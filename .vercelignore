@@ -1,0 +1,12 @@
+node_modules
+.vercel
+.env*
+.env*.local
+dist
+artifacts
+backups
+public/onboarding/sessions
+runtime
+tmp
+.DS_Store
+scripts/__pycache__

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>TimeSyncher Vacation Onboarding Dashboard</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0c0f14; --panel:#151922; --line:#2b3342; --text:#f5f1e8; --muted:#aeb7c7; --gold:#f5d37b; --green:#7ee0a2; --red:#ff8e85; --blue:#86c9ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: rgba(12,15,20,.96); border-bottom: 1px solid var(--line); }
+    h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
+    button, input { border: 1px solid var(--line); border-radius: 8px; background: #10141c; color: var(--text); min-height: 36px; padding: 8px 10px; font: inherit; }
+    button { cursor: pointer; font-weight: 700; }
+    button.primary { background: var(--gold); color: #151006; border-color: var(--gold); }
+    main { display: grid; grid-template-columns: minmax(320px, 430px) minmax(0, 1fr); min-height: calc(100vh - 65px); }
+    aside { border-right: 1px solid var(--line); overflow: auto; max-height: calc(100vh - 65px); }
+    section { padding: 16px; }
+    .row { border-bottom: 1px solid var(--line); padding: 12px 14px; cursor: pointer; }
+    .row:hover, .row.active { background: #171d28; }
+    .title { font-weight: 800; }
+    .muted { color: var(--muted); }
+    .pill { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .pill.good { color: var(--green); border-color: rgba(126,224,162,.35); }
+    .pill.bad { color: var(--red); border-color: rgba(255,142,133,.45); }
+    .metrics { display: grid; grid-template-columns: repeat(6, minmax(90px, 1fr)); gap: 10px; margin: 10px 0 16px; }
+    .metric, .card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 12px; }
+    .metric strong { display: block; color: var(--gold); font-size: 20px; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .tabs button.active { border-color: var(--gold); color: var(--gold); }
+    .timeline { display: grid; gap: 8px; }
+    .event { border-left: 3px solid var(--blue); padding: 9px 10px; background: #111722; border-radius: 6px; }
+    .event.email { border-left-color: var(--green); }
+    .event.click { border-left-color: var(--gold); }
+    .event.turn { border-left-color: #d6a6ff; }
+    .event.worker_job, .event.request { border-left-color: #ffb185; }
+    .summary { margin-top: 5px; color: var(--muted); overflow-wrap: anywhere; }
+    pre { margin: 8px 0 0; white-space: pre-wrap; word-break: break-word; background: #0a0d12; border: 1px solid var(--line); border-radius: 6px; padding: 10px; max-height: 320px; overflow: auto; }
+    .hidden { display: none; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } aside { max-height: none; border-right: 0; border-bottom: 1px solid var(--line); } .metrics { grid-template-columns: repeat(2, minmax(120px, 1fr)); } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Vacation Onboardings</h1>
+    <div>
+      <input id="token" type="password" placeholder="Admin token" autocomplete="off" />
+      <button class="primary" id="save">Load</button>
+      <button id="refresh">Refresh</button>
+    </div>
+  </header>
+  <main>
+    <aside id="sessions"></aside>
+    <section id="detail">
+      <p class="muted">Enter the admin token to load onboarding sessions.</p>
+    </section>
+  </main>
+  <script>
+    const els = { token: document.getElementById('token'), save: document.getElementById('save'), refresh: document.getElementById('refresh'), sessions: document.getElementById('sessions'), detail: document.getElementById('detail') };
+    const params = new URLSearchParams(location.search);
+    let token = params.get('token') || localStorage.getItem('timesyncherAdminToken') || '';
+    let currentId = '';
+    els.token.value = token;
+    if (params.get('token')) {
+      localStorage.setItem('timesyncherAdminToken', token);
+      history.replaceState(null, '', '/admin-onboardings.html');
+    }
+
+    function fmtDate(value) { return value ? new Date(value).toLocaleString() : 'not yet'; }
+    function fmtMs(value) {
+      if (value == null) return 'not yet';
+      if (value < 1000) return `${value}ms`;
+      const sec = Math.round(value / 1000);
+      if (sec < 60) return `${sec}s`;
+      return `${Math.round(sec / 60)}m`;
+    }
+    function money(cents, currency) { return cents == null ? '' : `${(cents / 100).toFixed(2)} ${currency || 'usd'}`; }
+    function safe(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function jsonBlock(value) { return `<pre>${safe(JSON.stringify(value, null, 2))}</pre>`; }
+    function humanKey(key) {
+      return String(key || '').replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+    }
+    function shortText(value, max = 140) {
+      const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+      return text.length > max ? `${text.slice(0, max - 1)}...` : text;
+    }
+    function readableValue(key, value) {
+      if (value == null || value === '') return '';
+      const lower = String(key || '').toLowerCase();
+      if (lower.includes('amountcents')) return money(value, 'usd');
+      if (lower.endsWith('_at') || lower.endsWith('at') || lower.includes('date')) return fmtDate(value);
+      if (lower.endsWith('_ms') || lower.endsWith('ms')) return fmtMs(value);
+      if (typeof value === 'object') return shortText(JSON.stringify(value), 90);
+      return shortText(value);
+    }
+    function compactFields(source, keys) {
+      return keys.map(key => {
+        const value = readableValue(key, source?.[key]);
+        return value ? `${humanKey(key)} ${value}` : '';
+      }).filter(Boolean);
+    }
+    function fallbackSummary(source) {
+      const data = source && typeof source === 'object' ? source : {};
+      return Object.keys(data)
+        .filter(key => data[key] != null && data[key] !== '' && typeof data[key] !== 'object')
+        .slice(0, 6)
+        .map(key => `${humanKey(key)} ${readableValue(key, data[key])}`)
+        .filter(Boolean)
+        .join(' · ') || 'No additional details.';
+    }
+    function eventSummary(item) {
+      const data = item.data || item;
+      const kind = item.kind || data.kind || '';
+      if (kind === 'payment') return compactFields(data, ['status', 'plan', 'amountCents']).join(' · ');
+      if (kind === 'onboarding') return compactFields(data, ['status', 'currentStep']).join(' · ');
+      if (kind === 'email') return compactFields(data, ['to_email', 'status', 'provider', 'subject', 'sent_at', 'error_summary']).join(' · ');
+      if (kind === 'click') return compactFields(data, ['event_type', 'target', 'href', 'clicked_at']).join(' · ');
+      if (kind === 'telegram_session') return compactFields(data, ['status', 'current_step', 'telegram_user_id', 'started_at', 'last_message_at']).join(' · ');
+      if (kind === 'turn') {
+        const fields = compactFields(data, ['direction', 'speaker', 'channel', 'onboarding_step', 'response_latency_ms']);
+        if (data.body) fields.push(`message ${shortText(data.body)}`);
+        return fields.join(' · ');
+      }
+      if (kind === 'request') {
+        const fields = compactFields(data, ['request_type', 'status', 'source', 'normalized_intent', 'retry_count', 'agent_runtime']);
+        if (data.request_text) fields.push(`request ${shortText(data.request_text)}`);
+        return fields.join(' · ');
+      }
+      if (kind === 'worker_job') return compactFields(data, ['job_type', 'status', 'priority', 'attempts', 'max_attempts', 'locked_by', 'error_summary', 'updated_at']).join(' · ');
+      return fallbackSummary(data);
+    }
+    function showTokenPrompt() {
+      els.sessions.innerHTML = '';
+      els.detail.innerHTML = '<p class="muted">Enter the admin token to load onboarding sessions.</p>';
+    }
+    function showLoadingState() {
+      els.sessions.innerHTML = '<div class="row"><div class="title">Loading sessions...</div><div class="muted">Checking onboarding activity.</div></div>';
+      els.detail.innerHTML = '<p class="muted">Loading onboarding sessions...</p>';
+    }
+    function showEmptyState() {
+      els.sessions.innerHTML = `
+        <div class="row">
+          <div class="title">No sessions yet</div>
+          <div class="muted">Run a test checkout, then refresh this dashboard.</div>
+        </div>`;
+      els.detail.innerHTML = `
+        <div class="card">
+          <h2>Dashboard loaded</h2>
+          <p class="muted">No onboarding sessions have been recorded yet.</p>
+          <p>Start a test purchase/onboarding, then click Refresh here to see the session timeline, turns, clicks, email records, and timing.</p>
+        </div>`;
+    }
+    function showErrorState(message) {
+      els.sessions.innerHTML = '';
+      els.detail.innerHTML = `<div class="card"><h2>Could not load dashboard</h2><p class="muted">${safe(message)}</p></div>`;
+    }
+    async function api(path) {
+      const res = await fetch(path, { headers: { authorization: `Bearer ${token}` } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data;
+    }
+    function sessionName(s) {
+      return s.customer.displayName || [s.customer.firstName, s.customer.lastName].filter(Boolean).join(' ') || s.customer.email || 'Unknown customer';
+    }
+    async function loadList() {
+      if (!token) {
+        showTokenPrompt();
+        return;
+      }
+      localStorage.setItem('timesyncherAdminToken', token);
+      if (!currentId) showLoadingState();
+      const data = await api('/api/admin-onboardings?limit=100');
+      const sessions = data.sessions || [];
+      if (!sessions.length) {
+        currentId = '';
+        showEmptyState();
+        return;
+      }
+      els.sessions.innerHTML = sessions.map(s => `
+        <div class="row ${s.id === currentId ? 'active' : ''}" data-id="${s.id}">
+          <div class="title">${safe(sessionName(s))}</div>
+          <div class="muted">${safe(s.customer.email || '')}</div>
+          <div>
+            <span class="pill ${s.status === 'telegram_started' ? 'good' : ''}">${safe(s.status)}</span>
+            <span class="pill">${safe(s.currentStep)}</span>
+          </div>
+          <div class="muted">${fmtDate(s.createdAt)}</div>
+        </div>`).join('');
+      for (const row of els.sessions.querySelectorAll('.row')) row.addEventListener('click', () => loadDetail(row.dataset.id));
+      if (!currentId && sessions[0]) await loadDetail(sessions[0].id);
+    }
+    function listEvents(items, { raw = false } = {}) {
+      if (!items.length) return '<p class="muted">No records yet.</p>';
+      return `<div class="timeline">${items.map(item => `
+        <div class="event ${safe(item.kind || '')}">
+          <div><strong>${safe(item.label || item.kind || 'event')}</strong> <span class="muted">${fmtDate(item.at || item.created_at || item.createdAt)}</span></div>
+          ${raw ? jsonBlock(item.data || item) : `<div class="summary">${safe(eventSummary(item))}</div>`}
+        </div>`).join('')}</div>`;
+    }
+    async function loadDetail(id) {
+      currentId = id;
+      const data = await api(`/api/admin-onboardings?id=${encodeURIComponent(id)}`);
+      const s = data.session;
+      els.detail.innerHTML = `
+        <div class="card">
+          <h2>${safe(sessionName(s))}</h2>
+          <p class="muted">${safe(s.customer.email || '')} ${safe(s.customer.phone || '')}</p>
+          <p><a href="${safe(s.telegramUrl || '#')}" target="_blank" rel="noreferrer">Start TimeSyncher Vacation bot link</a></p>
+          <div><span class="pill">${safe(s.status)}</span> <span class="pill">${safe(s.currentStep)}</span> <span class="pill">${safe(s.telegramInstallChoice || 'no install choice')}</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><strong>${s.counts.emails}</strong><span>Email records</span></div>
+          <div class="metric"><strong>${s.counts.clicks}</strong><span>Clicks</span></div>
+          <div class="metric"><strong>${s.counts.telegramSessions}</strong><span>Telegram sessions</span></div>
+          <div class="metric"><strong>${s.counts.turns}</strong><span>Turns</span></div>
+          <div class="metric"><strong>${s.counts.requests}</strong><span>Requests</span></div>
+          <div class="metric"><strong>${s.counts.workerJobs}</strong><span>Worker jobs</span></div>
+        </div>
+        <div class="card">
+          <strong>Timing:</strong>
+          Paid ${fmtDate(s.order.paidAt)} · email ${fmtMs(s.timings.paidToEmailMs)} · Telegram start ${fmtMs(s.timings.paidToTelegramStartMs)}
+          <br><strong>Order:</strong> ${safe(s.order.plan || '')} ${safe(money(s.order.amountCents, s.order.currency))}
+        </div>
+        <div class="tabs">
+          <button class="active" data-view="timeline">Timeline</button>
+          <button data-view="turns">Turns</button>
+          <button data-view="clicks">Clicks</button>
+          <button data-view="emails">Emails</button>
+          <button data-view="jobs">Jobs</button>
+          <button data-view="raw">Raw</button>
+        </div>
+        <div id="panel"></div>`;
+      const panel = document.getElementById('panel');
+      const render = view => {
+        const views = {
+          timeline: data.timeline,
+          turns: data.turns.map(t => ({ kind: 'turn', label: `${t.direction || ''} ${t.speaker || ''}`, at: t.received_at || t.sent_at || t.created_at, data: t })),
+          clicks: data.clicks.map(c => ({ kind: 'click', label: `${c.event_type}: ${c.target}`, at: c.clicked_at, data: c })),
+          emails: data.emails.map(e => ({ kind: 'email', label: `${e.status}: ${e.subject}`, at: e.sent_at || e.created_at, data: e })),
+          jobs: data.jobs.map(j => ({ kind: 'worker_job', label: `${j.job_type}: ${j.status}`, at: j.updated_at || j.created_at, data: j })),
+          raw: [{ kind: 'raw', label: 'Full payload', at: new Date().toISOString(), data }],
+        };
+        panel.innerHTML = listEvents(views[view] || [], { raw: view === 'raw' });
+      };
+      for (const btn of els.detail.querySelectorAll('.tabs button')) btn.addEventListener('click', () => {
+        for (const b of els.detail.querySelectorAll('.tabs button')) b.classList.remove('active');
+        btn.classList.add('active');
+        render(btn.dataset.view);
+      });
+      render('timeline');
+      await loadList();
+    }
+    els.save.addEventListener('click', () => { token = els.token.value.trim(); currentId = ''; loadList().catch(err => showErrorState(err.message)); });
+    els.refresh.addEventListener('click', () => { currentId = ''; loadList().catch(err => showErrorState(err.message)); });
+    if (token) loadList().catch(err => showErrorState(err.message));
+  </script>
+</body>
+</html>

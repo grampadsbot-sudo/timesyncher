@@ -3,239 +3,873 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TimeSyncher | AI Assistant and Communications Automation</title>
-  <meta name="description" content="TimeSyncher helps small businesses handle inbound calls, reminders, follow-up, and communications workflows with AI-assisted automation." />
-  <meta property="og:title" content="TimeSyncher | AI Assistant and Communications Automation" />
-  <meta property="og:description" content="AI-assisted call handling, reminders, follow-up, and communications automation for small businesses." />
+  <title>TimeSyncher Vacation | Stop Needing a Vacation From Your Vacation</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="TimeSyncher" />
+  <meta property="og:image" content="https://www.timesyncher.com/timesyncher-social-card.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:image" content="https://www.timesyncher.com/timesyncher-social-card.png" />
+  <meta name="description" content="TimeSyncher Vacation is a one-of-a-kind AI vacation assistant that unlocks unforgettable experiences by turning scattered family preferences, reservations, budgets, and daily plans into one inspired shared vacation plan." />
+  <meta property="og:title" content="TimeSyncher Vacation | Unlock unforgettable experiences" />
+  <meta property="og:description" content="A high-touch vacation planning app for families and couples who want alignment before they leave." />
   <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#0c1222" />
+  <meta property="og:url" content="https://www.timesyncher.com" />
+  <meta name="theme-color" content="#050505" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b1020;
-      --bg2: #121a31;
-      --card: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.1);
-      --text: #eef3ff;
-      --muted: #bfd0f3;
-      --accent: #7dd3fc;
-      --accent2: #a78bfa;
-      --accent3: #34d399;
+      --black: #050505;
+      --ink: #0c0b09;
+      --panel: rgba(18, 17, 14, 0.82);
+      --panel2: rgba(255,255,255,0.055);
+      --gold: #d6a84f;
+      --gold2: #f4d98b;
+      --sand: #f7efd9;
+      --muted: #c7bda4;
+      --line: rgba(214,168,79,0.34);
+      --sea: #5fd8d4;
+      --rose: #d78b74;
+      --shadow: 0 30px 90px rgba(0,0,0,.48);
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
+      background: var(--black);
+      color: var(--sand);
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(125,211,252,.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(167,139,250,.14), transparent 26%),
-        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
       line-height: 1.55;
     }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background:
+        radial-gradient(circle at 20% 5%, rgba(214,168,79,.22), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(95,216,212,.12), transparent 26%),
+        linear-gradient(180deg, #060606 0%, #10100f 42%, #050505 100%);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      opacity: .19;
+      background-image: linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(to bottom, black, transparent 80%);
+    }
     a { color: inherit; text-decoration: none; }
-    .shell { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+    img { max-width: 100%; display: block; }
+    .font-cinzel { font-family: Cinzel, serif; }
+    .font-playfair { font-family: "Playfair Display", serif; }
+    .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+    .hero .shell { width: 100%; max-width: none; }
     .topbar {
-      position: sticky; top: 0; z-index: 10;
-      backdrop-filter: blur(12px);
-      background: rgba(8,12,24,.78);
-      border-bottom: 1px solid rgba(255,255,255,.06);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(5,5,5,.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
     }
-    .topbar-inner {
-      min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    .brand-wrap { display: grid; place-items: center; padding: 15px 0 9px; }
+    .brand-main { display: inline-flex; align-items: center; justify-content: center; gap: .32em; }
+    .brand-logo { width: clamp(24px, 5.2vw, 52px); height: clamp(24px, 5.2vw, 52px); transform: translateY(-2px); filter: drop-shadow(0 0 18px rgba(214,168,79,.34)); }
+    .brand {
+      text-align: center;
+      letter-spacing: .2em;
+      color: var(--gold2);
+      text-transform: uppercase;
+      font: 700 clamp(1.45rem, 3vw, 2.8rem)/1 Cinzel, serif;
+      text-shadow: 0 0 30px rgba(214,168,79,.25);
     }
-    .brand { font-weight: 800; letter-spacing: .04em; font-size: 1.05rem; }
-    .nav { display: flex; gap: 10px; flex-wrap: wrap; }
-    .nav a {
-      padding: 10px 14px; border-radius: 999px; color: var(--muted);
-      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
-      font-size: .94rem;
+    .brand small {
+      display: block;
+      margin-top: 8px;
+      letter-spacing: .42em;
+      color: var(--muted);
+      font: 600 2.56rem/1 Inter, sans-serif;
+      margin-bottom: 20px;
     }
-    .hero { padding: 72px 0 34px; }
-    .eyebrow {
-      display: inline-block; margin-bottom: 16px; padding: 9px 14px; border-radius: 999px;
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-      color: var(--accent); text-transform: uppercase; letter-spacing: .14em; font-size: .74rem;
+    nav { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 0 0 13px; flex-wrap: wrap; }
+    nav a { color: #d8cfba; font: 600 .76rem/1 Cinzel, serif; letter-spacing: .08em; text-transform: uppercase; }
+    nav a:hover { color: var(--gold2); }
+    .nav-cta { padding: 9px 14px; color: #0a0803; background: linear-gradient(135deg, var(--gold2), var(--gold)); border-radius: 999px; box-shadow: 0 10px 24px rgba(214,168,79,.2); }
+    .hero {
+      min-height: auto;
+      display: grid;
+      align-items: start;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
     }
-    h1 {
-      margin: 0 0 18px; font-size: clamp(2.7rem, 8vw, 5.2rem); line-height: .95; letter-spacing: -.03em;
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.84), rgba(0,0,0,.43) 43%, rgba(0,0,0,.82)),
+        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.98)),
+        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=82') center/cover;
+      z-index: -1;
+      transform: scale(1.02);
     }
-    .gradient {
-      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .lede {
-      margin: 0 0 24px; max-width: 760px; color: var(--muted); font-size: 1.08rem;
-    }
-    .cta-row { display: flex; flex-wrap: wrap; gap: 14px; }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 14px 20px; border-radius: 999px; font-weight: 700;
-    }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #08111d; }
-    .btn-secondary { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
-    section { padding: 28px 0; }
-    .section-head { max-width: 760px; margin-bottom: 18px; }
-    .section-tag {
-      display: inline-block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .14em;
-      font-size: .73rem; color: var(--accent);
-    }
-    .section-head h2 { margin: 0 0 10px; font-size: clamp(1.9rem, 4vw, 3.2rem); line-height: 1; }
-    .section-head p { margin: 0; color: var(--muted); }
-    .grid { display: grid; gap: 20px; }
+    .hero-grid { width: min(1500px, calc(100% - 48px)); margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 26px; align-items: start; padding: 0 0 58px; transform: translateY(-24px); margin-bottom: -24px; }
+    .hero-question { width: 100%; text-align: center; display: flex; justify-content: center; }
+    .hero-question h1 { margin: 0; }
+    .hero-copy { width: 100%; max-width: none; margin: 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .hero-card { max-width: 560px; width: 100%; margin: 0 auto; }
+    .eyebrow { display: inline-flex; gap: 10px; align-items: center; justify-content: center; text-align: center; padding: 9px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--gold2); background: rgba(0,0,0,.38); text-transform: uppercase; letter-spacing: .18em; font-size: .72rem; font-weight: 800; }
+    h1 { width: 100%; margin: 20px 0 18px; text-align: center; font: 700 clamp(2.7rem, 6.4vw, 5.6rem)/.88 Cinzel, serif; letter-spacing: -.055em; color: white; }
+    .hero-subtitle { width: 100%; margin: 16px 0 18px; text-align: center; font: 700 clamp(2.3rem, 5.4vw, 5rem)/.92 Cinzel, serif; letter-spacing: -.045em; }
+    .hero-title-line, .gold { display: block; width: 100%; text-align: center; white-space: normal; }
+    .gold { color: var(--gold2); }
+    .inline-gold { display: inline; width: auto; }
+    .hero .lede { width: min(730px, calc(100vw - 36px)); margin: 0 auto 28px; text-align: center; color: #e2d8c1; font: 400 clamp(1.08rem, 2vw, 1.35rem)/1.6 "Playfair Display", serif; }
+    .cta-row { display: flex; gap: 14px; flex-wrap: nowrap; align-items: center; }
+    .hero .cta-row { justify-content: center; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 50px; padding: 14px 20px; border-radius: 999px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+    .btn-primary { background: linear-gradient(135deg, var(--gold2), var(--gold)); color: #070604; box-shadow: 0 18px 40px rgba(214,168,79,.24); }
+    .btn-secondary { border: 1px solid var(--line); color: var(--gold2); background: rgba(0,0,0,.38); }
+    .order-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(410px, 1fr); gap: 24px; align-items: start; width: 100%; }
+    .order-panel { background: rgba(13, 12, 10, .86); border: 1px solid rgba(245,211,123,.24); border-radius: 30px; box-shadow: var(--shadow); overflow: hidden; backdrop-filter: blur(18px); }
+    .video-box { min-height: 500px; display: grid; grid-template-rows: 1fr auto; background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.76)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80') center/cover; }
+    .play { place-self: center; width: 86px; height: 86px; border-radius: 999px; border: 1px solid rgba(245,211,123,.5); display: grid; place-items: center; background: rgba(0,0,0,.55); box-shadow: 0 0 50px rgba(245,211,123,.2); font-size: 1.8rem; color: var(--gold2); }
+    .video-copy { padding: 20px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.76)); }
+    .video-copy h2 { margin: 0 0 8px; font: 700 clamp(1.35rem, 2.2vw, 2rem)/1 Cinzel, serif; color: var(--gold2); }
+    .video-copy p { margin: 0; color: #e5d7bd; font-size: .95rem; line-height: 1.42; }
+    .form-head { padding: 16px 18px 14px; border-bottom: 1px solid rgba(245,211,123,.24); }
+    .form-head h2 { margin: 0 0 5px; font: 700 1.34rem/1.05 Cinzel, serif; color: var(--gold2); }
+    .form-head p { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.3; }
+    .checkout-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 13px; padding: 4px; border: 1px solid rgba(245,211,123,.24); border-radius: 15px; background: rgba(255,255,255,.035); }
+    .step-pill { border: 1px solid transparent; border-radius: 11px; padding: 9px 12px; color: var(--muted); background: transparent; font-size: .78rem; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; }
+    .step-pill.active { color: #080604; background: linear-gradient(135deg, var(--gold2), var(--gold)); border-color: transparent; }
+    .step-pill:focus-visible { outline: 2px solid var(--gold2); outline-offset: 2px; }
+    .order-form { padding: 16px 18px 18px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .order-form label { display: grid; gap: 5px; color: #eadfca; font-size: .76rem; font-weight: 800; }
+    .order-form label.full { grid-column: 1 / -1; }
+    .order-form input, .order-form select { width: 100%; min-height: 40px; border-radius: 11px; border: 1px solid rgba(245,211,123,.26); background: rgba(255,255,255,.075); color: white; padding: 9px 11px; font: 600 .88rem/1 Inter, sans-serif; outline: none; }
+    .order-form input::placeholder { color: rgba(255,255,255,.38); }
+    .order-form input:focus, .order-form select:focus { border-color: var(--gold2); box-shadow: 0 0 0 3px rgba(245,211,123,.14); }
+    .order-form select option { color: #111; }
+    .hidden { display: none !important; }
+    .order-summary { margin: 16px 0; border: 1px solid rgba(245,211,123,.26); border-radius: 18px; overflow: hidden; background: rgba(255,255,255,.045); }
+    .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 13px 14px; color: #e9dec8; border-bottom: 1px solid rgba(245,211,123,.14); }
+    .summary-row[hidden] { display: none !important; }
+    .summary-row:last-child { border-bottom: 0; }
+    .summary-row.total { font-size: 1.15rem; font-weight: 900; color: white; background: rgba(245,211,123,.08); }
+    .bump { margin: 16px 0; border: 2px dashed rgba(245,211,123,.48); border-radius: 20px; padding: 14px; background: rgba(245,211,123,.08); }
+    .bump label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+    .bump input { width: 20px; height: 20px; min-height: 20px; margin-top: 2px; accent-color: var(--gold2); }
+    .bump b { display: block; color: var(--gold2); font-size: .98rem; }
+    .bump span { display: block; color: #e8dbc2; font-weight: 500; line-height: 1.42; margin-top: 3px; }
+    .stripe-mount { min-height: 128px; border-radius: 18px; border: 1px solid rgba(98,214,207,.38); background: rgba(98,214,207,.08); padding: 16px; display: grid; gap: 10px; align-content: center; color: #dcfffc; }
+    .stripe-mount strong { color: var(--sea); }
+    #paymentElement { min-height: 92px; }
+    .stripe-loading { color: #dcfffc; line-height: 1.45; }
+    .button-row { display: flex; gap: 10px; margin-top: 12px; }
+    .order-form button { appearance: none; border: 0; cursor: pointer; border-radius: 999px; min-height: 44px; padding: 11px 16px; font-weight: 900; font-size: .9rem; }
+    .primary { flex: 1; background: linear-gradient(135deg, var(--gold2), var(--gold)); color: #070604; box-shadow: 0 16px 34px rgba(245,211,123,.22); }
+    .secondary { background: rgba(255,255,255,.08); color: var(--gold2); border: 1px solid var(--line); }
+    .notice { margin-top: 13px; color: #bfb49d; font-size: .78rem; line-height: 1.45; }
+    .status { margin-top: 14px; border-radius: 14px; padding: 12px; background: rgba(98,214,207,.1); color: #dffefa; border: 1px solid rgba(98,214,207,.3); font-size: .88rem; line-height: 1.45; }
+    .hero-card { background: rgba(9,9,8,.72); border: 1px solid var(--line); border-radius: 30px; padding: 18px; box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+    .phone { border-radius: 26px; overflow: hidden; background: #0d0e0f; border: 8px solid #1c1b18; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+    .phone-hero { height: 190px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.7)), url('https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1100&q=80') center/cover; padding: 18px; display: flex; align-items: end; justify-content: center; text-align: center; }
+    .phone-hero strong { display: block; width: 100%; font: 700 1.4rem/1.05 Cinzel, serif; color: white; }
+    .screen { padding: 14px; display: grid; gap: 10px; }
+    .screen-row { display: grid; grid-template-columns: 50px 1fr auto; gap: 10px; align-items: center; padding: 11px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
+    .icon { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: rgba(214,168,79,.17); border: 1px solid rgba(214,168,79,.28); font-size: 1.35rem; }
+    .screen-row b { display: block; color: #fff; font-size: .92rem; }
+    .screen-row span { color: var(--muted); font-size: .78rem; }
+    .pill { color: #0b0803; background: var(--gold2); border-radius: 999px; padding: 5px 8px; font-size: .7rem; font-weight: 800; }
+    section { padding: 76px 0; }
+    .section-head { max-width: 850px; margin: 0 auto 32px; text-align: center; }
+    .kicker { color: var(--gold2); text-transform: uppercase; letter-spacing: .22em; font-size: .74rem; font-weight: 900; }
+    h2 { margin: 12px 0 12px; font: 700 clamp(2.05rem, 4.7vw, 4.3rem)/.95 Cinzel, serif; letter-spacing: -.035em; }
+    .section-head p { margin: 0; color: var(--muted); font-size: 1.05rem; }
+    .grid { display: grid; gap: 24px; }
     .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .card {
-      padding: 22px; border-radius: 24px; background: var(--card);
-      border: 1px solid var(--border); box-shadow: 0 18px 48px rgba(0,0,0,.22);
-    }
-    .card h3 { margin: 0 0 10px; font-size: 1.1rem; }
-    .card p, .card li { color: var(--muted); }
-    .card ul { margin: 0; padding-left: 18px; }
-    .band {
-      margin: 8px 0; padding: 28px; border-radius: 28px;
-      background: linear-gradient(135deg, rgba(125,211,252,.10), rgba(167,139,250,.10), rgba(52,211,153,.10));
-      border: 1px solid rgba(255,255,255,.1);
-      text-align: center;
-    }
-    .band strong { display: block; font-size: clamp(1.3rem, 3vw, 2rem); margin-bottom: 8px; }
-    .muted { color: var(--muted); }
-    .footer {
-      padding: 42px 0 60px; color: var(--muted); font-size: .95rem;
-      border-top: 1px solid rgba(255,255,255,.06); margin-top: 22px;
-    }
-    .legal a { text-decoration: underline; }
-    @media (max-width: 900px) {
-      .three, .two { grid-template-columns: 1fr; }
-      .nav { display: none; }
-      .hero { padding-top: 54px; }
+    .four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035)); border: 1px solid rgba(214,168,79,.28); border-radius: 24px; overflow: hidden; box-shadow: 0 18px 60px rgba(0,0,0,.28); }
+    .card-body { padding: 24px; }
+    .card h3 { margin: 0 0 10px; color: var(--gold2); font: 700 1.28rem/1.1 Cinzel, serif; }
+    .card p, .card li { color: #d4c9b0; }
+    .card ul { margin: 0; padding-left: 20px; }
+    .img-card img { width: 100%; height: 235px; object-fit: cover; border-bottom: 1px solid var(--line); }
+    .band { border-block: 1px solid var(--line); background: linear-gradient(90deg, rgba(214,168,79,.11), rgba(95,216,212,.07), rgba(214,168,79,.11)); padding: 44px 0; text-align: center; }
+    .band strong { display: block; font: 700 clamp(1.8rem, 4vw, 3.4rem)/1 Cinzel, serif; color: white; }
+    .band span { display: block; margin: 10px auto 0; max-width: 980px; color: var(--muted); }
+    .band-preview { margin-top: 28px; }
+    .dark { background: rgba(0,0,0,.38); }
+    .feature { display: grid; grid-template-columns: 1fr; gap: 34px; align-items: center; }
+    .feature-copy { max-width: 980px; margin: 0 auto; text-align: center; }
+    .feature-copy .lede { margin-left: auto; margin-right: auto; text-align: center; }
+    .feature-copy .lux-img { margin: 26px 0 30px; }
+    .lux-img { min-height: 430px; width: 100%; border-radius: 30px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.72)), url('https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1800&q=82') center/cover; border: 1px solid var(--line); box-shadow: var(--shadow); display: flex; align-items: end; padding: 28px; }
+    .quote { font: 500 1.55rem/1.35 "Playfair Display", serif; color: white; }
+    .steps { counter-reset: step; }
+    .step { position: relative; padding-left: 76px; min-height: 70px; }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #080604; background: linear-gradient(135deg, var(--gold2), var(--gold)); font-weight: 900; }
+    .screenshot { border-radius: 28px; border: 1px solid var(--line); background: #0b0b0a; padding: 18px; box-shadow: var(--shadow); }
+    .appbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px 18px; color: var(--muted); font-size: .86rem; }
+    .mock-window { min-height: 340px; border-radius: 22px; overflow: hidden; background: #111; border: 1px solid rgba(255,255,255,.08); }
+    .mock-top { min-height: 122px; padding: 20px; background: linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.72)), url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1300&q=80') center/cover; }
+    .mock-top b { color: white; font: 700 1.45rem/1 Cinzel, serif; }
+    .mock-content { padding: 16px; display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr); gap: 12px; }
+    .timeline { display: grid; gap: 10px; }
+    .itinerary-img { border-radius: 16px; overflow: hidden; background: #fff; min-height: 210px; }
+    .itinerary-img img { width: 100%; height: 100%; min-height: 210px; object-fit: cover; object-position: left top; display: block; }
+    .time-card { display: grid; grid-template-columns: 62px 1fr; gap: 12px; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.08); }
+    .time-card small { color: var(--gold2); font-weight: 800; }
+    .time-card b { display: block; color: white; }
+    .mini-map { border-radius: 16px; border: 1px solid rgba(255,255,255,.08); min-height: 210px; overflow: hidden; background: #e9ecea; }
+    .mini-map img { width: 100%; height: 100%; min-height: 210px; object-fit: contain; display: block; background: #f2f4f2; }
+    .pricing { align-items: stretch; grid-auto-rows: 1fr; }
+
+    .memory-showcase { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 28px; align-items: center; }
+    .memory-collage { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 78px; gap: 10px; }
+    .memory-tile { position: relative; overflow: hidden; border-radius: 18px; border: 1px solid rgba(245,211,123,.2); background: rgba(255,255,255,.06); box-shadow: 0 20px 60px rgba(0,0,0,.24); }
+    .memory-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .memory-tile.large { grid-column: span 4; grid-row: span 3; }
+    .memory-tile.tall { grid-column: span 2; grid-row: span 3; }
+    .memory-tile.wide { grid-column: span 3; grid-row: span 2; }
+    .memory-caption { position: absolute; left: 12px; right: 12px; bottom: 10px; padding: 8px 10px; border-radius: 999px; color: white; background: rgba(0,0,0,.58); font-weight: 900; font-size: .74rem; backdrop-filter: blur(10px); }
+    .memory-list { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; }
+    .memory-list li { position: relative; padding-left: 26px; color: #e9dec8; line-height: 1.45; }
+    .memory-list li::before { content: "✦"; position: absolute; left: 0; color: var(--gold2); font-weight: 900; }
+    .memory-price { display: inline-flex; align-items: center; gap: 10px; margin-top: 20px; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(245,211,123,.32); background: rgba(245,211,123,.09); color: var(--gold2); font-weight: 900; }
+    .price-card { text-align: center; padding: 34px 24px; position: relative; display: flex; flex-direction: column; height: 100%; min-height: 292px; }
+    .price-card ul { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 9px; }
+    .price-card li { position: relative; padding-left: 22px; text-align: left; font-size: .94rem; line-height: 1.25; }
+    .price-card li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--gold2); font-weight: 900; }
+    .price { font: 800 3rem/1 Inter, sans-serif; color: white; margin: 16px 0 4px; }
+    .price small { font-size: 1rem; color: var(--muted); }
+    .popular { outline: none; transform: none; }
+    .badge { display: inline-flex; justify-content: center; align-items: center; margin: auto auto 0; padding: 7px 13px; border-radius: 999px; background: var(--gold2); color: #070604; font-weight: 900; font-size: .72rem; transform: translateY(5px); }
+    .faq details { border: 1px solid rgba(214,168,79,.25); border-radius: 18px; padding: 17px 18px; background: rgba(255,255,255,.045); }
+    .faq details + details { margin-top: 12px; }
+    summary { cursor: pointer; color: var(--gold2); font-weight: 800; }
+    footer { border-top: 1px solid var(--line); padding: 42px 0 60px; color: var(--muted); }
+    .footer-grid { display: grid; grid-template-columns: 1.1fr .9fr .9fr; gap: 24px; }
+    .footer-grid a { display: block; margin: 8px 0; color: #e8dcc3; text-decoration: underline; text-decoration-color: rgba(214,168,79,.45); }
+    .fineprint { margin-top: 28px; font-size: .84rem; color: #a89e89; }
+    @media (max-width: 920px) {
+      .hero { min-height: auto; align-items: start; }
+      .hero-grid { width: min(1180px, calc(100% - 32px)); padding: 0 0 48px; align-items: start; transform: translateY(-34px); margin-bottom: -34px; }
+      .eyebrow { width: 100%; margin-top: 0; }
+      h1 { font-size: clamp(2.1rem, 11.5vw, 4.2rem); }
+      .hero-title-line, .gold { white-space: normal; }
+      .hero-grid, .feature, .two, .three, .four, .footer-grid, .memory-showcase { grid-template-columns: 1fr; }
+      .order-grid { grid-template-columns: 1fr; }
+      .checkout-panel { order: 1; }
+      .video-panel { order: 2; }
+      .video-box { min-height: 360px; }
+      .fields { grid-template-columns: 1fr; }
+      .button-row { flex-direction: column; }
+      .secondary { order: 2; }
+      .popular { transform: none; }
+      .mock-content { grid-template-columns: 1fr; }
+      .memory-collage { grid-auto-rows: 58px; }
+
+      .brand-wrap { padding-bottom: 4px; }
+      .brand small { font-size: 1.28rem; margin-bottom: 5px; }
+      nav { gap: 12px; padding-bottom: 7px; }
+      nav a:not(.nav-cta) { display: none; }
+      .cta-row { gap: 8px; }
+      .btn { min-height: 44px; padding: 12px 14px; font-size: clamp(.74rem, 3.35vw, .9rem); }
+      section { padding: 58px 0; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="brand" href="#top">TimeSyncher</a>
-      <nav class="nav">
-        <a href="#services">Services</a>
-        <a href="#who">Who it's for</a>
-        <a href="#contact">Contact</a>
+    <div class="shell">
+      <div class="brand-wrap">
+        <a class="brand" href="/"><span class="brand-main"><img class="brand-logo" src="/timesyncher-logo-gold.png" alt="" aria-hidden="true">TimeSyncher</span><small>Vacation</small></a>
+      </div>
+      <nav aria-label="Main navigation">
+        <a href="#how">How it works</a>
+        <a href="#features">Benefits</a>
+        <a href="#pricing">Savings</a>
+        <a href="#memories">Memories</a>
+        <a href="/support.html">Support</a>
       </nav>
     </div>
   </header>
 
-  <main id="top" class="shell">
+  <main>
     <section class="hero">
-      <div class="eyebrow">AI assistant and communications automation</div>
-      <h1>Helping small businesses <span class="gradient">stay responsive, organized, and easier to reach.</span></h1>
-      <p class="lede">TimeSyncher provides AI-assisted call handling, reminders, follow-up, and communications workflows for small businesses that need help keeping up with customers, scheduling, and day-to-day coordination.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="#contact">Contact us</a>
-        <a class="btn btn-secondary" href="#services">See services</a>
+      <div class="shell hero-grid">
+        <div class="hero-question">
+          <h1><span class="hero-title-line">Planning a Vacation in the Next 6 Months? <span class="gold inline-gold">You Need TimeSyncher Vacation</span></span></h1>
+        </div>
+        <section class="order-grid" aria-label="Sales video and order form">
+          <div class="order-panel video-panel video-box">
+            <div class="play" aria-label="Sales video placeholder">▶</div>
+            <div class="video-copy">
+              <h2>Stop needing a vacation from your vacation.</h2>
+              <p>Watch how TimeSyncher turns scattered vacation ideas, reservations, budgets, and family preferences into one calm plan before you leave.</p>
+            </div>
+          </div>
+
+          <div class="order-panel checkout-panel">
+            <div class="form-head">
+              <h2>Start your TimeSyncher Vacation</h2>
+              <p>Step 1 captures contact details. Step 2 takes secure payment and starts your onboarding path.</p>
+              <div class="checkout-steps" role="tablist" aria-label="Checkout steps">
+                <button type="button" class="step-pill active" id="step1Pill" role="tab" aria-selected="true" aria-controls="step1">Step 1: Contact Info</button>
+                <button type="button" class="step-pill" id="step2Pill" role="tab" aria-selected="false" aria-controls="step2" tabindex="-1">Step 2: Payment Info</button>
+              </div>
+            </div>
+
+            <form class="order-form" id="orderForm">
+              <div id="step1" role="tabpanel" aria-labelledby="step1Pill">
+                <div class="fields">
+                  <label>First name<input name="firstName" autocomplete="given-name" placeholder="Craig" required /></label>
+                  <label>Last name<input name="lastName" autocomplete="family-name" placeholder="Doe" required /></label>
+                  <label class="full">Email<input type="email" name="email" autocomplete="email" placeholder="you@example.com" required /></label>
+                  <label>Phone<input name="phone" autocomplete="tel" placeholder="(555) 123-4567" /></label>
+                  <label>Vacation date<input type="date" name="vacationDate" /></label>
+                  <label class="full">Billing address<input name="address" autocomplete="billing street-address" placeholder="Street address" /></label>
+                  <label>City<input name="city" autocomplete="billing address-level2" placeholder="Las Vegas" /></label>
+                  <label>State<input name="state" autocomplete="billing address-level1" placeholder="NV" /></label>
+                  <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="89101" /></label>
+                  <label>Country<select name="country" autocomplete="billing country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option></select></label>
+                </div>
+                <div class="button-row">
+                  <button type="button" class="primary" id="continueBtn">Go to step two</button>
+                </div>
+              </div>
+
+              <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
+                <div class="order-summary" aria-label="Order summary">
+                  <div class="summary-row"><span id="singleName">TimeSyncher Vacation - Single</span><strong id="singlePrice">$37</strong></div>
+                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">Upgrade to TimeSyncher Vacation - Unlimited</span><strong id="unlimitedPrice">+$27</strong></div>
+                  <div class="summary-row" id="photoRow" hidden><span id="photoName">Photo Memories Keepsake</span><strong id="photoPrice">+$5</strong></div>
+                  <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
+                  <div class="summary-row total"><span>Total today</span><strong id="total">$37</strong></div>
+                </div>
+
+                <div class="bump">
+                  <label>
+                    <input type="checkbox" id="orderBump" />
+                    <span><b id="bumpTitle">Upgrade to TimeSyncher Vacation - Unlimited for +$27</b><span id="bumpDescription">The order bump moves the setup from the Single product to the Unlimited subscription product.</span></span>
+                  </label>
+                </div>
+
+                <div class="bump">
+                  <label>
+                    <input type="checkbox" id="photoMemories" />
+                    <span><b id="photoTitle">Add Photo Memories Keepsake for +$5/year</b><span id="photoDescription">Include up to 100 favorite photos in the printable vacation keepsake. Photos only for MVP.</span></span>
+                  </label>
+                </div>
+
+                <div class="stripe-mount" id="stripeMount">
+                  <strong>Secure payment</strong>
+                  <div id="paymentElement"><div class="stripe-loading">Loading Stripe checkout...</div></div>
+                </div>
+
+                <div class="button-row">
+                  <button type="button" class="secondary" id="backBtn">Back to Step 1</button>
+                  <button type="button" class="primary" id="payBtn">Pay securely</button>
+                </div>
+                <div class="notice">Secure checkout. Your purchase starts the TimeSyncher Vacation onboarding path.</div>
+              </div>
+
+              <div id="status" class="status hidden"></div>
+            </form>
+          </div>
+        </section>
+        <div class="hero-copy">
+          <span class="eyebrow">AI vacation assistant • family<br>alignment • unforgettable experiences</span>
+          <h2 class="hero-subtitle gold">Stop Needing a Vacation from Your Vacation</h2>
+          <p class="lede">TimeSyncher Vacation is a one-of-a-kind AI vacation assistant that unlocks unforgettable experiences by turning messy family preferences, scattered research, reservations, budgets, and daily plans into one inspired shared vacation plan before you leave.</p>
+        </div>
       </div>
     </section>
 
-    <div class="band">
-      <strong>Built to help businesses handle calls, reminders, and customer follow-up more reliably.</strong>
-      <span class="muted">TimeSyncher is focused on practical communications support, not generic automation for its own sake.</span>
-    </div>
-
-    <section id="services">
-      <div class="section-head">
-        <span class="section-tag">Services</span>
-        <h2>What TimeSyncher helps with</h2>
-        <p>We focus on practical communications workflows that help a business stay reachable, consistent, and better organized.</p>
-      </div>
-      <div class="grid three">
-        <article class="card">
-          <h3>Inbound call handling</h3>
-          <p>Help businesses stay responsive when calls come in, capture messages, and route communication more reliably.</p>
-        </article>
-        <article class="card">
-          <h3>Reminders and follow-up</h3>
-          <p>Support appointment reminders, customer follow-up, and simple communication workflows that reduce dropped balls.</p>
-        </article>
-        <article class="card">
-          <h3>Business workflow automation</h3>
-          <p>Connect communications to lightweight operational flows so teams spend less time manually coordinating routine tasks.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="who">
-      <div class="section-head">
-        <span class="section-tag">Who it's for</span>
-        <h2>Designed for small businesses that need practical support</h2>
-        <p>TimeSyncher is aimed at businesses that want more reliable communication without needing to build a large internal operations stack.</p>
-      </div>
-      <div class="grid two">
-        <article class="card">
-          <h3>Good fit for</h3>
-          <ul>
-            <li>service businesses</li>
-            <li>appointment-driven businesses</li>
-            <li>owner-operated businesses</li>
-            <li>teams that need better customer responsiveness</li>
+    <section id="memories" class="shell">
+      <div class="memory-showcase">
+        <div class="section-head" style="text-align:left;margin:0">
+          <span class="kicker">Vacation Memories Album</span>
+          <h2>Memories that last a lifetime</h2>
+          <p>TimeSyncher Vacation is not just about getting the plan right before you leave. Add favorite photos during the trip and the Album can include the moments that made each restaurant, show, hotel, day, and surprise worth remembering.</p>
+          <ul class="memory-list">
+            <li>Attach selected photos to the whole trip, a specific day, or to a specific restaurant, hotel, show, or activity.</li>
+            <li>Highlight your favorite photos on the first page of the Memories Album.</li>
+            <li>Share the Memories Album with family and friends so they can live vicariously through you.</li>
           </ul>
+        </div>
+        <div class="memory-collage" aria-label="Photo memories keepsake preview">
+          <div class="memory-tile large"><img src="https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&w=900&q=82" alt="Family vacation memory by the water"><span class="memory-caption">Favorite moments</span></div>
+          <div class="memory-tile tall"><img src="https://images.unsplash.com/photo-1519985176271-adb1088fa94c?auto=format&fit=crop&w=500&q=82" alt="City vacation dinner memory"><span class="memory-caption">Dinner</span></div>
+          <div class="memory-tile wide"><img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=700&q=82" alt="Vacation keepsake scenery"><span class="memory-caption">Day highlights</span></div>
+          <div class="memory-tile wide"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=82" alt="Travel photo memories"><span class="memory-caption">Printable PDF</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" aria-label="Positioning statement">
+      <div class="shell">
+        <strong>Plan by talking, not clicking.</strong>
+        <span>A one-of-a-kind AI vacation assistant for the unforgettable vacation experience — family, priorities, budgets, options, reservations, and the actual daily flow. Easily managed by talking to the app, no clicking, no frustration.</span>
+        <aside class="hero-card band-preview" aria-label="TimeSyncher Vacation app preview">
+          <div class="phone">
+            <div class="phone-hero"><strong>Anniversary Escape</strong></div>
+            <div class="screen">
+              <div class="screen-row"><div class="icon">✈️</div><div><b>Flights compared</b><span>Best timing, bags, airport tradeoffs</span></div><em class="pill">Ready</em></div>
+              <div class="screen-row"><div class="icon">🏨</div><div><b>Hotel short list</b><span>Preferred stay + backup options</span></div><em class="pill">Sync</em></div>
+              <div class="screen-row"><div class="icon">🍽️</div><div><b>Daily rhythm</b><span>Dinners, shows, downtime, buffers</span></div><em class="pill">Calm</em></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="features" class="shell">
+      <div class="section-head">
+        <span class="kicker">Built for the vacation decision mess</span>
+        <h2>The assistant that unlocks the vacation you actually want.</h2>
+        <p>The excitement and anticipation will grow and grow as you plan your trip. TimeSyncher Vacation makes the planning process almost as much fun as the vacation itself.</p>
+      </div>
+      <div class="grid four">
+        <article class="card img-card">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=78" alt="Luxury resort pool and travel planning atmosphere">
+          <div class="card-body"><h3>FOMO filter</h3><p>Compare restaurants, tours, neighborhoods, flights, and hotels against what the family actually wants — not what the internet screams about.</p></div>
         </article>
-        <article class="card">
-          <h3>Typical outcomes</h3>
-          <ul>
-            <li>fewer missed calls</li>
-            <li>more consistent customer follow-up</li>
-            <li>clearer communication workflows</li>
-            <li>less manual coordination overhead</li>
-          </ul>
+        <article class="card img-card">
+          <img src="https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=900&q=78" alt="High-end city travel skyline">
+          <div class="card-body"><h3>Shared alignment</h3><p>Get spouses, family members, friends, and family travelers on the same page before the calendar fills with conflicting ideas.</p></div>
+        </article>
+        <article class="card img-card">
+          <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=900&q=78" alt="Premium hotel lobby">
+          <div class="card-body"><h3>Decision-ready details</h3><p>See the tradeoffs that matter: location, timing, cost, convenience, crowd level, effort, and whether the day still feels like a vacation.</p></div>
+        </article>
+        <article class="card img-card">
+          <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=900&q=78" alt="Traveler reviewing vacation plan">
+          <div class="card-body"><h3>Daily printouts</h3><p>Turn the final plan into beautiful day-by-day views with maps, timing, costs, reservations, selected photos, and the why behind each choice.</p></div>
         </article>
       </div>
     </section>
 
-    <section id="contact">
-      <div class="section-head">
-        <span class="section-tag">Contact</span>
-        <h2>Get in touch</h2>
-        <p>TimeSyncher is currently focused on practical pilot and small-business deployments.</p>
-      </div>
-      <div class="grid two">
-        <article class="card">
-          <h3>Business contact</h3>
-          <p>Email: <strong>admin@timesyncher.com</strong></p>
-          <p>Website: <strong>timesyncher.com</strong></p>
-          <p>Address: <strong>35 E. Horizon Ridge Pkwy, Suite 110 #1167, Henderson, NV 89002</strong></p>
-        </article>
-        <article class="card legal">
-          <h3>Policies</h3>
-          <p><a href="#privacy">Privacy Policy</a></p>
-          <p><a href="#terms">Terms of Service</a></p>
-        </article>
+    <section class="dark">
+      <div class="shell feature">
+        <div class="feature-copy">
+          <span class="kicker">Vacation intelligence</span>
+          <h2>Unlock unforgettable experiences, not just more options.</h2>
+          <div class="lux-img"><p class="quote">“The goal is not to pack the most into every day. The goal is to come home glad you went.”</p></div>
+          <p class="lede">TimeSyncher Vacation helps surface what turns a vacation into an unforgettable experience: quiet mornings, must-see shows, kid-friendly pacing, anniversary dinners, elder mobility, food preferences, shopping stops, downtime, and budget comfort.</p>
+          <div class="grid two">
+            <article class="card"><div class="card-body"><h3>Flights + hotels</h3><p>Shortlists with real decision tradeoffs: airport convenience, check-in timing, neighborhood fit, bag rules, room style, and transit friction.</p></div></article>
+            <article class="card"><div class="card-body"><h3>Restaurants + experiences</h3><p>Ranked options by day, vibe, location, reservation status, price confidence, and how each choice affects the rest of the day.</p></div></article>
+            <article class="card"><div class="card-body"><h3>Budget clarity</h3><p>Vacation-level targets for flights, hotel, restaurants, stores, and experiences — with under/over visibility before you commit.</p></div></article>
+            <article class="card"><div class="card-body"><h3>Travel companion</h3><p>Ask the plan questions in plain English and get answers grounded in the shared vacation context.</p></div></article>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section id="privacy">
+    <section id="how" class="shell">
       <div class="section-head">
-        <span class="section-tag">Privacy Policy</span>
-        <h2>Privacy Policy</h2>
-        <p>This is a simple public-facing privacy statement for vendor and customer trust review.</p>
+        <span class="kicker">How it works</span>
+        <h2>From scattered ideas to unforgettable experiences.</h2>
       </div>
-      <article class="card">
-        <p>TimeSyncher may collect contact information, communications data, and operational data needed to provide communications automation and related support services. We use this information to operate, improve, and support our services. We do not sell personal information. We may use service providers and infrastructure vendors to help operate our systems. If you have privacy-related questions, contact <strong>admin@timesyncher.com</strong>.</p>
-      </article>
+      <div class="grid three steps">
+        <article class="card"><div class="card-body step"><h3>1. Drop in the mess</h3><p>Forward reservations, paste links, add wish-list places, mention budget ranges, and capture what each traveler cares about.</p></div></article>
+        <article class="card"><div class="card-body step"><h3>2. Compare the real tradeoffs</h3><p>The app organizes candidates into flights, hotels, restaurants, stores, tours, music, transportation, and daily options.</p></div></article>
+        <article class="card"><div class="card-body step"><h3>3. Sync before departure</h3><p>Everyone sees the preferred plan, backup options, maps, timing, costs, and daily rhythm — with fewer last-minute arguments.</p></div></article>
+      </div>
     </section>
 
-    <section id="terms">
-      <div class="section-head">
-        <span class="section-tag">Terms of Service</span>
-        <h2>Terms of Service</h2>
-        <p>This is a simple public-facing terms stub suitable for an early business web presence.</p>
+    <section id="screenshots" class="dark">
+      <div class="shell">
+        <div class="section-head">
+          <span class="kicker">An easy, intuitive AI-assisted user interface</span>
+          <h2>One-of-a-kind vacation planning, made visual.</h2>
+          <p>Talk to the AI and create the initial day-to-day itineraries filled with the right things to do. Keep talking to it to change things, or easily click on the itinerary and add or move things around. See the highlights of Day 3’s example itinerary below, as well as the daily map of things to do that day.</p>
+        </div>
+        <div class="grid two">
+          <div class="screenshot">
+            <div class="appbar"><span>TimeSyncher Vacation</span><span>Shared Vacation View</span></div>
+            <div class="mock-window">
+              <div class="mock-top"><b>Day 3 • Theater District + Jazz Night</b></div>
+              <div class="mock-content">
+                <div class="itinerary-img"><img src="/itinerary-screen.jpg" alt="Day 3 TimeSyncher itinerary preview"></div>
+                <div class="mini-map"><img src="/central-park-map.jpg" alt="Central Park vacation map preview"></div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot">
+            <div class="appbar"><span>Decision Board</span><span>Hotels • Flights • Budget</span></div>
+            <div class="mock-window">
+              <div class="mock-top" style="background-image:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.72)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1300&q=80')"><b>Preferred Hotel Shortlist</b></div>
+              <div class="screen">
+                <div class="screen-row"><div class="icon">🏨</div><div><b>Upper West Side suite</b><span>Quiet, larger rooms, easy Lincoln Center logistics</span></div><em class="pill">Top</em></div>
+                <div class="screen-row"><div class="icon">🗽</div><div><b>Midtown luxury tower</b><span>Best for shows, weaker for quiet mornings</span></div><em class="pill">Alt</em></div>
+                <div class="screen-row"><div class="icon">💳</div><div><b>Vacation budget</b><span>$1,180 under target with current timeline</span></div><em class="pill">OK</em></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <article class="card">
-        <p>TimeSyncher provides communications automation and related support services for business use. Use of the service is subject to availability, configuration limits, and applicable law. Customers are responsible for lawful use, appropriate consent where required, and the accuracy of information they provide. Services may evolve over time as the product is improved. For service or legal questions, contact <strong>admin@timesyncher.com</strong>.</p>
-      </article>
+    </section>
+
+    <section id="pricing" class="shell">
+      <div class="section-head">
+        <span class="kicker">Full-vacation budgeting</span>
+        <h2>Know the real cost before the vacation starts.</h2>
+        <p>TimeSyncher Vacation builds a complete vacation budget across flights, hotel, meals, transportation, tickets, tours, shopping, fees, tips, and backup options — so your family can choose unforgettable experiences without budget surprises.</p>
+      </div>
+      <div class="grid three pricing">
+        <article class="card price-card"><h3>Spot hidden costs</h3><p>We surface the expenses that sneak up later.</p><ul><li>Resort fees, bags, taxis, tips</li><li>Deposits and cancellation windows</li><li>Meals, snacks, coffee, kid costs</li></ul></article>
+        <article class="card price-card popular"><h3>Find smarter tradeoffs</h3><p>The app's budgeting feature usually pays for itself, often 10X.</p><ul><li>Hotel choice cuts daily ride costs</li><li>Timing avoids surge pricing</li><li>Flights avoid bag and transfer fees</li></ul><span class="badge">10x value</span></article>
+        <article class="card price-card"><h3>Spend on what matters</h3><p>Protect the experiences your family remembers.</p><ul><li>Shift logistics money to must-do moments</li><li>Compare splurge vs. save choices</li><li>Keep calm backups if prices change</li></ul></article>
+      </div>
+    </section>
+
+    <section class="shell faq">
+      <div class="section-head">
+        <span class="kicker">FAQ</span>
+        <h2>Key questions.</h2>
+      </div>
+      <details open><summary>Is this another travel-planning app?</summary><p>No. TimeSyncher Vacation is a one-of-a-kind AI vacation assistant that helps your family unlock unforgettable experiences. It helps you decide what matters most, compare the real tradeoffs, budget the whole vacation, and protect the moments you will actually remember.</p></details>
+      <details><summary>Who is it for?</summary><p>Couples, families, groups, and multi-generational travelers who want a one-of-a-kind vacation without turning vacation planning into a second job.</p></details>
+      <details><summary>Does TimeSyncher book travel for me?</summary><p>No. The app helps organize and compare choices so you can book confidently.</p></details>
+      <details><summary>What happens to my travel data?</summary><p>We don’t sell your personal travel data or use it for anything unrelated to your vacation. We only use it to provide and support your plan. See the <a href="/privacy.html" style="color:var(--gold2);text-decoration:underline">Privacy Policy</a> for details.</p></details>
     </section>
   </main>
 
-  <footer class="footer shell">
-    <p><strong>TimeSyncher</strong> • AI assistant and communications automation for small businesses</p>
-    <p>35 E. Horizon Ridge Pkwy, Suite 110 #1167, Henderson, NV 89002 • admin@timesyncher.com</p>
+  <footer>
+    <div class="shell footer-grid">
+      <div>
+        <h3 class="font-cinzel" style="color:var(--gold2);margin-top:0">TimeSyncher Vacation</h3>
+        <p>One-of-a-kind AI vacation assistant that unlocks unforgettable experiences.</p>
+        <p>35 E. Horizon Ridge Pkwy, Suite 110 #1167, Henderson, NV 89002</p>
+      </div>
+      <div>
+        <h4 class="font-cinzel" style="color:var(--gold2)">Company</h4>
+        <a href="mailto:support@timesyncher.com">support@timesyncher.com</a>
+        <a href="/support.html">Customer Support</a>
+      </div>
+      <div>
+        <h4 class="font-cinzel" style="color:var(--gold2)">Legal</h4>
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+      </div>
+    </div>
+    <div class="shell fineprint">© 2026 TimeSyncher. All rights reserved. TimeSyncher Vacation is an early-stage consumer software product; features and pricing may change before general availability.</div>
   </footer>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step1Pill = document.getElementById('step1Pill');
+    const step2Pill = document.getElementById('step2Pill');
+    const continueBtn = document.getElementById('continueBtn');
+    const backBtn = document.getElementById('backBtn');
+    const payBtn = document.getElementById('payBtn');
+    const bump = document.getElementById('orderBump');
+    const photoMemories = document.getElementById('photoMemories');
+    const bumpRow = document.getElementById('bumpRow');
+    const photoRow = document.getElementById('photoRow');
+    const singleName = document.getElementById('singleName');
+    const singlePrice = document.getElementById('singlePrice');
+    const unlimitedName = document.getElementById('unlimitedName');
+    const unlimitedPrice = document.getElementById('unlimitedPrice');
+    const photoName = document.getElementById('photoName');
+    const photoPrice = document.getElementById('photoPrice');
+    const bumpTitle = document.getElementById('bumpTitle');
+    const bumpDescription = document.getElementById('bumpDescription');
+    const photoTitle = document.getElementById('photoTitle');
+    const photoDescription = document.getElementById('photoDescription');
+    const total = document.getElementById('total');
+    const tax = document.getElementById('tax');
+    const statusBox = document.getElementById('status');
+    const form = document.getElementById('orderForm');
+    const paymentElementMount = document.getElementById('paymentElement');
+    const videoBox = document.querySelector('.video-box');
+    const checkoutPanel = document.querySelector('.checkout-panel');
+
+    let stripe;
+    let elements;
+    let paymentElement;
+    let currentOrderBump = bump.checked;
+    let currentPhotoMemories = photoMemories.checked;
+    let paymentReady = false;
+    let stripeConfigPromise;
+    let paymentRequestId = 0;
+    let productConfig = {};
+
+    function money(cents) {
+      return '$' + (cents / 100).toFixed(0);
+    }
+
+    function productLabel(name) {
+      return String(name || '').replace(/ - /g, ' - ');
+    }
+
+    function activePhotoProduct() {
+      const photos = productConfig.products?.photoMemories || {};
+      return bump.checked ? (photos.unlimited || {}) : (photos.single || {});
+    }
+
+    function syncPhotoCopy() {
+      const photos = activePhotoProduct();
+      photoName.textContent = productLabel(photos.name || 'Photo Memories Keepsake');
+      photoPrice.textContent = '+' + money(photos.amount || 500);
+      photoRow.hidden = !photoMemories.checked;
+      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photos.amount || 500)}/year`;
+      photoDescription.textContent = photos.description || 'Include favorite photos in the printable vacation keepsake. Photos only for MVP.';
+    }
+
+    function applyProductCopy(config) {
+      productConfig = config || {};
+      const single = config.products?.single || {};
+      const unlimited = config.products?.unlimited || {};
+      singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
+      singlePrice.textContent = money(single.amount || 3700);
+      unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
+      unlimitedPrice.textContent = '+' + money(unlimited.amount || 2700);
+      bumpRow.hidden = !bump.checked;
+      bumpTitle.textContent = `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount || 2700)}`;
+      bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
+      syncPhotoCopy();
+    }
+
+    function formData() {
+      return Object.fromEntries(new FormData(form).entries());
+    }
+
+    function stripeCountryCode(country) {
+      const normalized = String(country || '').trim().toLowerCase();
+      const map = {
+        'united states': 'US',
+        'us': 'US',
+        'usa': 'US',
+        'canada': 'CA',
+        'ca': 'CA',
+        'united kingdom': 'GB',
+        'uk': 'GB',
+        'gb': 'GB',
+        'australia': 'AU',
+        'au': 'AU',
+      };
+      return map[normalized] || (normalized.length === 2 ? normalized.toUpperCase() : 'US');
+    }
+
+    function setStatus(message, isError = false) {
+      statusBox.textContent = message;
+      statusBox.style.borderColor = isError ? 'rgba(255,116,104,.55)' : 'rgba(98,214,207,.3)';
+      statusBox.style.background = isError ? 'rgba(255,116,104,.12)' : 'rgba(98,214,207,.1)';
+      statusBox.style.color = isError ? '#ffd5d1' : '#dffefa';
+      statusBox.classList.remove('hidden');
+    }
+
+    function hideStatus() {
+      statusBox.classList.add('hidden');
+    }
+
+    function lockVideoToStepOneHeight() {
+      if (window.matchMedia('(max-width: 920px)').matches) {
+        videoBox.style.height = '';
+        return;
+      }
+      if (!step1.classList.contains('hidden')) {
+        videoBox.style.height = checkoutPanel.getBoundingClientRect().height + 'px';
+      }
+    }
+
+    function showStep(n) {
+      const payment = n === 2;
+      step1.classList.toggle('hidden', payment);
+      step2.classList.toggle('hidden', !payment);
+      step1Pill.classList.toggle('active', !payment);
+      step2Pill.classList.toggle('active', payment);
+      step1Pill.setAttribute('aria-selected', String(!payment));
+      step2Pill.setAttribute('aria-selected', String(payment));
+      step1Pill.tabIndex = payment ? -1 : 0;
+      step2Pill.tabIndex = payment ? 0 : -1;
+      hideStatus();
+      if (!payment) requestAnimationFrame(lockVideoToStepOneHeight);
+    }
+
+    function updateTotal() {
+      const bumped = bump.checked;
+      const photos = photoMemories.checked;
+      const photoProduct = activePhotoProduct();
+      bumpRow.hidden = !bumped;
+      photoRow.hidden = !photos;
+      syncPhotoCopy();
+      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? (photoProduct.amount || 500) : 0);
+      total.textContent = money(cents);
+      tax.textContent = 'Calculated by Stripe';
+    }
+
+    async function loadStripeConfig() {
+      if (!stripeConfigPromise) {
+        stripeConfigPromise = fetch('/api/checkout-config')
+          .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) throw new Error(data.error || 'Stripe checkout is not configured yet.');
+            applyProductCopy(data);
+            return data;
+          });
+      }
+      return stripeConfigPromise;
+    }
+
+    async function preparePaymentElement() {
+      if (!form.reportValidity()) return false;
+      const requestId = ++paymentRequestId;
+      const requestedOrderBump = bump.checked;
+      const requestedPhotoMemories = photoMemories.checked;
+      if (stripe && elements && paymentElement && paymentReady && currentOrderBump === requestedOrderBump && currentPhotoMemories === requestedPhotoMemories) {
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay securely';
+        return true;
+      }
+      paymentReady = false;
+      payBtn.disabled = true;
+      payBtn.textContent = 'Preparing secure payment...';
+      paymentElementMount.innerHTML = '<div class="stripe-loading">Preparing Stripe checkout...</div>';
+
+      try {
+        const config = await loadStripeConfig();
+        stripe = stripe || Stripe(config.publishableKey);
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ...formData(), orderBump: requestedOrderBump, photoMemories: requestedPhotoMemories }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to create Stripe payment.');
+        if (requestId !== paymentRequestId || requestedOrderBump !== bump.checked || requestedPhotoMemories !== photoMemories.checked) {
+          return false;
+        }
+
+        if (paymentElement) paymentElement.unmount();
+        paymentElementMount.innerHTML = '';
+        elements = stripe.elements({
+          clientSecret: data.clientSecret,
+          appearance: {
+            theme: 'night',
+            variables: {
+              colorPrimary: '#f5d37b',
+              colorBackground: '#11100d',
+              colorText: '#fffaf0',
+              colorDanger: '#ff7468',
+              borderRadius: '13px',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            },
+          },
+        });
+        const currentFormData = formData();
+        paymentElement = elements.create('payment', {
+          layout: 'tabs',
+          defaultValues: {
+            billingDetails: {
+              name: `${currentFormData.firstName || ''} ${currentFormData.lastName || ''}`.trim(),
+              email: currentFormData.email || undefined,
+              phone: currentFormData.phone || undefined,
+              address: {
+                line1: currentFormData.address || undefined,
+                city: currentFormData.city || undefined,
+                state: currentFormData.state || undefined,
+                postal_code: currentFormData.zip || undefined,
+                country: stripeCountryCode(currentFormData.country),
+              },
+            },
+          },
+        });
+        paymentElement.mount('#paymentElement');
+        currentOrderBump = requestedOrderBump;
+        currentPhotoMemories = requestedPhotoMemories;
+        paymentReady = true;
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay securely';
+        total.textContent = money(data.amount);
+        tax.textContent = 'Calculated by Stripe';
+        return true;
+      } catch (error) {
+        if (requestId !== paymentRequestId || requestedOrderBump !== bump.checked || requestedPhotoMemories !== photoMemories.checked) {
+          return false;
+        }
+        paymentElementMount.innerHTML = '<div class="stripe-loading">Stripe checkout is not ready yet.</div>';
+        setStatus(error.message || 'Stripe checkout is not ready yet.', true);
+        payBtn.disabled = false;
+        payBtn.textContent = 'Retry secure payment';
+        return false;
+      }
+    }
+
+    async function goToStepTwo() {
+      if (!form.reportValidity()) return;
+      showStep(2);
+      window.scrollTo({ top: document.querySelector('.order-grid').offsetTop - 12, behavior: 'smooth' });
+      await preparePaymentElement();
+    }
+
+    continueBtn.addEventListener('click', goToStepTwo);
+    step2Pill.addEventListener('click', goToStepTwo);
+    step1Pill.addEventListener('click', () => showStep(1));
+    backBtn.addEventListener('click', () => showStep(1));
+    bump.addEventListener('change', async () => {
+      updateTotal();
+      if (!step2.classList.contains('hidden')) await preparePaymentElement();
+    });
+    photoMemories.addEventListener('change', async () => {
+      updateTotal();
+      if (!step2.classList.contains('hidden')) await preparePaymentElement();
+    });
+    payBtn.addEventListener('click', async () => {
+      if (!stripe || !elements || !paymentReady || currentOrderBump !== bump.checked || currentPhotoMemories !== photoMemories.checked) {
+        const ready = await preparePaymentElement();
+        if (!ready) return;
+      }
+      payBtn.disabled = true;
+      payBtn.textContent = 'Processing...';
+      hideStatus();
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/order-success.html`,
+          payment_method_data: {
+            billing_details: {
+              name: `${formData().firstName || ''} ${formData().lastName || ''}`.trim(),
+              email: formData().email,
+              phone: formData().phone,
+              address: {
+                line1: formData().address,
+                city: formData().city,
+                state: formData().state,
+                postal_code: formData().zip,
+                country: stripeCountryCode(formData().country),
+              },
+            },
+          },
+        },
+      });
+      if (error) {
+        setStatus(error.message || 'Payment was not completed.', true);
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay securely';
+      }
+    });
+    updateTotal();
+    requestAnimationFrame(lockVideoToStepOneHeight);
+    window.addEventListener('resize', lockVideoToStepOneHeight);
+  </script>
 </body>
 </html>

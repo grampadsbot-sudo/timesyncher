@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="TimeSyncher gold mark">
+  <defs>
+    <linearGradient id="g" x1="18" y1="12" x2="108" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff2b0"/>
+      <stop offset="0.42" stop-color="#d6a84f"/>
+      <stop offset="1" stop-color="#8d6420"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="64" cy="64" r="55" fill="none" stroke="url(#g)" stroke-width="8" opacity=".95"/>
+  <path d="M27 43h74M64 31v66" fill="none" stroke="url(#g)" stroke-width="10" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M38 86c16 14 36 14 52 0" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" opacity=".9"/>
+</svg>

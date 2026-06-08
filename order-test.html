@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>TimeSyncher Vacation Test Order Form</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta property="og:title" content="TimeSyncher Vacation" />
+  <meta property="og:description" content="Test checkout page for TimeSyncher Vacation." />
+  <meta property="og:image" content="/timesyncher-social-card.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;600;700;800;900&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050505;
+      --card: rgba(13, 12, 10, .86);
+      --card2: rgba(255,255,255,.055);
+      --gold: #b8892e;
+      --gold2: #f5d37b;
+      --muted: #c7bca4;
+      --line: rgba(245,211,123,.24);
+      --white: #fffaf0;
+      --teal: #62d6cf;
+      --danger: #ff7468;
+      --shadow: 0 30px 90px rgba(0,0,0,.48);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(245,211,123,.13), transparent 34rem),
+        linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.92)),
+        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=82') center/cover fixed,
+        var(--bg);
+      color: var(--white);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: rgba(0,0,0,.55);
+      z-index: -1;
+    }
+    a { color: inherit; }
+    .shell { width: min(1500px, calc(100% - 48px)); margin: 0 auto; }
+    header { padding: 18px 0 10px; text-align: center; background: rgba(5,5,5,.72); border-bottom: 1px solid var(--line); backdrop-filter: blur(16px); }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--gold2); font: 700 clamp(1.35rem, 3vw, 2.35rem)/1 Cinzel, serif; letter-spacing: .18em; text-transform: uppercase; text-decoration: none; }
+    .brand img { width: clamp(30px, 5vw, 46px); height: clamp(30px, 5vw, 46px); filter: drop-shadow(0 0 18px rgba(245,211,123,.28)); }
+    .brand-sub { margin: 6px 0 0; color: var(--muted); text-transform: uppercase; letter-spacing: .38em; font-size: .86rem; font-weight: 800; }
+    .test-ribbon { display: inline-flex; gap: 8px; align-items: center; margin-top: 14px; padding: 7px 12px; border: 1px solid rgba(98,214,207,.45); border-radius: 999px; color: #d9fffb; background: rgba(98,214,207,.11); font-size: .76rem; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; }
+    main { padding: 34px 0 72px; }
+    .hero { text-align: center; margin: 0 auto 28px; max-width: 980px; }
+    .kicker { color: var(--gold2); text-transform: uppercase; letter-spacing: .22em; font-size: .76rem; font-weight: 900; }
+    h1 { margin: 14px 0 12px; font: 700 clamp(2.2rem, 6vw, 5rem)/.92 Cinzel, serif; letter-spacing: -.045em; }
+    .lede { margin: 0 auto; max-width: 780px; color: #e7ddc7; font: 500 clamp(1.02rem, 2vw, 1.28rem)/1.55 "Playfair Display", serif; }
+    .order-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(410px, 1fr); gap: 24px; align-items: start; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 30px; box-shadow: var(--shadow); overflow: hidden; backdrop-filter: blur(18px); }
+    .video-box { min-height: 500px; display: grid; grid-template-rows: 1fr auto; background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.76)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80') center/cover; }
+    .play { place-self: center; width: 86px; height: 86px; border-radius: 999px; border: 1px solid rgba(245,211,123,.5); display: grid; place-items: center; background: rgba(0,0,0,.55); box-shadow: 0 0 50px rgba(245,211,123,.2); font-size: 1.8rem; color: var(--gold2); }
+    .video-copy { padding: 20px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.76)); }
+    .video-copy h2 { margin: 0 0 8px; font: 700 clamp(1.35rem, 2.2vw, 2rem)/1 Cinzel, serif; color: var(--gold2); }
+    .video-copy p { margin: 0; color: #e5d7bd; font-size: .95rem; line-height: 1.42; }
+    .form-head { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); }
+    .form-head h2 { margin: 0 0 5px; font: 700 1.34rem/1.05 Cinzel, serif; color: var(--gold2); }
+    .form-head p { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.3; }
+    .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 13px; padding: 4px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.035); }
+    .step-pill { border: 1px solid transparent; border-radius: 11px; padding: 9px 12px; color: var(--muted); background: transparent; font-size: .78rem; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; }
+    .step-pill.active { color: #080604; background: linear-gradient(135deg, var(--gold2), var(--gold)); border-color: transparent; }
+    .step-pill:focus-visible { outline: 2px solid var(--gold2); outline-offset: 2px; }
+    form { padding: 16px 18px 18px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { display: grid; gap: 5px; color: #eadfca; font-size: .76rem; font-weight: 800; }
+    label.full { grid-column: 1 / -1; }
+    input, select { width: 100%; min-height: 40px; border-radius: 11px; border: 1px solid rgba(245,211,123,.26); background: rgba(255,255,255,.075); color: white; padding: 9px 11px; font: 600 .88rem/1 Inter, sans-serif; outline: none; }
+    input::placeholder { color: rgba(255,255,255,.38); }
+    input:focus, select:focus { border-color: var(--gold2); box-shadow: 0 0 0 3px rgba(245,211,123,.14); }
+    select option { color: #111; }
+    .hidden { display: none !important; }
+    .order-summary { margin: 16px 0; border: 1px solid rgba(245,211,123,.26); border-radius: 18px; overflow: hidden; background: rgba(255,255,255,.045); }
+    .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 13px 14px; color: #e9dec8; border-bottom: 1px solid rgba(245,211,123,.14); }
+    .summary-row[hidden] { display: none !important; }
+    .summary-row:last-child { border-bottom: 0; }
+    .summary-row.total { font-size: 1.15rem; font-weight: 900; color: white; background: rgba(245,211,123,.08); }
+    .bump { margin: 16px 0; border: 2px dashed rgba(245,211,123,.48); border-radius: 20px; padding: 14px; background: rgba(245,211,123,.08); }
+    .bump label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+    .bump input { width: 20px; height: 20px; min-height: 20px; margin-top: 2px; accent-color: var(--gold2); }
+    .bump b { display: block; color: var(--gold2); font-size: .98rem; }
+    .bump span { display: block; color: #e8dbc2; font-weight: 500; line-height: 1.42; margin-top: 3px; }
+    .stripe-mount { min-height: 128px; border-radius: 18px; border: 1px solid rgba(98,214,207,.38); background: rgba(98,214,207,.08); padding: 16px; display: grid; gap: 10px; align-content: center; color: #dcfffc; }
+    .stripe-mount strong { color: var(--teal); }
+    #paymentElement { min-height: 92px; }
+    .stripe-loading { color: #dcfffc; line-height: 1.45; }
+    .cards { display: flex; gap: 7px; flex-wrap: wrap; }
+    .card-chip { border: 1px solid rgba(255,255,255,.2); border-radius: 8px; padding: 5px 8px; font-size: .7rem; color: #efe6d3; background: rgba(0,0,0,.26); }
+    .button-row { display: flex; gap: 10px; margin-top: 12px; }
+    button { appearance: none; border: 0; cursor: pointer; border-radius: 999px; min-height: 44px; padding: 11px 16px; font-weight: 900; font-size: .9rem; }
+    .primary { flex: 1; background: linear-gradient(135deg, var(--gold2), var(--gold)); color: #070604; box-shadow: 0 16px 34px rgba(245,211,123,.22); }
+    .secondary { background: rgba(255,255,255,.08); color: var(--gold2); border: 1px solid var(--line); }
+    .notice { margin-top: 13px; color: #bfb49d; font-size: .78rem; line-height: 1.45; }
+    .status { margin-top: 14px; border-radius: 14px; padding: 12px; background: rgba(98,214,207,.1); color: #dffefa; border: 1px solid rgba(98,214,207,.3); font-size: .88rem; line-height: 1.45; }
+    .trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .trust div { border: 1px solid rgba(245,211,123,.18); border-radius: 16px; padding: 12px; background: rgba(0,0,0,.25); color: #d9cdb5; font-size: .82rem; line-height: 1.35; }
+    .trust b { display: block; color: var(--gold2); margin-bottom: 4px; }
+    footer { padding: 0 0 38px; text-align: center; color: #a99e86; font-size: .82rem; }
+    footer a { color: #e8dcc3; }
+    @media (max-width: 920px) {
+      .shell { width: min(1180px, calc(100% - 32px)); }
+      main { padding-top: 24px; }
+      .order-grid { grid-template-columns: 1fr; }
+      .video-box { min-height: 360px; }
+      .fields { grid-template-columns: 1fr; }
+      .trust { grid-template-columns: 1fr; }
+      .button-row { flex-direction: column; }
+      .secondary { order: 2; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <a class="brand" href="/"><img src="/timesyncher-logo-gold.png" alt="" aria-hidden="true" />TimeSyncher</a>
+      <div class="brand-sub">Vacation</div>
+      <div class="test-ribbon">Private test page · not linked from the live site</div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="kicker">Two-step order form test</div>
+      <h1 id="page-title">Make your next vacation feel calm before it starts.</h1>
+      <p class="lede">Placeholder sales-video/order page for the low-ticket TimeSyncher Vacation offer. This lets us get the checkout flow working before moving it onto the main homepage.</p>
+    </section>
+
+    <section class="order-grid" aria-label="Sales video and order form">
+      <div class="panel video-box">
+        <div class="play" aria-label="Sales video placeholder">▶</div>
+        <div class="video-copy">
+          <h2>Sales video placeholder</h2>
+          <p>Drop the Russell Brunson-style VSL here: the vacation chaos, the TimeSyncher mechanism, what they get, why it pays for itself, and the simple invitation to start.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="form-head">
+          <h2>Start your TimeSyncher Vacation</h2>
+          <p>Step 1 captures contact details. Step 2 will mount Stripe test-mode payment once the backend is wired.</p>
+          <div class="steps" role="tablist" aria-label="Checkout steps">
+            <button type="button" class="step-pill active" id="step1Pill" role="tab" aria-selected="true" aria-controls="step1">Step 1: Contact Info</button>
+            <button type="button" class="step-pill" id="step2Pill" role="tab" aria-selected="false" aria-controls="step2" tabindex="-1">Step 2: Payment Info</button>
+          </div>
+        </div>
+
+        <form id="orderForm">
+          <div id="step1" role="tabpanel" aria-labelledby="step1Pill">
+            <div class="fields">
+              <label>First name<input name="firstName" autocomplete="given-name" placeholder="Craig" required /></label>
+              <label>Last name<input name="lastName" autocomplete="family-name" placeholder="Doe" required /></label>
+              <label class="full">Email<input type="email" name="email" autocomplete="email" placeholder="you@example.com" required /></label>
+              <label>Phone<input name="phone" autocomplete="tel" placeholder="(555) 123-4567" /></label>
+              <label>Vacation date<input type="date" name="vacationDate" /></label>
+              <label class="full">Billing address<input name="address" autocomplete="billing street-address" placeholder="Street address" /></label>
+              <label>City<input name="city" autocomplete="billing address-level2" placeholder="Las Vegas" /></label>
+              <label>State<input name="state" autocomplete="billing address-level1" placeholder="NV" /></label>
+              <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="89101" /></label>
+              <label>Country<select name="country" autocomplete="billing country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option></select></label>
+            </div>
+            <div class="button-row">
+              <button type="button" class="primary" id="continueBtn">Go to step two</button>
+            </div>
+          </div>
+
+          <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
+            <div class="order-summary" aria-label="Order summary">
+              <div class="summary-row"><span id="singleName">TimeSyncher Vacation – Single</span><strong id="singlePrice">$37</strong></div>
+              <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">Upgrade to TimeSyncher Vacation – Unlimited</span><strong id="unlimitedPrice">+$27</strong></div>
+              <div class="summary-row" id="photoRow" hidden><span id="photoName">Photo Memories Keepsake</span><strong id="photoPrice">+$5</strong></div>
+              <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
+              <div class="summary-row total"><span>Total today</span><strong id="total">$37</strong></div>
+            </div>
+
+            <div class="bump">
+              <label>
+                <input type="checkbox" id="orderBump" />
+                <span><b id="bumpTitle">Upgrade to TimeSyncher Vacation – Unlimited for +$27</b><span id="bumpDescription">The order bump moves the setup from the Single product to the Unlimited subscription product.</span></span>
+              </label>
+            </div>
+
+            <div class="bump">
+              <label>
+                <input type="checkbox" id="photoMemories" />
+                <span><b id="photoTitle">Add Photo Memories Keepsake for +$5/year</b><span id="photoDescription">Include up to 100 favorite photos in the printable vacation keepsake. Photos only for MVP.</span></span>
+              </label>
+            </div>
+
+            <div class="stripe-mount" id="stripeMount">
+              <strong>Secure payment</strong>
+              <div id="paymentElement"><div class="stripe-loading">Loading Stripe test checkout…</div></div>
+            </div>
+
+            <div class="button-row">
+              <button type="button" class="secondary" id="backBtn">Back to Step 1</button>
+              <button type="button" class="primary" id="payBtn">Pay securely</button>
+            </div>
+            <div class="notice">Test page only. Use Stripe test cards until Stripe approval/live mode are ready. Do not enter real card data here.</div>
+          </div>
+
+          <div id="status" class="status hidden"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="trust" aria-label="Checkout notes">
+      <div><b>Private test lane</b>This page is published only so we can browser-test and iterate. It is not linked from the public homepage.</div>
+      <div><b>Stripe test mode first</b>We can use test keys/cards and webhook proof before enabling real charges.</div>
+      <div><b>Main site stays clean</b>Once this works and looks right, we move the polished section onto the homepage.</div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    <a href="/">Back to TimeSyncher.com</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a>
+  </footer>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step1Pill = document.getElementById('step1Pill');
+    const step2Pill = document.getElementById('step2Pill');
+    const continueBtn = document.getElementById('continueBtn');
+    const backBtn = document.getElementById('backBtn');
+    const payBtn = document.getElementById('payBtn');
+    const bump = document.getElementById('orderBump');
+    const photoMemories = document.getElementById('photoMemories');
+    const bumpRow = document.getElementById('bumpRow');
+    const photoRow = document.getElementById('photoRow');
+    const singleName = document.getElementById('singleName');
+    const singlePrice = document.getElementById('singlePrice');
+    const unlimitedName = document.getElementById('unlimitedName');
+    const unlimitedPrice = document.getElementById('unlimitedPrice');
+    const photoName = document.getElementById('photoName');
+    const photoPrice = document.getElementById('photoPrice');
+    const bumpTitle = document.getElementById('bumpTitle');
+    const bumpDescription = document.getElementById('bumpDescription');
+    const photoTitle = document.getElementById('photoTitle');
+    const photoDescription = document.getElementById('photoDescription');
+    const total = document.getElementById('total');
+    const tax = document.getElementById('tax');
+    const statusBox = document.getElementById('status');
+    const form = document.getElementById('orderForm');
+    const paymentElementMount = document.getElementById('paymentElement');
+    const videoBox = document.querySelector('.video-box');
+    const checkoutPanel = document.querySelector('.order-grid > .panel:last-child');
+
+    let stripe;
+    let elements;
+    let paymentElement;
+    let currentOrderBump = bump.checked;
+    let currentPhotoMemories = photoMemories.checked;
+    let paymentReady = false;
+    let stripeConfigPromise;
+    let paymentRequestId = 0;
+
+    function money(cents) {
+      return '$' + (cents / 100).toFixed(0);
+    }
+
+    function productLabel(name) {
+      return String(name || '').replace(/ - /g, ' – ');
+    }
+
+    let productConfig = {};
+
+    function activePhotoProduct() {
+      const photos = productConfig.products?.photoMemories || {};
+      return bump.checked ? (photos.unlimited || {}) : (photos.single || {});
+    }
+
+    function syncPhotoCopy() {
+      const photos = activePhotoProduct();
+      photoName.textContent = productLabel(photos.name || 'Photo Memories Keepsake');
+      photoPrice.textContent = '+' + money(photos.amount || 500);
+      photoRow.hidden = !photoMemories.checked;
+      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photos.amount || 500)}/year`;
+      photoDescription.textContent = photos.description || 'Include favorite photos in the printable vacation keepsake. Photos only for MVP.';
+    }
+
+    function applyProductCopy(config) {
+      productConfig = config || {};
+      const single = config.products?.single || {};
+      const unlimited = config.products?.unlimited || {};
+      singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
+      singlePrice.textContent = money(single.amount || 3700);
+      unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
+      unlimitedPrice.textContent = '+' + money(unlimited.amount || 2700);
+      bumpRow.hidden = !bump.checked;
+      bumpTitle.textContent = `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount || 2700)}`;
+      bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
+      syncPhotoCopy();
+    }
+
+    function formData() {
+      return Object.fromEntries(new FormData(form).entries());
+    }
+
+    function stripeCountryCode(country) {
+      const normalized = String(country || '').trim().toLowerCase();
+      const map = {
+        'united states': 'US',
+        'us': 'US',
+        'usa': 'US',
+        'canada': 'CA',
+        'ca': 'CA',
+        'united kingdom': 'GB',
+        'uk': 'GB',
+        'gb': 'GB',
+        'australia': 'AU',
+        'au': 'AU',
+      };
+      return map[normalized] || (normalized.length === 2 ? normalized.toUpperCase() : 'US');
+    }
+
+    function setStatus(message, isError = false) {
+      statusBox.textContent = message;
+      statusBox.style.borderColor = isError ? 'rgba(255,116,104,.55)' : 'rgba(98,214,207,.3)';
+      statusBox.style.background = isError ? 'rgba(255,116,104,.12)' : 'rgba(98,214,207,.1)';
+      statusBox.style.color = isError ? '#ffd5d1' : '#dffefa';
+      statusBox.classList.remove('hidden');
+    }
+
+    function hideStatus() {
+      statusBox.classList.add('hidden');
+    }
+
+    function lockVideoToStepOneHeight() {
+      if (window.matchMedia('(max-width: 920px)').matches) {
+        videoBox.style.height = '';
+        return;
+      }
+      if (!step1.classList.contains('hidden')) {
+        videoBox.style.height = checkoutPanel.getBoundingClientRect().height + 'px';
+      }
+    }
+
+    function showStep(n) {
+      const payment = n === 2;
+      step1.classList.toggle('hidden', payment);
+      step2.classList.toggle('hidden', !payment);
+      step1Pill.classList.toggle('active', !payment);
+      step2Pill.classList.toggle('active', payment);
+      step1Pill.setAttribute('aria-selected', String(!payment));
+      step2Pill.setAttribute('aria-selected', String(payment));
+      step1Pill.tabIndex = payment ? -1 : 0;
+      step2Pill.tabIndex = payment ? 0 : -1;
+      hideStatus();
+      if (!payment) requestAnimationFrame(lockVideoToStepOneHeight);
+    }
+
+    function updateTotal() {
+      const bumped = bump.checked;
+      const photos = photoMemories.checked;
+      const photoProduct = activePhotoProduct();
+      bumpRow.hidden = !bumped;
+      photoRow.hidden = !photos;
+      syncPhotoCopy();
+      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? (photoProduct.amount || 500) : 0);
+      total.textContent = money(cents);
+      tax.textContent = 'Calculated by Stripe';
+    }
+
+    async function loadStripeConfig() {
+      if (!stripeConfigPromise) {
+        stripeConfigPromise = fetch('/api/checkout-config')
+          .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) throw new Error(data.error || 'Stripe checkout is not configured yet.');
+            applyProductCopy(data);
+            return data;
+          });
+      }
+      return stripeConfigPromise;
+    }
+
+    async function preparePaymentElement() {
+      if (!form.reportValidity()) return false;
+      const requestId = ++paymentRequestId;
+      const requestedOrderBump = bump.checked;
+      const requestedPhotoMemories = photoMemories.checked;
+      if (stripe && elements && paymentElement && paymentReady && currentOrderBump === requestedOrderBump && currentPhotoMemories === requestedPhotoMemories) {
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay securely';
+        return true;
+      }
+      paymentReady = false;
+      payBtn.disabled = true;
+      payBtn.textContent = 'Preparing secure payment…';
+      paymentElementMount.innerHTML = '<div class="stripe-loading">Preparing Stripe test checkout…</div>';
+
+      try {
+        const config = await loadStripeConfig();
+        stripe = stripe || Stripe(config.publishableKey);
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ...formData(), orderBump: requestedOrderBump, photoMemories: requestedPhotoMemories }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to create Stripe payment.');
+        if (requestId !== paymentRequestId || requestedOrderBump !== bump.checked || requestedPhotoMemories !== photoMemories.checked) {
+          return false;
+        }
+
+        if (paymentElement) paymentElement.unmount();
+        paymentElementMount.innerHTML = '';
+        elements = stripe.elements({
+          clientSecret: data.clientSecret,
+          appearance: {
+            theme: 'night',
+            variables: {
+              colorPrimary: '#f5d37b',
+              colorBackground: '#11100d',
+              colorText: '#fffaf0',
+              colorDanger: '#ff7468',
+              borderRadius: '13px',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            },
+          },
+        });
+        const currentFormData = formData();
+        paymentElement = elements.create('payment', {
+          layout: 'tabs',
+          defaultValues: {
+            billingDetails: {
+              name: `${currentFormData.firstName || ''} ${currentFormData.lastName || ''}`.trim(),
+              email: currentFormData.email || undefined,
+              phone: currentFormData.phone || undefined,
+              address: {
+                line1: currentFormData.address || undefined,
+                city: currentFormData.city || undefined,
+                state: currentFormData.state || undefined,
+                postal_code: currentFormData.zip || undefined,
+                country: stripeCountryCode(currentFormData.country),
+              },
+            },
+          },
+        });
+        paymentElement.mount('#paymentElement');
+        currentOrderBump = requestedOrderBump;
+        currentPhotoMemories = requestedPhotoMemories;
+        paymentReady = true;
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay securely';
+        total.textContent = money(data.amount);
+        tax.textContent = 'Calculated by Stripe';
+        return true;
+      } catch (error) {
+        if (requestId !== paymentRequestId || requestedOrderBump !== bump.checked || requestedPhotoMemories !== photoMemories.checked) {
+          return false;
+        }
+        paymentElementMount.innerHTML = '<div class="stripe-loading">Stripe test checkout is not ready yet.</div>';
+        setStatus(error.message || 'Stripe checkout is not ready yet.', true);
+        payBtn.disabled = false;
+        payBtn.textContent = 'Retry secure payment';
+        return false;
+      }
+    }
+
+    async function goToStepTwo() {
+      if (!form.reportValidity()) return;
+      showStep(2);
+      window.scrollTo({ top: document.querySelector('.order-grid').offsetTop - 12, behavior: 'smooth' });
+      await preparePaymentElement();
+    }
+
+    continueBtn.addEventListener('click', goToStepTwo);
+    step2Pill.addEventListener('click', goToStepTwo);
+    step1Pill.addEventListener('click', () => showStep(1));
+    backBtn.addEventListener('click', () => showStep(1));
+    bump.addEventListener('change', async () => {
+      updateTotal();
+      if (!step2.classList.contains('hidden')) await preparePaymentElement();
+    });
+    photoMemories.addEventListener('change', async () => {
+      updateTotal();
+      if (!step2.classList.contains('hidden')) await preparePaymentElement();
+    });
+    payBtn.addEventListener('click', async () => {
+      if (!stripe || !elements || !paymentReady || currentOrderBump !== bump.checked || currentPhotoMemories !== photoMemories.checked) {
+        const ready = await preparePaymentElement();
+        if (!ready) return;
+      }
+      payBtn.disabled = true;
+      payBtn.textContent = 'Processing…';
+      hideStatus();
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/order-success.html`,
+          payment_method_data: {
+            billing_details: {
+              name: `${formData().firstName || ''} ${formData().lastName || ''}`.trim(),
+              email: formData().email,
+              phone: formData().phone,
+              address: {
+                line1: formData().address,
+                city: formData().city,
+                state: formData().state,
+                postal_code: formData().zip,
+                country: stripeCountryCode(formData().country),
+              },
+            },
+          },
+        },
+      });
+      if (error) {
+        setStatus(error.message || 'Payment was not completed.', true);
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay securely';
+      }
+    });
+    updateTotal();
+    requestAnimationFrame(lockVideoToStepOneHeight);
+    window.addEventListener('resize', lockVideoToStepOneHeight);
+  </script>
+</body>
+</html>

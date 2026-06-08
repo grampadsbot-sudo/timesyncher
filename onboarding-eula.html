@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeSyncher Onboarding — EULA Acceptance</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="TimeSyncher" />
+  <meta property="og:image" content="https://www.timesyncher.com/timesyncher-social-card.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:image" content="https://www.timesyncher.com/timesyncher-social-card.png" />
+  <meta property="og:title" content="TimeSyncher Onboarding — EULA Acceptance" />
+  <meta property="og:description" content="TimeSyncher Vacation" />
+  <meta property="og:url" content="https://www.timesyncher.com/onboarding-eula.html" />
+  <style>
+    :root { --bg:#0b1020; --card:#111a31; --line:#2b3758; --text:#eef3ff; --muted:#b8c7e6; --accent:#7dd3fc; --ok:#34d399; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,var(--bg),#121a31);color:var(--text);line-height:1.55}.shell{max-width:1080px;margin:auto;padding:32px 18px}.card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.11);border-radius:22px;padding:22px;margin:18px 0;box-shadow:0 20px 60px rgba(0,0,0,.24)}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:0 0 12px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pill{display:inline-block;background:rgba(125,211,252,.12);border:1px solid rgba(125,211,252,.25);padding:6px 10px;border-radius:999px;color:var(--accent);font-size:.85rem}.eula{white-space:pre-wrap;max-height:460px;overflow:auto;background:#07101f;border:1px solid var(--line);padding:18px;border-radius:16px}.check{display:flex;gap:10px;align-items:flex-start}.btn{border:0;border-radius:999px;padding:13px 18px;font-weight:800;cursor:pointer}.primary{background:linear-gradient(135deg,var(--accent),#a78bfa);color:#07101f}.secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.12)}input[type=text]{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:#07101f;color:var(--text)}pre{white-space:pre-wrap;overflow:auto}.actions{display:flex;gap:12px;flex-wrap:wrap}@media(max-width:800px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body><div id="app" class="shell">
+  <span class="pill">Hosted onboarding acceptance · local scaffold</span>
+  <h1>Review and accept the TimeSyncher EULA</h1>
+  <p class="muted">This page shows the current client setup, Google access policy, and exact EULA version before acceptance. Acceptance creates a receipt hash and downloadable acceptance copy.</p>
+  <section class="grid">
+    <div class="card"><h2>Client</h2><p id="client"></p><p id="contact" class="muted"></p><p>EULA version: <strong id="version"></strong></p></div>
+    <div class="card"><h2>Selected functionality</h2><ul id="features"></ul></div>
+  </section>
+  <section class="card"><h2>Google/OAuth policy snapshot</h2><pre id="google"></pre></section>
+  <section class="card"><h2>Full EULA text</h2><div id="eula" class="eula"></div></section>
+  <form id="accept-form" class="card">
+    <h2>Accept EULA</h2>
+    <label>Typed name / authorized signer<input id="acceptedByName" type="text" required placeholder="Your full name" /></label>
+    <p class="check"><input id="agree" type="checkbox" required /> <span>I have read and agree to the TimeSyncher EULA shown above, including the Google Workspace/OAuth and AI/LLM risk terms.</span></p>
+    <button class="btn primary" type="submit">Accept and generate receipt</button>
+  </form>
+  <section id="result" class="card" hidden>
+    <h2>Acceptance receipt generated</h2><p class="muted">For this local scaffold, the receipt is generated in-browser. GA backend should store this server-side and gate activation on the stored receipt hash.</p>
+    <div class="actions"><button id="download-json" class="btn secondary">Download receipt JSON</button><button id="download-copy" class="btn secondary">Download PDF-ready copy HTML</button><button id="print-copy" class="btn secondary">Print / Save as PDF</button></div>
+    <pre id="receipt"></pre>
+  </section>
+</div><script type="module" src="/src/onboarding/eula-page.mjs"></script></body></html>

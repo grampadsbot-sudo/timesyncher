@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>TimeSyncher Vacation</title>
+  <style>
+    :root { --ink: #111827; --muted: #6b7280; --gold: #f5d37b; --panel: #ffffff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: #f9fafb; }
+    main { min-height: 100vh; display: grid; grid-template-columns: minmax(420px, 1.15fr) minmax(360px, .85fr); }
+    .brand { display: flex; align-items: center; justify-content: center; padding: 48px; background: radial-gradient(circle at 30% 20%, rgba(245,211,123,.14), transparent 34%), linear-gradient(135deg, #0b1220, #111827 60%, #070b12); color: white; text-align: center; }
+    .brand-inner { max-width: 620px; }
+    .logo { font-size: clamp(34px, 5vw, 58px); font-weight: 900; letter-spacing: 0; line-height: 1.05; }
+    .tagline { margin: 28px 0 12px; font-size: clamp(28px, 4vw, 44px); line-height: 1.08; font-weight: 900; text-transform: lowercase; }
+    .description { margin: 0; color: rgba(255,255,255,.64); font-size: 16px; line-height: 1.7; }
+    .auth { display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
+    .card { width: 100%; max-width: 410px; border: 1px solid #e5e7eb; border-radius: 20px; background: var(--panel); padding: 36px 32px; box-shadow: 0 2px 16px rgba(0,0,0,.06); }
+    h1 { margin: 0 0 4px; font-size: 24px; line-height: 1.2; }
+    .sub { margin: 0 0 26px; color: #9ca3af; font-size: 14px; }
+    label { display: block; margin: 0 0 6px; color: #374151; font-size: 13px; font-weight: 700; }
+    input { width: 100%; min-height: 44px; margin: 0 0 16px; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; color: var(--ink); font: inherit; }
+    button, .button { width: 100%; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: var(--ink); color: white; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .note { margin: 18px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; }
+      .brand { min-height: 42vh; padding: 36px 22px; }
+      .auth { padding: 28px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="brand" aria-label="TimeSyncher Vacation">
+      <div class="brand-inner">
+        <div class="logo">TimeSyncher Vacation</div>
+        <div class="tagline">your trips. your plan.</div>
+        <p class="description">Plan vacations collaboratively with interactive maps, budgets, and real-time sync.</p>
+      </div>
+    </section>
+    <section class="auth" aria-label="Sign in">
+      <div class="card">
+        <h1>Sign In</h1>
+        <p class="sub">Welcome back</p>
+        <form onsubmit="event.preventDefault();">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="your@email.com" />
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+          <button type="submit">Sign In</button>
+        </form>
+        <p class="note">Vacation onboarding does not require signing in here. Use the tokenized TimeSyncher Vacation link from your purchase email or success page.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

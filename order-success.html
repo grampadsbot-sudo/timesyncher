@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Start TimeSyncher Vacation Onboarding</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@400;700;900&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --black:#050505; --gold:#f5d37b; --line:rgba(245,211,123,.28); --muted:#cfc2a9; --sea:#5fd8d4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, rgba(245,211,123,.16), transparent 34rem), #050505; color: #fffaf0; font-family: Inter, sans-serif; line-height: 1.55; }
+    .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0; }
+    .card { border: 1px solid var(--line); border-radius: 24px; padding: clamp(24px, 5vw, 44px); background: rgba(18,16,12,.84); box-shadow: 0 30px 90px rgba(0,0,0,.42); }
+    .logo { width: 64px; filter: drop-shadow(0 0 20px rgba(245,211,123,.28)); }
+    h1 { margin: 18px 0 12px; color: var(--gold); font: 800 clamp(2rem, 7vw, 4.1rem)/.95 Cinzel, serif; }
+    h2 { margin: 0 0 10px; color: var(--gold); font: 800 1.3rem/1.1 Cinzel, serif; }
+    p { color: #e6dbc4; font: 500 1.08rem/1.6 "Playfair Display", serif; }
+    .meta { margin: 18px 0; border-radius: 18px; background: rgba(255,255,255,.06); padding: 14px; color: var(--muted); font-size: .94rem; word-break: break-word; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+    .choice { border: 1px solid rgba(245,211,123,.22); border-radius: 20px; padding: 18px; background: rgba(255,255,255,.045); }
+    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    a.button, button.button { appearance: none; display: inline-flex; align-items: center; justify-content: center; min-height: 46px; border: 0; cursor: pointer; color: #090704; background: linear-gradient(135deg, #f5d37b, #b8892e); border-radius: 999px; padding: 12px 17px; text-decoration: none; font-weight: 900; font-family: Inter, sans-serif; }
+    a.secondary { color: var(--gold); background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+    .status { color: #dffefa; border: 1px solid rgba(95,216,212,.3); background: rgba(95,216,212,.1); border-radius: 16px; padding: 13px 14px; }
+    .hidden { display: none !important; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .shell { padding-top: 24px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="card">
+      <img class="logo" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
+      <h1>Purchase confirmed</h1>
+      <p>Let's get started with TimeSyncher Vacation. If you don't have the app already, you need to install Telegram to get started.</p>
+      <div class="meta" id="meta">Loading onboarding session...</div>
+      <div class="status hidden" id="status"></div>
+
+      <section class="hidden" id="choices" aria-label="Telegram onboarding">
+        <div class="choice">
+          <h2>Install Telegram</h2>
+          <div class="button-row">
+            <a class="button secondary" id="iosInstall" href="#">Install on iPhone/iPad</a>
+            <a class="button secondary" id="androidInstall" href="#">Install on Android</a>
+            <a class="button secondary" id="desktopInstall" href="#">Install on Mac</a>
+          </div>
+        </div>
+        <div class="choice">
+          <h2>Start Your TimeSyncher Vacation Planning</h2>
+          <p>Click the button below to launch your TimeSyncher Vacation Telegram conversation.</p>
+          <div class="button-row">
+            <a class="button" id="openBot" href="#">Start TimeSyncher Vacation</a>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const meta = document.getElementById('meta');
+    const statusBox = document.getElementById('status');
+    const choices = document.getElementById('choices');
+    const state = { token: params.get('session') || '', session: null };
+
+    function setStatus(text, error = false) {
+      statusBox.textContent = text;
+      statusBox.style.color = error ? '#ffd5d1' : '#dffefa';
+      statusBox.style.background = error ? 'rgba(255,116,104,.12)' : 'rgba(95,216,212,.1)';
+      statusBox.style.borderColor = error ? 'rgba(255,116,104,.55)' : 'rgba(95,216,212,.3)';
+      statusBox.classList.remove('hidden');
+    }
+
+    async function track(target, href, eventType = 'click') {
+      if (!state.token) return;
+      try {
+        await fetch('/api/track-click', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ session: state.token, target, href, eventType, metadata: { page: 'order-success' } }),
+        });
+      } catch {
+        // Do not block customer navigation on analytics.
+      }
+    }
+
+    function trackedHref(target, href) {
+      return `/api/track-click?session=${encodeURIComponent(state.token)}&target=${encodeURIComponent(target)}&href=${encodeURIComponent(href)}`;
+    }
+
+    function wireLink(id, target, href) {
+      const el = document.getElementById(id);
+      el.href = trackedHref(target, href);
+      el.addEventListener('click', () => track(target, href));
+    }
+
+    async function loadSession() {
+      const paymentIntent = params.get('payment_intent');
+      const query = state.token
+        ? `session=${encodeURIComponent(state.token)}`
+        : `payment_intent=${encodeURIComponent(paymentIntent || '')}`;
+      const response = await fetch(`/api/onboarding-session?${query}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to load onboarding.');
+      state.session = data.session;
+      state.token = data.session.token;
+      history.replaceState(null, '', `/order-success.html?session=${encodeURIComponent(state.token)}`);
+      const who = data.session.customerName || data.session.email || 'your account';
+      meta.textContent = `An unforgettable vacation is awaiting ${who}.`;
+      wireLink('openBot', 'telegram_open', data.session.telegramUrl);
+      wireLink('iosInstall', 'telegram_ios', data.session.telegramInstall.ios);
+      wireLink('androidInstall', 'telegram_android', data.session.telegramInstall.android);
+      wireLink('desktopInstall', 'telegram_desktop', data.session.telegramInstall.desktop);
+      choices.classList.remove('hidden');
+      await track('onboarding_page', location.href, 'page_view');
+    }
+
+    loadSession().catch((error) => {
+      meta.textContent = 'Onboarding is not ready yet.';
+      setStatus(error.message || 'Unable to load onboarding. Check your purchase email or contact support@timesyncher.com.', true);
+    });
+  </script>
+</body>
+</html>

@@ -6,9 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:eula": "node scripts/smoke_eula_acceptance.mjs",
+    "test:eula:backend": "node scripts/smoke_eula_backend.mjs",
+    "serve:eula": "node scripts/eula_acceptance_server.mjs",
+    "test:eula:page": "node scripts/smoke_eula_accept_page.mjs",
+    "test:eula:persistent": "node scripts/smoke_eula_persistent_store.mjs",
+    "test:eula:blob": "node scripts/smoke_eula_vercel_blob.mjs",
+    "test:eula:vercel-route": "node scripts/smoke_eula_vercel_route.mjs",
+    "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
+    "worker:timestopper": "node scripts/timestopper-worker.mjs",
+    "migration:apply-vacation-schema": "node scripts/apply_vacation_schema.mjs",
+    "migration:import-neon": "node scripts/import_hosted_bundle_to_neon.mjs"
   },
   "devDependencies": {
     "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@stripe/stripe-js": "^9.7.0",
+    "@vercel/blob": "^2.3.3",
+    "stripe": "^22.2.0"
   }
 }
