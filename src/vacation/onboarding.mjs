@@ -1,7 +1,15 @@
 import crypto from 'node:crypto';
+import {
+  activationStatusPersistent,
+  createOnboardingSessionPersistent,
+  loadDefaultEulaText,
+  loadSessionPersistent,
+} from '../onboarding/eula-persistent-core.mjs';
+import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
+const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
 
 export function siteBase(env = process.env) {
   return (env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).replace(/\/+$/, '');
@@ -21,6 +29,18 @@ export function onboardingLink(token, env = process.env) {
 
 export function telegramLink(token, env = process.env) {
   return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
+}
+
+export function eulaSessionIdForOnboarding(row) {
+  return `vacation-${row.token}`;
+}
+
+export function eulaClientKeyForOnboarding(row) {
+  return `vacation-onboarding:${row.id}`;
+}
+
+export function eulaAcceptLink(row, env = process.env) {
+  return `${siteBase(env)}/accept/${encodeURIComponent(eulaSessionIdForOnboarding(row))}`;
 }
 
 export function hashIp(value = '', env = process.env) {
@@ -158,6 +178,70 @@ async function ensureOnboardingSession(db, customerId, tripId, orderId, metadata
   return rows[0];
 }
 
+function eulaContactFromOnboarding(row, contact = {}) {
+  return {
+    email: cleanText(contact.email || row.email, 180).toLowerCase() || null,
+    phone: cleanText(contact.phone || row.phone, 80) || null,
+  };
+}
+
+export async function ensureVacationEulaSession(row, { contact = {}, env = process.env } = {}) {
+  if (!row?.id || !row?.token) return null;
+  const store = createPersistentStoreFromEnv(env);
+  const sessionId = eulaSessionIdForOnboarding(row);
+  const existing = await loadSessionPersistent(store, sessionId);
+  if (existing && !existing.unavailableReason) {
+    const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION);
+    return {
+      sessionId,
+      acceptUrl: eulaAcceptLink(row, env),
+      status: status.ok ? 'accepted' : existing.status,
+      receiptSha256: status.receiptSha256 || existing.receiptSha256 || null,
+    };
+  }
+
+  const session = await createOnboardingSessionPersistent(store, {
+    sessionId,
+    clientKey: eulaClientKeyForOnboarding(row),
+    clientLabel: cleanText(contact.displayName || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(' '), 180) || 'TimeSyncher Vacation customer',
+    contact: eulaContactFromOnboarding(row, contact),
+    selectedFunctionality: [
+      'vacation_planning_onboarding',
+      'telegram_voice_note_intake',
+      'hosted_itinerary_generation',
+      'purchase_receipts_and_support',
+    ],
+    google: {
+      policy: 'No Google OAuth access is requested for this vacation onboarding step unless separately enabled later.',
+    },
+    eula: {
+      version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
+      text: loadDefaultEulaText(),
+    },
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+  });
+
+  return {
+    sessionId,
+    acceptUrl: eulaAcceptLink(row, env),
+    status: session.status,
+    receiptSha256: session.receiptSha256 || null,
+  };
+}
+
+export async function vacationEulaStatus(row, env = process.env) {
+  if (!row?.id || !row?.token) return { ok: false, status: 'missing', errors: ['onboarding session missing'] };
+  const eula = await ensureVacationEulaSession(row, { env });
+  const store = createPersistentStoreFromEnv(env);
+  const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION);
+  return {
+    ...status,
+    status: status.ok ? 'accepted' : eula?.status || 'pending',
+    sessionId: eula?.sessionId || eulaSessionIdForOnboarding(row),
+    acceptUrl: eulaAcceptLink(row, env),
+  };
+}
+
 export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, invoice, subscription, stripeCustomer, env = process.env }) {
   const resolvedPaymentIntent = typeof paymentIntent === 'string'
     ? await stripe.paymentIntents.retrieve(paymentIntent)
@@ -181,6 +265,8 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     `;
     if (existing[0]) {
       const row = existing[0];
+      const contact = row.contact || {};
+      const eula = await ensureVacationEulaSession(row, { contact, env });
       return {
         customerId: row.customer_id,
         tripId: row.trip_id,
@@ -190,7 +276,8 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         token: row.token,
         onboardingUrl: onboardingLink(row.token, env),
         telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
-        contact: row.contact || {},
+        eula,
+        contact,
         order: {
           stripePaymentIntentId: resolvedPaymentIntent.id,
           amountCents: row.amount_cents,
@@ -244,6 +331,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
+  const eula = await ensureVacationEulaSession(session, { contact, env });
 
   return {
     customerId,
@@ -254,6 +342,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     token: session.token,
     onboardingUrl: onboardingLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
+    eula,
     contact,
     order,
   };
@@ -279,7 +368,7 @@ export async function getSessionByToken(db, tokenValue) {
   return rows[0] || null;
 }
 
-export function publicSession(row, env = process.env) {
+export function publicSession(row, env = process.env, eula = null) {
   if (!row) return null;
   return {
     sessionId: row.id,
@@ -293,6 +382,13 @@ export function publicSession(row, env = process.env) {
     currency: row.currency,
     onboardingUrl: onboardingLink(row.token, env),
     telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
+    eula: eula ? {
+      status: eula.status || (eula.ok ? 'accepted' : 'pending'),
+      accepted: Boolean(eula.ok || eula.status === 'accepted'),
+      acceptUrl: eula.acceptUrl || eulaAcceptLink(row, env),
+      sessionId: eula.sessionId || eulaSessionIdForOnboarding(row),
+      receiptSha256: eula.receiptSha256 || null,
+    } : null,
     telegramInstall: {
       ios: 'https://apps.apple.com/app/telegram-messenger/id686449807',
       android: 'https://play.google.com/store/apps/details?id=org.telegram.messenger',

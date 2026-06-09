@@ -40,6 +40,17 @@
       <div class="meta" id="meta">Loading onboarding session...</div>
       <div class="status hidden" id="status"></div>
 
+      <section class="hidden" id="eula" aria-label="EULA acceptance">
+        <div class="choice">
+          <h2>Accept TimeSyncher EULA</h2>
+          <p>Review and accept the TimeSyncher EULA before opening your Telegram onboarding conversation.</p>
+          <div class="button-row">
+            <a class="button" id="acceptEula" href="#">Review and Accept EULA</a>
+            <button class="button secondary" id="refreshEula" type="button">I Accepted It</button>
+          </div>
+        </div>
+      </section>
+
       <section class="hidden" id="choices" aria-label="Telegram onboarding">
         <div class="choice">
           <h2>Install Telegram</h2>
@@ -64,6 +75,7 @@
     const meta = document.getElementById('meta');
     const statusBox = document.getElementById('status');
     const choices = document.getElementById('choices');
+    const eula = document.getElementById('eula');
     const state = { token: params.get('session') || '', session: null };
 
     function setStatus(text, error = false) {
@@ -97,6 +109,12 @@
       el.addEventListener('click', () => track(target, href));
     }
 
+    function wireDirectLink(id, target, href) {
+      const el = document.getElementById(id);
+      el.href = href;
+      el.addEventListener('click', () => track(target, href));
+    }
+
     async function loadSession() {
       const paymentIntent = params.get('payment_intent');
       const query = state.token
@@ -110,11 +128,22 @@
       history.replaceState(null, '', `/order-success.html?session=${encodeURIComponent(state.token)}`);
       const who = data.session.customerName || data.session.email || 'your account';
       meta.textContent = `An unforgettable vacation is awaiting ${who}.`;
+      choices.classList.add('hidden');
+      eula.classList.add('hidden');
+      if (!data.session.eula?.accepted) {
+        wireDirectLink('acceptEula', 'eula_accept_open', data.session.eula.acceptUrl);
+        document.getElementById('refreshEula').onclick = () => loadSession();
+        eula.classList.remove('hidden');
+        setStatus('Please accept the EULA first. After acceptance, come back here and tap “I Accepted It” to unlock Telegram onboarding.');
+        await track('eula_required', data.session.eula.acceptUrl, 'page_view');
+        return;
+      }
       wireLink('openBot', 'telegram_open', data.session.telegramUrl);
       wireLink('iosInstall', 'telegram_ios', data.session.telegramInstall.ios);
       wireLink('androidInstall', 'telegram_android', data.session.telegramInstall.android);
       wireLink('desktopInstall', 'telegram_desktop', data.session.telegramInstall.desktop);
       choices.classList.remove('hidden');
+      setStatus('EULA accepted. Telegram onboarding is unlocked.');
       await track('onboarding_page', location.href, 'page_view');
     }
 

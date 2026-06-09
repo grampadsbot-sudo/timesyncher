@@ -1,7 +1,7 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { getSessionByToken } from '../src/vacation/onboarding.mjs';
+import { getSessionByToken, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 
 function displayName(user = {}) {
   return cleanText([user.firstName || user.first_name, user.lastName || user.last_name].filter(Boolean).join(' ') || user.username || `telegram:${user.id}`, 160);
@@ -165,12 +165,39 @@ function voiceNoteIntro() {
   ].join('\n');
 }
 
+function eulaRequiredReply(eula) {
+  return [
+    'Your TimeSyncher Vacation purchase is linked.',
+    '',
+    'Before we start Telegram onboarding, please review and accept the TimeSyncher EULA:',
+    eula.acceptUrl,
+    '',
+    'After you accept it, come back here and send /start with your purchase link again. Then I will unlock the voice-note onboarding flow.',
+  ].join('\n');
+}
+
 async function markVoiceNotePracticePrompted(db, session) {
   const rows = await db`
     update telegram_sessions
     set current_step = 'awaiting_voice_note_practice',
       metadata = metadata || ${{
         voiceNotePracticePromptedAt: new Date().toISOString(),
+      }},
+      updated_at = now()
+    where id = ${session.id}
+    returning *
+  `;
+  return rows[0];
+}
+
+async function markEulaAcceptanceRequired(db, session, eula) {
+  const rows = await db`
+    update telegram_sessions
+    set current_step = 'pending_eula_acceptance',
+      metadata = metadata || ${{
+        eulaRequiredAt: new Date().toISOString(),
+        eulaAcceptUrl: eula.acceptUrl,
+        eulaSessionId: eula.sessionId,
       }},
       updated_at = now()
     where id = ${session.id}
@@ -350,6 +377,58 @@ export default async function handler(req, res) {
     if (!telegramChatId) return sendJson(res, 400, { ok: false, error: 'telegramChatId is required.' });
 
     const onboarding = startToken ? await getSessionByToken(db, startToken) : null;
+    if (startToken && onboarding) {
+      const eula = await vacationEulaStatus(onboarding, process.env);
+      if (!eula.ok) {
+        let pendingSession = await ensureTelegramSession(db, {
+          onboarding: null,
+          telegramChatId,
+          telegramUserId: telegramUserId ? `telegram:${telegramUserId}` : '',
+          user,
+          payload: {
+            ...(body.payload || {}),
+            onboardingSessionId: onboarding.id,
+            eulaSessionId: eula.sessionId,
+          },
+        });
+        pendingSession = await markEulaAcceptanceRequired(db, pendingSession, eula);
+        const inboundTranscriptId = await recordTranscript(db, {
+          session: pendingSession,
+          speaker: 'customer',
+          direction: 'inbound',
+          body: text,
+          telegramMessageId: cleanText(body.telegramMessageId || message.messageId || message.message_id, 120),
+          payload: body.payload || {},
+          receivedAt,
+          onboardingStep: pendingSession.current_step,
+        });
+        const reply = eulaRequiredReply(eula);
+        const respondedAt = new Date();
+        const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
+        const outboundTranscriptId = await recordTranscript(db, {
+          session: pendingSession,
+          speaker: 'assistant',
+          direction: 'outbound',
+          body: reply,
+          payload: { eulaRequired: true, eulaAcceptUrl: eula.acceptUrl, eulaSessionId: eula.sessionId },
+          receivedAt,
+          sentAt: respondedAt.toISOString(),
+          responseLatencyMs: Number.isFinite(latency) ? latency : null,
+          onboardingStep: pendingSession.current_step,
+        });
+        return sendJson(res, 200, {
+          ok: true,
+          reply,
+          eulaRequired: true,
+          eulaAcceptUrl: eula.acceptUrl,
+          telegramSessionId: pendingSession.id,
+          inboundTranscriptId,
+          outboundTranscriptId,
+          queued: null,
+          responseLatencyMs: Number.isFinite(latency) ? latency : null,
+        });
+      }
+    }
     const existingSession = onboarding ? null : await findSessionForTelegram(db, telegramChatId, telegramUserId ? `telegram:${telegramUserId}` : '');
     let session;
     if (existingSession && !onboarding) {

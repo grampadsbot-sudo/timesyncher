@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { stripeSecretKey } from './_stripe-env.mjs';
 import { sql } from '../src/vacation/db.mjs';
-import { buildOnboardingFromStripe, getSessionByToken, publicSession } from '../src/vacation/onboarding.mjs';
+import { buildOnboardingFromStripe, ensureVacationEulaSession, getSessionByToken, publicSession, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 import { sendJson } from '../src/vacation/http.mjs';
 
@@ -32,7 +32,8 @@ export default async function handler(req, res) {
     if (token) {
       const row = await getSessionByToken(db, token);
       if (!row) return sendJson(res, 404, { ok: false, error: 'Onboarding session not found.' });
-      return sendJson(res, 200, { ok: true, session: publicSession(row, process.env) });
+      const eula = await vacationEulaStatus(row, process.env);
+      return sendJson(res, 200, { ok: true, session: publicSession(row, process.env, eula) });
     }
 
     if (!paymentIntentId) return sendJson(res, 400, { ok: false, error: 'session or payment_intent is required.' });
@@ -55,7 +56,9 @@ export default async function handler(req, res) {
       row = await getSessionByToken(db, onboarding.token);
     }
 
-    return sendJson(res, 200, { ok: true, session: publicSession(row, process.env) });
+    const eula = await ensureVacationEulaSession(row, { env: process.env });
+    const status = await vacationEulaStatus(row, process.env);
+    return sendJson(res, 200, { ok: true, session: publicSession(row, process.env, { ...eula, ...status }) });
   } catch (error) {
     return sendJson(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to load onboarding session.' });
   }
