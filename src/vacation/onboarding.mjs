@@ -12,11 +12,11 @@ const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
 const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
 
 export function siteBase(env = process.env) {
-  return (env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).replace(/\/+$/, '');
+  return String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).trim().replace(/\/+$/, '');
 }
 
 export function botUsername(env = process.env) {
-  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || DEFAULT_BOT_USERNAME).replace(/^@/, '');
+  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || DEFAULT_BOT_USERNAME).trim().replace(/^@/, '');
 }
 
 export function cleanText(value, max = 1000) {
