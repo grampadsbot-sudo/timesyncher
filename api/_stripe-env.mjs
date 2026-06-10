@@ -8,16 +8,23 @@ function keyPrefixForMode(mode, kind) {
   return null;
 }
 
+function allowedPrefixesForMode(mode, kind) {
+  const standard = keyPrefixForMode(mode, kind);
+  if (!standard) return null;
+  if (kind === 'secret') return mode === 'test' ? ['sk_test_', 'rk_test_'] : ['sk_live_', 'rk_live_'];
+  return [standard];
+}
+
 export function validateStripeKey({ key, kind, env = process.env }) {
   const mode = stripeMode(env);
-  const expectedPrefix = keyPrefixForMode(mode, kind);
-  if (!expectedPrefix) {
+  const expectedPrefixes = allowedPrefixesForMode(mode, kind);
+  if (!expectedPrefixes) {
     throw new Error('Invalid STRIPE_MODE. Use "test" or "live".');
   }
   if (!key) {
     throw new Error(`Stripe ${kind} key is not configured yet.`);
   }
-  if (!key.startsWith(expectedPrefix)) {
+  if (!expectedPrefixes.some((prefix) => key.startsWith(prefix))) {
     throw new Error(`Stripe ${kind} key does not match STRIPE_MODE=${mode}.`);
   }
   if (mode === 'live' && env.ALLOW_LIVE_STRIPE !== 'true') {
