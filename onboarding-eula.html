@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TimeSyncher Onboarding — EULA Acceptance</title>
+  <title>TimeSyncher Onboarding - Terms Acceptance</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -14,7 +14,7 @@
   <meta property="og:image:height" content="512" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:image" content="https://www.timesyncher.com/timesyncher-social-card.png" />
-  <meta property="og:title" content="TimeSyncher Onboarding — EULA Acceptance" />
+  <meta property="og:title" content="TimeSyncher Onboarding - Terms Acceptance" />
   <meta property="og:description" content="TimeSyncher Vacation" />
   <meta property="og:url" content="https://www.timesyncher.com/onboarding-eula.html" />
   <style>
@@ -24,18 +24,18 @@
 </head>
 <body><div id="app" class="shell">
   <span class="pill">Hosted onboarding acceptance · local scaffold</span>
-  <h1>Review and accept the TimeSyncher EULA</h1>
-  <p class="muted">This page shows the current client setup, Google access policy, and exact EULA version before acceptance. Acceptance creates a receipt hash and downloadable acceptance copy.</p>
+  <h1>Review and accept TimeSyncher Terms & Privacy</h1>
+  <p class="muted">This page shows the current client setup, access policy, and exact terms version before acceptance. Acceptance creates a receipt hash and downloadable acceptance copy.</p>
   <section class="grid">
-    <div class="card"><h2>Client</h2><p id="client"></p><p id="contact" class="muted"></p><p>EULA version: <strong id="version"></strong></p></div>
+    <div class="card"><h2>Client</h2><p id="client"></p><p id="contact" class="muted"></p><p>Terms version: <strong id="version"></strong></p></div>
     <div class="card"><h2>Selected functionality</h2><ul id="features"></ul></div>
   </section>
   <section class="card"><h2>Google/OAuth policy snapshot</h2><pre id="google"></pre></section>
   <section class="card"><h2>Full EULA text</h2><div id="eula" class="eula"></div></section>
   <form id="accept-form" class="card">
-    <h2>Accept EULA</h2>
+    <h2>Accept terms</h2>
     <label>Typed name / authorized signer<input id="acceptedByName" type="text" required placeholder="Your full name" /></label>
-    <p class="check"><input id="agree" type="checkbox" required /> <span>I have read and agree to the TimeSyncher EULA shown above, including the Google Workspace/OAuth and AI/LLM risk terms.</span></p>
+    <p class="check"><input id="agree" type="checkbox" required /> <span>I have read and agree to TimeSyncher Terms and Privacy Policy and understand the service is advisory-only.</span></p>
     <button class="btn primary" type="submit">Accept and generate receipt</button>
   </form>
   <section id="result" class="card" hidden>

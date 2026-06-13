@@ -1,6 +1,6 @@
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
-import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
+import { renderAcceptPage, renderUnavailableAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 
 function send(res, status, body, type = 'text/html') {
   res.statusCode = status;
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   try {
     const store = createPersistentStoreFromEnv(process.env);
     const session = await loadSessionPersistent(store, sessionId);
-    if (!session || session.unavailableReason) return send(res, 404, 'Acceptance session not found or unavailable', 'text/plain');
+    if (!session || session.unavailableReason) return send(res, 404, renderUnavailableAcceptPage(session?.unavailableReason || 'missing'));
     return send(res, 200, renderAcceptPage(session));
   } catch (error) {
     return send(res, 400, error.message, 'text/plain');

@@ -114,7 +114,7 @@ export function buildAcceptanceReceipt({ session, acceptedByName, acceptedAt, ip
 
 export function renderAcceptanceCopyHtml({ receipt, eulaText }) {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  return `<!doctype html><html><head><meta charset="utf-8"><title>TimeSyncher EULA Acceptance ${esc(receipt.eula.version)}</title><style>body{font-family:system-ui,sans-serif;line-height:1.5;margin:40px;max-width:900px}.box{border:1px solid #ccc;padding:16px;border-radius:10px;background:#f8fafc}pre{white-space:pre-wrap}</style></head><body><h1>TimeSyncher EULA Acceptance Copy</h1><div class="box"><p><strong>Client:</strong> ${esc(receipt.clientLabel)} (${esc(receipt.clientKey)})</p><p><strong>Accepted by:</strong> ${esc(receipt.eula.acceptedByName)}</p><p><strong>Accepted at:</strong> ${esc(receipt.eula.acceptedAt)}</p><p><strong>EULA version:</strong> ${esc(receipt.eula.version)}</p><p><strong>EULA SHA-256:</strong> ${esc(receipt.eula.eulaTextSha256)}</p><p><strong>Receipt SHA-256:</strong> ${esc(receipt.receiptSha256)}</p></div><h2>Selected functionality snapshot</h2><pre>${esc(JSON.stringify(receipt.capabilitySnapshot, null, 2))}</pre><h2>Accepted EULA text</h2><pre>${esc(eulaText)}</pre></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>TimeSyncher Terms Acceptance ${esc(receipt.eula.version)}</title><style>body{font-family:system-ui,sans-serif;line-height:1.5;margin:40px;max-width:900px}.box{border:1px solid #ccc;padding:16px;border-radius:8px;background:#f8fafc}pre{white-space:pre-wrap}</style></head><body><h1>TimeSyncher Terms Acceptance Copy</h1><div class="box"><p><strong>Client:</strong> ${esc(receipt.clientLabel)} (${esc(receipt.clientKey)})</p><p><strong>Accepted by:</strong> ${esc(receipt.eula.acceptedByName)}</p><p><strong>Accepted at:</strong> ${esc(receipt.eula.acceptedAt)}</p><p><strong>Terms version:</strong> ${esc(receipt.eula.version)}</p><p><strong>Terms SHA-256:</strong> ${esc(receipt.eula.eulaTextSha256)}</p><p><strong>Receipt SHA-256:</strong> ${esc(receipt.receiptSha256)}</p></div><h2>Included assistance snapshot</h2><pre>${esc(JSON.stringify(receipt.capabilitySnapshot, null, 2))}</pre><h2>Accepted terms text</h2><pre>${esc(eulaText)}</pre></body></html>`;
 }
 
 export function acceptEula(storeDir, sessionId, { acceptedByName, checkboxConfirmed, ipAddress = '', userAgent = '' }, now = new Date()) {
@@ -139,7 +139,7 @@ export function validateReceiptForActivation({ session, receipt, requiredEulaVer
   if (errors.length) return { ok: false, errors };
   if (session.status !== 'accepted') errors.push('session is not accepted');
   if (receipt.eula?.status !== 'accepted') errors.push('receipt EULA is not accepted');
-  if (receipt.eula?.version !== requiredEulaVersion) errors.push('receipt EULA version is stale or unexpected');
+  if (receipt.eula?.version !== requiredEulaVersion) errors.push('receipt terms version is stale or unexpected');
   if (receipt.eula?.eulaTextSha256 !== sha256Hex(session.eula.text)) errors.push('EULA text hash mismatch');
   const capabilitySnapshot = capabilitySnapshotFromSession(session);
   if (receipt.eula?.capabilitySnapshotSha256 !== sha256Hex(stableJson(capabilitySnapshot))) errors.push('capability snapshot hash mismatch');

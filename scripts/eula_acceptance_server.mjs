@@ -11,13 +11,14 @@ import {
   receiptPath,
   readJson,
 } from '../src/onboarding/eula-backend-core.mjs';
+import { renderAcceptPage, renderUnavailableAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 
 const PORT = Number(process.env.PORT || 4180);
 const HOST = process.env.HOST || '127.0.0.1';
 const ROOT = resolve(process.env.TIMESYNCHER_STATIC_ROOT || 'dist');
 const STORE = resolve(process.env.TIMESYNCHER_ONBOARDING_STORE || 'runtime/onboarding-eula');
-const DEFAULT_EULA = process.env.TIMESYNCHER_EULA_PATH || 'public/legal/eula-2026-04-initial-draft.md';
-const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft';
+const DEFAULT_EULA = process.env.TIMESYNCHER_EULA_PATH || 'public/legal/terms-2026-06-advisory-only.md';
+const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
 
 ensureStore(STORE);
 
@@ -42,14 +43,6 @@ function publicSession(session) {
 
 function contentType(path) {
   return ({ '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.md': 'text/markdown' })[extname(path)] || 'application/octet-stream';
-}
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-function renderAcceptPage(session) {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>TimeSyncher EULA Acceptance</title><style>body{font-family:system-ui,sans-serif;line-height:1.55;margin:0;background:#0b1020;color:#eef3ff}.shell{max-width:960px;margin:auto;padding:28px 18px}.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:20px;margin:16px 0}.eula{white-space:pre-wrap;max-height:45vh;overflow:auto;background:#07101f;border:1px solid #2b3758;border-radius:14px;padding:16px}input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #2b3758;background:#07101f;color:#eef3ff}.btn{border:0;border-radius:999px;padding:13px 18px;font-weight:800;background:linear-gradient(135deg,#7dd3fc,#a78bfa);color:#07101f}.muted{color:#bfd0f3}pre{white-space:pre-wrap;overflow:auto}</style></head><body><main class="shell"><h1>TimeSyncher EULA Acceptance</h1><p class="muted">Please review the EULA and selected functionality before accepting.</p><section class="card"><h2>Client</h2><p>${escapeHtml(session.clientLabel)} (${escapeHtml(session.clientKey)})</p><p class="muted">${escapeHtml(session.contact?.email)} · ${escapeHtml(session.contact?.phone)}</p><p>EULA version: <strong>${escapeHtml(session.eula.version)}</strong></p></section><section class="card"><h2>Selected functionality</h2><ul>${(session.selectedFunctionality || []).map((f) => `<li>${escapeHtml(String(f).replaceAll('_', ' '))}</li>`).join('')}</ul></section><section class="card"><h2>Google/OAuth policy snapshot</h2><pre>${escapeHtml(JSON.stringify(session.google || {}, null, 2))}</pre></section><section class="card"><h2>Full EULA text</h2><div class="eula">${escapeHtml(session.eula.text)}</div></section><form id="form" class="card"><h2>Accept</h2><label>Typed name / authorized signer<input id="name" required value="${escapeHtml(session.clientLabel || '')}"></label><p><label><input id="agree" type="checkbox" required> I have read and agree to the TimeSyncher EULA shown above.</label></p><button class="btn">Accept EULA</button></form><section id="result" class="card" hidden><h2>Accepted</h2><p>Your acceptance receipt was saved server-side. Thank you — TimeSyncher has recorded your EULA acceptance.</p></section></main><script>document.getElementById('form').addEventListener('submit', async (e)=>{e.preventDefault(); const r=await fetch('/api/onboarding/${encodeURIComponent(session.sessionId)}/eula/accept',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({acceptedByName:document.getElementById('name').value,checkboxConfirmed:document.getElementById('agree').checked})}); const j=await r.json(); if(!j.ok){alert(j.error||'Acceptance failed'); return;} document.getElementById('result').hidden=false; document.getElementById('form').hidden=true;});</script></body></html>`;
 }
 
 async function handleApi(req, res, url) {
@@ -110,7 +103,7 @@ const server = createServer(async (req, res) => {
     const acceptMatch = url.pathname.match(/^\/accept\/([^/]+)$/);
     if (req.method === 'GET' && acceptMatch) {
       const session = loadSession(STORE, decodeURIComponent(acceptMatch[1]));
-      if (!session || session.unavailableReason) return send(res, 404, 'acceptance session not found or unavailable', 'text/plain');
+      if (!session || session.unavailableReason) return send(res, 404, renderUnavailableAcceptPage(session?.unavailableReason || 'missing'), 'text/html');
       return send(res, 200, renderAcceptPage(session), 'text/html');
     }
     const pathname = url.pathname === '/' ? '/index.html' : url.pathname;

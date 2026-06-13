@@ -9,7 +9,7 @@ import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-stor
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
-const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
+const DEFAULT_EULA_VERSION = '2026-06-terms-advisory-only';
 
 export function siteBase(env = process.env) {
   return String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).trim().replace(/\/+$/, '');
@@ -210,9 +210,10 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
       'telegram_voice_note_intake',
       'hosted_itinerary_generation',
       'purchase_receipts_and_support',
+      'advisory_only_no_delegated_actions',
     ],
     google: {
-      policy: 'No Google OAuth access is requested for this vacation onboarding step unless separately enabled later.',
+      policy: 'No Google OAuth access is requested for this vacation onboarding step. TimeSyncher is advisory-only and cannot book, buy, send, cancel, reschedule, accept terms, or modify external accounts for the customer.',
     },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,

@@ -4,7 +4,7 @@ import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs'
 import { readFileSync } from 'node:fs';
 
 const store = new LocalJsonStore('tmp/eula-route-smoke');
-const eulaText = readFileSync('public/legal/eula-2026-04-initial-draft.md', 'utf8');
+const eulaText = readFileSync('public/legal/terms-2026-06-advisory-only.md', 'utf8');
 const session = await createOnboardingSessionPersistent(store, {
   sessionId: 'route-smoke',
   clientKey: 'telegram:6373624711',
@@ -12,7 +12,7 @@ const session = await createOnboardingSessionPersistent(store, {
   contact: { email: 'test-customer@example.com', phone: '+15551234567' },
   selectedFunctionality: ['email_handling'],
   google: { accountEmail: 'test-customer@example.com', gmailPolicy: 'read_only' },
-  eula: { version: '2026-04-initial-draft', text: eulaText },
+  eula: { version: '2026-06-terms-advisory-only', text: eulaText },
 });
 const html = renderAcceptPage(session);
 if (!html.includes("/api/eula?action=accept&sessionId=route-smoke")) throw new Error('accept API target missing');

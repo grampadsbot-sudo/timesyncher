@@ -25,10 +25,10 @@ export function purchaseEmail({ contact, token, env = process.env }) {
     '',
     'Your TimeSyncher Vacation purchase is confirmed.',
     '',
-    'Click the button below to review the TimeSyncher EULA and get started on your unforgettable TimeSyncher Vacation.',
+    'Click the button below to review TimeSyncher Terms & Privacy and get started on your unforgettable TimeSyncher Vacation.',
     '',
     `Start TimeSyncher Vacation: ${onboardingUrl}`,
-    `Telegram bot link after EULA acceptance: ${botUrl}`,
+    `Telegram bot link after terms acceptance: ${botUrl}`,
     '',
     'If Telegram is not installed:',
     `iPhone/iPad: ${iosUrl}`,
@@ -42,9 +42,9 @@ export function purchaseEmail({ contact, token, env = process.env }) {
   <div style="max-width:640px;margin:0 auto;padding:28px">
     <h1 style="color:#f5d37b">Your TimeSyncher Vacation purchase is confirmed</h1>
     <p>Hi ${name},</p>
-    <p>Click the button below to review the TimeSyncher EULA and get started on your unforgettable TimeSyncher Vacation.</p>
+    <p>Click the button below to review TimeSyncher Terms &amp; Privacy and get started on your unforgettable TimeSyncher Vacation.</p>
     <p><a href="${onboardingUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Start TimeSyncher Vacation</a></p>
-    <p>After EULA acceptance, you can also open the bot directly with this tokenized link:</p>
+    <p>After terms acceptance, you can also open the bot directly with this tokenized link:</p>
     <p><a href="${botUrl}">${botUrl}</a></p>
     <p>If Telegram is not installed: <a href="${iosUrl}">iPhone/iPad</a> · <a href="${androidUrl}">Android</a> · <a href="${macUrl}">Mac</a></p>
     <p style="color:#cfc2a9">Questions: ${supportEmail(env)}</p>

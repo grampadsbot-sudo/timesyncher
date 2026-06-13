@@ -8,7 +8,7 @@ import {
   receiptKey,
 } from '../src/onboarding/eula-persistent-core.mjs';
 
-const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft';
+const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
 
 function send(res, status, body, type = 'application/json') {
   res.statusCode = status;

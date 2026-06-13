@@ -2,6 +2,7 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { getSessionByToken, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { blockHighAuthorityRequest } from '../src/safety/high-authority-actions.mjs';
 
 function displayName(user = {}) {
   return cleanText([user.firstName || user.first_name, user.lastName || user.last_name].filter(Boolean).join(' ') || user.username || `telegram:${user.id}`, 160);
@@ -169,7 +170,7 @@ function eulaRequiredReply(eula) {
   return [
     'Your TimeSyncher Vacation purchase is linked.',
     '',
-    'Before we start Telegram onboarding, please review and accept the TimeSyncher EULA:',
+    'Before we start Telegram onboarding, please review and accept TimeSyncher Terms & Privacy:',
     eula.acceptUrl,
     '',
     'After you accept it, come back here and send /start with your purchase link again. Then I will unlock the voice-note onboarding flow.',
@@ -465,6 +466,40 @@ export default async function handler(req, res) {
       receivedAt,
       onboardingStep: session.current_step,
     });
+
+    const blockedAction = blockHighAuthorityRequest(text, process.env);
+    if (blockedAction.blocked) {
+      const respondedAt = new Date();
+      const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
+      const reply = blockedAction.message;
+      const outboundTranscriptId = await recordTranscript(db, {
+        session,
+        speaker: 'assistant',
+        direction: 'outbound',
+        body: reply,
+        channel: 'system_guard',
+        payload: {
+          blocked: true,
+          code: 'HIGH_AUTHORITY_ACTION_BLOCKED',
+          kinds: blockedAction.kinds,
+        },
+        receivedAt,
+        sentAt: respondedAt.toISOString(),
+        responseLatencyMs: Number.isFinite(latency) ? latency : null,
+        onboardingStep: session.current_step,
+      });
+      return sendJson(res, 200, {
+        ok: true,
+        reply,
+        telegramSessionId: session.id,
+        inboundTranscriptId,
+        outboundTranscriptId,
+        queued: null,
+        blocked: true,
+        blockedKinds: blockedAction.kinds,
+        responseLatencyMs: Number.isFinite(latency) ? latency : null,
+      });
+    }
 
     let kind = requestKind(text);
     let queued = null;

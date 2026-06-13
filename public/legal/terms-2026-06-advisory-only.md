@@ -1,5 +1,4 @@
-export const CURRENT_EULA_VERSION = '2026-06-terms-advisory-only';
-export const CURRENT_EULA_TEXT = `# TimeSyncher Terms and Privacy Acknowledgment
+# TimeSyncher Terms and Privacy Acknowledgment
 
 Status: product/legal workbench language, not final legal advice. Before customer-facing use, IBE Inc. should have counsel review it.
 
@@ -52,4 +51,3 @@ IBE Inc. may modify, limit, suspend, or terminate TimeSyncher functionality if r
 ## 10. Versioning and acceptance
 
 The onboarding record stores the accepted terms version, accepted timestamp, accepted-by name, text hash, capability/access snapshot hash, and receipt hash. The backend receipt is the authoritative acceptance record.
-`;

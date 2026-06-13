@@ -14,6 +14,7 @@
     "test:eula:persistent": "node scripts/smoke_eula_persistent_store.mjs",
     "test:eula:blob": "node scripts/smoke_eula_vercel_blob.mjs",
     "test:eula:vercel-route": "node scripts/smoke_eula_vercel_route.mjs",
+    "test:authority-guard": "node scripts/smoke_high_authority_guard.mjs",
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
     "migration:apply-vacation-schema": "node scripts/apply_vacation_schema.mjs",
