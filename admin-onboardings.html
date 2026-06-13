@@ -33,6 +33,7 @@
     .event { border-left: 3px solid var(--blue); padding: 9px 10px; background: #111722; border-radius: 6px; }
     .event.email { border-left-color: var(--green); }
     .event.click { border-left-color: var(--gold); }
+    .event.coupon { border-left-color: var(--gold); }
     .event.turn { border-left-color: #d6a6ff; }
     .event.worker_job, .event.request { border-left-color: #ffb185; }
     .summary { margin-top: 5px; color: var(--muted); overflow-wrap: anywhere; }
@@ -113,6 +114,7 @@
       const data = item.data || item;
       const kind = item.kind || data.kind || '';
       if (kind === 'payment') return compactFields(data, ['status', 'plan', 'amountCents']).join(' · ');
+      if (kind === 'coupon') return compactFields(data, ['code_hint', 'status', 'plan', 'waived_amount_cents', 'customer_email', 'email_status', 'redeemed_at']).join(' · ');
       if (kind === 'onboarding') return compactFields(data, ['status', 'currentStep']).join(' · ');
       if (kind === 'email') return compactFields(data, ['to_email', 'status', 'provider', 'subject', 'sent_at', 'error_summary']).join(' · ');
       if (kind === 'click') return compactFields(data, ['event_type', 'target', 'href', 'clicked_at']).join(' · ');
@@ -212,6 +214,7 @@
         </div>
         <div class="metrics">
           <div class="metric"><strong>${s.counts.emails}</strong><span>Email records</span></div>
+          <div class="metric"><strong>${data.coupons.length}</strong><span>Coupons taken</span></div>
           <div class="metric"><strong>${s.counts.clicks}</strong><span>Clicks</span></div>
           <div class="metric"><strong>${s.counts.telegramSessions}</strong><span>Telegram sessions</span></div>
           <div class="metric"><strong>${s.counts.turns}</strong><span>Turns</span></div>
@@ -222,9 +225,11 @@
           <strong>Timing:</strong>
           Paid ${fmtDate(s.order.paidAt)} · email ${fmtMs(s.timings.paidToEmailMs)} · Telegram start ${fmtMs(s.timings.paidToTelegramStartMs)}
           <br><strong>Order:</strong> ${safe(s.order.plan || '')} ${safe(money(s.order.amountCents, s.order.currency))}
+          ${s.order.coupon ? `<br><strong>Coupon:</strong> ${safe(s.order.coupon.label || s.order.coupon.hint || 'coupon')} waived ${safe(money(s.order.coupon.waivedAmountCents, s.order.currency))}` : ''}
         </div>
         <div class="tabs">
           <button class="active" data-view="timeline">Timeline</button>
+          <button data-view="coupons">Coupons</button>
           <button data-view="turns">Turns</button>
           <button data-view="clicks">Clicks</button>
           <button data-view="emails">Emails</button>
@@ -236,6 +241,7 @@
       const render = view => {
         const views = {
           timeline: data.timeline,
+          coupons: data.coupons.map(c => ({ kind: 'coupon', label: `${c.status}: ${c.code_hint}`, at: c.redeemed_at, data: c })),
           turns: data.turns.map(t => ({ kind: 'turn', label: `${t.direction || ''} ${t.speaker || ''}`, at: t.received_at || t.sent_at || t.created_at, data: t })),
           clicks: data.clicks.map(c => ({ kind: 'click', label: `${c.event_type}: ${c.target}`, at: c.clicked_at, data: c })),
           emails: data.emails.map(e => ({ kind: 'email', label: `${e.status}: ${e.subject}`, at: e.sent_at || e.created_at, data: e })),

@@ -64,6 +64,21 @@ create table if not exists paid_orders (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists checkout_coupons (
+  id uuid primary key default gen_random_uuid(),
+  code_hash text not null unique,
+  code_hint text not null,
+  label text,
+  status text not null default 'active',
+  created_by text,
+  expires_at timestamptz,
+  redeemed_at timestamptz,
+  redeemed_order_id uuid,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists onboarding_sessions (
   id uuid primary key default gen_random_uuid(),
   customer_id uuid references customers(id) on delete set null,
@@ -80,6 +95,24 @@ create table if not exists onboarding_sessions (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists checkout_coupon_redemptions (
+  id uuid primary key default gen_random_uuid(),
+  coupon_id uuid references checkout_coupons(id) on delete set null,
+  customer_id uuid references customers(id) on delete set null,
+  order_id uuid references paid_orders(id) on delete set null,
+  session_id uuid references onboarding_sessions(id) on delete set null,
+  code_hint text not null,
+  customer_email text,
+  plan text not null default 'single',
+  original_amount_cents integer not null default 0,
+  waived_amount_cents integer not null default 0,
+  currency text not null default 'usd',
+  email_status text,
+  status text not null default 'redeemed',
+  metadata jsonb not null default '{}'::jsonb,
+  redeemed_at timestamptz not null default now()
 );
 
 create table if not exists onboarding_clicks (
@@ -250,6 +283,9 @@ create table if not exists support_notes (
 );
 
 create index if not exists idx_trips_customer_id on trips(customer_id);
+create index if not exists idx_checkout_coupons_status on checkout_coupons(status, expires_at);
+create index if not exists idx_checkout_coupon_redemptions_coupon_id on checkout_coupon_redemptions(coupon_id);
+create index if not exists idx_checkout_coupon_redemptions_redeemed_at on checkout_coupon_redemptions(redeemed_at);
 create index if not exists idx_vacation_requests_trip_id on vacation_requests(trip_id);
 create index if not exists idx_vacation_requests_status on vacation_requests(status);
 create index if not exists idx_vacation_requests_timing on vacation_requests(received_at, completed_at);

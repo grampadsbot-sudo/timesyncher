@@ -53,6 +53,12 @@ function publicSession(row) {
       stripeCustomerId: row.stripe_customer_id,
       stripeSubscriptionId: row.stripe_subscription_id,
       stripePaymentIntentId: row.stripe_payment_intent_id,
+      coupon: row.order_metadata?.couponCheckout ? {
+        hint: row.order_metadata.couponHint || null,
+        label: row.order_metadata.couponLabel || null,
+        waivedAmountCents: row.order_metadata.waivedAmountCents || null,
+        originalAmountCents: row.order_metadata.originalAmountCents || null,
+      } : null,
     },
     trip: {
       id: row.trip_id,
@@ -210,6 +216,7 @@ async function listSessions(db, url) {
       c.email, c.phone, c.first_name, c.last_name, c.display_name, c.telegram_user_id,
       po.status as order_status, po.plan, po.amount_cents, po.currency, po.paid_at,
       po.stripe_customer_id, po.stripe_subscription_id, po.stripe_payment_intent_id,
+      po.metadata as order_metadata,
       t.title as trip_title, t.destination, t.status as trip_status, t.start_date, t.end_date,
       (select count(*) from onboarding_clicks oc where oc.session_id = os.id) as click_count,
       (select count(*) from outbound_emails oe where oe.session_id = os.id) as email_count,
@@ -235,6 +242,7 @@ async function detailSession(db, id) {
       c.email, c.phone, c.first_name, c.last_name, c.display_name, c.telegram_user_id,
       po.status as order_status, po.plan, po.amount_cents, po.currency, po.paid_at,
       po.stripe_customer_id, po.stripe_subscription_id, po.stripe_payment_intent_id,
+      po.metadata as order_metadata,
       t.title as trip_title, t.destination, t.status as trip_status, t.start_date, t.end_date,
       0 as click_count, 0 as email_count, 0 as telegram_session_count, 0 as turn_count, 0 as request_count, 0 as job_count
     from onboarding_sessions os
@@ -249,6 +257,7 @@ async function detailSession(db, id) {
       c.email, c.phone, c.first_name, c.last_name, c.display_name, c.telegram_user_id,
       po.status as order_status, po.plan, po.amount_cents, po.currency, po.paid_at,
       po.stripe_customer_id, po.stripe_subscription_id, po.stripe_payment_intent_id,
+      po.metadata as order_metadata,
       t.title as trip_title, t.destination, t.status as trip_status, t.start_date, t.end_date,
       0 as click_count, 0 as email_count, 0 as telegram_session_count, 0 as turn_count, 0 as request_count, 0 as job_count
     from onboarding_sessions os
@@ -261,7 +270,7 @@ async function detailSession(db, id) {
   const row = rows[0];
   if (!row) throw Object.assign(new Error('Onboarding session not found.'), { statusCode: 404 });
 
-  const [clicks, emails, telegramSessions, turns, requests, jobs] = await Promise.all([
+  const [clicks, emails, telegramSessions, turns, requests, jobs, coupons] = await Promise.all([
     db`
       select id, event_type, target, href, user_agent, clicked_at, metadata
       from onboarding_clicks
@@ -305,10 +314,18 @@ async function detailSession(db, id) {
       where vr.customer_id = ${row.customer_id} or vr.trip_id = ${row.trip_id}
       order by wj.created_at asc
     `,
+    db`
+      select id, coupon_id, code_hint, customer_email, plan, original_amount_cents,
+        waived_amount_cents, currency, email_status, status, metadata, redeemed_at
+      from checkout_coupon_redemptions
+      where order_id = ${row.order_id}
+      order by redeemed_at asc
+    `,
   ]);
 
   const timeline = sortTimeline([
     { kind: 'payment', label: 'Payment/order created', at: row.paid_at, data: { amountCents: row.amount_cents, plan: row.plan, status: row.order_status } },
+    ...coupons.map((coupon) => ({ kind: 'coupon', label: `Coupon ${coupon.status}`, at: coupon.redeemed_at, data: coupon })),
     { kind: 'onboarding', label: 'Onboarding session created', at: row.created_at, data: { status: row.status, currentStep: row.current_step } },
     ...emails.map((email) => ({ kind: 'email', label: `Email ${email.status}`, at: email.sent_at || email.created_at, data: email })),
     ...clicks.map((click) => ({ kind: 'click', label: `${click.event_type}: ${click.target || 'unknown'}`, at: click.clicked_at, data: click })),
@@ -330,6 +347,7 @@ async function detailSession(db, id) {
     }),
     clicks,
     emails,
+    coupons,
     telegramSessions,
     turns,
     requests,

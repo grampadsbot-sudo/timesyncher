@@ -91,6 +91,9 @@
     .bump input { width: 20px; height: 20px; min-height: 20px; margin-top: 2px; accent-color: var(--gold2); }
     .bump b { display: block; color: var(--gold2); font-size: .98rem; }
     .bump span { display: block; color: #e8dbc2; font-weight: 500; line-height: 1.42; margin-top: 3px; }
+    .coupon-box { margin: 16px 0; border: 1px solid rgba(245,211,123,.3); border-radius: 18px; padding: 14px; background: rgba(255,255,255,.045); }
+    .coupon-box label { display: grid; gap: 7px; }
+    .coupon-box small { color: #bfb49d; line-height: 1.35; }
     .stripe-mount { min-height: 128px; border-radius: 18px; border: 1px solid rgba(98,214,207,.38); background: rgba(98,214,207,.08); padding: 16px; display: grid; gap: 10px; align-content: center; color: #dcfffc; }
     .stripe-mount strong { color: var(--teal); }
     #paymentElement { min-height: 92px; }
@@ -197,6 +200,13 @@
               </label>
             </div>
 
+            <div class="coupon-box">
+              <label>Coupon code
+                <input id="couponCode" name="couponCode" autocomplete="off" placeholder="Optional full-order coupon" />
+                <small>A valid coupon pays for this full order and skips Stripe checkout.</small>
+              </label>
+            </div>
+
             <div class="stripe-mount" id="stripeMount">
               <strong>Secure payment</strong>
               <div id="paymentElement"><div class="stripe-loading">Loading Stripe test checkout…</div></div>
@@ -236,6 +246,7 @@
     const payBtn = document.getElementById('payBtn');
     const bump = document.getElementById('orderBump');
     const photoMemories = document.getElementById('photoMemories');
+    const couponCode = document.getElementById('couponCode');
     const bumpRow = document.getElementById('bumpRow');
     const photoRow = document.getElementById('photoRow');
     const singleName = document.getElementById('singleName');
@@ -274,6 +285,10 @@
     }
 
     let productConfig = {};
+
+    function hasCoupon() {
+      return couponCode.value.trim().length > 0;
+    }
 
     function activePhotoProduct() {
       const photos = productConfig.products?.photoMemories || {};
@@ -368,8 +383,8 @@
       photoRow.hidden = !photos;
       syncPhotoCopy();
       const cents = 3700 + (bumped ? 2700 : 0) + (photos ? (photoProduct.amount || 500) : 0);
-      total.textContent = money(cents);
-      tax.textContent = 'Calculated by Stripe';
+      total.textContent = hasCoupon() ? '$0 with coupon' : money(cents);
+      tax.textContent = hasCoupon() ? 'No Stripe charge' : 'Calculated by Stripe';
     }
 
     async function loadStripeConfig() {
@@ -390,6 +405,16 @@
       const requestId = ++paymentRequestId;
       const requestedOrderBump = bump.checked;
       const requestedPhotoMemories = photoMemories.checked;
+      if (hasCoupon()) {
+        if (paymentElement) paymentElement.unmount();
+        paymentElementMount.innerHTML = '<div class="stripe-loading">Coupon checkout skips Stripe. Click Redeem coupon to finish.</div>';
+        paymentReady = false;
+        payBtn.disabled = false;
+        payBtn.textContent = 'Redeem coupon';
+        total.textContent = '$0 with coupon';
+        tax.textContent = 'No Stripe charge';
+        return true;
+      }
       if (stripe && elements && paymentElement && paymentReady && currentOrderBump === requestedOrderBump && currentPhotoMemories === requestedPhotoMemories) {
         payBtn.disabled = false;
         payBtn.textContent = 'Pay securely';
@@ -488,7 +513,33 @@
       updateTotal();
       if (!step2.classList.contains('hidden')) await preparePaymentElement();
     });
+    couponCode.addEventListener('input', async () => {
+      updateTotal();
+      paymentReady = false;
+      if (!step2.classList.contains('hidden')) await preparePaymentElement();
+    });
     payBtn.addEventListener('click', async () => {
+      if (hasCoupon()) {
+        payBtn.disabled = true;
+        payBtn.textContent = 'Redeeming coupon...';
+        hideStatus();
+        try {
+          const response = await fetch('/api/redeem-checkout-coupon', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be redeemed.');
+          setStatus('Coupon redeemed. Opening your TimeSyncher onboarding...', false);
+          window.location.href = data.onboarding?.onboardingUrl || '/order-success.html';
+        } catch (error) {
+          setStatus(error.message || 'Coupon could not be redeemed.', true);
+          payBtn.disabled = false;
+          payBtn.textContent = 'Redeem coupon';
+        }
+        return;
+      }
       if (!stripe || !elements || !paymentReady || currentOrderBump !== bump.checked || currentPhotoMemories !== photoMemories.checked) {
         const ready = await preparePaymentElement();
         if (!ready) return;

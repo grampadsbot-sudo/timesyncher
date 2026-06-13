@@ -1,15 +1,11 @@
 import Stripe from 'stripe';
 import { stripeSecretKey } from './_stripe-env.mjs';
+import { checkoutOrderSummary } from '../src/vacation/checkout-pricing.mjs';
 
-const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
-const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 const SINGLE_PRICE_ID = process.env.TIMESYNCHER_SINGLE_PRICE_ID || '';
 const UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_UNLIMITED_PRICE_ID || '';
 const PHOTO_MEMORIES_SINGLE_PRICE_ID = process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_ID || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_ID || '';
 const PHOTO_MEMORIES_UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_ID || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_ID || '';
-const PHOTO_MEMORIES_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -95,9 +91,9 @@ export default async function handler(req, res) {
     const orderBump = Boolean(body.orderBump);
     const photoMemories = Boolean(body.photoMemories);
     const photoMemoriesPriceId = orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_ID : PHOTO_MEMORIES_SINGLE_PRICE_ID;
-    const photoMemoriesAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
     if (photoMemories && !photoMemoriesPriceId) throw new Error('Photo Memories subscription price ID is not configured yet.');
-    const amount = BASE_PRICE_CENTS + (orderBump ? ORDER_BUMP_PRICE_CENTS : 0) + photoMemoriesAmount;
+    const orderSummary = checkoutOrderSummary({ orderBump, photoMemories }, process.env);
+    const amount = orderSummary.amountCents;
     if (!Number.isFinite(amount) || amount < 50) throw new Error('Invalid checkout amount.');
 
     const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
@@ -156,7 +152,7 @@ export default async function handler(req, res) {
       customerId: stripeCustomer.id,
       amount: invoice?.amount_due ?? amount,
       estimatedAmount: amount,
-      currency: CURRENCY,
+      currency: orderSummary.currency,
       orderBump,
       photoMemories,
       photoMemoriesPlan: photoMemories ? (orderBump ? 'unlimited' : 'single') : null,
