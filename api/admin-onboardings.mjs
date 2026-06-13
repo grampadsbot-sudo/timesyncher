@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { requireAdminAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { createCheckoutCoupon, listCheckoutCoupons } from '../src/vacation/checkout-coupons.mjs';
 import {
   ensureVacationEulaSession,
   onboardingLink,
@@ -361,6 +362,32 @@ export default async function handler(req, res) {
     requireAdminAuth(req, process.env);
     const db = sql(process.env);
     const url = new URL(req.url || '/', 'https://timesyncher.com');
+    const action = cleanText(url.searchParams.get('action'), 80);
+    if (req.method === 'GET' && action === 'coupons') {
+      return sendJson(res, 200, { ok: true, coupons: await listCheckoutCoupons(db, { limit: url.searchParams.get('limit') || 100 }) });
+    }
+    if (req.method === 'POST' && action === 'create-coupon') {
+      return sendJson(res, 201, {
+        ok: true,
+        ...(await createCheckoutCoupon(db, {
+          ...(await readJson(req)),
+          createdBy: 'openclaw-imac',
+        }, process.env)),
+      });
+    }
+    if (req.method === 'POST' && action === 'disable-coupon') {
+      const body = await readJson(req);
+      const id = cleanText(body.id, 120);
+      if (!id) return sendJson(res, 400, { ok: false, error: 'id is required.' });
+      const rows = await db`
+        update checkout_coupons
+        set status = 'disabled', updated_at = now()
+        where id = ${id} and status = 'active'
+        returning id, code_hint, label, status, expires_at, redeemed_at, metadata, created_at, updated_at
+      `;
+      if (!rows[0]) return sendJson(res, 404, { ok: false, error: 'Active coupon not found.' });
+      return sendJson(res, 200, { ok: true, coupon: rows[0] });
+    }
     if (req.method === 'POST' && url.searchParams.get('action') === 'create') {
       return sendJson(res, 201, { ok: true, ...(await createAdminOnboarding(db, await readJson(req))) });
     }

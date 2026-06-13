@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 import { stripeSecretKey } from './_stripe-env.mjs';
 import { checkoutOrderSummary } from '../src/vacation/checkout-pricing.mjs';
+import { redeemCheckoutCoupon } from '../src/vacation/checkout-coupons.mjs';
+import { sql } from '../src/vacation/db.mjs';
 
 const SINGLE_PRICE_ID = process.env.TIMESYNCHER_SINGLE_PRICE_ID || '';
 const UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_UNLIMITED_PRICE_ID || '';
@@ -77,6 +79,24 @@ async function findOrCreateStripeCustomer(stripe, customer, metadata) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'method not allowed' });
+  let body;
+  try {
+    body = await readBody(req);
+  } catch (error) {
+    return send(res, 400, { ok: false, error: error.message || 'Request body must be valid JSON.' });
+  }
+  if (body.couponCode || body.code) {
+    try {
+      const result = await redeemCheckoutCoupon(sql(process.env), {
+        ...body,
+        userAgent: req.headers['user-agent'] || '',
+      }, process.env);
+      return send(res, 200, { ...result, couponRedeemed: true });
+    } catch (error) {
+      return send(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to redeem coupon.' });
+    }
+  }
+
   let stripeConfig;
   try {
     stripeConfig = stripeSecretKey(process.env);
@@ -86,7 +106,6 @@ export default async function handler(req, res) {
   if (!SINGLE_PRICE_ID || !UNLIMITED_PRICE_ID) return send(res, 503, { ok: false, error: 'Stripe subscription price IDs are not configured yet.' });
 
   try {
-    const body = await readBody(req);
     const customer = requireCustomer(body);
     const orderBump = Boolean(body.orderBump);
     const photoMemories = Boolean(body.photoMemories);

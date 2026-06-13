@@ -869,7 +869,7 @@
         payBtn.textContent = 'Redeeming coupon...';
         hideStatus();
         try {
-          const response = await fetch('/api/redeem-checkout-coupon', {
+          const response = await fetch('/api/create-payment-intent', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),

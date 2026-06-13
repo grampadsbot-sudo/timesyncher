@@ -38,12 +38,15 @@ assert.equal(checkoutOrderSummary({ orderBump: true, photoMemories: true }, env)
 for (const file of ['index.html', 'order-test.html']) {
   const html = readFileSync(file, 'utf8');
   assert.match(html, /id="couponCode"/, `${file} has coupon input`);
-  assert.match(html, /\/api\/redeem-checkout-coupon/, `${file} posts to coupon endpoint`);
+  assert.match(html, /\/api\/create-payment-intent/, `${file} posts to checkout endpoint`);
   assert.match(html, /Coupon checkout skips Stripe/, `${file} explains Stripe is skipped`);
   assert.match(html, /No Stripe charge/, `${file} shows no Stripe charge`);
 }
 
-const couponApi = readFileSync('api/redeem-checkout-coupon.mjs', 'utf8');
-assert.doesNotMatch(couponApi, /Stripe|stripe/i, 'coupon redemption API does not import or call Stripe');
+const checkoutApi = readFileSync('api/create-payment-intent.mjs', 'utf8');
+assert.ok(
+  checkoutApi.indexOf('if (body.couponCode || body.code)') < checkoutApi.indexOf('stripeConfig = stripeSecretKey'),
+  'coupon branch runs before Stripe config is loaded',
+);
 
-console.log(JSON.stringify({ ok: true, checked: ['coupon helpers', 'pricing', 'checkout UI', 'no Stripe in coupon API'] }, null, 2));
+console.log(JSON.stringify({ ok: true, checked: ['coupon helpers', 'pricing', 'checkout UI', 'coupon branch before Stripe'] }, null, 2));
