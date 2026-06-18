@@ -4,6 +4,7 @@ import {
   checkoutOrderSummary,
 } from '../src/vacation/checkout-pricing.mjs';
 import {
+  couponAuditHint,
   couponCodeHash,
   couponCodeHint,
   normalizeCouponCode,
@@ -22,6 +23,8 @@ const env = {
 assert.equal(normalizeCouponCode('  tsv-free-1  '), 'TSV-FREE-1');
 assert.equal(validateCouponCode('tsv-free-1'), 'TSV-FREE-1');
 assert.equal(couponCodeHint('TSV-ABCDEFGH'), 'TSV-...EFGH');
+assert.equal(couponAuditHint({ codeHint: 'TS-...JRX' }, 'TS-WBO06AM1OJRX'), 'TS-...JRX');
+assert.equal(couponAuditHint({}, 'TS-WBO06AM1OJRX'), 'TS-W...OJRX');
 assert.equal(couponCodeHash('TSV-FREE-1', env), couponCodeHash('tsv-free-1', env));
 assert.throws(() => validateCouponCode('x'), /valid coupon/);
 

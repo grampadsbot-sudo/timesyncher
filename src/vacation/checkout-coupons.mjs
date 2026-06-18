@@ -25,6 +25,10 @@ export function couponCodeHint(value) {
   return `${code.slice(0, 4)}...${code.slice(-4)}`;
 }
 
+export function couponAuditHint(coupon = {}, code = '') {
+  return cleanText(coupon.code_hint || coupon.codeHint || couponCodeHint(code), 80);
+}
+
 export function couponCodeHash(value, env = process.env) {
   const code = validateCouponCode(value);
   const salt = env.TIMESYNCHER_COUPON_HASH_SALT || env.TIMESYNCHER_AUDIT_HASH_SALT || 'timesyncher-coupons';
@@ -58,7 +62,7 @@ function couponMetadata({ body, contact, coupon, orderSummary }) {
     source: 'coupon_checkout',
     couponCheckout: true,
     couponId: coupon.id,
-    couponHint: coupon.code_hint,
+    couponHint: coupon.code_hint || coupon.codeHint,
     couponLabel: coupon.label || null,
     requestedEmail: contact.email,
     orderBump: orderSummary.orderBump,
@@ -183,7 +187,11 @@ export async function redeemCheckoutCoupon(db, body = {}, env = process.env) {
       and (expires_at is null or expires_at > now())
     returning id, code_hint, label, status, created_by, expires_at, redeemed_at, metadata, created_at, updated_at
   `;
-  const coupon = claimed[0];
+  const claimedCoupon = claimed[0];
+  const coupon = claimedCoupon ? {
+    ...claimedCoupon,
+    code_hint: couponAuditHint(claimedCoupon, code),
+  } : null;
   if (!coupon) {
     throw Object.assign(new Error('Coupon is invalid, expired, or already used.'), { statusCode: 400 });
   }
