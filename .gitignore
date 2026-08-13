@@ -8,5 +8,6 @@ backups/
 artifacts/
 public/onboarding/sessions/
 scripts/__pycache__/
+scripts/telegram-worker-drain-target.json
 .DS_Store
 .env*
