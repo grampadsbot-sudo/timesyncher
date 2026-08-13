@@ -30,6 +30,8 @@ export function collaboratorPlan(codeOrScope = 'single_trip') {
 
 export function isCollaboratorInviteRequest(text = '') {
   return /\b(add|invite|let|allow|give)\b.{0,100}\b(wife|husband|spouse|partner|assistant|friend|family|daughter|son|mom|mother|dad|father|collaborator|someone|user)\b.{0,140}\b(telegram|bot|modify|edit|update|change|interact|ability|access)\b/i.test(text)
+    || /\b(send|get|create|make|share|give)\b.{0,80}\b(link|checkout|setup|set\s+up)\b.{0,100}\b(her|him|them|wife|husband|spouse|partner|kim|collaborator|assistant|friend|family|someone)\b/i.test(text)
+    || /\b(set\s+up|setup)\b.{0,80}\b(her|him|them|wife|husband|spouse|partner|kim|collaborator|assistant|friend|family|someone)\b.{0,100}\b(link|checkout|telegram|bot|access|collaborator)\b/i.test(text)
     || /\btelegram collaborator\b/i.test(text);
 }
 

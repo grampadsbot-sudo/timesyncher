@@ -19,7 +19,10 @@ assert.equal(collaboratorPlan('unlimited_trips').amountCents, 2700);
 assert.equal(collaboratorPlan('unlimited_trips').maxActiveCollaborators, 1);
 assert.equal(isCollaboratorInviteRequest('Add my wife to the Caldwell vacation so she can update it in Telegram'), true);
 assert.equal(isCollaboratorInviteRequest('I want to give my wife the ability to interact and change the vacation just like I am doing.'), true);
+assert.equal(isCollaboratorInviteRequest('Can you send me the link to set her up?'), true);
+assert.equal(isCollaboratorInviteRequest('Please make a checkout link to set Kim up'), true);
 assert.equal(isCollaboratorInviteRequest('Please add 3 restaurants to day two'), false);
+assert.equal(isCollaboratorInviteRequest('Can you send me the link to the Vegas vacation?'), false);
 
 const checkoutCopy = collaboratorCheckoutCopy();
 assert.match(checkoutCopy, /\$27/);
