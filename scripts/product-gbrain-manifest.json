@@ -1,0 +1,387 @@
+{
+  "allowedSkills": [
+    "timesyncher-travel-assistant",
+    "timesyncher-travel-method-registry",
+    "timesyncher-travel-restaurant-tagger",
+    "timesyncher-travel-store-tagger",
+    "timesyncher-travel-thing-editor",
+    "timesyncher-travel-ui",
+    "timesyncher-vacation-production-capability",
+    "timesyncher-vacation-public-research-worker",
+    "timesyncher-vacation-telegram-collaborators",
+    "timesyncher-vacation-support-router",
+    "timesyncher-vacation-public-source-orchestrator"
+  ],
+  "allowedToolLanes": [
+    "public-web-search",
+    "browser-automation",
+    "weather",
+    "filesystem-read-product-gbrain",
+    "hosted-queue-read-write",
+    "trek-agent-edit-runner",
+    "stripe-checkout-addon",
+    "telegram-collaborator-invite"
+  ],
+  "blockedCapabilities": [
+    "gmail",
+    "google-calendar",
+    "google-drive",
+    "google-contacts",
+    "social-posting",
+    "owner-private-gbrain-browse",
+    "general-openclaw-admin",
+    "shell-access-for-customer"
+  ],
+  "capturePolicy": {
+    "captureOutboundResponses": true,
+    "captureRawCustomerRequests": true,
+    "captureTimings": true,
+    "initialReviewCohort": 20
+  },
+  "completionPolicy": {
+    "onboardingSetup": {
+      "minimumSourceLinkedCandidatesForKnownHawaiiFlow": 8,
+      "mustCreateConcreteFirstPassItinerary": true,
+      "mustCreateWebItineraryUrlWhenOnboardingTokenExists": true,
+      "mustPersistArtifact": true,
+      "mustPersistSourceLinkedResearchCandidates": true,
+      "mustSendOrQueueCustomerResponse": true,
+      "notes": "Hosted worker may send a concise chat response, but the durable output must include a web itinerary page populated with source-linked candidates, caveats, and next verification steps. Do not mark a client-facing setup complete if it only restates intake text or creates queued placeholder artifacts.",
+      "placeholderOnlyArtifactsAreIncomplete": true,
+      "telegramRequestsSendThroughBotWhenChatIdAvailable": true
+    },
+    "placeholderRule": "If only placeholders were created, return retry/queued status or create a follow-up itinerary-generation job; do not report completed to the customer.",
+    "telegramDelivery": "For Telegram-originated onboarding_setup requests, send the initial itinerary draft back through the TimeSyncher Vacation bot when a telegramChatId is available."
+  },
+  "customerFacing": true,
+  "defaultRuntime": "TimeStopper",
+  "displayName": "TimeSyncher Vacation Product GBrain",
+  "intakePolicy": {
+    "vacationNamingFirst": {
+      "askBeforeTripDetails": true,
+      "avoidRandomLookingCustomerUrls": true,
+      "publicItinerarySlugUsesVacationName": true,
+      "requiredFields": [
+        "vacationName",
+        "unforgettableGoal"
+      ],
+      "tripTitleUsesVacationName": true
+    },
+    "supportRouter": {
+      "policySkill": "timesyncher-vacation-support-router",
+      "canonicalEntrypoint": "/api/vacation-telegram-turn",
+      "runsAfterSessionCustomerLookup": true,
+      "telegramBridgeMayAnswerAccountQuestions": false,
+      "telegramBridgeMayUseDefaultTripToken": false,
+      "supportOrAccountQuestionsQueueWorker": false,
+      "mediaAttachRequiresResolvedTripContext": true,
+      "missingMediaContextBehavior": "fail_closed_clarify",
+      "currentTurnIntentRequiredBeforeTranscriptWrite": true,
+      "priorTranscriptMayNotUpgradeQuestionToWrite": true,
+      "structuredRouterDecisionPreferred": true,
+      "modelRouterReturnsStructuredDecision": true,
+      "modelRouterFailsClosedOnLowConfidence": true,
+      "explicitNewVacationIgnoresExistingTripContext": true,
+      "newVacationRequiresCreateNewTrip": true,
+      "newVacationMayUpdateExistingTripByTitle": false,
+      "newVacationForbidsInheritedTripName": true,
+      "staleTokenDestinationMismatchBehavior": "fail_closed_no_write",
+      "existingTripCorrectionRequiresMatchingTripContext": true,
+      "durationNightsInferInclusiveDays": true,
+      "relativeEndDateParsesAgainstCustomerTimezone": true,
+      "existingVacationCopyWhenUrlExists": "update_existing_vacation_website",
+      "newVacationAdviceQuestionsQueueWorker": false,
+      "vagueNextStepQuestionsQueueWorker": false,
+      "vacationExistenceQuestionsQueueWorker": false,
+      "accessibleVacationStateLookupRequired": true,
+      "customerCopyMustHideTelegramLinkage": true,
+      "vacationExistenceNoMatchCopy": "I could not find a matching vacation site yet.",
+      "telegramTurnDrainMaxJobs": 1,
+      "forbiddenCustomerCopy": [
+        "TREK",
+        "GBrain",
+        "worker",
+        "research workspace",
+        "public research pass",
+        "capability gate",
+        "sqlite",
+        "Traceback",
+        "/home/"
+      ]
+    }
+  },
+  "lodgingPolicy": {
+    "airbnb": "Search Airbnb only when the customer explicitly asks for Airbnb, vacation rentals, houses, condos, apartments, or more space.",
+    "default": "Search hotels first.",
+    "normalization": "Airbnb results display as category hotel with subtype Airbnb."
+  },
+  "name": "timesyncher-vacation",
+  "owner": "TimeStopper",
+  "productBoundaries": {
+    "booking": {
+      "customerBooksThemselves": true,
+      "forbiddenCustomerCopy": [
+        "Nothing is booked yet",
+        "we can book",
+        "I can book",
+        "booking is pending"
+      ],
+      "notes": "Do not imply TimeSyncher Vacation books, holds, reserves, or can complete travel purchases. Itinerary setup is planning software only.",
+      "requiredCustomerCopy": "TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.",
+      "timeSyncherDoesNotBookTravel": true
+    }
+  },
+  "promotionPolicy": {
+    "direction": "one-way",
+    "from": "private/dev GBrain",
+    "requires": [
+      "allowlist approval",
+      "resolver fit",
+      "no Google/private owner capabilities",
+      "smoke validation"
+    ],
+    "to": "Product GBrain"
+  },
+  "purpose": "Restricted public-launch travel concierge brain for TimeSyncher Vacation customer requests.",
+  "sourceOfTruth": {
+    "hostedApp": "https://www.timesyncher.com",
+    "privateGBrain": "/home/ubishere9995/gbrain",
+    "queue": "Neon Postgres via Vercel API routes"
+  },
+  "capabilityObject": {
+    "enforcedBy": "product-gbrain-dispatch/product-capabilities.mjs",
+    "policySkill": "timesyncher-vacation-production-capability",
+    "publicResearchRequired": true,
+    "minimumInitialResearchMinutes": 10,
+    "targetInitialResearchMinutes": 15,
+    "noHardCodedDestinationItineraries": true,
+    "savedThingsAreReusableCorpusNotGeneratedOutput": true,
+    "runtimeVerifier": "product-gbrains/timesyncher-vacation/scripts/verify_capabilities.py",
+    "publicResearchWorker": {
+      "skill": "timesyncher-vacation-public-research-worker",
+      "runtime": "/home/timesyncher-agent/timestopper-vacation-worker/vacation-public-research-worker.mjs",
+      "mode": "public-provider-or-fixture-smoke",
+      "liveProviderEnv": "PERPLEXITY_API_KEY + TIMESYNCHER_PUBLIC_RESEARCH_LIVE=1",
+      "failsClosedStatus": "provider_not_configured",
+      "writesSourceBackedThingsToTrek": true,
+      "minimumInitialResearchMinutes": 10,
+      "targetInitialResearchMinutes": 15
+    },
+    "existingTripEditWorker": {
+      "skill": "timesyncher-travel-assistant",
+      "deterministicRuntime": "/home/timesyncher-agent/timestopper-vacation-worker/trek-itinerary-edit.mjs",
+      "broadRuntime": "/home/timesyncher-agent/timestopper-vacation-worker/trek-agent-edit.mjs",
+      "model": "grok-4.5",
+      "mode": "deterministic-fast-path-then-grok-structured-plan-deterministic-apply",
+      "requiresSharedUrlOrKnownTrip": true,
+      "requiresPostChangeSmoke": true,
+      "allowedScope": "existing TREK trip data, shared thing fields, day assignments, share/access/member settings, and product-approved travel artifacts only",
+      "failsClosedStatus": "needs_manual_review"
+    }
+  },
+  "collaboratorEntitlementPolicy": {
+    "policySkill": "timesyncher-vacation-telegram-collaborators",
+    "paidTelegramModificationRequired": true,
+    "freeWebItinerarySharingUnaffected": true,
+    "initialMaxActiveCollaborators": 1,
+    "plans": [
+      {
+        "code": "telegram_collaborators_single_trip",
+        "amountUsd": 15,
+        "scope": "single_trip",
+        "maxActiveCollaborators": 1
+      },
+      {
+        "code": "telegram_collaborators_unlimited_trips",
+        "amountUsd": 27,
+        "scope": "unlimited_trips",
+        "maxActiveCollaborators": 1
+      }
+    ],
+    "authorizationOrder": [
+      "owner telegram session",
+      "active paid collaborator for matching trip",
+      "active paid unlimited collaborator for owner",
+      "collaborator invite acceptance start token",
+      "deny Telegram modification and explain paid collaborator requirement"
+    ]
+  },
+  "mediaAddOnPolicy": {
+    "policySkill": "timesyncher-travel-assistant",
+    "photoMemories": {
+      "singleVacationAmountUsd": 5,
+      "unlimitedVacationsAmountUsd": 9,
+      "photoLimitPerVacation": 100,
+      "scope": "favorite photos for printable vacation keepsake"
+    },
+    "videoMemoriesRecommendation": {
+      "singleVacationAmountUsd": 17,
+      "unlimitedVacationsAmountUsd": 27,
+      "scope": "short keepsake video uploads for vacation memories",
+      "checkoutTiming": "offer only when a customer asks to upload videos or use video memories; do not include in initial checkout by default",
+      "limits": {
+        "maxVideosPerVacation": 20,
+        "maxRawUploadSeconds": 120,
+        "maxRawUploadMegabytes": 200,
+        "retainedOptimizedMaxResolution": "720p",
+        "retainedOptimizedMaxFps": 30,
+        "retainedOptimizedGigabytesPerVacation": 2,
+        "unlimitedFairUseVideosPerYear": 100,
+        "unlimitedFairUseRetainedOptimizedGigabytesPerYear": 10,
+        "rawOriginalRetention": "temporary only; delete after transcoding/debugging"
+      },
+      "requirements": [
+        "separate Stripe entitlement before accepting videos",
+        "size and duration limits",
+        "queued transcoding/optimization",
+        "private metadata stripping where feasible",
+        "link photos/videos from trip, day, and Thing itinerary context",
+        "printed PDFs include QR codes/deep links to media pages instead of embedded videos",
+        "do not advertise as live until hosted upload path is implemented and smoke-tested",
+        "customer photo/video uploads come through Telegram/customer-bot intake first",
+        "do not add public website self-serve media upload UI in the initial product",
+        "do not claim full 200 MB Telegram readiness until private upload-link or local Telegram Bot API path exists"
+      ],
+      "uploadIntake": "Telegram/customer-bot intake first; website is for viewing, captions, selection/favorites, paid gallery links, and QR/deep-link targets, not public self-serve upload UI in the initial product",
+      "currentStagingImplementation": {
+        "uploadIntake": "Telegram/customer-bot media messages",
+        "readyFor": [
+          "photos",
+          "small/compressed Telegram videos within bot download limit"
+        ],
+        "telegramBotApiDownloadLimitBytes": 20971520,
+        "fullProductLimitRequires": "private upload-link flow or local Telegram Bot API server before accepting raw originals near 200 MB",
+        "hostedApi": "/api/vacation-telegram-turn event=media_upload; GET action=media-list/media-download"
+      }
+    }
+  },
+  "accessRemediationCatalog": {
+    "defaultCheckoutBaseUrl": "https://vacation-staging.timesyncher.com",
+    "defaultAddOnCheckoutPath": "/addons-checkout.html",
+    "items": [
+      {
+        "id": "telegram_collaborator_single_trip_purchase",
+        "targetCapability": "collab_telegram",
+        "actionType": "purchase",
+        "planCode": "telegram_collaborators_single_trip",
+        "amountUsd": 15,
+        "scope": "single_trip",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add Telegram editing access for this vacation"
+      },
+      {
+        "id": "telegram_collaborator_unlimited_trips_purchase",
+        "targetCapability": "collab_telegram",
+        "actionType": "purchase",
+        "planCode": "telegram_collaborators_unlimited_trips",
+        "amountUsd": 27,
+        "scope": "unlimited_trips",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add Telegram editing access for all vacations"
+      },
+      {
+        "id": "photo_upload_single_vacation_purchase",
+        "targetCapability": "photo_upload",
+        "actionType": "purchase",
+        "planCode": "photo_upload_single_vacation",
+        "amountUsd": 5,
+        "scope": "single_trip",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add photo upload access for this vacation"
+      },
+      {
+        "id": "photo_upload_unlimited_vacations_purchase",
+        "targetCapability": "photo_upload",
+        "actionType": "purchase",
+        "planCode": "photo_upload_unlimited_vacations",
+        "amountUsd": 9,
+        "scope": "unlimited_trips",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add photo upload access for all vacations"
+      },
+      {
+        "id": "video_upload_single_vacation_purchase",
+        "targetCapability": "video_upload",
+        "actionType": "purchase",
+        "planCode": "video_upload_single_vacation",
+        "amountUsd": 17,
+        "scope": "single_trip",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add video upload access for this vacation"
+      },
+      {
+        "id": "video_upload_unlimited_vacations_purchase",
+        "targetCapability": "video_upload",
+        "actionType": "purchase",
+        "planCode": "video_upload_unlimited_vacations",
+        "amountUsd": 27,
+        "scope": "unlimited_trips",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add video upload access for all vacations"
+      },
+      {
+        "id": "full_access_single_vacation_bundle",
+        "targetCapability": "full_access",
+        "actionType": "purchase",
+        "planCode": "full_access_single_vacation",
+        "amountUsd": 49,
+        "scope": "single_trip",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add full Telegram plus photo/video access for this vacation"
+      },
+      {
+        "id": "full_access_unlimited_vacations_bundle",
+        "targetCapability": "full_access",
+        "actionType": "purchase",
+        "planCode": "full_access_unlimited_vacations",
+        "amountUsd": 73,
+        "scope": "unlimited_trips",
+        "path": "/addons-checkout.html",
+        "ctaLabel": "Add full Telegram plus photo/video access for all vacations"
+      },
+      {
+        "id": "web_editor_email_invite_owner_action",
+        "targetCapability": "collab_web",
+        "actionType": "owner_email_invite",
+        "planCode": null,
+        "amountUsd": 0,
+        "scope": "single_trip",
+        "path": null,
+        "ctaLabel": "Invite a named email user to edit the website"
+      }
+    ]
+  },
+  "webAccessPolicy": {
+    "publicSharedUrlDefault": "view_only",
+    "publicUrlDoesNotIdentifyViewer": true,
+    "ownerIdentitySources": [
+      "purchaser customer/order session",
+      "verified owner email magic link",
+      "linked owner Telegram session",
+      "existing authenticated owner session cookie"
+    ],
+    "webEditorAccess": {
+      "freeWhenOwnerApproved": true,
+      "requiresNamedInvite": true,
+      "requiresVerifiedEmail": true,
+      "telegramLinkedOwnersAndCollaboratorsMayEditFromTelegramLaunchedSiteLink": true,
+      "emailMagicLinksAreForNonTelegramInvitees": true,
+      "possessionOfSharedUrlIsNeverEditAuthorization": true,
+      "statusValues": [
+        "invited",
+        "accepted",
+        "revoked",
+        "expired"
+      ],
+      "roleValues": [
+        "viewer",
+        "web_editor",
+        "owner",
+        "telegram_collaborator"
+      ],
+      "recommendedTable": "vacation_web_access_grants"
+    },
+    "telegramAccessSeparatePaidEntitlement": true,
+    "mediaUploadSeparatePaidEntitlement": true
+  }
+}

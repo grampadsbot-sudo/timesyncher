@@ -1,0 +1,234 @@
+{
+  "version": "2026-06-15",
+  "thingMetadataSchemaVersion": "travel-source-quality-v1",
+  "policy": {
+    "defaultEnabled": false,
+    "allowBookingOrPayment": false,
+    "allowPrivateAccountAccess": false,
+    "productionAllowedSafetyClasses": [
+      "approved_public_search",
+      "approved_public_read_only",
+      "unofficial_read_only"
+    ],
+    "blockedSafetyClasses": [
+      "experimental_hidden_api",
+      "authenticated_customer_account",
+      "forbidden_booking_payment"
+    ]
+  },
+  "adapters": [
+    {
+      "id": "grok-public-web-search",
+      "kind": "provider",
+      "label": "Paid Ubuntu Grok web_search",
+      "safetyClass": "approved_public_search",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["hotel", "flight", "car", "restaurant", "store", "activity", "tour", "event", "transport", "decision"],
+      "timeoutMs": 900000,
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "provider_internal_only"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      }
+    },
+    {
+      "id": "fixture-recent-traveler-sentiment",
+      "kind": "fixture",
+      "label": "Fixture recent traveler sentiment adapter",
+      "safetyClass": "approved_public_read_only",
+      "enabled": true,
+      "fixtureOnly": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["activity", "restaurant", "store", "event", "decision"],
+      "timeoutMs": 1000,
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "blocked"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      }
+    },
+    {
+      "id": "printingpress-wanderlust-goat",
+      "kind": "printing_press_cli",
+      "label": "Printing Press Wanderlust GOAT",
+      "safetyClass": "unofficial_read_only",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["activity", "tour", "event", "restaurant", "store", "decision"],
+      "timeoutMs": 120000,
+      "binaryPath": "/home/ubishere9995/.local/bin/wanderlust-goat-pp-cli",
+      "runAsUser": "ubishere9995",
+      "secretFiles": {
+        "GOOGLE_PLACES_API_KEY": "/home/timesyncher-agent/timestopper-vacation-worker/.google-places-api-key"
+      },
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "smokeStatus": "passed_read_only_live_goat_google_places_2026-06-15"
+    },
+    {
+      "id": "printingpress-roadside-america",
+      "kind": "printing_press_cli",
+      "label": "Printing Press Roadside America",
+      "safetyClass": "unofficial_read_only",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["activity", "tour", "event", "decision"],
+      "timeoutMs": 75000,
+      "binaryPath": "/home/ubishere9995/.local/bin/roadside-america-pp-cli",
+      "runAsUser": "ubishere9995",
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "smokeStatus": "passed_read_only_live_nearby_attractions_2026-06-15"
+    },
+    {
+      "id": "printingpress-alltrails",
+      "kind": "printing_press_cli",
+      "label": "Printing Press AllTrails",
+      "safetyClass": "unofficial_read_only",
+      "enabled": false,
+      "allowsBookingOrPayment": false,
+      "blockedCommands": ["create", "import", "sync", "tail"],
+      "allowedCategories": ["activity", "tour", "decision"],
+      "timeoutMs": 75000,
+      "binaryPath": "/home/ubishere9995/.local/bin/alltrails-pp-cli",
+      "runAsUser": "ubishere9995",
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "approvalBlocker": "Installed, but live read-only trail search smoke returned AllTrails bot-protection HTTP 403.",
+      "smokeStatus": "blocked_alltrails_bot_protection_403_2026-06-15"
+    },
+    {
+      "id": "printingpress-tripadvisor",
+      "kind": "printing_press_cli",
+      "label": "Printing Press Tripadvisor",
+      "safetyClass": "unofficial_read_only",
+      "enabled": false,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["hotel", "restaurant", "activity", "tour", "event", "store"],
+      "timeoutMs": 120000,
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "approvalBlocker": "Needs installed CLI path, terms review, read-only smoke, and review/source citation proof before production enablement."
+    },
+    {
+      "id": "printingpress-hotel-goat",
+      "kind": "printing_press_cli",
+      "label": "Printing Press Hotel GOAT",
+      "safetyClass": "unofficial_read_only",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["hotel", "decision"],
+      "timeoutMs": 120000,
+      "binaryPath": "/home/ubishere9995/.local/bin/hotel-goat-pp-cli",
+      "runAsUser": "ubishere9995",
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "smokeStatus": "passed_read_only_live_hotels_2026-06-15"
+    },
+    {
+      "id": "printingpress-masterpark-quote",
+      "kind": "printing_press_cli",
+      "label": "Printing Press MasterPark quote",
+      "safetyClass": "unofficial_read_only",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "blockedCommands": ["reserve", "reservations", "auth"],
+      "allowedCategories": ["car", "transport", "decision"],
+      "timeoutMs": 60000,
+      "binaryPath": "/home/ubishere9995/.local/bin/masterpark-pp-cli",
+      "runAsUser": "ubishere9995",
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "smokeStatus": "passed_read_only_locations_and_quote_2026-06-15"
+    },
+    {
+      "id": "printingpress-flight-goat",
+      "kind": "printing_press_cli",
+      "label": "Printing Press Flight GOAT",
+      "safetyClass": "unofficial_read_only",
+      "enabled": false,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["flight", "transport", "decision"],
+      "timeoutMs": 120000,
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "bounded_cli"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources"],
+        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
+      },
+      "approvalBlocker": "Needs installed CLI path, terms review, read-only fare-card smoke, and no-booking proof before production enablement."
+    },
+    {
+      "id": "forbidden-booking-payment",
+      "kind": "policy_block",
+      "label": "Booking/payment/write actions",
+      "safetyClass": "forbidden_booking_payment",
+      "enabled": false,
+      "allowsBookingOrPayment": true,
+      "allowedCategories": [],
+      "timeoutMs": 0,
+      "inputPolicy": {
+        "customerPii": "blocked",
+        "privateSources": "blocked",
+        "shellAccess": "blocked"
+      },
+      "outputSchema": {
+        "required": []
+      }
+    }
+  ]
+}

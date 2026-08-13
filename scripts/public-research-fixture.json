@@ -1,0 +1,118 @@
+{
+  "provider": "fixture-public-sources",
+  "queries": [
+    "Tokyo hotels public source",
+    "Tokyo ramen restaurants public source",
+    "Tokyo museums activities public source"
+  ],
+  "candidates": [
+    {
+      "category": "hotel",
+      "subtype": "hotel",
+      "title": "Hotel Metropolitan Tokyo Marunouchi",
+      "summary": "Tokyo Station hotel candidate with unusually strong rail convenience for first-time city logistics.",
+      "details": "Compare direct rates, room size, cancellation terms, and Tokyo Station access before booking.",
+      "website": "https://tokyostationhotel.jp/",
+      "sources": [
+        {
+          "label": "Official hotel site",
+          "url": "https://tokyostationhotel.jp/"
+        }
+      ],
+      "verificationStatus": "source_checked",
+      "caveats": [
+        "Verify current rates, fees, and availability."
+      ]
+    },
+    {
+      "category": "hotel",
+      "subtype": "hotel",
+      "title": "Nohga Hotel Ueno Tokyo",
+      "summary": "Ueno-area hotel candidate with easier museum and market access than a pure business-district stay.",
+      "details": "Useful if the itinerary leans toward Ueno Park museums, Ameyoko, and northeast Tokyo transit.",
+      "website": "https://nohgahotel.com/ueno/en/",
+      "sources": [
+        {
+          "label": "Official hotel site",
+          "url": "https://nohgahotel.com/ueno/en/"
+        }
+      ],
+      "verificationStatus": "source_checked",
+      "caveats": [
+        "Verify room type, breakfast policy, and cancellation terms."
+      ]
+    },
+    {
+      "category": "restaurant",
+      "subtype": "ramen",
+      "title": "Nakiryu",
+      "summary": "Michelin-recognized ramen stop to compare for a food-focused Tokyo itinerary.",
+      "details": "Treat as a high-demand candidate; verify current queue/ticketing expectations and hours.",
+      "website": "https://guide.michelin.com/us/en/tokyo-region/tokyo/restaurant/nakiryu",
+      "sources": [
+        {
+          "label": "Michelin Guide listing",
+          "url": "https://guide.michelin.com/us/en/tokyo-region/tokyo/restaurant/nakiryu"
+        }
+      ],
+      "verificationStatus": "needs_browser_review",
+      "caveats": [
+        "Hours and queue process can change."
+      ]
+    },
+    {
+      "category": "store",
+      "subtype": "market",
+      "title": "Ameyoko Shopping Street",
+      "summary": "Lively Ueno market/shopping area for snacks, casual browsing, and a less-polished street-market feel.",
+      "details": "Best as a flexible walkable block paired with Ueno Park or a Ueno hotel base.",
+      "website": "https://www.gotokyo.org/en/spot/78/index.html",
+      "sources": [
+        {
+          "label": "GO TOKYO overview",
+          "url": "https://www.gotokyo.org/en/spot/78/index.html"
+        }
+      ],
+      "verificationStatus": "source_checked",
+      "caveats": [
+        "Individual shop hours vary."
+      ]
+    },
+    {
+      "category": "activity",
+      "subtype": "museum",
+      "title": "Tokyo National Museum",
+      "summary": "Major Ueno museum anchor for Japanese art/history and a strong rainy-day or culture-first block.",
+      "details": "Pair with Ueno Park and nearby food; verify open days, special exhibitions, and ticket rules.",
+      "website": "https://www.tnm.jp/?lang=en",
+      "sources": [
+        {
+          "label": "Official museum site",
+          "url": "https://www.tnm.jp/?lang=en"
+        }
+      ],
+      "verificationStatus": "source_checked",
+      "caveats": [
+        "Verify current exhibitions and closures."
+      ]
+    },
+    {
+      "category": "transport",
+      "subtype": "airport rail",
+      "title": "Narita Express / airport rail comparison",
+      "summary": "Airport-transfer decision point: compare Narita Express, Keisei Skyliner, taxi, or Haneda rail based on arrival airport and hotel area.",
+      "details": "Do not choose until flights and hotel base are known.",
+      "website": "https://www.jreast.co.jp/multi/en/nex/",
+      "sources": [
+        {
+          "label": "JR East Narita Express",
+          "url": "https://www.jreast.co.jp/multi/en/nex/"
+        }
+      ],
+      "verificationStatus": "needs_availability_check",
+      "caveats": [
+        "Route depends on arrival airport, hotel area, luggage, and arrival time."
+      ]
+    }
+  ]
+}

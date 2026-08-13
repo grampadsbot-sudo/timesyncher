@@ -19,6 +19,58 @@ function text(value, max = 5000) {
   return String(value || '').trim().slice(0, max);
 }
 
+
+function trekTypeForCategory(category) {
+  const value = text(category, 40);
+  if (['hotel', 'restaurant', 'store', 'flight', 'car'].includes(value)) return value;
+  if (value === 'transport') return 'flight';
+  return 'event';
+}
+
+function trekPlaceFromResearchThing(thing, index, destination, boundary) {
+  const sources = Array.isArray(thing.sources) ? thing.sources : [];
+  const sourceLines = sources.map((source) => `${source.label || 'Source'}: ${source.url}`).join('\n');
+  const caveats = Array.isArray(thing.caveats) ? thing.caveats.join(' ') : '';
+  const sourceCaveats = Array.isArray(thing.sourceCaveats) ? thing.sourceCaveats.join(' ') : '';
+  const verifiedLine = thing.verifiedAt ? `Verified: ${thing.verifiedAt}${thing.expiresAt ? `; recheck after ${thing.expiresAt}` : ''}` : '';
+  return {
+    key: `research-${index + 1}`,
+    type: trekTypeForCategory(thing.category),
+    name: text(thing.title || `Research candidate ${index + 1}`, 180),
+    day: Math.min(2 + (index % 2), 3),
+    time: index % 2 === 0 ? '13:00' : '15:00',
+    area: text(thing.area || destination || 'Research', 120),
+    lat: Number.isFinite(Number(thing.lat)) ? Number(thing.lat) : null,
+    lng: Number.isFinite(Number(thing.lng)) ? Number(thing.lng) : null,
+    address: text(thing.address || thing.area || destination || '', 240),
+    website: text(thing.website || sources[0]?.url || '', 500),
+    price: 0,
+    summary: text(thing.summary || '', 500),
+    details: [thing.details, sourceLines ? `Sources:\n${sourceLines}` : '', verifiedLine, caveats ? `Caveats: ${caveats}` : '', sourceCaveats ? `Source caveats: ${sourceCaveats}` : '', boundary].filter(Boolean).join('\n\n'),
+    sources,
+    sourceBacked: Boolean(thing.sourceBacked),
+    verificationStatus: text(thing.verificationStatus || '', 80),
+    sourceQuality: thing.sourceQuality || {},
+    adapterSources: Array.isArray(thing.adapterSources) ? thing.adapterSources : [],
+    qualitySignals: thing.qualitySignals || {},
+    fitScores: thing.fitScores || {},
+    sourceCaveats: Array.isArray(thing.sourceCaveats) ? thing.sourceCaveats : [],
+    verifiedAt: text(thing.verifiedAt || '', 40),
+    expiresAt: text(thing.expiresAt || '', 40),
+    review1: text(thing.review1 || '', 1000),
+    review2: text(thing.review2 || '', 1000),
+    review3: text(thing.review3 || '', 1000),
+    reviewSources: Array.isArray(thing.reviewSources) ? thing.reviewSources : [],
+    googleRating: text(thing.googleRating || '', 40),
+    yelpRating: text(thing.yelpRating || '', 40),
+    thirdPartyRating: text(thing.thirdPartyRating || '', 80),
+    happyHour: Boolean(thing.happyHour),
+    happyHourDetails: text(thing.happyHourDetails || '', 1200),
+    happyHourSources: Array.isArray(thing.happyHourSources) ? thing.happyHourSources : [],
+    researchMetadata: thing.metadata || {},
+  };
+}
+
 function slugify(value) {
   return text(value, 160)
     .toLowerCase()
@@ -28,73 +80,55 @@ function slugify(value) {
     .slice(0, 80) || `vacation-${Date.now()}`;
 }
 
-function hawaiiPlan(payload) {
+function genericPlan(payload) {
   const now = new Date().toISOString();
-  const title = text(payload.title || 'Hawaii July 2026', 160);
+  const title = text(payload.title || 'TimeSyncher Vacation Research Workspace', 160);
+  const createNewTrip = Boolean(payload.createNewTrip || payload.create_new_trip);
+  const destination = text(payload.destination || 'Destination to research', 180);
   const unforgettableGoal = text(payload.unforgettableGoal || payload.unforgettable_goal || '', 1000);
-  const tripSummary = text(payload.tripSummary || payload.trip_summary || payload.description, 1200);
-  const defaultDescription = [
-    'TimeSyncher Vacation itinerary workspace for Hawaii: Oahu/Waikiki, Maui/Kihei, and Big Island/Kona.',
-    unforgettableGoal ? `Unforgettable goal: ${unforgettableGoal}.` : '',
-    'Includes flights, hotels, restaurants, stores, activities, rental cars, map points, budget targets, and open decisions. TimeSyncher organizes and compares options; customers verify details and make bookings themselves.',
-  ].filter(Boolean).join(' ');
+  const unforgettableGoalSentence = unforgettableGoal.replace(/[.!?]+$/, '');
+  const dateText = text(payload.dates?.dateText || payload.dates?.startDate || '', 120) || 'Dates to confirm';
+  const startDate = text(payload.dates?.startDate || '', 40) || null;
+  const endDate = text(payload.dates?.endDate || '', 40) || null;
+  const startMs = startDate ? Date.parse(`${startDate}T00:00:00Z`) : Number.NaN;
+  const endMs = endDate ? Date.parse(`${endDate}T00:00:00Z`) : Number.NaN;
+  const dayCount = Number.isFinite(startMs) && Number.isFinite(endMs) && endMs >= startMs
+    ? Math.max(1, Math.min(31, Math.round((endMs - startMs) / 86400000) + 1))
+    : 3;
+  const bookingBoundary = 'TimeSyncher Vacation does not book, reserve, hold, purchase, or complete travel arrangements. Customers verify prices, availability, hours, seasonal details, and terms before booking or relying on any option.';
+  const researchedPlaces = (Array.isArray(payload.researchedThings) ? payload.researchedThings : []).map((thing, index) => trekPlaceFromResearchThing(thing, index, destination, bookingBoundary));
+  const queuePlaces = [
+    { key: 'research-lodging', type: 'hotel', name: `${destination} lodging research queue`, day: 1, time: '09:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue multiple lodging/hotel options from public sources with fees, location tradeoffs, availability caveats, and cancellation terms.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },
+    { key: 'research-transport', type: 'car', name: `${destination} transport and car research queue`, day: 2, time: '10:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue flights, airport transfers, rental cars, rideshare, transit, and parking logistics when relevant.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },
+    { key: 'research-food-activities-shopping', type: 'event', name: `${destination} restaurants, activities, and shopping research queue`, day: 2, time: '11:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue restaurants, shopping, and activity candidates with source URLs, hours, reservation needs, and verification status.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },
+  ];
+  const hasResearchedPlaces = researchedPlaces.length > 0;
   return {
-    sourceKey: text(payload.sourceKey || payload.onboardingToken || 'timesyncher-vacation-hawaii', 160),
+    sourceKey: text(payload.sourceKey || payload.onboardingToken || title, 160),
     publicBase: text(payload.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, ''),
     preferredToken: slugify(title),
+    createNewTrip,
     title,
     unforgettableGoal,
-    description: tripSummary || defaultDescription,
-    tripSummarySource: tripSummary ? 'assistant_trip_summary' : 'default_trip_summary',
-    startDate: '2026-07-24',
-    endDate: '2026-07-31',
+    description: [
+      `TimeSyncher Vacation research workspace for ${destination}.`,
+      `Dates: ${dateText}.`,
+      unforgettableGoalSentence ? `Unforgettable goal: ${unforgettableGoalSentence}.` : '',
+    ].filter(Boolean).join(' '),
+    startDate,
+    endDate,
     currency: 'USD',
     createdAt: now,
-    bookingBoundary: 'TimeSyncher Vacation does not book, reserve, hold, purchase, or complete travel arrangements. Customers verify prices, availability, hours, seasonal details, and terms before booking or relying on any option.',
-    days: [
-      ['2026-07-24', 'Arrive Honolulu / Waikiki'],
-      ['2026-07-25', 'Waikiki surf, restaurants, shopping'],
-      ['2026-07-26', 'North Shore / Banzai Pipeline option'],
-      ['2026-07-27', 'Fly Oahu to Maui / Kihei'],
-      ['2026-07-28', 'Kihei + Kapalua dining / sunset sail'],
-      ['2026-07-29', 'Fly Maui to Kona / Big Island'],
-      ['2026-07-30', 'Kona manta ray night snorkel'],
-      ['2026-07-31', 'Depart Kona / return routing'],
-    ],
-    places: [
-      { key: 'flight-las-hnl', type: 'flight', name: 'Flight research: Las Vegas (LAS) to Honolulu (HNL)', day: 1, time: '09:00', area: 'Flights', lat: 21.3187, lng: -157.9225, address: 'Daniel K. Inouye International Airport (HNL)', website: 'https://www.google.com/travel/flights', price: 650, summary: 'Compare LAS to HNL routes landing July 24, including Southwest/Hawaiian/United/American options, connection time, bags, and arrival time.', details: 'Flight candidate only. Add exact departure, airline, fare class, baggage, and connection details after live comparison.' },
-      { key: 'flight-hnl-ogg', type: 'flight', name: 'Inter-island flight: Honolulu (HNL) to Maui (OGG)', day: 4, time: '10:00', area: 'Flights', lat: 20.8986, lng: -156.4305, address: 'Kahului Airport (OGG)', website: 'https://www.hawaiianairlines.com/', price: 120, summary: 'Short hop after three Waikiki nights; compare Hawaiian and Southwest schedules to protect the Maui check-in day.', details: 'Confirm baggage fees and whether rental-car pickup timing works at OGG.' },
-      { key: 'flight-ogg-koa', type: 'flight', name: 'Inter-island flight: Maui (OGG) to Kona (KOA)', day: 6, time: '10:30', area: 'Flights', lat: 19.7388, lng: -156.0456, address: 'Ellison Onizuka Kona International Airport (KOA)', website: 'https://www.southwest.com/destinations/hawaii', price: 130, summary: 'Move from Maui to Kona for the final Big Island segment; compare direct routing and timing.', details: 'Confirm whether an OGG-KOA direct flight or connection is best for date and fare.' },
-      { key: 'hotel-moana', type: 'hotel', name: 'Moana Surfrider, A Westin Resort & Spa, Waikiki Beach', day: 1, time: '15:00', area: 'Waikiki', lat: 21.2766, lng: -157.8268, address: '2365 Kalakaua Ave, Honolulu, HI', website: 'https://www.marriott.com/en-us/hotels/hnlwi-moana-surfrider-a-westin-resort-and-spa-waikiki-beach/overview/', price: 1800, summary: 'Preferred Waikiki candidate from the voice note. Historic beachfront location, very central for surf lessons, shopping, and restaurants.', details: 'Verify exact July 24-27 availability, taxes, resort fees, cancellation policy, room view, and parking before choosing.' },
-      { key: 'hotel-royal-hawaiian', type: 'hotel', name: 'The Royal Hawaiian, a Luxury Collection Resort', day: 1, time: '15:00', area: 'Waikiki', lat: 21.2777, lng: -157.8294, address: '2259 Kalakaua Ave, Honolulu, HI', website: 'https://www.marriott.com/en-us/hotels/hnllc-the-royal-hawaiian-a-luxury-collection-resort-waikiki/overview/', price: 1950, summary: 'Nearby premium Waikiki comparison option if Moana pricing or availability is weak.', details: 'Good comparison against Moana for beachfront feel, room quality, and total stay cost.' },
-      { key: 'hotel-kihei', type: 'hotel', name: 'Kihei / Wailea lodging comparison set', day: 4, time: '15:00', area: 'Kihei / South Maui', lat: 20.7644, lng: -156.445, address: 'Kihei, Maui, HI', website: 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei', price: 1100, summary: 'Kihei-area lodging first, with Wailea as a nearby upscale comparison if budget and availability fit.', details: 'Shortlist should compare beach access, parking, resort fees, cancellation terms, and drive time to Kapalua/Napili dining.' },
-      { key: 'hotel-hilton-waikoloa', type: 'hotel', name: 'Hilton Waikoloa Village / Kona-area fit check', day: 6, time: '15:00', area: 'Big Island / Kona', lat: 19.9257, lng: -155.8877, address: '69-425 Waikoloa Beach Dr, Waikoloa Village, HI', website: 'https://www.hilton.com/en/hotels/koahwhh-hilton-waikoloa-village/', price: 950, summary: 'Likely Big Island Hilton candidate. Note that “Hilton Hawaiian Village” is on Oahu, so confirm whether Waikoloa is the intended Kona-area Hilton.', details: 'Compare with true Kona-town hotels for manta-ray tour pickup convenience and restaurant access.' },
-      { key: 'car-oahu', type: 'car', name: 'Oahu rental car decision', day: 1, time: '12:00', area: 'Transportation', lat: 21.3187, lng: -157.9225, address: 'HNL / Waikiki', website: 'https://www.google.com/search?q=Honolulu+airport+rental+car', price: 240, summary: 'Decide whether to rent for all three Waikiki nights or only North Shore day; Waikiki parking can be expensive.', details: 'If only one North Shore day is planned, compare day-rental vs ride/tour logistics.' },
-      { key: 'car-maui', type: 'car', name: 'Maui rental car for Kihei/Kapalua', day: 4, time: '11:00', area: 'Transportation', lat: 20.8986, lng: -156.4305, address: 'OGG / Kihei', website: 'https://www.google.com/search?q=Maui+OGG+rental+car', price: 260, summary: 'Maui segment likely needs a car for Kihei lodging, Kapalua-area restaurants, and sunset sail logistics.', details: 'Compare pickup at OGG, return timing, parking at lodging, and cancellation terms.' },
-      { key: 'car-kona', type: 'car', name: 'Big Island rental car for Kona/Waikoloa', day: 6, time: '11:30', area: 'Transportation', lat: 19.7388, lng: -156.0456, address: 'KOA / Kona', website: 'https://www.google.com/search?q=Kona+airport+rental+car', price: 220, summary: 'Big Island generally needs a car, especially if staying at Waikoloa and doing manta/snorkel logistics.', details: 'Check pickup/dropoff timing, parking, and whether tour provider pickup reduces car needs.' },
-      { key: 'surf-waikiki', type: 'event', name: 'Waikiki beginner surf lesson', day: 2, time: '09:00', area: 'Waikiki', lat: 21.276, lng: -157.826, address: 'Waikiki Beach, Honolulu, HI', website: 'https://hhsurf.com/', price: 160, summary: 'Customer wants to learn to surf in Waikiki. Compare group vs private beginner lessons and meeting points.', details: 'Verify duration, instructor ratio, photo/video options, cancellation policy, and ocean conditions.' },
-      { key: 'pipeline', type: 'event', name: 'Banzai Pipeline / North Shore day', day: 3, time: '10:00', area: 'North Shore Oahu', lat: 21.6658, lng: -158.0529, address: 'Ehukai Beach Park, Haleiwa, HI', website: 'https://www.gohawaii.com/islands/oahu/regions/north-shore', price: 0, summary: 'Visit the famous Pipeline surf break. Summer can be calmer; winter is big-wave season.', details: 'Pair with Haleiwa food stops, beaches, and shopping if surf is quiet.' },
-      { key: 'maui-sunset-sail', type: 'event', name: 'Maui sunset dinner sail / whale-season check', day: 5, time: '17:00', area: 'Maui', lat: 20.741, lng: -156.456, address: 'South Maui / Maalaea departure options', website: 'https://sailtrilogy.com/', price: 360, summary: 'Compare sunset dinner sail operators. Whale watching is seasonal, so verify whether July has whale viewing or swap to snorkeling/sunset sail.', details: 'Check departure harbor, dinner included, drinks, cancellation policy, and drive from Kihei.' },
-      { key: 'manta-kona', type: 'event', name: 'Kona night manta ray snorkel', day: 7, time: '18:30', area: 'Kona', lat: 19.731, lng: -156.063, address: 'Kona Coast, Big Island, HI', website: 'https://mantaraydiveshawaii.com/', price: 320, summary: 'Signature Big Island night activity. Compare operators by departure harbor, snorkel vs dive, duration, safety requirements, and weather policy.', details: 'Verify swim requirements, minimum age, wetsuit/gear, cancellation policy, and moon/weather caveats.' },
-      { key: 'restaurant-marugame', type: 'restaurant', name: 'Marugame Udon Waikiki', day: 2, time: '12:00', area: 'Waikiki', lat: 21.2792, lng: -157.8279, address: '2310 Kuhio Ave, Honolulu, HI', website: 'https://www.marugameudon.com/locations/waikiki/', price: 40, summary: 'Casual, local-favorite-ish Waikiki noodle stop with strong value and easy logistics.', details: 'Verify current line, hours, and whether it fits lunch or casual dinner.' },
-      { key: 'restaurant-dukes', type: 'restaurant', name: 'Duke’s Waikiki', day: 1, time: '19:00', area: 'Waikiki', lat: 21.2768, lng: -157.8273, address: '2335 Kalakaua Ave, Honolulu, HI', website: 'https://www.dukeswaikiki.com/', price: 150, summary: 'Classic beachfront Waikiki dinner option, convenient near Moana/Royal Hawaiian.', details: 'Verify reservation availability, live music schedule, and whether Hula Grill is a better fit.' },
-      { key: 'restaurant-leonards', type: 'restaurant', name: 'Leonard’s Bakery malasadas', day: 3, time: '08:30', area: 'Honolulu', lat: 21.2846, lng: -157.8139, address: '933 Kapahulu Ave, Honolulu, HI', website: 'https://www.leonardshawaii.com/', price: 25, summary: 'Iconic malasada stop that can pair with Waikiki/North Shore route planning.', details: 'Check hours, lines, and whether food truck/pop-up options are closer.' },
-      { key: 'restaurant-nalus', type: 'restaurant', name: 'Nalu’s South Shore Grill', day: 5, time: '11:30', area: 'Kihei', lat: 20.7478, lng: -156.4565, address: '1280 S Kihei Rd, Kihei, HI', website: 'https://www.naluskihei.com/', price: 80, summary: 'Kihei-area casual restaurant candidate for local-feeling breakfast/lunch/dinner.', details: 'Verify hours, music schedule, and recent reviews.' },
-      { key: 'restaurant-merrimans', type: 'restaurant', name: 'Merriman’s Kapalua', day: 5, time: '18:30', area: 'Kapalua', lat: 21.003, lng: -156.666, address: '1 Bay Club Pl, Lahaina, HI', website: 'https://www.merrimanshawaii.com/kapalua/', price: 260, summary: 'Elevated Kapalua sunset dinner candidate if drive/time fit from Kihei.', details: 'Verify reservations, menu, sunset timing, parking, and travel time.' },
-      { key: 'restaurant-kona-inn', type: 'restaurant', name: 'Kona waterfront / hotel restaurant shortlist', day: 7, time: '19:45', area: 'Kona', lat: 19.639, lng: -155.996, address: 'Kailua-Kona, HI', website: 'https://www.google.com/search?q=best+waterfront+restaurants+Kailua+Kona', price: 180, summary: 'Kona has fewer options than Oahu/Maui; focus on waterfront and hotel-adjacent dinner candidates.', details: 'Shortlist after verifying hotel location and manta tour return time.' },
-      { key: 'shopping-royal-hawaiian', type: 'store', name: 'Royal Hawaiian Center', day: 2, time: '15:00', area: 'Waikiki', lat: 21.278, lng: -157.829, address: '2201 Kalakaua Ave, Honolulu, HI', website: 'https://www.royalhawaiiancenter.com/', price: 0, summary: 'Walkable Waikiki shopping near the preferred hotel zone.', details: 'Compare against International Market Place and Ala Moana for time/value.' },
-      { key: 'shopping-ala-moana', type: 'store', name: 'Ala Moana Center', day: 2, time: '16:30', area: 'Honolulu', lat: 21.291, lng: -157.843, address: '1450 Ala Moana Blvd, Honolulu, HI', website: 'https://www.alamoanacenter.com/', price: 0, summary: 'Larger shopping block outside Waikiki if shopping becomes a priority.', details: 'Best if paired with dinner or if car/transport is easy.' },
-      { key: 'rest-waikiki-beach', type: 'event', name: 'Waikiki beach / recovery time', day: 1, time: '16:00', area: 'Waikiki', lat: 21.276, lng: -157.826, address: 'Waikiki Beach, Honolulu, HI', website: 'https://www.gohawaii.com/islands/oahu/regions/honolulu/waikiki', price: 0, summary: 'Intentional rest block after arrival before dinner.', details: 'Keep this flexible until exact flight arrival and check-in timing are known.' },
-    ],
+    bookingBoundary,
+    days: Array.from({ length: dayCount }, (_, idx) => {
+      const date = startDate ? new Date(Date.parse(`${startDate}T00:00:00Z`) + idx * 86400000).toISOString().slice(0, 10) : '';
+      return [date, ''];
+    }),
+    places: hasResearchedPlaces ? researchedPlaces : queuePlaces,
     budget: [
-      ['Flights', 'LAS-HNL / HNL-OGG / OGG-KOA / return routing target', 1200, 'Placeholder until live fare comparison.'],
-      ['Hotel', 'Oahu Waikiki 3 nights target', 1800, 'Moana Surfrider preferred; verify total cost.'],
-      ['Hotel', 'Maui Kihei/Wailea 2 nights target', 1100, 'Compare Kihei and Wailea fit.'],
-      ['Hotel', 'Big Island Kona/Waikoloa 2 nights target', 950, 'Confirm intended Hilton/Kona fit.'],
-      ['Restaurants', 'Dining target across islands', 1400, 'Mix casual local spots and elevated dinners.'],
-      ['Stores', 'Waikiki shopping target', 600, 'Customer-adjustable.'],
-      ['Activities', 'Surf, sunset sail, manta snorkel target', 900, 'Seasonality and operator availability need verification.'],
-      ['Transport', 'Rental cars / transfers target', 800, 'Oahu optional; Maui and Big Island likely needed.'],
+      ['Lodging', `${destination} lodging research target`, 0, 'Placeholder until live source-backed research.'],
+      ['Transport', `${destination} flights, cars, and ground transport research target`, 0, 'Placeholder until live source-backed research.'],
+      ['Food, shopping, activities', `${destination} experience research target`, 0, 'Placeholder until live source-backed research.'],
     ],
   };
 }
@@ -127,7 +161,7 @@ const cat = {
   car: categoryId('Car', '#0891b2', 'Car'),
 };
 const uid = userId();
-let trip = one('SELECT id FROM trips WHERE title = ? ORDER BY id LIMIT 1', payload.title);
+let trip = payload.createNewTrip ? null : one('SELECT id FROM trips WHERE title = ? ORDER BY id LIMIT 1', payload.title);
 let tripId;
 if (trip) {
   tripId = Number(trip.id);
@@ -173,7 +207,7 @@ payload.places.forEach((p, idx) => {
   if (['hotel', 'flight', 'car', 'event'].includes(p.type)) {
     run('INSERT INTO reservations (trip_id, day_id, place_id, title, reservation_time, location, notes, status, type, needs_review) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tripId, dayId || null, placeId, p.name, p.time || null, p.address || null, p.details || p.summary || null, 'candidate', p.type === 'event' ? 'activity' : p.type, 1);
   }
-  thingFields['place-' + placeId] = {
+  thingFields['place:' + placeId] = {
     category: p.type,
     area: p.area || '',
     status: 'considering',
@@ -184,21 +218,58 @@ payload.places.forEach((p, idx) => {
     longDetails: p.details || '',
     website: p.website || '',
     travelTime: '',
-    googleRating: '',
-    sourceNote: 'Seeded by TimeSyncher Vacation worker from researched starter itinerary.',
+    lat: p.lat ?? null,
+    lng: p.lng ?? null,
+    address: p.address || '',
+    googleRating: p.googleRating || '',
+    yelpRating: p.yelpRating || '',
+    thirdPartyRating: p.thirdPartyRating || '',
+    review1: p.review1 || '',
+    review2: p.review2 || '',
+    review3: p.review3 || '',
+    reviewSources: Array.isArray(p.reviewSources) ? p.reviewSources : [],
+    happyHour: Boolean(p.happyHour),
+    happyHourDetails: p.happyHourDetails || '',
+    happyHourSources: Array.isArray(p.happyHourSources) ? p.happyHourSources : [],
+    sourceNote: 'Seeded by TimeSyncher Vacation worker from source-backed public research.',
+    sources: Array.isArray(p.sources) ? p.sources : [],
+    sourceBacked: Boolean(p.sourceBacked),
+    verificationStatus: p.verificationStatus || '',
+    sourceQuality: p.sourceQuality || {},
+    adapterSources: Array.isArray(p.adapterSources) ? p.adapterSources : [],
+    qualitySignals: p.qualitySignals || {},
+    fitScores: p.fitScores || {},
+    sourceCaveats: Array.isArray(p.sourceCaveats) ? p.sourceCaveats : [],
+    verifiedAt: p.verifiedAt || '',
+    expiresAt: p.expiresAt || '',
+    researchMetadata: p.researchMetadata || {},
   };
-});
-payload.days.forEach(([date, title], idx) => {
-  const dayId = dayMap.get(idx + 1);
-  run('INSERT INTO day_notes (day_id, trip_id, text, time, icon, sort_order) VALUES (?, ?, ?, ?, ?, ?)', dayId, tripId, title, '09:00', 'Info', 0);
 });
 payload.budget.forEach(([category, name, total, note], idx) => {
   run('INSERT INTO budget_items (trip_id, category, name, total_price, persons, note, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)', tripId, category, name, total, 2, note, idx);
 });
 let share = one('SELECT token FROM share_tokens WHERE trip_id=? ORDER BY id LIMIT 1', tripId);
 let token = share?.token;
+let preferredCandidate = '';
+const preferred = String(payload.preferredToken || '').trim().toLowerCase();
+if (preferred) {
+  preferredCandidate = preferred;
+  let n = 2;
+  for (;;) {
+    const row = one('SELECT trip_id FROM share_tokens WHERE token=?', preferredCandidate);
+    if (!row || Number(row.trip_id) === tripId) break;
+    preferredCandidate = preferred + '-' + n;
+    n += 1;
+  }
+  if (token && token !== preferredCandidate) {
+    run('UPDATE shared_travel_thing_fields SET token=? WHERE token=?', preferredCandidate, token);
+    run('UPDATE share_token_overrides SET token=? WHERE token=?', preferredCandidate, token);
+    run('UPDATE share_tokens SET token=? WHERE trip_id=?', preferredCandidate, tripId);
+    token = preferredCandidate;
+  }
+}
 if (!token) {
-  token = crypto.randomBytes(24).toString('base64url');
+  token = preferredCandidate || crypto.randomBytes(24).toString('base64url');
   const expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
   run('INSERT INTO share_tokens (trip_id, token, created_by, share_map, share_bookings, share_packing, share_budget, share_collab, expires_at) VALUES (?, ?, ?, 1, 1, 0, 1, 0, ?)', tripId, token, uid, expires);
 } else {
@@ -216,10 +287,10 @@ console.log(JSON.stringify({ tripId, token, url: String(payload.publicBase || ''
 `;
 
 const pythonCode = String.raw`
-import json, sqlite3, sys, secrets, datetime
+import json, sqlite3, sys, secrets, datetime, os
 
 payload = json.load(sys.stdin)
-db = sqlite3.connect('/home/timesyncher-agent/trek/runtime/data/travel.db')
+db = sqlite3.connect(os.environ.get('TIMESYNCHER_TREK_DB_PATH') or '/home/timesyncher-agent/trek/runtime/data/travel.db')
 db.row_factory = sqlite3.Row
 
 def one(sql, args=()):
@@ -250,7 +321,8 @@ cat = {
     'car': category_id('Car', '#0891b2', 'Car'),
 }
 uid = user_id()
-trip = one('SELECT id FROM trips WHERE title = ? ORDER BY id LIMIT 1', (payload['title'],))
+create_new_trip = bool(payload.get('createNewTrip'))
+trip = None if create_new_trip else one('SELECT id FROM trips WHERE title = ? ORDER BY id LIMIT 1', (payload['title'],))
 if trip:
     trip_id = int(trip['id'])
     run('UPDATE trips SET description=?, start_date=?, end_date=?, currency=?, updated_at=CURRENT_TIMESTAMP WHERE id=?', (payload['description'], payload['startDate'], payload['endDate'], payload['currency'], trip_id))
@@ -293,7 +365,7 @@ for idx, p in enumerate(payload['places']):
             run('INSERT INTO day_accommodations (trip_id, place_id, start_day_id, end_day_id, check_in, check_out, notes) VALUES (?, ?, ?, ?, ?, ?, ?)', (trip_id, place_id, start_day, end_day, '15:00', '11:00', p.get('details')))
     if p.get('type') in ('hotel', 'flight', 'car', 'event'):
         run('INSERT INTO reservations (trip_id, day_id, place_id, title, reservation_time, location, notes, status, type, needs_review) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (trip_id, day_id, place_id, p['name'], p.get('time'), p.get('address'), p.get('details') or p.get('summary'), 'candidate', 'activity' if p.get('type') == 'event' else p.get('type'), 1))
-    thing_fields['place-' + str(place_id)] = {
+    thing_fields['place:' + str(place_id)] = {
         'category': p.get('type'),
         'area': p.get('area') or '',
         'status': 'considering',
@@ -304,13 +376,32 @@ for idx, p in enumerate(payload['places']):
         'longDetails': p.get('details') or '',
         'website': p.get('website') or '',
         'travelTime': '',
-        'googleRating': '',
-        'sourceNote': 'Seeded by TimeSyncher Vacation worker from researched starter itinerary.',
+        'lat': p.get('lat'),
+        'lng': p.get('lng'),
+        'address': p.get('address') or '',
+        'googleRating': p.get('googleRating') or '',
+        'yelpRating': p.get('yelpRating') or '',
+        'thirdPartyRating': p.get('thirdPartyRating') or '',
+        'review1': p.get('review1') or '',
+        'review2': p.get('review2') or '',
+        'review3': p.get('review3') or '',
+        'reviewSources': p.get('reviewSources') or [],
+        'happyHour': bool(p.get('happyHour')),
+        'happyHourDetails': p.get('happyHourDetails') or '',
+        'happyHourSources': p.get('happyHourSources') or [],
+        'sourceNote': 'Seeded by TimeSyncher Vacation worker from source-backed public research.',
+        'sources': p.get('sources') or [],
+        'sourceBacked': bool(p.get('sourceBacked')),
+        'verificationStatus': p.get('verificationStatus') or '',
+        'sourceQuality': p.get('sourceQuality') or {},
+        'adapterSources': p.get('adapterSources') or [],
+        'qualitySignals': p.get('qualitySignals') or {},
+        'fitScores': p.get('fitScores') or {},
+        'sourceCaveats': p.get('sourceCaveats') or [],
+        'verifiedAt': p.get('verifiedAt') or '',
+        'expiresAt': p.get('expiresAt') or '',
+        'researchMetadata': p.get('researchMetadata') or {},
     }
-
-for idx, row in enumerate(payload['days'], start=1):
-    date, title = row
-    run('INSERT INTO day_notes (day_id, trip_id, text, time, icon, sort_order) VALUES (?, ?, ?, ?, ?, ?)', (day_map[idx], trip_id, title, '09:00', 'Info', 0))
 
 for idx, row in enumerate(payload['budget']):
     category, name, total, note = row
@@ -319,6 +410,7 @@ for idx, row in enumerate(payload['budget']):
 share = one('SELECT token FROM share_tokens WHERE trip_id=? ORDER BY id LIMIT 1', (trip_id,))
 token = share['token'] if share else None
 preferred = (payload.get('preferredToken') or '').strip().lower()
+preferred_candidate = ''
 if preferred:
     candidate = preferred
     n = 2
@@ -328,13 +420,14 @@ if preferred:
             break
         candidate = preferred + '-' + str(n)
         n += 1
+    preferred_candidate = candidate
     if token and token != candidate:
         run('UPDATE shared_travel_thing_fields SET token=? WHERE token=?', (candidate, token))
         run('UPDATE share_token_overrides SET token=? WHERE token=?', (candidate, token))
         run('UPDATE share_tokens SET token=? WHERE trip_id=?', (candidate, trip_id))
         token = candidate
 if not token:
-    token = preferred or secrets.token_urlsafe(24)
+    token = preferred_candidate or secrets.token_urlsafe(24)
     expires = (datetime.datetime.utcnow() + datetime.timedelta(days=90)).isoformat() + 'Z'
     run('INSERT INTO share_tokens (trip_id, token, created_by, share_map, share_bookings, share_packing, share_budget, share_collab, expires_at) VALUES (?, ?, ?, 1, 1, 0, 1, 0, ?)', (trip_id, token, uid, expires))
 else:
@@ -355,7 +448,7 @@ print(json.dumps({'tripId': trip_id, 'token': token, 'url': payload['publicBase'
 
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
-  const plan = hawaiiPlan(input);
+  const plan = genericPlan(input);
   const final = spawnSync('python3', ['-c', pythonCode], {
     input: JSON.stringify(plan),
     encoding: 'utf8',
