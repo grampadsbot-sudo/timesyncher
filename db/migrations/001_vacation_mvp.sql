@@ -44,6 +44,82 @@ create table if not exists entitlements (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists vacation_collaborator_invites (
+  id uuid primary key default gen_random_uuid(),
+  owner_customer_id uuid not null references customers(id) on delete cascade,
+  trip_id uuid references trips(id) on delete cascade,
+  plan_code text not null,
+  scope text not null default 'single_trip',
+  requested_for text,
+  status text not null default 'pending_payment',
+  stripe_checkout_session_id text unique,
+  stripe_payment_intent_id text,
+  deep_link_token_hash text unique,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  paid_at timestamptz,
+  accepted_at timestamptz,
+  expires_at timestamptz,
+  check (scope in ('single_trip', 'unlimited_trips')),
+  check (status in ('pending_payment', 'paid', 'accepted', 'revoked', 'expired'))
+);
+
+create table if not exists vacation_collaborators (
+  id uuid primary key default gen_random_uuid(),
+  invite_id uuid references vacation_collaborator_invites(id) on delete set null,
+  owner_customer_id uuid not null references customers(id) on delete cascade,
+  trip_id uuid references trips(id) on delete cascade,
+  telegram_chat_id text,
+  telegram_user_id text,
+  display_name text,
+  plan_code text not null,
+  scope text not null default 'single_trip',
+  status text not null default 'active',
+  accepted_eula_version text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  accepted_at timestamptz,
+  revoked_at timestamptz,
+  check (scope in ('single_trip', 'unlimited_trips')),
+  check (status in ('active', 'revoked'))
+);
+
+create unique index if not exists vacation_collaborators_active_telegram_chat_idx
+  on vacation_collaborators (owner_customer_id, coalesce(trip_id, '00000000-0000-0000-0000-000000000000'::uuid), telegram_chat_id)
+  where status = 'active' and telegram_chat_id is not null;
+
+create unique index if not exists vacation_collaborators_active_telegram_user_idx
+  on vacation_collaborators (owner_customer_id, coalesce(trip_id, '00000000-0000-0000-0000-000000000000'::uuid), telegram_user_id)
+  where status = 'active' and telegram_user_id is not null;
+
+create table if not exists vacation_web_access_grants (
+  id uuid primary key default gen_random_uuid(),
+  owner_customer_id uuid not null references customers(id) on delete cascade,
+  trip_id uuid not null references trips(id) on delete cascade,
+  email text not null,
+  display_name text,
+  role text not null default 'web_editor',
+  status text not null default 'invited',
+  invite_token_hash text unique,
+  session_token_hash text unique,
+  invited_at timestamptz not null default now(),
+  accepted_at timestamptz,
+  revoked_at timestamptz,
+  expires_at timestamptz,
+  last_seen_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (role in ('owner', 'web_editor', 'telegram_collaborator', 'viewer')),
+  check (status in ('invited', 'accepted', 'revoked', 'expired'))
+);
+
+create unique index if not exists vacation_web_access_active_email_idx
+  on vacation_web_access_grants (trip_id, lower(email), role)
+  where status in ('invited', 'accepted');
+
 create table if not exists paid_orders (
   id uuid primary key default gen_random_uuid(),
   customer_id uuid references customers(id) on delete set null,
@@ -60,21 +136,6 @@ create table if not exists paid_orders (
   contact jsonb not null default '{}'::jsonb,
   metadata jsonb not null default '{}'::jsonb,
   paid_at timestamptz not null default now(),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists checkout_coupons (
-  id uuid primary key default gen_random_uuid(),
-  code_hash text not null unique,
-  code_hint text not null,
-  label text,
-  status text not null default 'active',
-  created_by text,
-  expires_at timestamptz,
-  redeemed_at timestamptz,
-  redeemed_order_id uuid,
-  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -97,23 +158,58 @@ create table if not exists onboarding_sessions (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists checkout_coupons (
+  id uuid primary key default gen_random_uuid(),
+  code_hash text not null unique,
+  code_hint text not null,
+  label text not null default 'TimeSyncher checkout coupon',
+  max_redemptions integer not null default 1,
+  redemption_count integer not null default 0,
+  status text not null default 'active',
+  expires_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (max_redemptions > 0),
+  check (redemption_count >= 0)
+);
+
 create table if not exists checkout_coupon_redemptions (
   id uuid primary key default gen_random_uuid(),
-  coupon_id uuid references checkout_coupons(id) on delete set null,
+  coupon_id uuid not null references checkout_coupons(id) on delete cascade,
   customer_id uuid references customers(id) on delete set null,
+  trip_id uuid references trips(id) on delete set null,
   order_id uuid references paid_orders(id) on delete set null,
-  session_id uuid references onboarding_sessions(id) on delete set null,
-  code_hint text not null,
-  customer_email text,
+  onboarding_session_id uuid references onboarding_sessions(id) on delete set null,
+  email text,
   plan text not null default 'single',
   original_amount_cents integer not null default 0,
-  waived_amount_cents integer not null default 0,
-  currency text not null default 'usd',
+  status text not null default 'processing',
   email_status text,
-  status text not null default 'redeemed',
   metadata jsonb not null default '{}'::jsonb,
-  redeemed_at timestamptz not null default now()
+  created_at timestamptz not null default now()
 );
+
+alter table checkout_coupons
+  add column if not exists max_redemptions integer not null default 1,
+  add column if not exists redemption_count integer not null default 0,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table checkout_coupon_redemptions
+  add column if not exists customer_id uuid references customers(id) on delete set null,
+  add column if not exists trip_id uuid references trips(id) on delete set null,
+  add column if not exists order_id uuid references paid_orders(id) on delete set null,
+  add column if not exists onboarding_session_id uuid references onboarding_sessions(id) on delete set null,
+  add column if not exists email text,
+  add column if not exists email_status text,
+  add column if not exists created_at timestamptz not null default now();
+
+alter table checkout_coupon_redemptions
+  add column if not exists code_hint text;
+
+alter table checkout_coupon_redemptions
+  alter column code_hint drop not null;
 
 create table if not exists onboarding_clicks (
   id uuid primary key default gen_random_uuid(),
@@ -269,7 +365,12 @@ alter table transcript_turns
   add column if not exists received_at timestamptz,
   add column if not exists sent_at timestamptz,
   add column if not exists response_latency_ms integer,
-  add column if not exists onboarding_step text;
+  add column if not exists onboarding_step text,
+  add column if not exists turn_category text,
+  add column if not exists turn_tags text[] not null default '{}'::text[],
+  add column if not exists turn_tag_source text,
+  add column if not exists turn_tag_confidence numeric,
+  add column if not exists turn_tagged_at timestamptz;
 
 create table if not exists support_notes (
   id uuid primary key default gen_random_uuid(),
@@ -283,9 +384,6 @@ create table if not exists support_notes (
 );
 
 create index if not exists idx_trips_customer_id on trips(customer_id);
-create index if not exists idx_checkout_coupons_status on checkout_coupons(status, expires_at);
-create index if not exists idx_checkout_coupon_redemptions_coupon_id on checkout_coupon_redemptions(coupon_id);
-create index if not exists idx_checkout_coupon_redemptions_redeemed_at on checkout_coupon_redemptions(redeemed_at);
 create index if not exists idx_vacation_requests_trip_id on vacation_requests(trip_id);
 create index if not exists idx_vacation_requests_status on vacation_requests(status);
 create index if not exists idx_vacation_requests_timing on vacation_requests(received_at, completed_at);
@@ -295,9 +393,14 @@ create index if not exists idx_transcript_turns_trip_id on transcript_turns(trip
 create index if not exists idx_trip_things_trip_category on trip_things(trip_id, category, subtype);
 create index if not exists idx_budget_items_trip_id on budget_items(trip_id);
 create index if not exists idx_paid_orders_customer_id on paid_orders(customer_id);
+create index if not exists idx_checkout_coupons_status on checkout_coupons(status, expires_at, created_at);
+create index if not exists idx_checkout_coupon_redemptions_coupon_id on checkout_coupon_redemptions(coupon_id, created_at);
+create index if not exists idx_checkout_coupon_redemptions_session_id on checkout_coupon_redemptions(onboarding_session_id);
 create index if not exists idx_onboarding_sessions_customer_id on onboarding_sessions(customer_id);
 create index if not exists idx_onboarding_sessions_token on onboarding_sessions(token);
 create index if not exists idx_onboarding_clicks_session_id on onboarding_clicks(session_id, clicked_at);
 create index if not exists idx_outbound_emails_status on outbound_emails(status, created_at);
 create index if not exists idx_telegram_sessions_customer_id on telegram_sessions(customer_id);
 create index if not exists idx_transcript_turns_telegram_session_id on transcript_turns(telegram_session_id, created_at);
+create index if not exists idx_transcript_turns_turn_category on transcript_turns(turn_category, created_at);
+create index if not exists idx_transcript_turns_turn_tags on transcript_turns using gin(turn_tags);

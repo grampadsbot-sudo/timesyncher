@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>OpenClaw Control</title>
+  <style>
+    :root { --bg:#050505; --panel:#15120d; --gold:#f5d37b; --line:rgba(245,211,123,.24); --muted:#cfc2a9; --bad:#ff8678; --ok:#71e5bc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, rgba(245,211,123,.14), transparent 34rem), var(--bg); color: #fffaf0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(760px, calc(100% - 28px)); margin: 0 auto; padding: 34px 0; }
+    section { border: 1px solid var(--line); background: rgba(21,18,13,.9); border-radius: 16px; padding: 18px; margin: 14px 0; }
+    h1 { margin: 0 0 8px; color: var(--gold); font-size: clamp(2rem, 8vw, 3.6rem); line-height: .95; }
+    h2 { margin: 0 0 12px; color: var(--gold); font-size: 1rem; text-transform: uppercase; letter-spacing: .08em; }
+    p { color: #e6dbc4; line-height: 1.5; }
+    label { display: grid; gap: 8px; color: var(--muted); font-weight: 700; }
+    input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #090704; color: #fffaf0; font: inherit; }
+    button { min-height: 44px; border: 0; border-radius: 999px; padding: 11px 16px; cursor: pointer; color: #090704; background: linear-gradient(135deg, #f5d37b, #b8892e); font-weight: 900; }
+    button.secondary { color: var(--gold); background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+    button.danger { color: #220602; background: linear-gradient(135deg, #ffb08b, #ff6c58); }
+    button:disabled { opacity: .55; cursor: wait; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .metric { border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px; background: rgba(255,255,255,.04); min-height: 74px; }
+    .metric b { display: block; color: #fffaf0; overflow-wrap: anywhere; }
+    .metric span { color: var(--muted); font-size: .86rem; }
+    .status { border-radius: 12px; padding: 12px; background: rgba(113,229,188,.1); color: var(--ok); border: 1px solid rgba(113,229,188,.25); overflow-wrap: anywhere; }
+    .status.bad { color: var(--bad); background: rgba(255,134,120,.1); border-color: rgba(255,134,120,.35); }
+    .hidden { display: none !important; }
+    @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>OpenClaw Control</h1>
+    <p>Recovery switch for the iMac OpenClaw gateway.</p>
+
+    <section id="login">
+      <h2>Access</h2>
+      <label>Access code
+        <input id="token" autocomplete="current-password" type="password" />
+      </label>
+      <div class="row" style="margin-top:12px">
+        <button id="saveToken">Save</button>
+      </div>
+    </section>
+
+    <section id="control" class="hidden">
+      <h2>Status</h2>
+      <div id="message" class="status">Loading...</div>
+      <div class="grid" style="margin-top:12px">
+        <div class="metric"><span>Last iMac heartbeat</span><b id="heartbeat">--</b></div>
+        <div class="metric"><span>Last iMac poll</span><b id="poll">--</b></div>
+        <div class="metric"><span>Last restart request</span><b id="requested">--</b></div>
+        <div class="metric"><span>Last restart result</span><b id="completed">--</b></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button id="refresh" class="secondary">Refresh</button>
+        <button id="restart" class="danger">Restart Gateway</button>
+        <button id="clear" class="secondary">Forget Code</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const TOKEN_KEY = 'timesyncher.openclaw.adminToken';
+    const tokenInput = document.getElementById('token');
+    const login = document.getElementById('login');
+    const control = document.getElementById('control');
+    const message = document.getElementById('message');
+    const els = {
+      heartbeat: document.getElementById('heartbeat'),
+      poll: document.getElementById('poll'),
+      requested: document.getElementById('requested'),
+      completed: document.getElementById('completed'),
+    };
+    let busy = false;
+
+    function token() {
+      return localStorage.getItem(TOKEN_KEY) || tokenInput.value.trim();
+    }
+
+    function showMessage(text, bad = false) {
+      message.textContent = text;
+      message.classList.toggle('bad', bad);
+    }
+
+    function fmt(value) {
+      if (!value) return '--';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    async function api(action, options = {}) {
+      const response = await fetch(`/api/eula?action=${encodeURIComponent(`openclaw-control-${action}`)}`, {
+        method: options.method || 'GET',
+        headers: {
+          'content-type': 'application/json',
+          'x-openclaw-admin-token': token(),
+        },
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || `Request failed (${response.status})`);
+      return data;
+    }
+
+    function render(controlState) {
+      const pending = controlState.pendingCommand;
+      els.heartbeat.textContent = fmt(controlState.lastAgentHeartbeatAt);
+      els.poll.textContent = fmt(controlState.lastPollAt);
+      els.requested.textContent = fmt(controlState.lastRestartRequestedAt);
+      els.completed.textContent = controlState.lastRestartCompletedAt
+        ? `${fmt(controlState.lastRestartCompletedAt)} (${controlState.lastRestartStatus || 'unknown'})`
+        : '--';
+      showMessage(pending ? `Restart ${pending.status}: ${pending.id}` : 'Ready. Poller checks every 10 minutes.');
+    }
+
+    async function refresh() {
+      if (!token()) return;
+      try {
+        const data = await api('status');
+        login.classList.add('hidden');
+        control.classList.remove('hidden');
+        render(data.control);
+      } catch (error) {
+        login.classList.remove('hidden');
+        control.classList.add('hidden');
+        showMessage(error.message, true);
+      }
+    }
+
+    async function requestRestart() {
+      if (busy) return;
+      if (!confirm('Restart the iMac OpenClaw gateway?')) return;
+      busy = true;
+      document.getElementById('restart').disabled = true;
+      try {
+        const data = await api('request-restart', { method: 'POST', body: { requestedBy: 'openclaw-admin-page' } });
+        render(data.control);
+      } catch (error) {
+        showMessage(error.message, true);
+      } finally {
+        busy = false;
+        document.getElementById('restart').disabled = false;
+      }
+    }
+
+    document.getElementById('saveToken').addEventListener('click', () => {
+      if (!tokenInput.value.trim()) return;
+      localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
+      refresh();
+    });
+    document.getElementById('refresh').addEventListener('click', refresh);
+    document.getElementById('restart').addEventListener('click', requestRestart);
+    document.getElementById('clear').addEventListener('click', () => {
+      localStorage.removeItem(TOKEN_KEY);
+      tokenInput.value = '';
+      login.classList.remove('hidden');
+      control.classList.add('hidden');
+    });
+
+    tokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
+    refresh();
+    setInterval(refresh, 30000);
+  </script>
+</body>
+</html>

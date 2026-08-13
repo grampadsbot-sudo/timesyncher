@@ -1,6 +1,7 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 
 function customerFields(body) {
   const customer = body.customer || {};
@@ -118,9 +119,22 @@ export default async function handler(req, res) {
     `;
     const requestId = requestRows[0].id;
 
+    const turnTag = classifyTurn({
+      text: request.requestText,
+      speaker: 'customer',
+      direction: 'inbound',
+      channel: request.source,
+      payload: request.payload,
+    });
     await db`
-      insert into transcript_turns (customer_id, trip_id, request_id, speaker, channel, body, payload)
-      values (${customerId}, ${tripId}, ${requestId}, 'customer', ${request.source}, ${request.requestText}, ${request.payload})
+      insert into transcript_turns (
+        customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+        turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
+      )
+      values (
+        ${customerId}, ${tripId}, ${requestId}, 'customer', ${request.source}, ${request.requestText}, ${request.payload}, 'inbound',
+        ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
+      )
     `;
     await db`
       insert into vacation_request_events (request_id, event_type, actor, details)

@@ -1,6 +1,7 @@
 import { requireWorkerAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 
 async function claimJobs(db, { workerId, limit }) {
   const rows = await db`
@@ -41,7 +42,7 @@ async function claimJobs(db, { workerId, limit }) {
       (
         select coalesce(jsonb_agg(row_to_json(turns) order by turns.created_at), '[]'::jsonb)
         from (
-          select id, speaker, channel, direction, body, payload, created_at
+          select id, speaker, channel, direction, body, payload, turn_category, turn_tags, created_at
           from transcript_turns
           where trip_id = claimed.trip_id
           order by created_at desc
@@ -104,9 +105,22 @@ async function completeJob(db, body) {
   `;
 
   if (body.customerResponse) {
+    const turnTag = classifyTurn({
+      text: body.customerResponse,
+      speaker: 'assistant',
+      direction: 'outbound',
+      channel: 'worker',
+      payload: body.result || {},
+    });
     await db`
-      insert into transcript_turns (trip_id, request_id, speaker, channel, body, payload)
-      values (${rows[0].trip_id}, ${rows[0].request_id}, 'assistant', 'worker', ${cleanText(body.customerResponse, 12000)}, ${JSON.stringify(body.result || {})}::jsonb)
+      insert into transcript_turns (
+        trip_id, request_id, speaker, channel, body, payload, direction,
+        turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
+      )
+      values (
+        ${rows[0].trip_id}, ${rows[0].request_id}, 'assistant', 'worker', ${cleanText(body.customerResponse, 12000)}, ${JSON.stringify(body.result || {})}::jsonb, 'outbound',
+        ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
+      )
     `;
   }
   await persistArtifacts(db, rows[0], body.result || {});

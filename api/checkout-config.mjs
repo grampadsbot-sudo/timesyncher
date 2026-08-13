@@ -1,4 +1,4 @@
-import { stripePublishableKey } from './_stripe-env.mjs';
+import { stripePublishableKey } from '../src/vacation/stripe-env.mjs';
 
 function send(res, status, body) {
   res.statusCode = status;

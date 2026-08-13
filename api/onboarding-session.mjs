@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { stripeSecretKey } from './_stripe-env.mjs';
+import { stripeSecretKey } from '../src/vacation/stripe-env.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { buildOnboardingFromStripe, ensureVacationEulaSession, getSessionByToken, publicSession, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';

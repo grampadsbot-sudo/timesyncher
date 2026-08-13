@@ -9,7 +9,7 @@ import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-stor
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
-const DEFAULT_EULA_VERSION = '2026-06-terms-advisory-only';
+const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
 
 export function siteBase(env = process.env) {
   return String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).trim().replace(/\/+$/, '');
@@ -103,7 +103,7 @@ async function ensureTrip(db, customerId, metadata) {
     values (
       ${customerId}, ${title}, ${vacationDate || null},
       ${{
-        source: 'stripe_purchase',
+        source: cleanText(metadata.source, 80) || 'stripe_purchase',
         onboarding: true,
       }},
       'onboarding',
@@ -148,11 +148,63 @@ async function ensureOrder(db, customerId, tripId, entitlementId, order) {
     values (
       ${customerId}, ${tripId}, ${entitlementId}, ${order.stripeCustomerId}, ${order.stripeSubscriptionId},
       ${order.stripeInvoiceId}, ${order.stripePaymentIntentId}, ${order.amountCents}, ${order.currency},
-      ${order.plan}, 'paid', ${order.contact}, ${order.metadata}, ${order.paidAt || new Date().toISOString()}, now()
+      ${order.plan}, ${order.status || 'paid'}, ${order.contact}, ${order.metadata}, ${order.paidAt || new Date().toISOString()}, now()
     )
     returning id
   `;
   return rows[0].id;
+}
+
+export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', amountCents = 0, metadata = {}, env = process.env }) {
+  const orderMetadata = {
+    ...jsonObject(metadata),
+    source: 'coupon_checkout',
+    couponCheckout: true,
+  };
+  const cleanContact = {
+    email: cleanText(contact?.email, 180).toLowerCase() || null,
+    phone: cleanText(contact?.phone, 80) || null,
+    firstName: cleanText(contact?.firstName, 80) || null,
+    lastName: cleanText(contact?.lastName, 80) || null,
+    displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' '), 180) || cleanText(contact?.email, 180) || null,
+  };
+  const customerId = await upsertCustomer(db, cleanContact, orderMetadata);
+  const tripId = await ensureTrip(db, customerId, orderMetadata);
+  const order = {
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    stripeInvoiceId: null,
+    stripePaymentIntentId: null,
+    amountCents: 0,
+    currency: cleanText(orderMetadata.currency || 'usd', 12) || 'usd',
+    plan: cleanText(plan, 40) === 'unlimited' ? 'unlimited' : 'single',
+    status: 'coupon_redeemed',
+    contact: cleanContact,
+    paidAt: new Date().toISOString(),
+    metadata: {
+      ...orderMetadata,
+      originalAmountCents: Number.isFinite(amountCents) ? amountCents : 0,
+      amountWaivedCents: Number.isFinite(amountCents) ? amountCents : 0,
+    },
+  };
+  const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
+  const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
+  const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
+  const eula = await ensureVacationEulaSession(session, { contact: cleanContact, env });
+
+  return {
+    customerId,
+    tripId,
+    entitlementId,
+    orderId,
+    session,
+    token: session.token,
+    onboardingUrl: onboardingLink(session.token, env),
+    telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
+    eula,
+    contact: cleanContact,
+    order,
+  };
 }
 
 async function ensureOnboardingSession(db, customerId, tripId, orderId, metadata, env) {
@@ -210,11 +262,8 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
       'telegram_voice_note_intake',
       'hosted_itinerary_generation',
       'purchase_receipts_and_support',
-      'advisory_only_no_delegated_actions',
     ],
-    google: {
-      policy: 'No Google OAuth access is requested for this vacation onboarding step. TimeSyncher is advisory-only and cannot book, buy, send, cancel, reschedule, accept terms, or modify external accounts for the customer.',
-    },
+    google: {},
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
       text: loadDefaultEulaText(),

@@ -11,7 +11,7 @@
     body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: rgba(12,15,20,.96); border-bottom: 1px solid var(--line); }
     h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
-    button, input { border: 1px solid var(--line); border-radius: 8px; background: #10141c; color: var(--text); min-height: 36px; padding: 8px 10px; font: inherit; }
+    button, input, select { border: 1px solid var(--line); border-radius: 8px; background: #10141c; color: var(--text); min-height: 36px; padding: 8px 10px; font: inherit; }
     button { cursor: pointer; font-weight: 700; }
     button.primary { background: var(--gold); color: #151006; border-color: var(--gold); }
     main { display: grid; grid-template-columns: minmax(320px, 430px) minmax(0, 1fr); min-height: calc(100vh - 65px); }
@@ -24,6 +24,10 @@
     .pill { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 12px; }
     .pill.good { color: var(--green); border-color: rgba(126,224,162,.35); }
     .pill.bad { color: var(--red); border-color: rgba(255,142,133,.45); }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .tag { color: #f3e7c0; border-color: rgba(245,211,123,.35); background: rgba(245,211,123,.08); }
+    .tag.outside { color: #b8ddff; border-color: rgba(134,201,255,.42); background: rgba(134,201,255,.08); }
+    .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
     .metrics { display: grid; grid-template-columns: repeat(6, minmax(90px, 1fr)); gap: 10px; margin: 10px 0 16px; }
     .metric, .card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 12px; }
     .metric strong { display: block; color: var(--gold); font-size: 20px; }
@@ -33,7 +37,6 @@
     .event { border-left: 3px solid var(--blue); padding: 9px 10px; background: #111722; border-radius: 6px; }
     .event.email { border-left-color: var(--green); }
     .event.click { border-left-color: var(--gold); }
-    .event.coupon { border-left-color: var(--gold); }
     .event.turn { border-left-color: #d6a6ff; }
     .event.worker_job, .event.request { border-left-color: #ffb185; }
     .summary { margin-top: 5px; color: var(--muted); overflow-wrap: anywhere; }
@@ -101,6 +104,21 @@
         return value ? `${humanKey(key)} ${value}` : '';
       }).filter(Boolean);
     }
+    function turnTags(data) {
+      return Array.isArray(data?.turn_tags) ? data.turn_tags : [];
+    }
+    function tagPills(data) {
+      const tags = turnTags(data);
+      if (!tags.length) return '';
+      return `<div class="tag-row">${tags.map(tag => `<span class="pill tag ${tag.startsWith('outside_travel_') ? 'outside' : ''}">${safe(tag)}</span>`).join('')}</div>`;
+    }
+    function matchesTag(item, tag) {
+      return !tag || turnTags(item.data || item).includes(tag);
+    }
+    function tagOptions(turns) {
+      const tags = [...new Set((turns || []).flatMap(turn => turnTags(turn)))].sort();
+      return ['<option value="">All tags</option>', ...tags.map(tag => `<option value="${safe(tag)}">${safe(tag)}</option>`)].join('');
+    }
     function fallbackSummary(source) {
       const data = source && typeof source === 'object' ? source : {};
       return Object.keys(data)
@@ -114,13 +132,12 @@
       const data = item.data || item;
       const kind = item.kind || data.kind || '';
       if (kind === 'payment') return compactFields(data, ['status', 'plan', 'amountCents']).join(' · ');
-      if (kind === 'coupon') return compactFields(data, ['code_hint', 'status', 'plan', 'waived_amount_cents', 'customer_email', 'email_status', 'redeemed_at']).join(' · ');
       if (kind === 'onboarding') return compactFields(data, ['status', 'currentStep']).join(' · ');
       if (kind === 'email') return compactFields(data, ['to_email', 'status', 'provider', 'subject', 'sent_at', 'error_summary']).join(' · ');
       if (kind === 'click') return compactFields(data, ['event_type', 'target', 'href', 'clicked_at']).join(' · ');
       if (kind === 'telegram_session') return compactFields(data, ['status', 'current_step', 'telegram_user_id', 'started_at', 'last_message_at']).join(' · ');
       if (kind === 'turn') {
-        const fields = compactFields(data, ['direction', 'speaker', 'channel', 'onboarding_step', 'response_latency_ms']);
+        const fields = compactFields(data, ['direction', 'speaker', 'turn_category', 'channel', 'onboarding_step', 'response_latency_ms']);
         if (data.body) fields.push(`message ${shortText(data.body)}`);
         return fields.join(' · ');
       }
@@ -187,18 +204,22 @@
           <div>
             <span class="pill ${s.status === 'telegram_started' ? 'good' : ''}">${safe(s.status)}</span>
             <span class="pill">${safe(s.currentStep)}</span>
+            ${s.order?.coupon ? `<span class="pill good">coupon ${safe(s.order.coupon.codeHint || '')}</span>` : ''}
           </div>
           <div class="muted">${fmtDate(s.createdAt)}</div>
         </div>`).join('');
       for (const row of els.sessions.querySelectorAll('.row')) row.addEventListener('click', () => loadDetail(row.dataset.id));
       if (!currentId && sessions[0]) await loadDetail(sessions[0].id);
     }
-    function listEvents(items, { raw = false } = {}) {
+    function listEvents(items, { raw = false, tag = '' } = {}) {
+      const visible = tag ? items.filter(item => matchesTag(item, tag)) : items;
+      if (!visible.length && tag) return '<p class="muted">No records match that tag.</p>';
       if (!items.length) return '<p class="muted">No records yet.</p>';
-      return `<div class="timeline">${items.map(item => `
+      return `<div class="timeline">${visible.map(item => `
         <div class="event ${safe(item.kind || '')}">
           <div><strong>${safe(item.label || item.kind || 'event')}</strong> <span class="muted">${fmtDate(item.at || item.created_at || item.createdAt)}</span></div>
           ${raw ? jsonBlock(item.data || item) : `<div class="summary">${safe(eventSummary(item))}</div>`}
+          ${raw ? '' : tagPills(item.data || item)}
         </div>`).join('')}</div>`;
     }
     async function loadDetail(id) {
@@ -214,7 +235,6 @@
         </div>
         <div class="metrics">
           <div class="metric"><strong>${s.counts.emails}</strong><span>Email records</span></div>
-          <div class="metric"><strong>${data.coupons.length}</strong><span>Coupons taken</span></div>
           <div class="metric"><strong>${s.counts.clicks}</strong><span>Clicks</span></div>
           <div class="metric"><strong>${s.counts.telegramSessions}</strong><span>Telegram sessions</span></div>
           <div class="metric"><strong>${s.counts.turns}</strong><span>Turns</span></div>
@@ -225,11 +245,14 @@
           <strong>Timing:</strong>
           Paid ${fmtDate(s.order.paidAt)} · email ${fmtMs(s.timings.paidToEmailMs)} · Telegram start ${fmtMs(s.timings.paidToTelegramStartMs)}
           <br><strong>Order:</strong> ${safe(s.order.plan || '')} ${safe(money(s.order.amountCents, s.order.currency))}
-          ${s.order.coupon ? `<br><strong>Coupon:</strong> ${safe(s.order.coupon.label || s.order.coupon.hint || 'coupon')} waived ${safe(money(s.order.coupon.waivedAmountCents, s.order.currency))}` : ''}
+          ${s.order.coupon ? `<br><strong>Coupon:</strong> ${safe(s.order.coupon.label || 'Coupon redeemed')} · ${safe(s.order.coupon.codeHint || '')} · waived ${safe(money(s.order.coupon.originalAmountCents, s.order.currency))} · email ${safe(s.order.coupon.emailStatus || 'unknown')}` : ''}
+        </div>
+        <div class="filters">
+          <span class="muted">Tag</span>
+          <select id="tagFilter">${tagOptions(data.turns)}</select>
         </div>
         <div class="tabs">
           <button class="active" data-view="timeline">Timeline</button>
-          <button data-view="coupons">Coupons</button>
           <button data-view="turns">Turns</button>
           <button data-view="clicks">Clicks</button>
           <button data-view="emails">Emails</button>
@@ -238,22 +261,26 @@
         </div>
         <div id="panel"></div>`;
       const panel = document.getElementById('panel');
+      const tagFilter = document.getElementById('tagFilter');
       const render = view => {
         const views = {
           timeline: data.timeline,
-          coupons: data.coupons.map(c => ({ kind: 'coupon', label: `${c.status}: ${c.code_hint}`, at: c.redeemed_at, data: c })),
           turns: data.turns.map(t => ({ kind: 'turn', label: `${t.direction || ''} ${t.speaker || ''}`, at: t.received_at || t.sent_at || t.created_at, data: t })),
           clicks: data.clicks.map(c => ({ kind: 'click', label: `${c.event_type}: ${c.target}`, at: c.clicked_at, data: c })),
           emails: data.emails.map(e => ({ kind: 'email', label: `${e.status}: ${e.subject}`, at: e.sent_at || e.created_at, data: e })),
           jobs: data.jobs.map(j => ({ kind: 'worker_job', label: `${j.job_type}: ${j.status}`, at: j.updated_at || j.created_at, data: j })),
           raw: [{ kind: 'raw', label: 'Full payload', at: new Date().toISOString(), data }],
         };
-        panel.innerHTML = listEvents(views[view] || [], { raw: view === 'raw' });
+        panel.innerHTML = listEvents(views[view] || [], { raw: view === 'raw', tag: tagFilter?.value || '' });
       };
       for (const btn of els.detail.querySelectorAll('.tabs button')) btn.addEventListener('click', () => {
         for (const b of els.detail.querySelectorAll('.tabs button')) b.classList.remove('active');
         btn.classList.add('active');
         render(btn.dataset.view);
+      });
+      tagFilter?.addEventListener('change', () => {
+        const active = els.detail.querySelector('.tabs button.active')?.dataset.view || 'timeline';
+        render(active);
       });
       render('timeline');
       await loadList();

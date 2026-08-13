@@ -166,9 +166,129 @@ function planningQuestions(destination, dates) {
   const questions = [];
   if (!destination) questions.push('What destination or cities should I plan around?');
   if (!dates.startDate && !dates.endDate && !dates.dateText) questions.push('What travel dates or date range should I use?');
+  questions.push('What should the shared trip paragraph emphasize: relaxing, adventure, family time, food, shows, shopping, or something else?');
   questions.push('What budget range and must-haves should I optimize for?');
   questions.push('Who is traveling, and are there mobility, food, lodging, or schedule constraints?');
   return questions.slice(0, 4);
+}
+
+function summaryMissingFields(requestText, destination, dates) {
+  const lower = requestText.toLowerCase();
+  const missing = [];
+  if (!destination) missing.push('destination or cities');
+  if (!dates.startDate && !dates.endDate && !dates.dateText) missing.push('dates or trip length');
+  if (!/\b(adult|adults|kid|kids|child|children|family|wife|husband|spouse|couple|people|travelers|travellers|guests)\b/.test(lower)) missing.push('who is traveling');
+  if (!/\b(budget|cheap|affordable|luxury|splurge|price|cost|per night|total)\b/.test(lower)) missing.push('budget or style');
+  if (!/\b(unforgettable|special|goal|vibe|relax|adventure|food|restaurant|beach|surf|museum|show|shop|avoid|must)\b/.test(lower)) missing.push('must-dos, vibe, or things to avoid');
+  return missing;
+}
+
+function hasUsableTripSummary(requestText, destination, dates) {
+  const wordCount = requestText.split(/\s+/).filter(Boolean).length;
+  return wordCount >= 18 && summaryMissingFields(requestText, destination, dates).length <= 2;
+}
+
+function deterministicTripSummary({ requestText, destination, dates, vacationName, unforgettableGoal }) {
+  const place = destination || 'this vacation';
+  const dateText = dates.dateText || [dates.startDate, dates.endDate].filter(Boolean).join(' to ');
+  const goal = unforgettableGoal || firstMatch(requestText, [
+    /\b(?:unforgettable|special|goal|vibe|want)\s*[:\-]?\s*([^.\n]{12,220})/i,
+    /\b(?:make it|would be)\s+([^.\n]{12,220})/i,
+  ]);
+  const travelerHint = firstMatch(requestText, [
+    /\b((?:my|our)\s+(?:wife|husband|spouse|family|kids|children|parents|friends)[^.\n]{0,120})/i,
+    /\b(\d+\s+(?:adults|kids|children|people|travelers|travellers|guests)[^.\n]{0,120})/i,
+  ]);
+  const pieces = [
+    `${vacationName || titleCase(place)} is being planned as a TimeSyncher Vacation for ${place}${dateText ? ` around ${dateText}` : ''}.`,
+    travelerHint ? `The plan should fit ${travelerHint}.` : '',
+    goal ? `The shared trip story should emphasize ${goal.replace(/[.;,]$/, '')}.` : '',
+    'The first itinerary pass should turn that brief into a practical, source-backed plan with lodging, food, activities, transportation, budget tradeoffs, and open questions called out clearly.',
+  ].filter(Boolean);
+  return pieces.join(' ').replace(/\s+/g, ' ').slice(0, 900);
+}
+
+async function grokTripSummary({ requestText, destination, dates, vacationName, unforgettableGoal }) {
+  const apiKey = process.env.TIMESYNCHER_XAI_API_KEY || process.env.XAI_API_KEY || '';
+  if (!apiKey) return null;
+  const model = process.env.TIMESYNCHER_XAI_SUMMARY_MODEL || process.env.XAI_MODEL || 'grok-4';
+  const prompt = [
+    'Write one polished customer-facing TimeSyncher Vacation trip summary paragraph.',
+    'Use only the customer-provided facts. Do not invent bookings, prices, restaurants, or events.',
+    'Mention uncertainty naturally if dates, travelers, budget, or destination are incomplete.',
+    'This exact paragraph will appear on the website and in PDFs.',
+    '',
+    `Vacation name: ${vacationName || '(not provided)'}`,
+    `Destination: ${destination || '(not provided)'}`,
+    `Dates: ${dates.dateText || dates.startDate || dates.endDate || '(not provided)'}`,
+    `Unforgettable goal: ${unforgettableGoal || '(not provided)'}`,
+    '',
+    'Customer text:',
+    requestText,
+  ].join('\n');
+  const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.4,
+      max_tokens: 220,
+      messages: [
+        { role: 'system', content: 'You write concise, specific travel-planning summaries for a customer-facing vacation itinerary.' },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error?.message || `XAI summary HTTP ${response.status}`);
+  return text(json.choices?.[0]?.message?.content, 1200).replace(/^["“]+|["”]+$/g, '').trim();
+}
+
+export async function buildTripSummary(artifacts) {
+  const missing = summaryMissingFields(artifacts.requestText, artifacts.destination, artifacts.dates);
+  const goodInput = hasUsableTripSummary(artifacts.requestText, artifacts.destination, artifacts.dates);
+  const fallback = deterministicTripSummary(artifacts);
+  if (!goodInput) {
+    return {
+      paragraph: fallback,
+      provider: 'deterministic_summary',
+      status: 'needs_followup',
+      missing,
+      followUpQuestions: missing.map((field) => `Please send ${field}.`),
+    };
+  }
+  try {
+    const paragraph = await grokTripSummary(artifacts);
+    if (paragraph) {
+      return {
+        paragraph,
+        provider: 'xai_grok',
+        model: process.env.TIMESYNCHER_XAI_SUMMARY_MODEL || process.env.XAI_MODEL || 'grok-4',
+        status: missing.length ? 'draft_with_open_questions' : 'draft_ready',
+        missing,
+        followUpQuestions: missing.map((field) => `Please confirm ${field}.`),
+      };
+    }
+  } catch (error) {
+    return {
+      paragraph: fallback,
+      provider: 'deterministic_summary',
+      providerError: text(error.message, 500),
+      status: missing.length ? 'draft_with_open_questions' : 'draft_ready',
+      missing,
+      followUpQuestions: missing.map((field) => `Please confirm ${field}.`),
+    };
+  }
+  return {
+    paragraph: fallback,
+    provider: 'deterministic_summary',
+    status: missing.length ? 'draft_with_open_questions' : 'draft_ready',
+    missing,
+    followUpQuestions: missing.map((field) => `Please confirm ${field}.`),
+  };
 }
 
 function extractTripSegments(requestText) {
@@ -403,19 +523,18 @@ function siteBase() {
   return String(process.env.TIMESYNCHER_SITE_BASE_URL || process.env.SITE_BASE_URL || DEFAULT_SITE_BASE).replace(/\/+$/, '');
 }
 
-function itineraryUrl(job) {
-  return '';
-}
-
 function syncTrekItinerary(job, artifacts) {
-  if (!/\bhawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island\b/i.test(artifacts.requestText || '')) return null;
+  if (!/\bhawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island\b/i.test(artifacts.requestText || '')) {
+    throw new Error('TREK itinerary sync is mandatory, but this destination is not supported by the current TREK sync adapter yet. Do not send a customer success URL.');
+  }
   const script = path.join(SCRIPT_DIR, 'trek-vacation-sync.mjs');
-  if (!fs.existsSync(script)) return null;
+  if (!fs.existsSync(script)) throw new Error(`TREK sync script is missing: ${script}`);
   const payload = {
     sourceKey: text(job.onboarding_token || job.request_id || job.id || 'timesyncher-vacation-hawaii', 180),
     onboardingToken: text(job.onboarding_token || '', 180),
     title: artifacts.vacationName || 'Hawaii July 2026',
     unforgettableGoal: artifacts.unforgettableGoal || '',
+    tripSummary: artifacts.tripSummary?.paragraph || '',
     publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com',
   };
   const result = spawnSync(process.execPath, [script], {
@@ -425,16 +544,55 @@ function syncTrekItinerary(job, artifacts) {
     maxBuffer: 1024 * 1024,
   });
   if (result.status !== 0) {
-    return { error: text(result.stderr || result.stdout || 'TREK sync failed', 800) };
+    throw new Error(`TREK sync failed: ${text(result.stderr || result.stdout || 'unknown error', 800)}`);
   }
+  let sync;
   try {
-    return JSON.parse(result.stdout.trim());
+    sync = JSON.parse(result.stdout.trim());
   } catch {
-    return { error: `TREK sync returned invalid JSON: ${text(result.stdout, 300)}` };
+    throw new Error(`TREK sync returned invalid JSON: ${text(result.stdout, 300)}`);
+  }
+  smokeCheckTrekSync(sync);
+  return sync;
+}
+
+function smokeCheckTrekSync(sync) {
+  const url = text(sync?.url || '', 500);
+  const token = text(sync?.token || '', 180);
+  if (!url) throw new Error('TREK sync returned no customer URL');
+  const parsed = new URL(url);
+  if (parsed.hostname.toLowerCase() !== 'vacation.timesyncher.com') {
+    throw new Error(`TREK sync returned non-canonical host: ${parsed.hostname}`);
+  }
+  const page = spawnSync('curl', ['-fsSL', url], { encoding: 'utf8', timeout: 20000, maxBuffer: 1024 * 1024 });
+  if (page.status !== 0) throw new Error(`TREK shared URL smoke failed: ${text(page.stderr || page.stdout || 'no response', 500)}`);
+  const assetPaths = Array.from(page.stdout.matchAll(/["'](\/assets\/index-[^"']+)["']/g), (match) => match[1]);
+  if (assetPaths.length < 2) throw new Error('TREK shared URL smoke failed: missing app JS/CSS assets');
+  for (const assetPath of assetPaths) {
+    const assetUrl = new URL(assetPath, parsed.origin).toString();
+    const asset = spawnSync('curl', ['-fsSL', assetUrl], { encoding: 'utf8', timeout: 30000, maxBuffer: 8 * 1024 * 1024 });
+    if (asset.status !== 0) throw new Error(`TREK asset smoke failed for ${assetPath}: ${text(asset.stderr || asset.stdout || 'no response', 500)}`);
+  }
+  if (token) {
+    const api = new URL(`/api/shared/${encodeURIComponent(token)}`, parsed.origin);
+    const apiRes = spawnSync('curl', ['-fsSL', api.toString()], { encoding: 'utf8', timeout: 20000, maxBuffer: 1024 * 1024 });
+    if (apiRes.status !== 0) throw new Error(`TREK shared API smoke failed: ${text(apiRes.stderr || apiRes.stdout || 'no response', 500)}`);
+    let body;
+    try {
+      body = JSON.parse(apiRes.stdout);
+    } catch {
+      throw new Error(`TREK shared API returned invalid JSON: ${text(apiRes.stdout, 300)}`);
+    }
+    const trip = body?.trip || body;
+    const days = Array.isArray(body?.days) ? body.days : Array.isArray(trip?.days) ? trip.days : [];
+    const places = Array.isArray(body?.places) ? body.places : Array.isArray(trip?.places) ? trip.places : [];
+    if (!text(trip?.title || body?.title, 180)) throw new Error('TREK shared API smoke failed: missing title');
+    if (days.length < 1) throw new Error('TREK shared API smoke failed: missing days');
+    if (places.length < 1) throw new Error('TREK shared API smoke failed: missing places');
   }
 }
 
-function buildArtifacts(job, manifest) {
+async function buildArtifacts(job, manifest) {
   const input = asObject(job.input);
   const payload = { ...asObject(job.payload), ...asObject(input.payload) };
   const trip = { ...asObject(payload.trip), ...asObject(input.trip) };
@@ -449,8 +607,9 @@ function buildArtifacts(job, manifest) {
   const requestedAt = new Date().toISOString();
   const initialItinerary = buildInitialItinerary({ requestText, destination, dates });
   const researchedThings = hawaiiResearchThings(requestText);
-  const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal });
-  const webItineraryUrl = trekSync?.url || itineraryUrl(job);
+  const tripSummary = await buildTripSummary({ requestText, destination, dates, vacationName, unforgettableGoal });
+  const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal, tripSummary });
+  const webItineraryUrl = trekSync.url;
 
   const planningSummary = [
     destination ? `Destination: ${titleDestination}` : 'Destination: needs confirmation',
@@ -471,6 +630,7 @@ function buildArtifacts(job, manifest) {
         requestedAt,
         allowedMethods: methods,
         questions: planningQuestions(destination, dates),
+        tripSummary,
         initialItineraryGenerated: true,
         vacationName: vacationName || null,
         unforgettableGoal: unforgettableGoal || null,
@@ -525,13 +685,16 @@ function buildArtifacts(job, manifest) {
     },
   ];
 
-  return { requestText, destination, dates, methods, lane, vacationName, unforgettableGoal, things, budgetItems, supportNotes, initialItinerary, webItineraryUrl, researchedThings, trekSync };
+  return { requestText, destination, dates, methods, lane, vacationName, unforgettableGoal, tripSummary, things, budgetItems, supportNotes, initialItinerary, webItineraryUrl, researchedThings, trekSync };
 }
 
 function customerResponse(job, artifacts) {
   const researchedCount = artifacts.researchedThings?.length || 0;
   const lines = [
-    'I created the first web-based TimeSyncher Vacation itinerary and added researched starter options for hotels, activities, restaurants, shopping, transportation, and open decisions.',
+    'I created the TimeSyncher Vacation TREK itinerary and added researched starter options for hotels, activities, restaurants, shopping, transportation, and open decisions.',
+    '',
+    artifacts.tripSummary?.paragraph ? `Trip summary: ${artifacts.tripSummary.paragraph}` : '',
+    artifacts.tripSummary?.followUpQuestions?.length ? `I still need: ${artifacts.tripSummary.followUpQuestions.join(' ')}` : '',
     '',
     artifacts.webItineraryUrl ? `Open it here: ${artifacts.webItineraryUrl}` : '',
     researchedCount ? `I saved ${researchedCount} source-linked research candidates so the next pass can rank and refine them instead of re-stating your voice note.` : '',
@@ -547,7 +710,7 @@ async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
   const job = input.job || input;
   const allowedSkills = manifest.allowedSkills || [];
-  const artifacts = buildArtifacts(job, manifest);
+  const artifacts = await buildArtifacts(job, manifest);
 
   const response = {
     customerResponse: customerResponse(job, artifacts),
@@ -562,6 +725,7 @@ async function main() {
       normalizedTrip: {
         vacationName: artifacts.vacationName || null,
         unforgettableGoal: artifacts.unforgettableGoal || null,
+        tripSummary: artifacts.tripSummary || null,
         destination: artifacts.destination || null,
         dates: artifacts.dates,
         lodgingLane: artifacts.lane,
@@ -589,7 +753,9 @@ async function main() {
   console.log(JSON.stringify(response));
 }
 
-main().catch((error) => {
-  console.error(error.message || String(error));
-  process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error.message || String(error));
+    process.exit(1);
+  });
+}

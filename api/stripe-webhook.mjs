@@ -1,8 +1,10 @@
 import Stripe from 'stripe';
-import { stripeSecretKey } from './_stripe-env.mjs';
+import { stripeSecretKey } from '../src/vacation/stripe-env.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { buildOnboardingFromStripe } from '../src/vacation/onboarding.mjs';
-import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
+import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
+import { markCollaboratorInvitePaid } from '../src/vacation/collaborators.mjs';
+import { ownerMediaAddOns, recordOwnerMediaPurchase } from '../src/vacation/media-checkout.mjs';
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -38,6 +40,69 @@ export default async function handler(req, res) {
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object;
       const db = sql(process.env);
+      const metadata = paymentIntent.metadata || {};
+      if (metadata.product === 'timesyncher_vacation_telegram_collaborator' && metadata.invite_id) {
+        const invite = await markCollaboratorInvitePaid(db, {
+          inviteId: metadata.invite_id,
+          env: process.env,
+          metadata: {
+            stripeCustomerId: typeof paymentIntent.customer === 'string' ? paymentIntent.customer : paymentIntent.customer?.id || null,
+            stripePaymentIntentId: paymentIntent.id,
+            paidVia: 'stripe_payment_element',
+          },
+        });
+        const token = metadata.invite_token || '';
+        const email = token ? await queueOrSendCollaboratorInviteEmail(db, {
+          invite,
+          token,
+          contact: {
+            email: paymentIntent.receipt_email || metadata.email || '',
+            firstName: metadata.first_name || '',
+            lastName: metadata.last_name || '',
+            displayName: metadata.requested_for || `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim() || '',
+          },
+        }, process.env) : { status: 'skipped', reason: 'missing invite token' };
+        console.log('TimeSyncher collaborator payment succeeded', {
+          paymentIntentId: paymentIntent.id,
+          inviteId: metadata.invite_id,
+          planCode: metadata.plan_code,
+          emailStatus: email.status,
+        });
+        return send(res, 200, { ok: true, received: true, type: event.type });
+      }
+      if (metadata.product === 'timesyncher_vacation_owner_media_addons') {
+        const addOns = ownerMediaAddOns({
+          mediaScope: metadata.media_scope,
+          photoUpload: metadata.photo_memories === 'true',
+          videoUpload: metadata.video_memories === 'true',
+        });
+        const purchase = await recordOwnerMediaPurchase({
+          db,
+          contact: {
+            email: paymentIntent.receipt_email || metadata.email || '',
+            firstName: metadata.first_name || '',
+            lastName: metadata.last_name || '',
+          },
+          addOns,
+          amountCents: paymentIntent.amount_received || paymentIntent.amount || addOns.amountCents,
+          currency: paymentIntent.currency || 'usd',
+          status: 'paid',
+          stripeCustomerId: typeof paymentIntent.customer === 'string' ? paymentIntent.customer : paymentIntent.customer?.id || null,
+          stripePaymentIntentId: paymentIntent.id,
+          metadata: {
+            paidVia: 'stripe_payment_element',
+            stripePaymentIntentId: paymentIntent.id,
+            source: 'owner_media_payment_element',
+          },
+        });
+        console.log('TimeSyncher owner media payment succeeded', {
+          paymentIntentId: paymentIntent.id,
+          orderId: purchase.orderId,
+          amount: purchase.amountCents,
+          currency: purchase.currency,
+        });
+        return send(res, 200, { ok: true, received: true, type: event.type });
+      }
       const onboarding = await buildOnboardingFromStripe({ db, stripe, paymentIntent, env: process.env });
       const email = await queueOrSendPurchaseEmail(db, onboarding, process.env);
       console.log('TimeSyncher payment succeeded and onboarding created', {
@@ -49,6 +114,40 @@ export default async function handler(req, res) {
         email: onboarding.contact?.email,
         emailStatus: email.status,
       });
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const metadata = session.metadata || {};
+      if (metadata.product === 'timesyncher_vacation_telegram_collaborator' && metadata.invite_id) {
+        const db = sql(process.env);
+        const invite = await markCollaboratorInvitePaid(db, {
+          inviteId: metadata.invite_id,
+          env: process.env,
+          metadata: {
+            stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id || null,
+            stripeCheckoutSessionId: session.id,
+            stripePaymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null,
+            checkoutMode: session.mode || null,
+            paidVia: 'stripe_checkout',
+          },
+        });
+        const token = metadata.invite_token || '';
+        const email = token ? await queueOrSendCollaboratorInviteEmail(db, {
+          invite,
+          token,
+          contact: {
+            email: session.customer_details?.email || session.customer_email || '',
+            displayName: session.customer_details?.name || invite.requested_for || '',
+          },
+        }, process.env) : { status: 'skipped', reason: 'missing invite token' };
+        console.log('TimeSyncher collaborator checkout completed', {
+          checkoutSessionId: session.id,
+          inviteId: metadata.invite_id,
+          planCode: metadata.plan_code,
+          emailStatus: email.status,
+        });
+      }
     }
 
     return send(res, 200, { ok: true, received: true, type: event.type });

@@ -7,6 +7,8 @@ import {
   loadSessionPersistent,
   receiptKey,
 } from '../src/onboarding/eula-persistent-core.mjs';
+import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
+import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
 
 const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
 
@@ -35,6 +37,9 @@ export default async function handler(req, res) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   const action = url.searchParams.get('action');
   try {
+    if (action?.startsWith('openclaw-control-')) {
+      return await handleOpenClawControl(req, res, action.slice('openclaw-control-'.length));
+    }
     if (req.method === 'POST' && action === 'create-session') {
       const body = await readBody(req);
       const eulaText = body.eula?.text || loadDefaultEulaText();
@@ -48,6 +53,11 @@ export default async function handler(req, res) {
       const session = await loadSessionPersistent(store, url.searchParams.get('sessionId'));
       if (!session || session.unavailableReason) return send(res, 404, { ok: false, error: session?.unavailableReason || 'session not found' });
       return send(res, 200, { ok: true, session: publicSession(session) });
+    }
+    if (req.method === 'GET' && action === 'accept-page') {
+      const session = await loadSessionPersistent(store, url.searchParams.get('sessionId'));
+      if (!session || session.unavailableReason) return send(res, 404, 'Acceptance session not found or unavailable', 'text/plain');
+      return send(res, 200, renderAcceptPage(session), 'text/html');
     }
     if (req.method === 'POST' && action === 'accept') {
       const body = await readBody(req);

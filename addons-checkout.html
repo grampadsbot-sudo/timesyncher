@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeSyncher Vacation Add-ons</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    :root { color-scheme: dark; --gold:#f5d37b; --bg:#070706; --panel:#12110f; --line:rgba(245,211,123,.26); --text:#fffaf0; --muted:#cfc2a9; --ok:#8ee7d8; --bad:#ffb3ab; --field:#080807; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--text); padding:24px; }
+    main { width:min(1040px,100%); margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:20px; align-items:start; }
+    section, aside { border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:24px; box-shadow:0 20px 80px rgba(0,0,0,.28); }
+    .brand { font-family: Georgia, serif; color:var(--gold); letter-spacing:.12em; text-transform:uppercase; font-size:14px; margin-bottom:18px; }
+    h1 { font-family: Georgia, serif; font-size:clamp(30px,5vw,46px); line-height:1; margin:0 0 10px; color:var(--gold); letter-spacing:0; }
+    h2 { font-size:18px; margin:0 0 14px; color:var(--gold); letter-spacing:0; }
+    p { color:var(--muted); line-height:1.5; margin:0 0 14px; }
+    form { display:grid; gap:16px; margin-top:18px; }
+    fieldset { border:0; padding:0; margin:0; display:grid; gap:14px; }
+    legend { color:var(--gold); font-weight:900; margin-bottom:10px; }
+    label { display:grid; gap:6px; color:var(--gold); font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.05em; }
+    input { width:100%; border:1px solid rgba(245,211,123,.28); border-radius:8px; padding:13px 14px; background:var(--field); color:var(--text); font:inherit; min-width:0; }
+    input::placeholder { color:rgba(207,194,169,.62); }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .card-row { display:grid; grid-template-columns:1.5fr .8fr .7fr; gap:12px; }
+    .summary, .choices { display:grid; gap:12px; }
+    .summary-row { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(245,211,123,.14); padding-bottom:12px; color:var(--muted); }
+    .summary-row strong { color:var(--text); }
+    .total { font-size:22px; color:var(--gold); }
+    .access-total { border:1px solid rgba(245,211,123,.28); border-radius:8px; padding:14px; background:rgba(245,211,123,.08); }
+    .choice { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:start; border:1px solid rgba(245,211,123,.22); border-radius:8px; padding:12px; background:rgba(245,211,123,.055); color:var(--muted); }
+    .choice input { width:auto; margin-top:3px; }
+    .choice b { display:block; color:var(--gold); }
+    .choice small { display:block; margin-top:3px; color:var(--muted); line-height:1.35; }
+    .choice strong { color:var(--text); white-space:nowrap; }
+    button { border:0; border-radius:8px; padding:14px 18px; background:var(--gold); color:#080604; font-weight:900; cursor:pointer; font:inherit; }
+    button:disabled { opacity:.65; cursor:not-allowed; }
+    .status { display:none; border:1px solid var(--line); border-radius:8px; padding:12px; color:var(--muted); }
+    .status.show { display:block; }
+    .status.error { border-color:rgba(255,179,171,.55); color:var(--bad); }
+    .status.ok { border-color:rgba(142,231,216,.5); color:var(--ok); }
+    .notice { border:1px solid rgba(245,211,123,.2); border-radius:8px; padding:12px; color:var(--muted); background:rgba(245,211,123,.06); }
+    .hidden { display:none !important; }
+    #paymentElement { border:1px solid rgba(245,211,123,.2); border-radius:8px; padding:12px; background:#11100d; }
+    @media (max-width:860px) { body { padding:14px; } main { grid-template-columns:1fr; } section, aside { padding:18px; } }
+    @media (max-width:640px) { .row, .card-row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <div class="brand">TimeSyncher Vacation</div>
+      <h1>Family access add-ons</h1>
+      <p>This adds Telegram editing access for one owner-approved person. The shared vacation URL stays view-only unless that person verifies an invited email address.</p>
+      <form id="form">
+        <fieldset>
+          <legend>Who gets access</legend>
+          <div class="row">
+            <label>First name<input name="firstName" autocomplete="given-name" required /></label>
+            <label>Last name<input name="lastName" autocomplete="family-name" required /></label>
+          </div>
+          <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Access options</legend>
+          <div class="choices">
+            <label class="choice">
+              <input name="planScope" type="radio" value="single_trip" checked />
+              <span><b>This vacation</b><small>Add access only for the vacation linked to this checkout.</small></span>
+            </label>
+            <label class="choice">
+              <input name="planScope" type="radio" value="unlimited_trips" />
+              <span><b>All vacations</b><small>Add access for all current and future vacations on the owner account.</small></span>
+            </label>
+          </div>
+          <div class="choices">
+            <label class="choice">
+              <input type="checkbox" checked disabled />
+              <span><b id="telegramTitle">Telegram editing access</b><small>Lets this person interact with the vacation through the TimeSyncher bot. One collaborator is added per checkout.</small></span>
+              <strong id="telegramPrice">$15</strong>
+            </label>
+            <label class="choice">
+              <input name="photoUpload" type="checkbox" checked />
+              <span><b>Photo upload access</b><small>Add photos to this vacation’s memories/keepsake from Telegram.</small></span>
+              <strong id="photoPrice">$5</strong>
+            </label>
+            <label class="choice">
+              <input name="videoUpload" type="checkbox" checked />
+              <span><b>Video upload access</b><small>Add short keepsake videos within the current upload limits.</small></span>
+              <strong id="videoPrice">$17</strong>
+            </label>
+          </div>
+          <div class="notice">Website editing is separate and FREE: the owner can approve named email users for web edits without giving them Telegram access.</div>
+          <div class="summary-row total access-total"><span>Total today</span><strong id="accessTotal">$15</strong></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Payment</legend>
+          <div id="stripeBox" class="hidden">
+            <div id="paymentElement"><div class="notice">Preparing secure card checkout...</div></div>
+          </div>
+          <div id="stagingCardBox">
+            <label>Card number<input name="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" /></label>
+            <div class="card-row">
+              <label>Expiration<input name="cardExpiry" autocomplete="cc-exp" placeholder="MM / YY" /></label>
+              <label>CVC<input name="cardCvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" /></label>
+              <label>ZIP<input name="postalCode" autocomplete="postal-code" /></label>
+            </div>
+          </div>
+          <label>Access add-on coupon<input name="couponCode" autocomplete="off" placeholder="Optional code" aria-label="Access add-on coupon code" /></label>
+          <div id="stagingNotice" class="notice">Staging card checkout is enabled for testing because Stripe is not available here. Do not enter a real card.</div>
+        </fieldset>
+
+        <button id="submit" type="submit">Pay securely</button>
+        <div id="status" class="status"></div>
+      </form>
+    </section>
+
+    <aside class="summary">
+      <h2>Order summary</h2>
+      <div class="summary-row"><span id="planName">Telegram access</span><strong id="planPrice">$15</strong></div>
+      <div class="summary-row" id="photoRow" hidden><span>Photo upload access</span><strong id="photoTotal">$5</strong></div>
+      <div class="summary-row" id="videoRow" hidden><span>Video upload access</span><strong id="videoTotal">$17</strong></div>
+      <div class="summary-row" id="couponRow" hidden><span>Access add-on coupon</span><strong>Covers selected access after validation</strong></div>
+      <div class="summary-row"><span>Estimated tax</span><strong>Calculated at checkout</strong></div>
+      <div class="summary-row total"><span>Total today</span><strong id="total">$15</strong></div>
+      <p>The invite email is sent after payment. The Telegram link in that email completes collaborator setup. Shared website editing still requires owner-approved email verification.</p>
+    </aside>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const collaboratorInvite = params.get('collaboratorInvite') || '';
+    const initialPlan = params.get('plan') || 'telegram_collaborators_single_trip';
+    const PLAN_CODES = {
+      single_trip: 'telegram_collaborators_single_trip',
+      unlimited_trips: 'telegram_collaborators_unlimited_trips',
+    };
+    let planScope = initialPlan === PLAN_CODES.unlimited_trips ? 'unlimited_trips' : 'single_trip';
+    let plan = PLAN_CODES[planScope];
+    const ownerSuccessUrl = '/order-success.html?collaboratorCheckout=complete';
+    const form = document.getElementById('form');
+    const submit = document.getElementById('submit');
+    const statusBox = document.getElementById('status');
+    const stripeBox = document.getElementById('stripeBox');
+    const stagingCardBox = document.getElementById('stagingCardBox');
+    const stagingNotice = document.getElementById('stagingNotice');
+    let stripe;
+    let elements;
+    let paymentReady = false;
+    let stagingCardMode = true;
+
+    const photoUpload = form.elements.photoUpload;
+    const videoUpload = form.elements.videoUpload;
+      const photoRow = document.getElementById('photoRow');
+      const videoRow = document.getElementById('videoRow');
+      const couponRow = document.getElementById('couponRow');
+      const couponCode = form.elements.couponCode;
+      const accessTotal = document.getElementById('accessTotal');
+
+    for (const input of form.elements.planScope) input.checked = input.value === planScope;
+    updateScope();
+
+    function money(cents) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format((cents || 0) / 100);
+    }
+
+    function setStatus(message, kind = '') {
+      statusBox.textContent = message;
+      statusBox.className = `status show ${kind}`;
+    }
+
+    function contactPayload() {
+      return Object.fromEntries(new FormData(form).entries());
+    }
+
+    function selectedAddOns() {
+      return {
+        photoUpload: Boolean(photoUpload.checked),
+        videoUpload: Boolean(videoUpload.checked),
+      };
+    }
+
+    function isUnlimited() {
+      return planScope === 'unlimited_trips';
+    }
+
+    function baseAmountCents() {
+      return isUnlimited() ? 2700 : 1500;
+    }
+
+    function addOnPrices() {
+      return {
+        photo: isUnlimited() ? 900 : 500,
+        video: isUnlimited() ? 2700 : 1700,
+      };
+    }
+
+    function totalCents() {
+      const prices = addOnPrices();
+      return baseAmountCents() + (photoUpload.checked ? prices.photo : 0) + (videoUpload.checked ? prices.video : 0);
+    }
+
+    function couponMode() {
+      return String(couponCode.value || '').trim().length > 0;
+    }
+
+    function updateScope() {
+      planScope = form.elements.planScope.value;
+      plan = PLAN_CODES[planScope];
+      const prices = addOnPrices();
+      document.getElementById('telegramTitle').textContent = isUnlimited() ? 'Telegram editing access for all vacations' : 'Telegram editing access for this vacation';
+      document.getElementById('planName').textContent = isUnlimited() ? 'Telegram access for all vacations' : 'Telegram access for this vacation';
+      document.getElementById('planPrice').textContent = money(baseAmountCents());
+      document.getElementById('telegramPrice').textContent = money(baseAmountCents());
+      document.getElementById('photoPrice').textContent = money(prices.photo);
+      document.getElementById('photoTotal').textContent = money(prices.photo);
+      document.getElementById('videoPrice').textContent = money(prices.video);
+      document.getElementById('videoTotal').textContent = money(prices.video);
+      updateSummary();
+    }
+
+    function updateSummary() {
+      photoRow.hidden = !photoUpload.checked;
+      videoRow.hidden = !videoUpload.checked;
+      couponRow.hidden = !couponMode();
+      const totalText = couponMode() ? '$0 after valid coupon' : money(totalCents());
+      accessTotal.textContent = totalText;
+      document.getElementById('total').textContent = totalText;
+      submit.textContent = couponMode() ? 'Redeem coupon' : 'Pay securely';
+      paymentReady = false;
+    }
+
+    function cardBrand(number) {
+      const digits = number.replace(/\D/g, '');
+      if (/^4/.test(digits)) return 'visa';
+      if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
+      if (/^3[47]/.test(digits)) return 'amex';
+      if (/^6/.test(digits)) return 'discover';
+      return 'card';
+    }
+
+    function validateStagingCard() {
+      const data = contactPayload();
+      const digits = String(data.cardNumber || '').replace(/\D/g, '');
+      if (digits.length < 12) throw new Error('Enter a valid card number for checkout.');
+      if (!/^\d{1,2}\s*\/?\s*\d{2,4}$/.test(String(data.cardExpiry || '').trim())) throw new Error('Enter a valid expiration date.');
+      if (!/^\d{3,4}$/.test(String(data.cardCvc || '').trim())) throw new Error('Enter a valid CVC.');
+      return {
+        brand: cardBrand(data.cardNumber || ''),
+        last4: digits.slice(-4),
+        postalCode: String(data.postalCode || '').trim(),
+      };
+    }
+
+    async function preparePayment() {
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          ...contactPayload(),
+          action: 'create_collaborator_payment_intent',
+          collaboratorInvite,
+          collaboratorPlan: plan,
+          accessAddOns: selectedAddOns(),
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to prepare Telegram access checkout.');
+      if (data.mode === 'staging_card' || data.stripeUnavailable) {
+        stagingCardMode = true;
+        stripeBox.classList.add('hidden');
+        stagingCardBox.classList.remove('hidden');
+        stagingNotice.classList.remove('hidden');
+        paymentReady = true;
+        return data;
+      }
+      stagingCardMode = false;
+      stagingCardBox.classList.add('hidden');
+      stagingNotice.classList.add('hidden');
+      stripeBox.classList.remove('hidden');
+      stripe = stripe || Stripe((await fetch('/api/checkout-config').then((r) => r.json())).publishableKey);
+      elements = stripe.elements({
+        clientSecret: data.clientSecret,
+        appearance: {
+          theme: 'night',
+          variables: {
+            colorPrimary: '#f5d37b',
+            colorBackground: '#11100d',
+            colorText: '#fffaf0',
+            colorDanger: '#ff7468',
+            borderRadius: '8px',
+            fontFamily: 'Inter, system-ui, sans-serif',
+          },
+        },
+      });
+      document.getElementById('paymentElement').innerHTML = '';
+      elements.create('payment', { layout: 'tabs' }).mount('#paymentElement');
+      paymentReady = true;
+      return data;
+    }
+
+    async function redeemCoupon(couponCode) {
+      const response = await fetch('/api/checkout-coupon', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...contactPayload(), collaboratorInvite, collaboratorPlan: plan, couponCode, accessAddOns: selectedAddOns() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to redeem coupon.');
+      return ownerSuccessUrl;
+    }
+
+    async function completeStagingCard() {
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          ...contactPayload(),
+          action: 'complete_staging_collaborator_checkout',
+          collaboratorInvite,
+          collaboratorPlan: plan,
+          accessAddOns: selectedAddOns(),
+          card: validateStagingCard(),
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to complete staging card checkout.');
+      return ownerSuccessUrl;
+    }
+
+    async function completeStripePayment() {
+      const data = contactPayload();
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${location.origin}${ownerSuccessUrl}`,
+          payment_method_data: {
+            billing_details: {
+              name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+              email: data.email || undefined,
+            },
+          },
+        },
+      });
+      if (result.error) throw new Error(result.error.message || 'Card payment failed.');
+    }
+
+    if (!collaboratorInvite) {
+      setStatus('This Telegram access checkout link is missing its invite token.', 'error');
+      submit.disabled = true;
+    }
+
+    photoUpload.addEventListener('change', updateSummary);
+    videoUpload.addEventListener('change', updateSummary);
+    couponCode.addEventListener('input', updateSummary);
+    for (const input of form.elements.planScope) input.addEventListener('change', updateScope);
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity() || !collaboratorInvite) return;
+      submit.disabled = true;
+      submit.textContent = 'Processing...';
+      setStatus('Preparing checkout...');
+      try {
+        const couponCode = String(contactPayload().couponCode || '').trim();
+        if (couponCode) {
+          location.href = await redeemCoupon(couponCode);
+          return;
+        }
+        const justPrepared = !paymentReady;
+        if (!paymentReady) await preparePayment();
+        if (stagingCardMode) {
+          location.href = await completeStagingCard();
+          return;
+        }
+        if (justPrepared) {
+          setStatus('Enter card details, then press Pay securely.');
+          submit.disabled = false;
+          submit.textContent = 'Pay securely';
+          return;
+        }
+        await completeStripePayment();
+      } catch (error) {
+        setStatus(error.message || 'Unable to complete Telegram access checkout.', 'error');
+        submit.disabled = false;
+        submit.textContent = couponMode() ? 'Redeem coupon' : 'Pay securely';
+      }
+    });
+
+  </script>
+</body>
+</html>

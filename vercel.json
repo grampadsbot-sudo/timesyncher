@@ -2,8 +2,32 @@
   "version": 2,
   "routes": [
     {
+      "src": "/shared/(.*)",
+      "dest": "https://travel.timesyncher.com/shared/$1"
+    },
+    {
+      "src": "/api/shared/(.*)",
+      "dest": "https://travel.timesyncher.com/api/shared/$1"
+    },
+    {
+      "src": "/api/vacation-web-access",
+      "dest": "/api/vacation-itinerary?webAccess=1"
+    },
+    {
+      "src": "/icons/(.*)",
+      "dest": "https://travel.timesyncher.com/icons/$1"
+    },
+    {
+      "src": "/manifest.webmanifest",
+      "dest": "https://travel.timesyncher.com/manifest.webmanifest"
+    },
+    {
+      "src": "/registerSW.js",
+      "dest": "https://travel.timesyncher.com/registerSW.js"
+    },
+    {
       "src": "/accept/([^/]+)",
-      "dest": "/api/accept?sessionId=$1"
+      "dest": "/api/eula?action=accept-page&sessionId=$1"
     }
   ],
   "headers": [

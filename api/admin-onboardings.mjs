@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { requireAdminAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { createCheckoutCoupon, listCheckoutCoupons } from '../src/vacation/checkout-coupons.mjs';
+import { createCoupon, disableCoupon, listCoupons } from '../src/vacation/coupons.mjs';
 import {
   ensureVacationEulaSession,
   onboardingLink,
@@ -54,11 +54,14 @@ function publicSession(row) {
       stripeCustomerId: row.stripe_customer_id,
       stripeSubscriptionId: row.stripe_subscription_id,
       stripePaymentIntentId: row.stripe_payment_intent_id,
-      coupon: row.order_metadata?.couponCheckout ? {
-        hint: row.order_metadata.couponHint || null,
-        label: row.order_metadata.couponLabel || null,
-        waivedAmountCents: row.order_metadata.waivedAmountCents || null,
-        originalAmountCents: row.order_metadata.originalAmountCents || null,
+      coupon: row.coupon_redemption_id ? {
+        redemptionId: row.coupon_redemption_id,
+        couponId: row.coupon_id,
+        codeHint: row.coupon_code_hint,
+        label: row.coupon_label,
+        originalAmountCents: row.coupon_original_amount_cents,
+        redeemedAt: row.coupon_redeemed_at,
+        emailStatus: row.coupon_email_status,
       } : null,
     },
     trip: {
@@ -217,7 +220,9 @@ async function listSessions(db, url) {
       c.email, c.phone, c.first_name, c.last_name, c.display_name, c.telegram_user_id,
       po.status as order_status, po.plan, po.amount_cents, po.currency, po.paid_at,
       po.stripe_customer_id, po.stripe_subscription_id, po.stripe_payment_intent_id,
-      po.metadata as order_metadata,
+      ccr.id as coupon_redemption_id, ccr.coupon_id, ccr.original_amount_cents as coupon_original_amount_cents,
+      ccr.created_at as coupon_redeemed_at, ccr.email_status as coupon_email_status,
+      cc.code_hint as coupon_code_hint, cc.label as coupon_label,
       t.title as trip_title, t.destination, t.status as trip_status, t.start_date, t.end_date,
       (select count(*) from onboarding_clicks oc where oc.session_id = os.id) as click_count,
       (select count(*) from outbound_emails oe where oe.session_id = os.id) as email_count,
@@ -228,6 +233,8 @@ async function listSessions(db, url) {
     from onboarding_sessions os
     left join customers c on c.id = os.customer_id
     left join paid_orders po on po.id = os.order_id
+    left join checkout_coupon_redemptions ccr on ccr.onboarding_session_id = os.id
+    left join checkout_coupons cc on cc.id = ccr.coupon_id
     left join trips t on t.id = os.trip_id
     order by os.created_at desc
     limit ${limit}
@@ -243,12 +250,16 @@ async function detailSession(db, id) {
       c.email, c.phone, c.first_name, c.last_name, c.display_name, c.telegram_user_id,
       po.status as order_status, po.plan, po.amount_cents, po.currency, po.paid_at,
       po.stripe_customer_id, po.stripe_subscription_id, po.stripe_payment_intent_id,
-      po.metadata as order_metadata,
+      ccr.id as coupon_redemption_id, ccr.coupon_id, ccr.original_amount_cents as coupon_original_amount_cents,
+      ccr.created_at as coupon_redeemed_at, ccr.email_status as coupon_email_status,
+      cc.code_hint as coupon_code_hint, cc.label as coupon_label,
       t.title as trip_title, t.destination, t.status as trip_status, t.start_date, t.end_date,
       0 as click_count, 0 as email_count, 0 as telegram_session_count, 0 as turn_count, 0 as request_count, 0 as job_count
     from onboarding_sessions os
     left join customers c on c.id = os.customer_id
     left join paid_orders po on po.id = os.order_id
+    left join checkout_coupon_redemptions ccr on ccr.onboarding_session_id = os.id
+    left join checkout_coupons cc on cc.id = ccr.coupon_id
     left join trips t on t.id = os.trip_id
     where os.id = ${id} or os.token = ${id}
     limit 1
@@ -258,12 +269,16 @@ async function detailSession(db, id) {
       c.email, c.phone, c.first_name, c.last_name, c.display_name, c.telegram_user_id,
       po.status as order_status, po.plan, po.amount_cents, po.currency, po.paid_at,
       po.stripe_customer_id, po.stripe_subscription_id, po.stripe_payment_intent_id,
-      po.metadata as order_metadata,
+      ccr.id as coupon_redemption_id, ccr.coupon_id, ccr.original_amount_cents as coupon_original_amount_cents,
+      ccr.created_at as coupon_redeemed_at, ccr.email_status as coupon_email_status,
+      cc.code_hint as coupon_code_hint, cc.label as coupon_label,
       t.title as trip_title, t.destination, t.status as trip_status, t.start_date, t.end_date,
       0 as click_count, 0 as email_count, 0 as telegram_session_count, 0 as turn_count, 0 as request_count, 0 as job_count
     from onboarding_sessions os
     left join customers c on c.id = os.customer_id
     left join paid_orders po on po.id = os.order_id
+    left join checkout_coupon_redemptions ccr on ccr.onboarding_session_id = os.id
+    left join checkout_coupons cc on cc.id = ccr.coupon_id
     left join trips t on t.id = os.trip_id
     where os.token = ${id}
     limit 1
@@ -271,7 +286,7 @@ async function detailSession(db, id) {
   const row = rows[0];
   if (!row) throw Object.assign(new Error('Onboarding session not found.'), { statusCode: 404 });
 
-  const [clicks, emails, telegramSessions, turns, requests, jobs, coupons] = await Promise.all([
+  const [clicks, emails, telegramSessions, turns, requests, jobs] = await Promise.all([
     db`
       select id, event_type, target, href, user_agent, clicked_at, metadata
       from onboarding_clicks
@@ -292,7 +307,9 @@ async function detailSession(db, id) {
     `,
     db`
       select id, telegram_session_id, request_id, speaker, channel, direction, body, payload,
-        telegram_message_id, received_at, sent_at, response_latency_ms, onboarding_step, created_at
+        telegram_message_id, received_at, sent_at, response_latency_ms, onboarding_step,
+        turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at,
+        created_at
       from transcript_turns
       where customer_id = ${row.customer_id} or trip_id = ${row.trip_id}
       order by coalesce(received_at, sent_at, created_at) asc
@@ -315,18 +332,10 @@ async function detailSession(db, id) {
       where vr.customer_id = ${row.customer_id} or vr.trip_id = ${row.trip_id}
       order by wj.created_at asc
     `,
-    db`
-      select id, coupon_id, code_hint, customer_email, plan, original_amount_cents,
-        waived_amount_cents, currency, email_status, status, metadata, redeemed_at
-      from checkout_coupon_redemptions
-      where order_id = ${row.order_id}
-      order by redeemed_at asc
-    `,
   ]);
 
   const timeline = sortTimeline([
     { kind: 'payment', label: 'Payment/order created', at: row.paid_at, data: { amountCents: row.amount_cents, plan: row.plan, status: row.order_status } },
-    ...coupons.map((coupon) => ({ kind: 'coupon', label: `Coupon ${coupon.status}`, at: coupon.redeemed_at, data: coupon })),
     { kind: 'onboarding', label: 'Onboarding session created', at: row.created_at, data: { status: row.status, currentStep: row.current_step } },
     ...emails.map((email) => ({ kind: 'email', label: `Email ${email.status}`, at: email.sent_at || email.created_at, data: email })),
     ...clicks.map((click) => ({ kind: 'click', label: `${click.event_type}: ${click.target || 'unknown'}`, at: click.clicked_at, data: click })),
@@ -348,7 +357,6 @@ async function detailSession(db, id) {
     }),
     clicks,
     emails,
-    coupons,
     telegramSessions,
     turns,
     requests,
@@ -357,41 +365,80 @@ async function detailSession(db, id) {
   };
 }
 
+async function resendPurchaseEmailForSession(db, id, env = process.env) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const rows = isUuid ? await db`
+    select
+      os.*,
+      c.email, c.phone, c.first_name, c.last_name, c.display_name,
+      po.amount_cents, po.currency, po.plan, po.status as order_status
+    from onboarding_sessions os
+    join customers c on c.id = os.customer_id
+    join paid_orders po on po.id = os.order_id
+    where os.id = ${id} or os.token = ${id}
+    limit 1
+  ` : await db`
+    select
+      os.*,
+      c.email, c.phone, c.first_name, c.last_name, c.display_name,
+      po.amount_cents, po.currency, po.plan, po.status as order_status
+    from onboarding_sessions os
+    join customers c on c.id = os.customer_id
+    join paid_orders po on po.id = os.order_id
+    where os.token = ${id}
+    limit 1
+  `;
+  const row = rows[0];
+  if (!row) throw Object.assign(new Error('Onboarding session not found.'), { statusCode: 404 });
+  return queueOrSendPurchaseEmail(db, {
+    customerId: row.customer_id,
+    tripId: row.trip_id,
+    orderId: row.order_id,
+    session: row,
+    token: row.token,
+    onboardingUrl: onboardingLink(row.token, env),
+    telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
+    contact: {
+      email: row.email,
+      phone: row.phone,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      displayName: row.display_name,
+    },
+    order: {
+      amountCents: row.amount_cents,
+      currency: row.currency,
+      plan: row.plan,
+      status: row.order_status,
+    },
+  }, env);
+}
+
 export default async function handler(req, res) {
   try {
     requireAdminAuth(req, process.env);
     const db = sql(process.env);
     const url = new URL(req.url || '/', 'https://timesyncher.com');
-    const action = cleanText(url.searchParams.get('action'), 80);
-    if (req.method === 'GET' && action === 'coupons') {
-      return sendJson(res, 200, { ok: true, coupons: await listCheckoutCoupons(db, { limit: url.searchParams.get('limit') || 100 }) });
-    }
-    if (req.method === 'POST' && action === 'create-coupon') {
-      return sendJson(res, 201, {
-        ok: true,
-        ...(await createCheckoutCoupon(db, {
-          ...(await readJson(req)),
-          createdBy: 'openclaw-imac',
-        }, process.env)),
-      });
-    }
-    if (req.method === 'POST' && action === 'disable-coupon') {
-      const body = await readJson(req);
-      const id = cleanText(body.id, 120);
-      if (!id) return sendJson(res, 400, { ok: false, error: 'id is required.' });
-      const rows = await db`
-        update checkout_coupons
-        set status = 'disabled', updated_at = now()
-        where id = ${id} and status = 'active'
-        returning id, code_hint, label, status, expires_at, redeemed_at, metadata, created_at, updated_at
-      `;
-      if (!rows[0]) return sendJson(res, 404, { ok: false, error: 'Active coupon not found.' });
-      return sendJson(res, 200, { ok: true, coupon: rows[0] });
-    }
     if (req.method === 'POST' && url.searchParams.get('action') === 'create') {
       return sendJson(res, 201, { ok: true, ...(await createAdminOnboarding(db, await readJson(req))) });
     }
+    if (req.method === 'POST' && url.searchParams.get('action') === 'create-coupon') {
+      return sendJson(res, 201, { ok: true, ...(await createCoupon(db, await readJson(req), process.env)) });
+    }
+    if (req.method === 'POST' && url.searchParams.get('action') === 'disable-coupon') {
+      const body = await readJson(req);
+      return sendJson(res, 200, { ok: true, coupon: await disableCoupon(db, cleanText(body.id, 120)) });
+    }
+    if (req.method === 'POST' && url.searchParams.get('action') === 'resend-purchase-email') {
+      const body = await readJson(req);
+      const id = cleanText(body.id || body.sessionId || body.token, 160);
+      if (!id) throw Object.assign(new Error('id, sessionId, or token is required.'), { statusCode: 400 });
+      return sendJson(res, 200, { ok: true, email: await resendPurchaseEmailForSession(db, id, process.env) });
+    }
     if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
+    if (url.searchParams.get('action') === 'coupons') {
+      return sendJson(res, 200, { ok: true, coupons: await listCoupons(db, url.searchParams.get('limit') || '100') });
+    }
     const id = cleanText(url.searchParams.get('id') || url.searchParams.get('session'), 160);
     if (id) return sendJson(res, 200, { ok: true, ...(await detailSession(db, id)) });
     return sendJson(res, 200, { ok: true, sessions: await listSessions(db, url) });

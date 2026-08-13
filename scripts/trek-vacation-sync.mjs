@@ -32,17 +32,20 @@ function hawaiiPlan(payload) {
   const now = new Date().toISOString();
   const title = text(payload.title || 'Hawaii July 2026', 160);
   const unforgettableGoal = text(payload.unforgettableGoal || payload.unforgettable_goal || '', 1000);
+  const tripSummary = text(payload.tripSummary || payload.trip_summary || payload.description, 1200);
+  const defaultDescription = [
+    'TimeSyncher Vacation itinerary workspace for Hawaii: Oahu/Waikiki, Maui/Kihei, and Big Island/Kona.',
+    unforgettableGoal ? `Unforgettable goal: ${unforgettableGoal}.` : '',
+    'Includes flights, hotels, restaurants, stores, activities, rental cars, map points, budget targets, and open decisions. TimeSyncher organizes and compares options; customers verify details and make bookings themselves.',
+  ].filter(Boolean).join(' ');
   return {
     sourceKey: text(payload.sourceKey || payload.onboardingToken || 'timesyncher-vacation-hawaii', 160),
     publicBase: text(payload.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, ''),
     preferredToken: slugify(title),
     title,
     unforgettableGoal,
-    description: [
-      'TimeSyncher Vacation itinerary workspace for Hawaii: Oahu/Waikiki, Maui/Kihei, and Big Island/Kona.',
-      unforgettableGoal ? `Unforgettable goal: ${unforgettableGoal}.` : '',
-      'Includes flights, hotels, restaurants, stores, activities, rental cars, map points, budget targets, and open decisions. TimeSyncher organizes and compares options; customers verify details and make bookings themselves.',
-    ].filter(Boolean).join(' '),
+    description: tripSummary || defaultDescription,
+    tripSummarySource: tripSummary ? 'assistant_trip_summary' : 'default_trip_summary',
     startDate: '2026-07-24',
     endDate: '2026-07-31',
     currency: 'USD',
@@ -353,7 +356,7 @@ print(json.dumps({'tripId': trip_id, 'token': token, 'url': payload['publicBase'
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
   const plan = hawaiiPlan(input);
-  const final = spawnSync('sudo', ['-n', '-u', 'ubishere9995', 'python3', '-c', pythonCode], {
+  const final = spawnSync('python3', ['-c', pythonCode], {
     input: JSON.stringify(plan),
     encoding: 'utf8',
     maxBuffer: 1024 * 1024,

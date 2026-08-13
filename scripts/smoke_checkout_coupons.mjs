@@ -41,15 +41,15 @@ assert.equal(checkoutOrderSummary({ orderBump: true, photoMemories: true }, env)
 for (const file of ['index.html', 'order-test.html']) {
   const html = readFileSync(file, 'utf8');
   assert.match(html, /id="couponCode"/, `${file} has coupon input`);
-  assert.match(html, /<label>Coupon\s*<input[^>]+placeholder="Enter coupon code"/, `${file} uses customer-facing coupon copy`);
-  assert.match(html, /\/api\/create-payment-intent/, `${file} posts to checkout endpoint`);
-  assert.match(html, /No Stripe charge/, `${file} shows no Stripe charge`);
+  assert.match(html, /<label(?:[^>]*)>(?:Enter coupon|Coupon)\s*<input[^>]+placeholder="(?:Enter coupon code|Coupon code)"/, `${file} uses customer-facing coupon copy`);
+  assert.match(html, /\/api\/(?:create-payment-intent|checkout-coupon)/, `${file} posts to a checkout coupon endpoint`);
+  assert.match(html, /(?:No Stripe charge|Waived by coupon)/, `${file} shows no Stripe charge`);
 }
 
-const checkoutApi = readFileSync('api/create-payment-intent.mjs', 'utf8');
+const checkoutApi = readFileSync('api/checkout-coupon.mjs', 'utf8');
 assert.ok(
-  checkoutApi.indexOf('if (body.couponCode || body.code)') < checkoutApi.indexOf('stripeConfig = stripeSecretKey'),
-  'coupon branch runs before Stripe config is loaded',
+  checkoutApi.includes('consumeCoupon') && !checkoutApi.includes('new Stripe'),
+  'coupon endpoint redeems without loading Stripe',
 );
 
-console.log(JSON.stringify({ ok: true, checked: ['coupon helpers', 'pricing', 'checkout UI', 'coupon branch before Stripe'] }, null, 2));
+console.log(JSON.stringify({ ok: true, checked: ['coupon helpers', 'pricing', 'checkout UI', 'coupon endpoint without Stripe'] }, null, 2));
