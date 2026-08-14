@@ -652,7 +652,7 @@ function vacationSupportRouterDecision(value = '') {
   return null;
 }
 
-const BRIDGE_ROUTER_ALLOWED_INTENTS = new Set(['itinerary_action', 'account_question', 'support_question', 'ambiguous', 'unsafe_internal', 'media_upload_question', 'collaborator_access_question', 'website_link_question']);
+const BRIDGE_ROUTER_ALLOWED_INTENTS = new Set(['itinerary_action', 'account_question', 'support_question', 'ambiguous', 'unsafe_internal', 'media_upload_question', 'collaborator_access_question', 'collaborator_setup_link', 'website_link_question']);
 const BRIDGE_ROUTER_WRITE_MODES = new Set(['none', 'create', 'edit', 'attach']);
 
 function normalizeBridgeRouterDecision(candidate, source = 'grok_intent_router') {

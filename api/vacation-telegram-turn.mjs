@@ -615,6 +615,20 @@ function compactConversationContext(input = {}) {
   };
 }
 
+function collaboratorSetupLinkFollowupFromContext(text = '', conversationContext = {}) {
+  const normalized = cleanText(text, 2000).toLowerCase();
+  if (!isQuestionLike(normalized)) return false;
+  const asksForMissingLink = /\b(where|what|send|share|show|give|need|open)\b/.test(normalized)
+    && /\b(link|url|checkout|option|page|add-?on|setup|set up)\b/.test(normalized);
+  if (!asksForMissingLink) return false;
+  const compact = compactConversationContext(conversationContext);
+  const recentText = compact.recentTurns
+    .map((turn) => `${turn.speaker}: ${turn.body}`)
+    .join('\n')
+    .toLowerCase();
+  return /\b(telegram collaborator|telegram access|telegram add-?on|collaborator add-?on|collaborator access|checkout page|photo and video upload access|one collaborator is added per checkout)\b/.test(recentText);
+}
+
 async function recentConversationContext(db, session, { excludeTranscriptId = null, payload = {} } = {}) {
   const payloadContext = compactConversationContext(payload.conversationContext || payload.turnContext || {});
   const metadata = sessionMetadata(session);
@@ -759,6 +773,8 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     '- Use the conversation state to resolve follow-ups and pronouns. Do not require the current turn to repeat collaborator, wife, Kim, Telegram, or vacation words.',
     '- Questions about ability, access, pricing, checkout, coupons, or media upload are no-write support/account turns.',
     '- collaborator_setup_link is a no-write support/account turn; it creates checkout copy in the hosted API, not itinerary work.',
+    '- If the assistant just mentioned a Telegram add-on, checkout page, or option below, and the customer asks where the link/option/page is, classify collaborator_setup_link even if the current turn does not name the wife/collaborator again.',
+    '- Never repeat stale wording from context such as "up to 3 people"; current product copy is one collaborator per checkout.',
     '- Do not classify a question as itinerary_action just because it names a destination or vacation.',
     '- Use itinerary_action only when the current turn clearly asks to create/change itinerary content.',
     '- write_mode must be none for support/account/media/collaborator/ambiguous turns.',
@@ -834,6 +850,17 @@ export async function vacationSupportIntentWithModel(text, { env = process.env, 
     if (modelDecision) return modelDecision;
   } catch (error) {
     console.warn('TimeSyncher Vacation Grok support router fallback', error?.message || error);
+  }
+  if (collaboratorSetupLinkFollowupFromContext(text, conversationContext)) {
+    return {
+      intent: 'collaborator_setup_link',
+      write_mode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      source: 'conversation_context_fallback',
+      answerMode: 'collaborator_checkout',
+      reasons: ['recent_context_mentions_telegram_add_on_checkout'],
+    };
   }
   const fallback = vacationSupportIntent(text);
   return fallback ? { ...fallback, source: 'deterministic_fallback' } : null;

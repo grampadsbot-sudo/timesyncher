@@ -235,6 +235,32 @@ assert.equal(grokSetupFollowup.intent, 'collaborator_setup_link');
 assert.equal(grokSetupFollowup.source, 'grok');
 assert.equal(grokSetupFollowup.shouldQueueWorker, false);
 
+const missingTelegramOptionContext = {
+  recentTurns: [
+    { speaker: 'customer', body: 'Can you send me the link to set her up?' },
+    {
+      speaker: 'assistant',
+      body: [
+        'Yes. You can share the vacation website with your wife or family so they can view it.',
+        '',
+        'Website editing is owner-approved and email-verified, so someone with only the shared URL stays view-only. Full access through Telegram, equal to yours, requires the Telegram access add-on. You can give Telegram access to up to 3 people.',
+        '',
+        'Choose a Telegram add-on option below. The checkout page also lets you add photo and video upload access with pricing that matches the selected scope.',
+      ].join('\n'),
+    },
+  ],
+};
+const missingTelegramOptionFollowup = await vacationSupportIntentWithModel('Where is the link to the telegram add on option?', {
+  env: {},
+  conversationContext: missingTelegramOptionContext,
+  fetchImpl: async () => {
+    throw new Error('should not call Grok without key');
+  },
+});
+assert.equal(missingTelegramOptionFollowup.intent, 'collaborator_setup_link');
+assert.equal(missingTelegramOptionFollowup.source, 'conversation_context_fallback');
+assert.equal(missingTelegramOptionFollowup.shouldQueueWorker, false);
+
 const ubuntuRouterQuestion = await vacationSupportIntentWithModel('Am I able to upload pics and videos to the Vegas vacation?', {
   env: { TIMESYNCHER_GROK_ROUTER_URL: 'https://auth.timesyncher.com/grok-router/intent', TIMESYNCHER_GROK_ROUTER_TOKEN: 'test-token' },
   fetchImpl: async (url, options) => {
