@@ -563,166 +563,6 @@ function vacationAccessAnswerFromMatches(value = '', matches = []) {
   return lines.join('\n\n');
 }
 
-function vacationExistenceQuestionCopy() {
-  return [
-    'I could not find a matching vacation site yet.',
-  ].join('\n');
-}
-
-
-function isSupportQuestionCandidate(value = '') {
-  const normalized = cleanText(value, 2000).toLowerCase();
-  if (!normalized || !isQuestionLike(normalized)) return false;
-  if (isWebsiteLinkRequest(normalized)) return true;
-  if (isNewVacationAdviceQuestion(normalized) || isVagueNextStepQuestion(normalized) || isVacationExistenceQuestion(normalized) || isPersonAccessQuestion(normalized)) return true;
-  return /\b(unlimited|access|included|include|coupon|code|plan|paid|payment|checkout|order|subscription|refund|price|cost|book|booking|flight|hotel|reserve|reservation|support|help|account|login|sign in|vacations?)\b/.test(normalized);
-}
-
-function vacationSupportRouterDecision(value = '') {
-  const normalized = cleanText(value, 2000).toLowerCase();
-  if (!isSupportQuestionCandidate(normalized)) return null;
-
-  if (isVacationExistenceQuestion(normalized)) {
-    return {
-      intent: 'support_question',
-      shouldQueueWorker: false,
-      confidence: 0.92,
-      reply: vacationExistenceQuestionCopy(),
-    };
-  }
-
-  if (isWebsiteLinkRequest(normalized)) {
-    return {
-      intent: 'support_question',
-      shouldQueueWorker: false,
-      confidence: 0.93,
-      reply: vacationExistenceQuestionCopy(),
-      answerMode: 'account_state',
-    };
-  }
-
-  if (isAccessPricingQuestion(normalized)) {
-    return {
-      intent: 'support_question',
-      shouldQueueWorker: false,
-      confidence: 0.94,
-      reply: accessPricingAnswer(normalized),
-      answerMode: 'pricing',
-    };
-  }
-
-  if (isPersonAccessQuestion(normalized)) {
-    return {
-      intent: 'account_question',
-      shouldQueueWorker: false,
-      confidence: 0.93,
-      reply: vacationAccessAnswerFromMatches(normalized, []),
-    };
-  }
-
-  if (isNewVacationAdviceQuestion(normalized) || isVagueNextStepQuestion(normalized)) {
-    const reply = isVagueNextStepQuestion(normalized)
-      ? [
-        'I need a little more direction before I work on a vacation.',
-        '',
-        vacationDirectionClarificationCopy(),
-      ].join('\n')
-      : [
-        'I need a direct instruction before I work on a vacation.',
-        '',
-        'If you want a new vacation, send an explicit request like “Create a new Vegas vacation with these dates and priorities.” If you want to update an existing one, tell me the vacation name and the change to make.',
-      ].join('\n');
-    return {
-      intent: 'support_question',
-      shouldQueueWorker: false,
-      confidence: 0.9,
-      reply,
-    };
-  }
-
-  if (/\b(book|booking|reserve|reservation|purchase|pay for|hold)\b/.test(normalized)) {
-    return {
-      intent: 'support_question',
-      shouldQueueWorker: false,
-      confidence: 0.9,
-      reply: 'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.',
-    };
-  }
-
-  return null;
-}
-
-const BRIDGE_ROUTER_ALLOWED_INTENTS = new Set(['itinerary_action', 'account_question', 'support_question', 'ambiguous', 'unsafe_internal', 'media_upload_question', 'collaborator_access_question', 'collaborator_setup_link', 'website_link_question']);
-const BRIDGE_ROUTER_WRITE_MODES = new Set(['none', 'create', 'edit', 'attach']);
-
-function normalizeBridgeRouterDecision(candidate, source = 'grok_intent_router') {
-  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return null;
-  const intent = cleanText(candidate.intent, 80);
-  const writeMode = cleanText(candidate.write_mode || candidate.writeMode || '', 80) || (candidate.shouldQueueWorker === false ? 'none' : '');
-  const confidence = Number(candidate.confidence);
-  if (!BRIDGE_ROUTER_ALLOWED_INTENTS.has(intent)) return null;
-  if (!BRIDGE_ROUTER_WRITE_MODES.has(writeMode)) return null;
-  if (!Number.isFinite(confidence) || confidence < 0.7 || confidence > 1) return null;
-  const shouldQueueWorker = candidate.shouldQueueWorker === true;
-  if (writeMode === 'none' && shouldQueueWorker) return null;
-  if (shouldQueueWorker && !['create', 'edit', 'attach'].includes(writeMode)) return null;
-  return {
-    intent,
-    shouldQueueWorker,
-    confidence,
-    reply: cleanText(candidate.answer || candidate.reply || candidate.customerResponse, 1800),
-    answerMode: cleanText(candidate.answerMode || candidate.answer_mode || '', 80),
-    write_mode: writeMode,
-    selectedSkill: cleanText(candidate.selectedSkill || candidate.skill || 'timesyncher-vacation-support-router', 120),
-    reasons: Array.isArray(candidate.reasons) ? candidate.reasons.map((reason) => cleanText(reason, 240)).filter(Boolean) : [],
-    source,
-  };
-}
-
-function grokBridgePreflightDecision(value = '', context = {}) {
-  if (process.env.TIMESYNCHER_DISABLE_GROK_INTENT_ROUTER === '1') return null;
-  const token = cleanText(process.env.TIMESYNCHER_GROK_ROUTER_TOKEN, 500);
-  if (!token) return null;
-  const host = cleanText(process.env.TIMESYNCHER_GROK_ROUTER_HOST || '127.0.0.1', 120);
-  const port = cleanText(process.env.TIMESYNCHER_GROK_ROUTER_PORT || '39217', 20);
-  const routePath = cleanText(process.env.TIMESYNCHER_GROK_ROUTER_PATH || '/intent', 80) || '/intent';
-  const timeoutSeconds = Math.max(1, Math.ceil(Number(process.env.TIMESYNCHER_GROK_ROUTER_CLIENT_TIMEOUT_MS || process.env.TIMESYNCHER_GROK_ROUTER_TIMEOUT_MS || 12000) / 1000));
-  const url = /^https?:\/\//i.test(host) ? host.replace(/\/+$/, '') + routePath : 'http://' + host + ':' + port + routePath;
-  const result = spawnSync('/usr/bin/curl', ['-sS', '--max-time', String(timeoutSeconds), '-H', 'content-type: application/json', '-H', 'authorization: Bearer ' + token, '--data-binary', '@-', url], {
-    input: JSON.stringify({ text: value, context: { route: 'telegram-vacation-intake-bot', ...context } }),
-    encoding: 'utf8',
-    maxBuffer: 1024 * 1024,
-  });
-  if (result.status !== 0) return null;
-  try {
-    const body = JSON.parse(result.stdout || '{}');
-    if (body.ok === false) return null;
-    return normalizeBridgeRouterDecision(body.decision || body, 'grok_intent_router');
-  } catch {
-    return null;
-  }
-}
-
-function renderBridgeNoWriteCopy(value = '', decision = {}) {
-  if (decision.reply) return decision.reply;
-  const deterministicCopy = vacationSupportRouterDecision(value);
-  if (deterministicCopy?.reply) return deterministicCopy.reply;
-  if (decision.intent === 'ambiguous') return 'I need a direct vacation instruction before I change anything. Send the destination, dates, and priorities for a new vacation, or the vacation name plus the exact update for an existing one.';
-  return ['I need to check one thing before I change anything.', '', 'Do you want me to update an existing vacation, start a brand-new vacation, or answer a product/account question?'].join('\n');
-}
-
-function vacationSupportRouterPreflightDecision(value = '', context = {}) {
-  const grokDecision = grokBridgePreflightDecision(value, context);
-  if (grokDecision) {
-    if (grokDecision.write_mode === 'none' || grokDecision.shouldQueueWorker === false) {
-      return { ...grokDecision, shouldQueueWorker: false, reply: renderBridgeNoWriteCopy(value, grokDecision), reasons: [...grokDecision.reasons, 'model_primary_bridge_preflight'] };
-    }
-    return null;
-  }
-  const fallback = vacationSupportRouterDecision(value);
-  return fallback ? { ...fallback, source: 'deterministic_fallback_router', reasons: ['grok_router_unavailable_or_invalid', 'deterministic_fallback_bridge_preflight'] } : null;
-}
-
 function noWriteDecisionFromTurn(turn = {}) {
   const candidates = [turn.supportRouterDecision, turn.support_router_decision, turn.turnDecision, turn.turn_decision, turn.routerDecision, turn.router_decision].filter(Boolean);
   for (const candidate of candidates) {
@@ -1760,53 +1600,6 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
     return;
   }
 
-  const conversationContext = conversationContextForMessage(message, text);
-  const supportDecision = vacationSupportRouterPreflightDecision(text, { chatId: String(chatId || ''), messageId: String(messageId || ''), conversationContext });
-  if (supportDecision && supportDecision.shouldQueueWorker === false) {
-    const accessibleVacationMatches = (isVacationExistenceQuestion(text) || isPersonAccessQuestion(text) || isWebsiteLinkRequest(text))
-      ? findAccessibleVacationMatchesForQuestion(text)
-      : [];
-    if (accessibleVacationMatches.length) {
-      supportDecision.reply = isPersonAccessQuestion(text)
-        ? vacationAccessAnswerFromMatches(text, accessibleVacationMatches)
-        : vacationExistenceAnswerFromMatches(text, accessibleVacationMatches);
-    }
-    noteCacheStage(cacheDir, 'support-router-direct-reply', {
-      intent: supportDecision.intent,
-      confidence: supportDecision.confidence,
-      queued: false,
-      mode: 'bridge_preflight_annotation',
-      accessibleVacationMatches: accessibleVacationMatches.length,
-    });
-    payload = {
-      ...payload,
-      linkedVacations: [
-        ...accessibleVacationMatches,
-        ...(Array.isArray(payload.linkedVacations) ? payload.linkedVacations : []),
-      ],
-      customerVacations: [
-        ...accessibleVacationMatches,
-        ...(Array.isArray(payload.customerVacations) ? payload.customerVacations : []),
-      ],
-      supportRouterDecision: {
-        intent: supportDecision.intent,
-        shouldQueueWorker: false,
-        confidence: supportDecision.confidence,
-        answer: accessibleVacationMatches.length || !isPersonAccessQuestion(text) ? supportDecision.reply : '',
-        selectedSkill: 'timesyncher-vacation-support-router',
-        write_mode: 'none',
-        answerMode: supportDecision.answerMode || (accessibleVacationMatches.length ? 'account_state' : (isPersonAccessQuestion(text) ? 'access_state_unverified' : 'bridge_preflight')),
-        tripSelector: accessibleVacationMatches.length
-          ? { lookup: vacationLookupTerm(text), candidatesConsidered: accessibleVacationMatches.length }
-          : null,
-        reasons: [
-          'telegram_bridge_preflight_no_write',
-          ...(accessibleVacationMatches.length ? ['trek_accessible_vacation_lookup'] : []),
-        ],
-      },
-    };
-  }
-
   let turn;
   try {
     turn = await recordTelegramTurn(message, { textOverride: text, payload });
@@ -1821,26 +1614,15 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
     queued: turn.queued || null,
   });
   const hostedNoWriteDecision = noWriteDecisionFromTurn(turn);
-  const supportNoWrite = Boolean((supportDecision && supportDecision.shouldQueueWorker === false) || hostedNoWriteDecision);
-  const supportQueuedBypass = supportNoWrite && turn.queued;
-  if (supportQueuedBypass) {
-    noteCacheStage(cacheDir, 'support-router-queue-bypassed', {
-      reason: 'bridge_preflight_no_write_overrides_hosted_queue',
-      queued: turn.queued,
-      transcriptId: turn.transcriptId || null,
-      outboundTranscriptId: turn.outboundTranscriptId || null,
-    });
-  } else {
-    startWorkerDrainIfQueued(turn);
-  }
+  const supportNoWrite = Boolean(hostedNoWriteDecision);
+  startWorkerDrainIfQueued(turn);
 
   const hostedReply = cleanText(turn.reply || turn.customerResponse || turn.answer, 4000);
-  const bridgeNoWriteReply = supportNoWrite ? cleanText(supportDecision.reply, 4000) : '';
-  let reply = hostedReply || (supportNoWrite ? bridgeNoWriteReply : [
+  let reply = hostedReply || [
     'I am processing the information you sent and setting up your TimeSyncher Vacation.',
     '',
     'Expect an initial vacation itinerary in about 10-20 minutes. You can keep sending updates here while I work on it.',
-  ].join('\n'));
+  ].join('\n');
   if (!supportNoWrite && turn.queued && isConcreteItineraryEditRequest(text) && isGenericQueuedAcknowledgement(reply)) {
     reply = editAcknowledgement(text);
   }

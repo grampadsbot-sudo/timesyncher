@@ -46,11 +46,13 @@ async function assertGeneratedSharedUrlIsReadable(webItineraryUrl) {
 
 const telegramBotSource = fs.readFileSync('./telegram-vacation-intake-bot.mjs', 'utf8');
 const timestopperWorkerSource = fs.readFileSync('./timestopper-worker.mjs', 'utf8');
+const hostedApiSource = fs.readFileSync('../api/vacation-telegram-turn.mjs', 'utf8');
+const dispatchSource = fs.readFileSync('./product-gbrain-dispatch.mjs', 'utf8');
 assert.equal(telegramBotSource.includes('I do not have enough account detail in this chat message'), false, 'Telegram bridge must not answer account questions before API session/account lookup');
-assert.ok(telegramBotSource.includes('isNewVacationAdviceQuestion'), 'Telegram bridge must guard meta/advice questions before queueing vacation work');
-assert.ok(telegramBotSource.includes('isVagueNextStepQuestion'), 'Telegram bridge must guard vague next-step questions before queueing vacation work');
-assert.ok(telegramBotSource.includes('isVacationExistenceQuestion'), 'Telegram bridge must guard vacation existence/state questions before queueing vacation work');
-assert.ok(telegramBotSource.includes('isPersonAccessQuestion'), 'Telegram bridge must guard person access questions before queueing vacation work');
+assert.ok(hostedApiSource.includes('vacationSupportIntentWithModel'), 'Hosted API must own normal text support/account intent classification');
+assert.ok(hostedApiSource.includes('recentConversationContext'), 'Hosted API must build canonical conversation context before classifying support/account turns');
+assert.ok(hostedApiSource.includes('supportIntent?.intent'), 'Hosted API must use typed support intents for normal text turns');
+assert.ok(dispatchSource.includes('currentTurnRouterDecisionModelFirst'), 'Dispatcher must retain model-first support/account routing for worker turns');
 assert.equal(telegramBotSource.includes('not an instruction to create or update a vacation'), false, 'Telegram bridge customer copy must not explain internal no-write routing');
 assert.equal(telegramBotSource.includes('not changing anything'), false, 'Telegram bridge customer copy must not use robotic no-write disclaimers');
 assert.equal(telegramBotSource.includes('plus two other Telegram editors'), false, 'Telegram pricing copy must not mention retired three-seat collaborator plans');
@@ -63,16 +65,16 @@ assert.ok(
   telegramBotSource.includes('Can my wife Kim change') || telegramBotSource.includes('accessCapabilitiesRequested'),
   'Telegram bridge must cover combined website-change plus media-upload access questions without throwing',
 );
-assert.ok(telegramBotSource.includes('I need a direct instruction before I work on a vacation.'), 'Telegram bridge must answer staging/new-vacation advice questions without queueing');
-assert.ok(telegramBotSource.includes('tell me which vacation by name and the change you want made'), 'Telegram bridge must ask for vacation name/change, not customer-supplied links');
+assert.ok(dispatchSource.includes('I need a direct instruction before I work on a vacation.'), 'Hosted/dispatcher path must answer staging/new-vacation advice questions without bridge preflight');
+assert.ok(dispatchSource.includes('tell me which vacation by name and the change you want made'), 'Hosted/dispatcher path must ask for vacation name/change, not customer-supplied links');
 assert.equal(telegramBotSource.includes('send the vacation website link and the change'), false, 'Telegram bridge must not ask customers to send vacation website links for vague support turns');
 assert.ok(telegramBotSource.includes('vacationDirectionClarificationCopy'), 'Telegram bridge must centralize start-new/update-existing clarification copy');
-assert.ok(telegramBotSource.includes('bridge_preflight_annotation'), 'Telegram bridge should annotate support decisions for the hosted API instead of owning account/state routing');
-assert.ok(telegramBotSource.includes('support-router-queue-bypassed'), 'Telegram bridge must bypass hosted queued work when preflight says no-write');
-assert.ok(telegramBotSource.includes('bridge_preflight_no_write_overrides_hosted_queue'), 'Telegram bridge must record when no-write preflight overrides hosted queueing');
+assert.equal(telegramBotSource.includes('bridge_preflight_annotation'), false, 'Telegram bridge must not annotate normal text turns with pre-hosted support decisions');
+assert.equal(telegramBotSource.includes('support-router-queue-bypassed'), false, 'Telegram bridge must not bypass hosted queued work from preflight no-write decisions');
+assert.equal(telegramBotSource.includes('bridge_preflight_no_write_overrides_hosted_queue'), false, 'Telegram bridge must not override hosted queueing with bridge preflight no-write decisions');
 assert.ok(
-  telegramBotSource.includes('let reply = hostedReply || (supportNoWrite ? bridgeNoWriteReply'),
-  'Telegram bridge final reply selection must render hosted API answers ahead of bridge preflight copy',
+  telegramBotSource.includes('let reply = hostedReply || ['),
+  'Telegram bridge final reply selection must use hosted API answers before generic delivery fallback copy',
 );
 assert.equal(
   telegramBotSource.includes('preferBridgeNoWriteReply'),
@@ -106,8 +108,8 @@ assert.ok(
 );
 assert.ok(telegramBotSource.includes('function grokBridgeCustomerRender'), 'Telegram bridge must use bounded Grok rendering for direct no-write account-state replies');
 assert.ok(telegramBotSource.includes('bridgeCustomerCopyLooksSafe'), 'Telegram bridge must validate Grok-rendered direct replies before sending them');
-assert.ok(telegramBotSource.includes('supportRouterDecision'), 'Telegram bridge must pass structured support decisions into the hosted turn API payload');
-assert.ok(telegramBotSource.includes('write_mode'), 'Telegram bridge support preflight must use the typed decision write_mode field');
+assert.equal(telegramBotSource.includes('payload.supportRouterDecision'), false, 'Telegram bridge must not inject structured support decisions into the hosted turn API payload');
+assert.ok(telegramBotSource.includes('write_mode'), 'Telegram bridge may read hosted typed decisions but must not create bridge preflight write_mode decisions');
 assert.ok(telegramBotSource.includes('value === undefined || value === null'), 'Telegram send payload must omit null/undefined optional fields such as reply_markup');
 assert.equal(telegramBotSource.includes('could not queue it yet: ${cleanText(error.message'), false, 'Telegram fallback copy must not echo raw delivery/queue errors to customers');
 assert.ok(telegramBotSource.includes('hit a delivery issue while responding'), 'Telegram fallback copy must use customer-safe delivery failure copy');
@@ -141,14 +143,13 @@ assert.ok(timestopperWorkerSource.includes('spawn(process.execPath, [PRODUCT_GBR
 assert.ok(timestopperWorkerSource.includes('findSupportNoWriteDecision'), 'Worker must silently no-op queued jobs that carry support no-write decisions');
 assert.ok(timestopperWorkerSource.includes('support_router_no_write'), 'Worker no-write guard must preserve support router reason');
 assert.ok(timestopperWorkerSource.includes('timestopper-worker-support-no-write-gate'), 'Worker no-write guard must expose deterministic tooling receipt');
-const dispatchSource = fs.readFileSync('./product-gbrain-dispatch.mjs', 'utf8');
 assert.ok(dispatchSource.includes('function grokRouterDecision'), 'Product dispatcher must call the Grok intent router before deterministic fallback classification');
 assert.ok(dispatchSource.includes('function currentTurnRouterDecisionModelFirst'), 'Product dispatcher must expose the model-first router entrypoint');
 assert.ok(dispatchSource.includes('function grokCustomerRender'), 'Product dispatcher must let Grok render bounded customer answers from resolved fact packets');
 assert.ok(dispatchSource.includes('customerCopyLooksSafe'), 'Product dispatcher must validate Grok-rendered customer copy before sending it');
 assert.ok(dispatchSource.includes('deterministic_fallback_router'), 'Product dispatcher must label regex/word routing as fallback only');
-assert.ok(telegramBotSource.includes('function vacationSupportRouterPreflightDecision'), 'Telegram bridge must use model-first preflight before deterministic fallback');
-assert.ok(telegramBotSource.includes('model_primary_bridge_preflight'), 'Telegram bridge must record model-primary preflight decisions');
+assert.equal(telegramBotSource.includes('function vacationSupportRouterPreflightDecision'), false, 'Telegram bridge must not run a local intent router before hosted normal text turns');
+assert.equal(telegramBotSource.includes('model_primary_bridge_preflight'), false, 'Telegram bridge must not record model-primary preflight decisions for normal text turns');
 assert.ok(dispatchSource.includes('function makeTurnDecision'), 'Product dispatcher must use a typed turn decision object');
 assert.ok(dispatchSource.includes('write_mode'), 'Typed decision object must include write_mode');
 assert.ok(dispatchSource.includes('tripSelector'), 'Typed decision object must include tripSelector');
