@@ -554,14 +554,22 @@ function eulaRequiredReply(eula) {
   ].join('\n');
 }
 
-function collaboratorCheckoutReplyText() {
-  return [
+export function collaboratorCheckoutReplyText({ singleTripUrl = '', unlimitedTripsUrl = '' } = {}) {
+  const lines = [
     'Yes. You can share the vacation website with your wife or family so they can view it.',
     '',
-    'Website editing is owner-approved and email-verified, so someone with only the shared URL stays view-only. Full access through Telegram, equal to yours, requires the Telegram access add-on. You can give Telegram access to up to 3 people.',
+    'Website editing is owner-approved and email-verified, so someone with only the shared URL stays view-only. Full access through Telegram, equal to yours, requires the Telegram collaborator add-on. One collaborator is added per checkout.',
     '',
-    'Choose a Telegram add-on option below. The checkout page also lets you add photo and video upload access with pricing that matches the selected scope.',
-  ].join('\n');
+    'Use this checkout link for Telegram collaborator access:',
+  ];
+  if (singleTripUrl) lines.push(`One vacation: ${singleTripUrl}`);
+  if (unlimitedTripsUrl) lines.push(`All vacations: ${unlimitedTripsUrl}`);
+  if (!singleTripUrl && !unlimitedTripsUrl) lines.push('I could not create the checkout link in this moment. Please try again in a minute.');
+  lines.push(
+    '',
+    'The checkout page also lets you add photo and video upload access with pricing that matches the selected scope.',
+  );
+  return lines.join('\n');
 }
 
 function collaboratorStatusQuestion(text = '') {
@@ -1225,7 +1233,10 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
     };
   }
   return {
-    reply: collaboratorCheckoutReplyText(),
+    reply: collaboratorCheckoutReplyText({
+      singleTripUrl: checkoutLinks.singleTrip?.checkoutUrl || '',
+      unlimitedTripsUrl: checkoutLinks.unlimitedTrips?.checkoutUrl || '',
+    }),
     payload: {
       collaboratorEntitlement: {
         required: true,

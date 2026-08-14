@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
   hasTripPlanningDetails,
+  collaboratorCheckoutReplyText,
   parseVacationIdentity,
   vacationSupportIntent,
   vacationSupportIntentWithModel,
@@ -150,6 +151,16 @@ assert.match(wifeTelegramCollaboratorStatusReply, /^No, Kim is not a Telegram co
 assert.match(wifeTelegramCollaboratorStatusReply, /website editor invite/i);
 assert.match(wifeTelegramCollaboratorStatusReply, /website editing and Telegram collaboration are separate/i);
 assert.doesNotMatch(wifeTelegramCollaboratorStatusReply, /could not verify|matching vacation|Yes\.|up to 3 people|Choose a Telegram add-on option/i);
+
+const collaboratorCheckoutText = collaboratorCheckoutReplyText({
+  singleTripUrl: 'https://vacation-staging.timesyncher.com/addons-checkout.html?collaboratorInvite=single-token&plan=telegram_collaborators_single_trip',
+  unlimitedTripsUrl: 'https://vacation-staging.timesyncher.com/addons-checkout.html?collaboratorInvite=all-token&plan=telegram_collaborators_unlimited_trips',
+});
+assert.match(collaboratorCheckoutText, /One collaborator is added per checkout/i);
+assert.match(collaboratorCheckoutText, /One vacation: https:\/\/vacation-staging\.timesyncher\.com\/addons-checkout\.html\?collaboratorInvite=single-token/i);
+assert.match(collaboratorCheckoutText, /All vacations: https:\/\/vacation-staging\.timesyncher\.com\/addons-checkout\.html\?collaboratorInvite=all-token/i);
+assert.match(collaboratorCheckoutText, /photo and video upload access/i);
+assert.doesNotMatch(collaboratorCheckoutText, /up to 3 people|Choose a Telegram add-on option below/i);
 
 const mockedGrokFetch = async () => ({
   ok: true,
