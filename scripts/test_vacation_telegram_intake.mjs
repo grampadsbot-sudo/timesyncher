@@ -264,6 +264,30 @@ assert.equal(missingTelegramOptionFollowup.intent, 'collaborator_setup_link');
 assert.equal(missingTelegramOptionFollowup.source, 'conversation_context_fallback');
 assert.equal(missingTelegramOptionFollowup.shouldQueueWorker, false);
 
+const screenshotLinkCommandIntent = vacationSupportIntent('Send me the telegram link again');
+assert.equal(screenshotLinkCommandIntent.intent, 'collaborator_setup_link');
+assert.equal(screenshotLinkCommandIntent.shouldQueueWorker, false);
+
+const screenshotLinkCommandFollowup = await vacationSupportIntentWithModel('Send me the telegram link again', {
+  env: {},
+  conversationContext: {
+    activeVacation: 'Las Vegas Strip Vacation',
+    knownParticipants: ['Kim'],
+    recentTurns: [
+      {
+        speaker: 'assistant',
+        body: collaboratorCheckoutText,
+      },
+    ],
+  },
+  fetchImpl: async () => {
+    throw new Error('should not call Grok without key');
+  },
+});
+assert.equal(screenshotLinkCommandFollowup.intent, 'collaborator_setup_link');
+assert.equal(screenshotLinkCommandFollowup.source, 'conversation_context_fallback');
+assert.equal(screenshotLinkCommandFollowup.shouldQueueWorker, false);
+
 const ubuntuRouterQuestion = await vacationSupportIntentWithModel('Am I able to upload pics and videos to the Vegas vacation?', {
   env: { TIMESYNCHER_GROK_ROUTER_URL: 'https://auth.timesyncher.com/grok-router/intent', TIMESYNCHER_GROK_ROUTER_TOKEN: 'test-token' },
   fetchImpl: async (url, options) => {

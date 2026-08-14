@@ -614,6 +614,12 @@ function isQuestionLike(value = '') {
   return normalized.includes('?') || /\b(do|does|can|could|will|would|what|when|where|why|how|am i|are we|is there|did i|have i)\b/.test(normalized);
 }
 
+function asksForLinkOrCheckout(value = '') {
+  const normalized = cleanText(value, 2000).toLowerCase();
+  return /\b(send|share|show|give|need|open|where|what|find|get|resend)\b/.test(normalized)
+    && /\b(link|url|checkout|option|page|add-?on|setup|set up)\b/.test(normalized);
+}
+
 function compactConversationContext(input = {}) {
   const metadata = input.metadata && typeof input.metadata === 'object' ? input.metadata : {};
   const recentTurns = Array.isArray(input.recentTurns) ? input.recentTurns : [];
@@ -635,10 +641,7 @@ function compactConversationContext(input = {}) {
 
 function collaboratorSetupLinkFollowupFromContext(text = '', conversationContext = {}) {
   const normalized = cleanText(text, 2000).toLowerCase();
-  if (!isQuestionLike(normalized)) return false;
-  const asksForMissingLink = /\b(where|what|send|share|show|give|need|open)\b/.test(normalized)
-    && /\b(link|url|checkout|option|page|add-?on|setup|set up)\b/.test(normalized);
-  if (!asksForMissingLink) return false;
+  if (!asksForLinkOrCheckout(normalized)) return false;
   const compact = compactConversationContext(conversationContext);
   const recentText = compact.recentTurns
     .map((turn) => `${turn.speaker}: ${turn.body}`)
@@ -693,7 +696,11 @@ function isConcreteItineraryQuestion(value = '') {
 export function vacationSupportIntent(text) {
   const normalized = cleanText(text, 2000).toLowerCase();
   if (!normalized || /^\/start\b/i.test(normalized)) return null;
-  if (!isQuestionLike(normalized) || isConcreteItineraryQuestion(normalized)) return null;
+  const linkOrCheckoutRequest = asksForLinkOrCheckout(normalized);
+  if ((!isQuestionLike(normalized) && !linkOrCheckoutRequest) || isConcreteItineraryQuestion(normalized)) return null;
+  if (linkOrCheckoutRequest && /\b(telegram|collaborator|wife|spouse|family|photo|video|pic|pics|media|add-?on)\b/.test(normalized)) {
+    return { intent: 'collaborator_setup_link', shouldQueueWorker: false, confidence: 0.9, answerMode: 'collaborator_checkout' };
+  }
   if (/\b(send|share|show|give|need|where|what|open)\b/.test(normalized) && /\b(website|web site|site|link|url)\b/.test(normalized) && /\b(vacation|trip|itinerary|vegas|las vegas|strip)\b/.test(normalized)) {
     return { intent: 'website_link_question', shouldQueueWorker: false, confidence: 0.95, answerMode: 'account_state' };
   }
