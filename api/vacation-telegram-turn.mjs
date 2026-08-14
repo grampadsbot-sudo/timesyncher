@@ -588,6 +588,62 @@ function isQuestionLike(value = '') {
   return normalized.includes('?') || /\b(do|does|can|could|will|would|what|when|where|why|how|am i|are we|is there|did i|have i)\b/.test(normalized);
 }
 
+function compactConversationContext(input = {}) {
+  const metadata = input.metadata && typeof input.metadata === 'object' ? input.metadata : {};
+  const recentTurns = Array.isArray(input.recentTurns) ? input.recentTurns : [];
+  return {
+    activeVacation: cleanText(input.activeVacation || metadata.vacationName || metadata.vacation_name, 160) || null,
+    activeDestination: cleanText(input.activeDestination || metadata.destination, 160) || null,
+    knownParticipants: Array.isArray(input.knownParticipants)
+      ? input.knownParticipants.map((name) => cleanText(name, 80)).filter(Boolean).slice(0, 8)
+      : [],
+    recentTurns: recentTurns
+      .map((turn) => ({
+        speaker: cleanText(turn.speaker || turn.role, 24) || 'customer',
+        body: cleanText(turn.body || turn.text || turn.message, 700),
+      }))
+      .filter((turn) => turn.body)
+      .slice(-8),
+  };
+}
+
+async function recentConversationContext(db, session, { excludeTranscriptId = null, payload = {} } = {}) {
+  const payloadContext = compactConversationContext(payload.conversationContext || payload.turnContext || {});
+  const metadata = sessionMetadata(session);
+  let transcriptTurns = [];
+  if (session?.id) {
+    try {
+      const rows = await db`
+        select id, speaker, body
+        from transcript_turns
+        where telegram_session_id = ${session.id}
+          and (${excludeTranscriptId || null}::uuid is null or id <> ${excludeTranscriptId || null})
+        order by coalesce(sent_at, received_at, turn_tagged_at) desc nulls last
+        limit 8
+      `;
+      transcriptTurns = rows.reverse().map((row) => ({
+        speaker: row.speaker,
+        body: row.body,
+      }));
+    } catch (error) {
+      console.warn('TimeSyncher Vacation transcript context unavailable', error?.message || error);
+    }
+  }
+  const knownParticipants = new Set(payloadContext.knownParticipants || []);
+  const wifeName = cleanText(process.env.TIMESYNCHER_CUSTOMER_WIFE_DISPLAY_NAME || process.env.TIMESYNCHER_PRIMARY_SPOUSE_NAME, 80);
+  if (wifeName) knownParticipants.add(wifeName);
+  for (const turn of [...transcriptTurns, ...(payloadContext.recentTurns || [])]) {
+    if (/\bkim\b/i.test(turn.body || '')) knownParticipants.add('Kim');
+  }
+  return compactConversationContext({
+    metadata,
+    activeVacation: payloadContext.activeVacation,
+    activeDestination: payloadContext.activeDestination,
+    knownParticipants: [...knownParticipants],
+    recentTurns: transcriptTurns.length ? transcriptTurns : payloadContext.recentTurns,
+  });
+}
+
 function isConcreteItineraryQuestion(value = '') {
   const normalized = cleanText(value, 2000).toLowerCase();
   return /\b(find|compare|plan|build|create|make|draft|research|suggest|recommend|add|change|update|remove|swap|move|refine)\b/.test(normalized)
@@ -625,6 +681,7 @@ const SUPPORT_ROUTER_INTENTS = new Set([
   'website_link_question',
   'media_upload_question',
   'collaborator_access_question',
+  'collaborator_setup_link',
   'ambiguous',
   'unsafe_internal',
 ]);
@@ -663,7 +720,17 @@ function extractJsonObject(value = '') {
   }
 }
 
-export async function grokVacationSupportIntent(text, { env = process.env, fetchImpl = fetch, signal } = {}) {
+function conversationContextPrompt(context = {}) {
+  const compact = compactConversationContext(context);
+  if (!compact.activeVacation && !compact.knownParticipants.length && !compact.recentTurns.length) return '';
+  return [
+    'Conversation state for resolving pronouns and follow-ups:',
+    JSON.stringify(compact, null, 2),
+    '',
+  ].join('\n');
+}
+
+export async function grokVacationSupportIntent(text, { env = process.env, fetchImpl = fetch, signal, conversationContext = {} } = {}) {
   const apiKey = env.TIMESYNCHER_XAI_API_KEY || env.XAI_API_KEY || '';
   if (!apiKey) return null;
   const model = env.TIMESYNCHER_XAI_ROUTER_MODEL || env.TIMESYNCHER_XAI_SUMMARY_MODEL || env.XAI_MODEL || 'grok-4';
@@ -676,11 +743,14 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     '- support_question: asks how the product works, pricing, booking boundary, login, support, website URL/link.',
     '- media_upload_question: asks whether/how the owner or collaborator can upload/send/add/attach photos, pictures, videos, or media.',
     '- collaborator_access_question: asks whether a wife, spouse, family member, assistant, or another person can view/edit/change/upload through the vacation.',
+    '- collaborator_setup_link: asks for a checkout/setup/invite link or next step to give another person Telegram collaborator access. Use recent context to resolve pronouns like her, him, or them.',
     '- ambiguous: unclear whether support or itinerary work.',
     '- itinerary_action: asks to create, update, refine, research, or modify vacation itinerary content.',
     '',
     'Rules:',
+    '- Use the conversation state to resolve follow-ups and pronouns. Do not require the current turn to repeat collaborator, wife, Kim, Telegram, or vacation words.',
     '- Questions about ability, access, pricing, checkout, coupons, or media upload are no-write support/account turns.',
+    '- collaborator_setup_link is a no-write support/account turn; it creates checkout copy in the hosted API, not itinerary work.',
     '- Do not classify a question as itinerary_action just because it names a destination or vacation.',
     '- Use itinerary_action only when the current turn clearly asks to create/change itinerary content.',
     '- write_mode must be none for support/account/media/collaborator/ambiguous turns.',
@@ -689,6 +759,7 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     'JSON schema:',
     '{"intent":"media_upload_question","write_mode":"none","answerMode":"account_state","shouldQueueWorker":false,"confidence":0.0,"reasons":["short reason"]}',
     '',
+    conversationContextPrompt(conversationContext),
     `Customer turn: ${cleanText(text, 2000)}`,
   ].join('\n');
   const response = await fetchImpl('https://api.x.ai/v1/chat/completions', {
@@ -714,7 +785,7 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
   return normalizeRouterDecision(extractJsonObject(content), 'grok');
 }
 
-export async function ubuntuGrokVacationSupportIntent(text, { env = process.env, fetchImpl = fetch, signal } = {}) {
+export async function ubuntuGrokVacationSupportIntent(text, { env = process.env, fetchImpl = fetch, signal, conversationContext = {} } = {}) {
   const routerUrl = cleanText(env.TIMESYNCHER_GROK_ROUTER_URL, 500);
   const token = env.TIMESYNCHER_GROK_ROUTER_TOKEN || '';
   if (!routerUrl || !token) return null;
@@ -730,6 +801,11 @@ export async function ubuntuGrokVacationSupportIntent(text, { env = process.env,
       context: {
         product: 'timesyncher_vacation',
         surface: 'telegram',
+        conversationContext: compactConversationContext(conversationContext),
+        classifierContract: {
+          pronounFollowupsUseConversationContext: true,
+          setupLinkIntent: 'collaborator_setup_link',
+        },
       },
     }),
   });
@@ -738,15 +814,15 @@ export async function ubuntuGrokVacationSupportIntent(text, { env = process.env,
   return normalizeRouterDecision(json.decision, 'ubuntu_grok_router');
 }
 
-export async function vacationSupportIntentWithModel(text, { env = process.env, fetchImpl = fetch } = {}) {
+export async function vacationSupportIntentWithModel(text, { env = process.env, fetchImpl = fetch, conversationContext = {} } = {}) {
   try {
     const timeoutMs = Number.parseInt(env.TIMESYNCHER_XAI_ROUTER_TIMEOUT_MS || '4500', 10);
     const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
       ? AbortSignal.timeout(Number.isFinite(timeoutMs) ? timeoutMs : 4500)
       : undefined;
-    const ubuntuDecision = await ubuntuGrokVacationSupportIntent(text, { env, fetchImpl, signal });
+    const ubuntuDecision = await ubuntuGrokVacationSupportIntent(text, { env, fetchImpl, signal, conversationContext });
     if (ubuntuDecision) return ubuntuDecision;
-    const modelDecision = await grokVacationSupportIntent(text, { env, fetchImpl, signal });
+    const modelDecision = await grokVacationSupportIntent(text, { env, fetchImpl, signal, conversationContext });
     if (modelDecision) return modelDecision;
   } catch (error) {
     console.warn('TimeSyncher Vacation Grok support router fallback', error?.message || error);
@@ -1590,12 +1666,50 @@ export default async function handler(req, res) {
     let queued = null;
     let reply;
     let replyPayload = {};
-    const collaboratorInviteRequested = session?.customer_id && isCollaboratorInviteRequest(text) && !collaboratorStatusQuestion(text);
-    const supportIntent = collaboratorInviteRequested ? null : await vacationSupportIntentWithModel(text);
+    const conversationContext = await recentConversationContext(db, session, {
+      excludeTranscriptId: inboundTranscriptId,
+      payload: body.payload || {},
+    });
+    const supportIntent = await vacationSupportIntentWithModel(text, { conversationContext });
+    const collaboratorInviteRequested = Boolean(
+      session?.customer_id
+        && !collaboratorStatusQuestion(text)
+        && (
+          supportIntent?.intent === 'collaborator_setup_link'
+          || ((!supportIntent || supportIntent.source === 'deterministic_fallback') && isCollaboratorInviteRequest(text))
+        ),
+    );
 
     if (startMatch) {
       if (onboarding) session = await markVoiceNotePracticePrompted(db, session);
       reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+    } else if (collaboratorInviteRequested) {
+      try {
+        const checkout = await collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId });
+        reply = checkout.reply;
+        replyPayload = {
+          ...checkout.payload,
+          supportRouter: supportIntent ? {
+            intent: supportIntent.intent,
+            shouldQueueWorker: false,
+            confidence: supportIntent.confidence,
+            source: supportIntent.source || 'model',
+            answerMode: supportIntent.answerMode || 'collaborator_checkout',
+          } : null,
+        };
+      } catch (error) {
+        reply = [
+          collaboratorCheckoutCopy(),
+          '',
+          'I could not create the checkout links in this moment. Please try again in a minute.',
+        ].join('\n');
+        replyPayload = {
+          collaboratorEntitlement: {
+            required: true,
+            error: error.message || 'checkout link creation failed',
+          },
+        };
+      }
     } else if (supportIntent) {
       const access = await vacationAccessSummary(db, session, { telegramChatId, telegramUserId, payload: body.payload || {}, text });
       reply = vacationSupportReply({ text, intent: supportIntent, access });
@@ -1652,24 +1766,6 @@ export default async function handler(req, res) {
           saved.vacationName ? `I caught the name as “${saved.vacationName}”; I still need what would make it unforgettable.` : 'Please include both the vacation name and what would make it unforgettable.',
           missing.length ? `Also include: ${missing.join(', ')}.` : '',
         ].filter(Boolean).join('\n');
-      }
-    } else if (collaboratorInviteRequested) {
-      try {
-        const checkout = await collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId });
-        reply = checkout.reply;
-        replyPayload = checkout.payload;
-      } catch (error) {
-        reply = [
-          collaboratorCheckoutCopy(),
-          '',
-          'I could not create the checkout links in this moment. Please try again in a minute.',
-        ].join('\n');
-        replyPayload = {
-          collaboratorEntitlement: {
-            required: true,
-            error: error.message || 'checkout link creation failed',
-          },
-        };
       }
     } else {
       const authz = await canQueueTelegramModification(db, session, { telegramChatId, telegramUserId, kind });

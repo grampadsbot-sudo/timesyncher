@@ -930,6 +930,64 @@ function noteCacheStage(cacheDir, stage, details = {}) {
   });
 }
 
+function conversationStatePath(chatId = '') {
+  return path.join(INGRESS_CACHE_DIR, 'state', `chat-${safePathPart(chatId || 'unknown')}.json`);
+}
+
+function readConversationState(chatId = '') {
+  try {
+    const filePath = conversationStatePath(chatId);
+    if (!fs.existsSync(filePath)) return { recentTurns: [] };
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : { recentTurns: [] };
+  } catch {
+    return { recentTurns: [] };
+  }
+}
+
+function conversationContextForMessage(message = {}, text = '') {
+  const chatId = String(message.chat?.id || '');
+  const state = readConversationState(chatId);
+  const recentTurns = Array.isArray(state.recentTurns) ? state.recentTurns : [];
+  return {
+    activeVacation: cleanText(state.activeVacation, 160) || null,
+    activeDestination: cleanText(state.activeDestination, 160) || null,
+    knownParticipants: Array.isArray(state.knownParticipants)
+      ? state.knownParticipants.map((name) => cleanText(name, 80)).filter(Boolean).slice(0, 8)
+      : [],
+    recentTurns: recentTurns
+      .map((turn) => ({
+        speaker: cleanText(turn.speaker, 24) || 'customer',
+        body: cleanText(turn.body, 700),
+      }))
+      .filter((turn) => turn.body)
+      .slice(-8),
+    currentTurnPreview: cleanText(text, 700),
+  };
+}
+
+function rememberConversationTurn(message = {}, { inboundText = '', outboundText = '', turn = {} } = {}) {
+  const chatId = String(message.chat?.id || '');
+  if (!chatId) return;
+  const state = readConversationState(chatId);
+  const recentTurns = Array.isArray(state.recentTurns) ? state.recentTurns : [];
+  const knownParticipants = new Set(Array.isArray(state.knownParticipants) ? state.knownParticipants : []);
+  const combined = `${inboundText}\n${outboundText}`;
+  if (/\bkim\b/i.test(combined)) knownParticipants.add('Kim');
+  const vacationName = cleanText(turn.vacationName || turn.payload?.vacationName || state.activeVacation, 160);
+  const nextTurns = [
+    ...recentTurns,
+    inboundText ? { speaker: 'customer', body: cleanText(inboundText, 700), at: new Date().toISOString() } : null,
+    outboundText ? { speaker: 'assistant', body: cleanText(outboundText, 700), at: new Date().toISOString() } : null,
+  ].filter(Boolean).slice(-8);
+  writeJsonAtomic(conversationStatePath(chatId), {
+    updatedAt: new Date().toISOString(),
+    activeVacation: vacationName || null,
+    knownParticipants: [...knownParticipants].slice(0, 8),
+    recentTurns: nextTurns,
+  });
+}
+
 function cleanupIngressCache() {
   const cutoffMs = Date.now() - INGRESS_RETENTION_DAYS * 24 * 60 * 60 * 1000;
   try {
@@ -1383,6 +1441,7 @@ async function recordTelegramTurn(message, { textOverride = '', payload = {} } =
   const chat = message.chat || {};
   const text = cleanText(textOverride || message.text || message.caption);
   const startMatch = /^\/start(?:\s+(.+))?/i.exec(text);
+  const conversationContext = conversationContextForMessage(message, text);
   const { response, json } = await fetchJsonWithRetry(`${API_BASE}/api/vacation-telegram-turn`, {
     method: 'POST',
     headers: {
@@ -1412,6 +1471,7 @@ async function recordTelegramTurn(message, { textOverride = '', payload = {} } =
       },
       payload: {
         ...payload,
+        conversationContext,
         telegramChatId: String(chat.id || ''),
         telegramChatType: chat.type || '',
         telegramMessageId: message.message_id || null,
@@ -1700,7 +1760,8 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
     return;
   }
 
-  const supportDecision = vacationSupportRouterPreflightDecision(text, { chatId: String(chatId || ''), messageId: String(messageId || '') });
+  const conversationContext = conversationContextForMessage(message, text);
+  const supportDecision = vacationSupportRouterPreflightDecision(text, { chatId: String(chatId || ''), messageId: String(messageId || ''), conversationContext });
   if (supportDecision && supportDecision.shouldQueueWorker === false) {
     const accessibleVacationMatches = (isVacationExistenceQuestion(text) || isPersonAccessQuestion(text) || isWebsiteLinkRequest(text))
       ? findAccessibleVacationMatchesForQuestion(text)
@@ -1800,6 +1861,7 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
     sent = await sendMessage(chatId, reply, messageId, supportNoWrite ? null : replyMarkupForTurn(turn));
   }
   await recordDelivery({ transcriptId: turn.outboundTranscriptId, telegramMessageId: sent?.message_id });
+  rememberConversationTurn(message, { inboundText: text, outboundText: reply, turn });
 }
 
 async function pollOnce() {

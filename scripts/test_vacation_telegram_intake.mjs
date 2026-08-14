@@ -178,11 +178,60 @@ assert.equal(grokMediaQuestion.intent, 'media_upload_question');
 assert.equal(grokMediaQuestion.source, 'grok');
 assert.equal(grokMediaQuestion.shouldQueueWorker, false);
 
+const vagueFollowupContext = {
+  activeVacation: 'Las Vegas Strip Vacation',
+  knownParticipants: ['Kim'],
+  recentTurns: [
+    { speaker: 'customer', body: 'Can my wife Kim get full Telegram access and upload pictures and videos?' },
+    { speaker: 'assistant', body: 'Telegram editing for another person is a paid TimeSyncher Vacation add-on.' },
+  ],
+};
+const grokSetupFollowup = await vacationSupportIntentWithModel('Can you send me the link?', {
+  env: { TIMESYNCHER_XAI_API_KEY: 'test-key', TIMESYNCHER_XAI_ROUTER_MODEL: 'grok-test' },
+  conversationContext: vagueFollowupContext,
+  fetchImpl: async (url, options) => {
+    assert.equal(url, 'https://api.x.ai/v1/chat/completions');
+    const body = JSON.parse(options.body);
+    const prompt = body.messages[1].content;
+    assert.match(prompt, /Conversation state for resolving pronouns and follow-ups/);
+    assert.match(prompt, /Las Vegas Strip Vacation/);
+    assert.match(prompt, /Kim/);
+    assert.match(prompt, /Can my wife Kim get full Telegram access/);
+    assert.match(prompt, /collaborator_setup_link/);
+    assert.match(prompt, /Customer turn: Can you send me the link\?/);
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                intent: 'collaborator_setup_link',
+                write_mode: 'none',
+                answerMode: 'collaborator_checkout',
+                shouldQueueWorker: false,
+                confidence: 0.94,
+                reasons: ['recent_context_mentions_wife_kim_telegram_access'],
+              }),
+            },
+          }],
+        };
+      },
+    };
+  },
+});
+assert.equal(grokSetupFollowup.intent, 'collaborator_setup_link');
+assert.equal(grokSetupFollowup.source, 'grok');
+assert.equal(grokSetupFollowup.shouldQueueWorker, false);
+
 const ubuntuRouterQuestion = await vacationSupportIntentWithModel('Am I able to upload pics and videos to the Vegas vacation?', {
   env: { TIMESYNCHER_GROK_ROUTER_URL: 'https://auth.timesyncher.com/grok-router/intent', TIMESYNCHER_GROK_ROUTER_TOKEN: 'test-token' },
   fetchImpl: async (url, options) => {
     assert.equal(url, 'https://auth.timesyncher.com/grok-router/intent');
     assert.equal(options.headers.authorization, 'Bearer test-token');
+    const body = JSON.parse(options.body);
+    assert.equal(body.context.product, 'timesyncher_vacation');
+    assert.equal(body.context.classifierContract.setupLinkIntent, 'collaborator_setup_link');
     return {
       ok: true,
       async json() {
