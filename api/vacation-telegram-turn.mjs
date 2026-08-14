@@ -1188,6 +1188,54 @@ async function ownerHasUnlimitedVacationPlan(db, session) {
   return Boolean(rows[0]);
 }
 
+function normalizedTripMatchScore(trip = {}, needles = []) {
+  const title = cleanText(trip.title, 240).toLowerCase();
+  if (!title) return 0;
+  let score = 0;
+  for (const needle of needles) {
+    const value = cleanText(needle, 240).toLowerCase();
+    if (!value) continue;
+    if (title === value) score += 100;
+    if (title.includes(value) || value.includes(title)) score += 60;
+    const words = value.split(/[^a-z0-9]+/).filter((word) => word.length >= 4);
+    for (const word of words) {
+      if (title.includes(word)) score += 8;
+    }
+  }
+  if (/\b(setup|onboarding)\b/i.test(title)) score -= 25;
+  return score;
+}
+
+async function collaboratorCheckoutTrip(db, session, { text = '', conversationContext = {} } = {}) {
+  const fallbackRows = session?.trip_id ? await db`
+    select id, title
+    from trips
+    where id = ${session.trip_id}
+    limit 1
+  ` : [];
+  const fallback = fallbackRows[0] || (session?.trip_id ? { id: session.trip_id, title: '' } : null);
+  if (!session?.customer_id) return fallback;
+  const compact = compactConversationContext(conversationContext);
+  const needles = [
+    compact.activeVacation,
+    compact.activeDestination,
+    text,
+    ...compact.recentTurns.map((turn) => turn.body),
+  ].filter(Boolean);
+  if (!needles.length) return fallback;
+  const rows = await db`
+    select id, title
+    from trips
+    where customer_id = ${session.customer_id}
+    order by created_at desc nulls last
+    limit 50
+  `;
+  const ranked = rows
+    .map((trip) => ({ trip, score: normalizedTripMatchScore(trip, needles) }))
+    .sort((a, b) => b.score - a.score);
+  return ranked[0]?.score > 0 ? ranked[0].trip : fallback;
+}
+
 function collaboratorPaymentUrl(token, planCode, env = process.env) {
   const path = env.TIMESYNCHER_COLLABORATOR_PAYMENT_PATH || '/addons-checkout.html?collaboratorInvite=';
   const base = siteBase(env);
@@ -1198,10 +1246,10 @@ function collaboratorPaymentUrl(token, planCode, env = process.env) {
   return `${base}${path}${separator}collaboratorInvite=${encodeURIComponent(token)}&plan=${encodeURIComponent(planCode)}`;
 }
 
-async function createTokenizedCollaboratorPaymentLink(db, session, { text, telegramChatId, telegramUserId, planCode }) {
+async function createTokenizedCollaboratorPaymentLink(db, session, { text, telegramChatId, telegramUserId, tripId, planCode }) {
   const { invite, token } = await createCollaboratorInvite(db, {
     ownerCustomerId: session.customer_id,
-    tripId: session.trip_id,
+    tripId,
     planCode,
     requestedFor: text,
     metadata: {
@@ -1218,7 +1266,7 @@ async function createTokenizedCollaboratorPaymentLink(db, session, { text, teleg
   };
 }
 
-async function collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId }) {
+async function collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId, conversationContext = {} }) {
   if (!session?.customer_id || !session?.trip_id) {
     return {
       reply: collaboratorCheckoutCopy(),
@@ -1231,6 +1279,8 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
     };
   }
 
+  const checkoutTrip = await collaboratorCheckoutTrip(db, session, { text, conversationContext });
+  const checkoutTripId = checkoutTrip?.id || session.trip_id;
   let single;
   let unlimited = null;
   const showUnlimitedCollaboratorPlan = await ownerHasUnlimitedVacationPlan(db, session);
@@ -1241,12 +1291,14 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       stripe,
       env: process.env,
       ownerCustomerId: session.customer_id,
-      tripId: session.trip_id,
+      tripId: checkoutTripId,
       requestedFor: text,
       metadata: {
         requestedByTelegramChatId: telegramChatId || null,
         requestedByTelegramUserId: telegramUserId || null,
         requestedFrom: 'telegram_owner_request',
+        selectedTripId: checkoutTripId,
+        selectedTripTitle: cleanText(checkoutTrip?.title, 180) || null,
       },
     };
     single = await createCollaboratorCheckout({ ...base, planCode: 'telegram_collaborators_single_trip' });
@@ -1259,6 +1311,7 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       text,
       telegramChatId,
       telegramUserId,
+      tripId: checkoutTripId,
       planCode: 'telegram_collaborators_single_trip',
     });
     if (showUnlimitedCollaboratorPlan) {
@@ -1266,6 +1319,7 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
         text,
         telegramChatId,
         telegramUserId,
+        tripId: checkoutTripId,
         planCode: 'telegram_collaborators_unlimited_trips',
       });
     }
@@ -1284,13 +1338,7 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       allowPromotionCodes: unlimited.allowPromotionCodes,
     };
   }
-  const tripRows = await db`
-    select title
-    from trips
-    where id = ${session.trip_id}
-    limit 1
-  `;
-  const vacationLabel = cleanText(tripRows[0]?.title, 180) || 'this vacation';
+  const vacationLabel = cleanText(checkoutTrip?.title, 180) || 'this vacation';
   return {
     reply: collaboratorCheckoutReplyText({
       singleTripUrl: checkoutLinks.singleTrip?.checkoutUrl || '',
@@ -1755,7 +1803,7 @@ export default async function handler(req, res) {
       reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
     } else if (collaboratorInviteRequested) {
       try {
-        const checkout = await collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId });
+        const checkout = await collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId, conversationContext });
         reply = checkout.reply;
         replyPayload = {
           ...checkout.payload,
