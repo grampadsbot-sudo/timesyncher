@@ -189,48 +189,59 @@ export async function ensureCollaboratorEulaSession(invite, token, env = process
   };
 }
 
-export async function acceptCollaboratorInvite(db, {
-  token,
+export async function recordPendingCollaboratorTelegramSession(db, {
+  invite,
+  token = '',
+  telegramChatId,
+  telegramUserId,
+  displayName = '',
+  username = '',
+  payload = {},
+} = {}) {
+  if (!invite?.id || !telegramChatId) return null;
+  const rows = await db`
+    insert into telegram_sessions (
+      customer_id, trip_id, onboarding_session_id, telegram_chat_id, telegram_user_id,
+      current_step, last_message_at, metadata, updated_at
+    )
+    values (
+      ${invite.owner_customer_id}, ${invite.trip_id || null}, null,
+      ${telegramChatId}, ${telegramUserId || null}, 'collaborator_eula_required', now(),
+      ${{
+        telegramRole: 'pending_collaborator',
+        collaboratorInviteId: invite.id,
+        collaboratorInviteToken: token || null,
+        telegramUsername: username || null,
+        displayName: displayName || null,
+        ...payload,
+      }},
+      now()
+    )
+    on conflict (telegram_chat_id) do update set
+      customer_id = excluded.customer_id,
+      trip_id = excluded.trip_id,
+      telegram_user_id = coalesce(excluded.telegram_user_id, telegram_sessions.telegram_user_id),
+      current_step = 'collaborator_eula_required',
+      last_message_at = now(),
+      metadata = telegram_sessions.metadata || excluded.metadata,
+      updated_at = now()
+    returning *
+  `;
+  return rows[0] || null;
+}
+
+export async function activateCollaboratorInvite(db, {
+  invite,
+  eula,
   telegramChatId,
   telegramUserId,
   displayName = '',
   username = '',
   payload = {},
   env = process.env,
-}) {
-  const invite = await loadCollaboratorInviteByToken(db, token, env);
-  if (!invite) return { ok: false, status: 'not_found' };
-  if (invite.status === 'pending_payment') {
-    return {
-      ok: false,
-      status: 'payment_pending',
-      invite,
-      reply: [
-        'I found this Telegram collaborator invite, but the add-on payment is not confirmed yet.',
-        '',
-        'If you just checked out, give Stripe a moment and try this Telegram link again.',
-      ].join('\n'),
-    };
-  }
-
-  const eula = await ensureCollaboratorEulaSession(invite, token, env);
-  if (!eula.ok) {
-    return {
-      ok: false,
-      status: 'eula_required',
-      invite,
-      eula,
-      reply: [
-        'Your TimeSyncher Vacation collaborator add-on is paid.',
-        '',
-        'Before Telegram editing is enabled, please review and accept the TimeSyncher EULA:',
-        eula.acceptUrl,
-        '',
-        'After accepting, return to this Telegram link to finish setup.',
-      ].join('\n'),
-    };
-  }
-
+} = {}) {
+  if (!invite?.id) return { ok: false, status: 'not_found' };
+  if (!eula?.ok) return { ok: false, status: 'eula_required', invite, eula };
   const existing = await activeCollaboratorForTelegram(db, {
     ownerCustomerId: invite.owner_customer_id,
     tripId: invite.trip_id,
@@ -313,6 +324,201 @@ export async function acceptCollaboratorInvite(db, {
       'You can now send updates for this vacation here. Opening the vacation website link from Telegram should also enable website editing for this browser.',
     ].join('\n'),
   };
+}
+
+export async function acceptCollaboratorInvite(db, {
+  token,
+  telegramChatId,
+  telegramUserId,
+  displayName = '',
+  username = '',
+  payload = {},
+  env = process.env,
+}) {
+  const invite = await loadCollaboratorInviteByToken(db, token, env);
+  if (!invite) return { ok: false, status: 'not_found' };
+  if (invite.status === 'pending_payment') {
+    return {
+      ok: false,
+      status: 'payment_pending',
+      invite,
+      reply: [
+        'I found this Telegram collaborator invite, but the add-on payment is not confirmed yet.',
+        '',
+        'If you just checked out, give Stripe a moment and try this Telegram link again.',
+      ].join('\n'),
+    };
+  }
+
+  const eula = await ensureCollaboratorEulaSession(invite, token, env);
+  if (!eula.ok) {
+    await recordPendingCollaboratorTelegramSession(db, {
+      invite,
+      token,
+      telegramChatId,
+      telegramUserId,
+      displayName,
+      username,
+      payload: {
+        ...payload,
+        eulaSessionId: eula.sessionId,
+        eulaAcceptUrl: eula.acceptUrl,
+      },
+    });
+    return {
+      ok: false,
+      status: 'eula_required',
+      invite,
+      eula,
+      reply: [
+        'Your TimeSyncher Vacation collaborator add-on is paid.',
+        '',
+        'Before Telegram editing is enabled, please review and accept the TimeSyncher EULA:',
+        eula.acceptUrl,
+        '',
+        'After accepting, tap Continue to Telegram. I will finish setup here.',
+      ].join('\n'),
+    };
+  }
+
+  return activateCollaboratorInvite(db, {
+    invite,
+    eula,
+    telegramChatId,
+    telegramUserId,
+    displayName,
+    username,
+    payload,
+    env,
+  });
+}
+
+export async function loadPendingCollaboratorInviteForTelegram(db, { telegramChatId, telegramUserId } = {}) {
+  if (!telegramChatId && !telegramUserId) return null;
+  const rows = await db`
+    select
+      i.*,
+      c.email as owner_email,
+      c.display_name as owner_display_name,
+      t.title as trip_title,
+      s.id as telegram_session_id,
+      s.telegram_chat_id as pending_telegram_chat_id,
+      s.telegram_user_id as pending_telegram_user_id,
+      s.metadata as telegram_session_metadata
+    from telegram_sessions s
+    join vacation_collaborator_invites i
+      on i.id::text = s.metadata->>'collaboratorInviteId'
+    join customers c on c.id = i.owner_customer_id
+    left join trips t on t.id = i.trip_id
+    where coalesce(s.metadata->>'telegramRole', '') = 'pending_collaborator'
+      and s.current_step = 'collaborator_eula_required'
+      and i.status = 'paid'
+      and (
+        (${telegramChatId || null}::text is not null and s.telegram_chat_id = ${telegramChatId || null})
+        or (${telegramUserId || null}::text is not null and s.telegram_user_id = ${telegramUserId || null})
+      )
+    order by s.updated_at desc
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+export async function completePendingCollaboratorForTelegram(db, {
+  telegramChatId,
+  telegramUserId,
+  displayName = '',
+  username = '',
+  payload = {},
+  env = process.env,
+} = {}) {
+  const invite = await loadPendingCollaboratorInviteForTelegram(db, { telegramChatId, telegramUserId });
+  if (!invite) return { ok: false, status: 'not_found' };
+  const eula = await ensureCollaboratorEulaSession(
+    invite,
+    invite.telegram_session_metadata?.collaboratorInviteToken || '',
+    env,
+  );
+  if (!eula.ok) {
+    return {
+      ok: false,
+      status: 'eula_required',
+      invite,
+      eula,
+      reply: [
+        'Your collaborator add-on is paid, but the TimeSyncher EULA still needs to be accepted before Telegram editing is enabled:',
+        eula.acceptUrl,
+      ].join('\n'),
+    };
+  }
+  return activateCollaboratorInvite(db, {
+    invite,
+    eula,
+    telegramChatId,
+    telegramUserId,
+    displayName,
+    username,
+    payload: {
+      ...payload,
+      completedFromPendingTelegramSessionId: invite.telegram_session_id || null,
+    },
+    env,
+  });
+}
+
+export async function completePendingCollaboratorsForEulaSession(db, {
+  sessionId,
+  env = process.env,
+} = {}) {
+  if (!sessionId || !String(sessionId).startsWith('vacation-collaborator-')) return [];
+  const inviteId = String(sessionId).slice('vacation-collaborator-'.length);
+  const rows = await db`
+    select
+      i.*,
+      c.email as owner_email,
+      c.display_name as owner_display_name,
+      t.title as trip_title,
+      s.id as telegram_session_id,
+      s.telegram_chat_id as pending_telegram_chat_id,
+      s.telegram_user_id as pending_telegram_user_id,
+      s.metadata as telegram_session_metadata
+    from telegram_sessions s
+    join vacation_collaborator_invites i on i.id = ${inviteId}::uuid
+    join customers c on c.id = i.owner_customer_id
+    left join trips t on t.id = i.trip_id
+    where i.id::text = s.metadata->>'collaboratorInviteId'
+      and coalesce(s.metadata->>'telegramRole', '') = 'pending_collaborator'
+      and s.current_step = 'collaborator_eula_required'
+      and i.status = 'paid'
+    order by s.updated_at desc
+  `;
+  const completed = [];
+  for (const invite of rows) {
+    const eula = await ensureCollaboratorEulaSession(
+      invite,
+      invite.telegram_session_metadata?.collaboratorInviteToken || '',
+      env,
+    );
+    if (!eula.ok) continue;
+    const result = await activateCollaboratorInvite(db, {
+      invite,
+      eula,
+      telegramChatId: invite.pending_telegram_chat_id,
+      telegramUserId: invite.pending_telegram_user_id,
+      displayName: invite.telegram_session_metadata?.displayName || '',
+      username: invite.telegram_session_metadata?.telegramUsername || '',
+      payload: {
+        completedFromEulaAccept: true,
+        completedFromPendingTelegramSessionId: invite.telegram_session_id || null,
+      },
+      env,
+    });
+    completed.push({
+      ...result,
+      telegramChatId: invite.pending_telegram_chat_id,
+      telegramUserId: invite.pending_telegram_user_id,
+    });
+  }
+  return completed;
 }
 
 export function collaboratorDeniedCopy() {

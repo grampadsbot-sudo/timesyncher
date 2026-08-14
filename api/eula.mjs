@@ -9,6 +9,8 @@ import {
 } from '../src/onboarding/eula-persistent-core.mjs';
 import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
+import { sql } from '../src/vacation/db.mjs';
+import { completePendingCollaboratorsForEulaSession } from '../src/vacation/collaborators.mjs';
 
 const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
 
@@ -30,6 +32,26 @@ function publicSession(session) {
   if (!session) return null;
   const { eula, ...rest } = session;
   return { ...rest, eula: { version: eula.version, text: eula.text } };
+}
+
+function telegramBotToken(env = process.env) {
+  return env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || env.TIMESYNCHER_VACATION_TELEGRAM_BOT_TOKEN || '';
+}
+
+async function sendTelegramWelcome(chatId, text, env = process.env) {
+  const token = telegramBotToken(env);
+  if (!token || !chatId || !text) return { ok: false, skipped: true };
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    }),
+  });
+  const body = await response.json().catch(() => ({}));
+  return { ok: response.ok && body?.ok !== false, status: response.status, body };
 }
 
 export default async function handler(req, res) {
@@ -61,13 +83,39 @@ export default async function handler(req, res) {
     }
     if (req.method === 'POST' && action === 'accept') {
       const body = await readBody(req);
-      const result = await acceptEulaPersistent(store, url.searchParams.get('sessionId'), {
+      const sessionId = url.searchParams.get('sessionId');
+      const session = await loadSessionPersistent(store, sessionId);
+      const result = await acceptEulaPersistent(store, sessionId, {
         acceptedByName: body.acceptedByName,
         checkboxConfirmed: body.checkboxConfirmed,
         ipAddress: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
         userAgent: req.headers['user-agent'] || '',
       });
-      return send(res, 201, { ok: true, receiptSha256: result.receipt.receiptSha256 });
+      let collaboratorActivations = [];
+      if (sessionId?.startsWith('vacation-collaborator-')) {
+        try {
+          const db = sql(process.env);
+          collaboratorActivations = await completePendingCollaboratorsForEulaSession(db, { sessionId, env: process.env });
+          for (const activation of collaboratorActivations) {
+            if (activation.ok && activation.telegramChatId) {
+              await sendTelegramWelcome(activation.telegramChatId, activation.reply, process.env).catch(() => null);
+            }
+          }
+        } catch (activationError) {
+          collaboratorActivations = [{ ok: false, status: 'activation_error', error: activationError.message }];
+        }
+      }
+      return send(res, 201, {
+        ok: true,
+        receiptSha256: result.receipt.receiptSha256,
+        continueUrl: session?.google?.returnUrl || null,
+        collaboratorActivations: collaboratorActivations.map((activation) => ({
+          ok: Boolean(activation.ok),
+          status: activation.status || null,
+          notifiedTelegram: Boolean(activation.ok && activation.telegramChatId),
+          error: activation.error || null,
+        })),
+      });
     }
     if (req.method === 'GET' && action === 'receipt') {
       const receipt = await store.getJson(receiptKey(url.searchParams.get('sessionId')));

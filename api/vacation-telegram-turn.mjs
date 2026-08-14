@@ -12,6 +12,7 @@ import {
   acceptCollaboratorInvite,
   collaboratorCheckoutCopy,
   collaboratorDeniedCopy,
+  completePendingCollaboratorForTelegram,
   createCollaboratorInvite,
   isCollaboratorInviteRequest,
 } from '../src/vacation/collaborators.mjs';
@@ -1745,6 +1746,53 @@ export default async function handler(req, res) {
       receivedAt,
       onboardingStep: session.current_step,
     });
+
+    if (!startToken && session.current_step === 'collaborator_eula_required') {
+      const collaboratorReady = await completePendingCollaboratorForTelegram(db, {
+        telegramChatId,
+        telegramUserId: telegramUserId ? `telegram:${telegramUserId}` : '',
+        displayName: displayName(user),
+        username: cleanText(user.username, 120),
+        payload: body.payload || {},
+        env: process.env,
+      });
+      if (collaboratorReady.status !== 'not_found') {
+        const reply = collaboratorReady.reply || collaboratorDeniedCopy();
+        const respondedAt = new Date();
+        const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
+        const currentSession = await findSessionForTelegram(db, telegramChatId, telegramUserId ? `telegram:${telegramUserId}` : '') || session;
+        const outboundTranscriptId = await recordTranscript(db, {
+          session: currentSession,
+          speaker: 'assistant',
+          direction: 'outbound',
+          body: reply,
+          payload: {
+            collaboratorInviteId: collaboratorReady.invite?.id || null,
+            collaboratorStartStatus: collaboratorReady.status,
+            eula: collaboratorReady.eula || null,
+          },
+          receivedAt,
+          sentAt: respondedAt.toISOString(),
+          responseLatencyMs: Number.isFinite(latency) ? latency : null,
+          onboardingStep: currentSession.current_step || 'collaborator_ready',
+        });
+        return sendJson(res, 200, {
+          ok: true,
+          reply,
+          collaboratorInvite: {
+            status: collaboratorReady.status,
+            accepted: Boolean(collaboratorReady.ok),
+            eulaRequired: collaboratorReady.status === 'eula_required',
+            eulaAcceptUrl: collaboratorReady.eula?.acceptUrl || null,
+          },
+          telegramSessionId: currentSession.id,
+          inboundTranscriptId,
+          outboundTranscriptId,
+          queued: null,
+          responseLatencyMs: Number.isFinite(latency) ? latency : null,
+        });
+      }
+    }
 
     const blockedAction = blockHighAuthorityRequest(text, process.env);
     if (blockedAction.blocked) {
