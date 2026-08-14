@@ -8,6 +8,7 @@ import {
   collaboratorEulaSessionId,
   collaboratorPlan,
   collaboratorTelegramLink,
+  collaboratorWelcomeReply,
   isCollaboratorInviteRequest,
 } from '../src/vacation/collaborators.mjs';
 import { collaboratorInviteEmail as buildCollaboratorInviteEmail } from '../src/vacation/email.mjs';
@@ -46,6 +47,17 @@ assert.equal(
   collaboratorTelegramLink('abc 123', { TIMESYNCHER_TELEGRAM_BOT_USERNAME: 'TimeSyncherVacationStagingBot' }),
   'https://t.me/TimeSyncherVacationStagingBot?start=abc%20123',
 );
+
+const welcome = collaboratorWelcomeReply({
+  invite: { trip_title: 'Las Vegas Strip Vacation', trip_id: 'trip-id', scope: 'single_trip' },
+  websiteUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=abc',
+});
+assert.match(welcome, /Las Vegas Strip Vacation/);
+assert.match(welcome, /vacation website/);
+assert.match(welcome, /https:\/\/vacation-staging\.timesyncher\.com\/api\/vacation-web-access/);
+assert.match(welcome, /voice note/i);
+assert.match(welcome, /press and hold the microphone/i);
+assert.match(welcome, /Try sending one short update now/i);
 
 const email = buildCollaboratorInviteEmail({
   contact: { firstName: 'Kim', email: 'kim@example.com' },

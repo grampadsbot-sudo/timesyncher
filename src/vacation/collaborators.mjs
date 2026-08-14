@@ -5,6 +5,7 @@ import {
   loadDefaultEulaText,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
+import { createTelegramWebAccessSession } from './web-access.mjs';
 
 export const COLLABORATOR_PLANS = {
   telegram_collaborators_single_trip: {
@@ -66,6 +67,28 @@ function botUsername(env = process.env) {
 
 export function collaboratorTelegramLink(token, env = process.env) {
   return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
+}
+
+export function collaboratorWelcomeReply({ invite = {}, websiteUrl = '' } = {}) {
+  const tripTitle = clean(invite.trip_title, 180) || 'this vacation';
+  const scope = clean(invite.scope, 80) === 'unlimited_trips' ? 'your TimeSyncher vacations' : tripTitle;
+  const lines = [
+    `You are set up as a paid TimeSyncher Vacation Telegram collaborator for ${scope}.`,
+    '',
+  ];
+  if (websiteUrl) {
+    lines.push(`Open the vacation website from this Telegram link so editing can be enabled for your browser: ${websiteUrl}`, '');
+  } else if (invite.trip_id) {
+    lines.push('Ask me for the vacation website link any time and I will send the Telegram-enabled link for editing.', '');
+  }
+  lines.push(
+    'You can send updates here by typing or by voice note. For a voice note, press and hold the microphone button while you talk.',
+    '',
+    'Useful updates include places to add, schedule changes, notes about what to avoid, budget preferences, reservations, photos, or videos if those upload options were included.',
+    '',
+    'Try sending one short update now, like “Add a note that we want a relaxed dinner one night.”',
+  );
+  return lines.join('\n');
 }
 
 export function collaboratorEulaSessionId(invite) {
@@ -312,17 +335,38 @@ export async function activateCollaboratorInvite(db, {
     returning *
   `;
 
+  let websiteAccess = null;
+  if (invite.trip_id && telegramChatId) {
+    const syntheticEmail = `telegram-${clean(telegramUserId || telegramChatId, 80).replace(/[^a-zA-Z0-9_.-]/g, '-') || collaborator.id}@telegram.timesyncher.local`;
+    try {
+      websiteAccess = await createTelegramWebAccessSession(db, {
+        ownerCustomerId: invite.owner_customer_id,
+        tripId: invite.trip_id,
+        email: syntheticEmail,
+        displayName: clean(displayName || invite.requested_for || 'Telegram collaborator', 180),
+        role: 'telegram_collaborator',
+        metadata: {
+          source: 'telegram_collaborator_activation_welcome',
+          telegramChatId: telegramChatId || null,
+          telegramUserId: telegramUserId || null,
+          collaboratorId: collaborator.id,
+          collaboratorInviteId: invite.id,
+        },
+        env,
+      });
+    } catch (error) {
+      console.warn('TimeSyncher collaborator web access welcome link fallback', error?.message || error);
+    }
+  }
+
   return {
     ok: true,
     status: 'accepted',
     invite,
     collaborator,
     eula,
-    reply: [
-      'You are set up as a paid TimeSyncher Vacation Telegram collaborator.',
-      '',
-      'You can now send updates for this vacation here. Opening the vacation website link from Telegram should also enable website editing for this browser.',
-    ].join('\n'),
+    websiteAccess,
+    reply: collaboratorWelcomeReply({ invite, websiteUrl: websiteAccess?.launchUrl || '' }),
   };
 }
 
