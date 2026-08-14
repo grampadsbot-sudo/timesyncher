@@ -7,7 +7,7 @@ import {
   loadSessionPersistent,
   receiptKey,
 } from '../src/onboarding/eula-persistent-core.mjs';
-import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
+import { acceptanceNameForReceipt, renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { completePendingCollaboratorsForEulaSession } from '../src/vacation/collaborators.mjs';
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       const sessionId = url.searchParams.get('sessionId');
       const session = await loadSessionPersistent(store, sessionId);
       const result = await acceptEulaPersistent(store, sessionId, {
-        acceptedByName: body.acceptedByName,
+        acceptedByName: String(body.acceptedByName || '').trim() || acceptanceNameForReceipt(session),
         checkboxConfirmed: body.checkboxConfirmed,
         ipAddress: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
         userAgent: req.headers['user-agent'] || '',
