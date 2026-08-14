@@ -154,11 +154,14 @@ assert.doesNotMatch(wifeTelegramCollaboratorStatusReply, /could not verify|match
 
 const collaboratorCheckoutText = collaboratorCheckoutReplyText({
   singleTripUrl: 'https://vacation-staging.timesyncher.com/addons-checkout.html?collaboratorInvite=single-token&plan=telegram_collaborators_single_trip',
-  unlimitedTripsUrl: 'https://vacation-staging.timesyncher.com/addons-checkout.html?collaboratorInvite=all-token&plan=telegram_collaborators_unlimited_trips',
+  vacationLabel: 'Las Vegas Strip Vacation',
 });
 assert.match(collaboratorCheckoutText, /One collaborator is added per checkout/i);
-assert.match(collaboratorCheckoutText, /One vacation: https:\/\/vacation-staging\.timesyncher\.com\/addons-checkout\.html\?collaboratorInvite=single-token/i);
-assert.match(collaboratorCheckoutText, /All vacations: https:\/\/vacation-staging\.timesyncher\.com\/addons-checkout\.html\?collaboratorInvite=all-token/i);
+assert.match(collaboratorCheckoutText, /Anyone can view and edit the website for FREE, but editing is owner-approved and the editable link is sent through email\./i);
+assert.match(collaboratorCheckoutText, /Telegram collaborator access for Las Vegas Strip Vacation/i);
+assert.match(collaboratorCheckoutText, /<a href="https:\/\/vacation-staging\.timesyncher\.com\/addons-checkout\.html\?collaboratorInvite=single-token&amp;plan=telegram_collaborators_single_trip">Click here<\/a>/i);
+assert.doesNotMatch(collaboratorCheckoutText, /All vacations:/i);
+assert.doesNotMatch(collaboratorCheckoutText, /One vacation:/i);
 assert.match(collaboratorCheckoutText, /photo and video upload access/i);
 assert.doesNotMatch(collaboratorCheckoutText, /up to 3 people|Choose a Telegram add-on option below/i);
 

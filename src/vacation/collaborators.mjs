@@ -84,11 +84,17 @@ export function collaboratorEulaAcceptUrl(invite, env = process.env) {
 export async function loadCollaboratorInviteByToken(db, token, env = process.env) {
   if (!token) return null;
   const rows = await db`
-    select *
-    from vacation_collaborator_invites
-    where deep_link_token_hash = ${hashToken(token, env)}
-      and status in ('pending_payment', 'paid', 'accepted')
-      and (expires_at is null or expires_at > now())
+    select
+      i.*,
+      c.email as owner_email,
+      c.display_name as owner_display_name,
+      t.title as trip_title
+    from vacation_collaborator_invites i
+    join customers c on c.id = i.owner_customer_id
+    left join trips t on t.id = i.trip_id
+    where i.deep_link_token_hash = ${hashToken(token, env)}
+      and i.status in ('pending_payment', 'paid', 'accepted')
+      and (i.expires_at is null or i.expires_at > now())
     limit 1
   `;
   return rows[0] || null;

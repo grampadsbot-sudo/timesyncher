@@ -554,20 +554,38 @@ function eulaRequiredReply(eula) {
   ].join('\n');
 }
 
-export function collaboratorCheckoutReplyText({ singleTripUrl = '', unlimitedTripsUrl = '' } = {}) {
+function htmlAttrEscape(value = '') {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function htmlTextEscape(value = '') {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+export function collaboratorCheckoutReplyText({ singleTripUrl = '', vacationLabel = '' } = {}) {
+  const label = cleanText(vacationLabel, 180) || 'this vacation';
+  const checkoutLink = singleTripUrl
+    ? `<a href="${htmlAttrEscape(singleTripUrl)}">Click here</a>`
+    : '';
   const lines = [
     'Yes. You can share the vacation website with your wife or family so they can view it.',
     '',
-    'Website editing is owner-approved and email-verified, so someone with only the shared URL stays view-only. Full access through Telegram, equal to yours, requires the Telegram collaborator add-on. One collaborator is added per checkout.',
+    'Anyone can view and edit the website for FREE, but editing is owner-approved and the editable link is sent through email. Full access through Telegram, equal to yours, requires the Telegram collaborator add-on. One collaborator is added per checkout.',
     '',
-    'Use this checkout link for Telegram collaborator access:',
+    `Use this checkout link for Telegram collaborator access for ${htmlTextEscape(label)}:`,
   ];
-  if (singleTripUrl) lines.push(`One vacation: ${singleTripUrl}`);
-  if (unlimitedTripsUrl) lines.push(`All vacations: ${unlimitedTripsUrl}`);
-  if (!singleTripUrl && !unlimitedTripsUrl) lines.push('I could not create the checkout link in this moment. Please try again in a minute.');
+  if (checkoutLink) lines.push(checkoutLink);
+  if (!checkoutLink) lines.push('I could not create the checkout link in this moment. Please try again in a minute.');
   lines.push(
     '',
-    'The checkout page also lets you add photo and video upload access with pricing that matches the selected scope.',
+    'The checkout page also lets you add photo and video upload access for the same vacation.',
   );
   return lines.join('\n');
 }
@@ -1259,10 +1277,17 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       allowPromotionCodes: unlimited.allowPromotionCodes,
     };
   }
+  const tripRows = await db`
+    select title
+    from trips
+    where id = ${session.trip_id}
+    limit 1
+  `;
+  const vacationLabel = cleanText(tripRows[0]?.title, 180) || 'this vacation';
   return {
     reply: collaboratorCheckoutReplyText({
       singleTripUrl: checkoutLinks.singleTrip?.checkoutUrl || '',
-      unlimitedTripsUrl: checkoutLinks.unlimitedTrips?.checkoutUrl || '',
+      vacationLabel,
     }),
     payload: {
       collaboratorEntitlement: {

@@ -107,6 +107,18 @@ function collaboratorAccessAddOns(body = {}, plan = {}) {
   };
 }
 
+function collaboratorInviteMetadata(invite) {
+  if (!invite) return null;
+  return {
+    id: invite.id,
+    status: invite.status,
+    scope: invite.scope || null,
+    plan: invite.plan_code || null,
+    tripTitle: invite.trip_title || null,
+    ownerDisplayName: invite.owner_display_name || null,
+  };
+}
+
 async function collaboratorInviteWithSelectedPlan(db, invite, body = {}) {
   const requestedPlanCode = clean(body.collaboratorPlan || body.planCode || body.plan || invite?.plan_code || 'single_trip', 100);
   const plan = collaboratorPlan(requestedPlanCode);
@@ -380,6 +392,18 @@ export default async function handler(req, res) {
       }
       const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
       return send(res, 200, await collaboratorPaymentIntent({ db, stripe, token, contact, body, env: process.env }));
+    }
+
+    if (body.action === 'collaborator_invite_metadata') {
+      const token = clean(body.collaboratorInvite || body.collaboratorInviteToken, 200);
+      if (!token) return send(res, 400, { ok: false, error: 'Collaborator invite token is required.' });
+      const db = sql(process.env);
+      const invite = await loadCollaboratorInviteByToken(db, token, process.env);
+      if (!invite) return send(res, 400, { ok: false, error: 'Collaborator invite link is invalid or expired.' });
+      return send(res, 200, {
+        ok: true,
+        collaboratorInvite: collaboratorInviteMetadata(invite),
+      });
     }
 
     if (body.action === 'complete_staging_collaborator_checkout') {
