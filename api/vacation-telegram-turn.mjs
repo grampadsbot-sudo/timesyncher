@@ -411,6 +411,10 @@ function sessionMetadata(session) {
   return session?.metadata && typeof session.metadata === 'object' && !Array.isArray(session.metadata) ? session.metadata : {};
 }
 
+function isTelegramCollaboratorSession(session) {
+  return String(sessionMetadata(session).telegramRole || '').toLowerCase() === 'collaborator';
+}
+
 function hasVacationIdentity(session) {
   const metadata = sessionMetadata(session);
   return Boolean(cleanText(metadata.vacationName, 160) && cleanText(metadata.unforgettableGoal, 1000));
@@ -1650,6 +1654,10 @@ export default async function handler(req, res) {
             eulaRequired: collaboratorStart.status === 'eula_required',
             eulaAcceptUrl: collaboratorStart.eula?.acceptUrl || null,
           },
+          payload: {
+            vacationName: cleanText(collaboratorStart.invite?.trip_title, 160) || null,
+            collaboratorStartStatus: collaboratorStart.status,
+          },
           telegramSessionId: collaboratorSession?.id || null,
           inboundTranscriptId,
           outboundTranscriptId,
@@ -1837,8 +1845,13 @@ export default async function handler(req, res) {
       payload: body.payload || {},
     });
     const supportIntent = await vacationSupportIntentWithModel(text, { conversationContext });
+    const collaboratorSession = isTelegramCollaboratorSession(session);
+    const effectiveSupportIntent = collaboratorSession && supportIntent?.intent === 'collaborator_setup_link'
+      ? { ...supportIntent, intent: 'website_link_question', answerMode: 'account_state' }
+      : supportIntent;
     const collaboratorInviteRequested = Boolean(
       session?.customer_id
+        && !collaboratorSession
         && !collaboratorStatusQuestion(text)
         && (
           supportIntent?.intent === 'collaborator_setup_link'
@@ -1876,15 +1889,15 @@ export default async function handler(req, res) {
           },
         };
       }
-    } else if (supportIntent) {
+    } else if (effectiveSupportIntent) {
       const access = await vacationAccessSummary(db, session, { telegramChatId, telegramUserId, payload: body.payload || {}, text });
-      reply = vacationSupportReply({ text, intent: supportIntent, access });
+      reply = vacationSupportReply({ text, intent: effectiveSupportIntent, access });
       replyPayload = {
         supportRouter: {
-          intent: supportIntent.intent,
+          intent: effectiveSupportIntent.intent,
             shouldQueueWorker: false,
-            confidence: supportIntent.confidence,
-            source: supportIntent.source || 'deterministic_fallback',
+            confidence: effectiveSupportIntent.confidence,
+            source: effectiveSupportIntent.source || 'deterministic_fallback',
             access: {
               linked: access.linked,
               hasUnlimited: access.hasUnlimited,
@@ -1905,7 +1918,7 @@ export default async function handler(req, res) {
         telegramUserId,
       }, kind);
       reply = firstTripDetailsAck({ queued });
-    } else if (session?.customer_id && !hasVacationIdentity(session)) {
+    } else if (session?.customer_id && !collaboratorSession && !hasVacationIdentity(session)) {
       const saved = await saveVacationIdentity(db, session, text);
       if (saved.complete) {
         session = saved.session;
