@@ -1476,7 +1476,7 @@ async function queueSetupRequest(db, session, text, payload, kind) {
   return { requestId, jobId: jobRows[0].id };
 }
 
-async function canQueueTelegramModification(db, session, { telegramChatId, telegramUserId, kind }) {
+export async function canQueueTelegramModification(db, session, { telegramChatId, telegramUserId, kind }) {
   if (!session?.customer_id || !session?.trip_id) return { allowed: false, reason: 'unlinked_session' };
   if (kind?.requestType !== 'itinerary_research_update') return { allowed: true, reason: 'owner_onboarding_or_intake' };
   const ownerRows = await db`

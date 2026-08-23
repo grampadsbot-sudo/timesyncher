@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import {
   hasTripPlanningDetails,
   collaboratorCheckoutReplyText,
+  canQueueTelegramModification,
   parseVacationIdentity,
   vacationSupportIntent,
   vacationSupportIntentWithModel,
   vacationSupportReply,
   vacationIdentityAck,
 } from '../api/vacation-telegram-turn.mjs';
+import { collaboratorDeniedCopy } from '../src/vacation/collaborators.mjs';
 
 const screenshotTranscript = [
   'I will call it this our Hawaiian getaway and what would make it unforgettable',
@@ -326,6 +328,30 @@ const fallbackMediaQuestion = await vacationSupportIntentWithModel('Am I able to
 });
 assert.equal(fallbackMediaQuestion.intent, 'media_upload_question');
 assert.equal(fallbackMediaQuestion.source, 'deterministic_fallback');
+
+const participantVoiceTranscript = [
+  'Add the music event at the coffeehouse next Friday night.',
+  'Also add the Sunday market while we are in town.',
+].join(' ');
+assert.equal(hasTripPlanningDetails(participantVoiceTranscript), true);
+
+const noAccessDb = async () => [];
+const participantVoiceAuthz = await canQueueTelegramModification(noAccessDb, {
+  customer_id: 'owner-customer-id',
+  trip_id: 'trip-id',
+  metadata: {},
+}, {
+  telegramChatId: 'participant-chat-id',
+  telegramUserId: 'telegram:participant-user-id',
+  kind: { requestType: 'itinerary_research_update' },
+});
+assert.equal(participantVoiceAuthz.allowed, false);
+assert.equal(participantVoiceAuthz.reason, 'missing_paid_collaborator');
+
+const participantDenied = collaboratorDeniedCopy();
+assert.match(participantDenied, /not authorized|paid Telegram collaborator/i);
+assert.doesNotMatch(participantDenied, /updating the hosted TimeSyncher Vacation itinerary now/i);
+assert.doesNotMatch(participantDenied, /send the itinerary link when the next pass is ready/i);
 
 assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null);
 
