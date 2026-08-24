@@ -26,6 +26,14 @@ for (const [text, expectedKind] of blockedExamples) {
 const allowedPlanning = classifyHighAuthorityRequest('compare three hotels and draft a recommendation');
 assert.equal(allowedPlanning.blocked, false);
 
+const productCheckout = blockHighAuthorityRequest("i want to buy a vacation", {});
+assert.equal(productCheckout.blocked, false);
+assert.equal(productCheckout.reason, "timesyncher_vacation_checkout");
+
+const namedProductCheckout = blockHighAuthorityRequest("I want to purchase TimeSyncher Vacation", {});
+assert.equal(namedProductCheckout.blocked, false);
+
+
 assert.throws(
   () => assertHighAuthorityActionAllowed('email_send', {}),
   /high-authority action blocked: email_send/,

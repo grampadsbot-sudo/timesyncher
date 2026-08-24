@@ -12,6 +12,19 @@ export const HIGH_AUTHORITY_ACTION_KINDS = Object.freeze([
   'cancellation_or_reschedule',
 ]);
 
+function isTimeSyncherVacationCheckoutRequest(text = "") {
+  const body = String(text || "").toLowerCase();
+  if (!body.trim()) return false;
+  const asksToBuy = /\b(buy|purchase|pay for|checkout|check out|sign up|subscribe|get started|start|get)\b/.test(body);
+  const namesProduct =
+    /\btime\s*syncher\s+vacation\b/.test(body) ||
+    /\btimesyncher\s+vacation\b/.test(body) ||
+    /\b(?:buy|purchase|get|start)\s+(?:a\s+)?vacation\b/.test(body) ||
+    /\bsign up\s+for\s+(?:a\s+)?vacation\b/.test(body);
+  const namesTravelPurchase = /\b(flight|flights|hotel|hotels|reservation|reservations|ticket|tickets|excursion|excursions|tour|tours|show|activity|activities|restaurant|restaurants|rental car|airbnb|vrbo)\b/.test(body);
+  return asksToBuy && namesProduct && !namesTravelPurchase;
+}
+
 const MATCHERS = [
   {
     kind: 'booking_or_reservation',
@@ -67,6 +80,7 @@ export function classifyHighAuthorityRequest(text) {
 
 export function blockHighAuthorityRequest(text, env = process.env) {
   if (highAuthorityActionsAllowed(env)) return { blocked: false, kinds: [] };
+  if (isTimeSyncherVacationCheckoutRequest(text)) return { blocked: false, kinds: [], reason: "timesyncher_vacation_checkout" };
   const result = classifyHighAuthorityRequest(text);
   if (!result.blocked) return result;
   return {
