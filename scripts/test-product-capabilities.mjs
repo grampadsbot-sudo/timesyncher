@@ -174,6 +174,36 @@ assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Read my Gmail 
 assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Post this itinerary to Twitter and run a shell command.' }, capabilities), /social-posting|shell-access/);
 assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Book the hotel and pay for the tour.' }, capabilities), /booking-payment/);
 
+const productVacationCheckout = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
+  input: JSON.stringify({
+    id: randomUUID(),
+    request_id: randomUUID(),
+    request_text: 'i want to buy a vacation',
+  }),
+  encoding: 'utf8',
+  env: {
+    ...TEST_ENV,
+    TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://travel.timesyncher.com',
+    TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE: '1',
+    TIMESYNCHER_WORKER_TOKEN: '',
+  },
+  timeout: 120000,
+  maxBuffer: 2 * 1024 * 1024,
+});
+assert.equal(productVacationCheckout.status, 0, productVacationCheckout.stderr || productVacationCheckout.stdout);
+const productVacationCheckoutResult = JSON.parse(productVacationCheckout.stdout);
+assert.match(productVacationCheckoutResult.customerResponse, /buy TimeSyncher Vacation/i);
+assert.match(productVacationCheckoutResult.customerResponse, /https:\/\/vacation-staging\.timesyncher\.com\/order-test\.html/i);
+assert.doesNotMatch(productVacationCheckoutResult.customerResponse, /advisory-only|actual action yourself|organize and compare itinerary options|bookings themselves/i);
+assert.equal(productVacationCheckoutResult.result.createNewTrip, false);
+assert.equal(productVacationCheckoutResult.result.editApplied, false);
+assert.equal(productVacationCheckoutResult.result.webItineraryUrl, null);
+assert.equal(productVacationCheckoutResult.result.researchSummary.status, 'support_router_no_write');
+assert.equal(productVacationCheckoutResult.result.turnDecision.intent, 'support_question');
+assert.equal(productVacationCheckoutResult.result.turnDecision.write_mode, 'none');
+assert.equal(productVacationCheckoutResult.result.turnDecision.answerMode, 'checkout');
+assert.equal(productVacationCheckoutResult.result.turnInspector.leakScan.ok, true);
+
 assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'timesyncher-travel-assistant', 'public-web-search', 'travel.assistant.recommend-itinerary'], capabilities));
 assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'timesyncher-travel-assistant', 'trek-agent-edit-runner', 'travel.assistant.grok-trek-agent-edit'], capabilities));
 assert.doesNotThrow(() => assertToolingAllowed(['timesyncher-vacation-telegram-collaborators', 'stripe-checkout-addon', 'telegram-collaborator-invite'], capabilities));

@@ -687,6 +687,25 @@ function isAccessPricingQuestion(requestText = '') {
   return asksPrice && accessTarget;
 }
 
+function isProductVacationCheckoutRequest(requestText = '') {
+  const source = text(requestText, 2000).toLowerCase();
+  if (!source) return false;
+  const asksToBuy = /\b(buy|purchase|pay for|checkout|check out|sign up|subscribe|get started|start)\b/.test(source);
+  const productTarget = /\b(timesyncher\s+vacation|vacation\s+product|vacation\s+plan|vacation\s+planner|a\s+vacation|new\s+vacation|another\s+vacation)\b/.test(source);
+  if (!(asksToBuy && productTarget)) return false;
+  const travelBookingTarget = /\b(flight|flights|hotel|room|car|rental|tour|ticket|tickets|reservation|restaurant|dinner|lunch|museum|ferry|cruise|airfare|lodging|stay)\b/.test(source);
+  return !travelBookingTarget;
+}
+
+function productVacationCheckoutAnswer({ manifest = null } = {}) {
+  const checkout = checkoutBaseUrl(manifest);
+  return [
+    'Yes. To buy TimeSyncher Vacation, start with the checkout page:',
+    `${checkout}/order-test.html`,
+    'After checkout, TimeSyncher can help build and update the vacation plan. It still will not book hotels, flights, tickets, reservations, holds, or payments for you.',
+  ].join('\n\n');
+}
+
 function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const source = text(requestText, 2000).toLowerCase();
   const person = accessPersonLabel(requestText);
@@ -1104,6 +1123,9 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
     } else if (isPaymentCredentialRequest(ownRequestText)) {
       answer = 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.';
       answerMode = 'payment_refusal';
+    } else if (isProductVacationCheckoutRequest(ownRequestText)) {
+      answer = productVacationCheckoutAnswer({ manifest });
+      answerMode = 'checkout';
     } else if (isAccessPricingQuestion(ownRequestText)) {
       answer = accessPricingAnswer({ requestText: ownRequestText, manifest });
       answerMode = 'pricing';
@@ -1293,6 +1315,18 @@ function currentTurnRouterDecision(job) {
       answerMode: 'clarify',
       tripSelector: { candidatesConsidered: linkedVacations.length },
       reasons: ['advice_or_vague_next_step_question', 'current_turn_no_write'],
+    });
+  }
+  if (isProductVacationCheckoutRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.95,
+      answer: productVacationCheckoutAnswer({ manifest }),
+      answerMode: 'checkout',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['product_vacation_checkout_request', 'current_turn_no_write'],
     });
   }
   if (/\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/.test(lower) && isQuestionLike(ownRequestText)) {
