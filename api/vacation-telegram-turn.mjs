@@ -384,6 +384,34 @@ async function recordTranscript(db, { session, speaker, direction, body, channel
   return rows[0].id;
 }
 
+
+function isProductVacationCheckoutText(text = "") {
+  const body = cleanText(text, 2000).toLowerCase();
+  if (!body) return false;
+  const asksToBuy = /\b(buy|purchase|pay for|checkout|check out|sign up|subscribe|get started|start|get)\b/.test(body);
+  const namesProduct =
+    /\btime\s*syncher\s+vacation\b/.test(body) ||
+    /\btimesyncher\s+vacation\b/.test(body) ||
+    /\b(?:buy|purchase|get|start)\s+(?:a\s+)?vacation\b/.test(body) ||
+    /\bsign up\s+for\s+(?:a\s+)?vacation\b/.test(body);
+  const namesTravelPurchase = /\b(flight|flights|hotel|hotels|reservation|reservations|ticket|tickets|excursion|excursions|tour|tours|show|activity|activities|restaurant|restaurants|rental car|airbnb|vrbo)\b/.test(body);
+  return asksToBuy && namesProduct && !namesTravelPurchase;
+}
+
+function productVacationCheckoutReply() {
+  const checkout = cleanText(
+    process.env.TIMESYNCHER_ACCESS_CHECKOUT_BASE_URL ||
+      process.env.TIMESYNCHER_VACATION_CHECKOUT_BASE_URL ||
+      "https://vacation-staging.timesyncher.com",
+    500,
+  ).replace(/\/+$/, "");
+  return [
+    "Yes. To buy TimeSyncher Vacation, start with the checkout page:",
+    checkout + "/order-test.html",
+    "After checkout, TimeSyncher can help build and update the vacation plan. It still will not book hotels, flights, tickets, reservations, holds, or payments for you.",
+  ].join("\n\n");
+}
+
 function requestKind(text) {
   const lower = cleanText(text, 1000).toLowerCase();
   if (/^(yes|yep|yeah|ok|okay|sure|go ahead|do it|continue|next pass|yes do next pass)[\s.!?]*$/i.test(lower)) {
@@ -1835,6 +1863,45 @@ export default async function handler(req, res) {
         responseLatencyMs: Number.isFinite(latency) ? latency : null,
       });
     }
+
+    if (isProductVacationCheckoutText(text)) {
+      const respondedAt = new Date();
+      const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
+      const reply = productVacationCheckoutReply();
+      const outboundTranscriptId = await recordTranscript(db, {
+        session,
+        speaker: "assistant",
+        direction: "outbound",
+        body: reply,
+        channel: "support_router",
+        payload: {
+          answerMode: "checkout",
+          reasons: ["product_vacation_checkout_request", "api_no_queue"],
+        },
+        receivedAt,
+        sentAt: respondedAt.toISOString(),
+        responseLatencyMs: Number.isFinite(latency) ? latency : null,
+        onboardingStep: session.current_step,
+      });
+      return sendJson(res, 200, {
+        ok: true,
+        reply,
+        telegramSessionId: session.id,
+        inboundTranscriptId,
+        outboundTranscriptId,
+        queued: null,
+        blocked: false,
+        responseLatencyMs: Number.isFinite(latency) ? latency : null,
+        supportRouter: {
+          intent: "support_question",
+          shouldQueueWorker: false,
+          confidence: 0.95,
+          source: "deterministic_api_checkout",
+          answerMode: "checkout",
+        },
+      });
+    }
+
 
     let kind = requestKind(text);
     let queued = null;
