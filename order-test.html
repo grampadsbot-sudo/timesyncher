@@ -321,6 +321,39 @@
       return Object.fromEntries(new FormData(form).entries());
     }
 
+    function setFieldValue(name, value) {
+      const field = form.elements[name];
+      if (!field || value == null || value === '') return;
+      field.value = value;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function prefillFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const aliases = {
+        firstName: ['firstName', 'first_name', 'given_name'],
+        lastName: ['lastName', 'last_name', 'family_name'],
+        email: ['email'],
+        phone: ['phone', 'tel'],
+        vacationDate: ['vacationDate', 'vacation_date', 'date'],
+        address: ['address', 'street'],
+        city: ['city'],
+        state: ['state', 'region'],
+        zip: ['zip', 'postal', 'postal_code'],
+        country: ['country'],
+        couponCode: ['couponCode', 'coupon', 'code'],
+      };
+      for (const [field, names] of Object.entries(aliases)) {
+        const value = names.map((name) => params.get(name)).find(Boolean);
+        setFieldValue(field, value);
+      }
+      const plan = String(params.get('plan') || '').toLowerCase();
+      if (['unlimited', 'all', 'all-vacations', 'all_vacations'].includes(plan)) bump.checked = true;
+      if (/^(1|true|yes|photo|photos)$/i.test(params.get('photoMemories') || params.get('photos') || '')) photoMemories.checked = true;
+    }
+
+
     function stripeCountryCode(country) {
       const normalized = String(country || '').trim().toLowerCase();
       const map = {
@@ -572,6 +605,7 @@
         payBtn.textContent = 'Pay securely';
       }
     });
+    prefillFromQuery();
     updateTotal();
     requestAnimationFrame(lockVideoToStepOneHeight);
     window.addEventListener('resize', lockVideoToStepOneHeight);

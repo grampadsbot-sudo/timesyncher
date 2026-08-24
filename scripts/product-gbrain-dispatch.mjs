@@ -702,7 +702,6 @@ function productVacationCheckoutAnswer({ manifest = null } = {}) {
   return [
     'Yes. To buy TimeSyncher Vacation, start with the checkout page:',
     `${checkout}/order-test.html`,
-    'After checkout, TimeSyncher can help build and update the vacation plan. It still will not book hotels, flights, tickets, reservations, holds, or payments for you.',
   ].join('\n\n');
 }
 
