@@ -15,7 +15,7 @@ const env = {
   TIMESYNCHER_BASE_PRICE_CENTS: '3700',
   TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
   TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS: '500',
-  TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS: '500',
+  TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS: '900',
   TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
   TIMESYNCHER_COUPON_HASH_SALT: 'test-salt',
 };
@@ -36,13 +36,14 @@ assert.deepEqual(checkoutOrderSummary({}, env), {
   photoMemories: false,
   photoMemoriesPlan: null,
 });
-assert.equal(checkoutOrderSummary({ orderBump: true, photoMemories: true }, env).amountCents, 6900);
+assert.equal(checkoutOrderSummary({ orderBump: true, photoMemories: true }, env).amountCents, 7300);
 
 for (const file of ['index.html', 'order-test.html']) {
   const html = readFileSync(file, 'utf8');
   assert.match(html, /id="couponCode"/, `${file} has coupon input`);
   assert.match(html, /<label(?:[^>]*)>(?:Enter coupon|Coupon)\s*<input[^>]+placeholder="(?:Enter coupon code|Coupon code)"/, `${file} uses customer-facing coupon copy`);
-  assert.match(html, /\/api\/(?:create-payment-intent|checkout-coupon)/, `${file} posts to a checkout coupon endpoint`);
+  assert.match(html, /\/api\/checkout-coupon/, `${file} posts coupon redemption to the non-Stripe coupon endpoint`);
+  assert.doesNotMatch(html, /hasCoupon\(\)[\s\S]{0,900}\/api\/create-payment-intent/, `${file} does not send coupon redemption through Stripe payment intent`);
   assert.match(html, /(?:No Stripe charge|Waived by coupon)/, `${file} shows no Stripe charge`);
 }
 
