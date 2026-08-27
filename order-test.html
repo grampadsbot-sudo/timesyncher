@@ -294,12 +294,17 @@
       return bump.checked ? (photos.unlimited || {}) : (photos.single || {});
     }
 
+    function activePhotoAmountCents(photos = activePhotoProduct()) {
+      return photos.amount || (bump.checked ? 900 : 500);
+    }
+
     function syncPhotoCopy() {
       const photos = activePhotoProduct();
+      const photoAmount = activePhotoAmountCents(photos);
       photoName.textContent = productLabel(photos.name || 'Photo Memories Keepsake');
-      photoPrice.textContent = '+' + money(photos.amount || 500);
+      photoPrice.textContent = '+' + money(photoAmount);
       photoRow.hidden = !photoMemories.checked;
-      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photos.amount || 500)}/year`;
+      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photoAmount)}/year`;
       photoDescription.textContent = photos.description || 'Include favorite photos in the printable vacation keepsake. Photos only for MVP.';
     }
 
@@ -414,7 +419,7 @@
       bumpRow.hidden = !bumped;
       photoRow.hidden = !photos;
       syncPhotoCopy();
-      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? (photoProduct.amount || 500) : 0);
+      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? activePhotoAmountCents(photoProduct) : 0);
       total.textContent = hasCoupon() ? '$0 with coupon' : money(cents);
       tax.textContent = hasCoupon() ? 'No Stripe charge' : 'Calculated by Stripe';
     }

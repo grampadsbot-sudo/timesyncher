@@ -514,7 +514,7 @@ function accessPricingAnswer(value = '') {
       lines.push(`Video upload access for one vacation is ${video.singleVacationAmountUsd ? `$${video.singleVacationAmountUsd}` : '$17'}.`);
     }
   }
-  lines.push(`Checkout link: ${checkout}/order-test.html`);
+  lines.push(`Checkout link: ${checkout}/`);
   return lines.join('\n\n');
 }
 

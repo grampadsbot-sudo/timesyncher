@@ -407,7 +407,7 @@ function productVacationCheckoutReply() {
   ).replace(/\/+$/, "");
   return [
     "Yes. To buy TimeSyncher Vacation, start with the checkout page:",
-    checkout + "/order-test.html",
+    checkout + "/",
   ].join("\n\n");
 }
 

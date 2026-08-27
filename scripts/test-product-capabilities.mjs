@@ -193,7 +193,8 @@ const productVacationCheckout = spawnSync(process.execPath, ['./product-gbrain-d
 assert.equal(productVacationCheckout.status, 0, productVacationCheckout.stderr || productVacationCheckout.stdout);
 const productVacationCheckoutResult = JSON.parse(productVacationCheckout.stdout);
 assert.match(productVacationCheckoutResult.customerResponse, /buy TimeSyncher Vacation/i);
-assert.match(productVacationCheckoutResult.customerResponse, /https:\/\/vacation-staging\.timesyncher\.com\/order-test\.html/i);
+assert.match(productVacationCheckoutResult.customerResponse, /https:\/\/vacation-staging\.timesyncher\.com\//i);
+assert.doesNotMatch(productVacationCheckoutResult.customerResponse, /order-test\.html/i);
 assert.doesNotMatch(productVacationCheckoutResult.customerResponse, /advisory-only|actual action yourself|organize and compare itinerary options|bookings themselves/i);
 assert.equal(productVacationCheckoutResult.result.createNewTrip, false);
 assert.equal(productVacationCheckoutResult.result.editApplied, false);

@@ -45,6 +45,9 @@ for (const file of ['index.html', 'order-test.html']) {
   assert.match(html, /\/api\/checkout-coupon/, `${file} posts coupon redemption to the non-Stripe coupon endpoint`);
   assert.doesNotMatch(html, /hasCoupon\(\)[\s\S]{0,900}\/api\/create-payment-intent/, `${file} does not send coupon redemption through Stripe payment intent`);
   assert.match(html, /(?:No Stripe charge|Waived by coupon)/, `${file} shows no Stripe charge`);
+  assert.match(html, /activePhotoAmountCents/, `${file} uses the shared photo fallback helper`);
+  assert.match(html, /bump\.checked \? 900 : 500/, `${file} falls back to $9 for unlimited Photo Memories`);
+  assert.doesNotMatch(html, /photos\.amount \|\| 500|photoProduct\.amount \|\| 500/, `${file} has no stale $5 unlimited Photo Memories fallback`);
 }
 
 const checkoutApi = readFileSync('api/checkout-coupon.mjs', 'utf8');

@@ -701,7 +701,7 @@ function productVacationCheckoutAnswer({ manifest = null } = {}) {
   const checkout = checkoutBaseUrl(manifest);
   return [
     'Yes. To buy TimeSyncher Vacation, start with the checkout page:',
-    `${checkout}/order-test.html`,
+    `${checkout}/`,
   ].join('\n\n');
 }
 
