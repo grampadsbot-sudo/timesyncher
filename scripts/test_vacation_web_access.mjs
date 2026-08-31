@@ -64,6 +64,7 @@ assert.match(api, /upload_audio_note/);
 assert.match(api, /website_audio_note/);
 assert.match(api, /transcribeWebsiteAudioNote/);
 assert.match(api, /set-cookie/);
+assert.match(api, /;\[a-z0-9!#\$&\^_\.\+-\]\+=/);
 const sharedAudioBridge = await readFile(new URL('../scripts/shared-audio-note-bridge.mjs', import.meta.url), 'utf8');
 assert.match(sharedAudioBridge, /;base64/);
 assert.match(sharedAudioBridge, /;\[a-z0-9!#\$&\^_\.\+-\]\+=/);
