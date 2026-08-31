@@ -26,6 +26,30 @@ function audioNoteNoopMessage({ transcript = '', summary = '' } = {}) {
   return lines.join(' ');
 }
 
+function splitTranscriptIntoEditRequests(transcript) {
+  const source = clean(transcript, 12000).replace(/\s+/g, ' ');
+  if (!source) return [];
+  const protectedSource = source.replace(/\b(and|also)\s+(?:see|check)\s+if\s+there(?:'| i)?s\b/gi, ' $1 check whether there is');
+  const normalized = protectedSource
+    .replace(/\b(?:and\s+)?also\s+(?=(?:on|at|for|in)\b|(?:check|see|say|tell|make|change|update|move|take|remove|delete|add|put|switch|replace)\b)/gi, '\n')
+    .replace(/\b(?:and\s+)?(?=(?:take|remove|delete)\s+(?:out|off|from|the)\b)/gi, '\n')
+    .replace(/\b(?:and\s+)?(?=(?:move|switch|replace|change|update|add|put)\b)/gi, '\n');
+  const segments = normalized
+    .split(/\n+|(?:^|[.;])\s+/)
+    .map((part) => clean(part.replace(/^(?:okay|ok|so|then|and)\b[\s,]*/i, ''), 1200))
+    .filter((part) => part.length >= 4);
+  const actionSegments = segments.filter((part) => /\b(check|see|say|tell|make|change|update|move|take|remove|delete|add|put|switch|replace)\b/i.test(part));
+  const unique = [];
+  const seen = new Set();
+  for (const segment of actionSegments.length > 1 ? actionSegments : [source]) {
+    const key = segment.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(segment);
+  }
+  return unique;
+}
+
 function send(res, status, body) {
   const json = JSON.stringify(body);
   res.writeHead(status, {
@@ -149,6 +173,60 @@ async function runTrekEdit({ shareToken, requestText }) {
   }
 }
 
+function editApplied(result) {
+  return result && result.noop !== true && result.editApplied !== false;
+}
+
+function updatedItemLabel(item = {}) {
+  const action = clean(item.action || 'changed', 80).replace(/_/g, ' ');
+  const title = clean(item.title || item.name || item.label || 'requested item', 180);
+  const day = item.day ? ` on Day ${item.day}` : '';
+  return `Changed "${title}"${day}: ${action}.`;
+}
+
+function audioNoteMultiResultMessage({ transcript = '', itemResults = [] } = {}) {
+  const lines = [];
+  const heard = clean(transcript, 520).replace(/\s+/g, ' ');
+  if (heard) lines.push(`I heard: "${heard}"`);
+  itemResults.forEach((item, index) => {
+    const request = clean(item.requestText, 260).replace(/\s+/g, ' ');
+    const prefix = itemResults.length > 1 ? `${index + 1}. ` : '';
+    if (item.ok) {
+      const changed = Array.isArray(item.edit?.updatedItems) && item.edit.updatedItems.length
+        ? item.edit.updatedItems.map(updatedItemLabel).join(' ')
+        : 'I changed that itinerary item.';
+      lines.push(`${prefix}${request ? `For "${request}": ` : ''}${changed}`);
+      return;
+    }
+    lines.push(`${prefix}${request ? `For "${request}": ` : ''}I could not find the matching itinerary item to change, so I did not change that item.`);
+  });
+  return lines.join(' ');
+}
+
+async function runTrekEditRequests({ shareToken, transcript }) {
+  const requests = splitTranscriptIntoEditRequests(transcript);
+  const itemResults = [];
+  for (const requestText of requests) {
+    try {
+      const edit = await runTrekEdit({ shareToken, requestText });
+      itemResults.push({ requestText, ok: editApplied(edit), edit });
+    } catch (error) {
+      itemResults.push({
+        requestText,
+        ok: false,
+        edit: { noop: true, reason: 'edit_runner_error', summary: clean(error?.message || error, 600) },
+      });
+    }
+  }
+  return {
+    transcript,
+    requests,
+    itemResults,
+    okCount: itemResults.filter((item) => item.ok).length,
+    failCount: itemResults.filter((item) => !item.ok).length,
+  };
+}
+
 async function readBody(req) {
   let body = '';
   for await (const chunk of req) {
@@ -172,18 +250,20 @@ const server = http.createServer(async (req, res) => {
     if (!shareToken) throw Object.assign(new Error('shareToken is required.'), { statusCode: 400 });
     const parsed = parseDataUrl(body.audioDataUrl || body.audio?.dataUrl);
     const transcript = await transcribe(parsed);
-    const result = await runTrekEdit({ shareToken, requestText: transcript });
-    if (result?.noop || result?.editApplied === false) {
+    const result = await runTrekEditRequests({ shareToken, transcript });
+    const customerMessage = audioNoteMultiResultMessage(result);
+    if (!result.okCount) {
       return send(res, 422, {
         ok: false,
-        error: audioNoteNoopMessage({ transcript, summary: result?.summary || '' }),
+        error: customerMessage || audioNoteNoopMessage({ transcript }),
         transcript,
         edit: result,
       });
     }
-    send(res, 201, {
+    send(res, result.failCount ? 207 : 201, {
       ok: true,
-      status: 'processed',
+      status: result.failCount ? 'partially_processed' : 'processed',
+      message: customerMessage,
       transcript,
       edit: result,
     });
