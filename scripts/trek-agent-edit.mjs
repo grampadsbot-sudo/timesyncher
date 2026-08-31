@@ -4,6 +4,9 @@ import { spawnSync } from 'node:child_process';
 
 const DEFAULT_PUBLIC_BASE = 'https://vacation.timesyncher.com';
 const DEFAULT_DB_PATH = '/home/timesyncher-agent/trek/runtime/data/travel.db';
+let lastRequestText = '';
+let lastToken = '';
+let lastPublicBase = DEFAULT_PUBLIC_BASE;
 
 function readStdin() {
   return new Promise((resolve, reject) => {
@@ -448,6 +451,20 @@ function customerSafeNoopSummary(value) {
   return source;
 }
 
+function customerNoopAnswer({ requestText = '', summary = '', reason = '' } = {}) {
+  const heard = text(requestText, 260).replace(/\s+/g, ' ');
+  const safeSummary = customerSafeNoopSummary(summary);
+  const resolvedReason = text(reason, 120);
+  const couldNotFind = /target|found|resolved|supported|operation|plan|empty|sanitized/i.test(resolvedReason + ' ' + safeSummary);
+  const lines = [];
+  if (heard) lines.push(`I heard: "${heard}"`);
+  lines.push(couldNotFind
+    ? 'I could not find the matching itinerary item to change, so I did not change the trip.'
+    : 'I could not safely apply that itinerary update, so I did not change the trip.');
+  if (safeSummary && !/^I kept the current trip unchanged/i.test(safeSummary)) lines.push(safeSummary);
+  return lines.join(' ');
+}
+
 function structuredNoopResult({
   token = '',
   publicBase = DEFAULT_PUBLIC_BASE,
@@ -464,7 +481,7 @@ function structuredNoopResult({
     mode: 'trek_agent_edit_noop',
     token: safeToken || null,
     url: safeToken ? `${base}/shared/${encodeURIComponent(safeToken)}/` : '',
-    summary: customerSafeNoopSummary(summary),
+    summary: customerNoopAnswer({ requestText, summary, reason }),
     reason: text(reason, 120),
     requestText: text(requestText, 500),
     plannedOperations: [],
@@ -1599,6 +1616,9 @@ async function main() {
   const publicBase = text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, '');
   const dbPath = text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || DEFAULT_DB_PATH, 500);
   const requestText = text(input.requestText || input.request_text || '', 12000);
+  lastRequestText = requestText;
+  lastToken = token;
+  lastPublicBase = publicBase || DEFAULT_PUBLIC_BASE;
   if (!token) {
     console.log(JSON.stringify(structuredNoopResult({
       token: '',
@@ -1743,11 +1763,15 @@ main().catch((error) => {
       noop: true,
       editApplied: false,
       mode: 'trek_agent_edit_noop',
-      token: null,
-      url: '',
-      summary: /Traceback|RuntimeError|File "|\/home\//i.test(msg)
-        ? 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.'
-        : msg.slice(0, 400),
+      token: lastToken || null,
+      url: lastToken ? `${String(lastPublicBase || DEFAULT_PUBLIC_BASE).replace(/\/+$/, '')}/shared/${encodeURIComponent(lastToken)}/` : '',
+      summary: customerNoopAnswer({
+        requestText: lastRequestText,
+        summary: /Traceback|RuntimeError|File "|\/home\//i.test(msg)
+          ? 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.'
+          : msg.slice(0, 400),
+        reason: 'unexpected_error_noop',
+      }),
       reason: 'unexpected_error_noop',
       plannedOperations: [],
       updatedItems: [],
@@ -1756,7 +1780,16 @@ main().catch((error) => {
       verification: { changed: false, source: 'unexpected-error-noop' },
     })}\n`);
   } catch {
-    process.stdout.write(`${JSON.stringify({ ok: true, noop: true, editApplied: false, mode: 'trek_agent_edit_noop', summary: 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.', reason: 'unexpected_error_noop' })}\n`);
+    process.stdout.write(`${JSON.stringify({
+      ok: true,
+      noop: true,
+      editApplied: false,
+      mode: 'trek_agent_edit_noop',
+      token: lastToken || null,
+      url: lastToken ? `${String(lastPublicBase || DEFAULT_PUBLIC_BASE).replace(/\/+$/, '')}/shared/${encodeURIComponent(lastToken)}/` : '',
+      summary: customerNoopAnswer({ requestText: lastRequestText, reason: 'unexpected_error_noop' }),
+      reason: 'unexpected_error_noop',
+    })}\n`);
   }
   process.exit(0);
 });

@@ -56,6 +56,22 @@ function sanitizeCustomerNoopSummary(value) {
   return source;
 }
 
+function customerNoopEditAnswer({ requestText = '', summary = '', reason = '' } = {}) {
+  const heard = text(requestText, 260).replace(/\s+/g, ' ');
+  const safeSummary = sanitizeCustomerNoopSummary(summary);
+  const reasonText = text(reason, 120);
+  const targetMiss = /target|found|resolved|supported|operation|plan|empty|sanitized/i.test(`${reasonText} ${safeSummary}`);
+  const lines = [];
+  if (heard) lines.push(`I heard: "${heard}"`);
+  lines.push(targetMiss
+    ? 'I could not find the matching itinerary item to change, so I did not change the trip.'
+    : 'I could not safely apply that itinerary update, so I did not change the trip.');
+  if (safeSummary && !/^I kept the current trip unchanged/i.test(safeSummary) && !/^I heard:/i.test(safeSummary)) {
+    lines.push(safeSummary);
+  }
+  return lines.join(' ');
+}
+
 function sanitizeCustomerFacingCopy(value, max = MAX_TEXT) {
   // Customer surfaces only: purge banned source-* compounds while keeping the
   // judge-required "verified" wording and leaving internal research enums alone.
@@ -3166,7 +3182,11 @@ async function buildArtifacts(job, manifest) {
     const linkedVacationsForEdit = linkedVacationsFrom(job, input, payload);
     const fallbackBaseForEdit = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_SITE_BASE;
     // On planner/target miss, fall through to boundary-read handlers instead of the generic no-op apology.
-    let noopAnswer = sanitizeCustomerNoopSummary(trekEdit?.summary) || routerDecision?.answer || 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.';
+    let noopAnswer = customerNoopEditAnswer({
+      requestText: ownRequestText || requestText,
+      summary: trekEdit?.summary || routerDecision?.answer || '',
+      reason: trekEdit?.reason || 'no_resolved_target',
+    });
     let noopReasons = [...(routerDecision?.reasons || []), 'trek_edit_noop_no_resolved_target'];
     if (!editApplied) {
       if (isTravelerFacingKeepsakePrintSurface(ownRequestText) && !requestsInternalCopyDump(ownRequestText)) {

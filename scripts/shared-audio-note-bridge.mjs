@@ -14,6 +14,18 @@ function clean(value, max = 8000) {
   return String(value || '').trim().slice(0, max);
 }
 
+function audioNoteNoopMessage({ transcript = '', summary = '' } = {}) {
+  const heard = clean(transcript, 260).replace(/\s+/g, ' ');
+  const safeSummary = clean(summary, 420);
+  const lines = [];
+  if (heard) lines.push(`I heard: "${heard}"`);
+  lines.push('I could not find the matching itinerary item to change, so I did not change the trip.');
+  if (safeSummary && !/^I heard:/i.test(safeSummary) && !/^I kept the current trip unchanged/i.test(safeSummary)) {
+    lines.push(safeSummary);
+  }
+  return lines.join(' ');
+}
+
 function send(res, status, body) {
   const json = JSON.stringify(body);
   res.writeHead(status, {
@@ -140,7 +152,12 @@ const server = http.createServer(async (req, res) => {
     const transcript = await transcribe(parsed);
     const result = await runTrekEdit({ shareToken, requestText: transcript });
     if (result?.noop || result?.editApplied === false) {
-      throw Object.assign(new Error(result?.summary || 'I could not apply that itinerary update.'), { statusCode: 422 });
+      return send(res, 422, {
+        ok: false,
+        error: audioNoteNoopMessage({ transcript, summary: result?.summary || '' }),
+        transcript,
+        edit: result,
+      });
     }
     send(res, 201, {
       ok: true,
