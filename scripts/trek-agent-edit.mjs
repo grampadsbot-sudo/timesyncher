@@ -172,6 +172,20 @@ const PLACE_TARGET_ALIASES = Object.freeze({
     'second honky-tonk',
     'second honky tonk',
   ]),
+  'umekes fish market bar & grill': Object.freeze([
+    'umekes',
+    'umeke',
+    'umeke s',
+    'umeke happy hour',
+    'umekes happy hour',
+    'omeke',
+    'omekes',
+    'omeker',
+    'omekers',
+    'omeker s',
+    'omeke happy hour',
+    'omekes happy hour',
+  ]),
   'minnehaha falls': Object.freeze([
     'minnehaha falls',
     'minnehaha',
@@ -647,6 +661,30 @@ function inferFallbackPlan(requestText, before = null) {
       summary: 'Removed from the current vacation itinerary.',
       ifPresent: /\bif\b/i.test(source) || /\bstill on\b/i.test(source) || /\byou sketched\b/i.test(source) || /\byou put\b/i.test(source),
     });
+  }
+
+  const sayHappyHourMatch = source.match(/\b(?:on|at|for)\s+([^,.;]{3,80}?),?\s+(?:say|call|make|mark|label|update)\s+(?:it|that|the item)?\s*(?:as|is|it's|its|to)?\s*(?:a\s+)?([^,.;]{0,80}happy hour)\b/i);
+  if (!ops.length && sayHappyHourMatch?.[1] && /\bhappy hour\b/i.test(source)) {
+    const spokenTarget = text(sayHappyHourMatch[1], 180);
+    const namedPlace = findPlaceByAliasMap(before, spokenTarget) || findPlaceByHints(before, [spokenTarget]);
+    const matchTitle = text(namedPlace?.name || spokenTarget, 180);
+    const happyTitle = text(sayHappyHourMatch[2] || `${matchTitle} happy hour`, 180)
+      .replace(/^(?:it'?s|its|'s)\s+/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (matchTitle) {
+      ops.push({
+        op: 'update_thing',
+        matchTitle,
+        title: /\bhappy hour\b/i.test(matchTitle) ? matchTitle : `${matchTitle} happy hour`,
+        category: 'restaurant',
+        day: hasExplicitDay ? day : undefined,
+        status: 'considering',
+        summary: `Updated ${matchTitle} as ${happyTitle || 'happy hour'} on the current vacation itinerary.`,
+        details: `Customer asked to label ${matchTitle} as ${happyTitle || 'happy hour'}; verify current happy-hour hours before relying on it.`,
+        fields: { happyHour: true, happyHourDetails: 'Customer requested this as a happy-hour stop; verify current happy-hour hours before relying on it.' },
+      });
+    }
   }
 
   // Swap / replace one stop with another concrete candidate.
@@ -1236,6 +1274,7 @@ def find_place(op):
   # Exact alias-map lookup (canonical happy-hour / known scenario synonyms only).
   alias_map={
     "happy hour": ["happy hour","same happy hour","that same happy hour","that happy hour","late-afternoon happy hour","late afternoon happy hour","friday happy hour","sit-down happy hour","source-backed sit-down happy hour","honky-tonk","honky tonk","second honky-tonk","second honky tonk","broadway honky-tonk happy hour","source-backed broadway honky-tonk happy hour"],
+    "umekes fish market bar & grill": ["umekes","umeke","umeke s","umeke happy hour","umekes happy hour","omeke","omekes","omeker","omekers","omeker s","omeke happy hour","omekes happy hour"],
     "minnehaha falls": ["minnehaha falls","minnehaha","falls block","the falls","falls"],
     "mill city museum": ["mill city museum","mill city","museum stop"],
     "boat cruise": ["boat cruise","cruise"],
