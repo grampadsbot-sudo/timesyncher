@@ -348,17 +348,35 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     if day_num < 1: day_num = 1
     if day_num > len(days): day_num = len(days)
     day_id = int(days[day_num - 1]['id'])
+    start_time = txt(item.get('time') or '', 40)
+    try:
+        duration_minutes = int(item.get('durationMinutes') or item.get('duration_minutes') or 90)
+    except Exception:
+        duration_minutes = 90
+    if duration_minutes <= 0:
+        duration_minutes = 90
+    end_time = ''
+    import re as _re
+    m = _re.search(r"\b([01]?\d|2[0-3]):([0-5]\d)\b", start_time)
+    if m:
+        total = (int(m.group(1)) * 60) + int(m.group(2)) + duration_minutes
+        end_time = f"{(total // 60) % 24:02d}:{total % 60:02d}"
+        try:
+            run('UPDATE places SET duration_minutes=?, end_time=COALESCE(NULLIF(?, ""), end_time) WHERE id=?', (duration_minutes, end_time, place_id))
+        except Exception:
+            run('UPDATE places SET duration_minutes=? WHERE id=?', (duration_minutes, place_id))
     assignment = one('SELECT id FROM day_assignments WHERE day_id=? AND place_id=?', (day_id, place_id))
     order_row = one('SELECT COALESCE(MAX(order_index), -1) + 1 AS next_index FROM day_assignments WHERE day_id=?', (day_id,))
     if assignment:
-        run("UPDATE day_assignments SET notes=?, reservation_status=?, assignment_time=COALESCE(NULLIF(?, ''), assignment_time) WHERE id=?", (summary, 'considering', item.get('time') or '', assignment['id']))
+        run("UPDATE day_assignments SET notes=?, reservation_status=?, assignment_time=COALESCE(NULLIF(?, ''), assignment_time), assignment_end_time=COALESCE(NULLIF(?, ''), assignment_end_time) WHERE id=?", (summary, 'considering', start_time or '', end_time or '', assignment['id']))
     else:
-        run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time) VALUES (?, ?, ?, ?, ?, ?)', (day_id, place_id, int(order_row['next_index']), summary, 'considering', item.get('time') or None))
+        run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time, assignment_end_time) VALUES (?, ?, ?, ?, ?, ?, ?)', (day_id, place_id, int(order_row['next_index']), summary, 'considering', start_time or None, end_time or None))
     fields = {
         'category': kind,
         'status': 'considering',
         'timeline': True,
-        'startTime': item.get('time') or '',
+        'startTime': start_time or '',
+        'endTime': end_time or '',
         'summary': summary,
         'longDetails': summary,
         'price': '',
@@ -376,6 +394,133 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     save_field(token, 'place:' + str(place_id), fields, overrides)
     return {'action': action, 'placeId': place_id, 'title': title, 'day': day_num, 'category': kind}
 
+
+def parse_hhmm(value):
+  import re
+  s=str(value or "")
+  m=re.search(r"\b([01]?\d|2[0-3]):([0-5]\d)\b", s)
+  if not m: return None
+  return (int(m.group(1))*60)+int(m.group(2))
+
+def hhmm(total):
+  total=int(total)%(24*60)
+  return f"{(total//60):02d}:{(total%60):02d}"
+
+def parse_travel_minutes(value, default=0):
+  s=txt(value,40)
+  if s=="": return int(default)
+  try:
+    n=int(float(s))
+    return n if n>=0 else int(default)
+  except Exception:
+    return int(default)
+
+def venue_key(place_row, fields):
+  name=txt(place_row["name"] if place_row else "",180).lower()
+  address=""
+  try:
+    address=txt((fields or {}).get("address") or (place_row["address"] if place_row is not None and "address" in place_row.keys() else ""),240).lower()
+  except Exception:
+    address=txt((fields or {}).get("address") or "",240).lower()
+  lat=(fields or {}).get("lat") if isinstance(fields,dict) else None
+  lng=(fields or {}).get("lng") if isinstance(fields,dict) else None
+  try:
+    if lat is None and place_row is not None and "lat" in place_row.keys(): lat=place_row["lat"]
+    if lng is None and place_row is not None and "lng" in place_row.keys(): lng=place_row["lng"]
+  except Exception:
+    pass
+  if lat is not None and lng is not None:
+    try: return "coord:%s,%s" % (round(float(lat),4), round(float(lng),4))
+    except Exception: pass
+  if address: return "addr:"+address
+  return "name:"+name
+
+def travel_floor_minutes(prev_row, prev_fields, cur_row, cur_fields):
+  if venue_key(prev_row, prev_fields) == venue_key(cur_row, cur_fields):
+    return 0
+  existing = parse_travel_minutes((cur_fields or {}).get("travelTime"), -1)
+  if existing > 0: return existing
+  return 15
+
+def normalize_trip_schedule(trip_id, token):
+  day_rows_local = rows("SELECT id, day_number FROM days WHERE trip_id=? ORDER BY day_number", (trip_id,))
+  changed = 0
+  for day in day_rows_local:
+    day_id=int(day["id"])
+    items=[]
+    qrows = rows("""
+      SELECT da.id AS assignment_id, da.place_id, da.order_index, da.assignment_time, da.assignment_end_time,
+             da.reservation_status, p.name, p.address, p.lat, p.lng, p.place_time, p.end_time, p.duration_minutes
+      FROM day_assignments da
+      JOIN places p ON p.id=da.place_id
+      WHERE da.day_id=?
+    """, (day_id,))
+    for raw in qrows:
+      row = dict(raw) if not isinstance(raw, dict) else raw
+      start=parse_hhmm(row.get("assignment_time") or row.get("place_time") or "")
+      if start is None: continue
+      try: dur=int(row.get("duration_minutes") or 90)
+      except Exception: dur=90
+      if dur<=0: dur=90
+      end=parse_hhmm(row.get("assignment_end_time") or row.get("end_time") or "")
+      if end is None or end <= start: end = start + dur
+      fields={}
+      key="place:"+str(int(row["place_id"]))
+      frow=one("SELECT fields_json FROM shared_travel_thing_fields WHERE token=? AND thing_key=?",(token,key))
+      if frow:
+        try:
+          fdict = dict(frow) if not isinstance(frow, dict) else frow
+          fields=json.loads(fdict.get("fields_json") or fdict["fields_json"]) or {}
+        except Exception:
+          fields={}
+      items.append({"row":row,"start":start,"end":end,"dur":dur,"fields":fields,"key":key})
+    if not items:
+      continue
+    items.sort(key=lambda it: (it["start"], int(it["row"].get("order_index") or 0), int(it["row"]["assignment_id"])))
+    prev=None
+    for idx,it in enumerate(items):
+      it["fields"] = dict(it["fields"] or {})
+      if prev is not None:
+        floor=travel_floor_minutes(prev["row"], prev["fields"], it["row"], it["fields"])
+        min_start = prev["end"] + floor
+        if it["start"] < min_start:
+          it["start"] = min_start
+          it["end"] = it["start"] + it["dur"]
+          if it["end"] >= 24*60:
+            it["end"] = 24*60 - 1
+            it["start"] = max(0, it["end"] - it["dur"])
+        it["fields"]["travelTime"] = str(int(floor))
+      else:
+        if it["fields"].get("travelTime") in (None,""):
+          it["fields"]["travelTime"]="0"
+      start_s=hhmm(it["start"]); end_s=hhmm(it["end"])
+      db.execute("UPDATE day_assignments SET order_index=?, assignment_time=?, assignment_end_time=? WHERE id=?",(idx,start_s,end_s,int(it["row"]["assignment_id"])))
+      try:
+        db.execute("UPDATE places SET place_time=?, end_time=?, duration_minutes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",(start_s,end_s,it["dur"],int(it["row"]["place_id"])))
+      except Exception:
+        db.execute("UPDATE places SET place_time=?, duration_minutes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",(start_s,it["dur"],int(it["row"]["place_id"])))
+      fields=it["fields"]
+      fields["startTime"]=start_s
+      fields["endTime"]=end_s
+      status=str(fields.get("status") or "").lower()
+      if status in ("","considering","tbd") and start_s:
+        if str(fields.get("timeline", True)).lower() not in ("false","0","no"):
+          fields["status"]="scheduled"
+      db.execute("INSERT INTO shared_travel_thing_fields (token,thing_key,fields_json,updated_at) VALUES (?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(token,thing_key) DO UPDATE SET fields_json=excluded.fields_json, updated_at=CURRENT_TIMESTAMP",(token,it["key"],json.dumps(fields)))
+      try:
+        ovr=load_overrides() if "load_overrides" in globals() else {}
+      except Exception:
+        ovr={}
+      if isinstance(ovr, dict):
+        ovr[it["key"]] = fields
+        try:
+          db.execute("INSERT INTO share_token_overrides (token,overrides_json,updated_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(token) DO UPDATE SET overrides_json=excluded.overrides_json, updated_at=CURRENT_TIMESTAMP",(token,json.dumps(ovr)))
+        except Exception:
+          pass
+      changed += 1
+      prev=it
+  return changed
+
 trip = find_trip(payload.get('token') or '', payload.get('requestText') or '')
 if not trip:
     raise RuntimeError('No target TREK trip/share token could be identified for this edit request.')
@@ -389,6 +534,11 @@ overrides = load_overrides(token)
 results = []
 for item in items:
     results.append(insert_or_update_item(int(trip['id']), token, days, item, overrides))
+if results:
+  try:
+    normalize_trip_schedule(int(trip['id']), token)
+  except Exception as _norm_err:
+    raise RuntimeError('schedule normalize failed: '+str(_norm_err))
 db.commit()
 base = (payload.get('publicBase') or 'https://vacation.timesyncher.com').rstrip('/')
 print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results) + (1 if date_range else 0)}))

@@ -133,10 +133,14 @@ export function assertCustomerRequestAllowed(job, capabilities) {
     .filter(({ capability, pattern }) => capabilities.blockedCapabilities.has(capability) || capability === 'booking-payment')
     .filter(({ pattern }) => pattern.test(requestText))
     .map(({ capability }) => capability);
-  if (violations.length) {
-    const error = new Error(`Blocked production Vacation capability requested: ${[...new Set(violations)].sort().join(', ')}`);
+  // Booking/payment asks are handled by the product dispatcher as advisory-only
+  // refusal copy. They should not crash the customer turn before that safe
+  // response can be produced.
+  const hardViolations = violations.filter((capability) => capability !== 'booking-payment');
+  if (hardViolations.length) {
+    const error = new Error(`Blocked production Vacation capability requested: ${[...new Set(hardViolations)].sort().join(', ')}`);
     error.code = 'PRODUCT_CAPABILITY_BLOCKED';
-    error.violations = [...new Set(violations)].sort();
+    error.violations = [...new Set(hardViolations)].sort();
     throw error;
   }
 }

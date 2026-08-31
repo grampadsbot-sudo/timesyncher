@@ -140,6 +140,17 @@
         await track('collaborator_checkout_complete', location.href, 'page_view');
         return;
       }
+      if (params.get('accountUpgradeCheckout') === 'complete') {
+        const ownerName = cleanParam(params.get('ownerName') || params.get('customerName') || params.get('name'));
+        meta.textContent = 'Owner account upgraded.';
+        intro.classList.add('hidden');
+        setStatus(`Unlimited vacation access has been added for ${ownerName || 'the owner account'}.`);
+        eula.classList.add('hidden');
+        choices.classList.add('hidden');
+        collaborator.classList.add('hidden');
+        await track('account_upgrade_checkout_complete', location.href, 'page_view');
+        return;
+      }
       if (params.get('ownerMediaCheckout') === 'complete') {
         const ownerName = cleanParam(params.get('ownerName') || params.get('customerName') || params.get('name'));
         meta.textContent = 'Owner media add-ons purchased.';

@@ -112,6 +112,45 @@ function isPersonAccessQuestion(value = '') {
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
 
+function isVoiceNoteCreationStatusQuestion(value = '') {
+  const normalized = cleanText(value, 2000).toLowerCase();
+  const questionish = isQuestionLike(normalized) || /\b(are you|is it|will it|did you|does this|going to|gonna|can you)\b/.test(normalized);
+  if (!questionish) return false;
+  const asksCreationStatus = /\b(are you|is it|will it|did you|does this|going to|gonna|can you)\b/.test(normalized)
+    && /\b(create|creating|make|making|build|building|turn|turning|use|using|base|based)\b/.test(normalized);
+  const mentionsVoiceNotes = /\b(voice notes?|voice messages?|audio notes?|recordings?|notes? i sent|information i sent)\b/.test(normalized);
+  const mentionsVacation = /\b(vacation|trip|itinerary|plan)\b/.test(normalized);
+  return asksCreationStatus && mentionsVoiceNotes && mentionsVacation;
+}
+
+function isPriorVoiceNoteReuseRequest(value = '') {
+  const normalized = cleanText(value, 2000).toLowerCase();
+  if (!normalized) return false;
+  const mentionsPrior = /\b(previous|earlier|above|already sent|sent before|old|prior)\b/.test(normalized);
+  const mentionsVoice = /\b(voicemails?|voice\s*notes?|voice\s*messages?|audio\s*notes?|recordings?)\b/.test(normalized);
+  const asksUse = /\b(use|using|utilize|incorporate|include|listen|find|look up|base|based|create|make|build)\b/.test(normalized);
+  const asksAboutResend = /\b(resend|send again|send them again)\b/.test(normalized);
+  return (mentionsPrior && mentionsVoice && (asksUse || asksAboutResend)) ||
+    (asksAboutResend && /\b(already sent|sent before|previous|earlier)\b/.test(normalized));
+}
+
+function bareStartBridgeReply() {
+  return [
+    'Welcome to TimeSyncher Vacation.',
+    '',
+    'I do not have the setup token in this /start message, so I have not started building a vacation from this chat yet.',
+    '',
+    'Open the Telegram link from your purchase email after accepting the Terms, then send or forward the voice notes you want me to use.',
+  ].join('\n');
+}
+
+function voiceNoteStatusBridgeReply() {
+  return [
+    'Not yet. I do not see this Telegram chat linked to the new TimeSyncher Vacation checkout yet.',
+    '',
+    'Open the Telegram link from the purchase email after accepting the Terms, then send or forward the voice notes you want used for the vacation.',
+  ].join('\n');
+}
 function vacationLookupTerm(value = '') {
   const normalized = cleanText(value, 2000).toLowerCase().replace(/\s+/g, ' ').trim();
   if (/\b(vegas|las vegas|strip|jockey club)\b/.test(normalized)) return 'Las Vegas';
@@ -770,6 +809,62 @@ function noteCacheStage(cacheDir, stage, details = {}) {
   });
 }
 
+function readJsonFile(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function cachedUpdateMessage(updateDir) {
+  const update = readJsonFile(path.join(updateDir, 'update.json'));
+  return update?.update?.message || update?.message || null;
+}
+
+function cachedVoiceTranscriptionsForChat(message = {}, { limit = 16 } = {}) {
+  const chatId = String(message.chat?.id || '');
+  const currentMessageId = Number(message.message_id || 0);
+  if (!chatId) return [];
+  const matches = [];
+  try {
+    if (!fs.existsSync(INGRESS_CACHE_DIR)) return [];
+    for (const dateEntry of fs.readdirSync(INGRESS_CACHE_DIR, { withFileTypes: true })) {
+      if (!dateEntry.isDirectory() || !/^\d{4}-\d{2}-\d{2}$/.test(dateEntry.name)) continue;
+      const dateDir = path.join(INGRESS_CACHE_DIR, dateEntry.name);
+      for (const updateEntry of fs.readdirSync(dateDir, { withFileTypes: true })) {
+        if (!updateEntry.isDirectory()) continue;
+        const updateDir = path.join(dateDir, updateEntry.name);
+        const transcription = readJsonFile(path.join(updateDir, 'transcription.json'));
+        const text = cleanText(transcription?.text, 3000);
+        if (!text) continue;
+        const cachedMessage = cachedUpdateMessage(updateDir);
+        const cachedChatId = String(cachedMessage?.chat?.id || '');
+        const messageId = Number(cachedMessage?.message_id || updateEntry.name.match(/message-(\d+)/)?.[1] || 0);
+        if (cachedChatId !== chatId) continue;
+        if (currentMessageId && messageId >= currentMessageId) continue;
+        matches.push({
+          messageId,
+          updateId: String(cachedMessage?.update_id || updateEntry.name.match(/^update-([^-]+)/)?.[1] || ''),
+          transcribedAt: cleanText(transcription.cachedAt, 80) || null,
+          text,
+        });
+      }
+    }
+  } catch (error) {
+    return [];
+  }
+  return matches
+    .sort((a, b) => a.messageId - b.messageId)
+    .slice(-limit);
+}
+
+function priorVoiceNotePlanningText(notes = []) {
+  return notes
+    .map((note) => `[previous voice note message ${note.messageId || 'unknown'}]\n${note.text}`)
+    .join('\n\n');
+}
+
 function conversationStatePath(chatId = '') {
   return path.join(INGRESS_CACHE_DIR, 'state', `chat-${safePathPart(chatId || 'unknown')}.json`);
 }
@@ -806,6 +901,15 @@ function conversationContextForMessage(message = {}, text = '') {
   };
 }
 
+function conversationCacheVacationName(value = '') {
+  const cleaned = cleanText(value, 160);
+  if (!cleaned) return '';
+  if (/\?/.test(cleaned)) return '';
+  if (/^\//.test(cleaned)) return '';
+  if (/\b(are you|am i|why|what|when|where|how|already done|technical issue|voice notes?|message|checkout|eula|terms)\b/i.test(cleaned)) return '';
+  return cleaned;
+}
+
 function rememberConversationTurn(message = {}, { inboundText = '', outboundText = '', turn = {} } = {}) {
   const chatId = String(message.chat?.id || '');
   if (!chatId) return;
@@ -814,7 +918,8 @@ function rememberConversationTurn(message = {}, { inboundText = '', outboundText
   const knownParticipants = new Set(Array.isArray(state.knownParticipants) ? state.knownParticipants : []);
   const combined = `${inboundText}\n${outboundText}`;
   if (/\bkim\b/i.test(combined)) knownParticipants.add('Kim');
-  const vacationName = cleanText(turn.vacationName || turn.payload?.vacationName || state.activeVacation, 160);
+  const vacationName = conversationCacheVacationName(turn.vacationName || turn.payload?.vacationName)
+    || conversationCacheVacationName(state.activeVacation);
   const nextTurns = [
     ...recentTurns,
     inboundText ? { speaker: 'customer', body: cleanText(inboundText, 700), at: new Date().toISOString() } : null,
@@ -874,12 +979,13 @@ function parseEnvFile(filePath) {
   return env;
 }
 
-function startWorkerDrainDirect(jobId) {
+function startWorkerDrainDirect(jobId, { telegramChatId = '' } = {}) {
   const env = {
     ...process.env,
     ...parseEnvFile(WORKER_DRAIN_ENV_FILE),
     TIMESYNCHER_WORKER_TARGET_JOB_ID: jobId,
     TIMESYNCHER_WORKER_TARGET_FILE: WORKER_DRAIN_TARGET_FILE,
+    TIMESYNCHER_WORKER_TARGET_TELEGRAM_CHAT_ID: cleanText(telegramChatId, 120),
   };
   const child = spawn(process.execPath, [WORKER_DRAIN_SCRIPT, '--drain'], {
     cwd: process.cwd(),
@@ -903,7 +1009,7 @@ function startWorkerDrainDirect(jobId) {
   });
 }
 
-function startWorkerDrainIfQueued(turn) {
+function startWorkerDrainIfQueued(turn, { telegramChatId = '' } = {}) {
   const jobId = cleanText(turn?.queued?.jobId || turn?.queued?.job_id, 80);
   if (!turn || !turn.queued || !jobId || !WORKER_DRAIN_SERVICE) return;
   writeJsonAtomic(WORKER_DRAIN_TARGET_FILE, {
@@ -911,18 +1017,19 @@ function startWorkerDrainIfQueued(turn) {
     requestId: cleanText(turn.queued.requestId || turn.queued.request_id, 80) || null,
     transcriptId: cleanText(turn.transcriptId || turn.transcript_id, 80) || null,
     outboundTranscriptId: cleanText(turn.outboundTranscriptId || turn.outbound_transcript_id, 80) || null,
+    telegramChatId: cleanText(telegramChatId, 120) || null,
     queuedAt: new Date().toISOString(),
     reason: 'telegram_turn_scoped_worker_drain',
   });
   if (WORKER_DRAIN_MODE === 'direct') {
     console.log(`[${new Date().toISOString()}] direct worker drain start requested for queued Telegram job ${jobId}`);
-    startWorkerDrainDirect(jobId);
+    startWorkerDrainDirect(jobId, { telegramChatId });
     return;
   }
   execFile('systemctl', ['--user', 'start', WORKER_DRAIN_SERVICE], (error) => {
     if (error) {
       console.error(`[${new Date().toISOString()}] worker drain start failed for job ${jobId}: ${error.message}`);
-      startWorkerDrainDirect(jobId);
+      startWorkerDrainDirect(jobId, { telegramChatId });
       return;
     }
     console.log(`[${new Date().toISOString()}] worker drain start requested for queued Telegram job ${jobId}`);
@@ -1584,6 +1691,32 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
     };
   }
 
+  if (text && isPriorVoiceNoteReuseRequest(text)) {
+    const priorVoiceNotes = cachedVoiceTranscriptionsForChat(message);
+    if (priorVoiceNotes.length) {
+      payload = {
+        ...payload,
+        priorTelegramVoiceNotes: {
+          source: 'telegram_ingress_cache',
+          chatId: String(chatId),
+          count: priorVoiceNotes.length,
+          messageIds: priorVoiceNotes.map((note) => note.messageId).filter(Boolean),
+          transcripts: priorVoiceNotes,
+          planningText: priorVoiceNotePlanningText(priorVoiceNotes),
+        },
+      };
+      noteCacheStage(cacheDir, 'prior-voice-notes-attached', {
+        count: priorVoiceNotes.length,
+        messageIds: priorVoiceNotes.map((note) => note.messageId).filter(Boolean),
+      });
+    } else {
+      noteCacheStage(cacheDir, 'prior-voice-notes-missing', {
+        reason: 'reuse_request_but_no_prior_transcriptions_for_chat',
+        telegramMessageId: messageId || null,
+      });
+    }
+  }
+
   const media = mediaFromMessage(message);
   if (media) {
     await telegram('sendChatAction', { chat_id: chatId, action: media.mediaKind === 'video' ? 'upload_video' : 'upload_photo' }).catch(() => {});
@@ -1597,6 +1730,19 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
 
   if (!text) {
     await sendMessage(chatId, 'Send me the trip, dates, people, budget, or what you want planned, and I will start the vacation workspace.', messageId);
+    return;
+  }
+
+  const bareStart = /^\/start\s*$/i.test(text);
+  if (bareStart || isVoiceNoteCreationStatusQuestion(text)) {
+    const reply = bareStart ? bareStartBridgeReply() : voiceNoteStatusBridgeReply();
+    const sent = await sendMessage(chatId, reply, messageId);
+    noteCacheStage(cacheDir, bareStart ? 'bare-start-guarded' : 'voice-note-status-guarded', {
+      reason: 'local_no_queue_guard',
+      telegramMessageId: messageId || null,
+      sentTelegramMessageId: sent?.message_id || null,
+    });
+    rememberConversationTurn(message, { inboundText: text, outboundText: reply, turn: { queued: null } });
     return;
   }
 
@@ -1615,7 +1761,7 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
   });
   const hostedNoWriteDecision = noWriteDecisionFromTurn(turn);
   const supportNoWrite = Boolean(hostedNoWriteDecision);
-  startWorkerDrainIfQueued(turn);
+  startWorkerDrainIfQueued(turn, { telegramChatId: chatId });
 
   const hostedReply = cleanText(turn.reply || turn.customerResponse || turn.answer, 4000);
   let reply = hostedReply || [

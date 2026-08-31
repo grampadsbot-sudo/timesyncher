@@ -48,8 +48,8 @@
   <main>
     <section>
       <div class="brand">TimeSyncher Vacation</div>
-      <h1>Owner media add-ons</h1>
-      <p>Add photo and video upload access for the owner account. This checkout is separate from adding a Telegram collaborator.</p>
+      <h1 id="pageTitle">Owner media add-ons</h1>
+      <p id="pageIntro">Add photo and video upload access for the owner account. This checkout is separate from adding a Telegram collaborator.</p>
       <form id="form">
         <fieldset>
           <legend>Owner contact</legend>
@@ -60,7 +60,7 @@
           <label>Email<input name="email" type="email" autocomplete="email" required /></label>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="coverageFieldset">
           <legend>Coverage</legend>
           <div class="choices">
             <label class="choice">
@@ -115,12 +115,13 @@
 
     <aside class="summary">
       <h2>Order summary</h2>
+      <div class="summary-row" id="upgradeSummaryRow" hidden><span>Unlimited vacation access</span><strong id="upgradeTotal">$27</strong></div>
       <div class="summary-row" id="photoRow"><span>Photo upload access</span><strong id="photoTotal">$5</strong></div>
       <div class="summary-row" id="videoRow"><span>Video upload access</span><strong id="videoTotal">$17</strong></div>
       <div class="summary-row" id="couponRow" hidden><span>Media add-on coupon</span><strong>Covers selected media after validation</strong></div>
       <div class="summary-row"><span>Estimated tax</span><strong>Calculated at checkout</strong></div>
       <div class="summary-row total"><span>Total today</span><strong id="total">$22</strong></div>
-      <p>After checkout, the owner can send photos and videos to the TimeSyncher Vacation bot for the covered vacation scope.</p>
+      <p id="summaryCopy">After checkout, the owner can send photos and videos to the TimeSyncher Vacation bot for the covered vacation scope.</p>
     </aside>
   </main>
   <script>
@@ -140,6 +141,8 @@
     let paymentReady = false;
     let stagingCardMode = true;
     let ownerSessionToken = params.get('session') || params.get('token') || '';
+    const accountUpgradeMode = ['unlimited', 'true', '1'].includes(String(params.get('upgrade') || params.get('accountUpgrade') || '').toLowerCase());
+    const ACCOUNT_UPGRADE_CENTS = 2700;
 
     function splitOwnerName(name = '') {
       const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -169,12 +172,20 @@
     }
 
     function isUnlimited() {
-      return form.elements.mediaScope.value === 'unlimited_trips';
+      return accountUpgradeMode || form.elements.mediaScope.value === 'unlimited_trips';
     }
 
     function mediaAddOns() {
       return {
-        mediaScope: form.elements.mediaScope.value,
+        mediaScope: accountUpgradeMode ? 'unlimited_trips' : form.elements.mediaScope.value,
+        photoUpload: Boolean(photoUpload.checked),
+        videoUpload: Boolean(videoUpload.checked),
+      };
+    }
+
+    function upgradePayload() {
+      return {
+        accountUpgrade: 'unlimited',
         photoUpload: Boolean(photoUpload.checked),
         videoUpload: Boolean(videoUpload.checked),
       };
@@ -189,7 +200,7 @@
 
     function totalCents() {
       const p = prices();
-      return (photoUpload.checked ? p.photo : 0) + (videoUpload.checked ? p.video : 0);
+      return (accountUpgradeMode ? ACCOUNT_UPGRADE_CENTS : 0) + (photoUpload.checked ? p.photo : 0) + (videoUpload.checked ? p.video : 0);
     }
 
     function couponMode() {
@@ -199,7 +210,7 @@
     function ownerMediaSuccessUrl() {
       const data = contactPayload();
       const ownerName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
-      const params = new URLSearchParams({ ownerMediaCheckout: 'complete' });
+      const params = new URLSearchParams({ [accountUpgradeMode ? 'accountUpgradeCheckout' : 'ownerMediaCheckout']: 'complete' });
       if (ownerName) params.set('ownerName', ownerName);
       if (ownerSessionToken) params.set('session', ownerSessionToken);
       return `/order-success.html?${params.toString()}`;
@@ -212,6 +223,15 @@
 
     function updateSummary() {
       const p = prices();
+      document.getElementById('pageTitle').textContent = accountUpgradeMode ? 'Owner account upgrade' : 'Owner media add-ons';
+      document.getElementById('pageIntro').textContent = accountUpgradeMode
+        ? 'Upgrade this existing owner account to unlimited vacations. Add photo or video upload access for all vacations if needed. No new vacation setup or EULA is created.'
+        : 'Add photo and video upload access for the owner account. This checkout is separate from adding a Telegram collaborator.';
+      document.getElementById('coverageFieldset').classList.toggle('hidden', accountUpgradeMode);
+      document.getElementById('upgradeSummaryRow').hidden = !accountUpgradeMode;
+      document.getElementById('summaryCopy').textContent = accountUpgradeMode
+        ? 'After checkout, unlimited vacation access is added to the existing owner account. Photo and video upload access applies to all vacations when selected.'
+        : 'After checkout, the owner can send photos and videos to the TimeSyncher Vacation bot for the covered vacation scope.';
       document.getElementById('photoPrice').textContent = money(p.photo);
       document.getElementById('photoTotal').textContent = money(p.photo);
       document.getElementById('videoPrice').textContent = money(p.video);
@@ -250,7 +270,9 @@
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...contactPayload(), action: 'create_owner_media_payment_intent', mediaAddOns: mediaAddOns() }),
+        body: JSON.stringify(accountUpgradeMode
+          ? { ...contactPayload(), action: 'create_owner_account_upgrade_payment_intent', accountUpgrade: upgradePayload() }
+          : { ...contactPayload(), action: 'create_owner_media_payment_intent', mediaAddOns: mediaAddOns() }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to prepare media checkout.');
@@ -281,7 +303,9 @@
       const response = await fetch('/api/checkout-coupon', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...contactPayload(), action: 'redeem_owner_media_coupon', product: 'owner_media_addons', couponCode: code, mediaAddOns: mediaAddOns() }),
+        body: JSON.stringify(accountUpgradeMode
+          ? { ...contactPayload(), action: 'redeem_owner_account_upgrade_coupon', product: 'owner_account_upgrade', couponCode: code, accountUpgrade: upgradePayload() }
+          : { ...contactPayload(), action: 'redeem_owner_media_coupon', product: 'owner_media_addons', couponCode: code, mediaAddOns: mediaAddOns() }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to redeem coupon.');
@@ -292,7 +316,9 @@
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...contactPayload(), action: 'complete_staging_owner_media_checkout', mediaAddOns: mediaAddOns(), card: validateStagingCard() }),
+        body: JSON.stringify(accountUpgradeMode
+          ? { ...contactPayload(), action: 'complete_staging_owner_account_upgrade_checkout', accountUpgrade: upgradePayload(), card: validateStagingCard() }
+          : { ...contactPayload(), action: 'complete_staging_owner_media_checkout', mediaAddOns: mediaAddOns(), card: validateStagingCard() }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to complete staging media checkout.');

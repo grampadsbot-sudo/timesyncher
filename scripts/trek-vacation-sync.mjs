@@ -38,7 +38,10 @@ function trekPlaceFromResearchThing(thing, index, destination, boundary) {
     type: trekTypeForCategory(thing.category),
     name: text(thing.title || `Research candidate ${index + 1}`, 180),
     day: Math.min(2 + (index % 2), 3),
-    time: index % 2 === 0 ? '13:00' : '15:00',
+    time: '',
+    endTime: '',
+    travelTime: '',
+    status: 'tbd',
     area: text(thing.area || destination || 'Research', 120),
     lat: Number.isFinite(Number(thing.lat)) ? Number(thing.lat) : null,
     lng: Number.isFinite(Number(thing.lng)) ? Number(thing.lng) : null,
@@ -71,6 +74,120 @@ function trekPlaceFromResearchThing(thing, index, destination, boundary) {
   };
 }
 
+function minutesToTime(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function scheduledDurationMinutes(place) {
+  if (Number.isFinite(Number(place.duration)) && Number(place.duration) > 0) return Math.min(240, Math.max(30, Number(place.duration)));
+  if (place.type === 'restaurant') return 90;
+  if (place.type === 'store') return 60;
+  if (place.type === 'hotel') return 60;
+  return 120;
+}
+
+
+function cascadeDaySchedule(places) {
+  const byDay = new Map();
+  for (const place of places) {
+    const day = Number(place.day || 1);
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(place);
+  }
+  const floorFor = (prev, cur) => {
+    const sameName = text(prev?.name || '', 180).toLowerCase() === text(cur?.name || '', 180).toLowerCase();
+    const prevAddr = text(prev?.address || '', 240).toLowerCase();
+    const curAddr = text(cur?.address || '', 240).toLowerCase();
+    const sameAddr = Boolean(prevAddr) && prevAddr === curAddr;
+    const sameCoord = Number.isFinite(Number(prev?.lat)) && Number.isFinite(Number(cur?.lat))
+      && Math.abs(Number(prev.lat) - Number(cur.lat)) < 0.0005
+      && Math.abs(Number(prev.lng) - Number(cur.lng)) < 0.0005;
+    if (sameName || sameAddr || sameCoord) return 0;
+    const existing = Number(cur?.travelTime);
+    if (Number.isFinite(existing) && existing > 0) return existing;
+    return 15;
+  };
+  const toMin = (value) => {
+    const m = String(value || '').match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  };
+  for (const dayPlaces of byDay.values()) {
+    const scheduled = dayPlaces
+      .filter((place) => place.time && String(place.status || '').toLowerCase() !== 'tbd')
+      .sort((a, b) => (toMin(a.time) ?? 0) - (toMin(b.time) ?? 0));
+    let prev = null;
+    for (const place of scheduled) {
+      const dur = scheduledDurationMinutes(place);
+      place.duration = dur;
+      let start = toMin(place.time);
+      if (start == null) continue;
+      let end = toMin(place.endTime);
+      if (end == null || end <= start) end = start + dur;
+      if (prev) {
+        const floor = floorFor(prev, place);
+        const prevEnd = toMin(prev.endTime) ?? ((toMin(prev.time) ?? 0) + scheduledDurationMinutes(prev));
+        const minStart = prevEnd + floor;
+        if (start < minStart) {
+          start = minStart;
+          end = start + dur;
+        }
+        place.travelTime = String(floor);
+      } else if (place.travelTime === '' || place.travelTime == null) {
+        place.travelTime = '0';
+      }
+      if (end >= 24 * 60) {
+        end = 24 * 60 - 1;
+        start = Math.max(0, end - dur);
+      }
+      place.time = minutesToTime(start);
+      place.endTime = minutesToTime(end);
+      place.status = place.status || 'scheduled';
+      prev = place;
+    }
+  }
+  return places;
+}
+
+function applyFeasibleTimeline(places) {
+  const byDay = new Map();
+  for (const place of places) {
+    const day = Number(place.day || 1);
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(place);
+  }
+  const slots = [9 * 60 + 30, 12 * 60 + 30, 15 * 60 + 30];
+  for (const dayPlaces of byDay.values()) {
+    let scheduled = 0;
+    for (const place of dayPlaces) {
+      place.duration = scheduledDurationMinutes(place);
+      if (place.type === 'hotel') {
+        place.time = place.time || '15:00';
+        place.endTime = place.endTime || '16:00';
+        place.travelTime = '';
+        place.status = 'scheduled';
+        continue;
+      }
+      if (scheduled < slots.length) {
+        const start = slots[scheduled];
+        place.time = minutesToTime(start);
+        place.endTime = minutesToTime(start + place.duration);
+        place.travelTime = scheduled === 0 ? '0' : '20';
+        place.status = 'scheduled';
+        scheduled += 1;
+      } else {
+        place.time = '';
+        place.endTime = '';
+        place.travelTime = '';
+        place.status = 'tbd';
+      }
+    }
+  }
+  return places;
+}
+
 function slugify(value) {
   return text(value, 160)
     .toLowerCase()
@@ -96,7 +213,7 @@ function genericPlan(payload) {
     ? Math.max(1, Math.min(31, Math.round((endMs - startMs) / 86400000) + 1))
     : 3;
   const bookingBoundary = 'TimeSyncher Vacation does not book, reserve, hold, purchase, or complete travel arrangements. Customers verify prices, availability, hours, seasonal details, and terms before booking or relying on any option.';
-  const researchedPlaces = (Array.isArray(payload.researchedThings) ? payload.researchedThings : []).map((thing, index) => trekPlaceFromResearchThing(thing, index, destination, bookingBoundary));
+  const researchedPlaces = cascadeDaySchedule(applyFeasibleTimeline((Array.isArray(payload.researchedThings) ? payload.researchedThings : []).map((thing, index) => trekPlaceFromResearchThing(thing, index, destination, bookingBoundary))));
   const queuePlaces = [
     { key: 'research-lodging', type: 'hotel', name: `${destination} lodging research queue`, day: 1, time: '09:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue multiple lodging/hotel options from public sources with fees, location tradeoffs, availability caveats, and cancellation terms.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },
     { key: 'research-transport', type: 'car', name: `${destination} transport and car research queue`, day: 2, time: '10:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue flights, airport transfers, rental cars, rideshare, transit, and parking logistics when relevant.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },
@@ -351,12 +468,12 @@ for idx, p in enumerate(payload['places']):
     category = type_to_cat.get(p.get('type'), cat['attraction'])
     description = '\n\n'.join([x for x in [p.get('summary'), p.get('details'), payload.get('bookingBoundary')] if x])
     place_id = run(
-        'INSERT INTO places (trip_id, name, description, lat, lng, address, category_id, price, currency, reservation_status, place_time, duration_minutes, notes, website, transport_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        (trip_id, p['name'], description, p.get('lat'), p.get('lng'), p.get('address'), category, p.get('price'), payload['currency'], 'considering', p.get('time'), p.get('duration', 90), p.get('details') or p.get('summary'), p.get('website'), 'driving')
+        'INSERT INTO places (trip_id, name, description, lat, lng, address, category_id, price, currency, reservation_status, place_time, end_time, duration_minutes, notes, website, transport_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        (trip_id, p['name'], description, p.get('lat'), p.get('lng'), p.get('address'), category, p.get('price'), payload['currency'], p.get('status') or 'considering', p.get('time'), p.get('endTime'), p.get('duration', 90), p.get('details') or p.get('summary'), p.get('website'), 'driving')
     )
     day_id = day_map.get(int(p.get('day') or 1))
     if day_id:
-        run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time) VALUES (?, ?, ?, ?, ?, ?)', (day_id, place_id, idx, p.get('summary'), 'considering', p.get('time')))
+        run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time, assignment_end_time) VALUES (?, ?, ?, ?, ?, ?, ?)', (day_id, place_id, idx, p.get('summary'), p.get('status') or 'considering', p.get('time') or None, p.get('endTime') or None))
     if p.get('type') == 'hotel':
         start_day = day_map.get(int(p.get('day') or 1))
         nights = 3 if ('Moana' in p['name'] or 'Royal' in p['name']) else 2
@@ -368,14 +485,15 @@ for idx, p in enumerate(payload['places']):
     thing_fields['place:' + str(place_id)] = {
         'category': p.get('type'),
         'area': p.get('area') or '',
-        'status': 'considering',
+        'status': p.get('status') or 'considering',
         'timeline': True,
         'startTime': p.get('time') or '',
+        'endTime': p.get('endTime') or '',
         'price': str(p.get('price') or ''),
         'summary': p.get('summary') or '',
         'longDetails': p.get('details') or '',
         'website': p.get('website') or '',
-        'travelTime': '',
+        'travelTime': p.get('travelTime') or '',
         'lat': p.get('lat'),
         'lng': p.get('lng'),
         'address': p.get('address') or '',

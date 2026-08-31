@@ -3,12 +3,14 @@ import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 
-async function claimJobs(db, { workerId, limit }) {
+async function claimJobs(db, { workerId, limit, jobId }) {
+  const targetJobId = cleanText(jobId, 80);
   const rows = await db`
     with claimable as (
       select id
       from worker_jobs
       where status in ('pending', 'retry')
+        and (${targetJobId || null}::uuid is null or id = ${targetJobId || null}::uuid)
         and run_after <= now()
         and attempts < max_attempts
       order by priority asc, created_at asc
@@ -32,6 +34,23 @@ async function claimJobs(db, { workerId, limit }) {
       vacation_requests.request_type,
       vacation_requests.request_text,
       vacation_requests.source,
+      vacation_requests.payload as request_payload,
+      (
+        select telegram_sessions.telegram_chat_id
+        from telegram_sessions
+        where telegram_sessions.trip_id = claimed.trip_id
+           or telegram_sessions.customer_id = vacation_requests.customer_id
+        order by telegram_sessions.updated_at desc
+        limit 1
+      ) as telegram_chat_id,
+      (
+        select telegram_sessions.telegram_user_id
+        from telegram_sessions
+        where telegram_sessions.trip_id = claimed.trip_id
+           or telegram_sessions.customer_id = vacation_requests.customer_id
+        order by telegram_sessions.updated_at desc
+        limit 1
+      ) as telegram_user_id,
       (
         select onboarding_sessions.token
         from onboarding_sessions
@@ -201,7 +220,8 @@ export default async function handler(req, res) {
       const url = new URL(req.url || '/', 'https://timesyncher.com');
       const workerId = cleanText(url.searchParams.get('workerId') || 'TimeStopper', 120);
       const limit = Math.max(1, Math.min(10, Number.parseInt(url.searchParams.get('limit') || '1', 10)));
-      const jobs = await claimJobs(db, { workerId, limit });
+      const jobId = cleanText(url.searchParams.get('jobId') || url.searchParams.get('job_id'), 80);
+      const jobs = await claimJobs(db, { workerId, limit, jobId });
       return sendJson(res, 200, { ok: true, jobs });
     }
 

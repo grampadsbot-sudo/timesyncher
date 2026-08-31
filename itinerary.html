@@ -27,6 +27,22 @@
     a { color:#71510c; font-weight:700; }
     pre { white-space:pre-wrap; font:inherit; margin:0; color:#313946; }
     .empty { padding:24px; background:#fff; border:1px dashed var(--line); border-radius:8px; }
+
+    .editor-tools { margin:0 0 18px; }
+    .audio-note { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+    .audio-copy { min-width:0; }
+    .audio-copy b { display:block; font-size:14px; }
+    .audio-copy span { display:block; margin-top:2px; color:var(--muted); font-size:12px; }
+    .record-button { appearance:none; border:0; border-radius:999px; min-height:42px; padding:0 14px; background:#101721; color:#fff; font-weight:800; cursor:pointer; white-space:nowrap; }
+    .record-button:disabled { cursor:not-allowed; opacity:.58; }
+    .record-button.recording { background:#b42318; }
+    .record-dot { display:inline-block; width:9px; height:9px; border-radius:999px; background:#e11d48; margin-right:7px; vertical-align:1px; }
+    .record-button.recording .record-dot { background:#fff; animation:pulse 1s infinite; }
+    .audio-status { min-height:18px; margin-top:8px; color:var(--muted); font-size:12px; }
+    .audio-status.error { color:#b42318; }
+    .audio-status.ok { color:#067647; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+    @media (max-width:620px) { .audio-note { align-items:stretch; flex-direction:column; } .record-button { width:100%; } }
   </style>
 </head>
 <body>
@@ -37,6 +53,15 @@
   </header>
   <main class="wrap">
     <section class="summary" id="summary"></section>
+    <section id="editorTools" class="editor-tools" hidden>
+      <div class="audio-note">
+        <div class="audio-copy">
+          <b>Audio update</b>
+          <span id="audioStatus">Ready to record an itinerary change.</span>
+        </div>
+        <button id="recordButton" class="record-button" type="button"><span class="record-dot"></span>Record update</button>
+      </div>
+    </section>
     <div id="content" class="grid"><div class="empty">Loading itinerary...</div></div>
   </main>
   <script>
@@ -46,6 +71,100 @@
     const order = ['note','transport','hotel','activity','restaurant','shopping','other'];
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const dateText = (value) => value ? new Date(value).toLocaleString([], { dateStyle:'medium', timeStyle:'short' }) : '';
+
+    let tripId = '';
+    let recorder = null;
+    let recordStartedAt = 0;
+    let audioStream = null;
+    let audioChunks = [];
+    const editorTools = document.getElementById('editorTools');
+    const recordButton = document.getElementById('recordButton');
+    const audioStatus = document.getElementById('audioStatus');
+    function setAudioStatus(message, tone = '') {
+      audioStatus.textContent = message;
+      audioStatus.className = `audio-status ${tone}`.trim();
+    }
+    function preferredAudioMimeType() {
+      const options = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+      return options.find((type) => window.MediaRecorder?.isTypeSupported?.(type)) || '';
+    }
+    function blobToDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('Could not read audio note.'));
+        reader.readAsDataURL(blob);
+      });
+    }
+    async function checkAudioAccess(data) {
+      tripId = data.trip?.id || '';
+      if (!tripId || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return;
+      try {
+        const res = await fetch(`/api/vacation-web-access?action=status&tripId=${encodeURIComponent(tripId)}`, { credentials: 'include' });
+        const status = await res.json();
+        const role = String(status.role || '').toLowerCase();
+        const allowedRole = role === 'owner' || role === 'telegram_collaborator' || role === 'web_editor';
+        if (status.ok && status.canEdit && allowedRole) editorTools.hidden = false;
+      } catch {
+        editorTools.hidden = true;
+      }
+    }
+    async function submitAudioNote(blob) {
+      setAudioStatus('Transcribing and queuing update...');
+      recordButton.disabled = true;
+      try {
+        const audioDataUrl = await blobToDataUrl(blob);
+        const durationSeconds = recordStartedAt ? Math.round((Date.now() - recordStartedAt) / 1000) : null;
+        const res = await fetch('/api/vacation-itinerary', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'upload_audio_note', session, audioDataUrl, durationSeconds }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || result.ok === false) throw new Error(result.error || 'Could not send audio update.');
+        setAudioStatus('Queued. TimeSyncher is applying that update.', 'ok');
+      } catch (error) {
+        setAudioStatus(error.message || 'Could not send audio update.', 'error');
+      } finally {
+        recordButton.disabled = false;
+        recordButton.innerHTML = '<span class="record-dot"></span>Record update';
+        recordButton.classList.remove('recording');
+        recordStartedAt = 0;
+      }
+    }
+    async function startRecording() {
+      audioChunks = [];
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = preferredAudioMimeType();
+      recorder = new MediaRecorder(audioStream, mimeType ? { mimeType } : undefined);
+      recorder.addEventListener('dataavailable', (event) => {
+        if (event.data?.size) audioChunks.push(event.data);
+      });
+      recorder.addEventListener('stop', () => {
+        const blob = new Blob(audioChunks, { type: recorder.mimeType || 'audio/webm' });
+        audioStream?.getTracks().forEach((track) => track.stop());
+        audioStream = null;
+        submitAudioNote(blob);
+      }, { once: true });
+      recordStartedAt = Date.now();
+      recorder.start();
+      recordButton.classList.add('recording');
+      recordButton.innerHTML = '<span class="record-dot"></span>Stop and send';
+      setAudioStatus('Recording...');
+    }
+    async function toggleRecording() {
+      if (recorder?.state === 'recording') {
+        recorder.stop();
+        return;
+      }
+      try {
+        await startRecording();
+      } catch (error) {
+        setAudioStatus(error.message || 'Microphone access was blocked.', 'error');
+      }
+    }
+    recordButton.addEventListener('click', toggleRecording);
     function renderThing(thing) {
       const links = Array.isArray(thing.links) ? thing.links : [];
       return `<article class="thing">
@@ -72,6 +191,7 @@
         ['Status', data.trip.status || 'Planning'],
         ['Updated', new Date(data.generatedAt).toLocaleString()]
       ].map(([label, value]) => `<div><span>${label}</span><b>${safe(value)}</b></div>`).join('');
+      checkAudioAccess(data);
       const sections = data.sections || {};
       const html = order.filter((key) => sections[key]?.length).map((key) => `<section><h2>${names[key] || key}</h2><div class="grid">${sections[key].map(renderThing).join('')}</div></section>`).join('');
       document.getElementById('content').innerHTML = html || '<div class="empty">The itinerary is being built. Check back in a few minutes.</div>';

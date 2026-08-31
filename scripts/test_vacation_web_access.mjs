@@ -60,10 +60,18 @@ const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /telegram_launch/);
 assert.match(api, /assert_can_edit/);
+assert.match(api, /upload_audio_note/);
+assert.match(api, /website_audio_note/);
+assert.match(api, /transcribeWebsiteAudioNote/);
 assert.match(api, /set-cookie/);
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
 assert.match(vercel, /vacation-web-access/);
 assert.match(vercel, /webAccess=1/);
+
+const itineraryHtml = await readFile(new URL('../itinerary.html', import.meta.url), 'utf8');
+assert.match(itineraryHtml, /MediaRecorder/);
+assert.match(itineraryHtml, /upload_audio_note/);
+assert.match(itineraryHtml, /vacation-web-access\?action=status/);
 
 const checkout = await readFile(new URL('../addons-checkout.html', import.meta.url), 'utf8');
 assert.match(checkout, /name="planScope"/);

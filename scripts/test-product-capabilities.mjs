@@ -46,13 +46,12 @@ async function assertGeneratedSharedUrlIsReadable(webItineraryUrl) {
 
 const telegramBotSource = fs.readFileSync('./telegram-vacation-intake-bot.mjs', 'utf8');
 const timestopperWorkerSource = fs.readFileSync('./timestopper-worker.mjs', 'utf8');
-const hostedApiSource = fs.readFileSync('../api/vacation-telegram-turn.mjs', 'utf8');
-const dispatchSource = fs.readFileSync('./product-gbrain-dispatch.mjs', 'utf8');
+const workerJobsSource = fs.readFileSync('../api/worker-jobs.mjs', 'utf8');
 assert.equal(telegramBotSource.includes('I do not have enough account detail in this chat message'), false, 'Telegram bridge must not answer account questions before API session/account lookup');
-assert.ok(hostedApiSource.includes('vacationSupportIntentWithModel'), 'Hosted API must own normal text support/account intent classification');
-assert.ok(hostedApiSource.includes('recentConversationContext'), 'Hosted API must build canonical conversation context before classifying support/account turns');
-assert.ok(hostedApiSource.includes('supportIntent?.intent'), 'Hosted API must use typed support intents for normal text turns');
-assert.ok(dispatchSource.includes('currentTurnRouterDecisionModelFirst'), 'Dispatcher must retain model-first support/account routing for worker turns');
+assert.ok(telegramBotSource.includes('isNewVacationAdviceQuestion'), 'Telegram bridge must guard meta/advice questions before queueing vacation work');
+assert.ok(telegramBotSource.includes('isVagueNextStepQuestion'), 'Telegram bridge must guard vague next-step questions before queueing vacation work');
+assert.ok(telegramBotSource.includes('isVacationExistenceQuestion'), 'Telegram bridge must guard vacation existence/state questions before queueing vacation work');
+assert.ok(telegramBotSource.includes('isPersonAccessQuestion'), 'Telegram bridge must guard person access questions before queueing vacation work');
 assert.equal(telegramBotSource.includes('not an instruction to create or update a vacation'), false, 'Telegram bridge customer copy must not explain internal no-write routing');
 assert.equal(telegramBotSource.includes('not changing anything'), false, 'Telegram bridge customer copy must not use robotic no-write disclaimers');
 assert.equal(telegramBotSource.includes('plus two other Telegram editors'), false, 'Telegram pricing copy must not mention retired three-seat collaborator plans');
@@ -65,16 +64,16 @@ assert.ok(
   telegramBotSource.includes('Can my wife Kim change') || telegramBotSource.includes('accessCapabilitiesRequested'),
   'Telegram bridge must cover combined website-change plus media-upload access questions without throwing',
 );
-assert.ok(dispatchSource.includes('I need a direct instruction before I work on a vacation.'), 'Hosted/dispatcher path must answer staging/new-vacation advice questions without bridge preflight');
-assert.ok(dispatchSource.includes('tell me which vacation by name and the change you want made'), 'Hosted/dispatcher path must ask for vacation name/change, not customer-supplied links');
+assert.ok(telegramBotSource.includes('To start a new vacation, send the destination, dates, and priorities.'), 'Telegram bridge must answer staging/new-vacation advice questions without queueing');
+assert.ok(telegramBotSource.includes('tell me which vacation by name and the change you want made'), 'Telegram bridge must ask for vacation name/change, not customer-supplied links');
 assert.equal(telegramBotSource.includes('send the vacation website link and the change'), false, 'Telegram bridge must not ask customers to send vacation website links for vague support turns');
 assert.ok(telegramBotSource.includes('vacationDirectionClarificationCopy'), 'Telegram bridge must centralize start-new/update-existing clarification copy');
-assert.equal(telegramBotSource.includes('bridge_preflight_annotation'), false, 'Telegram bridge must not annotate normal text turns with pre-hosted support decisions');
-assert.equal(telegramBotSource.includes('support-router-queue-bypassed'), false, 'Telegram bridge must not bypass hosted queued work from preflight no-write decisions');
-assert.equal(telegramBotSource.includes('bridge_preflight_no_write_overrides_hosted_queue'), false, 'Telegram bridge must not override hosted queueing with bridge preflight no-write decisions');
+assert.ok(telegramBotSource.includes('hostedNoWriteDecision'), 'Telegram bridge should preserve hosted support decisions instead of owning account/state routing');
+assert.ok(telegramBotSource.includes('supportNoWrite ? null : replyMarkupForTurn(turn)'), 'Telegram bridge must bypass edit reply markup when hosted support says no-write');
+assert.ok(telegramBotSource.includes('supportNoWrite'), 'Telegram bridge must keep an explicit no-write branch for hosted support turns');
 assert.ok(
   telegramBotSource.includes('let reply = hostedReply || ['),
-  'Telegram bridge final reply selection must use hosted API answers before generic delivery fallback copy',
+  'Telegram bridge final reply selection must render hosted API answers ahead of bridge preflight copy',
 );
 assert.equal(
   telegramBotSource.includes('preferBridgeNoWriteReply'),
@@ -108,8 +107,8 @@ assert.ok(
 );
 assert.ok(telegramBotSource.includes('function grokBridgeCustomerRender'), 'Telegram bridge must use bounded Grok rendering for direct no-write account-state replies');
 assert.ok(telegramBotSource.includes('bridgeCustomerCopyLooksSafe'), 'Telegram bridge must validate Grok-rendered direct replies before sending them');
-assert.equal(telegramBotSource.includes('payload.supportRouterDecision'), false, 'Telegram bridge must not inject structured support decisions into the hosted turn API payload');
-assert.ok(telegramBotSource.includes('write_mode'), 'Telegram bridge may read hosted typed decisions but must not create bridge preflight write_mode decisions');
+assert.ok(telegramBotSource.includes('supportRouterDecision'), 'Telegram bridge must pass structured support decisions into the hosted turn API payload');
+assert.ok(telegramBotSource.includes('write_mode'), 'Telegram bridge support preflight must use the typed decision write_mode field');
 assert.ok(telegramBotSource.includes('value === undefined || value === null'), 'Telegram send payload must omit null/undefined optional fields such as reply_markup');
 assert.equal(telegramBotSource.includes('could not queue it yet: ${cleanText(error.message'), false, 'Telegram fallback copy must not echo raw delivery/queue errors to customers');
 assert.ok(telegramBotSource.includes('hit a delivery issue while responding'), 'Telegram fallback copy must use customer-safe delivery failure copy');
@@ -143,13 +142,20 @@ assert.ok(timestopperWorkerSource.includes('spawn(process.execPath, [PRODUCT_GBR
 assert.ok(timestopperWorkerSource.includes('findSupportNoWriteDecision'), 'Worker must silently no-op queued jobs that carry support no-write decisions');
 assert.ok(timestopperWorkerSource.includes('support_router_no_write'), 'Worker no-write guard must preserve support router reason');
 assert.ok(timestopperWorkerSource.includes('timestopper-worker-support-no-write-gate'), 'Worker no-write guard must expose deterministic tooling receipt');
+assert.ok(telegramBotSource.includes('TIMESYNCHER_WORKER_TARGET_TELEGRAM_CHAT_ID'), 'Telegram direct drain must pass the current chat id to the worker');
+assert.ok(telegramBotSource.includes('telegramChatId: cleanText(telegramChatId, 120) || null'), 'Telegram direct drain target file must record the current chat id');
+assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_TARGET_TELEGRAM_CHAT_ID'), 'Worker must recover Telegram chat id from direct-drain env fallback');
+assert.ok(workerJobsSource.includes('vacation_requests.payload as request_payload'), 'Claimed worker jobs must include request payload for final Telegram delivery context');
+assert.ok(workerJobsSource.includes('telegram_sessions.telegram_chat_id'), 'Claimed worker jobs must include Telegram chat id fallback for final response delivery');
+assert.ok(workerJobsSource.includes('telegram_sessions.telegram_user_id'), 'Claimed worker jobs must include Telegram user id fallback for final response delivery');
+const dispatchSource = fs.readFileSync('./product-gbrain-dispatch.mjs', 'utf8');
 assert.ok(dispatchSource.includes('function grokRouterDecision'), 'Product dispatcher must call the Grok intent router before deterministic fallback classification');
 assert.ok(dispatchSource.includes('function currentTurnRouterDecisionModelFirst'), 'Product dispatcher must expose the model-first router entrypoint');
 assert.ok(dispatchSource.includes('function grokCustomerRender'), 'Product dispatcher must let Grok render bounded customer answers from resolved fact packets');
 assert.ok(dispatchSource.includes('customerCopyLooksSafe'), 'Product dispatcher must validate Grok-rendered customer copy before sending it');
 assert.ok(dispatchSource.includes('deterministic_fallback_router'), 'Product dispatcher must label regex/word routing as fallback only');
-assert.equal(telegramBotSource.includes('function vacationSupportRouterPreflightDecision'), false, 'Telegram bridge must not run a local intent router before hosted normal text turns');
-assert.equal(telegramBotSource.includes('model_primary_bridge_preflight'), false, 'Telegram bridge must not record model-primary preflight decisions for normal text turns');
+assert.ok(telegramBotSource.includes('function vacationSupportRouterPreflightDecision'), 'Telegram bridge must use model-first preflight before deterministic fallback');
+assert.ok(telegramBotSource.includes('model_primary_bridge_preflight'), 'Telegram bridge must record model-primary preflight decisions');
 assert.ok(dispatchSource.includes('function makeTurnDecision'), 'Product dispatcher must use a typed turn decision object');
 assert.ok(dispatchSource.includes('write_mode'), 'Typed decision object must include write_mode');
 assert.ok(dispatchSource.includes('tripSelector'), 'Typed decision object must include tripSelector');
@@ -210,6 +216,35 @@ assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'time
 assert.doesNotThrow(() => assertToolingAllowed(['timesyncher-vacation-telegram-collaborators', 'stripe-checkout-addon', 'telegram-collaborator-invite'], capabilities));
 assert.throws(() => assertToolingAllowed(['timesyncher-email-review'], capabilities), /outside allowlist/);
 
+const productVacationCheckout = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
+  input: JSON.stringify({
+    id: randomUUID(),
+    request_id: randomUUID(),
+    request_text: 'i want to buy a vacation',
+  }),
+  encoding: 'utf8',
+  env: {
+    ...TEST_ENV,
+    TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://travel.timesyncher.com',
+    TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE: '1',
+    TIMESYNCHER_WORKER_TOKEN: '',
+  },
+  timeout: 120000,
+  maxBuffer: 2 * 1024 * 1024,
+});
+assert.equal(productVacationCheckout.status, 0, productVacationCheckout.stderr || productVacationCheckout.stdout);
+const productVacationCheckoutResult = JSON.parse(productVacationCheckout.stdout);
+assert.match(productVacationCheckoutResult.customerResponse, /buy TimeSyncher Vacation/i);
+assert.match(productVacationCheckoutResult.customerResponse, /https:\/\/vacation-staging\.timesyncher\.com\/order-test\.html/i);
+assert.doesNotMatch(productVacationCheckoutResult.customerResponse, /advisory-only|actual action yourself|organize and compare itinerary options|bookings themselves/i);
+assert.equal(productVacationCheckoutResult.result.createNewTrip, false);
+assert.equal(productVacationCheckoutResult.result.editApplied, false);
+assert.equal(productVacationCheckoutResult.result.webItineraryUrl, null);
+assert.equal(productVacationCheckoutResult.result.researchSummary.status, 'support_router_no_write');
+assert.equal(productVacationCheckoutResult.result.turnDecision.intent, 'support_question');
+assert.equal(productVacationCheckoutResult.result.turnDecision.write_mode, 'none');
+assert.equal(productVacationCheckoutResult.result.turnDecision.answerMode, 'checkout');
+assert.equal(productVacationCheckoutResult.result.turnInspector.leakScan.ok, true);
 
 const smokeToken = `capability-smoke-${Date.now()}`;
 const smokeJobId = randomUUID();
@@ -340,6 +375,102 @@ assert.equal(linkedAmbiguousResult.result.editApplied, false);
 assert.equal(linkedAmbiguousResult.result.researchSummary.status, 'support_router_no_write');
 assert.equal(linkedAmbiguousResult.result.turnDecision.write_mode, 'none');
 assert.doesNotMatch(linkedAmbiguousResult.customerResponse, /first TimeSyncher Vacation pass is ready/i);
+
+const linkedWebsiteAgain = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
+  input: JSON.stringify({
+    id: randomUUID(),
+    request_id: randomUUID(),
+    share_token: e2e.result.trekSync.token,
+    request_text: 'Can you send me the website link again?',
+    payload: {
+      trip: {
+        title: 'Capability Smoke Trip',
+        shareToken: e2e.result.trekSync.token,
+        url: e2e.result.webItineraryUrl,
+      },
+    },
+  }),
+  encoding: 'utf8',
+  env: {
+    ...TEST_ENV,
+    TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://travel.timesyncher.com',
+    TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE: '1',
+    TIMESYNCHER_WORKER_TOKEN: '',
+  },
+  timeout: 120000,
+  maxBuffer: 2 * 1024 * 1024,
+});
+assert.equal(linkedWebsiteAgain.status, 0, linkedWebsiteAgain.stderr || linkedWebsiteAgain.stdout);
+const linkedWebsiteAgainResult = JSON.parse(linkedWebsiteAgain.stdout);
+assert.match(linkedWebsiteAgainResult.customerResponse, /^Here is the website: https:\/\/travel\.timesyncher\.com\/shared\//);
+assert.equal(linkedWebsiteAgainResult.result.editApplied, false);
+assert.equal(linkedWebsiteAgainResult.result.researchSummary.status, 'support_router_no_write');
+assert.equal(linkedWebsiteAgainResult.result.turnDecision.write_mode, 'none');
+assert.doesNotMatch(linkedWebsiteAgainResult.customerResponse, /update the current vacation website, or start a brand-new vacation/i);
+
+const linkedCurrentTripLookup = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
+  input: JSON.stringify({
+    id: randomUUID(),
+    request_id: randomUUID(),
+    share_token: e2e.result.trekSync.token,
+    request_text: 'What does our current trip say for Friday, including how we get from the hotel to the first stop?',
+    payload: {
+      trip: {
+        title: 'Capability Smoke Trip',
+        shareToken: e2e.result.trekSync.token,
+        url: e2e.result.webItineraryUrl,
+      },
+    },
+  }),
+  encoding: 'utf8',
+  env: {
+    ...TEST_ENV,
+    TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://travel.timesyncher.com',
+    TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE: '1',
+    TIMESYNCHER_WORKER_TOKEN: '',
+  },
+  timeout: 120000,
+  maxBuffer: 2 * 1024 * 1024,
+});
+assert.equal(linkedCurrentTripLookup.status, 0, linkedCurrentTripLookup.stderr || linkedCurrentTripLookup.stdout);
+const linkedCurrentTripLookupResult = JSON.parse(linkedCurrentTripLookup.stdout);
+assert.match(linkedCurrentTripLookupResult.customerResponse, /Here is the website: https:\/\/travel\.timesyncher\.com\/shared\//);
+assert.match(linkedCurrentTripLookupResult.customerResponse, /current trip context|saved vacation website/i);
+assert.equal(linkedCurrentTripLookupResult.result.editApplied, false);
+assert.equal(linkedCurrentTripLookupResult.result.turnDecision.write_mode, 'none');
+assert.doesNotMatch(linkedCurrentTripLookupResult.customerResponse, /update the current vacation website, or start a brand-new vacation/i);
+
+const linkedNewestTimingLookup = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
+  input: JSON.stringify({
+    id: randomUUID(),
+    request_id: randomUUID(),
+    share_token: e2e.result.trekSync.token,
+    request_text: 'On that newest link, keep the taco place we just added as Saturday breakfast and double-check travel minutes so Sunday happy hour still does not crash into anything.',
+    payload: {
+      trip: {
+        title: 'Capability Smoke Trip',
+        shareToken: e2e.result.trekSync.token,
+        url: e2e.result.webItineraryUrl,
+      },
+    },
+  }),
+  encoding: 'utf8',
+  env: {
+    ...TEST_ENV,
+    TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://travel.timesyncher.com',
+    TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE: '1',
+    TIMESYNCHER_WORKER_TOKEN: '',
+  },
+  timeout: 120000,
+  maxBuffer: 2 * 1024 * 1024,
+});
+assert.equal(linkedNewestTimingLookup.status, 0, linkedNewestTimingLookup.stderr || linkedNewestTimingLookup.stdout);
+const linkedNewestTimingLookupResult = JSON.parse(linkedNewestTimingLookup.stdout);
+assert.match(linkedNewestTimingLookupResult.customerResponse, /Here is the website: https:\/\/travel\.timesyncher\.com\/shared\//);
+assert.match(linkedNewestTimingLookupResult.customerResponse, /saved itinerary timing|numeric travel minutes/i);
+assert.equal(linkedNewestTimingLookupResult.result.editApplied, false);
+assert.equal(linkedNewestTimingLookupResult.result.turnDecision.write_mode, 'none');
+assert.doesNotMatch(linkedNewestTimingLookupResult.customerResponse, /update the current vacation website, or start a brand-new vacation/i);
 
 const linkedNewVacation = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
   input: JSON.stringify({

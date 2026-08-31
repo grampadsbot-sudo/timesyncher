@@ -4,7 +4,7 @@ import { sql } from '../src/vacation/db.mjs';
 import { buildOnboardingFromStripe } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 import { markCollaboratorInvitePaid } from '../src/vacation/collaborators.mjs';
-import { ownerMediaAddOns, recordOwnerMediaPurchase } from '../src/vacation/media-checkout.mjs';
+import { accountUpgradeAddOns, ownerMediaAddOns, recordAccountUpgradePurchase, recordOwnerMediaPurchase } from '../src/vacation/media-checkout.mjs';
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -67,6 +67,38 @@ export default async function handler(req, res) {
           inviteId: metadata.invite_id,
           planCode: metadata.plan_code,
           emailStatus: email.status,
+        });
+        return send(res, 200, { ok: true, received: true, type: event.type });
+      }
+      if (metadata.product === 'timesyncher_vacation_account_upgrade') {
+        const upgrade = accountUpgradeAddOns({
+          photoUpload: metadata.photo_memories === 'true',
+          videoUpload: metadata.video_memories === 'true',
+        });
+        const purchase = await recordAccountUpgradePurchase({
+          db,
+          contact: {
+            email: paymentIntent.receipt_email || metadata.email || '',
+            firstName: metadata.first_name || '',
+            lastName: metadata.last_name || '',
+          },
+          upgrade,
+          amountCents: paymentIntent.amount_received || paymentIntent.amount || upgrade.amountCents,
+          currency: paymentIntent.currency || 'usd',
+          status: 'paid',
+          stripeCustomerId: typeof paymentIntent.customer === 'string' ? paymentIntent.customer : paymentIntent.customer?.id || null,
+          stripePaymentIntentId: paymentIntent.id,
+          metadata: {
+            paidVia: 'stripe_payment_element',
+            stripePaymentIntentId: paymentIntent.id,
+            source: 'account_upgrade_payment_element',
+          },
+        });
+        console.log('TimeSyncher account upgrade payment succeeded', {
+          paymentIntentId: paymentIntent.id,
+          orderId: purchase.orderId,
+          amount: purchase.amountCents,
+          currency: purchase.currency,
         });
         return send(res, 200, { ok: true, received: true, type: event.type });
       }

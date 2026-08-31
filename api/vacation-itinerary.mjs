@@ -2,6 +2,7 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createWebEditorInvite,
@@ -12,6 +13,198 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+
+
+const MAX_WEBSITE_AUDIO_NOTE_BYTES = 3 * 1024 * 1024;
+
+function parseAudioDataUrl(value) {
+  const raw = String(value || '');
+  if (!raw) throw Object.assign(new Error('Audio note is required.'), { statusCode: 400 });
+  const match = raw.match(/^data:([a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*);base64,([a-z0-9+/=\r\n]+)$/i);
+  if (!match) throw Object.assign(new Error('Audio note must be a base64 data URL.'), { statusCode: 400 });
+  const mimeType = cleanText(match[1].toLowerCase(), 80);
+  if (!/^(audio|video)\//.test(mimeType)) throw Object.assign(new Error('Audio note must use an audio MIME type.'), { statusCode: 400 });
+  const base64 = match[2].replace(/\s/g, '');
+  const bytes = Buffer.from(base64, 'base64');
+  if (!bytes.length) throw Object.assign(new Error('Audio note was empty.'), { statusCode: 400 });
+  if (bytes.length > MAX_WEBSITE_AUDIO_NOTE_BYTES) {
+    throw Object.assign(new Error('Audio note is too large. Please keep recordings under about 45 seconds.'), { statusCode: 413 });
+  }
+  return { bytes, mimeType };
+}
+
+function audioExtension(mimeType = '') {
+  if (mimeType.includes('mpeg') || mimeType.includes('mp3')) return 'mp3';
+  if (mimeType.includes('mp4') || mimeType.includes('m4a')) return 'm4a';
+  if (mimeType.includes('ogg')) return 'ogg';
+  if (mimeType.includes('wav')) return 'wav';
+  return 'webm';
+}
+
+async function transcribeWebsiteAudioNote({ bytes, mimeType }) {
+  const apiKey = process.env.TIMESYNCHER_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '';
+  if (!apiKey) throw Object.assign(new Error('Website audio note transcription is not configured yet.'), { statusCode: 503 });
+  const model = process.env.TIMESYNCHER_STT_MODEL || 'whisper-1';
+  const form = new FormData();
+  form.append('model', model);
+  form.append('file', new Blob([bytes], { type: mimeType }), `website-audio-note.${audioExtension(mimeType)}`);
+  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${apiKey}` },
+    body: form,
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw Object.assign(new Error(json.error?.message || `Website audio note transcription failed with ${response.status}.`), { statusCode: 502 });
+  const text = cleanText(json.text, 12000);
+  if (!text) throw Object.assign(new Error('Website audio note transcription returned empty text.'), { statusCode: 422 });
+  return { text, model };
+}
+
+async function loadItinerarySession(db, token) {
+  const sessions = await db`
+    select
+      onboarding_sessions.token,
+      onboarding_sessions.customer_id,
+      onboarding_sessions.trip_id,
+      trips.customer_id as owner_customer_id,
+      trips.title,
+      trips.destination,
+      customers.display_name,
+      customers.first_name,
+      customers.last_name
+    from onboarding_sessions
+    join trips on trips.id = onboarding_sessions.trip_id
+    left join customers on customers.id = onboarding_sessions.customer_id
+    where onboarding_sessions.token = ${token}
+    limit 1
+  `;
+  return sessions[0] || null;
+}
+
+async function loadItinerarySessionByShareToken(db, shareToken) {
+  const token = cleanText(shareToken, 240);
+  if (!token) return null;
+  const sessions = await db`
+    select
+      onboarding_sessions.token,
+      onboarding_sessions.customer_id,
+      onboarding_sessions.trip_id,
+      trips.customer_id as owner_customer_id,
+      trips.title,
+      trips.destination,
+      customers.display_name,
+      customers.first_name,
+      customers.last_name
+    from trips
+    left join onboarding_sessions on onboarding_sessions.trip_id = trips.id
+    left join customers on customers.id = trips.customer_id
+    where
+      trips.metadata->>'sharedToken' = ${token}
+      or trips.metadata->>'shareToken' = ${token}
+      or trips.metadata->>'publicSlug' = ${token}
+      or trips.metadata->>'source_token' = ${token}
+      or trips.metadata->>'slug' = ${token}
+    order by onboarding_sessions.updated_at desc nulls last
+    limit 1
+  `;
+  return sessions[0] || null;
+}
+
+async function handleWebsiteAudioNote(req, res, db, body) {
+  const token = cleanText(body.session || body.token, 160);
+  const shareToken = cleanText(body.shareToken || body.publicSlug, 240);
+  if (!token && !shareToken) throw Object.assign(new Error('session or shareToken is required.'), { statusCode: 400 });
+  const session = token
+    ? await loadItinerarySession(db, token)
+    : await loadItinerarySessionByShareToken(db, shareToken);
+  if (!session) throw Object.assign(new Error('Itinerary not found.'), { statusCode: 404 });
+  const access = token
+    ? await requireWebEditAccess(db, req, {
+      tripId: session.trip_id,
+      ownerCustomerId: session.owner_customer_id,
+      env: process.env,
+    })
+    : { ok: true, role: 'shared_link', grant: null };
+  const parsed = parseAudioDataUrl(body.audioDataUrl || body.audio?.dataUrl);
+  const durationValue = Number(body.durationSeconds || body.audio?.durationSeconds);
+  const durationSeconds = Number.isFinite(durationValue) ? Math.max(0, Math.round(durationValue)) : null;
+  const transcription = await transcribeWebsiteAudioNote(parsed);
+  const payload = {
+    websiteAudioNote: {
+      mimeType: parsed.mimeType,
+      fileSizeBytes: parsed.bytes.length,
+      durationSeconds,
+      transcriptionModel: transcription.model,
+      webAccessRole: access.role,
+      webAccessGrantId: access.grant?.id || null,
+      submittedAt: new Date().toISOString(),
+      userAgent: cleanText(req.headers['user-agent'], 300) || null,
+    },
+    transcribedFromWebsiteAudio: true,
+  };
+  const normalizedIntent = {
+    source: 'website_audio_note',
+    intent: 'itinerary_update_from_audio_note',
+    role: access.role,
+  };
+  const requestRows = await db`
+    insert into vacation_requests (
+      customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
+      status, queued_at
+    )
+    values (
+      ${session.customer_id}, ${session.trip_id}, 'website_audio_note', 'itinerary_research_update',
+      ${transcription.text}, ${normalizedIntent}, ${payload}, 'queued', now()
+    )
+    returning id, queued_at
+  `;
+  const requestId = requestRows[0].id;
+  const turnTag = classifyTurn({
+    text: transcription.text,
+    speaker: 'customer',
+    direction: 'inbound',
+    channel: 'website_audio_note',
+    payload,
+  });
+  await db`
+    insert into transcript_turns (
+      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+      turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
+    )
+    values (
+      ${session.customer_id}, ${session.trip_id}, ${requestId}, 'customer', 'website_audio_note',
+      ${transcription.text}, ${payload}, 'inbound',
+      ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
+    )
+  `;
+  await db`
+    insert into vacation_request_events (request_id, event_type, actor, details)
+    values
+      (${requestId}, 'website_audio_note_transcribed', 'website', ${payload}),
+      (${requestId}, 'queued', 'system', ${normalizedIntent})
+  `;
+  const jobRows = await db`
+    insert into worker_jobs (request_id, trip_id, job_type, input)
+    values (${requestId}, ${session.trip_id}, 'itinerary_research_update', ${{
+      customerId: session.customer_id,
+      tripId: session.trip_id,
+      requestId,
+      source: 'website_audio_note',
+      requestType: 'itinerary_research_update',
+      requestText: transcription.text,
+      payload,
+    }})
+    returning id
+  `;
+  return sendJson(res, 201, {
+    ok: true,
+    status: 'queued',
+    requestId,
+    jobId: jobRows[0].id,
+    transcript: transcription.text,
+    queuedAt: requestRows[0].queued_at,
+  });
+}
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -127,6 +320,12 @@ export default async function handler(req, res) {
       return await handleWebAccess(req, res, db, url);
     }
 
+    if (req.method === 'POST') {
+      const body = await readJson(req);
+      if (body.action === 'upload_audio_note') return await handleWebsiteAudioNote(req, res, db, body);
+      return sendJson(res, 404, { ok: false, error: 'unknown itinerary action' });
+    }
+
     if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
     const token = cleanText(url.searchParams.get('session') || url.searchParams.get('token'), 160);
     if (!token) return sendJson(res, 400, { ok: false, error: 'session is required.' });
@@ -220,6 +419,7 @@ export default async function handler(req, res) {
     return sendJson(res, 200, {
       ok: true,
       trip: {
+        id: session.trip_id,
         title: session.title,
         destination: session.destination,
         startDate: session.start_date,

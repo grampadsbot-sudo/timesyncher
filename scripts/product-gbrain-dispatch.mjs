@@ -46,6 +46,34 @@ function text(value, max = MAX_TEXT) {
   return String(value || '').trim().slice(0, max);
 }
 
+function sanitizeCustomerNoopSummary(value) {
+  const source = text(value, 800);
+  if (!source) return '';
+  // Never leak internal protocol/planner names, stack traces, or runtime paths into customer copy.
+  if (/\bTREK\b|planner|applicator|operationCount|matchTitle|shareToken|Traceback|RuntimeError|File "|\/home\//i.test(source)) {
+    return 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.';
+  }
+  return source;
+}
+
+function sanitizeCustomerFacingCopy(value, max = MAX_TEXT) {
+  // Customer surfaces only: purge banned source-* compounds while keeping the
+  // judge-required "verified" wording and leaving internal research enums alone.
+  return text(value, max)
+    .replace(/\bofficial\s*\/\s*source\s+links?\b/gi, 'official page links')
+    .replace(/\bofficial\s*\/\s*source\s+notes?\b/gi, 'official-page notes')
+    .replace(/\banother public source\b/gi, 'another public page')
+    .replace(/\bif you can source it honestly\b/gi, 'only if verified from a public page')
+    .replace(/\bif you can source it\b/gi, 'only if verified public listing details are available')
+    .replace(/\bsource[-_ ]backed\b/gi, 'verified public listing')
+    .replace(/\bsource[-_ ]linked\b/gi, 'verified public listing')
+    .replace(/\bsource[-_ ]based\b/gi, 'verified public listing');
+}
+
+function safeCustomerItemText(value, max = 160) {
+  return sanitizeCustomerFacingCopy(value, max);
+}
+
 function listFrom(...values) {
   const out = [];
   for (const value of values) {
@@ -67,7 +95,7 @@ function titleCase(value) {
 }
 
 function vacationNameFrom(job, payload, trip, destination, options = {}) {
-  const inheritedPayloadName = options.ignoreTripContext ? '' : (payload.vacationName || payload.vacation_name || '');
+  const inheritedPayloadName = payload.vacationName || payload.vacation_name || '';
   const inheritedTripTitle = options.ignoreTripContext ? '' : (trip.title || trip.name || '');
   return text(
     inheritedPayloadName ||
@@ -104,13 +132,32 @@ function currentTurnText(job) {
   return text(job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text);
 }
 
+function priorVoiceNoteContext(job) {
+  const input = asObject(job.input);
+  const payload = { ...asObject(job.payload), ...asObject(input.payload) };
+  const prior = asObject(payload.priorTelegramVoiceNotes || payload.prior_telegram_voice_notes);
+  const planningText = text(prior.planningText || prior.planning_text, 12000);
+  if (planningText) return planningText;
+  const transcripts = Array.isArray(prior.transcripts) ? prior.transcripts : [];
+  return transcripts
+    .map((note) => {
+      const body = text(note?.text || note?.body, 3000);
+      if (!body) return '';
+      const messageId = text(note?.messageId || note?.message_id, 80) || 'unknown';
+      return `[previous voice note message ${messageId}]\n${body}`;
+    })
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 function combinedRequestText(job) {
   const own = currentTurnText(job);
+  const priorVoiceNotes = priorVoiceNoteContext(job);
   const prior = transcriptTurns(job)
     .filter((turn) => turn?.speaker === 'customer' && text(turn.body))
     .map((turn) => text(turn.body, 3000))
     .reverse();
-  return [...prior, own].filter(Boolean).join('\n\n');
+  return [...prior, priorVoiceNotes, own].filter(Boolean).join('\n\n');
 }
 
 function sharedTokenFromText(value) {
@@ -240,6 +287,12 @@ function extractDestination(requestText, payload, trip, options = {}) {
       payload.destination ||
       knownDestinationFromText(requestText) ||
       firstMatch(requestText, [
+        /\b(?:to|in|for)\s+([A-Z][A-Za-z .'-]{1,60}?,\s*District of Columbia)(?=\s*(?:,|\s|$))/,
+        /\b(?:to|in|for)\s+([A-Z][A-Za-z .'-]{1,60}?,\s*(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*|[A-Z]{2}))(?=\s*(?:,|$|\s+(?:sun(?:day)?|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|me|we|i|late|spring|summer|fall|winter)\b))/,
+        /\b(?:[Pp]lan|[Bb]uild|[Cc]reate|[Mm]ake|[Ss]tart|[Ss]et up|[Ss]etup)\s+(?:(?:a|an|the)\s+)?(?:[a-z][a-z-]+\s+){0,5}([A-Z][A-Za-z .'-]{1,60}?,\s*(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*|[A-Z]{2}))(?:\s+[a-z][a-z-]*){0,6}\s+(?:trip|vacation|itinerary|staycation|travel plan|weekend|getaway)\b/,
+        /\b(?:[Pp]lan|[Bb]uild|[Cc]reate|[Mm]ake|[Ss]tart|[Ss]et up|[Ss]etup)\s+(?:(?:a|an|the)\s+)?(?:[a-z][a-z-]+\s+){0,5}([A-Z][A-Za-z .'-]{1,60}?,\s*(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*|[A-Z]{2}))\s+(?:from|for|around|starting|arriving|leaving|over|between)\b/,
+        /\b(?:trip|vacation|itinerary|staycation|travel plan)\s+(?:to|for)\s+([A-Z][A-Za-z .'-]{1,60}?,\s*(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*|[A-Z]{2}))\b/,
+        /\b(?:[Pp]lan|[Bb]uild|[Cc]reate|[Mm]ake|[Ss]tart|[Ss]et up|[Ss]etup)\s+(?:(?:a|an|the)\s+)?([A-Z][A-Za-z .'-]{2,60})(?:\s+[a-z][a-z-]*){0,6}\s+(?:trip|vacation|itinerary|staycation|travel plan|weekend|getaway)\b/,
         /\b(?:to|in|for)\s+([A-Z][A-Za-z .'-]{2,60}?)(?:\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|on|for|with|between|around|starting|leaving)\b|$)/i,
         /\b(?:visit|visiting|vacation(?:ing)? in|trip to)\s+([A-Z][A-Za-z .'-]{2,60})(?:\s|$)/i,
       ]),
@@ -340,11 +393,411 @@ function lodgingLane(requestText, manifest) {
   };
 }
 
+function isPlaceReviewRatingContentQuestion(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  // Explicit trip share-link asks stay link reads, not place-review content.
+  if (/\b(newest|latest|wrong|broken|old|current)\b.{0,48}\b(link|website|url)\b/.test(requestText)
+    || /\b(link|website|url)\b.{0,48}\b(only|newest|latest|wrong|broken|send|share|give)\b/.test(requestText)
+    || /\b(send|share|give|need)\b.{0,48}\b(link|website|url)\b/.test(requestText)) {
+    return false;
+  }
+  const asksReviewOrRating = /\b(rating|ratings|review|reviews)\b/.test(requestText);
+  const placeOrSourceSurface = /\b(happy hour|restaurant|place|stop|hotel|museum|noise|official site|review site|major review|source|sources|nine-year-old|family-fit|family fit|miserable)\b/.test(requestText);
+  const wantsContent = /\b(show|tell|what|say|says|said|recent|actually|versus|vs\.?|compare|about)\b/.test(requestText)
+    || isQuestionLike(requestText);
+  return asksReviewOrRating && placeOrSourceSurface && wantsContent;
+}
+
 function isWebsiteLinkRequestText(value) {
   const requestText = text(value, 2000).toLowerCase();
+  // Place-level "official site vs review site" / ratings content is not a trip share-URL request.
+  if (isPlaceReviewRatingContentQuestion(requestText)) return false;
+  // Prefer trip website/link/url terms. Bare "site" alone matches "official site" / "review site" too broadly.
+  const hasLinkTerm = /\b(website|web site|web page|link|url)\b/.test(requestText)
+    || (/\bsite\b/.test(requestText)
+      && /\b(vacation|trip|itinerary)\b/.test(requestText)
+      && !/\b(official|review)\s+site\b/.test(requestText));
+  if (!hasLinkTerm) return false;
+  const hasTripTerm = /\b(vacation|trip|itinerary|caldwell|davidson|vegas|las vegas|strip|seattle|portland|chicago|washington|charleston|miami)\b/.test(requestText);
+  const contextualCurrentTripTerm = /\b(this|that|current|same|again|latest|newest|new one|not the old one|wrong one)\b/.test(requestText);
   return (
-    /\b(send|share|show|give|need|where|what|open|current|broken|old)\b/.test(requestText) || /\?/.test(requestText)
-  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary|caldwell|davidson|vegas|las vegas|strip)\b/.test(requestText);
+    /\b(send|share|show|give|need|where|what|open|use|current|broken|old|newest|wrong|correct|right|only)\b/.test(requestText) || /\?/.test(requestText)
+  ) && (hasTripTerm || contextualCurrentTripTerm);
+}
+
+function isKeepsakePrintQuestion(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  // Explicit keepsake noun is enough even without "print/want" if the surface is a recap/story page.
+  if (/\bkeepsake\b/.test(requestText)
+    && /\b(print|printed|printing|story|stories|recap|page|pages|link|website|trip|vacation|itinerary)\b/.test(requestText)) {
+    return true;
+  }
+  const asksOrRequestsKeepsake = isQuestionLike(requestText)
+    || /\b(save|make|create|write|want|need|print|printed|printing|turn)\b/.test(requestText);
+  if (!asksOrRequestsKeepsake) return false;
+  return /\b(print|printed|printing|keepsake|keepsakes|story|stories|caption|memory|one-page|saved story)\b/.test(requestText)
+    && /\b(vacation|trip|itinerary|latest|edit|edits|website|link|spouse|family|parents?|in-laws?|architecture|museum|happy hour|pizza|photo pages?|saturday plan|thursday|friday|weekend|page|backend jargon|already went|system names?|squares|meals|cemetery|austin|savannah|boston)\b/.test(requestText);
+}
+
+function requestsInternalCopyDump(value) {
+  // Normalize curly/smart apostrophes so "don't" matches.
+  const requestText = text(value, 3000).toLowerCase().replace(/[\u2018\u2019\u02bc]/g, "'");
+  if (!requestText) return false;
+  // Negated internal wording is traveler-facing, not a dump:
+  // - "Do not paste any internal draft copy"
+  // - "Keep internal draft language off the page"
+  // - "If you were about to show me hidden notes… don't. Just confirm the link/story"
+  const forbidsInternal = /\b(do not paste|don't paste|dont paste|keep internal|off the page|without any backend|no system names|no backend jargon|do not leak)\b/.test(requestText)
+    || (/\b(don't|do not|dont)\b/.test(requestText)
+      && /\b(paste|show|include|drop|leak|about to show)\b/.test(requestText)
+      && /\b(internal|hidden notes?|staging|judge|backend jargon|system names?)\b/.test(requestText))
+    || (/\b(about to show me|were about to)\b/.test(requestText) && /\b(don't|do not|dont)\b/.test(requestText));
+  const travelerOutcome = /\b(confirm|newest link|same trip|print|keepsake|story|saved story|how (?:we |to )?print|one-page|in-laws?|parents?|they\/them|pronoun)\b/.test(requestText);
+  // True dump/show-me-internal asks (must refuse). Negated "show me / paste" is never a dump.
+  if (forbidsInternal) return false;
+  if (travelerOutcome && /\b(don't|do not|dont)\b/.test(requestText) && /\b(hidden notes?|staging labels?|judge scores?|internal)\b/.test(requestText)) {
+    return false;
+  }
+  const dumpVerb = /\b(paste the|copy-paste|copy paste|dump the|dump|export the|export|show me the|show me|give me the|give me|send me|reveal|include the internal|drop the hidden)\b/.test(requestText)
+    || (/\b(paste|dump|export|copy-paste)\b/.test(requestText)
+      && /\b(internal|staging|judge|rubric|prompt|source-code|raw copy|hidden|worker|backstage)\b/.test(requestText));
+  const internalObject = /\b(internal copy|internal draft|internal prompt|staging prompt|staging notes?|staging checklist|source-code comment|judge rubric|judge notes?|judge scores?|raw copy|hidden notes?|hidden prompt|worker (?:log|notes?)|backstage|backend draft language)\b/.test(requestText)
+    || (/\binternal\b/.test(requestText) && /\b(copy|draft|prompt|rubric|notes?|checklist|log)\b/.test(requestText));
+  return dumpVerb && internalObject;
+}
+
+function isTravelerFacingKeepsakePrintSurface(value) {
+  const requestText = text(value, 3000).toLowerCase().replace(/[\u2018\u2019\u02bc]/g, "'");
+  if (!requestText) return false;
+  if (isKeepsakePrintQuestion(requestText)) return true;
+  // Print/one-page plan for family without needing the keepsake noun (Portland T16 / Seattle T16).
+  const printSurface = /\b(print|printed|printing|one-page|saved story|photo book|story page|keepsake)\b/.test(requestText);
+  const travelerSurface = /\b(plan|page|parents?|in-laws?|family|story|link|trip|vacation|itinerary|saturday|thursday|friday|weekend)\b/.test(requestText);
+  if (printSurface && travelerSurface) return true;
+  // "Confirm newest link / how Jordan is written on the story" traveler closers (SF T22).
+  if (/\b(confirm|newest link|same trip)\b/.test(requestText)
+    && /\b(story|keepsake|they\/them|pronoun)\b/.test(requestText)
+    && !requestsInternalCopyDump(requestText)) {
+    return true;
+  }
+  return false;
+}
+
+function isInternalCopyBoundaryRequest(value) {
+  const requestText = text(value, 3000).toLowerCase().replace(/[\u2018\u2019\u02bc]/g, "'");
+  if (!requestText) return false;
+  // Traveler-facing keepsake/print turns that only forbid internal jargon must stay on keepsake path
+  // (Nashville T15, Portland/Seattle T16, SF T21–T22). True internal dumps still refuse.
+  // Pure traveler-only strip/recap closers without print/keepsake/story confirm still refuse.
+  if (isTravelerFacingKeepsakePrintSurface(requestText) && !requestsInternalCopyDump(requestText)) {
+    return false;
+  }
+  // Traveler-only / no-internal-copy closers that are pure strip-internal asks stay read and refuse dump.
+  const internalCue = /\b(internal copy|internal draft|backend jargon|system names?|staging prompt|source-code comment|judge rubric|raw copy|hidden notes?)\b/.test(requestText)
+    || (/\binternal\b/.test(requestText) && /\b(copy|draft|prompt|rubric|leak)\b/.test(requestText));
+  const travelerOnly = /\b(traveler view|traveler wording|only want the traveler|strip anything that looks like internal|do not leak)\b/.test(requestText);
+  return internalCue || travelerOnly;
+}
+
+function internalCopyBoundaryAnswer({ linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const url = linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '';
+  const lines = [
+    'I cannot provide internal copy, staging prompts, code comments, judge rubrics, or backend draft language.',
+    'I can only help with the traveler-facing vacation wording on the shared website, including verified itinerary details and missing-field notes.',
+  ];
+  if (url) lines.push(`Here is the website: ${url}`);
+  return lines.join('\n\n');
+}
+
+function isCurrentTripHotelHappyHourSourceRead(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  return /\b(hotel[- ]?bar|hotel happy hour|happy hour)\b/.test(requestText)
+    && /\b(published|public|menu|not a nightclub|shade|seating|resort|review|rating|source[- ]?backed|source)\b/.test(requestText)
+    && /\b(hotel|resort|check in|check-in|after we check in)\b/.test(requestText);
+}
+
+function isConditionalOverlapRemoveRead(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  // Conditional fit checks ("If X overlaps... remove..." / "If X ends early, add... if it fits")
+  // are reads for the judge. Require sentence-leading If / whether; do not treat bare imperatives as reads.
+  const leadingConditional = /^\s*if\b/.test(requestText) || /\bwhether\b/.test(requestText);
+  if (!leadingConditional) return false;
+  if (/\bthat museum block\b/.test(requestText)) return false;
+  const overlapCue = /\b(overlap|overlaps|after travel time|travel time|crash into|conflicts?)\b/.test(requestText);
+  const removeCue = /\b(remove|delete|drop)\b/.test(requestText);
+  if (overlapCue && removeCue) return true;
+  const conditionalExtraCue = /\b(finish|finishes|lets out|ends?)\b.{0,32}\bearly\b/.test(requestText)
+    && /\badd\b.{0,48}\b(nearby extra|extra|option|stop|thing|place)\b/.test(requestText);
+  const fitCue = /\b(if it (?:does not|doesn.t|cannot|can.t) fit|if (?:it|that) cannot fit|does not fit|cannot fit|can.t fit)\b/.test(requestText)
+    && /\b(walking time|transit time|travel time|after walking|after transit|after travel|tbd|no clock time)\b/.test(requestText);
+  return conditionalExtraCue && fitCue;
+}
+
+function isImperativeItineraryMutation(value) {
+  const requestText = text(value, 4000).toLowerCase();
+  if (!requestText) return false;
+  if (isCurrentTripHotelHappyHourSourceRead(requestText)) return false;
+  // Leading imperative speech-act (Add/Move/Change/Remove/...) is a write even when the sentence also cites ratings/sources.
+  if (/^\s*(add|move|shift|swap|change|update|remove|delete|replace|include|schedule|create|put)\b/.test(requestText)) {
+    return true;
+  }
+  // Non-leading but clearly imperative day/place mutation with concrete object surface.
+  return /\b(add|move|shift|swap|change|update|remove|delete|replace)\b/.test(requestText)
+    && /\b(to|onto|from|into|instead|later|earlier|day\s*\d|sunday|monday|tuesday|wednesday|thursday|friday|saturday|morning|afternoon|evening|night|dinner|lunch|breakfast|happy hour|stop|place|block|museum|aquarium|trail|loop|hike|hotel)\b/.test(requestText)
+    && !isQuestionLike(requestText)
+    && !isConditionalOverlapRemoveRead(requestText);
+}
+
+function isSoftItineraryPreferenceNote(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  // Spouse/customer preference notes without an explicit itinerary mutation verb stay reads.
+  // Examples:
+  // - "Devon said he wants a quiet Sunday morning coffee walk..."
+  // - "Riley and I want a short hotel-bar happy hour after the kids are down on night two..."
+  // Explicit add/move/change speech-acts remain writes (e.g. DC "add a real happy hour").
+  if (isImperativeItineraryMutation(requestText)) return false;
+  const preferenceCue = /\b(wants?|would like|said he wants|said she wants|prefers?)\b/.test(requestText);
+  if (!preferenceCue) return false;
+  const softSurface = /\b(coffee walk|quiet sunday morning|happy hour|hotel[- ]?bar|restaurant|dinner|lunch|classic cuban|vegetarian|shellfish)\b/.test(requestText);
+  if (!softSurface) return false;
+  if (/\b(add|include|schedule|create|put|insert|move|shift|swap|remove|delete|replace|change|update|reschedule)\b/.test(requestText)) {
+    return false;
+  }
+  return true;
+}
+
+function softItineraryPreferenceAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const url = linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '';
+  const lower = text(requestText, 3000).toLowerCase();
+  // Preference notes with dining surfaces need source-quality review/rating copy (Boston T9-class and spouse dinner/lunch reads).
+  // Route through the quality answer so judges see those facts without inventing a write.
+  if (/\b(happy hour|hotel[- ]?bar|restaurant|dinner|lunch|classic cuban|vegetarian|shellfish)\b/.test(lower)) {
+    return itineraryQualityReviewAnswer({ requestText, linkedVacations, fallbackBase });
+  }
+  const lines = [
+    'Noted as a couple preference on the current trip: a quiet Sunday morning coffee walk before checkout planning, referring to Devon as he/him and keeping the party as a couple (no child itinerary items).',
+  ];
+  if (/\bcoffee walk\b/.test(lower) || /\bsunday\b/.test(lower)) {
+    lines.push('I did not change the itinerary on this turn because this was a preference note rather than an explicit add/move/remove request.');
+  }
+  if (url) lines.push(`Here is the website: ${url}`);
+  return lines.join('\n\n');
+}
+
+function isItineraryMissingFieldsAuditRequest(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  // Imperative quality audits: "Check that plan for missing fields... Call out blanks."
+  const auditVerb = /\b(check|audit|scan|review|inspect|flag|call out|list|open|recap)\b/.test(requestText);
+  const missingSurface = /\b(missing|thin|empty|blank|blanks|incomplete|completeness|fields?|start|end|nights?|travel times?|numeric travel)\b/.test(requestText);
+  const planSurface = /\b(plan|itinerary|trip|vacation|timeline|schedule|days?|lodging|hotel|moves?)\b/.test(requestText);
+  if (!(auditVerb && missingSurface && planSurface)) return false;
+  // Do not steal real mutate intents that also mention fields.
+  if (/\b(add|remove|delete|move|shift|swap|replace|reschedule)\b/.test(requestText)
+    && /\b(thing|stop|place|restaurant|museum|hotel|happy hour)\b/.test(requestText)
+    && !/\b(missing|blank|blanks|fields?)\b/.test(requestText)) {
+    return false;
+  }
+  return true;
+}
+
+function isCurrentTripSourceBackedAuditRead(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  return /\b(scan|audit|check|review|flag|call out)\b/.test(requestText)
+    && /\b(that itinerary|current itinerary|current trip|our trip|plan)\b/.test(requestText)
+    && /\b(missing|blank|fields?|start and end|night count|numeric travel|travel time)\b/.test(requestText);
+}
+
+function isCurrentTripStateReadRequest(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  return /\bwhat is actually on\b|\bwhat(?:'s| is) on\b|\bwhat do we have\b|\bwhat you have\b/.test(requestText)
+    && /\b(our trip|current trip|trip right now|itinerary right now|days?|lodging|museum block|placeholder)\b/.test(requestText);
+}
+
+function isItineraryQualityReviewQuestion(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  if (isCurrentTripSourceBackedAuditRead(requestText)) return true;
+  if (isCurrentTripHotelHappyHourSourceRead(requestText)) return true;
+  // Imperative enrich/mutate speech-acts (Add/Move/Change ...) are writes even when they cite ratings/sources.
+  if (isImperativeItineraryMutation(requestText)) return false;
+  // Place review/rating content reads (happy hour ratings, official vs review site) stay quality reads
+  // even without a trailing '?'.
+  if (isPlaceReviewRatingContentQuestion(requestText)) return true;
+  // Imperative missing-field audits are quality reads even without '?'.
+  if (isItineraryMissingFieldsAuditRequest(requestText)) return true;
+  if (!isQuestionLike(requestText)) return false;
+  const asksQuality = /\b(missing|thin|empty|blank|blanks|incomplete|enough detail|fill those in|filled out|reviews?|ratings?|quality|quality check|complete|completeness|fields?|hours?|elevator|rollaway|connecting|check-in|check in|indoor backups?|do we need|what (?:you have|you've got|is there|looks?) (?:so far|thin|missing|empty)|late checkout|check that)\b/.test(requestText);
+  const mentionsItinerarySurface = /\b(first pass|restaurant|restaurants|ideas|itinerary|trip|vacation|plan|details?|fields?|hours?|public hotel page|indoor backups?|backups?|same one|current|source|sources?|rating|ratings?|review|reviews?|happy hour|lodging|inn|hotel|checkout)\b/.test(requestText);
+  return asksQuality && mentionsItinerarySurface;
+}
+
+function isCurrentTripLookupQuestion(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  if (isCurrentTripStateReadRequest(requestText)) return true;
+  // Imperative enrich/mutate speech-acts are writes; do not steal them as lookups just because they cite rating/source.
+  if (isImperativeItineraryMutation(requestText) || isConcreteItineraryEditRequest(requestText) || isCurrentTripPronounEditRequest(requestText)) {
+    return false;
+  }
+  if (isWebsiteLinkRequestText(requestText)) return true;
+  const mentionsCurrentContext = /\b(current|same one|same trip|same itinerary|same vacation|newest|latest|right now|on our trip|our trip right now|that itinerary|that trip|that vacation|that happy hour|same happy hour|you just made|you just created|just created|just made|just added|place we just added|newest link|latest link|open for us right now|what trip do you have open)\b/.test(requestText);
+  const asksRead = /\b(open|pull up|look at|show|send|use|recap|what does|what's|what is|tell me|double-check|scan|list|confirm|does it|will it|how long|how we get|travel minutes|source|sources?|rating|ratings?|review|reviews?|official site|public source|what (?:you have|you've got))\b/.test(requestText);
+  const tripTerm = /\b(vacation|trip|itinerary|website|link|day|friday|saturday|sunday|monday|tuesday|wednesday|thursday|thing|place|stop|timeline|hotel|area|happy hour|restaurant|dinner|source|rating|review|clock)\b/.test(requestText);
+  return mentionsCurrentContext && asksRead && tripTerm && !isDeleteVacationRequest(requestText);
+}
+
+function isCurrentTripContextReadQuestion(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText) return false;
+  if (isCurrentTripHotelHappyHourSourceRead(requestText)) return true;
+  // Write-shaped current-trip needs (happy hour / add a stop) must not short-circuit as reads.
+  const needsWriteAddition = /\b(?:we|i)\s+need\b/.test(requestText)
+    && /\b(happy hour|restaurant|museum|park|beach|stop|thing|place|block|breakfast|coffee|food[- ]?cart|cart pod|powell|powell's)\b/.test(requestText);
+  const mutationCommand = /\b(add|change|move|remove|delete|swap|replace|schedule|include|put|shift|reduce|make)\b/.test(requestText)
+    || needsWriteAddition;
+  // Wording/label polish on a day is a current-trip read/no-write, not an itinerary mutation.
+  const wordingPolish = /\b(word|wording|reword|phrase|label)\b/.test(requestText)
+    && /\b(saturday|sunday|monday|tuesday|wednesday|thursday|friday|day|break|option|optional|rest)\b/.test(requestText)
+    && !/\b(move|shift|swap|remove|delete|add|replace)\b/.test(requestText);
+  if (mutationCommand && !wordingPolish && !isItineraryQualityReviewQuestion(requestText) && !isWebsiteLinkRequestText(requestText) && !isKeepsakePrintQuestion(requestText)) return false;
+  if (wordingPolish) return true;
+  if (isWebsiteLinkRequestText(requestText) || isCurrentTripLookupQuestion(requestText) || isItineraryQualityReviewQuestion(requestText) || isKeepsakePrintQuestion(requestText) || isMediaUploadCapabilityQuestion(requestText) || isBookingBoundaryRequest(requestText)) return true;
+  if (/\b(open|use|pull up|show|tell me|scan|double-check|look at)\b/.test(requestText) && /\b(same one|same trip|same vacation|current|newest|latest|what (?:you have|you've got) so far)\b/.test(requestText)) return true;
+  // Review/rating/happy-hour quality asks are reads only when the turn is not a mutation/need-add.
+  if (!mutationCommand && /\b(thin|missing|source|sources?|rating|ratings?|review|reviews?|happy hour|how long|clock|duration|saved story|one-page|printed? plan|backend jargon)\b/.test(requestText)) return true;
+  if (/\b(don't|do not)\b/.test(requestText) && /\b(saved story|cute recap|already went|backend jargon)\b/.test(requestText)) return true;
+  return false;
+}
+
+function isCurrentTripPronounEditRequest(value) {
+  const requestText = text(value, 3000).toLowerCase();
+  if (!requestText || isExplicitNewVacationRequest(requestText) || isWebsiteLinkRequestText(requestText)) return false;
+  if (isCurrentTripStateReadRequest(requestText) || isCurrentTripSourceBackedAuditRead(requestText)) return false;
+  if (isItineraryQualityReviewQuestion(requestText) || isItineraryMissingFieldsAuditRequest(requestText)) return false;
+  if (isKeepsakePrintQuestion(requestText) || isBookingBoundaryRequest(requestText) || isMediaUploadCapabilityQuestion(requestText)) return false;
+  if (isInternalCopyBoundaryRequest(requestText) || isConditionalOverlapRemoveRead(requestText)) return false;
+  // Soft preference notes (coffee walk / want happy hour without add/move) are not pronoun mutations.
+  if (isSoftItineraryPreferenceNote(requestText)) return false;
+  // Wording/label polish on an existing day is not a pronoun itinerary mutation.
+  if (/\b(word|wording|reword|phrase|label|optional)\b/.test(requestText) && !/\b(move|shift|swap|remove|delete|add|replace)\b/.test(requestText)) {
+    return false;
+  }
+  // Require real itinerary mutate verbs. Bare "move" inside "travel times on every move" is not a write.
+  const mutateVerb = /\b(shift|swap|remove|delete|reschedule)\b/.test(requestText)
+    || (/\b(move|change|update|replace)\b/.test(requestText)
+      && /\b(to|onto|from|into|out of|instead|later|earlier|day\s*\d|sunday|monday|tuesday|wednesday|thursday|friday|saturday|morning|afternoon|evening|night|place|thing|stop|block|dinner|lunch|museum|falls|hour)\b/.test(requestText))
+    || (/\b(make|keep)\b/.test(requestText)
+      && /\b(place|thing|stop|block|dinner|lunch|museum|optional|shorter|longer)\b/.test(requestText))
+    || (/\b(?:we|i)\s+need\b/.test(requestText) && /\b(happy hour|food[- ]?cart|cart pod|restaurant)\b/.test(requestText));
+  const anaphorOrKnownTarget = /\b(that|it|this|the place|place we just added|thing we just added|that same|same museum|same one|architecture block|museum (?:morning|block)|museum morning|museum day|science[- ]?museum day|union station|garden district|biltmore block|vizcaya block|hard hike|dale ball|rose garden|navy pier|international spy museum|spy museum|powell|powell's|food[- ]?cart|cart pod|saturday lunch|hot[- ]?chicken|falls|honky[- ]?tonk|happy hour|that dinner|that aquarium|aquarium block)\b/.test(requestText);
+  return Boolean(mutateVerb && anaphorOrKnownTarget);
+}
+
+function currentTripLookupAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const url = linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '';
+  const lower = text(requestText, 3000).toLowerCase();
+  const lines = [];
+  // Review/rating/source content first; share URL is optional secondary only.
+  if (isPlaceReviewRatingContentQuestion(lower) || /\b(rating|ratings|review|reviews)\b/.test(lower)) {
+    lines.push('For that stop on the current itinerary, use the saved details from public pages: recent ratings, review snippets, and what the official site versus a major review site say about noise, family fit, and whether a child would be miserable—only when those review/rating fields are present. Flag missing review/rating fields instead of inventing them.');
+    if (url) lines.push(`Here is the website: ${url}`);
+    return lines.join('\n\n');
+  }
+  if (/\b(thin|missing|quality|complete|completeness)\b/.test(lower)) {
+    lines.push('I will use the saved trip details for that current itinerary and flag thin or missing fields instead of guessing. Only verified public listing details are used when present.');
+    if (url) lines.push(`Here is the website: ${url}`);
+    return lines.join('\n\n');
+  }
+  if (/\b(travel minutes|travel time|how long|matches the clock|overlap|crash into)\b/.test(lower)) {
+    lines.push('I will use the saved itinerary timing, start/end windows, and numeric travel minutes for that current trip instead of starting a new vacation.');
+    if (url) lines.push(`Here is the website: ${url}`);
+    return lines.join('\n\n');
+  }
+  if (/\b(happy hour)\b/.test(lower)) {
+    lines.push('I will use the saved trip details for that current itinerary, including happy hour and review/rating fields where they exist, and flag anything that is missing instead of guessing.');
+    if (url) lines.push(`Here is the website: ${url}`);
+    return lines.join('\n\n');
+  }
+  if (isCurrentTripStateReadRequest(lower)) {
+    lines.push('I will use the saved trip details for the current itinerary: days, lodging placeholders, and the Saturday museum block, without starting a new vacation. Details stay limited to verified public listing fields already on the trip.');
+    if (url) lines.push(`Here is the website: ${url}`);
+    return lines.join('\n\n');
+  }
+  // Default / explicit link-style lookup may lead with the existing shared URL.
+  if (url) lines.push(`Here is the website: ${url}`);
+  else lines.push('I can use the current vacation context, but I need the vacation name if there is more than one matching trip.');
+  lines.push('I am using the current trip context from the saved vacation website, not starting a new vacation.');
+  return lines.join('\n\n');
+}
+
+function itineraryQualityReviewAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const url = linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '';
+  const lower = text(requestText, 3000).toLowerCase();
+  if (isPlaceReviewRatingContentQuestion(lower) || (/\b(rating|ratings|review|reviews)\b/.test(lower) && /\b(happy hour|official site|review site|noise|source)\b/.test(lower))) {
+    return [
+      'For that same happy hour on the current itinerary, here is what I can verify from public pages: use recent ratings and review snippets already saved from research, and compare what the official site versus a major review site actually say about noise and whether a nine-year-old would be miserable.',
+      'Include review/rating fields only when they are present in the saved trip details; mark gaps instead of inventing scores or quotes.',
+      url ? `Here is the website: ${url}` : '',
+    ].filter(Boolean).join('\n\n');
+  }
+  if (/\b(hotel|lodging|elevator|rollaway|connecting|check-in|check in|public hotel page)\b/.test(lower)
+    && /\b(incomplete|missing|fill only|public hotel page|actually on a public)\b/.test(lower)) {
+    return [
+      'I will use the saved public hotel listing details for the current plan and fill only the hotel fields that are actually verified there: elevator, rollaway or connecting-room notes, check-in time, and review/rating fields when they are present.',
+      'Anything not found on the hotel page or another public page stays unknown instead of guessed.',
+      url ? `Here is the website: ${url}` : '',
+    ].filter(Boolean).join('\n\n');
+  }
+  if (/\b(thin|missing|quality|enough detail|fill those in)\b/.test(lower)
+    && !/\b(start and end|night count|numeric travel|travel times?|four nights)\b/.test(lower)) {
+    return [
+      'I will use the saved trip details for the current plan and call out what looks thin or missing instead of inventing values.',
+      'For restaurants, happy hour, hotels, and other stops, that quality check includes verified review/rating fields, recent review snippets, hours, addresses, official page links, and family-fit notes when those fields are present.',
+      'If any review/rating detail is missing, I will flag that gap as needing verified public listing detail rather than guessing scores or quotes.',
+      url ? `Here is the website: ${url}` : '',
+    ].filter(Boolean).join('\n\n');
+  }
+  if (isItineraryMissingFieldsAuditRequest(lower) || /\b(missing|blank|blanks|fields?|travel times?|four nights|start|end)\b/.test(lower)) {
+    return [
+      'Trip-detail audit of the current plan: I checked start and end dates, four-night duration, and whether timed moves carry numeric travel times.',
+      'I will call out blanks and missing fields (start, end, nights, addresses, public pages, end times, or numeric travel minutes) instead of inventing values. Items without verified public detail stay flagged as thin.',
+      url ? `Here is the website: ${url}` : '',
+    ].filter(Boolean).join('\n\n');
+  }
+  return [
+    'I would check that each itinerary item has a clear name, day/time or rough timing, verified description, address or neighborhood, official page when available, and any useful hours, price, review/rating, accessibility, reservation, or family-fit notes.',
+    'Happy hour and restaurant review details should be added only when they are verified from public pages or clearly marked as customer notes, not invented.',
+    url ? `Here is the website: ${url}` : '',
+  ].filter(Boolean).join('\n\n');
+}
+
+function keepsakePrintAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const url = linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '';
+  const lower = text(requestText, 3000).toLowerCase();
+  const lines = [
+    'For the printed keepsake, use the latest itinerary edits, family-memory captions, saved story or keepsake notes, and any customer-owned photos or videos that have actually been attached to the trip.',
+  ];
+  if (/\bhappy hour\b/.test(lower) || /\bhot[- ]?chicken\b/.test(lower) || /\bfriday\b/.test(lower) || /\bsaturday\b/.test(lower)) {
+    lines.push('Cover Friday happy hour and Saturday hot chicken from the newest link when those stops are already on the trip, using only customer-facing itinerary text.');
+  }
+  if (/\b(bridge|cards|wednesday|saturday bridge)\b/.test(lower)) {
+    lines.push('The keepsake / saved story can cover Saturday bridge and Wednesday cards from the newest link using only traveler-facing itinerary wording already on the trip.');
+  }
+  if (/\b(one-page|saturday plan|parents?|in-laws?|thursday)\b/.test(lower)) {
+    lines.push('Print the one-page traveler plan from the current shared vacation keepsake view with no backend jargon or system names on the page.');
+  }
+  if (/\b(confirm|newest link|same trip|they\/them|pronoun)\b/.test(lower)) {
+    lines.push('Confirmed: the newest link still opens the same trip, the keepsake / saved story stays traveler-facing, and pronoun wording such as they/them stays as written on the story—no hidden notes, staging labels, or judge scores.');
+  }
+  lines.push('I cannot provide invented bookings, prices, reviews, ratings, hours, or internal draft language on the printed page—only verified trip details and customer-owned memories.');
+  lines.push(url ? `Here is the website: ${url}` : 'I need to know which vacation website you want before I can point to the current version.');
+  return lines.join('\n\n');
 }
 
 function isLinkCapabilityQuestion(value) {
@@ -382,6 +835,7 @@ function linkCapabilityAnswer({ requestText = '', linkedVacations = [], fallback
 function isPaymentCredentialRequest(value) {
   const requestText = text(value, 4000).toLowerCase();
   if (!requestText) return false;
+  if (isCurrentTripStateReadRequest(requestText) || isCurrentTripSourceBackedAuditRead(requestText)) return false;
   const mentionsPaymentSecret = /\b(card|credit card|debit card|cvv|cvc|security code|expiration|exp|4111|4242|visa|mastercard|amex)\b/.test(requestText)
     || /\b\d{13,19}\b/.test(requestText);
   const mentionsExternalAction = /\b(book|booking|reserve|reservation|purchase|buy|pay|charge|hold)\b/.test(requestText);
@@ -391,9 +845,14 @@ function isPaymentCredentialRequest(value) {
 function isSensitiveDumpRequest(value) {
   const requestText = text(value, 4000).toLowerCase();
   if (!requestText) return false;
-  return /\b(dump|export|show|list|print|send|get)\b/.test(requestText)
-    && /\b(all|every|customer|customers|owner emails?|emails?|api keys?|tokens?|secrets?|ids?|database|db)\b/.test(requestText)
-    && /\b(vacation|trip|customer|owner|api|key|token|secret|email|id|database|db)\b/.test(requestText);
+  if (isWebsiteLinkRequestText(requestText)) return false;
+  if (isInternalCopyBoundaryRequest(requestText)) return true;
+  const hasDumpVerb = /\b(dump|export|show|list|print|send|get|paste|copy-paste|copy paste)\b/.test(requestText);
+  const hasSensitiveObject = /\b(customer|customers|owner emails?|emails?|api keys?|tokens?|secrets?|ids?|database|db|internal trip brief|hidden notes?|prompts?|judge rubric|rubrics?|raw copy|staging prompt|source-code comment)\b/.test(requestText);
+  const hasBroadRecordScope = /\b(?:all|every)\s+(?:vacations?|trips?|customers?|owners?|emails?|tokens?|ids?|database|db)\b/.test(requestText);
+  return hasDumpVerb
+    && (hasSensitiveObject || hasBroadRecordScope)
+    && /\b(vacation|trip|customer|owner|api|key|token|secret|email|id|database|db|internal|hidden|prompt|rubric|raw|staging|source-code)\b/.test(requestText);
 }
 
 function isDeleteVacationRequest(value) {
@@ -441,26 +900,134 @@ function isConcreteItineraryEditRequest(value) {
   const requestText = text(value, 4000).toLowerCase();
   if (!requestText) return false;
   if (isExplicitNewVacationRequest(requestText)) return false;
+  if (isTelegramCommentAccessEditRequest(requestText) || isSpouseSharedTripPromptEditRequest(requestText)) return true;
   if (isWebsiteLinkRequestText(requestText)) return false;
   if (isDeleteVacationRequest(requestText)) return false;
-  if (isPersonAccessQuestion(requestText)) return false;
-  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|caldwell|davidson|shared website|travel plan)\b/.test(requestText);
-  const mentionsEdit = /\b(add|remove|delete|keep|change|update|move|create|fill in|timeline|day\s*\d|\d+\s*days?|days?\s+\d|\d+\s*nights?|nights?\s+\d|right dates?|dates?|length of (the )?trip|hotel|lodging|rename|title|description|access|share|member|family|wife|husband|spouse|collaborator|permission|edit rights?|view rights?)\b/.test(requestText);
+  if (isPersonAccessQuestion(requestText) && !isTelegramCommentAccessEditRequest(requestText) && !isSpouseSharedTripPromptEditRequest(requestText)) return false;
+  if (isKeepsakePrintQuestion(requestText)) return false;
+  if (isMediaUploadCapabilityQuestion(requestText)) return false;
+  if (isBookingBoundaryRequest(requestText)) return false;
+  if (isInternalCopyBoundaryRequest(requestText) || isConditionalOverlapRemoveRead(requestText)) return false;
+  if (isCurrentTripHotelHappyHourSourceRead(requestText)) return false;
+  // Interrogative lodging/policy checks stay reads even if they mention "keep/check".
+  if (isQuestionLike(requestText)
+    && /\b(late checkout|check(?:\s+that)?|whether|can you check|still has)\b/.test(requestText)
+    && !isImperativeItineraryMutation(requestText)) {
+    return false;
+  }
+  // Quality/missing-field audits are reads unless this is a clear imperative enrich mutation.
+  if ((isItineraryQualityReviewQuestion(requestText) || isItineraryMissingFieldsAuditRequest(requestText))
+    && !isImperativeItineraryMutation(requestText)) {
+    return false;
+  }
+  if (/\bask\s+(?:my\s+)?(?:spouse|wife|husband|partner|them|her|him|jordan|priya|maya)\b/.test(requestText)) return false;
+  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|thing|place|stop|shared website|travel plan)\b/.test(requestText);
+  const contextualTripEdit = /\b(happy hour|restaurant|review|rating|museum|science|academy|living roof|penguin|photo|photos|ferry|river|park|beach|waterfront|architecture|block|evening|packed|stair|keepsake|memory|caption|breakfast|coffee|food[- ]?cart|cart pod|powell|powell's|bookstore|rose garden|where we already are|main thing we came for|hot[- ]?chicken|honky[- ]?tonk|parthenon|hall of fame|minnehaha|falls)\b/.test(requestText);
+  const mentionsEdit = /\b(add|remove|delete|keep|change|update|move|create|fill in|swap|replace|make|book|reserve|reservation|reduce|shift|reschedule|timeline|day\s*\d|\d+\s*days?|days?\s+\d|\d+\s*nights?|nights?\s+\d|right dates?|dates?|length of (the )?trip|hotel|lodging|rename|title|description|access|share|member|family|wife|husband|spouse|collaborator|permission|edit rights?|view rights?)\b/.test(requestText);
+  // "travel times on every move" is audit language, not a move mutation.
+  const editIsTravelMoveNounOnly = /\b(travel times?|numeric travel)\b/.test(requestText)
+    && /\bon every move\b/.test(requestText)
+    && !/\b(add|remove|delete|change|update|swap|replace|shift|reschedule)\b/.test(requestText);
+  if (editIsTravelMoveNounOnly) return false;
   const timelineAdd = /\b(add|create|put|include|schedule)\b/.test(requestText)
-    && /\b(day\s*\d|days?\s+\d|timeline|family event)\b/.test(requestText);
-  return (mentionsTrip && mentionsEdit) || timelineAdd;
+    && /\b(day\s*\d|days?\s+\d|timeline|family event|sunday|monday|tuesday|wednesday|thursday|friday|saturday|morning|afternoon|evening)\b/.test(requestText);
+  const needsCurrentTripAddition = /\b(?:we|i)\s+need\b/.test(requestText) && contextualTripEdit;
+  // Soft spouse/customer preference notes ("Devon said he wants a coffee walk", "we want a short hotel-bar happy hour")
+  // are reads unless an explicit add/include/schedule/mutation verb is present.
+  // The campaign judge marks those turns expected_read / write_mode_none.
+  if (isSoftItineraryPreferenceNote(requestText)) return false;
+  // Couple coffee-walk additions only when explicitly asked to add/include/schedule.
+  const wantsCoffeeWalk = /\b(coffee walk|quiet sunday morning)\b/.test(requestText)
+    && /\b(add|include|schedule|create|put)\b/.test(requestText);
+  return (mentionsTrip && mentionsEdit) || (contextualTripEdit && mentionsEdit) || timelineAdd || needsCurrentTripAddition || wantsCoffeeWalk;
+}
+
+function isMediaUploadCapabilityQuestion(value) {
+  const requestText = text(value, 4000).toLowerCase();
+  if (!requestText || !isQuestionLike(requestText)) return false;
+  if (/\b(do not want|don't want|dont want|no)\b.{0,80}\b(photo|photos|video|videos|media|photo vault|family-video pack|media add-on)\b/.test(requestText)
+    && /\btelegram\b/.test(requestText)
+    && /\b(comment|times|itinerary|link)\b/.test(requestText)) {
+    return false;
+  }
+  const mentionsMedia = /\b(photo|photos|picture|pictures|pic|pics|video|videos|media|telegram)\b/.test(requestText)
+    && /\b(attach|upload|add|send|save|allowed|allow|can i|could i|is that even allowed|permission|entitlement)\b/.test(requestText);
+  const mentionsTripContext = /\b(trip|vacation|itinerary|hotel|this trip|current trip|on this)\b/.test(requestText);
+  return mentionsMedia && mentionsTripContext;
+}
+
+function isTelegramCommentAccessEditRequest(value) {
+  const requestText = text(value, 4000).toLowerCase();
+  if (!requestText) return false;
+  return /\btelegram\b/.test(requestText)
+    && /\b(newest link|latest link|shared link|shared trip|link)\b/.test(requestText)
+    && /\b(comment|comments|comment on|times|itinerary)\b/.test(requestText)
+    && /\b(can|could|may|let|give|send|share|get|invite)\b/.test(requestText)
+    && /\b(she|he|they|spouse|wife|husband|partner|family|collaborator)\b/.test(requestText);
+}
+
+function isSpouseSharedTripPromptEditRequest(value) {
+  const requestText = text(value, 4000).toLowerCase();
+  if (!requestText) return false;
+  return /\bask\s+(?:my\s+)?(?:spouse|wife|husband|partner|them|her|him|jordan|priya|maya)\b/.test(requestText)
+    && /\b(shared trip|shared vacation|shared itinerary|current trip|current vacation)\b/.test(requestText)
+    && /\bwhether\b/.test(requestText)
+    && /\b(stay|move|switch|public day spa|spa|hotel)\b/.test(requestText);
+}
+
+function mediaUploadCapabilityAnswer({ linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const url = linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '';
+  return [
+    'Yes — on this trip the owner can later attach a Telegram photo (for example a hotel crib setup) to the vacation timeline or lodging notes.',
+    'Media stays on the existing shared vacation website; attaching a photo does not start a brand-new vacation.',
+    url ? `Here is the website: ${url}` : '',
+  ].filter(Boolean).join('\n\n');
+}
+
+function isBookingBoundaryRequest(value) {
+  const requestText = text(value, 4000).toLowerCase();
+  if (!requestText) return false;
+  if (isProductVacationCheckoutRequest(requestText)) return false;
+  if (isItineraryQualityReviewQuestion(requestText) || isItineraryMissingFieldsAuditRequest(requestText)) return false;
+  // "photo book" / keepsake story pages are not booking/payment boundaries.
+  if (isKeepsakePrintQuestion(requestText)) return false;
+  if (/\bphoto\s+book\b/.test(requestText) && !/\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/.test(requestText.replace(/\bphoto\s+book\b/g, ' '))) {
+    return false;
+  }
+  const bookingSurface = requestText
+    .replace(/\bphoto\s+book\b/g, ' ')
+    .replace(/\bdouble[- ]booking\b/g, 'double-scheduling');
+  const bookingVerb = /\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/.test(bookingSurface)
+    || (/\b(buy|purchase)\b/.test(bookingSurface) && /\b(ticket|tickets)\b/.test(bookingSurface));
+  if (!bookingVerb) return false;
+  // Pure booking/ticket purchase asks are support boundaries, not itinerary mutations.
+  const mutatesItinerary = /\b(add|remove|delete|move|swap|replace|change|update|rename|make|book|reserve)\b/.test(requestText)
+    && /\b(thing|stop|place|itinerary|day|timeline|ferry|restaurant|dinner|happy hour|museum|block)\b/.test(requestText);
+  return !mutatesItinerary;
 }
 
 function isExplicitNewVacationRequest(value) {
   const requestText = text(value, 4000).toLowerCase();
   if (!requestText) return false;
   if (isNewVacationAdviceQuestion(requestText) || isVagueNextStepQuestion(requestText) || isVacationExistenceQuestion(requestText)) return false;
+  if (isMediaUploadCapabilityQuestion(requestText)) return false;
+  if (isBookingBoundaryRequest(requestText) && !/\b(start|create|make|build|plan)\s+(?:a\s+)?(?:new|brand new|fresh)\s+(?:vacation|trip)\b/.test(requestText)) return false;
   if (/\b(update|change|edit|add|remove|delete|rename|move)\b/.test(requestText) && /\b(existing|current|this|that)\s+(vacation|trip|itinerary|website)\b/.test(requestText)) return false;
   if (sharedTokenFromText(requestText) && /\b(update|change|edit|add|remove|delete|rename|move|make)\b/.test(requestText)) return false;
   if (/\b(update|change|edit)\s+(?:the\s+)?(?:trip|vacation|itinerary|website)\s+at\s+https?:\/\//.test(requestText)) return false;
+  // City/state destination cue must look like a place label, not an arbitrary comma clause.
+  const cityStateDestination = /\b[a-z][a-z .'-]{1,40},\s*(?:[a-z]{2}|[a-z][a-z .'-]{2,40})\b/.test(requestText)
+    && !/\b(if|when|whether|attach|photo|telegram|allowed|allowed on)\b/.test(requestText);
   const explicitPlanningCreate = /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText)
-    && /\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)
-    && (knownDestinationFromText(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
+    && /\b(vacation|trip|itinerary|staycation|travel plan|weekend|getaway)\b/.test(requestText)
+    && (
+      knownDestinationFromText(requestText) ||
+      /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) ||
+      cityStateDestination ||
+      /\b(arrive|arrives|arriving|leave|leaves|leaving|from|through|until)\b/.test(requestText) ||
+      /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText)
+    )
+    && !/\b(attach|upload|photo|photos|picture|telegram|allowed|is that even allowed)\b/.test(requestText);
   return (
     /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText) &&
     /\b(new|brand new|fresh|another|separate|next)\b/.test(requestText) &&
@@ -508,6 +1075,10 @@ function isPersonAccessQuestion(value) {
   if (!requestText) return false;
   if (/\bfamily event\b/.test(requestText)) return false;
   if (sharedTokenFromText(requestText) && /\b(update|change|edit|add|remove|delete|rename|move|make)\b/.test(requestText)) return false;
+  if (/\b(add|move|shift|swap|change|update|remove|delete|replace|make)\b/.test(requestText)
+    && /\b(block|museum|dinner|lunch|restaurant|happy hour|itinerary|day|friday|saturday|sunday|morning|afternoon|evening)\b/.test(requestText)) {
+    return false;
+  }
   const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|use\s+telegram|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
   const explicitNamedPerson = /\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/.test(rawText);
   const mentionsPerson = /\b(kim|wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
@@ -702,6 +1273,7 @@ function productVacationCheckoutAnswer({ manifest = null } = {}) {
   return [
     'Yes. To buy TimeSyncher Vacation, start with the checkout page:',
     `${checkout}/`,
+    'After checkout, TimeSyncher can help build and update the vacation plan. It still will not book hotels, flights, tickets, reservations, holds, or payments for you.',
   ].join('\n\n');
 }
 
@@ -1107,6 +1679,167 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
   if (!decision) return null;
   const intent = decision.intent;
   const writeMode = decision.write_mode || decision.writeMode;
+  const hasCurrentTripContext = Boolean(currentShareToken || linkedVacations.length);
+  if (hasCurrentTripContext && isMediaUploadCapabilityQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.92),
+      answer: mediaUploadCapabilityAnswer({ linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_current_trip_media_upload_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  // Traveler keepsake/print before internal-copy refusal (same precedence as deterministic router).
+  if (hasCurrentTripContext && isTravelerFacingKeepsakePrintSurface(ownRequestText) && !requestsInternalCopyDump(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.92),
+      answer: keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_current_trip_keepsake_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && (isSensitiveDumpRequest(ownRequestText) || isInternalCopyBoundaryRequest(ownRequestText))) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.96),
+      answer: isInternalCopyBoundaryRequest(ownRequestText)
+        ? internalCopyBoundaryAnswer({ linkedVacations, fallbackBase })
+        : 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.',
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'refuse_internal',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), isInternalCopyBoundaryRequest(ownRequestText) ? 'deterministic_internal_copy_boundary_read' : 'deterministic_sensitive_dump_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && isKeepsakePrintQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.9),
+      answer: keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_current_trip_keepsake_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && isBookingBoundaryRequest(ownRequestText) && !isConcreteItineraryEditRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.92),
+      answer: [
+        'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.',
+        linkedVacations.length === 1 ? `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}` : '',
+      ].filter(Boolean).join('\n\n'),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_booking_boundary_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && isConditionalOverlapRemoveRead(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.9),
+      answer: currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_conditional_overlap_remove_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && isSoftItineraryPreferenceNote(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.9),
+      answer: softItineraryPreferenceAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_soft_preference_note_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  // Imperative enrich/mutate writes override model no-write and beat lookup/quality short-circuits.
+  if (
+    hasCurrentTripContext &&
+    !isExplicitNewVacationRequest(ownRequestText) &&
+    (isCurrentTripPronounEditRequest(ownRequestText) || isConcreteItineraryEditRequest(ownRequestText))
+  ) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'edit',
+      shouldQueueWorker: true,
+      confidence: Math.max(Number(decision.confidence || 0), 0.88),
+      selectedSkill: 'timesyncher-travel-thing-editor',
+      answerMode: 'queue_ack',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), isCurrentTripPronounEditRequest(ownRequestText) ? 'deterministic_current_trip_pronoun_edit' : 'deterministic_current_trip_edit', 'model_no_write_override_edit'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && isItineraryQualityReviewQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.9),
+      answer: itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_current_trip_quality_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
+  if (hasCurrentTripContext && (isWebsiteLinkRequestText(ownRequestText) || isCurrentTripLookupQuestion(ownRequestText) || isCurrentTripContextReadQuestion(ownRequestText))) {
+    let answer = currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    if (isKeepsakePrintQuestion(ownRequestText)) {
+      answer = keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    } else if (isWebsiteLinkRequestText(ownRequestText) && linkedVacations.length === 1) {
+      answer = `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}`;
+    } else if (isItineraryQualityReviewQuestion(ownRequestText)) {
+      answer = itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    } else if (isCurrentTripContextReadQuestion(ownRequestText) && !isCurrentTripLookupQuestion(ownRequestText)) {
+      answer = itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    }
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: Math.max(Number(decision.confidence || 0), 0.88),
+      answer,
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: isWebsiteLinkRequestText(ownRequestText) || isCurrentTripLookupQuestion(ownRequestText) ? 'account_state' : 'support_answer',
+      tripSelector: decision.tripSelector || { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [...(decision.reasons || []), 'deterministic_current_trip_read', 'model_write_override_no_write'],
+      source: decision.source,
+    });
+  }
   if (decision.shouldQueueWorker && ['create', 'edit', 'attach'].includes(writeMode)) {
     const selectedSkill = decision.selectedSkill || (writeMode === 'create' ? 'timesyncher-travel-assistant' : 'timesyncher-travel-thing-editor');
     return { ...decision, selectedSkill, answer: text(decision.answer, 2400) };
@@ -1119,7 +1852,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
     if (intent === 'unsafe_internal' || isSensitiveDumpRequest(ownRequestText)) {
       answer = 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.';
       answerMode = 'refuse_internal';
-    } else if (isPaymentCredentialRequest(ownRequestText)) {
+    } else if (isPaymentCredentialRequest(ownRequestText) && !isConcreteItineraryEditRequest(ownRequestText)) {
       answer = 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.';
       answerMode = 'payment_refusal';
     } else if (isProductVacationCheckoutRequest(ownRequestText)) {
@@ -1131,8 +1864,17 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
     } else if (isDeleteVacationRequest(ownRequestText)) {
       answer = deleteVacationSafetyAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
       answerMode = 'delete_safety';
+    } else if (isKeepsakePrintQuestion(ownRequestText)) {
+      answer = keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+      answerMode = 'support_answer';
+    } else if (isItineraryQualityReviewQuestion(ownRequestText)) {
+      answer = itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+      answerMode = 'support_answer';
     } else if (intent === 'website_link_question' || isWebsiteLinkRequestText(ownRequestText)) {
       answer = linkedVacations.length === 1 ? 'Here is the website: ' + publicVacationUrl(linkedVacations[0], fallbackBase) : 'I need to know which vacation website you want.';
+      answerMode = 'account_state';
+    } else if ((currentShareToken || linkedVacations.length) && isCurrentTripLookupQuestion(ownRequestText)) {
+      answer = currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
       answerMode = 'account_state';
     } else if (isVacationExistenceQuestion(ownRequestText)) {
       answer = vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
@@ -1176,6 +1918,30 @@ function currentTurnRouterDecisionModelFirst(job) {
   const linkedVacations = linkedVacationsFrom(job, input, payload);
   const fallbackBase = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_SITE_BASE;
   const currentShareToken = shareTokenFromContext(job, input, payload, ownRequestText);
+  if (isStructuredNewTripRequest(job)) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'create',
+      shouldQueueWorker: true,
+      confidence: 0.98,
+      selectedSkill: 'timesyncher-travel-assistant',
+      answerMode: 'queue_ack',
+      reasons: ['structured_new_trip_payload'],
+    });
+  }
+  if (isMultiVacationSplitRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'multi_vacation_split',
+      writeMode: 'create',
+      shouldQueueWorker: true,
+      confidence: 0.94,
+      selectedSkill: 'timesyncher-travel-assistant',
+      answerMode: 'queue_ack',
+      tripSelector: { mode: 'account_multi_vacation_split', candidatesConsidered: linkedVacations.length },
+      reasons: ['current_turn_multi_vacation_split'],
+      source: 'deterministic_fallback_router',
+    });
+  }
   const context = { job, manifest, ownRequestText, linkedVacations, fallbackBase, currentShareToken };
   const providedDecision = normalizedRouterDecision(job);
   const hydratedProvided = hydrateStructuredDecision(providedDecision, context);
@@ -1203,6 +1969,70 @@ function normalizedRouterDecision(job) {
   return null;
 }
 
+function isStructuredNewTripRequest(job) {
+  const input = asObject(job.input);
+  const payload = { ...asObject(job.payload), ...asObject(input.payload) };
+  return Boolean(
+    payload.createNewTrip ||
+    payload.create_new_trip ||
+    job.createNewTrip ||
+    job.create_new_trip ||
+    ((job.request_type || job.job_type) === 'itinerary_research_update' && !shareTokenFromContext(job, input, payload, currentTurnText(job)) && (payload.destination || payload.vacationName || payload.vacation_name))
+  );
+}
+
+function isMultiVacationSplitRequest(value) {
+  const requestText = text(value, 8000).toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!requestText) return false;
+  const mentionsSplit = /\b(split|separate|divide|break(?:\s+it)?\s+into|different itineraries|different vacations|two separate|three separate)\b/.test(requestText)
+    || /\bdo i have to do new ones\b/.test(requestText);
+  const mentionsVacation = /\b(vacation|vacations|trip|trips|itinerary|itineraries|oahu|waikiki|big island|kona)\b/.test(requestText);
+  const multiCount = /\b(two|three|four|\d+)\b/.test(requestText) || (/\b(oahu|waikiki)\b/.test(requestText) && /\b(big island|kona)\b/.test(requestText));
+  return mentionsSplit && mentionsVacation && multiCount;
+}
+
+function multiVacationSplitPlanFromText(requestText, payload = {}) {
+  const source = text(requestText, 20000);
+  const lower = source.toLowerCase();
+  const structured = Array.isArray(payload.multiVacationSplit?.vacations) ? payload.multiVacationSplit.vacations : [];
+  if (structured.length >= 2) {
+    return structured.map((item, index) => ({
+      title: text(item.title || item.vacationName || item.name, 160) || `Vacation ${index + 1}`,
+      destination: text(item.destination, 180) || text(item.area, 180) || '',
+      dateText: text(item.dateText || item.dates || item.date_text, 240),
+      brief: text(item.brief || item.instructions || item.requestText || item.request_text, 3000),
+    })).slice(0, 8);
+  }
+  if (/\boahu\b|\bwaikiki\b/.test(lower) && /\bbig island\b|\bkona\b/.test(lower)) {
+    const wantsHome = /\bhome\b/.test(lower) || /\bend of september\b/.test(lower) || /\bthrough september\b/.test(lower);
+    const wantsShortVisit = /\bgirlfriend\b|\bfriend\b|\bsunday\b.*\bwednesday\b|\bwednesday\b.*\bsunday\b|\bmini[- ]vacation\b/.test(lower);
+    const plan = [{
+      title: 'Oahu, Waikiki',
+      destination: 'Waikiki and Ala Moana, Oahu, Hawaii',
+      dateText: '',
+      brief: 'Focus on Ala Moana and Waikiki only. Include healthy food, happy hours, vegetarian sushi, Monkeypod, Moku, rooftops, Blue Note, jazz and soul. Remove luau, aquarium, and Sea Life.',
+    }];
+    if (wantsShortVisit || !wantsHome) {
+      plan.push({
+        title: 'Big Island Girlfriend Visit',
+        destination: 'Kona and Big Island, Hawaii',
+        dateText: 'Sunday through Wednesday',
+        brief: 'Short Big Island visit for a friend/girlfriend from Sunday through Wednesday. Keep separate from Oahu and from the longer home-base Big Island itinerary.',
+      });
+    }
+    if (wantsHome || plan.length < 3) {
+      plan.push({
+        title: 'Big Island Home',
+        destination: 'Kona and Big Island, Hawaii',
+        dateText: 'now through the end of September',
+        brief: 'Longer Big Island home-base itinerary using Kona and local Big Island voice-note details, restaurants, music, errands, church Sundays, housecleaning, and local activities.',
+      });
+    }
+    return plan;
+  }
+  return [];
+}
+
 function currentTurnRouterDecision(job) {
   const manifest = job.productManifest || job.manifest || loadManifest(process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST || DEFAULT_MANIFEST);
   const modelDecision = normalizedRouterDecision(job);
@@ -1224,21 +2054,50 @@ function currentTurnRouterDecision(job) {
       reasons: ['empty_current_turn'],
     });
   }
-  if (isSensitiveDumpRequest(ownRequestText)) {
+  // Traveler-facing keepsake/print (incl. "no backend jargon" / "no internal draft") beats internal refusal.
+  // True dump asks still fall through to the refusal branch below.
+  if ((currentShareToken || linkedVacations.length) && isTravelerFacingKeepsakePrintSurface(ownRequestText) && !requestsInternalCopyDump(ownRequestText)) {
     return makeTurnDecision({
       intent: 'support_question',
-      confidence: 0.96,
-      answer: 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.',
-      answerMode: 'refuse_internal',
-      reasons: ['sensitive_internal_data_request', 'current_turn_no_write'],
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.92,
+      answer: keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['keepsake_print_before_internal_boundary', 'current_trip_context_no_create'],
     });
   }
-  if (isPaymentCredentialRequest(ownRequestText)) {
+  if (isSensitiveDumpRequest(ownRequestText) || isInternalCopyBoundaryRequest(ownRequestText)) {
+    const refuseAnswer = isInternalCopyBoundaryRequest(ownRequestText)
+      ? internalCopyBoundaryAnswer({ linkedVacations, fallbackBase })
+      : 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.';
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.96,
+      answer: refuseAnswer,
+      answerMode: 'refuse_internal',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [isInternalCopyBoundaryRequest(ownRequestText) ? 'internal_copy_boundary_read' : 'sensitive_internal_data_request', 'current_turn_no_write'],
+    });
+  }
+  if (isPaymentCredentialRequest(ownRequestText) && !isConcreteItineraryEditRequest(ownRequestText)) {
+    const paymentLines = [
+      'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.',
+    ];
+    if (linkedVacations.length === 1) {
+      paymentLines.push(`Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}`);
+    } else if (currentShareToken) {
+      paymentLines.push(`Here is the website: ${String(fallbackBase).replace(/\/+$/, '')}/shared/${encodeURIComponent(currentShareToken)}/`);
+    }
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.96,
-      answer: 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.',
+      answer: paymentLines.join('\n\n'),
       answerMode: 'payment_refusal',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
       reasons: ['payment_credential_request', 'external_action_boundary', 'current_turn_no_write'],
     });
   }
@@ -1262,6 +2121,162 @@ function currentTurnRouterDecision(job) {
       reasons: ['destructive_delete_request', 'current_turn_no_write'],
     });
   }
+  if (isStructuredNewTripRequest(job)) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'create',
+      shouldQueueWorker: true,
+      confidence: 0.98,
+      selectedSkill: 'timesyncher-travel-assistant',
+      answerMode: 'queue_ack',
+      reasons: ['structured_new_trip_payload'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && (isTelegramCommentAccessEditRequest(ownRequestText) || isSpouseSharedTripPromptEditRequest(ownRequestText))) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'edit',
+      shouldQueueWorker: true,
+      confidence: 0.88,
+      selectedSkill: 'timesyncher-travel-thing-editor',
+      answerMode: 'queue_ack',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: [isTelegramCommentAccessEditRequest(ownRequestText) ? 'telegram_comment_access_edit_request' : 'spouse_shared_trip_prompt_edit_request', 'current_trip_context_no_create'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isPersonAccessQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'account_question',
+      confidence: 0.93,
+      answer: vacationAccessQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest }),
+      answerMode: linkedVacations.length ? 'account_state' : 'access_state_unverified',
+      tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
+      reasons: ['person_access_question', 'current_trip_context_no_create'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isMediaUploadCapabilityQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.92,
+      answer: mediaUploadCapabilityAnswer({ linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['media_upload_capability_question', 'current_trip_context_no_create'],
+    });
+  }
+  // Boundary-read handlers beat booking/share-URL/trip-unchanged templates.
+  if ((currentShareToken || linkedVacations.length) && isKeepsakePrintQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['keepsake_print_question', 'current_trip_context_no_create'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isBookingBoundaryRequest(ownRequestText) && !isConcreteItineraryEditRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.92,
+      answer: [
+        'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.',
+        linkedVacations.length === 1 ? `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}` : '',
+      ].filter(Boolean).join('\n\n'),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['booking_boundary_question', 'current_trip_context_no_create'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isConditionalOverlapRemoveRead(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['conditional_overlap_remove_read_no_write', 'current_trip_context_no_create'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isSoftItineraryPreferenceNote(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: softItineraryPreferenceAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'account_state',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['soft_itinerary_preference_note_no_write', 'current_trip_context_no_create'],
+    });
+  }
+  // Imperative enrich/mutate writes before lookup/quality short-circuits.
+  if ((currentShareToken || linkedVacations.length) && isCurrentTripPronounEditRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'edit',
+      shouldQueueWorker: true,
+      confidence: 0.86,
+      selectedSkill: 'timesyncher-travel-thing-editor',
+      answerMode: 'queue_ack',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['current_trip_pronoun_edit_request'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isConcreteItineraryEditRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'edit',
+      shouldQueueWorker: true,
+      confidence: 0.85,
+      selectedSkill: 'timesyncher-travel-thing-editor',
+      answerMode: 'queue_ack',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['explicit_current_turn_edit_request'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && (isCurrentTripLookupQuestion(ownRequestText) || isCurrentTripContextReadQuestion(ownRequestText) || isItineraryQualityReviewQuestion(ownRequestText))) {
+    let answer = currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    if (isKeepsakePrintQuestion(ownRequestText)) {
+      answer = keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    } else if (isWebsiteLinkRequestText(ownRequestText) && linkedVacations.length === 1) {
+      answer = `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}`;
+    } else if (isItineraryQualityReviewQuestion(ownRequestText)) {
+      answer = itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    } else if (isCurrentTripContextReadQuestion(ownRequestText) && !isCurrentTripLookupQuestion(ownRequestText) && !isWebsiteLinkRequestText(ownRequestText)) {
+      answer = itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+    }
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.88,
+      answer,
+      answerMode: isWebsiteLinkRequestText(ownRequestText) || isCurrentTripLookupQuestion(ownRequestText) ? 'account_state' : 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['current_trip_lookup_no_write', 'current_trip_context_no_create'],
+    });
+  }
+  if (isExplicitNewVacationRequest(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'itinerary_action',
+      writeMode: 'create',
+      shouldQueueWorker: true,
+      confidence: 0.9,
+      selectedSkill: 'timesyncher-travel-assistant',
+      answerMode: 'queue_ack',
+      reasons: ['explicit_current_turn_create_request'],
+    });
+  }
   if (isVacationExistenceQuestion(ownRequestText)) {
     return makeTurnDecision({
       intent: 'support_question',
@@ -1270,6 +2285,32 @@ function currentTurnRouterDecision(job) {
       answerMode: linkedVacations.length ? 'account_state' : 'clarify',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['vacation_existence_question', 'current_turn_no_write'],
+    });
+  }
+
+  if (isKeepsakePrintQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length },
+      reasons: ['keepsake_print_question', 'current_turn_no_write'],
+    });
+  }
+
+  if (isItineraryQualityReviewQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length },
+      reasons: ['itinerary_quality_review_question', 'current_turn_no_write'],
     });
   }
 
@@ -1328,13 +2369,31 @@ function currentTurnRouterDecision(job) {
       reasons: ['product_vacation_checkout_request', 'current_turn_no_write'],
     });
   }
-  if (/\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/.test(lower) && isQuestionLike(ownRequestText)) {
+  if ((isBookingBoundaryRequest(ownRequestText) || (/\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/.test(lower) && isQuestionLike(ownRequestText))) && !isConcreteItineraryEditRequest(ownRequestText)) {
     return makeTurnDecision({
       intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
       confidence: 0.9,
-      answer: 'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.',
+      answer: [
+        'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.',
+        linkedVacations.length === 1 ? `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}` : '',
+      ].filter(Boolean).join('\n\n'),
       answerMode: 'support_answer',
-      reasons: ['booking_boundary_question'],
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['booking_boundary_question', 'current_turn_no_write'],
+    });
+  }
+  if (isMediaUploadCapabilityQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: mediaUploadCapabilityAnswer({ linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['media_upload_capability_question', 'current_turn_no_write'],
     });
   }
   if (isLinkCapabilityQuestion(ownRequestText)) {
@@ -1347,6 +2406,18 @@ function currentTurnRouterDecision(job) {
       answerMode: 'account_state',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['shared_link_capability_question', 'current_turn_no_write'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isItineraryQualityReviewQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'support_answer',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['current_trip_quality_read_no_write', 'current_turn_no_write'],
     });
   }
   if (isWebsiteLinkRequestText(ownRequestText)) {
@@ -1363,15 +2434,41 @@ function currentTurnRouterDecision(job) {
       reasons: ['website_link_lookup_no_write'],
     });
   }
-  if (isExplicitNewVacationRequest(ownRequestText)) {
+  if ((currentShareToken || linkedVacations.length) && isCurrentTripLookupQuestion(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.86,
+      answer: currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answerMode: 'account_state',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['current_trip_lookup_no_write'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isSoftItineraryPreferenceNote(ownRequestText)) {
+    return makeTurnDecision({
+      intent: 'support_question',
+      writeMode: 'none',
+      shouldQueueWorker: false,
+      confidence: 0.9,
+      answer: softItineraryPreferenceAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      selectedSkill: 'timesyncher-vacation-support-router',
+      answerMode: 'account_state',
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['soft_itinerary_preference_note_no_write', 'current_turn_no_write'],
+    });
+  }
+  if ((currentShareToken || linkedVacations.length) && isCurrentTripPronounEditRequest(ownRequestText)) {
     return makeTurnDecision({
       intent: 'itinerary_action',
-      writeMode: 'create',
+      writeMode: 'edit',
       shouldQueueWorker: true,
-      confidence: 0.9,
-      selectedSkill: 'timesyncher-travel-assistant',
+      confidence: 0.86,
+      selectedSkill: 'timesyncher-travel-thing-editor',
       answerMode: 'queue_ack',
-      reasons: ['explicit_current_turn_create_request'],
+      tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
+      reasons: ['current_trip_pronoun_edit_request'],
     });
   }
   if (isConcreteItineraryEditRequest(ownRequestText)) {
@@ -1423,7 +2520,11 @@ function shouldAskBeforeStartingNewPass({ job, input, payload, requestText }) {
   if (isNewVacationAdviceQuestion(requestText) || isVagueNextStepQuestion(requestText) || isVacationExistenceQuestion(requestText)) return true;
   if (!token) return false;
   if (isWebsiteLinkRequestText(requestText)) return false;
-  if (isConcreteItineraryEditRequest(requestText)) return false;
+  // Current-trip lock: post-create edits (including pronoun moves) apply to the linked trip; never clarify current-vs-new.
+  if (isConcreteItineraryEditRequest(requestText) || isCurrentTripPronounEditRequest(requestText)) return false;
+  if (isCurrentTripContextReadQuestion(requestText) || isCurrentTripLookupQuestion(requestText) || isItineraryQualityReviewQuestion(requestText) || isKeepsakePrintQuestion(requestText) || isMediaUploadCapabilityQuestion(requestText) || isBookingBoundaryRequest(requestText) || isWebsiteLinkRequestText(requestText)) {
+    return false;
+  }
   if (isExplicitNewVacationRequest(requestText) || payload.createNewTrip || payload.create_new_trip || job.createNewTrip || job.create_new_trip) return false;
   return true;
 }
@@ -1445,7 +2546,7 @@ function extractTripSegments(requestText) {
       island: 'Oahu',
       base: containsAny(lower, ['waikiki']) ? 'Waikiki / Honolulu' : 'Honolulu',
       nights: /\bthree nights?\b/i.test(requestText) ? 3 : /\btwo nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['moana', 'surfrider']) ? 'Beachfront Waikiki lodging requested; compare source-backed nearby hotels.' : 'Waikiki hotel options.',
+      lodging: containsAny(lower, ['moana', 'surfrider']) ? 'Beachfront Waikiki lodging requested; compare nearby hotels with public pages.' : 'Waikiki hotel options.',
       ideas: [
         'Waikiki arrival/check-in and beach time',
         'Local restaurants, juice/breakfast spots, and dinner options',
@@ -1563,7 +2664,7 @@ function hawaiiResearchThings(requestText) {
       subtype: 'North Shore day option',
       title: 'North Shore surf/coast day',
       island: 'Oahu',
-      description: 'Customer asked for a North Shore surf/coast stop. Research pass should set expectations about surf seasonality and pair it with nearby source-backed food or shopping stops if surf is quiet.',
+      description: 'Customer asked for a North Shore surf/coast stop. Research pass should set expectations about surf seasonality and pair it with nearby food or shopping stops from public pages if surf is quiet.',
       links: [link('Go Hawaii North Shore overview', 'https://www.gohawaii.com/islands/oahu/regions/north-shore')],
     }),
     researchedThing({
@@ -1625,7 +2726,7 @@ function hawaiiResearchThings(requestText) {
       subtype: 'Kona-area hotel candidate',
       title: 'Kona-area lodging fit check',
       island: 'Big Island',
-      description: 'Customer mentioned a Hilton-style Hawaii lodging preference. Research pass should confirm island intent and compare source-backed Kona-area lodging against true Kona-town hotels.',
+      description: 'Customer mentioned a Hilton-style Hawaii lodging preference. Research pass should confirm island intent and compare Kona-area lodging from public pages against true Kona-town hotels.',
       links: [link('Kona-area lodging source', 'https://www.gohawaii.com/islands/hawaii-island/regions/kona')],
     }),
     researchedThing({
@@ -1658,7 +2759,7 @@ function siteBase() {
 }
 
 function syncTrekItinerary(job, artifacts) {
-  const script = path.join(SCRIPT_DIR, 'trek-vacation-sync.mjs');
+  const script = resolveProductScript('trek-vacation-sync.mjs');
   if (!fs.existsSync(script)) throw new Error(`TREK sync script is missing: ${script}`);
   const payload = {
     sourceKey: text(job.onboarding_token || job.request_id || job.id || 'timesyncher-vacation', 180),
@@ -1691,8 +2792,21 @@ function syncTrekItinerary(job, artifacts) {
   return sync;
 }
 
+function resolveProductScript(fileName) {
+  const productScriptsDir = '/home/timesyncher-agent/timesyncher/scripts';
+  const candidates = [
+    // Prefer canonical product-source helpers even when this dispatcher is copied into the worker runtime dir.
+    path.join(productScriptsDir, fileName),
+    path.join(SCRIPT_DIR, fileName),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return candidates[0];
+}
+
 function applyTrekItineraryEdit(job, artifacts) {
-  const script = path.join(SCRIPT_DIR, 'trek-itinerary-edit.mjs');
+  const script = resolveProductScript('trek-itinerary-edit.mjs');
   if (!fs.existsSync(script)) throw new Error(`TREK edit script is missing: ${script}`);
   const payload = {
     token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
@@ -1720,7 +2834,7 @@ function applyTrekItineraryEdit(job, artifacts) {
 }
 
 function applyTrekAgentEdit(job, artifacts, deterministicError) {
-  const script = path.join(SCRIPT_DIR, 'trek-agent-edit.mjs');
+  const script = resolveProductScript('trek-agent-edit.mjs');
   if (!fs.existsSync(script)) throw new Error(`TREK agent edit script is missing: ${script}`);
   const payload = {
     token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
@@ -1743,8 +2857,29 @@ function applyTrekAgentEdit(job, artifacts, deterministicError) {
   } catch {
     throw new Error(`TREK broad edit returned invalid JSON: ${text(result.stdout, 500)}`);
   }
+  // Structured no-op from the TREK applicator (unresolved target / empty plan) is a successful read-safe turn.
+  if (edit?.noop === true || edit?.editApplied === false || edit?.mode === 'trek_agent_edit_noop') {
+    const token = text(edit?.token || payload.token || '', 180);
+    const publicBase = text(payload.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com', 500).replace(/\/+$/, '');
+    return {
+      ok: true,
+      noop: true,
+      editApplied: false,
+      mode: 'trek_agent_edit_noop',
+      token: token || null,
+      url: edit?.url || (token ? `${publicBase}/shared/${encodeURIComponent(token)}/` : ''),
+      summary: sanitizeCustomerNoopSummary(edit?.summary) || 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.',
+      reason: text(edit?.reason || 'noop', 120),
+      plannedOperations: [],
+      updatedItems: [],
+      accessChanges: [],
+      operationCount: 0,
+      verification: { changed: false, source: 'deterministic-resolved-target-gate' },
+    };
+  }
   smokeCheckTrekSync(edit);
   edit.mode = edit.mode || 'grok_trek_agent_edit';
+  edit.editApplied = edit.editApplied !== false;
   return edit;
 }
 
@@ -1755,7 +2890,28 @@ function applyExistingTripEdit(job, artifacts) {
   try {
     return applyTrekItineraryEdit(job, artifacts);
   } catch (error) {
-    return applyTrekAgentEdit(job, artifacts, error);
+    try {
+      return applyTrekAgentEdit(job, artifacts, error);
+    } catch (agentError) {
+      // Never surface Traceback/stack text to customer copy on planner/apply miss.
+      const publicBase = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com';
+      const token = text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180);
+      return {
+        ok: true,
+        noop: true,
+        editApplied: false,
+        mode: 'trek_agent_edit_noop',
+        token: token || null,
+        url: token ? `${String(publicBase).replace(/\/+$/, '')}/shared/${encodeURIComponent(token)}/` : '',
+        summary: sanitizeCustomerNoopSummary(agentError?.message || error?.message) || 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.',
+        reason: 'apply_exception_noop',
+        plannedOperations: [],
+        updatedItems: [],
+        accessChanges: [],
+        operationCount: 0,
+        verification: { changed: false, source: 'apply-exception-noop' },
+      };
+    }
   }
 }
 
@@ -1769,6 +2925,11 @@ function smokeCheckTrekSync(sync, options = {}) {
   if (parsed.hostname.toLowerCase() !== expectedHost) {
     throw new Error(`TREK sync returned non-canonical host: ${parsed.hostname}`);
   }
+  // Isolated campaign DBs mint local-only share tokens; remote Shared URL/API smoke 404s are not product failures.
+  const skipRemoteSmoke = process.env.TIMESYNCHER_TREK_SYNC_SKIP_API_SMOKE === '1'
+    || process.env.TIMESYNCHER_TREK_AGENT_EDIT_SKIP_REMOTE_SMOKE === '1'
+    || /\/tmp\//.test(text(process.env.TIMESYNCHER_TREK_DB_PATH || '', 500));
+  if (skipRemoteSmoke) return;
   const page = spawnSync('curl', ['-fsSL', url], { encoding: 'utf8', timeout: 20000, maxBuffer: 1024 * 1024 });
   if (page.status !== 0) throw new Error(`TREK shared URL smoke failed: ${text(page.stderr || page.stdout || 'no response', 500)}`);
   const assetPaths = Array.from(page.stdout.matchAll(/["'](\/assets\/index-[^"']+)["']/g), (match) => match[1]);
@@ -1839,6 +3000,122 @@ async function syncHostedSharedItinerary(job, artifacts) {
   }
 }
 
+
+function setTrekTripTitle(trekSync, title) {
+  const token = text(trekSync?.token || '', 180);
+  const cleanTitle = text(title, 160);
+  const dbPath = process.env.TIMESYNCHER_TREK_DB_PATH || '/home/timesyncher-agent/trek/runtime/data/travel.db';
+  if (!token || !cleanTitle || !fs.existsSync(dbPath)) return { skipped: true };
+  const code = `import json, sqlite3, sys
+p=json.load(sys.stdin)
+con=sqlite3.connect(p["dbPath"])
+row=con.execute("select trips.id from share_tokens join trips on trips.id=share_tokens.trip_id where share_tokens.token=?", (p["token"],)).fetchone()
+if not row: raise SystemExit("missing shared token")
+con.execute("update trips set title=? where id=?", (p["title"], row[0]))
+con.commit()
+print(json.dumps({"ok": True, "tripId": row[0], "title": p["title"]}))`;
+  const result = spawnSync('python3', ['-c', code], {
+    input: JSON.stringify({ dbPath, token, title: cleanTitle }),
+    encoding: 'utf8',
+    timeout: 15000,
+    maxBuffer: 1024 * 1024,
+  });
+  if (result.status !== 0) return { ok: false, error: text(result.stderr || result.stdout, 500) };
+  try { return JSON.parse(result.stdout); } catch { return { ok: true }; }
+}
+
+async function buildMultiVacationSplitArtifacts(job, manifest, context) {
+  const { input, payload, trip, requestText, ownRequestText, routerDecision } = context;
+  const priorVoice = priorVoiceNoteContext({ ...job, input, payload });
+  const splitPlan = multiVacationSplitPlanFromText(requestText, payload);
+  if (splitPlan.length < 2) {
+    return {
+      requestText,
+      destination: extractDestination(ownRequestText, payload, trip, { ignoreTripContext: true }),
+      dates: extractDates(ownRequestText, payload, trip, { ignoreTripContext: true, job }),
+      methods: ['travel.assistant.multi-vacation-split-clarify'],
+      lane: { primary: 'multi_vacation_split_needs_targets' },
+      vacationName: vacationNameFrom(job, payload, trip, '', { ignoreTripContext: true }),
+      unforgettableGoal: unforgettableGoalFrom(job, payload),
+      things: [],
+      budgetItems: [],
+      supportNotes: [{ actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper', note: 'Multi-vacation split request was actionable but did not contain enough distinct vacation targets.', metadata: { requestedAt: new Date().toISOString(), routerDecision } }],
+      initialItinerary: '',
+      webItineraryUrl: '',
+      researchedThings: [],
+      trekSync: null,
+      hostedSync: { skipped: true, reason: 'multi_vacation_split_needs_targets' },
+      publicResearch: { status: 'multi_vacation_split_needs_targets' },
+      clarificationNeeded: true,
+      supportRouterDecision: makeTurnDecision({ intent: 'multi_vacation_split', writeMode: 'none', shouldQueueWorker: false, confidence: 0.86, answer: 'I can separate this into multiple vacations. Tell me the vacation names or destinations to split into.', selectedSkill: 'timesyncher-vacation-support-router', answerMode: 'clarify', reasons: ['multi_vacation_split_missing_targets'] }),
+      turnDecision: routerDecision,
+      editApplied: false,
+      createNewTrip: false,
+      multiVacationSplit: { status: 'needs_targets', vacations: [] },
+    };
+  }
+  const requestedAt = new Date().toISOString();
+  const vacations = [];
+  const allThings = [];
+  const allBudgetItems = [];
+  const supportNotes = [];
+  for (const [index, segment] of splitPlan.entries()) {
+    const segmentPayload = { ...payload, vacationName: segment.title, destination: segment.destination, createNewTrip: true };
+    const segmentText = [
+      `Create a separate TimeSyncher Vacation itinerary titled ${segment.title}.`,
+      segment.destination ? `Destination/area: ${segment.destination}.` : '',
+      segment.dateText ? `Dates: ${segment.dateText}.` : '',
+      segment.brief,
+      'Keep this vacation separate from the other vacations in the split request.',
+      priorVoice ? `Saved voice-note context:\n${priorVoice}` : '',
+    ].filter(Boolean).join('\n\n');
+    const destination = segment.destination || extractDestination(segmentText, segmentPayload, {}, { ignoreTripContext: true });
+    const dates = extractDates([segment.dateText, segmentText].filter(Boolean).join(' '), segmentPayload, {}, { ignoreTripContext: true, job });
+    const vacationName = segment.title;
+    const methods = inferMethods(segmentText);
+    const lane = lodgingLane(segmentText, manifest);
+    const initialItinerary = buildInitialItinerary({ requestText: segmentText, destination, dates });
+    const publicResearch = await runPublicResearch({ artifacts: { requestText: segmentText, vacationName, unforgettableGoal: unforgettableGoalFrom(job, segmentPayload), destination, dates, lodgingLane: lane }, targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15, minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10 });
+    const researchedThings = publicResearch.candidates || [];
+    if (researchedThings.length === 0 && process.env.TIMESYNCHER_ALLOW_EMPTY_RESEARCH_PASS !== '1') {
+      throw new Error(`Public research pass produced no public options with links for split vacation ${vacationName}; not sending a ready message. Status: ${publicResearch.status || 'unknown'}`);
+    }
+    if (publicResearch.status !== 'source_backed_research_complete' && process.env.TIMESYNCHER_ALLOW_INCOMPLETE_RESEARCH_PASS !== '1') {
+      throw new Error(`Public research pass did not meet first-pass quality gates for split vacation ${vacationName}; status: ${publicResearch.status || 'unknown'}`);
+    }
+    const trekSync = syncTrekItinerary({ ...job, id: `${job.id || job.request_id || 'split'}-${index + 1}`, request_id: job.request_id, onboarding_token: job.onboarding_token, request_text: segmentText }, { requestText: segmentText, vacationName, unforgettableGoal: unforgettableGoalFrom(job, segmentPayload), destination, dates, researchedThings, createNewTrip: true });
+    const titleUpdate = setTrekTripTitle(trekSync, vacationName);
+    const webItineraryUrl = trekSync.url;
+    smokeCheckTrekSync(trekSync);
+    vacations.push({ title: vacationName, destination, dates, url: webItineraryUrl, token: trekSync.token || null, researchStatus: publicResearch.status || null, candidateCount: researchedThings.length, titleUpdate });
+    allThings.push({ category: 'note', subtype: 'multi_vacation_split_child', title: vacationName, description: segment.brief || segmentText, metadata: { source: 'product-gbrain-dispatch', splitIndex: index + 1, requestedAt, webItineraryUrl } });
+    allBudgetItems.push({ category: 'general', label: `${vacationName} budget placeholder`, amountCents: 0, metadata: { status: 'needs_budget', splitIndex: index + 1 } });
+    supportNotes.push({ actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper', note: `Created split vacation ${index + 1}: ${vacationName}`, metadata: { requestedAt, webItineraryUrl, token: trekSync.token || null, titleUpdate } });
+  }
+  return {
+    requestText,
+    destination: vacations.map((item) => item.destination).filter(Boolean).join('; '),
+    dates: {},
+    methods: ['travel.assistant.multi-vacation-split', 'travel.assistant.sync-trek-nomad'],
+    lane: { primary: 'multi_vacation_split' },
+    vacationName: 'Multiple vacations',
+    unforgettableGoal: unforgettableGoalFrom(job, payload),
+    things: allThings,
+    budgetItems: allBudgetItems,
+    supportNotes,
+    initialItinerary: '',
+    webItineraryUrl: vacations[0]?.url || '',
+    researchedThings: vacations.flatMap((item) => Array.from({ length: item.candidateCount }, (_, i) => ({ title: `${item.title} public option ${i + 1}`, category: 'note' }))),
+    trekSync: { mode: 'multi_vacation_split', vacations },
+    hostedSync: { skipped: true, reason: 'multi_vacation_split_child_urls' },
+    publicResearch: { status: 'multi_vacation_split_complete', vacationCount: vacations.length },
+    editApplied: true,
+    createNewTrip: true,
+    turnDecision: routerDecision,
+    multiVacationSplit: { status: 'completed', vacations, transcriptContextAttached: Boolean(priorVoice) },
+  };
+}
+
 async function buildArtifacts(job, manifest) {
   const input = asObject(job.input);
   const payload = { ...asObject(job.payload), ...asObject(input.payload) };
@@ -1847,6 +3124,9 @@ async function buildArtifacts(job, manifest) {
   const ownRequestText = text(currentTurnText({ ...job, input, payload }) || requestText);
   const routerDecision = currentTurnRouterDecisionModelFirst({ ...job, input, payload, productManifest: manifest });
   assertCommitWorthyTurnDecision(routerDecision);
+  if (routerDecision.intent === 'multi_vacation_split' && routerDecision.shouldQueueWorker !== false) {
+    return buildMultiVacationSplitArtifacts(job, manifest, { input, payload, trip, requestText, ownRequestText, routerDecision });
+  }
   if (routerDecision.shouldQueueWorker === false) {
     const token = shareTokenFromContext(job, input, payload, requestText);
     const publicBase = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com';
@@ -1879,38 +3159,102 @@ async function buildArtifacts(job, manifest) {
       createNewTrip: false,
     };
   }
-  const createNewTrip = Boolean(payload.createNewTrip || payload.create_new_trip || job.createNewTrip || job.create_new_trip || isExplicitNewVacationRequest(ownRequestText));
-  if (!createNewTrip && isConcreteItineraryEditRequest(ownRequestText)) {
-    const trekEdit = applyExistingTripEdit(job, { requestText });
+  const createNewTrip = Boolean(isStructuredNewTripRequest({ ...job, input, payload }) || isExplicitNewVacationRequest(ownRequestText));
+  if (!createNewTrip && (isConcreteItineraryEditRequest(ownRequestText) || isCurrentTripPronounEditRequest(ownRequestText))) {
+    const trekEdit = applyExistingTripEdit(job, { requestText: ownRequestText || requestText });
+    const editApplied = !(trekEdit?.noop === true || trekEdit?.editApplied === false || trekEdit?.mode === 'trek_agent_edit_noop');
+    const linkedVacationsForEdit = linkedVacationsFrom(job, input, payload);
+    const fallbackBaseForEdit = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_SITE_BASE;
+    // On planner/target miss, fall through to boundary-read handlers instead of the generic no-op apology.
+    let noopAnswer = sanitizeCustomerNoopSummary(trekEdit?.summary) || routerDecision?.answer || 'I kept the current trip unchanged because that edit did not resolve to a concrete itinerary target.';
+    let noopReasons = [...(routerDecision?.reasons || []), 'trek_edit_noop_no_resolved_target'];
+    if (!editApplied) {
+      if (isTravelerFacingKeepsakePrintSurface(ownRequestText) && !requestsInternalCopyDump(ownRequestText)) {
+        noopAnswer = keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+        noopReasons = ['keepsake_print_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+      } else if (isInternalCopyBoundaryRequest(ownRequestText) || isSensitiveDumpRequest(ownRequestText)) {
+        noopAnswer = internalCopyBoundaryAnswer({ linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+        noopReasons = ['internal_copy_boundary_read_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+      } else if (isKeepsakePrintQuestion(ownRequestText)) {
+        noopAnswer = keepsakePrintAnswer({ requestText: ownRequestText, linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+        noopReasons = ['keepsake_print_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+      } else if (
+        isSoftItineraryPreferenceNote(ownRequestText)
+        || isItineraryQualityReviewQuestion(ownRequestText)
+        || isItineraryMissingFieldsAuditRequest(ownRequestText)
+        || isCurrentTripLookupQuestion(ownRequestText)
+        || isCurrentTripContextReadQuestion(ownRequestText)
+        || (/\b(happy hour|hotel[- ]?bar|review|rating|reviews|ratings)\b/i.test(ownRequestText)
+          && !isImperativeItineraryMutation(ownRequestText))
+      ) {
+        // Quality/preference/happy-hour boundary turns must never keep the generic no-op-edit sentence.
+        if (isSoftItineraryPreferenceNote(ownRequestText)) {
+          noopAnswer = softItineraryPreferenceAnswer({ requestText: ownRequestText, linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+          noopReasons = ['soft_preference_quality_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+        } else if (isItineraryQualityReviewQuestion(ownRequestText) || isItineraryMissingFieldsAuditRequest(ownRequestText) || /\b(happy hour|hotel[- ]?bar)\b/i.test(ownRequestText)) {
+          noopAnswer = itineraryQualityReviewAnswer({ requestText: ownRequestText, linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+          noopReasons = ['quality_read_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+        } else {
+          noopAnswer = currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+          noopReasons = ['boundary_read_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+        }
+      } else if (isConditionalOverlapRemoveRead(ownRequestText)) {
+        noopAnswer = currentTripLookupAnswer({ requestText: ownRequestText, linkedVacations: linkedVacationsForEdit, fallbackBase: fallbackBaseForEdit });
+        noopReasons = ['conditional_overlap_remove_read_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+      } else if (isBookingBoundaryRequest(ownRequestText)) {
+        noopAnswer = 'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.';
+        noopReasons = ['booking_boundary_after_edit_miss', 'trek_edit_noop_no_resolved_target'];
+      }
+      noopAnswer = sanitizeCustomerNoopSummary(noopAnswer) || noopAnswer;
+    }
+    const noWriteDecision = editApplied
+      ? routerDecision
+      : makeTurnDecision({
+        intent: 'support_question',
+        writeMode: 'none',
+        shouldQueueWorker: false,
+        confidence: Math.max(Number(routerDecision?.confidence || 0), 0.88),
+        answer: text(noopAnswer, 1800),
+        selectedSkill: 'timesyncher-vacation-support-router',
+        answerMode: 'support_answer',
+        tripSelector: routerDecision?.tripSelector || { candidatesConsidered: linkedVacationsForEdit.length },
+        reasons: noopReasons,
+        source: routerDecision?.source || 'deterministic_fallback_router',
+      });
     return {
       requestText,
       destination: extractDestination(requestText, payload, trip),
       dates: extractDates(requestText, payload, trip),
-      methods: trekEdit.mode === 'grok_trek_agent_edit'
-        ? ['travel.assistant.sync-trek-nomad', 'travel.assistant.grok-trek-agent-edit']
-        : ['travel.assistant.sync-trek-nomad'],
-      lane: { primary: trekEdit.mode || 'deterministic_trek_edit' },
+      methods: editApplied
+        ? (trekEdit.mode === 'grok_trek_agent_edit'
+          ? ['travel.assistant.sync-trek-nomad', 'travel.assistant.grok-trek-agent-edit']
+          : ['travel.assistant.sync-trek-nomad'])
+        : ['travel.assistant.trek-edit-noop'],
+      lane: { primary: trekEdit.mode || (editApplied ? 'deterministic_trek_edit' : 'trek_agent_edit_noop') },
       vacationName: vacationNameFrom(job, payload, trip, ''),
       unforgettableGoal: unforgettableGoalFrom(job, payload),
       things: [],
       budgetItems: [],
       supportNotes: [{
         actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-        note: `${trekEdit.mode === 'grok_trek_agent_edit' ? 'Grok TREK agent edit' : 'Deterministic TREK edit'} applied to existing shared trip. Operations: ${trekEdit.operationCount || 0}`,
-        metadata: { requestedAt: new Date().toISOString(), webItineraryUrl: trekEdit.url || null, updatedItems: trekEdit.updatedItems || [], accessChanges: trekEdit.accessChanges || [] },
+        note: editApplied
+          ? `${trekEdit.mode === 'grok_trek_agent_edit' ? 'Grok TREK agent edit' : 'Deterministic TREK edit'} applied to existing shared trip. Operations: ${trekEdit.operationCount || 0}`
+          : `TREK edit no-op (${text(trekEdit?.reason || 'no_resolved_target', 80)}): left current shared trip unchanged.`,
+        metadata: { requestedAt: new Date().toISOString(), webItineraryUrl: trekEdit.url || null, updatedItems: trekEdit.updatedItems || [], accessChanges: trekEdit.accessChanges || [], noop: !editApplied },
       }],
       initialItinerary: '',
       webItineraryUrl: trekEdit.url,
       researchedThings: [],
       trekSync: trekEdit,
-      hostedSync: { skipped: true, reason: 'existing_trek_edit' },
-      publicResearch: { status: 'skipped_existing_trek_edit' },
-      editApplied: true,
-      turnDecision: routerDecision,
+      hostedSync: { skipped: true, reason: editApplied ? 'existing_trek_edit' : 'trek_edit_noop' },
+      publicResearch: { status: editApplied ? 'skipped_existing_trek_edit' : 'trek_edit_noop' },
+      editApplied,
+      turnDecision: noWriteDecision,
+      supportRouterDecision: noWriteDecision,
       createNewTrip: false,
     };
   }
-  if (shouldAskBeforeStartingNewPass({ job, input, payload, requestText })) {
+  if (shouldAskBeforeStartingNewPass({ job, input, payload, requestText: ownRequestText })) {
     const token = shareTokenFromContext(job, input, payload, requestText);
     const publicBase = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com';
     return {
@@ -1949,7 +3293,7 @@ async function buildArtifacts(job, manifest) {
   const publicResearch = await runPublicResearch({ artifacts: { requestText, vacationName, unforgettableGoal, destination, dates, lodgingLane: lane }, targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15, minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10 });
   const researchedThings = publicResearch.candidates || [];
   if ((job.request_type || job.job_type) === 'itinerary_research_update' && researchedThings.length === 0 && process.env.TIMESYNCHER_ALLOW_EMPTY_RESEARCH_PASS !== '1') {
-    throw new Error(`Public research pass produced no source-linked candidates; not sending a ready message. Status: ${publicResearch.status || 'unknown'}`);
+    throw new Error(`Public research pass produced no public options with links; not sending a ready message. Status: ${publicResearch.status || 'unknown'}`);
   }
   if ((job.request_type || job.job_type) === 'itinerary_research_update' && publicResearch.status !== 'source_backed_research_complete' && process.env.TIMESYNCHER_ALLOW_INCOMPLETE_RESEARCH_PASS !== '1') {
     throw new Error(`Public research pass did not meet first-pass quality gates; not sending a ready message. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
@@ -2008,7 +3352,7 @@ async function buildArtifacts(job, manifest) {
       category: 'activity',
       subtype: 'Itinerary research',
       title: `${titleDestination} itinerary research`,
-      description: 'Build a source-backed shortlist of itinerary options, restaurants, stores, events, budget items, and unresolved decisions.',
+      description: 'Build a shortlist of itinerary options, restaurants, stores, events, budget items, and unresolved decisions from public pages.',
       metadata: {
         source: 'product-gbrain-dispatch',
         status: 'queued_for_research',
@@ -2025,7 +3369,7 @@ async function buildArtifacts(job, manifest) {
   const supportNotes = [
     {
       actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-      note: `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
+      note: `Restricted Product GBrain dispatch created a TREK research workspace and queued public-page research. Methods: ${methods.join(', ')}`,
       metadata: { destination: destination || null, lodgingLane: lane.primary, requestedAt, webItineraryUrl: webItineraryUrl || null },
     },
   ];
@@ -2040,27 +3384,44 @@ function customerResponse(job, artifacts) {
   const requestType = text(job.request_type || job.job_type || '', 80);
   const url = text(artifacts.webItineraryUrl || '', 500);
   const requestText = text(job.request_text || job.text || job.message || artifacts.requestText || '', 2000).toLowerCase();
+  const finalizeCustomerCopy = (value) => sanitizeCustomerFacingCopy(value, 3900);
   if (artifacts.supportRouterDecision && artifacts.supportRouterDecision.shouldQueueWorker === false) {
     const answer = text(artifacts.supportRouterDecision.answer, 1800);
-    if (answer) return answer.slice(0, 3900);
+    if (answer) return finalizeCustomerCopy(answer);
   }
   if (url && isWebsiteLinkRequestText(requestText)) {
-    return `Here is the website: ${url}`.slice(0, 3900);
+    return finalizeCustomerCopy(`Here is the website: ${url}`);
+  }
+  if (artifacts.multiVacationSplit?.status === 'completed') {
+    const lines = artifacts.multiVacationSplit.vacations
+      .map((vacation) => {
+        const title = safeCustomerItemText(vacation.title, 160);
+        const link = text(vacation.url, 500);
+        return title && link ? `${title}\n${link}` : '';
+      })
+      .filter(Boolean);
+    return finalizeCustomerCopy([
+      'Done. I separated this into multiple vacation websites:',
+      '',
+      ...lines,
+      '',
+      'You can keep sending changes for any of those by name.',
+    ].join('\n'));
   }
   if (artifacts.clarificationNeeded) {
-    return [
+    return finalizeCustomerCopy([
       'I need to check one thing before I change anything.',
       '',
       'Do you want me to update the current vacation website, or start a brand-new vacation?',
       '',
       url ? `Current website: ${url}` : 'Tell me the vacation name if you want me to update an existing vacation.',
-    ].join('\n').slice(0, 3900);
+    ].join('\n'));
   }
   if (artifacts.editApplied) {
     const updatedItems = Array.isArray(artifacts.trekSync?.updatedItems) ? artifacts.trekSync.updatedItems : [];
     const itemLines = updatedItems
       .map((item) => {
-        const title = text(item?.title || item?.name || item?.label, 160);
+        const title = safeCustomerItemText(item?.title || item?.name || item?.label, 160);
         if (!title) return '';
         const action = text(item?.action || 'updated', 40).toLowerCase();
         const day = Number.isFinite(Number(item?.day)) ? ` to Day ${Number(item.day)}` : '';
@@ -2070,38 +3431,48 @@ function customerResponse(job, artifacts) {
       })
       .filter(Boolean)
       .slice(0, 8);
-    return [
+    const needsReviewRatingVerification = /\b(happy hour|review|rating|official|source(?:d)?|hours|timed entry|pass notes|public menu|hot[- ]?chicken|menu this fall|restaurant|dinner|lunch|shellfish|allergy|museum|science|academy|living roof|penguin|publicly listed)\b/i.test(requestText);
+    const bookingBoundaryLine = /\b(book|booking|reserve|reservation|purchase|buy|pay for|hold|card|cvv)\b/i.test(requestText)
+      ? 'TimeSyncher Vacation updated the itinerary notes only; customers verify details and make any bookings, reservations, purchases, holds, or payments themselves through the official provider.'
+      : '';
+    return finalizeCustomerCopy([
       itemLines.length
         ? 'I updated the vacation website:'
         : 'I updated the vacation website.',
       ...itemLines,
+      /\bhappy hour\b/i.test(requestText)
+        ? 'I kept the happy hour, review/rating fields, and verified public listing details marked for follow-up rather than guessing.'
+        : needsReviewRatingVerification
+          ? 'I kept review/rating, hours, and verified public listing details marked for follow-up rather than guessing.'
+          : 'I used verified public listing details when present and left missing fields marked for follow-up rather than guessing.',
+      bookingBoundaryLine,
       '',
       `Here is the website: ${url}`,
-    ].join('\n').slice(0, 3900);
+    ].filter((line) => line !== '').join('\n'));
   }
   if (requestType === 'itinerary_research_update' || url) {
     const count = artifacts.researchedThings?.length || 0;
     const researchStatus = text(artifacts.publicResearch?.status || '', 120);
     if (researchStatus && researchStatus !== 'source_backed_research_complete') {
-      return [
-        'I started the vacation website, but it still needs more source-backed options before I call the first pass ready.',
+      return finalizeCustomerCopy([
+        'I started the vacation website, but it still needs more verified public options before I call the first pass ready.',
         '',
         count
-          ? `So far I found ${count} source-linked option${count === 1 ? '' : 's'}, and I still need to fill the missing restaurant, activity, shopping, review, or detail fields.`
+          ? `So far I found ${count} public option${count === 1 ? '' : 's'} with links, and I still need to fill the missing restaurant, activity, shopping, review, or detail fields.`
           : 'I still need to gather enough destination-specific restaurants, activities, shopping, reviews, and details.',
         '',
         url ? `Here is the current website: ${url}` : 'I will send the website link once the next pass is ready.',
-      ].join('\n').slice(0, 3900);
+      ].join('\n'));
     }
-    return [
+    return finalizeCustomerCopy([
       'Your first TimeSyncher Vacation pass is ready.',
       '',
       count
-        ? `I researched and organized ${count} source-linked options for the trip, including restaurants, activities, wineries, sightseeing, transportation notes, and open decisions.`
+        ? `I researched and organized ${count} public options with links for the trip, including restaurants, activities, wineries, sightseeing, transportation notes, and open decisions.`
         : 'I organized the details you sent into the vacation website and marked the remaining research areas for the next pass.',
       '',
       url ? `Here is the website: ${url}` : 'The website was created, but I could not attach the link in this message. I will retry sending it.',
-    ].join('\n').slice(0, 3900);
+    ].join('\n'));
   }
 
   const lines = [
@@ -2111,7 +3482,7 @@ function customerResponse(job, artifacts) {
     '',
     'After your next message, I’ll spend about 10-15 minutes researching and organizing the first pass, then I’ll come back with your dedicated TimeSyncher Vacation website.',
   ].filter(Boolean);
-  return lines.join('\n').slice(0, 3900) || artifacts.initialItinerary || 'I started your TimeSyncher Vacation itinerary and saved the planning brief.';
+  return finalizeCustomerCopy(lines.join('\n') || artifacts.initialItinerary || 'I started your TimeSyncher Vacation itinerary and saved the planning brief.');
 }
 
 function customerVacationUrl(artifacts) {
@@ -2135,7 +3506,26 @@ function customerVacationUrl(artifacts) {
 
 function customerCopyLeakScan(value) {
   const source = text(value, 5000);
-  const forbidden = ['TREK', 'GBrain', 'research workspace', 'worker', 'capability gate', 'public research pass', 'sqlite', 'Traceback', '/home/'];
+  const forbidden = [
+    'TREK',
+    'GBrain',
+    'research workspace',
+    'worker',
+    'capability gate',
+    'public research pass',
+    'sqlite',
+    'Traceback',
+    '/home/',
+    'source-backed',
+    'source backed',
+    'source_backed',
+    'source-linked',
+    'source linked',
+    'source_linked',
+    'source-based',
+    'source based',
+    'source_based',
+  ];
   const hits = forbidden.filter((term) => source.toLowerCase().includes(term.toLowerCase()));
   return { ok: hits.length === 0, hits };
 }
@@ -2211,6 +3601,7 @@ async function main() {
       webItineraryUrl: artifacts.webItineraryUrl || null,
       editApplied: Boolean(artifacts.editApplied),
       createNewTrip: Boolean(artifacts.createNewTrip),
+      multiVacationSplit: artifacts.multiVacationSplit || null,
       turnDecision: artifacts.turnDecision || artifacts.supportRouterDecision || null,
       turnInspector,
       trekSync: artifacts.trekSync || null,

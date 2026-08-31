@@ -3,7 +3,7 @@ import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption } from '../src/vacation/coupons.mjs';
 import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
+import { recordAccountUpgradePurchase, recordOwnerMediaPurchase, requireAccountUpgrade, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
   collaboratorTelegramLink,
@@ -75,6 +75,77 @@ export default async function handler(req, res) {
     const db = sql(process.env);
     const couponCode = cleanText(body.couponCode || body.coupon, 120);
     const collaboratorInviteToken = cleanText(body.collaboratorInvite || body.collaboratorInviteToken, 200);
+    if (body.action === 'redeem_owner_account_upgrade_coupon' || body.product === 'owner_account_upgrade') {
+      const upgrade = requireAccountUpgrade(body);
+      const { coupon, redemption } = await consumeCoupon(db, couponCode, {
+        email: contact.email,
+        plan: 'unlimited',
+        originalAmountCents: upgrade.amountCents,
+        metadata: {
+          source: 'account_upgrade_coupon_checkout',
+          plan: 'unlimited',
+          accountUpgrade: 'unlimited',
+          photoUpload: upgrade.photoUpload,
+          videoUpload: upgrade.videoUpload,
+          upgradeAmountCents: upgrade.upgradeAmountCents,
+          photoAmountCents: upgrade.photoAmountCents,
+          videoAmountCents: upgrade.videoAmountCents,
+          totalAmountCents: upgrade.amountCents,
+          email: contact.email,
+          first_name: contact.firstName,
+          last_name: contact.lastName,
+        },
+      }, process.env);
+      const purchase = await recordAccountUpgradePurchase({
+        db,
+        contact,
+        upgrade,
+        amountCents: 0,
+        currency: CURRENCY,
+        status: 'coupon_redeemed',
+        metadata: {
+          couponId: coupon.id,
+          couponHint: coupon.codeHint,
+          couponRedemptionId: redemption.id,
+          paidVia: 'coupon_checkout',
+          originalAmountCents: upgrade.amountCents,
+          amountWaivedCents: upgrade.amountCents,
+          source: 'account_upgrade_coupon_checkout',
+        },
+      });
+      const rows = await db`
+        update checkout_coupon_redemptions
+        set customer_id = ${purchase.customerId},
+          trip_id = null,
+          order_id = ${purchase.orderId},
+          onboarding_session_id = null,
+          status = 'redeemed',
+          email_status = 'not_applicable',
+          metadata = metadata || ${{
+            accountUpgradeOrderId: purchase.orderId,
+            accountUpgradeEntitlementId: purchase.entitlementId,
+            accountUpgrade: upgrade,
+          }}
+        where id = ${redemption.id}
+        returning *
+      `;
+      return sendJson(res, 200, {
+        ok: true,
+        status: 'owner_account_upgrade_coupon_redeemed',
+        coupon,
+        redemption: rows[0] || null,
+        order: {
+          amountCents: 0,
+          originalAmountCents: upgrade.amountCents,
+          amountWaivedCents: upgrade.amountCents,
+          currency: CURRENCY,
+          plan: 'unlimited',
+          status: 'coupon_redeemed',
+          accountUpgrade: upgrade,
+        },
+      });
+    }
+
     if (body.action === 'redeem_owner_media_coupon' || body.product === 'owner_media_addons') {
       const addOns = requireOwnerMediaAddOns(body);
       const { coupon, redemption } = await consumeCoupon(db, couponCode, {

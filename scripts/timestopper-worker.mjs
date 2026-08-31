@@ -156,6 +156,8 @@ async function completeJob(job, completion) {
 }
 
 function findTelegramChatId(value) {
+  const targetChatId = cleanText(process.env.TIMESYNCHER_WORKER_TARGET_TELEGRAM_CHAT_ID, 120);
+  if (targetChatId) return targetChatId;
   if (!value || typeof value !== 'object') return '';
   const direct = value.telegramChatId || value.telegram_chat_id;
   if (direct) return String(direct);
@@ -238,6 +240,9 @@ async function tick() {
     try {
       console.log(`[${new Date().toISOString()}] ${WORKER_ID}: claimed ${job.id} (${job.job_type})`);
       const completion = await handleJob(job);
+      if (!cleanText(completion.customerResponse, 4000) && !completion.result?.skipped) {
+        throw new Error('Worker completed without a customer response; saved turn requires retry or operator repair.');
+      }
       await completeJob(job, completion);
       const chatId = findTelegramChatId(job);
       if (chatId && completion.customerResponse) {

@@ -34,6 +34,20 @@ function publicSession(session) {
   return { ...rest, eula: { version: eula.version, text: eula.text } };
 }
 
+function telegramBotUsername(env = process.env) {
+  return String(env.TIMESYNCHER_VACATION_TELEGRAM_BOT_USERNAME
+    || env.TIMESYNCHER_TELEGRAM_BOT_USERNAME
+    || 'TimeSyncherVacationBot').trim().replace(/^@/, '');
+}
+
+function vacationContinueUrl(session, sessionId, env = process.env) {
+  if (session?.google?.returnUrl) return String(session.google.returnUrl).replace(/\s+/g, '');
+  if (!String(session?.clientKey || '').startsWith('vacation-onboarding:')) return null;
+  const token = String(sessionId || '').startsWith('vacation-') ? String(sessionId).slice('vacation-'.length) : '';
+  if (!token) return null;
+  return `https://t.me/${telegramBotUsername(env)}?start=${encodeURIComponent(token)}`;
+}
+
 function telegramBotToken(env = process.env) {
   return env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || env.TIMESYNCHER_VACATION_TELEGRAM_BOT_TOKEN || '';
 }
@@ -72,14 +86,25 @@ export default async function handler(req, res) {
       return send(res, 201, { ok: true, sessionId: session.sessionId, session: publicSession(session) });
     }
     if (req.method === 'GET' && action === 'get-session') {
-      const session = await loadSessionPersistent(store, url.searchParams.get('sessionId'));
+      const sessionId = url.searchParams.get('sessionId');
+      const session = await loadSessionPersistent(store, sessionId);
       if (!session || session.unavailableReason) return send(res, 404, { ok: false, error: session?.unavailableReason || 'session not found' });
-      return send(res, 200, { ok: true, session: publicSession(session) });
+      const exposed = publicSession(session);
+      if (exposed && !exposed.google?.returnUrl) {
+        exposed.google = { ...(exposed.google || {}), returnUrl: vacationContinueUrl(session, sessionId, process.env) };
+      }
+      return send(res, 200, { ok: true, session: exposed });
     }
     if (req.method === 'GET' && action === 'accept-page') {
       const session = await loadSessionPersistent(store, url.searchParams.get('sessionId'));
       if (!session || session.unavailableReason) return send(res, 404, 'Acceptance session not found or unavailable', 'text/plain');
-      return send(res, 200, renderAcceptPage(session), 'text/html');
+      return send(res, 200, renderAcceptPage({
+        ...session,
+        google: {
+          ...(session.google || {}),
+          returnUrl: vacationContinueUrl(session, url.searchParams.get('sessionId'), process.env),
+        },
+      }), 'text/html');
     }
     if (req.method === 'POST' && action === 'accept') {
       const body = await readBody(req);
@@ -108,7 +133,7 @@ export default async function handler(req, res) {
       return send(res, 201, {
         ok: true,
         receiptSha256: result.receipt.receiptSha256,
-        continueUrl: session?.google?.returnUrl || null,
+        continueUrl: vacationContinueUrl(session, sessionId, process.env),
         collaboratorActivations: collaboratorActivations.map((activation) => ({
           ok: Boolean(activation.ok),
           status: activation.status || null,

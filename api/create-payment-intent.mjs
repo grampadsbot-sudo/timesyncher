@@ -3,7 +3,14 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { stripeSecretKey } from '../src/vacation/stripe-env.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
-import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
+import {
+  accountUpgradeMetadata,
+  recordAccountUpgradePurchase,
+  ownerMediaMetadata,
+  recordOwnerMediaPurchase,
+  requireAccountUpgrade,
+  requireOwnerMediaAddOns,
+} from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
   collaboratorTelegramLink,
@@ -246,6 +253,66 @@ async function completeStagingCollaboratorCheckout({ db, token, contact, card = 
   };
 }
 
+
+async function accountUpgradePaymentIntent({ stripe, contact, body = {} }) {
+  const upgrade = requireAccountUpgrade(body);
+  const metadata = accountUpgradeMetadata(upgrade, {
+    email: contact.email,
+    first_name: contact.firstName,
+    last_name: contact.lastName,
+    source: 'account_upgrade_payment_element',
+  });
+  const stripeCustomer = await findOrCreateStripeCustomer(stripe, {
+    ...contact,
+    address: body.address || '',
+    city: body.city || '',
+    state: body.state || '',
+    zip: body.zip || body.postalCode || '',
+    country: body.country || 'US',
+  }, metadata);
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: upgrade.amountCents,
+    currency: CURRENCY,
+    customer: stripeCustomer.id,
+    automatic_payment_methods: { enabled: true },
+    receipt_email: contact.email,
+    description: 'TimeSyncher Vacation unlimited account upgrade',
+    metadata,
+  });
+  return {
+    ok: true,
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+    amount: upgrade.amountCents,
+    currency: CURRENCY,
+    plan: 'unlimited',
+    scope: 'unlimited_trips',
+    accountUpgrade: upgrade,
+  };
+}
+
+async function completeStagingAccountUpgradeCheckout({ db, contact, card = {}, body = {}, env = process.env }) {
+  if (!stagingCardCheckoutAllowed(env)) {
+    throw Object.assign(new Error('Staging card checkout is not enabled for this environment.'), { statusCode: 403 });
+  }
+  const upgrade = requireAccountUpgrade(body);
+  return recordAccountUpgradePurchase({
+    db,
+    contact,
+    upgrade,
+    amountCents: upgrade.amountCents,
+    currency: CURRENCY,
+    status: 'paid',
+    metadata: {
+      paidVia: 'staging_card_checkout',
+      cardBrand: clean(card.brand, 40) || null,
+      cardLast4: clean(card.last4, 4) || null,
+      billingPostalCode: clean(card.postalCode, 40) || null,
+      source: 'account_upgrade_staging_card_checkout',
+    },
+  });
+}
+
 async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
   const addOns = requireOwnerMediaAddOns(body);
   const metadata = ownerMediaMetadata(addOns, {
@@ -414,6 +481,45 @@ export default async function handler(req, res) {
       return send(res, 200, await completeStagingCollaboratorCheckout({
         db,
         token,
+        contact,
+        card: body.card || {},
+        body,
+        env: process.env,
+      }));
+    }
+
+    if (body.action === 'create_owner_account_upgrade_payment_intent') {
+      const contact = requireCollaboratorContact(body);
+      const db = sql(process.env);
+      let stripeConfig;
+      try {
+        stripeConfig = stripeSecretKey(process.env);
+      } catch (error) {
+        if (stagingCardCheckoutAllowed(process.env)) {
+          const upgrade = requireAccountUpgrade(body);
+          return send(res, 200, {
+            ok: true,
+            mode: 'staging_card',
+            stripeUnavailable: true,
+            amount: upgrade.amountCents,
+            currency: CURRENCY,
+            plan: 'unlimited',
+            scope: 'unlimited_trips',
+            accountUpgrade: upgrade,
+            error: error.message,
+          });
+        }
+        return send(res, 503, { ok: false, error: error.message || 'Stripe secret key is not configured yet.' });
+      }
+      const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
+      return send(res, 200, await accountUpgradePaymentIntent({ stripe, contact, body }));
+    }
+
+    if (body.action === 'complete_staging_owner_account_upgrade_checkout') {
+      const contact = requireCollaboratorContact(body);
+      const db = sql(process.env);
+      return send(res, 200, await completeStagingAccountUpgradeCheckout({
+        db,
         contact,
         card: body.card || {},
         body,

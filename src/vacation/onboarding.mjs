@@ -263,7 +263,9 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
       'hosted_itinerary_generation',
       'purchase_receipts_and_support',
     ],
-    google: {},
+    google: {
+      returnUrl: row.telegram_deep_link || telegramLink(row.token, env),
+    },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
       text: loadDefaultEulaText(),
