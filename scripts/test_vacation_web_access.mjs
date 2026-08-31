@@ -110,6 +110,11 @@ assert.match(itineraryHtml, /collectVoicePageContext/);
 assert.match(itineraryHtml, /shared_itinerary_page_voice_button/);
 assert.match(itineraryHtml, /pageContext: window\.__timesyncherVoicePageContext/);
 
+const sharedAppBundle = await readFile(new URL('../dist/assets/index-TimeSyncherVacationLogin.js', import.meta.url), 'utf8');
+assert.doesNotMatch(sharedAppBundle, /<div class="day-header">/);
+assert.doesNotMatch(sharedAppBundle, /class="day-tag"/);
+assert.doesNotMatch(sharedAppBundle, /class="day-date"/);
+
 const checkout = await readFile(new URL('../addons-checkout.html', import.meta.url), 'utf8');
 assert.match(checkout, /name="planScope"/);
 assert.match(checkout, /TimeSyncher Vacation Add-ons/i);

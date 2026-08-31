@@ -210,7 +210,8 @@ function normalizeWithBoundedParser({ transcript, pageContext }) {
   });
   if (result.status !== 0) return fallback.map((request) => ({ ...request, parserFallback: clean(result.stderr || result.stdout, 600) }));
   try {
-    const parsed = parseJsonOutput(result.stdout);
+    let parsed = parseJsonOutput(result.stdout);
+    if (typeof parsed?.text === 'string') parsed = parseJsonOutput(parsed.text);
     const requests = Array.isArray(parsed.requests) ? parsed.requests : [];
     const normalized = requests
       .map((request) => ({
@@ -229,10 +230,14 @@ function normalizeWithBoundedParser({ transcript, pageContext }) {
 }
 
 function enrichedRequestText(request) {
-  const base = clean(request.requestText || request.heardText, 1400);
+  const heard = clean(request.heardText, 1400);
+  const normalized = clean(request.requestText, 1400);
+  const base = heard && normalized && heard.toLowerCase() !== normalized.toLowerCase()
+    ? [heard, `Normalized intent: ${normalized}.`].join('\n')
+    : (normalized || heard);
   const confident = (request.targetCandidates || []).filter((candidate) => Number(candidate.confidence) >= 0.72 && clean(candidate.title, 180));
   if (!confident.length) return base;
-  const candidateLines = confident.slice(0, 3).map((candidate) => `Likely itinerary target: ${clean(candidate.title, 180)}${candidate.heardAlias ? ` (heard as ${clean(candidate.heardAlias, 80)})` : ''}.`);
+  const candidateLines = confident.slice(0, 3).map((candidate) => `Existing itinerary target: "${clean(candidate.title, 180)}"${candidate.heardAlias ? `; heard alias: "${clean(candidate.heardAlias, 80)}"` : ''}.`);
   const detail = request.detail ? `Normalized detail: ${clean(request.detail, 300)}.` : '';
   return [base, ...candidateLines, detail].filter(Boolean).join('\n');
 }

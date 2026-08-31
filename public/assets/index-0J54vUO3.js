@@ -11389,12 +11389,6 @@ ${(k?k.defines():[]).concat(z.map(ue=>`#define ${ue}`)).join(`
           <div class="day-accommodations ${Qe.length===1?"single":""}">${Se}</div>
         </div>`:"";return`
       <div class="day-section${Ne>0?" page-break":""}">
-        <div class="day-header">
-          <span class="day-tag">${qo(P("dayplan.dayN",{n:we.day_number})).toUpperCase()}</span>
-          <span class="day-title">${qo(we.title||P("dayplan.dayN",{n:we.day_number}))}</span>
-          ${we.date?`<span class="day-date">${jze(we.date,T)}</span>`:""}
-          ${Fe?`<span class="day-cost">${Fe}</span>`:""}
-        </div>
         <div class="day-body">${xt}${Wt}</div>
       </div>`}).join(""),xe=`<!DOCTYPE html>
 <html lang="${T.split("-")[0]}">
