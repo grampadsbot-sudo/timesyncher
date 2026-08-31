@@ -129,6 +129,9 @@ async function handleWebsiteAudioNote(req, res, db, body) {
   const durationValue = Number(body.durationSeconds || body.audio?.durationSeconds);
   const durationSeconds = Number.isFinite(durationValue) ? Math.max(0, Math.round(durationValue)) : null;
   const transcription = await transcribeWebsiteAudioNote(parsed);
+  const pageContext = body.pageContext && typeof body.pageContext === 'object' && !Array.isArray(body.pageContext)
+    ? body.pageContext
+    : null;
   const payload = {
     websiteAudioNote: {
       mimeType: parsed.mimeType,
@@ -139,7 +142,9 @@ async function handleWebsiteAudioNote(req, res, db, body) {
       webAccessGrantId: access.grant?.id || null,
       submittedAt: new Date().toISOString(),
       userAgent: cleanText(req.headers['user-agent'], 300) || null,
+      pageContextItemCount: Array.isArray(pageContext?.items) ? pageContext.items.length : 0,
     },
+    pageContext,
     transcribedFromWebsiteAudio: true,
   };
   const normalizedIntent = {

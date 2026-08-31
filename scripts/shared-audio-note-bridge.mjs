@@ -227,6 +227,45 @@ async function runTrekEditRequests({ shareToken, transcript }) {
   };
 }
 
+function runSharedEditPipeline({ shareToken, transcript, pageContext = {} }) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ['/home/timesyncher-agent/timesyncher/scripts/vacation-edit-pipeline.mjs'], {
+      cwd: '/home/timesyncher-agent/timesyncher',
+      env: {
+        ...process.env,
+        TIMESYNCHER_TREK_DB_PATH: process.env.TIMESYNCHER_TREK_DB_PATH || DEFAULT_DB_PATH,
+        TIMESYNCHER_TREK_PUBLIC_BASE_URL: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE,
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM');
+      reject(Object.assign(new Error('Timed out applying itinerary update.'), { statusCode: 504 }));
+    }, Number(process.env.TIMESYNCHER_SHARED_AUDIO_EDIT_TIMEOUT_MS || 930000));
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) {
+        reject(Object.assign(new Error(clean(stderr || stdout || `vacation-edit-pipeline exited ${code}`, 900)), { statusCode: 502 }));
+        return;
+      }
+      try {
+        resolve(parseJsonOutput(stdout));
+      } catch (error) {
+        reject(Object.assign(error, { statusCode: 502 }));
+      }
+    });
+    child.stdin.end(JSON.stringify({ shareToken, transcript, pageContext }));
+  });
+}
+
 async function readBody(req) {
   let body = '';
   for await (const chunk of req) {
@@ -250,8 +289,9 @@ const server = http.createServer(async (req, res) => {
     if (!shareToken) throw Object.assign(new Error('shareToken is required.'), { statusCode: 400 });
     const parsed = parseDataUrl(body.audioDataUrl || body.audio?.dataUrl);
     const transcript = await transcribe(parsed);
-    const result = await runTrekEditRequests({ shareToken, transcript });
-    const customerMessage = audioNoteMultiResultMessage(result);
+    const pageContext = body.pageContext || body.page_context || body.visiblePageContext || {};
+    const result = await runSharedEditPipeline({ shareToken, transcript, pageContext });
+    const customerMessage = result.message || audioNoteMultiResultMessage(result);
     if (!result.okCount) {
       return send(res, 422, {
         ok: false,

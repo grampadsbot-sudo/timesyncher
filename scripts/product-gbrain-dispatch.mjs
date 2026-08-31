@@ -61,10 +61,12 @@ function customerNoopEditAnswer({ requestText = '', summary = '', reason = '' } 
   const safeSummary = sanitizeCustomerNoopSummary(summary);
   const reasonText = text(reason, 120);
   const targetMiss = /target|found|resolved|supported|operation|plan|empty|sanitized/i.test(`${reasonText} ${safeSummary}`);
+  if (targetMiss && /^I heard "/i.test(safeSummary)) return safeSummary;
   const lines = [];
-  if (heard) lines.push(`I heard: "${heard}"`);
+  if (targetMiss && heard) return `I heard "${heard}", couldn't find a match, what do you mean?`;
+  if (heard) lines.push(`I heard "${heard}"`);
   lines.push(targetMiss
-    ? 'I could not find the matching itinerary item to change, so I did not change the trip.'
+    ? "couldn't find a match, what do you mean?"
     : 'I could not safely apply that itinerary update, so I did not change the trip.');
   if (safeSummary && !/^I kept the current trip unchanged/i.test(safeSummary) && !/^I heard:/i.test(safeSummary)) {
     lines.push(safeSummary);
@@ -2899,7 +2901,43 @@ function applyTrekAgentEdit(job, artifacts, deterministicError) {
   return edit;
 }
 
+function applySharedVacationEditPipeline(job, artifacts) {
+  const script = resolveProductScript('vacation-edit-pipeline.mjs');
+  if (!fs.existsSync(script)) throw new Error(`Shared vacation edit pipeline is missing: ${script}`);
+  const payload = {
+    token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
+    requestText: artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '',
+    publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com',
+    pageContext: job.payload?.pageContext || job.input?.payload?.pageContext || job.input?.pageContext || {},
+  };
+  const result = spawnSync(process.execPath, [script], {
+    input: JSON.stringify(payload),
+    encoding: 'utf8',
+    timeout: Number(process.env.TIMESYNCHER_SHARED_EDIT_PIPELINE_TIMEOUT_MS || 930000),
+    maxBuffer: 4 * 1024 * 1024,
+  });
+  if (result.status !== 0) {
+    throw new Error(`Shared vacation edit pipeline failed: ${text(result.stderr || result.stdout || 'unknown error', 1800)}`);
+  }
+  let edit;
+  try {
+    edit = JSON.parse(result.stdout.trim());
+  } catch {
+    throw new Error(`Shared vacation edit pipeline returned invalid JSON: ${text(result.stdout, 500)}`);
+  }
+  if (edit?.url) smokeCheckTrekSync(edit);
+  edit.mode = edit.mode || 'shared_vacation_edit_pipeline';
+  return edit;
+}
+
 function applyExistingTripEdit(job, artifacts) {
+  if (process.env.TIMESYNCHER_USE_LEGACY_TREK_EDIT_PIPELINE !== '1') {
+    try {
+      return applySharedVacationEditPipeline(job, artifacts);
+    } catch (pipelineError) {
+      if (process.env.TIMESYNCHER_REQUIRE_SHARED_EDIT_PIPELINE === '1') throw pipelineError;
+    }
+  }
   if (process.env.TIMESYNCHER_FORCE_TREK_AGENT_EDIT === '1') {
     return applyTrekAgentEdit(job, artifacts, new Error('Forced broad TREK edit runner by environment.'));
   }

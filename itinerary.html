@@ -96,6 +96,24 @@
         reader.readAsDataURL(blob);
       });
     }
+    function collectVoicePageContext(data) {
+      const sections = data?.sections || {};
+      const items = [];
+      Object.entries(sections).forEach(([section, sectionItems]) => {
+        (Array.isArray(sectionItems) ? sectionItems : []).forEach((thing) => {
+          items.push({
+            id: thing.id || thing.placeId || thing.place_id || '',
+            title: thing.title || thing.name || '',
+            description: thing.description || thing.summary || thing.notes || '',
+            category: thing.category || thing.subtype || section,
+            day: thing.day || thing.dayNumber || thing.day_number || null,
+            time: thing.time || thing.startTime || thing.place_time || null,
+            scope: section,
+          });
+        });
+      });
+      return { source: 'shared_itinerary_page_voice_button', trip: data?.trip || null, items };
+    }
     async function checkAudioAccess(data) {
       tripId = data.trip?.id || '';
       if (!tripId || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return;
@@ -119,7 +137,7 @@
           method: 'POST',
           credentials: 'include',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ action: 'upload_audio_note', session, audioDataUrl, durationSeconds }),
+          body: JSON.stringify({ action: 'upload_audio_note', session, audioDataUrl, durationSeconds, pageContext: window.__timesyncherVoicePageContext || null }),
         });
         const result = await res.json().catch(() => ({}));
         if (!res.ok || result.ok === false) throw new Error(result.error || 'Could not send audio update.');
@@ -191,6 +209,7 @@
         ['Status', data.trip.status || 'Planning'],
         ['Updated', new Date(data.generatedAt).toLocaleString()]
       ].map(([label, value]) => `<div><span>${label}</span><b>${safe(value)}</b></div>`).join('');
+      window.__timesyncherVoicePageContext = collectVoicePageContext(data);
       checkAudioAccess(data);
       const sections = data.sections || {};
       const html = order.filter((key) => sections[key]?.length).map((key) => `<section><h2>${names[key] || key}</h2><div class="grid">${sections[key].map(renderThing).join('')}</div></section>`).join('');
