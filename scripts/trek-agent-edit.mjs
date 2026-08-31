@@ -362,6 +362,7 @@ function extractNamedTarget(requestText) {
     }
   }
   const patterns = [
+    /\b(?:take\s+out)\s+(?:the\s+)?(.+?)(?:\s+if\b|\s+from\b|[.?!]|$)/i,
     /\b(?:remove|delete|drop)\s+(?:the\s+)?(.+?)(?:\s+if\b|\s+from\b|[.?!]|$)/i,
     /\b(?:change|update)\s+(?:the\s+)?(.+?)(?:\s+to\b|\s+so\b|[.?!]|$)/i,
     /\b(?:swap|replace)\s+(?:the\s+)?(.+?)(?:\s+for\b|\s+with\b|[.?!]|$)/i,
@@ -438,6 +439,13 @@ function resolveTargetPlace(requestText, before = null) {
     typeHint,
     aliasCanonical,
   };
+}
+
+function isIncompleteMoveRequest(requestText) {
+  const source = text(requestText, 1000);
+  if (!/\b(?:move|shift)\b/i.test(source.replace(/\btravel times? on every move\b/ig, ' '))) return false;
+  if (/\b(?:to|from|onto|on|later|earlier|after|before|instead|day\s*\d|sunday|monday|tuesday|wednesday|thursday|friday|saturday|\d{1,2}(?::\d{2})?\s*(?:am|pm)|morning|afternoon|evening|night)\b/i.test(source)) return false;
+  return true;
 }
 
 function customerSafeNoopSummary(value) {
@@ -627,11 +635,11 @@ function inferFallbackPlan(requestText, before = null) {
   }
 
   // Remove / drop an existing place from the timeline.
-  if (/\b(remove|delete|drop)\b/i.test(source) && (targetTitle || resolved.namedTarget || /\b(rose garden|navy pier|international spy museum|spy museum|museum block|hard hike|dale ball)\b/i.test(source))) {
+  if (/\b(remove|delete|drop|take\s+out)\b/i.test(source) && (targetTitle || resolved.namedTarget || /\b(rose garden|navy pier|international spy museum|spy museum|museum block|hard hike|dale ball|coconut grove marketplace|kailua pier)\b/i.test(source))) {
     // Prefer the customer's named target string so conditional removes do not retarget a different same-type place.
     const removeTitle = text(resolved.namedTarget || resolved.explicitHint || '', 180)
       || targetTitle
-      || text((source.match(/\b(rose garden|navy pier|international spy museum|spy museum|museum block|hard hike|dale ball)\b/i) || [])[1] || '', 180);
+      || text((source.match(/\b(rose garden|navy pier|international spy museum|spy museum|museum block|hard hike|dale ball|coconut grove marketplace|kailua pier)\b/i) || [])[1] || '', 180);
     ops.push({
       op: 'delete_thing',
       matchTitle: removeTitle,
@@ -1665,6 +1673,16 @@ async function main() {
       requestText,
       reason: 'sanitized_empty',
       summary: 'I kept the current trip unchanged because no approved edit operations remained after validation.',
+    })));
+    return;
+  }
+  if (isIncompleteMoveRequest(requestText) && plan.operations.some((op) => text(op?.op || '', 40) === 'move_thing')) {
+    console.log(JSON.stringify(structuredNoopResult({
+      token,
+      publicBase,
+      requestText,
+      reason: 'incomplete_move_target',
+      summary: 'I heard a move request, but it was cut off before saying where the itinerary item should move.',
     })));
     return;
   }
