@@ -83,9 +83,9 @@ async function transcribe({ bytes, mimeType }) {
   return text;
 }
 
-function runTrekEdit({ shareToken, requestText }) {
+function runEditScript({ scriptName, shareToken, requestText, deterministicError = '' }) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['/home/timesyncher-agent/timesyncher/scripts/trek-agent-edit.mjs'], {
+    const child = spawn(process.execPath, [`/home/timesyncher-agent/timesyncher/scripts/${scriptName}`], {
       cwd: '/home/timesyncher-agent/timesyncher',
       env: {
         ...process.env,
@@ -109,7 +109,7 @@ function runTrekEdit({ shareToken, requestText }) {
     child.on('close', (code) => {
       clearTimeout(timer);
       if (code !== 0) {
-        reject(Object.assign(new Error(clean(stderr || stdout || `trek-agent-edit exited ${code}`, 600)), { statusCode: 502 }));
+        reject(Object.assign(new Error(clean(stderr || stdout || `${scriptName} exited ${code}`, 600)), { statusCode: 502 }));
         return;
       }
       try {
@@ -123,8 +123,30 @@ function runTrekEdit({ shareToken, requestText }) {
       requestText,
       publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE,
       dbPath: process.env.TIMESYNCHER_TREK_DB_PATH || DEFAULT_DB_PATH,
+      deterministicError,
     }));
   });
+}
+
+async function runTrekEdit({ shareToken, requestText }) {
+  try {
+    const deterministic = await runEditScript({
+      scriptName: 'trek-itinerary-edit.mjs',
+      shareToken,
+      requestText,
+    });
+    deterministic.mode = deterministic.mode || 'deterministic_trek_edit';
+    return deterministic;
+  } catch (error) {
+    const fallback = await runEditScript({
+      scriptName: 'trek-agent-edit.mjs',
+      shareToken,
+      requestText,
+      deterministicError: clean(error?.message || error, 1200),
+    });
+    fallback.mode = fallback.mode || 'grok_trek_agent_edit';
+    return fallback;
+  }
 }
 
 async function readBody(req) {
