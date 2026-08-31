@@ -35,7 +35,7 @@ function parseJsonOutput(value) {
 
 function parseDataUrl(value) {
   const raw = String(value || '');
-  const match = raw.match(/^data:([a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*)(?:;[a-z0-9!#$&^_.+-]+=(?:"[^"]*"|[^;,]+))*;base64,([a-z0-9+/=\r\n]+)$/i);
+  const match = raw.match(/^data:([a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*)(?:\s*;[^,;]*)*;\s*base64\s*,([a-z0-9+/=\r\n]+)$/i);
   if (!match) throw Object.assign(new Error('Audio note must be a base64 data URL.'), { statusCode: 400 });
   const mimeType = clean(match[1].toLowerCase(), 80);
   if (!/^(audio|video)\//.test(mimeType)) throw Object.assign(new Error('Audio note must use an audio MIME type.'), { statusCode: 400 });
@@ -130,6 +130,10 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method !== 'POST' || req.url !== '/audio-note') return send(res, 404, { ok: false, error: 'not found' });
     const body = await readBody(req);
+    const rawAudio = String(body.audioDataUrl || body.audio?.dataUrl || '');
+    req.audioNoteDataUrlHeader = rawAudio
+      ? rawAudio.slice(0, Math.min(rawAudio.indexOf(',') + 1 || 120, 240))
+      : null;
     const shareToken = clean(body.shareToken, 240);
     if (!shareToken) throw Object.assign(new Error('shareToken is required.'), { statusCode: 400 });
     const parsed = parseDataUrl(body.audioDataUrl || body.audio?.dataUrl);
@@ -145,6 +149,13 @@ const server = http.createServer(async (req, res) => {
       edit: result,
     });
   } catch (error) {
+    console.error('shared_audio_note_error', JSON.stringify({
+      statusCode: error?.statusCode || 500,
+      message: clean(error?.message || error || 'Unable to process audio note.', 240),
+      dataUrlHeader: req.audioNoteDataUrlHeader || null,
+      contentLength: req.headers['content-length'] || null,
+      userAgent: clean(req.headers['user-agent'], 180) || null,
+    }));
     send(res, error?.statusCode || 500, {
       ok: false,
       error: clean(error?.message || error || 'Unable to process audio note.', 600),

@@ -20,7 +20,7 @@ const MAX_WEBSITE_AUDIO_NOTE_BYTES = 3 * 1024 * 1024;
 function parseAudioDataUrl(value) {
   const raw = String(value || '');
   if (!raw) throw Object.assign(new Error('Audio note is required.'), { statusCode: 400 });
-  const match = raw.match(/^data:([a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*)(?:;[a-z0-9!#$&^_.+-]+=(?:"[^"]*"|[^;,]+))*;base64,([a-z0-9+/=\r\n]+)$/i);
+  const match = raw.match(/^data:([a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*)(?:\s*;[^,;]*)*;\s*base64\s*,([a-z0-9+/=\r\n]+)$/i);
   if (!match) throw Object.assign(new Error('Audio note must be a base64 data URL.'), { statusCode: 400 });
   const mimeType = cleanText(match[1].toLowerCase(), 80);
   if (!/^(audio|video)\//.test(mimeType)) throw Object.assign(new Error('Audio note must use an audio MIME type.'), { statusCode: 400 });
