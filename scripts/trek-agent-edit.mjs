@@ -837,7 +837,7 @@ function inferFallbackPlan(requestText, before = null) {
 
   // Current-trip happy-hour additions (write-shaped, not read).
   // Covers "we need a happy hour" and "Add a ... happy hour ..." without inventing unrelated stops.
-  if (!ops.some((op) => op.op === 'add_thing')
+  if (!ops.length
     && /\bhappy hour\b|\bhonky[- ]?tonk\b/i.test(source)
     && (/\b(?:we|i)\s+need\b/i.test(source) || /\b(?:add|include|schedule)\b/i.test(source))
     && !/\b(remove|delete|drop)\b/i.test(source)) {
@@ -900,7 +900,7 @@ function inferFallbackPlan(requestText, before = null) {
   const addMatch = source.match(/\b(?:add|create|include|schedule)\b(?:[^"'“”\n]{0,80})["'“”]([^"'“”]{3,180})["'“”]/i)
     || source.match(/\b(?:add|create|include|schedule)\s+(?:a\s+)?(?:timeline\s+item\s+)?(?:named|called)\s+([^.\n]+?)(?:\s+on\s+day|\s+at\s+|\s+with\s+status|[.。]|$)/i)
     || source.match(/\b(?:add|create|include|schedule)\s+(?:a\s+|an\s+|the\s+)?([^.\n]{3,160}?)(?:\s+on\s+(?:friday|saturday|sunday|monday|tuesday|wednesday|thursday|day\s*\d+)|[.?!]|$)/i);
-  if (addMatch?.[1] && !ops.some((op) => op.op === 'add_thing')) {
+  if (addMatch?.[1] && !ops.length) {
     const title = text(addMatch[1].replace(/[.;]+$/g, ''), 180);
     const category = /family/i.test(source) ? 'family_event'
       : /food|lunch|dinner|restaurant|cart|happy hour/i.test(`${title} ${source}`) ? 'restaurant'

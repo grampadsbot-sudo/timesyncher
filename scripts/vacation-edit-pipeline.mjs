@@ -203,7 +203,7 @@ function normalizeWithBoundedParser({ transcript, pageContext }) {
   const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
   const grokModel = process.env.TIMESYNCHER_VACATION_BOUNDED_PARSER_MODEL || process.env.TIMESYNCHER_GROK_MODEL || 'grok-4.5';
   const timeoutSeconds = Math.max(8, Math.ceil(Number(process.env.TIMESYNCHER_VACATION_BOUNDED_PARSER_TIMEOUT_MS || 45000) / 1000));
-  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${timeoutSeconds}s`, 'sudo', '-n', '-u', 'ubishere9995', grokBin, '-p', boundedParserPrompt({ transcript, pageContext }), '--output-format', 'json', '--json-schema', boundedParserSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '1'], {
+  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${timeoutSeconds}s`, 'sudo', '-n', '-u', 'ubishere9995', grokBin, '-p', boundedParserPrompt({ transcript, pageContext }), '--output-format', 'json', '--json-schema', boundedParserSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '3'], {
     encoding: 'utf8',
     timeout: (timeoutSeconds + 10) * 1000,
     maxBuffer: 2 * 1024 * 1024,
@@ -307,9 +307,21 @@ function editApplied(result) {
   return result && result.noop !== true && result.editApplied !== false;
 }
 
-function updatedItemLabel(item = {}) {
-  const action = clean(item.action || 'changed', 80).replace(/_/g, ' ');
+function bestTargetCandidate(intent = {}) {
+  return (Array.isArray(intent.targetCandidates) ? intent.targetCandidates : [])
+    .filter((candidate) => clean(candidate.title, 180) && Number(candidate.confidence) >= 0.72)
+    .sort((a, b) => Number(b.confidence) - Number(a.confidence))[0] || null;
+}
+
+function updatedItemLabel(item = {}, edit = {}) {
   const title = clean(item.title || item.name || item.label || 'requested item', 180);
+  const action = clean(item.action || 'changed', 80).replace(/_/g, ' ');
+  const op = (Array.isArray(edit.plannedOperations) ? edit.plannedOperations : [])
+    .find((operation) => clean(operation.matchTitle || operation.title, 180).toLowerCase().includes(title.toLowerCase()) || title.toLowerCase().includes(clean(operation.matchTitle || operation.title, 180).toLowerCase())) || {};
+  const before = clean(op.matchTitle || title, 180);
+  const after = clean(op.title, 220);
+  if (/removed from timeline|delete|remove/i.test(action) || /^delete_/i.test(clean(op.op, 80))) return `Removed "${title}" from the timeline.`;
+  if (after && before && after.toLowerCase() !== before.toLowerCase()) return `Changed "${before}" to "${after}".`;
   const day = item.day ? ` on Day ${item.day}` : '';
   return `Changed "${title}"${day}: ${action}.`;
 }
@@ -321,14 +333,27 @@ function noMatchText(heardText) {
     : `I couldn't find a match, what do you mean?`;
 }
 
+function noChangeText(item = {}, fallbackText = '') {
+  const heard = clean(item.heardText || item.requestText || fallbackText, 300).replace(/\s+/g, ' ');
+  const reason = clean(item.edit?.reason, 120);
+  const action = clean(item.boundedIntent?.action, 120);
+  const target = bestTargetCandidate(item.boundedIntent);
+  if (reason === 'no_supported_operations' || action === 'check_or_research') {
+    if (heard && target) return `I heard "${heard}". I found "${clean(target.title, 180)}", but checking or researching it is not a supported itinerary change yet, so I did not change the trip.`;
+    if (heard) return `I heard "${heard}". Checking or researching that is not a supported itinerary change yet, so I did not change the trip.`;
+    return `I found the request, but checking or researching it is not a supported itinerary change yet, so I did not change the trip.`;
+  }
+  return noMatchText(heard);
+}
+
 function multiResultMessage({ transcript = '', itemResults = [] } = {}) {
   const lines = [];
   if (itemResults.length <= 1) {
     const item = itemResults[0];
     if (!item) return noMatchText(transcript);
-    if (!item.ok) return noMatchText(item.heardText || item.requestText || transcript);
+    if (!item.ok) return noChangeText(item, transcript);
     const changed = Array.isArray(item.edit?.updatedItems) && item.edit.updatedItems.length
-      ? item.edit.updatedItems.map(updatedItemLabel).join(' ')
+      ? item.edit.updatedItems.map((updatedItem) => updatedItemLabel(updatedItem, item.edit)).join(' ')
       : 'I changed that itinerary item.';
     return `I heard "${clean(item.heardText || item.requestText || transcript, 300).replace(/\s+/g, ' ')}". ${changed}`;
   }
@@ -339,12 +364,12 @@ function multiResultMessage({ transcript = '', itemResults = [] } = {}) {
     const prefix = `${index + 1}. `;
     if (item.ok) {
       const changed = Array.isArray(item.edit?.updatedItems) && item.edit.updatedItems.length
-        ? item.edit.updatedItems.map(updatedItemLabel).join(' ')
+        ? item.edit.updatedItems.map((updatedItem) => updatedItemLabel(updatedItem, item.edit)).join(' ')
         : 'I changed that itinerary item.';
       lines.push(`${prefix}${request ? `For "${request}": ` : ''}${changed}`);
       return;
     }
-    lines.push(`${prefix}${noMatchText(request)}`);
+    lines.push(`${prefix}${noChangeText(item, request)}`);
   });
   return lines.join(' ');
 }
