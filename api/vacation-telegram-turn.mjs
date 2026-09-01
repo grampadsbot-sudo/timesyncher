@@ -88,6 +88,9 @@ async function ensureMediaSchema(db) {
     )
   `;
   await db`create index if not exists idx_vacation_media_trip_kind on vacation_media_uploads(trip_id, media_kind, created_at)`;
+  await db`alter table vacation_media_uploads add column if not exists thing_id uuid references trip_things(id) on delete set null`;
+  await db`alter table vacation_media_uploads add column if not exists storage_provider text not null default 'telegram'`;
+  await db`create index if not exists idx_vacation_media_thing on vacation_media_uploads(thing_id, created_at)`;
   await db`create index if not exists idx_vacation_media_public_token on vacation_media_uploads(public_token)`;
 }
 
@@ -284,6 +287,7 @@ function publicMedia(media, req) {
     id: media.id,
     kind: media.media_kind,
     attachmentScope: media.attachment_scope,
+    thingId: media.thing_id,
     dayDate: media.day_date,
     caption: media.caption,
     mimeType: media.mime_type,
@@ -481,6 +485,15 @@ async function downloadMedia(db, req, res) {
   `;
   const media = rows[0];
   if (!media) throw Object.assign(new Error('Media not found.'), { statusCode: 404 });
+  const metadata = media.metadata && typeof media.metadata === 'object' ? media.metadata : {};
+  if (media.storage_provider === 'vercel_blob' && metadata.blobUrl) {
+    res.statusCode = 302;
+    res.setHeader('cache-control', 'private, max-age=300');
+    res.setHeader('x-content-type-options', 'nosniff');
+    res.setHeader('location', metadata.blobUrl);
+    res.end('');
+    return;
+  }
   const botToken = process.env.TIMESYNCHER_VACATION_MEDIA_BOT_TOKEN || process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || '';
   if (!botToken) throw Object.assign(new Error('Media download is not configured.'), { statusCode: 503 });
   let filePath = media.telegram_file_path;

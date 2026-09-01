@@ -27,6 +27,17 @@
     a { color:#71510c; font-weight:700; }
     pre { white-space:pre-wrap; font:inherit; margin:0; color:#313946; }
     .empty { padding:24px; background:#fff; border:1px dashed var(--line); border-radius:8px; }
+    .button-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .media-button { appearance:none; border:1px solid #cbd5e1; border-radius:999px; min-height:34px; padding:0 11px; background:#fff; color:#101721; font-weight:800; cursor:pointer; white-space:nowrap; }
+    .media-button:disabled { cursor:not-allowed; opacity:.58; }
+    .trip-media { margin:18px 0 0; display:grid; gap:10px; }
+    .media-strip { display:flex; gap:8px; overflow-x:auto; padding:2px 0 4px; }
+    .media-tile { width:92px; height:92px; min-width:92px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#f1f5f9; display:grid; place-items:center; color:var(--muted); font-size:12px; text-decoration:none; }
+    .media-tile img, .media-tile video { width:100%; height:100%; object-fit:cover; display:block; }
+    .thing-actions { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding-top:4px; }
+    .media-status { min-height:18px; color:var(--muted); font-size:12px; }
+    .media-status.error { color:#b42318; }
+    .media-status.ok { color:#067647; }
 
     .editor-tools { margin:0 0 18px; }
     .audio-note { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
@@ -42,7 +53,7 @@
     .audio-status.error { color:#b42318; }
     .audio-status.ok { color:#067647; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
-    @media (max-width:620px) { .audio-note { align-items:stretch; flex-direction:column; } .record-button { width:100%; } }
+    @media (max-width:620px) { .audio-note { align-items:stretch; flex-direction:column; } .record-button, .media-button { width:100%; } .thing-actions { align-items:stretch; flex-direction:column; } }
   </style>
 </head>
 <body>
@@ -59,9 +70,14 @@
           <b>Audio update</b>
           <span id="audioStatus">Ready to record an itinerary change.</span>
         </div>
-        <button id="recordButton" class="record-button" type="button"><span class="record-dot"></span>Record update</button>
+        <div class="button-row">
+          <button id="tripMediaButton" class="media-button" type="button">Add trip media</button>
+          <button id="recordButton" class="record-button" type="button"><span class="record-dot"></span>Record update</button>
+        </div>
       </div>
+      <div id="mediaStatus" class="media-status"></div>
     </section>
+    <input id="mediaInput" type="file" accept="image/*,video/*" hidden />
     <div id="content" class="grid"><div class="empty">Loading itinerary...</div></div>
   </main>
   <script>
@@ -77,12 +93,22 @@
     let recordStartedAt = 0;
     let audioStream = null;
     let audioChunks = [];
+    let canUploadMedia = false;
+    let currentData = null;
+    let activeMediaThingId = '';
     const editorTools = document.getElementById('editorTools');
     const recordButton = document.getElementById('recordButton');
+    const tripMediaButton = document.getElementById('tripMediaButton');
+    const mediaInput = document.getElementById('mediaInput');
     const audioStatus = document.getElementById('audioStatus');
+    const mediaStatus = document.getElementById('mediaStatus');
     function setAudioStatus(message, tone = '') {
       audioStatus.textContent = message;
       audioStatus.className = `audio-status ${tone}`.trim();
+    }
+    function setMediaStatus(message, tone = '') {
+      mediaStatus.textContent = message;
+      mediaStatus.className = `media-status ${tone}`.trim();
     }
     function preferredAudioMimeType() {
       const options = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
@@ -114,17 +140,23 @@
       });
       return { source: 'shared_itinerary_page_voice_button', trip: data?.trip || null, items };
     }
-    async function checkAudioAccess(data) {
+    async function checkEditorAccess(data) {
       tripId = data.trip?.id || '';
-      if (!tripId || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return;
+      if (!tripId) return;
       try {
         const res = await fetch(`/api/vacation-web-access?action=status&tripId=${encodeURIComponent(tripId)}`, { credentials: 'include' });
         const status = await res.json();
         const role = String(status.role || '').toLowerCase();
         const allowedRole = role === 'owner' || role === 'telegram_collaborator' || role === 'web_editor';
-        if (status.ok && status.canEdit && allowedRole) editorTools.hidden = false;
+        if (status.ok && status.canEdit && allowedRole) {
+          editorTools.hidden = false;
+          canUploadMedia = true;
+          if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) recordButton.hidden = true;
+          renderContent(currentData);
+        }
       } catch {
         editorTools.hidden = true;
+        canUploadMedia = false;
       }
     }
     async function submitAudioNote(blob) {
@@ -183,8 +215,81 @@
       }
     }
     recordButton.addEventListener('click', toggleRecording);
+    tripMediaButton.addEventListener('click', () => openMediaPicker(''));
+    mediaInput.addEventListener('change', () => {
+      const file = mediaInput.files?.[0];
+      mediaInput.value = '';
+      if (file) submitMedia(file, activeMediaThingId);
+    });
+    function openMediaPicker(thingId = '') {
+      activeMediaThingId = thingId || '';
+      mediaInput.click();
+    }
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('Could not read media file.'));
+        reader.readAsDataURL(file);
+      });
+    }
+    function mediaForThing(thingId) {
+      return (currentData?.media || []).filter((item) => String(item.thingId || '') === String(thingId || ''));
+    }
+    function tripLevelMedia() {
+      return (currentData?.media || []).filter((item) => !item.thingId);
+    }
+    function renderMediaTile(item) {
+      const label = safe(item.caption || item.kind || 'Media');
+      if (item.kind === 'video') {
+        return `<a class="media-tile" href="${safe(item.url)}" target="_blank" rel="noreferrer" title="${label}"><video src="${safe(item.url)}" muted playsinline preload="metadata"></video></a>`;
+      }
+      return `<a class="media-tile" href="${safe(item.url)}" target="_blank" rel="noreferrer" title="${label}"><img src="${safe(item.url)}" alt="${label}" loading="lazy" /></a>`;
+    }
+    function renderMediaStrip(items) {
+      return items.length ? `<div class="media-strip">${items.map(renderMediaTile).join('')}</div>` : '';
+    }
+    async function submitMedia(file, thingId = '') {
+      const kind = file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'photo' : '';
+      if (!kind) {
+        setMediaStatus('Choose a photo or video file.', 'error');
+        return;
+      }
+      tripMediaButton.disabled = true;
+      document.querySelectorAll('.thing-media-button').forEach((button) => { button.disabled = true; });
+      setMediaStatus(`Uploading ${kind}...`);
+      try {
+        const mediaDataUrl = await fileToDataUrl(file);
+        const res = await fetch('/api/vacation-itinerary', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            action: 'upload_media',
+            session,
+            thingId,
+            mediaDataUrl,
+            mimeType: file.type,
+            originalName: file.name,
+            fileSizeBytes: file.size,
+            attachmentScope: thingId ? 'thing' : 'trip',
+          }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || result.ok === false) throw new Error(result.error || 'Could not upload media.');
+        currentData.media = [result.media, ...(currentData.media || [])].filter(Boolean);
+        renderContent(currentData);
+        setMediaStatus(kind === 'video' ? 'Video saved.' : 'Photo saved.', 'ok');
+      } catch (error) {
+        setMediaStatus(error.message || 'Could not upload media.', 'error');
+      } finally {
+        tripMediaButton.disabled = false;
+        document.querySelectorAll('.thing-media-button').forEach((button) => { button.disabled = false; });
+      }
+    }
     function renderThing(thing) {
       const links = Array.isArray(thing.links) ? thing.links : [];
+      const media = renderMediaStrip(mediaForThing(thing.id));
       return `<article class="thing">
         <div class="meta">
           <span class="pill">${safe(thing.subtype || thing.category)}</span>
@@ -194,13 +299,27 @@
         <h3>${safe(thing.title)}</h3>
         ${thing.description ? `<pre>${safe(thing.description)}</pre>` : ''}
         ${links.length ? `<div class="links">${links.map((link, index) => `<a href="${safe(link.url || link.href)}" target="_blank" rel="noreferrer">${safe(link.label || link.title || `Source ${index + 1}`)}</a>`).join('')}</div>` : ''}
+        ${media}
+        ${canUploadMedia ? `<div class="thing-actions"><span class="muted">Media</span><button class="media-button thing-media-button" type="button" data-thing-id="${safe(thing.id)}">Add media</button></div>` : ''}
       </article>`;
+    }
+    function renderContent(data) {
+      if (!data) return;
+      const sections = data.sections || {};
+      const tripMedia = renderMediaStrip(tripLevelMedia());
+      const tripMediaHtml = tripMedia ? `<section class="trip-media"><h2>Trip Media</h2>${tripMedia}</section>` : '';
+      const html = order.filter((key) => sections[key]?.length).map((key) => `<section><h2>${names[key] || key}</h2><div class="grid">${sections[key].map(renderThing).join('')}</div></section>`).join('');
+      document.getElementById('content').innerHTML = tripMediaHtml + (html || '<div class="empty">The itinerary is being built. Check back in a few minutes.</div>');
+      document.querySelectorAll('.thing-media-button').forEach((button) => {
+        button.addEventListener('click', () => openMediaPicker(button.dataset.thingId || ''));
+      });
     }
     async function load() {
       if (!session) throw new Error('Missing itinerary session token.');
       const res = await fetch(`/api/vacation-itinerary?session=${encodeURIComponent(session)}`);
       const data = await res.json();
       if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to load itinerary.');
+      currentData = data;
       document.getElementById('title').textContent = data.trip.title || 'Vacation Itinerary';
       document.getElementById('subtitle').textContent = [data.trip.destination, data.trip.travelerName].filter(Boolean).join(' · ');
       document.getElementById('summary').innerHTML = [
@@ -210,10 +329,8 @@
         ['Updated', new Date(data.generatedAt).toLocaleString()]
       ].map(([label, value]) => `<div><span>${label}</span><b>${safe(value)}</b></div>`).join('');
       window.__timesyncherVoicePageContext = collectVoicePageContext(data);
-      checkAudioAccess(data);
-      const sections = data.sections || {};
-      const html = order.filter((key) => sections[key]?.length).map((key) => `<section><h2>${names[key] || key}</h2><div class="grid">${sections[key].map(renderThing).join('')}</div></section>`).join('');
-      document.getElementById('content').innerHTML = html || '<div class="empty">The itinerary is being built. Check back in a few minutes.</div>';
+      renderContent(data);
+      checkEditorAccess(data);
     }
     load().catch((error) => {
       document.getElementById('content').innerHTML = `<div class="empty">${safe(error.message)}</div>`;

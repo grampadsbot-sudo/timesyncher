@@ -55,12 +55,20 @@ const migration = await readFile(new URL('../db/migrations/001_vacation_mvp.sql'
 assert.match(migration, /create table if not exists vacation_web_access_grants/);
 assert.match(migration, /vacation_web_access_active_email_idx/);
 assert.match(migration, /telegram_collaborator/);
+assert.match(migration, /create table if not exists vacation_media_uploads/);
+assert.match(migration, /thing_id uuid references trip_things/);
+assert.match(migration, /idx_vacation_media_thing/);
 
 const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /telegram_launch/);
 assert.match(api, /assert_can_edit/);
 assert.match(api, /upload_audio_note/);
+assert.match(api, /upload_media/);
+assert.match(api, /handleWebsiteMediaUpload/);
+assert.match(api, /requireWebEditAccess/);
+assert.match(api, /put\(blobPath/);
+assert.match(api, /where id = \$\{requestedThingId\}\n\s+and trip_id = \$\{session\.trip_id\}/);
 assert.match(api, /website_audio_note/);
 assert.match(api, /transcribeWebsiteAudioNote/);
 assert.match(api, /set-cookie/);
@@ -111,10 +119,18 @@ assert.match(vercel, /webAccess=1/);
 const itineraryHtml = await readFile(new URL('../itinerary.html', import.meta.url), 'utf8');
 assert.match(itineraryHtml, /MediaRecorder/);
 assert.match(itineraryHtml, /upload_audio_note/);
+assert.match(itineraryHtml, /Add trip media/);
+assert.match(itineraryHtml, /thing-media-button/);
+assert.match(itineraryHtml, /upload_media/);
+assert.match(itineraryHtml, /attachmentScope: thingId \? 'thing' : 'trip'/);
 assert.match(itineraryHtml, /vacation-web-access\?action=status/);
 assert.match(itineraryHtml, /collectVoicePageContext/);
 assert.match(itineraryHtml, /shared_itinerary_page_voice_button/);
 assert.match(itineraryHtml, /pageContext: window\.__timesyncherVoicePageContext/);
+
+const telegramTurnApi = await readFile(new URL('../api/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
+assert.match(telegramTurnApi, /storage_provider === 'vercel_blob'/);
+assert.match(telegramTurnApi, /metadata\.blobUrl/);
 
 const sharedAppBundle = await readFile(new URL('../dist/assets/index-TimeSyncherVacationLogin.js', import.meta.url), 'utf8');
 assert.doesNotMatch(sharedAppBundle, /<div class="day-header">/);

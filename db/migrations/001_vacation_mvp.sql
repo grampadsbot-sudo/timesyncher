@@ -332,6 +332,42 @@ create table if not exists trip_things (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists vacation_media_uploads (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references customers(id) on delete set null,
+  trip_id uuid references trips(id) on delete cascade,
+  telegram_session_id uuid references telegram_sessions(id) on delete set null,
+  public_token text not null unique,
+  media_kind text not null,
+  attachment_scope text not null default 'trip',
+  thing_id uuid references trip_things(id) on delete set null,
+  day_date date,
+  caption text,
+  mime_type text,
+  original_name text,
+  file_size_bytes bigint,
+  width integer,
+  height integer,
+  duration_seconds integer,
+  telegram_file_id text,
+  telegram_file_unique_id text,
+  telegram_file_path text,
+  telegram_message_id text,
+  telegram_chat_id text,
+  telegram_user_id text,
+  storage_provider text not null default 'telegram',
+  status text not null default 'active',
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (media_kind in ('photo', 'video')),
+  check (attachment_scope in ('trip', 'day', 'thing'))
+);
+
+alter table vacation_media_uploads
+  add column if not exists thing_id uuid references trip_things(id) on delete set null,
+  add column if not exists storage_provider text not null default 'telegram';
+
 create table if not exists budget_items (
   id uuid primary key default gen_random_uuid(),
   trip_id uuid references trips(id) on delete cascade,
@@ -388,6 +424,9 @@ create index if not exists idx_vacation_requests_trip_id on vacation_requests(tr
 create index if not exists idx_vacation_requests_status on vacation_requests(status);
 create index if not exists idx_vacation_requests_timing on vacation_requests(received_at, completed_at);
 create index if not exists idx_worker_jobs_claim on worker_jobs(status, run_after, priority, created_at);
+create index if not exists idx_vacation_media_trip_kind on vacation_media_uploads(trip_id, media_kind, created_at);
+create index if not exists idx_vacation_media_thing on vacation_media_uploads(thing_id, created_at);
+create index if not exists idx_vacation_media_public_token on vacation_media_uploads(public_token);
 create index if not exists idx_worker_jobs_request_id on worker_jobs(request_id);
 create index if not exists idx_transcript_turns_trip_id on transcript_turns(trip_id, created_at);
 create index if not exists idx_trip_things_trip_category on trip_things(trip_id, category, subtype);
