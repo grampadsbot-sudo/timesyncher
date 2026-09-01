@@ -1265,6 +1265,87 @@ async function resolveTrekMediaTarget(caption = '') {
   };
 }
 
+function mediaVacationLookupTerm(caption = '') {
+  const normalized = cleanText(caption, 1000).toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+  const shared = normalized.match(/\/shared\/([^/?#\s]+)/i)?.[1];
+  if (shared) return shared;
+  if (/\b(girlfriend|peggy)\b/.test(normalized)) return 'girlfriend';
+  if (/\b(oahu|waikiki|ala moana)\b/.test(normalized)) return 'oahu waikiki';
+  if (/\b(big island home|home trip|home itinerary)\b/.test(normalized)) return 'big island home';
+  if (/\b(kona experiences|kona experience)\b/.test(normalized)) return 'kona experiences';
+  if (/\b(big island|kona)\b/.test(normalized)) return 'big island';
+  return '';
+}
+
+function mediaCaptionLooksLikeTripTarget(caption = '') {
+  const normalized = cleanText(caption, 1000).toLowerCase();
+  if (!normalized) return false;
+  return /\/shared\/[^/?#\s]+/i.test(normalized)
+    || /\b(?:for|to|on|in|into|with)\b.{0,80}\b(?:trip|vacation|itinerary)\b/.test(normalized)
+    || /\b(?:girlfriend|peggy|oahu|waikiki|ala moana|big island|kona experiences?|home trip|home itinerary)\b/.test(normalized);
+}
+
+function resolveTrekMediaTripTarget(caption = '') {
+  if (!mediaCaptionLooksLikeTripTarget(caption)) return null;
+  const lookup = mediaVacationLookupTerm(caption);
+  if (!lookup) throw new Error('I need the vacation name before I can attach that media.');
+  const script = `
+import json, sqlite3, sys
+db_path, lookup = sys.argv[1], sys.argv[2].lower()
+conn = sqlite3.connect(db_path)
+conn.row_factory = sqlite3.Row
+terms = [lookup]
+if lookup == "girlfriend":
+    terms += ["peggy", "girlfriend visit"]
+elif lookup == "oahu waikiki":
+    terms += ["oahu", "waikiki", "ala moana"]
+elif lookup == "big island home":
+    terms += ["home"]
+elif lookup == "kona experiences":
+    terms += ["kona experiences"]
+elif lookup == "big island":
+    terms += ["big island"]
+rows = []
+for term in dict.fromkeys([t for t in terms if t]):
+    like = "%" + term + "%"
+    rows.extend(conn.execute("""
+        select t.id, t.title, t.created_at, st.token
+          from trips t
+          join share_tokens st on st.trip_id = t.id
+         where lower(ifnull(t.title, '')) like ?
+            or lower(ifnull(t.description, '')) like ?
+            or lower(ifnull(st.token, '')) like ?
+         order by datetime(t.created_at) desc, t.id desc
+         limit 20
+    """, (like, like, like)).fetchall())
+seen_titles = set()
+out = []
+for row in rows:
+    title_key = (row["title"] or "").strip().lower()
+    if not title_key or title_key in seen_titles:
+        continue
+    seen_titles.add(title_key)
+    out.append({"tripId": row["id"], "title": row["title"], "shareToken": row["token"]})
+print(json.dumps(out[:5]))
+`;
+  const result = spawnSync('python3', ['-c', script, TREK_DB_PATH, lookup], {
+    encoding: 'utf8',
+    timeout: 5000,
+    maxBuffer: 1024 * 1024,
+  });
+  if (result.status !== 0) {
+    throw new Error(`I could not look up that vacation yet: ${cleanText(result.stderr || result.stdout || 'lookup failed', 240)}`);
+  }
+  const matches = JSON.parse(result.stdout || '[]');
+  if (!Array.isArray(matches) || !matches.length) throw new Error(`I could not find a vacation matching "${lookup}".`);
+  if (matches.length > 1 && lookup === 'big island') {
+    const names = matches.map((match) => match.title).filter(Boolean).join(', ');
+    throw new Error(`I found more than one Big Island vacation: ${names}. Please say the exact vacation name.`);
+  }
+  return matches[0];
+}
+
 function runChecked(command, args, label) {
   const result = spawnSync(command, args, { encoding: 'utf8' });
   if (result.status !== 0) {
@@ -1288,11 +1369,11 @@ function copyMediaIntoTrekUploads(cached, filename) {
 function mediaFilenameForTrek(media, target) {
   const extension = safePathPart(media.extension || path.extname(media.originalName || '').replace(/^\./, '') || 'bin', 'bin').toLowerCase();
   const label = safePathPart(media.label || `telegram-${media.mediaKind}-${Date.now()}`, 'telegram-media');
-  const targetSlug = safePathPart(target.placeName, 'itinerary-item').toLowerCase().slice(0, 80);
+  const targetSlug = safePathPart(target.placeName || target.title || 'trip', 'itinerary-item').toLowerCase().slice(0, 80);
   return `${label}-${targetSlug}.${extension}`;
 }
 
-function insertTrekMediaRow(target, media, cached, filename) {
+function insertTrekMediaRow(target, media, cached, filename, { tripLevel = false } = {}) {
   const script = `
 const Database = require('better-sqlite3');
 const input = JSON.parse(process.env.ATTACH_JSON || '{}');
@@ -1300,14 +1381,16 @@ const db = new Database('/app/data/travel.db');
 db.pragma('foreign_keys = ON');
 const trip = db.prepare('SELECT t.id FROM trips t JOIN share_tokens st ON st.trip_id = t.id WHERE st.token = ?').get(input.token);
 if (!trip) throw new Error('Trip token not found');
-const day = db.prepare('SELECT id FROM days WHERE id = ? AND trip_id = ?').get(input.dayId, trip.id);
-if (!day) throw new Error('Target day not found on trip');
-const place = db.prepare('SELECT id FROM places WHERE id = ? AND trip_id = ?').get(input.placeId, trip.id);
-if (!place) throw new Error('Target item not found on trip');
+if (!input.tripLevel) {
+  const day = db.prepare('SELECT id FROM days WHERE id = ? AND trip_id = ?').get(input.dayId, trip.id);
+  if (!day) throw new Error('Target day not found on trip');
+  const place = db.prepare('SELECT id FROM places WHERE id = ? AND trip_id = ?').get(input.placeId, trip.id);
+  if (!place) throw new Error('Target item not found on trip');
+}
 const existing = db.prepare('SELECT * FROM photos WHERE filename = ?').get(input.filename);
 if (!existing) {
   db.prepare('INSERT INTO photos (trip_id, day_id, place_id, filename, original_name, file_size, mime_type, caption, taken_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(trip.id, input.dayId, input.placeId, input.filename, input.originalName, input.fileSizeBytes, input.mimeType, input.caption, null);
+    .run(trip.id, input.tripLevel ? null : input.dayId, input.tripLevel ? null : input.placeId, input.filename, input.originalName, input.fileSizeBytes, input.mimeType, input.caption, null);
 }
 const row = db.prepare('SELECT * FROM photos WHERE filename = ?').get(input.filename);
 console.log(JSON.stringify(row));
@@ -1316,11 +1399,12 @@ console.log(JSON.stringify(row));
     token: target.token,
     dayId: target.dayId,
     placeId: target.placeId,
+    tripLevel,
     filename,
     originalName: media.originalName || path.basename(cached.filePath),
     fileSizeBytes: media.fileSizeBytes || cached.bytes.length,
     mimeType: media.mimeType || (media.mediaKind === 'video' ? 'video/mp4' : 'image/jpeg'),
-    caption: target.placeName,
+    caption: target.placeName || target.title || media.caption || media.originalName || `Telegram ${media.mediaKind}`,
   };
   const stdout = runChecked('docker', ['exec', '-e', `ATTACH_JSON=${JSON.stringify(input)}`, '-u', 'node', TREK_CONTAINER, 'node', '-e', script], 'insert Trek media row');
   return JSON.parse(stdout.trim() || '{}');
@@ -1335,6 +1419,24 @@ async function attachMediaToTrekThing(message, media, cached) {
   const row = insertTrekMediaRow(target, media, cached, filename);
   return {
     ...target,
+    filename,
+    destination,
+    row,
+    telegramMessageId: message.message_id || null,
+  };
+}
+
+async function attachMediaToTrekTrip(message, media, cached) {
+  if (mediaCaptionLooksLikeAttachmentCommand(media.caption)) return null;
+  const target = resolveTrekMediaTripTarget(media.caption);
+  if (!target) return null;
+  const filename = mediaFilenameForTrek(media, { title: target.title });
+  const destination = copyMediaIntoTrekUploads(cached, filename);
+  const row = insertTrekMediaRow({ token: target.shareToken, title: target.title }, media, cached, filename, { tripLevel: true });
+  return {
+    token: target.shareToken,
+    title: target.title,
+    tripId: target.tripId,
     filename,
     destination,
     row,
@@ -1555,6 +1657,32 @@ async function recordMediaUpload(message, media, { cacheDir = '' } = {}) {
     };
   }
 
+  let trekTripAttachment = null;
+  let trekTripTarget = null;
+  try {
+    trekTripTarget = resolveTrekMediaTripTarget(media.caption);
+  } catch (error) {
+    noteCacheStage(cacheDir, 'trek-media-trip-target-failed', {
+      mediaKind: media.mediaKind,
+      caption: media.caption,
+      error: error.message,
+    });
+    return {
+      ok: true,
+      skippedMediaUpload: true,
+      reply: `I received that ${media.mediaKind}, but I need a clearer vacation name before I attach it: ${cleanText(error.message, 300)}`,
+      trekAttachmentError: error.message,
+    };
+  }
+  if (trekTripTarget) {
+    payload.metadata.trekAttachmentOnly = true;
+    payload.metadata.trekTarget = {
+      tripId: trekTripTarget.tripId,
+      title: trekTripTarget.title,
+      shareToken: trekTripTarget.shareToken,
+    };
+  }
+
   const { response, json } = await fetchJsonWithRetry(`${API_BASE}/api/vacation-telegram-turn`, {
     method: 'POST',
     headers: {
@@ -1564,6 +1692,38 @@ async function recordMediaUpload(message, media, { cacheDir = '' } = {}) {
     body: JSON.stringify({ event: 'media_upload', ...payload }),
   }, 'Vacation media API');
   if (!response.ok || json.ok === false) throw new Error(json.error || `Vacation media API ${response.status}`);
+  if (trekTripTarget) {
+    try {
+      trekTripAttachment = await attachMediaToTrekTrip(message, media, cached);
+    } catch (error) {
+      noteCacheStage(cacheDir, 'trek-media-trip-attach-failed', {
+        mediaKind: media.mediaKind,
+        caption: media.caption,
+        target: trekTripTarget,
+        error: error.message,
+      });
+      return {
+        ...json,
+        reply: `I received that ${media.mediaKind}, but I could not attach it to ${trekTripTarget.title} yet: ${cleanText(error.message, 300)}`,
+        trekAttachmentError: error.message,
+      };
+    }
+    noteCacheStage(cacheDir, 'recorded-trip-media', {
+      mediaKind: media.mediaKind,
+      fileSizeBytes: payload.fileSizeBytes,
+      trekAttachment: {
+        token: trekTripAttachment.token,
+        title: trekTripAttachment.title,
+        filename: trekTripAttachment.filename,
+        rowId: trekTripAttachment.row?.id || null,
+      },
+    });
+    return {
+      ...json,
+      trekAttachment: trekTripAttachment,
+      reply: `Got it — I attached that ${media.mediaKind} to ${trekTripAttachment.title}.`,
+    };
+  }
   let trekAttachment = null;
   try {
     trekAttachment = await attachMediaToTrekThing(message, media, cached);

@@ -187,6 +187,32 @@ async function recordMediaUpload(db, req, body) {
   if (!entitlement.allowed) {
     throw Object.assign(new Error(`${media.mediaKind === 'video' ? 'Video' : 'Photo'} Memories add-on is required before uploading ${media.mediaKind}s.`), { statusCode: 402 });
   }
+  if (media.metadata?.trekAttachmentOnly === true) {
+    await recordTranscript(db, {
+      session,
+      speaker: 'customer',
+      direction: 'inbound',
+      body: media.caption || `Uploaded ${media.mediaKind}`,
+      channel: 'telegram_vacation_media',
+      telegramMessageId: media.telegramMessageId,
+      payload: {
+        mediaKind: media.mediaKind,
+        fileSizeBytes: media.fileSizeBytes,
+        durationSeconds: media.durationSeconds,
+        trekAttachmentOnly: true,
+        trekTarget: media.metadata?.trekTarget || null,
+      },
+      receivedAt: new Date().toISOString(),
+      onboardingStep: session.current_step,
+    });
+    return {
+      ok: true,
+      media: null,
+      reply: 'Got it.',
+      entitlementSource: entitlement.source,
+      trekAttachmentOnly: true,
+    };
+  }
   const limit = media.mediaKind === 'video' ? MAX_VIDEOS_PER_VACATION : MAX_PHOTOS_PER_VACATION;
   const countRows = await db`
     select count(*)::int as count
@@ -1132,7 +1158,8 @@ export function vacationSupportReply({ text, intent, access }) {
     const photoOk = !asksPhoto || access.hasPhotoUpload;
     const videoOk = !asksVideo || access.hasVideoUpload;
     if (photoOk && videoOk) {
-      return 'Yes. This linked TimeSyncher Vacation chat has the needed photo/video upload access. Send the pics or videos here, and I will attach them to the Vegas vacation.';
+      const label = cleanText(access?.trip?.title || 'this vacation', 180);
+      return `Yes. This linked TimeSyncher Vacation chat has the needed photo/video upload access. Send the pics or videos here, and I will attach them to ${label}.`;
     }
     return [
       'Not yet. This chat is linked, but I do not see the needed photo/video upload add-on active for this account.',

@@ -100,6 +100,22 @@ assert.match(
   }),
   /Yes.*photo\/video upload access/i,
 );
+assert.match(
+  vacationSupportReply({
+    text: 'Am I able to upload pics to the girlfriend trip?',
+    intent: { intent: 'media_upload_question', shouldQueueWorker: false, confidence: 0.94 },
+    access: { linked: true, hasPhotoUpload: true, hasVideoUpload: true, trip: { title: 'Big Island Girlfriend Visit' } },
+  }),
+  /attach them to Big Island Girlfriend Visit/i,
+);
+assert.doesNotMatch(
+  vacationSupportReply({
+    text: 'Am I able to upload pics to the girlfriend trip?',
+    intent: { intent: 'media_upload_question', shouldQueueWorker: false, confidence: 0.94 },
+    access: { linked: true, hasPhotoUpload: true, hasVideoUpload: true, trip: { title: 'Big Island Girlfriend Visit' } },
+  }),
+  /Vegas vacation/i,
+);
 assert.doesNotMatch(
   vacationSupportReply({
     text: 'Am I able to upload pics and videos to the Vegas vacation?',

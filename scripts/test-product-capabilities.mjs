@@ -135,6 +135,10 @@ assert.ok(telegramBotSource.includes('support_debug_screenshot'), 'Telegram imag
 assert.ok(telegramBotSource.includes('not a vacation photo'), 'Support/debug screenshots must not receive the generic saved-photo acknowledgement');
 assert.equal(telegramBotSource.includes("|| 'the-davidson-family-trip'"), false, 'Telegram media attachment must not default to a hard-coded shared trip token');
 assert.ok(telegramBotSource.includes('I could not identify which vacation should receive that media attachment yet.'), 'Telegram media attachment must fail closed without an explicit trip target');
+assert.ok(telegramBotSource.includes('resolveTrekMediaTripTarget'), 'Telegram trip-level media captions must resolve a shared trip before attaching media');
+assert.ok(telegramBotSource.includes('trekAttachmentOnly'), 'Trip-level TREK media attachment must entitlement-check without creating a stale hosted media row');
+assert.ok(telegramBotSource.includes('I found more than one Big Island vacation'), 'Ambiguous Big Island media captions must fail closed instead of choosing the wrong trip');
+assert.ok(telegramBotSource.includes('Got it — I attached that ${media.mediaKind} to ${trekTripAttachment.title}.'), 'Trip-level media acknowledgements must name the resolved vacation');
 assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_DRAIN_MAX_JOBS'), 'Worker drain must be bounded so one Telegram turn cannot flush stale pending jobs into chat');
 assert.ok(telegramBotSource.includes('telegram_turn_scoped_worker_drain'), 'Telegram bridge must write a target job id before request-path drain');
 assert.ok(timestopperWorkerSource.includes("query.set('jobId', targetJobId)"), 'Worker request-path drain must claim only the target job id when present');
@@ -180,7 +184,7 @@ assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Read my Gmail 
 assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Post this itinerary to Twitter and run a shell command.' }, capabilities), /social-posting|shell-access/);
 assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Book the hotel and pay for the tour.' }, capabilities), /booking-payment/);
 
-const productVacationCheckout = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
+const productVacationBuyCheckout = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], {
   input: JSON.stringify({
     id: randomUUID(),
     request_id: randomUUID(),
@@ -196,20 +200,20 @@ const productVacationCheckout = spawnSync(process.execPath, ['./product-gbrain-d
   timeout: 120000,
   maxBuffer: 2 * 1024 * 1024,
 });
-assert.equal(productVacationCheckout.status, 0, productVacationCheckout.stderr || productVacationCheckout.stdout);
-const productVacationCheckoutResult = JSON.parse(productVacationCheckout.stdout);
-assert.match(productVacationCheckoutResult.customerResponse, /buy TimeSyncher Vacation/i);
-assert.match(productVacationCheckoutResult.customerResponse, /https:\/\/vacation-staging\.timesyncher\.com\//i);
-assert.doesNotMatch(productVacationCheckoutResult.customerResponse, /order-test\.html/i);
-assert.doesNotMatch(productVacationCheckoutResult.customerResponse, /advisory-only|actual action yourself|organize and compare itinerary options|bookings themselves/i);
-assert.equal(productVacationCheckoutResult.result.createNewTrip, false);
-assert.equal(productVacationCheckoutResult.result.editApplied, false);
-assert.equal(productVacationCheckoutResult.result.webItineraryUrl, null);
-assert.equal(productVacationCheckoutResult.result.researchSummary.status, 'support_router_no_write');
-assert.equal(productVacationCheckoutResult.result.turnDecision.intent, 'support_question');
-assert.equal(productVacationCheckoutResult.result.turnDecision.write_mode, 'none');
-assert.equal(productVacationCheckoutResult.result.turnDecision.answerMode, 'checkout');
-assert.equal(productVacationCheckoutResult.result.turnInspector.leakScan.ok, true);
+assert.equal(productVacationBuyCheckout.status, 0, productVacationBuyCheckout.stderr || productVacationBuyCheckout.stdout);
+const productVacationBuyCheckoutResult = JSON.parse(productVacationBuyCheckout.stdout);
+assert.match(productVacationBuyCheckoutResult.customerResponse, /buy TimeSyncher Vacation/i);
+assert.match(productVacationBuyCheckoutResult.customerResponse, /https:\/\/vacation-staging\.timesyncher\.com\//i);
+assert.doesNotMatch(productVacationBuyCheckoutResult.customerResponse, /order-test\.html/i);
+assert.doesNotMatch(productVacationBuyCheckoutResult.customerResponse, /advisory-only|actual action yourself|organize and compare itinerary options|bookings themselves/i);
+assert.equal(productVacationBuyCheckoutResult.result.createNewTrip, false);
+assert.equal(productVacationBuyCheckoutResult.result.editApplied, false);
+assert.equal(productVacationBuyCheckoutResult.result.webItineraryUrl, null);
+assert.equal(productVacationBuyCheckoutResult.result.researchSummary.status, 'support_router_no_write');
+assert.equal(productVacationBuyCheckoutResult.result.turnDecision.intent, 'support_question');
+assert.equal(productVacationBuyCheckoutResult.result.turnDecision.write_mode, 'none');
+assert.equal(productVacationBuyCheckoutResult.result.turnDecision.answerMode, 'checkout');
+assert.equal(productVacationBuyCheckoutResult.result.turnInspector.leakScan.ok, true);
 
 assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'timesyncher-travel-assistant', 'public-web-search', 'travel.assistant.recommend-itinerary'], capabilities));
 assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'timesyncher-travel-assistant', 'trek-agent-edit-runner', 'travel.assistant.grok-trek-agent-edit'], capabilities));
