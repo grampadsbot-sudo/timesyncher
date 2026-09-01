@@ -278,7 +278,16 @@ const cat = {
   car: categoryId('Car', '#0891b2', 'Car'),
 };
 const uid = userId();
-let trip = payload.createNewTrip ? null : one('SELECT id FROM trips WHERE title = ? ORDER BY id LIMIT 1', payload.title);
+function existingTripForPayload() {
+  const preferred = String(payload.preferredToken || '').trim().toLowerCase();
+  if (preferred) {
+    const byToken = one('SELECT trips.id FROM share_tokens JOIN trips ON trips.id=share_tokens.trip_id WHERE lower(share_tokens.token)=lower(?) ORDER BY share_tokens.id LIMIT 1', preferred);
+    if (byToken) return byToken;
+  }
+  return one('SELECT id FROM trips WHERE lower(title)=lower(?) ORDER BY id LIMIT 1', payload.title);
+}
+let trip = existingTripForPayload();
+let reusedExistingTrip = Boolean(trip);
 let tripId;
 if (trip) {
   tripId = Number(trip.id);
@@ -400,7 +409,7 @@ for (const [key, fields] of Object.entries(thingFields)) {
 }
 const overrides = { ...thingFields, __keepsakeSummary: payload.description, __bookingBoundary: payload.bookingBoundary };
 run('INSERT INTO share_token_overrides (token, overrides_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(token) DO UPDATE SET overrides_json=excluded.overrides_json, updated_at=CURRENT_TIMESTAMP', token, JSON.stringify(overrides));
-console.log(JSON.stringify({ tripId, token, url: String(payload.publicBase || '').replace(new RegExp('/+$'), '') + '/shared/' + encodeURIComponent(token) + '/' }));
+console.log(JSON.stringify({ tripId, token, reusedExistingTrip, url: String(payload.publicBase || '').replace(new RegExp('/+$'), '') + '/shared/' + encodeURIComponent(token) + '/' }));
 `;
 
 const pythonCode = String.raw`
@@ -438,8 +447,16 @@ cat = {
     'car': category_id('Car', '#0891b2', 'Car'),
 }
 uid = user_id()
-create_new_trip = bool(payload.get('createNewTrip'))
-trip = None if create_new_trip else one('SELECT id FROM trips WHERE title = ? ORDER BY id LIMIT 1', (payload['title'],))
+def existing_trip_for_payload():
+    preferred = str(payload.get('preferredToken') or '').strip().lower()
+    if preferred:
+        by_token = one('SELECT trips.id FROM share_tokens JOIN trips ON trips.id=share_tokens.trip_id WHERE lower(share_tokens.token)=lower(?) ORDER BY share_tokens.id LIMIT 1', (preferred,))
+        if by_token:
+            return by_token
+    return one('SELECT id FROM trips WHERE lower(title)=lower(?) ORDER BY id LIMIT 1', (payload['title'],))
+
+trip = existing_trip_for_payload()
+reused_existing_trip = bool(trip)
 if trip:
     trip_id = int(trip['id'])
     run('UPDATE trips SET description=?, start_date=?, end_date=?, currency=?, updated_at=CURRENT_TIMESTAMP WHERE id=?', (payload['description'], payload['startDate'], payload['endDate'], payload['currency'], trip_id))
@@ -561,7 +578,7 @@ overrides['__keepsakeSummary'] = payload['description']
 overrides['__bookingBoundary'] = payload['bookingBoundary']
 run('INSERT INTO share_token_overrides (token, overrides_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(token) DO UPDATE SET overrides_json=excluded.overrides_json, updated_at=CURRENT_TIMESTAMP', (token, json.dumps(overrides)))
 db.commit()
-print(json.dumps({'tripId': trip_id, 'token': token, 'url': payload['publicBase'].rstrip('/') + '/shared/' + token + '/'}))
+print(json.dumps({'tripId': trip_id, 'token': token, 'reusedExistingTrip': reused_existing_trip, 'url': payload['publicBase'].rstrip('/') + '/shared/' + token + '/'}))
 `;
 
 async function main() {
