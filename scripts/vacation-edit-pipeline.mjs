@@ -66,6 +66,108 @@ function normalizePageContext(raw) {
   };
 }
 
+function wordDayNumber(value) {
+  const source = clean(value, 80).toLowerCase();
+  const numeric = Number((source.match(/\bday\s*(\d{1,2})\b/) || [])[1] || 0);
+  if (numeric > 0) return numeric;
+  const words = {
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+  };
+  const match = source.match(/\bday\s+(one|two|three|four|five|six|seven|eight|nine|ten)\b/);
+  return match ? words[match[1]] : null;
+}
+
+function targetTokens(value) {
+  return clean(value, 220)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token && ![
+      'the', 'a', 'an', 'this', 'that', 'these', 'those',
+      'from', 'to', 'on', 'for', 'with', 'and', 'or',
+      'thing', 'item', 'itinerary', 'timeline', 'day',
+      'please', 'thanks', 'thank', 'you', 'off', 'out',
+    ].includes(token));
+}
+
+function scoreItemTitle(title, heardTarget) {
+  const name = clean(title, 220).toLowerCase();
+  const needle = clean(heardTarget, 220).toLowerCase();
+  if (!name || !needle) return 0;
+  if (name === needle) return 100;
+  if (name.includes(needle) || needle.includes(name)) return 92;
+  const nameTokens = targetTokens(name);
+  const heardTokens = targetTokens(needle);
+  if (!nameTokens.length || !heardTokens.length) return 0;
+  const overlap = heardTokens.filter((token) => nameTokens.some((candidate) => candidate === token || candidate.includes(token) || token.includes(candidate)));
+  if (!overlap.length) return 0;
+  return 20 + (overlap.length * 18) + overlap.join('').length;
+}
+
+function bestPageItemTarget(pageContext, heardTarget, dayNumber = null) {
+  const items = Array.isArray(pageContext?.items) ? pageContext.items : [];
+  const scoped = Number.isFinite(Number(dayNumber))
+    ? items.filter((item) => Number(item?.day) === Number(dayNumber))
+    : items;
+  const candidates = scoped.length ? scoped : items;
+  let best = null;
+  let bestScore = 0;
+  for (const item of candidates) {
+    const score = scoreItemTitle(item?.title, heardTarget);
+    if (score > bestScore) {
+      best = item;
+      bestScore = score;
+    }
+  }
+  return best && bestScore >= 45 ? { item: best, score: bestScore } : null;
+}
+
+function coordinatedDeleteRequests({ transcript, pageContext }) {
+  const source = clean(transcript, 12000).replace(/\s+/g, ' ');
+  if (!/\b(?:take\s+off|take\s+out|remove|delete|drop)\b/i.test(source)) return [];
+  const dayNumber = wordDayNumber(source);
+  const matches = [...source.matchAll(/\b(?:take\s+off|take\s+out|remove|delete|drop)\s+(?:a\s+|an\s+|the\s+)?(.+?)(?=\s+(?:and\s+)?(?:take\s+off|take\s+out|remove|delete|drop)\b|[.?!]|$)/gi)];
+  if (!matches.length) return [];
+  const seen = new Set();
+  const requests = [];
+  for (const match of matches) {
+    const heard = clean(match[1], 220)
+      .replace(/\b(?:thank you|thanks|please)\b.*$/i, '')
+      .replace(/[.;,]+$/g, '')
+      .trim();
+    if (heard.length < 3) continue;
+    const target = bestPageItemTarget(pageContext, heard, dayNumber);
+    const title = clean(target?.item?.title || heard, 180);
+    const key = title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    requests.push({
+      requestText: `Remove ${title}${dayNumber ? ` from Day ${dayNumber}` : ''}.`,
+      heardText: `take off ${heard}`,
+      action: 'delete_thing',
+      detail: dayNumber ? `Remove from Day ${dayNumber} timeline.` : 'Remove from timeline.',
+      targetCandidates: target ? [{
+        id: String(target.item.id || ''),
+        title,
+        heardAlias: heard,
+        confidence: Math.min(0.99, Math.max(0.76, target.score / 100)),
+        reason: dayNumber ? `Matched spoken delete target against Day ${dayNumber} itinerary items.` : 'Matched spoken delete target against itinerary items.',
+      }] : [],
+      source: 'deterministic_coordinated_delete_parser',
+    });
+  }
+  return requests.length ? requests : [];
+}
+
 function collectDbPageContext({ shareToken, dbPath }) {
   const token = clean(shareToken, 240);
   if (!token) return { trip: null, source: 'empty_token', items: [] };
@@ -199,6 +301,8 @@ function boundedParserPrompt({ transcript, pageContext }) {
 
 function normalizeWithBoundedParser({ transcript, pageContext }) {
   const fallback = splitTranscriptIntoEditRequests(transcript);
+  const deleteRequests = coordinatedDeleteRequests({ transcript, pageContext });
+  if (deleteRequests.length) return deleteRequests;
   if (process.env.TIMESYNCHER_VACATION_BOUNDED_PARSER_DISABLE_MODEL === '1') return fallback;
   const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
   const grokModel = process.env.TIMESYNCHER_VACATION_BOUNDED_PARSER_MODEL || process.env.TIMESYNCHER_GROK_MODEL || 'grok-4.5';
@@ -242,12 +346,33 @@ function enrichedRequestText(request) {
   return [base, ...candidateLines, detail].filter(Boolean).join('\n');
 }
 
+function runnerPlanOverrideForBoundedIntent(intent = {}) {
+  if (clean(intent.action, 80) !== 'delete_thing') return '';
+  const candidate = bestTargetCandidate(intent);
+  if (!candidate?.title) return '';
+  const title = clean(candidate.title, 180);
+  return JSON.stringify({
+    ok: true,
+    summary: 'Parsed verified bounded delete target from the shared itinerary page context.',
+    plannerSource: 'bounded_intent_verified_target',
+    operations: [{
+      op: 'delete_thing',
+      matchTitle: title,
+      title,
+      summary: 'Removed from the current vacation itinerary.',
+      ifPresent: false,
+    }],
+  });
+}
+
 function runEditScript({ scriptName, shareToken, requestText, deterministicError = '', pageContext = {}, boundedIntent = {} }) {
   return new Promise((resolve, reject) => {
+    const boundedPlanOverride = runnerPlanOverrideForBoundedIntent(boundedIntent);
     const child = spawn(process.execPath, [`${SCRIPT_DIR}/${scriptName}`], {
       cwd: '/home/timesyncher-agent/timesyncher',
       env: {
         ...process.env,
+        ...(boundedPlanOverride ? { TIMESYNCHER_TREK_AGENT_EDIT_FAKE_RESULT: boundedPlanOverride } : {}),
         TIMESYNCHER_TREK_DB_PATH: process.env.TIMESYNCHER_TREK_DB_PATH || DEFAULT_DB_PATH,
         TIMESYNCHER_TREK_PUBLIC_BASE_URL: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE,
       },

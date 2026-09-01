@@ -376,7 +376,7 @@ function extractNamedTarget(requestText) {
     }
   }
   const patterns = [
-    /\b(?:take\s+out)\s+(?:the\s+)?(.+?)(?:\s+if\b|\s+from\b|[.?!]|$)/i,
+    /\b(?:take\s+(?:out|off))\s+(?:the\s+)?(.+?)(?:\s+if\b|\s+from\b|[.?!]|$)/i,
     /\b(?:remove|delete|drop)\s+(?:the\s+)?(.+?)(?:\s+if\b|\s+from\b|[.?!]|$)/i,
     /\b(?:change|update)\s+(?:the\s+)?(.+?)(?:\s+to\b|\s+so\b|[.?!]|$)/i,
     /\b(?:swap|replace)\s+(?:the\s+)?(.+?)(?:\s+for\b|\s+with\b|[.?!]|$)/i,
@@ -649,7 +649,7 @@ function inferFallbackPlan(requestText, before = null) {
   }
 
   // Remove / drop an existing place from the timeline.
-  if (/\b(remove|delete|drop|take\s+out)\b/i.test(source) && (targetTitle || resolved.namedTarget || /\b(rose garden|navy pier|international spy museum|spy museum|museum block|hard hike|dale ball|coconut grove marketplace|kailua pier)\b/i.test(source))) {
+  if (/\b(remove|delete|drop|take\s+(?:out|off))\b/i.test(source) && (targetTitle || resolved.namedTarget || /\b(rose garden|navy pier|international spy museum|spy museum|museum block|hard hike|dale ball|coconut grove marketplace|kailua pier)\b/i.test(source))) {
     // Prefer the customer's named target string so conditional removes do not retarget a different same-type place.
     const removeTitle = text(resolved.namedTarget || resolved.explicitHint || '', 180)
       || targetTitle
@@ -1073,6 +1073,29 @@ function dropNoopDayPlans({ before, operations }) {
     kept.push(op);
   }
   return kept;
+}
+
+function planFromBoundedIntent(input = {}) {
+  const intent = input.boundedIntent && typeof input.boundedIntent === 'object' ? input.boundedIntent : {};
+  const action = text(intent.action || '', 80);
+  if (action !== 'delete_thing') return null;
+  const candidate = (Array.isArray(intent.targetCandidates) ? intent.targetCandidates : [])
+    .filter((item) => text(item?.title || '', 180) && Number(item?.confidence) >= 0.72)
+    .sort((a, b) => Number(b.confidence) - Number(a.confidence))[0];
+  if (!candidate) return null;
+  const title = text(candidate.title, 180);
+  return {
+    ok: true,
+    summary: 'Parsed verified bounded delete target from the shared itinerary page context.',
+    plannerSource: 'bounded_intent_verified_target',
+    operations: [{
+      op: 'delete_thing',
+      matchTitle: title,
+      title,
+      summary: 'Removed from the current vacation itinerary.',
+      ifPresent: false,
+    }],
+  };
 }
 
 function operationSchema() {
@@ -1679,9 +1702,10 @@ async function main() {
   const before = tripState({ dbPath, token });
   let plan;
   try {
-    plan = process.env.TIMESYNCHER_TREK_AGENT_EDIT_FAKE_RESULT
+    plan = planFromBoundedIntent(input)
+      || (process.env.TIMESYNCHER_TREK_AGENT_EDIT_FAKE_RESULT
       ? JSON.parse(process.env.TIMESYNCHER_TREK_AGENT_EDIT_FAKE_RESULT)
-      : planWithGrok({ requestText, before });
+      : planWithGrok({ requestText, before }));
   } catch (error) {
     // Planner/lookup miss must not hard-exit the product turn.
     console.log(JSON.stringify(structuredNoopResult({
