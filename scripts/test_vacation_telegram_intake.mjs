@@ -5,6 +5,7 @@ import {
   collaboratorCheckoutReplyText,
   canQueueTelegramModification,
   parseVacationIdentity,
+  resolveMediaUploadTargetTripFromRows,
   vacationSupportIntent,
   vacationSupportIntentWithModel,
   vacationSupportReply,
@@ -368,6 +369,39 @@ const participantDenied = collaboratorDeniedCopy();
 assert.match(participantDenied, /not authorized|paid Telegram collaborator/i);
 assert.doesNotMatch(participantDenied, /updating the hosted TimeSyncher Vacation itinerary now/i);
 assert.doesNotMatch(participantDenied, /send the itinerary link when the next pass is ready/i);
+
+const kimTrips = [
+  { id: 'kona-experiences-trip-id', title: 'Kona Experiences', status: 'active', metadata: {} },
+  { id: 'oahu-trip-id', title: 'Oahu, Waikiki', status: 'active', metadata: { shareToken: 'oahu-waikiki' } },
+  { id: 'girlfriend-trip-id', title: 'Big Island Girlfriend Visit', status: 'active', metadata: { shareToken: 'big-island-girlfriend-visit' } },
+  { id: 'home-trip-id', title: 'Big Island Home', status: 'active', metadata: { shareToken: 'big-island-home' } },
+];
+const kimMediaTarget = resolveMediaUploadTargetTripFromRows(
+  { customer_id: 'kim-customer-id', trip_id: 'kona-experiences-trip-id' },
+  { mediaKind: 'photo', caption: 'Please add this to my girlfriend trip', metadata: {} },
+  kimTrips,
+  {},
+);
+assert.equal(kimMediaTarget.trip.id, 'girlfriend-trip-id');
+assert.equal(kimMediaTarget.source, 'caption_or_payload');
+assert.throws(
+  () => resolveMediaUploadTargetTripFromRows(
+    { customer_id: 'kim-customer-id', trip_id: 'kona-experiences-trip-id' },
+    { mediaKind: 'photo', caption: '', metadata: {} },
+    kimTrips,
+    {},
+  ),
+  /Which vacation should receive this media/i,
+);
+assert.equal(
+  resolveMediaUploadTargetTripFromRows(
+    { customer_id: 'kim-customer-id', trip_id: 'kona-experiences-trip-id' },
+    { mediaKind: 'photo', caption: '', metadata: { targetTripId: 'home-trip-id' } },
+    kimTrips,
+    {},
+  ).trip.id,
+  'home-trip-id',
+);
 
 assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null);
 

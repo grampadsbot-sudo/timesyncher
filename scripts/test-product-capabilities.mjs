@@ -139,6 +139,10 @@ assert.ok(telegramBotSource.includes('resolveTrekMediaTripTarget'), 'Telegram tr
 assert.ok(telegramBotSource.includes('trekAttachmentOnly'), 'Trip-level TREK media attachment must entitlement-check without creating a stale hosted media row');
 assert.ok(telegramBotSource.includes('I found more than one Big Island vacation'), 'Ambiguous Big Island media captions must fail closed instead of choosing the wrong trip');
 assert.ok(telegramBotSource.includes('Got it — I attached that ${media.mediaKind} to ${trekTripAttachment.title}.'), 'Trip-level media acknowledgements must name the resolved vacation');
+const hostedTurnSource = fs.readFileSync('../api/vacation-telegram-turn.mjs', 'utf8');
+assert.ok(hostedTurnSource.includes('resolveMediaUploadTargetTripFromRows'), 'Hosted media intake must resolve account-level target trips before storing uploads');
+assert.ok(hostedTurnSource.includes('Which vacation should receive this media?'), 'Hosted media intake must fail closed for untargeted multi-vacation uploads');
+assert.ok(hostedTurnSource.includes('mediaTargetSource'), 'Hosted media rows must record how the target trip was resolved');
 assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_DRAIN_MAX_JOBS'), 'Worker drain must be bounded so one Telegram turn cannot flush stale pending jobs into chat');
 assert.ok(telegramBotSource.includes('telegram_turn_scoped_worker_drain'), 'Telegram bridge must write a target job id before request-path drain');
 assert.ok(timestopperWorkerSource.includes("query.set('jobId', targetJobId)"), 'Worker request-path drain must claim only the target job id when present');

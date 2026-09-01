@@ -122,6 +122,162 @@ async function hasMediaEntitlement(db, session, mediaKind, env = process.env, ho
   return rows[0] ? { allowed: true, source: rows[0].source } : { allowed: false, source: 'missing_media_entitlement' };
 }
 
+function compactLookupText(value = '') {
+  return cleanText(value, 1000)
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function compactLookupKey(value = '') {
+  return compactLookupText(value).replace(/\s+/g, '');
+}
+
+function lookupWords(value = '') {
+  const ignored = new Set(['the', 'this', 'that', 'trip', 'trips', 'vacation', 'vacations', 'itinerary', 'itineraries', 'photo', 'photos', 'picture', 'pictures', 'pic', 'pics', 'video', 'videos', 'media', 'upload', 'uploads', 'attach', 'attached', 'save', 'saved', 'send', 'sent', 'to', 'for', 'on', 'in', 'into', 'my', 'our', 'her', 'his', 'their']);
+  return compactLookupText(value).split(' ').filter((word) => word.length > 2 && !ignored.has(word));
+}
+
+function metadataTargetValue(metadata = {}, keys = []) {
+  if (!metadata || typeof metadata !== 'object') return '';
+  for (const key of keys) {
+    const value = cleanText(metadata[key], 500);
+    if (value) return value;
+  }
+  return '';
+}
+
+function mediaTargetHints(media = {}, body = {}) {
+  const metadata = media.metadata && typeof media.metadata === 'object' ? media.metadata : {};
+  const bodyMetadata = body.metadata && typeof body.metadata === 'object' ? body.metadata : {};
+  const values = [
+    media.caption,
+    body.text,
+    body.message?.caption,
+    metadataTargetValue(metadata, ['targetTripTitle', 'target_trip_title', 'tripTitle', 'trip_title', 'vacationName', 'vacation_name', 'targetVacation', 'target_vacation']),
+    metadataTargetValue(bodyMetadata, ['targetTripTitle', 'target_trip_title', 'tripTitle', 'trip_title', 'vacationName', 'vacation_name', 'targetVacation', 'target_vacation']),
+    metadataTargetValue(metadata, ['shareToken', 'share_token', 'targetShareToken', 'target_share_token']),
+    metadataTargetValue(bodyMetadata, ['shareToken', 'share_token', 'targetShareToken', 'target_share_token']),
+  ].map((value) => cleanText(value, 1000)).filter(Boolean);
+  return [...new Set(values)];
+}
+
+function explicitMediaTargetRequested(media = {}, body = {}) {
+  const metadata = media.metadata && typeof media.metadata === 'object' ? media.metadata : {};
+  const bodyMetadata = body.metadata && typeof body.metadata === 'object' ? body.metadata : {};
+  if (metadataTargetValue(metadata, ['targetTripId', 'target_trip_id', 'tripId', 'trip_id'])) return true;
+  if (metadataTargetValue(bodyMetadata, ['targetTripId', 'target_trip_id', 'tripId', 'trip_id'])) return true;
+  if (mediaTargetHints(media, body).some((hint) => /\/shared\/[^/?#\s]+/i.test(hint))) return true;
+  const text = compactLookupText([media.caption, body.text, body.message?.caption].filter(Boolean).join(' '));
+  return /\b(?:to|for|on|into|attach|attached|save|saved|send|sent)\b.{0,100}\b(?:trip|vacation|itinerary|visit|getaway|home|oahu|waikiki|girlfriend|friend|kona|vegas|island)\b/.test(text);
+}
+
+function rowTargetFields(row = {}) {
+  const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  return [
+    row.id,
+    row.trip_id,
+    row.title,
+    row.name,
+    row.destination,
+    row.status,
+    row.onboarding_token,
+    metadata.shareToken,
+    metadata.share_token,
+    metadata.publicUrl,
+    metadata.public_url,
+    metadata.webItineraryUrl,
+    metadata.web_itinerary_url,
+    metadata.destination,
+    metadata.vacationName,
+    metadata.vacation_name,
+  ].map((value) => cleanText(value, 1000)).filter(Boolean);
+}
+
+function mediaTargetMatchScore(row = {}, hints = []) {
+  const fields = rowTargetFields(row);
+  const haystack = compactLookupText(fields.join(' '));
+  const haystackKey = compactLookupKey(fields.join(' '));
+  let score = 0;
+  for (const hint of hints) {
+    const normalized = compactLookupText(hint);
+    const key = compactLookupKey(hint);
+    if (!normalized) continue;
+    if (fields.some((field) => field === hint || compactLookupText(field) === normalized)) score += 120;
+    if (key && haystackKey.includes(key)) score += 80;
+    for (const word of lookupWords(normalized)) {
+      if (haystack.split(' ').includes(word)) score += 12;
+    }
+  }
+  if (/\b(onboarding|setup|test)\b/.test(haystack)) score -= 25;
+  return score;
+}
+
+export function resolveMediaUploadTargetTripFromRows(session = {}, media = {}, rows = [], body = {}) {
+  const explicitTripId = cleanText(
+    metadataTargetValue(media.metadata, ['targetTripId', 'target_trip_id', 'tripId', 'trip_id'])
+      || metadataTargetValue(body.metadata, ['targetTripId', 'target_trip_id', 'tripId', 'trip_id'])
+      || body.targetTripId
+      || body.target_trip_id
+      || body.tripId
+      || body.trip_id,
+    120,
+  );
+  const candidates = rows.filter((row) => row?.id || row?.trip_id);
+  if (explicitTripId) {
+    const matched = candidates.find((row) => cleanText(row.id || row.trip_id, 120) === explicitTripId);
+    if (!matched) {
+      throw Object.assign(new Error('That vacation is not connected to this account.'), { statusCode: 403 });
+    }
+    return { trip: matched, source: 'explicit_trip_id' };
+  }
+  const requested = explicitMediaTargetRequested(media, body);
+  if (requested) {
+    const hints = mediaTargetHints(media, body);
+    const ranked = candidates
+      .map((trip) => ({ trip, score: mediaTargetMatchScore(trip, hints) }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+    if (!ranked.length) {
+      throw Object.assign(new Error('I could not match that media to one of this account\'s vacations. Please name the vacation.'), { statusCode: 409 });
+    }
+    const top = ranked[0];
+    const tied = ranked.filter((item) => item.score === top.score);
+    if (tied.length > 1) {
+      const names = tied.map((item) => cleanText(item.trip.title || item.trip.name || item.trip.id || item.trip.trip_id, 120)).filter(Boolean).join(', ');
+      throw Object.assign(new Error(`I found more than one matching vacation: ${names}. Please say the exact vacation name.`), { statusCode: 409 });
+    }
+    return { trip: top.trip, source: 'caption_or_payload' };
+  }
+  const activeCandidates = candidates.filter((row) => !row.status || ['active', 'paid', 'complete', 'published', 'ready'].includes(cleanText(row.status, 80).toLowerCase()));
+  const usable = activeCandidates.length ? activeCandidates : candidates;
+  if (usable.length > 1) {
+    const names = usable.slice(0, 6).map((row) => cleanText(row.title || row.name || row.id || row.trip_id, 120)).filter(Boolean).join(', ');
+    throw Object.assign(new Error(`Which vacation should receive this media? Current options include: ${names}.`), { statusCode: 409 });
+  }
+  return { trip: usable[0] || { id: session.trip_id, title: '' }, source: usable[0] ? 'single_account_trip' : 'session_trip' };
+}
+
+async function resolveMediaUploadTargetTrip(db, session, media, body = {}) {
+  const rows = await db`
+    select
+      trips.id,
+      trips.title,
+      trips.status,
+      trips.metadata,
+      max(onboarding_sessions.token) as onboarding_token
+    from trips
+    left join onboarding_sessions on onboarding_sessions.trip_id = trips.id
+    where trips.customer_id = ${session.customer_id}
+    group by trips.id
+    order by trips.updated_at desc nulls last, trips.created_at desc nulls last
+    limit 100
+  `;
+  return resolveMediaUploadTargetTripFromRows(session, media, rows, body);
+}
+
 function publicMedia(media, req) {
   const origin = `https://${req.headers.host || 'vacation.timesyncher.com'}`;
   return {
@@ -213,11 +369,15 @@ async function recordMediaUpload(db, req, body) {
       trekAttachmentOnly: true,
     };
   }
+  const target = await resolveMediaUploadTargetTrip(db, session, media, body);
+  const targetTrip = target.trip || { id: session.trip_id, title: '' };
+  const targetTripId = targetTrip.id || targetTrip.trip_id || session.trip_id;
+  const targetSession = { ...session, trip_id: targetTripId };
   const limit = media.mediaKind === 'video' ? MAX_VIDEOS_PER_VACATION : MAX_PHOTOS_PER_VACATION;
   const countRows = await db`
     select count(*)::int as count
     from vacation_media_uploads
-    where trip_id = ${session.trip_id}
+    where trip_id = ${targetTripId}
       and media_kind = ${media.mediaKind}
       and status = 'active'
   `;
@@ -233,7 +393,7 @@ async function recordMediaUpload(db, req, body) {
       telegram_chat_id, telegram_user_id, metadata
     )
     values (
-      ${session.customer_id}, ${session.trip_id}, ${session.id}, ${publicToken}, ${media.mediaKind},
+      ${session.customer_id}, ${targetTripId}, ${session.id}, ${publicToken}, ${media.mediaKind},
       ${['trip', 'day', 'thing'].includes(media.attachmentScope) ? media.attachmentScope : 'trip'},
       ${media.dayDate}, ${media.caption}, ${media.mimeType}, ${media.originalName}, ${media.fileSizeBytes},
       ${media.width}, ${media.height}, ${media.durationSeconds}, ${media.telegramFileId},
@@ -242,13 +402,17 @@ async function recordMediaUpload(db, req, body) {
       ${{
         ...media.metadata,
         entitlementSource: entitlement.source,
+        mediaTargetSource: target.source,
+        resolvedTripId: targetTripId,
+        resolvedTripTitle: targetTrip.title || targetTrip.name || null,
+        sessionTripId: session.trip_id,
         telegramBotApiDownloadLimitBytes: MAX_TELEGRAM_DOWNLOAD_BYTES,
       }}
     )
     returning *
   `;
   await recordTranscript(db, {
-    session,
+    session: targetSession,
     speaker: 'customer',
     direction: 'inbound',
     body: media.caption || `Uploaded ${media.mediaKind}`,
@@ -259,16 +423,21 @@ async function recordMediaUpload(db, req, body) {
       mediaKind: media.mediaKind,
       fileSizeBytes: media.fileSizeBytes,
       durationSeconds: media.durationSeconds,
+      mediaTargetSource: target.source,
+      resolvedTripId: targetTripId,
+      resolvedTripTitle: targetTrip.title || targetTrip.name || null,
+      sessionTripId: session.trip_id,
     },
     receivedAt: new Date().toISOString(),
     onboardingStep: session.current_step,
   });
   const responseMedia = publicMedia(rows[0], req);
+  const targetLabel = cleanText(targetTrip.title || targetTrip.name || 'this vacation', 180);
   return {
     media: responseMedia,
     reply: media.mediaKind === 'video'
-      ? 'Got it — I saved that video to this vacation.'
-      : 'Got it — I saved that photo to this vacation.',
+      ? `Got it — I saved that video to ${targetLabel}.`
+      : `Got it — I saved that photo to ${targetLabel}.`,
   };
 }
 
