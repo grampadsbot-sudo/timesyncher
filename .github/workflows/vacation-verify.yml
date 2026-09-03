@@ -78,10 +78,9 @@ jobs:
         run: mkdir -p artifacts/vacation-verify
       - name: write doctor.json
         run: |
-          set +e
-          set +o pipefail
-          node scripts/control-vacation.mjs doctor --json | tee artifacts/vacation-verify/doctor.json
-          test -s artifacts/vacation-verify/doctor.json
+          set -euo pipefail
+          node scripts/control-vacation.mjs doctor --json --produce-gate | tee artifacts/vacation-verify/doctor.json
+          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
       - name: upload doctor.json
         uses: actions/upload-artifact@v4
         with:
@@ -100,5 +99,47 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: download gate doctor.json
+        uses: actions/download-artifact@v4
+        with:
+          name: vacation-verify-gate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/vacation-verify-gate
       - name: doctor
-        run: node scripts/control-vacation.mjs doctor --json
+        env:
+          VACATION_VERIFY_DOCTOR_JSON: artifacts/vacation-verify-gate/doctor.json
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/vacation-verify
+          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify-gate/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
+          node scripts/control-vacation.mjs doctor --json | tee artifacts/vacation-verify/doctor.json
+          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
+      - name: upload attest doctor.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: vacation-verify-attest-${{ github.event.pull_request.head.sha || github.sha }}
+          if-no-files-found: error
+          path: artifacts/vacation-verify/doctor.json
+
+  vacation-verify-bind:
+    needs: vacation-verify-attest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: download attest doctor.json
+        uses: actions/download-artifact@v4
+        with:
+          name: vacation-verify-attest-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/vacation-verify-attest
+      - name: doctor
+        env:
+          VACATION_VERIFY_DOCTOR_JSON: artifacts/vacation-verify-attest/doctor.json
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify-attest/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
+          node scripts/control-vacation.mjs doctor --json

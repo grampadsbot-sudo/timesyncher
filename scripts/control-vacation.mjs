@@ -66,13 +66,14 @@ function usage() {
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
-  const args = { command, json: false, fixtures: [], jobId: '', persist: true, localSnapshot: false, trekDb: '' };
+  const args = { command, json: false, fixtures: [], jobId: '', persist: true, localSnapshot: false, trekDb: '', produceGate: false };
   for (let i = 0; i < rest.length; i += 1) {
     const token = rest[i];
     if (token === '--json') args.json = true;
     else if (token === '--no-persist') args.persist = false;
     else if (token === '--all-fixtures') args.all = true;
     else if (token === '--local-snapshot') args.localSnapshot = true;
+    else if (token === '--produce-gate') args.produceGate = true;
     else if (token === '--trek-db') args.trekDb = rest[++i];
     else if (token === '--fixture' || token === '-f') args.fixtures.push(rest[++i]);
     else if (token === '--job-id') args.jobId = rest[++i];
@@ -159,7 +160,7 @@ function inspectCommittedProof(fixtureId) {
   }
 }
 
-function doctor() {
+function doctor({ produceGate = false } = {}) {
   const fixtures = listFixtureFiles(cwd);
   const requiredFeatures = [
     'checkout.md',
@@ -219,7 +220,7 @@ function doctor() {
     hosted_target: {
       status: 'hold',
       named: 'timesyncher / timesyncher.com',
-      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is vacation-verify + vacation-verify-doctor + vacation-verify-gate job success, with doctor proof the gate doctor.json digest (not the marker).',
+      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is vacation-verify + vacation-verify-doctor + vacation-verify-gate + vacation-verify-attest job success, with doctor proof the gate doctor.json digest (ok:true required; not the marker).',
     },
     checks: {
       feature_map: fs.existsSync(FEATURE_MAP),
@@ -243,8 +244,9 @@ function doctor() {
     && missingFixtures.length === 0
     && committedProofsOk
     && report.checks.ci_workflow
-    && report.checks.ci_attestation
+    && (produceGate || report.checks.ci_attestation)
     && fixtures.length >= requiredFixtures.length;
+  if (produceGate) report.produce_gate = true;
   return report;
 }
 
@@ -302,7 +304,7 @@ if (!args.command || args.command === 'help' || args.command === '--help') {
 
 try {
   if (args.command === 'doctor') {
-    const report = doctor();
+    const report = doctor({ produceGate: args.produceGate });
     if (args.json) process.stdout.write(JSON.stringify(report, null, 2) + '\n');
     else {
       console.log(`${report.ok ? 'PASS' : 'FAIL'} control-vacation doctor`);
@@ -320,7 +322,7 @@ try {
         console.log(`  missing ci commands: ${report.checks.missing_ci_commands.join(', ')}`);
       }
       const attest = report.ci_attestation || {};
-      console.log(`  ci attestation: ${attest.ok ? `${attest.run_id} job ${attest.job_id}/${attest.doctor_job_id || '-'} ${attest.conclusion}` : 'missing'} ${attest.artifact_digest || attest.reason || ''} ${attest.doctor_artifact_digest || ''} ${attest.sha || ''}`);
+      console.log(`  ci attestation: ${attest.ok ? `${attest.run_id} job ${attest.job_id}/${attest.doctor_job_id || '-'}/${attest.attest_job_id || '-'} ${attest.conclusion}` : 'missing'} ${attest.artifact_digest || attest.reason || ''} ${attest.doctor_artifact_digest || ''} ${attest.attest_artifact_digest || ''} ${attest.sha || ''}`);
       console.log(`  hosted target: ${report.hosted_target.status} (${report.hosted_target.named})`);
     }
     process.exit(report.ok ? 0 : 1);

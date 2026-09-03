@@ -26,9 +26,11 @@ import {
 import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
 import {
   REVIEWER_CI_COMMANDS,
+  attestArtifactNameForSha,
   attestVacationVerifyJob,
   bindCommittedReceipt,
   doctorArtifactNameForSha,
+  doctorJsonOk,
   inspectCiAttestation,
   missingReviewerCiCommands,
   parseWorkflowRunCommands,
@@ -38,6 +40,10 @@ const cwd = process.cwd();
 const ciWorkflow = fs.readFileSync(path.join(cwd, '.github', 'workflows', 'vacation-verify.yml'), 'utf8');
 assert.deepEqual(missingReviewerCiCommands(ciWorkflow), []);
 assert.ok(parseWorkflowRunCommands(ciWorkflow).some((line) => line.startsWith('node scripts/control-vacation.mjs doctor')));
+assert.ok(!/set \+e/.test(ciWorkflow), 'gate must not ignore doctor exit with set +e');
+assert.ok(!/set \+o pipefail/.test(ciWorkflow), 'gate must not ignore doctor exit with set +o pipefail');
+assert.ok(ciWorkflow.includes('doctorJsonOk'), 'uploaded doctor.json must be checked for ok:true');
+assert.ok(ciWorkflow.includes('vacation-verify-attest-'), 'attest job must upload a proof artifact');
 const commentOnly = [
   'name: vacation-verify',
   'jobs:',
@@ -62,6 +68,7 @@ const successRun = {
 const successJob = { id: 100853800148, name: 'vacation-verify', conclusion: 'success', status: 'completed' };
 const successDoctorJob = { id: 100855092982, name: 'vacation-verify-doctor', conclusion: 'success', status: 'completed' };
 const successGateJob = { id: 100856986539, name: 'vacation-verify-gate', conclusion: 'success', status: 'completed' };
+const successAttestJob = { id: 100858000001, name: 'vacation-verify-attest', conclusion: 'success', status: 'completed' };
 const successArtifact = {
   id: 9917176993,
   name: `vacation-verify-${shaB}`,
@@ -77,7 +84,16 @@ const successGateArtifact = {
   name: `vacation-verify-gate-${shaB}`,
   digest: 'sha256:24e8627baf5c0550792c026121d3733d3c2da8e6618ebf2432bb0c1076e61a30',
 };
+const successAttestArtifact = {
+  id: 9917600001,
+  name: `vacation-verify-attest-${shaB}`,
+  digest: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+};
 assert.equal(doctorArtifactNameForSha(shaB), `vacation-verify-gate-${shaB}`);
+assert.equal(attestArtifactNameForSha(shaB), `vacation-verify-attest-${shaB}`);
+assert.equal(doctorJsonOk({ ok: true }), true);
+assert.equal(doctorJsonOk({ ok: false }), false);
+assert.equal(doctorJsonOk({}), false);
 const forgedEnv = inspectCiAttestation({
   cwd,
   sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -98,6 +114,7 @@ const receiptOnly = inspectCiAttestation({
     workflow: 'vacation-verify',
     artifact_digest: successArtifact.digest,
     doctor_artifact_digest: successGateArtifact.digest,
+    attest_artifact_digest: successAttestArtifact.digest,
   },
   fetchRuns: () => [],
 });
@@ -112,8 +129,8 @@ const inProgress = inspectCiAttestation({
   fetchArtifacts: () => [successArtifact],
 });
 assert.equal(inProgress.ok, false, 'in_progress vacation-verify job must not pass doctor');
-const allJobs = [successJob, successDoctorJob, successGateJob];
-const allArtifacts = [successArtifact, successMarkerArtifact, successGateArtifact];
+const allJobs = [successJob, successDoctorJob, successGateJob, successAttestJob];
+const allArtifacts = [successArtifact, successMarkerArtifact, successGateArtifact, successAttestArtifact];
 const noDigest = inspectCiAttestation({
   cwd,
   sha: shaB,
@@ -187,6 +204,9 @@ assert.equal(bound.conclusion, 'success');
 assert.equal(bound.doctor_conclusion, 'success');
 assert.equal(bound.artifact_digest, successArtifact.digest);
 assert.equal(bound.doctor_artifact_digest, successGateArtifact.digest);
+assert.equal(bound.attest_job_id, '100858000001');
+assert.equal(bound.attest_conclusion, 'success');
+assert.equal(bound.attest_artifact_digest, successAttestArtifact.digest);
 assert.notEqual(bound.doctor_artifact_digest, successMarkerArtifact.digest);
 const receiptMismatch = inspectCiAttestation({
   cwd,
@@ -294,6 +314,22 @@ assert.equal(bindCommittedReceipt({
   run_id: '33817831176',
   artifact_digest: successArtifact.digest,
   doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+}).ok, false, 'receipt missing attest_artifact_digest must not match');
+assert.equal(bindCommittedReceipt({
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  workflow: 'vacation-verify',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+}, {
+  sha: shaB,
+  run_id: '33817831176',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
 }).ok, true);
 const receiptDoctorMatch = inspectCiAttestation({
   cwd,
@@ -306,12 +342,103 @@ const receiptDoctorMatch = inspectCiAttestation({
     workflow: 'vacation-verify',
     artifact_digest: successArtifact.digest,
     doctor_artifact_digest: successGateArtifact.digest,
+    attest_artifact_digest: successAttestArtifact.digest,
   },
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
 });
 assert.equal(receiptDoctorMatch.ok, true);
+const noAttestJob = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, successDoctorJob, successGateJob],
+  fetchArtifacts: () => [successArtifact, successMarkerArtifact, successGateArtifact],
+});
+assert.equal(noAttestJob.ok, false, 'deleting vacation-verify-attest must fail attestation');
+assert.match(attestVacationVerifyJob({
+  run: successRun,
+  jobs: [successJob, successDoctorJob, successGateJob],
+  artifacts: [successArtifact, successMarkerArtifact, successGateArtifact],
+  sha: shaB,
+}).reason, /vacation-verify-attest/);
+const attestSkipped = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, successDoctorJob, successGateJob, { ...successAttestJob, conclusion: 'skipped' }],
+  fetchArtifacts: () => allArtifacts,
+});
+assert.equal(attestSkipped.ok, false, 'skipped vacation-verify-attest must fail attestation');
+const attestNoDigest = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => [successArtifact, successMarkerArtifact, successGateArtifact],
+});
+assert.equal(attestNoDigest.ok, false, 'attest job without attest doctor.json digest must fail-closed');
+const doctorJsonFalse = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  doctorJson: { ok: false, checks: { ci_attestation: false } },
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => allArtifacts,
+});
+assert.equal(doctorJsonFalse.ok, false, 'ok:false doctor.json must not bind even with job success + digests');
+assert.equal(attestVacationVerifyJob({
+  run: successRun,
+  jobs: allJobs,
+  artifacts: allArtifacts,
+  sha: shaB,
+  doctorJson: { ok: false },
+}).ok, false);
+const doctorJsonTrue = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  doctorJson: { ok: true },
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => allArtifacts,
+});
+assert.equal(doctorJsonTrue.ok, true);
+const midAttestProduces = attestVacationVerifyJob({
+  run: successRun,
+  jobs: [successJob, successDoctorJob, successGateJob, { ...successAttestJob, conclusion: null, status: 'in_progress' }],
+  artifacts: [successArtifact, successMarkerArtifact, successGateArtifact],
+  sha: shaB,
+  env: {
+    GITHUB_ACTIONS: 'true',
+    GITHUB_JOB: 'vacation-verify-attest',
+    GITHUB_RUN_ID: '33817831176',
+  },
+  doctorJson: { ok: true },
+});
+assert.equal(midAttestProduces.ok, true, 'attest job may produce proof while in_progress after gate success');
+const forgedAttestSkip = attestVacationVerifyJob({
+  run: successRun,
+  jobs: [successJob, successDoctorJob, successGateJob],
+  artifacts: [successArtifact, successMarkerArtifact, successGateArtifact],
+  sha: shaB,
+  env: {
+    GITHUB_ACTIONS: 'true',
+    GITHUB_JOB: 'vacation-verify-attest',
+    GITHUB_RUN_ID: '33817831176',
+  },
+});
+assert.equal(forgedAttestSkip.ok, false, 'forged GITHUB_JOB=vacation-verify-attest without an in_progress attest job must fail');
 const committedProofs = writeAllCommittedDryRunProofs({ cwd });
 assert.deepEqual(committedProofs.map((row) => row.compact.fixture_id), [...COMMITTED_PROOF_FIXTURE_IDS]);
 const committedProof = committedProofs[0];
