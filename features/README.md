@@ -8,7 +8,7 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 
 - Work in this repo (`grampadsbot-sudo/timesyncher`), the Vacation product on Vercel (`timesyncher` / timesyncher.com). Do not drive `timesyncher-travel-trek` unless inspection shows the pipeline actually lives there.
 - Put the repo root on `PATH` for helper scripts, or invoke them as `node scripts/control-vacation.mjs`.
-- Run `node scripts/control-vacation.mjs doctor` and require the Feature Map, skill, pipeline syntax, and fixture catalog to be present.
+- Run `node scripts/control-vacation.mjs doctor` and require the Feature Map, skill, pipeline syntax, fixture catalog, and `.github/workflows/vacation-verify.yml` (the five reviewer commands) to be present.
 - Use fixture trip `trip-vegas-live-001` / `Las Vegas Strip Vacation` unless a recipe names another synthetic account.
 - Default mode is dry-run JSON. `--apply` is refused unless you pass `--local-snapshot` (JSON only; not product state) or `--apply --trek-db <path>` (local TREK SQLite id-set / row-count proof).
 - Do not start customer simulation, mint Grok bots, touch production Stripe, or auto-merge.
@@ -30,6 +30,7 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 - Existing-itinerary edits must not use first-pass language such as "turning this into an itinerary."
 - Record the feature ID, surface, and entry point with every artifact.
 - Committed inspectable dry-run receipts live under [features/proof/](./proof/) for `telegram-text-single-edit`, `thing-media-stale` (cross-trip `thing_id`, stop `thing_id_cross_trip`), and `thing-media-visible`. Doctor re-execs each fixture and requires `proof_digest` (and before/after hashes) to match the live run. A rewritten `generated_at` / event `ts` is not freshness. Those trees are dry-run: `prove_state_movement` is hold; TREK apply is `control-vacation --apply --trek-db` or worker first-pass, not the telegram `planned_writes` turn.
+- SHA evidence for the reviewer commands is GitHub Actions `vacation-verify` (`.github/workflows/vacation-verify.yml`): doctor, dry-run `--all-fixtures`, and the three `test_vacation_*` scripts. Vercel `timesyncher` / timesyncher.com is a named deploy; doctor and dry-run have no remote target — do not invent one. A Vercel commit status is not vacation-verify.
 - Required later customer-run artifacts (named, not produced by this lever): whole-experience screenshot / customer-flow PDF, customer-story PDF with generated pictures, and final keepsake PDF.
 - Report an unreachable path with the attempted command and the unmet precondition.
 

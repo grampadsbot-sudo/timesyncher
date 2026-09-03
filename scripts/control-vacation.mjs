@@ -27,6 +27,14 @@ const cwd = process.cwd();
 const FEATURE_MAP = path.join(cwd, 'features', 'README.md');
 const SKILL = path.join(cwd, '.cursor', 'skills', 'verify-timesyncher-vacation', 'SKILL.md');
 const PIPELINE = path.join(cwd, 'src', 'vacation', 'edit-pipeline.mjs');
+const CI_WORKFLOW = path.join(cwd, '.github', 'workflows', 'vacation-verify.yml');
+export const REVIEWER_CI_COMMANDS = Object.freeze([
+  'node scripts/control-vacation.mjs doctor',
+  'node scripts/control-vacation.mjs dry-run --all-fixtures',
+  'node scripts/test_vacation_edit_pipeline.mjs',
+  'node scripts/test_vacation_trek_apply.mjs',
+  'node scripts/test_vacation_intake_pipeline_seam.mjs',
+]);
 
 function usage() {
   return [
@@ -54,6 +62,7 @@ function usage() {
     '  node scripts/test_vacation_edit_pipeline.mjs',
     '  node scripts/test_vacation_trek_apply.mjs',
     '  node scripts/test_vacation_intake_pipeline_seam.mjs',
+    '  CI: .github/workflows/vacation-verify.yml runs those five commands on pull_request',
   ].join('\n');
 }
 
@@ -196,6 +205,8 @@ function doctor() {
   const committedProofs = COMMITTED_PROOF_FIXTURE_IDS.map((fixtureId) => inspectCommittedProof(fixtureId));
   const committedProof = committedProofs[0];
   const committedProofsOk = committedProofs.every((row) => row.ok);
+  const ciText = fs.existsSync(CI_WORKFLOW) ? fs.readFileSync(CI_WORKFLOW, 'utf8') : '';
+  const missingCiCommands = REVIEWER_CI_COMMANDS.filter((command) => !ciText.includes(command));
   const report = {
     ok: false,
     pipeline: PIPELINE_NAME,
@@ -205,6 +216,11 @@ function doctor() {
     skill: SKILL,
     committed_proof: committedProof,
     committed_proofs: committedProofs,
+    hosted_target: {
+      status: 'hold',
+      named: 'timesyncher / timesyncher.com',
+      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is local harnesses on GitHub Actions vacation-verify.',
+    },
     checks: {
       feature_map: fs.existsSync(FEATURE_MAP),
       skill: fs.existsSync(SKILL),
@@ -214,6 +230,8 @@ function doctor() {
       missing_map_rows: missingMapRows,
       missing_fixtures: missingFixtures,
       committed_proof: committedProofsOk,
+      ci_workflow: Boolean(ciText) && missingCiCommands.length === 0,
+      missing_ci_commands: missingCiCommands,
     },
   };
   report.ok = report.checks.feature_map
@@ -223,6 +241,7 @@ function doctor() {
     && missingMapRows.length === 0
     && missingFixtures.length === 0
     && committedProofsOk
+    && report.checks.ci_workflow
     && fixtures.length >= requiredFixtures.length;
   return report;
 }
@@ -294,6 +313,11 @@ try {
       for (const proof of report.committed_proofs || []) {
         console.log(`  committed proof: ${proof.ok ? proof.job_id : `${proof.fixture_id} missing`} ${proof.receipt || ''}`);
       }
+      console.log(`  ci workflow: ${report.checks.ci_workflow ? CI_WORKFLOW : 'missing'}`);
+      if (report.checks.missing_ci_commands.length) {
+        console.log(`  missing ci commands: ${report.checks.missing_ci_commands.join(', ')}`);
+      }
+      console.log(`  hosted target: ${report.hosted_target.status} (${report.hosted_target.named})`);
     }
     process.exit(report.ok ? 0 : 1);
   }

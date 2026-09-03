@@ -1,0 +1,26 @@
+name: vacation-verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  vacation-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: doctor
+        run: node scripts/control-vacation.mjs doctor
+      - name: dry-run --all-fixtures
+        run: node scripts/control-vacation.mjs dry-run --all-fixtures
+      - name: test_vacation_edit_pipeline
+        run: node scripts/test_vacation_edit_pipeline.mjs
+      - name: test_vacation_trek_apply
+        run: node scripts/test_vacation_trek_apply.mjs
+      - name: test_vacation_intake_pipeline_seam
+        run: node scripts/test_vacation_intake_pipeline_seam.mjs

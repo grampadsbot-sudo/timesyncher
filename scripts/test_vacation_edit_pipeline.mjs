@@ -26,6 +26,16 @@ import {
 import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
 
 const cwd = process.cwd();
+const ciWorkflow = fs.readFileSync(path.join(cwd, '.github', 'workflows', 'vacation-verify.yml'), 'utf8');
+for (const command of [
+  'node scripts/control-vacation.mjs doctor',
+  'node scripts/control-vacation.mjs dry-run --all-fixtures',
+  'node scripts/test_vacation_edit_pipeline.mjs',
+  'node scripts/test_vacation_trek_apply.mjs',
+  'node scripts/test_vacation_intake_pipeline_seam.mjs',
+]) {
+  assert.ok(ciWorkflow.includes(command), `CI workflow must run ${command}`);
+}
 const committedProofs = writeAllCommittedDryRunProofs({ cwd });
 assert.deepEqual(committedProofs.map((row) => row.compact.fixture_id), [...COMMITTED_PROOF_FIXTURE_IDS]);
 const committedProof = committedProofs[0];

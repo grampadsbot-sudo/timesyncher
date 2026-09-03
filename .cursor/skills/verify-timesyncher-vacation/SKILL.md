@@ -30,7 +30,7 @@ Read-only check that the instance is worth driving:
 node scripts/control-vacation.mjs doctor --json
 ```
 
-Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, and the fixture catalog complete. If doctor fails, stop. Do not dry-run a broken catalog.
+Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, the fixture catalog complete, and `.github/workflows/vacation-verify.yml` containing the five reviewer commands. Hosted Vercel `timesyncher` is a deploy status, not a remote doctor/dry-run target. If doctor fails, stop. Do not dry-run a broken catalog.
 
 ## Drive
 
@@ -124,6 +124,7 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the telegram turn
 - doctor must see committed proofs at features/proof/vac-verify-telegram-text-single-edit/, vac-verify-thing-media-stale/, and vac-verify-thing-media-visible/
 - doctor freshness is a live re-exec proof_digest match, not COMMITTED_PROOF_NOW stamp equality
+- reviewer commands must run as GitHub Actions vacation-verify on the SHA; Vercel deploy status is not that evidence
 - fail_closed_thing_id fail-closes on thing_not_visible / thing_id_cross_trip even when write is null; it does not treat bound-trip stale_trip_media as a thing_id stop
 - dry-run trees hold prove_state_movement; TREK apply is --apply --trek-db or worker first-pass
 - events.jsonl appends one event per handoff and never overwrites
