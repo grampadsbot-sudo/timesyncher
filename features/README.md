@@ -26,9 +26,10 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 - Capture the user action and the resulting state, not only the final reply.
 - Mutation proof for product state is a TREK id-set and row-count before vs after (`--apply --trek-db`). A local fixture hash is labeled `apply_local_snapshot` and is not product state.
 - No-match wording must be exact: `I heard "...", couldn't find a match, what do you mean?`
-- A success reply must name the change. Acknowledgement without state movement is a failure.
+- Pipeline `customer_facing_response` may name a planned change (`Moved …`). That is planned-write copy, not a Telegram success claim. Telegram `plannedWritesReplied` must not send Moved/Removed until TREK movement is proven on a separate apply entry (`apply_not_on_turn`). A reply that claims an update without TREK id-set movement is a failure.
 - Existing-itinerary edits must not use first-pass language such as "turning this into an itinerary."
 - Record the feature ID, surface, and entry point with every artifact.
+- A committed inspectable dry-run receipt lives at [features/proof/vac-verify-telegram-text-single-edit/receipt.json](./proof/vac-verify-telegram-text-single-edit/receipt.json) with `events.jsonl` and `dry-run.json` beside it. Doctor requires that path. Do not treat a gitignored `artifacts/` run as in-tree proof.
 - Required later customer-run artifacts (named, not produced by this lever): whole-experience screenshot / customer-flow PDF, customer-story PDF with generated pictures, and final keepsake PDF.
 - Report an unreachable path with the attempted command and the unmet precondition.
 
@@ -77,7 +78,7 @@ Named in feature files but not a vacation-edit-pipeline golden (do not fake):
 
 ## Live TREK apply entries
 
-Telegram `plannedWritesReplied` replies `customer_facing_response` and does not queue a write worker. That is intentional: a second customer message must re-enter the gate. Live TREK apply is not on that turn path.
+Telegram `plannedWritesReplied` does not queue a write worker and must not send Moved/Removed success copy. Apply is not on that turn (`apply_not_on_turn` fail-closed). A second customer message must re-enter the gate.
 
 Separate apply entries (do not invent a second writer on the turn):
 

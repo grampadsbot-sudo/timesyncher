@@ -1,0 +1,215 @@
+{
+  "schema": "timesyncher.vacation-edit-pipeline.v1",
+  "pipeline": "vacation-edit-pipeline",
+  "pipeline_version": "1",
+  "job_id": "vac-verify-telegram-text-single-edit",
+  "mode": "dry-run",
+  "apply_scope": "dry-run",
+  "surface": "telegram-text",
+  "actor": {
+    "id": "owner-craig",
+    "role": "owner",
+    "session": true,
+    "logged_out": false,
+    "identity": "owner-craig",
+    "authorized": true,
+    "canUpload": true,
+    "canEdit": true
+  },
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live"
+  },
+  "page_context": {
+    "kind": "timeline",
+    "day": null,
+    "item_ids": [
+      "thing-bellagio-fountains",
+      "thing-umekes"
+    ]
+  },
+  "transcript": "Move Bellagio Fountains to day 2",
+  "audio_path": null,
+  "audio_real_ogg": false,
+  "dropped_clause": false,
+  "clause_count": 1,
+  "expected_clauses": 1,
+  "fixture_id": "telegram-text-single-edit",
+  "fixture_path": "features/fixtures/telegram-text-single-edit.json",
+  "intents": [
+    {
+      "id": "intent-1",
+      "kind": "move",
+      "heard": "Move Bellagio Fountains to day 2",
+      "target": "Bellagio Fountains",
+      "destination": "day 2",
+      "replacement": null
+    }
+  ],
+  "candidates": [
+    {
+      "id": "thing-bellagio-fountains",
+      "title": "Bellagio Fountains",
+      "score": 1,
+      "day": 1
+    }
+  ],
+  "planned_writes": [
+    {
+      "op": "move_thing",
+      "trip_id": "trip-vegas-live-001",
+      "item_id": "thing-bellagio-fountains",
+      "title": "Bellagio Fountains",
+      "from": "day 1 20:00",
+      "to": "day 2"
+    }
+  ],
+  "no_ops": [],
+  "writes_applied": [],
+  "customer_facing_response": "Moved Bellagio Fountains from day 1 20:00 to day 2.",
+  "before_hash": "e193b98105beca49f8cbfd81c486c6185f43ad915fbaca5690704d3dcb3b0054",
+  "after_hash": "e193b98105beca49f8cbfd81c486c6185f43ad915fbaca5690704d3dcb3b0054",
+  "before_state": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      {
+        "id": "thing-bellagio-fountains",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Bellagio Fountains",
+        "day": 1,
+        "location": "day 1 20:00"
+      },
+      {
+        "id": "thing-umekes",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Umekes Fish Market Bar & Grill",
+        "day": 2,
+        "location": "day 2 13:00"
+      }
+    ],
+    "trek_rows": [
+      {
+        "id": 41,
+        "title": "Las Vegas Strip Vacation",
+        "token": "las-vegas-strip-vacation"
+      }
+    ]
+  },
+  "after_state": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      {
+        "id": "thing-bellagio-fountains",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Bellagio Fountains",
+        "day": 1,
+        "location": "day 1 20:00"
+      },
+      {
+        "id": "thing-umekes",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Umekes Fish Market Bar & Grill",
+        "day": 2,
+        "location": "day 2 13:00"
+      }
+    ],
+    "trek_rows": [
+      {
+        "id": 41,
+        "title": "Las Vegas Strip Vacation",
+        "token": "las-vegas-strip-vacation"
+      }
+    ]
+  },
+  "trek_state": {
+    "row_ids_before": [
+      "41"
+    ],
+    "row_ids_after": [
+      "41"
+    ],
+    "row_count_before": 1,
+    "row_count_after": 1,
+    "item_moved": false,
+    "source": "fixture_trek_rows"
+  },
+  "artifacts": {
+    "dir": "features/proof/vac-verify-telegram-text-single-edit",
+    "events": "features/proof/vac-verify-telegram-text-single-edit/events.jsonl",
+    "dry_run": "features/proof/vac-verify-telegram-text-single-edit/dry-run.json",
+    "receipt": "features/proof/vac-verify-telegram-text-single-edit/receipt.json",
+    "before": "features/proof/vac-verify-telegram-text-single-edit/before.json",
+    "after": "features/proof/vac-verify-telegram-text-single-edit/after.json"
+  },
+  "stop_rules": [
+    {
+      "id": "no_customer_simulation",
+      "description": "Do not start synthetic customer journeys from this lever.",
+      "status": "pass",
+      "detail": "Dry-run/control driver only; no customer journey started."
+    },
+    {
+      "id": "no_production_billing",
+      "description": "Do not charge Stripe or mutate production entitlements.",
+      "status": "pass",
+      "detail": "Checkout proof uses a synthetic account fixture."
+    },
+    {
+      "id": "no_unvalidated_writes",
+      "description": "The parser never writes. Only validated item IDs on the locked trip may mutate.",
+      "status": "pass",
+      "detail": "Writes require deterministic validation."
+    },
+    {
+      "id": "fail_closed_stale_media",
+      "description": "Media must bind to the live trip_id or no-op.",
+      "status": "pass",
+      "detail": "Stale or mismatched trip media must no-op."
+    },
+    {
+      "id": "fail_closed_unauthorized_upload",
+      "description": "Public-link and unauthorized collaborator uploads reject.",
+      "status": "pass",
+      "detail": "Unauthorized or public-link uploads must reject."
+    },
+    {
+      "id": "fail_closed_duplicate_trek",
+      "description": "Split-trip must not create a second TREK row for the same title/token.",
+      "status": "pass",
+      "detail": "TREK id-set unchanged (41); row count 1."
+    },
+    {
+      "id": "fail_closed_dropped_clause",
+      "description": "Multi-request voice must fail closed if any spoken clause is dropped.",
+      "status": "pass",
+      "detail": "Every spoken clause produced a decision."
+    },
+    {
+      "id": "exact_no_match_copy",
+      "description": "Unmatched targets use the exact no-match sentence.",
+      "status": "pass",
+      "detail": "Unmatched copy must be exact."
+    },
+    {
+      "id": "prove_state_movement",
+      "description": "A success reply is invalid unless TREK/backend id-set state moved, or local-snapshot is labeled hold.",
+      "status": "hold",
+      "detail": "Dry-run records planned writes; --apply --trek-db proves TREK id-set movement."
+    },
+    {
+      "id": "no_first_pass_language_on_edits",
+      "description": "Existing-itinerary edits must not use first-pass creation language.",
+      "status": "pass",
+      "detail": "Existing edits must name the change, not first-pass setup."
+    }
+  ],
+  "ok": true
+}

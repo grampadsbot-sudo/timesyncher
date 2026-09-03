@@ -25,6 +25,7 @@ import {
   gateTelegramIntakeEdit,
   mapLiveLockedThingRows,
   selectLiveLockedTripThings,
+  telegramTurnAfterGate,
 } from '../src/vacation/intake-edit-bridge.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
@@ -1818,12 +1819,17 @@ export default async function handler(req, res) {
             items: tripItems,
           },
         });
-        replyPayload = { ...replyPayload, vacationEditPipeline: editGate.compact || { skip: Boolean(editGate.skip) } };
-        const plannedWritesReplied = !editGate.skip && !editGate.failClosed && (editGate.receipt?.planned_writes || []).length > 0;
+        const turnDecision = telegramTurnAfterGate(editGate);
+        replyPayload = {
+          ...replyPayload,
+          vacationEditPipeline: editGate.compact || { skip: Boolean(editGate.skip) },
+          telegramTurn: turnDecision,
+        };
+        const plannedWritesReplied = turnDecision.plannedWritesReplied;
         if (!editGate.skip && editGate.failClosed) {
-          reply = editGate.receipt.customer_facing_response;
+          reply = turnDecision.reply;
         } else if (plannedWritesReplied) {
-          reply = editGate.receipt.customer_facing_response;
+          reply = turnDecision.reply;
         } else {
           const queuedPayload = { ...(body.payload || {}) };
           delete queuedPayload.things;

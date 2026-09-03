@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
+  COMMITTED_PROOF_JOB_ID,
   NO_MATCH_TEMPLATE,
   compactReceipt,
   isRealOggAudio,
@@ -15,10 +16,29 @@ import {
   noMatchCopy,
   runVacationEditPipeline,
   stableJobId,
+  writeCommittedDryRunProof,
 } from '../src/vacation/edit-pipeline.mjs';
 import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
 
 const cwd = process.cwd();
+const committedProof = writeCommittedDryRunProof({ cwd });
+const committedProofDir = committedProof.dir;
+const committedReceipt = JSON.parse(fs.readFileSync(path.join(committedProofDir, 'receipt.json'), 'utf8'));
+const committedEvents = fs.readFileSync(path.join(committedProofDir, 'events.jsonl'), 'utf8').trim().split('\n');
+assert.equal(committedReceipt.job_id, COMMITTED_PROOF_JOB_ID);
+assert.equal(committedReceipt.ok, true);
+assert.equal(committedReceipt.events_jsonl, 'features/proof/vac-verify-telegram-text-single-edit/events.jsonl');
+assert.equal(committedReceipt.dry_run, 'features/proof/vac-verify-telegram-text-single-edit/dry-run.json');
+assert.equal(committedReceipt.artifact_dir, 'features/proof/vac-verify-telegram-text-single-edit');
+assert.ok(!path.isAbsolute(committedReceipt.events_jsonl), 'committed receipt paths must be repo-relative');
+assert.ok(committedReceipt.stop_rules.length >= 8, 'committed receipt must record stop rules');
+assert.ok(fs.existsSync(path.join(cwd, committedReceipt.events_jsonl)));
+assert.ok(committedEvents.some((line) => JSON.parse(line).step === 'initialize'));
+assert.ok(committedEvents.some((line) => JSON.parse(line).step === 'complete'));
+assert.equal(committedEvents.length, 6, 'committed proof events.jsonl must be one initialize→complete pass');
+assert.ok(fs.existsSync(path.join(committedProofDir, 'dry-run.json')));
+assert.deepEqual(committedReceipt.event_steps, ['initialize', 'lock_identity', 'parse', 'validate', 'copy_check', 'complete']);
+
 const fixtures = listFixtureFiles(cwd);
 assert.ok(fixtures.length >= 18, `expected at least 18 fixtures, got ${fixtures.length}`);
 

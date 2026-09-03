@@ -7,11 +7,15 @@ import { spawnSync } from 'node:child_process';
 import {
   PIPELINE_NAME,
   PIPELINE_VERSION,
+  COMMITTED_PROOF_FIXTURE_ID,
+  COMMITTED_PROOF_JOB_ID,
   artifactDirFor,
+  committedProofDir,
+  compactReceipt,
   listFixtureFiles,
   loadFixture,
   runVacationEditPipeline,
-  compactReceipt,
+  writeCommittedDryRunProof,
 } from '../src/vacation/edit-pipeline.mjs';
 import { createTrekFixtureStore } from '../src/vacation/trek-fixture-store.mjs';
 
@@ -19,6 +23,8 @@ const cwd = process.cwd();
 const FEATURE_MAP = path.join(cwd, 'features', 'README.md');
 const SKILL = path.join(cwd, '.cursor', 'skills', 'verify-timesyncher-vacation', 'SKILL.md');
 const PIPELINE = path.join(cwd, 'src', 'vacation', 'edit-pipeline.mjs');
+const COMMITTED_PROOF_DIR = committedProofDir(cwd);
+const COMMITTED_PROOF_JOB = COMMITTED_PROOF_JOB_ID;
 
 function usage() {
   return [
@@ -28,6 +34,7 @@ function usage() {
     '  doctor                         Read-only check that the lever is worth driving',
     '  dry-run --fixture <path>       Run vacation-edit-pipeline in dry-run JSON mode',
     '  dry-run --all-fixtures         Run every features/fixtures/*.json case',
+    '  commit-proof                   Refresh the committed inspectable dry-run receipt',
     '  apply --local-snapshot --fixture <path>',
     '                                 Apply validated writes to a local JSON snapshot only',
     '                                 (not product/TREK state; prove_state_movement=hold)',
@@ -38,6 +45,7 @@ function usage() {
     '',
     'Reviewer commands:',
     '  node scripts/control-vacation.mjs doctor',
+    '  node scripts/control-vacation.mjs commit-proof',
     '  node scripts/control-vacation.mjs dry-run --all-fixtures --json',
     '  node scripts/control-vacation.mjs apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json --json',
     '  node scripts/control-vacation.mjs apply --trek-db /tmp/vacation-trek-verify.db --fixture features/fixtures/telegram-text-single-edit.json --json',
@@ -103,6 +111,32 @@ function doctor() {
   ];
   const missingFixtures = requiredFixtures.filter((id) => !fixtureIds.includes(id));
   const node = spawnSync(process.execPath, ['--check', PIPELINE], { encoding: 'utf8' });
+  const proofReceiptPath = path.join(COMMITTED_PROOF_DIR, 'receipt.json');
+  const proofEventsPath = path.join(COMMITTED_PROOF_DIR, 'events.jsonl');
+  const proofDryRunPath = path.join(COMMITTED_PROOF_DIR, 'dry-run.json');
+  let committedProof = { ok: false, reason: 'missing' };
+  if (fs.existsSync(proofReceiptPath) && fs.existsSync(proofEventsPath) && fs.existsSync(proofDryRunPath)) {
+    try {
+      const receipt = JSON.parse(fs.readFileSync(proofReceiptPath, 'utf8'));
+      const eventLines = fs.readFileSync(proofEventsPath, 'utf8').trim().split('\n').filter(Boolean);
+      const steps = eventLines.map((line) => JSON.parse(line).step);
+      committedProof = {
+        ok: receipt.job_id === COMMITTED_PROOF_JOB
+          && receipt.ok === true
+          && Array.isArray(receipt.stop_rules)
+          && receipt.stop_rules.length >= 8
+          && steps.includes('initialize')
+          && steps.includes('complete'),
+        job_id: receipt.job_id || null,
+        events: path.relative(cwd, proofEventsPath),
+        receipt: path.relative(cwd, proofReceiptPath),
+        dry_run: path.relative(cwd, proofDryRunPath),
+        artifact_dir: path.relative(cwd, COMMITTED_PROOF_DIR),
+      };
+    } catch (error) {
+      committedProof = { ok: false, reason: error.message || 'invalid_proof' };
+    }
+  }
   const report = {
     ok: false,
     pipeline: PIPELINE_NAME,
@@ -110,6 +144,7 @@ function doctor() {
     cwd,
     feature_map: FEATURE_MAP,
     skill: SKILL,
+    committed_proof: committedProof,
     checks: {
       feature_map: fs.existsSync(FEATURE_MAP),
       skill: fs.existsSync(SKILL),
@@ -118,6 +153,7 @@ function doctor() {
       missing_features: missingFeatures,
       missing_map_rows: missingMapRows,
       missing_fixtures: missingFixtures,
+      committed_proof: committedProof.ok,
     },
   };
   report.ok = report.checks.feature_map
@@ -126,6 +162,7 @@ function doctor() {
     && missingFeatures.length === 0
     && missingMapRows.length === 0
     && missingFixtures.length === 0
+    && committedProof.ok
     && fixtures.length >= requiredFixtures.length;
   return report;
 }
@@ -156,15 +193,22 @@ function runFixtures(args, apply) {
       jobId: args.jobId || undefined,
       cwd,
     });
+    if (!apply && fixture.fixture_id === COMMITTED_PROOF_FIXTURE_ID) {
+      writeCommittedDryRunProof({ cwd, fixture });
+    }
     return receipt;
   });
 }
 
 function readReceipt(jobId) {
+  const committedPath = path.join(COMMITTED_PROOF_DIR, 'receipt.json');
+  if (jobId === COMMITTED_PROOF_JOB && fs.existsSync(committedPath)) {
+    return JSON.parse(fs.readFileSync(committedPath, 'utf8'));
+  }
   const dir = artifactDirFor(jobId, cwd);
   const receiptPath = path.join(dir, 'receipt.json');
-  if (!fs.existsSync(receiptPath)) throw new Error(`No receipt at ${receiptPath}`);
-  return JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+  if (fs.existsSync(receiptPath)) return JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+  throw new Error(`No receipt at ${receiptPath}${jobId === COMMITTED_PROOF_JOB ? ` or ${committedPath}` : ''}`);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -185,6 +229,11 @@ try {
       if (report.checks.missing_features.length) console.log(`  missing features: ${report.checks.missing_features.join(', ')}`);
       if (report.checks.missing_map_rows.length) console.log(`  missing map rows: ${report.checks.missing_map_rows.join(', ')}`);
       if (report.checks.missing_fixtures.length) console.log(`  missing fixtures: ${report.checks.missing_fixtures.join(', ')}`);
+      if (report.committed_proof?.ok) {
+        console.log(`  committed proof: ${report.committed_proof.job_id} ${report.committed_proof.receipt}`);
+      } else {
+        console.log('  committed proof: missing');
+      }
     }
     process.exit(report.ok ? 0 : 1);
   }
@@ -192,6 +241,19 @@ try {
   if (args.command === 'apply' && !args.localSnapshot && !args.trekDb) {
     console.error('apply requires --local-snapshot (JSON only; not product/TREK state) or --trek-db <path>.');
     process.exit(2);
+  }
+
+  if (args.command === 'commit-proof') {
+    const proof = writeCommittedDryRunProof({ cwd });
+    const compact = proof.compact;
+    if (args.json) process.stdout.write(JSON.stringify({ receipt: compact, compact }, null, 2) + '\n');
+    else {
+      console.log(`${compact.ok ? 'PASS' : 'FAIL'} ${compact.job_id}`);
+      console.log(`  events: ${compact.events_jsonl}`);
+      console.log(`  dry-run: ${compact.dry_run}`);
+      console.log(`  artifact_dir: ${compact.artifact_dir}`);
+    }
+    process.exit(compact.ok ? 0 : 1);
   }
 
   if (args.command === 'dry-run' || args.command === 'apply') {

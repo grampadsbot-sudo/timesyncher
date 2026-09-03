@@ -15,6 +15,8 @@ import {
   isPaidMediaEntitlement,
   pipelineWriteDecision,
   selectLiveLockedTripThings,
+  telegramTurnAfterGate,
+  telegramTurnNoApplyCopy,
 } from '../src/vacation/intake-edit-bridge.mjs';
 import { itemsFromValidatedWrites } from './trek-itinerary-edit.mjs';
 
@@ -39,6 +41,8 @@ assert.match(INTAKE_SEAM.remaining, /customer_id/);
 assert.match(INTAKE_SEAM.remaining, /plannedWritesReplied/);
 assert.match(INTAKE_SEAM.remaining, /separate entry/);
 assert.match(INTAKE_SEAM.remaining, /--trek-db/);
+assert.match(INTAKE_SEAM.remaining, /apply_not_on_turn/);
+assert.match(INTAKE_SEAM.remaining, /features\/proof\/vac-verify-telegram-text-single-edit/);
 
 const owner = gateTelegramIntakeEdit({
   text: 'Move Bellagio Fountains to day 2',
@@ -50,6 +54,15 @@ assert.equal(owner.failClosed, false);
 assert.equal(owner.receipt.planned_writes[0].op, 'move_thing');
 assert.equal(pipelineWriteDecision(owner, { items: vegasItems }).allowTrekWrite, true);
 assert.equal(pipelineWriteDecision(owner, { items: vegasItems }).editApplied, true);
+const turnAfterGate = telegramTurnAfterGate(owner);
+assert.equal(turnAfterGate.plannedWritesReplied, true);
+assert.equal(turnAfterGate.queueWorker, false);
+assert.equal(turnAfterGate.failClosed, true);
+assert.equal(turnAfterGate.editApplied, false);
+assert.equal(turnAfterGate.reason, 'apply_not_on_turn');
+assert.equal(turnAfterGate.reply, telegramTurnNoApplyCopy('Move Bellagio Fountains to day 2'));
+assert.doesNotMatch(turnAfterGate.reply, /^Moved /);
+assert.doesNotMatch(turnAfterGate.reply, /updated the itinerary/i);
 
 const emptyItems = gateTelegramIntakeEdit({
   text: 'Move Bellagio Fountains to day 2',
@@ -282,12 +295,15 @@ assert.match(turn, /gateMediaUploadIntake/);
 assert.match(turn, /resolve_live_session/);
 assert.match(turn, /selectLiveLockedTripThings/);
 assert.match(turn, /plannedWritesReplied/);
+assert.match(turn, /telegramTurnAfterGate/);
 assert.doesNotMatch(turn, /canUpload:\s*true/);
 assert.doesNotMatch(turn, /source: 'staging_bypass'/);
 assert.doesNotMatch(turn, /allowed: true, source: 'staging_bypass'/);
 const editGateBlock = turn.slice(turn.lastIndexOf('const editGate = gateTelegramIntakeEdit'));
 assert.match(editGateBlock, /else if \(plannedWritesReplied\)/);
 assert.ok(editGateBlock.indexOf('else if (plannedWritesReplied)') < editGateBlock.indexOf('queueSetupRequest'), 'planned_writes reply must not queue a write worker');
+assert.match(editGateBlock, /turnDecision\.reply/);
+assert.doesNotMatch(editGateBlock, /plannedWritesReplied\) \{\s*reply = editGate\.receipt\.customer_facing_response/);
 
 const bot = fs.readFileSync(path.join(cwd, 'scripts/telegram-vacation-intake-bot.mjs'), 'utf8');
 assert.match(bot, /annotateIntakeFromLiveSession/);

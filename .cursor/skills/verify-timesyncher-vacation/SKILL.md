@@ -50,7 +50,9 @@ Drive the mapped features from `features/README.md`. Sibling entry points for th
 
 ## Evidence
 
-Proof artifacts land in `artifacts/vacation-verify/<job_id>/` and survive cleanup:
+The inspectable dry-run receipt an attacker can read from the repo is `features/proof/vac-verify-telegram-text-single-edit/` (`receipt.json`, `events.jsonl`, `dry-run.json`). Refresh it with `node scripts/control-vacation.mjs commit-proof` or `dry-run` of `telegram-text-single-edit`. Do not treat a gitignored `artifacts/` run as in-tree proof.
+
+Scratch artifacts also land in `artifacts/vacation-verify/<job_id>/` and survive cleanup:
 
 - `events.jsonl` — one JSON object per step (`initialize`, `lock_identity`, `parse`, `validate`, `copy_check`, `complete`)
 - `dry-run.json` — full pipeline receipt
@@ -80,6 +82,7 @@ All helpers are executable and invoked as follows:
 
 ```bash
 node scripts/control-vacation.mjs doctor
+node scripts/control-vacation.mjs commit-proof
 node scripts/control-vacation.mjs dry-run --all-fixtures --json
 node scripts/control-vacation.mjs apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json --json
 node scripts/control-vacation.mjs apply --trek-db /tmp/vacation-trek-verify.db --fixture features/fixtures/telegram-text-single-edit.json --json
@@ -114,8 +117,9 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - staging_bypass is not entitlement proof and must not set canUpload
 - customer_id alone is not owner/canEdit
 - trek-* live files must not keep inferFallbackPlan / planWithGrok / extractQuotedAdds
-- once the turn gate replies planned_writes, do not queue a write worker; the next turn re-enters the gate
-- live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the plannedWritesReplied turn
+- once the turn gate has planned_writes, do not queue a write worker and do not send Moved/Removed success copy (apply_not_on_turn)
+- live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the telegram turn
+- doctor must see the committed proof at features/proof/vac-verify-telegram-text-single-edit/
 - events.jsonl appends one event per handoff and never overwrites
 
 ## Anti-patterns

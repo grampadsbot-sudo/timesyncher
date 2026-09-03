@@ -426,18 +426,37 @@ function persistArtifacts(receipt, events, { apply, audioPath }) {
   }
 }
 
-export function compactReceipt(receipt) {
+export const COMMITTED_PROOF_JOB_ID = 'vac-verify-telegram-text-single-edit';
+export const COMMITTED_PROOF_FIXTURE_ID = 'telegram-text-single-edit';
+export const COMMITTED_PROOF_NOW = '2026-09-03T22:00:00.000Z';
+
+export function committedProofDir(cwd = process.cwd()) {
+  return path.join(cwd, 'features', 'proof', COMMITTED_PROOF_JOB_ID);
+}
+
+export function toRepoRelative(value, cwd = process.cwd()) {
+  if (typeof value !== 'string' || !value) return value;
+  if (!path.isAbsolute(value)) return value;
+  const rel = path.relative(cwd, value);
+  if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) return rel;
+  return value;
+}
+
+export function compactReceipt(receipt, { cwd } = {}) {
+  const root = cwd || process.cwd();
+  const rel = (value) => toRepoRelative(value, root);
   return {
     job_id: receipt.job_id,
-    events_jsonl: receipt.artifacts.events,
+    fixture_id: receipt.fixture_id || null,
+    events_jsonl: rel(receipt.artifacts.events),
     surface: receipt.surface,
     actor: receipt.actor.role,
     trip_id: receipt.trip.trip_id,
     public_url: receipt.trip.publicUrl,
     before_hash: receipt.before_hash,
     after_hash: receipt.after_hash,
-    dry_run: receipt.artifacts.dry_run,
-    artifact_dir: receipt.artifacts.dir,
+    dry_run: rel(receipt.artifacts.dry_run),
+    artifact_dir: rel(receipt.artifacts.dir),
     required_artifacts: [
       'whole-experience screenshot / customer-flow PDF',
       'customer-story PDF with generated pictures',
@@ -452,6 +471,40 @@ export function compactReceipt(receipt) {
     customer_facing_response: receipt.customer_facing_response,
     ok: receipt.ok,
   };
+}
+
+export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture } = {}) {
+  const loaded = fixture || loadFixture(
+    path.join(cwd, 'features', 'fixtures', `${COMMITTED_PROOF_FIXTURE_ID}.json`),
+    cwd,
+  );
+  const dir = committedProofDir(cwd);
+  if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+  const { receipt, events } = runVacationEditPipeline(loaded, {
+    persist: true,
+    artifactRoot: dir,
+    cwd,
+    now: COMMITTED_PROOF_NOW,
+    jobId: COMMITTED_PROOF_JOB_ID,
+  });
+  const committed = {
+    ...compactReceipt(receipt, { cwd }),
+    job_id: COMMITTED_PROOF_JOB_ID,
+    fixture_id: loaded.fixture_id,
+    event_steps: events.map((event) => event.step),
+  };
+  fs.writeFileSync(path.join(dir, 'receipt.json'), `${JSON.stringify(committed, null, 2)}\n`);
+  const dryRunPath = path.join(dir, 'dry-run.json');
+  const dryRun = JSON.parse(fs.readFileSync(dryRunPath, 'utf8'));
+  if (dryRun.artifacts) {
+    for (const [key, value] of Object.entries(dryRun.artifacts)) {
+      dryRun.artifacts[key] = toRepoRelative(value, cwd);
+    }
+  }
+  if (dryRun.fixture_path) dryRun.fixture_path = toRepoRelative(dryRun.fixture_path, cwd);
+  if (dryRun.audio_path) dryRun.audio_path = toRepoRelative(dryRun.audio_path, cwd);
+  fs.writeFileSync(dryRunPath, `${JSON.stringify(dryRun, null, 2)}\n`);
+  return { receipt, compact: committed, dir, events };
 }
 
 function normalizeInput(raw) {
