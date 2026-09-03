@@ -123,7 +123,9 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - dry-run receipt customer_facing_response must use the same no-apply copy; do not store Moved/Removed when writes_applied is empty
 - live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the telegram turn
 - doctor must see committed proofs at features/proof/vac-verify-telegram-text-single-edit/, vac-verify-thing-media-stale/, and vac-verify-thing-media-visible/
+- doctor freshness is a live re-exec proof_digest match, not COMMITTED_PROOF_NOW stamp equality
 - fail_closed_thing_id fail-closes on thing_not_visible / thing_id_cross_trip even when write is null; it does not treat bound-trip stale_trip_media as a thing_id stop
+- dry-run trees hold prove_state_movement; TREK apply is --apply --trek-db or worker first-pass
 - events.jsonl appends one event per handoff and never overwrites
 
 ## Anti-patterns

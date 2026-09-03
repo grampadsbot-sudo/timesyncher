@@ -113,6 +113,39 @@ export function snapshotHash(value) {
   return crypto.createHash('sha256').update(canonicalize(value)).digest('hex');
 }
 
+export function committedProofMaterial(receipt = {}) {
+  return {
+    apply_scope: receipt.apply_scope || null,
+    after_hash: receipt.after_hash || null,
+    before_hash: receipt.before_hash || null,
+    customer_facing_response: receipt.customer_facing_response || '',
+    dropped_clause: Boolean(receipt.dropped_clause),
+    fixture_id: receipt.fixture_id || null,
+    job_id: receipt.job_id || null,
+    no_ops: receipt.no_ops || [],
+    planned_writes: receipt.planned_writes || [],
+    stop_rules: (receipt.stop_rules || []).map((rule) => ({
+      detail: rule.detail || null,
+      id: rule.id,
+      status: rule.status,
+    })),
+    trek_state: receipt.trek_state || null,
+    writes_applied: receipt.writes_applied || [],
+  };
+}
+
+export function committedProofDigest(receipt = {}) {
+  return snapshotHash(committedProofMaterial(receipt));
+}
+
+export function eventPayloadsWithoutTs(events = []) {
+  return (Array.isArray(events) ? events : []).map((event) => {
+    const { ts, ...rest } = event || {};
+    void ts;
+    return rest;
+  });
+}
+
 export function artifactDirFor(jobId, root = process.cwd()) {
   return path.join(root, 'artifacts', 'vacation-verify', slugToken(jobId));
 }
@@ -508,6 +541,11 @@ export function compactReceipt(receipt, { cwd } = {}) {
     trek_state: receipt.trek_state,
     dropped_clause: receipt.dropped_clause,
     customer_facing_response: receipt.customer_facing_response,
+    apply_gate: {
+      prove_state_movement: (receipt.stop_rules || []).find((rule) => rule.id === 'prove_state_movement')?.status || null,
+      apply_on_this_receipt: (receipt.writes_applied || []).length > 0,
+      live_apply_entry: 'control-vacation --apply --trek-db or worker applyExistingTripEdit (first-pass/non-edit queue)',
+    },
     ok: receipt.ok,
   };
 }
@@ -528,11 +566,12 @@ export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture, fixtur
     now: COMMITTED_PROOF_NOW,
     jobId,
   });
+  const digest = committedProofDigest(receipt);
   const committed = {
     ...compactReceipt(receipt, { cwd }),
     job_id: jobId,
     fixture_id: loaded.fixture_id,
-    generated_at: COMMITTED_PROOF_NOW,
+    proof_digest: digest,
     event_steps: events.map((event) => event.step),
   };
   fs.writeFileSync(path.join(dir, 'receipt.json'), `${JSON.stringify(committed, null, 2)}\n`);
@@ -545,6 +584,7 @@ export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture, fixtur
   }
   if (dryRun.fixture_path) dryRun.fixture_path = toRepoRelative(dryRun.fixture_path, cwd);
   if (dryRun.audio_path) dryRun.audio_path = toRepoRelative(dryRun.audio_path, cwd);
+  dryRun.proof_digest = digest;
   fs.writeFileSync(dryRunPath, `${JSON.stringify(dryRun, null, 2)}\n`);
   return { receipt, compact: committed, dir, events };
 }
@@ -799,7 +839,7 @@ function decideMediaUpload(intent, input) {
         write: null,
         applied: false,
         candidates: [],
-        response: `I heard "${intent.heard}", but that item is not on the locked live trip, so I left it unchanged.`,
+        response: `I heard "${intent.heard}", but that Thing belongs to another trip, so I did not attach the media.`,
       };
     }
     const visible = contextItems(input).some((item) => String(item.id) === String(thingId));

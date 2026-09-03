@@ -102,8 +102,13 @@
   },
   "dropped_clause": false,
   "customer_facing_response": "I heard \"Attach this photo to Bellagio Fountains\", but that Thing is not in this page, so I did not attach the media.",
+  "apply_gate": {
+    "prove_state_movement": "hold",
+    "apply_on_this_receipt": false,
+    "live_apply_entry": "control-vacation --apply --trek-db or worker applyExistingTripEdit (first-pass/non-edit queue)"
+  },
   "ok": true,
-  "generated_at": "2026-09-03T23:10:00.000Z",
+  "proof_digest": "dc73aabe9a5cb5bdda1accbcb5b4390037c7477b5cebd5bfd315bbf098837d69",
   "event_steps": [
     "initialize",
     "lock_identity",

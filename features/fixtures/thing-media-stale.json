@@ -23,6 +23,7 @@
   "expect": {
     "ok": true,
     "write_ops": [],
-    "no_op_stops": ["thing_id_cross_trip"]
+    "no_op_stops": ["thing_id_cross_trip"],
+    "response_includes": "belongs to another trip"
   }
 }

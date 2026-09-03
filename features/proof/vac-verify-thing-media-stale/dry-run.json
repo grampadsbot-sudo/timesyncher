@@ -54,11 +54,11 @@
     {
       "reason": "thing_id_cross_trip",
       "heard": "Attach this photo to the luau",
-      "response": "I heard \"Attach this photo to the luau\", but that item is not on the locked live trip, so I left it unchanged."
+      "response": "I heard \"Attach this photo to the luau\", but that Thing belongs to another trip, so I did not attach the media."
     }
   ],
   "writes_applied": [],
-  "customer_facing_response": "I heard \"Attach this photo to the luau\", but that item is not on the locked live trip, so I left it unchanged.",
+  "customer_facing_response": "I heard \"Attach this photo to the luau\", but that Thing belongs to another trip, so I did not attach the media.",
   "before_hash": "02a82b1e39368ea6699b3dab9727e9fffb93092484173f23d5efa323d9858535",
   "after_hash": "02a82b1e39368ea6699b3dab9727e9fffb93092484173f23d5efa323d9858535",
   "before_state": {
@@ -191,5 +191,6 @@
       "detail": "Existing edits must name the change, not first-pass setup."
     }
   ],
-  "ok": true
+  "ok": true,
+  "proof_digest": "0fab04c860dd596043ffaa334f26b7c643e946bcb54bde4159dc949ecc4d625d"
 }

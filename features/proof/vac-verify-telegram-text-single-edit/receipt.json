@@ -100,8 +100,13 @@
   },
   "dropped_clause": false,
   "customer_facing_response": "I heard \"Move Bellagio Fountains to day 2\", but I did not change the itinerary from this message.",
+  "apply_gate": {
+    "prove_state_movement": "hold",
+    "apply_on_this_receipt": false,
+    "live_apply_entry": "control-vacation --apply --trek-db or worker applyExistingTripEdit (first-pass/non-edit queue)"
+  },
   "ok": true,
-  "generated_at": "2026-09-03T23:10:00.000Z",
+  "proof_digest": "5b6cf5809ff648af93634aaee4d76f54a8515043969723bb60add4abab9d1d8a",
   "event_steps": [
     "initialize",
     "lock_identity",

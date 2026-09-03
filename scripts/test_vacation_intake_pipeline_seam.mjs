@@ -47,6 +47,8 @@ assert.match(INTAKE_SEAM.remaining, /joins every clause/);
 assert.match(INTAKE_SEAM.remaining, /thing_not_visible/);
 assert.match(INTAKE_SEAM.remaining, /thing_id_cross_trip/);
 assert.match(INTAKE_SEAM.remaining, /does not treat bound-trip stale_trip_media/);
+assert.match(INTAKE_SEAM.remaining, /proof_digest/);
+assert.match(INTAKE_SEAM.remaining, /another trip/);
 assert.match(INTAKE_SEAM.remaining, /features\/proof\/vac-verify-telegram-text-single-edit/);
 
 const owner = gateTelegramIntakeEdit({

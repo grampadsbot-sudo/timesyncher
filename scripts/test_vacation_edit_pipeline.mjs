@@ -8,8 +8,8 @@ import path from 'node:path';
 import {
   COMMITTED_PROOF_FIXTURE_IDS,
   COMMITTED_PROOF_JOB_ID,
-  COMMITTED_PROOF_NOW,
   NO_MATCH_TEMPLATE,
+  committedProofDigest,
   compactReceipt,
   evaluateStopRules,
   isRealOggAudio,
@@ -45,8 +45,21 @@ assert.ok(committedEvents.some((line) => JSON.parse(line).step === 'complete'));
 assert.equal(committedEvents.length, 6, 'committed proof events.jsonl must be one initialize→complete pass');
 assert.ok(fs.existsSync(path.join(committedProofDir, 'dry-run.json')));
 assert.deepEqual(committedReceipt.event_steps, ['initialize', 'lock_identity', 'parse', 'validate', 'copy_check', 'complete']);
-assert.equal(committedReceipt.generated_at, COMMITTED_PROOF_NOW);
-assert.ok(committedEvents.every((line) => JSON.parse(line).ts === COMMITTED_PROOF_NOW));
+const liveSingle = runVacationEditPipeline(loadFixture('features/fixtures/telegram-text-single-edit.json', cwd), { persist: false, cwd });
+assert.equal(committedReceipt.proof_digest, committedProofDigest(liveSingle.receipt));
+assert.equal(JSON.parse(fs.readFileSync(path.join(committedProofDir, 'dry-run.json'), 'utf8')).proof_digest, committedReceipt.proof_digest);
+assert.equal(
+  committedProofDigest({ ...liveSingle.receipt, generated_at: '2099-01-01T00:00:00.000Z' }),
+  committedReceipt.proof_digest,
+  'generated_at is not proof material',
+);
+assert.notEqual(
+  committedProofDigest({ ...liveSingle.receipt, customer_facing_response: 'forged' }),
+  committedReceipt.proof_digest,
+  'digest must move when receipt material moves',
+);
+assert.equal(committedReceipt.apply_gate.prove_state_movement, 'hold');
+assert.equal(committedReceipt.apply_gate.apply_on_this_receipt, false);
 assert.equal(committedReceipt.customer_facing_response, noApplyCopy('Move Bellagio Fountains to day 2'));
 assert.doesNotMatch(committedReceipt.customer_facing_response, /^(Moved |Removed )/);
 assert.equal(committedReceipt.before_hash, committedReceipt.after_hash);
@@ -66,8 +79,9 @@ for (const proof of committedProofs.filter((row) => String(row.compact.fixture_i
   assert.deepEqual(receipt.writes_applied, []);
   assert.equal(thingRule.status, 'pass');
   assert.match(thingRule.detail, /write=null/);
-  assert.equal(receipt.generated_at, COMMITTED_PROOF_NOW);
-  assert.ok(events.every((line) => JSON.parse(line).ts === COMMITTED_PROOF_NOW));
+  const liveThing = runVacationEditPipeline(loadFixture(`features/fixtures/${receipt.fixture_id}.json`, cwd), { persist: false, cwd });
+  assert.equal(receipt.proof_digest, committedProofDigest(liveThing.receipt));
+  assert.equal(JSON.parse(fs.readFileSync(path.join(proof.dir, 'dry-run.json'), 'utf8')).proof_digest, receipt.proof_digest);
 }
 
 const leakedThingId = evaluateStopRules({
@@ -243,6 +257,8 @@ assert.equal(thingStale.receipt.planned_writes.length, 0);
 assert.ok(thingStale.receipt.no_ops.some((row) => row.reason === 'thing_id_cross_trip'));
 assert.equal(loadFixture(thingStale.receipt.fixture_path, cwd).media.thing_id, 'thing-hawaii-luau');
 assert.match(thingStale.receipt.stop_rules.find((rule) => rule.id === 'fail_closed_thing_id').detail, /write=null/);
+assert.match(thingStale.receipt.customer_facing_response, /belongs to another trip/);
+assert.doesNotMatch(stale.receipt.customer_facing_response, /belongs to another trip/);
 
 const thingVisible = byId.get('thing-media-visible');
 assert.equal(thingVisible.receipt.planned_writes.length, 0);

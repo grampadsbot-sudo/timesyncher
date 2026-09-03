@@ -88,7 +88,7 @@
     {
       "reason": "thing_id_cross_trip",
       "heard": "Attach this photo to the luau",
-      "response": "I heard \"Attach this photo to the luau\", but that item is not on the locked live trip, so I left it unchanged."
+      "response": "I heard \"Attach this photo to the luau\", but that Thing belongs to another trip, so I did not attach the media."
     }
   ],
   "apply_scope": "dry-run",
@@ -101,9 +101,14 @@
     "source": "fixture_trek_rows"
   },
   "dropped_clause": false,
-  "customer_facing_response": "I heard \"Attach this photo to the luau\", but that item is not on the locked live trip, so I left it unchanged.",
+  "customer_facing_response": "I heard \"Attach this photo to the luau\", but that Thing belongs to another trip, so I did not attach the media.",
+  "apply_gate": {
+    "prove_state_movement": "hold",
+    "apply_on_this_receipt": false,
+    "live_apply_entry": "control-vacation --apply --trek-db or worker applyExistingTripEdit (first-pass/non-edit queue)"
+  },
   "ok": true,
-  "generated_at": "2026-09-03T23:10:00.000Z",
+  "proof_digest": "0fab04c860dd596043ffaa334f26b7c643e946bcb54bde4159dc949ecc4d625d",
   "event_steps": [
     "initialize",
     "lock_identity",

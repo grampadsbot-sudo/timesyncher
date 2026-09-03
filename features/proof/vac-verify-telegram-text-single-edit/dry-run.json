@@ -217,5 +217,6 @@
       "detail": "Existing edits must name the change, not first-pass setup."
     }
   ],
-  "ok": true
+  "ok": true,
+  "proof_digest": "5b6cf5809ff648af93634aaee4d76f54a8515043969723bb60add4abab9d1d8a"
 }

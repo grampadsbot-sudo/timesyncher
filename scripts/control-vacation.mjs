@@ -8,14 +8,16 @@ import {
   PIPELINE_NAME,
   PIPELINE_VERSION,
   COMMITTED_PROOF_FIXTURE_IDS,
-  COMMITTED_PROOF_NOW,
   artifactDirFor,
+  committedProofDigest,
   committedProofDir,
   committedProofJobId,
   compactReceipt,
+  eventPayloadsWithoutTs,
   listFixtureFiles,
   loadFixture,
   runVacationEditPipeline,
+  snapshotHash,
   writeAllCommittedDryRunProofs,
   writeCommittedDryRunProof,
 } from '../src/vacation/edit-pipeline.mjs';
@@ -87,9 +89,31 @@ function inspectCommittedProof(fixtureId) {
     const eventLines = fs.readFileSync(proofEventsPath, 'utf8').trim().split('\n').filter(Boolean);
     const parsedEvents = eventLines.map((line) => JSON.parse(line));
     const steps = parsedEvents.map((event) => event.step);
-    const freshExec = receipt.generated_at === COMMITTED_PROOF_NOW
-      && parsedEvents.length > 0
-      && parsedEvents.every((event) => event.ts === COMMITTED_PROOF_NOW);
+    const fixture = loadFixture(path.join(cwd, 'features', 'fixtures', `${fixtureId}.json`), cwd);
+    const live = runVacationEditPipeline(fixture, { persist: false, cwd, jobId });
+    const liveDigest = committedProofDigest(live.receipt);
+    const receiptDigest = receipt.proof_digest;
+    const dryRunBodyDigest = committedProofDigest(dryRun);
+    const dryRunDigest = dryRun.proof_digest;
+    const beforePath = path.join(dir, 'before.json');
+    const afterPath = path.join(dir, 'after.json');
+    const beforeHash = fs.existsSync(beforePath) ? snapshotHash(JSON.parse(fs.readFileSync(beforePath, 'utf8'))) : null;
+    const afterHash = fs.existsSync(afterPath) ? snapshotHash(JSON.parse(fs.readFileSync(afterPath, 'utf8'))) : null;
+    const eventsMatch = snapshotHash(eventPayloadsWithoutTs(parsedEvents))
+      === snapshotHash(eventPayloadsWithoutTs(live.events));
+    const copyMatch = receipt.customer_facing_response === live.receipt.customer_facing_response
+      && dryRun.customer_facing_response === live.receipt.customer_facing_response;
+    const applyHold = receipt.apply_gate?.prove_state_movement === 'hold'
+      && receipt.apply_gate?.apply_on_this_receipt === false;
+    const reexec = Boolean(liveDigest)
+      && liveDigest === receiptDigest
+      && liveDigest === dryRunDigest
+      && liveDigest === dryRunBodyDigest
+      && beforeHash === live.receipt.before_hash
+      && afterHash === live.receipt.after_hash
+      && eventsMatch
+      && copyMatch
+      && applyHold;
     const thingIdRule = (receipt.stop_rules || []).find((rule) => rule.id === 'fail_closed_thing_id');
     const thingProof = fixtureId.startsWith('thing-media-');
     const honestCopy = (text) => /did not change the itinerary/.test(String(text || ''))
@@ -109,12 +133,15 @@ function inspectCommittedProof(fixtureId) {
       && dryRun.before_hash === dryRun.after_hash
       && Array.isArray(receipt.writes_applied)
       && receipt.writes_applied.length === 0
-      && freshExec
+      && Boolean(receiptDigest)
+      && reexec
       && (thingProof ? thingClosed : honestCopy(receipt.customer_facing_response) && honestCopy(dryRun.customer_facing_response));
     return {
       ok,
       fixture_id: fixtureId,
       job_id: receipt.job_id || jobId,
+      proof_digest: receiptDigest || null,
+      reexec,
       events: path.relative(cwd, proofEventsPath),
       receipt: path.relative(cwd, proofReceiptPath),
       dry_run: path.relative(cwd, proofDryRunPath),
