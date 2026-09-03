@@ -12,7 +12,7 @@ export const INTAKE_SEAM = Object.freeze({
     'scripts/product-gbrain-dispatch.mjs',
     'scripts/telegram-vacation-intake-bot.mjs',
   ],
-  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
+  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Dead re-parse helpers (inferFallbackPlan / planWithGrok / extractQuotedAdds) are removed from trek-* live files. Once the turn gate replies planned_writes (plannedWritesReplied), it does not queue a write worker; any subsequent customer turn must re-enter the gate. Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
 });
 
 const FAIL_CLOSED_REASONS = new Set([

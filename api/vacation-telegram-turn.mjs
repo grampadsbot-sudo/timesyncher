@@ -1819,7 +1819,10 @@ export default async function handler(req, res) {
           },
         });
         replyPayload = { ...replyPayload, vacationEditPipeline: editGate.compact || { skip: Boolean(editGate.skip) } };
+        const plannedWritesReplied = !editGate.skip && !editGate.failClosed && (editGate.receipt?.planned_writes || []).length > 0;
         if (!editGate.skip && editGate.failClosed) {
+          reply = editGate.receipt.customer_facing_response;
+        } else if (plannedWritesReplied) {
           reply = editGate.receipt.customer_facing_response;
         } else {
           const queuedPayload = { ...(body.payload || {}) };
@@ -1835,9 +1838,7 @@ export default async function handler(req, res) {
           vacationEditPipeline: editGate.compact,
           liveLockedThings: tripItems,
         }, kind);
-          reply = (!editGate.skip && editGate.receipt?.planned_writes?.length)
-            ? editGate.receipt.customer_facing_response
-            : setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+          reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
         }
       }
     }

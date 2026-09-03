@@ -113,6 +113,8 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - Thing list is live-locked trip_things, not client payload.things
 - staging_bypass is not entitlement proof and must not set canUpload
 - customer_id alone is not owner/canEdit
+- trek-* live files must not keep inferFallbackPlan / planWithGrok / extractQuotedAdds
+- once the turn gate replies planned_writes, do not queue a write worker; the next turn re-enters the gate
 - events.jsonl appends one event per handoff and never overwrites
 
 ## Anti-patterns

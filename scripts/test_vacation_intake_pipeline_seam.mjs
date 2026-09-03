@@ -36,6 +36,7 @@ assert.match(INTAKE_SEAM.remaining, /planned_writes/);
 assert.match(INTAKE_SEAM.remaining, /live-locked trip_things/);
 assert.match(INTAKE_SEAM.remaining, /staging_bypass/);
 assert.match(INTAKE_SEAM.remaining, /customer_id/);
+assert.match(INTAKE_SEAM.remaining, /plannedWritesReplied/);
 
 const owner = gateTelegramIntakeEdit({
   text: 'Move Bellagio Fountains to day 2',
@@ -278,9 +279,13 @@ assert.match(turn, /actorFromLiveSession/);
 assert.match(turn, /gateMediaUploadIntake/);
 assert.match(turn, /resolve_live_session/);
 assert.match(turn, /selectLiveLockedTripThings/);
+assert.match(turn, /plannedWritesReplied/);
 assert.doesNotMatch(turn, /canUpload:\s*true/);
 assert.doesNotMatch(turn, /source: 'staging_bypass'/);
 assert.doesNotMatch(turn, /allowed: true, source: 'staging_bypass'/);
+const editGateBlock = turn.slice(turn.lastIndexOf('const editGate = gateTelegramIntakeEdit'));
+assert.match(editGateBlock, /else if \(plannedWritesReplied\)/);
+assert.ok(editGateBlock.indexOf('else if (plannedWritesReplied)') < editGateBlock.indexOf('queueSetupRequest'), 'planned_writes reply must not queue a write worker');
 
 const bot = fs.readFileSync(path.join(cwd, 'scripts/telegram-vacation-intake-bot.mjs'), 'utf8');
 assert.match(bot, /annotateIntakeFromLiveSession/);
@@ -295,14 +300,17 @@ const trekEdit = fs.readFileSync(path.join(cwd, 'scripts/trek-itinerary-edit.mjs
 const trekMain = trekEdit.slice(trekEdit.indexOf('async function main'));
 assert.match(trekMain, /validatedWrites/);
 assert.match(trekMain, /applyValidatedOnly/);
+assert.doesNotMatch(trekEdit, /extractQuotedAdds/);
+assert.doesNotMatch(trekEdit, /function editItems/);
 assert.doesNotMatch(trekMain, /editItems\(/);
 assert.doesNotMatch(trekMain, /parseDateRange\(/);
 
 const trekAgent = fs.readFileSync(path.join(cwd, 'scripts/trek-agent-edit.mjs'), 'utf8');
 const agentMain = trekAgent.slice(trekAgent.indexOf('async function main'));
 assert.match(agentMain, /validatedWrites/);
-assert.doesNotMatch(agentMain, /planWithGrok/);
-assert.doesNotMatch(agentMain, /inferFallbackPlan/);
+assert.doesNotMatch(trekAgent, /planWithGrok/);
+assert.doesNotMatch(trekAgent, /inferFallbackPlan/);
+assert.doesNotMatch(trekAgent, /extractQuotedAdds/);
 
 const workerJobs = fs.readFileSync(path.join(cwd, 'api/worker-jobs.mjs'), 'utf8');
 assert.match(workerJobs, /liveLockedThings/);
