@@ -8,6 +8,7 @@ import path from 'node:path';
 import {
   COMMITTED_PROOF_FIXTURE_IDS,
   COMMITTED_PROOF_JOB_ID,
+  COMMITTED_PROOF_NOW,
   NO_MATCH_TEMPLATE,
   compactReceipt,
   evaluateStopRules,
@@ -44,6 +45,8 @@ assert.ok(committedEvents.some((line) => JSON.parse(line).step === 'complete'));
 assert.equal(committedEvents.length, 6, 'committed proof events.jsonl must be one initialize→complete pass');
 assert.ok(fs.existsSync(path.join(committedProofDir, 'dry-run.json')));
 assert.deepEqual(committedReceipt.event_steps, ['initialize', 'lock_identity', 'parse', 'validate', 'copy_check', 'complete']);
+assert.equal(committedReceipt.generated_at, COMMITTED_PROOF_NOW);
+assert.ok(committedEvents.every((line) => JSON.parse(line).ts === COMMITTED_PROOF_NOW));
 assert.equal(committedReceipt.customer_facing_response, noApplyCopy('Move Bellagio Fountains to day 2'));
 assert.doesNotMatch(committedReceipt.customer_facing_response, /^(Moved |Removed )/);
 assert.equal(committedReceipt.before_hash, committedReceipt.after_hash);
@@ -63,6 +66,8 @@ for (const proof of committedProofs.filter((row) => String(row.compact.fixture_i
   assert.deepEqual(receipt.writes_applied, []);
   assert.equal(thingRule.status, 'pass');
   assert.match(thingRule.detail, /write=null/);
+  assert.equal(receipt.generated_at, COMMITTED_PROOF_NOW);
+  assert.ok(events.every((line) => JSON.parse(line).ts === COMMITTED_PROOF_NOW));
 }
 
 const leakedThingId = evaluateStopRules({

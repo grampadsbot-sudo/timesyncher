@@ -101,6 +101,7 @@
   "dropped_clause": false,
   "customer_facing_response": "I heard \"Move Bellagio Fountains to day 2\", but I did not change the itinerary from this message.",
   "ok": true,
+  "generated_at": "2026-09-03T23:10:00.000Z",
   "event_steps": [
     "initialize",
     "lock_identity",

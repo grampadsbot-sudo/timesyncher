@@ -463,7 +463,7 @@ export const COMMITTED_PROOF_FIXTURE_IDS = Object.freeze([
   'thing-media-stale',
   'thing-media-visible',
 ]);
-export const COMMITTED_PROOF_NOW = '2026-09-03T22:00:00.000Z';
+export const COMMITTED_PROOF_NOW = '2026-09-03T23:10:00.000Z';
 
 export function committedProofJobId(fixtureId = COMMITTED_PROOF_FIXTURE_ID) {
   return `vac-verify-${slugToken(fixtureId)}`;
@@ -532,6 +532,7 @@ export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture, fixtur
     ...compactReceipt(receipt, { cwd }),
     job_id: jobId,
     fixture_id: loaded.fixture_id,
+    generated_at: COMMITTED_PROOF_NOW,
     event_steps: events.map((event) => event.step),
   };
   fs.writeFileSync(path.join(dir, 'receipt.json'), `${JSON.stringify(committed, null, 2)}\n`);

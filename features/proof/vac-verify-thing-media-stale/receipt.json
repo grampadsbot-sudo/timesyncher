@@ -103,6 +103,7 @@
   "dropped_clause": false,
   "customer_facing_response": "I heard \"Attach this photo to the luau\", but that item is not on the locked live trip, so I left it unchanged.",
   "ok": true,
+  "generated_at": "2026-09-03T23:10:00.000Z",
   "event_steps": [
     "initialize",
     "lock_identity",

@@ -8,6 +8,7 @@ import {
   PIPELINE_NAME,
   PIPELINE_VERSION,
   COMMITTED_PROOF_FIXTURE_IDS,
+  COMMITTED_PROOF_NOW,
   artifactDirFor,
   committedProofDir,
   committedProofJobId,
@@ -84,7 +85,11 @@ function inspectCommittedProof(fixtureId) {
     const receipt = JSON.parse(fs.readFileSync(proofReceiptPath, 'utf8'));
     const dryRun = JSON.parse(fs.readFileSync(proofDryRunPath, 'utf8'));
     const eventLines = fs.readFileSync(proofEventsPath, 'utf8').trim().split('\n').filter(Boolean);
-    const steps = eventLines.map((line) => JSON.parse(line).step);
+    const parsedEvents = eventLines.map((line) => JSON.parse(line));
+    const steps = parsedEvents.map((event) => event.step);
+    const freshExec = receipt.generated_at === COMMITTED_PROOF_NOW
+      && parsedEvents.length > 0
+      && parsedEvents.every((event) => event.ts === COMMITTED_PROOF_NOW);
     const thingIdRule = (receipt.stop_rules || []).find((rule) => rule.id === 'fail_closed_thing_id');
     const thingProof = fixtureId.startsWith('thing-media-');
     const honestCopy = (text) => /did not change the itinerary/.test(String(text || ''))
@@ -104,6 +109,7 @@ function inspectCommittedProof(fixtureId) {
       && dryRun.before_hash === dryRun.after_hash
       && Array.isArray(receipt.writes_applied)
       && receipt.writes_applied.length === 0
+      && freshExec
       && (thingProof ? thingClosed : honestCopy(receipt.customer_facing_response) && honestCopy(dryRun.customer_facing_response));
     return {
       ok,
