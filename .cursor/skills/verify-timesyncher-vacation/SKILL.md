@@ -106,7 +106,10 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - exact no-match copy
 - prove TREK/backend state movement on `--apply --trek-db` (local-snapshot is hold)
 - no first-pass creation language on existing-itinerary edits
-- live intake must call the pipeline (PR-branch dry-run alone is not integrated-state proof)
+- live intake must call the pipeline; empty Thing list / unmatched must fail closed and must not call applyTrekItineraryEdit
+- fail-closed means no write and editApplied false
+- media actors come from live session context; never hardcode canUpload:true
+- events.jsonl appends one event per handoff and never overwrites
 
 ## Anti-patterns
 

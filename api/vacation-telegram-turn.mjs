@@ -20,7 +20,7 @@ import {
   publicTripUrl,
 } from '../src/vacation/web-access.mjs';
 import {
-  actorFromIntake,
+  actorFromLiveSession,
   gateMediaUploadIntake,
   gateTelegramIntakeEdit,
 } from '../src/vacation/intake-edit-bridge.mjs';
@@ -185,16 +185,46 @@ async function recordMediaUpload(db, req, body) {
   if (!media.telegramFileId) throw Object.assign(new Error('telegramFileId is required.'), { statusCode: 400 });
   const session = await findSessionForTelegram(db, media.telegramChatId, media.telegramUserId);
   if (!session?.customer_id || !session?.trip_id) {
-    throw Object.assign(new Error('A linked TimeSyncher Vacation session is required before uploading media.'), { statusCode: 403 });
+    const loggedOutGate = gateMediaUploadIntake({
+      text: media.caption || `Upload this ${media.mediaKind} to the vacation`,
+      actor: actorFromLiveSession({
+        id: media.telegramUserId || media.telegramChatId,
+        loggedOut: true,
+        session: null,
+      }),
+      trip: { trip_id: 'trip-unspecified', title: 'Vacation', status: 'live', items: [] },
+      media: {
+        media_kind: media.mediaKind,
+        bound_trip_id: null,
+        attachment_scope: media.attachmentScope || 'trip',
+      },
+    });
+    throw Object.assign(new Error(loggedOutGate.receipt?.customer_facing_response || 'A linked TimeSyncher Vacation session is required before uploading media.'), {
+      statusCode: 403,
+      vacationEditPipeline: loggedOutGate.compact,
+    });
   }
+  const meta = sessionMetadata(session);
+  const collaboratorRole = String(meta.telegramRole || '').toLowerCase() === 'collaborator';
+  const collaborator = collaboratorRole
+    ? await activeCollaboratorForTelegram(db, {
+      ownerCustomerId: session.customer_id,
+      tripId: session.trip_id,
+      telegramChatId: media.telegramChatId,
+      telegramUserId: media.telegramUserId,
+    })
+    : null;
+  const entitlement = await hasMediaEntitlement(db, session, media.mediaKind, process.env, req.headers.host || '');
   const mediaGate = gateMediaUploadIntake({
     text: media.caption || `Upload this ${media.mediaKind} to the vacation`,
-    actor: actorFromIntake({
+    actor: actorFromLiveSession({
       id: media.telegramUserId || media.telegramChatId,
-      role: sessionMetadata(session).telegramRole === 'collaborator' ? 'telegram_collaborator' : 'owner',
-      authorized: true,
-      canUpload: true,
-      canEdit: true,
+      telegramUserId: media.telegramUserId,
+      customer_id: session.customer_id,
+      trip_id: session.trip_id,
+      metadata: meta,
+      collaborator,
+      entitlement,
     }),
     trip: { trip_id: session.trip_id, title: 'Vacation', status: 'live', items: [] },
     media: {
@@ -209,7 +239,6 @@ async function recordMediaUpload(db, req, body) {
       vacationEditPipeline: mediaGate.compact,
     });
   }
-  const entitlement = await hasMediaEntitlement(db, session, media.mediaKind, process.env, req.headers.host || '');
   if (!entitlement.allowed) {
     throw Object.assign(new Error(`${media.mediaKind === 'video' ? 'Video' : 'Photo'} Memories add-on is required before uploading ${media.mediaKind}s.`), { statusCode: 402 });
   }
@@ -1728,12 +1757,14 @@ export default async function handler(req, res) {
           text,
           payload: body.payload || {},
           audioPath: body.payload?.telegramVoice?.cachePath || body.payload?.voiceCache?.path,
-          actor: actorFromIntake({
+          actor: actorFromLiveSession({
             id: telegramUserId || telegramChatId,
-            role: authz.reason === 'paid_collaborator' ? 'telegram_collaborator' : 'owner',
-            authorized: true,
-            canEdit: true,
-            canUpload: false,
+            telegramUserId,
+            customer_id: session.customer_id,
+            trip_id: session.trip_id,
+            metadata: sessionMetadata(session),
+            collaborator: authz.reason === 'paid_collaborator' ? { id: authz.collaboratorId || 'paid', status: 'active' } : null,
+            entitlement: { allowed: false },
           }),
           trip: {
             trip_id: session.trip_id,

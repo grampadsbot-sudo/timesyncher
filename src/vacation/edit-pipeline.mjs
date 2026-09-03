@@ -410,8 +410,9 @@ export function listFixtureFiles(root = process.cwd()) {
 
 function persistArtifacts(receipt, events, { apply, audioPath }) {
   fs.mkdirSync(receipt.artifacts.dir, { recursive: true });
-  const lines = events.map((event) => JSON.stringify(event)).join('\n') + '\n';
-  fs.writeFileSync(receipt.artifacts.events, lines);
+  for (const event of events) {
+    fs.appendFileSync(receipt.artifacts.events, `${JSON.stringify(event)}\n`);
+  }
   fs.writeFileSync(receipt.artifacts.dry_run, JSON.stringify(receipt, null, 2) + '\n');
   fs.writeFileSync(receipt.artifacts.receipt, JSON.stringify(compactReceipt(receipt), null, 2) + '\n');
   fs.writeFileSync(receipt.artifacts.before, JSON.stringify(receipt.before_state, null, 2) + '\n');
@@ -473,11 +474,11 @@ function normalizeInput(raw) {
       logged_out: Boolean(actor.logged_out || actor.role === 'logged-out'),
       identity: actor.identity || actor.id || 'synthetic-actor',
       authorized: actor.authorized !== false
-        && !['public-link', 'viewer', 'logged-out', 'unpaid_collaborator'].includes(actor.role)
+        && !['public-link', 'viewer', 'logged-out', 'unpaid_collaborator', 'unresolved'].includes(actor.role)
         && actor.logged_out !== true,
-      canUpload: Boolean(actor.canUpload) && actor.logged_out !== true && actor.role !== 'logged-out',
+      canUpload: Boolean(actor.canUpload) && actor.logged_out !== true && actor.role !== 'logged-out' && actor.role !== 'unresolved',
       canEdit: actor.canEdit !== false
-        && !['public-link', 'viewer', 'logged-out', 'unpaid_collaborator'].includes(actor.role)
+        && !['public-link', 'viewer', 'logged-out', 'unpaid_collaborator', 'unresolved'].includes(actor.role)
         && actor.logged_out !== true,
     },
     expected_clauses: raw.expected_clauses ?? raw.expect?.expected_clauses ?? null,

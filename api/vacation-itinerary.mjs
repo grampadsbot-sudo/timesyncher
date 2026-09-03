@@ -13,7 +13,7 @@ import {
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
 import {
-  actorFromIntake,
+  actorFromLiveSession,
   gateSharedPageIntakeEdit,
 } from '../src/vacation/intake-edit-bridge.mjs';
 
@@ -121,23 +121,18 @@ async function handleWebAccess(req, res, db, url) {
         env: process.env,
       });
       const loggedOut = !sessionToken;
-      const actor = grant
-        ? actorFromIntake({
+      const actor = actorFromLiveSession(grant
+        ? {
           id: grant.email || grant.id || grant.role,
+          email: grant.email,
+          customer_id: grant.owner_customer_id || grant.customer_id,
+          trip_id: grant.trip_id || tripId,
           role: grant.role,
-          authorized: true,
-          canEdit: true,
-          canUpload: true,
-        })
-        : actorFromIntake({
-          id: loggedOut ? 'logged-out-visitor' : 'public-link-visitor',
-          role: loggedOut ? 'logged-out' : 'public-link',
-          authorized: false,
-          canEdit: false,
-          canUpload: false,
-          session: sessionToken || null,
-          loggedOut,
-        });
+          entitlement: { allowed: ['owner', 'web_editor', 'telegram_collaborator'].includes(grant.role) },
+        }
+        : loggedOut
+          ? { id: 'logged-out-visitor', loggedOut: true, session: null }
+          : { id: 'public-link-visitor', publicLink: true, webGrant: null, shareToken });
       let items = Array.isArray(body.items) ? body.items : [];
       if (!items.length && tripId) {
         try {
@@ -187,7 +182,7 @@ async function handleWebAccess(req, res, db, url) {
         role: grant.role,
         plannedWrites: gate.receipt?.planned_writes || [],
         vacationEditPipeline: gate.compact,
-        seam: 'shared-page vacation_edit gates via vacation-edit-pipeline; hosted TREK mutation stays in product-gbrain-dispatch / trek-itinerary-edit when this request has no Thing list',
+        seam: 'shared-page vacation_edit gates via vacation-edit-pipeline from the live web-access session; empty Thing list and unauthorized sessions fail closed',
       });
     }
   }

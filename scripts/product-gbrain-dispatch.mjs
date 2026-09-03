@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
-import { actorFromIntake, gateTelegramIntakeEdit } from '../src/vacation/intake-edit-bridge.mjs';
+import { actorFromLiveSession, gateTelegramIntakeEdit, pipelineWriteDecision } from '../src/vacation/intake-edit-bridge.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -1725,11 +1725,19 @@ function applyExistingTripEdit(job, artifacts) {
     : (Array.isArray(trip.items) ? trip.items : []);
   const gate = gateTelegramIntakeEdit({
     text: requestText,
-    actor: actorFromIntake({
-      id: text(job.telegram_user_id || payload.telegramUserId || 'dispatch-owner', 80) || 'dispatch-owner',
-      role: 'owner',
-      authorized: true,
-      canEdit: true,
+    actor: actorFromLiveSession({
+      id: text(job.telegram_user_id || payload.telegramUserId || payload.actorId, 80) || 'unresolved',
+      telegramUserId: job.telegram_user_id || payload.telegramUserId,
+      customer_id: job.customer_id || payload.customerId || trip.customer_id,
+      trip_id: trip.trip_id || trip.id || job.trip_id,
+      metadata: payload.sessionMetadata || job.session_metadata || {},
+      collaborator: payload.collaborator || job.collaborator || null,
+      role: payload.actorRole || job.actor_role,
+      publicLink: payload.publicLink === true,
+      loggedOut: payload.loggedOut === true || payload.session === null,
+      session: payload.session,
+      entitlement: payload.entitlement,
+      unresolved: !job.customer_id && !payload.customerId && !trip.customer_id && payload.loggedOut !== true,
     }),
     trip: {
       trip_id: trip.trip_id || trip.id || job.trip_id || 'trip-unspecified',
@@ -1740,12 +1748,14 @@ function applyExistingTripEdit(job, artifacts) {
       trek_rows: trip.trek_rows || [],
     },
   }, { persist: false });
-  if (!gate.skip && gate.integrityFailClosed) {
+  const decision = pipelineWriteDecision(gate, { items });
+  if (!decision.allowTrekWrite) {
     return {
-      mode: 'vacation_edit_pipeline_fail_closed',
+      mode: decision.mode || 'vacation_edit_pipeline_fail_closed',
       operationCount: 0,
+      editApplied: false,
       url: text(artifacts.webItineraryUrl || trip.publicUrl || trip.public_url || '', 500),
-      reason: gate.reason,
+      reason: decision.reason,
       vacationEditPipeline: gate.compact,
     };
   }
@@ -1760,6 +1770,7 @@ function applyExistingTripEdit(job, artifacts) {
     }
   }
   edit.vacationEditPipeline = gate.compact;
+  edit.editApplied = Boolean(edit.operationCount);
   return edit;
 }
 
@@ -1885,14 +1896,20 @@ async function buildArtifacts(job, manifest) {
   }
   const createNewTrip = Boolean(payload.createNewTrip || payload.create_new_trip || job.createNewTrip || job.create_new_trip || isExplicitNewVacationRequest(ownRequestText));
   if (!createNewTrip && isConcreteItineraryEditRequest(ownRequestText)) {
-    const trekEdit = applyExistingTripEdit(job, { requestText });
+    const trekEdit = applyExistingTripEdit(job, { requestText, things: payload.things || trip.items || [] });
+    const failClosed = trekEdit.mode === 'vacation_edit_pipeline_fail_closed'
+      || trekEdit.mode === 'vacation_edit_pipeline_skip'
+      || trekEdit.editApplied === false
+      || !trekEdit.operationCount;
     return {
       requestText,
       destination: extractDestination(requestText, payload, trip),
       dates: extractDates(requestText, payload, trip),
-      methods: trekEdit.mode === 'grok_trek_agent_edit'
-        ? ['travel.assistant.sync-trek-nomad', 'travel.assistant.grok-trek-agent-edit']
-        : ['travel.assistant.sync-trek-nomad'],
+      methods: failClosed
+        ? ['vacation-edit-pipeline']
+        : (trekEdit.mode === 'grok_trek_agent_edit'
+          ? ['travel.assistant.sync-trek-nomad', 'travel.assistant.grok-trek-agent-edit']
+          : ['travel.assistant.sync-trek-nomad']),
       lane: { primary: trekEdit.mode || 'deterministic_trek_edit' },
       vacationName: vacationNameFrom(job, payload, trip, ''),
       unforgettableGoal: unforgettableGoalFrom(job, payload),
@@ -1900,16 +1917,18 @@ async function buildArtifacts(job, manifest) {
       budgetItems: [],
       supportNotes: [{
         actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-        note: `${trekEdit.mode === 'grok_trek_agent_edit' ? 'Grok TREK agent edit' : 'Deterministic TREK edit'} applied to existing shared trip. Operations: ${trekEdit.operationCount || 0}`,
-        metadata: { requestedAt: new Date().toISOString(), webItineraryUrl: trekEdit.url || null, updatedItems: trekEdit.updatedItems || [], accessChanges: trekEdit.accessChanges || [] },
+        note: failClosed
+          ? `Vacation edit pipeline fail-closed (${trekEdit.reason || 'no_validated_writes'}). Operations: 0`
+          : `${trekEdit.mode === 'grok_trek_agent_edit' ? 'Grok TREK agent edit' : 'Deterministic TREK edit'} applied to existing shared trip. Operations: ${trekEdit.operationCount || 0}`,
+        metadata: { requestedAt: new Date().toISOString(), webItineraryUrl: trekEdit.url || null, updatedItems: trekEdit.updatedItems || [], accessChanges: trekEdit.accessChanges || [], failClosed },
       }],
       initialItinerary: '',
       webItineraryUrl: trekEdit.url,
       researchedThings: [],
-      trekSync: trekEdit,
-      hostedSync: { skipped: true, reason: 'existing_trek_edit' },
-      publicResearch: { status: 'skipped_existing_trek_edit' },
-      editApplied: true,
+      trekSync: failClosed ? { ...trekEdit, operationCount: 0, editApplied: false } : trekEdit,
+      hostedSync: { skipped: true, reason: failClosed ? 'vacation_edit_pipeline_fail_closed' : 'existing_trek_edit' },
+      publicResearch: { status: failClosed ? 'vacation_edit_pipeline_fail_closed' : 'skipped_existing_trek_edit' },
+      editApplied: !failClosed,
       turnDecision: routerDecision,
       createNewTrip: false,
     };

@@ -4,9 +4,7 @@ import { execFile, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  actorFromIntake,
-  gateMediaUploadIntake,
-  gateTelegramIntakeEdit,
+  annotateIntakeFromLiveSession,
 } from '../src/vacation/intake-edit-bridge.mjs';
 
 const TELEGRAM_BOT_TOKEN = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || '';
@@ -41,34 +39,27 @@ function requireEnv() {
   if (!TELEGRAM_BOT_TOKEN) throw new Error('TIMESYNCHER_TELEGRAM_BOT_TOKEN is required.');
 }
 
-function annotateTelegramIntakePipeline({ text, audioPath, telegramUserId, media } = {}) {
-  const actor = actorFromIntake({
-    id: telegramUserId || 'telegram-bot',
-    role: 'owner',
-    authorized: true,
-    canEdit: true,
-    canUpload: Boolean(media),
-  });
-  const gate = media
-    ? gateMediaUploadIntake({
-      text: text || `Upload this ${media.mediaKind || 'photo'} to the vacation`,
-      actor,
-      media: {
+function annotateTelegramIntakePipeline({ text, audioPath, telegramUserId, media, session } = {}) {
+  const note = annotateIntakeFromLiveSession({
+    text,
+    audioPath,
+    telegramUserId,
+    media: media
+      ? {
         media_kind: media.mediaKind || 'photo',
         bound_trip_id: media.boundTripId || media.bound_trip_id || null,
         attachment_scope: media.attachmentScope || 'trip',
-      },
-    }, { persist: false })
-    : gateTelegramIntakeEdit({
-      text,
-      audioPath,
-      actor,
-    }, { persist: false });
+      }
+      : null,
+    session: session || { unresolved: true, id: telegramUserId || 'unresolved' },
+  }, { persist: false });
   return {
-    vacationEditPipeline: gate.compact,
-    vacationEditPipelineSkip: Boolean(gate.skip),
-    vacationEditPipelineFailClosed: Boolean(gate.failClosed),
-    vacationEditPipelineIntegrityFailClosed: Boolean(gate.integrityFailClosed),
+    vacationEditPipeline: note.compact,
+    vacationEditPipelineSkip: Boolean(note.gate?.skip),
+    vacationEditPipelineFailClosed: Boolean(note.failClosed),
+    vacationEditPipelineBlocked: Boolean(note.blocked),
+    vacationEditPipelineActorRole: note.actor?.role || 'unresolved',
+    blocked: Boolean(note.blocked),
   };
 }
 
@@ -1419,6 +1410,21 @@ async function recordTelegramTurn(message, { textOverride = '', payload = {} } =
   const chat = message.chat || {};
   const text = cleanText(textOverride || message.text || message.caption);
   const startMatch = /^\/start(?:\s+(.+))?/i.exec(text);
+  const pipelineNote = annotateTelegramIntakePipeline({
+    text,
+    audioPath: payload.telegramVoice?.cachePath || payload.voiceCache?.path,
+    telegramUserId: from.id ? String(from.id) : '',
+    session: payload.liveSession,
+  });
+  if (pipelineNote.blocked) {
+    return {
+      ok: false,
+      failClosed: true,
+      editApplied: false,
+      reply: pipelineNote.vacationEditPipeline?.customer_facing_response || 'I received this, but this Telegram account is not authorized to modify that vacation yet.',
+      vacationEditPipeline: pipelineNote.vacationEditPipeline,
+    };
+  }
   const { response, json } = await fetchJsonWithRetry(`${API_BASE}/api/vacation-telegram-turn`, {
     method: 'POST',
     headers: {
@@ -1448,11 +1454,7 @@ async function recordTelegramTurn(message, { textOverride = '', payload = {} } =
       },
       payload: {
         ...payload,
-        ...annotateTelegramIntakePipeline({
-          text,
-          audioPath: payload.telegramVoice?.cachePath || payload.voiceCache?.path,
-          telegramUserId: from.id ? String(from.id) : '',
-        }),
+        ...pipelineNote,
         telegramChatId: String(chat.id || ''),
         telegramChatType: chat.type || '',
         telegramMessageId: message.message_id || null,
@@ -1546,6 +1548,21 @@ async function recordMediaUpload(message, media, { cacheDir = '' } = {}) {
   });
   const from = message.from || {};
   const chat = message.chat || {};
+  const pipelineNote = annotateTelegramIntakePipeline({
+    text: media.caption,
+    telegramUserId: from.id ? String(from.id) : '',
+    media,
+    session: media.liveSession,
+  });
+  if (pipelineNote.blocked) {
+    return {
+      ok: false,
+      failClosed: true,
+      editApplied: false,
+      reply: pipelineNote.vacationEditPipeline?.customer_facing_response || 'I received this, but this Telegram account is not authorized to modify that vacation yet.',
+      vacationEditPipeline: pipelineNote.vacationEditPipeline,
+    };
+  }
   const payload = {
     ...media,
     fileSizeBytes: media.fileSizeBytes || cached.bytes.length,
@@ -1559,11 +1576,7 @@ async function recordMediaUpload(message, media, { cacheDir = '' } = {}) {
       cachePath: cached.filePath,
       cacheSizeBytes: cached.bytes.length,
       telegramBotApiDownloadLimitBytes: TELEGRAM_MEDIA_MAX_BYTES,
-      ...annotateTelegramIntakePipeline({
-        text: media.caption,
-        telegramUserId: from.id ? String(from.id) : '',
-        media,
-      }),
+      ...pipelineNote,
     },
   };
 

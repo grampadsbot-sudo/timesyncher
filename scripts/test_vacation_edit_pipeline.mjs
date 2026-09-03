@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import {
@@ -15,6 +16,7 @@ import {
   runVacationEditPipeline,
   stableJobId,
 } from '../src/vacation/edit-pipeline.mjs';
+import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
 
 const cwd = process.cwd();
 const fixtures = listFixtureFiles(cwd);
@@ -24,15 +26,23 @@ const byId = new Map();
 for (const filePath of fixtures) {
   const fixture = loadFixture(filePath, cwd);
   const first = runVacationEditPipeline(fixture, { persist: true, cwd });
+  const firstEventLines = fs.readFileSync(first.receipt.artifacts.events, 'utf8').trim().split('\n');
   const second = runVacationEditPipeline(fixture, { persist: true, cwd });
   assert.equal(first.receipt.job_id, second.receipt.job_id, `${fixture.fixture_id} job_id must be stable`);
   assert.equal(first.receipt.job_id, stableJobId({ fixtureId: fixture.fixture_id }));
   assert.equal(first.receipt.mode, 'dry-run');
   assert.ok(fs.existsSync(first.receipt.artifacts.events), `${fixture.fixture_id} must write events.jsonl`);
   assert.ok(fs.existsSync(first.receipt.artifacts.dry_run), `${fixture.fixture_id} must write dry-run.json`);
-  const events = fs.readFileSync(first.receipt.artifacts.events, 'utf8').trim().split('\n');
-  assert.ok(events.length >= 4, `${fixture.fixture_id} events.jsonl must record initialize through complete`);
-  assert.equal(JSON.parse(events[0]).job_id, first.receipt.job_id);
+  assert.ok(firstEventLines.length >= 4, `${fixture.fixture_id} events.jsonl must record initialize through complete`);
+  assert.equal(JSON.parse(firstEventLines[0]).job_id, first.receipt.job_id);
+  const secondEventLines = fs.readFileSync(second.receipt.artifacts.events, 'utf8').trim().split('\n');
+  assert.ok(secondEventLines.length > firstEventLines.length, `${fixture.fixture_id} events.jsonl must append, never overwrite`);
+  assert.deepEqual(secondEventLines.slice(0, firstEventLines.length), firstEventLines);
+  for (const line of secondEventLines) {
+    const event = JSON.parse(line);
+    assert.ok(event.step, `${fixture.fixture_id} each events.jsonl line is one handoff`);
+    assert.equal(event.job_id, first.receipt.job_id);
+  }
   assert.ok(first.receipt.stop_rules.length >= 8);
   assert.ok(first.receipt.ok, `${fixture.fixture_id} stop rules failed: ${JSON.stringify(first.receipt.stop_rules.filter((rule) => rule.status === 'fail'))}`);
   if (fixture.expect?.write_ops) {
@@ -178,5 +188,44 @@ const receipt = compactReceipt(applied.receipt);
 assert.ok(receipt.required_artifacts.includes('final keepsake PDF'));
 assert.ok(receipt.events_jsonl.endsWith('events.jsonl'));
 assert.equal(receipt.apply_scope, 'local_snapshot');
+
+const appendJobId = `vac-verify-events-append-${process.pid}`;
+const appendFirst = runVacationEditPipeline(loadFixture('features/fixtures/telegram-text-single-edit.json', cwd), {
+  persist: true,
+  jobId: appendJobId,
+  cwd,
+});
+const appendFirstLines = fs.readFileSync(appendFirst.receipt.artifacts.events, 'utf8');
+const appendSecond = runVacationEditPipeline(loadFixture('features/fixtures/telegram-text-single-edit.json', cwd), {
+  persist: true,
+  jobId: appendJobId,
+  cwd,
+});
+const appendSecondLines = fs.readFileSync(appendSecond.receipt.artifacts.events, 'utf8');
+assert.ok(appendSecondLines.startsWith(appendFirstLines), 'events.jsonl must keep prior handoffs when appending');
+assert.ok(appendSecondLines.split('\n').filter(Boolean).length > appendFirstLines.split('\n').filter(Boolean).length);
+
+const shared = JSON.parse(fs.readFileSync(path.join(cwd, 'features/fixtures/_shared-vegas-trip.json'), 'utf8'));
+const bellagioDb = path.join(os.tmpdir(), `vacation-trek-sqlite-bellagio-${process.pid}.db`);
+const bellagioStore = createTrekFixtureStore({
+  dbPath: bellagioDb,
+  trip: { ...shared, trek_trip_id: 41, token: 'las-vegas-strip-vacation' },
+});
+const idsBefore = bellagioStore.snapshot().row_ids;
+assert.equal(placeDay(bellagioStore.snapshot(), 'thing-bellagio-fountains'), 1);
+const bellagio = runVacationEditPipeline(loadFixture('features/fixtures/telegram-text-single-edit.json', cwd), {
+  apply: true,
+  applyScope: 'trek_sqlite',
+  trekStore: bellagioStore,
+  persist: true,
+  cwd,
+});
+assert.equal(placeDay(bellagioStore.snapshot(), 'thing-bellagio-fountains'), 2, 'trek_sqlite bellagio test: day1→day2');
+assert.deepEqual(bellagioStore.snapshot().row_ids, idsBefore, 'trek_sqlite bellagio test: TREK id-set must stay unique');
+assert.equal(bellagio.receipt.trek_state.row_count_before, 1);
+assert.equal(bellagio.receipt.trek_state.row_count_after, 1);
+assert.equal(bellagio.receipt.trek_state.item_moved, true);
+assert.equal(bellagio.receipt.mode, 'apply_trek_sqlite');
+bellagioStore.dispose();
 
 console.log(`vacation-edit-pipeline verification lever passed (${fixtures.length} fixtures)`);
