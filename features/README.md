@@ -65,6 +65,7 @@ Present (pipeline dry-run observables):
 
 - Multi-request voice: `telegram-voice-audio`, `telegram-voice-multi-intent`, `telegram-voice-clause-drop` (audio + transcript + before/after).
 - Stale-trip media: `stale-trip-media`.
+- Thing-scoped attach: `thing-media-stale` (thing_id on another trip), `thing-media-visible` (thing_id missing from page context).
 - Split-trip no duplicate TREK rows: `split-trip-trek-uniqueness`.
 - Unauthorized / public-link / logged-out / unpaid collaborator upload: `unauthorized-upload`, `unauthorized-upload-logged-out`, `unauthorized-upload-unpaid-collaborator`.
 - Checkout entitlements: `checkout-entitlements`, `checkout-entitlements-missing`.
@@ -73,7 +74,6 @@ Present (pipeline dry-run observables):
 Named in feature files but not a vacation-edit-pipeline golden (do not fake):
 
 - Onboarding EULA / `/start` — `npm run test:eula` and `node scripts/test_vacation_telegram_intake.mjs`; not an edit-pipeline fixture.
-- Thing-scoped attach (`thing-media-stale`, `thing-media-visible`) — pipeline fail-closes stale `bound_trip_id` and unauthorized actors; it does not yet fail-close on `thing_id` belonging to another trip or missing from page context. No fixture added.
 - Keepsake PDF bytes — compact receipt names the three PDF contracts; this lever does not render them.
 
 ## Live TREK apply entries

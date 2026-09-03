@@ -114,6 +114,8 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - media actors come from live session context; never hardcode canUpload:true
 - FORCE/agent edit applies planned_writes only; no utterance re-parse
 - Thing list is live-locked trip_things, not client payload.things
+- Thing-scoped media fail-closes when thing_id is on another trip or missing from page context
+- multi-intent no-apply heard joins every spoken clause, not intents[0] only
 - staging_bypass is not entitlement proof and must not set canUpload
 - customer_id alone is not owner/canEdit
 - trek-* live files must not keep inferFallbackPlan / planWithGrok / extractQuotedAdds

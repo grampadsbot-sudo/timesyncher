@@ -14,6 +14,7 @@ import {
   listFixtureFiles,
   loadFixture,
   noApplyCopy,
+  noApplyHeard,
   noMatchCopy,
   runVacationEditPipeline,
   stableJobId,
@@ -140,6 +141,12 @@ assert.deepEqual(multi.intents.map((intent) => intent.kind), ['remove', 'move', 
 assert.ok(multi.receipt.planned_writes.length === 2);
 assert.ok(multi.receipt.no_ops.some((row) => row.reason === 'unsupported_research'));
 assert.equal(multi.receipt.dropped_clause, false);
+const multiHeard = noApplyHeard({ intents: multi.intents, text: multi.receipt.transcript });
+assert.match(multiHeard, /Remove Topgolf Las Vegas/);
+assert.match(multiHeard, /move In-N-Out Burger to day 3/i);
+assert.match(multiHeard, /live music/i);
+assert.equal(multi.receipt.customer_facing_response, noApplyCopy(multiHeard));
+assert.notEqual(multiHeard, multi.intents[0].heard);
 assert.ok(multi.receipt.audio_path.endsWith('kim-vegas-multi-clause.ogg'));
 
 const dropped = byId.get('telegram-voice-clause-drop');
@@ -154,6 +161,17 @@ assert.deepEqual(
 const stale = byId.get('stale-trip-media');
 assert.equal(stale.receipt.planned_writes.length, 0);
 assert.ok(stale.receipt.no_ops.some((row) => row.reason === 'stale_trip_media'));
+
+const thingStale = byId.get('thing-media-stale');
+assert.equal(thingStale.receipt.planned_writes.length, 0);
+assert.ok(thingStale.receipt.no_ops.some((row) => row.reason === 'stale_trip_media'));
+assert.equal(loadFixture(thingStale.receipt.fixture_path, cwd).media.thing_id, 'thing-hawaii-luau');
+
+const thingVisible = byId.get('thing-media-visible');
+assert.equal(thingVisible.receipt.planned_writes.length, 0);
+assert.ok(thingVisible.receipt.no_ops.some((row) => row.reason === 'thing_not_visible'));
+assert.equal(thingVisible.receipt.page_context.kind, 'day');
+assert.ok(!thingVisible.receipt.page_context.item_ids.includes('thing-bellagio-fountains'));
 
 const ownerUpload = byId.get('authorized-owner-upload');
 const publicLink = byId.get('unauthorized-upload');

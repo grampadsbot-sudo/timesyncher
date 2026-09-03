@@ -26,6 +26,8 @@ Preconditions:
 - **List context.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/shared-page-voice-list.json --json`. `page_context.item_ids` contains every visible Thing, including the target.
 - **Day context.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/shared-page-voice-day.json --json`. Only day 2 items are in context.
 - **Stale bind.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/stale-trip-media.json --json`. No attach write is planned.
+- **Cross-trip Thing.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/thing-media-stale.json --json`. `planned_writes` is `[]`. `no_ops[0].reason` is `stale_trip_media`. The `thing_id` belongs to another `trip_id`.
+- **Not visible on this page.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/thing-media-visible.json --json`. `planned_writes` is `[]`. `no_ops[0].reason` is `thing_not_visible`. Bellagio is on the locked trip but not in the day-2 page context.
 - **Proof.** Artifact `dry-run.json` shows `page_context.item_ids` and any `attach_media` write with the locked `trip_id`.
 
 ## Gotchas
@@ -33,4 +35,4 @@ Preconditions:
 - A day microphone must not silently widen to the whole trip. A list microphone must not shrink to one day.
 - Maps, unassigned/options, and the shared page must lose a removed Thing. This lever records the itinerary snapshot; TREK pin cleanup is a later apply-time check.
 - Do not attach media to a suggested/research queue item unless the fixture marks it as a real Thing on the live trip.
-- `thing-media-stale` / `thing-media-visible` are named here; the pipeline does not yet fail-close on `thing_id` vs live trip or missing page-context IDs. Do not add a fake golden for that.
+- Thing-scoped attach fail-closes when `thing_id` belongs to another trip (`stale_trip_media`) or is missing from the page context (`thing_not_visible`). Do not treat a matching `bound_trip_id` as enough.

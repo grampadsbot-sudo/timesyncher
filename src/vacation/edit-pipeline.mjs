@@ -25,6 +25,7 @@ const DEFAULT_STOP_RULES = Object.freeze([
   { id: 'no_production_billing', description: 'Do not charge Stripe or mutate production entitlements.' },
   { id: 'no_unvalidated_writes', description: 'The parser never writes. Only validated item IDs on the locked trip may mutate.' },
   { id: 'fail_closed_stale_media', description: 'Media must bind to the live trip_id or no-op.' },
+  { id: 'fail_closed_thing_id', description: 'Thing-scoped media must target a Thing on the locked trip and in page context.' },
   { id: 'fail_closed_unauthorized_upload', description: 'Public-link and unauthorized collaborator uploads reject.' },
   { id: 'fail_closed_duplicate_trek', description: 'Split-trip must not create a second TREK row for the same title/token.' },
   { id: 'fail_closed_dropped_clause', description: 'Multi-request voice must fail closed if any spoken clause is dropped.' },
@@ -69,6 +70,14 @@ export function noMatchCopy(heard) {
 export function noApplyCopy(heard = 'that edit') {
   const text = String(heard || 'that edit').trim() || 'that edit';
   return NO_APPLY_TEMPLATE.replace('{heard}', text);
+}
+
+export function noApplyHeard({ intents = [], text = '', transcript = '' } = {}) {
+  const parts = (Array.isArray(intents) ? intents : [])
+    .map((row) => String(row?.heard || '').trim())
+    .filter(Boolean);
+  if (parts.length > 1) return parts.join('; ');
+  return parts[0] || String(transcript || text || '').trim() || 'that edit';
 }
 
 export function normalizeName(value) {
@@ -172,6 +181,11 @@ export function evaluateStopRules({ input, intents, decisions, receipt, apply, a
     'fail_closed_stale_media',
     decisions.some((row) => row.stop === 'stale_trip_media' && row.write) ? 'fail' : 'pass',
     'Stale or mismatched trip media must no-op.',
+  );
+  mark(
+    'fail_closed_thing_id',
+    decisions.some((row) => (row.stop === 'thing_not_visible' || row.stop === 'stale_trip_media') && row.write && row.write.item_id) ? 'fail' : 'pass',
+    'Thing-scoped media must no-op unless the Thing is on the locked trip and in page context.',
   );
   mark(
     'fail_closed_unauthorized_upload',
@@ -320,7 +334,7 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
   const plannedWrites = decisions.filter((row) => row.write);
   const writesApplied = decisions.filter((row) => row.applied);
   const customerFacing = plannedWrites.length && writesApplied.length === 0
-    ? noApplyCopy(intents[0]?.heard || input.text || 'that edit')
+    ? noApplyCopy(noApplyHeard({ intents, text: input.text }))
     : composeCustomerFacing(responses, decisions);
   const receipt = {
     schema: 'timesyncher.vacation-edit-pipeline.v1',
@@ -748,12 +762,45 @@ function decideMediaUpload(intent, input) {
       response: collaboratorDeniedCopy(),
     };
   }
+  const thingId = media.thing_id || media.item_id || null;
+  const thingScoped = media.attachment_scope === 'thing' || Boolean(thingId);
+  if (thingScoped) {
+    const liveItems = (input.trip.items || []).filter((item) => String(item.trip_id || liveId) === String(liveId));
+    const onTrip = thingId ? liveItems.find((item) => String(item.id) === String(thingId)) : null;
+    if (!thingId || !onTrip) {
+      return {
+        kind: intent.kind,
+        heard: intent.heard,
+        matchStatus: 'stale_trip',
+        stop: 'stale_trip_media',
+        validation: 'rejected',
+        write: null,
+        applied: false,
+        candidates: [],
+        response: `I heard "${intent.heard}", but that item is not on the locked live trip, so I left it unchanged.`,
+      };
+    }
+    const visible = contextItems(input).some((item) => String(item.id) === String(thingId));
+    if (!visible) {
+      return {
+        kind: intent.kind,
+        heard: intent.heard,
+        matchStatus: 'not_visible',
+        stop: 'thing_not_visible',
+        validation: 'rejected',
+        write: null,
+        applied: false,
+        candidates: [publicCandidate({ item: onTrip, score: 1 })],
+        response: `I heard "${intent.heard}", but that Thing is not in this page, so I did not attach the media.`,
+      };
+    }
+  }
   const write = {
     op: 'attach_media',
     trip_id: liveId,
-    item_id: media.thing_id || null,
+    item_id: thingId,
     media_kind: media.media_kind || 'photo',
-    attachment_scope: media.attachment_scope || 'trip',
+    attachment_scope: media.attachment_scope || (thingId ? 'thing' : 'trip'),
   };
   return {
     kind: intent.kind,

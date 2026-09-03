@@ -41,6 +41,12 @@
       "detail": "Stale or mismatched trip media must no-op."
     },
     {
+      "id": "fail_closed_thing_id",
+      "description": "Thing-scoped media must target a Thing on the locked trip and in page context.",
+      "status": "pass",
+      "detail": "Thing-scoped media must no-op unless the Thing is on the locked trip and in page context."
+    },
+    {
       "id": "fail_closed_unauthorized_upload",
       "description": "Public-link and unauthorized collaborator uploads reject.",
       "status": "pass",

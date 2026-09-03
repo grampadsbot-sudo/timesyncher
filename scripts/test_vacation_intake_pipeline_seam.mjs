@@ -43,6 +43,8 @@ assert.match(INTAKE_SEAM.remaining, /separate entry/);
 assert.match(INTAKE_SEAM.remaining, /--trek-db/);
 assert.match(INTAKE_SEAM.remaining, /apply_not_on_turn/);
 assert.match(INTAKE_SEAM.remaining, /no-apply customer_facing_response/);
+assert.match(INTAKE_SEAM.remaining, /joins every clause/);
+assert.match(INTAKE_SEAM.remaining, /thing_not_visible/);
 assert.match(INTAKE_SEAM.remaining, /features\/proof\/vac-verify-telegram-text-single-edit/);
 
 const owner = gateTelegramIntakeEdit({
@@ -65,6 +67,80 @@ assert.equal(turnAfterGate.reply, telegramTurnNoApplyCopy('Move Bellagio Fountai
 assert.equal(owner.receipt.customer_facing_response, telegramTurnNoApplyCopy('Move Bellagio Fountains to day 2'));
 assert.doesNotMatch(turnAfterGate.reply, /^Moved /);
 assert.doesNotMatch(owner.receipt.customer_facing_response, /^Moved /);
+
+const multiGate = gateTelegramIntakeEdit({
+  surface: 'telegram-voice',
+  text: 'Remove Topgolf Las Vegas and then move In-N-Out Burger to day 3. Also check if there is live music tonight.',
+  expected_clauses: 3,
+  actor: actorFromIntake({ id: 'owner-craig', role: 'owner', authorized: true, canEdit: true }),
+  trip: {
+    trip_id: 'trip-vegas-live-001',
+    title: 'Las Vegas Strip Vacation',
+    status: 'live',
+    items: [
+      { id: 'thing-topgolf', trip_id: 'trip-vegas-live-001', title: 'Topgolf Las Vegas', day: 3, location: 'day 3 16:00' },
+      { id: 'thing-inoahs', trip_id: 'trip-vegas-live-001', title: 'In-N-Out Burger', day: 2, location: 'day 2 12:00' },
+    ],
+  },
+}, { persist: false });
+const multiTurn = telegramTurnAfterGate(multiGate);
+assert.equal(multiTurn.plannedWritesReplied, true);
+assert.match(multiTurn.reply, /Remove Topgolf Las Vegas/);
+assert.match(multiTurn.reply, /move In-N-Out Burger to day 3/i);
+assert.match(multiTurn.reply, /live music/i);
+assert.doesNotMatch(multiTurn.reply, /^(Moved |Removed )/);
+assert.notEqual(multiTurn.reply, telegramTurnNoApplyCopy(multiGate.receipt.intents[0].heard));
+
+const thingStaleGate = gateMediaUploadIntake({
+  text: 'Attach this photo to the luau',
+  actor: actorFromIntake({ id: 'owner-craig', role: 'owner', authorized: true, canEdit: true, canUpload: true }),
+  trip: {
+    trip_id: 'trip-vegas-live-001',
+    title: 'Las Vegas Strip Vacation',
+    status: 'live',
+    items: [
+      ...vegasItems,
+      { id: 'thing-hawaii-luau', trip_id: 'trip-hawaii-old-009', title: 'Luau', day: 1, location: 'day 1 18:00' },
+    ],
+  },
+  media: {
+    media_kind: 'photo',
+    bound_trip_id: 'trip-vegas-live-001',
+    attachment_scope: 'thing',
+    thing_id: 'thing-hawaii-luau',
+  },
+}, { persist: false });
+assert.equal(thingStaleGate.failClosed, true);
+assert.equal(thingStaleGate.reason, 'stale_trip_media');
+assert.equal(thingStaleGate.receipt.planned_writes.length, 0);
+
+const thingVisibleGate = gateMediaUploadIntake({
+  text: 'Attach this photo to Bellagio Fountains',
+  actor: actorFromIntake({ id: 'owner-craig', role: 'owner', authorized: true, canEdit: true, canUpload: true }),
+  pageContext: {
+    kind: 'day',
+    day: 2,
+    items: [{ id: 'thing-umekes', trip_id: 'trip-vegas-live-001', title: 'Umekes Fish Market Bar & Grill', day: 2 }],
+  },
+  trip: {
+    trip_id: 'trip-vegas-live-001',
+    title: 'Las Vegas Strip Vacation',
+    status: 'live',
+    items: [
+      ...vegasItems,
+      { id: 'thing-umekes', trip_id: 'trip-vegas-live-001', title: 'Umekes Fish Market Bar & Grill', day: 2 },
+    ],
+  },
+  media: {
+    media_kind: 'photo',
+    bound_trip_id: 'trip-vegas-live-001',
+    attachment_scope: 'thing',
+    thing_id: 'thing-bellagio-fountains',
+  },
+}, { persist: false });
+assert.equal(thingVisibleGate.failClosed, true);
+assert.equal(thingVisibleGate.reason, 'thing_not_visible');
+assert.equal(thingVisibleGate.receipt.planned_writes.length, 0);
 assert.doesNotMatch(turnAfterGate.reply, /updated the itinerary/i);
 
 const emptyItems = gateTelegramIntakeEdit({

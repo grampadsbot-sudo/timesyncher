@@ -99,6 +99,8 @@ function doctor() {
     'unsupported-research',
     'incomplete-move',
     'stale-trip-media',
+    'thing-media-stale',
+    'thing-media-visible',
     'authorized-owner-upload',
     'unauthorized-upload',
     'unauthorized-upload-logged-out',
