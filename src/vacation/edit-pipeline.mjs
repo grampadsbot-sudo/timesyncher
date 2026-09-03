@@ -182,10 +182,16 @@ export function evaluateStopRules({ input, intents, decisions, receipt, apply, a
     decisions.some((row) => row.stop === 'stale_trip_media' && row.write) ? 'fail' : 'pass',
     'Stale or mismatched trip media must no-op.',
   );
+  const thingIdStops = decisions.filter((row) => row.stop === 'thing_not_visible' || row.stop === 'stale_trip_media');
+  const thingIdWrote = thingIdStops.some((row) => row.write != null);
   mark(
     'fail_closed_thing_id',
-    decisions.some((row) => (row.stop === 'thing_not_visible' || row.stop === 'stale_trip_media') && row.write && row.write.item_id) ? 'fail' : 'pass',
-    'Thing-scoped media must no-op unless the Thing is on the locked trip and in page context.',
+    thingIdWrote ? 'fail' : 'pass',
+    thingIdStops.length
+      ? (thingIdWrote
+        ? 'Thing-scoped media planned a write after thing_id fail-close.'
+        : 'Fail-closed on thing_id; write=null.')
+      : 'No thing_id fail-close on this receipt.',
   );
   mark(
     'fail_closed_unauthorized_upload',
@@ -452,10 +458,19 @@ function persistArtifacts(receipt, events, { apply, audioPath }) {
 
 export const COMMITTED_PROOF_JOB_ID = 'vac-verify-telegram-text-single-edit';
 export const COMMITTED_PROOF_FIXTURE_ID = 'telegram-text-single-edit';
+export const COMMITTED_PROOF_FIXTURE_IDS = Object.freeze([
+  'telegram-text-single-edit',
+  'thing-media-stale',
+  'thing-media-visible',
+]);
 export const COMMITTED_PROOF_NOW = '2026-09-03T22:00:00.000Z';
 
-export function committedProofDir(cwd = process.cwd()) {
-  return path.join(cwd, 'features', 'proof', COMMITTED_PROOF_JOB_ID);
+export function committedProofJobId(fixtureId = COMMITTED_PROOF_FIXTURE_ID) {
+  return `vac-verify-${slugToken(fixtureId)}`;
+}
+
+export function committedProofDir(cwd = process.cwd(), fixtureId = COMMITTED_PROOF_FIXTURE_ID) {
+  return path.join(cwd, 'features', 'proof', committedProofJobId(fixtureId));
 }
 
 export function toRepoRelative(value, cwd = process.cwd()) {
@@ -497,23 +512,25 @@ export function compactReceipt(receipt, { cwd } = {}) {
   };
 }
 
-export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture } = {}) {
+export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture, fixtureId } = {}) {
+  const id = fixture?.fixture_id || fixtureId || COMMITTED_PROOF_FIXTURE_ID;
   const loaded = fixture || loadFixture(
-    path.join(cwd, 'features', 'fixtures', `${COMMITTED_PROOF_FIXTURE_ID}.json`),
+    path.join(cwd, 'features', 'fixtures', `${id}.json`),
     cwd,
   );
-  const dir = committedProofDir(cwd);
+  const jobId = committedProofJobId(loaded.fixture_id);
+  const dir = committedProofDir(cwd, loaded.fixture_id);
   if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
   const { receipt, events } = runVacationEditPipeline(loaded, {
     persist: true,
     artifactRoot: dir,
     cwd,
     now: COMMITTED_PROOF_NOW,
-    jobId: COMMITTED_PROOF_JOB_ID,
+    jobId,
   });
   const committed = {
     ...compactReceipt(receipt, { cwd }),
-    job_id: COMMITTED_PROOF_JOB_ID,
+    job_id: jobId,
     fixture_id: loaded.fixture_id,
     event_steps: events.map((event) => event.step),
   };
@@ -529,6 +546,10 @@ export function writeCommittedDryRunProof({ cwd = process.cwd(), fixture } = {})
   if (dryRun.audio_path) dryRun.audio_path = toRepoRelative(dryRun.audio_path, cwd);
   fs.writeFileSync(dryRunPath, `${JSON.stringify(dryRun, null, 2)}\n`);
   return { receipt, compact: committed, dir, events };
+}
+
+export function writeAllCommittedDryRunProofs({ cwd = process.cwd() } = {}) {
+  return COMMITTED_PROOF_FIXTURE_IDS.map((fixtureId) => writeCommittedDryRunProof({ cwd, fixtureId }));
 }
 
 function normalizeInput(raw) {

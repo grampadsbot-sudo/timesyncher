@@ -28,7 +28,7 @@ Preconditions:
 - **Stale bind.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/stale-trip-media.json --json`. No attach write is planned.
 - **Cross-trip Thing.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/thing-media-stale.json --json`. `planned_writes` is `[]`. `no_ops[0].reason` is `stale_trip_media`. The `thing_id` belongs to another `trip_id`.
 - **Not visible on this page.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/thing-media-visible.json --json`. `planned_writes` is `[]`. `no_ops[0].reason` is `thing_not_visible`. Bellagio is on the locked trip but not in the day-2 page context.
-- **Proof.** Artifact `dry-run.json` shows `page_context.item_ids` and any `attach_media` write with the locked `trip_id`.
+- **Proof.** Committed trees: `features/proof/vac-verify-thing-media-stale/` and `features/proof/vac-verify-thing-media-visible/` (`receipt.json`, `events.jsonl`, `dry-run.json`). Refresh with `node scripts/control-vacation.mjs commit-proof`. `fail_closed_thing_id` must say write=null.
 
 ## Gotchas
 

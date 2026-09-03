@@ -6,9 +6,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
+  COMMITTED_PROOF_FIXTURE_IDS,
   COMMITTED_PROOF_JOB_ID,
   NO_MATCH_TEMPLATE,
   compactReceipt,
+  evaluateStopRules,
   isRealOggAudio,
   isVoiceSurface,
   listFixtureFiles,
@@ -18,12 +20,14 @@ import {
   noMatchCopy,
   runVacationEditPipeline,
   stableJobId,
-  writeCommittedDryRunProof,
+  writeAllCommittedDryRunProofs,
 } from '../src/vacation/edit-pipeline.mjs';
 import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
 
 const cwd = process.cwd();
-const committedProof = writeCommittedDryRunProof({ cwd });
+const committedProofs = writeAllCommittedDryRunProofs({ cwd });
+assert.deepEqual(committedProofs.map((row) => row.compact.fixture_id), [...COMMITTED_PROOF_FIXTURE_IDS]);
+const committedProof = committedProofs[0];
 const committedProofDir = committedProof.dir;
 const committedReceipt = JSON.parse(fs.readFileSync(path.join(committedProofDir, 'receipt.json'), 'utf8'));
 const committedEvents = fs.readFileSync(path.join(committedProofDir, 'events.jsonl'), 'utf8').trim().split('\n');
@@ -44,6 +48,55 @@ assert.equal(committedReceipt.customer_facing_response, noApplyCopy('Move Bellag
 assert.doesNotMatch(committedReceipt.customer_facing_response, /^(Moved |Removed )/);
 assert.equal(committedReceipt.before_hash, committedReceipt.after_hash);
 assert.deepEqual(committedReceipt.writes_applied, []);
+
+for (const proof of committedProofs.filter((row) => String(row.compact.fixture_id).startsWith('thing-media-'))) {
+  const receipt = JSON.parse(fs.readFileSync(path.join(proof.dir, 'receipt.json'), 'utf8'));
+  const events = fs.readFileSync(path.join(proof.dir, 'events.jsonl'), 'utf8').trim().split('\n');
+  const thingRule = receipt.stop_rules.find((rule) => rule.id === 'fail_closed_thing_id');
+  assert.equal(receipt.job_id, `vac-verify-${receipt.fixture_id}`);
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.artifact_dir, `features/proof/vac-verify-${receipt.fixture_id}`);
+  assert.ok(fs.existsSync(path.join(cwd, receipt.events_jsonl)));
+  assert.ok(fs.existsSync(path.join(proof.dir, 'dry-run.json')));
+  assert.ok(events.some((line) => JSON.parse(line).step === 'initialize'));
+  assert.ok(events.some((line) => JSON.parse(line).step === 'complete'));
+  assert.deepEqual(receipt.writes_applied, []);
+  assert.equal(thingRule.status, 'pass');
+  assert.match(thingRule.detail, /write=null/);
+}
+
+const leakedThingId = evaluateStopRules({
+  input: { media: { attachment_scope: 'thing', thing_id: 'thing-hawaii-luau' }, allowProductionBilling: false },
+  intents: [],
+  decisions: [{ stop: 'stale_trip_media', write: { op: 'attach_media' }, validation: 'rejected' }],
+  receipt: {
+    trek_state: {},
+    planned_writes: [{ op: 'attach_media' }],
+    writes_applied: [],
+    dropped_clause: false,
+    customer_facing_response: 'Attached a photo.',
+    no_ops: [],
+  },
+  apply: false,
+}).find((rule) => rule.id === 'fail_closed_thing_id');
+assert.equal(leakedThingId.status, 'fail', 'fail_closed_thing_id must fail when a stop reason still has a write, even without item_id');
+
+const cleanThingId = evaluateStopRules({
+  input: { media: { attachment_scope: 'thing', thing_id: 'thing-hawaii-luau' }, allowProductionBilling: false },
+  intents: [],
+  decisions: [{ stop: 'stale_trip_media', write: null, validation: 'rejected' }],
+  receipt: {
+    trek_state: {},
+    planned_writes: [],
+    writes_applied: [],
+    dropped_clause: false,
+    customer_facing_response: 'left it unchanged',
+    no_ops: [{ reason: 'stale_trip_media' }],
+  },
+  apply: false,
+}).find((rule) => rule.id === 'fail_closed_thing_id');
+assert.equal(cleanThingId.status, 'pass');
+assert.match(cleanThingId.detail, /write=null/);
 
 const fixtures = listFixtureFiles(cwd);
 assert.ok(fixtures.length >= 18, `expected at least 18 fixtures, got ${fixtures.length}`);
@@ -166,12 +219,14 @@ const thingStale = byId.get('thing-media-stale');
 assert.equal(thingStale.receipt.planned_writes.length, 0);
 assert.ok(thingStale.receipt.no_ops.some((row) => row.reason === 'stale_trip_media'));
 assert.equal(loadFixture(thingStale.receipt.fixture_path, cwd).media.thing_id, 'thing-hawaii-luau');
+assert.match(thingStale.receipt.stop_rules.find((rule) => rule.id === 'fail_closed_thing_id').detail, /write=null/);
 
 const thingVisible = byId.get('thing-media-visible');
 assert.equal(thingVisible.receipt.planned_writes.length, 0);
 assert.ok(thingVisible.receipt.no_ops.some((row) => row.reason === 'thing_not_visible'));
 assert.equal(thingVisible.receipt.page_context.kind, 'day');
 assert.ok(!thingVisible.receipt.page_context.item_ids.includes('thing-bellagio-fountains'));
+assert.match(thingVisible.receipt.stop_rules.find((rule) => rule.id === 'fail_closed_thing_id').detail, /write=null/);
 
 const ownerUpload = byId.get('authorized-owner-upload');
 const publicLink = byId.get('unauthorized-upload');
