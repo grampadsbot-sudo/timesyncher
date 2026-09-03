@@ -173,7 +173,6 @@ export function attestVacationVerifyJob({
   jobs = [],
   artifacts = [],
   sha,
-  allowLiveDoctor = false,
 } = {}) {
   const fail = (reason) => ({
     ok: false,
@@ -200,32 +199,24 @@ export function attestVacationVerifyJob({
   const artifact = artifactWithDigest(artifacts, artifactNameForSha(sha));
   if (!artifact) return fail('vacation-verify artifact digest missing');
   const doctorJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-doctor');
-  const doctorFailed = doctorJob && doctorJob.conclusion && doctorJob.conclusion !== 'success';
-  if (doctorFailed) {
-    return fail(`vacation-verify-doctor job conclusion=${doctorJob.conclusion}`);
+  if (!doctorJob) return fail('vacation-verify-doctor job missing');
+  if (doctorJob.conclusion !== 'success') {
+    return fail(`vacation-verify-doctor job conclusion=${doctorJob.conclusion || doctorJob.status || 'missing'}`);
   }
-  const doctorSuccess = doctorJob?.conclusion === 'success';
-  if (!doctorSuccess && !allowLiveDoctor) {
-    return fail(`vacation-verify-doctor job conclusion=${doctorJob?.conclusion || doctorJob?.status || 'missing'}`);
-  }
-  const doctorArtifact = doctorSuccess
-    ? artifactWithDigest(artifacts, doctorArtifactNameForSha(sha))
-    : null;
-  if (doctorSuccess && !doctorArtifact) {
-    return fail('vacation-verify-doctor artifact digest missing');
-  }
+  const doctorArtifact = artifactWithDigest(artifacts, doctorArtifactNameForSha(sha));
+  if (!doctorArtifact) return fail('vacation-verify-doctor artifact digest missing');
   return {
     ok: true,
     sha,
     run_id: String(run.id),
     job_id: String(job.id),
-    doctor_job_id: doctorJob?.id ? String(doctorJob.id) : null,
+    doctor_job_id: String(doctorJob.id),
     conclusion: 'success',
-    doctor_conclusion: doctorSuccess ? 'success' : (doctorJob?.status || 'in_progress'),
+    doctor_conclusion: 'success',
     artifact_digest: artifact.digest,
-    doctor_artifact_digest: doctorArtifact?.digest || null,
+    doctor_artifact_digest: doctorArtifact.digest,
     artifact_id: String(artifact.id),
-    doctor_artifact_id: doctorArtifact?.id ? String(doctorArtifact.id) : null,
+    doctor_artifact_id: String(doctorArtifact.id),
     repo: null,
   };
 }
@@ -240,16 +231,21 @@ function loadRunJobsArtifacts(repo, runId, token, fetchJobs, fetchArtifacts) {
   return { jobs, artifacts };
 }
 
-function bindCommittedReceipt(receipt, live) {
+function sha256DigestField(value) {
+  return typeof value === 'string' && value.startsWith('sha256:') ? value : null;
+}
+
+export function bindCommittedReceipt(receipt, live) {
   if (!receipt) return { ok: true };
   if (receipt.ok === false && receipt.reason === 'invalid_ci_receipt') {
     return { ok: false, reason: 'invalid_ci_receipt' };
   }
+  const receiptHarness = sha256DigestField(receipt.artifact_digest);
+  const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
   const sameSha = receipt.sha === live.sha;
   const sameRun = String(receipt.run_id) === String(live.run_id);
-  const sameDigest = receipt.artifact_digest === live.artifact_digest;
-  const sameDoctor = !receipt.doctor_artifact_digest
-    || receipt.doctor_artifact_digest === live.doctor_artifact_digest;
+  const sameDigest = Boolean(receiptHarness) && receiptHarness === live.artifact_digest;
+  const sameDoctor = Boolean(receiptDoctor) && receiptDoctor === live.doctor_artifact_digest;
   const success = receipt.conclusion === 'success' && receipt.workflow === 'vacation-verify';
   if (!sameSha || !sameRun || !sameDigest || !sameDoctor || !success) {
     return { ok: false, reason: 'committed_receipt_does_not_match_api' };
@@ -302,13 +298,11 @@ export function inspectCiAttestation({
       : githubGetRun(repo, liveId, token);
     if (fetched.ok && fetched.run) {
       const extras = loadRunJobsArtifacts(repo, fetched.run.id, token, fetchJobs, fetchArtifacts);
-      const liveDoctor = env.GITHUB_JOB === 'vacation-verify-doctor';
       const attested = attestVacationVerifyJob({
         run: fetched.run,
         jobs: extras.jobs.jobs,
         artifacts: extras.artifacts.artifacts,
         sha: head,
-        allowLiveDoctor: liveDoctor,
       });
       if (attested.ok) return finish(attested, 'live_run');
       if (!extras.jobs.ok || !extras.artifacts.ok) {

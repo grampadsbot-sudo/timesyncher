@@ -26,6 +26,8 @@ import {
 import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
 import {
   REVIEWER_CI_COMMANDS,
+  attestVacationVerifyJob,
+  bindCommittedReceipt,
   inspectCiAttestation,
   missingReviewerCiCommands,
   parseWorkflowRunCommands,
@@ -174,6 +176,100 @@ const receiptMismatch = inspectCiAttestation({
   fetchArtifacts: () => [successArtifact, successDoctorArtifact],
 });
 assert.equal(receiptMismatch.ok, false, 'committed receipt digest must match live artifact');
+const midJobDoctor = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {
+    GITHUB_ACTIONS: 'true',
+    GITHUB_RUN_ID: '33817831176',
+    GITHUB_JOB: 'vacation-verify-doctor',
+  },
+  receipt: null,
+  fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
+  fetchJobs: () => [successJob, { ...successDoctorJob, conclusion: null, status: 'in_progress' }],
+  fetchArtifacts: () => [successArtifact],
+});
+assert.equal(midJobDoctor.ok, false, 'GITHUB_JOB=vacation-verify-doctor must not pass while doctor job is in_progress');
+const midJobNoDoctorDigest = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {
+    GITHUB_ACTIONS: 'true',
+    GITHUB_RUN_ID: '33817831176',
+    GITHUB_JOB: 'vacation-verify-doctor',
+  },
+  receipt: null,
+  fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [successArtifact],
+});
+assert.equal(midJobNoDoctorDigest.ok, false, 'GITHUB_JOB=vacation-verify-doctor must not pass without doctor_artifact_digest');
+const liveMidAttest = attestVacationVerifyJob({
+  run: { ...successRun, conclusion: null, status: 'in_progress' },
+  jobs: [successJob, { ...successDoctorJob, conclusion: null, status: 'in_progress' }],
+  artifacts: [successArtifact],
+  sha: shaB,
+});
+assert.equal(liveMidAttest.ok, false);
+assert.match(liveMidAttest.reason, /vacation-verify-doctor job conclusion/);
+const receiptMissingDoctorDigest = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: {
+    sha: shaB,
+    run_id: 33817831176,
+    conclusion: 'success',
+    workflow: 'vacation-verify',
+    artifact_digest: successArtifact.digest,
+  },
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [successArtifact, successDoctorArtifact],
+});
+assert.equal(receiptMissingDoctorDigest.ok, false, 'receipt missing doctor_artifact_digest must not match');
+assert.equal(bindCommittedReceipt({
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  workflow: 'vacation-verify',
+  artifact_digest: successArtifact.digest,
+}, {
+  sha: shaB,
+  run_id: '33817831176',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successDoctorArtifact.digest,
+}).ok, false);
+assert.equal(bindCommittedReceipt({
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  workflow: 'vacation-verify',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successDoctorArtifact.digest,
+}, {
+  sha: shaB,
+  run_id: '33817831176',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successDoctorArtifact.digest,
+}).ok, true);
+const receiptDoctorMatch = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: {
+    sha: shaB,
+    run_id: 33817831176,
+    conclusion: 'success',
+    workflow: 'vacation-verify',
+    artifact_digest: successArtifact.digest,
+    doctor_artifact_digest: successDoctorArtifact.digest,
+  },
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [successArtifact, successDoctorArtifact],
+});
+assert.equal(receiptDoctorMatch.ok, true);
 const committedProofs = writeAllCommittedDryRunProofs({ cwd });
 assert.deepEqual(committedProofs.map((row) => row.compact.fixture_id), [...COMMITTED_PROOF_FIXTURE_IDS]);
 const committedProof = committedProofs[0];
