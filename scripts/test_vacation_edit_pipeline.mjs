@@ -24,18 +24,53 @@ import {
   writeAllCommittedDryRunProofs,
 } from '../src/vacation/edit-pipeline.mjs';
 import { createTrekFixtureStore, placeDay } from '../src/vacation/trek-fixture-store.mjs';
+import {
+  REVIEWER_CI_COMMANDS,
+  inspectCiAttestation,
+  missingReviewerCiCommands,
+  parseWorkflowRunCommands,
+} from '../src/vacation/ci-attestation.mjs';
 
 const cwd = process.cwd();
 const ciWorkflow = fs.readFileSync(path.join(cwd, '.github', 'workflows', 'vacation-verify.yml'), 'utf8');
-for (const command of [
-  'node scripts/control-vacation.mjs doctor',
-  'node scripts/control-vacation.mjs dry-run --all-fixtures',
-  'node scripts/test_vacation_edit_pipeline.mjs',
-  'node scripts/test_vacation_trek_apply.mjs',
-  'node scripts/test_vacation_intake_pipeline_seam.mjs',
-]) {
-  assert.ok(ciWorkflow.includes(command), `CI workflow must run ${command}`);
-}
+assert.deepEqual(missingReviewerCiCommands(ciWorkflow), []);
+assert.ok(parseWorkflowRunCommands(ciWorkflow).some((line) => line.startsWith('node scripts/control-vacation.mjs doctor')));
+const commentOnly = [
+  'name: vacation-verify',
+  'jobs:',
+  '  vacation-verify:',
+  '    steps:',
+  '      # node scripts/control-vacation.mjs doctor',
+  '      - run: echo "node scripts/control-vacation.mjs doctor"',
+  '      - run: echo "node scripts/control-vacation.mjs dry-run --all-fixtures"',
+  `      - run: echo "${REVIEWER_CI_COMMANDS[2]}"`,
+  `      - run: echo "${REVIEWER_CI_COMMANDS[3]}"`,
+  `      - run: echo "${REVIEWER_CI_COMMANDS[4]}"`,
+].join('\n');
+assert.deepEqual(missingReviewerCiCommands(commentOnly), [...REVIEWER_CI_COMMANDS]);
+const forgedEnv = inspectCiAttestation({
+  cwd,
+  sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  env: { GITHUB_ACTIONS: 'true', GITHUB_WORKFLOW: 'vacation-verify', GITHUB_RUN_ID: '1' },
+  fetchRun: () => null,
+  fetchRuns: () => [],
+});
+assert.equal(forgedEnv.ok, false, 'forged GITHUB_* env without a real run must fail-closed');
+const bound = inspectCiAttestation({
+  cwd,
+  sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+  env: {},
+  fetchRuns: () => [{
+    id: 33817351351,
+    name: 'vacation-verify',
+    path: '.github/workflows/vacation-verify.yml',
+    head_sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    conclusion: 'success',
+  }],
+});
+assert.equal(bound.ok, true);
+assert.equal(bound.run_id, '33817351351');
+assert.equal(bound.conclusion, 'success');
 const committedProofs = writeAllCommittedDryRunProofs({ cwd });
 assert.deepEqual(committedProofs.map((row) => row.compact.fixture_id), [...COMMITTED_PROOF_FIXTURE_IDS]);
 const committedProof = committedProofs[0];

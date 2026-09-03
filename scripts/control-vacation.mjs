@@ -22,19 +22,17 @@ import {
   writeCommittedDryRunProof,
 } from '../src/vacation/edit-pipeline.mjs';
 import { createTrekFixtureStore } from '../src/vacation/trek-fixture-store.mjs';
+import {
+  CI_WORKFLOW_REL,
+  inspectCiAttestation,
+  missingReviewerCiCommands,
+} from '../src/vacation/ci-attestation.mjs';
 
 const cwd = process.cwd();
 const FEATURE_MAP = path.join(cwd, 'features', 'README.md');
 const SKILL = path.join(cwd, '.cursor', 'skills', 'verify-timesyncher-vacation', 'SKILL.md');
 const PIPELINE = path.join(cwd, 'src', 'vacation', 'edit-pipeline.mjs');
-const CI_WORKFLOW = path.join(cwd, '.github', 'workflows', 'vacation-verify.yml');
-export const REVIEWER_CI_COMMANDS = Object.freeze([
-  'node scripts/control-vacation.mjs doctor',
-  'node scripts/control-vacation.mjs dry-run --all-fixtures',
-  'node scripts/test_vacation_edit_pipeline.mjs',
-  'node scripts/test_vacation_trek_apply.mjs',
-  'node scripts/test_vacation_intake_pipeline_seam.mjs',
-]);
+const CI_WORKFLOW = path.join(cwd, CI_WORKFLOW_REL);
 
 function usage() {
   return [
@@ -206,7 +204,8 @@ function doctor() {
   const committedProof = committedProofs[0];
   const committedProofsOk = committedProofs.every((row) => row.ok);
   const ciText = fs.existsSync(CI_WORKFLOW) ? fs.readFileSync(CI_WORKFLOW, 'utf8') : '';
-  const missingCiCommands = REVIEWER_CI_COMMANDS.filter((command) => !ciText.includes(command));
+  const missingCiCommands = missingReviewerCiCommands(ciText);
+  const ciAttestation = inspectCiAttestation({ cwd });
   const report = {
     ok: false,
     pipeline: PIPELINE_NAME,
@@ -216,10 +215,11 @@ function doctor() {
     skill: SKILL,
     committed_proof: committedProof,
     committed_proofs: committedProofs,
+    ci_attestation: ciAttestation,
     hosted_target: {
       status: 'hold',
       named: 'timesyncher / timesyncher.com',
-      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is local harnesses on GitHub Actions vacation-verify.',
+      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is a vacation-verify run_id with conclusion=success (or a live in-progress run for this SHA).',
     },
     checks: {
       feature_map: fs.existsSync(FEATURE_MAP),
@@ -232,6 +232,7 @@ function doctor() {
       committed_proof: committedProofsOk,
       ci_workflow: Boolean(ciText) && missingCiCommands.length === 0,
       missing_ci_commands: missingCiCommands,
+      ci_attestation: Boolean(ciAttestation.ok),
     },
   };
   report.ok = report.checks.feature_map
@@ -242,6 +243,7 @@ function doctor() {
     && missingFixtures.length === 0
     && committedProofsOk
     && report.checks.ci_workflow
+    && report.checks.ci_attestation
     && fixtures.length >= requiredFixtures.length;
   return report;
 }
@@ -317,6 +319,8 @@ try {
       if (report.checks.missing_ci_commands.length) {
         console.log(`  missing ci commands: ${report.checks.missing_ci_commands.join(', ')}`);
       }
+      const attest = report.ci_attestation || {};
+      console.log(`  ci attestation: ${attest.ok ? `${attest.run_id} ${attest.conclusion}` : 'missing'} ${attest.sha || ''}`);
       console.log(`  hosted target: ${report.hosted_target.status} (${report.hosted_target.named})`);
     }
     process.exit(report.ok ? 0 : 1);
