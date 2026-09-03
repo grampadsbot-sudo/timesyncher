@@ -1,0 +1,34 @@
+{
+  "id": "checkout-entitlements",
+  "surface": "telegram-text",
+  "actor": { "id": "synthetic-owner", "role": "owner", "authorized": true, "canEdit": true, "canUpload": true },
+  "pageContext": { "kind": "timeline" },
+  "text": "Checkout proof: do I have unlimited trips, photo upload, and video upload?",
+  "checkout": {
+    "account": {
+      "id": "cust-synthetic-verify-001",
+      "email": "verify-gate@example.test",
+      "plan": "unlimited",
+      "entitlements": {
+        "plan": "unlimited",
+        "unlimited_trips": true,
+        "photo_memories": true,
+        "video_memories": true,
+        "photos": true,
+        "videos": true
+      }
+    }
+  },
+  "trip": {
+    "trip_id": "trip-synthetic-001",
+    "title": "Synthetic Entitlement Trip",
+    "publicUrl": "https://travel.timesyncher.com/shared/synthetic-entitlement-trip/",
+    "status": "live",
+    "items": []
+  },
+  "expect": {
+    "ok": true,
+    "write_ops": [],
+    "response_includes": "unlimited trips, photo upload, and video upload"
+  }
+}

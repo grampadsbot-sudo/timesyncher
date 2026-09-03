@@ -1,0 +1,113 @@
+---
+name: verify-timesyncher-vacation
+description: Drive TimeSyncher Vacation verification through the shared edit pipeline and Feature Map. Use for vacation-edit-pipeline dry-runs, Kim-class voice-note gates, and pre-customer proof. Do not start customer simulation.
+---
+
+# Verify TimeSyncher Vacation
+
+TimeSyncher Vacation is the Vercel product in this repo (`grampadsbot-sudo/timesyncher`, timesyncher.com). Users buy a plan, onboard in Telegram, and edit a shared itinerary by text or voice. TREK is the hosted itinerary runtime this repo syncs to; do not switch to `timesyncher-travel-trek` unless inspection shows the pipeline actually lives there.
+
+The Feature Map at `features/README.md` is the source of truth. This skill is the lever: a control CLI plus `vacation-edit-pipeline` dry-run JSON that emits a stable `job_id`, `events.jsonl`, artifact directory, and stop rules.
+
+## Launch
+
+There is no long-lived Vacation server required for this gate. Launch means install nothing extra (Node is enough) and make the helpers executable once:
+
+```bash
+chmod +x scripts/control-vacation.mjs scripts/vacation-edit-pipeline.mjs scripts/test_vacation_edit_pipeline.mjs
+node scripts/control-vacation.mjs doctor
+```
+
+Ready when doctor prints `PASS` and exits `0`. Teardown is unnecessary for doctor. Each dry-run is a short-lived Node process; start a fresh process per drive.
+
+Do not launch `scripts/telegram-vacation-intake-bot.mjs`, Stripe checkout, or a customer journey from this skill.
+
+## Doctor
+
+Read-only check that the instance is worth driving:
+
+```bash
+node scripts/control-vacation.mjs doctor --json
+```
+
+Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, and the fixture catalog complete. If doctor fails, stop. Do not dry-run a broken catalog.
+
+## Drive
+
+Use `control-vacation`. Commands are literal.
+
+```bash
+node scripts/control-vacation.mjs dry-run --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/control-vacation.mjs dry-run --all-fixtures
+node scripts/control-vacation.mjs apply --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/vacation-edit-pipeline.mjs --dry-run --json --fixture features/fixtures/telegram-text-single-edit.json
+```
+
+Surfaces in every fixture `surface` field: `telegram-text`, `telegram-voice`, `shared-page-voice`. The pipeline is shared: transcript or text → bounded parser → deterministic matcher → validated writes → per-item response.
+
+Drive the mapped features from `features/README.md`. Sibling entry points for the same behavior all have to be proven before a receipt is complete.
+
+## Evidence
+
+Proof artifacts land in `artifacts/vacation-verify/<job_id>/` and survive cleanup:
+
+- `events.jsonl` — one JSON object per step (`initialize`, `lock_identity`, `parse`, `validate`, `copy_check`, `complete`)
+- `dry-run.json` — full pipeline receipt
+- `receipt.json` — compact verification receipt
+- `before.json` / `after.json` — itinerary snapshots
+
+Standards:
+
+- Exercise the fixture path the user would use (Telegram text, Telegram voice, shared-page voice). Do not call internal TREK writers and call that done.
+- Capture the action and the resulting planned write or explicit no-op, not only the reply string.
+- `--apply` must change `after_hash` for a successful edit and leave it unchanged for no-ops. Observe the snapshot files; do not trust the flag name.
+- Dry-run skips Stripe, Telegram send, TREK SQLite, and network STT. Confirm skipped I/O by seeing no payment-intent calls and a local artifact dir only.
+- No-match copy must be exactly `I heard "...", couldn't find a match, what do you mean?`
+- Success copy must name old/new or removed/added state.
+
+Required later customer-run artifacts (named on every compact receipt, not produced here): whole-experience screenshot / customer-flow PDF, customer-story PDF with generated pictures, final keepsake PDF.
+
+## Cleanup
+
+Kill only Node processes this run started (the dry-run CLIs exit on their own). Do not `pkill` Telegram bots or Vite.
+
+Remove scratch copies of fixture snapshots you created outside `artifacts/`. Never delete `artifacts/vacation-verify/<job_id>/`. After cleanup, confirm `events.jsonl` is still at the named path.
+
+## Helpers
+
+All helpers are executable and invoked as follows:
+
+```bash
+node scripts/control-vacation.mjs doctor
+node scripts/control-vacation.mjs dry-run --all-fixtures --json
+node scripts/control-vacation.mjs apply --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/control-vacation.mjs receipt --job-id vac-verify-telegram-text-single-edit
+node scripts/vacation-edit-pipeline.mjs --dry-run --json --all-fixtures
+node scripts/test_vacation_edit_pipeline.mjs
+```
+
+`src/vacation/edit-pipeline.mjs` is the shared library. Fixtures live in `features/fixtures/`. Original voice-note audio for this gate is `features/fixtures/audio/kim-vegas-voice.ogg`.
+
+## Stop rules
+
+A dry-run receipt is green only when stop rules are `pass` or `hold`:
+
+- no customer simulation
+- no production billing
+- no unvalidated writes
+- stale-trip media fail-closed
+- unauthorized / public-link upload fail-closed
+- split-trip TREK uniqueness fail-closed
+- exact no-match copy
+- prove state movement on `--apply`
+- no first-pass creation language on existing-itinerary edits
+
+## Anti-patterns
+
+- Starting a synthetic customer after Bot 0 before this lever has a passing dry-run receipt
+- Feeding the parser only a day when the microphone was on a list page
+- Letting Telegram and shared-page voice use different matcher orders
+- Closing a Kim-class issue with reply-copy changes when itinerary state did not move
+- Creating Grok bots, touching production billing, or auto-merging
+
+Keep the map honest with `/maintain-verification-skill` as the product changes.

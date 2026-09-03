@@ -1,0 +1,22 @@
+{
+  "pipeline": "vacation-edit-pipeline",
+  "job_id_prefix": "vac-verify-",
+  "audio_fixture": "features/fixtures/audio/kim-vegas-voice.ogg",
+  "required_goldens": [
+    "telegram-text-single-edit",
+    "telegram-voice-multi-intent",
+    "telegram-voice-audio",
+    "shared-page-voice-day",
+    "shared-page-voice-list",
+    "alias-omeke",
+    "unsupported-research",
+    "incomplete-move",
+    "stale-trip-media",
+    "unauthorized-upload",
+    "split-trip-trek-uniqueness",
+    "checkout-entitlements",
+    "checkout-entitlements-missing",
+    "exact-no-match",
+    "successful-edit-wording"
+  ]
+}
