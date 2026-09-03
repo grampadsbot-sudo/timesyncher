@@ -155,16 +155,39 @@ export function artifactNameForSha(sha) {
   return `vacation-verify-${sha}`;
 }
 
-export function attestVacationVerifyJob({ run, jobs = [], artifacts = [], sha } = {}) {
+export function doctorArtifactNameForSha(sha) {
+  return `vacation-verify-doctor-${sha}`;
+}
+
+function artifactWithDigest(artifacts, name) {
+  return (artifacts || []).find((row) => (
+    row
+    && row.name === name
+    && typeof row.digest === 'string'
+    && row.digest.startsWith('sha256:')
+  ));
+}
+
+export function attestVacationVerifyJob({
+  run,
+  jobs = [],
+  artifacts = [],
+  sha,
+  allowLiveDoctor = false,
+} = {}) {
   const fail = (reason) => ({
     ok: false,
     source: 'missing',
     sha: sha || run?.head_sha || null,
     run_id: run?.id ? String(run.id) : null,
     job_id: null,
+    doctor_job_id: null,
     conclusion: null,
+    doctor_conclusion: null,
     artifact_digest: null,
+    doctor_artifact_digest: null,
     artifact_id: null,
+    doctor_artifact_id: null,
     reason,
   });
   if (!isVacationVerifyRun(run) || !run?.id) return fail('not_vacation_verify_run');
@@ -174,21 +197,35 @@ export function attestVacationVerifyJob({ run, jobs = [], artifacts = [], sha } 
   if (job.conclusion !== 'success') {
     return fail(`vacation-verify job conclusion=${job.conclusion || job.status || 'missing'}`);
   }
-  const artifact = (artifacts || []).find((row) => (
-    row
-    && row.name === artifactNameForSha(sha)
-    && typeof row.digest === 'string'
-    && row.digest.startsWith('sha256:')
-  ));
+  const artifact = artifactWithDigest(artifacts, artifactNameForSha(sha));
   if (!artifact) return fail('vacation-verify artifact digest missing');
+  const doctorJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-doctor');
+  const doctorFailed = doctorJob && doctorJob.conclusion && doctorJob.conclusion !== 'success';
+  if (doctorFailed) {
+    return fail(`vacation-verify-doctor job conclusion=${doctorJob.conclusion}`);
+  }
+  const doctorSuccess = doctorJob?.conclusion === 'success';
+  if (!doctorSuccess && !allowLiveDoctor) {
+    return fail(`vacation-verify-doctor job conclusion=${doctorJob?.conclusion || doctorJob?.status || 'missing'}`);
+  }
+  const doctorArtifact = doctorSuccess
+    ? artifactWithDigest(artifacts, doctorArtifactNameForSha(sha))
+    : null;
+  if (doctorSuccess && !doctorArtifact) {
+    return fail('vacation-verify-doctor artifact digest missing');
+  }
   return {
     ok: true,
     sha,
     run_id: String(run.id),
     job_id: String(job.id),
+    doctor_job_id: doctorJob?.id ? String(doctorJob.id) : null,
     conclusion: 'success',
+    doctor_conclusion: doctorSuccess ? 'success' : (doctorJob?.status || 'in_progress'),
     artifact_digest: artifact.digest,
+    doctor_artifact_digest: doctorArtifact?.digest || null,
     artifact_id: String(artifact.id),
+    doctor_artifact_id: doctorArtifact?.id ? String(doctorArtifact.id) : null,
     repo: null,
   };
 }
@@ -211,8 +248,10 @@ function bindCommittedReceipt(receipt, live) {
   const sameSha = receipt.sha === live.sha;
   const sameRun = String(receipt.run_id) === String(live.run_id);
   const sameDigest = receipt.artifact_digest === live.artifact_digest;
+  const sameDoctor = !receipt.doctor_artifact_digest
+    || receipt.doctor_artifact_digest === live.doctor_artifact_digest;
   const success = receipt.conclusion === 'success' && receipt.workflow === 'vacation-verify';
-  if (!sameSha || !sameRun || !sameDigest || !success) {
+  if (!sameSha || !sameRun || !sameDigest || !sameDoctor || !success) {
     return { ok: false, reason: 'committed_receipt_does_not_match_api' };
   }
   return { ok: true };
@@ -242,9 +281,13 @@ export function inspectCiAttestation({
         sha: head,
         run_id: attestation.run_id,
         job_id: attestation.job_id,
+        doctor_job_id: attestation.doctor_job_id,
         conclusion: attestation.conclusion,
+        doctor_conclusion: attestation.doctor_conclusion,
         artifact_digest: attestation.artifact_digest,
+        doctor_artifact_digest: attestation.doctor_artifact_digest,
         artifact_id: attestation.artifact_id,
+        doctor_artifact_id: attestation.doctor_artifact_id,
         repo,
         reason: bound.reason,
       };
@@ -259,11 +302,13 @@ export function inspectCiAttestation({
       : githubGetRun(repo, liveId, token);
     if (fetched.ok && fetched.run) {
       const extras = loadRunJobsArtifacts(repo, fetched.run.id, token, fetchJobs, fetchArtifacts);
+      const liveDoctor = env.GITHUB_JOB === 'vacation-verify-doctor';
       const attested = attestVacationVerifyJob({
         run: fetched.run,
         jobs: extras.jobs.jobs,
         artifacts: extras.artifacts.artifacts,
         sha: head,
+        allowLiveDoctor: liveDoctor,
       });
       if (attested.ok) return finish(attested, 'live_run');
       if (!extras.jobs.ok || !extras.artifacts.ok) {
@@ -320,6 +365,6 @@ export function inspectCiAttestation({
     conclusion: null,
     artifact_digest: null,
     repo,
-    reason: 'no vacation-verify job success + artifact digest for this SHA',
+    reason: 'no vacation-verify + vacation-verify-doctor job success + artifact digests for this SHA',
   };
 }

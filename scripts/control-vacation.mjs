@@ -219,7 +219,7 @@ function doctor() {
     hosted_target: {
       status: 'hold',
       named: 'timesyncher / timesyncher.com',
-      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is vacation-verify job conclusion=success plus the artifact sha256 digest.',
+      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is vacation-verify and vacation-verify-doctor job conclusion=success plus both artifact sha256 digests.',
     },
     checks: {
       feature_map: fs.existsSync(FEATURE_MAP),
@@ -320,7 +320,7 @@ try {
         console.log(`  missing ci commands: ${report.checks.missing_ci_commands.join(', ')}`);
       }
       const attest = report.ci_attestation || {};
-      console.log(`  ci attestation: ${attest.ok ? `${attest.run_id} job ${attest.job_id} ${attest.conclusion}` : 'missing'} ${attest.artifact_digest || attest.reason || ''} ${attest.sha || ''}`);
+      console.log(`  ci attestation: ${attest.ok ? `${attest.run_id} job ${attest.job_id}/${attest.doctor_job_id || '-'} ${attest.conclusion}` : 'missing'} ${attest.artifact_digest || attest.reason || ''} ${attest.doctor_artifact_digest || ''} ${attest.sha || ''}`);
       console.log(`  hosted target: ${report.hosted_target.status} (${report.hosted_target.named})`);
     }
     process.exit(report.ok ? 0 : 1);

@@ -57,10 +57,16 @@ const successRun = {
   conclusion: 'success',
 };
 const successJob = { id: 100853800148, name: 'vacation-verify', conclusion: 'success', status: 'completed' };
+const successDoctorJob = { id: 100855092982, name: 'vacation-verify-doctor', conclusion: 'success', status: 'completed' };
 const successArtifact = {
   id: 9917176993,
   name: `vacation-verify-${shaB}`,
   digest: 'sha256:f5915a7de9d18017957507b6f3a7a9031ddaea396456bc786d9466d3ff621163',
+};
+const successDoctorArtifact = {
+  id: 9917309579,
+  name: `vacation-verify-doctor-${shaB}`,
+  digest: 'sha256:3467be0cbc93a616e466ff8b3d2ee2513701acd9c149f1e46cb47d3160dba6cb',
 };
 const forgedEnv = inspectCiAttestation({
   cwd,
@@ -101,11 +107,11 @@ const noDigest = inspectCiAttestation({
   env: {},
   receipt: null,
   fetchRuns: () => [successRun],
-  fetchJobs: () => [successJob],
-  fetchArtifacts: () => [{ ...successArtifact, digest: null }],
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [{ ...successArtifact, digest: null }, successDoctorArtifact],
 });
 assert.equal(noDigest.ok, false, 'missing artifact digest must fail-closed');
-const bound = inspectCiAttestation({
+const harnessOnly = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
@@ -114,11 +120,44 @@ const bound = inspectCiAttestation({
   fetchJobs: () => [successJob],
   fetchArtifacts: () => [successArtifact],
 });
+assert.equal(harnessOnly.ok, false, 'harness job success alone must not pass doctor attestation');
+const doctorFailed = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, { ...successDoctorJob, conclusion: 'failure' }],
+  fetchArtifacts: () => [successArtifact],
+});
+assert.equal(doctorFailed.ok, false, 'failed vacation-verify-doctor job must fail-closed');
+const doctorNoDigest = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [successArtifact],
+});
+assert.equal(doctorNoDigest.ok, false, 'missing doctor artifact digest must fail-closed');
+const bound = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [successArtifact, successDoctorArtifact],
+});
 assert.equal(bound.ok, true);
 assert.equal(bound.run_id, '33817831176');
 assert.equal(bound.job_id, '100853800148');
+assert.equal(bound.doctor_job_id, '100855092982');
 assert.equal(bound.conclusion, 'success');
+assert.equal(bound.doctor_conclusion, 'success');
 assert.equal(bound.artifact_digest, successArtifact.digest);
+assert.equal(bound.doctor_artifact_digest, successDoctorArtifact.digest);
 const receiptMismatch = inspectCiAttestation({
   cwd,
   sha: shaB,
@@ -131,8 +170,8 @@ const receiptMismatch = inspectCiAttestation({
     artifact_digest: 'sha256:deadbeef',
   },
   fetchRuns: () => [successRun],
-  fetchJobs: () => [successJob],
-  fetchArtifacts: () => [successArtifact],
+  fetchJobs: () => [successJob, successDoctorJob],
+  fetchArtifacts: () => [successArtifact, successDoctorArtifact],
 });
 assert.equal(receiptMismatch.ok, false, 'committed receipt digest must match live artifact');
 const committedProofs = writeAllCommittedDryRunProofs({ cwd });
