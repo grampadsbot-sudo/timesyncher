@@ -22,8 +22,6 @@ jobs:
           node-version: 20
       - name: prepare artifact dir
         run: mkdir -p artifacts/vacation-verify
-      - name: doctor
-        run: node scripts/control-vacation.mjs doctor --json | tee artifacts/vacation-verify/doctor.json
       - name: dry-run --all-fixtures
         run: node scripts/control-vacation.mjs dry-run --all-fixtures
       - name: test_vacation_edit_pipeline
@@ -43,3 +41,26 @@ jobs:
             features/proof/**/receipt.json
             features/proof/**/dry-run.json
             features/proof/**/events.jsonl
+
+  vacation-verify-doctor:
+    needs: vacation-verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: prepare artifact dir
+        run: mkdir -p artifacts/vacation-verify
+      - name: doctor
+        run: node scripts/control-vacation.mjs doctor --json | tee artifacts/vacation-verify/doctor.json
+      - name: upload doctor receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vacation-verify-doctor-${{ github.event.pull_request.head.sha || github.sha }}
+          if-no-files-found: error
+          path: artifacts/vacation-verify/doctor.json

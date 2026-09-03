@@ -48,29 +48,93 @@ const commentOnly = [
   `      - run: echo "${REVIEWER_CI_COMMANDS[4]}"`,
 ].join('\n');
 assert.deepEqual(missingReviewerCiCommands(commentOnly), [...REVIEWER_CI_COMMANDS]);
+const shaB = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const successRun = {
+  id: 33817831176,
+  name: 'vacation-verify',
+  path: '.github/workflows/vacation-verify.yml',
+  head_sha: shaB,
+  conclusion: 'success',
+};
+const successJob = { id: 100853800148, name: 'vacation-verify', conclusion: 'success', status: 'completed' };
+const successArtifact = {
+  id: 9917176993,
+  name: `vacation-verify-${shaB}`,
+  digest: 'sha256:f5915a7de9d18017957507b6f3a7a9031ddaea396456bc786d9466d3ff621163',
+};
 const forgedEnv = inspectCiAttestation({
   cwd,
   sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   env: { GITHUB_ACTIONS: 'true', GITHUB_WORKFLOW: 'vacation-verify', GITHUB_RUN_ID: '1' },
   fetchRun: () => null,
   fetchRuns: () => [],
+  receipt: null,
 });
 assert.equal(forgedEnv.ok, false, 'forged GITHUB_* env without a real run must fail-closed');
+const receiptOnly = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: {
+    sha: shaB,
+    run_id: 33817831176,
+    conclusion: 'success',
+    workflow: 'vacation-verify',
+    artifact_digest: successArtifact.digest,
+  },
+  fetchRuns: () => [],
+});
+assert.equal(receiptOnly.ok, false, 'committed receipt must not skip GitHub API');
+const inProgress = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: { GITHUB_ACTIONS: 'true', GITHUB_RUN_ID: '33817831176' },
+  receipt: null,
+  fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
+  fetchJobs: () => [{ ...successJob, conclusion: null, status: 'in_progress' }],
+  fetchArtifacts: () => [successArtifact],
+});
+assert.equal(inProgress.ok, false, 'in_progress vacation-verify job must not pass doctor');
+const noDigest = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob],
+  fetchArtifacts: () => [{ ...successArtifact, digest: null }],
+});
+assert.equal(noDigest.ok, false, 'missing artifact digest must fail-closed');
 const bound = inspectCiAttestation({
   cwd,
-  sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+  sha: shaB,
   env: {},
-  fetchRuns: () => [{
-    id: 33817351351,
-    name: 'vacation-verify',
-    path: '.github/workflows/vacation-verify.yml',
-    head_sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-    conclusion: 'success',
-  }],
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob],
+  fetchArtifacts: () => [successArtifact],
 });
 assert.equal(bound.ok, true);
-assert.equal(bound.run_id, '33817351351');
+assert.equal(bound.run_id, '33817831176');
+assert.equal(bound.job_id, '100853800148');
 assert.equal(bound.conclusion, 'success');
+assert.equal(bound.artifact_digest, successArtifact.digest);
+const receiptMismatch = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: {
+    sha: shaB,
+    run_id: 33817831176,
+    conclusion: 'success',
+    workflow: 'vacation-verify',
+    artifact_digest: 'sha256:deadbeef',
+  },
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [successJob],
+  fetchArtifacts: () => [successArtifact],
+});
+assert.equal(receiptMismatch.ok, false, 'committed receipt digest must match live artifact');
 const committedProofs = writeAllCommittedDryRunProofs({ cwd });
 assert.deepEqual(committedProofs.map((row) => row.compact.fixture_id), [...COMMITTED_PROOF_FIXTURE_IDS]);
 const committedProof = committedProofs[0];

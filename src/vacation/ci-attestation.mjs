@@ -137,73 +137,178 @@ export function githubGetRun(repo, runId, token = '') {
   return { ok: true, run: fetched.json };
 }
 
+export function githubListJobs(repo, runId, token = '') {
+  if (!repo || !runId) return { ok: false, jobs: [], error: 'missing_repo_or_run' };
+  const fetched = githubJson(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs?per_page=30`, token);
+  if (!fetched.ok) return { ok: false, jobs: [], error: fetched.error };
+  return { ok: true, jobs: fetched.json.jobs || [] };
+}
+
+export function githubListArtifacts(repo, runId, token = '') {
+  if (!repo || !runId) return { ok: false, artifacts: [], error: 'missing_repo_or_run' };
+  const fetched = githubJson(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts?per_page=30`, token);
+  if (!fetched.ok) return { ok: false, artifacts: [], error: fetched.error };
+  return { ok: true, artifacts: fetched.json.artifacts || [] };
+}
+
+export function artifactNameForSha(sha) {
+  return `vacation-verify-${sha}`;
+}
+
+export function attestVacationVerifyJob({ run, jobs = [], artifacts = [], sha } = {}) {
+  const fail = (reason) => ({
+    ok: false,
+    source: 'missing',
+    sha: sha || run?.head_sha || null,
+    run_id: run?.id ? String(run.id) : null,
+    job_id: null,
+    conclusion: null,
+    artifact_digest: null,
+    artifact_id: null,
+    reason,
+  });
+  if (!isVacationVerifyRun(run) || !run?.id) return fail('not_vacation_verify_run');
+  if (run.head_sha !== sha) return fail('run_sha_mismatch');
+  const job = (jobs || []).find((row) => row && row.name === 'vacation-verify');
+  if (!job) return fail('vacation-verify job missing');
+  if (job.conclusion !== 'success') {
+    return fail(`vacation-verify job conclusion=${job.conclusion || job.status || 'missing'}`);
+  }
+  const artifact = (artifacts || []).find((row) => (
+    row
+    && row.name === artifactNameForSha(sha)
+    && typeof row.digest === 'string'
+    && row.digest.startsWith('sha256:')
+  ));
+  if (!artifact) return fail('vacation-verify artifact digest missing');
+  return {
+    ok: true,
+    sha,
+    run_id: String(run.id),
+    job_id: String(job.id),
+    conclusion: 'success',
+    artifact_digest: artifact.digest,
+    artifact_id: String(artifact.id),
+    repo: null,
+  };
+}
+
+function loadRunJobsArtifacts(repo, runId, token, fetchJobs, fetchArtifacts) {
+  const jobs = fetchJobs
+    ? { ok: true, jobs: fetchJobs(repo, runId, token) || [] }
+    : githubListJobs(repo, runId, token);
+  const artifacts = fetchArtifacts
+    ? { ok: true, artifacts: fetchArtifacts(repo, runId, token) || [] }
+    : githubListArtifacts(repo, runId, token);
+  return { jobs, artifacts };
+}
+
+function bindCommittedReceipt(receipt, live) {
+  if (!receipt) return { ok: true };
+  if (receipt.ok === false && receipt.reason === 'invalid_ci_receipt') {
+    return { ok: false, reason: 'invalid_ci_receipt' };
+  }
+  const sameSha = receipt.sha === live.sha;
+  const sameRun = String(receipt.run_id) === String(live.run_id);
+  const sameDigest = receipt.artifact_digest === live.artifact_digest;
+  const success = receipt.conclusion === 'success' && receipt.workflow === 'vacation-verify';
+  if (!sameSha || !sameRun || !sameDigest || !success) {
+    return { ok: false, reason: 'committed_receipt_does_not_match_api' };
+  }
+  return { ok: true };
+}
+
 export function inspectCiAttestation({
   cwd = process.cwd(),
   env = process.env,
   sha,
+  receipt,
   fetchRuns,
   fetchRun,
+  fetchJobs,
+  fetchArtifacts,
 } = {}) {
   const head = sha || gitRevParse(cwd);
   const repo = githubRepoFromOrigin(cwd);
   const token = env.GITHUB_TOKEN || env.GH_TOKEN || '';
-  const receipt = readCommittedCiReceipt(cwd);
-  if (
-    receipt
-    && receipt.sha === head
-    && String(receipt.conclusion) === 'success'
-    && receipt.run_id
-    && receipt.workflow === 'vacation-verify'
-  ) {
-    return {
-      ok: true,
-      source: 'committed_receipt',
-      sha: head,
-      run_id: String(receipt.run_id),
-      conclusion: 'success',
-      repo,
-    };
-  }
+  const committed = receipt !== undefined ? receipt : readCommittedCiReceipt(cwd);
+  const finish = (attestation, source) => {
+    if (!attestation.ok) return { ...attestation, source: attestation.source || 'missing', repo };
+    const bound = bindCommittedReceipt(committed, attestation);
+    if (!bound.ok) {
+      return {
+        ok: false,
+        source: 'committed_receipt',
+        sha: head,
+        run_id: attestation.run_id,
+        job_id: attestation.job_id,
+        conclusion: attestation.conclusion,
+        artifact_digest: attestation.artifact_digest,
+        artifact_id: attestation.artifact_id,
+        repo,
+        reason: bound.reason,
+      };
+    }
+    return { ...attestation, source, repo };
+  };
 
   const liveId = env.GITHUB_RUN_ID || '';
   if (env.GITHUB_ACTIONS === 'true' && liveId) {
     const fetched = fetchRun
       ? { ok: true, run: fetchRun(repo, liveId, token) }
       : githubGetRun(repo, liveId, token);
-    const run = fetched.run;
-    const shaOk = run?.head_sha === head;
-    const liveOk = run?.conclusion === 'success'
-      || (run?.status === 'in_progress' && !run?.conclusion);
-    if (fetched.ok && isVacationVerifyRun(run) && shaOk && liveOk && run.id) {
-      return {
-        ok: true,
-        source: 'live_run',
+    if (fetched.ok && fetched.run) {
+      const extras = loadRunJobsArtifacts(repo, fetched.run.id, token, fetchJobs, fetchArtifacts);
+      const attested = attestVacationVerifyJob({
+        run: fetched.run,
+        jobs: extras.jobs.jobs,
+        artifacts: extras.artifacts.artifacts,
         sha: head,
-        run_id: String(run.id),
-        conclusion: run.conclusion || 'in_progress',
-        repo,
-      };
+      });
+      if (attested.ok) return finish(attested, 'live_run');
+      if (!extras.jobs.ok || !extras.artifacts.ok) {
+        return {
+          ok: false,
+          source: 'live_run',
+          sha: head,
+          run_id: String(fetched.run.id),
+          job_id: null,
+          conclusion: null,
+          artifact_digest: null,
+          repo,
+          reason: extras.jobs.error || extras.artifacts.error || attested.reason,
+        };
+      }
     }
   }
 
   const listed = fetchRuns
     ? { ok: true, runs: fetchRuns(repo, head, token) || [] }
     : githubListVacationVerifyRuns(repo, head, token);
-  const hit = (listed.runs || []).find((run) => (
-    isVacationVerifyRun(run)
-    && run.head_sha === head
-    && run.conclusion === 'success'
-    && run.id
-  ));
-  if (listed.ok && hit) {
+  if (!listed.ok) {
     return {
-      ok: true,
-      source: 'github_api',
+      ok: false,
+      source: 'missing',
       sha: head,
-      run_id: String(hit.id),
-      conclusion: 'success',
+      run_id: null,
+      job_id: null,
+      conclusion: null,
+      artifact_digest: null,
       repo,
+      reason: listed.error || 'github_api_failed',
     };
+  }
+  for (const run of listed.runs || []) {
+    if (!isVacationVerifyRun(run) || run.head_sha !== head || !run.id) continue;
+    const extras = loadRunJobsArtifacts(repo, run.id, token, fetchJobs, fetchArtifacts);
+    if (!extras.jobs.ok || !extras.artifacts.ok) continue;
+    const attested = attestVacationVerifyJob({
+      run,
+      jobs: extras.jobs.jobs,
+      artifacts: extras.artifacts.artifacts,
+      sha: head,
+    });
+    if (attested.ok) return finish(attested, 'github_api');
   }
 
   return {
@@ -211,8 +316,10 @@ export function inspectCiAttestation({
     source: 'missing',
     sha: head,
     run_id: null,
+    job_id: null,
     conclusion: null,
+    artifact_digest: null,
     repo,
-    reason: listed.error || 'no vacation-verify success for this SHA',
+    reason: 'no vacation-verify job success + artifact digest for this SHA',
   };
 }
