@@ -12,7 +12,7 @@ export const INTAKE_SEAM = Object.freeze({
     'scripts/product-gbrain-dispatch.mjs',
     'scripts/telegram-vacation-intake-bot.mjs',
   ],
-  remaining: 'applyTrekItineraryEdit runs only after pipelineWriteDecision.allowTrekWrite (validated writes and a Thing list). Empty items, skip, unmatched, and integrity stops fail closed with editApplied false and never call TREK writers. Bot annotate without a resolved live session is unresolved (not owner) and is non-blocking until API session resolution; a resolved unpaid/logged-out/public-link session is blocking. Verification tests do not mutate production TREK.',
+  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
 });
 
 const FAIL_CLOSED_REASONS = new Set([
@@ -27,7 +27,46 @@ const FAIL_CLOSED_REASONS = new Set([
 ]);
 
 const UNAUTHORIZED_REASONS = new Set(['unauthorized_upload', 'unauthorized_edit', 'logged_out']);
-const UNAUTHORIZED_ROLES = new Set(['public-link', 'viewer', 'logged-out', 'unpaid_collaborator', 'unresolved']);
+const UNAUTHORIZED_ROLES = new Set(['public-link', 'viewer', 'logged-out', 'unpaid_collaborator', 'unresolved', 'unproven_session']);
+
+const PAID_MEDIA_ENTITLEMENT_SOURCES = new Set([
+  'entitlement',
+  'paid_order',
+  'timesyncher_paid',
+  'stripe',
+  'paid',
+  'subscription',
+  'session_entitlement',
+]);
+
+export function isPaidMediaEntitlement(entitlement) {
+  if (!entitlement || entitlement.allowed !== true) return false;
+  const source = String(entitlement.source || '').trim();
+  if (!source || source === 'staging_bypass') return false;
+  return PAID_MEDIA_ENTITLEMENT_SOURCES.has(source);
+}
+
+export function mapLiveLockedThingRows(rows = [], tripId) {
+  const id = String(tripId || '').trim();
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => ({
+      id: row.id,
+      trip_id: id || row.trip_id || row.tripId || '',
+      title: row.title || row.name,
+      location: row.location,
+      day: Number(row.metadata?.day || row.day || 0) || null,
+    }))
+    .filter((row) => row.id && row.title);
+}
+
+export function selectLiveLockedTripThings({ tripId, liveLockedThings, clientThings, payloadThings, tripItems } = {}) {
+  void clientThings;
+  void payloadThings;
+  void tripItems;
+  const id = String(tripId || '').trim();
+  if (!id || !Array.isArray(liveLockedThings)) return [];
+  return liveLockedThings.filter((row) => String(row?.trip_id || row?.tripId || id) === id);
+}
 
 export function isItineraryEditText(text = '') {
   const normalized = String(text || '').toLowerCase();
@@ -62,9 +101,37 @@ export function actorFromIntake({ role, authorized, canUpload, canEdit, id, sess
   };
 }
 
+export function buildLiveSessionFromLookup(lookup = {}) {
+  if (!lookup || lookup.unresolved === true) {
+    return { unresolved: true, id: lookup.telegramUserId || lookup.id || 'unresolved' };
+  }
+  if (lookup.loggedOut === true || lookup.session === null && !lookup.customer_id) {
+    return {
+      id: lookup.telegramUserId || lookup.id || 'logged-out',
+      telegramUserId: lookup.telegramUserId,
+      loggedOut: true,
+      session: null,
+    };
+  }
+  return {
+    id: lookup.telegramUserId || lookup.id || lookup.email,
+    telegramUserId: lookup.telegramUserId,
+    customer_id: lookup.customer_id,
+    trip_id: lookup.trip_id,
+    metadata: lookup.metadata || {},
+    collaborator: lookup.collaborator || null,
+    entitlement: lookup.entitlement || { allowed: false },
+    publicLink: lookup.publicLink === true,
+    webGrant: lookup.webGrant,
+    shareToken: lookup.shareToken,
+    session: lookup.session,
+    role: lookup.role,
+    source: 'live_session_lookup',
+  };
+}
+
 export function actorFromLiveSession(session = {}) {
   const id = String(session.telegramUserId || session.id || session.email || 'unresolved');
-  const entitlementAllowed = session.entitlement?.allowed === true;
   if (session.loggedOut === true || session.session === null) {
     return { ...actorFromIntake({ id, identity: id, loggedOut: true, session: null }), source: 'live_session' };
   }
@@ -96,9 +163,14 @@ export function actorFromLiveSession(session = {}) {
       source: 'live_session',
     };
   }
-  const collaboratorRole = String(session.metadata?.telegramRole || session.telegramRole || '').toLowerCase() === 'collaborator';
-  const paidCollaborator = Boolean(session.collaborator?.id || session.collaborator?.status === 'active');
-  if (collaboratorRole && !paidCollaborator) {
+  const telegramRole = String(session.metadata?.telegramRole || session.telegramRole || '').toLowerCase();
+  const grant = session.grant && typeof session.grant === 'object' ? session.grant : null;
+  const grantRole = String(grant?.role || '').toLowerCase();
+  const grantAccepted = Boolean(grant) && (grant.status === 'accepted' || grant.live === true);
+  const collaboratorActive = String(session.collaborator?.status || '').toLowerCase() === 'active'
+    && Boolean(session.collaborator?.id);
+
+  if (telegramRole === 'collaborator' && !collaboratorActive) {
     return {
       ...actorFromIntake({
         id,
@@ -111,12 +183,33 @@ export function actorFromLiveSession(session = {}) {
       source: 'live_session',
     };
   }
-  if (!session.customer_id && !paidCollaborator) {
-    return { ...actorFromIntake({ id, identity: id, loggedOut: true, session: null }), source: 'live_session' };
+
+  let role = null;
+  if (telegramRole === 'owner') {
+    role = 'owner';
+  } else if (telegramRole === 'collaborator' && collaboratorActive) {
+    role = 'telegram_collaborator';
+  } else if (grantAccepted && (grantRole === 'owner' || grantRole === 'web_editor' || grantRole === 'telegram_collaborator')) {
+    role = grantRole === 'owner' ? 'owner' : (grantRole === 'web_editor' ? 'web_editor' : 'telegram_collaborator');
   }
-  const role = paidCollaborator || collaboratorRole
-    ? 'telegram_collaborator'
-    : (session.role === 'web_editor' ? 'web_editor' : 'owner');
+
+  if (!role) {
+    const loggedOut = !session.customer_id;
+    return {
+      ...actorFromIntake({
+        id,
+        identity: id,
+        role: loggedOut ? 'logged-out' : 'unproven_session',
+        authorized: false,
+        canUpload: false,
+        canEdit: false,
+        loggedOut,
+        session: loggedOut ? null : true,
+      }),
+      source: 'live_session',
+    };
+  }
+
   return {
     ...actorFromIntake({
       id,
@@ -124,7 +217,7 @@ export function actorFromLiveSession(session = {}) {
       role,
       authorized: true,
       canEdit: true,
-      canUpload: entitlementAllowed,
+      canUpload: isPaidMediaEntitlement(session.entitlement),
     }),
     source: 'live_session',
   };

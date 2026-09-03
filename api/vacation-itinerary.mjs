@@ -15,6 +15,8 @@ import {
 import {
   actorFromLiveSession,
   gateSharedPageIntakeEdit,
+  mapLiveLockedThingRows,
+  selectLiveLockedTripThings,
 } from '../src/vacation/intake-edit-bridge.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
@@ -127,14 +129,14 @@ async function handleWebAccess(req, res, db, url) {
           email: grant.email,
           customer_id: grant.owner_customer_id || grant.customer_id,
           trip_id: grant.trip_id || tripId,
-          role: grant.role,
-          entitlement: { allowed: ['owner', 'web_editor', 'telegram_collaborator'].includes(grant.role) },
+          grant: { role: grant.role, status: 'accepted' },
+          entitlement: { allowed: false, source: 'web_grant_not_media' },
         }
         : loggedOut
           ? { id: 'logged-out-visitor', loggedOut: true, session: null }
           : { id: 'public-link-visitor', publicLink: true, webGrant: null, shareToken });
-      let items = Array.isArray(body.items) ? body.items : [];
-      if (!items.length && tripId) {
+      let liveLockedThings = [];
+      if (tripId) {
         try {
           const rows = await db`
             select id, title, location, metadata
@@ -142,17 +144,17 @@ async function handleWebAccess(req, res, db, url) {
             where trip_id = ${tripId}
             limit 200
           `;
-          items = rows.map((row) => ({
-            id: row.id,
-            trip_id: tripId,
-            title: row.title,
-            location: row.location,
-            day: Number(row.metadata?.day || 0) || null,
-          }));
+          liveLockedThings = mapLiveLockedThingRows(rows, tripId);
         } catch {
-          items = [];
+          liveLockedThings = [];
         }
       }
+      const items = selectLiveLockedTripThings({
+        tripId,
+        liveLockedThings,
+        clientThings: body.items,
+        payloadThings: body.things,
+      });
       const gate = gateSharedPageIntakeEdit({
         text: body.text || body.transcript || '',
         audioPath: body.audioPath || body.audio_path,

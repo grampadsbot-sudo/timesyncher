@@ -33,8 +33,8 @@ Preconditions:
 
 ## Gotchas
 
-- JSON role flags are not live-session proof. `actorFromLiveSession` maps a real session (customer_id, telegramRole, paid collaborator row, web grant, entitlement) onto the same unauthorized branch. Logged-out / public-link / unpaid collaborator sessions must not receive `canUpload: true`.
+- JSON role flags are not live-session proof. `actorFromLiveSession` maps a real session onto the same unauthorized branch. `customer_id` alone is not owner/`canEdit`. `staging_bypass` (env or vacation-staging host) is not entitlement proof and must not set `canUpload` for unpaid, public-link, or logged-out actors. Logged-out / public-link / unpaid collaborator sessions must not receive `canUpload: true`.
 - Telegram file bytes are not fetched in this dry-run. The lever proves binding and authorization, not storage I/O.
 - A caption that names the Vegas trip does not override a stale `bound_trip_id`.
-- Staging bypass env (`TIMESYNCHER_MEDIA_UPLOAD_STAGING_BYPASS`) must stay unset for fail-closed proof.
+- Staging host or `TIMESYNCHER_MEDIA_UPLOAD_STAGING_BYPASS` must not bypass unauthorized / unpaid / logged-out upload denial.
 - Thing-scoped attachments are covered in [Timeline / Thing media](./timeline-thing-media.md).

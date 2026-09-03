@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_PUBLIC_BASE = 'https://vacation.timesyncher.com';
 
@@ -211,6 +213,28 @@ function parseDateRange(input) {
   return { startDate: `${year}-07-${String(start).padStart(2, '0')}`, endDate: `${year}-07-${String(end).padStart(2, '0')}` };
 }
 
+export function explicitShareToken(input = {}) {
+  return text(input.token || input.shareToken || input.share_token, 180);
+}
+
+export function itemsFromValidatedWrites(writes = []) {
+  return (Array.isArray(writes) ? writes : [])
+    .map((write) => {
+      const day = Number(String(write.to || write.day || '').match(/day\s*(\d+)/i)?.[1] || write.day || 0) || null;
+      return {
+        op: write.op,
+        title: write.title,
+        matchTitle: write.title,
+        item_id: write.item_id,
+        day,
+        to: write.to,
+        from: write.from,
+        replacement: write.to,
+      };
+    })
+    .filter((item) => item.op && (item.title || item.item_id));
+}
+
 const pythonCode = String.raw`
 import datetime, json, sqlite3, sys, urllib.parse, urllib.request
 
@@ -324,6 +348,45 @@ def save_field(token, thing_key, fields, overrides):
 def matching_place(trip_id, title):
     return one('SELECT * FROM places WHERE trip_id=? AND lower(name)=lower(?) ORDER BY id LIMIT 1', (trip_id, title))
 
+def find_place_for_write(trip_id, item):
+    item_id = txt(item.get('item_id'), 180)
+    title = txt(item.get('title') or item.get('matchTitle'), 180)
+    if item_id:
+        row = one('SELECT * FROM places WHERE trip_id=? AND (notes=? OR cast(id as text)=?) ORDER BY id LIMIT 1', (trip_id, item_id, item_id))
+        if row:
+            return row
+    if title:
+        return matching_place(trip_id, title)
+    return None
+
+def apply_validated_write(trip_id, token, days, item, overrides):
+    op = txt(item.get('op'), 40)
+    if op == 'add_thing':
+        return insert_or_update_item(trip_id, token, days, item, overrides)
+    place = find_place_for_write(trip_id, item)
+    if not place:
+        raise RuntimeError('validated write target not found: ' + txt(item.get('title') or item.get('item_id'), 180))
+    place_id = int(place['id'])
+    if op == 'move_thing':
+        day_num = int(item.get('day') or 1)
+        if day_num < 1: day_num = 1
+        if day_num > len(days): day_num = len(days)
+        day_id = int(days[day_num - 1]['id'])
+        run('DELETE FROM day_assignments WHERE place_id=?', (place_id,))
+        order_row = one('SELECT COALESCE(MAX(order_index), -1) + 1 AS next_index FROM day_assignments WHERE day_id=?', (day_id,))
+        run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time) VALUES (?, ?, ?, ?, ?, ?)', (day_id, place_id, int(order_row['next_index']), place['notes'] or '', 'considering', None))
+        return {'action': 'moved', 'placeId': place_id, 'title': place['name'], 'day': day_num, 'op': op, 'category': item.get('category') or ''}
+    if op == 'remove_thing':
+        run('DELETE FROM day_assignments WHERE place_id=?', (place_id,))
+        run("UPDATE places SET reservation_status=? WHERE id=?", ('eliminated', place_id))
+        return {'action': 'removed', 'placeId': place_id, 'title': place['name'], 'op': op}
+    if op == 'update_thing':
+        new_title = txt(item.get('replacement') or item.get('to') or item.get('title'), 180)
+        if new_title:
+            run('UPDATE places SET name=? WHERE id=?', (new_title, place_id))
+        return {'action': 'updated', 'placeId': place_id, 'title': new_title or place['name'], 'op': op}
+    raise RuntimeError('unsupported validated write op: ' + op)
+
 def insert_or_update_item(trip_id, token, days, item, overrides):
     kind = item.get('category') or 'event'
     cat_name, color, icon = category_meta(kind)
@@ -376,31 +439,44 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     save_field(token, 'place:' + str(place_id), fields, overrides)
     return {'action': action, 'placeId': place_id, 'title': title, 'day': day_num, 'category': kind}
 
-trip = find_trip(payload.get('token') or '', payload.get('requestText') or '')
+apply_validated_only = bool(payload.get('applyValidatedOnly'))
+trip = find_trip(payload.get('token') or '', '' if apply_validated_only else (payload.get('requestText') or ''))
 if not trip:
     raise RuntimeError('No target TREK trip/share token could be identified for this edit request.')
 token = trip['share_token']
-date_range = payload.get('dateRange')
+date_range = None if apply_validated_only else payload.get('dateRange')
 days = ensure_days(int(trip['id']), date_range)
 items = payload.get('items') or []
-if not items and not date_range:
-    raise RuntimeError('No supported deterministic edit operations were parsed from the request.')
+if apply_validated_only:
+    if not items:
+        raise RuntimeError('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.')
+else:
+    raise RuntimeError('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.')
 overrides = load_overrides(token)
 results = []
 for item in items:
-    results.append(insert_or_update_item(int(trip['id']), token, days, item, overrides))
+    results.append(apply_validated_write(int(trip['id']), token, days, item, overrides))
 db.commit()
 base = (payload.get('publicBase') or 'https://vacation.timesyncher.com').rstrip('/')
-print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results) + (1 if date_range else 0)}))
+print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results)}))
 `;
 
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
+  const validatedWrites = Array.isArray(input.validatedWrites) ? input.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.');
+  }
+  const items = itemsFromValidatedWrites(validatedWrites);
+  if (!items.length) {
+    throw new Error('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.');
+  }
   const payload = {
-    token: targetToken(input),
-    requestText: text(input.requestText || input.request_text || '', 8000),
-    items: editItems(input),
-    dateRange: parseDateRange(input),
+    token: explicitShareToken(input),
+    applyValidatedOnly: true,
+    requestText: '',
+    items,
+    dateRange: null,
     receivedAt: text(input.receivedAt || input.received_at || '', 80),
     publicBase: text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, ''),
     dbPath: text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || '', 500),
@@ -419,7 +495,10 @@ async function main() {
   console.log(out);
 }
 
-main().catch((error) => {
-  console.error(error.message || String(error));
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error(error.message || String(error));
+    process.exit(1);
+  });
+}

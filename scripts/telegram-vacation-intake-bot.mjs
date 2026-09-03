@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   annotateIntakeFromLiveSession,
+  buildLiveSessionFromLookup,
 } from '../src/vacation/intake-edit-bridge.mjs';
 
 const TELEGRAM_BOT_TOKEN = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || '';
@@ -37,6 +38,30 @@ const PRODUCT_MANIFEST_PATH = process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST ||
 
 function requireEnv() {
   if (!TELEGRAM_BOT_TOKEN) throw new Error('TIMESYNCHER_TELEGRAM_BOT_TOKEN is required.');
+}
+
+async function resolveLiveSession({ telegramChatId, telegramUserId, mediaKind } = {}) {
+  const unresolved = { unresolved: true, id: telegramUserId || 'unresolved' };
+  if (!telegramChatId && !telegramUserId) return unresolved;
+  try {
+    const { response, json } = await fetchJsonWithRetry(`${API_BASE}/api/vacation-telegram-turn`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(INTAKE_TOKEN ? { authorization: `Bearer ${INTAKE_TOKEN}` } : {}),
+      },
+      body: JSON.stringify({
+        event: 'resolve_live_session',
+        telegramChatId: telegramChatId || '',
+        telegramUserId: telegramUserId || '',
+        mediaKind: mediaKind || '',
+      }),
+    }, 'Vacation live session');
+    if (!response.ok || json.ok === false) return unresolved;
+    return buildLiveSessionFromLookup({ ...json, telegramUserId: telegramUserId || json.telegramUserId });
+  } catch {
+    return unresolved;
+  }
 }
 
 function annotateTelegramIntakePipeline({ text, audioPath, telegramUserId, media, session } = {}) {
@@ -1410,11 +1435,15 @@ async function recordTelegramTurn(message, { textOverride = '', payload = {} } =
   const chat = message.chat || {};
   const text = cleanText(textOverride || message.text || message.caption);
   const startMatch = /^\/start(?:\s+(.+))?/i.exec(text);
+  const liveSession = payload.liveSession || await resolveLiveSession({
+    telegramChatId: String(chat.id || ''),
+    telegramUserId: from.id ? String(from.id) : '',
+  });
   const pipelineNote = annotateTelegramIntakePipeline({
     text,
     audioPath: payload.telegramVoice?.cachePath || payload.voiceCache?.path,
     telegramUserId: from.id ? String(from.id) : '',
-    session: payload.liveSession,
+    session: liveSession,
   });
   if (pipelineNote.blocked) {
     return {
@@ -1548,11 +1577,16 @@ async function recordMediaUpload(message, media, { cacheDir = '' } = {}) {
   });
   const from = message.from || {};
   const chat = message.chat || {};
+  const liveSession = media.liveSession || await resolveLiveSession({
+    telegramChatId: String(chat.id || ''),
+    telegramUserId: from.id ? String(from.id) : '',
+    mediaKind: media.mediaKind,
+  });
   const pipelineNote = annotateTelegramIntakePipeline({
     text: media.caption,
     telegramUserId: from.id ? String(from.id) : '',
     media,
-    session: media.liveSession,
+    session: liveSession,
   });
   if (pipelineNote.blocked) {
     return {
@@ -1721,15 +1755,22 @@ async function recordBotError({ message = {}, updateId, stage, error }) {
 async function handleMessage(message, { cacheDir = '' } = {}) {
   const chatId = message.chat?.id;
   const messageId = message.message_id;
+  const from = message.from || {};
   let text = cleanText(message.text || message.caption);
   let payload = {};
   if (!chatId) return;
+  const liveSession = await resolveLiveSession({
+    telegramChatId: String(chatId),
+    telegramUserId: from.id ? String(from.id) : '',
+  });
+  payload.liveSession = liveSession;
 
   if (!text && message.voice) {
     await telegram('sendChatAction', { chat_id: chatId, action: 'typing' }).catch(() => {});
     const transcription = await transcribeVoiceMessage(message, { cacheDir });
     text = transcription.text;
     payload = {
+      liveSession,
       telegramVoice: {
         duration: message.voice.duration || null,
         fileId: message.voice.file_id || null,
@@ -1746,7 +1787,7 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
   const media = mediaFromMessage(message);
   if (media) {
     await telegram('sendChatAction', { chat_id: chatId, action: media.mediaKind === 'video' ? 'upload_video' : 'upload_photo' }).catch(() => {});
-    const result = await recordMediaUpload(message, media, { cacheDir });
+    const result = await recordMediaUpload(message, { ...media, liveSession }, { cacheDir });
     const reply = result.reply || (media.mediaKind === 'video'
       ? 'Got it — I saved that video to this vacation.'
       : 'Got it — I saved that photo to this vacation.');

@@ -12,8 +12,11 @@ import {
   gateMediaUploadIntake,
   gateSharedPageIntakeEdit,
   gateTelegramIntakeEdit,
+  isPaidMediaEntitlement,
   pipelineWriteDecision,
+  selectLiveLockedTripThings,
 } from '../src/vacation/intake-edit-bridge.mjs';
+import { itemsFromValidatedWrites } from './trek-itinerary-edit.mjs';
 
 const cwd = process.cwd();
 const vegasItems = [
@@ -29,6 +32,10 @@ for (const rel of INTAKE_SEAM.liveCallers) {
 
 assert.match(INTAKE_SEAM.remaining, /allowTrekWrite/);
 assert.match(INTAKE_SEAM.remaining, /editApplied false/);
+assert.match(INTAKE_SEAM.remaining, /planned_writes/);
+assert.match(INTAKE_SEAM.remaining, /live-locked trip_things/);
+assert.match(INTAKE_SEAM.remaining, /staging_bypass/);
+assert.match(INTAKE_SEAM.remaining, /customer_id/);
 
 const owner = gateTelegramIntakeEdit({
   text: 'Move Bellagio Fountains to day 2',
@@ -111,6 +118,86 @@ const publicLinkActor = actorFromLiveSession(livePublicLinkSession);
 assert.equal(publicLinkActor.role, 'public-link');
 assert.equal(publicLinkActor.canUpload, false);
 
+const customerOnlyActor = actorFromLiveSession({
+  id: 'maybe-craig',
+  customer_id: 'cust-craig',
+  trip_id: 'trip-vegas-live-001',
+});
+assert.notEqual(customerOnlyActor.role, 'owner');
+assert.equal(customerOnlyActor.canEdit, false);
+assert.equal(customerOnlyActor.canUpload, false);
+
+const unpaidStagingActor = actorFromLiveSession({
+  ...liveUnpaidSession,
+  entitlement: { allowed: true, source: 'staging_bypass' },
+});
+assert.equal(unpaidStagingActor.canUpload, false);
+assert.equal(unpaidStagingActor.canEdit, false);
+assert.equal(isPaidMediaEntitlement({ allowed: true, source: 'staging_bypass' }), false);
+
+const ownerStagingActor = actorFromLiveSession({
+  ...liveOwnerSession,
+  entitlement: { allowed: true, source: 'staging_bypass' },
+});
+assert.equal(ownerStagingActor.role, 'owner');
+assert.equal(ownerStagingActor.canEdit, true);
+assert.equal(ownerStagingActor.canUpload, false);
+
+const loggedOutStagingActor = actorFromLiveSession({
+  ...liveLoggedOutSession,
+  entitlement: { allowed: true, source: 'staging_bypass' },
+});
+assert.equal(loggedOutStagingActor.canUpload, false);
+assert.equal(loggedOutStagingActor.canEdit, false);
+
+const publicLinkStagingActor = actorFromLiveSession({
+  ...livePublicLinkSession,
+  entitlement: { allowed: true, source: 'staging_bypass' },
+});
+assert.equal(publicLinkStagingActor.canUpload, false);
+assert.equal(publicLinkStagingActor.canEdit, false);
+
+const paidCollaboratorActor = actorFromLiveSession({
+  id: 'collaborator-kim-paid',
+  customer_id: 'cust-craig',
+  trip_id: 'trip-vegas-live-001',
+  telegramUserId: 'tg-kim-paid',
+  metadata: { telegramRole: 'collaborator' },
+  collaborator: { id: 'collab-kim', status: 'active' },
+  entitlement: { allowed: true, source: 'paid_order' },
+});
+assert.equal(paidCollaboratorActor.role, 'telegram_collaborator');
+assert.equal(paidCollaboratorActor.canEdit, true);
+assert.equal(paidCollaboratorActor.canUpload, true);
+
+const fabricatedThings = selectLiveLockedTripThings({
+  tripId: 'trip-vegas-live-001',
+  liveLockedThings: undefined,
+  clientThings: vegasItems,
+  payloadThings: vegasItems,
+  tripItems: vegasItems,
+});
+assert.deepEqual(fabricatedThings, []);
+assert.deepEqual(selectLiveLockedTripThings({
+  tripId: 'trip-vegas-live-001',
+  liveLockedThings: vegasItems,
+}), vegasItems);
+assert.deepEqual(itemsFromValidatedWrites([{
+  op: 'move_thing',
+  title: 'Bellagio Fountains',
+  item_id: 'thing-bellagio-fountains',
+  to: 'day 2',
+}]).map((row) => ({ op: row.op, day: row.day })), [{ op: 'move_thing', day: 2 }]);
+
+const unpaidStagingGate = gateMediaUploadIntake({
+  text: 'Upload this video to the Vegas vacation',
+  actor: unpaidStagingActor,
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+  media,
+}, { persist: false });
+assert.equal(unpaidStagingGate.failClosed, true);
+assert.equal(unpaidStagingGate.reason, 'unauthorized_upload');
+
 const unpaidGate = gateMediaUploadIntake({
   text: 'Upload this video to the Vegas vacation',
   actor: unpaidActor,
@@ -166,25 +253,60 @@ const itinerary = fs.readFileSync(path.join(cwd, 'api/vacation-itinerary.mjs'), 
 assert.match(itinerary, /action === 'vacation_edit'/);
 assert.match(itinerary, /gateSharedPageIntakeEdit/);
 assert.match(itinerary, /actorFromLiveSession/);
+assert.match(itinerary, /selectLiveLockedTripThings/);
+assert.match(itinerary, /trip_things/);
+assert.doesNotMatch(itinerary, /let items = Array.isArray\(body\.items\)/);
 
 const dispatch = fs.readFileSync(path.join(cwd, 'scripts/product-gbrain-dispatch.mjs'), 'utf8');
 assert.match(dispatch, /pipelineWriteDecision/);
 assert.match(dispatch, /allowTrekWrite/);
 assert.match(dispatch, /editApplied: false/);
 assert.match(dispatch, /vacation_edit_pipeline_fail_closed/);
-const trekCallIndex = dispatch.indexOf('applyTrekItineraryEdit(job, artifacts)');
+assert.match(dispatch, /selectLiveLockedTripThings/);
+assert.match(dispatch, /validatedWrites: gate.receipt.planned_writes/);
+assert.match(dispatch, /applyValidatedOnly: true/);
+assert.doesNotMatch(dispatch, /things: payload\.things/);
 const decisionIndex = dispatch.indexOf('pipelineWriteDecision');
+const trekCallIndex = dispatch.indexOf('applyTrekItineraryEdit(job, writeArtifacts)');
+const agentFn = dispatch.slice(dispatch.indexOf('function applyTrekAgentEdit'), dispatch.indexOf('function applyExistingTripEdit'));
 assert.ok(decisionIndex !== -1 && trekCallIndex !== -1 && decisionIndex < trekCallIndex, 'TREK writer must sit behind pipelineWriteDecision');
+assert.match(agentFn, /validatedWrites/);
+assert.doesNotMatch(agentFn, /requestText:/);
 
 const turn = fs.readFileSync(path.join(cwd, 'api/vacation-telegram-turn.mjs'), 'utf8');
 assert.match(turn, /actorFromLiveSession/);
 assert.match(turn, /gateMediaUploadIntake/);
+assert.match(turn, /resolve_live_session/);
+assert.match(turn, /selectLiveLockedTripThings/);
 assert.doesNotMatch(turn, /canUpload:\s*true/);
+assert.doesNotMatch(turn, /source: 'staging_bypass'/);
+assert.doesNotMatch(turn, /allowed: true, source: 'staging_bypass'/);
 
 const bot = fs.readFileSync(path.join(cwd, 'scripts/telegram-vacation-intake-bot.mjs'), 'utf8');
 assert.match(bot, /annotateIntakeFromLiveSession/);
+assert.match(bot, /resolveLiveSession/);
+assert.match(bot, /event: 'resolve_live_session'/);
+assert.match(bot, /payload\.liveSession = liveSession/);
+assert.match(bot, /liveSession,/);
 assert.doesNotMatch(bot, /role:\s*'owner'/);
 assert.match(bot, /blocked/);
+
+const trekEdit = fs.readFileSync(path.join(cwd, 'scripts/trek-itinerary-edit.mjs'), 'utf8');
+const trekMain = trekEdit.slice(trekEdit.indexOf('async function main'));
+assert.match(trekMain, /validatedWrites/);
+assert.match(trekMain, /applyValidatedOnly/);
+assert.doesNotMatch(trekMain, /editItems\(/);
+assert.doesNotMatch(trekMain, /parseDateRange\(/);
+
+const trekAgent = fs.readFileSync(path.join(cwd, 'scripts/trek-agent-edit.mjs'), 'utf8');
+const agentMain = trekAgent.slice(trekAgent.indexOf('async function main'));
+assert.match(agentMain, /validatedWrites/);
+assert.doesNotMatch(agentMain, /planWithGrok/);
+assert.doesNotMatch(agentMain, /inferFallbackPlan/);
+
+const workerJobs = fs.readFileSync(path.join(cwd, 'api/worker-jobs.mjs'), 'utf8');
+assert.match(workerJobs, /liveLockedThings/);
+assert.match(workerJobs, /trip_things/);
 
 console.log('vacation intake pipeline seam passed');
 console.log(`remaining seam: ${INTAKE_SEAM.remaining}`);

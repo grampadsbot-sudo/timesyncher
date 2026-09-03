@@ -2,6 +2,7 @@ import { requireWorkerAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { mapLiveLockedThingRows } from '../src/vacation/intake-edit-bridge.mjs';
 
 async function claimJobs(db, { workerId, limit }) {
   const rows = await db`
@@ -66,6 +67,21 @@ async function claimJobs(db, { workerId, limit }) {
       insert into vacation_request_events (request_id, event_type, actor, details)
       values (${job.request_id}, 'worker_claimed', ${workerId}, ${{ jobId: job.id, attempts: job.attempts }})
     `;
+    if (job.trip_id) {
+      try {
+        const thingRows = await db`
+          select id, title, location, metadata
+          from trip_things
+          where trip_id = ${job.trip_id}
+          limit 200
+        `;
+        job.liveLockedThings = mapLiveLockedThingRows(thingRows, job.trip_id);
+      } catch {
+        job.liveLockedThings = [];
+      }
+    } else {
+      job.liveLockedThings = [];
+    }
   }
 
   return rows;

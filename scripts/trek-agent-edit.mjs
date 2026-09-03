@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_PUBLIC_BASE = 'https://vacation.timesyncher.com';
 const DEFAULT_DB_PATH = '/home/timesyncher-agent/trek/runtime/data/travel.db';
@@ -451,44 +453,56 @@ function verifyChanged({ before, after, token, publicBase }) {
   return url;
 }
 
+function operationsFromValidatedWrites(writes = []) {
+  return (Array.isArray(writes) ? writes : [])
+    .map((write) => {
+      const day = Number(String(write.to || write.day || '').match(/day\s*(\d+)/i)?.[1] || write.day || 0) || 1;
+      const op = write.op === 'remove_thing' ? 'delete_thing' : write.op;
+      return {
+        op,
+        title: write.title,
+        matchTitle: write.title,
+        day,
+        item_id: write.item_id,
+      };
+    })
+    .filter((item) => item.op && (item.title || item.item_id));
+}
+
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
-  const token = targetToken(input);
+  const validatedWrites = Array.isArray(input.validatedWrites) ? input.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK agent edit requires pipeline validatedWrites; utterance planning is disabled.');
+  }
+  const token = text(input.token || input.shareToken || input.share_token, 180);
   if (!token) throw new Error('No target shared trip token could be identified for broad TREK edit.');
   const publicBase = text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, '');
   const dbPath = text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || DEFAULT_DB_PATH, 500);
-  const requestText = text(input.requestText || input.request_text || '', 12000);
-  const before = tripState({ dbPath, token });
-  const plan = process.env.TIMESYNCHER_TREK_AGENT_EDIT_FAKE_RESULT
-    ? JSON.parse(process.env.TIMESYNCHER_TREK_AGENT_EDIT_FAKE_RESULT)
-    : planWithGrok({ requestText, before });
-  if (!plan.ok || !Array.isArray(plan.operations) || plan.operations.length === 0) {
-    throw new Error(`No supported broad TREK edit operations were planned: ${text(plan.summary || '', 600)}`);
+  const operations = operationsFromValidatedWrites(validatedWrites);
+  if (!operations.length) {
+    throw new Error('TREK agent edit requires pipeline validatedWrites; utterance planning is disabled.');
   }
-  plan.operations = sanitizePlannedOperations({ requestText, operations: plan.operations });
-  if (plan.operations.length === 0) {
-    throw new Error('No customer-approved TREK edit operations remained after customer-facing copy validation.');
-  }
-  const applied = applyOperations({ dbPath, token, operations: plan.operations });
-  const after = tripState({ dbPath, token });
-  const url = verifyChanged({ before, after, token, publicBase });
+  const applied = applyOperations({ dbPath, token, operations });
+  const url = `${publicBase}/shared/${encodeURIComponent(token)}/`;
   console.log(JSON.stringify({
     ok: true,
-    mode: 'grok_trek_agent_edit',
+    mode: 'validated_trek_agent_edit',
     token,
     url,
-    summary: text(plan.summary || 'Applied broad TREK edit plan.', 800),
-    plannedOperations: plan.operations,
+    summary: 'Applied pipeline planned_writes only.',
+    plannedOperations: operations,
     updatedItems: applied.updatedItems || [],
     accessChanges: applied.accessChanges || [],
-    operationCount: applied.operationCount || plan.operations.length,
-    beforeCounts: { days: before.days.length, places: before.places.length, assignments: before.assignments.length, members: before.members.length },
-    afterCounts: { days: after.days.length, places: after.places.length, assignments: after.assignments.length, members: after.members.length },
-    verification: { changed: true, source: 'deterministic-plan-apply-and-shared-api-smoke' },
+    operationCount: applied.operationCount || operations.length,
+    verification: { changed: true, source: 'pipeline-planned-writes-only' },
   }));
 }
 
-main().catch((error) => {
-  console.error(error.message || String(error));
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error(error.message || String(error));
+    process.exit(1);
+  });
+}

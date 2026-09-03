@@ -36,3 +36,4 @@ Preconditions:
 - "Can my wife Kim change the Vegas site?" is a support/account question, not a write.
 - Do not treat an invited website editor as a Telegram collaborator.
 - Unauthorized upload and unauthorized edit share fail-closed behavior but different fixtures.
+- Do not infer owner/`canEdit` from `customer_id` alone. `staging_bypass` is not entitlement proof.

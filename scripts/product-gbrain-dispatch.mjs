@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
-import { actorFromLiveSession, gateTelegramIntakeEdit, pipelineWriteDecision } from '../src/vacation/intake-edit-bridge.mjs';
+import { actorFromLiveSession, gateTelegramIntakeEdit, pipelineWriteDecision, selectLiveLockedTripThings } from '../src/vacation/intake-edit-bridge.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -1662,9 +1662,14 @@ function syncTrekItinerary(job, artifacts) {
 function applyTrekItineraryEdit(job, artifacts) {
   const script = path.join(SCRIPT_DIR, 'trek-itinerary-edit.mjs');
   if (!fs.existsSync(script)) throw new Error(`TREK edit script is missing: ${script}`);
+  const validatedWrites = Array.isArray(artifacts.validatedWrites) ? artifacts.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.');
+  }
   const payload = {
     token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
-    requestText: artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '',
+    validatedWrites,
+    applyValidatedOnly: true,
     publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com',
   };
   const result = spawnSync(process.execPath, [script], {
@@ -1687,32 +1692,16 @@ function applyTrekItineraryEdit(job, artifacts) {
   return edit;
 }
 
-function applyTrekAgentEdit(job, artifacts, deterministicError) {
-  const script = path.join(SCRIPT_DIR, 'trek-agent-edit.mjs');
-  if (!fs.existsSync(script)) throw new Error(`TREK agent edit script is missing: ${script}`);
-  const payload = {
-    token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
-    requestText: artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '',
-    publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com',
-    deterministicError: text(deterministicError?.message || deterministicError || '', 1200),
-  };
-  const result = spawnSync(process.execPath, [script], {
-    input: JSON.stringify(payload),
-    encoding: 'utf8',
-    timeout: Number(process.env.TIMESYNCHER_TREK_AGENT_EDIT_WRAPPER_TIMEOUT_MS || 930000),
-    maxBuffer: 4 * 1024 * 1024,
+function applyTrekAgentEdit(job, artifacts) {
+  const validatedWrites = Array.isArray(artifacts.validatedWrites) ? artifacts.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK agent edit requires pipeline validatedWrites; utterance re-parse is disabled.');
+  }
+  const edit = applyTrekItineraryEdit(job, {
+    validatedWrites,
+    applyValidatedOnly: true,
   });
-  if (result.status !== 0) {
-    throw new Error(`TREK broad edit failed after deterministic parser could not handle the request: ${text(result.stderr || result.stdout || 'unknown error', 1800)}`);
-  }
-  let edit;
-  try {
-    edit = JSON.parse(result.stdout.trim());
-  } catch {
-    throw new Error(`TREK broad edit returned invalid JSON: ${text(result.stdout, 500)}`);
-  }
-  smokeCheckTrekSync(edit);
-  edit.mode = edit.mode || 'grok_trek_agent_edit';
+  edit.mode = edit.mode || 'validated_trek_agent_edit';
   return edit;
 }
 
@@ -1720,27 +1709,34 @@ function applyExistingTripEdit(job, artifacts) {
   const requestText = text(artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '');
   const payload = { ...asObject(job.payload), ...asObject(job.input?.payload) };
   const trip = { ...asObject(payload.trip), ...asObject(job.input?.trip) };
-  const items = Array.isArray(artifacts.things)
-    ? artifacts.things
-    : (Array.isArray(trip.items) ? trip.items : []);
+  const tripId = trip.trip_id || trip.id || job.trip_id || '';
+  const items = selectLiveLockedTripThings({
+    tripId,
+    liveLockedThings: artifacts.liveLockedThings || job.liveLockedThings,
+    clientThings: artifacts.things,
+    payloadThings: payload.things,
+    tripItems: trip.items,
+  });
   const gate = gateTelegramIntakeEdit({
     text: requestText,
     actor: actorFromLiveSession({
       id: text(job.telegram_user_id || payload.telegramUserId || payload.actorId, 80) || 'unresolved',
       telegramUserId: job.telegram_user_id || payload.telegramUserId,
       customer_id: job.customer_id || payload.customerId || trip.customer_id,
-      trip_id: trip.trip_id || trip.id || job.trip_id,
+      trip_id: tripId,
       metadata: payload.sessionMetadata || job.session_metadata || {},
-      collaborator: payload.collaborator || job.collaborator || null,
-      role: payload.actorRole || job.actor_role,
+      collaborator: job.collaborator || (payload.collaboratorAuthorization?.reason === 'paid_collaborator'
+        ? { id: payload.collaboratorAuthorization.collaboratorId || 'paid', status: 'active' }
+        : null),
+      grant: job.grant || null,
       publicLink: payload.publicLink === true,
       loggedOut: payload.loggedOut === true || payload.session === null,
       session: payload.session,
-      entitlement: payload.entitlement,
+      entitlement: job.entitlement || null,
       unresolved: !job.customer_id && !payload.customerId && !trip.customer_id && payload.loggedOut !== true,
     }),
     trip: {
-      trip_id: trip.trip_id || trip.id || job.trip_id || 'trip-unspecified',
+      trip_id: tripId || 'trip-unspecified',
       title: trip.title || 'Vacation',
       publicUrl: trip.publicUrl || trip.public_url || '',
       status: 'live',
@@ -1759,16 +1755,13 @@ function applyExistingTripEdit(job, artifacts) {
       vacationEditPipeline: gate.compact,
     };
   }
-  let edit;
-  if (process.env.TIMESYNCHER_FORCE_TREK_AGENT_EDIT === '1') {
-    edit = applyTrekAgentEdit(job, artifacts, new Error('Forced broad TREK edit runner by environment.'));
-  } else {
-    try {
-      edit = applyTrekItineraryEdit(job, artifacts);
-    } catch (error) {
-      edit = applyTrekAgentEdit(job, artifacts, error);
-    }
-  }
+  const writeArtifacts = {
+    validatedWrites: gate.receipt.planned_writes,
+    applyValidatedOnly: true,
+  };
+  const edit = process.env.TIMESYNCHER_FORCE_TREK_AGENT_EDIT === '1'
+    ? applyTrekAgentEdit(job, writeArtifacts)
+    : applyTrekItineraryEdit(job, writeArtifacts);
   edit.vacationEditPipeline = gate.compact;
   edit.editApplied = Boolean(edit.operationCount);
   return edit;
@@ -1896,7 +1889,10 @@ async function buildArtifacts(job, manifest) {
   }
   const createNewTrip = Boolean(payload.createNewTrip || payload.create_new_trip || job.createNewTrip || job.create_new_trip || isExplicitNewVacationRequest(ownRequestText));
   if (!createNewTrip && isConcreteItineraryEditRequest(ownRequestText)) {
-    const trekEdit = applyExistingTripEdit(job, { requestText, things: payload.things || trip.items || [] });
+    const trekEdit = applyExistingTripEdit(job, {
+      requestText,
+      liveLockedThings: job.liveLockedThings,
+    });
     const failClosed = trekEdit.mode === 'vacation_edit_pipeline_fail_closed'
       || trekEdit.mode === 'vacation_edit_pipeline_skip'
       || trekEdit.editApplied === false

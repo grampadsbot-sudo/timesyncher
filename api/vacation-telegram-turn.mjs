@@ -23,6 +23,8 @@ import {
   actorFromLiveSession,
   gateMediaUploadIntake,
   gateTelegramIntakeEdit,
+  mapLiveLockedThingRows,
+  selectLiveLockedTripThings,
 } from '../src/vacation/intake-edit-bridge.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
@@ -96,9 +98,8 @@ async function ensureMediaSchema(db) {
 }
 
 async function hasMediaEntitlement(db, session, mediaKind, env = process.env, host = '') {
-  if (env.TIMESYNCHER_MEDIA_UPLOAD_STAGING_BYPASS === 'true' || /vacation-staging\.timesyncher\.com/i.test(host)) {
-    return { allowed: true, source: 'staging_bypass' };
-  }
+  void env;
+  void host;
   if (!session?.customer_id || !session?.trip_id) return { allowed: false, source: 'unlinked_session' };
   const metadataKey = mediaKind === 'video' ? 'video_memories' : 'photo_memories';
   const rows = await db`
@@ -1446,6 +1447,50 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { ok: true, transcriptId, telegramSessionId: session?.id || null });
     }
 
+    if (event === 'resolve_live_session') {
+      const lookupUserId = telegramUserId ? `telegram:${telegramUserId}` : '';
+      const session = telegramChatId || lookupUserId
+        ? await findSessionForTelegram(db, telegramChatId, lookupUserId)
+        : null;
+      if (!session?.customer_id || !session?.trip_id) {
+        return sendJson(res, 200, {
+          ok: true,
+          loggedOut: true,
+          session: null,
+          telegramChatId: telegramChatId || null,
+          telegramUserId: telegramUserId || null,
+        });
+      }
+      const meta = sessionMetadata(session);
+      const collaboratorRole = String(meta.telegramRole || '').toLowerCase() === 'collaborator';
+      const collaborator = collaboratorRole
+        ? await activeCollaboratorForTelegram(db, {
+          ownerCustomerId: session.customer_id,
+          tripId: session.trip_id,
+          telegramChatId,
+          telegramUserId: lookupUserId,
+        })
+        : null;
+      const mediaKind = cleanText(body.mediaKind || body.media_kind, 20).toLowerCase();
+      const entitlement = mediaKind === 'photo' || mediaKind === 'video'
+        ? await hasMediaEntitlement(db, session, mediaKind, process.env, req.headers.host || '')
+        : {
+          allowed: (await hasMediaEntitlement(db, session, 'photo', process.env, req.headers.host || '')).allowed
+            || (await hasMediaEntitlement(db, session, 'video', process.env, req.headers.host || '')).allowed,
+          source: 'session_lookup',
+        };
+      return sendJson(res, 200, {
+        ok: true,
+        customer_id: session.customer_id,
+        trip_id: session.trip_id,
+        telegramChatId,
+        telegramUserId,
+        metadata: meta,
+        collaborator: collaborator ? { id: collaborator.id, status: collaborator.status || 'active' } : null,
+        entitlement,
+      });
+    }
+
     if (event === 'media_upload') {
       const result = await recordMediaUpload(db, req, body);
       return sendJson(res, 200, { ok: true, ...result });
@@ -1733,7 +1778,7 @@ export default async function handler(req, res) {
         reply = collaboratorDeniedCopy();
         replyPayload = { collaboratorAuthorization: authz };
       } else {
-        let tripItems = [];
+        let liveLockedThings = [];
         try {
           if (session.trip_id) {
             const rows = await db`
@@ -1742,17 +1787,17 @@ export default async function handler(req, res) {
               where trip_id = ${session.trip_id}
               limit 200
             `;
-            tripItems = rows.map((row) => ({
-              id: row.id,
-              trip_id: session.trip_id,
-              title: row.title,
-              location: row.location,
-              day: Number(row.metadata?.day || 0) || null,
-            }));
+            liveLockedThings = mapLiveLockedThingRows(rows, session.trip_id);
           }
         } catch {
-          tripItems = [];
+          liveLockedThings = [];
         }
+        const tripItems = selectLiveLockedTripThings({
+          tripId: session.trip_id,
+          liveLockedThings,
+          clientThings: body.payload?.things,
+          payloadThings: body.items,
+        });
         const editGate = gateTelegramIntakeEdit({
           text,
           payload: body.payload || {},
@@ -1777,8 +1822,10 @@ export default async function handler(req, res) {
         if (!editGate.skip && editGate.failClosed) {
           reply = editGate.receipt.customer_facing_response;
         } else {
+          const queuedPayload = { ...(body.payload || {}) };
+          delete queuedPayload.things;
           queued = await queueSetupRequest(db, session, text, {
-        ...(body.payload || {}),
+        ...queuedPayload,
         vacationName: cleanText(sessionMetadata(session).vacationName, 160) || null,
         unforgettableGoal: cleanText(sessionMetadata(session).unforgettableGoal, 1000) || null,
         inboundTranscriptId,
@@ -1786,6 +1833,7 @@ export default async function handler(req, res) {
         telegramUserId,
           collaboratorAuthorization: authz,
           vacationEditPipeline: editGate.compact,
+          liveLockedThings: tripItems,
         }, kind);
           reply = (!editGate.skip && editGate.receipt?.planned_writes?.length)
             ? editGate.receipt.customer_facing_response

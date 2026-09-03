@@ -109,6 +109,10 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - live intake must call the pipeline; empty Thing list / unmatched must fail closed and must not call applyTrekItineraryEdit
 - fail-closed means no write and editApplied false
 - media actors come from live session context; never hardcode canUpload:true
+- FORCE/agent edit applies planned_writes only; no utterance re-parse
+- Thing list is live-locked trip_things, not client payload.things
+- staging_bypass is not entitlement proof and must not set canUpload
+- customer_id alone is not owner/canEdit
 - events.jsonl appends one event per handoff and never overwrites
 
 ## Anti-patterns
