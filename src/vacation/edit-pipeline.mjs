@@ -58,7 +58,7 @@ export function isVoiceSurface(surface) {
 }
 
 export function trekIdSet(rows = []) {
-  return [...new Set((rows || []).map((row) => String(row.id))).filter(Boolean)].sort();
+  return [...new Set((rows || []).map((row) => String(row.id)).filter(Boolean))].sort();
 }
 
 export function noMatchCopy(heard) {
@@ -188,7 +188,7 @@ export function evaluateStopRules({ input, intents, decisions, receipt, apply, a
     receipt.dropped_clause ? 'A spoken clause was dropped; all writes were no-op\'d.' : 'Every spoken clause produced a decision.',
   );
   const noMatchOk = decisions
-    .filter((row) => row.matchStatus === 'no_match')
+    .filter((row) => row.matchStatus === 'no_match' && row.stop !== 'dropped_clause')
     .every((row) => row.response === noMatchCopy(row.heard));
   mark('exact_no_match_copy', noMatchOk ? 'pass' : 'fail', 'Unmatched copy must be exact.');
   const editReply = receipt.customer_facing_response || '';
@@ -278,8 +278,8 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
       decision.write = null;
       decision.applied = false;
       decision.validation = 'rejected';
-      decision.stop = decision.stop || 'dropped_clause';
-      decision.response = decision.response || `I heard "${decision.heard}", but part of that voice note could not be matched, so I left the itinerary unchanged.`;
+      decision.stop = 'dropped_clause';
+      decision.response = `I heard "${decision.heard}", but part of that voice note could not be matched, so I left the itinerary unchanged.`;
     }
   }
   emit('validate', { decisions: decisions.map(publicDecision), dropped_clause: droppedClause });
