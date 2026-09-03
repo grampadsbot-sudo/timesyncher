@@ -30,7 +30,7 @@ Read-only check that the instance is worth driving:
 node scripts/control-vacation.mjs doctor --json
 ```
 
-Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, the fixture catalog complete, workflow `run:` steps that actually invoke the five reviewer commands, and SHA-bound `vacation-verify` **and** `vacation-verify-doctor` jobs with `conclusion=success` plus each job's artifact digest. Harness green alone is not attestation. A committed CI receipt must match that live run/digest; it must not skip the API. `in_progress` is not success. Hosted Vercel `timesyncher` is a deploy status, not a remote doctor/dry-run target. If doctor fails, stop. Do not dry-run a broken catalog.
+Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, the fixture catalog complete, workflow `run:` steps that actually invoke the five reviewer commands, and SHA-bound `vacation-verify` **and** `vacation-verify-doctor` jobs with `conclusion=success` plus each job's artifact digest. Harness green alone is not attestation. Mid-job `GITHUB_JOB=vacation-verify-doctor` (`in_progress` or null doctor digest) is not attestation. A committed CI receipt must include `doctor_artifact_digest` equal to the live doctor artifact; it must not skip the API. Hosted Vercel `timesyncher` is a deploy status, not a remote doctor/dry-run target. If doctor fails, stop. Do not dry-run a broken catalog.
 
 ## Drive
 
