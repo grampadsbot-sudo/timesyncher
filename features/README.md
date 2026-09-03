@@ -10,7 +10,7 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 - Put the repo root on `PATH` for helper scripts, or invoke them as `node scripts/control-vacation.mjs`.
 - Run `node scripts/control-vacation.mjs doctor` and require the Feature Map, skill, pipeline syntax, and fixture catalog to be present.
 - Use fixture trip `trip-vegas-live-001` / `Las Vegas Strip Vacation` unless a recipe names another synthetic account.
-- Default mode is dry-run JSON. `--apply` mutates only the local snapshot under `artifacts/vacation-verify/<job_id>/`.
+- Default mode is dry-run JSON. `--apply` is refused unless you pass `--local-snapshot` (JSON only; not product state) or `--apply --trek-db <path>` (local TREK SQLite id-set / row-count proof).
 - Do not start customer simulation, mint Grok bots, touch production Stripe, or auto-merge.
 
 ## Driving conventions
@@ -24,7 +24,7 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 ## Proof and skip reporting
 
 - Capture the user action and the resulting state, not only the final reply.
-- Mutation proof is a before/after snapshot hash plus the named item movement.
+- Mutation proof for product state is a TREK id-set and row-count before vs after (`--apply --trek-db`). A local fixture hash is labeled `apply_local_snapshot` and is not product state.
 - No-match wording must be exact: `I heard "...", couldn't find a match, what do you mean?`
 - A success reply must name the change. Acknowledgement without state movement is a failure.
 - Existing-itinerary edits must not use first-pass language such as "turning this into an itinerary."

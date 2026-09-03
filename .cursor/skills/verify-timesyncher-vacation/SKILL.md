@@ -39,7 +39,8 @@ Use `control-vacation`. Commands are literal.
 ```bash
 node scripts/control-vacation.mjs dry-run --fixture features/fixtures/telegram-text-single-edit.json --json
 node scripts/control-vacation.mjs dry-run --all-fixtures
-node scripts/control-vacation.mjs apply --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/control-vacation.mjs apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/control-vacation.mjs apply --trek-db /tmp/vacation-trek-verify.db --fixture features/fixtures/telegram-text-single-edit.json --json
 node scripts/vacation-edit-pipeline.mjs --dry-run --json --fixture features/fixtures/telegram-text-single-edit.json
 ```
 
@@ -60,7 +61,7 @@ Standards:
 
 - Exercise the fixture path the user would use (Telegram text, Telegram voice, shared-page voice). Do not call internal TREK writers and call that done.
 - Capture the action and the resulting planned write or explicit no-op, not only the reply string.
-- `--apply` must change `after_hash` for a successful edit and leave it unchanged for no-ops. Observe the snapshot files; do not trust the flag name.
+- Bare `--apply` is refused (exit 2). `--apply --local-snapshot` is labeled hold and is not product/TREK state. `--apply --trek-db` must move TREK place/assignment ids and keep the trip id-set/row-count stable for a move, or reject a split that would duplicate TREK rows.
 - Dry-run skips Stripe, Telegram send, TREK SQLite, and network STT. Confirm skipped I/O by seeing no payment-intent calls and a local artifact dir only.
 - No-match copy must be exactly `I heard "...", couldn't find a match, what do you mean?`
 - Success copy must name old/new or removed/added state.
@@ -80,13 +81,16 @@ All helpers are executable and invoked as follows:
 ```bash
 node scripts/control-vacation.mjs doctor
 node scripts/control-vacation.mjs dry-run --all-fixtures --json
-node scripts/control-vacation.mjs apply --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/control-vacation.mjs apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json --json
+node scripts/control-vacation.mjs apply --trek-db /tmp/vacation-trek-verify.db --fixture features/fixtures/telegram-text-single-edit.json --json
 node scripts/control-vacation.mjs receipt --job-id vac-verify-telegram-text-single-edit
 node scripts/vacation-edit-pipeline.mjs --dry-run --json --all-fixtures
 node scripts/test_vacation_edit_pipeline.mjs
+node scripts/test_vacation_trek_apply.mjs
+node scripts/test_vacation_intake_pipeline_seam.mjs
 ```
 
-`src/vacation/edit-pipeline.mjs` is the shared library. Fixtures live in `features/fixtures/`. Original voice-note audio for this gate is `features/fixtures/audio/kim-vegas-voice.ogg`.
+`src/vacation/edit-pipeline.mjs` is the shared library. Live Telegram / shared-page intake calls `src/vacation/intake-edit-bridge.mjs`. Fixtures live in `features/fixtures/`. Original voice-note audio is real OggS under `features/fixtures/audio/` plus a sibling transcript.
 
 ## Stop rules
 
@@ -96,11 +100,13 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - no production billing
 - no unvalidated writes
 - stale-trip media fail-closed
-- unauthorized / public-link upload fail-closed
-- split-trip TREK uniqueness fail-closed
+- unauthorized / public-link / logged-out / unpaid-collaborator upload fail-closed from a second identity
+- split-trip TREK uniqueness fail-closed (id-set and row-count, not a UI hash)
+- multi-request voice fail-closed if a clause drops
 - exact no-match copy
-- prove state movement on `--apply`
+- prove TREK/backend state movement on `--apply --trek-db` (local-snapshot is hold)
 - no first-pass creation language on existing-itinerary edits
+- live intake must call the pipeline (PR-branch dry-run alone is not integrated-state proof)
 
 ## Anti-patterns
 

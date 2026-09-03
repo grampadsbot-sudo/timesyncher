@@ -6,7 +6,7 @@ Media uploads attach a photo or short video to the live vacation only when the a
 
 - `media-live-trip` accepts media whose `bound_trip_id` matches the locked live trip.
 - `media-stale-trip` rejects media bound to a different or stale trip.
-- `media-unauthorized` rejects public-link and unpaid collaborator uploads.
+- `media-unauthorized` rejects public-link, logged-out, and unpaid collaborator uploads from a second, non-owner identity. One authenticated owner actor is not proof.
 - `media-entitlement` requires photo or video memories flags on the synthetic account.
 
 ## How to get to it (user POV)
@@ -24,7 +24,10 @@ Preconditions:
 - Locked trip is `trip-vegas-live-001` with `status: live`.
 
 - **Stale trip fail-closed.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/stale-trip-media.json --json`. `planned_writes` is `[]`. `no_ops[0].reason` is `stale_trip_media`.
-- **Unauthorized fail-closed.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload.json --json`. `no_ops[0].reason` is `unauthorized_upload`.
+- **Owner upload control.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/authorized-owner-upload.json --json`. Actor identity is `owner-craig` and `planned_writes[0].op` is `attach_media`.
+- **Public-link reject.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload.json --json`. Actor identity is `public-link-visitor` (not the owner). `no_ops[0].reason` is `unauthorized_upload`.
+- **Logged-out reject.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload-logged-out.json --json`. Actor identity is `logged-out-visitor`. Same media payload, no write.
+- **Unpaid collaborator reject.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload-unpaid-collaborator.json --json`. Actor identity is `collaborator-kim-unpaid`. Same media payload, no write.
 - **Entitlement missing.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/checkout-entitlements-missing.json --json`. Photo/video access stays closed.
 - **Proof.** `events.jsonl` records `lock_identity` with the live `trip_id` before any media decision.
 

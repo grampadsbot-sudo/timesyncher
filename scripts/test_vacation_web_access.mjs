@@ -60,6 +60,8 @@ const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /telegram_launch/);
 assert.match(api, /assert_can_edit/);
+assert.match(api, /vacation_edit/);
+assert.match(api, /gateSharedPageIntakeEdit/);
 assert.match(api, /set-cookie/);
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
 assert.match(vercel, /vacation-web-access/);

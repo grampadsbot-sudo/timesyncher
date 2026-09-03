@@ -19,6 +19,11 @@ import {
   createTelegramWebAccessSession,
   publicTripUrl,
 } from '../src/vacation/web-access.mjs';
+import {
+  actorFromIntake,
+  gateMediaUploadIntake,
+  gateTelegramIntakeEdit,
+} from '../src/vacation/intake-edit-bridge.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
 const MAX_VIDEOS_PER_VACATION = 20;
@@ -181,6 +186,28 @@ async function recordMediaUpload(db, req, body) {
   const session = await findSessionForTelegram(db, media.telegramChatId, media.telegramUserId);
   if (!session?.customer_id || !session?.trip_id) {
     throw Object.assign(new Error('A linked TimeSyncher Vacation session is required before uploading media.'), { statusCode: 403 });
+  }
+  const mediaGate = gateMediaUploadIntake({
+    text: media.caption || `Upload this ${media.mediaKind} to the vacation`,
+    actor: actorFromIntake({
+      id: media.telegramUserId || media.telegramChatId,
+      role: sessionMetadata(session).telegramRole === 'collaborator' ? 'telegram_collaborator' : 'owner',
+      authorized: true,
+      canUpload: true,
+      canEdit: true,
+    }),
+    trip: { trip_id: session.trip_id, title: 'Vacation', status: 'live', items: [] },
+    media: {
+      media_kind: media.mediaKind,
+      bound_trip_id: session.trip_id,
+      attachment_scope: media.attachmentScope || 'trip',
+    },
+  });
+  if (mediaGate.failClosed) {
+    throw Object.assign(new Error(mediaGate.receipt?.customer_facing_response || 'Media upload rejected.'), {
+      statusCode: 403,
+      vacationEditPipeline: mediaGate.compact,
+    });
   }
   const entitlement = await hasMediaEntitlement(db, session, media.mediaKind, process.env, req.headers.host || '');
   if (!entitlement.allowed) {
@@ -1677,7 +1704,49 @@ export default async function handler(req, res) {
         reply = collaboratorDeniedCopy();
         replyPayload = { collaboratorAuthorization: authz };
       } else {
-        queued = await queueSetupRequest(db, session, text, {
+        let tripItems = [];
+        try {
+          if (session.trip_id) {
+            const rows = await db`
+              select id, title, location, metadata
+              from trip_things
+              where trip_id = ${session.trip_id}
+              limit 200
+            `;
+            tripItems = rows.map((row) => ({
+              id: row.id,
+              trip_id: session.trip_id,
+              title: row.title,
+              location: row.location,
+              day: Number(row.metadata?.day || 0) || null,
+            }));
+          }
+        } catch {
+          tripItems = [];
+        }
+        const editGate = gateTelegramIntakeEdit({
+          text,
+          payload: body.payload || {},
+          audioPath: body.payload?.telegramVoice?.cachePath || body.payload?.voiceCache?.path,
+          actor: actorFromIntake({
+            id: telegramUserId || telegramChatId,
+            role: authz.reason === 'paid_collaborator' ? 'telegram_collaborator' : 'owner',
+            authorized: true,
+            canEdit: true,
+            canUpload: false,
+          }),
+          trip: {
+            trip_id: session.trip_id,
+            title: cleanText(sessionMetadata(session).vacationName, 160) || 'Vacation',
+            status: 'live',
+            items: tripItems,
+          },
+        });
+        replyPayload = { ...replyPayload, vacationEditPipeline: editGate.compact || { skip: Boolean(editGate.skip) } };
+        if (!editGate.skip && editGate.failClosed) {
+          reply = editGate.receipt.customer_facing_response;
+        } else {
+          queued = await queueSetupRequest(db, session, text, {
         ...(body.payload || {}),
         vacationName: cleanText(sessionMetadata(session).vacationName, 160) || null,
         unforgettableGoal: cleanText(sessionMetadata(session).unforgettableGoal, 1000) || null,
@@ -1685,8 +1754,12 @@ export default async function handler(req, res) {
         telegramChatId,
         telegramUserId,
           collaboratorAuthorization: authz,
+          vacationEditPipeline: editGate.compact,
         }, kind);
-        reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+          reply = (!editGate.skip && editGate.receipt?.planned_writes?.length)
+            ? editGate.receipt.customer_facing_response
+            : setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+        }
       }
     }
     const respondedAt = new Date();

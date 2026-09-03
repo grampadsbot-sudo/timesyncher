@@ -1,7 +1,7 @@
 {
   "id": "split-trip-trek-uniqueness",
   "surface": "telegram-text",
-  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true },
+  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true, "identity": "owner-craig" },
   "pageContext": { "kind": "timeline" },
   "text": "Split this into a second trip called Las Vegas Strip Vacation",
   "trip": {
@@ -19,6 +19,9 @@
   "expect": {
     "ok": true,
     "write_ops": [],
-    "no_op_stops": ["duplicate_trek"]
+    "no_op_stops": ["duplicate_trek"],
+    "trek_row_count_before": 1,
+    "trek_row_count_after": 1,
+    "trek_ids_unchanged": true
   }
 }

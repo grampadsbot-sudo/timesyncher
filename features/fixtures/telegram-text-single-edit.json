@@ -9,6 +9,7 @@
     "title": "Las Vegas Strip Vacation",
     "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
     "status": "live",
+    "trek_rows": [{ "id": 41, "title": "Las Vegas Strip Vacation", "token": "las-vegas-strip-vacation" }],
     "items": [
       { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" },
       { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" }

@@ -3,6 +3,11 @@
 import { execFile, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  actorFromIntake,
+  gateMediaUploadIntake,
+  gateTelegramIntakeEdit,
+} from '../src/vacation/intake-edit-bridge.mjs';
 
 const TELEGRAM_BOT_TOKEN = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || '';
 const API_BASE = (process.env.TIMESYNCHER_API_BASE_URL || 'https://vacation.timesyncher.com').replace(/\/+$/, '');
@@ -34,6 +39,37 @@ const PRODUCT_MANIFEST_PATH = process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST ||
 
 function requireEnv() {
   if (!TELEGRAM_BOT_TOKEN) throw new Error('TIMESYNCHER_TELEGRAM_BOT_TOKEN is required.');
+}
+
+function annotateTelegramIntakePipeline({ text, audioPath, telegramUserId, media } = {}) {
+  const actor = actorFromIntake({
+    id: telegramUserId || 'telegram-bot',
+    role: 'owner',
+    authorized: true,
+    canEdit: true,
+    canUpload: Boolean(media),
+  });
+  const gate = media
+    ? gateMediaUploadIntake({
+      text: text || `Upload this ${media.mediaKind || 'photo'} to the vacation`,
+      actor,
+      media: {
+        media_kind: media.mediaKind || 'photo',
+        bound_trip_id: media.boundTripId || media.bound_trip_id || null,
+        attachment_scope: media.attachmentScope || 'trip',
+      },
+    }, { persist: false })
+    : gateTelegramIntakeEdit({
+      text,
+      audioPath,
+      actor,
+    }, { persist: false });
+  return {
+    vacationEditPipeline: gate.compact,
+    vacationEditPipelineSkip: Boolean(gate.skip),
+    vacationEditPipelineFailClosed: Boolean(gate.failClosed),
+    vacationEditPipelineIntegrityFailClosed: Boolean(gate.integrityFailClosed),
+  };
 }
 
 function cleanText(value, max = 12000) {
@@ -1412,6 +1448,11 @@ async function recordTelegramTurn(message, { textOverride = '', payload = {} } =
       },
       payload: {
         ...payload,
+        ...annotateTelegramIntakePipeline({
+          text,
+          audioPath: payload.telegramVoice?.cachePath || payload.voiceCache?.path,
+          telegramUserId: from.id ? String(from.id) : '',
+        }),
         telegramChatId: String(chat.id || ''),
         telegramChatType: chat.type || '',
         telegramMessageId: message.message_id || null,
@@ -1518,6 +1559,11 @@ async function recordMediaUpload(message, media, { cacheDir = '' } = {}) {
       cachePath: cached.filePath,
       cacheSizeBytes: cached.bytes.length,
       telegramBotApiDownloadLimitBytes: TELEGRAM_MEDIA_MAX_BYTES,
+      ...annotateTelegramIntakePipeline({
+        text: media.caption,
+        telegramUserId: from.id ? String(from.id) : '',
+        media,
+      }),
     },
   };
 

@@ -7,6 +7,8 @@ import path from 'node:path';
 import {
   NO_MATCH_TEMPLATE,
   compactReceipt,
+  isRealOggAudio,
+  isVoiceSurface,
   listFixtureFiles,
   loadFixture,
   noMatchCopy,
@@ -16,7 +18,7 @@ import {
 
 const cwd = process.cwd();
 const fixtures = listFixtureFiles(cwd);
-assert.ok(fixtures.length >= 14, `expected at least 14 fixtures, got ${fixtures.length}`);
+assert.ok(fixtures.length >= 18, `expected at least 18 fixtures, got ${fixtures.length}`);
 
 const byId = new Map();
 for (const filePath of fixtures) {
@@ -58,8 +60,29 @@ for (const filePath of fixtures) {
   if (fixture.expect?.context_includes) {
     assert.ok(first.receipt.page_context.item_ids.includes(fixture.expect.context_includes));
   }
+  if (fixture.expect?.dropped_clause != null) {
+    assert.equal(first.receipt.dropped_clause, fixture.expect.dropped_clause, `${fixture.fixture_id} dropped_clause`);
+  }
+  if (isVoiceSurface(fixture.surface)) {
+    assert.ok(first.receipt.audio_path, `${fixture.fixture_id} voice fixture must keep original audio`);
+    assert.ok(fs.existsSync(first.receipt.audio_path), `${fixture.fixture_id} audio path missing`);
+    assert.ok(isRealOggAudio(first.receipt.audio_path), `${fixture.fixture_id} .ogg must be real OggS audio, not a text stub`);
+    const magic = Buffer.alloc(4);
+    const fd = fs.openSync(first.receipt.audio_path, 'r');
+    fs.readSync(fd, magic, 0, 4, 0);
+    fs.closeSync(fd);
+    assert.equal(magic.toString('ascii'), 'OggS');
+    assert.equal(first.receipt.transcript, fixture.transcript || fixture.text);
+    assert.ok(fs.existsSync(path.join(first.receipt.artifacts.dir, 'transcript.txt')));
+    if (Array.isArray(fixture.itinerary_before)) {
+      assert.deepEqual(
+        first.receipt.before_state.items.map((item) => ({ id: item.id, day: item.day })),
+        fixture.itinerary_before.map((item) => ({ id: item.id, day: item.day })),
+      );
+    }
+  }
   if (fixture.expect?.preserve_audio_path) {
-    assert.ok(first.receipt.audio_path && first.receipt.audio_path.endsWith('kim-vegas-voice.ogg'));
+    assert.ok(first.receipt.audio_path && first.receipt.audio_path.endsWith('.ogg'));
     assert.ok(fs.existsSync(first.receipt.audio_path));
   }
   byId.set(fixture.fixture_id, first);
@@ -76,19 +99,49 @@ assert.equal(multi.intents.length, 3);
 assert.deepEqual(multi.intents.map((intent) => intent.kind), ['remove', 'move', 'research']);
 assert.ok(multi.receipt.planned_writes.length === 2);
 assert.ok(multi.receipt.no_ops.some((row) => row.reason === 'unsupported_research'));
+assert.equal(multi.receipt.dropped_clause, false);
+assert.ok(multi.receipt.audio_path.endsWith('kim-vegas-multi-clause.ogg'));
+
+const dropped = byId.get('telegram-voice-clause-drop');
+assert.equal(dropped.receipt.dropped_clause, true);
+assert.equal(dropped.receipt.planned_writes.length, 0, 'multi-request voice must fail closed if a clause drops');
+assert.ok(dropped.receipt.no_ops.every((row) => row.reason === 'dropped_clause'));
+assert.deepEqual(
+  dropped.receipt.after_state.items.map((item) => item.day),
+  dropped.receipt.before_state.items.map((item) => item.day),
+);
 
 const stale = byId.get('stale-trip-media');
 assert.equal(stale.receipt.planned_writes.length, 0);
 assert.ok(stale.receipt.no_ops.some((row) => row.reason === 'stale_trip_media'));
 
-const unauthorized = byId.get('unauthorized-upload');
-assert.equal(unauthorized.receipt.planned_writes.length, 0);
-assert.ok(unauthorized.receipt.no_ops.some((row) => row.reason === 'unauthorized_upload'));
-assert.match(unauthorized.receipt.customer_facing_response, /not authorized/i);
+const ownerUpload = byId.get('authorized-owner-upload');
+const publicLink = byId.get('unauthorized-upload');
+const loggedOut = byId.get('unauthorized-upload-logged-out');
+const kimUnpaid = byId.get('unauthorized-upload-unpaid-collaborator');
+assert.deepEqual(ownerUpload.receipt.planned_writes.map((row) => row.op), ['attach_media']);
+assert.equal(publicLink.receipt.planned_writes.length, 0);
+assert.equal(loggedOut.receipt.planned_writes.length, 0);
+assert.equal(kimUnpaid.receipt.planned_writes.length, 0);
+assert.notEqual(ownerUpload.receipt.actor.identity, kimUnpaid.receipt.actor.identity);
+assert.notEqual(ownerUpload.receipt.actor.identity, loggedOut.receipt.actor.identity);
+assert.notEqual(ownerUpload.receipt.actor.identity, publicLink.receipt.actor.identity);
+assert.equal(ownerUpload.receipt.actor.role, 'owner');
+assert.equal(kimUnpaid.receipt.actor.role, 'unpaid_collaborator');
+assert.equal(loggedOut.receipt.actor.role, 'logged-out');
+assert.equal(publicLink.receipt.actor.role, 'public-link');
+for (const row of [ownerUpload, publicLink, loggedOut, kimUnpaid]) {
+  assert.equal(row.receipt.intents[0]?.kind || 'media_upload', 'media_upload');
+  assert.equal(loadFixture(row.receipt.fixture_path, cwd).media.bound_trip_id, 'trip-vegas-live-001');
+}
 
 const split = byId.get('split-trip-trek-uniqueness');
 assert.equal(split.receipt.planned_writes.length, 0);
 assert.ok(split.receipt.no_ops.some((row) => row.reason === 'duplicate_trek'));
+assert.deepEqual(split.receipt.trek_state.row_ids_before, ['41']);
+assert.deepEqual(split.receipt.trek_state.row_ids_after, ['41']);
+assert.equal(split.receipt.trek_state.row_count_before, 1);
+assert.equal(split.receipt.trek_state.row_count_after, 1);
 
 const missing = byId.get('checkout-entitlements-missing');
 assert.equal(missing.receipt.planned_writes.length, 0);
@@ -102,16 +155,20 @@ assert.equal(alias.receipt.planned_writes[0].title, 'Umekes Fish Market Bar & Gr
 
 const applied = runVacationEditPipeline(loadFixture('features/fixtures/telegram-text-single-edit.json', cwd), {
   apply: true,
+  applyScope: 'local_snapshot',
   persist: true,
   cwd,
 });
-assert.equal(applied.receipt.mode, 'apply');
+assert.equal(applied.receipt.mode, 'apply_local_snapshot');
+assert.equal(applied.receipt.apply_scope, 'local_snapshot');
 assert.notEqual(applied.receipt.before_hash, applied.receipt.after_hash);
 assert.equal(applied.receipt.after_state.items.find((item) => item.id === 'thing-bellagio-fountains').day, 2);
-assert.ok(applied.receipt.stop_rules.find((rule) => rule.id === 'prove_state_movement').status === 'pass');
+assert.equal(applied.receipt.stop_rules.find((rule) => rule.id === 'prove_state_movement').status, 'hold');
+assert.match(applied.receipt.stop_rules.find((rule) => rule.id === 'prove_state_movement').detail, /not product\/TREK state/);
 
 const noopApply = runVacationEditPipeline(loadFixture('features/fixtures/exact-no-match.json', cwd), {
   apply: true,
+  applyScope: 'local_snapshot',
   persist: true,
   cwd,
 });
@@ -120,5 +177,6 @@ assert.equal(noopApply.receipt.before_hash, noopApply.receipt.after_hash);
 const receipt = compactReceipt(applied.receipt);
 assert.ok(receipt.required_artifacts.includes('final keepsake PDF'));
 assert.ok(receipt.events_jsonl.endsWith('events.jsonl'));
+assert.equal(receipt.apply_scope, 'local_snapshot');
 
 console.log(`vacation-edit-pipeline verification lever passed (${fixtures.length} fixtures)`);

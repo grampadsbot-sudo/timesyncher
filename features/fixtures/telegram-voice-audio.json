@@ -1,15 +1,24 @@
 {
   "id": "telegram-voice-audio",
   "surface": "telegram-voice",
-  "actor": { "id": "collaborator-kim", "role": "telegram_collaborator", "authorized": true, "canEdit": true },
+  "actor": { "id": "collaborator-kim", "role": "telegram_collaborator", "authorized": true, "canEdit": true, "identity": "collaborator-kim" },
   "pageContext": { "kind": "timeline" },
   "text": "Move Umekes Fish Market Bar & Grill to day 1",
+  "transcript": "Move Umekes Fish Market Bar & Grill to day 1",
   "audio_path": "audio/kim-vegas-voice.ogg",
+  "expected_clauses": 1,
+  "itinerary_before": [
+    { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" }
+  ],
+  "itinerary_after": [
+    { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 1, "location": "day 1" }
+  ],
   "trip": {
     "trip_id": "trip-vegas-live-001",
     "title": "Las Vegas Strip Vacation",
     "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
     "status": "live",
+    "trek_rows": [{ "id": 41, "title": "Las Vegas Strip Vacation", "token": "las-vegas-strip-vacation" }],
     "items": [
       { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" }
     ]
@@ -17,6 +26,8 @@
   "expect": {
     "ok": true,
     "preserve_audio_path": true,
+    "expected_clauses": 1,
+    "dropped_clause": false,
     "write_ops": ["move_thing"]
   }
 }

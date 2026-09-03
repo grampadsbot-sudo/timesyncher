@@ -24,7 +24,9 @@ Preconditions:
 - Policy unit tests remain green: `npm run test:vacation-collaborators` and `npm run test:vacation-web-access`.
 
 - **Authorized voice edit.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/telegram-voice-audio.json --json`. Actor role is `telegram_collaborator` and a `move_thing` write is planned.
-- **Public-link upload reject.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload.json --json`. `no_ops[0].reason` is `unauthorized_upload` and the reply contains `not authorized`.
+- **Public-link upload reject.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload.json --json`. Actor is `public-link-visitor`, not the owner. `no_ops[0].reason` is `unauthorized_upload` and the reply contains `not authorized`.
+- **Second-identity unpaid collaborator.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload-unpaid-collaborator.json --json`. Kim (`collaborator-kim-unpaid`) is a different identity from `owner-craig` on `authorized-owner-upload`. Same media payload, no write.
+- **Logged-out / unauth fixture.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/unauthorized-upload-logged-out.json --json`. Session is null.
 - **Denied copy.** The pipeline reply matches the product denied copy: paid Telegram collaborator or owner-approved email magic link, not a public URL grant.
 - **Proof.** Record surface, actor role, and the no-op or planned write in `events.jsonl`.
 

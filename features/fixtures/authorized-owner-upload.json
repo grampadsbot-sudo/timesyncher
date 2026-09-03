@@ -1,0 +1,32 @@
+{
+  "id": "authorized-owner-upload",
+  "surface": "telegram-text",
+  "actor": {
+    "id": "owner-craig",
+    "role": "owner",
+    "authorized": true,
+    "canEdit": true,
+    "canUpload": true,
+    "identity": "owner-craig"
+  },
+  "pageContext": { "kind": "timeline" },
+  "text": "Upload this video to the Vegas vacation",
+  "media": {
+    "media_kind": "video",
+    "bound_trip_id": "trip-vegas-live-001",
+    "attachment_scope": "trip"
+  },
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" }
+    ]
+  },
+  "expect": {
+    "ok": true,
+    "write_ops": ["attach_media"]
+  }
+}

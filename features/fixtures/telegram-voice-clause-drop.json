@@ -1,12 +1,12 @@
 {
-  "id": "incomplete-move",
+  "id": "telegram-voice-clause-drop",
   "surface": "telegram-voice",
   "actor": { "id": "collaborator-kim", "role": "telegram_collaborator", "authorized": true, "canEdit": true, "identity": "collaborator-kim" },
   "pageContext": { "kind": "timeline" },
-  "text": "Move Bellagio Fountains",
-  "transcript": "Move Bellagio Fountains",
-  "audio_path": "audio/kim-vegas-voice.ogg",
-  "expected_clauses": 1,
+  "text": "Move Bellagio Fountains to day 2 and then blorpt the xenon fountain.",
+  "transcript": "Move Bellagio Fountains to day 2 and then blorpt the xenon fountain.",
+  "audio_path": "audio/kim-vegas-clause-drop.ogg",
+  "expected_clauses": 2,
   "itinerary_before": [
     { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" }
   ],
@@ -18,6 +18,7 @@
     "title": "Las Vegas Strip Vacation",
     "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
     "status": "live",
+    "trek_rows": [{ "id": 41, "title": "Las Vegas Strip Vacation", "token": "las-vegas-strip-vacation" }],
     "items": [
       { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" }
     ]
@@ -25,7 +26,8 @@
   "expect": {
     "ok": true,
     "write_ops": [],
-    "no_op_stops": ["incomplete_move"],
-    "dropped_clause": false
+    "dropped_clause": true,
+    "expected_clauses": 2,
+    "no_op_stops": ["dropped_clause"]
   }
 }

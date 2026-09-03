@@ -13,6 +13,7 @@ import {
   runVacationEditPipeline,
   compactReceipt,
 } from '../src/vacation/edit-pipeline.mjs';
+import { createTrekFixtureStore } from '../src/vacation/trek-fixture-store.mjs';
 
 const cwd = process.cwd();
 const FEATURE_MAP = path.join(cwd, 'features', 'README.md');
@@ -27,24 +28,35 @@ function usage() {
     '  doctor                         Read-only check that the lever is worth driving',
     '  dry-run --fixture <path>       Run vacation-edit-pipeline in dry-run JSON mode',
     '  dry-run --all-fixtures         Run every features/fixtures/*.json case',
-    '  apply --fixture <path>         Apply validated writes to the local snapshot only',
+    '  apply --local-snapshot --fixture <path>',
+    '                                 Apply validated writes to a local JSON snapshot only',
+    '                                 (not product/TREK state; prove_state_movement=hold)',
+    '  apply --trek-db <path> --fixture <path>',
+    '                                 Apply validated writes to a local TREK SQLite fixture',
+    '                                 and record id-set / row-count before vs after',
     '  receipt --job-id <id>          Print the compact receipt for a prior artifact dir',
     '',
     'Reviewer commands:',
     '  node scripts/control-vacation.mjs doctor',
     '  node scripts/control-vacation.mjs dry-run --all-fixtures --json',
+    '  node scripts/control-vacation.mjs apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json --json',
+    '  node scripts/control-vacation.mjs apply --trek-db /tmp/vacation-trek-verify.db --fixture features/fixtures/telegram-text-single-edit.json --json',
     '  node scripts/test_vacation_edit_pipeline.mjs',
+    '  node scripts/test_vacation_trek_apply.mjs',
+    '  node scripts/test_vacation_intake_pipeline_seam.mjs',
   ].join('\n');
 }
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
-  const args = { command, json: false, fixtures: [], jobId: '', persist: true };
+  const args = { command, json: false, fixtures: [], jobId: '', persist: true, localSnapshot: false, trekDb: '' };
   for (let i = 0; i < rest.length; i += 1) {
     const token = rest[i];
     if (token === '--json') args.json = true;
     else if (token === '--no-persist') args.persist = false;
     else if (token === '--all-fixtures') args.all = true;
+    else if (token === '--local-snapshot') args.localSnapshot = true;
+    else if (token === '--trek-db') args.trekDb = rest[++i];
     else if (token === '--fixture' || token === '-f') args.fixtures.push(rest[++i]);
     else if (token === '--job-id') args.jobId = rest[++i];
     else if (!token.startsWith('-')) args.fixtures.push(token);
@@ -70,13 +82,17 @@ function doctor() {
     'telegram-text-single-edit',
     'telegram-voice-multi-intent',
     'telegram-voice-audio',
+    'telegram-voice-clause-drop',
     'shared-page-voice-day',
     'shared-page-voice-list',
     'alias-omeke',
     'unsupported-research',
     'incomplete-move',
     'stale-trip-media',
+    'authorized-owner-upload',
     'unauthorized-upload',
+    'unauthorized-upload-logged-out',
+    'unauthorized-upload-unpaid-collaborator',
     'split-trip-trek-uniqueness',
     'checkout-entitlements',
     'checkout-entitlements-missing',
@@ -110,13 +126,28 @@ function doctor() {
   return report;
 }
 
+function seedTripFromFixture(fixture) {
+  return {
+    ...fixture.trip,
+    trek_trip_id: fixture.trip?.trek_rows?.[0]?.id || fixture.trip?.trek_trip_id || 41,
+    token: fixture.trip?.trek_rows?.[0]?.token || fixture.trip?.token,
+    items: fixture.trip?.items || [],
+  };
+}
+
 function runFixtures(args, apply) {
   const files = args.all ? listFixtureFiles(cwd) : args.fixtures;
   if (!files.length) throw new Error('Pass --fixture <path> or --all-fixtures');
+  const applyScope = !apply ? 'dry-run' : (args.trekDb ? 'trek_sqlite' : 'local_snapshot');
   return files.map((filePath) => {
     const fixture = loadFixture(filePath, cwd);
+    const trekStore = apply && args.trekDb
+      ? createTrekFixtureStore({ dbPath: args.trekDb, trip: seedTripFromFixture(fixture) })
+      : undefined;
     const { receipt } = runVacationEditPipeline(fixture, {
       apply,
+      applyScope,
+      trekStore,
       persist: args.persist,
       jobId: args.jobId || undefined,
       cwd,
@@ -151,6 +182,11 @@ try {
       if (report.checks.missing_fixtures.length) console.log(`  missing fixtures: ${report.checks.missing_fixtures.join(', ')}`);
     }
     process.exit(report.ok ? 0 : 1);
+  }
+
+  if (args.command === 'apply' && !args.localSnapshot && !args.trekDb) {
+    console.error('apply requires --local-snapshot (JSON only; not product/TREK state) or --trek-db <path>.');
+    process.exit(2);
   }
 
   if (args.command === 'dry-run' || args.command === 'apply') {

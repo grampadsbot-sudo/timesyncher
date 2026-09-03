@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { actorFromIntake, gateTelegramIntakeEdit } from '../src/vacation/intake-edit-bridge.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -1716,14 +1717,50 @@ function applyTrekAgentEdit(job, artifacts, deterministicError) {
 }
 
 function applyExistingTripEdit(job, artifacts) {
+  const requestText = text(artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '');
+  const payload = { ...asObject(job.payload), ...asObject(job.input?.payload) };
+  const trip = { ...asObject(payload.trip), ...asObject(job.input?.trip) };
+  const items = Array.isArray(artifacts.things)
+    ? artifacts.things
+    : (Array.isArray(trip.items) ? trip.items : []);
+  const gate = gateTelegramIntakeEdit({
+    text: requestText,
+    actor: actorFromIntake({
+      id: text(job.telegram_user_id || payload.telegramUserId || 'dispatch-owner', 80) || 'dispatch-owner',
+      role: 'owner',
+      authorized: true,
+      canEdit: true,
+    }),
+    trip: {
+      trip_id: trip.trip_id || trip.id || job.trip_id || 'trip-unspecified',
+      title: trip.title || 'Vacation',
+      publicUrl: trip.publicUrl || trip.public_url || '',
+      status: 'live',
+      items,
+      trek_rows: trip.trek_rows || [],
+    },
+  }, { persist: false });
+  if (!gate.skip && gate.integrityFailClosed) {
+    return {
+      mode: 'vacation_edit_pipeline_fail_closed',
+      operationCount: 0,
+      url: text(artifacts.webItineraryUrl || trip.publicUrl || trip.public_url || '', 500),
+      reason: gate.reason,
+      vacationEditPipeline: gate.compact,
+    };
+  }
+  let edit;
   if (process.env.TIMESYNCHER_FORCE_TREK_AGENT_EDIT === '1') {
-    return applyTrekAgentEdit(job, artifacts, new Error('Forced broad TREK edit runner by environment.'));
+    edit = applyTrekAgentEdit(job, artifacts, new Error('Forced broad TREK edit runner by environment.'));
+  } else {
+    try {
+      edit = applyTrekItineraryEdit(job, artifacts);
+    } catch (error) {
+      edit = applyTrekAgentEdit(job, artifacts, error);
+    }
   }
-  try {
-    return applyTrekItineraryEdit(job, artifacts);
-  } catch (error) {
-    return applyTrekAgentEdit(job, artifacts, error);
-  }
+  edit.vacationEditPipeline = gate.compact;
+  return edit;
 }
 
 function smokeCheckTrekSync(sync, options = {}) {

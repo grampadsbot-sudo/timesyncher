@@ -26,10 +26,40 @@ const DEFAULT_STOP_RULES = Object.freeze([
   { id: 'fail_closed_stale_media', description: 'Media must bind to the live trip_id or no-op.' },
   { id: 'fail_closed_unauthorized_upload', description: 'Public-link and unauthorized collaborator uploads reject.' },
   { id: 'fail_closed_duplicate_trek', description: 'Split-trip must not create a second TREK row for the same title/token.' },
+  { id: 'fail_closed_dropped_clause', description: 'Multi-request voice must fail closed if any spoken clause is dropped.' },
   { id: 'exact_no_match_copy', description: 'Unmatched targets use the exact no-match sentence.' },
-  { id: 'prove_state_movement', description: 'A success reply is invalid unless before/after hashes differ for the named change.' },
+  { id: 'prove_state_movement', description: 'A success reply is invalid unless TREK/backend id-set state moved, or local-snapshot is labeled hold.' },
   { id: 'no_first_pass_language_on_edits', description: 'Existing-itinerary edits must not use first-pass creation language.' },
 ]);
+
+export function isRealOggAudio(filePath) {
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    const buf = Buffer.alloc(4);
+    fs.readSync(fd, buf, 0, 4, 0);
+    fs.closeSync(fd);
+    return buf.toString('ascii') === 'OggS' && fs.statSync(filePath).size > 200;
+  } catch {
+    return false;
+  }
+}
+
+export function splitRequestChunks(source) {
+  const numbered = String(source || '').split(/\n+/).map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(Boolean);
+  if (numbered.length > 1) return numbered;
+  return String(source || '')
+    .split(/(?:\s+and then\s+|\s+then\s+|;\s+|(?<=\w)[.!]+\s+)/i)
+    .map((chunk) => chunk.replace(/[.?!]+$/g, '').trim())
+    .filter(Boolean);
+}
+
+export function isVoiceSurface(surface) {
+  return surface === 'telegram-voice' || surface === 'shared-page-voice';
+}
+
+export function trekIdSet(rows = []) {
+  return [...new Set((rows || []).map((row) => String(row.id))).filter(Boolean)].sort();
+}
 
 export function noMatchCopy(heard) {
   return NO_MATCH_TEMPLATE.replace('{heard}', String(heard || '').trim());
@@ -122,7 +152,7 @@ export function matchIntent(intent, items) {
   return { status: 'matched', candidates: scored.slice(0, 4), chosen: scored[0], alias };
 }
 
-export function evaluateStopRules({ input, intents, decisions, receipt, apply }) {
+export function evaluateStopRules({ input, intents, decisions, receipt, apply, applyScope }) {
   const rules = defaultStopRules();
   const mark = (id, status, detail) => {
     const row = rules.find((rule) => rule.id === id);
@@ -142,10 +172,20 @@ export function evaluateStopRules({ input, intents, decisions, receipt, apply })
     decisions.some((row) => row.stop === 'unauthorized_upload' && row.write) ? 'fail' : 'pass',
     'Unauthorized or public-link uploads must reject.',
   );
+  const trek = receipt.trek_state || {};
+  const trekIdsUnchanged = JSON.stringify(trek.row_ids_before || []) === JSON.stringify(trek.row_ids_after || []);
+  const trekCountUnchanged = Number(trek.row_count_before || 0) === Number(trek.row_count_after || 0);
   mark(
     'fail_closed_duplicate_trek',
-    decisions.some((row) => row.stop === 'duplicate_trek' && row.write) ? 'fail' : 'pass',
-    'Split-trip must reuse or reject, never duplicate TREK rows.',
+    decisions.some((row) => row.stop === 'duplicate_trek' && row.write) || (decisions.some((row) => row.kind === 'split_trip') && !trekIdsUnchanged) ? 'fail' : 'pass',
+    trekIdsUnchanged && trekCountUnchanged
+      ? `TREK id-set unchanged (${(trek.row_ids_after || []).join(',') || 'none'}); row count ${trek.row_count_after ?? 0}.`
+      : 'Split-trip must reuse or reject, never duplicate TREK rows.',
+  );
+  mark(
+    'fail_closed_dropped_clause',
+    receipt.dropped_clause && receipt.planned_writes.length ? 'fail' : 'pass',
+    receipt.dropped_clause ? 'A spoken clause was dropped; all writes were no-op\'d.' : 'Every spoken clause produced a decision.',
   );
   const noMatchOk = decisions
     .filter((row) => row.matchStatus === 'no_match')
@@ -154,17 +194,20 @@ export function evaluateStopRules({ input, intents, decisions, receipt, apply })
   const editReply = receipt.customer_facing_response || '';
   const usedFirstPass = FIRST_PASS_LANGUAGE.test(editReply) && intents.some((intent) => intent.kind !== 'intake');
   mark('no_first_pass_language_on_edits', usedFirstPass ? 'fail' : 'pass', 'Existing edits must name the change, not first-pass setup.');
-  const appliedWrites = decisions.filter((row) => row.write && row.applied);
   if (!apply) {
-    mark('prove_state_movement', 'hold', 'Dry-run records planned writes; apply mode proves the hash move.');
-  } else if (appliedWrites.length) {
+    mark('prove_state_movement', 'hold', 'Dry-run records planned writes; --apply --trek-db proves TREK id-set movement.');
+  } else if (applyScope === 'local_snapshot') {
+    mark('prove_state_movement', 'hold', 'local-snapshot only. Fixture JSON hash is not product/TREK state.');
+  } else if (applyScope === 'trek_sqlite') {
+    const moved = Boolean(receipt.trek_state?.item_moved);
+    const noop = (receipt.writes_applied || []).length === 0;
     mark(
       'prove_state_movement',
-      receipt.before_hash && receipt.after_hash && receipt.before_hash !== receipt.after_hash ? 'pass' : 'fail',
-      'Applied writes must change the itinerary snapshot hash.',
+      (moved && !noop) || (noop && trekIdsUnchanged) ? 'pass' : 'fail',
+      moved ? 'TREK place/assignment ids moved on the locked trip.' : 'TREK id-set/row-count unchanged (no-op or uniqueness).',
     );
   } else {
-    mark('prove_state_movement', 'pass', 'No-op path: after-hash must match before-hash.');
+    mark('prove_state_movement', 'hold', 'Apply without --trek-db is not product state.');
   }
   return rules;
 }
@@ -179,6 +222,7 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
     seed: options.seed,
   });
   const apply = Boolean(options.apply);
+  const applyScope = options.applyScope || (options.trekStore ? 'trek_sqlite' : (apply ? 'local_snapshot' : 'dry-run'));
   const cwd = options.cwd || process.cwd();
   const artifactRoot = options.artifactRoot || artifactDirFor(jobId, cwd);
   const events = [];
@@ -201,22 +245,68 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
     audio_path: input.audioPath || null,
   });
 
+  const clauses = splitRequestChunks(input.text);
   const intents = parseIntents(input.text, { surface: input.surface, pageKind: input.pageContext.kind });
-  emit('parse', { intent_count: intents.length, intents: intents.map(publicIntent) });
+  const expectedClauses = Number(input.expected_clauses || clauses.length);
+  const droppedClause = Boolean(
+    isVoiceSurface(input.surface)
+    && (
+      clauses.length !== intents.length
+      || intents.some((intent) => intent.kind === 'unknown')
+      || (input.expected_clauses != null && expectedClauses !== intents.length)
+    ),
+  );
+  emit('parse', {
+    intent_count: intents.length,
+    clause_count: clauses.length,
+    expected_clauses: expectedClauses,
+    dropped_clause: droppedClause,
+    intents: intents.map(publicIntent),
+  });
 
   const before = clone(input.trip);
   const beforeHash = snapshotHash(before);
   const working = clone(input.trip);
+  const trekBefore = options.trekStore ? options.trekStore.snapshot() : {
+    row_ids: trekIdSet(input.trip.trek_rows),
+    row_count: (input.trip.trek_rows || []).length,
+    assignments: [],
+  };
   const decisions = intents.map((intent) => decideIntent(intent, { input, items, working, apply }));
-  emit('validate', { decisions: decisions.map(publicDecision) });
+  if (droppedClause) {
+    for (const decision of decisions) {
+      decision.write = null;
+      decision.applied = false;
+      decision.validation = 'rejected';
+      decision.stop = decision.stop || 'dropped_clause';
+      decision.response = decision.response || `I heard "${decision.heard}", but part of that voice note could not be matched, so I left the itinerary unchanged.`;
+    }
+  }
+  emit('validate', { decisions: decisions.map(publicDecision), dropped_clause: droppedClause });
 
-  if (apply) {
+  if (apply && applyScope === 'local_snapshot') {
     for (const decision of decisions) {
       if (decision.write && decision.validation === 'validated') {
         applyWrite(working, decision.write);
         decision.applied = true;
       }
     }
+  }
+  let trekAfter = trekBefore;
+  let trekItemMoved = false;
+  if (apply && applyScope === 'trek_sqlite' && options.trekStore) {
+    const validated = decisions.filter((row) => row.write && row.validation === 'validated');
+    if (validated.length) {
+      const moved = options.trekStore.applyWrites(validated.map((row) => row.write));
+      trekItemMoved = Boolean(moved.itemMoved);
+      for (const decision of validated) decision.applied = true;
+    }
+    trekAfter = options.trekStore.snapshot();
+  } else if (!droppedClause) {
+    const wouldCreate = decisions.some((row) => row.write?.op === 'create_trek_row' && row.validation === 'validated');
+    trekAfter = wouldCreate
+      ? { ...trekBefore, row_count: trekBefore.row_count + 1, row_ids: [...trekBefore.row_ids, 'new'] }
+      : trekBefore;
   }
 
   const afterHash = snapshotHash(working);
@@ -227,7 +317,8 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
     pipeline: PIPELINE_NAME,
     pipeline_version: PIPELINE_VERSION,
     job_id: jobId,
-    mode: apply ? 'apply' : 'dry-run',
+    mode: apply ? `apply_${applyScope}` : 'dry-run',
+    apply_scope: applyScope,
     surface: input.surface,
     actor: input.actor,
     trip: {
@@ -243,6 +334,10 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
     },
     transcript: input.text,
     audio_path: input.audioPath || null,
+    audio_real_ogg: input.audioPath ? isRealOggAudio(input.audioPath) : false,
+    dropped_clause: droppedClause,
+    clause_count: clauses.length,
+    expected_clauses: expectedClauses,
     fixture_id: input.fixture_id || null,
     fixture_path: input.fixture_path || null,
     intents: intents.map(publicIntent),
@@ -258,7 +353,15 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
     before_hash: beforeHash,
     after_hash: afterHash,
     before_state: before,
-    after_state: apply ? working : before,
+    after_state: apply && applyScope === 'local_snapshot' ? working : before,
+    trek_state: {
+      row_ids_before: trekBefore.row_ids,
+      row_ids_after: trekAfter.row_ids,
+      row_count_before: trekBefore.row_count,
+      row_count_after: trekAfter.row_count,
+      item_moved: trekItemMoved,
+      source: applyScope === 'trek_sqlite' ? 'trek_sqlite' : 'fixture_trek_rows',
+    },
     artifacts: {
       dir: artifactRoot,
       events: path.join(artifactRoot, 'events.jsonl'),
@@ -268,13 +371,17 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
       after: path.join(artifactRoot, 'after.json'),
     },
   };
-  receipt.stop_rules = evaluateStopRules({ input, intents, decisions, receipt, apply });
+  receipt.stop_rules = evaluateStopRules({ input, intents, decisions, receipt, apply, applyScope });
   receipt.ok = receipt.stop_rules.every((rule) => rule.status === 'pass' || rule.status === 'hold');
+  if (isVoiceSurface(input.surface) && input.audioPath && !receipt.audio_real_ogg) {
+    receipt.ok = false;
+    receipt.stop_rules.push({ id: 'real_voice_audio', status: 'fail', description: 'Voice fixtures must keep original OGG audio.', detail: input.audioPath });
+  }
   emit('copy_check', { response: customerFacing, first_pass_language: FIRST_PASS_LANGUAGE.test(customerFacing) });
   emit('complete', { ok: receipt.ok, write_count: receipt.planned_writes.length, no_op_count: receipt.no_ops.length });
 
   if (options.persist !== false) {
-    persistArtifacts(receipt, events, { apply });
+    persistArtifacts(receipt, events, { apply, audioPath: input.audioPath });
   }
   return { receipt, events, decisions, intents };
 }
@@ -301,14 +408,21 @@ export function listFixtureFiles(root = process.cwd()) {
     .sort();
 }
 
-function persistArtifacts(receipt, events, { apply }) {
+function persistArtifacts(receipt, events, { apply, audioPath }) {
   fs.mkdirSync(receipt.artifacts.dir, { recursive: true });
   const lines = events.map((event) => JSON.stringify(event)).join('\n') + '\n';
   fs.writeFileSync(receipt.artifacts.events, lines);
   fs.writeFileSync(receipt.artifacts.dry_run, JSON.stringify(receipt, null, 2) + '\n');
   fs.writeFileSync(receipt.artifacts.receipt, JSON.stringify(compactReceipt(receipt), null, 2) + '\n');
   fs.writeFileSync(receipt.artifacts.before, JSON.stringify(receipt.before_state, null, 2) + '\n');
-  fs.writeFileSync(receipt.artifacts.after, JSON.stringify(apply ? receipt.after_state : receipt.before_state, null, 2) + '\n');
+  fs.writeFileSync(receipt.artifacts.after, JSON.stringify(receipt.after_state, null, 2) + '\n');
+  fs.writeFileSync(path.join(receipt.artifacts.dir, 'transcript.txt'), `${receipt.transcript || ''}\n`);
+  if (audioPath && fs.existsSync(audioPath)) {
+    const dest = path.join(receipt.artifacts.dir, path.basename(audioPath));
+    fs.copyFileSync(audioPath, dest);
+    receipt.artifacts.audio = dest;
+    receipt.artifacts.transcript = path.join(receipt.artifacts.dir, 'transcript.txt');
+  }
 }
 
 export function compactReceipt(receipt) {
@@ -331,6 +445,9 @@ export function compactReceipt(receipt) {
     stop_rules: receipt.stop_rules,
     writes_applied: receipt.writes_applied,
     no_ops: receipt.no_ops,
+    apply_scope: receipt.apply_scope,
+    trek_state: receipt.trek_state,
+    dropped_clause: receipt.dropped_clause,
     customer_facing_response: receipt.customer_facing_response,
     ok: receipt.ok,
   };
@@ -352,10 +469,18 @@ function normalizeInput(raw) {
     actor: {
       id: actor.id || 'synthetic-actor',
       role: actor.role || 'owner',
-      authorized: actor.authorized !== false && actor.role !== 'public-link' && actor.role !== 'viewer',
-      canUpload: Boolean(actor.canUpload),
-      canEdit: actor.canEdit !== false && actor.role !== 'public-link' && actor.role !== 'viewer',
+      session: actor.session === undefined ? true : actor.session,
+      logged_out: Boolean(actor.logged_out || actor.role === 'logged-out'),
+      identity: actor.identity || actor.id || 'synthetic-actor',
+      authorized: actor.authorized !== false
+        && !['public-link', 'viewer', 'logged-out', 'unpaid_collaborator'].includes(actor.role)
+        && actor.logged_out !== true,
+      canUpload: Boolean(actor.canUpload) && actor.logged_out !== true && actor.role !== 'logged-out',
+      canEdit: actor.canEdit !== false
+        && !['public-link', 'viewer', 'logged-out', 'unpaid_collaborator'].includes(actor.role)
+        && actor.logged_out !== true,
     },
+    expected_clauses: raw.expected_clauses ?? raw.expect?.expected_clauses ?? null,
     trip: {
       trip_id: raw.trip?.trip_id || raw.trip?.id || 'trip-unspecified',
       title: raw.trip?.title || 'Vacation',
@@ -372,15 +497,6 @@ function normalizeInput(raw) {
     media: raw.media || null,
     checkout: raw.checkout || null,
   };
-}
-
-function splitRequestChunks(source) {
-  const numbered = source.split(/\n+/).map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(Boolean);
-  if (numbered.length > 1) return numbered;
-  return source
-    .split(/(?:\s+and then\s+|\s+then\s+|;\s+|(?<=\w)[.!]+\s+)/i)
-    .map((chunk) => chunk.replace(/[.?!]+$/g, '').trim())
-    .filter(Boolean);
 }
 
 function classifyIntent(chunk, { surface, pageKind, index }) {
@@ -552,7 +668,9 @@ function decideMediaUpload(intent, input) {
       response: `I heard "${intent.heard}", but that media is not bound to the live trip, so I did not upload it.`,
     };
   }
-  const publicLink = input.actor.role === 'public-link' || input.actor.role === 'viewer';
+  const publicLink = ['public-link', 'viewer', 'logged-out', 'unpaid_collaborator'].includes(input.actor.role)
+    || input.actor.logged_out
+    || input.actor.session === null;
   if (publicLink || !input.actor.authorized || !input.actor.canUpload) {
     return {
       kind: intent.kind,

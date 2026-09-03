@@ -1,7 +1,7 @@
 {
   "id": "shared-page-voice-list",
   "surface": "shared-page-voice",
-  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true },
+  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true, "identity": "owner-craig" },
   "pageContext": {
     "kind": "list",
     "items": [
@@ -12,7 +12,21 @@
     ]
   },
   "text": "Move Topgolf Las Vegas to day 1",
+  "transcript": "Move Topgolf Las Vegas to day 1",
   "audio_path": "audio/kim-vegas-voice.ogg",
+  "expected_clauses": 1,
+  "itinerary_before": [
+    { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" },
+    { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" },
+    { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 3, "location": "day 3 16:00" },
+    { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" }
+  ],
+  "itinerary_after": [
+    { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" },
+    { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" },
+    { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 1, "location": "day 1" },
+    { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" }
+  ],
   "trip": {
     "trip_id": "trip-vegas-live-001",
     "title": "Las Vegas Strip Vacation",
@@ -29,6 +43,7 @@
     "ok": true,
     "page_kind": "list",
     "context_includes": "thing-topgolf",
-    "write_ops": ["move_thing"]
+    "write_ops": ["move_thing"],
+    "dropped_clause": false
   }
 }

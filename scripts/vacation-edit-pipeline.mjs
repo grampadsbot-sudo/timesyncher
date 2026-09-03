@@ -10,6 +10,7 @@ import {
   runVacationEditPipeline,
   compactReceipt,
 } from '../src/vacation/edit-pipeline.mjs';
+import { createTrekFixtureStore } from '../src/vacation/trek-fixture-store.mjs';
 
 const cwd = process.cwd();
 
@@ -22,11 +23,15 @@ function parseArgs(argv) {
     fixtures: [],
     jobId: '',
     all: false,
+    localSnapshot: false,
+    trekDb: '',
   };
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (token === '--dry-run') args.dryRun = true;
     else if (token === '--apply') args.apply = true;
+    else if (token === '--local-snapshot') args.localSnapshot = true;
+    else if (token === '--trek-db') args.trekDb = argv[++i];
     else if (token === '--json') args.json = true;
     else if (token === '--no-persist') args.persist = false;
     else if (token === '--all-fixtures') args.all = true;
@@ -45,17 +50,33 @@ function usage() {
     'Usage:',
     '  node scripts/vacation-edit-pipeline.mjs --dry-run --json --fixture features/fixtures/telegram-text-single-edit.json',
     '  node scripts/vacation-edit-pipeline.mjs --dry-run --all-fixtures --json',
-    '  node scripts/vacation-edit-pipeline.mjs --apply --fixture features/fixtures/telegram-text-single-edit.json',
+    '  node scripts/vacation-edit-pipeline.mjs --apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json',
+    '  node scripts/vacation-edit-pipeline.mjs --apply --trek-db /tmp/vacation-trek-verify.db --fixture features/fixtures/telegram-text-single-edit.json',
     '',
-    'Apply mutates only the local fixture snapshot written under artifacts/vacation-verify/<job_id>/.',
+    '--apply --local-snapshot mutates only the local fixture JSON under artifacts/vacation-verify/<job_id>/.',
+    'That hash is not product/TREK state. --apply --trek-db proves TREK id-set / row-count movement.',
     'It does not call Stripe, TREK production, Telegram, or customer simulation.',
   ].join('\n');
 }
 
 function runOne(filePath, args) {
   const fixture = loadFixture(filePath, cwd);
+  const applyScope = !args.apply ? 'dry-run' : (args.trekDb ? 'trek_sqlite' : 'local_snapshot');
+  const trekStore = args.apply && args.trekDb
+    ? createTrekFixtureStore({
+      dbPath: args.trekDb,
+      trip: {
+        ...fixture.trip,
+        trek_trip_id: fixture.trip?.trek_rows?.[0]?.id || 41,
+        token: fixture.trip?.trek_rows?.[0]?.token,
+        items: fixture.trip?.items || [],
+      },
+    })
+    : undefined;
   const { receipt } = runVacationEditPipeline(fixture, {
     apply: args.apply,
+    applyScope,
+    trekStore,
     persist: args.persist,
     jobId: args.jobId || undefined,
     cwd,
@@ -67,6 +88,10 @@ const args = parseArgs(process.argv.slice(2));
 if (args.help) {
   console.log(usage());
   process.exit(0);
+}
+if (args.apply && !args.localSnapshot && !args.trekDb) {
+  console.error('apply requires --local-snapshot (JSON only; not product/TREK state) or --trek-db <path>.');
+  process.exit(2);
 }
 
 const files = args.all ? listFixtureFiles(cwd) : args.fixtures;
