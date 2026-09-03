@@ -45,6 +45,8 @@ assert.match(INTAKE_SEAM.remaining, /apply_not_on_turn/);
 assert.match(INTAKE_SEAM.remaining, /no-apply customer_facing_response/);
 assert.match(INTAKE_SEAM.remaining, /joins every clause/);
 assert.match(INTAKE_SEAM.remaining, /thing_not_visible/);
+assert.match(INTAKE_SEAM.remaining, /thing_id_cross_trip/);
+assert.match(INTAKE_SEAM.remaining, /does not treat bound-trip stale_trip_media/);
 assert.match(INTAKE_SEAM.remaining, /features\/proof\/vac-verify-telegram-text-single-edit/);
 
 const owner = gateTelegramIntakeEdit({
@@ -111,7 +113,7 @@ const thingStaleGate = gateMediaUploadIntake({
   },
 }, { persist: false });
 assert.equal(thingStaleGate.failClosed, true);
-assert.equal(thingStaleGate.reason, 'stale_trip_media');
+assert.equal(thingStaleGate.reason, 'thing_id_cross_trip');
 assert.equal(thingStaleGate.receipt.planned_writes.length, 0);
 
 const thingVisibleGate = gateMediaUploadIntake({

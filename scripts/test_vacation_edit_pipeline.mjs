@@ -68,7 +68,7 @@ for (const proof of committedProofs.filter((row) => String(row.compact.fixture_i
 const leakedThingId = evaluateStopRules({
   input: { media: { attachment_scope: 'thing', thing_id: 'thing-hawaii-luau' }, allowProductionBilling: false },
   intents: [],
-  decisions: [{ stop: 'stale_trip_media', write: { op: 'attach_media' }, validation: 'rejected' }],
+  decisions: [{ stop: 'thing_id_cross_trip', write: { op: 'attach_media' }, validation: 'rejected' }],
   receipt: {
     trek_state: {},
     planned_writes: [{ op: 'attach_media' }],
@@ -79,10 +79,27 @@ const leakedThingId = evaluateStopRules({
   },
   apply: false,
 }).find((rule) => rule.id === 'fail_closed_thing_id');
-assert.equal(leakedThingId.status, 'fail', 'fail_closed_thing_id must fail when a stop reason still has a write, even without item_id');
+assert.equal(leakedThingId.status, 'fail', 'fail_closed_thing_id must fail when a thing_id stop still has a write, even without item_id');
 
 const cleanThingId = evaluateStopRules({
   input: { media: { attachment_scope: 'thing', thing_id: 'thing-hawaii-luau' }, allowProductionBilling: false },
+  intents: [],
+  decisions: [{ stop: 'thing_id_cross_trip', write: null, validation: 'rejected' }],
+  receipt: {
+    trek_state: {},
+    planned_writes: [],
+    writes_applied: [],
+    dropped_clause: false,
+    customer_facing_response: 'left it unchanged',
+    no_ops: [{ reason: 'thing_id_cross_trip' }],
+  },
+  apply: false,
+}).find((rule) => rule.id === 'fail_closed_thing_id');
+assert.equal(cleanThingId.status, 'pass');
+assert.match(cleanThingId.detail, /write=null/);
+
+const boundTripStale = evaluateStopRules({
+  input: { media: { bound_trip_id: 'trip-hawaii-old-009', attachment_scope: 'trip' }, allowProductionBilling: false },
   intents: [],
   decisions: [{ stop: 'stale_trip_media', write: null, validation: 'rejected' }],
   receipt: {
@@ -90,13 +107,13 @@ const cleanThingId = evaluateStopRules({
     planned_writes: [],
     writes_applied: [],
     dropped_clause: false,
-    customer_facing_response: 'left it unchanged',
+    customer_facing_response: 'not bound to the live trip',
     no_ops: [{ reason: 'stale_trip_media' }],
   },
   apply: false,
 }).find((rule) => rule.id === 'fail_closed_thing_id');
-assert.equal(cleanThingId.status, 'pass');
-assert.match(cleanThingId.detail, /write=null/);
+assert.equal(boundTripStale.status, 'pass');
+assert.match(boundTripStale.detail, /No thing_id fail-close/);
 
 const fixtures = listFixtureFiles(cwd);
 assert.ok(fixtures.length >= 18, `expected at least 18 fixtures, got ${fixtures.length}`);
@@ -214,10 +231,11 @@ assert.deepEqual(
 const stale = byId.get('stale-trip-media');
 assert.equal(stale.receipt.planned_writes.length, 0);
 assert.ok(stale.receipt.no_ops.some((row) => row.reason === 'stale_trip_media'));
+assert.match(stale.receipt.stop_rules.find((rule) => rule.id === 'fail_closed_thing_id').detail, /No thing_id fail-close/);
 
 const thingStale = byId.get('thing-media-stale');
 assert.equal(thingStale.receipt.planned_writes.length, 0);
-assert.ok(thingStale.receipt.no_ops.some((row) => row.reason === 'stale_trip_media'));
+assert.ok(thingStale.receipt.no_ops.some((row) => row.reason === 'thing_id_cross_trip'));
 assert.equal(loadFixture(thingStale.receipt.fixture_path, cwd).media.thing_id, 'thing-hawaii-luau');
 assert.match(thingStale.receipt.stop_rules.find((rule) => rule.id === 'fail_closed_thing_id').detail, /write=null/);
 

@@ -65,7 +65,7 @@ Present (pipeline dry-run observables):
 
 - Multi-request voice: `telegram-voice-audio`, `telegram-voice-multi-intent`, `telegram-voice-clause-drop` (audio + transcript + before/after).
 - Stale-trip media: `stale-trip-media`.
-- Thing-scoped attach: `thing-media-stale` (thing_id on another trip), `thing-media-visible` (thing_id missing from page context).
+- Thing-scoped attach: `thing-media-stale` (`thing_id_cross_trip`), `thing-media-visible` (`thing_not_visible`). Bound-trip stale stays `stale-trip-media` / `stale_trip_media`.
 - Split-trip no duplicate TREK rows: `split-trip-trek-uniqueness`.
 - Unauthorized / public-link / logged-out / unpaid collaborator upload: `unauthorized-upload`, `unauthorized-upload-logged-out`, `unauthorized-upload-unpaid-collaborator`.
 - Checkout entitlements: `checkout-entitlements`, `checkout-entitlements-missing`.

@@ -86,7 +86,7 @@
   "writes_applied": [],
   "no_ops": [
     {
-      "reason": "stale_trip_media",
+      "reason": "thing_id_cross_trip",
       "heard": "Attach this photo to the luau",
       "response": "I heard \"Attach this photo to the luau\", but that item is not on the locked live trip, so I left it unchanged."
     }

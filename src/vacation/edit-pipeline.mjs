@@ -182,7 +182,7 @@ export function evaluateStopRules({ input, intents, decisions, receipt, apply, a
     decisions.some((row) => row.stop === 'stale_trip_media' && row.write) ? 'fail' : 'pass',
     'Stale or mismatched trip media must no-op.',
   );
-  const thingIdStops = decisions.filter((row) => row.stop === 'thing_not_visible' || row.stop === 'stale_trip_media');
+  const thingIdStops = decisions.filter((row) => row.stop === 'thing_not_visible' || row.stop === 'thing_id_cross_trip');
   const thingIdWrote = thingIdStops.some((row) => row.write != null);
   mark(
     'fail_closed_thing_id',
@@ -792,8 +792,8 @@ function decideMediaUpload(intent, input) {
       return {
         kind: intent.kind,
         heard: intent.heard,
-        matchStatus: 'stale_trip',
-        stop: 'stale_trip_media',
+        matchStatus: 'thing_id_cross_trip',
+        stop: 'thing_id_cross_trip',
         validation: 'rejected',
         write: null,
         applied: false,

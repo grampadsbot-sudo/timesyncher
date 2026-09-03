@@ -23,6 +23,6 @@
   "expect": {
     "ok": true,
     "write_ops": [],
-    "no_op_stops": ["stale_trip_media"]
+    "no_op_stops": ["thing_id_cross_trip"]
   }
 }
