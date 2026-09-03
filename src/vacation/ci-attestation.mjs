@@ -156,6 +156,10 @@ export function artifactNameForSha(sha) {
 }
 
 export function doctorArtifactNameForSha(sha) {
+  return `vacation-verify-gate-${sha}`;
+}
+
+export function markerArtifactNameForSha(sha) {
   return `vacation-verify-doctor-${sha}`;
 }
 
@@ -203,14 +207,24 @@ export function attestVacationVerifyJob({
   if (doctorJob.conclusion !== 'success') {
     return fail(`vacation-verify-doctor job conclusion=${doctorJob.conclusion || doctorJob.status || 'missing'}`);
   }
+  const gateJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-gate');
+  if (!gateJob) return fail('vacation-verify-gate job missing');
+  if (gateJob.conclusion !== 'success') {
+    return fail(`vacation-verify-gate job conclusion=${gateJob.conclusion || gateJob.status || 'missing'}`);
+  }
+  const markerOnly = artifactWithDigest(artifacts, markerArtifactNameForSha(sha));
   const doctorArtifact = artifactWithDigest(artifacts, doctorArtifactNameForSha(sha));
-  if (!doctorArtifact) return fail('vacation-verify-doctor artifact digest missing');
+  if (!doctorArtifact) {
+    return fail(markerOnly
+      ? 'vacation-verify-gate artifact digest missing (marker-only is not doctor proof)'
+      : 'vacation-verify-gate artifact digest missing');
+  }
   return {
     ok: true,
     sha,
     run_id: String(run.id),
     job_id: String(job.id),
-    doctor_job_id: String(doctorJob.id),
+    doctor_job_id: String(gateJob.id),
     conclusion: 'success',
     doctor_conclusion: 'success',
     artifact_digest: artifact.digest,

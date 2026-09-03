@@ -30,7 +30,7 @@ Read-only check that the instance is worth driving:
 node scripts/control-vacation.mjs doctor --json
 ```
 
-Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, the fixture catalog complete, workflow `run:` steps that actually invoke the five reviewer commands, and SHA-bound `vacation-verify` **and** `vacation-verify-doctor` jobs with `conclusion=success` plus each job's artifact digest. Harness green alone is not attestation. Mid-job `GITHUB_JOB=vacation-verify-doctor` (`in_progress` or null doctor digest) is not attestation. A committed CI receipt must include `doctor_artifact_digest` equal to the live doctor artifact; it must not skip the API. Hosted Vercel `timesyncher` is a deploy status, not a remote doctor/dry-run target. If doctor fails, stop. Do not dry-run a broken catalog.
+Require `ok: true`, Feature Map present, this skill present, pipeline syntax valid, the fixture catalog complete, workflow `run:` steps that actually invoke the five reviewer commands, and SHA-bound `vacation-verify`, `vacation-verify-doctor`, and `vacation-verify-gate` jobs with `conclusion=success`. Doctor proof is the gate `doctor.json` artifact digest, not the doctor-job marker. Harness green or marker-only is not attestation. Mid-job `in_progress` or a null gate digest is not attestation. A committed CI receipt must include `doctor_artifact_digest` equal to the live gate digest; it must not skip the API. Hosted Vercel `timesyncher` is a deploy status, not a remote doctor/dry-run target. If doctor fails, stop. Do not dry-run a broken catalog.
 
 ## Drive
 
@@ -124,7 +124,7 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the telegram turn
 - doctor must see committed proofs at features/proof/vac-verify-telegram-text-single-edit/, vac-verify-thing-media-stale/, and vac-verify-thing-media-visible/
 - doctor freshness is a live re-exec proof_digest match, not COMMITTED_PROOF_NOW stamp equality
-- reviewer commands must run as GitHub Actions vacation-verify on the SHA; doctor binds both vacation-verify and vacation-verify-doctor job conclusion=success and both artifact digests via the GitHub API, not yaml text or a committed receipt skip; Vercel deploy status is not that evidence
+- reviewer commands must run as GitHub Actions vacation-verify on the SHA; doctor binds harness + doctor-job + gate job success and the gate doctor.json digest via the GitHub API (marker digest is not doctor proof); Vercel deploy status is not that evidence
 - fail_closed_thing_id fail-closes on thing_not_visible / thing_id_cross_trip even when write is null; it does not treat bound-trip stale_trip_media as a thing_id stop
 - dry-run trees hold prove_state_movement; TREK apply is --apply --trek-db or worker first-pass
 - events.jsonl appends one event per handoff and never overwrites
