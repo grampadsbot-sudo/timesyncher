@@ -43,11 +43,44 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 
 ## Features
 
-- [Checkout](./checkout.md) covers single/unlimited plans, photo/video add-ons, coupons, and synthetic entitlement proof.
-- [Onboarding](./onboarding.md) covers post-purchase session, EULA accept, Telegram `/start`, and first voice-note intake.
-- [Telegram-style messages](./telegram-messages.md) covers owner text edits through the shared pipeline.
-- [Voice notes](./voice-notes.md) covers Telegram voice and shared-page voice, including list-page context.
-- [Collaborator edits](./collaborator-edits.md) covers paid Telegram collaborators versus view-only public links.
-- [Media uploads](./media-uploads.md) covers live `trip_id` binding and unauthorized upload reject.
-- [Timeline / Thing media](./timeline-thing-media.md) covers attaching media to a day or Thing on the locked trip.
-- [Keepsake PDFs](./keepsake-pdfs.md) names the required PDF proofs a later dry-run or customer run must emit.
+Sibling rows. Each recipe file is required. Entry points are from that file's "How to get to it" section, not invented here.
+
+| Feature | Recipe | Sibling entry points in repo |
+| --- | --- | --- |
+| Checkout | [checkout.md](./checkout.md) | storefront checkout, `/addons-checkout.html`, `/owner-media-checkout.html`, Telegram entitlement questions, synthetic entitlement fixtures |
+| Onboarding | [onboarding.md](./onboarding.md) | `/order-success.html`, EULA accept URL, Telegram `/start <token>`, first voice/text after microphone intro |
+| Telegram-style messages | [telegram-messages.md](./telegram-messages.md) | owner Telegram text, paid collaborator Telegram text, `control-vacation` fixtures |
+| Voice notes | [voice-notes.md](./voice-notes.md) | Telegram voice, shared-page day mic, shared-page list mic, stored `.ogg` + transcript replay |
+| Collaborator edits | [collaborator-edits.md](./collaborator-edits.md) | collaborator checkout, paid Telegram start token, public shared URL (view-only), website editor magic link |
+| Media uploads | [media-uploads.md](./media-uploads.md) | Telegram photo/video, owner-media checkout then upload, public-link attempt, stale/unauthorized fixtures |
+| Timeline / Thing media | [timeline-thing-media.md](./timeline-thing-media.md) | shared day attach, shared list attach, Telegram caption that names a Thing, list/stale fixtures |
+| Keepsake PDFs | [keepsake-pdfs.md](./keepsake-pdfs.md) | Photo Memories checkout (later customer run), TREK Journey/book export, compact receipt `required_artifacts` |
+
+## Fail-closed goldens
+
+Catalog IDs in `features/fixtures/catalog.json` `required_goldens`. Voice goldens keep real OggS `.ogg` plus sibling `.txt` transcripts.
+
+Present (pipeline dry-run observables):
+
+- Multi-request voice: `telegram-voice-audio`, `telegram-voice-multi-intent`, `telegram-voice-clause-drop` (audio + transcript + before/after).
+- Stale-trip media: `stale-trip-media`.
+- Split-trip no duplicate TREK rows: `split-trip-trek-uniqueness`.
+- Unauthorized / public-link / logged-out / unpaid collaborator upload: `unauthorized-upload`, `unauthorized-upload-logged-out`, `unauthorized-upload-unpaid-collaborator`.
+- Checkout entitlements: `checkout-entitlements`, `checkout-entitlements-missing`.
+- Also present: `telegram-text-single-edit`, `shared-page-voice-day`, `shared-page-voice-list`, `alias-omeke`, `unsupported-research`, `incomplete-move`, `authorized-owner-upload`, `exact-no-match`, `successful-edit-wording`.
+
+Named in feature files but not a vacation-edit-pipeline golden (do not fake):
+
+- Onboarding EULA / `/start` — `npm run test:eula` and `node scripts/test_vacation_telegram_intake.mjs`; not an edit-pipeline fixture.
+- Thing-scoped attach (`thing-media-stale`, `thing-media-visible`) — pipeline fail-closes stale `bound_trip_id` and unauthorized actors; it does not yet fail-close on `thing_id` belonging to another trip or missing from page context. No fixture added.
+- Keepsake PDF bytes — compact receipt names the three PDF contracts; this lever does not render them.
+
+## Live TREK apply entries
+
+Telegram `plannedWritesReplied` replies `customer_facing_response` and does not queue a write worker. That is intentional: a second customer message must re-enter the gate. Live TREK apply is not on that turn path.
+
+Separate apply entries (do not invent a second writer on the turn):
+
+- Worker `applyExistingTripEdit` in `scripts/product-gbrain-dispatch.mjs` — only when a job is queued (first-pass / non-edit setup). Re-gates; writes `planned_writes` only.
+- Verification lever `control-vacation apply --trek-db <path>` (local TREK SQLite id-set) or `apply --local-snapshot` (JSON hold, not product state).
+- Shared-page `POST vacation_edit` on `api/vacation-itinerary.mjs` is gate-only (returns `plannedWrites`; fail-closed is 403).

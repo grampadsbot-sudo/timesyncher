@@ -77,6 +77,8 @@ function doctor() {
     'keepsake-pdfs.md',
   ];
   const missingFeatures = requiredFeatures.filter((name) => !fs.existsSync(path.join(cwd, 'features', name)));
+  const featureMapText = fs.existsSync(FEATURE_MAP) ? fs.readFileSync(FEATURE_MAP, 'utf8') : '';
+  const missingMapRows = requiredFeatures.filter((name) => !featureMapText.includes(`](./${name})`));
   const fixtureIds = fixtures.map((filePath) => loadFixture(filePath, cwd).fixture_id);
   const requiredFixtures = [
     'telegram-text-single-edit',
@@ -114,6 +116,7 @@ function doctor() {
       pipeline_syntax: node.status === 0,
       fixture_count: fixtures.length,
       missing_features: missingFeatures,
+      missing_map_rows: missingMapRows,
       missing_fixtures: missingFixtures,
     },
   };
@@ -121,6 +124,7 @@ function doctor() {
     && report.checks.skill
     && report.checks.pipeline_syntax
     && missingFeatures.length === 0
+    && missingMapRows.length === 0
     && missingFixtures.length === 0
     && fixtures.length >= requiredFixtures.length;
   return report;
@@ -179,6 +183,7 @@ try {
       console.log(`  skill: ${report.checks.skill ? SKILL : 'missing'}`);
       console.log(`  fixtures: ${report.checks.fixture_count}`);
       if (report.checks.missing_features.length) console.log(`  missing features: ${report.checks.missing_features.join(', ')}`);
+      if (report.checks.missing_map_rows.length) console.log(`  missing map rows: ${report.checks.missing_map_rows.join(', ')}`);
       if (report.checks.missing_fixtures.length) console.log(`  missing fixtures: ${report.checks.missing_fixtures.join(', ')}`);
     }
     process.exit(report.ok ? 0 : 1);

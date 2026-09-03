@@ -33,3 +33,4 @@ Preconditions:
 - A day microphone must not silently widen to the whole trip. A list microphone must not shrink to one day.
 - Maps, unassigned/options, and the shared page must lose a removed Thing. This lever records the itinerary snapshot; TREK pin cleanup is a later apply-time check.
 - Do not attach media to a suggested/research queue item unless the fixture marks it as a real Thing on the live trip.
+- `thing-media-stale` / `thing-media-visible` are named here; the pipeline does not yet fail-close on `thing_id` vs live trip or missing page-context IDs. Do not add a fake golden for that.

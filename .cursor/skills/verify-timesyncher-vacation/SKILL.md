@@ -115,6 +115,7 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - customer_id alone is not owner/canEdit
 - trek-* live files must not keep inferFallbackPlan / planWithGrok / extractQuotedAdds
 - once the turn gate replies planned_writes, do not queue a write worker; the next turn re-enters the gate
+- live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the plannedWritesReplied turn
 - events.jsonl appends one event per handoff and never overwrites
 
 ## Anti-patterns

@@ -37,6 +37,8 @@ assert.match(INTAKE_SEAM.remaining, /live-locked trip_things/);
 assert.match(INTAKE_SEAM.remaining, /staging_bypass/);
 assert.match(INTAKE_SEAM.remaining, /customer_id/);
 assert.match(INTAKE_SEAM.remaining, /plannedWritesReplied/);
+assert.match(INTAKE_SEAM.remaining, /separate entry/);
+assert.match(INTAKE_SEAM.remaining, /--trek-db/);
 
 const owner = gateTelegramIntakeEdit({
   text: 'Move Bellagio Fountains to day 2',
