@@ -13,6 +13,7 @@ import {
   isVoiceSurface,
   listFixtureFiles,
   loadFixture,
+  noApplyCopy,
   noMatchCopy,
   runVacationEditPipeline,
   stableJobId,
@@ -38,6 +39,10 @@ assert.ok(committedEvents.some((line) => JSON.parse(line).step === 'complete'));
 assert.equal(committedEvents.length, 6, 'committed proof events.jsonl must be one initialize→complete pass');
 assert.ok(fs.existsSync(path.join(committedProofDir, 'dry-run.json')));
 assert.deepEqual(committedReceipt.event_steps, ['initialize', 'lock_identity', 'parse', 'validate', 'copy_check', 'complete']);
+assert.equal(committedReceipt.customer_facing_response, noApplyCopy('Move Bellagio Fountains to day 2'));
+assert.doesNotMatch(committedReceipt.customer_facing_response, /^(Moved |Removed )/);
+assert.equal(committedReceipt.before_hash, committedReceipt.after_hash);
+assert.deepEqual(committedReceipt.writes_applied, []);
 
 const fixtures = listFixtureFiles(cwd);
 assert.ok(fixtures.length >= 18, `expected at least 18 fixtures, got ${fixtures.length}`);
@@ -83,6 +88,11 @@ for (const filePath of fixtures) {
     for (const banned of fixture.expect.forbids) {
       assert.doesNotMatch(first.receipt.customer_facing_response, new RegExp(banned, 'i'));
     }
+  }
+  if (first.receipt.planned_writes.length && first.receipt.writes_applied.length === 0) {
+    assert.equal(first.receipt.before_hash, first.receipt.after_hash, `${fixture.fixture_id} dry-run hashes must stay honest`);
+    assert.match(first.receipt.customer_facing_response, /did not change the itinerary/);
+    assert.doesNotMatch(first.receipt.customer_facing_response, /^(Moved |Removed )/);
   }
   if (fixture.expect?.page_kind) {
     assert.equal(first.receipt.page_context.kind, fixture.expect.page_kind);
@@ -195,6 +205,7 @@ assert.notEqual(applied.receipt.before_hash, applied.receipt.after_hash);
 assert.equal(applied.receipt.after_state.items.find((item) => item.id === 'thing-bellagio-fountains').day, 2);
 assert.equal(applied.receipt.stop_rules.find((rule) => rule.id === 'prove_state_movement').status, 'hold');
 assert.match(applied.receipt.stop_rules.find((rule) => rule.id === 'prove_state_movement').detail, /not product\/TREK state/);
+assert.match(applied.receipt.customer_facing_response, /^Moved Bellagio Fountains from day 1 20:00 to day 2/);
 
 const noopApply = runVacationEditPipeline(loadFixture('features/fixtures/exact-no-match.json', cwd), {
   apply: true,
@@ -246,6 +257,7 @@ assert.equal(bellagio.receipt.trek_state.row_count_before, 1);
 assert.equal(bellagio.receipt.trek_state.row_count_after, 1);
 assert.equal(bellagio.receipt.trek_state.item_moved, true);
 assert.equal(bellagio.receipt.mode, 'apply_trek_sqlite');
+assert.match(bellagio.receipt.customer_facing_response, /^Moved Bellagio Fountains from day 1 20:00 to day 2/);
 bellagioStore.dispose();
 
 console.log(`vacation-edit-pipeline verification lever passed (${fixtures.length} fixtures)`);

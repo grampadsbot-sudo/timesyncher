@@ -5,6 +5,7 @@ import path from 'node:path';
 export const PIPELINE_NAME = 'vacation-edit-pipeline';
 export const PIPELINE_VERSION = '1';
 export const NO_MATCH_TEMPLATE = 'I heard "{heard}", couldn\'t find a match, what do you mean?';
+export const NO_APPLY_TEMPLATE = 'I heard "{heard}", but I did not change the itinerary from this message.';
 export const FIRST_PASS_LANGUAGE = /turning this into an itinerary|turning the information you sent into a hosted|will send the itinerary link when the first pass is ready/i;
 
 export const SURFACES = Object.freeze(['telegram-text', 'telegram-voice', 'shared-page-voice']);
@@ -63,6 +64,11 @@ export function trekIdSet(rows = []) {
 
 export function noMatchCopy(heard) {
   return NO_MATCH_TEMPLATE.replace('{heard}', String(heard || '').trim());
+}
+
+export function noApplyCopy(heard = 'that edit') {
+  const text = String(heard || 'that edit').trim() || 'that edit';
+  return NO_APPLY_TEMPLATE.replace('{heard}', text);
 }
 
 export function normalizeName(value) {
@@ -311,7 +317,11 @@ export function runVacationEditPipeline(rawInput = {}, options = {}) {
 
   const afterHash = snapshotHash(working);
   const responses = decisions.map((row) => row.response).filter(Boolean);
-  const customerFacing = composeCustomerFacing(responses, decisions);
+  const plannedWrites = decisions.filter((row) => row.write);
+  const writesApplied = decisions.filter((row) => row.applied);
+  const customerFacing = plannedWrites.length && writesApplied.length === 0
+    ? noApplyCopy(intents[0]?.heard || input.text || 'that edit')
+    : composeCustomerFacing(responses, decisions);
   const receipt = {
     schema: 'timesyncher.vacation-edit-pipeline.v1',
     pipeline: PIPELINE_NAME,

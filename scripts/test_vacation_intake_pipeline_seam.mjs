@@ -42,6 +42,7 @@ assert.match(INTAKE_SEAM.remaining, /plannedWritesReplied/);
 assert.match(INTAKE_SEAM.remaining, /separate entry/);
 assert.match(INTAKE_SEAM.remaining, /--trek-db/);
 assert.match(INTAKE_SEAM.remaining, /apply_not_on_turn/);
+assert.match(INTAKE_SEAM.remaining, /no-apply customer_facing_response/);
 assert.match(INTAKE_SEAM.remaining, /features\/proof\/vac-verify-telegram-text-single-edit/);
 
 const owner = gateTelegramIntakeEdit({
@@ -61,7 +62,9 @@ assert.equal(turnAfterGate.failClosed, true);
 assert.equal(turnAfterGate.editApplied, false);
 assert.equal(turnAfterGate.reason, 'apply_not_on_turn');
 assert.equal(turnAfterGate.reply, telegramTurnNoApplyCopy('Move Bellagio Fountains to day 2'));
+assert.equal(owner.receipt.customer_facing_response, telegramTurnNoApplyCopy('Move Bellagio Fountains to day 2'));
 assert.doesNotMatch(turnAfterGate.reply, /^Moved /);
+assert.doesNotMatch(owner.receipt.customer_facing_response, /^Moved /);
 assert.doesNotMatch(turnAfterGate.reply, /updated the itinerary/i);
 
 const emptyItems = gateTelegramIntakeEdit({

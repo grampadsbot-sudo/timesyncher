@@ -23,13 +23,13 @@ Preconditions:
 - `node scripts/control-vacation.mjs doctor` exits `0`.
 - Fixture trip `trip-vegas-live-001` is locked.
 
-- **Single clear edit.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/telegram-text-single-edit.json --json`. `planned_writes[0].op` is `move_thing` and the reply starts with `Moved Bellagio Fountains`.
+- **Single clear edit.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/telegram-text-single-edit.json --json`. `planned_writes[0].op` is `move_thing`. `customer_facing_response` is `I heard "Move Bellagio Fountains to day 2", but I did not change the itinerary from this message.` Before/after hashes match. `writes_applied` is empty.
 - **Local snapshot (not product state).** Run `node scripts/control-vacation.mjs apply --local-snapshot --fixture features/fixtures/telegram-text-single-edit.json --json`. Mode is `apply_local_snapshot`. `prove_state_movement` is `hold`. The JSON hash is not TREK/product state.
 - **TREK id-set movement.** Run `node scripts/test_vacation_edit_pipeline.mjs` (the `trek_sqlite` Bellagio unit test) and `node scripts/test_vacation_trek_apply.mjs`. Bellagio moves day 1 → day 2. `row_ids` stay `["41"]` and row count stays `1`. Do not claim uniqueness from fixture sqlite without those tests.
 - **Bare apply refused.** `node scripts/control-vacation.mjs apply --fixture features/fixtures/telegram-text-single-edit.json` exits `2` and asks for `--local-snapshot` or `--trek-db`.
 - **Exact no-match.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/exact-no-match.json --json`. `customer_facing_response` is `I heard "Remove the volcano helicopter tour", couldn't find a match, what do you mean?`
 - **Alias.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/alias-omeke.json --json`. The planned write title is `Umekes Fish Market Bar & Grill`.
-- **Success wording.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/successful-edit-wording.json --json`. The reply names the removed item and location and does not mention a first pass.
+- **Success wording.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/successful-edit-wording.json --json`. Dry-run `customer_facing_response` is the no-apply sentence (no `Removed`/`Moved`). `planned_writes[0].op` is `remove_thing`. `--apply --local-snapshot` or `--apply --trek-db` names the removed item and location and does not mention a first pass.
 - **Split-trip TREK uniqueness.** Run `node scripts/control-vacation.mjs dry-run --fixture features/fixtures/split-trip-trek-uniqueness.json --json`. `trek_state.row_ids_before` equals `row_ids_after` (`["41"]`) and `row_count_*` stays `1`. Do not use a UI hash as uniqueness proof.
 - **Proof.** Refresh the committed inspectable receipt with `node scripts/control-vacation.mjs commit-proof` (also written by `dry-run` of this fixture). Read `features/proof/vac-verify-telegram-text-single-edit/{receipt.json,events.jsonl,dry-run.json}` in the repo. Do not treat a gitignored `artifacts/` run as in-tree proof.
 

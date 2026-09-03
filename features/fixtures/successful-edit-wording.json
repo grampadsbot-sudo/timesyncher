@@ -16,7 +16,7 @@
   "expect": {
     "ok": true,
     "write_ops": ["remove_thing"],
-    "response_includes": "Removed Bellagio Fountains from day 1 20:00",
-    "forbids": ["turning this into an itinerary", "first pass"]
+    "response_includes": "I did not change the itinerary from this message",
+    "forbids": ["turning this into an itinerary", "first pass", "^Removed ", "^Moved "]
   }
 }

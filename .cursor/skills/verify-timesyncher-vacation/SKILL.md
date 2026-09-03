@@ -66,7 +66,7 @@ Standards:
 - Bare `--apply` is refused (exit 2). `--apply --local-snapshot` is labeled hold and is not product/TREK state. `--apply --trek-db` must move TREK place/assignment ids and keep the trip id-set/row-count stable for a move, or reject a split that would duplicate TREK rows.
 - Dry-run skips Stripe, Telegram send, TREK SQLite, and network STT. Confirm skipped I/O by seeing no payment-intent calls and a local artifact dir only.
 - No-match copy must be exactly `I heard "...", couldn't find a match, what do you mean?`
-- Success copy must name old/new or removed/added state.
+- Dry-run `customer_facing_response` must be the no-apply sentence when planned writes were not applied. Success copy (Moved/Removed naming old/new state) is only honest after `--apply` actually wrote.
 
 Required later customer-run artifacts (named on every compact receipt, not produced here): whole-experience screenshot / customer-flow PDF, customer-story PDF with generated pictures, final keepsake PDF.
 
@@ -118,6 +118,7 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - customer_id alone is not owner/canEdit
 - trek-* live files must not keep inferFallbackPlan / planWithGrok / extractQuotedAdds
 - once the turn gate has planned_writes, do not queue a write worker and do not send Moved/Removed success copy (apply_not_on_turn)
+- dry-run receipt customer_facing_response must use the same no-apply copy; do not store Moved/Removed when writes_applied is empty
 - live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the telegram turn
 - doctor must see the committed proof at features/proof/vac-verify-telegram-text-single-edit/
 - events.jsonl appends one event per handoff and never overwrites

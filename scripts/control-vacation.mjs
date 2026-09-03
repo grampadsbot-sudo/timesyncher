@@ -118,15 +118,24 @@ function doctor() {
   if (fs.existsSync(proofReceiptPath) && fs.existsSync(proofEventsPath) && fs.existsSync(proofDryRunPath)) {
     try {
       const receipt = JSON.parse(fs.readFileSync(proofReceiptPath, 'utf8'));
+      const dryRun = JSON.parse(fs.readFileSync(proofDryRunPath, 'utf8'));
       const eventLines = fs.readFileSync(proofEventsPath, 'utf8').trim().split('\n').filter(Boolean);
       const steps = eventLines.map((line) => JSON.parse(line).step);
+      const honestCopy = (text) => /did not change the itinerary/.test(String(text || ''))
+        && !/^(Moved |Removed )/i.test(String(text || ''));
       committedProof = {
         ok: receipt.job_id === COMMITTED_PROOF_JOB
           && receipt.ok === true
           && Array.isArray(receipt.stop_rules)
           && receipt.stop_rules.length >= 8
           && steps.includes('initialize')
-          && steps.includes('complete'),
+          && steps.includes('complete')
+          && receipt.before_hash === receipt.after_hash
+          && dryRun.before_hash === dryRun.after_hash
+          && Array.isArray(receipt.writes_applied)
+          && receipt.writes_applied.length === 0
+          && honestCopy(receipt.customer_facing_response)
+          && honestCopy(dryRun.customer_facing_response),
         job_id: receipt.job_id || null,
         events: path.relative(cwd, proofEventsPath),
         receipt: path.relative(cwd, proofReceiptPath),

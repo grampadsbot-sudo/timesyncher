@@ -26,7 +26,7 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 - Capture the user action and the resulting state, not only the final reply.
 - Mutation proof for product state is a TREK id-set and row-count before vs after (`--apply --trek-db`). A local fixture hash is labeled `apply_local_snapshot` and is not product state.
 - No-match wording must be exact: `I heard "...", couldn't find a match, what do you mean?`
-- Pipeline `customer_facing_response` may name a planned change (`Moved …`). That is planned-write copy, not a Telegram success claim. Telegram `plannedWritesReplied` must not send Moved/Removed until TREK movement is proven on a separate apply entry (`apply_not_on_turn`). A reply that claims an update without TREK id-set movement is a failure.
+- Dry-run and other unapplied receipts store the no-apply sentence (`I heard "…", but I did not change the itinerary from this message.`). `planned_writes` still names the validated change. Moved/Removed success copy is only honest after writes were applied (`--apply`). Telegram `plannedWritesReplied` uses the same no-apply copy (`apply_not_on_turn`). A reply that claims an update without TREK id-set movement is a failure. Before/after hashes stay equal on dry-run.
 - Existing-itinerary edits must not use first-pass language such as "turning this into an itinerary."
 - Record the feature ID, surface, and entry point with every artifact.
 - A committed inspectable dry-run receipt lives at [features/proof/vac-verify-telegram-text-single-edit/receipt.json](./proof/vac-verify-telegram-text-single-edit/receipt.json) with `events.jsonl` and `dry-run.json` beside it. Doctor requires that path. Do not treat a gitignored `artifacts/` run as in-tree proof.

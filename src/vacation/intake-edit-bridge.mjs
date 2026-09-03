@@ -1,5 +1,7 @@
 import {
+  NO_APPLY_TEMPLATE,
   compactReceipt,
+  noApplyCopy,
   runVacationEditPipeline,
 } from './edit-pipeline.mjs';
 
@@ -12,14 +14,13 @@ export const INTAKE_SEAM = Object.freeze({
     'scripts/product-gbrain-dispatch.mjs',
     'scripts/telegram-vacation-intake-bot.mjs',
   ],
-  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Dead re-parse helpers (inferFallbackPlan / planWithGrok / extractQuotedAdds) are removed from trek-* live files. Once the turn gate has planned_writes (plannedWritesReplied), it does not queue a write worker and must not send Moved/Removed success copy — apply is not on that turn (apply_not_on_turn fail-closed). Live TREK apply is a separate entry (worker applyExistingTripEdit only when a first-pass/non-edit job is queued, or control-vacation --apply --trek-db / --local-snapshot). Committed inspectable dry-run receipt lives at features/proof/vac-verify-telegram-text-single-edit/. Any subsequent customer turn must re-enter the gate. Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
+  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Dead re-parse helpers (inferFallbackPlan / planWithGrok / extractQuotedAdds) are removed from trek-* live files. Once the turn gate has planned_writes (plannedWritesReplied), it does not queue a write worker and must not send Moved/Removed success copy — apply is not on that turn (apply_not_on_turn fail-closed). Dry-run and other unapplied receipts store the same no-apply customer_facing_response; planned_writes stay on the receipt. Live TREK apply is a separate entry (worker applyExistingTripEdit only when a first-pass/non-edit job is queued, or control-vacation --apply --trek-db / --local-snapshot). Committed inspectable dry-run receipt lives at features/proof/vac-verify-telegram-text-single-edit/. Any subsequent customer turn must re-enter the gate. Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
 });
 
-export const TELEGRAM_TURN_NO_APPLY_TEMPLATE = 'I heard "{heard}", but I did not change the itinerary from this message.';
+export const TELEGRAM_TURN_NO_APPLY_TEMPLATE = NO_APPLY_TEMPLATE;
 
 export function telegramTurnNoApplyCopy(heard = 'that edit') {
-  const text = String(heard || 'that edit').trim() || 'that edit';
-  return TELEGRAM_TURN_NO_APPLY_TEMPLATE.replace('{heard}', text);
+  return noApplyCopy(heard);
 }
 
 export function telegramTurnAfterGate(gate = {}) {

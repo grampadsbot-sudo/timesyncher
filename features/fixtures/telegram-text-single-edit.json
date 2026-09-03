@@ -18,6 +18,6 @@
   "expect": {
     "ok": true,
     "write_ops": ["move_thing"],
-    "response_includes": "Moved Bellagio Fountains from day 1 20:00 to day 2"
+    "response_includes": "I heard \"Move Bellagio Fountains to day 2\", but I did not change the itinerary from this message."
   }
 }
