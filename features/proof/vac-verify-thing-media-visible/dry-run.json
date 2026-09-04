@@ -1,0 +1,202 @@
+{
+  "schema": "timesyncher.vacation-edit-pipeline.v1",
+  "pipeline": "vacation-edit-pipeline",
+  "pipeline_version": "1",
+  "job_id": "vac-verify-thing-media-visible",
+  "mode": "dry-run",
+  "apply_scope": "dry-run",
+  "surface": "telegram-text",
+  "actor": {
+    "id": "owner-craig",
+    "role": "owner",
+    "session": true,
+    "logged_out": false,
+    "identity": "owner-craig",
+    "authorized": true,
+    "canUpload": true,
+    "canEdit": true
+  },
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live"
+  },
+  "page_context": {
+    "kind": "day",
+    "day": 2,
+    "item_ids": [
+      "thing-umekes"
+    ]
+  },
+  "transcript": "Attach this photo to Bellagio Fountains",
+  "audio_path": null,
+  "audio_real_ogg": false,
+  "dropped_clause": false,
+  "clause_count": 1,
+  "expected_clauses": 1,
+  "fixture_id": "thing-media-visible",
+  "fixture_path": "features/fixtures/thing-media-visible.json",
+  "intents": [
+    {
+      "id": "intent-1",
+      "kind": "media_upload",
+      "heard": "Attach this photo to Bellagio Fountains",
+      "target": "Attach this photo to Bellagio Fountains",
+      "destination": null,
+      "replacement": null
+    }
+  ],
+  "candidates": [
+    {
+      "id": "thing-bellagio-fountains",
+      "title": "Bellagio Fountains",
+      "score": 1,
+      "day": 1
+    }
+  ],
+  "planned_writes": [],
+  "no_ops": [
+    {
+      "reason": "thing_not_visible",
+      "heard": "Attach this photo to Bellagio Fountains",
+      "response": "I heard \"Attach this photo to Bellagio Fountains\", but that Thing is not in this page, so I did not attach the media."
+    }
+  ],
+  "writes_applied": [],
+  "customer_facing_response": "I heard \"Attach this photo to Bellagio Fountains\", but that Thing is not in this page, so I did not attach the media.",
+  "before_hash": "4d4030f09ef7dcfebf5aaae7341cdd942986470dcf342fbf994ff4179aa998a5",
+  "after_hash": "4d4030f09ef7dcfebf5aaae7341cdd942986470dcf342fbf994ff4179aa998a5",
+  "before_state": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      {
+        "id": "thing-bellagio-fountains",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Bellagio Fountains",
+        "day": 1,
+        "location": "day 1 20:00"
+      },
+      {
+        "id": "thing-umekes",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Umekes Fish Market Bar & Grill",
+        "day": 2,
+        "location": "day 2 13:00"
+      }
+    ],
+    "trek_rows": []
+  },
+  "after_state": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      {
+        "id": "thing-bellagio-fountains",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Bellagio Fountains",
+        "day": 1,
+        "location": "day 1 20:00"
+      },
+      {
+        "id": "thing-umekes",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Umekes Fish Market Bar & Grill",
+        "day": 2,
+        "location": "day 2 13:00"
+      }
+    ],
+    "trek_rows": []
+  },
+  "trek_state": {
+    "row_ids_before": [],
+    "row_ids_after": [],
+    "row_count_before": 0,
+    "row_count_after": 0,
+    "item_moved": false,
+    "source": "fixture_trek_rows"
+  },
+  "artifacts": {
+    "dir": "features/proof/vac-verify-thing-media-visible",
+    "events": "features/proof/vac-verify-thing-media-visible/events.jsonl",
+    "dry_run": "features/proof/vac-verify-thing-media-visible/dry-run.json",
+    "receipt": "features/proof/vac-verify-thing-media-visible/receipt.json",
+    "before": "features/proof/vac-verify-thing-media-visible/before.json",
+    "after": "features/proof/vac-verify-thing-media-visible/after.json"
+  },
+  "stop_rules": [
+    {
+      "id": "no_customer_simulation",
+      "description": "Do not start synthetic customer journeys from this lever.",
+      "status": "pass",
+      "detail": "Dry-run/control driver only; no customer journey started."
+    },
+    {
+      "id": "no_production_billing",
+      "description": "Do not charge Stripe or mutate production entitlements.",
+      "status": "pass",
+      "detail": "Checkout proof uses a synthetic account fixture."
+    },
+    {
+      "id": "no_unvalidated_writes",
+      "description": "The parser never writes. Only validated item IDs on the locked trip may mutate.",
+      "status": "pass",
+      "detail": "Writes require deterministic validation."
+    },
+    {
+      "id": "fail_closed_stale_media",
+      "description": "Media must bind to the live trip_id or no-op.",
+      "status": "pass",
+      "detail": "Stale or mismatched trip media must no-op."
+    },
+    {
+      "id": "fail_closed_thing_id",
+      "description": "Thing-scoped media must target a Thing on the locked trip and in page context.",
+      "status": "pass",
+      "detail": "Fail-closed on thing_id; write=null."
+    },
+    {
+      "id": "fail_closed_unauthorized_upload",
+      "description": "Public-link and unauthorized collaborator uploads reject.",
+      "status": "pass",
+      "detail": "Unauthorized or public-link uploads must reject."
+    },
+    {
+      "id": "fail_closed_duplicate_trek",
+      "description": "Split-trip must not create a second TREK row for the same title/token.",
+      "status": "pass",
+      "detail": "TREK id-set unchanged (none); row count 0."
+    },
+    {
+      "id": "fail_closed_dropped_clause",
+      "description": "Multi-request voice must fail closed if any spoken clause is dropped.",
+      "status": "pass",
+      "detail": "Every spoken clause produced a decision."
+    },
+    {
+      "id": "exact_no_match_copy",
+      "description": "Unmatched targets use the exact no-match sentence.",
+      "status": "pass",
+      "detail": "Unmatched copy must be exact."
+    },
+    {
+      "id": "prove_state_movement",
+      "description": "A success reply is invalid unless TREK/backend id-set state moved, or local-snapshot is labeled hold.",
+      "status": "hold",
+      "detail": "Dry-run records planned writes; --apply --trek-db proves TREK id-set movement."
+    },
+    {
+      "id": "no_first_pass_language_on_edits",
+      "description": "Existing-itinerary edits must not use first-pass creation language.",
+      "status": "pass",
+      "detail": "Existing edits must name the change, not first-pass setup."
+    }
+  ],
+  "ok": true,
+  "proof_digest": "dc73aabe9a5cb5bdda1accbcb5b4390037c7477b5cebd5bfd315bbf098837d69"
+}

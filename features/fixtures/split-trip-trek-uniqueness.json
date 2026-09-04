@@ -1,0 +1,27 @@
+{
+  "id": "split-trip-trek-uniqueness",
+  "surface": "telegram-text",
+  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true, "identity": "owner-craig" },
+  "pageContext": { "kind": "timeline" },
+  "text": "Split this into a second trip called Las Vegas Strip Vacation",
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "trek_rows": [
+      { "id": 41, "title": "Las Vegas Strip Vacation", "token": "las-vegas-strip-vacation" }
+    ],
+    "items": [
+      { "id": "thing-bellagio-fountains", "trip_id": "trip-vegas-live-001", "title": "Bellagio Fountains", "day": 1, "location": "day 1 20:00" }
+    ]
+  },
+  "expect": {
+    "ok": true,
+    "write_ops": [],
+    "no_op_stops": ["duplicate_trek"],
+    "trek_row_count_before": 1,
+    "trek_row_count_after": 1,
+    "trek_ids_unchanged": true
+  }
+}

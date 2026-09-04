@@ -19,6 +19,14 @@ import {
   createTelegramWebAccessSession,
   publicTripUrl,
 } from '../src/vacation/web-access.mjs';
+import {
+  actorFromLiveSession,
+  gateMediaUploadIntake,
+  gateTelegramIntakeEdit,
+  mapLiveLockedThingRows,
+  selectLiveLockedTripThings,
+  telegramTurnAfterGate,
+} from '../src/vacation/intake-edit-bridge.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
 const MAX_VIDEOS_PER_VACATION = 20;
@@ -91,9 +99,8 @@ async function ensureMediaSchema(db) {
 }
 
 async function hasMediaEntitlement(db, session, mediaKind, env = process.env, host = '') {
-  if (env.TIMESYNCHER_MEDIA_UPLOAD_STAGING_BYPASS === 'true' || /vacation-staging\.timesyncher\.com/i.test(host)) {
-    return { allowed: true, source: 'staging_bypass' };
-  }
+  void env;
+  void host;
   if (!session?.customer_id || !session?.trip_id) return { allowed: false, source: 'unlinked_session' };
   const metadataKey = mediaKind === 'video' ? 'video_memories' : 'photo_memories';
   const rows = await db`
@@ -180,9 +187,60 @@ async function recordMediaUpload(db, req, body) {
   if (!media.telegramFileId) throw Object.assign(new Error('telegramFileId is required.'), { statusCode: 400 });
   const session = await findSessionForTelegram(db, media.telegramChatId, media.telegramUserId);
   if (!session?.customer_id || !session?.trip_id) {
-    throw Object.assign(new Error('A linked TimeSyncher Vacation session is required before uploading media.'), { statusCode: 403 });
+    const loggedOutGate = gateMediaUploadIntake({
+      text: media.caption || `Upload this ${media.mediaKind} to the vacation`,
+      actor: actorFromLiveSession({
+        id: media.telegramUserId || media.telegramChatId,
+        loggedOut: true,
+        session: null,
+      }),
+      trip: { trip_id: 'trip-unspecified', title: 'Vacation', status: 'live', items: [] },
+      media: {
+        media_kind: media.mediaKind,
+        bound_trip_id: null,
+        attachment_scope: media.attachmentScope || 'trip',
+      },
+    });
+    throw Object.assign(new Error(loggedOutGate.receipt?.customer_facing_response || 'A linked TimeSyncher Vacation session is required before uploading media.'), {
+      statusCode: 403,
+      vacationEditPipeline: loggedOutGate.compact,
+    });
   }
+  const meta = sessionMetadata(session);
+  const collaboratorRole = String(meta.telegramRole || '').toLowerCase() === 'collaborator';
+  const collaborator = collaboratorRole
+    ? await activeCollaboratorForTelegram(db, {
+      ownerCustomerId: session.customer_id,
+      tripId: session.trip_id,
+      telegramChatId: media.telegramChatId,
+      telegramUserId: media.telegramUserId,
+    })
+    : null;
   const entitlement = await hasMediaEntitlement(db, session, media.mediaKind, process.env, req.headers.host || '');
+  const mediaGate = gateMediaUploadIntake({
+    text: media.caption || `Upload this ${media.mediaKind} to the vacation`,
+    actor: actorFromLiveSession({
+      id: media.telegramUserId || media.telegramChatId,
+      telegramUserId: media.telegramUserId,
+      customer_id: session.customer_id,
+      trip_id: session.trip_id,
+      metadata: meta,
+      collaborator,
+      entitlement,
+    }),
+    trip: { trip_id: session.trip_id, title: 'Vacation', status: 'live', items: [] },
+    media: {
+      media_kind: media.mediaKind,
+      bound_trip_id: session.trip_id,
+      attachment_scope: media.attachmentScope || 'trip',
+    },
+  });
+  if (mediaGate.failClosed) {
+    throw Object.assign(new Error(mediaGate.receipt?.customer_facing_response || 'Media upload rejected.'), {
+      statusCode: 403,
+      vacationEditPipeline: mediaGate.compact,
+    });
+  }
   if (!entitlement.allowed) {
     throw Object.assign(new Error(`${media.mediaKind === 'video' ? 'Video' : 'Photo'} Memories add-on is required before uploading ${media.mediaKind}s.`), { statusCode: 402 });
   }
@@ -1390,6 +1448,50 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { ok: true, transcriptId, telegramSessionId: session?.id || null });
     }
 
+    if (event === 'resolve_live_session') {
+      const lookupUserId = telegramUserId ? `telegram:${telegramUserId}` : '';
+      const session = telegramChatId || lookupUserId
+        ? await findSessionForTelegram(db, telegramChatId, lookupUserId)
+        : null;
+      if (!session?.customer_id || !session?.trip_id) {
+        return sendJson(res, 200, {
+          ok: true,
+          loggedOut: true,
+          session: null,
+          telegramChatId: telegramChatId || null,
+          telegramUserId: telegramUserId || null,
+        });
+      }
+      const meta = sessionMetadata(session);
+      const collaboratorRole = String(meta.telegramRole || '').toLowerCase() === 'collaborator';
+      const collaborator = collaboratorRole
+        ? await activeCollaboratorForTelegram(db, {
+          ownerCustomerId: session.customer_id,
+          tripId: session.trip_id,
+          telegramChatId,
+          telegramUserId: lookupUserId,
+        })
+        : null;
+      const mediaKind = cleanText(body.mediaKind || body.media_kind, 20).toLowerCase();
+      const entitlement = mediaKind === 'photo' || mediaKind === 'video'
+        ? await hasMediaEntitlement(db, session, mediaKind, process.env, req.headers.host || '')
+        : {
+          allowed: (await hasMediaEntitlement(db, session, 'photo', process.env, req.headers.host || '')).allowed
+            || (await hasMediaEntitlement(db, session, 'video', process.env, req.headers.host || '')).allowed,
+          source: 'session_lookup',
+        };
+      return sendJson(res, 200, {
+        ok: true,
+        customer_id: session.customer_id,
+        trip_id: session.trip_id,
+        telegramChatId,
+        telegramUserId,
+        metadata: meta,
+        collaborator: collaborator ? { id: collaborator.id, status: collaborator.status || 'active' } : null,
+        entitlement,
+      });
+    }
+
     if (event === 'media_upload') {
       const result = await recordMediaUpload(db, req, body);
       return sendJson(res, 200, { ok: true, ...result });
@@ -1677,16 +1779,73 @@ export default async function handler(req, res) {
         reply = collaboratorDeniedCopy();
         replyPayload = { collaboratorAuthorization: authz };
       } else {
-        queued = await queueSetupRequest(db, session, text, {
-        ...(body.payload || {}),
+        let liveLockedThings = [];
+        try {
+          if (session.trip_id) {
+            const rows = await db`
+              select id, title, location, metadata
+              from trip_things
+              where trip_id = ${session.trip_id}
+              limit 200
+            `;
+            liveLockedThings = mapLiveLockedThingRows(rows, session.trip_id);
+          }
+        } catch {
+          liveLockedThings = [];
+        }
+        const tripItems = selectLiveLockedTripThings({
+          tripId: session.trip_id,
+          liveLockedThings,
+          clientThings: body.payload?.things,
+          payloadThings: body.items,
+        });
+        const editGate = gateTelegramIntakeEdit({
+          text,
+          payload: body.payload || {},
+          audioPath: body.payload?.telegramVoice?.cachePath || body.payload?.voiceCache?.path,
+          actor: actorFromLiveSession({
+            id: telegramUserId || telegramChatId,
+            telegramUserId,
+            customer_id: session.customer_id,
+            trip_id: session.trip_id,
+            metadata: sessionMetadata(session),
+            collaborator: authz.reason === 'paid_collaborator' ? { id: authz.collaboratorId || 'paid', status: 'active' } : null,
+            entitlement: { allowed: false },
+          }),
+          trip: {
+            trip_id: session.trip_id,
+            title: cleanText(sessionMetadata(session).vacationName, 160) || 'Vacation',
+            status: 'live',
+            items: tripItems,
+          },
+        });
+        const turnDecision = telegramTurnAfterGate(editGate);
+        replyPayload = {
+          ...replyPayload,
+          vacationEditPipeline: editGate.compact || { skip: Boolean(editGate.skip) },
+          telegramTurn: turnDecision,
+        };
+        const plannedWritesReplied = turnDecision.plannedWritesReplied;
+        if (!editGate.skip && editGate.failClosed) {
+          reply = turnDecision.reply;
+        } else if (plannedWritesReplied) {
+          reply = turnDecision.reply;
+        } else {
+          const queuedPayload = { ...(body.payload || {}) };
+          delete queuedPayload.things;
+          queued = await queueSetupRequest(db, session, text, {
+        ...queuedPayload,
         vacationName: cleanText(sessionMetadata(session).vacationName, 160) || null,
         unforgettableGoal: cleanText(sessionMetadata(session).unforgettableGoal, 1000) || null,
         inboundTranscriptId,
         telegramChatId,
         telegramUserId,
           collaboratorAuthorization: authz,
+          vacationEditPipeline: editGate.compact,
+          liveLockedThings: tripItems,
         }, kind);
-        reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+          reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+        }
       }
     }
     const respondedAt = new Date();

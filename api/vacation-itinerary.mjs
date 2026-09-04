@@ -12,6 +12,12 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import {
+  actorFromLiveSession,
+  gateSharedPageIntakeEdit,
+  mapLiveLockedThingRows,
+  selectLiveLockedTripThings,
+} from '../src/vacation/intake-edit-bridge.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -104,6 +110,82 @@ async function handleWebAccess(req, res, db, url) {
         env: process.env,
       });
       return sendJson(res, 200, { ok: true, canEdit: true, role: result.role });
+    }
+
+    if (body.action === 'vacation_edit') {
+      const tripId = cleanText(body.tripId, 80);
+      const shareToken = cleanText(body.shareToken || body.publicSlug, 240);
+      const sessionToken = readCookie(req, webAccessCookieName()) || req.headers['x-timesyncher-web-access-token'] || '';
+      const grant = await webAccessForSession(db, {
+        sessionToken,
+        tripId,
+        shareToken,
+        env: process.env,
+      });
+      const loggedOut = !sessionToken;
+      const actor = actorFromLiveSession(grant
+        ? {
+          id: grant.email || grant.id || grant.role,
+          email: grant.email,
+          customer_id: grant.owner_customer_id || grant.customer_id,
+          trip_id: grant.trip_id || tripId,
+          grant: { role: grant.role, status: 'accepted' },
+          entitlement: { allowed: false, source: 'web_grant_not_media' },
+        }
+        : loggedOut
+          ? { id: 'logged-out-visitor', loggedOut: true, session: null }
+          : { id: 'public-link-visitor', publicLink: true, webGrant: null, shareToken });
+      let liveLockedThings = [];
+      if (tripId) {
+        try {
+          const rows = await db`
+            select id, title, location, metadata
+            from trip_things
+            where trip_id = ${tripId}
+            limit 200
+          `;
+          liveLockedThings = mapLiveLockedThingRows(rows, tripId);
+        } catch {
+          liveLockedThings = [];
+        }
+      }
+      const items = selectLiveLockedTripThings({
+        tripId,
+        liveLockedThings,
+        clientThings: body.items,
+        payloadThings: body.things,
+      });
+      const gate = gateSharedPageIntakeEdit({
+        text: body.text || body.transcript || '',
+        audioPath: body.audioPath || body.audio_path,
+        actor,
+        trip: {
+          trip_id: tripId || 'trip-unspecified',
+          title: cleanText(body.tripTitle || body.title, 180) || 'Vacation',
+          publicUrl: cleanText(body.publicUrl, 500) || '',
+          status: 'live',
+          items,
+        },
+        pageContext: body.pageContext || { kind: body.pageKind || 'timeline', items },
+        media: body.media || null,
+        persist: false,
+      }, { persist: false });
+      if (!grant || gate.failClosed) {
+        return sendJson(res, 403, {
+          ok: false,
+          failClosed: true,
+          reason: gate.reason || (grant ? 'no_validated_writes' : (loggedOut ? 'logged_out' : 'unauthorized_edit')),
+          vacationEditPipeline: gate.compact,
+        });
+      }
+      return sendJson(res, 200, {
+        ok: true,
+        canEdit: true,
+        role: grant.role,
+        plannedWrites: gate.receipt?.planned_writes || [],
+        vacationEditPipeline: gate.compact,
+        seam: 'shared-page vacation_edit gates via vacation-edit-pipeline from the live web-access session; empty Thing list and unauthorized sessions fail closed',
+      });
     }
   }
 

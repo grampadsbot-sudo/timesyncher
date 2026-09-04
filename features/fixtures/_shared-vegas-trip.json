@@ -1,0 +1,47 @@
+{
+  "trip_id": "trip-vegas-live-001",
+  "title": "Las Vegas Strip Vacation",
+  "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+  "status": "live",
+  "trek_rows": [
+    {
+      "id": 41,
+      "title": "Las Vegas Strip Vacation",
+      "token": "las-vegas-strip-vacation"
+    }
+  ],
+  "items": [
+    {
+      "id": "thing-umekes",
+      "trip_id": "trip-vegas-live-001",
+      "title": "Umekes Fish Market Bar & Grill",
+      "day": 2,
+      "location": "day 2 13:00",
+      "category": "restaurant"
+    },
+    {
+      "id": "thing-bellagio-fountains",
+      "trip_id": "trip-vegas-live-001",
+      "title": "Bellagio Fountains",
+      "day": 1,
+      "location": "day 1 20:00",
+      "category": "event"
+    },
+    {
+      "id": "thing-topgolf",
+      "trip_id": "trip-vegas-live-001",
+      "title": "Topgolf Las Vegas",
+      "day": 3,
+      "location": "day 3 16:00",
+      "category": "event"
+    },
+    {
+      "id": "thing-inoahs",
+      "trip_id": "trip-vegas-live-001",
+      "title": "In-N-Out Burger",
+      "day": 2,
+      "location": "day 2 12:00",
+      "category": "restaurant"
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "schema": "timesyncher.vacation-edit-pipeline.v1",
+  "pipeline": "vacation-edit-pipeline",
+  "pipeline_version": "1",
+  "job_id": "vac-verify-thing-media-stale",
+  "mode": "dry-run",
+  "apply_scope": "dry-run",
+  "surface": "telegram-text",
+  "actor": {
+    "id": "owner-craig",
+    "role": "owner",
+    "session": true,
+    "logged_out": false,
+    "identity": "owner-craig",
+    "authorized": true,
+    "canUpload": true,
+    "canEdit": true
+  },
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live"
+  },
+  "page_context": {
+    "kind": "timeline",
+    "day": null,
+    "item_ids": [
+      "thing-bellagio-fountains",
+      "thing-hawaii-luau"
+    ]
+  },
+  "transcript": "Attach this photo to the luau",
+  "audio_path": null,
+  "audio_real_ogg": false,
+  "dropped_clause": false,
+  "clause_count": 1,
+  "expected_clauses": 1,
+  "fixture_id": "thing-media-stale",
+  "fixture_path": "features/fixtures/thing-media-stale.json",
+  "intents": [
+    {
+      "id": "intent-1",
+      "kind": "media_upload",
+      "heard": "Attach this photo to the luau",
+      "target": "Attach this photo to the luau",
+      "destination": null,
+      "replacement": null
+    }
+  ],
+  "candidates": [],
+  "planned_writes": [],
+  "no_ops": [
+    {
+      "reason": "thing_id_cross_trip",
+      "heard": "Attach this photo to the luau",
+      "response": "I heard \"Attach this photo to the luau\", but that Thing belongs to another trip, so I did not attach the media."
+    }
+  ],
+  "writes_applied": [],
+  "customer_facing_response": "I heard \"Attach this photo to the luau\", but that Thing belongs to another trip, so I did not attach the media.",
+  "before_hash": "02a82b1e39368ea6699b3dab9727e9fffb93092484173f23d5efa323d9858535",
+  "after_hash": "02a82b1e39368ea6699b3dab9727e9fffb93092484173f23d5efa323d9858535",
+  "before_state": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      {
+        "id": "thing-bellagio-fountains",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Bellagio Fountains",
+        "day": 1,
+        "location": "day 1 20:00"
+      },
+      {
+        "id": "thing-hawaii-luau",
+        "trip_id": "trip-hawaii-old-009",
+        "title": "Luau",
+        "day": 1,
+        "location": "day 1 18:00"
+      }
+    ],
+    "trek_rows": []
+  },
+  "after_state": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      {
+        "id": "thing-bellagio-fountains",
+        "trip_id": "trip-vegas-live-001",
+        "title": "Bellagio Fountains",
+        "day": 1,
+        "location": "day 1 20:00"
+      },
+      {
+        "id": "thing-hawaii-luau",
+        "trip_id": "trip-hawaii-old-009",
+        "title": "Luau",
+        "day": 1,
+        "location": "day 1 18:00"
+      }
+    ],
+    "trek_rows": []
+  },
+  "trek_state": {
+    "row_ids_before": [],
+    "row_ids_after": [],
+    "row_count_before": 0,
+    "row_count_after": 0,
+    "item_moved": false,
+    "source": "fixture_trek_rows"
+  },
+  "artifacts": {
+    "dir": "features/proof/vac-verify-thing-media-stale",
+    "events": "features/proof/vac-verify-thing-media-stale/events.jsonl",
+    "dry_run": "features/proof/vac-verify-thing-media-stale/dry-run.json",
+    "receipt": "features/proof/vac-verify-thing-media-stale/receipt.json",
+    "before": "features/proof/vac-verify-thing-media-stale/before.json",
+    "after": "features/proof/vac-verify-thing-media-stale/after.json"
+  },
+  "stop_rules": [
+    {
+      "id": "no_customer_simulation",
+      "description": "Do not start synthetic customer journeys from this lever.",
+      "status": "pass",
+      "detail": "Dry-run/control driver only; no customer journey started."
+    },
+    {
+      "id": "no_production_billing",
+      "description": "Do not charge Stripe or mutate production entitlements.",
+      "status": "pass",
+      "detail": "Checkout proof uses a synthetic account fixture."
+    },
+    {
+      "id": "no_unvalidated_writes",
+      "description": "The parser never writes. Only validated item IDs on the locked trip may mutate.",
+      "status": "pass",
+      "detail": "Writes require deterministic validation."
+    },
+    {
+      "id": "fail_closed_stale_media",
+      "description": "Media must bind to the live trip_id or no-op.",
+      "status": "pass",
+      "detail": "Stale or mismatched trip media must no-op."
+    },
+    {
+      "id": "fail_closed_thing_id",
+      "description": "Thing-scoped media must target a Thing on the locked trip and in page context.",
+      "status": "pass",
+      "detail": "Fail-closed on thing_id; write=null."
+    },
+    {
+      "id": "fail_closed_unauthorized_upload",
+      "description": "Public-link and unauthorized collaborator uploads reject.",
+      "status": "pass",
+      "detail": "Unauthorized or public-link uploads must reject."
+    },
+    {
+      "id": "fail_closed_duplicate_trek",
+      "description": "Split-trip must not create a second TREK row for the same title/token.",
+      "status": "pass",
+      "detail": "TREK id-set unchanged (none); row count 0."
+    },
+    {
+      "id": "fail_closed_dropped_clause",
+      "description": "Multi-request voice must fail closed if any spoken clause is dropped.",
+      "status": "pass",
+      "detail": "Every spoken clause produced a decision."
+    },
+    {
+      "id": "exact_no_match_copy",
+      "description": "Unmatched targets use the exact no-match sentence.",
+      "status": "pass",
+      "detail": "Unmatched copy must be exact."
+    },
+    {
+      "id": "prove_state_movement",
+      "description": "A success reply is invalid unless TREK/backend id-set state moved, or local-snapshot is labeled hold.",
+      "status": "hold",
+      "detail": "Dry-run records planned writes; --apply --trek-db proves TREK id-set movement."
+    },
+    {
+      "id": "no_first_pass_language_on_edits",
+      "description": "Existing-itinerary edits must not use first-pass creation language.",
+      "status": "pass",
+      "detail": "Existing edits must name the change, not first-pass setup."
+    }
+  ],
+  "ok": true,
+  "proof_digest": "0fab04c860dd596043ffaa334f26b7c643e946bcb54bde4159dc949ecc4d625d"
+}

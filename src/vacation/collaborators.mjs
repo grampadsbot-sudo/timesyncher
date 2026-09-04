@@ -4,6 +4,7 @@ import {
   createOnboardingSessionPersistent,
   loadDefaultEulaText,
 } from '../onboarding/eula-persistent-core.mjs';
+import { CURRENT_EULA_VERSION } from '../onboarding/current-eula-text.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
 
 export const COLLABORATOR_PLANS = {
@@ -141,7 +142,7 @@ export async function ensureCollaboratorEulaSession(invite, token, env = process
   const status = await activationStatusPersistent(
     store,
     collaboratorEulaClientKey(invite),
-    env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft',
+    env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
   );
   if (status.ok) {
     return {
@@ -167,7 +168,7 @@ export async function ensureCollaboratorEulaSession(invite, token, env = process
       returnUrl: collaboratorTelegramLink(token, env),
     },
     eula: {
-      version: env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft',
+      version: env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
       text: loadDefaultEulaText(),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
@@ -241,7 +242,7 @@ export async function acceptCollaboratorInvite(db, {
       ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id || null},
       ${telegramChatId || null}, ${telegramUserId || null}, ${displayName || null},
       ${invite.plan_code}, ${invite.scope}, 'active',
-      ${env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft'},
+      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
       ${{
         source: 'telegram_collaborator_invite',
         telegramUsername: username || null,
