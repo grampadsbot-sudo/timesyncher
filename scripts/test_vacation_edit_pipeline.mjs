@@ -565,11 +565,11 @@ assert.equal(requireCommittedCiReceipt({
   attest_artifact_digest: successAttestArtifact.digest,
 }).ok, false, 'ancestor-style receipt without bind fields is incomplete');
 assert.equal(requireCommittedCiReceipt(readCommittedCiReceipt(cwd)).ok, true);
-assert.equal(readCommittedCiReceipt(cwd).sha, '9a98cab552e707322a788a3c063d403dce75b7e8');
-assert.equal(String(readCommittedCiReceipt(cwd).run_id), '33823585754');
-assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100871503112');
+assert.equal(readCommittedCiReceipt(cwd).sha, '18ca97344a278c70c488eba2edb008f5807d8f93');
+assert.equal(String(readCommittedCiReceipt(cwd).run_id), '33823889530');
+assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100872437393');
 assert.equal(readCommittedCiReceipt(cwd).jobs['vacation-verify-bind'], 'success');
-assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:42ec0dc78e209395231a2ce47756fe53f6f7a6d1255005cef98bc5ec9966e77b');
+assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:a01b8488aed7f0be41dcd4842bbe7d6a5f8a0ec3603af85a6f9c90f8b74b3968');
 const committedSha = readCommittedCiReceipt(cwd).sha;
 const headSha = gitRevParse(cwd);
 const parentSha = gitRevParse(cwd, `${headSha}^`);

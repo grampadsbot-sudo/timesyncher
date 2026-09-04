@@ -27,7 +27,8 @@
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
     "migration:apply-vacation-schema": "node scripts/apply_vacation_schema.mjs",
-    "migration:import-neon": "node scripts/import_hosted_bundle_to_neon.mjs"
+    "migration:import-neon": "node scripts/import_hosted_bundle_to_neon.mjs",
+    "test:eula:vacation-onboarding": "node scripts/test_vacation_onboarding_eula.mjs"
   },
   "devDependencies": {
     "vite": "^7.3.1"
