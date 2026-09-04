@@ -1,0 +1,122 @@
+[
+  {
+    "path": "/api/checkout-config",
+    "method": "GET",
+    "status": 503,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"Stripe publishable key does not match STRIPE_MODE=test.\"\n}\n"
+  },
+  {
+    "path": "/api/vacation-request",
+    "method": "GET",
+    "status": 405,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"method not allowed\"\n}\n"
+  },
+  {
+    "path": "/api/vacation-request",
+    "method": "POST",
+    "status": 400,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"Request body must be valid JSON.\"\n}\n"
+  },
+  {
+    "path": "/api/vacation-telegram-turn",
+    "method": "GET",
+    "status": 405,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"method not allowed\"\n}\n"
+  },
+  {
+    "path": "/api/vacation-telegram-turn",
+    "method": "POST",
+    "status": 400,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"Request body must be valid JSON.\"\n}\n"
+  },
+  {
+    "path": "/api/checkout-coupon",
+    "method": "GET",
+    "status": 405,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"method not allowed\"\n}\n"
+  },
+  {
+    "path": "/api/checkout-coupon",
+    "method": "POST",
+    "status": 400,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"First name is required.\"\n}\n"
+  },
+  {
+    "path": "/api/admin-onboardings",
+    "method": "GET",
+    "status": 503,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"TIMESYNCHER_ADMIN_TOKEN is not configured.\"\n}\n"
+  },
+  {
+    "path": "/api/admin-onboardings?action=coupons",
+    "method": "GET",
+    "status": 503,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"TIMESYNCHER_ADMIN_TOKEN is not configured.\"\n}\n"
+  },
+  {
+    "path": "/api/create-payment-intent",
+    "method": "GET",
+    "status": 405,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"method not allowed\"\n}\n"
+  },
+  {
+    "path": "/api/onboarding-session",
+    "method": "GET",
+    "status": 400,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"session or payment_intent is required.\"\n}\n"
+  },
+  {
+    "path": "/api/eula",
+    "method": "GET",
+    "status": 404,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"unknown action\"\n}\n"
+  },
+  {
+    "path": "/api/vacation-itinerary",
+    "method": "GET",
+    "status": 400,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"session is required.\"\n}\n"
+  },
+  {
+    "path": "/api/message-simulator",
+    "method": "GET",
+    "status": 404,
+    "content_type": "text/plain; charset=utf-8",
+    "location": "",
+    "body": "The page could not be found\n\nNOT_FOUND\n\niad1::j7tcg-1788493628110-27ae9b268ff8\n"
+  },
+  {
+    "path": "/api/vacation-simulator",
+    "method": "GET",
+    "status": 404,
+    "content_type": "text/plain; charset=utf-8",
+    "location": "",
+    "body": "The page could not be found\n\nNOT_FOUND\n\niad1::rd6q5-1788493628126-550173ec44c3\n"
+  }
+]

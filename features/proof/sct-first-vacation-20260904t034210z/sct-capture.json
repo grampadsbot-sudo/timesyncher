@@ -1,0 +1,248 @@
+{
+  "job_id": "sct-first-vacation-20260904t034210z",
+  "certified": false,
+  "merged": false,
+  "lane": "cursor-browser-api-capture",
+  "preview_url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+  "head": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "deployment_id": "dpl_5cyCb18FhnViwqofcXt2at5Kee8g",
+  "checkout_config_status": 503,
+  "checkout_config_error": "Stripe publishable key does not match STRIPE_MODE=test.",
+  "purchase_path": "skipped",
+  "trip_id": null,
+  "shared_url": null,
+  "before_state": null,
+  "screenshots": [
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/addons-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/checkout-attempt-contact.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/itinerary-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/login.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/onboarding-eula.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+  ],
+  "screenshot_visits": [
+    {
+      "id": "storefront",
+      "path": "/",
+      "status": 200,
+      "title": "TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+    },
+    {
+      "id": "addons-checkout",
+      "path": "/addons-checkout.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation Add-ons",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/addons-checkout.png"
+    },
+    {
+      "id": "owner-media-checkout",
+      "path": "/owner-media-checkout.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation Media Add-ons",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png"
+    },
+    {
+      "id": "order-success-onboarding",
+      "path": "/order-success.html",
+      "status": 200,
+      "title": "Start TimeSyncher Vacation Onboarding",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png"
+    },
+    {
+      "id": "onboarding-eula",
+      "path": "/onboarding-eula.html",
+      "status": 200,
+      "title": "TimeSyncher Onboarding - Terms Acceptance",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/onboarding-eula.png"
+    },
+    {
+      "id": "login",
+      "path": "/login.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/login.png"
+    },
+    {
+      "id": "itinerary-product",
+      "path": "/itinerary.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation Itinerary",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/itinerary-product.png"
+    },
+    {
+      "id": "shared-vegas-product",
+      "path": "/shared/las-vegas-strip-vacation/",
+      "status": 200,
+      "title": "TimeSyncher Vacation",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png"
+    },
+    {
+      "id": "checkout-attempt-contact",
+      "path": "/",
+      "status": 200,
+      "title": "TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/checkout-attempt-contact.png",
+      "filled": {
+        "first": true,
+        "last": true,
+        "email": true
+      },
+      "note": "Contact fields only. Did not submit payment or call create-payment-intent."
+    }
+  ],
+  "api_probes": [
+    {
+      "method": "GET",
+      "path": "/api/checkout-config",
+      "status": 503,
+      "error": "Stripe publishable key does not match STRIPE_MODE=test."
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-request",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "POST",
+      "path": "/api/vacation-request",
+      "status": 400,
+      "error": "Request body must be valid JSON."
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-telegram-turn",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "POST",
+      "path": "/api/vacation-telegram-turn",
+      "status": 400,
+      "error": "Request body must be valid JSON."
+    },
+    {
+      "method": "GET",
+      "path": "/api/checkout-coupon",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout-coupon",
+      "status": 400,
+      "error": "First name is required."
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin-onboardings",
+      "status": 503,
+      "error": "TIMESYNCHER_ADMIN_TOKEN is not configured."
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin-onboardings?action=coupons",
+      "status": 503,
+      "error": "TIMESYNCHER_ADMIN_TOKEN is not configured."
+    },
+    {
+      "method": "GET",
+      "path": "/api/create-payment-intent",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session",
+      "status": 400,
+      "error": "session or payment_intent is required."
+    },
+    {
+      "method": "GET",
+      "path": "/api/eula",
+      "status": 404,
+      "error": "unknown action"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary",
+      "status": 400,
+      "error": "session is required."
+    },
+    {
+      "method": "GET",
+      "path": "/api/message-simulator",
+      "status": 404,
+      "error": "The page could not be found"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-simulator",
+      "status": 404,
+      "error": "The page could not be found"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "checkout_config_env_gap",
+      "status": 503,
+      "detail": "Stripe publishable key does not match STRIPE_MODE=test. Purchase/billing path stopped. No create-payment-intent POST."
+    },
+    {
+      "id": "no_staging_coupon",
+      "status": 503,
+      "detail": "GET /api/admin-onboardings?action=coupons returned 503 TIMESYNCHER_ADMIN_TOKEN is not configured. No coupon code in this runner env. Did not invent one. POST /api/checkout-coupon without contact returned 400 First name is required."
+    },
+    {
+      "id": "no_message_simulator",
+      "status": 404,
+      "detail": "GET /api/message-simulator 404. GET /api/vacation-simulator 404. No in-repo message-simulator route."
+    },
+    {
+      "id": "telegram_turn_no_bind",
+      "status": 400,
+      "detail": "POST /api/vacation-telegram-turn with invalid JSON returned 400 Request body must be valid JSON (not 401). Did not POST a live Telegram turn; that would not be a staging-safe trip bind from this lane."
+    },
+    {
+      "id": "vacation_request_no_bind",
+      "status": 400,
+      "detail": "GET /api/vacation-request 405. POST invalid JSON 400 Request body must be valid JSON (intake auth not required on this preview). A valid JSON POST could insert customer/trip rows into whatever DB this preview uses. Capture lane did not POST a create payload because the preview DB is not proven staging-safe."
+    },
+    {
+      "id": "onboarding_surfaces_unbound",
+      "status": 400,
+      "detail": "order-success.html shows session or payment_intent is required. itinerary.html shows Missing itinerary session token. onboarding-eula.html could not load session cd-review-current-eula. GET /api/onboarding-session 400. GET /api/vacation-itinerary 400 session is required."
+    },
+    {
+      "id": "shared_preview_empty",
+      "status": 200,
+      "detail": "GET /shared/las-vegas-strip-vacation/ returned 200 with empty body text in Playwright. Not treated as a bound SCT trip."
+    }
+  ],
+  "artifact_paths": [
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/sct-capture.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/api-probes.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/addons-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/checkout-attempt-contact.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/itinerary-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/login.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/onboarding-eula.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+  ]
+}
