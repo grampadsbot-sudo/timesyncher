@@ -57,7 +57,7 @@ assert.ok(parseWorkflowRunCommands(ciWorkflow).some((line) => (
   line.startsWith('node scripts/control-vacation.mjs doctor --json')
   && !line.includes('--produce-')
 )), 'workflow must run default doctor --json');
-assert.ok(/fetch-depth:\s*0/.test(ciWorkflow), 'CI checkout must have history for ancestor receipt bind');
+assert.ok(/fetch-depth:\s*0/.test(ciWorkflow), 'CI checkout must have history for parent receipt bind');
 const commentOnly = [
   'name: vacation-verify',
   'jobs:',
@@ -546,15 +546,20 @@ assert.equal(requireCommittedCiReceipt({
   attest_artifact_digest: successAttestArtifact.digest,
 }).ok, false, 'ancestor-style receipt without bind fields is incomplete');
 assert.equal(requireCommittedCiReceipt(readCommittedCiReceipt(cwd)).ok, true);
-assert.equal(readCommittedCiReceipt(cwd).sha, 'fcf143ddb55be0c9054dd25b79d45457c0ad805c');
-assert.equal(String(readCommittedCiReceipt(cwd).run_id), '33822502055');
-assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100868155538');
+assert.equal(readCommittedCiReceipt(cwd).sha, '27d367a5fcb7c5619deddec9450bef8b6bc69653');
+assert.equal(String(readCommittedCiReceipt(cwd).run_id), '33822908484');
+assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100869396123');
 assert.equal(readCommittedCiReceipt(cwd).jobs['vacation-verify-bind'], 'success');
-assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:544c0600a9315410ceb0ee9e5f7bab6ca9f8ffd45f1db46f51733561803d3368');
+assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:22f16e23863f379a8e9b03011b34f9f159de73b4d85b31535c61d7038a60e7ed');
 const committedSha = readCommittedCiReceipt(cwd).sha;
+const headSha = gitRevParse(cwd);
+const parentSha = gitRevParse(cwd, `${headSha}^`);
+const grandparentSha = gitRevParse(cwd, `${headSha}~2`);
 assert.equal(committedReceiptShaAllowed(committedSha, committedSha, cwd), true);
-assert.equal(committedReceiptShaAllowed(committedSha, gitRevParse(cwd), cwd), true, 'committed receipt SHA must be HEAD or an ancestor (two-proof)');
-assert.equal(committedReceiptShaAllowed('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', gitRevParse(cwd), cwd), false);
+assert.equal(committedReceiptShaAllowed(headSha, headSha, cwd), true);
+assert.equal(committedReceiptShaAllowed(parentSha, headSha, cwd), true, 'direct parent receipt SHA is allowed (one-commit lag)');
+assert.equal(committedReceiptShaAllowed(grandparentSha, headSha, cwd), false, 'deeper ancestor receipt SHA must fail-closed');
+assert.equal(committedReceiptShaAllowed('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', headSha, cwd), false);
 const offBranchReceipt = inspectCiAttestation({
   cwd,
   sha: shaB,
@@ -565,8 +570,8 @@ const offBranchReceipt = inspectCiAttestation({
   fetchArtifacts: () => allArtifacts,
   fetchDoctorJson: fetchOkDoctorJson,
 });
-assert.equal(offBranchReceipt.ok, false, 'receipt SHA not on this branch must fail-closed');
-assert.equal(offBranchReceipt.reason, 'committed_receipt_sha_not_on_branch');
+assert.equal(offBranchReceipt.ok, false, 'receipt SHA beyond one-commit lag must fail-closed');
+assert.equal(offBranchReceipt.reason, 'committed_receipt_sha_lag');
 const missingReceiptCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'vac-verify-ci-'));
 const missingReceipt = inspectCiAttestation({
   cwd: missingReceiptCwd,

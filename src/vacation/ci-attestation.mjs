@@ -516,8 +516,8 @@ export function requireCommittedCiReceipt(receipt) {
 export function committedReceiptShaAllowed(receiptSha, head, cwd = process.cwd()) {
   if (!receiptSha || !head) return false;
   if (receiptSha === head) return true;
-  const result = spawnSync('git', ['-C', cwd, 'merge-base', '--is-ancestor', receiptSha, head], { encoding: 'utf8' });
-  return result.status === 0;
+  const parent = gitRevParse(cwd, `${head}^`);
+  return Boolean(parent) && receiptSha === parent;
 }
 
 function loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns) {
@@ -550,7 +550,7 @@ export function verifyCommittedCiReceipt(receipt, live, {
   const required = requireCommittedCiReceipt(receipt);
   if (!required.ok) return required;
   if (!committedReceiptShaAllowed(receipt.sha, head || live?.sha, cwd)) {
-    return { ok: false, reason: 'committed_receipt_sha_not_on_branch' };
+    return { ok: false, reason: 'committed_receipt_sha_lag' };
   }
   if (live && receipt.sha === live.sha) {
     const bound = bindCommittedReceipt(receipt, live);
