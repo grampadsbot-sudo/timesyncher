@@ -14,7 +14,7 @@
   "shared_url": null,
   "bind_method": "staging_trip_provided",
   "bind_locked": false,
-  "onboard_status": "craig_start_succeeded_shared_url_not_published",
+  "onboard_status": "eula_store_accepted_onboarding_session_still_eula_required",
   "staging": {
     "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
     "deployment_id": "dpl_2XRn1xpE8Mc4sNoWanWcbn2p55fu",
@@ -25,9 +25,9 @@
     "eula_receipt_sha256": "b9df4e7bec716598759b29d32c91525be09c125bf23a4d60bc0fc579b996798a",
     "eula_version": "2026-06-terms-advisory-only",
     "shared_url": null,
-    "telegram_status": "craig_start_claimed_worker_not_visible",
+    "telegram_status": "craig_start_done_eula_gate_still_false",
     "telegram_bind_proof": null,
-    "onboard_status": "craig_start_succeeded_shared_url_not_published",
+    "onboard_status": "eula_store_accepted_onboarding_session_still_eula_required",
     "order_success_url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB",
     "eula_url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
     "artifacts_dir": "features/proof/sct-first-vacation-20260904t034210z/staging-onboard/",
@@ -39,7 +39,8 @@
       "checkout-config 503 Stripe publishable key is not configured yet \u2014 purchase skipped. No billing POSTs. No travel.timesyncher.com writes.",
       "shared_url still null; itinerary remains onboarding with zero things.",
       "2026-09-04T05:51Z shared_url resume: TIMESYNCHER_INTAKE_TOKEN still MISSING in this runner process env (CoS said treat as live if present; it was not). POST /api/vacation-telegram-turn and /api/vacation-request still 401 Unauthorized intake request. Did not invent a token. Polled onboarding-session/itinerary/web-access 15 times over ~2.5 min; trip stays onboarding, 0 things, no public slug. Alternate is real TG /start.",
-      "2026-09-04T06:09Z Craig /start claimed succeeded; hard-polled staging 06:00:26Z\u201306:09:04Z (~27 GETs). itinerary 200 still tripStatus=onboarding title=TimeSyncher Vacation Setup things=0 dest=null startDate=2026-10-15 step=eula_required. No public slug. INTAKE_TOKEN still MISSING."
+      "2026-09-04T06:09Z Craig /start claimed succeeded; hard-polled staging 06:00:26Z\u201306:09:04Z (~27 GETs). itinerary 200 still tripStatus=onboarding title=TimeSyncher Vacation Setup things=0 dest=null startDate=2026-10-15 step=eula_required. No public slug. INTAKE_TOKEN still MISSING.",
+      "2026-09-04T06:15Z EULA unblock: accept URL store was missing then recreated. Playwright Agree and continue saved receipt 9859b9bc\u2026 (2026-06). Also accepted 2026-04 and 2026-08 for same clientKey. GET /api/eula activation-status ok for those versions. GET /api/onboarding-session still currentStep=eula_required eula.accepted=false. order-success still Review and Continue. itinerary empty; worker-jobs 401. Did not invent INTAKE_TOKEN or mint a trip."
     ],
     "intake_status": "missing_token"
   },
@@ -372,10 +373,13 @@
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accepted.png",
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success-after-eula.png",
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/shared-url-resume.json",
-    "/workspace/features/proof/sct-first-vacation-20260904t034210z/craig-start-hard-poll.json"
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/craig-start-hard-poll.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/eula-unblock/result.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/eula-unblock/eula-accept-after.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/eula-unblock/order-success-after-eula.png"
   ],
   "intake_status": "missing_token",
-  "telegram_status": "craig_start_claimed_worker_not_visible",
+  "telegram_status": "craig_start_done_eula_gate_still_false",
   "shared_url_resume": {
     "attempted_at": "2026-09-04T05:48:45Z",
     "finished_at": "2026-09-04T05:51:17Z",
@@ -439,5 +443,43 @@
     },
     "intake_token_in_runner": "MISSING",
     "evidence": "features/proof/sct-first-vacation-20260904t034210z/craig-start-hard-poll.json"
+  },
+  "eula_unblock": {
+    "attempted_at": "2026-09-04T06:13:59Z",
+    "finished_at": "2026-09-04T06:15:04Z",
+    "shared_url": null,
+    "still_blocked": "eula_gate onboarding-session currentStep=eula_required eula.accepted=false (EULA store accepted 2026-04/06/08; onboarding API ignores receipts)",
+    "eula_store": {
+      "2026-06-terms-advisory-only": {
+        "ok": true,
+        "receipt": "9859b9bc3775e9d6692f5b651ea13afb40505d2ba13f4c0816059f78e75a6b4a"
+      },
+      "2026-04-initial-draft": {
+        "ok": true,
+        "receipt": "1e3652459845913a148af0501fe17d69fba78f34f357a0827aea8314cae953af"
+      },
+      "2026-08-terms-advisory-only": {
+        "ok": true,
+        "receipt": "50e93f0b41c02dc2f57cb1ad56088cf039c19ff6c5c717f317ded74549eb2042"
+      }
+    },
+    "onboarding_after": {
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "eulaStatus": "pending",
+      "receiptSha256": null
+    },
+    "order_success": "still Review and Continue (eula section visible, telegram choices hidden)",
+    "worker_jobs": {
+      "status": 401,
+      "error": "Unauthorized worker request."
+    },
+    "itinerary": {
+      "status": "onboarding",
+      "title": "TimeSyncher Vacation Setup",
+      "things": 0,
+      "shareToken": null
+    },
+    "evidence": "features/proof/sct-first-vacation-20260904t034210z/eula-unblock/"
   }
 }
