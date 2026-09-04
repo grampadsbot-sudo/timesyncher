@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import {
-  activationStatusPersistent,
+  activationStatusForSessionPersistent,
   createOnboardingSessionPersistent,
   loadDefaultEulaText,
   loadSessionPersistent,
@@ -243,7 +243,11 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
   const sessionId = eulaSessionIdForOnboarding(row);
   const existing = await loadSessionPersistent(store, sessionId);
   if (existing && !existing.unavailableReason) {
-    const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION);
+    const status = await activationStatusForSessionPersistent(
+      store,
+      sessionId,
+      env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
+    );
     return {
       sessionId,
       acceptUrl: eulaAcceptLink(row, env),
@@ -283,7 +287,11 @@ export async function vacationEulaStatus(row, env = process.env) {
   if (!row?.id || !row?.token) return { ok: false, status: 'missing', errors: ['onboarding session missing'] };
   const eula = await ensureVacationEulaSession(row, { env });
   const store = createPersistentStoreFromEnv(env);
-  const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION);
+  const status = await activationStatusForSessionPersistent(
+    store,
+    eula.sessionId || eulaSessionIdForOnboarding(row),
+    env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
+  );
   return {
     ...status,
     status: status.ok ? 'accepted' : eula?.status || 'pending',

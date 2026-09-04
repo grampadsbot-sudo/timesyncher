@@ -1,0 +1,29 @@
+{
+  "job_id": "blob-403-eula-store-20260904",
+  "certified": false,
+  "merged": false,
+  "production_deploy": false,
+  "live_alias": "https://vacation-staging.timesyncher.com",
+  "live_deployment": "https://timesyncher-vacation-staging-i9gdfp8pb.vercel.app",
+  "vercel_project": "timesyncher-vacation-staging",
+  "deployed_syntax_fix_sha": "46197d48c5f7eb48441d9755984fa502bcb56b0d",
+  "session": "TqOYg4gl-nnqMVj8tMjnQmEB",
+  "did_not_reuse_trip": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+  "smoke": {
+    "home": 200,
+    "vacation_itinerary": 200,
+    "onboarding_session": 400,
+    "error": "Vercel Blob: Failed to fetch blob: 403 Forbidden"
+  },
+  "cause_class": "code",
+  "cause": "onboarding-session finds the Neon row then vacationEulaStatus reads the EULA Blob store. @vercel/blob get() returns null on 404 but throws on 403. Private stores hide missing or other-store pathnames as 403. VercelBlobStore.getJson let that throw become HTTP 400. activationStatusPersistent also listed every sessions/ blob and get() each one, so one unreadable object failed the whole GET. Token is present on Production and Preview; this is path/store-read handling, not a missing env name.",
+  "fix": "Treat Blob GET 403/404 as missing; skip unreadable list items; look up EULA activation by the deterministic vacation-${token} session id instead of listing the store. Recreate the pending EULA session in the token's store on next GET. If PUT also 403s after this ships, that is a dashboard token/store rebind (BLOB_READ_WRITE_TOKEN on timesyncher-vacation-staging Production and Preview must belong to the store that prefix timesyncher-eula is written to).",
+  "did_not": [
+    "print or write tokens",
+    "merge",
+    "production-deploy",
+    "certify",
+    "start SCT",
+    "reuse empty trip 4e18a3db"
+  ]
+}
