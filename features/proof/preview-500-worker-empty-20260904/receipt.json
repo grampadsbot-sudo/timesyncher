@@ -1,0 +1,47 @@
+{
+  "job_id": "preview-500-worker-empty-20260904",
+  "certified": false,
+  "merged": false,
+  "production_deploy": false,
+  "status_slug": "bot-admin/messages/time-syncher/openclaw-vacation-staging-runner-gate-20260904t192054z",
+  "old_deploy": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
+  "new_preview": "https://timesyncher-vacation-staging-b3yj5uz4a.vercel.app",
+  "pr_head_diagnosed": "27ef0a5d0229636c45bfb27b92cbbe9e7e3f01b7",
+  "session": "TqOYg4gl-nnqMVj8tMjnQmEB",
+  "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+  "worker_request_id": "1a490c3d-098c-4255-b18f-865ecd27359e",
+  "preview_500": {
+    "routes": [
+      "/api/onboarding-session",
+      "/api/vacation-itinerary"
+    ],
+    "reproduced": {
+      "existing_session": 500,
+      "nonexistent_session": 500,
+      "home": 200,
+      "checkout_config": 503
+    },
+    "platform_body": {
+      "error": {
+        "code": "500",
+        "message": "A server error has occurred"
+      }
+    },
+    "cause": "27ef0a5 collaborators.mjs template literal missing closing brace on accepted_eula_version. email.mjs imports collaborators.mjs; both API routes import email.mjs, so the module fails at load time (FUNCTION_INVOCATION_FAILED) before handler catch. Not a missing DATABASE_URL (that would be a caught 400). Old deploy 18ca973-era APIs still 200/404.",
+    "fix": "Restore `${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION},` in src/vacation/collaborators.mjs"
+  },
+  "worker_empty_complete": {
+    "observed": "TimeStopperStaging completed onboarding_setup with no error; trip still onboarding, empty things/sections/budgets/media, no share token.",
+    "cause": "timestopper-worker.mjs marked jobs completed on a scaffold path when TIMESYNCHER_PRODUCT_GBRAIN_DISPATCH was unset (nextStep dispatch_to_product_gbrain, no writes). product-gbrain-dispatch hostedSync also returned skipped:true with no throw when TIMESYNCHER_API_BASE_URL or TIMESYNCHER_WORKER_TOKEN was missing, so a dispatch run could still complete without Neon rows.",
+    "fix": "Fail-close: refuse scaffold completion without dispatch; throw if hosted sync config is missing. Completed request 1a490c3d is not rewritten; a new job is required after deploy+config.",
+    "not_eula_soft_window_alone": "Old deploy session is telegram_started; EULA accepted=false is still true on that API but the worker already ran. Empty itinerary is the write/complete path, not the stale eula_required label."
+  },
+  "did_not": [
+    "invent a new Vercel URL",
+    "merge",
+    "production-deploy",
+    "certify",
+    "start SCT/spouse customers",
+    "print secrets"
+  ]
+}

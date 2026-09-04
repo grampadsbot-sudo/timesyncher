@@ -93,20 +93,27 @@ async function handleJob(job) {
       toolingUsed: ['timestopper-worker-support-no-write-gate'],
     };
   }
-  if (PRODUCT_GBRAIN_DISPATCH) {
-    return dispatchProductGbrain(job);
+  if (!PRODUCT_GBRAIN_DISPATCH) {
+    throw new Error('TIMESYNCHER_PRODUCT_GBRAIN_DISPATCH is required; refusing to mark a worker job completed without itinerary writes.');
   }
-  return {
-    customerResponse: 'Your TimeSyncher Vacation request was received and is queued for planning.',
-    result: {
-      handledBy: WORKER_ID,
-      requestId: job.request_id,
-      jobId: job.id,
-      requestType: job.request_type || job.job_type,
-      nextStep: 'dispatch_to_product_gbrain',
-    },
-    toolingUsed: ['timestopper-worker-scaffold'],
-  };
+  const completion = await dispatchProductGbrain(job);
+  const result = completion?.result && typeof completion.result === 'object' ? completion.result : {};
+  const hostedSync = result.hostedSync && typeof result.hostedSync === 'object'
+    ? result.hostedSync
+    : result.turnInspector?.workerResult?.hostedSync || {};
+  const requestType = String(job.request_type || job.job_type || result.requestType || '');
+  const wroteUrl = Boolean(result.webItineraryUrl);
+  const skippedHosted = hostedSync.skipped === true;
+  const skipReason = String(hostedSync.reason || '');
+  if (
+    (requestType === 'onboarding_setup' || requestType === 'itinerary_research_update')
+    && !wroteUrl
+    && skippedHosted
+    && /not configured|missing.*(api|token)|TIMESYNCHER_API_BASE_URL|TIMESYNCHER_WORKER_TOKEN/i.test(skipReason)
+  ) {
+    throw new Error(`Hosted itinerary sync skipped after ${requestType}: ${skipReason || 'missing hosted API config'}`);
+  }
+  return completion;
 }
 
 function dispatchProductGbrain(job) {
