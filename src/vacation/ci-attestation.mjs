@@ -254,10 +254,17 @@ export function doctorJsonFieldsOk(value) {
   if (!committed.sha || !sha256DigestField(committed.bind_artifact_digest)) return false;
   if (lag === 'head' && committed.sha !== attest.sha) return false;
   if (lag === 'parent' && committed.sha === attest.sha) return false;
+  if (lag === 'parent' && !attest.run_id) return false;
   if (!bindInProgress && lag === 'head' && committed.bind_artifact_digest !== attest.bind_artifact_digest) {
     return false;
   }
+  if (lag === 'parent' && !bindInProgress && !sha256DigestField(attest.bind_artifact_digest)) {
+    return false;
+  }
   if (!bindInProgress && lag === 'parent' && committed.bind_artifact_digest === attest.bind_artifact_digest) {
+    return false;
+  }
+  if (attest.doctor_artifact_kind !== 'gate' || attest.doctor_job_artifact_kind !== 'marker') {
     return false;
   }
   return Boolean(
@@ -490,6 +497,9 @@ export function attestVacationVerifyJob({
     doctor_artifact_id: String(doctorArtifact.id),
     attest_artifact_id: String(attestArtifact.id),
     bind_artifact_id: bindArtifact?.id ? String(bindArtifact.id) : null,
+    doctor_artifact_kind: 'gate',
+    doctor_job_artifact_kind: 'marker',
+    marker_artifact_digest: markerOnly?.digest || null,
     repo: null,
   };
 }
@@ -542,11 +552,17 @@ export function twoProofRelationship(receipt, live, { cwd = process.cwd(), head 
   }
   const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
   const liveBind = sha256DigestField(live.bind_artifact_digest);
+  const bindInProgress = live.bind_conclusion === 'in_progress';
   if (receipt.sha === live.sha) {
-    if (!liveBind || receiptBind !== liveBind) {
+    if (bindInProgress) return { ok: true, receipt_lag: 'head' };
+    if (!live.run_id || !liveBind || receiptBind !== liveBind) {
       return { ok: false, reason: 'committed_receipt_does_not_match_api' };
     }
     return { ok: true, receipt_lag: 'head' };
+  }
+  if (!live.run_id) return { ok: false, reason: 'live_head_bind_missing' };
+  if (!bindInProgress && !liveBind) {
+    return { ok: false, reason: 'live_head_bind_missing' };
   }
   if (String(receipt.run_id) === String(live.run_id) || (liveBind && receiptBind === liveBind)) {
     return { ok: false, reason: 'committed_receipt_aliases_live_head' };
