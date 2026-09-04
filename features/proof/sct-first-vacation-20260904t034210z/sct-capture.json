@@ -1,0 +1,341 @@
+{
+  "job_id": "sct-first-vacation-20260904t034210z",
+  "certified": false,
+  "merged": false,
+  "lane": "cursor-browser-api-capture",
+  "bind_lane": "cursor-staging-safe-trip-bind",
+  "preview_url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+  "head": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "deployment_id": "dpl_5cyCb18FhnViwqofcXt2at5Kee8g",
+  "checkout_config_status": 503,
+  "checkout_config_error": "Stripe publishable key does not match STRIPE_MODE=test.",
+  "purchase_path": "skipped",
+  "trip_id": null,
+  "shared_url": null,
+  "bind_method": null,
+  "bind_locked": false,
+  "before_state": null,
+  "bind_attempted_at": "2026-09-04T03:56:00Z",
+  "runner_env_presence": {
+    "VERCEL_PROTECTION_BYPASS": "PRESENT_NON_EMPTY",
+    "TIMESYNCHER_ADMIN_TOKEN": "MISSING",
+    "TIMESYNCHER_INTAKE_TOKEN": "MISSING",
+    "TIMESYNCHER_WORKER_TOKEN": "MISSING",
+    "DATABASE_URL": "MISSING",
+    "NEON_DATABASE_URL": "MISSING",
+    "STRIPE_SECRET_KEY": "MISSING"
+  },
+  "preview_db_identity": {
+    "verdict": "unknown_not_proven_staging",
+    "did_create_rows": false,
+    "evidence": [
+      "Preview Neon is live: GET /api/vacation-itinerary?session=sct-probe-nonexistent returned 404 Itinerary not found (query executed, not DATABASE_URL missing).",
+      "GET /api/onboarding-session?session=sct-probe-nonexistent returned 404 Onboarding session not found.",
+      "GET /api/worker-jobs returned 401 Unauthorized worker request (TIMESYNCHER_WORKER_TOKEN is configured on preview; this runner does not have it).",
+      "No repo, env, or docs name this Vercel preview's DATABASE_URL / Neon as the staging/test DB. This runner has no DATABASE_URL/NEON_DATABASE_URL to inspect.",
+      "STRIPE_MODE=test appears only in the checkout-config 503 (publishable key does not match). That is Stripe env mismatch, not a database identity proof. Mixed/broken preview env argues against treating the DB as clearly staging.",
+      "src/vacation/auth.mjs requireIntakeAuth is a no-op when TIMESYNCHER_INTAKE_TOKEN is unset. Prior POST /api/vacation-request with invalid JSON returned 400 Request body must be valid JSON (not 401), so a valid JSON POST would insert customer/trip/request rows into whatever Neon this preview uses.",
+      "api/vacation-request.mjs upserts customer and trip before validating request text. Even {} would insert rows. Bind lane did not POST any valid JSON create body.",
+      "create-payment-intent.mjs stagingCardCheckoutAllowed keys off TIMESYNCHER_SITE_BASE_URL containing vacation-staging or staging. This preview host is a Vercel git alias, not vacation-staging.timesyncher.com."
+    ]
+  },
+  "observed_not_locked": {
+    "fixture_trip_id": "trip-vegas-live-001",
+    "fixture_public_url": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "fixture_local_trek_id": 41,
+    "hosted_trek_trip_id": 90,
+    "hosted_trek_title": "Las Vegas Strip Vacation",
+    "hosted_trek_dates": "2026-07-30/2026-08-03",
+    "hosted_trek_api": "https://travel.timesyncher.com/api/shared/las-vegas-strip-vacation",
+    "preview_shared_proxy": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/shared/las-vegas-strip-vacation/",
+    "why_not_locked": [
+      "vercel.json rewrites /shared/(.*) and /api/shared/(.*) to https://travel.timesyncher.com — production TREK public host, not preview Neon.",
+      "Preview GET /api/shared/las-vegas-strip-vacation returned the same hosted TREK trip id 90 / title Las Vegas Strip Vacation as travel.timesyncher.com.",
+      "features/fixtures/telegram-text-single-edit.json maps trip-vegas-live-001 to local trek_rows id 41 and publicUrl travel.timesyncher.com. Live hosted id is 90, not 41. Fixture ID is dry-run / local TREK SQLite, not a preview Neon UUID.",
+      "GET /api/vacation-web-access?action=status&shareToken=las-vegas-strip-vacation returned tripId null (share token echoed only). Without a web-access session, shareToken is not resolved to a vacation trips row.",
+      "GET ...&tripId=trip-vegas-live-001 returned tripId trip-vegas-live-001 by echoing the query param (api/vacation-itinerary.mjs tripId || grant?.trip_id). Not a DB lookup. canEdit false, role viewer.",
+      "features/README.md and verify-timesyncher-vacation skill treat trip-vegas-live-001 as the baseline dry-run fixture. --apply is local-snapshot or --trek-db only. Not a hosted SCT customer bind.",
+      "Locking TREK 90 / travel.timesyncher.com/shared/las-vegas-strip-vacation/ would point SCT at the public production TREK research workspace. Not staging-safe."
+    ]
+  },
+  "screenshots": [
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/addons-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/checkout-attempt-contact.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/itinerary-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/login.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/onboarding-eula.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+  ],
+  "screenshot_visits": [
+    {
+      "id": "storefront",
+      "path": "/",
+      "status": 200,
+      "title": "TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+    },
+    {
+      "id": "addons-checkout",
+      "path": "/addons-checkout.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation Add-ons",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/addons-checkout.png"
+    },
+    {
+      "id": "owner-media-checkout",
+      "path": "/owner-media-checkout.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation Media Add-ons",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png"
+    },
+    {
+      "id": "order-success-onboarding",
+      "path": "/order-success.html",
+      "status": 200,
+      "title": "Start TimeSyncher Vacation Onboarding",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png"
+    },
+    {
+      "id": "onboarding-eula",
+      "path": "/onboarding-eula.html",
+      "status": 200,
+      "title": "TimeSyncher Onboarding - Terms Acceptance",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/onboarding-eula.png"
+    },
+    {
+      "id": "login",
+      "path": "/login.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/login.png"
+    },
+    {
+      "id": "itinerary-product",
+      "path": "/itinerary.html",
+      "status": 200,
+      "title": "TimeSyncher Vacation Itinerary",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/itinerary-product.png"
+    },
+    {
+      "id": "shared-vegas-product",
+      "path": "/shared/las-vegas-strip-vacation/",
+      "status": 200,
+      "title": "TimeSyncher Vacation",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png",
+      "note": "HTML 200 is a vercel.json rewrite proxy to travel.timesyncher.com. Playwright body text was empty because it is a JS SPA. Bind resume confirmed TREK trip id 90 on that host. Not locked."
+    },
+    {
+      "id": "checkout-attempt-contact",
+      "path": "/",
+      "status": 200,
+      "title": "TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again",
+      "sso": false,
+      "file": "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/checkout-attempt-contact.png",
+      "filled": {
+        "first": true,
+        "last": true,
+        "email": true
+      },
+      "note": "Contact fields only. Did not submit payment or call create-payment-intent."
+    }
+  ],
+  "api_probes": [
+    {
+      "method": "GET",
+      "path": "/api/checkout-config",
+      "status": 503,
+      "error": "Stripe publishable key does not match STRIPE_MODE=test."
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-request",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "POST",
+      "path": "/api/vacation-request",
+      "status": 400,
+      "error": "Request body must be valid JSON."
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-telegram-turn",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "POST",
+      "path": "/api/vacation-telegram-turn",
+      "status": 400,
+      "error": "Request body must be valid JSON."
+    },
+    {
+      "method": "GET",
+      "path": "/api/checkout-coupon",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout-coupon",
+      "status": 400,
+      "error": "First name is required."
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin-onboardings",
+      "status": 503,
+      "error": "TIMESYNCHER_ADMIN_TOKEN is not configured."
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin-onboardings?action=coupons",
+      "status": 503,
+      "error": "TIMESYNCHER_ADMIN_TOKEN is not configured."
+    },
+    {
+      "method": "GET",
+      "path": "/api/create-payment-intent",
+      "status": 405,
+      "error": "method not allowed"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session",
+      "status": 400,
+      "error": "session or payment_intent is required."
+    },
+    {
+      "method": "GET",
+      "path": "/api/eula",
+      "status": 404,
+      "error": "unknown action"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary",
+      "status": 400,
+      "error": "session is required."
+    },
+    {
+      "method": "GET",
+      "path": "/api/message-simulator",
+      "status": 404,
+      "error": "The page could not be found"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-simulator",
+      "status": 404,
+      "error": "The page could not be found"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-web-access?action=status&shareToken=las-vegas-strip-vacation",
+      "status": 200,
+      "note": "canEdit false, role viewer, tripId null, shareToken echoed"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-web-access?action=status&tripId=trip-vegas-live-001",
+      "status": 200,
+      "note": "canEdit false, role viewer, tripId echoed from query, not a Neon lookup"
+    },
+    {
+      "method": "GET",
+      "path": "/api/shared/las-vegas-strip-vacation",
+      "status": 200,
+      "note": "vercel.json rewrite to travel.timesyncher.com; hosted TREK trip id 90"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary?session=sct-probe-nonexistent",
+      "status": 404,
+      "error": "Itinerary not found."
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session?session=sct-probe-nonexistent",
+      "status": 404,
+      "error": "Onboarding session not found."
+    },
+    {
+      "method": "GET",
+      "path": "/api/worker-jobs",
+      "status": 401,
+      "error": "Unauthorized worker request."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "checkout_config_env_gap",
+      "status": 503,
+      "detail": "Stripe publishable key does not match STRIPE_MODE=test. Purchase/billing path stopped. No create-payment-intent POST."
+    },
+    {
+      "id": "no_staging_coupon",
+      "status": 503,
+      "detail": "GET /api/admin-onboardings?action=coupons returned 503 TIMESYNCHER_ADMIN_TOKEN is not configured on the preview. This runner also has TIMESYNCHER_ADMIN_TOKEN=MISSING. Did not invent a coupon or admin token. POST /api/checkout-coupon without contact returned 400 First name is required."
+    },
+    {
+      "id": "no_message_simulator",
+      "status": 404,
+      "detail": "GET /api/message-simulator 404. GET /api/vacation-simulator 404. No in-repo message-simulator route."
+    },
+    {
+      "id": "telegram_turn_no_bind",
+      "status": 400,
+      "detail": "POST /api/vacation-telegram-turn with invalid JSON returned 400 Request body must be valid JSON (not 401). Did not POST a live Telegram turn; that would not be a staging-safe trip bind from this lane."
+    },
+    {
+      "id": "vacation_request_no_bind",
+      "status": 400,
+      "detail": "GET /api/vacation-request 405. POST invalid JSON 400 Request body must be valid JSON (intake auth not required when TIMESYNCHER_INTAKE_TOKEN unset). A valid JSON POST would insert customer/trip rows into whatever DB this preview uses, including before request-text validation. Bind lane did not POST a create payload because preview DB identity is unknown_not_proven_staging."
+    },
+    {
+      "id": "preview_db_not_proven_staging",
+      "status": null,
+      "detail": "Preview Neon answers itinerary/onboarding 404s, so a database is configured, but no repo/env/docs cite it as the staging/test DB. STRIPE_MODE=test in a 503 is not DB proof. Did not create synthetic customer grok-vacation-test-20260904-001 / Alex Rivera / Vegas Oct 9-12."
+    },
+    {
+      "id": "shared_slug_is_prod_trek_proxy",
+      "status": 200,
+      "detail": "GET /shared/las-vegas-strip-vacation/ and /api/shared/las-vegas-strip-vacation are vercel.json rewrites to travel.timesyncher.com. Hosted TREK trip id 90 (Las Vegas Strip Vacation, 2026-07-30 to 2026-08-03). Local fixture trek id is 41 / trip-vegas-live-001. Preview web-access status does not resolve the slug to a Neon trip_id. Not locked as an SCT bind."
+    },
+    {
+      "id": "fixture_trip_not_hosted_bind",
+      "status": 200,
+      "detail": "trip-vegas-live-001 is the Feature Map dry-run fixture (features/README.md, features/fixtures/telegram-text-single-edit.json). control-vacation --apply is local-snapshot or --trek-db only. Preview web-access echoes the query tripId; it is not a UUID in preview trips."
+    },
+    {
+      "id": "onboarding_surfaces_unbound",
+      "status": 400,
+      "detail": "order-success.html shows session or payment_intent is required. itinerary.html shows Missing itinerary session token. onboarding-eula.html could not load session cd-review-current-eula. GET /api/onboarding-session 400. GET /api/vacation-itinerary 400 session is required."
+    }
+  ],
+  "artifact_paths": [
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/sct-capture.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/api-probes.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/addons-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/checkout-attempt-contact.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/itinerary-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/login.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/onboarding-eula.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+  ]
+}
