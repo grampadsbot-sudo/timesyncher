@@ -7,6 +7,8 @@
   "live_deployment": "https://timesyncher-vacation-staging-i9gdfp8pb.vercel.app",
   "vercel_project": "timesyncher-vacation-staging",
   "deployed_syntax_fix_sha": "46197d48c5f7eb48441d9755984fa502bcb56b0d",
+  "fix_sha": "adf809dd18a8c29f174aa777440a95748c258cc7",
+  "fix_branch": "cursor/blob-403-eula-store-cb2f",
   "session": "TqOYg4gl-nnqMVj8tMjnQmEB",
   "did_not_reuse_trip": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
   "smoke": {
