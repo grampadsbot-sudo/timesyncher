@@ -513,9 +513,10 @@ export function requireCommittedCiReceipt(receipt) {
   return { ok: true };
 }
 
-export function committedReceiptShaAllowed(receiptSha, head, cwd = process.cwd()) {
+export function committedReceiptShaAllowed(receiptSha, head, cwd = process.cwd(), env = {}, jobs = []) {
   if (!receiptSha || !head) return false;
   if (receiptSha === head) return true;
+  if (!producingBindJob(env, jobs)) return false;
   const result = spawnSync('git', ['-C', cwd, 'merge-base', '--is-ancestor', receiptSha, head], { encoding: 'utf8' });
   return result.status === 0;
 }
@@ -539,6 +540,7 @@ export function verifyCommittedCiReceipt(receipt, live, {
   repo,
   token = '',
   env = {},
+  jobs = [],
   fetchRun,
   fetchRuns,
   fetchJobs,
@@ -549,8 +551,8 @@ export function verifyCommittedCiReceipt(receipt, live, {
 } = {}) {
   const required = requireCommittedCiReceipt(receipt);
   if (!required.ok) return required;
-  if (!committedReceiptShaAllowed(receipt.sha, head || live?.sha, cwd)) {
-    return { ok: false, reason: 'committed_receipt_sha_not_on_branch' };
+  if (!committedReceiptShaAllowed(receipt.sha, head || live?.sha, cwd, env, jobs)) {
+    return { ok: false, reason: 'committed_receipt_sha_not_head' };
   }
   if (live && receipt.sha === live.sha) {
     const bound = bindCommittedReceipt(receipt, live);
@@ -635,7 +637,7 @@ export function inspectCiAttestation({
     };
   }
   const parsedDoctorJson = resolveDoctorJson(cwd, env, doctorJson);
-  const finish = (attestation, source) => {
+  const finish = (attestation, source, jobs = []) => {
     if (!attestation.ok) return { ...attestation, source: attestation.source || 'missing', repo };
     const bound = committed
       ? verifyCommittedCiReceipt(committed, attestation, {
@@ -644,6 +646,7 @@ export function inspectCiAttestation({
         repo,
         token,
         env,
+        jobs,
         fetchRun,
         fetchRuns,
         fetchJobs,
@@ -697,7 +700,7 @@ export function inspectCiAttestation({
         doctorJson: parsedDoctorJson,
         attestDoctorJson,
       });
-      if (attested.ok) return finish(attested, 'live_run');
+      if (attested.ok) return finish(attested, 'live_run', extras.jobs.jobs);
       if (!extras.jobs.ok || !extras.artifacts.ok) {
         return {
           ok: false,
@@ -746,7 +749,7 @@ export function inspectCiAttestation({
       doctorJson: parsedDoctorJson,
       attestDoctorJson,
     });
-    if (attested.ok) return finish(attested, 'github_api');
+    if (attested.ok) return finish(attested, 'github_api', extras.jobs.jobs);
   }
 
   return {
