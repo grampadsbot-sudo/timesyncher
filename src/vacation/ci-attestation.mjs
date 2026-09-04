@@ -397,11 +397,90 @@ function sha256DigestField(value) {
   return typeof value === 'string' && value.startsWith('sha256:') ? value : null;
 }
 
-export function bindCommittedReceipt(receipt, live) {
-  if (!receipt) return { ok: true };
+export function requireCommittedCiReceipt(receipt) {
+  if (receipt == null) return { ok: false, reason: 'committed_ci_receipt_missing' };
   if (receipt.ok === false && receipt.reason === 'invalid_ci_receipt') {
     return { ok: false, reason: 'invalid_ci_receipt' };
   }
+  const receiptHarness = sha256DigestField(receipt.artifact_digest);
+  const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
+  const receiptAttest = sha256DigestField(receipt.attest_artifact_digest);
+  const conclusions = receipt.conclusion === 'success'
+    && receipt.workflow === 'vacation-verify'
+    && receipt.doctor_conclusion === 'success'
+    && receipt.attest_conclusion === 'success';
+  if (!receipt.sha || !receipt.run_id || !receiptHarness || !receiptDoctor || !receiptAttest || !conclusions) {
+    return { ok: false, reason: 'committed_ci_receipt_incomplete' };
+  }
+  return { ok: true };
+}
+
+export function committedReceiptShaAllowed(receiptSha, head, cwd = process.cwd()) {
+  if (!receiptSha || !head) return false;
+  if (receiptSha === head) return true;
+  const result = spawnSync('git', ['-C', cwd, 'merge-base', '--is-ancestor', receiptSha, head], { encoding: 'utf8' });
+  return result.status === 0;
+}
+
+function loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns) {
+  if (fetchRun) {
+    const run = fetchRun(repo, receipt.run_id, token);
+    return run ? { ok: true, run } : { ok: false, run: null };
+  }
+  if (fetchRuns) {
+    const runs = fetchRuns(repo, receipt.sha, token) || [];
+    const run = runs.find((row) => row && String(row.id) === String(receipt.run_id));
+    return run ? { ok: true, run } : { ok: false, run: null };
+  }
+  return githubGetRun(repo, receipt.run_id, token);
+}
+
+export function verifyCommittedCiReceipt(receipt, live, {
+  cwd = process.cwd(),
+  head,
+  repo,
+  token = '',
+  env = {},
+  fetchRun,
+  fetchRuns,
+  fetchJobs,
+  fetchArtifacts,
+  fetchDoctorJson,
+  doctorJson,
+  attestDoctorJson,
+} = {}) {
+  const required = requireCommittedCiReceipt(receipt);
+  if (!required.ok) return required;
+  if (!committedReceiptShaAllowed(receipt.sha, head || live?.sha, cwd)) {
+    return { ok: false, reason: 'committed_receipt_sha_not_on_branch' };
+  }
+  if (live && receipt.sha === live.sha) return bindCommittedReceipt(receipt, live);
+  const fetched = loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns);
+  if (!fetched.ok || !fetched.run) return { ok: false, reason: 'committed_receipt_run_missing' };
+  const extras = loadRunJobsArtifacts(repo, fetched.run.id, token, fetchJobs, fetchArtifacts);
+  if (!extras.jobs.ok || !extras.artifacts.ok) {
+    return { ok: false, reason: extras.jobs.error || extras.artifacts.error || 'committed_receipt_run_missing' };
+  }
+  const attested = attestVacationVerifyJob({
+    run: fetched.run,
+    jobs: extras.jobs.jobs,
+    artifacts: extras.artifacts.artifacts,
+    sha: receipt.sha,
+    env,
+    repo,
+    token,
+    fetchDoctorJson,
+    doctorJson,
+    attestDoctorJson,
+  });
+  if (!attested.ok) return { ok: false, reason: attested.reason || 'committed_receipt_does_not_match_api' };
+  return bindCommittedReceipt(receipt, attested);
+}
+
+export function bindCommittedReceipt(receipt, live) {
+  if (!receipt) return { ok: true };
+  const required = requireCommittedCiReceipt(receipt);
+  if (!required.ok) return required;
   const receiptHarness = sha256DigestField(receipt.artifact_digest);
   const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
   const receiptAttest = sha256DigestField(receipt.attest_artifact_digest);
@@ -434,10 +513,38 @@ export function inspectCiAttestation({
   const repo = githubRepoFromOrigin(cwd);
   const token = githubAuthToken(env);
   const committed = receipt !== undefined ? receipt : readCommittedCiReceipt(cwd);
+  if (receipt === undefined && !committed) {
+    return {
+      ok: false,
+      source: 'committed_receipt',
+      sha: head,
+      run_id: null,
+      job_id: null,
+      conclusion: null,
+      artifact_digest: null,
+      repo,
+      reason: 'committed_ci_receipt_missing',
+    };
+  }
   const parsedDoctorJson = resolveDoctorJson(cwd, env, doctorJson);
   const finish = (attestation, source) => {
     if (!attestation.ok) return { ...attestation, source: attestation.source || 'missing', repo };
-    const bound = bindCommittedReceipt(committed, attestation);
+    const bound = committed
+      ? verifyCommittedCiReceipt(committed, attestation, {
+        cwd,
+        head,
+        repo,
+        token,
+        env,
+        fetchRun,
+        fetchRuns,
+        fetchJobs,
+        fetchArtifacts,
+        fetchDoctorJson,
+        doctorJson: parsedDoctorJson,
+        attestDoctorJson,
+      })
+      : { ok: true };
     if (!bound.ok) {
       return {
         ok: false,

@@ -29,11 +29,15 @@ import {
   attestArtifactNameForSha,
   attestVacationVerifyJob,
   bindCommittedReceipt,
+  committedReceiptShaAllowed,
   doctorArtifactNameForSha,
   doctorJsonOk,
+  gitRevParse,
   inspectCiAttestation,
   missingReviewerCiCommands,
   parseWorkflowRunCommands,
+  readCommittedCiReceipt,
+  requireCommittedCiReceipt,
 } from '../src/vacation/ci-attestation.mjs';
 
 const cwd = process.cwd();
@@ -346,6 +350,23 @@ assert.equal(bindCommittedReceipt({
   artifact_digest: successArtifact.digest,
   doctor_artifact_digest: successGateArtifact.digest,
   attest_artifact_digest: successAttestArtifact.digest,
+}).ok, false, 'receipt missing job conclusions must not bind');
+assert.equal(bindCommittedReceipt({
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  doctor_conclusion: 'success',
+  attest_conclusion: 'success',
+  workflow: 'vacation-verify',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+}, {
+  sha: shaB,
+  run_id: '33817831176',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
 }).ok, true);
 const receiptDoctorMatch = inspectCiAttestation({
   cwd,
@@ -355,6 +376,8 @@ const receiptDoctorMatch = inspectCiAttestation({
     sha: shaB,
     run_id: 33817831176,
     conclusion: 'success',
+    doctor_conclusion: 'success',
+    attest_conclusion: 'success',
     workflow: 'vacation-verify',
     artifact_digest: successArtifact.digest,
     doctor_artifact_digest: successGateArtifact.digest,
@@ -366,6 +389,21 @@ const receiptDoctorMatch = inspectCiAttestation({
   fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(receiptDoctorMatch.ok, true);
+assert.equal(requireCommittedCiReceipt(null).ok, false);
+assert.equal(requireCommittedCiReceipt(readCommittedCiReceipt(cwd)).ok, true);
+assert.equal(committedReceiptShaAllowed(readCommittedCiReceipt(cwd).sha, gitRevParse(cwd), cwd), true);
+const missingReceiptCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'vac-verify-ci-'));
+const missingReceipt = inspectCiAttestation({
+  cwd: missingReceiptCwd,
+  sha: shaB,
+  env: {},
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
+});
+assert.equal(missingReceipt.ok, false, 'doctor must fail-closed when committed CI receipt is missing');
+assert.equal(missingReceipt.reason, 'committed_ci_receipt_missing');
 const noAttestJob = inspectCiAttestation({
   cwd,
   sha: shaB,
