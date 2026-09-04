@@ -57,7 +57,7 @@ assert.ok(parseWorkflowRunCommands(ciWorkflow).some((line) => (
   line.startsWith('node scripts/control-vacation.mjs doctor --json')
   && !line.includes('--produce-')
 )), 'workflow must run default doctor --json');
-assert.ok(/fetch-depth:\s*0/.test(ciWorkflow), 'CI checkout must have history for mid-bind ancestor receipt check');
+assert.ok(/fetch-depth:\s*0/.test(ciWorkflow), 'CI checkout must have history for ancestor receipt bind');
 const commentOnly = [
   'name: vacation-verify',
   'jobs:',
@@ -553,26 +553,20 @@ assert.equal(readCommittedCiReceipt(cwd).jobs['vacation-verify-bind'], 'success'
 assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:544c0600a9315410ceb0ee9e5f7bab6ca9f8ffd45f1db46f51733561803d3368');
 const committedSha = readCommittedCiReceipt(cwd).sha;
 assert.equal(committedReceiptShaAllowed(committedSha, committedSha, cwd), true);
-assert.equal(committedReceiptShaAllowed(gitRevParse(cwd, 'HEAD^'), gitRevParse(cwd), cwd), false, 'ancestor receipt SHA must fail-closed');
-assert.equal(committedReceiptShaAllowed(
-  gitRevParse(cwd, 'HEAD^'),
-  gitRevParse(cwd),
-  cwd,
-  { GITHUB_ACTIONS: 'true', GITHUB_JOB: 'vacation-verify-bind', GITHUB_RUN_ID: '1' },
-  [{ name: 'vacation-verify-bind', conclusion: null, status: 'in_progress' }],
-), true, 'mid-bind may see the previous HEAD receipt');
-const ancestorReceipt = inspectCiAttestation({
+assert.equal(committedReceiptShaAllowed(committedSha, gitRevParse(cwd), cwd), true, 'committed receipt SHA must be HEAD or an ancestor (two-proof)');
+assert.equal(committedReceiptShaAllowed('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', gitRevParse(cwd), cwd), false);
+const offBranchReceipt = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: { ...matchingReceipt, sha: '2e3bc00dd467e5914fffacd1e19c7b178a5376bf' },
+  receipt: { ...matchingReceipt, sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
   fetchDoctorJson: fetchOkDoctorJson,
 });
-assert.equal(ancestorReceipt.ok, false, 'ancestor-only committed receipt must fail-closed');
-assert.equal(ancestorReceipt.reason, 'committed_receipt_sha_not_head');
+assert.equal(offBranchReceipt.ok, false, 'receipt SHA not on this branch must fail-closed');
+assert.equal(offBranchReceipt.reason, 'committed_receipt_sha_not_on_branch');
 const missingReceiptCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'vac-verify-ci-'));
 const missingReceipt = inspectCiAttestation({
   cwd: missingReceiptCwd,
