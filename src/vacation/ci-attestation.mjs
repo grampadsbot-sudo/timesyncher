@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
@@ -207,6 +208,77 @@ export function resolveDoctorJson(cwd = process.cwd(), env = {}, explicit) {
   return parsed === null ? { ok: false, reason: 'doctor_json_unreadable' } : parsed;
 }
 
+export function githubAuthToken(env = process.env) {
+  const fromEnv = env.GITHUB_TOKEN || env.GH_TOKEN || '';
+  if (fromEnv) return fromEnv;
+  if (env !== process.env) return '';
+  const result = spawnSync('gh', ['auth', 'token'], { encoding: 'utf8' });
+  return result.status === 0 ? result.stdout.trim() : '';
+}
+
+function walkDoctorJson(dir) {
+  const stack = [dir];
+  while (stack.length) {
+    const current = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) stack.push(full);
+      else if (entry.name === 'doctor.json') return readDoctorJsonFile(full);
+    }
+  }
+  return null;
+}
+
+export function githubFetchArtifactDoctorJson(repo, artifactId, token = '') {
+  if (!repo || !artifactId) return { ok: false, reason: 'missing_artifact' };
+  if (!token) return { ok: false, reason: 'missing_token' };
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vac-verify-artifact-'));
+  const zipPath = path.join(tmp, 'artifact.zip');
+  try {
+    const downloaded = spawnSync('curl', [
+      '-sSL',
+      '-H', 'Accept: application/vnd.github+json',
+      '-H', 'User-Agent: timesyncher-vacation-verify',
+      '-H', `Authorization: Bearer ${token}`,
+      '-o', zipPath,
+      `https://api.github.com/repos/${repo}/actions/artifacts/${artifactId}/zip`,
+    ], { encoding: 'utf8', timeout: 30000 });
+    if (downloaded.status !== 0 || !fs.existsSync(zipPath) || fs.statSync(zipPath).size < 4) {
+      return { ok: false, reason: 'artifact_download_failed' };
+    }
+    const magic = fs.readFileSync(zipPath).subarray(0, 2);
+    if (magic.toString('hex') !== '504b') return { ok: false, reason: 'artifact_not_zip' };
+    const dest = path.join(tmp, 'unpacked');
+    fs.mkdirSync(dest);
+    const unzip = spawnSync('unzip', ['-qo', zipPath, '-d', dest], { encoding: 'utf8' });
+    if (unzip.status !== 0) return { ok: false, reason: 'artifact_unzip_failed' };
+    const parsed = walkDoctorJson(dest);
+    return parsed === null ? { ok: false, reason: 'doctor.json missing from artifact' } : parsed;
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+export function obtainBoundDoctorJson({
+  artifact,
+  repo,
+  token,
+  fetchDoctorJson,
+  explicit,
+} = {}) {
+  if (explicit !== undefined) return explicit;
+  if (typeof fetchDoctorJson === 'function') {
+    return fetchDoctorJson(repo, artifact, token);
+  }
+  return githubFetchArtifactDoctorJson(repo, artifact?.id, token);
+}
+
 export function producingAttestJob(env = {}, jobs = []) {
   const attestJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-attest');
   return Boolean(
@@ -225,7 +297,11 @@ export function attestVacationVerifyJob({
   artifacts = [],
   sha,
   env = {},
+  repo,
+  token,
+  fetchDoctorJson,
   doctorJson,
+  attestDoctorJson,
 } = {}) {
   const fail = (reason) => ({
     ok: false,
@@ -272,8 +348,15 @@ export function attestVacationVerifyJob({
       ? 'vacation-verify-gate artifact digest missing (marker-only is not doctor proof)'
       : 'vacation-verify-gate artifact digest missing');
   }
-  if (doctorJson !== undefined && !doctorJsonOk(doctorJson)) {
-    return fail('doctor.json ok is not true');
+  const gateJson = obtainBoundDoctorJson({
+    artifact: doctorArtifact,
+    repo,
+    token,
+    fetchDoctorJson,
+    explicit: doctorJson,
+  });
+  if (!doctorJsonOk(gateJson)) {
+    return fail(gateJson?.reason || 'gate doctor.json ok is not true');
   }
   const attestJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-attest');
   if (!producingAttestJob(env, jobs)) {
@@ -283,6 +366,16 @@ export function attestVacationVerifyJob({
     }
     const attestArtifact = artifactWithDigest(artifacts, attestArtifactNameForSha(sha));
     if (!attestArtifact) return fail('vacation-verify-attest artifact digest missing');
+    const attestJson = obtainBoundDoctorJson({
+      artifact: attestArtifact,
+      repo,
+      token,
+      fetchDoctorJson,
+      explicit: attestDoctorJson,
+    });
+    if (!doctorJsonOk(attestJson)) {
+      return fail(attestJson?.reason || 'attest doctor.json ok is not true');
+    }
     return {
       ok: true,
       sha,
@@ -362,6 +455,8 @@ export function inspectCiAttestation({
   sha,
   receipt,
   doctorJson,
+  attestDoctorJson,
+  fetchDoctorJson,
   fetchRuns,
   fetchRun,
   fetchJobs,
@@ -369,7 +464,7 @@ export function inspectCiAttestation({
 } = {}) {
   const head = sha || gitRevParse(cwd);
   const repo = githubRepoFromOrigin(cwd);
-  const token = env.GITHUB_TOKEN || env.GH_TOKEN || '';
+  const token = githubAuthToken(env);
   const committed = receipt !== undefined ? receipt : readCommittedCiReceipt(cwd);
   const parsedDoctorJson = resolveDoctorJson(cwd, env, doctorJson);
   const finish = (attestation, source) => {
@@ -413,7 +508,11 @@ export function inspectCiAttestation({
         artifacts: extras.artifacts.artifacts,
         sha: head,
         env,
+        repo,
+        token,
+        fetchDoctorJson,
         doctorJson: parsedDoctorJson,
+        attestDoctorJson,
       });
       if (attested.ok) return finish(attested, 'live_run');
       if (!extras.jobs.ok || !extras.artifacts.ok) {
@@ -458,7 +557,11 @@ export function inspectCiAttestation({
       artifacts: extras.artifacts.artifacts,
       sha: head,
       env,
+      repo,
+      token,
+      fetchDoctorJson,
       doctorJson: parsedDoctorJson,
+      attestDoctorJson,
     });
     if (attested.ok) return finish(attested, 'github_api');
   }

@@ -220,7 +220,7 @@ function doctor({ produceGate = false } = {}) {
     hosted_target: {
       status: 'hold',
       named: 'timesyncher / timesyncher.com',
-      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is vacation-verify + vacation-verify-doctor + vacation-verify-gate + vacation-verify-attest job success, with doctor proof the gate doctor.json digest (ok:true required; not the marker).',
+      detail: 'Vercel project is named in-repo. doctor and dry-run have no remote target; do not invent a deploy harness. SHA evidence is vacation-verify + vacation-verify-doctor + vacation-verify-gate + vacation-verify-attest job success. Doctor proof is the downloaded gate/attest doctor.json (ok:true required), not a name+digest bind and not the marker.',
     },
     checks: {
       feature_map: fs.existsSync(FEATURE_MAP),

@@ -44,6 +44,7 @@ assert.ok(!/set \+e/.test(ciWorkflow), 'gate must not ignore doctor exit with se
 assert.ok(!/set \+o pipefail/.test(ciWorkflow), 'gate must not ignore doctor exit with set +o pipefail');
 assert.ok(ciWorkflow.includes('doctorJsonOk'), 'uploaded doctor.json must be checked for ok:true');
 assert.ok(ciWorkflow.includes('vacation-verify-attest-'), 'attest job must upload a proof artifact');
+assert.ok(!ciWorkflow.includes('vacation-verify-bind'), 'cosmetic bind job must not remain in the workflow');
 const commentOnly = [
   'name: vacation-verify',
   'jobs:',
@@ -131,6 +132,7 @@ const inProgress = inspectCiAttestation({
 assert.equal(inProgress.ok, false, 'in_progress vacation-verify job must not pass doctor');
 const allJobs = [successJob, successDoctorJob, successGateJob, successAttestJob];
 const allArtifacts = [successArtifact, successMarkerArtifact, successGateArtifact, successAttestArtifact];
+const fetchOkDoctorJson = () => ({ ok: true });
 const noDigest = inspectCiAttestation({
   cwd,
   sha: shaB,
@@ -187,6 +189,16 @@ const doctorNoDigest = inspectCiAttestation({
   fetchArtifacts: () => [successArtifact, successMarkerArtifact],
 });
 assert.equal(doctorNoDigest.ok, false, 'gate job without gate doctor.json digest must fail-closed');
+const digestOnly = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => allArtifacts,
+});
+assert.equal(digestOnly.ok, false, 'artifact name+digest without obtained doctor.json must fail-closed');
 const bound = inspectCiAttestation({
   cwd,
   sha: shaB,
@@ -195,6 +207,7 @@ const bound = inspectCiAttestation({
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(bound.ok, true);
 assert.equal(bound.run_id, '33817831176');
@@ -223,6 +236,7 @@ const receiptMismatch = inspectCiAttestation({
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(receiptMismatch.ok, false, 'committed receipt digest must match live artifact');
 const midJobDoctor = inspectCiAttestation({
@@ -275,6 +289,7 @@ const receiptMissingDoctorDigest = inspectCiAttestation({
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(receiptMissingDoctorDigest.ok, false, 'receipt missing doctor_artifact_digest must not match');
 assert.equal(bindCommittedReceipt({
@@ -347,6 +362,7 @@ const receiptDoctorMatch = inspectCiAttestation({
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(receiptDoctorMatch.ok, true);
 const noAttestJob = inspectCiAttestation({
@@ -357,6 +373,7 @@ const noAttestJob = inspectCiAttestation({
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob, successDoctorJob, successGateJob],
   fetchArtifacts: () => [successArtifact, successMarkerArtifact, successGateArtifact],
+  fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(noAttestJob.ok, false, 'deleting vacation-verify-attest must fail attestation');
 assert.match(attestVacationVerifyJob({
@@ -364,6 +381,7 @@ assert.match(attestVacationVerifyJob({
   jobs: [successJob, successDoctorJob, successGateJob],
   artifacts: [successArtifact, successMarkerArtifact, successGateArtifact],
   sha: shaB,
+  doctorJson: { ok: true },
 }).reason, /vacation-verify-attest/);
 const attestSkipped = inspectCiAttestation({
   cwd,
@@ -373,6 +391,7 @@ const attestSkipped = inspectCiAttestation({
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob, successDoctorJob, successGateJob, { ...successAttestJob, conclusion: 'skipped' }],
   fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(attestSkipped.ok, false, 'skipped vacation-verify-attest must fail attestation');
 const attestNoDigest = inspectCiAttestation({
@@ -409,11 +428,23 @@ const doctorJsonTrue = inspectCiAttestation({
   env: {},
   receipt: null,
   doctorJson: { ok: true },
+  attestDoctorJson: { ok: true },
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
 });
 assert.equal(doctorJsonTrue.ok, true);
+const downloadedFalse = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: () => ({ ok: false }),
+});
+assert.equal(downloadedFalse.ok, false, 'downloaded doctor.json ok:false must fail-closed');
 const midAttestProduces = attestVacationVerifyJob({
   run: successRun,
   jobs: [successJob, successDoctorJob, successGateJob, { ...successAttestJob, conclusion: null, status: 'in_progress' }],
@@ -432,6 +463,7 @@ const forgedAttestSkip = attestVacationVerifyJob({
   jobs: [successJob, successDoctorJob, successGateJob],
   artifacts: [successArtifact, successMarkerArtifact, successGateArtifact],
   sha: shaB,
+  doctorJson: { ok: true },
   env: {
     GITHUB_ACTIONS: 'true',
     GITHUB_JOB: 'vacation-verify-attest',
