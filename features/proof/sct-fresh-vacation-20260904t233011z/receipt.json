@@ -1,0 +1,55 @@
+{
+  "job_id": "sct-fresh-vacation-20260904t233011z",
+  "certified": false,
+  "merged": false,
+  "production_deploy": false,
+  "status": "missing_token",
+  "did_not_reuse": {
+    "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+    "session": "TqOYg4gl-nnqMVj8tMjnQmEB"
+  },
+  "fresh_trip_id": null,
+  "fresh_shared_url": null,
+  "onboarding_urls": "missing_token",
+  "alias": "https://vacation-staging.timesyncher.com",
+  "deploy_url": "https://timesyncher-vacation-staging-bz96bw03q.vercel.app",
+  "agent_env": {
+    "TIMESYNCHER_ADMIN_TOKEN": "MISSING",
+    "TIMESYNCHER_INTAKE_TOKEN": "MISSING",
+    "TIMESYNCHER_WORKER_TOKEN": "MISSING",
+    "VERCEL_PROTECTION_BYPASS": "PRESENT"
+  },
+  "live_probes": {
+    "admin_create_unauthenticated": 401,
+    "admin_create_error": "Unauthorized admin request.",
+    "vacation_request_unauthenticated": 401,
+    "vacation_request_error": "Unauthorized intake request.",
+    "checkout_config": 503,
+    "checkout_config_error": "Live Stripe is disabled. Set ALLOW_LIVE_STRIPE=true only for real paid checkout."
+  },
+  "intended_admin_create": {
+    "method": "POST",
+    "path": "/api/admin-onboardings?action=create",
+    "auth": "Authorization Bearer TIMESYNCHER_ADMIN_TOKEN or x-timesyncher-admin-token or ?token=",
+    "body": {
+      "email": "sct-alex-rivera-fresh-20260904t233011z@example.invalid",
+      "firstName": "Alex",
+      "lastName": "Rivera",
+      "displayName": "Alex Rivera",
+      "plan": "single",
+      "tripTitle": "Las Vegas Strip light anniversary",
+      "vacationDate": "2026-10-09",
+      "sendEmail": false,
+      "note": "sct-fresh-vacation-20260904t233011z Alex + Kim Rivera Oct 9-12 2026"
+    }
+  },
+  "did_not": [
+    "invent admin or intake tokens",
+    "create a trip",
+    "reuse 4e18a3db / TqOYg4gl",
+    "merge",
+    "production-deploy",
+    "certify",
+    "print secrets"
+  ]
+}
