@@ -1,0 +1,110 @@
+{
+  "id": "cursor-preview-neon-prove-20260904t0406z",
+  "certified": false,
+  "merged": false,
+  "gbrain_receipt": "bot-admin/receipts/cursor-preview-neon-prove-20260904t0406z",
+  "preview_url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+  "deployment_id": "dpl_5cyCb18FhnViwqofcXt2at5Kee8g",
+  "head": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "vercel_project": "timesyncher",
+  "vercel_project_id": "prj_XA9H15Cxhe8CuPkWZBMAQKEbAeyZ",
+  "staging_vs_prod_conclusion": "unproven",
+  "did_mint_trip": false,
+  "did_write_prod_trek": false,
+  "did_post_vacation_create": false,
+  "did_set_secrets": false,
+  "inspect_blocked_on": [
+    "VERCEL_TOKEN",
+    "VERCEL_ACCESS_TOKEN",
+    "VERCEL_OIDC_TOKEN",
+    "vercel_cli",
+    "NEON_API_KEY"
+  ],
+  "runner_credential_presence": {
+    "VERCEL_TOKEN": "UNSET",
+    "VERCEL_ACCESS_TOKEN": "UNSET",
+    "VERCEL_OIDC_TOKEN": "UNSET",
+    "VERCEL_ORG_ID": "UNSET",
+    "VERCEL_PROJECT_ID": "UNSET",
+    "VERCEL_TEAM_ID": "UNSET",
+    "NEON_API_KEY": "UNSET",
+    "NEON_PROJECT_ID": "UNSET",
+    "DATABASE_URL": "UNSET",
+    "NEON_DATABASE_URL": "UNSET",
+    "TIMESYNCHER_ADMIN_TOKEN": "UNSET",
+    "VERCEL_PROTECTION_BYPASS": "PRESENT_NON_EMPTY"
+  },
+  "unauthenticated_api": {
+    "vercel_deployment_v13": { "status": 403, "error": "forbidden" },
+    "vercel_project_v9": { "status": 403, "error": "forbidden" },
+    "vercel_project_env_v9": { "status": 403, "error": "forbidden" },
+    "neon_projects_v2": { "status": 401 }
+  },
+  "preview_runtime_inferred_presence": {
+    "note": "Inferred from earlier bypass GETs against this exact preview. Not a host/db-name proof.",
+    "DATABASE_URL_or_NEON_DATABASE_URL": "PRESENT_INFERRED",
+    "TIMESYNCHER_ADMIN_TOKEN": "ABSENT",
+    "TIMESYNCHER_INTAKE_TOKEN": "ABSENT",
+    "TIMESYNCHER_WORKER_TOKEN": "PRESENT_INFERRED",
+    "STRIPE_MODE_and_publishable_key": "MISMATCH_503"
+  },
+  "redacted_hosts": {
+    "database_host": null,
+    "database_name": null,
+    "neon_project_name": null
+  },
+  "env_keys_for_admin_token_and_staging_safe_trip_create": {
+    "where": "Vercel project timesyncher / prj_XA9H15Cxhe8CuPkWZBMAQKEbAeyZ. Set on Preview so this git preview inherits them. Production-only does not reach dpl_5cyCb18FhnViwqofcXt2at5Kee8g. Do not set from this lane.",
+    "required_on_preview": [
+      {
+        "key": "TIMESYNCHER_ADMIN_TOKEN",
+        "why": "api/admin-onboardings.mjs requireAdminAuth. Missing → 503. Needed for GET action=coupons and POST action=create (admin_no_charge onboarding/trip).",
+        "target": "Preview (this deployment). Optional on Production if operators use admin there."
+      },
+      {
+        "key": "DATABASE_URL",
+        "alt": "NEON_DATABASE_URL",
+        "why": "src/vacation/db.mjs getDatabaseUrl. First non-empty of DATABASE_URL then NEON_DATABASE_URL. Admin create and vacation-request both write this Neon.",
+        "target": "Preview must point at a named staging/test Neon. Unproven today."
+      }
+    ],
+    "optional_or_dangerous": [
+      {
+        "key": "TIMESYNCHER_INTAKE_TOKEN",
+        "why": "api/vacation-request.mjs requireIntakeAuth is a no-op when unset. Preview currently accepts invalid JSON with 400 not 401. If Preview DB is ever proven staging, set this so anonymous POSTs cannot insert rows. Do not POST vacation-create from this lane."
+      },
+      {
+        "key": "TIMESYNCHER_SITE_BASE_URL",
+        "alt": "SITE_BASE_URL",
+        "why": "Onboarding/EULA links from admin create. Defaults to https://www.timesyncher.com if unset — wrong host for a preview bind."
+      },
+      {
+        "key": "TIMESYNCHER_WORKER_TOKEN",
+        "why": "Already configured on preview (GET /api/worker-jobs → 401). Not required to mint an admin trip."
+      }
+    ],
+    "not_a_path": [
+      "Do not use /shared/las-vegas-strip-vacation/ or hosted TREK trip 90 (production travel.timesyncher.com rewrite).",
+      "Do not POST /api/vacation-request or /api/admin-onboardings?action=create from this lane.",
+      "Do not invent deploy targets (vacation-staging or otherwise)."
+    ]
+  },
+  "craig_must_set_next": [
+    "Put VERCEL_TOKEN (or Vercel CLI login / VERCEL_ACCESS_TOKEN) on this Cursor runner so dpl_5cyCb18FhnViwqofcXt2at5Kee8g env can be inspected. Redact connection strings; record host/db/project name only.",
+    "Optional: NEON_API_KEY to correlate that host to a Neon project named staging vs production.",
+    "On Vercel Preview for timesyncher: set TIMESYNCHER_ADMIN_TOKEN (do not paste the value into GBrain or PRs).",
+    "On Vercel Preview: set DATABASE_URL (or NEON_DATABASE_URL) to the staging Neon only after inspect proves it is not production.",
+    "Recommended: set TIMESYNCHER_INTAKE_TOKEN on Preview so anonymous vacation-request POSTs fail closed.",
+    "Recommended: set TIMESYNCHER_SITE_BASE_URL to this preview origin if admin-create links should stay on the preview."
+  ],
+  "stop_rules_followed": [
+    "No trip mint",
+    "No production TREK write",
+    "No vacation-create / vacation-request create POST",
+    "No invent deploy target",
+    "No set secrets",
+    "No paste of connection strings or bypass/admin token values",
+    "Did not use shared Vegas / TREK trip 90 as a bind",
+    "Stopped when Vercel project access was missing"
+  ]
+}
