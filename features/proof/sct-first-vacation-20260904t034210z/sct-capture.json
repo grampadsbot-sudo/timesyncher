@@ -10,10 +10,36 @@
   "checkout_config_status": 503,
   "checkout_config_error": "Stripe publishable key does not match STRIPE_MODE=test.",
   "purchase_path": "skipped",
-  "trip_id": null,
+  "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
   "shared_url": null,
-  "bind_method": null,
+  "bind_method": "staging_trip_provided",
   "bind_locked": false,
+  "onboard_status": "eula_accepted_telegram_blocked_no_shared_url",
+  "staging": {
+    "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
+    "deployment_id": "dpl_2XRn1xpE8Mc4sNoWanWcbn2p55fu",
+    "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+    "onboarding_session_id": "05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca",
+    "order_success_ok": true,
+    "eula_accepted": true,
+    "eula_receipt_sha256": "b9df4e7bec716598759b29d32c91525be09c125bf23a4d60bc0fc579b996798a",
+    "eula_version": "2026-06-terms-advisory-only",
+    "shared_url": null,
+    "telegram_status": "blocked_intake_401",
+    "telegram_bind_proof": null,
+    "onboard_status": "eula_accepted_telegram_blocked_no_shared_url",
+    "order_success_url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+    "eula_url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+    "artifacts_dir": "features/proof/sct-first-vacation-20260904t034210z/staging-onboard/",
+    "notes": [
+      "Bypass loaded order-success 200 for Alex Rivera; Review and Continue present.",
+      "vacation-staging.timesyncher.com accept URL 404'd (EULA store session missing). Created session on this vercel.app host then accepted in Playwright.",
+      "EULA store / activation-status ok for 2026-06-terms-advisory-only. onboarding-session still currentStep=eula_required / eula.accepted=false (likely TIMESYNCHER_EULA_VERSION vs src/vacation/onboarding.mjs default 2026-04-initial-draft).",
+      "POST /api/vacation-telegram-turn and /api/vacation-request return 401 Unauthorized intake request (TIMESYNCHER_INTAKE_TOKEN set on staging; this runner does not have it). Did not invent the token.",
+      "checkout-config 503 Stripe publishable key is not configured yet — purchase skipped. No billing POSTs. No travel.timesyncher.com writes.",
+      "shared_url still null; itinerary remains onboarding with zero things."
+    ]
+  },
   "before_state": null,
   "bind_attempted_at": "2026-09-04T03:56:00Z",
   "runner_env_presence": {
@@ -336,6 +362,11 @@
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/order-success-onboarding.png",
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/owner-media-checkout.png",
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/shared-vegas-product.png",
-    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png"
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/screenshots/storefront.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/onboard-result.json",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accept-page.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accepted.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success-after-eula.png"
   ]
 }
