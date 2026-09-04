@@ -23,6 +23,8 @@
     "test:vacation-trek-apply": "node scripts/test_vacation_trek_apply.mjs",
     "test:vacation-intake-seam": "node scripts/test_vacation_intake_pipeline_seam.mjs",
     "verify:vacation": "node scripts/control-vacation.mjs doctor && node scripts/control-vacation.mjs dry-run --all-fixtures && node scripts/test_vacation_edit_pipeline.mjs && node scripts/test_vacation_trek_apply.mjs && node scripts/test_vacation_intake_pipeline_seam.mjs",
+    "verify:preview-map": "node scripts/test_feature_map_preview.mjs && node scripts/feature-map-preview.mjs presence",
+    "test:feature-map-preview": "node scripts/test_feature_map_preview.mjs",
     "test:openclaw-control": "node scripts/test_openclaw_control.mjs",
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
