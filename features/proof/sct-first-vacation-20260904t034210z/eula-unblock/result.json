@@ -1,0 +1,252 @@
+{
+  "started_at": "2026-09-04T06:13:59.170Z",
+  "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
+  "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+  "session": "TqOYg4gl-nnqMVj8tMjnQmEB",
+  "runner_env_presence": {
+    "VERCEL_PROTECTION_BYPASS": "PRESENT_NON_EMPTY",
+    "TIMESYNCHER_INTAKE_TOKEN": "MISSING",
+    "TIMESYNCHER_WORKER_TOKEN": "MISSING"
+  },
+  "shared_url": null,
+  "still_blocked": "eula_gate onboarding-session currentStep=eula_required eula.accepted=false (EULA store accepted 2026-04/06/08; onboarding API ignores receipts)",
+  "steps": [
+    {
+      "kind": "onboarding_before",
+      "status": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "eulaStatus": "pending",
+      "receiptSha256": null,
+      "acceptUrl": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB"
+    },
+    {
+      "kind": "eula_get_before",
+      "status": 200,
+      "error": null,
+      "sessionStatus": "accepted",
+      "version": "2026-06-terms-advisory-only"
+    },
+    {
+      "kind": "eula_create",
+      "status": 201,
+      "ok": true,
+      "error": null,
+      "sessionId": "vacation-TqOYg4gl-nnqMVj8tMjnQmEB-202606",
+      "version": "2026-06-terms-advisory-only"
+    },
+    {
+      "kind": "eula_page",
+      "http": 200,
+      "title": "TimeSyncher Terms & Privacy",
+      "formVisible": true,
+      "alreadySaved": false,
+      "acceptUrl": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB-202606",
+      "bodyPreview": "Review & continue\n\nPlease review TimeSyncher's terms, privacy, and advisory-only service limits before opening your onboarding conversation.\n\nAdvisory-only service\n\nTimeSyncher can research, compare, summarize, draft, and organize travel planning. It cannot book, buy, send messag",
+      "screenshot": "/workspace/features/proof/sct-first-vacation-20260904t034210z/eula-unblock/eula-accept-before.png"
+    },
+    {
+      "kind": "eula_accept_click",
+      "ok": true,
+      "savedText": "Saved\n\nYour acceptance receipt was saved server-side. Thank you - TimeSyncher has recorded your terms acceptance.",
+      "screenshot": "/workspace/features/proof/sct-first-vacation-20260904t034210z/eula-unblock/eula-accept-after.png"
+    },
+    {
+      "kind": "order_success",
+      "eulaVisible": true,
+      "choicesVisible": false,
+      "bodyPreview": "Purchase confirmed\n\nLet's get started with TimeSyncher Vacation.\n\nAn unforgettable vacation is awaiting Alex Rivera.\nReview Terms & Privacy\n\nReview and accept the TimeSyncher Terms & Privacy details. After acceptance, TimeSyncher will guide you to Telegram onboarding.\n\nReview and Continue",
+      "screenshot": "/workspace/features/proof/sct-first-vacation-20260904t034210z/eula-unblock/order-success-after-eula.png"
+    },
+    {
+      "kind": "activation_status",
+      "versionQueried": "default",
+      "status": 200,
+      "ok": true,
+      "required": "2026-06-terms-advisory-only",
+      "receipt": "9859b9bc3775e9d6692f5b651ea13afb40505d2ba13f4c0816059f78e75a6b4a",
+      "errors": null
+    },
+    {
+      "kind": "activation_status",
+      "versionQueried": "2026-06-terms-advisory-only",
+      "status": 200,
+      "ok": true,
+      "required": "2026-06-terms-advisory-only",
+      "receipt": "9859b9bc3775e9d6692f5b651ea13afb40505d2ba13f4c0816059f78e75a6b4a",
+      "errors": null
+    },
+    {
+      "kind": "activation_status",
+      "versionQueried": "2026-04-initial-draft",
+      "status": 200,
+      "ok": false,
+      "required": "2026-04-initial-draft",
+      "receipt": null,
+      "errors": [
+        "no valid accepted EULA receipt found"
+      ]
+    },
+    {
+      "kind": "onboarding_after_accept",
+      "status": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "eulaStatus": "pending",
+      "receiptSha256": null,
+      "acceptUrl": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB"
+    },
+    {
+      "kind": "eula_create_202604",
+      "status": 201,
+      "ok": true,
+      "error": null,
+      "sessionId": "vacation-TqOYg4gl-nnqMVj8tMjnQmEB-202604",
+      "version": "2026-04-initial-draft"
+    },
+    {
+      "kind": "eula_accept_202604",
+      "status": 201,
+      "ok": true,
+      "error": null,
+      "receipt": "1e3652459845913a148af0501fe17d69fba78f34f357a0827aea8314cae953af"
+    },
+    {
+      "kind": "onboarding_after_202604",
+      "status": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "eulaStatus": "pending",
+      "receiptSha256": null,
+      "acceptUrl": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB"
+    }
+  ],
+  "eulaSessionId": "vacation-TqOYg4gl-nnqMVj8tMjnQmEB-202606",
+  "polls": [
+    {
+      "i": 0,
+      "at": "2026-09-04T06:14:02.935Z",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "thingCount": 0,
+      "shareToken": null,
+      "workerJobs": {
+        "status": 401,
+        "error": "Unauthorized worker request."
+      }
+    },
+    {
+      "i": 1,
+      "at": "2026-09-04T06:14:15.182Z",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "thingCount": 0,
+      "shareToken": null,
+      "workerJobs": {
+        "status": 401,
+        "error": "Unauthorized worker request."
+      }
+    },
+    {
+      "i": 2,
+      "at": "2026-09-04T06:14:27.644Z",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "thingCount": 0,
+      "shareToken": null,
+      "workerJobs": {
+        "status": 401,
+        "error": "Unauthorized worker request."
+      }
+    },
+    {
+      "i": 3,
+      "at": "2026-09-04T06:14:39.865Z",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "thingCount": 0,
+      "shareToken": null,
+      "workerJobs": {
+        "status": 401,
+        "error": "Unauthorized worker request."
+      }
+    },
+    {
+      "i": 4,
+      "at": "2026-09-04T06:14:52.066Z",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "thingCount": 0,
+      "shareToken": null,
+      "workerJobs": {
+        "status": 401,
+        "error": "Unauthorized worker request."
+      }
+    },
+    {
+      "i": 5,
+      "at": "2026-09-04T06:15:04.276Z",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "thingCount": 0,
+      "shareToken": null,
+      "workerJobs": {
+        "status": 401,
+        "error": "Unauthorized worker request."
+      }
+    }
+  ],
+  "last": {
+    "i": 5,
+    "at": "2026-09-04T06:15:04.276Z",
+    "currentStep": "eula_required",
+    "eulaAccepted": false,
+    "tripStatus": "onboarding",
+    "tripTitle": "TimeSyncher Vacation Setup",
+    "destination": null,
+    "startDate": "2026-10-15T00:00:00.000Z",
+    "thingCount": 0,
+    "shareToken": null,
+    "workerJobs": {
+      "status": 401,
+      "error": "Unauthorized worker request."
+    }
+  },
+  "onboarding": {
+    "currentStep": "eula_required",
+    "status": "purchase_confirmed",
+    "eulaAccepted": false,
+    "eulaStatus": "pending",
+    "receiptSha256": null,
+    "acceptUrl": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB"
+  },
+  "finished_at": "2026-09-04T06:15:16.288Z",
+  "eula_202608": {
+    "ok": true,
+    "receipt": "50e93f0b41c02dc2f57cb1ad56088cf039c19ff6c5c717f317ded74549eb2042"
+  }
+}

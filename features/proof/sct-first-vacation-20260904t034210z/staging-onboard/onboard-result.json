@@ -1,0 +1,329 @@
+{
+  "job_id": "sct-first-vacation-20260904t034210z",
+  "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
+  "deployment_id": "dpl_2XRn1xpE8Mc4sNoWanWcbn2p55fu",
+  "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+  "onboarding_session_id": "05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca",
+  "session_token": "TqOYg4gl-nnqMVj8tMjnQmEB",
+  "order_success_ok": true,
+  "eula_accepted": true,
+  "shared_url": null,
+  "telegram_status": {
+    "start": {
+      "status": 401,
+      "ok": false,
+      "error": "Unauthorized intake request.",
+      "eulaRequired": false,
+      "reply": null,
+      "telegramSessionId": null,
+      "queued": null
+    },
+    "brief": null,
+    "observed_tme_only": "https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB",
+    "bind_method": null
+  },
+  "screenshots": [
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-after-click.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accept-page.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accepted.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success-after-eula.png"
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/api/checkout-config",
+      "status": 503,
+      "ok": false,
+      "error": "Stripe publishable key is not configured yet.",
+      "snippet": "{\n  \"ok\": false,\n  \"error\": \"Stripe publishable key is not configured yet.\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"session\": {\n    \"sessionId\": \"05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"token\": \"TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"status\": \"purchase_confirmed\",\n    \"currentStep\": \"eula_required\",\n    \"customerName\": \"Alex Rivera\",\n    \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\",\n    \"plan\": \"single\",\n    \"amountCents\": 0,\n    \"currency\": \"usd\",\n    \"onboardingUrl\": \"https://vacation-staging.timesyncher.com/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"telegramUrl\": \"https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"eula\": {\n      "
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"trip\": {\n    \"title\": \"TimeSyncher Vacation Setup\",\n    \"destination\": null,\n    \"startDate\": \"2026-10-15T00:00:00.000Z\",\n    \"endDate\": null,\n    \"status\": \"onboarding\",\n    \"travelerName\": \"Alex Rivera\"\n  },\n  \"sections\": {},\n  \"things\": [],\n  \"budgets\": [],\n  \"media\": [],\n  \"generatedAt\": \"2026-09-04T04:55:29.879Z\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/eula?action=get-session&sessionId=vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 404,
+      "ok": false,
+      "error": "session not found",
+      "snippet": "{\n  \"ok\": false,\n  \"error\": \"session not found\"\n}\n"
+    },
+    {
+      "method": "POST",
+      "path": "/api/vacation-telegram-turn",
+      "status": 401,
+      "ok": false,
+      "error": "Unauthorized intake request.",
+      "snippet": "{\n  \"ok\": false,\n  \"error\": \"Unauthorized intake request.\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/eula?action=get-session&sessionId=vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 404,
+      "ok": false,
+      "error": "session not found",
+      "snippet": "{\n  \"ok\": false,\n  \"error\": \"session not found\"\n}\n"
+    },
+    {
+      "method": "POST",
+      "path": "/api/eula?action=create-session",
+      "status": 201,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"sessionId\": \"vacation-TqOYg4gl-nnqMVj8tMjnQmEB\",\n  \"session\": {\n    \"sessionId\": \"vacation-TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"clientKey\": \"vacation-onboarding:05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"clientLabel\": \"Alex Rivera\",\n    \"contact\": {\n      \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\"\n    },\n    \"selectedFunctionality\": [\n      \"vacation_planning_onboarding\",\n      \"telegram_voice_note_intake\",\n      \"hosted_itinerary_generation\",\n      \"purchase_receipts_and_support\"\n    ],\n    \"google\": {},\n    \"status\": \"pending\",\n    \"createdAt\": \"2026-09-"
+    },
+    {
+      "method": "GET",
+      "path": "/api/eula?action=get-session&sessionId=vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"session\": {\n    \"sessionId\": \"vacation-TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"clientKey\": \"vacation-onboarding:05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"clientLabel\": \"Alex Rivera\",\n    \"contact\": {\n      \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\"\n    },\n    \"selectedFunctionality\": [\n      \"vacation_planning_onboarding\",\n      \"telegram_voice_note_intake\",\n      \"hosted_itinerary_generation\",\n      \"purchase_receipts_and_support\"\n    ],\n    \"google\": {},\n    \"status\": \"accepted\",\n    \"createdAt\": \"2026-09-04T04:55:36.029Z\",\n    \"expiresAt\": \"2026-09-18T04:"
+    },
+    {
+      "method": "GET",
+      "path": "/api/eula?action=activation-status&clientKey=vacation-onboarding:05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"clientKey\": \"vacation-onboarding:05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n  \"sessionId\": \"vacation-TqOYg4gl-nnqMVj8tMjnQmEB\",\n  \"receiptSha256\": \"b9df4e7bec716598759b29d32c91525be09c125bf23a4d60bc0fc579b996798a\",\n  \"requiredEulaVersion\": \"2026-06-terms-advisory-only\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"session\": {\n    \"sessionId\": \"05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"token\": \"TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"status\": \"purchase_confirmed\",\n    \"currentStep\": \"eula_required\",\n    \"customerName\": \"Alex Rivera\",\n    \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\",\n    \"plan\": \"single\",\n    \"amountCents\": 0,\n    \"currency\": \"usd\",\n    \"onboardingUrl\": \"https://vacation-staging.timesyncher.com/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"telegramUrl\": \"https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"eula\": {\n      "
+    },
+    {
+      "method": "POST",
+      "path": "/api/vacation-telegram-turn",
+      "status": 401,
+      "ok": false,
+      "error": "Unauthorized intake request.",
+      "snippet": "{\n  \"ok\": false,\n  \"error\": \"Unauthorized intake request.\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"session\": {\n    \"sessionId\": \"05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"token\": \"TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"status\": \"purchase_confirmed\",\n    \"currentStep\": \"eula_required\",\n    \"customerName\": \"Alex Rivera\",\n    \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\",\n    \"plan\": \"single\",\n    \"amountCents\": 0,\n    \"currency\": \"usd\",\n    \"onboardingUrl\": \"https://vacation-staging.timesyncher.com/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"telegramUrl\": \"https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"eula\": {\n      "
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"trip\": {\n    \"title\": \"TimeSyncher Vacation Setup\",\n    \"destination\": null,\n    \"startDate\": \"2026-10-15T00:00:00.000Z\",\n    \"endDate\": null,\n    \"status\": \"onboarding\",\n    \"travelerName\": \"Alex Rivera\"\n  },\n  \"sections\": {},\n  \"things\": [],\n  \"budgets\": [],\n  \"media\": [],\n  \"generatedAt\": \"2026-09-04T04:55:41.729Z\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-web-access?action=status&tripId=4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"canEdit\": false,\n  \"role\": \"viewer\",\n  \"email\": null,\n  \"tripId\": \"4e18a3db-d4e8-406d-b66c-6f3ba4adc817\",\n  \"shareToken\": null\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"session\": {\n    \"sessionId\": \"05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"token\": \"TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"status\": \"purchase_confirmed\",\n    \"currentStep\": \"eula_required\",\n    \"customerName\": \"Alex Rivera\",\n    \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\",\n    \"plan\": \"single\",\n    \"amountCents\": 0,\n    \"currency\": \"usd\",\n    \"onboardingUrl\": \"https://vacation-staging.timesyncher.com/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"telegramUrl\": \"https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"eula\": {\n      "
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"trip\": {\n    \"title\": \"TimeSyncher Vacation Setup\",\n    \"destination\": null,\n    \"startDate\": \"2026-10-15T00:00:00.000Z\",\n    \"endDate\": null,\n    \"status\": \"onboarding\",\n    \"travelerName\": \"Alex Rivera\"\n  },\n  \"sections\": {},\n  \"things\": [],\n  \"budgets\": [],\n  \"media\": [],\n  \"generatedAt\": \"2026-09-04T04:55:46.087Z\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-web-access?action=status&tripId=4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"canEdit\": false,\n  \"role\": \"viewer\",\n  \"email\": null,\n  \"tripId\": \"4e18a3db-d4e8-406d-b66c-6f3ba4adc817\",\n  \"shareToken\": null\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/onboarding-session?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"session\": {\n    \"sessionId\": \"05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca\",\n    \"token\": \"TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"status\": \"purchase_confirmed\",\n    \"currentStep\": \"eula_required\",\n    \"customerName\": \"Alex Rivera\",\n    \"email\": \"sct-alex-rivera-20260904+1788497091528@example.invalid\",\n    \"plan\": \"single\",\n    \"amountCents\": 0,\n    \"currency\": \"usd\",\n    \"onboardingUrl\": \"https://vacation-staging.timesyncher.com/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"telegramUrl\": \"https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB\",\n    \"eula\": {\n      "
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-itinerary?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"trip\": {\n    \"title\": \"TimeSyncher Vacation Setup\",\n    \"destination\": null,\n    \"startDate\": \"2026-10-15T00:00:00.000Z\",\n    \"endDate\": null,\n    \"status\": \"onboarding\",\n    \"travelerName\": \"Alex Rivera\"\n  },\n  \"sections\": {},\n  \"things\": [],\n  \"budgets\": [],\n  \"media\": [],\n  \"generatedAt\": \"2026-09-04T04:55:50.306Z\"\n}\n"
+    },
+    {
+      "method": "GET",
+      "path": "/api/vacation-web-access?action=status&tripId=4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+      "status": 200,
+      "ok": true,
+      "error": null,
+      "snippet": "{\n  \"ok\": true,\n  \"canEdit\": false,\n  \"role\": \"viewer\",\n  \"email\": null,\n  \"tripId\": \"4e18a3db-d4e8-406d-b66c-6f3ba4adc817\",\n  \"shareToken\": null\n}\n"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "checkout_config",
+      "status": 503,
+      "detail": "Stripe publishable key is not configured yet.",
+      "action": "skip_purchase"
+    },
+    {
+      "id": "telegram_turn_auth",
+      "status": 401,
+      "detail": "Unauthorized intake request."
+    },
+    {
+      "id": "vacation_request_auth",
+      "status": 401,
+      "detail": "POST /api/vacation-request returned 401 Unauthorized intake request. TIMESYNCHER_INTAKE_TOKEN is configured on staging; this runner does not have it."
+    },
+    {
+      "id": "onboarding_session_still_eula_required",
+      "detail": "EULA store accepted 2026-06-terms-advisory-only (receipt b9df4e7bec716598759b29d32c91525be09c125bf23a4d60bc0fc579b996798a) but GET /api/onboarding-session still reports currentStep=eula_required and eula.accepted=false. Order-success therefore still shows Review and Continue after accept."
+    },
+    {
+      "id": "shared_url_not_yet",
+      "detail": "Worker has not published a public itinerary slug on this staging trip. Did not query or write travel.timesyncher.com."
+    }
+  ],
+  "onboarding_before": {
+    "sessionId": "05079baa-8dfe-4053-a8fe-e0cfe3c5d7ca",
+    "token": "TqOYg4gl-nnqMVj8tMjnQmEB",
+    "status": "purchase_confirmed",
+    "currentStep": "eula_required",
+    "customerName": "Alex Rivera",
+    "email": "sct-alex-rivera-20260904+1788497091528@example.invalid",
+    "plan": "single",
+    "amountCents": 0,
+    "currency": "usd",
+    "onboardingUrl": "https://vacation-staging.timesyncher.com/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB",
+    "telegramUrl": "https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB",
+    "eula": {
+      "status": "pending",
+      "accepted": false,
+      "acceptUrl": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+      "sessionId": "vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+      "receiptSha256": null
+    },
+    "telegramInstall": {
+      "ios": "https://apps.apple.com/app/telegram-messenger/id686449807",
+      "android": "https://play.google.com/store/apps/details?id=org.telegram.messenger",
+      "desktop": "https://apps.apple.com/us/app/telegram/id747648890?mt=12"
+    }
+  },
+  "itinerary_before": {
+    "title": "TimeSyncher Vacation Setup",
+    "destination": null,
+    "startDate": "2026-10-15T00:00:00.000Z",
+    "endDate": null,
+    "status": "onboarding",
+    "travelerName": "Alex Rivera"
+  },
+  "order_success": {
+    "status": 200,
+    "title": "Start TimeSyncher Vacation Onboarding",
+    "eulaVisible": true,
+    "choicesVisible": false,
+    "acceptHref": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+    "bodyText": "Purchase confirmed Let's get started with TimeSyncher Vacation. An unforgettable vacation is awaiting Alex Rivera. Review Terms & Privacy Review and accept the TimeSyncher Terms & Privacy details. After acceptance, TimeSyncher will guide you to Telegram onboarding. Review and Continue"
+  },
+  "eula_nav": {
+    "href": "https://vacation-staging.timesyncher.com/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+    "status": 404,
+    "host": "vacation-staging.timesyncher.com"
+  },
+  "eula_create": {
+    "status": 201,
+    "ok": true,
+    "error": null
+  },
+  "eula_page": {
+    "url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
+    "status": 200,
+    "title": "TimeSyncher Terms & Privacy"
+  },
+  "eula_form_present": true,
+  "eula_after_click": {
+    "savedVisible": true,
+    "bodyText": "Review & continue Please review TimeSyncher's terms, privacy, and advisory-only service limits before opening your onboarding conversation. Advisory-only service TimeSyncher can research, compare, summarize, draft, and organize travel planning. It cannot book, buy, send messages, modify calendars or email, accept third-party terms, cancel, reschedule, or change accounts for you. Client Alex Rivera"
+  },
+  "eula_receipt": "b9df4e7bec716598759b29d32c91525be09c125bf23a4d60bc0fc579b996798a",
+  "order_success_after_eula": {
+    "eulaVisible": true,
+    "choicesVisible": false,
+    "openBotHref": "#",
+    "bodyText": "Purchase confirmed Let's get started with TimeSyncher Vacation. An unforgettable vacation is awaiting Alex Rivera. Review Terms & Privacy Review and accept the TimeSyncher Terms & Privacy details. After acceptance, TimeSyncher will guide you to Telegram onboarding. Review and Continue"
+  },
+  "telegram_start": {
+    "status": 401,
+    "ok": false,
+    "error": "Unauthorized intake request.",
+    "eulaRequired": false,
+    "reply": null,
+    "telegramSessionId": null,
+    "queued": null
+  },
+  "polls": [
+    {
+      "i": 0,
+      "sessionStatus": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "thingCount": 0,
+      "webShareToken": null,
+      "found": null
+    },
+    {
+      "i": 1,
+      "sessionStatus": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "thingCount": 0,
+      "webShareToken": null,
+      "found": null
+    },
+    {
+      "i": 2,
+      "sessionStatus": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "thingCount": 0,
+      "webShareToken": null,
+      "found": null
+    }
+  ]
+}
