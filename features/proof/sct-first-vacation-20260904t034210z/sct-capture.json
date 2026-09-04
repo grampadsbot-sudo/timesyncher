@@ -14,7 +14,7 @@
   "shared_url": null,
   "bind_method": "staging_trip_provided",
   "bind_locked": false,
-  "onboard_status": "eula_accepted_telegram_blocked_no_shared_url",
+  "onboard_status": "eula_accepted_telegram_blocked_missing_intake_token_no_shared_url",
   "staging": {
     "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
     "deployment_id": "dpl_2XRn1xpE8Mc4sNoWanWcbn2p55fu",
@@ -25,9 +25,9 @@
     "eula_receipt_sha256": "b9df4e7bec716598759b29d32c91525be09c125bf23a4d60bc0fc579b996798a",
     "eula_version": "2026-06-terms-advisory-only",
     "shared_url": null,
-    "telegram_status": "blocked_intake_401",
+    "telegram_status": "blocked_intake_401_missing_runner_token",
     "telegram_bind_proof": null,
-    "onboard_status": "eula_accepted_telegram_blocked_no_shared_url",
+    "onboard_status": "eula_accepted_telegram_blocked_missing_intake_token_no_shared_url",
     "order_success_url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/order-success.html?session=TqOYg4gl-nnqMVj8tMjnQmEB",
     "eula_url": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app/accept/vacation-TqOYg4gl-nnqMVj8tMjnQmEB",
     "artifacts_dir": "features/proof/sct-first-vacation-20260904t034210z/staging-onboard/",
@@ -36,9 +36,11 @@
       "vacation-staging.timesyncher.com accept URL 404'd (EULA store session missing). Created session on this vercel.app host then accepted in Playwright.",
       "EULA store / activation-status ok for 2026-06-terms-advisory-only. onboarding-session still currentStep=eula_required / eula.accepted=false (likely TIMESYNCHER_EULA_VERSION vs src/vacation/onboarding.mjs default 2026-04-initial-draft).",
       "POST /api/vacation-telegram-turn and /api/vacation-request return 401 Unauthorized intake request (TIMESYNCHER_INTAKE_TOKEN set on staging; this runner does not have it). Did not invent the token.",
-      "checkout-config 503 Stripe publishable key is not configured yet — purchase skipped. No billing POSTs. No travel.timesyncher.com writes.",
-      "shared_url still null; itinerary remains onboarding with zero things."
-    ]
+      "checkout-config 503 Stripe publishable key is not configured yet \u2014 purchase skipped. No billing POSTs. No travel.timesyncher.com writes.",
+      "shared_url still null; itinerary remains onboarding with zero things.",
+      "2026-09-04T05:51Z shared_url resume: TIMESYNCHER_INTAKE_TOKEN still MISSING in this runner process env (CoS said treat as live if present; it was not). POST /api/vacation-telegram-turn and /api/vacation-request still 401 Unauthorized intake request. Did not invent a token. Polled onboarding-session/itinerary/web-access 15 times over ~2.5 min; trip stays onboarding, 0 things, no public slug. Alternate is real TG /start."
+    ],
+    "intake_status": "missing_token"
   },
   "before_state": null,
   "bind_attempted_at": "2026-09-04T03:56:00Z",
@@ -75,7 +77,7 @@
     "hosted_trek_api": "https://travel.timesyncher.com/api/shared/las-vegas-strip-vacation",
     "preview_shared_proxy": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/shared/las-vegas-strip-vacation/",
     "why_not_locked": [
-      "vercel.json rewrites /shared/(.*) and /api/shared/(.*) to https://travel.timesyncher.com — production TREK public host, not preview Neon.",
+      "vercel.json rewrites /shared/(.*) and /api/shared/(.*) to https://travel.timesyncher.com \u2014 production TREK public host, not preview Neon.",
       "Preview GET /api/shared/las-vegas-strip-vacation returned the same hosted TREK trip id 90 / title Las Vegas Strip Vacation as travel.timesyncher.com.",
       "features/fixtures/telegram-text-single-edit.json maps trip-vegas-live-001 to local trek_rows id 41 and publicUrl travel.timesyncher.com. Live hosted id is 90, not 41. Fixture ID is dry-run / local TREK SQLite, not a preview Neon UUID.",
       "GET /api/vacation-web-access?action=status&shareToken=las-vegas-strip-vacation returned tripId null (share token echoed only). Without a web-access session, shareToken is not resolved to a vacation trips row.",
@@ -367,6 +369,45 @@
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success.png",
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accept-page.png",
     "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/eula-accepted.png",
-    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success-after-eula.png"
-  ]
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/staging-onboard/order-success-after-eula.png",
+    "/workspace/features/proof/sct-first-vacation-20260904t034210z/shared-url-resume.json"
+  ],
+  "intake_status": "missing_token",
+  "telegram_status": "blocked_intake_401_missing_runner_token",
+  "shared_url_resume": {
+    "attempted_at": "2026-09-04T05:48:45Z",
+    "finished_at": "2026-09-04T05:51:17Z",
+    "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
+    "deployment_id": "dpl_2XRn1xpE8Mc4sNoWanWcbn2p55fu",
+    "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+    "shared_url": null,
+    "intake_status": "missing_token",
+    "telegram_status": "blocked_intake_401_missing_runner_token",
+    "auth_shape": "Authorization Bearer or x-timesyncher-intake-token (src/vacation/auth.mjs requireIntakeAuth)",
+    "token_present_in_runner_env": false,
+    "still_401": true,
+    "post_telegram_turn": {
+      "status": 401,
+      "error": "Unauthorized intake request."
+    },
+    "post_vacation_request": {
+      "status": 401,
+      "error": "Unauthorized intake request."
+    },
+    "poll_count": 15,
+    "poll_window": "2026-09-04T05:48:48Z/2026-09-04T05:51:12Z",
+    "last_itinerary": {
+      "title": "TimeSyncher Vacation Setup",
+      "status": "onboarding",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "endDate": null,
+      "thingCount": 0
+    },
+    "alternate": "real Telegram /start https://t.me/TimeSyncherVacationBot?start=TqOYg4gl-nnqMVj8tMjnQmEB (SCT may handle separately)",
+    "certified": false,
+    "merged": false,
+    "prod_writes": false,
+    "evidence": "features/proof/sct-first-vacation-20260904t034210z/shared-url-resume.json"
+  }
 }
