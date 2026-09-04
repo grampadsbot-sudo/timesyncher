@@ -224,7 +224,7 @@ export function doctorReportOk(checks = {}) {
   );
 }
 
-export function doctorJsonOk(value) {
+export function doctorJsonFieldsOk(value) {
   let parsed = value;
   if (typeof parsed === 'string') {
     try {
@@ -234,7 +234,6 @@ export function doctorJsonOk(value) {
     }
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
-  if (parsed.ok !== true) return false;
   if (!doctorReportOk(parsed.checks || {})) return false;
   const attest = parsed.ci_attestation;
   if (!attest || attest.ok !== true) return false;
@@ -249,6 +248,19 @@ export function doctorJsonOk(value) {
     && sha256DigestField(attest.doctor_artifact_digest)
     && sha256DigestField(attest.attest_artifact_digest)
   );
+}
+
+export function doctorJsonOk(value) {
+  let parsed = value;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return false;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
+  return parsed.ok === true && doctorJsonFieldsOk(parsed);
 }
 
 export function readDoctorJsonFile(filePath) {

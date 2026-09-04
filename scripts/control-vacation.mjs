@@ -24,6 +24,7 @@ import {
 import { createTrekFixtureStore } from '../src/vacation/trek-fixture-store.mjs';
 import {
   CI_WORKFLOW_REL,
+  doctorJsonFieldsOk,
   doctorJsonOk,
   doctorReportOk,
   inspectCiAttestation,
@@ -244,7 +245,7 @@ function doctor({ produceGate = false, produceAttest = false } = {}) {
     && missingMapRows.length === 0
     && missingFixtures.length === 0
     && fixtures.length >= requiredFixtures.length
-    && doctorJsonOk(report);
+    && doctorJsonFieldsOk(report);
   if (produceGate) report.produce_gate = true;
   if (produceAttest) report.produce_attest = true;
   return report;

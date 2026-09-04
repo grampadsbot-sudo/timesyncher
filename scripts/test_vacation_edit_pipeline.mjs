@@ -31,6 +31,7 @@ import {
   bindCommittedReceipt,
   committedReceiptShaAllowed,
   doctorArtifactNameForSha,
+  doctorJsonFieldsOk,
   doctorJsonOk,
   doctorReportOk,
   gitRevParse,
@@ -155,6 +156,8 @@ const okDoctorJson = {
   },
 };
 assert.equal(doctorJsonOk(okDoctorJson), true);
+assert.equal(doctorJsonFieldsOk({ ...okDoctorJson, ok: false }), true);
+assert.equal(doctorJsonOk({ ...okDoctorJson, ok: false }), false, 'fields without ok:true are not a passing doctor.json');
 assert.equal(doctorArtifactNameForSha(shaB), `vacation-verify-gate-${shaB}`);
 assert.equal(attestArtifactNameForSha(shaB), `vacation-verify-attest-${shaB}`);
 assert.equal(doctorJsonOk({ ok: true }), false, 'shallow {ok:true} must fail-closed');
