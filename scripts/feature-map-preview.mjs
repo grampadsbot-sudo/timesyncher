@@ -15,6 +15,7 @@ import {
   compactPreviewReceipt,
   evaluatePreviewMap,
   extractFeatureMap,
+  keepFeatureMapEntries,
   observationsToHar,
   previewMapStable,
   probePreview,
@@ -233,7 +234,7 @@ async function captureAndExtract(args, { playwright = false } = {}) {
     };
   }
   const sanitizedPath = path.join(artifactDir, 'network.sanitized.har.json');
-  const sanitized = sanitizeHar(har);
+  const sanitized = keepFeatureMapEntries(har, { origin: args.origin });
   const sanitizedText = `${JSON.stringify(sanitized, null, 2)}\n`;
   assertNoSecret(sanitizedText);
   fs.writeFileSync(sanitizedPath, sanitizedText);
@@ -251,7 +252,12 @@ async function captureAndExtract(args, { playwright = false } = {}) {
     evaluation,
     eventsRel,
     artifactDir: path.relative(cwd, artifactDir),
-    playwright: playwrightResult,
+    playwright: {
+      ran: Boolean(playwrightResult.ran),
+      visits: playwrightResult.visits || [],
+      sso: Boolean(playwrightResult.sso),
+      reason: playwrightResult.reason || null,
+    },
     head: EXPECTED_HEAD,
     notes: [
       `Deploy target remains ${args.origin} / ${EXPECTED_DEPLOYMENT_ID}.`,

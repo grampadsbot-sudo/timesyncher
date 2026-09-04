@@ -10,6 +10,8 @@ import {
   bypassSecretPresent,
   classifyObservation,
   extractFeatureMap,
+  keepFeatureMapEntries,
+  isBypassCookieRedirect,
   isSsoRedirect,
   matchScenario,
   observationsToHar,
@@ -25,6 +27,8 @@ const fixtureHar = JSON.parse(fs.readFileSync(path.join(cwd, 'features/fixtures/
 assert.equal(isSsoRedirect(302, 'https://vercel.com/sso-api?url=https://example.vercel.app'), true);
 assert.equal(isSsoRedirect(200, ''), false);
 assert.equal(isSsoRedirect(307, '/'), false);
+assert.equal(isBypassCookieRedirect(307, '/', 'https://example.vercel.app'), true);
+assert.equal(isBypassCookieRedirect(307, 'https://vercel.com/sso-api?url=x', 'https://example.vercel.app'), false);
 
 assert.equal(stripSecretQuery('?x-vercel-protection-bypass=secret&action=status'), '?action=status');
 assert.equal(
@@ -38,6 +42,9 @@ assert.doesNotMatch(blob, /SHOULD-NEVER-EXTRACT/);
 assert.equal(sanitized.log.entries[0].request.headers.length, 0);
 assert.ok(!sanitized.log.entries[0].response.headers.some((row) => row.name === 'set-cookie'));
 assert.doesNotMatch(sanitized.log.entries[0].request.url, /x-vercel-protection-bypass/);
+const slim = keepFeatureMapEntries(fixtureHar);
+assert.equal(slim.log.entries.length, 2);
+assert.ok(slim.log.entries.every((entry) => !JSON.stringify(entry).includes('SHOULD-NEVER-EXTRACT')));
 
 const storefront = matchScenario('GET', 'https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/');
 assert.equal(storefront.id, 'storefront');

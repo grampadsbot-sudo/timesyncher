@@ -1,0 +1,8 @@
+{"ts":"2026-09-04T03:26:30.727Z","step":"initialize","job_id":"vac-verify-preview-integrated-2026-09-04t032630727z","origin":"https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app"}
+{"ts":"2026-09-04T03:26:30.727Z","step":"presence","status":"present_non_empty"}
+{"ts":"2026-09-04T03:26:30.727Z","step":"playwright_start","origin":"https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app"}
+{"ts":"2026-09-04T03:26:43.632Z","step":"playwright_complete","ran":true,"reason":null,"sso":false}
+{"ts":"2026-09-04T03:26:44.632Z","step":"probe","ok":true,"reason":null,"count":16}
+{"ts":"2026-09-04T03:26:44.667Z","step":"har_sanitized","path":"features/proof/vac-verify-preview-integrated/network.sanitized.har.json"}
+{"ts":"2026-09-04T03:26:44.671Z","step":"extract","digest":"a00e81d63104f60d3ff4bdd83875bff4bbb460d1f5f77d9873081c9f5c4c1b2b","ok":true}
+{"ts":"2026-09-04T03:26:44.671Z","step":"complete","ok":true,"certified":false}

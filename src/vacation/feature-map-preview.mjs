@@ -168,14 +168,27 @@ export function bypassSecretPresent(env = process.env) {
   return Boolean(env.VERCEL_PROTECTION_BYPASS && String(env.VERCEL_PROTECTION_BYPASS).length > 0);
 }
 
-export function bypassHeaders(env = process.env) {
+export function bypassHeaders(env = process.env, { setCookie = false } = {}) {
   if (!bypassSecretPresent(env)) {
     throw new Error('VERCEL_PROTECTION_BYPASS is missing');
   }
-  return {
+  const headers = {
     'x-vercel-protection-bypass': env.VERCEL_PROTECTION_BYPASS,
-    'x-vercel-set-bypass-cookie': 'true',
   };
+  if (setCookie) headers['x-vercel-set-bypass-cookie'] = 'true';
+  return headers;
+}
+
+export function isBypassCookieRedirect(status, location = '', origin = DEFAULT_PREVIEW_ORIGIN) {
+  if (status !== 307 && status !== 302 && status !== 303) return false;
+  if (isSsoRedirect(status, location)) return false;
+  if (!location) return true;
+  try {
+    const dest = new URL(location, origin);
+    return dest.host === new URL(origin).host;
+  } catch {
+    return String(location).startsWith('/');
+  }
 }
 
 export function isSsoRedirect(status, location = '') {
@@ -271,6 +284,16 @@ function sanitizeHeaders(headers) {
     out[key] = value;
   }
   return out;
+}
+
+export function keepFeatureMapEntries(har, { origin = DEFAULT_PREVIEW_ORIGIN } = {}) {
+  const sanitized = sanitizeHar(har);
+  return {
+    log: {
+      ...sanitized.log,
+      entries: sanitized.log.entries.filter((entry) => matchScenario(entry.request.method, entry.request.url, origin)),
+    },
+  };
 }
 
 export function sanitizeHar(har) {
@@ -448,6 +471,9 @@ export async function probePreview({
     let response;
     try {
       response = await fetchImpl(url, init);
+      if (isBypassCookieRedirect(response.status, response.headers.get('location') || '', origin)) {
+        response = await fetchImpl(url, init);
+      }
     } catch (error) {
       observations.push({
         id: scenario.id,

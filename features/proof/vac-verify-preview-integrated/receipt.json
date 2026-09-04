@@ -1,0 +1,129 @@
+{
+  "job_id": "vac-verify-preview-integrated-2026-09-04t032630727z",
+  "surface": "hosted-preview",
+  "actor": "preview-bypass-automation",
+  "trip_id": "trip-vegas-live-001",
+  "public_url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+  "expected_head": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "expected_deployment_id": "dpl_5cyCb18FhnViwqofcXt2at5Kee8g",
+  "head": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "preview_map": "features/preview-map.json",
+  "extract_digest": "a00e81d63104f60d3ff4bdd83875bff4bbb460d1f5f77d9873081c9f5c4c1b2b",
+  "events_jsonl": "features/proof/vac-verify-preview-integrated/events.jsonl",
+  "artifact_dir": "features/proof/vac-verify-preview-integrated",
+  "dry_run": "features/preview-map.json",
+  "certified": false,
+  "apply_on_this_receipt": false,
+  "ok": true,
+  "auth_failure": false,
+  "env_gaps": [
+    "checkout-config"
+  ],
+  "fail_closed": [
+    "onboarding-session-missing",
+    "vacation-itinerary-missing-session",
+    "vacation-telegram-turn-get",
+    "vacation-edit-logged-out"
+  ],
+  "unexpected": [],
+  "playwright": {
+    "ran": true,
+    "visits": [
+      {
+        "path": "/",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again",
+        "sso": false
+      },
+      {
+        "path": "/addons-checkout.html",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Vacation Add-ons",
+        "sso": false
+      },
+      {
+        "path": "/owner-media-checkout.html",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Vacation Media Add-ons",
+        "sso": false
+      },
+      {
+        "path": "/order-success.html",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "Start TimeSyncher Vacation Onboarding",
+        "sso": false
+      },
+      {
+        "path": "/onboarding-eula.html",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Onboarding - Terms Acceptance",
+        "sso": false
+      },
+      {
+        "path": "/login.html",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Vacation",
+        "sso": false
+      },
+      {
+        "path": "/shared/las-vegas-strip-vacation/",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Vacation",
+        "sso": false
+      },
+      {
+        "path": "/itinerary.html",
+        "status": 200,
+        "final_url_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+        "title": "TimeSyncher Vacation Itinerary",
+        "sso": false
+      }
+    ],
+    "sso": false
+  },
+  "writes_applied": [],
+  "notes": [
+    "Deploy target remains https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app / dpl_5cyCb18FhnViwqofcXt2at5Kee8g.",
+    "Not certified. No merge. No customer tests.",
+    "checkout-config env_gap: Stripe publishable key does not match STRIPE_MODE=test (preview env, not an auth failure)."
+  ],
+  "required_artifacts": [
+    "whole-experience screenshot / customer-flow PDF",
+    "customer-story PDF with generated pictures",
+    "final keepsake PDF"
+  ],
+  "stop_rules": [
+    {
+      "id": "no_customer_simulation",
+      "status": "pass",
+      "detail": "Preview probe only; no customer journey."
+    },
+    {
+      "id": "no_production_billing",
+      "status": "pass",
+      "detail": "Did not POST create-payment-intent or checkout-coupon."
+    },
+    {
+      "id": "no_unvalidated_writes",
+      "status": "pass",
+      "detail": "Logged-out vacation_edit expected 403."
+    },
+    {
+      "id": "vercel_protection_bypass",
+      "status": "pass",
+      "detail": "Bypass header reached the app."
+    },
+    {
+      "id": "prove_state_movement",
+      "status": "hold",
+      "detail": "Hosted preview probe does not apply TREK writes."
+    }
+  ]
+}
