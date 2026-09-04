@@ -242,7 +242,7 @@ export async function acceptCollaboratorInvite(db, {
       ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id || null},
       ${telegramChatId || null}, ${telegramUserId || null}, ${displayName || null},
       ${invite.plan_code}, ${invite.scope}, 'active',
-      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
+      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION},
       ${{
         source: 'telegram_collaborator_invite',
         telegramUsername: username || null,
