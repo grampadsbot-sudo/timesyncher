@@ -1,0 +1,72 @@
+{
+  "reason": "craig_telegram_start_hard_poll",
+  "window": "2026-09-04T06:00:26Z/2026-09-04T06:09:04Z",
+  "host": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
+  "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
+  "session": "TqOYg4gl-nnqMVj8tMjnQmEB",
+  "shared_url": null,
+  "intake_token": "MISSING",
+  "first_wave": {
+    "polls": 14,
+    "range": "2026-09-04T06:00:26Z/2026-09-04T06:04:25Z",
+    "ended": "ssl_handshake_timeout on vacation-web-access",
+    "unchanged": true
+  },
+  "second_wave": {
+    "polls": 13,
+    "range": "2026-09-04T06:05:34Z/2026-09-04T06:09:04Z",
+    "last": {
+      "i": 12,
+      "at": "2026-09-04T06:09:04Z",
+      "onboarding_http": 200,
+      "itinerary_http": 200,
+      "web_http": 200,
+      "sessionStatus": "purchase_confirmed",
+      "currentStep": "eula_required",
+      "eulaAccepted": false,
+      "tripStatus": "onboarding",
+      "tripTitle": "TimeSyncher Vacation Setup",
+      "destination": null,
+      "startDate": "2026-10-15T00:00:00.000Z",
+      "endDate": null,
+      "thingCount": 0,
+      "webShareToken": null,
+      "itin_error": null,
+      "found": null
+    }
+  },
+  "last": {
+    "i": 12,
+    "at": "2026-09-04T06:09:04Z",
+    "onboarding_http": 200,
+    "itinerary_http": 200,
+    "web_http": 200,
+    "sessionStatus": "purchase_confirmed",
+    "currentStep": "eula_required",
+    "eulaAccepted": false,
+    "tripStatus": "onboarding",
+    "tripTitle": "TimeSyncher Vacation Setup",
+    "destination": null,
+    "startDate": "2026-10-15T00:00:00.000Z",
+    "endDate": null,
+    "thingCount": 0,
+    "webShareToken": null,
+    "itin_error": null,
+    "found": null
+  },
+  "slug_probes_404": [
+    "vegas-light-anniversary",
+    "las-vegas-light-anniversary",
+    "alex-rivera-vegas",
+    "alex-rivera",
+    "time-syncher-vacation-setup",
+    "timesyncher-vacation-setup",
+    "las-vegas-october-2026",
+    "las-vegas-oct-9-12",
+    "vegas-anniversary",
+    "light-anniversary-vegas"
+  ],
+  "certified": false,
+  "merged": false,
+  "prod_writes": false
+}
