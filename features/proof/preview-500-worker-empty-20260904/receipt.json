@@ -7,6 +7,8 @@
   "old_deploy": "https://timesyncher-vacation-staging-dspmjbk7l.vercel.app",
   "new_preview": "https://timesyncher-vacation-staging-b3yj5uz4a.vercel.app",
   "pr_head_diagnosed": "27ef0a5d0229636c45bfb27b92cbbe9e7e3f01b7",
+  "fix_sha": "46197d48c5f7eb48441d9755984fa502bcb56b0d",
+  "fix_branch": "cursor/preview-500-worker-empty-cb2f",
   "session": "TqOYg4gl-nnqMVj8tMjnQmEB",
   "trip_id": "4e18a3db-d4e8-406d-b66c-6f3ba4adc817",
   "worker_request_id": "1a490c3d-098c-4255-b18f-865ecd27359e",
