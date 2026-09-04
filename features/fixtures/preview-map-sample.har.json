@@ -1,0 +1,37 @@
+{
+  "log": {
+    "version": "1.2",
+    "creator": { "name": "fixture", "version": "1" },
+    "entries": [
+      {
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/?x-vercel-protection-bypass=SHOULD-NEVER-EXTRACT",
+          "headers": [
+            { "name": "x-vercel-protection-bypass", "value": "SHOULD-NEVER-EXTRACT" },
+            { "name": "cookie", "value": "_vercel_jwt=SHOULD-NEVER-EXTRACT" }
+          ]
+        },
+        "response": {
+          "status": 200,
+          "headers": [
+            { "name": "content-type", "value": "text/html" },
+            { "name": "set-cookie", "value": "_vercel_jwt=SHOULD-NEVER-EXTRACT" }
+          ],
+          "content": { "mimeType": "text/html", "text": "<html><title>TimeSyncher Vacation</title></html>" }
+        }
+      },
+      {
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/vacation-itinerary"
+        },
+        "response": {
+          "status": 400,
+          "headers": [{ "name": "content-type", "value": "application/json" }],
+          "content": { "mimeType": "application/json", "text": "{\"ok\":false,\"error\":\"session is required.\"}" }
+        }
+      }
+    ]
+  }
+}

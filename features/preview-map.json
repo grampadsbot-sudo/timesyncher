@@ -1,0 +1,354 @@
+{
+  "version": 1,
+  "origin_host": "timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app",
+  "expected_head": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "expected_deployment_id": "dpl_5cyCb18FhnViwqofcXt2at5Kee8g",
+  "extract_digest": "a00e81d63104f60d3ff4bdd83875bff4bbb460d1f5f77d9873081c9f5c4c1b2b",
+  "scenarios": [
+    {
+      "id": "storefront",
+      "feature": "checkout",
+      "method": "GET",
+      "path": "/",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html",
+        "body_includes": [
+          "TimeSyncher"
+        ]
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> <title>TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again</title> <link rel"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "addons-checkout",
+      "feature": "checkout",
+      "method": "GET",
+      "path": "/addons-checkout.html",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html",
+        "body_includes": [
+          "Add-on"
+        ]
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Vacation Add-ons</title> <script src=\"https://js.stripe.com/v3/\"></script> <style> :r"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "owner-media-checkout",
+      "feature": "checkout",
+      "method": "GET",
+      "path": "/owner-media-checkout.html",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html",
+        "body_includes": [
+          "Photo"
+        ]
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Vacation Media Add-ons</title> <script src=\"https://js.stripe.com/v3/\"></script> <sty"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "checkout-config",
+      "feature": "checkout",
+      "method": "GET",
+      "path": "/api/checkout-config",
+      "kind": "api",
+      "expect": {
+        "status": [
+          200,
+          503
+        ],
+        "json": true
+      },
+      "observed": {
+        "status": 503,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"error\":\"Stripe publishable key does not match STRIPE_MODE=test.\"}"
+      },
+      "class": "env_gap"
+    },
+    {
+      "id": "order-success",
+      "feature": "onboarding",
+      "method": "GET",
+      "path": "/order-success.html",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html"
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> <meta name=\"robots\" content=\"noindex,nofollow\" /> <title>Start TimeSyncher Vacation Onboarding</title>"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "onboarding-eula-page",
+      "feature": "onboarding",
+      "method": "GET",
+      "path": "/onboarding-eula.html",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html"
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Onboarding - Terms Acceptance</title> <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "login",
+      "feature": "onboarding",
+      "method": "GET",
+      "path": "/login.html",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html"
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> <meta name=\"robots\" content=\"noindex,nofollow\" /> <title>TimeSyncher Vacation</title> <style> :root { "
+      },
+      "class": "ok"
+    },
+    {
+      "id": "onboarding-session-missing",
+      "feature": "onboarding",
+      "method": "GET",
+      "path": "/api/onboarding-session",
+      "kind": "api",
+      "expect": {
+        "status": [
+          400
+        ],
+        "json": true,
+        "fail_closed": true
+      },
+      "observed": {
+        "status": 400,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"error\":\"session or payment_intent is required.\"}"
+      },
+      "class": "fail_closed"
+    },
+    {
+      "id": "eula-missing-action",
+      "feature": "onboarding",
+      "method": "GET",
+      "path": "/api/eula",
+      "kind": "api",
+      "expect": {
+        "status": [
+          400,
+          404,
+          405
+        ],
+        "json": true
+      },
+      "observed": {
+        "status": 404,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"error\":\"unknown action\"}"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "vacation-itinerary-missing-session",
+      "feature": "telegram-messages",
+      "method": "GET",
+      "path": "/api/vacation-itinerary",
+      "kind": "api",
+      "expect": {
+        "status": [
+          400
+        ],
+        "json": true,
+        "fail_closed": true,
+        "body_includes": [
+          "session is required"
+        ]
+      },
+      "observed": {
+        "status": 400,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"error\":\"session is required.\"}"
+      },
+      "class": "fail_closed"
+    },
+    {
+      "id": "vacation-telegram-turn-get",
+      "feature": "telegram-messages",
+      "method": "GET",
+      "path": "/api/vacation-telegram-turn",
+      "kind": "api",
+      "expect": {
+        "status": [
+          405
+        ],
+        "json": true,
+        "fail_closed": true
+      },
+      "observed": {
+        "status": 405,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"error\":\"method not allowed\"}"
+      },
+      "class": "fail_closed"
+    },
+    {
+      "id": "vacation-request-get",
+      "feature": "telegram-messages",
+      "method": "GET",
+      "path": "/api/vacation-request",
+      "kind": "api",
+      "expect": {
+        "status": [
+          405
+        ],
+        "json": true
+      },
+      "observed": {
+        "status": 405,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"error\":\"method not allowed\"}"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "web-access-status",
+      "feature": "collaborator-edits",
+      "method": "GET",
+      "path": "/api/vacation-web-access?action=status",
+      "kind": "api",
+      "expect": {
+        "status": [
+          200,
+          500,
+          503
+        ],
+        "json": true
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":true,\"canEdit\":false,\"role\":\"viewer\",\"email\":null,\"tripId\":null,\"shareToken\":null}"
+      },
+      "class": "ok"
+    },
+    {
+      "id": "shared-page-proxy",
+      "feature": "collaborator-edits",
+      "method": "GET",
+      "path": "/shared/las-vegas-strip-vacation/",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200,
+          301,
+          302,
+          307,
+          308
+        ],
+        "allow_redirect": true
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=UTF-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\" /> <title>TimeSyncher Vacation</title> <!-- PWA "
+      },
+      "class": "ok"
+    },
+    {
+      "id": "vacation-edit-logged-out",
+      "feature": "collaborator-edits",
+      "method": "POST",
+      "path": "/api/vacation-itinerary?webAccess=1",
+      "kind": "api",
+      "expect": {
+        "status": [
+          403
+        ],
+        "json": true,
+        "fail_closed": true
+      },
+      "observed": {
+        "status": 403,
+        "content_type": "application/json; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "{\"ok\":false,\"failClosed\":true,\"reason\":\"no_thing_list\",\"vacationEditPipeline\":{\"job_id\":\"vac-verify-d969d85d37bc\",\"fixture_id\":null,\"events_jsonl\":\"artifacts/vacation-verify/vac-verify-d969d85d37bc/events.jsonl\",\"surface\":\"shared-page-voice\",\"actor\":\"logged-out\",\"trip_id\":\"trip-vegas-live-001\",\"public_url\":\"\",\"before_hash\":\"cb48bb58f2cb20eb9e0f4c7aeeeb14c4c26480ddd7d1b57ce3007f11d7af0b6c\",\"after_hash\":\"cb48bb58f2cb20eb9e0f4c7aeeeb14c4c26480ddd7d1b57ce3007f11d7af0b6c\",\"dry_run\":\"artifacts/vacation-verify/vac-verify-d969d85d37bc/dry-run.json\",\"artifact_dir\":\"artifacts/vacation-verify/vac-verify-d969d85d37bc\",\"required_artifacts\":[\"whole-experience screenshot / customer-flow PDF\",\"customer-story PDF with generated pictures\",\"final keepsake PDF\"],\"stop_rules\":[{\"id\":\"no_customer_simulation\",\"description\":\"Do not start synthetic customer journeys from this lever.\",\"status\":\"pass\",\"detail\":\"Dry-run/control driver only; no customer journey started.\"},{\"id\":\"no_production_billing\",\"description\":\"Do not charge Stripe or mutate production entitlements.\",\"status\":\"pass\",\"detail\":\"Checkout proof uses a synthetic account fixture.\"},{\"id\":\"no_unvalidated_writes\",\"description\":\"The parser never writes. Only validated item IDs on the locked trip may mutate.\",\"status\":\"pass\",\"detail\":\"Writes require deterministic validation.\"},{\"id\":\"fail_closed_stale_media\",\"description\":\"Media must bind to the live trip_id or no-op.\",\"status\":\"pass\",\"detail\":\"Stale or mismatched trip media must no-op.\"},{\"id\":\"fail_closed_thing_id\",\"description\":\"Thing-scoped media must target a Thing on the locked trip and in page context.\",\"status\":\"pass\",\"detail\":\"No thing_id fail-close on this receipt.\"},{\"id\":\"fail_closed_unauthorized_upload\",\"description\":\"Public-link and unauthorized collaborator uploads reject.\",\"status\":\"pass\",\"detail\":\"Unauthorized or public-link uploads must reject.\"},{\"id\":\"fail_closed_duplicate_trek\",\"description\":\"Split-trip must not create a second TREK row for the same title/token.\",\"status\":\"pass\",\"detail\":\"TREK id-set unchanged (none); row count 0.\"},{\"id\":\"fail_closed_dropped_clause\",\"description\":\"Multi-request voice must fail closed if any spoken clause is dropped.\",\"status\":\"pass\",\"detail\":\"Every spoken clause produced a decision.\"},{\"id\":\"exact_no_match_copy\",\"description\":\"Unmatched targets use the exact no-match sentence.\",\"status\":\"pass\",\"detail\":\"Unmatched copy must be exact.\"},{\"id\":\"prove_state_movement\",\"description\":\"A success reply is invalid unless TREK/backend id-set state moved, or local-snapshot is labeled hold.\",\"status\":\"hold\",\"detail\":\"Dry-run records planned writes; --apply --trek-db proves TREK id-set movement.\"},{\"id\":\"no_first_pass_language_on_edits\",\"description\":\"Existing-itinerary edits must not use first-pass creation language.\",\"status\":\"pass\",\"detail\":\"Existing edits must name the change, not first-pass setup.\"}],\"writes_applied\":[],\"no_ops\":[{\"reason\":\"unauthorized_edit\",\"heard\":\"Move Bellagio Fountains to day 2\",\"response\":\"I received this, but this Telegram account is not authorized to modify that vacation yet.\\n\\nThe vacation owner can add you as a paid Telegram collaborator. Non-Telegram website invitees use an owner-approved email magic link.\"}],\"apply_scope\":\"dry-run\",\"trek_state\":{\"row_ids_before\":[],\"row_ids_after\":[],\"row_count_before\":0,\"row_count_after\":0,\"item_moved\":false,\"source\":\"fixture_trek_rows\"},\"dropped_clause\":false,\"customer_facing_response\":\"I received this, but this Telegram account is not authorized to modify that vacation yet.\\n\\nThe vacation owner can add you as a paid Telegram collaborator. Non-Telegram website invitees use an owner-approved email magic link.\",\"apply_gate\":{\"prove_state_movement\":\"hold\",\"apply_on_this_receipt\":false,\"live_apply_entry\":\"control-vacation --apply --trek-db or worker applyExistingTripEdit (first-pass/non-edit queue)\"},\"ok\":true}}"
+      },
+      "class": "fail_closed"
+    },
+    {
+      "id": "itinerary-page",
+      "feature": "timeline-thing-media",
+      "method": "GET",
+      "path": "/itinerary.html",
+      "kind": "document",
+      "expect": {
+        "status": [
+          200
+        ],
+        "content_type_includes": "text/html"
+      },
+      "observed": {
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "location": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+        "body_preview": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Vacation Itinerary</title> <style> :root { color-scheme: light; --ink:#18202a; --mute"
+      },
+      "class": "ok"
+    }
+  ]
+}

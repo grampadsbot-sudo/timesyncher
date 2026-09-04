@@ -1,0 +1,1238 @@
+{
+  "log": {
+    "version": "1.2",
+    "creator": {
+      "name": "timesyncher-feature-map-preview",
+      "version": "1"
+    },
+    "entries": [
+      {
+        "startedDateTime": "2026-09-04T03:26:42.206Z",
+        "time": 119.20700000000001,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 307,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:42 GMT"
+            },
+            {
+              "name": "location",
+              "value": "/"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::q25tq-1788492402264-a68be5a701ba"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html",
+            "size": -1,
+            "text": ""
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:42.277Z",
+        "time": 43.542,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "304"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline"
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:42 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"400deecc04f4b3a6f84c11acb4536dc0\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:21:38 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::q25tq-1788492402287-6f34e6146bdd"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 59752,
+            "text": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again</title>\n  <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\" />\n  <link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/favicon-32x32.png\" />\n  <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\" />\n  <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n  <meta name=\"apple-mobile-web-app-title\" content=\"TimeSyncher\" />\n  <meta property=\"og:image\" content=\"https://www.timesyncher.com/timesyncher-social-card.png\" />\n  <meta property=\"og:image:width\" content=\"512\" />\n  <meta property=\"og:image:height\" content=\"512\" />\n  <meta name=\"twitter:card\" content=\"summary\" />\n  <meta name=\"twitter:image\" content=\"https://www.timesyncher.com/timesyncher-social-card.png\" />\n  <meta name=\"description\" content=\"TimeSyncher Vacation is a one-of-a-kind AI vacation assistant that unlocks unforgettable experiences by turning scattered family preferences, reservations, budgets, and daily plans into one inspired shared vacation plan.\" />\n  <meta property=\"og:title\" content=\"TimeSyncher Vacation | Unlock unforgettable experiences\" />\n  <meta property=\"og:description\" content=\"A high-touch vacation planning app for families and couples who want alignment before they leave.\" />\n  <meta property=\"og:type\" content=\"website\" />\n  <meta property=\"og:url\" content=\"https://www.timesyncher.com\" />\n  <meta name=\"theme-color\" content=\"#050505\" />\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://images.unsplash.com\">\n  <link href=\"https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap\" rel=\"stylesheet\">\n  <style>\n    :root {\n      --black: #050505;\n      --ink: #0c0b09;\n      --panel: rgba(18, 17, 14, 0.82);\n      --panel2: rgba(255,255,255,0.055);\n      --gold: #d6a84f;\n      --gold2: #f4d98b;\n      --sand: #f7efd9;\n      --muted: #c7bda4;\n      --line: rgba(214,168,79,0.34);\n      --sea: #5fd8d4;\n      --rose: #d78b74;\n      --shadow: 0 30px 90px rgba(0,0,0,.48);\n    }\n    * { box-sizing: border-box; }\n    html { scroll-behavior: smooth; }\n    body {\n      margin: 0;\n      background: var(--black);\n      color: var(--sand);\n      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n      line-height: 1.55;\n    }\n    body::before {\n      content: \"\";\n      position: fixed;\n      inset: 0;\n      z-index: -3;\n      background:\n        radial-gradient(circle at 20% 5%, rgba(214,168,79,.22), transparent 28%),\n        radial-gradient(circle at 82% 18%, rgba(95,216,212,.12), transparent 26%),\n        linear-gradient(180deg, #060606 0%, #10100f 42%, #050505 100%);\n    }\n    body::after {\n      content: \"\";\n      position: fixed;\n      inset: 0;\n      z-index: -2;\n      opacity: .19;\n      background-image: linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);\n      background-size: 72px 72px;\n      mask-image: linear-gradient(to bottom, black, transparent 80%);\n    }\n    a { color: inherit; text-decoration: none; }\n    img { max-width: 100%; display: block; }\n    .font-cinzel { font-family: Cinzel, serif; }\n    .font-playfair { font-family: \"Playfair Display\", serif; }\n    .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }\n    .hero .shell { width: 100%; max-width: none; }\n    .topbar {\n      position: sticky;\n      top: 0;\n      z-index: 30;\n      background: rgba(5,5,5,.9);\n      backdrop-filter: blur(16px);\n      border-bottom: 1px solid var(--line);\n    }\n    .brand-wrap { display: grid; place-items: center; padding: 15px 0 9px; }\n    .brand-main { display: inline-flex; align-items: center; justify-content: ce"
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:42.624Z",
+        "time": 16.117,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/addons-checkout.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "27"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline; filename=\"addons-checkout.html\""
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:42 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"00c1522e9dfa7ba40def64ed315aaa80\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:26:14 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::697nl-1788492402626-43d4ea087206"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 19346,
+            "text": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>TimeSyncher Vacation Add-ons</title>\n  <script src=\"https://js.stripe.com/v3/\"></script>\n  <style>\n    :root { color-scheme: dark; --gold:#f5d37b; --bg:#070706; --panel:#12110f; --line:rgba(245,211,123,.26); --text:#fffaf0; --muted:#cfc2a9; --ok:#8ee7d8; --bad:#ffb3ab; --field:#080807; }\n    * { box-sizing: border-box; }\n    body { margin:0; min-height:100vh; font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--text); padding:24px; }\n    main { width:min(1040px,100%); margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:20px; align-items:start; }\n    section, aside { border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:24px; box-shadow:0 20px 80px rgba(0,0,0,.28); }\n    .brand { font-family: Georgia, serif; color:var(--gold); letter-spacing:.12em; text-transform:uppercase; font-size:14px; margin-bottom:18px; }\n    h1 { font-family: Georgia, serif; font-size:clamp(30px,5vw,46px); line-height:1; margin:0 0 10px; color:var(--gold); letter-spacing:0; }\n    h2 { font-size:18px; margin:0 0 14px; color:var(--gold); letter-spacing:0; }\n    p { color:var(--muted); line-height:1.5; margin:0 0 14px; }\n    form { display:grid; gap:16px; margin-top:18px; }\n    fieldset { border:0; padding:0; margin:0; display:grid; gap:14px; }\n    legend { color:var(--gold); font-weight:900; margin-bottom:10px; }\n    label { display:grid; gap:6px; color:var(--gold); font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.05em; }\n    input { width:100%; border:1px solid rgba(245,211,123,.28); border-radius:8px; padding:13px 14px; background:var(--field); color:var(--text); font:inherit; min-width:0; }\n    input::placeholder { color:rgba(207,194,169,.62); }\n    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }\n    .card-row { display:grid; grid-template-columns:1.5fr .8fr .7fr; gap:12px; }\n    .summary, .choices { display:grid; gap:12px; }\n    .summary-row { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(245,211,123,.14); padding-bottom:12px; color:var(--muted); }\n    .summary-row strong { color:var(--text); }\n    .total { font-size:22px; color:var(--gold); }\n    .access-total { border:1px solid rgba(245,211,123,.28); border-radius:8px; padding:14px; background:rgba(245,211,123,.08); }\n    .choice { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:start; border:1px solid rgba(245,211,123,.22); border-radius:8px; padding:12px; background:rgba(245,211,123,.055); color:var(--muted); }\n    .choice input { width:auto; margin-top:3px; }\n    .choice b { display:block; color:var(--gold); }\n    .choice small { display:block; margin-top:3px; color:var(--muted); line-height:1.35; }\n    .choice strong { color:var(--text); white-space:nowrap; }\n    button { border:0; border-radius:8px; padding:14px 18px; background:var(--gold); color:#080604; font-weight:900; cursor:pointer; font:inherit; }\n    button:disabled { opacity:.65; cursor:not-allowed; }\n    .status { display:none; border:1px solid var(--line); border-radius:8px; padding:12px; color:var(--muted); }\n    .status.show { display:block; }\n    .status.error { border-color:rgba(255,179,171,.55); color:var(--bad); }\n    .status.ok { border-color:rgba(142,231,216,.5); color:var(--ok); }\n    .notice { border:1px solid rgba(245,211,123,.2); border-radius:8px; padding:12px; color:var(--muted); background:rgba(245,211,123,.06); }\n    .hidden { display:none !important; }\n    #paymentElement { border:1px solid rgba(245,211,123,.2); border-radius:8px; padding:12px; background:#11100d; }\n    @media (max-width:860px) { body { padding:14px; } main { grid-template-columns:1fr; } section, aside { padding:18px; } }\n    @media (max-width:640px) { .row, .card-row { grid-template-columns:1fr; } }\n  "
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:42.756Z",
+        "time": 11.102,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/owner-media-checkout.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "27"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline; filename=\"owner-media-checkout.html\""
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:42 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"5996df1caf529eb3ac1dea81bbf59275\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:26:14 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::q25tq-1788492402758-737cfc554b3b"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 19103,
+            "text": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>TimeSyncher Vacation Media Add-ons</title>\n  <script src=\"https://js.stripe.com/v3/\"></script>\n  <style>\n    :root { color-scheme: dark; --gold:#f5d37b; --bg:#070706; --panel:#12110f; --line:rgba(245,211,123,.26); --text:#fffaf0; --muted:#cfc2a9; --ok:#8ee7d8; --bad:#ffb3ab; --field:#080807; }\n    * { box-sizing: border-box; }\n    body { margin:0; min-height:100vh; font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--text); padding:24px; }\n    main { width:min(1040px,100%); margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:20px; align-items:start; }\n    section, aside { border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:24px; box-shadow:0 20px 80px rgba(0,0,0,.28); }\n    .brand { font-family: Georgia, serif; color:var(--gold); letter-spacing:.12em; text-transform:uppercase; font-size:14px; margin-bottom:18px; }\n    h1 { font-family: Georgia, serif; font-size:clamp(30px,5vw,46px); line-height:1; margin:0 0 10px; color:var(--gold); letter-spacing:0; }\n    h2 { font-size:18px; margin:0 0 14px; color:var(--gold); letter-spacing:0; }\n    p { color:var(--muted); line-height:1.5; margin:0 0 14px; }\n    form { display:grid; gap:16px; margin-top:18px; }\n    fieldset { border:0; padding:0; margin:0; display:grid; gap:14px; }\n    legend { color:var(--gold); font-weight:900; margin-bottom:10px; }\n    label { display:grid; gap:6px; color:var(--gold); font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.05em; }\n    input { width:100%; border:1px solid rgba(245,211,123,.28); border-radius:8px; padding:13px 14px; background:var(--field); color:var(--text); font:inherit; min-width:0; }\n    input::placeholder { color:rgba(207,194,169,.62); }\n    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }\n    .card-row { display:grid; grid-template-columns:1.5fr .8fr .7fr; gap:12px; }\n    .summary, .choices { display:grid; gap:12px; }\n    .summary-row { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(245,211,123,.14); padding-bottom:12px; color:var(--muted); }\n    .summary-row strong { color:var(--text); white-space:nowrap; }\n    .total { font-size:22px; color:var(--gold); }\n    .access-total { border:1px solid rgba(245,211,123,.28); border-radius:8px; padding:14px; background:rgba(245,211,123,.08); }\n    .choice { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:start; border:1px solid rgba(245,211,123,.22); border-radius:8px; padding:12px; background:rgba(245,211,123,.055); color:var(--muted); }\n    .choice input { width:auto; margin-top:3px; }\n    .choice b { display:block; color:var(--gold); }\n    .choice small { display:block; margin-top:3px; color:var(--muted); line-height:1.35; }\n    button { border:0; border-radius:8px; padding:14px 18px; background:var(--gold); color:#080604; font-weight:900; cursor:pointer; font:inherit; }\n    button:disabled { opacity:.65; cursor:not-allowed; }\n    .status { display:none; border:1px solid var(--line); border-radius:8px; padding:12px; color:var(--muted); }\n    .status.show { display:block; }\n    .status.error { border-color:rgba(255,179,171,.55); color:var(--bad); }\n    .notice { border:1px solid rgba(245,211,123,.2); border-radius:8px; padding:12px; color:var(--muted); background:rgba(245,211,123,.06); }\n    .hidden { display:none !important; }\n    #paymentElement { border:1px solid rgba(245,211,123,.2); border-radius:8px; padding:12px; background:#11100d; }\n    @media (max-width:860px) { body { padding:14px; } main { grid-template-columns:1fr; } section, aside { padding:18px; } }\n    @media (max-width:640px) { .row, .card-row { grid-template-columns:1fr; } }\n  </style>\n</head>\n<body>\n  <main>\n    <section>\n      <div class=\"brand\">TimeSyncher Vacation</div>\n      <h"
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:42.871Z",
+        "time": 9.39,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/order-success.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "27"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline; filename=\"order-success.html\""
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:42 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"f1a8232997b86cb2accb7438b14692ba\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:26:15 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::697nl-1788492402873-1886b3828ea3"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 11195,
+            "text": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <meta name=\"robots\" content=\"noindex,nofollow\" />\n  <title>Start TimeSyncher Vacation Onboarding</title>\n  <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\" />\n  <link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\" />\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n  <link href=\"https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@400;700;900&family=Playfair+Display:wght@500;700&display=swap\" rel=\"stylesheet\" />\n  <style>\n    :root { --black:#050505; --gold:#f5d37b; --line:rgba(245,211,123,.28); --muted:#cfc2a9; --sea:#5fd8d4; }\n    * { box-sizing: border-box; }\n    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, rgba(245,211,123,.16), transparent 34rem), #050505; color: #fffaf0; font-family: Inter, sans-serif; line-height: 1.55; }\n    .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0; }\n    .card { border: 1px solid var(--line); border-radius: 24px; padding: clamp(24px, 5vw, 44px); background: rgba(18,16,12,.84); box-shadow: 0 30px 90px rgba(0,0,0,.42); }\n    .logo { width: 64px; filter: drop-shadow(0 0 20px rgba(245,211,123,.28)); }\n    h1 { margin: 18px 0 12px; color: var(--gold); font: 800 clamp(2rem, 7vw, 4.1rem)/.95 Cinzel, serif; }\n    h2 { margin: 0 0 10px; color: var(--gold); font: 800 1.3rem/1.1 Cinzel, serif; }\n    p { color: #e6dbc4; font: 500 1.08rem/1.6 \"Playfair Display\", serif; }\n    .meta { margin: 18px 0; border-radius: 18px; background: rgba(255,255,255,.06); padding: 14px; color: var(--muted); font-size: .94rem; word-break: break-word; }\n    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }\n    .choice { border: 1px solid rgba(245,211,123,.22); border-radius: 20px; padding: 18px; background: rgba(255,255,255,.045); }\n    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }\n    a.button, button.button { appearance: none; display: inline-flex; align-items: center; justify-content: center; min-height: 46px; border: 0; cursor: pointer; color: #090704; background: linear-gradient(135deg, #f5d37b, #b8892e); border-radius: 999px; padding: 12px 17px; text-decoration: none; font-weight: 900; font-family: Inter, sans-serif; }\n    a.secondary { color: var(--gold); background: rgba(255,255,255,.07); border: 1px solid var(--line); }\n    .status { color: #dffefa; border: 1px solid rgba(95,216,212,.3); background: rgba(95,216,212,.1); border-radius: 16px; padding: 13px 14px; }\n    .hidden { display: none !important; }\n    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .shell { padding-top: 24px; } }\n  </style>\n</head>\n<body>\n  <main class=\"shell\">\n    <section class=\"card\">\n      <img class=\"logo\" src=\"/timesyncher-logo-gold.png\" alt=\"TimeSyncher\" />\n      <h1>Purchase confirmed</h1>\n      <p id=\"intro\">Let's get started with TimeSyncher Vacation.</p>\n      <div class=\"meta\" id=\"meta\">Loading onboarding session...</div>\n      <div class=\"status hidden\" id=\"status\"></div>\n\n      <section class=\"hidden\" id=\"eula\" aria-label=\"EULA acceptance\">\n        <div class=\"choice\">\n          <h2>Review Terms &amp; Privacy</h2>\n          <p>Review and accept the TimeSyncher Terms &amp; Privacy details. After acceptance, TimeSyncher will guide you to Telegram onboarding.</p>\n          <div class=\"button-row\">\n            <a class=\"button\" id=\"acceptEula\" href=\"#\">Review and Continue</a>\n          </div>\n        </div>\n      </section>\n\n      <section class=\"hidden\" id=\"choices\" aria-label=\"Telegram onboarding\">\n        <div class=\"choice\">\n          <h2>Install Telegram</h2>\n          <div class=\"button-row\">\n            <a class=\"button secondary\" id=\"iosInstall\" href=\"#\">Install on iPhone/iPad</a>\n            <a class=\"bu"
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:42.903Z",
+        "time": -1,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/onboarding-session",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": -1,
+          "statusText": "",
+          "headers": [],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "x-unknown",
+            "size": -1,
+            "text": ""
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:42.922Z",
+        "time": 14.524999999999999,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/onboarding-eula.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "27"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline; filename=\"onboarding-eula.html\""
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:42 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"eee14c801e8da1457a5adca11942e060\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:26:15 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::tqwl5-1788492402924-09dd88b8983c"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 4705,
+            "text": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>TimeSyncher Onboarding - Terms Acceptance</title>\n  <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\" />\n  <link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/favicon-32x32.png\" />\n  <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\" />\n  <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n  <meta name=\"apple-mobile-web-app-title\" content=\"TimeSyncher\" />\n  <meta property=\"og:image\" content=\"https://www.timesyncher.com/timesyncher-social-card.png\" />\n  <meta property=\"og:image:width\" content=\"512\" />\n  <meta property=\"og:image:height\" content=\"512\" />\n  <meta name=\"twitter:card\" content=\"summary\" />\n  <meta name=\"twitter:image\" content=\"https://www.timesyncher.com/timesyncher-social-card.png\" />\n  <meta property=\"og:title\" content=\"TimeSyncher Onboarding - Terms Acceptance\" />\n  <meta property=\"og:description\" content=\"TimeSyncher Vacation\" />\n  <meta property=\"og:url\" content=\"https://www.timesyncher.com/onboarding-eula.html\" />\n  <style>\n    :root { --bg:#0b1020; --card:#111a31; --line:#2b3758; --text:#eef3ff; --muted:#b8c7e6; --accent:#7dd3fc; --ok:#34d399; }\n    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,var(--bg),#121a31);color:var(--text);line-height:1.55}.shell{max-width:1080px;margin:auto;padding:32px 18px}.card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.11);border-radius:22px;padding:22px;margin:18px 0;box-shadow:0 20px 60px rgba(0,0,0,.24)}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:0 0 12px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pill{display:inline-block;background:rgba(125,211,252,.12);border:1px solid rgba(125,211,252,.25);padding:6px 10px;border-radius:999px;color:var(--accent);font-size:.85rem}.eula{white-space:pre-wrap;max-height:460px;overflow:auto;background:#07101f;border:1px solid var(--line);padding:18px;border-radius:16px}.check{display:flex;gap:10px;align-items:flex-start}.btn{border:0;border-radius:999px;padding:13px 18px;font-weight:800;cursor:pointer}.primary{background:linear-gradient(135deg,var(--accent),#a78bfa);color:#07101f}.secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.12)}input[type=text]{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:#07101f;color:var(--text)}pre{white-space:pre-wrap;overflow:auto}.actions{display:flex;gap:12px;flex-wrap:wrap}@media(max-width:800px){.grid{grid-template-columns:1fr}}\n  </style>\n  <script type=\"module\" crossorigin src=\"/assets/onboardingEula-B9pl7A6H.js\"></script>\n</head>\n<body><div id=\"app\" class=\"shell\">\n  <span class=\"pill\">Hosted onboarding acceptance · local scaffold</span>\n  <h1>Review and accept TimeSyncher Terms & Privacy</h1>\n  <p class=\"muted\">This page shows the current client setup, access policy, and exact terms version before acceptance. Acceptance creates a receipt hash and downloadable acceptance copy.</p>\n  <section class=\"grid\">\n    <div class=\"card\"><h2>Client</h2><p id=\"client\"></p><p id=\"contact\" class=\"muted\"></p><p>Terms version: <strong id=\"version\"></strong></p></div>\n    <div class=\"card\"><h2>Selected functionality</h2><ul id=\"features\"></ul></div>\n  </section>\n  <section class=\"card\"><h2>Google/OAuth policy snapshot</h2><pre id=\"google\"></pre></section>\n  <section class=\"card\"><h2>Full EULA text</h2><div id=\"eula\" class=\"eula\"></div></section>\n  <form id=\"accept-form\" class=\"card\">\n    <h2>Accept terms</h2>\n    <label>Typed name / authorized signer<input id=\"acceptedByName\" type=\"text\" required placeholder=\"Your full name\" /></label>\n    <p class=\"check\"><input id=\"agree\" type=\"checkbox\" required /> <span>I have read and agree to TimeSyncher Terms and Privacy Policy and understand the service is adviso"
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:43.028Z",
+        "time": 7.146999999999999,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/login.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "304"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline; filename=\"login.html\""
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:43 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"9c5ec031749e2dd1256d3e1756676e57\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:21:38 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::9gd9z-1788492403030-9c3c9855840e"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 3660,
+            "text": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <meta name=\"robots\" content=\"noindex,nofollow\" />\n  <title>TimeSyncher Vacation</title>\n  <style>\n    :root { --ink: #111827; --muted: #6b7280; --gold: #f5d37b; --panel: #ffffff; }\n    * { box-sizing: border-box; }\n    body { margin: 0; min-height: 100vh; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; color: var(--ink); background: #f9fafb; }\n    main { min-height: 100vh; display: grid; grid-template-columns: minmax(420px, 1.15fr) minmax(360px, .85fr); }\n    .brand { display: flex; align-items: center; justify-content: center; padding: 48px; background: radial-gradient(circle at 30% 20%, rgba(245,211,123,.14), transparent 34%), linear-gradient(135deg, #0b1220, #111827 60%, #070b12); color: white; text-align: center; }\n    .brand-inner { max-width: 620px; }\n    .logo { font-size: clamp(34px, 5vw, 58px); font-weight: 900; letter-spacing: 0; line-height: 1.05; }\n    .tagline { margin: 28px 0 12px; font-size: clamp(28px, 4vw, 44px); line-height: 1.08; font-weight: 900; text-transform: lowercase; }\n    .description { margin: 0; color: rgba(255,255,255,.64); font-size: 16px; line-height: 1.7; }\n    .auth { display: flex; align-items: center; justify-content: center; padding: 32px 24px; }\n    .card { width: 100%; max-width: 410px; border: 1px solid #e5e7eb; border-radius: 20px; background: var(--panel); padding: 36px 32px; box-shadow: 0 2px 16px rgba(0,0,0,.06); }\n    h1 { margin: 0 0 4px; font-size: 24px; line-height: 1.2; }\n    .sub { margin: 0 0 26px; color: #9ca3af; font-size: 14px; }\n    label { display: block; margin: 0 0 6px; color: #374151; font-size: 13px; font-weight: 700; }\n    input { width: 100%; min-height: 44px; margin: 0 0 16px; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; color: var(--ink); font: inherit; }\n    button, .button { width: 100%; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: var(--ink); color: white; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }\n    .note { margin: 18px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }\n    @media (max-width: 860px) {\n      main { grid-template-columns: 1fr; }\n      .brand { min-height: 42vh; padding: 36px 22px; }\n      .auth { padding: 28px 18px; }\n    }\n  </style>\n</head>\n<body>\n  <main>\n    <section class=\"brand\" aria-label=\"TimeSyncher Vacation\">\n      <div class=\"brand-inner\">\n        <div class=\"logo\">TimeSyncher Vacation</div>\n        <div class=\"tagline\">your trips. your plan.</div>\n        <p class=\"description\">Plan vacations collaboratively with interactive maps, budgets, and real-time sync.</p>\n      </div>\n    </section>\n    <section class=\"auth\" aria-label=\"Sign in\">\n      <div class=\"card\">\n        <h1>Sign In</h1>\n        <p class=\"sub\">Welcome back</p>\n        <form onsubmit=\"event.preventDefault();\">\n          <label for=\"email\">Email</label>\n          <input id=\"email\" type=\"email\" autocomplete=\"email\" placeholder=\"your@email.com\" />\n          <label for=\"password\">Password</label>\n          <input id=\"password\" type=\"password\" autocomplete=\"current-password\" placeholder=\"••••••••\" />\n          <button type=\"submit\">Sign In</button>\n        </form>\n        <p class=\"note\">Vacation onboarding does not require signing in here. Use the tokenized TimeSyncher Vacation link from your purchase email or success page.</p>\n      </div>\n    </section>\n  </main>\n</body>\n</html>\n"
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:43.061Z",
+        "time": 125.87899999999999,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/shared/las-vegas-strip-vacation/",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-credentials",
+              "value": "true"
+            },
+            {
+              "name": "cache-control",
+              "value": "no-cache, no-store, must-revalidate"
+            },
+            {
+              "name": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "name": "cf-ray",
+              "value": "a359e4ef49772010-IAD"
+            },
+            {
+              "name": "content-encoding",
+              "value": "zstd"
+            },
+            {
+              "name": "content-security-policy",
+              "value": "default-src 'self';script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://unpkg.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com;img-src 'self' data: blob: https:;connect-src 'self' ws: wss: https://nominatim.openstreetmap.org https://overpass-api.de https://places.googleapis.com https://api.openweathermap.org https://en.wikipedia.org https://commons.wikimedia.org https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://open-meteo.com https://api.open-meteo.com https://geocoding-api.open-meteo.com https://api.exchangerate-api.com https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson https://router.project-osrm.org/route/v1/ https://api.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com;worker-src 'self' blob:;child-src 'self' blob:;font-src 'self' https://fonts.gstatic.com data:;object-src 'none';frame-src 'none';frame-ancestors 'self';base-uri 'self';form-action 'self';script-src-attr 'none'"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=UTF-8"
+            },
+            {
+              "name": "cross-origin-opener-policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "cross-origin-resource-policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:43 GMT"
+            },
+            {
+              "name": "last-modified",
+              "value": "Mon, 31 Aug 2026 17:46:17 GMT"
+            },
+            {
+              "name": "nel",
+              "value": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+            },
+            {
+              "name": "origin-agent-cluster",
+              "value": "?1"
+            },
+            {
+              "name": "referrer-policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "name": "report-to",
+              "value": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=a2lOjDrGdB%2F8ZoL6whkvbqzCaIKm0bf6LWOCftFgiFKxQpruvPfY6oKC17BpN8ze7I2wmz7kUrz%2BrEN%2BUkhgnYg9jy%2Bey9iRc9OQGRBO8nasjeJVXLW82hyM76raBsnybfMgOtB7pwyX\"}]}"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "server-timing",
+              "value": "cfEdge;dur=7,cfOrigin;dur=80"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=31536000"
+            },
+            {
+              "name": "vary",
+              "value": "Origin"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-dns-prefetch-control",
+              "value": "off"
+            },
+            {
+              "name": "x-download-options",
+              "value": "noopen"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "x-permitted-cross-domain-policies",
+              "value": "none"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "MISS"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::9gd9z-1788492403062-8378decd1e94"
+            },
+            {
+              "name": "x-xss-protection",
+              "value": "0"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=UTF-8",
+            "size": 10222,
+            "text": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\" />\n    <title>TimeSyncher Vacation</title>\n\n    <!-- PWA / iOS -->\n    <meta name=\"theme-color\" content=\"#09090b\" />\n    <meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />\n    <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"default\" />\n    <meta name=\"apple-mobile-web-app-title\" content=\"TimeSyncher Vacation\" />\n    <link rel=\"apple-touch-icon\" href=\"/icons/timesyncher-apple-touch-icon-180x180.png\" />\n\n    <!-- Favicon -->\n    <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\" />\n    <link rel=\"shortcut icon\" href=\"/favicon.ico\" />\n    <link rel=\"icon\" href=\"/icons/timesyncher-favicon.ico\" sizes=\"any\" />\n    <link rel=\"icon\" type=\"image/png\" href=\"/icons/timesyncher-icon-256.png\" />\n\n    <!-- Sharing -->\n    <meta property=\"og:title\" content=\"TimeSyncher Vacation\" />\n    <meta property=\"og:description\" content=\"AI-assisted vacation itinerary planning by TimeSyncher\" />\n    <meta property=\"og:image\" content=\"/icons/timesyncher-social-card.png\" />\n    <meta name=\"twitter:card\" content=\"summary_large_image\" />\n    <meta name=\"twitter:image\" content=\"/icons/timesyncher-social-card.png\" />\n\n    <!-- Fonts -->\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n    <link href=\"https://fonts.googleapis.com/css2?family=MuseoModerno:wght@400;700;800&display=swap\" rel=\"stylesheet\" />\n\n    <!-- Leaflet -->\n    <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\"\n          integrity=\"sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=\"\n          crossorigin=\"\" />\n    <script type=\"module\" crossorigin src=\"/assets/index-BKun7ofk.js\"></script>\n    <link rel=\"stylesheet\" crossorigin href=\"/assets/index-CbEHlMj6.css\">\n  <link rel=\"manifest\" href=\"/manifest.webmanifest\"><script id=\"vite-plugin-pwa:register-sw\" src=\"/registerSW.js\"></script>\n    <style>\n      .ts-shared-audio-button {\n        width: 30px;\n        height: 30px;\n        border-radius: 999px;\n        border: 1px solid rgba(255,255,255,0.12);\n        background: rgba(255,255,255,0.07);\n        color: #fff;\n        display: inline-flex;\n        align-items: center;\n        justify-content: center;\n        cursor: pointer;\n        box-shadow: 0 6px 18px rgba(0,0,0,0.18);\n        font-size: 15px;\n        line-height: 1;\n        padding: 0;\n      }\n      .ts-shared-audio-button[disabled] {\n        cursor: not-allowed;\n        opacity: .58;\n      }\n      .ts-shared-audio-button.is-recording {\n        background: #b42318;\n        border-color: rgba(255,255,255,0.22);\n      }\n      .ts-shared-audio-toast {\n        position: fixed;\n        left: 16px;\n        right: 16px;\n        bottom: calc(18px + env(safe-area-inset-bottom));\n        z-index: 10000;\n        max-width: 520px;\n        margin: 0 auto;\n        border-radius: 8px;\n        background: rgba(15,23,42,.96);\n        color: #fff;\n        box-shadow: 0 18px 50px rgba(15,23,42,.28);\n        padding: 11px 13px;\n        font: 700 13px/1.35 -apple-system, BlinkMacSystemFont, \"SF Pro Text\", system-ui, sans-serif;\n        text-align: center;\n      }\n      .ts-shared-audio-toast.ok {\n        background: rgba(6,95,70,.96);\n      }\n      .ts-shared-audio-toast.error {\n        background: rgba(153,27,27,.96);\n      }\n    </style>\n    <script>\n      (() => {\n        const sharedMatch = location.pathname.match(/^\\/shared\\/([^/]+)/);\n        if (!sharedMatch) return;\n        const shareToken = decodeURIComponent(sharedMatch[1]);\n        const maxAudioBytes = 4 * 1024 * 1024;\n        let recorder = null;\n        let stream = null;\n        let chunks = [];\n        let startedAt = 0;\n\n        function canRecord() {\n          return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);\n        }\n\n      "
+          }
+        }
+      },
+      {
+        "startedDateTime": "2026-09-04T03:26:43.507Z",
+        "time": 9.706,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/itinerary.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "access-control-allow-origin",
+              "value": "*"
+            },
+            {
+              "name": "age",
+              "value": "20"
+            },
+            {
+              "name": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "name": "content-disposition",
+              "value": "inline; filename=\"itinerary.html\""
+            },
+            {
+              "name": "content-encoding",
+              "value": "br"
+            },
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "name": "date",
+              "value": "Fri, 04 Sep 2026 03:26:43 GMT"
+            },
+            {
+              "name": "etag",
+              "value": "W/\"9952092414cbc30e73f7ae9ddfe67995\""
+            },
+            {
+              "name": "last-modified",
+              "value": "Fri, 04 Sep 2026 03:26:23 GMT"
+            },
+            {
+              "name": "server",
+              "value": "Vercel"
+            },
+            {
+              "name": "strict-transport-security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "name": "x-content-type-options",
+              "value": "nosniff"
+            },
+            {
+              "name": "x-frame-options",
+              "value": "DENY"
+            },
+            {
+              "name": "x-robots-tag",
+              "value": "noindex"
+            },
+            {
+              "name": "x-vercel-cache",
+              "value": "HIT"
+            },
+            {
+              "name": "x-vercel-id",
+              "value": "iad1::sr896-1788492403508-a1c8fec2b399"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 5348,
+            "text": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>TimeSyncher Vacation Itinerary</title>\n  <style>\n    :root { color-scheme: light; --ink:#18202a; --muted:#667085; --line:#d8dee7; --gold:#a17825; --bg:#f7f8fb; --card:#fff; }\n    * { box-sizing: border-box; }\n    body { margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; background:var(--bg); color:var(--ink); }\n    header { background:#101721; color:#fff; padding:22px clamp(18px, 4vw, 44px); }\n    .brand { font-weight:800; letter-spacing:.01em; }\n    .wrap { max-width:1060px; margin:0 auto; padding:24px clamp(16px, 4vw, 34px) 48px; }\n    h1 { margin:8px 0 6px; font-size:clamp(28px, 4vw, 46px); line-height:1.05; letter-spacing:0; }\n    h2 { margin:28px 0 12px; font-size:20px; letter-spacing:0; }\n    .muted { color:var(--muted); }\n    .summary { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-top:18px; }\n    .summary div, .thing { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px; }\n    .summary span { display:block; color:var(--muted); font-size:12px; text-transform:uppercase; }\n    .summary b { display:block; margin-top:3px; }\n    .grid { display:grid; gap:12px; }\n    .thing { display:grid; gap:7px; }\n    .thing h3 { margin:0; font-size:17px; letter-spacing:0; }\n    .meta { display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted); }\n    .pill { border:1px solid var(--line); border-radius:999px; padding:3px 8px; background:#fbfcff; }\n    .links { display:flex; gap:8px; flex-wrap:wrap; }\n    a { color:#71510c; font-weight:700; }\n    pre { white-space:pre-wrap; font:inherit; margin:0; color:#313946; }\n    .empty { padding:24px; background:#fff; border:1px dashed var(--line); border-radius:8px; }\n  </style>\n</head>\n<body>\n  <header>\n    <div class=\"brand\">TimeSyncher Vacation</div>\n    <h1 id=\"title\">Vacation Itinerary</h1>\n    <div id=\"subtitle\" class=\"muted\"></div>\n  </header>\n  <main class=\"wrap\">\n    <section class=\"summary\" id=\"summary\"></section>\n    <div id=\"content\" class=\"grid\"><div class=\"empty\">Loading itinerary...</div></div>\n  </main>\n  <script>\n    const params = new URLSearchParams(location.search);\n    const session = params.get('session') || params.get('token') || '';\n    const names = { note:'Planning Notes', transport:'Flights & Transportation', hotel:'Hotels & Lodging', activity:'Activities & Daily Plan', restaurant:'Restaurants', shopping:'Shopping', other:'Other' };\n    const order = ['note','transport','hotel','activity','restaurant','shopping','other'];\n    const safe = (value) => String(value || '').replace(/[&<>\"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\n    const dateText = (value) => value ? new Date(value).toLocaleString([], { dateStyle:'medium', timeStyle:'short' }) : '';\n    function renderThing(thing) {\n      const links = Array.isArray(thing.links) ? thing.links : [];\n      return `<article class=\"thing\">\n        <div class=\"meta\">\n          <span class=\"pill\">${safe(thing.subtype || thing.category)}</span>\n          ${thing.metadata?.status ? `<span class=\"pill\">${safe(thing.metadata.status)}</span>` : ''}\n          ${thing.metadata?.sourceBacked ? '<span class=\"pill\">source-backed</span>' : ''}\n        </div>\n        <h3>${safe(thing.title)}</h3>\n        ${thing.description ? `<pre>${safe(thing.description)}</pre>` : ''}\n        ${links.length ? `<div class=\"links\">${links.map((link, index) => `<a href=\"${safe(link.url || link.href)}\" target=\"_blank\" rel=\"noreferrer\">${safe(link.label || link.title || `Source ${index + 1}`)}</a>`).join('')}</div>` : ''}\n      </article>`;\n    }\n    async function load() {\n      if (!session) throw new Error('Missing itinerary session token.');\n      const res = await fetch(`/api/vacation-itinerary?session=${encodeURICompo"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> <title>TimeSyncher Vacation | You'll Never Need a Vacation After Your Vacation Again</title> <link rel"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/addons-checkout.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Vacation Add-ons</title> <script src=\"https://js.stripe.com/v3/\"></script> <style> :r"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/owner-media-checkout.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Vacation Media Add-ons</title> <script src=\"https://js.stripe.com/v3/\"></script> <sty"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/checkout-config",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 503,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 78,
+            "text": "{\"ok\":false,\"error\":\"Stripe publishable key does not match STRIPE_MODE=test.\"}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/order-success.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> <meta name=\"robots\" content=\"noindex,nofollow\" /> <title>Start TimeSyncher Vacation Onboarding</title>"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/onboarding-eula.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Onboarding - Terms Acceptance</title> <link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/login.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> <meta name=\"robots\" content=\"noindex,nofollow\" /> <title>TimeSyncher Vacation</title> <style> :root { "
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/onboarding-session",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 61,
+            "text": "{\"ok\":false,\"error\":\"session or payment_intent is required.\"}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/eula",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 404,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 37,
+            "text": "{\"ok\":false,\"error\":\"unknown action\"}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/vacation-itinerary",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 400,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 43,
+            "text": "{\"ok\":false,\"error\":\"session is required.\"}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/vacation-telegram-turn",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 405,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 41,
+            "text": "{\"ok\":false,\"error\":\"method not allowed\"}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/vacation-request",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 405,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 41,
+            "text": "{\"ok\":false,\"error\":\"method not allowed\"}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/vacation-web-access?action=status",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 88,
+            "text": "{\"ok\":true,\"canEdit\":false,\"role\":\"viewer\",\"email\":null,\"tripId\":null,\"shareToken\":null}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/shared/las-vegas-strip-vacation/",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=UTF-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=UTF-8",
+            "size": 240,
+            "text": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover\" /> <title>TimeSyncher Vacation</title> <!-- PWA "
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "POST",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/api/vacation-itinerary?webAccess=1",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 403,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "application/json; charset=utf-8",
+            "size": 3875,
+            "text": "{\"ok\":false,\"failClosed\":true,\"reason\":\"no_thing_list\",\"vacationEditPipeline\":{\"job_id\":\"vac-verify-d969d85d37bc\",\"fixture_id\":null,\"events_jsonl\":\"artifacts/vacation-verify/vac-verify-d969d85d37bc/events.jsonl\",\"surface\":\"shared-page-voice\",\"actor\":\"logged-out\",\"trip_id\":\"trip-vegas-live-001\",\"public_url\":\"\",\"before_hash\":\"cb48bb58f2cb20eb9e0f4c7aeeeb14c4c26480ddd7d1b57ce3007f11d7af0b6c\",\"after_hash\":\"cb48bb58f2cb20eb9e0f4c7aeeeb14c4c26480ddd7d1b57ce3007f11d7af0b6c\",\"dry_run\":\"artifacts/vacation-verify/vac-verify-d969d85d37bc/dry-run.json\",\"artifact_dir\":\"artifacts/vacation-verify/vac-verify-d969d85d37bc\",\"required_artifacts\":[\"whole-experience screenshot / customer-flow PDF\",\"customer-story PDF with generated pictures\",\"final keepsake PDF\"],\"stop_rules\":[{\"id\":\"no_customer_simulation\",\"description\":\"Do not start synthetic customer journeys from this lever.\",\"status\":\"pass\",\"detail\":\"Dry-run/control driver only; no customer journey started.\"},{\"id\":\"no_production_billing\",\"description\":\"Do not charge Stripe or mutate production entitlements.\",\"status\":\"pass\",\"detail\":\"Checkout proof uses a synthetic account fixture.\"},{\"id\":\"no_unvalidated_writes\",\"description\":\"The parser never writes. Only validated item IDs on the locked trip may mutate.\",\"status\":\"pass\",\"detail\":\"Writes require deterministic validation.\"},{\"id\":\"fail_closed_stale_media\",\"description\":\"Media must bind to the live trip_id or no-op.\",\"status\":\"pass\",\"detail\":\"Stale or mismatched trip media must no-op.\"},{\"id\":\"fail_closed_thing_id\",\"description\":\"Thing-scoped media must target a Thing on the locked trip and in page context.\",\"status\":\"pass\",\"detail\":\"No thing_id fail-close on this receipt.\"},{\"id\":\"fail_closed_unauthorized_upload\",\"description\":\"Public-link and unauthorized collaborator uploads reject.\",\"status\":\"pass\",\"detail\":\"Unauthorized or public-link uploads must reject.\"},{\"id\":\"fail_closed_duplicate_trek\",\"description\":\"Split-trip must not create a second TREK row for the same title/token.\",\"status\":\"pass\",\"detail\":\"TREK id-set unchanged (none); row count 0.\"},{\"id\":\"fail_closed_dropped_clause\",\"description\":\"Multi-request voice must fail closed if any spoken clause is dropped.\",\"status\":\"pass\",\"detail\":\"Every spoken clause produced a decision.\"},{\"id\":\"exact_no_match_copy\",\"description\":\"Unmatched targets use the exact no-match sentence.\",\"status\":\"pass\",\"detail\":\"Unmatched copy must be exact.\"},{\"id\":\"prove_state_movement\",\"description\":\"A success reply is invalid unless TREK/backend id-set state moved, or local-snapshot is labeled hold.\",\"status\":\"hold\",\"detail\":\"Dry-run records planned writes; --apply --trek-db proves TREK id-set movement.\"},{\"id\":\"no_first_pass_language_on_edits\",\"description\":\"Existing-itinerary edits must not use first-pass creation language.\",\"status\":\"pass\",\"detail\":\"Existing edits must name the change, not first-pass setup.\"}],\"writes_applied\":[],\"no_ops\":[{\"reason\":\"unauthorized_edit\",\"heard\":\"Move Bellagio Fountains to day 2\",\"response\":\"I received this, but this Telegram account is not authorized to modify that vacation yet.\\n\\nThe vacation owner can add you as a paid Telegram collaborator. Non-Telegram website invitees use an owner-approved email magic link.\"}],\"apply_scope\":\"dry-run\",\"trek_state\":{\"row_ids_before\":[],\"row_ids_after\":[],\"row_count_before\":0,\"row_count_after\":0,\"item_moved\":false,\"source\":\"fixture_trek_rows\"},\"dropped_clause\":false,\"customer_facing_response\":\"I received this, but this Telegram account is not authorized to modify that vacation yet.\\n\\nThe vacation owner can add you as a paid Telegram collaborator. Non-Telegram website invitees use an owner-approved email magic link.\",\"apply_gate\":{\"prove_state_movement\":\"hold\",\"apply_on_this_receipt\":false,\"live_apply_entry\":\"control-vacation --apply --trek-db or worker applyExistingTripEdit (first-pass/non-edit queue)\"},\"ok\":true}}"
+          }
+        }
+      },
+      {
+        "startedDateTime": null,
+        "time": null,
+        "request": {
+          "method": "GET",
+          "url": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/itinerary.html",
+          "queryString": [],
+          "headers": []
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html; charset=utf-8"
+            }
+          ],
+          "redirectURL": "https://timesyncher-git-cursor-vacatio-453141-grampads-boughts-projects.vercel.app/",
+          "content": {
+            "mimeType": "text/html; charset=utf-8",
+            "size": 240,
+            "text": "<!doctype html> <html lang=\"en\"> <head> <meta charset=\"utf-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /> <title>TimeSyncher Vacation Itinerary</title> <style> :root { color-scheme: light; --ink:#18202a; --mute"
+          }
+        }
+      }
+    ]
+  }
+}
