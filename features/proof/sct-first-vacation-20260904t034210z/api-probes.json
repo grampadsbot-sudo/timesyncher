@@ -118,5 +118,53 @@
     "content_type": "text/plain; charset=utf-8",
     "location": "",
     "body": "The page could not be found\n\nNOT_FOUND\n\niad1::rd6q5-1788493628126-550173ec44c3\n"
+  },
+  {
+    "path": "/api/vacation-web-access?action=status&shareToken=las-vegas-strip-vacation",
+    "method": "GET",
+    "status": 200,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": true,\n  \"canEdit\": false,\n  \"role\": \"viewer\",\n  \"email\": null,\n  \"tripId\": null,\n  \"shareToken\": \"las-vegas-strip-vacation\"\n}\n"
+  },
+  {
+    "path": "/api/vacation-web-access?action=status&tripId=trip-vegas-live-001",
+    "method": "GET",
+    "status": 200,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": true,\n  \"canEdit\": false,\n  \"role\": \"viewer\",\n  \"email\": null,\n  \"tripId\": \"trip-vegas-live-001\",\n  \"shareToken\": null\n}\n"
+  },
+  {
+    "path": "/api/shared/las-vegas-strip-vacation",
+    "method": "GET",
+    "status": 200,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\"trip\":{\"id\":90,\"title\":\"Las Vegas Strip Vacation\",\"start_date\":\"2026-07-30\",\"end_date\":\"2026-08-03\"},\"note\":\"vercel.json rewrite to travel.timesyncher.com; body truncated in probe file\"}\n"
+  },
+  {
+    "path": "/api/vacation-itinerary?session=sct-probe-nonexistent",
+    "method": "GET",
+    "status": 404,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"Itinerary not found.\"\n}\n"
+  },
+  {
+    "path": "/api/onboarding-session?session=sct-probe-nonexistent",
+    "method": "GET",
+    "status": 404,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"Onboarding session not found.\"\n}\n"
+  },
+  {
+    "path": "/api/worker-jobs",
+    "method": "GET",
+    "status": 401,
+    "content_type": "application/json; charset=utf-8",
+    "location": "",
+    "body": "{\n  \"ok\": false,\n  \"error\": \"Unauthorized worker request.\"\n}\n"
   }
 ]
