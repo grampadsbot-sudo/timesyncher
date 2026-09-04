@@ -50,6 +50,7 @@ assert.ok(ciWorkflow.includes('doctorJsonOk'), 'uploaded doctor.json must be che
 assert.ok(ciWorkflow.includes('vacation-verify-attest-'), 'attest job must upload a proof artifact');
 assert.ok(ciWorkflow.includes('--produce-attest'), 'attest job must produce proof without self-attesting');
 assert.ok(!ciWorkflow.includes('vacation-verify-bind'), 'cosmetic bind job must not remain in the workflow');
+assert.ok(/fetch-depth:\s*0/.test(ciWorkflow), 'CI checkout must have history for ancestor receipt bind');
 const commentOnly = [
   'name: vacation-verify',
   'jobs:',
@@ -391,7 +392,9 @@ const receiptDoctorMatch = inspectCiAttestation({
 assert.equal(receiptDoctorMatch.ok, true);
 assert.equal(requireCommittedCiReceipt(null).ok, false);
 assert.equal(requireCommittedCiReceipt(readCommittedCiReceipt(cwd)).ok, true);
-assert.equal(committedReceiptShaAllowed(readCommittedCiReceipt(cwd).sha, gitRevParse(cwd), cwd), true);
+const committedSha = readCommittedCiReceipt(cwd).sha;
+assert.equal(committedReceiptShaAllowed(committedSha, committedSha, cwd), true);
+assert.equal(committedReceiptShaAllowed(committedSha, gitRevParse(cwd), cwd), true, 'committed receipt SHA must be HEAD or an ancestor (full clone)');
 const missingReceiptCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'vac-verify-ci-'));
 const missingReceipt = inspectCiAttestation({
   cwd: missingReceiptCwd,
