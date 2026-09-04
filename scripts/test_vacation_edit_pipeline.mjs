@@ -32,6 +32,7 @@ import {
   committedReceiptShaAllowed,
   doctorArtifactNameForSha,
   doctorJsonOk,
+  doctorReportOk,
   gitRevParse,
   inspectCiAttestation,
   missingReviewerCiCommands,
@@ -48,8 +49,13 @@ assert.ok(!/set \+e/.test(ciWorkflow), 'gate must not ignore doctor exit with se
 assert.ok(!/set \+o pipefail/.test(ciWorkflow), 'gate must not ignore doctor exit with set +o pipefail');
 assert.ok(ciWorkflow.includes('doctorJsonOk'), 'uploaded doctor.json must be checked for ok:true');
 assert.ok(ciWorkflow.includes('vacation-verify-attest-'), 'attest job must upload a proof artifact');
-assert.ok(ciWorkflow.includes('--produce-attest'), 'attest job must produce proof without self-attesting');
-assert.ok(!ciWorkflow.includes('vacation-verify-bind'), 'cosmetic bind job must not remain in the workflow');
+assert.ok(ciWorkflow.includes('vacation-verify-bind:'), 'default doctor path must run in vacation-verify-bind');
+assert.ok(!ciWorkflow.includes('--produce-gate'), 'produce-gate must not bypass doctor.ok');
+assert.ok(!ciWorkflow.includes('--produce-attest'), 'produce-attest must not bypass doctor.ok');
+assert.ok(parseWorkflowRunCommands(ciWorkflow).some((line) => (
+  line.startsWith('node scripts/control-vacation.mjs doctor --json')
+  && !line.includes('--produce-')
+)), 'workflow must run default doctor --json');
 assert.ok(/fetch-depth:\s*0/.test(ciWorkflow), 'CI checkout must have history for ancestor receipt bind');
 const commentOnly = [
   'name: vacation-verify',
@@ -96,18 +102,79 @@ const successAttestArtifact = {
   name: `vacation-verify-attest-${shaB}`,
   digest: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
 };
+const successBindJob = { id: 100859000001, name: 'vacation-verify-bind', conclusion: 'success', status: 'completed' };
+const successBindArtifact = {
+  id: 9917700001,
+  name: `vacation-verify-bind-${shaB}`,
+  digest: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+};
+const matchingReceipt = {
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  doctor_conclusion: 'success',
+  attest_conclusion: 'success',
+  workflow: 'vacation-verify',
+  job_id: '100853800148',
+  doctor_job_id: '100855092982',
+  gate_job_id: '100856986539',
+  attest_job_id: '100858000001',
+  jobs: {
+    'vacation-verify': 'success',
+    'vacation-verify-doctor': 'success',
+    'vacation-verify-gate': 'success',
+    'vacation-verify-attest': 'success',
+  },
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+};
+const okDoctorJson = {
+  ok: true,
+  checks: {
+    feature_map: true,
+    skill: true,
+    pipeline_syntax: true,
+    ci_workflow: true,
+    ci_attestation: true,
+    committed_proof: true,
+  },
+  ci_attestation: {
+    ok: true,
+    run_id: '33817831176',
+    job_id: '100853800148',
+    doctor_job_id: '100855092982',
+    gate_job_id: '100856986539',
+    attest_job_id: '100858000001',
+    conclusion: 'success',
+    doctor_conclusion: 'success',
+    attest_conclusion: 'success',
+    artifact_digest: successArtifact.digest,
+    doctor_artifact_digest: successGateArtifact.digest,
+    attest_artifact_digest: successAttestArtifact.digest,
+  },
+};
+assert.equal(doctorJsonOk(okDoctorJson), true);
 assert.equal(doctorArtifactNameForSha(shaB), `vacation-verify-gate-${shaB}`);
 assert.equal(attestArtifactNameForSha(shaB), `vacation-verify-attest-${shaB}`);
-assert.equal(doctorJsonOk({ ok: true }), true);
+assert.equal(doctorJsonOk({ ok: true }), false, 'shallow {ok:true} must fail-closed');
 assert.equal(doctorJsonOk({ ok: false }), false);
 assert.equal(doctorJsonOk({}), false);
+assert.equal(doctorReportOk({
+  feature_map: true,
+  skill: true,
+  pipeline_syntax: true,
+  ci_workflow: true,
+  committed_proof: true,
+  ci_attestation: false,
+}), false, 'produce-style local checks must not pass doctor.ok without ci_attestation');
 const forgedEnv = inspectCiAttestation({
   cwd,
   sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   env: { GITHUB_ACTIONS: 'true', GITHUB_WORKFLOW: 'vacation-verify', GITHUB_RUN_ID: '1' },
   fetchRun: () => null,
   fetchRuns: () => [],
-  receipt: null,
+  receipt: matchingReceipt,
 });
 assert.equal(forgedEnv.ok, false, 'forged GITHUB_* env without a real run must fail-closed');
 const receiptOnly = inspectCiAttestation({
@@ -130,7 +197,7 @@ const inProgress = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: { GITHUB_ACTIONS: 'true', GITHUB_RUN_ID: '33817831176' },
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
   fetchJobs: () => [{ ...successJob, conclusion: null, status: 'in_progress' }],
   fetchArtifacts: () => [successArtifact],
@@ -138,12 +205,12 @@ const inProgress = inspectCiAttestation({
 assert.equal(inProgress.ok, false, 'in_progress vacation-verify job must not pass doctor');
 const allJobs = [successJob, successDoctorJob, successGateJob, successAttestJob];
 const allArtifacts = [successArtifact, successMarkerArtifact, successGateArtifact, successAttestArtifact];
-const fetchOkDoctorJson = () => ({ ok: true });
+const fetchOkDoctorJson = () => okDoctorJson;
 const noDigest = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => [{ ...successArtifact, digest: null }, successMarkerArtifact, successGateArtifact],
@@ -153,7 +220,7 @@ const harnessOnly = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob],
   fetchArtifacts: () => [successArtifact],
@@ -163,7 +230,7 @@ const doctorFailed = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob, { ...successDoctorJob, conclusion: 'failure' }, successGateJob],
   fetchArtifacts: () => allArtifacts,
@@ -173,7 +240,7 @@ const markerOnly = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob, successDoctorJob],
   fetchArtifacts: () => [successArtifact, successMarkerArtifact],
@@ -189,7 +256,7 @@ const doctorNoDigest = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => [successArtifact, successMarkerArtifact],
@@ -199,7 +266,7 @@ const digestOnly = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
@@ -209,7 +276,7 @@ const bound = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
@@ -218,7 +285,8 @@ const bound = inspectCiAttestation({
 assert.equal(bound.ok, true);
 assert.equal(bound.run_id, '33817831176');
 assert.equal(bound.job_id, '100853800148');
-assert.equal(bound.doctor_job_id, '100856986539');
+assert.equal(bound.doctor_job_id, '100855092982');
+assert.equal(bound.gate_job_id, '100856986539');
 assert.equal(bound.conclusion, 'success');
 assert.equal(bound.doctor_conclusion, 'success');
 assert.equal(bound.artifact_digest, successArtifact.digest);
@@ -253,7 +321,7 @@ const midJobDoctor = inspectCiAttestation({
     GITHUB_RUN_ID: '33817831176',
     GITHUB_JOB: 'vacation-verify-doctor',
   },
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
   fetchJobs: () => [successJob, { ...successDoctorJob, conclusion: null, status: 'in_progress' }],
   fetchArtifacts: () => [successArtifact],
@@ -267,7 +335,7 @@ const midJobNoDoctorDigest = inspectCiAttestation({
     GITHUB_RUN_ID: '33817831176',
     GITHUB_JOB: 'vacation-verify-gate',
   },
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
   fetchJobs: () => [successJob, successDoctorJob, { ...successGateJob, conclusion: null, status: 'in_progress' }],
   fetchArtifacts: () => [successArtifact, successMarkerArtifact],
@@ -411,7 +479,7 @@ const noAttestJob = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob, successDoctorJob, successGateJob],
   fetchArtifacts: () => [successArtifact, successMarkerArtifact, successGateArtifact],
@@ -429,7 +497,7 @@ const attestSkipped = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => [successJob, successDoctorJob, successGateJob, { ...successAttestJob, conclusion: 'skipped' }],
   fetchArtifacts: () => allArtifacts,
@@ -440,7 +508,7 @@ const attestNoDigest = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => [successArtifact, successMarkerArtifact, successGateArtifact],
@@ -450,7 +518,7 @@ const doctorJsonFalse = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
+  receipt: matchingReceipt,
   doctorJson: { ok: false, checks: { ci_attestation: false } },
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
@@ -468,19 +536,53 @@ const doctorJsonTrue = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: null,
-  doctorJson: { ok: true },
-  attestDoctorJson: { ok: true },
+  receipt: matchingReceipt,
+  doctorJson: okDoctorJson,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
 });
 assert.equal(doctorJsonTrue.ok, true);
-const downloadedFalse = inspectCiAttestation({
+const nullReceiptSkipsNothing = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
   receipt: null,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
+});
+assert.equal(nullReceiptSkipsNothing.ok, false, 'receipt: null must not skip the missing-receipt gate');
+assert.equal(nullReceiptSkipsNothing.reason, 'committed_ci_receipt_missing');
+const bindPresentNoDigest = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: matchingReceipt,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [...allJobs, successBindJob],
+  fetchArtifacts: () => allArtifacts,
+  fetchDoctorJson: fetchOkDoctorJson,
+});
+assert.equal(bindPresentNoDigest.ok, false, 'bind job without bind doctor.json digest must fail-closed');
+const bindBound = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: matchingReceipt,
+  fetchRuns: () => [successRun],
+  fetchJobs: () => [...allJobs, successBindJob],
+  fetchArtifacts: () => [...allArtifacts, successBindArtifact],
+  fetchDoctorJson: fetchOkDoctorJson,
+});
+assert.equal(bindBound.ok, true);
+assert.equal(bindBound.bind_job_id, '100859000001');
+const downloadedFalse = inspectCiAttestation({
+  cwd,
+  sha: shaB,
+  env: {},
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
@@ -510,7 +612,7 @@ const midAttestInspect = inspectCiAttestation({
     GITHUB_RUN_ID: '33817831176',
     GITHUB_JOB: 'vacation-verify-attest',
   },
-  receipt: null,
+  receipt: matchingReceipt,
   doctorJson: { ok: true },
   fetchRun: () => ({ ...successRun, conclusion: null, status: 'in_progress' }),
   fetchJobs: () => [successJob, successDoctorJob, successGateJob, { ...successAttestJob, conclusion: null, status: 'in_progress' }],

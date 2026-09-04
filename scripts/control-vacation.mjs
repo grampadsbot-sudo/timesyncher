@@ -24,6 +24,8 @@ import {
 import { createTrekFixtureStore } from '../src/vacation/trek-fixture-store.mjs';
 import {
   CI_WORKFLOW_REL,
+  doctorJsonOk,
+  doctorReportOk,
   inspectCiAttestation,
   missingReviewerCiCommands,
 } from '../src/vacation/ci-attestation.mjs';
@@ -237,16 +239,12 @@ function doctor({ produceGate = false, produceAttest = false } = {}) {
       ci_attestation: Boolean(ciAttestation.ok),
     },
   };
-  report.ok = report.checks.feature_map
-    && report.checks.skill
-    && report.checks.pipeline_syntax
+  report.ok = doctorReportOk(report.checks)
     && missingFeatures.length === 0
     && missingMapRows.length === 0
     && missingFixtures.length === 0
-    && committedProofsOk
-    && report.checks.ci_workflow
-    && (produceGate || produceAttest || report.checks.ci_attestation)
-    && fixtures.length >= requiredFixtures.length;
+    && fixtures.length >= requiredFixtures.length
+    && doctorJsonOk(report);
   if (produceGate) report.produce_gate = true;
   if (produceAttest) report.produce_attest = true;
   return report;

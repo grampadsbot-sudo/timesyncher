@@ -6,7 +6,8 @@
   "run_url": "https://github.com/grampadsbot-sudo/timesyncher/actions/runs/33820443547",
   "conclusion": "success",
   "job_id": "100861764980",
-  "doctor_job_id": "100861830118",
+  "doctor_job_id": "100861808707",
+  "gate_job_id": "100861830118",
   "attest_job_id": "100861879754",
   "jobs": {
     "vacation-verify": "success",

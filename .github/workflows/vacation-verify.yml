@@ -79,17 +79,18 @@ jobs:
           node-version: 20
       - name: prepare artifact dir
         run: mkdir -p artifacts/vacation-verify
-      - name: write doctor.json
+      - name: write gate marker
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          set -euo pipefail
-          node scripts/control-vacation.mjs doctor --json --produce-gate | tee artifacts/vacation-verify/doctor.json
-          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
-      - name: upload doctor.json
+          mkdir -p artifacts/vacation-verify
+          printf '{"job":"vacation-verify-gate","sha":"%s","run_id":"%s"}\n' "$PR_HEAD_SHA" "$GITHUB_RUN_ID" > artifacts/vacation-verify/gate-job.json
+      - name: upload gate marker
         uses: actions/upload-artifact@v4
         with:
           name: vacation-verify-gate-${{ github.event.pull_request.head.sha || github.sha }}
           if-no-files-found: error
-          path: artifacts/vacation-verify/doctor.json
+          path: artifacts/vacation-verify/gate-job.json
 
   vacation-verify-attest:
     needs: vacation-verify-gate
@@ -100,26 +101,53 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: download gate doctor.json
+      - name: download gate marker
         uses: actions/download-artifact@v4
         with:
           name: vacation-verify-gate-${{ github.event.pull_request.head.sha || github.sha }}
           path: artifacts/vacation-verify-gate
-      - name: doctor
+      - name: write attest marker
         env:
-          VACATION_VERIFY_DOCTOR_JSON: artifacts/vacation-verify-gate/doctor.json
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
+          test -s artifacts/vacation-verify-gate/gate-job.json
           mkdir -p artifacts/vacation-verify
-          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify-gate/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
-          node scripts/control-vacation.mjs doctor --json --produce-attest | tee artifacts/vacation-verify/doctor.json
-          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
-      - name: upload attest doctor.json
+          printf '{"job":"vacation-verify-attest","sha":"%s","run_id":"%s"}\n' "$PR_HEAD_SHA" "$GITHUB_RUN_ID" > artifacts/vacation-verify/attest-job.json
+      - name: upload attest marker
         uses: actions/upload-artifact@v4
         with:
           name: vacation-verify-attest-${{ github.event.pull_request.head.sha || github.sha }}
+          if-no-files-found: error
+          path: artifacts/vacation-verify/attest-job.json
+
+  vacation-verify-bind:
+    needs: vacation-verify-attest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: download attest marker
+        uses: actions/download-artifact@v4
+        with:
+          name: vacation-verify-attest-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/vacation-verify-attest
+      - name: doctor
+        run: |
+          set -euo pipefail
+          test -s artifacts/vacation-verify-attest/attest-job.json
+          mkdir -p artifacts/vacation-verify
+          node scripts/control-vacation.mjs doctor --json | tee artifacts/vacation-verify/doctor.json
+          node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
+      - name: upload bind doctor.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: vacation-verify-bind-${{ github.event.pull_request.head.sha || github.sha }}
           if-no-files-found: error
           path: artifacts/vacation-verify/doctor.json
