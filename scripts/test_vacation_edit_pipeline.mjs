@@ -115,20 +115,24 @@ const matchingReceipt = {
   conclusion: 'success',
   doctor_conclusion: 'success',
   attest_conclusion: 'success',
+  bind_conclusion: 'success',
   workflow: 'vacation-verify',
   job_id: '100853800148',
   doctor_job_id: '100855092982',
   gate_job_id: '100856986539',
   attest_job_id: '100858000001',
+  bind_job_id: '100859000001',
   jobs: {
     'vacation-verify': 'success',
     'vacation-verify-doctor': 'success',
     'vacation-verify-gate': 'success',
     'vacation-verify-attest': 'success',
+    'vacation-verify-bind': 'success',
   },
   artifact_digest: successArtifact.digest,
   doctor_artifact_digest: successGateArtifact.digest,
   attest_artifact_digest: successAttestArtifact.digest,
+  bind_artifact_digest: successBindArtifact.digest,
 };
 const okDoctorJson = {
   ok: true,
@@ -147,17 +151,56 @@ const okDoctorJson = {
     doctor_job_id: '100855092982',
     gate_job_id: '100856986539',
     attest_job_id: '100858000001',
+    bind_job_id: '100859000001',
     conclusion: 'success',
     doctor_conclusion: 'success',
     attest_conclusion: 'success',
+    bind_conclusion: 'success',
     artifact_digest: successArtifact.digest,
     doctor_artifact_digest: successGateArtifact.digest,
     attest_artifact_digest: successAttestArtifact.digest,
+    bind_artifact_digest: successBindArtifact.digest,
   },
 };
 assert.equal(doctorJsonOk(okDoctorJson), true);
 assert.equal(doctorJsonFieldsOk({ ...okDoctorJson, ok: false }), true);
 assert.equal(doctorJsonOk({ ...okDoctorJson, ok: false }), false, 'fields without ok:true are not a passing doctor.json');
+const doctorJsonNoBind = {
+  ...okDoctorJson,
+  ci_attestation: {
+    ...okDoctorJson.ci_attestation,
+    bind_job_id: undefined,
+    bind_conclusion: undefined,
+    bind_artifact_digest: undefined,
+  },
+};
+assert.equal(doctorJsonFieldsOk(doctorJsonNoBind), false, 'doctor JSON without bind fields must fail-closed');
+assert.equal(doctorJsonOk(doctorJsonNoBind), false);
+assert.equal(doctorJsonFieldsOk({
+  ...okDoctorJson,
+  ci_attestation: { ...okDoctorJson.ci_attestation, bind_job_id: undefined },
+}), false, 'bind_conclusion=success without bind_job_id must fail-closed');
+assert.equal(doctorJsonFieldsOk({
+  ...okDoctorJson,
+  ci_attestation: { ...okDoctorJson.ci_attestation, bind_artifact_digest: undefined },
+}), false, 'bind_conclusion=success without bind digest must fail-closed');
+assert.equal(doctorJsonFieldsOk({
+  ...okDoctorJson,
+  ok: false,
+  ci_attestation: {
+    ...okDoctorJson.ci_attestation,
+    bind_conclusion: 'in_progress',
+    bind_artifact_digest: null,
+  },
+}), true, 'mid-bind doctor JSON may omit bind digest');
+assert.equal(doctorJsonOk({
+  ...okDoctorJson,
+  ci_attestation: {
+    ...okDoctorJson.ci_attestation,
+    bind_conclusion: 'in_progress',
+    bind_artifact_digest: null,
+  },
+}), true, 'mid-bind uploaded doctor.json with ok:true is not circular-broken');
 assert.equal(doctorArtifactNameForSha(shaB), `vacation-verify-gate-${shaB}`);
 assert.equal(attestArtifactNameForSha(shaB), `vacation-verify-attest-${shaB}`);
 assert.equal(doctorJsonOk({ ok: true }), false, 'shallow {ok:true} must fail-closed');
@@ -206,8 +249,10 @@ const inProgress = inspectCiAttestation({
   fetchArtifacts: () => [successArtifact],
 });
 assert.equal(inProgress.ok, false, 'in_progress vacation-verify job must not pass doctor');
-const allJobs = [successJob, successDoctorJob, successGateJob, successAttestJob];
-const allArtifacts = [successArtifact, successMarkerArtifact, successGateArtifact, successAttestArtifact];
+const coreJobs = [successJob, successDoctorJob, successGateJob, successAttestJob];
+const coreArtifacts = [successArtifact, successMarkerArtifact, successGateArtifact, successAttestArtifact];
+const allJobs = [...coreJobs, successBindJob];
+const allArtifacts = [...coreArtifacts, successBindArtifact];
 const fetchOkDoctorJson = () => okDoctorJson;
 const noDigest = inspectCiAttestation({
   cwd,
@@ -297,6 +342,9 @@ assert.equal(bound.doctor_artifact_digest, successGateArtifact.digest);
 assert.equal(bound.attest_job_id, '100858000001');
 assert.equal(bound.attest_conclusion, 'success');
 assert.equal(bound.attest_artifact_digest, successAttestArtifact.digest);
+assert.equal(bound.bind_job_id, '100859000001');
+assert.equal(bound.bind_conclusion, 'success');
+assert.equal(bound.bind_artifact_digest, successBindArtifact.digest);
 assert.notEqual(bound.doctor_artifact_digest, successMarkerArtifact.digest);
 const receiptMismatch = inspectCiAttestation({
   cwd,
@@ -439,22 +487,46 @@ assert.equal(bindCommittedReceipt({
   artifact_digest: successArtifact.digest,
   doctor_artifact_digest: successGateArtifact.digest,
   attest_artifact_digest: successAttestArtifact.digest,
+}).ok, false, 'receipt missing bind proof must not bind');
+assert.equal(bindCommittedReceipt({
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  doctor_conclusion: 'success',
+  attest_conclusion: 'success',
+  bind_conclusion: 'success',
+  workflow: 'vacation-verify',
+  bind_job_id: '100859000001',
+  jobs: { 'vacation-verify-bind': 'success' },
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+  bind_artifact_digest: successBindArtifact.digest,
+}, {
+  sha: shaB,
+  run_id: '33817831176',
+  bind_job_id: '100859000001',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+  bind_artifact_digest: successBindArtifact.digest,
 }).ok, true);
+assert.equal(bindCommittedReceipt({
+  ...matchingReceipt,
+}, {
+  sha: shaB,
+  run_id: '33817831176',
+  bind_job_id: '100859000001',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+  bind_artifact_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+}).ok, false, 'receipt bind digest must match live bind digest');
 const receiptDoctorMatch = inspectCiAttestation({
   cwd,
   sha: shaB,
   env: {},
-  receipt: {
-    sha: shaB,
-    run_id: 33817831176,
-    conclusion: 'success',
-    doctor_conclusion: 'success',
-    attest_conclusion: 'success',
-    workflow: 'vacation-verify',
-    artifact_digest: successArtifact.digest,
-    doctor_artifact_digest: successGateArtifact.digest,
-    attest_artifact_digest: successAttestArtifact.digest,
-  },
+  receipt: matchingReceipt,
   fetchRuns: () => [successRun],
   fetchJobs: () => allJobs,
   fetchArtifacts: () => allArtifacts,
@@ -462,7 +534,21 @@ const receiptDoctorMatch = inspectCiAttestation({
 });
 assert.equal(receiptDoctorMatch.ok, true);
 assert.equal(requireCommittedCiReceipt(null).ok, false);
+assert.equal(requireCommittedCiReceipt({
+  sha: shaB,
+  run_id: 33817831176,
+  conclusion: 'success',
+  doctor_conclusion: 'success',
+  attest_conclusion: 'success',
+  workflow: 'vacation-verify',
+  artifact_digest: successArtifact.digest,
+  doctor_artifact_digest: successGateArtifact.digest,
+  attest_artifact_digest: successAttestArtifact.digest,
+}).ok, false, 'ancestor-style receipt without bind fields is incomplete');
 assert.equal(requireCommittedCiReceipt(readCommittedCiReceipt(cwd)).ok, true);
+assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100865974131');
+assert.equal(readCommittedCiReceipt(cwd).jobs['vacation-verify-bind'], 'success');
+assert.ok(String(readCommittedCiReceipt(cwd).bind_artifact_digest || '').startsWith('sha256:'));
 const committedSha = readCommittedCiReceipt(cwd).sha;
 assert.equal(committedReceiptShaAllowed(committedSha, committedSha, cwd), true);
 assert.equal(committedReceiptShaAllowed(committedSha, gitRevParse(cwd), cwd), true, 'committed receipt SHA must be HEAD or an ancestor (full clone)');
@@ -564,8 +650,8 @@ const bindPresentNoDigest = inspectCiAttestation({
   env: {},
   receipt: matchingReceipt,
   fetchRuns: () => [successRun],
-  fetchJobs: () => [...allJobs, successBindJob],
-  fetchArtifacts: () => allArtifacts,
+  fetchJobs: () => allJobs,
+  fetchArtifacts: () => coreArtifacts,
   fetchDoctorJson: fetchOkDoctorJson,
 });
 assert.equal(bindPresentNoDigest.ok, false, 'bind job without bind doctor.json digest must fail-closed');

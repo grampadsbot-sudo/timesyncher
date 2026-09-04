@@ -243,6 +243,11 @@ export function doctorJsonFieldsOk(value) {
   if (!attest.run_id || !attest.job_id || !attest.doctor_job_id || !attest.gate_job_id || !attest.attest_job_id) {
     return false;
   }
+  if (!attest.bind_job_id) return false;
+  const bindInProgress = attest.bind_conclusion === 'in_progress';
+  if (!bindInProgress && (attest.bind_conclusion !== 'success' || !sha256DigestField(attest.bind_artifact_digest))) {
+    return false;
+  }
   return Boolean(
     sha256DigestField(attest.artifact_digest)
     && sha256DigestField(attest.doctor_artifact_digest)
@@ -495,11 +500,14 @@ export function requireCommittedCiReceipt(receipt) {
   const receiptHarness = sha256DigestField(receipt.artifact_digest);
   const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
   const receiptAttest = sha256DigestField(receipt.attest_artifact_digest);
+  const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
   const conclusions = receipt.conclusion === 'success'
     && receipt.workflow === 'vacation-verify'
     && receipt.doctor_conclusion === 'success'
-    && receipt.attest_conclusion === 'success';
-  if (!receipt.sha || !receipt.run_id || !receiptHarness || !receiptDoctor || !receiptAttest || !conclusions) {
+    && receipt.attest_conclusion === 'success'
+    && receipt.bind_conclusion === 'success';
+  const bindJob = receipt.jobs && receipt.jobs['vacation-verify-bind'] === 'success';
+  if (!receipt.sha || !receipt.run_id || !receipt.bind_job_id || !receiptHarness || !receiptDoctor || !receiptAttest || !receiptBind || !conclusions || !bindJob) {
     return { ok: false, reason: 'committed_ci_receipt_incomplete' };
   }
   return { ok: true };
@@ -580,14 +588,17 @@ export function bindCommittedReceipt(receipt, live) {
   const receiptHarness = sha256DigestField(receipt.artifact_digest);
   const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
   const receiptAttest = sha256DigestField(receipt.attest_artifact_digest);
+  const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
   const sameSha = receipt.sha === live.sha;
   const sameRun = String(receipt.run_id) === String(live.run_id);
   const sameDigest = Boolean(receiptHarness) && receiptHarness === live.artifact_digest;
   const sameDoctor = Boolean(receiptDoctor) && receiptDoctor === live.doctor_artifact_digest;
   const sameAttest = Boolean(receiptAttest) && receiptAttest === live.attest_artifact_digest;
+  const sameBind = Boolean(receiptBind) && receiptBind === live.bind_artifact_digest;
   const sameDoctorJob = !receipt.doctor_job_id || String(receipt.doctor_job_id) === String(live.doctor_job_id);
+  const sameBindJob = String(receipt.bind_job_id) === String(live.bind_job_id);
   const success = receipt.conclusion === 'success' && receipt.workflow === 'vacation-verify';
-  if (!sameSha || !sameRun || !sameDigest || !sameDoctor || !sameAttest || !sameDoctorJob || !success) {
+  if (!sameSha || !sameRun || !sameDigest || !sameDoctor || !sameAttest || !sameBind || !sameDoctorJob || !sameBindJob || !success) {
     return { ok: false, reason: 'committed_receipt_does_not_match_api' };
   }
   return { ok: true };
