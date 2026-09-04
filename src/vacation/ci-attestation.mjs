@@ -248,6 +248,18 @@ export function doctorJsonFieldsOk(value) {
   if (!bindInProgress && (attest.bind_conclusion !== 'success' || !sha256DigestField(attest.bind_artifact_digest))) {
     return false;
   }
+  const committed = attest.committed_receipt;
+  const lag = attest.receipt_lag;
+  if (!committed || typeof committed !== 'object' || (lag !== 'head' && lag !== 'parent')) return false;
+  if (!committed.sha || !sha256DigestField(committed.bind_artifact_digest)) return false;
+  if (lag === 'head' && committed.sha !== attest.sha) return false;
+  if (lag === 'parent' && committed.sha === attest.sha) return false;
+  if (!bindInProgress && lag === 'head' && committed.bind_artifact_digest !== attest.bind_artifact_digest) {
+    return false;
+  }
+  if (!bindInProgress && lag === 'parent' && committed.bind_artifact_digest === attest.bind_artifact_digest) {
+    return false;
+  }
   return Boolean(
     sha256DigestField(attest.artifact_digest)
     && sha256DigestField(attest.doctor_artifact_digest)
@@ -520,6 +532,40 @@ export function committedReceiptShaAllowed(receiptSha, head, cwd = process.cwd()
   return Boolean(parent) && receiptSha === parent;
 }
 
+export function twoProofRelationship(receipt, live, { cwd = process.cwd(), head } = {}) {
+  const required = requireCommittedCiReceipt(receipt);
+  if (!required.ok) return required;
+  const liveHead = head || live?.sha;
+  if (!live?.sha || !liveHead) return { ok: false, reason: 'committed_receipt_sha_lag' };
+  if (!committedReceiptShaAllowed(receipt.sha, liveHead, cwd)) {
+    return { ok: false, reason: 'committed_receipt_sha_lag' };
+  }
+  const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
+  const liveBind = sha256DigestField(live.bind_artifact_digest);
+  if (receipt.sha === live.sha) {
+    if (!liveBind || receiptBind !== liveBind) {
+      return { ok: false, reason: 'committed_receipt_does_not_match_api' };
+    }
+    return { ok: true, receipt_lag: 'head' };
+  }
+  if (String(receipt.run_id) === String(live.run_id) || (liveBind && receiptBind === liveBind)) {
+    return { ok: false, reason: 'committed_receipt_aliases_live_head' };
+  }
+  return { ok: true, receipt_lag: 'parent' };
+}
+
+function committedReceiptProof(receipt) {
+  return {
+    sha: receipt.sha,
+    run_id: String(receipt.run_id),
+    bind_job_id: receipt.bind_job_id || null,
+    artifact_digest: receipt.artifact_digest || null,
+    doctor_artifact_digest: receipt.doctor_artifact_digest || null,
+    attest_artifact_digest: receipt.attest_artifact_digest || null,
+    bind_artifact_digest: receipt.bind_artifact_digest || null,
+  };
+}
+
 function loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns) {
   if (fetchRun) {
     const run = fetchRun(repo, receipt.run_id, token);
@@ -554,8 +600,12 @@ export function verifyCommittedCiReceipt(receipt, live, {
   }
   if (live && receipt.sha === live.sha) {
     const bound = bindCommittedReceipt(receipt, live);
-    if (!bound.ok || !receipt.jobs || !fetchJobs) return bound;
-    return receiptJobsMatchApi(receipt.jobs, fetchJobs(repo, live.run_id, token) || []);
+    if (!bound.ok) return bound;
+    if (receipt.jobs && fetchJobs) {
+      const jobsMatch = receiptJobsMatchApi(receipt.jobs, fetchJobs(repo, live.run_id, token) || []);
+      if (!jobsMatch.ok) return jobsMatch;
+    }
+    return twoProofRelationship(receipt, live, { cwd, head: head || live.sha });
   }
   const fetched = loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns);
   if (!fetched.ok || !fetched.run) return { ok: false, reason: 'committed_receipt_run_missing' };
@@ -579,7 +629,9 @@ export function verifyCommittedCiReceipt(receipt, live, {
   if (!attested.ok) return { ok: false, reason: attested.reason || 'committed_receipt_does_not_match_api' };
   const jobsMatch = receiptJobsMatchApi(receipt.jobs, extras.jobs.jobs);
   if (!jobsMatch.ok) return jobsMatch;
-  return bindCommittedReceipt(receipt, attested);
+  const bound = bindCommittedReceipt(receipt, attested);
+  if (!bound.ok) return bound;
+  return twoProofRelationship(receipt, live, { cwd, head: head || live?.sha });
 }
 
 export function bindCommittedReceipt(receipt, live) {
@@ -675,7 +727,13 @@ export function inspectCiAttestation({
         reason: bound.reason,
       };
     }
-    return { ...attestation, source, repo };
+    return {
+      ...attestation,
+      source,
+      repo,
+      receipt_lag: bound.receipt_lag,
+      committed_receipt: committedReceiptProof(committed),
+    };
   };
 
   const liveId = env.GITHUB_RUN_ID || '';

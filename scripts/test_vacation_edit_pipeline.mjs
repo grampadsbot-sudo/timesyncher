@@ -30,6 +30,7 @@ import {
   attestVacationVerifyJob,
   bindCommittedReceipt,
   committedReceiptShaAllowed,
+  twoProofRelationship,
   doctorArtifactNameForSha,
   doctorJsonFieldsOk,
   doctorJsonOk,
@@ -146,6 +147,7 @@ const okDoctorJson = {
   },
   ci_attestation: {
     ok: true,
+    sha: shaB,
     run_id: '33817831176',
     job_id: '100853800148',
     doctor_job_id: '100855092982',
@@ -160,6 +162,16 @@ const okDoctorJson = {
     doctor_artifact_digest: successGateArtifact.digest,
     attest_artifact_digest: successAttestArtifact.digest,
     bind_artifact_digest: successBindArtifact.digest,
+    receipt_lag: 'head',
+    committed_receipt: {
+      sha: shaB,
+      run_id: '33817831176',
+      bind_job_id: '100859000001',
+      artifact_digest: successArtifact.digest,
+      doctor_artifact_digest: successGateArtifact.digest,
+      attest_artifact_digest: successAttestArtifact.digest,
+      bind_artifact_digest: successBindArtifact.digest,
+    },
   },
 };
 assert.equal(doctorJsonOk(okDoctorJson), true);
@@ -345,6 +357,9 @@ assert.equal(bound.attest_artifact_digest, successAttestArtifact.digest);
 assert.equal(bound.bind_job_id, '100859000001');
 assert.equal(bound.bind_conclusion, 'success');
 assert.equal(bound.bind_artifact_digest, successBindArtifact.digest);
+assert.equal(bound.receipt_lag, 'head');
+assert.equal(bound.committed_receipt.sha, shaB);
+assert.equal(bound.committed_receipt.bind_artifact_digest, bound.bind_artifact_digest);
 assert.notEqual(bound.doctor_artifact_digest, successMarkerArtifact.digest);
 const receiptMismatch = inspectCiAttestation({
   cwd,
@@ -546,11 +561,11 @@ assert.equal(requireCommittedCiReceipt({
   attest_artifact_digest: successAttestArtifact.digest,
 }).ok, false, 'ancestor-style receipt without bind fields is incomplete');
 assert.equal(requireCommittedCiReceipt(readCommittedCiReceipt(cwd)).ok, true);
-assert.equal(readCommittedCiReceipt(cwd).sha, '27d367a5fcb7c5619deddec9450bef8b6bc69653');
-assert.equal(String(readCommittedCiReceipt(cwd).run_id), '33822908484');
-assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100869396123');
+assert.equal(readCommittedCiReceipt(cwd).sha, '2060393cd894345bcf86387d9a4976650faad0e6');
+assert.equal(String(readCommittedCiReceipt(cwd).run_id), '33823342265');
+assert.equal(readCommittedCiReceipt(cwd).bind_job_id, '100870777955');
 assert.equal(readCommittedCiReceipt(cwd).jobs['vacation-verify-bind'], 'success');
-assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:22f16e23863f379a8e9b03011b34f9f159de73b4d85b31535c61d7038a60e7ed');
+assert.equal(readCommittedCiReceipt(cwd).bind_artifact_digest, 'sha256:33903e56b0c4ee5775052d5d6999e4c90d660be3f59cafabf25b45fcf838e9a5');
 const committedSha = readCommittedCiReceipt(cwd).sha;
 const headSha = gitRevParse(cwd);
 const parentSha = gitRevParse(cwd, `${headSha}^`);
@@ -560,6 +575,73 @@ assert.equal(committedReceiptShaAllowed(headSha, headSha, cwd), true);
 assert.equal(committedReceiptShaAllowed(parentSha, headSha, cwd), true, 'direct parent receipt SHA is allowed (one-commit lag)');
 assert.equal(committedReceiptShaAllowed(grandparentSha, headSha, cwd), false, 'deeper ancestor receipt SHA must fail-closed');
 assert.equal(committedReceiptShaAllowed('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', headSha, cwd), false);
+const sameShaProof = twoProofRelationship(matchingReceipt, {
+  sha: shaB,
+  run_id: matchingReceipt.run_id,
+  bind_artifact_digest: matchingReceipt.bind_artifact_digest,
+}, { cwd, head: shaB });
+assert.equal(sameShaProof.ok, true);
+assert.equal(sameShaProof.receipt_lag, 'head');
+assert.equal(twoProofRelationship(matchingReceipt, {
+  sha: shaB,
+  run_id: matchingReceipt.run_id,
+  bind_artifact_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+}, { cwd, head: shaB }).ok, false, 'same-SHA receipt bind digest must match live HEAD');
+const parentLagProof = twoProofRelationship({
+  ...matchingReceipt,
+  sha: parentSha,
+  run_id: '33822908484',
+}, {
+  sha: headSha,
+  run_id: '33823342265',
+  bind_artifact_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+}, { cwd, head: headSha });
+assert.equal(parentLagProof.ok, true);
+assert.equal(parentLagProof.receipt_lag, 'parent');
+assert.equal(twoProofRelationship({
+  ...matchingReceipt,
+  sha: parentSha,
+  run_id: '33822908484',
+}, {
+  sha: headSha,
+  run_id: '33823342265',
+  bind_artifact_digest: matchingReceipt.bind_artifact_digest,
+}, { cwd, head: headSha }).reason, 'committed_receipt_aliases_live_head');
+assert.equal(twoProofRelationship({
+  ...matchingReceipt,
+  sha: grandparentSha,
+}, {
+  sha: headSha,
+  run_id: '33823342265',
+  bind_artifact_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+}, { cwd, head: headSha }).reason, 'committed_receipt_sha_lag');
+assert.equal(doctorJsonFieldsOk({
+  ...okDoctorJson,
+  ci_attestation: {
+    ...okDoctorJson.ci_attestation,
+    sha: headSha,
+    receipt_lag: 'parent',
+    bind_artifact_digest: 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+    committed_receipt: {
+      ...okDoctorJson.ci_attestation.committed_receipt,
+      sha: parentSha,
+      bind_artifact_digest: successBindArtifact.digest,
+    },
+  },
+}), true, 'parent-lag doctor JSON must keep live HEAD and receipt bind digests distinct');
+assert.equal(doctorJsonFieldsOk({
+  ...okDoctorJson,
+  ci_attestation: {
+    ...okDoctorJson.ci_attestation,
+    sha: headSha,
+    receipt_lag: 'parent',
+    committed_receipt: {
+      ...okDoctorJson.ci_attestation.committed_receipt,
+      sha: parentSha,
+      bind_artifact_digest: okDoctorJson.ci_attestation.bind_artifact_digest,
+    },
+  },
+}), false, 'parent-lag doctor JSON that aliases live HEAD bind digest must fail-closed');
 const offBranchReceipt = inspectCiAttestation({
   cwd,
   sha: shaB,
