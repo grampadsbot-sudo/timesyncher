@@ -66,7 +66,7 @@ function usage() {
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
-  const args = { command, json: false, fixtures: [], jobId: '', persist: true, localSnapshot: false, trekDb: '', produceGate: false };
+  const args = { command, json: false, fixtures: [], jobId: '', persist: true, localSnapshot: false, trekDb: '', produceGate: false, produceAttest: false };
   for (let i = 0; i < rest.length; i += 1) {
     const token = rest[i];
     if (token === '--json') args.json = true;
@@ -74,6 +74,7 @@ function parseArgs(argv) {
     else if (token === '--all-fixtures') args.all = true;
     else if (token === '--local-snapshot') args.localSnapshot = true;
     else if (token === '--produce-gate') args.produceGate = true;
+    else if (token === '--produce-attest') args.produceAttest = true;
     else if (token === '--trek-db') args.trekDb = rest[++i];
     else if (token === '--fixture' || token === '-f') args.fixtures.push(rest[++i]);
     else if (token === '--job-id') args.jobId = rest[++i];
@@ -160,7 +161,7 @@ function inspectCommittedProof(fixtureId) {
   }
 }
 
-function doctor({ produceGate = false } = {}) {
+function doctor({ produceGate = false, produceAttest = false } = {}) {
   const fixtures = listFixtureFiles(cwd);
   const requiredFeatures = [
     'checkout.md',
@@ -244,9 +245,10 @@ function doctor({ produceGate = false } = {}) {
     && missingFixtures.length === 0
     && committedProofsOk
     && report.checks.ci_workflow
-    && (produceGate || report.checks.ci_attestation)
+    && (produceGate || produceAttest || report.checks.ci_attestation)
     && fixtures.length >= requiredFixtures.length;
   if (produceGate) report.produce_gate = true;
+  if (produceAttest) report.produce_attest = true;
   return report;
 }
 
@@ -304,7 +306,7 @@ if (!args.command || args.command === 'help' || args.command === '--help') {
 
 try {
   if (args.command === 'doctor') {
-    const report = doctor({ produceGate: args.produceGate });
+    const report = doctor({ produceGate: args.produceGate, produceAttest: args.produceAttest });
     if (args.json) process.stdout.write(JSON.stringify(report, null, 2) + '\n');
     else {
       console.log(`${report.ok ? 'PASS' : 'FAIL'} control-vacation doctor`);

@@ -111,7 +111,7 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/vacation-verify
           node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify-gate/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
-          node scripts/control-vacation.mjs doctor --json | tee artifacts/vacation-verify/doctor.json
+          node scripts/control-vacation.mjs doctor --json --produce-attest | tee artifacts/vacation-verify/doctor.json
           node --input-type=module -e 'import fs from "node:fs"; import { doctorJsonOk } from "./src/vacation/ci-attestation.mjs"; const j = JSON.parse(fs.readFileSync("artifacts/vacation-verify/doctor.json", "utf8")); if (!doctorJsonOk(j)) process.exit(1);'
       - name: upload attest doctor.json
         uses: actions/upload-artifact@v4

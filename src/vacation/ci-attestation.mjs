@@ -279,18 +279,6 @@ export function obtainBoundDoctorJson({
   return githubFetchArtifactDoctorJson(repo, artifact?.id, token);
 }
 
-export function producingAttestJob(env = {}, jobs = []) {
-  const attestJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-attest');
-  return Boolean(
-    env.GITHUB_ACTIONS === 'true'
-    && env.GITHUB_JOB === 'vacation-verify-attest'
-    && env.GITHUB_RUN_ID
-    && attestJob
-    && attestJob.conclusion !== 'success'
-    && (attestJob.status === 'in_progress' || !attestJob.conclusion)
-  );
-}
-
 export function attestVacationVerifyJob({
   run,
   jobs = [],
@@ -359,41 +347,21 @@ export function attestVacationVerifyJob({
     return fail(gateJson?.reason || 'gate doctor.json ok is not true');
   }
   const attestJob = (jobs || []).find((row) => row && row.name === 'vacation-verify-attest');
-  if (!producingAttestJob(env, jobs)) {
-    if (!attestJob) return fail('vacation-verify-attest job missing');
-    if (attestJob.conclusion !== 'success') {
-      return fail(`vacation-verify-attest job conclusion=${attestJob.conclusion || attestJob.status || 'missing'}`);
-    }
-    const attestArtifact = artifactWithDigest(artifacts, attestArtifactNameForSha(sha));
-    if (!attestArtifact) return fail('vacation-verify-attest artifact digest missing');
-    const attestJson = obtainBoundDoctorJson({
-      artifact: attestArtifact,
-      repo,
-      token,
-      fetchDoctorJson,
-      explicit: attestDoctorJson,
-    });
-    if (!doctorJsonOk(attestJson)) {
-      return fail(attestJson?.reason || 'attest doctor.json ok is not true');
-    }
-    return {
-      ok: true,
-      sha,
-      run_id: String(run.id),
-      job_id: String(job.id),
-      doctor_job_id: String(gateJob.id),
-      attest_job_id: String(attestJob.id),
-      conclusion: 'success',
-      doctor_conclusion: 'success',
-      attest_conclusion: 'success',
-      artifact_digest: artifact.digest,
-      doctor_artifact_digest: doctorArtifact.digest,
-      attest_artifact_digest: attestArtifact.digest,
-      artifact_id: String(artifact.id),
-      doctor_artifact_id: String(doctorArtifact.id),
-      attest_artifact_id: String(attestArtifact.id),
-      repo: null,
-    };
+  if (!attestJob) return fail('vacation-verify-attest job missing');
+  if (attestJob.conclusion !== 'success') {
+    return fail(`vacation-verify-attest job conclusion=${attestJob.conclusion || attestJob.status || 'missing'}`);
+  }
+  const attestArtifact = artifactWithDigest(artifacts, attestArtifactNameForSha(sha));
+  if (!attestArtifact) return fail('vacation-verify-attest artifact digest missing');
+  const attestJson = obtainBoundDoctorJson({
+    artifact: attestArtifact,
+    repo,
+    token,
+    fetchDoctorJson,
+    explicit: attestDoctorJson,
+  });
+  if (!doctorJsonOk(attestJson)) {
+    return fail(attestJson?.reason || 'attest doctor.json ok is not true');
   }
   return {
     ok: true,
@@ -401,16 +369,16 @@ export function attestVacationVerifyJob({
     run_id: String(run.id),
     job_id: String(job.id),
     doctor_job_id: String(gateJob.id),
-    attest_job_id: attestJob?.id ? String(attestJob.id) : null,
+    attest_job_id: String(attestJob.id),
     conclusion: 'success',
     doctor_conclusion: 'success',
-    attest_conclusion: attestJob?.conclusion || attestJob?.status || null,
+    attest_conclusion: 'success',
     artifact_digest: artifact.digest,
     doctor_artifact_digest: doctorArtifact.digest,
-    attest_artifact_digest: null,
+    attest_artifact_digest: attestArtifact.digest,
     artifact_id: String(artifact.id),
     doctor_artifact_id: String(doctorArtifact.id),
-    attest_artifact_id: null,
+    attest_artifact_id: String(attestArtifact.id),
     repo: null,
   };
 }
