@@ -69,6 +69,26 @@ export function collaboratorTelegramLink(token, env = process.env) {
   return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
 }
 
+export function collaboratorStagingCardCheckoutAllowed(env = process.env) {
+  if (env.ALLOW_COLLABORATOR_STAGING_CARD_CHECKOUT === 'true') return true;
+  const base = String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || env.VERCEL_PROJECT_PRODUCTION_URL || '').toLowerCase();
+  return base.includes('vacation-staging') || base.includes('staging');
+}
+
+export function collaboratorMarkPaidWithoutStripePath(env = process.env, couponCode = '') {
+  if (clean(couponCode, 120)) return 'coupon_checkout';
+  if (collaboratorStagingCardCheckoutAllowed(env)) return 'staging_card_checkout';
+  return null;
+}
+
+export function collaboratorCraigMarkPaidClick() {
+  return [
+    'Vercel → project timesyncher-vacation-staging → Settings → Environment Variables → set ALLOW_COLLABORATOR_STAGING_CARD_CHECKOUT=true on Production and Preview → Redeploy.',
+    'Or POST /api/admin-onboardings?action=create-coupon, then retry the broker with couponCode.',
+    'Owner fallback (no new deploy): open https://t.me/TimeSyncherVacationStagingBot?start=6CTRnW4Ca2MW_bsj6hqJozxW → ask to add Kim Rivera as a Telegram collaborator → finish /addons-checkout.html staging card or POST /api/checkout-coupon with the pending invite token.',
+  ].join(' ');
+}
+
 export function collaboratorEulaSessionId(invite) {
   return `vacation-collaborator-${invite.id}`;
 }
@@ -242,7 +262,7 @@ export async function acceptCollaboratorInvite(db, {
       ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id || null},
       ${telegramChatId || null}, ${telegramUserId || null}, ${displayName || null},
       ${invite.plan_code}, ${invite.scope}, 'active',
-      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
+      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION},
       ${{
         source: 'telegram_collaborator_invite',
         telegramUsername: username || null,

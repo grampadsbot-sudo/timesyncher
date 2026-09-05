@@ -10,6 +10,7 @@ import {
   upsertCustomer,
 } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
+import { brokerMintPaidCollaboratorInvite } from '../src/vacation/collaborator-broker.mjs';
 
 function token() {
   return crypto.randomBytes(18).toString('base64url');
@@ -417,8 +418,15 @@ async function resendPurchaseEmailForSession(db, id, env = process.env) {
 export default async function handler(req, res) {
   try {
     requireAdminAuth(req, process.env);
-    const db = sql(process.env);
     const url = new URL(req.url || '/', 'https://timesyncher.com');
+    if (req.method === 'POST' && url.searchParams.get('action') === 'create-collaborator-invite') {
+      const body = await readJson(req);
+      if (body.dryRun) {
+        return sendJson(res, 200, await brokerMintPaidCollaboratorInvite(null, body, process.env));
+      }
+      return sendJson(res, 200, await brokerMintPaidCollaboratorInvite(sql(process.env), body, process.env));
+    }
+    const db = sql(process.env);
     if (req.method === 'POST' && url.searchParams.get('action') === 'create') {
       return sendJson(res, 201, { ok: true, ...(await createAdminOnboarding(db, await readJson(req))) });
     }
