@@ -11,7 +11,7 @@
   "fresh_trip_id": null,
   "fresh_shared_url": null,
   "onboarding_urls": "missing_token",
-  "last_checked_at": "2026-09-05T23:39:30Z",
+  "last_checked_at": "2026-09-05T23:54:52Z",
   "next_retry_timer": "sct-fresh-missing-token-retry",
   "next_retry_delay_seconds": 900,
   "alias": "https://vacation-staging.timesyncher.com",
