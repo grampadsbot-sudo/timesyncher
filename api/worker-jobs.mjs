@@ -148,6 +148,52 @@ async function completeJob(db, body) {
   return { requestId: rows[0].request_id, tripId: rows[0].trip_id };
 }
 
+async function syncSharedItinerary(db, body) {
+  const jobId = cleanText(body.jobId || body.job_id, 80);
+  const token = cleanText(body.token || body.shareToken || body.share_token, 180);
+  if (!jobId) throw Object.assign(new Error('jobId is required.'), { statusCode: 400 });
+  if (!token) throw Object.assign(new Error('token is required.'), { statusCode: 400 });
+
+  const rows = await db`
+    select request_id, trip_id
+    from worker_jobs
+    where id = ${jobId}
+    limit 1
+  `;
+  if (!rows[0]) throw Object.assign(new Error('job not found.'), { statusCode: 404 });
+
+  const publicUrl = cleanText(body.publicUrl || body.public_url || body.webItineraryUrl || body.web_itinerary_url, 600)
+    || `https://travel.timesyncher.com/shared/${encodeURIComponent(token)}/`;
+  const dates = body.dates && typeof body.dates === 'object' ? body.dates : {};
+  await db`
+    update trips
+    set title = coalesce(${cleanText(body.title, 180) || null}, title),
+      destination = coalesce(${cleanText(body.destination, 180) || null}, destination),
+      start_date = coalesce(${cleanText(dates.startDate || dates.start_date, 40) || null}, start_date),
+      end_date = coalesce(${cleanText(dates.endDate || dates.end_date, 40) || null}, end_date),
+      status = 'active',
+      metadata = metadata || ${{
+        shareToken: token,
+        sharedToken: token,
+        publicUrl,
+        webItineraryUrl: publicUrl,
+        hostedSharedSyncAt: new Date().toISOString(),
+      }},
+      updated_at = now()
+    where id = ${rows[0].trip_id}
+  `;
+  await persistArtifacts(db, rows[0], { artifacts: body.artifacts || {} });
+  await db`
+    insert into vacation_request_events (request_id, event_type, actor, details)
+    values (${rows[0].request_id}, 'shared_sync', 'worker', ${{
+      jobId,
+      token,
+      publicUrl,
+    }}::jsonb)
+  `;
+  return { requestId: rows[0].request_id, tripId: rows[0].trip_id, token, publicUrl };
+}
+
 function artifactList(result, key) {
   const artifacts = result?.artifacts && typeof result.artifacts === 'object' ? result.artifacts : {};
   return Array.isArray(artifacts[key]) ? artifacts[key].slice(0, 25) : [];
@@ -223,7 +269,10 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = await readJson(req);
-      const result = await completeJob(db, body);
+      const action = cleanText(body.action, 80);
+      const result = action === 'shared-sync'
+        ? await syncSharedItinerary(db, body)
+        : await completeJob(db, body);
       return sendJson(res, 200, { ok: true, ...result });
     }
 

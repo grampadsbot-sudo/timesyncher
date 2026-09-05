@@ -9,6 +9,7 @@ const WORKER_TOKEN = process.env.TIMESYNCHER_WORKER_TOKEN || '';
 const TELEGRAM_BOT_TOKEN = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || process.env.TIMESYNCHER_VACATION_TELEGRAM_BOT_TOKEN || '';
 const POLL_INTERVAL_MS = Number.parseInt(process.env.TIMESYNCHER_WORKER_POLL_MS || '15000', 10);
 const PRODUCT_GBRAIN_DISPATCH = process.env.TIMESYNCHER_PRODUCT_GBRAIN_DISPATCH || '';
+const SUPPRESS_TELEGRAM_DELIVERY = /^(1|true|yes)$/i.test(process.env.TIMESYNCHER_WORKER_SUPPRESS_TELEGRAM_DELIVERY || '');
 const ONCE = process.argv.includes('--once');
 const DRAIN = process.argv.includes('--drain');
 const DRAIN_ALL = process.argv.includes('--drain-all');
@@ -181,6 +182,7 @@ function findTelegramChatId(value) {
 
 async function sendTelegram(chatId, text) {
   if (!TELEGRAM_BOT_TOKEN || !chatId || !text) return false;
+  if (SUPPRESS_TELEGRAM_DELIVERY) return false;
   const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -248,8 +250,8 @@ async function tick() {
       await completeJob(job, completion);
       const chatId = findTelegramChatId(job);
       if (chatId && completion.customerResponse) {
-        await sendTelegram(chatId, completion.customerResponse);
-        console.log(`[${new Date().toISOString()}] ${WORKER_ID}: sent Telegram response for ${job.id}`);
+        const sent = await sendTelegram(chatId, completion.customerResponse);
+        console.log(`[${new Date().toISOString()}] ${WORKER_ID}: ${sent ? 'sent Telegram response' : 'Telegram response delivery suppressed'} for ${job.id}`);
       }
       console.log(`[${new Date().toISOString()}] ${WORKER_ID}: completed ${job.id}`);
     } catch (error) {
@@ -257,8 +259,8 @@ async function tick() {
       await retryJob(job, error);
       const chatId = findTelegramChatId(job);
       if (chatId) {
-        await sendTelegram(chatId, customerFailureMessage(error));
-        console.log(`[${new Date().toISOString()}] ${WORKER_ID}: sent Telegram failure response for ${job.id}`);
+        const sent = await sendTelegram(chatId, customerFailureMessage(error));
+        console.log(`[${new Date().toISOString()}] ${WORKER_ID}: ${sent ? 'sent Telegram failure response' : 'Telegram failure response delivery suppressed'} for ${job.id}`);
       }
     }
   }

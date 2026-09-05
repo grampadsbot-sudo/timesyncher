@@ -46,6 +46,7 @@ async function assertGeneratedSharedUrlIsReadable(webItineraryUrl) {
 
 const telegramBotSource = fs.readFileSync('./telegram-vacation-intake-bot.mjs', 'utf8');
 const timestopperWorkerSource = fs.readFileSync('./timestopper-worker.mjs', 'utf8');
+const workerJobsSource = fs.readFileSync('../api/worker-jobs.mjs', 'utf8');
 assert.equal(telegramBotSource.includes('I do not have enough account detail in this chat message'), false, 'Telegram bridge must not answer account questions before API session/account lookup');
 assert.ok(telegramBotSource.includes('isNewVacationAdviceQuestion'), 'Telegram bridge must guard meta/advice questions before queueing vacation work');
 assert.ok(telegramBotSource.includes('isVagueNextStepQuestion'), 'Telegram bridge must guard vague next-step questions before queueing vacation work');
@@ -137,6 +138,10 @@ assert.ok(telegramBotSource.includes('I could not identify which vacation should
 assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_DRAIN_MAX_JOBS'), 'Worker drain must be bounded so one Telegram turn cannot flush stale pending jobs into chat');
 assert.ok(telegramBotSource.includes('telegram_turn_scoped_worker_drain'), 'Telegram bridge must write a target job id before request-path drain');
 assert.ok(timestopperWorkerSource.includes("query.set('jobId', targetJobId)"), 'Worker request-path drain must claim only the target job id when present');
+assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_SUPPRESS_TELEGRAM_DELIVERY'), 'Worker must support no-delivery broker drains without fake Telegram sends');
+assert.ok(timestopperWorkerSource.includes('Telegram response delivery suppressed'), 'Worker no-delivery mode must leave an auditable suppressed-response log');
+assert.ok(workerJobsSource.includes("action === 'shared-sync'"), 'Worker jobs API must handle hosted shared-sync separately from job completion');
+assert.ok(workerJobsSource.includes('webItineraryUrl: publicUrl'), 'Hosted shared-sync must persist the generated public itinerary URL');
 assert.ok(timestopperWorkerSource.includes('spawn(process.execPath, [PRODUCT_GBRAIN_DISPATCH]'), 'Worker must invoke dispatcher through node so deploy chmod cannot cause EACCES');
 assert.ok(timestopperWorkerSource.includes('refusing to mark a worker job completed without itinerary writes'), 'Worker must fail-close when product dispatch is not configured');
 assert.equal(timestopperWorkerSource.includes("nextStep: 'dispatch_to_product_gbrain'"), false, 'Worker must not mark jobs completed on the scaffold path');
