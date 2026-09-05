@@ -6,6 +6,7 @@ import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/
 import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
+  collaboratorStagingCardCheckoutAllowed,
   collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
@@ -86,9 +87,7 @@ function requireCollaboratorContact(body) {
 }
 
 function stagingCardCheckoutAllowed(env = process.env) {
-  if (env.ALLOW_COLLABORATOR_STAGING_CARD_CHECKOUT === 'true') return true;
-  const base = String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || env.VERCEL_PROJECT_PRODUCTION_URL || '').toLowerCase();
-  return base.includes('vacation-staging') || base.includes('staging');
+  return collaboratorStagingCardCheckoutAllowed(env);
 }
 
 function collaboratorAccessAddOns(body = {}, plan = {}) {
