@@ -111,6 +111,11 @@ assert.ok(telegramBotSource.includes('write_mode'), 'Telegram bridge support pre
 assert.ok(telegramBotSource.includes('value === undefined || value === null'), 'Telegram send payload must omit null/undefined optional fields such as reply_markup');
 assert.equal(telegramBotSource.includes('could not queue it yet: ${cleanText(error.message'), false, 'Telegram fallback copy must not echo raw delivery/queue errors to customers');
 assert.ok(telegramBotSource.includes('hit a delivery issue while responding'), 'Telegram fallback copy must use customer-safe delivery failure copy');
+assert.ok(telegramBotSource.includes('keepOrDayEdit'), 'Telegram bridge must treat keep + day-N collaborator cues as concrete itinerary edits');
+const telegramTurnSource = fs.readFileSync(new URL('../api/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
+assert.ok(telegramTurnSource.includes('sessionIsBoundExistingVacation'), 'Hosted Telegram turn must skip first-pass identity for paid collaborator sessions');
+assert.ok(telegramTurnSource.includes('existingTripUpdateReply'), 'Hosted Telegram turn must acknowledge an already-published vacation instead of first-pass copy');
+assert.match(telegramTurnSource, /web itinerary\|keep/, 'Keep cues must classify as itinerary_research_update, not onboarding_setup');
 const supportScreenshotReplySource = telegramBotSource.match(/function supportScreenshotReply\(\) \{[\s\S]+?\n\}/)?.[0] || '';
 assert.ok(supportScreenshotReplySource, 'Telegram bridge must define support screenshot reply copy');
 assert.ok(supportScreenshotReplySource.includes('vacationDirectionClarificationCopy()'), 'Support screenshot reply must use the canonical clarification copy');

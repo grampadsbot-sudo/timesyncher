@@ -5,11 +5,31 @@ import { join } from 'node:path';
 
 import { CURRENT_EULA_VERSION } from '../src/onboarding/current-eula-text.mjs';
 import { acceptEulaPersistent } from '../src/onboarding/eula-persistent-core.mjs';
-import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
+import {
+  LocalJsonStore,
+  PostgresJsonStore,
+  VercelBlobStore,
+  createPersistentStoreFromEnv,
+} from '../src/onboarding/eula-persistent-store.mjs';
 import {
   ensureVacationEulaSession,
   vacationEulaStatus,
 } from '../src/vacation/onboarding.mjs';
+
+assert.ok(
+  createPersistentStoreFromEnv({
+    TIMESYNCHER_EULA_STORE: 'postgres',
+    BLOB_READ_WRITE_TOKEN: 'must-not-win',
+    VERCEL_BLOB_STORE_ID: 'must-not-win',
+  }) instanceof PostgresJsonStore,
+  'TIMESYNCHER_EULA_STORE=postgres must win over Blob env',
+);
+assert.ok(
+  createPersistentStoreFromEnv({ BLOB_READ_WRITE_TOKEN: 'blob-token' }) instanceof VercelBlobStore,
+);
+assert.ok(
+  createPersistentStoreFromEnv({ TIMESYNCHER_ONBOARDING_STORE: mkdtempSync(join(tmpdir(), 'timesyncher-eula-local-')) }) instanceof LocalJsonStore,
+);
 
 const env = {
   TIMESYNCHER_ONBOARDING_STORE: mkdtempSync(join(tmpdir(), 'timesyncher-vacation-eula-')),

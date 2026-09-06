@@ -892,7 +892,8 @@ function isConcreteItineraryEditRequest(value = '') {
   const mentionsEdit = /\b(add|remove|delete|keep|change|update|move|create|fill in|timeline|day\s*\d|days?\s+\d|right dates?|length of (the )?trip|rename|title|description|access|share|member|family|wife|husband|spouse|collaborator|permission|edit rights?|view rights?)\b/.test(normalized);
   const timelineAdd = /\b(add|create|put|include|schedule)\b/.test(normalized)
     && /\b(day\s*\d|days?\s+\d|timeline|family event)\b/.test(normalized);
-  return (mentionsTrip && mentionsEdit) || timelineAdd;
+  const keepOrDayEdit = /\bkeep\b/.test(normalized) && /\b(day\s*\d|days?\s+\d)\b/.test(normalized);
+  return (mentionsTrip && mentionsEdit) || timelineAdd || keepOrDayEdit;
 }
 
 function editAcknowledgement(value = '') {
