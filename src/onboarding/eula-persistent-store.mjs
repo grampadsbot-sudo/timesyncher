@@ -47,9 +47,18 @@ export class LocalJsonStore {
   }
 }
 
+export function isBlobUnreadable(error) {
+  const status = Number(error?.status || error?.statusCode || 0);
+  const message = String(error?.message || '');
+  return status === 403
+    || status === 404
+    || /Failed to fetch blob:\s*(403|404)\b/i.test(message);
+}
+
 export class VercelBlobStore {
-  constructor({ prefix = 'timesyncher-eula' } = {}) {
+  constructor({ prefix = 'timesyncher-eula', blobModule } = {}) {
     this.prefix = prefix.replace(/^\/+|\/+$/g, '');
+    this.blobModule = blobModule || null;
   }
 
   key(key) {
@@ -57,7 +66,7 @@ export class VercelBlobStore {
   }
 
   async blob() {
-    return await import('@vercel/blob');
+    return this.blobModule || await import('@vercel/blob');
   }
 
   async putJson(key, value) {
@@ -72,12 +81,19 @@ export class VercelBlobStore {
   }
 
   async getJson(key) {
-    const { get } = await this.blob();
-    const pathname = this.key(key);
-    const result = await get(pathname, { access: 'private', useCache: false });
-    if (!result || result.statusCode !== 200 || !result.stream) return null;
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text);
+    try {
+      const { get } = await this.blob();
+      const pathname = this.key(key);
+      const result = await get(pathname, { access: 'private', useCache: false });
+      if (!result || result.statusCode !== 200 || !result.stream) return null;
+      const text = await new Response(result.stream).text();
+      return JSON.parse(text);
+    } catch (error) {
+      // Private Blob stores often hide missing or other-store paths as 403, not 404.
+      // Treat those reads as empty so onboarding can recreate the session in this token's store.
+      if (isBlobUnreadable(error)) return null;
+      throw error;
+    }
   }
 
   async putText(key, text, contentType = 'text/plain') {
@@ -96,16 +112,113 @@ export class VercelBlobStore {
     const out = [];
     for (const item of result.blobs || []) {
       if (!item.pathname.endsWith('.json')) continue;
-      const response = await get(item.pathname, { access: 'private', useCache: false });
-      if (response?.statusCode === 200 && response.stream) {
-        out.push(JSON.parse(await new Response(response.stream).text()));
+      try {
+        const response = await get(item.url || item.pathname, { access: 'private', useCache: false });
+        if (response?.statusCode === 200 && response.stream) {
+          out.push(JSON.parse(await new Response(response.stream).text()));
+        }
+      } catch (error) {
+        if (isBlobUnreadable(error)) continue;
+        throw error;
       }
     }
     return out;
   }
 }
 
+export class PostgresJsonStore {
+  constructor(env = process.env) {
+    this.env = env;
+    this.dbPromise = null;
+  }
+
+  databaseUrl() {
+    return this.env.DATABASE_URL || this.env.NEON_DATABASE_URL || this.env.POSTGRES_URL;
+  }
+
+  async db() {
+    if (!this.dbPromise) {
+      this.dbPromise = (async () => {
+        const url = this.databaseUrl();
+        if (!url) throw new Error('DATABASE_URL, NEON_DATABASE_URL, or POSTGRES_URL is required for Postgres EULA store');
+        const { neon } = await import('@neondatabase/serverless');
+        const sql = neon(url);
+        await sql`
+          create table if not exists eula_persistent_store (
+            key text primary key,
+            kind text not null,
+            json_value jsonb,
+            text_value text,
+            content_type text,
+            created_at timestamptz not null default now(),
+            updated_at timestamptz not null default now()
+          )
+        `;
+        return sql;
+      })();
+    }
+    return this.dbPromise;
+  }
+
+  async putJson(key, value) {
+    const sql = await this.db();
+    await sql`
+      insert into eula_persistent_store (key, kind, json_value, text_value, content_type, updated_at)
+      values (${key}, 'json', ${value}, null, 'application/json', now())
+      on conflict (key) do update set
+        kind = excluded.kind,
+        json_value = excluded.json_value,
+        text_value = null,
+        content_type = excluded.content_type,
+        updated_at = now()
+    `;
+    return { key, url: `postgres:eula_persistent_store:${key}`, contentType: 'application/json' };
+  }
+
+  async getJson(key) {
+    const sql = await this.db();
+    const rows = await sql`
+      select json_value
+      from eula_persistent_store
+      where key = ${key} and kind = 'json'
+      limit 1
+    `;
+    return rows[0]?.json_value || null;
+  }
+
+  async putText(key, text, contentType = 'text/plain') {
+    const sql = await this.db();
+    await sql`
+      insert into eula_persistent_store (key, kind, json_value, text_value, content_type, updated_at)
+      values (${key}, 'text', null, ${text}, ${contentType}, now())
+      on conflict (key) do update set
+        kind = excluded.kind,
+        json_value = null,
+        text_value = excluded.text_value,
+        content_type = excluded.content_type,
+        updated_at = now()
+    `;
+    return { key, url: `postgres:eula_persistent_store:${key}`, contentType };
+  }
+
+  async listJson(prefix) {
+    const sql = await this.db();
+    const cleanPrefix = String(prefix || '').replace(/^\/+|\/+$/g, '');
+    const likePrefix = cleanPrefix ? `${cleanPrefix}/%` : '%';
+    const rows = await sql`
+      select json_value
+      from eula_persistent_store
+      where kind = 'json' and key like ${likePrefix}
+      order by updated_at desc
+    `;
+    return rows.map((row) => row.json_value).filter(Boolean);
+  }
+}
+
 export function createPersistentStoreFromEnv(env = process.env) {
+  if (env.TIMESYNCHER_EULA_STORE === 'postgres') {
+    return new PostgresJsonStore(env);
+  }
   if (env.BLOB_READ_WRITE_TOKEN || env.VERCEL_BLOB_STORE_ID || env.TIMESYNCHER_EULA_STORE === 'vercel-blob') {
     return new VercelBlobStore({ prefix: env.TIMESYNCHER_EULA_BLOB_PREFIX || 'timesyncher-eula' });
   }
