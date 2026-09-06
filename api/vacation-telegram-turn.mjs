@@ -441,7 +441,7 @@ async function recordTranscript(db, { session, speaker, direction, body, channel
   return rows[0].id;
 }
 
-function requestKind(text) {
+export function requestKind(text) {
   const lower = cleanText(text, 1000).toLowerCase();
   if (/^(yes|yep|yeah|ok|okay|sure|go ahead|do it|continue|next pass|yes do next pass)[\s.!?]*$/i.test(lower)) {
     return {
@@ -450,7 +450,7 @@ function requestKind(text) {
       intent: 'continue_or_next_pass',
     };
   }
-  if (/\b(next pass|research|update|refine|revise|change|add|remove|swap|rank|compare|web itinerary)\b/i.test(lower)) {
+  if (/\b(next pass|research|update|refine|revise|change|add|remove|swap|rank|compare|web itinerary|keep)\b/i.test(lower)) {
     return {
       requestType: 'itinerary_research_update',
       jobType: 'itinerary_research_update',
@@ -471,6 +471,69 @@ function sessionMetadata(session) {
 function hasVacationIdentity(session) {
   const metadata = sessionMetadata(session);
   return Boolean(cleanText(metadata.vacationName, 160) && cleanText(metadata.unforgettableGoal, 1000));
+}
+
+export function sessionIsBoundExistingVacation(session) {
+  if (!session?.trip_id) return false;
+  const metadata = sessionMetadata(session);
+  const role = String(metadata.telegramRole || '').toLowerCase();
+  const step = String(session.current_step || '').toLowerCase();
+  return role === 'collaborator' || step === 'collaborator_active' || step === 'collaborator_start';
+}
+
+export function publishedTripPublicUrl(trip, env = process.env) {
+  const url = cleanText(publicTripUrl(trip, env), 600);
+  return /\/shared\//i.test(url) ? url : '';
+}
+
+export function existingTripUpdateReply({ title = '', publicUrl = '' } = {}) {
+  const name = cleanText(title, 160) || 'this TimeSyncher Vacation';
+  const url = cleanText(publicUrl, 600);
+  const lines = [
+    `Got it. I am updating the existing TimeSyncher Vacation “${name}” now.`,
+    '',
+  ];
+  if (url) {
+    lines.push('Current website:');
+    lines.push(url);
+    lines.push('');
+  }
+  lines.push('You can keep sending changes or priorities here while I work.');
+  return lines.join('\n');
+}
+
+function withExistingTripUrl(reply, existing) {
+  const url = cleanText(existing?.publicUrl, 600);
+  if (!url || !reply || String(reply).includes(url)) return reply;
+  const name = cleanText(existing?.title, 160);
+  return [
+    reply,
+    '',
+    `This is the existing${name ? ` “${name}”` : ''} vacation website:`,
+    url,
+  ].join('\n');
+}
+
+async function loadBoundExistingTrip(db, session) {
+  if (!session?.trip_id) return null;
+  const bound = sessionIsBoundExistingVacation(session);
+  const rows = await db`
+    select id, title, status, metadata
+    from trips
+    where id = ${session.trip_id}
+    limit 1
+  `;
+  const trip = rows[0];
+  if (!trip) {
+    return bound
+      ? { title: cleanText(sessionMetadata(session).vacationName, 160), publicUrl: '', bound: true }
+      : null;
+  }
+  const publicUrl = publishedTripPublicUrl(trip, process.env);
+  const title = cleanText(trip.title || sessionMetadata(session).vacationName, 160);
+  const published = Boolean(publicUrl || String(trip.status || '').toLowerCase() === 'active');
+  if (!published && !bound) return null;
+  return { title, publicUrl, status: trip.status, bound: true };
 }
 
 export function parseVacationIdentity(text) {
@@ -1727,7 +1790,7 @@ export default async function handler(req, res) {
         telegramUserId,
       }, kind);
       reply = firstTripDetailsAck({ queued });
-    } else if (session?.customer_id && !hasVacationIdentity(session)) {
+    } else if (session?.customer_id && !sessionIsBoundExistingVacation(session) && !hasVacationIdentity(session)) {
       const saved = await saveVacationIdentity(db, session, text);
       if (saved.complete) {
         session = saved.session;
@@ -1826,10 +1889,11 @@ export default async function handler(req, res) {
           telegramTurn: turnDecision,
         };
         const plannedWritesReplied = turnDecision.plannedWritesReplied;
+        const existingTrip = await loadBoundExistingTrip(db, session);
         if (!editGate.skip && editGate.failClosed) {
-          reply = turnDecision.reply;
+          reply = withExistingTripUrl(turnDecision.reply, existingTrip);
         } else if (plannedWritesReplied) {
-          reply = turnDecision.reply;
+          reply = withExistingTripUrl(turnDecision.reply, existingTrip);
         } else {
           const queuedPayload = { ...(body.payload || {}) };
           delete queuedPayload.things;
@@ -1843,8 +1907,11 @@ export default async function handler(req, res) {
           collaboratorAuthorization: authz,
           vacationEditPipeline: editGate.compact,
           liveLockedThings: tripItems,
+          existingTrip,
         }, kind);
-          reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+          reply = existingTrip
+            ? existingTripUpdateReply(existingTrip)
+            : setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
         }
       }
     }

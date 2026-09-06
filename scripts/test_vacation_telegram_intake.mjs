@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
 
+import { FIRST_PASS_LANGUAGE } from '../src/vacation/edit-pipeline.mjs';
 import {
+  existingTripUpdateReply,
   hasTripPlanningDetails,
   parseVacationIdentity,
+  publishedTripPublicUrl,
+  requestKind,
+  sessionIsBoundExistingVacation,
   vacationSupportIntent,
   vacationSupportIntentWithModel,
   vacationSupportReply,
@@ -215,5 +220,32 @@ assert.equal(fallbackMediaQuestion.intent, 'media_upload_question');
 assert.equal(fallbackMediaQuestion.source, 'deterministic_fallback');
 
 assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null);
+
+const keepCue = 'Keep Mon Ami Gabi. Pool morning day 2';
+assert.equal(requestKind(keepCue).requestType, 'itinerary_research_update');
+assert.equal(requestKind(keepCue).intent, 'itinerary_update');
+assert.equal(sessionIsBoundExistingVacation({
+  trip_id: 'aba991d7-894f-4b4c-a548-cb7510581182',
+  current_step: 'collaborator_active',
+  metadata: { telegramRole: 'collaborator' },
+}), true);
+assert.equal(sessionIsBoundExistingVacation({
+  trip_id: 'aba991d7-894f-4b4c-a548-cb7510581182',
+  current_step: 'awaiting_trip_details',
+  metadata: {},
+}), false);
+assert.equal(
+  publishedTripPublicUrl({ metadata: { shareToken: 'las-vegas-vacation-2' } }),
+  'https://travel.timesyncher.com/shared/las-vegas-vacation-2/',
+);
+const existingAck = existingTripUpdateReply({
+  title: 'Alex and Kim Vegas October Escape',
+  publicUrl: 'https://travel.timesyncher.com/shared/las-vegas-vacation-2/',
+});
+assert.match(existingAck, /existing TimeSyncher Vacation/i);
+assert.match(existingAck, /Alex and Kim Vegas October Escape/);
+assert.match(existingAck, /https:\/\/travel\.timesyncher\.com\/shared\/las-vegas-vacation-2\//);
+assert.doesNotMatch(existingAck, FIRST_PASS_LANGUAGE);
+assert.doesNotMatch(existingAck, /first pass|turning the information you sent/i);
 
 console.log('vacation telegram intake regression passed');
