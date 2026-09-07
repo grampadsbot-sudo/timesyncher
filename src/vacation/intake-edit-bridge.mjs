@@ -15,7 +15,7 @@ export const INTAKE_SEAM = Object.freeze({
     'scripts/product-gbrain-dispatch.mjs',
     'scripts/telegram-vacation-intake-bot.mjs',
   ],
-  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Dead re-parse helpers (inferFallbackPlan / planWithGrok / extractQuotedAdds) are removed from trek-* live files. Once the turn gate has planned_writes (plannedWritesReplied), it does not queue a write worker and must not send Moved/Removed success copy — apply is not on that turn (apply_not_on_turn fail-closed). Dry-run and other unapplied receipts store the same no-apply customer_facing_response; planned_writes stay on the receipt. Multi-intent no-apply heard joins every clause, not intents[0] only. Thing-scoped attach fail-closes when thing_id is on another trip (thing_id_cross_trip) or missing from page context (thing_not_visible). Cross-trip copy names another trip; bound-trip stale_trip_media does not. fail_closed_thing_id does not treat bound-trip stale_trip_media as a thing_id stop. Doctor freshness is a live re-exec proof_digest, not a COMMITTED_PROOF_NOW stamp. Live TREK apply is a separate entry (worker applyExistingTripEdit only when a first-pass/non-edit job is queued, or control-vacation --apply --trek-db / --local-snapshot). Committed inspectable dry-run receipt lives at features/proof/vac-verify-telegram-text-single-edit/. Any subsequent customer turn must re-enter the gate. Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
+  remaining: 'pipelineWriteDecision.allowTrekWrite is the only path to a TREK writer; fail-closed sets editApplied false. applyTrekItineraryEdit and applyTrekAgentEdit/FORCE apply pipeline planned_writes only (applyValidatedOnly; no utterance re-parse). Dead re-parse helpers (inferFallbackPlan / planWithGrok / extractQuotedAdds) are removed from trek-* live files. Once the turn gate has planned_writes (plannedWritesReplied), move/remove must not queue a write worker and must not send Moved/Removed success copy — apply is not on that turn (apply_not_on_turn fail-closed). add_thing planned writes keep the same no-apply customer_facing_response on the turn and queue applyExistingTripEdit so collaborator creates can land on TREK tabs. Dry-run and other unapplied receipts store the same no-apply customer_facing_response; planned_writes stay on the receipt. Multi-intent no-apply heard joins every clause, not intents[0] only. Thing-scoped attach fail-closes when thing_id is on another trip (thing_id_cross_trip) or missing from page context (thing_not_visible). Cross-trip copy names another trip; bound-trip stale_trip_media does not. fail_closed_thing_id does not treat bound-trip stale_trip_media as a thing_id stop. Doctor freshness is a live re-exec proof_digest, not a COMMITTED_PROOF_NOW stamp. Live TREK apply is a separate entry (worker applyExistingTripEdit when a first-pass/non-edit or add_thing job is queued, or control-vacation --apply --trek-db / --local-snapshot). Committed inspectable dry-run receipt lives at features/proof/vac-verify-telegram-text-single-edit/. Any subsequent customer turn must re-enter the gate. Thing list is live-locked trip_things for that trip_id, never client payload.things. Bot resolveLiveSession assigns payload.liveSession so unauthorized blocking is not inert; unresolved stays non-blocking. actorFromLiveSession does not infer owner/canEdit from customer_id alone and does not treat staging_bypass as entitlement/canUpload. Verification tests do not mutate production TREK.',
 });
 
 export const TELEGRAM_TURN_NO_APPLY_TEMPLATE = NO_APPLY_TEMPLATE;
@@ -27,6 +27,7 @@ export function telegramTurnNoApplyCopy(heard = 'that edit') {
 export function telegramTurnAfterGate(gate = {}) {
   const planned = gate?.receipt?.planned_writes || [];
   const plannedWritesReplied = !gate?.skip && !gate?.failClosed && planned.length > 0;
+  const createOnlyAdds = plannedWritesReplied && planned.every((row) => row.op === 'add_thing');
   if (!gate?.skip && gate?.failClosed) {
     return {
       plannedWritesReplied: false,
@@ -44,10 +45,10 @@ export function telegramTurnAfterGate(gate = {}) {
     });
     return {
       plannedWritesReplied: true,
-      queueWorker: false,
-      failClosed: true,
+      queueWorker: createOnlyAdds,
+      failClosed: !createOnlyAdds,
       editApplied: false,
-      reason: 'apply_not_on_turn',
+      reason: createOnlyAdds ? 'queue_add_thing_apply' : 'apply_not_on_turn',
       reply: telegramTurnNoApplyCopy(heard),
     };
   }
@@ -364,7 +365,9 @@ export function gateVacationIntakeEdit(raw = {}, options = {}) {
     noThingList
     || receipt.no_ops.some((row) => ['no_match', 'incomplete_move', 'unknown', 'ambiguous_target', 'no_thing_list'].includes(row.reason))
   );
-  const failClosed = integrityFailClosed || unmatchedEdit || noThingList;
+  const createOnlyAdds = receipt.planned_writes.length > 0
+    && receipt.planned_writes.every((row) => row.op === 'add_thing');
+  const failClosed = integrityFailClosed || unmatchedEdit || (noThingList && !createOnlyAdds);
 
   return {
     skip: false,

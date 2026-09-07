@@ -1,0 +1,69 @@
+Kim TG chat 8735301051 (K G) — session 52a7f3f6-61c5-4356-b6fb-f0d019365d3b
+Bound trip after rebind: 26399e64-ddb3-4999-82de-4f160ae9772d (vacation-3 / TREK 197)
+All replies below are on that trip_id. None queued a TREK apply worker. None appear on product tabs.
+
+2026-09-07T18:33:40Z inbound
+Which shared vacation website am I editing right now for Vegas Anniversary?
+2026-09-07T18:33:45Z outbound
+Got it. I am updating the existing TimeSyncher Vacation “Vegas Anniversary” now.
+
+Current website:
+https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+
+You can keep sending notes.
+(queued onboarding_setup 2629c264… — later cancelled; not an add)
+
+2026-09-07T18:36:07Z inbound
+Add restaurant Carbone at Aria Thu Oct 9 9:15pm anniversary to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:36:11Z outbound
+I heard "Add restaurant Carbone at Aria Thu Oct 9 9:15pm anniversary to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", but I did not change the itinerary from this message.
+telegramTurn.reason=apply_not_on_turn queued=null
+(matched Cursor-seeded Neon trip_thing "Carbone at Aria"; turn planned add_thing then refused TREK apply)
+
+2026-09-07T18:38:21Z inbound
+Add Shake Shack near Cosmo/Aria Fri Oct 10 1:30pm snack to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:38:25Z outbound
+I heard "Add Shake Shack near Cosmo/Aria Fri Oct 10 1:30pm snack to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+2026-09-07T18:38:45Z inbound
+Add Shake Shack near Cosmo/Aria Fri Oct 10 1:30pm snack to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:38:50Z outbound
+I heard "Add Shake Shack near Cosmo/Aria Fri Oct 10 1:30pm snack to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+2026-09-07T18:41:55Z inbound
+Add Lotus of Siam Sat Oct 11 12:30pm lunch to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:42:00Z outbound
+I heard "Add Lotus of Siam Sat Oct 11 12:30pm lunch to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+2026-09-07T18:43:14Z inbound
+Add Eggslut Sat Oct 11 9:00pm late bites to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:43:18Z outbound
+I heard "Add Eggslut Sat Oct 11 9:00pm late bites to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+2026-09-07T18:43:40Z inbound
+Add Cosmopolitan shops Fri Oct 10 2:15pm sunscreen and fridge magnet to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:43:45Z outbound
+I heard "Add Cosmopolitan shops Fri Oct 10 2:15pm sunscreen and fridge magnet to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+2026-09-07T18:44:41Z inbound
+Add outbound flight SFO to LAS Thu Oct 9 afternoon arrival landing ~3:50pm bags delayed ~15m to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:44:46Z outbound
+I heard "Add outbound flight SFO to LAS Thu Oct 9 afternoon arrival landing ~3:50pm bags delayed ~15m to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+2026-09-07T18:45:43Z inbound
+Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com/shared/las-vegas-vacation-3/
+2026-09-07T18:45:48Z outbound
+I heard "Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
+telegramTurn.reason=no_match queued=null
+
+Live TREK 197 GET /api/shared/las-vegas-vacation-3 @ 2026-09-07T18:58:21Z
+places: 8869 lodging queue (override Bellagio), 8870 car queue, 8871 rest queue (override Conservatory)
+Carbone / Shake Shack / Lotus / Eggslut / Cosmopolitan shops / SFO-LAS / LAS-SFO: ABSENT
+POST /api/trips/197/places = 401 AUTH_REQUIRED
+TREK 194 vacation-2: same 3-queue pattern; no Kim adds

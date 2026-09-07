@@ -12,6 +12,7 @@ import {
   committedProofDigest,
   compactReceipt,
   evaluateStopRules,
+  inferThingCategory,
   isRealOggAudio,
   isVoiceSurface,
   listFixtureFiles,
@@ -1211,5 +1212,25 @@ assert.equal(bellagio.receipt.trek_state.item_moved, true);
 assert.equal(bellagio.receipt.mode, 'apply_trek_sqlite');
 assert.match(bellagio.receipt.customer_facing_response, /^Moved Bellagio Fountains from day 1 20:00 to day 2/);
 bellagioStore.dispose();
+
+assert.equal(inferThingCategory({ heard: 'Add Carbone at Aria', target: 'Carbone at Aria' }), 'restaurant');
+assert.equal(inferThingCategory({ heard: 'Add Cosmopolitan shops', target: 'Cosmopolitan shops' }), 'store');
+assert.equal(inferThingCategory({ heard: 'Add SFO to LAS Thursday', target: 'SFO to LAS' }), 'flight');
+const collaboratorAdd = runVacationEditPipeline({
+  surface: 'telegram-text',
+  actor: { id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true },
+  pageContext: { kind: 'timeline' },
+  text: 'Add Shake Shack near Cosmo',
+  trip: {
+    trip_id: 'trip-vegas-live-001',
+    title: 'Las Vegas Strip Vacation',
+    status: 'live',
+    items: [{ id: 'thing-bellagio-fountains', trip_id: 'trip-vegas-live-001', title: 'Bellagio Fountains', day: 1 }],
+  },
+}, { persist: false, cwd });
+assert.equal(collaboratorAdd.receipt.planned_writes[0].op, 'add_thing');
+assert.equal(collaboratorAdd.receipt.planned_writes[0].title, 'Shake Shack near Cosmo');
+assert.equal(collaboratorAdd.receipt.planned_writes[0].category, 'restaurant');
+assert.equal(collaboratorAdd.receipt.writes_applied.length, 0);
 
 console.log(`vacation-edit-pipeline verification lever passed (${fixtures.length} fixtures)`);
