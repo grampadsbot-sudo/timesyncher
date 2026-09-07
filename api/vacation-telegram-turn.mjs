@@ -369,6 +369,39 @@ async function downloadMedia(db, req, res) {
   Readable.fromWeb(mediaResponse.body).pipe(res);
 }
 
+export async function attachTelegramUserToCustomer(db, {
+  customerId,
+  telegramUserId,
+  displayName: linkedDisplayName = '',
+  username = '',
+}) {
+  if (!customerId || !telegramUserId) return { attached: false, reason: 'missing_ids' };
+  const releasedAt = new Date().toISOString();
+  await db`
+    update customers
+    set telegram_user_id = null,
+      metadata = metadata || ${{
+        telegramUserIdReleasedAt: releasedAt,
+        telegramUserIdReleasedReason: 'rebound_to_current_onboarding',
+      }},
+      updated_at = now()
+    where telegram_user_id = ${telegramUserId}
+      and id <> ${customerId}
+  `;
+  await db`
+    update customers
+    set telegram_user_id = ${telegramUserId},
+      display_name = coalesce(display_name, ${linkedDisplayName || null}),
+      metadata = metadata || ${{
+        telegramUsername: username || null,
+        telegramLinkedAt: releasedAt,
+      }},
+      updated_at = now()
+    where id = ${customerId}
+  `;
+  return { attached: true };
+}
+
 async function ensureTelegramSession(db, { onboarding, telegramChatId, telegramUserId, user, payload }) {
   const rows = await db`
     insert into telegram_sessions (
@@ -397,17 +430,12 @@ async function ensureTelegramSession(db, { onboarding, telegramChatId, telegramU
   `;
 
   if (onboarding?.customer_id && telegramUserId) {
-    await db`
-      update customers
-      set telegram_user_id = ${telegramUserId},
-        display_name = coalesce(display_name, ${displayName(user)}),
-        metadata = metadata || ${{
-          telegramUsername: user.username || null,
-          telegramLinkedAt: new Date().toISOString(),
-        }},
-        updated_at = now()
-      where id = ${onboarding.customer_id}
-    `;
+    await attachTelegramUserToCustomer(db, {
+      customerId: onboarding.customer_id,
+      telegramUserId,
+      displayName: displayName(user),
+      username: user.username || '',
+    });
     await db`
       update onboarding_sessions
       set status = 'telegram_started',
