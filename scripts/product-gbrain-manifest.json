@@ -18,6 +18,7 @@
     "weather",
     "filesystem-read-product-gbrain",
     "hosted-queue-read-write",
+    "vacation-edit-pipeline",
     "trek-agent-edit-runner",
     "stripe-checkout-addon",
     "telegram-collaborator-invite"

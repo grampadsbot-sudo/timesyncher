@@ -168,6 +168,8 @@ assert.ok(dispatchSource.includes('buildTurnInspector'), 'Dispatcher must produc
 assert.ok(dispatchSource.includes('person_access_question'), 'Dispatcher must classify person-specific vacation access questions as no-write account lookups');
 assert.ok(dispatchSource.includes('linkedTripsConsidered'), 'Turn inspector must expose linked trips considered');
 assert.ok(dispatchSource.includes('leakScan'), 'Turn inspector must expose customer-copy leak scan results');
+assert.ok(dispatchSource.includes('firstPassSetup'), 'onboarding first-pass must be an explicit createNewTrip source');
+assert.ok(dispatchSource.includes('onboarding_setup'), 'first-pass onboarding_setup without a share token must create a new trip instead of vacation-edit-pipeline');
 
 const manifest = JSON.parse(fs.readFileSync('./product-gbrain-manifest.json', 'utf8'));
 const capabilities = buildCapabilityObject(manifest);
@@ -181,6 +183,7 @@ assert.throws(() => assertCustomerRequestAllowed({ request_text: 'Book the hotel
 assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'timesyncher-travel-assistant', 'public-web-search', 'travel.assistant.recommend-itinerary'], capabilities));
 assert.doesNotThrow(() => assertToolingAllowed(['product-gbrain-dispatch', 'timesyncher-travel-assistant', 'trek-agent-edit-runner', 'travel.assistant.grok-trek-agent-edit'], capabilities));
 assert.doesNotThrow(() => assertToolingAllowed(['timesyncher-vacation-telegram-collaborators', 'stripe-checkout-addon', 'telegram-collaborator-invite'], capabilities));
+assert.doesNotThrow(() => assertToolingAllowed(['vacation-edit-pipeline'], capabilities));
 assert.throws(() => assertToolingAllowed(['timesyncher-email-review'], capabilities), /outside allowlist/);
 
 
