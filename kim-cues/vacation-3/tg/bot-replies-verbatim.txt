@@ -62,8 +62,12 @@ Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com
 I heard "Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
 telegramTurn.reason=no_match queued=null
 
-Live TREK 197 GET /api/shared/las-vegas-vacation-3 @ 2026-09-07T18:58:21Z
-places: 8869 lodging queue (override Bellagio), 8870 car queue, 8871 rest queue (override Conservatory)
-Carbone / Shake Shack / Lotus / Eggslut / Cosmopolitan shops / SFO-LAS / LAS-SFO: ABSENT
+SCT shots (this turn; local 11:32–11:44 = 18:32–18:44Z):
+- shared-restaurants.png — vacation-3 Restaurants tab: "No restaurants match those tags."
+- tg-carbone.png — stale 11:32 no-match still names vacation-2 (pre-rebind). 11:35 Carbone add targets vacation-3.
+- tg-replies-latest.png — 11:44 SFO→LAS exact no-match on vacation-3.
+
+Live TREK 197 GET /api/shared/las-vegas-vacation-3 still 3 research-queue places only.
+Carbone / Shake Shack / Lotus / Eggslut / Cosmopolitan shops / SFO-LAS / LAS-SFO: ABSENT from tabs.
 POST /api/trips/197/places = 401 AUTH_REQUIRED
-TREK 194 vacation-2: same 3-queue pattern; no Kim adds
+TREK 194 vacation-2: same 3-queue pattern; no Kim adds. The vacation-2 URL in the 11:32 bubble is leftover chat, not the post-18:33:40 bind.
