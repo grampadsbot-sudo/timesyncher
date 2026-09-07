@@ -138,10 +138,13 @@ assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_DRAIN_MAX_JOBS'),
 assert.ok(telegramBotSource.includes('telegram_turn_scoped_worker_drain'), 'Telegram bridge must write a target job id before request-path drain');
 assert.ok(timestopperWorkerSource.includes("query.set('jobId', targetJobId)"), 'Worker request-path drain must claim only the target job id when present');
 assert.ok(timestopperWorkerSource.includes('spawn(process.execPath, [PRODUCT_GBRAIN_DISPATCH]'), 'Worker must invoke dispatcher through node so deploy chmod cannot cause EACCES');
+assert.ok(timestopperWorkerSource.includes('refusing to mark a worker job completed without itinerary writes'), 'Worker must fail-close when product dispatch is not configured');
+assert.equal(timestopperWorkerSource.includes("nextStep: 'dispatch_to_product_gbrain'"), false, 'Worker must not mark jobs completed on the scaffold path');
 assert.ok(timestopperWorkerSource.includes('findSupportNoWriteDecision'), 'Worker must silently no-op queued jobs that carry support no-write decisions');
 assert.ok(timestopperWorkerSource.includes('support_router_no_write'), 'Worker no-write guard must preserve support router reason');
 assert.ok(timestopperWorkerSource.includes('timestopper-worker-support-no-write-gate'), 'Worker no-write guard must expose deterministic tooling receipt');
 const dispatchSource = fs.readFileSync('./product-gbrain-dispatch.mjs', 'utf8');
+assert.ok(dispatchSource.includes('Hosted shared itinerary sync is not configured'), 'Dispatcher must fail-close hosted sync when API base or worker token is missing');
 assert.ok(dispatchSource.includes('function grokRouterDecision'), 'Product dispatcher must call the Grok intent router before deterministic fallback classification');
 assert.ok(dispatchSource.includes('function currentTurnRouterDecisionModelFirst'), 'Product dispatcher must expose the model-first router entrypoint');
 assert.ok(dispatchSource.includes('function grokCustomerRender'), 'Product dispatcher must let Grok render bounded customer answers from resolved fact packets');
