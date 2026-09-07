@@ -686,7 +686,15 @@ function classifyIntent(chunk, { surface, pageKind, index }) {
     };
   }
   if (/\b(add|include|schedule)\b/.test(lower)) {
-    return { id: `intent-${index + 1}`, kind: 'add', heard, target: extractQuoted(chunk) || extractNamedTarget(chunk), surface, pageKind };
+    return {
+      id: `intent-${index + 1}`,
+      kind: 'add',
+      heard,
+      target: extractAddTarget(chunk),
+      destination: extractDestination(chunk),
+      surface,
+      pageKind,
+    };
   }
   return { id: `intent-${index + 1}`, kind: 'unknown', heard, target, surface, pageKind };
 }
@@ -741,6 +749,10 @@ function decideIntent(intent, { input, items, working, apply }) {
       candidates: [],
       response: collaboratorDeniedCopy(),
     };
+  }
+
+  if (intent.kind === 'add') {
+    return decideAdd(intent, { input, apply });
   }
 
   const match = matchIntent(intent, items);
@@ -877,6 +889,74 @@ function decideMediaUpload(intent, input) {
   };
 }
 
+function decideAdd(intent, { input, apply }) {
+  const heard = intent.heard;
+  const title = cleanAddTitle(intent.target);
+  if (!title) {
+    return {
+      kind: intent.kind,
+      heard,
+      matchStatus: 'no_match',
+      stop: 'no_match',
+      validation: 'rejected',
+      write: null,
+      applied: false,
+      candidates: [],
+      response: noMatchCopy(heard),
+    };
+  }
+  const destination = intent.destination || inferAddDay(intent, input) || 'the itinerary';
+  const write = {
+    op: 'add_thing',
+    trip_id: input.trip.trip_id,
+    item_id: null,
+    title,
+    to: destination,
+    category: inferThingCategory({ ...intent, destination }),
+  };
+  return {
+    kind: intent.kind,
+    heard,
+    matchStatus: 'matched',
+    validation: 'validated',
+    stop: null,
+    write,
+    applied: Boolean(apply && write),
+    candidates: [],
+    response: successCopy(intent, { title, day: 1, location: destination }, write),
+  };
+}
+
+export function inferThingCategory(intent = {}) {
+  const text = `${intent.heard || ''} ${intent.target || ''} ${intent.destination || ''}`.toLowerCase();
+  if (
+    /\b(flight|flights|depart|departure|airport|airfare|airline)\b/.test(text)
+    || /\b[a-z]{3}\s*(?:→|->|to)\s*[a-z]{3}\b/.test(text)
+  ) {
+    return 'flight';
+  }
+  if (/\b(shop|shops|store|stores|mall|shopping)\b/.test(text)) return 'store';
+  if (/\b(hotel|resort|check[- ]?in|lodging)\b/.test(text) && !/\b(restaurant|dinner|lunch|eat|food)\b/.test(text)) {
+    return 'hotel';
+  }
+  return 'restaurant';
+}
+
+function inferAddDay(intent, input) {
+  const text = `${intent.heard || ''} ${intent.target || ''}`.toLowerCase();
+  const day = text.match(/\bday\s*(\d+)/);
+  if (day) return `day ${day[1]}`;
+  const itemDays = (Array.isArray(input.trip?.items) ? input.trip.items : [])
+    .map((item) => Number(item.day) || 0)
+    .filter((value) => value > 0);
+  const knownLast = Math.max(0, ...itemDays);
+  if (/\b(return|last day|final day|oct(?:ober)?\s*12|sunday)\b/.test(text)) {
+    return `day ${knownLast >= 2 ? knownLast : 3}`;
+  }
+  if (/\b(outbound|oct(?:ober)?\s*9|thursday|thu)\b/.test(text)) return 'day 1';
+  return '';
+}
+
 function decideSplitTrip(intent, input) {
   const rows = input.trip.trek_rows || [];
   const wanted = normalizeName(intent.target || input.trip.title);
@@ -990,6 +1070,7 @@ function planWrite(intent, item, input) {
       item_id: null,
       title: intent.target,
       to: intent.destination || locationOf(item),
+      category: inferThingCategory(intent),
     };
   }
   return null;
@@ -1015,6 +1096,7 @@ function applyWrite(trip, write) {
       trip_id: trip.trip_id,
       title: write.title,
       day: Number(String(write.to || '').match(/day\s*(\d+)/i)?.[1] || 1),
+      category: write.category || inferThingCategory({ target: write.title, heard: write.title }),
     });
   } else if (write.op === 'attach_media') {
     trip.media = [...(trip.media || []), { ...write }];
@@ -1052,6 +1134,21 @@ function locationOf(item) {
 function extractQuoted(value) {
   const match = String(value || '').match(/["'“”]([^"'“”]{2,160})["'“”]/);
   return match?.[1]?.trim() || '';
+}
+
+function cleanAddTitle(value) {
+  return cleanTarget(String(value || '')
+    .replace(/\s+to\s+https?:\/\/\S+$/i, '')
+    .replace(/^\s*(?:restaurant|store|shops?|flight|hotel|the)\s+/i, '')
+    .replace(/\s+(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b.*$/i, ''));
+}
+
+function extractAddTarget(value) {
+  const quoted = extractQuoted(value);
+  if (quoted) return cleanAddTitle(quoted);
+  const flight = String(value || '').match(/\b([A-Za-z]{3})\s*(?:→|->|to)\s*([A-Za-z]{3})\b/);
+  if (flight) return `${flight[1].toUpperCase()} to ${flight[2].toUpperCase()}`;
+  return cleanAddTitle(extractNamedTarget(value));
 }
 
 function extractNamedTarget(value) {

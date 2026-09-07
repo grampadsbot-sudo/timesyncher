@@ -1887,7 +1887,18 @@ async function buildArtifacts(job, manifest) {
       createNewTrip: false,
     };
   }
-  const createNewTrip = Boolean(payload.createNewTrip || payload.create_new_trip || job.createNewTrip || job.create_new_trip || isExplicitNewVacationRequest(ownRequestText));
+  const existingShareToken = shareTokenFromContext(job, input, payload, ownRequestText);
+  const firstPassSetup = ['onboarding_setup', 'trip_intake'].includes(String(job.request_type || job.job_type || input.requestType || ''))
+    && !existingShareToken
+    && !text(trip.publicUrl || trip.public_url || payload.webItineraryUrl, 500);
+  const createNewTrip = Boolean(
+    payload.createNewTrip
+    || payload.create_new_trip
+    || job.createNewTrip
+    || job.create_new_trip
+    || firstPassSetup
+    || isExplicitNewVacationRequest(ownRequestText),
+  );
   if (!createNewTrip && isConcreteItineraryEditRequest(ownRequestText)) {
     const trekEdit = applyExistingTripEdit(job, {
       requestText,

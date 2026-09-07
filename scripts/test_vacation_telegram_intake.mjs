@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import { FIRST_PASS_LANGUAGE } from '../src/vacation/edit-pipeline.mjs';
 import {
+  attachTelegramUserToCustomer,
   existingTripUpdateReply,
   hasTripPlanningDetails,
   parseVacationIdentity,
@@ -247,5 +248,27 @@ assert.match(existingAck, /Alex and Kim Vegas October Escape/);
 assert.match(existingAck, /https:\/\/travel\.timesyncher\.com\/shared\/las-vegas-vacation-2\//);
 assert.doesNotMatch(existingAck, FIRST_PASS_LANGUAGE);
 assert.doesNotMatch(existingAck, /first pass|turning the information you sent/i);
+
+const attachCalls = [];
+const fakeDb = (strings, ...values) => {
+  attachCalls.push({ sql: strings.join('?'), values });
+  return [];
+};
+const rebound = await attachTelegramUserToCustomer(fakeDb, {
+  customerId: 'new-alex',
+  telegramUserId: 'telegram:6373624711',
+  displayName: 'C D',
+  username: '',
+});
+assert.equal(rebound.attached, true);
+assert.equal(attachCalls.length, 2);
+assert.match(attachCalls[0].sql, /telegram_user_id = null/);
+assert.match(attachCalls[0].sql, /id <>/);
+assert.equal(attachCalls[0].values[1], 'telegram:6373624711');
+assert.equal(attachCalls[0].values[2], 'new-alex');
+assert.match(attachCalls[1].sql, /set telegram_user_id = \?/);
+assert.equal(attachCalls[1].values[0], 'telegram:6373624711');
+assert.equal(attachCalls[1].values[attachCalls[1].values.length - 1], 'new-alex');
+assert.equal(await attachTelegramUserToCustomer(fakeDb, { customerId: '', telegramUserId: 'telegram:1' }).then((row) => row.attached), false);
 
 console.log('vacation telegram intake regression passed');

@@ -26,7 +26,7 @@ The shared edit pipeline (`vacation-edit-pipeline`) is the target for Telegram t
 - Capture the user action and the resulting state, not only the final reply.
 - Mutation proof for product state is a TREK id-set and row-count before vs after (`--apply --trek-db`). A local fixture hash is labeled `apply_local_snapshot` and is not product state.
 - No-match wording must be exact: `I heard "...", couldn't find a match, what do you mean?`
-- Dry-run and other unapplied receipts store the no-apply sentence (`I heard "…", but I did not change the itinerary from this message.`). `planned_writes` still names the validated change. Moved/Removed success copy is only honest after writes were applied (`--apply`). Telegram `plannedWritesReplied` uses the same no-apply copy (`apply_not_on_turn`). A reply that claims an update without TREK id-set movement is a failure. Before/after hashes stay equal on dry-run.
+- Dry-run and other unapplied receipts store the no-apply sentence (`I heard "…", but I did not change the itinerary from this message.`). `planned_writes` still names the validated change. Moved/Removed success copy is only honest after writes were applied (`--apply`). Telegram `plannedWritesReplied` uses the same no-apply copy (`apply_not_on_turn` for move/remove; add_thing also keeps that copy while queuing `applyExistingTripEdit`). A reply that claims an update without TREK id-set movement is a failure. Before/after hashes stay equal on dry-run.
 - Existing-itinerary edits must not use first-pass language such as "turning this into an itinerary."
 - Record the feature ID, surface, and entry point with every artifact.
 - Committed inspectable dry-run receipts live under [features/proof/](./proof/) for `telegram-text-single-edit`, `thing-media-stale` (cross-trip `thing_id`, stop `thing_id_cross_trip`), and `thing-media-visible`. Doctor re-execs each fixture and requires `proof_digest` (and before/after hashes) to match the live run. A rewritten `generated_at` / event `ts` is not freshness. Those trees are dry-run: `prove_state_movement` is hold; TREK apply is `control-vacation --apply --trek-db` or worker first-pass, not the telegram `planned_writes` turn.
@@ -79,10 +79,10 @@ Named in feature files but not a vacation-edit-pipeline golden (do not fake):
 
 ## Live TREK apply entries
 
-Telegram `plannedWritesReplied` does not queue a write worker and must not send Moved/Removed success copy. Apply is not on that turn (`apply_not_on_turn` fail-closed). A second customer message must re-enter the gate.
+Telegram move/remove `plannedWritesReplied` does not queue a write worker and must not send Moved/Removed success copy. Apply is not on that turn (`apply_not_on_turn` fail-closed). `add_thing` planned writes keep the no-apply turn copy and queue `applyExistingTripEdit`. A second customer message must re-enter the gate.
 
 Separate apply entries (do not invent a second writer on the turn):
 
-- Worker `applyExistingTripEdit` in `scripts/product-gbrain-dispatch.mjs` — only when a job is queued (first-pass / non-edit setup). Re-gates; writes `planned_writes` only.
+- Worker `applyExistingTripEdit` in `scripts/product-gbrain-dispatch.mjs` — when a job is queued (first-pass / non-edit setup, or collaborator add_thing). Re-gates; writes `planned_writes` only.
 - Verification lever `control-vacation apply --trek-db <path>` (local TREK SQLite id-set) or `apply --local-snapshot` (JSON hold, not product state).
 - Shared-page `POST vacation_edit` on `api/vacation-itinerary.mjs` is gate-only (returns `plannedWrites`; fail-closed is 403).

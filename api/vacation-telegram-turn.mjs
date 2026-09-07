@@ -369,6 +369,39 @@ async function downloadMedia(db, req, res) {
   Readable.fromWeb(mediaResponse.body).pipe(res);
 }
 
+export async function attachTelegramUserToCustomer(db, {
+  customerId,
+  telegramUserId,
+  displayName: linkedDisplayName = '',
+  username = '',
+}) {
+  if (!customerId || !telegramUserId) return { attached: false, reason: 'missing_ids' };
+  const releasedAt = new Date().toISOString();
+  await db`
+    update customers
+    set telegram_user_id = null,
+      metadata = metadata || ${{
+        telegramUserIdReleasedAt: releasedAt,
+        telegramUserIdReleasedReason: 'rebound_to_current_onboarding',
+      }},
+      updated_at = now()
+    where telegram_user_id = ${telegramUserId}
+      and id <> ${customerId}
+  `;
+  await db`
+    update customers
+    set telegram_user_id = ${telegramUserId},
+      display_name = coalesce(display_name, ${linkedDisplayName || null}),
+      metadata = metadata || ${{
+        telegramUsername: username || null,
+        telegramLinkedAt: releasedAt,
+      }},
+      updated_at = now()
+    where id = ${customerId}
+  `;
+  return { attached: true };
+}
+
 async function ensureTelegramSession(db, { onboarding, telegramChatId, telegramUserId, user, payload }) {
   const rows = await db`
     insert into telegram_sessions (
@@ -397,17 +430,12 @@ async function ensureTelegramSession(db, { onboarding, telegramChatId, telegramU
   `;
 
   if (onboarding?.customer_id && telegramUserId) {
-    await db`
-      update customers
-      set telegram_user_id = ${telegramUserId},
-        display_name = coalesce(display_name, ${displayName(user)}),
-        metadata = metadata || ${{
-          telegramUsername: user.username || null,
-          telegramLinkedAt: new Date().toISOString(),
-        }},
-        updated_at = now()
-      where id = ${onboarding.customer_id}
-    `;
+    await attachTelegramUserToCustomer(db, {
+      customerId: onboarding.customer_id,
+      telegramUserId,
+      displayName: displayName(user),
+      username: user.username || '',
+    });
     await db`
       update onboarding_sessions
       set status = 'telegram_started',
@@ -1398,6 +1426,42 @@ async function queueSetupRequest(db, session, text, payload, kind) {
   return { requestId, jobId: jobRows[0].id };
 }
 
+async function persistPlannedAddThings(db, session, writes = []) {
+  const adds = (Array.isArray(writes) ? writes : []).filter((write) => write?.op === 'add_thing' && cleanText(write.title, 240));
+  const inserted = [];
+  for (const write of adds) {
+    const title = cleanText(write.title, 240);
+    const existing = await db`
+      select id
+      from trip_things
+      where trip_id = ${session.trip_id}
+        and lower(title) = ${title.toLowerCase()}
+      limit 1
+    `;
+    if (existing[0]) continue;
+    const rows = await db`
+      insert into trip_things (
+        trip_id, category, title, description, location, metadata
+      )
+      values (
+        ${session.trip_id},
+        ${cleanText(write.category || 'restaurant', 80) || 'restaurant'},
+        ${title},
+        ${'Added from collaborator Telegram note'},
+        ${JSON.stringify({ label: write.to || null })}::jsonb,
+        ${JSON.stringify({
+          source: 'telegram_add_thing',
+          day: write.to || null,
+          category: write.category || 'restaurant',
+        })}::jsonb
+      )
+      returning id, title, location, metadata
+    `;
+    if (rows[0]) inserted.push(rows[0]);
+  }
+  return inserted;
+}
+
 async function canQueueTelegramModification(db, session, { telegramChatId, telegramUserId, kind }) {
   if (!session?.customer_id || !session?.trip_id) return { allowed: false, reason: 'unlinked_session' };
   if (kind?.requestType !== 'itinerary_research_update') return { allowed: true, reason: 'owner_onboarding_or_intake' };
@@ -1894,6 +1958,36 @@ export default async function handler(req, res) {
           reply = withExistingTripUrl(turnDecision.reply, existingTrip);
         } else if (plannedWritesReplied) {
           reply = withExistingTripUrl(turnDecision.reply, existingTrip);
+          if (turnDecision.queueWorker) {
+            const persistedAdds = await persistPlannedAddThings(db, session, editGate.receipt?.planned_writes || []);
+            let queuedThings = tripItems;
+            if (persistedAdds.length) {
+              queuedThings = [
+                ...tripItems,
+                ...mapLiveLockedThingRows(persistedAdds, session.trip_id),
+              ];
+            }
+            const queuedPayload = { ...(body.payload || {}) };
+            delete queuedPayload.things;
+            queued = await queueSetupRequest(db, session, text, {
+              ...queuedPayload,
+              vacationName: cleanText(sessionMetadata(session).vacationName, 160) || null,
+              unforgettableGoal: cleanText(sessionMetadata(session).unforgettableGoal, 1000) || null,
+              inboundTranscriptId,
+              telegramChatId,
+              telegramUserId,
+              collaboratorAuthorization: authz,
+              vacationEditPipeline: editGate.compact,
+              liveLockedThings: queuedThings,
+              plannedWrites: editGate.receipt?.planned_writes || [],
+              applyExistingTripEdit: true,
+              existingTrip,
+            }, kind);
+            replyPayload = {
+              ...replyPayload,
+              persistedAdds: persistedAdds.map((row) => row.title),
+            };
+          }
         } else {
           const queuedPayload = { ...(body.payload || {}) };
           delete queuedPayload.things;

@@ -39,6 +39,10 @@ export function itemsFromValidatedWrites(writes = []) {
         to: write.to,
         from: write.from,
         replacement: write.to,
+        category: write.category || '',
+        time: write.time || '',
+        address: write.address || '',
+        summary: write.summary || '',
       };
     })
     .filter((item) => item.op && (item.title || item.item_id));

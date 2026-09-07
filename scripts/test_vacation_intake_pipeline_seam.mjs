@@ -287,6 +287,74 @@ assert.deepEqual(itemsFromValidatedWrites([{
   item_id: 'thing-bellagio-fountains',
   to: 'day 2',
 }]).map((row) => ({ op: row.op, day: row.day })), [{ op: 'move_thing', day: 2 }]);
+assert.deepEqual(itemsFromValidatedWrites([{
+  op: 'add_thing',
+  title: 'Carbone at Aria',
+  to: 'day 1',
+  category: 'restaurant',
+}]).map((row) => ({ op: row.op, day: row.day, category: row.category })), [{
+  op: 'add_thing',
+  day: 1,
+  category: 'restaurant',
+}]);
+
+const addGate = gateTelegramIntakeEdit({
+  text: 'Add Carbone at Aria',
+  actor: actorFromIntake({ id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true }),
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+}, { persist: false });
+assert.equal(addGate.failClosed, false);
+assert.equal(addGate.receipt.planned_writes[0].op, 'add_thing');
+assert.equal(addGate.receipt.planned_writes[0].title, 'Carbone at Aria');
+assert.equal(addGate.receipt.planned_writes[0].category, 'restaurant');
+const addTurn = telegramTurnAfterGate(addGate);
+assert.equal(addTurn.plannedWritesReplied, true);
+assert.equal(addTurn.queueWorker, true);
+assert.equal(addTurn.editApplied, false);
+assert.equal(addTurn.reason, 'queue_add_thing_apply');
+assert.equal(addTurn.reply, telegramTurnNoApplyCopy('Add Carbone at Aria'));
+assert.doesNotMatch(addTurn.reply, /^Added /);
+
+const flightGate = gateTelegramIntakeEdit({
+  text: 'Add SFO to LAS Thursday October 9 departing around 3:50pm',
+  actor: actorFromIntake({ id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true }),
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+}, { persist: false });
+assert.equal(flightGate.receipt.planned_writes[0].op, 'add_thing');
+assert.equal(flightGate.receipt.planned_writes[0].title, 'SFO to LAS');
+assert.equal(flightGate.receipt.planned_writes[0].category, 'flight');
+
+const storeGate = gateTelegramIntakeEdit({
+  text: 'Add Cosmopolitan shops',
+  actor: actorFromIntake({ id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true }),
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+}, { persist: false });
+assert.equal(storeGate.receipt.planned_writes[0].category, 'store');
+assert.equal(telegramTurnAfterGate(storeGate).queueWorker, true);
+
+const kimCarbone = gateTelegramIntakeEdit({
+  text: 'Add restaurant Carbone at Aria Thu Oct 9 9:15pm anniversary to https://travel.timesyncher.com/shared/las-vegas-vacation-3/',
+  actor: actorFromIntake({ id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true }),
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+}, { persist: false });
+assert.equal(kimCarbone.receipt.planned_writes[0].title, 'Carbone at Aria');
+assert.equal(kimCarbone.receipt.planned_writes[0].category, 'restaurant');
+assert.equal(telegramTurnAfterGate(kimCarbone).reason, 'queue_add_thing_apply');
+
+const kimReturn = gateTelegramIntakeEdit({
+  text: 'Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com/shared/las-vegas-vacation-3/',
+  actor: actorFromIntake({ id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true }),
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+}, { persist: false });
+assert.equal(kimReturn.failClosed, false);
+assert.equal(kimReturn.receipt.planned_writes[0].op, 'add_thing');
+assert.equal(kimReturn.receipt.planned_writes[0].title, 'LAS to SFO');
+assert.equal(kimReturn.receipt.planned_writes[0].category, 'flight');
+assert.equal(kimReturn.receipt.planned_writes[0].to, 'day 3');
+const kimReturnTurn = telegramTurnAfterGate(kimReturn);
+assert.equal(kimReturnTurn.queueWorker, true);
+assert.equal(kimReturnTurn.reason, 'queue_add_thing_apply');
+assert.doesNotMatch(kimReturnTurn.reply, /couldn't find a match/);
 
 const unpaidStagingGate = gateMediaUploadIntake({
   text: 'Upload this video to the Vegas vacation',
@@ -379,12 +447,15 @@ assert.match(turn, /resolve_live_session/);
 assert.match(turn, /selectLiveLockedTripThings/);
 assert.match(turn, /plannedWritesReplied/);
 assert.match(turn, /telegramTurnAfterGate/);
+assert.match(turn, /persistPlannedAddThings/);
+assert.match(turn, /applyExistingTripEdit: true/);
 assert.doesNotMatch(turn, /canUpload:\s*true/);
 assert.doesNotMatch(turn, /source: 'staging_bypass'/);
 assert.doesNotMatch(turn, /allowed: true, source: 'staging_bypass'/);
 const editGateBlock = turn.slice(turn.lastIndexOf('const editGate = gateTelegramIntakeEdit'));
 assert.match(editGateBlock, /else if \(plannedWritesReplied\)/);
-assert.ok(editGateBlock.indexOf('else if (plannedWritesReplied)') < editGateBlock.indexOf('queueSetupRequest'), 'planned_writes reply must not queue a write worker');
+assert.ok(editGateBlock.indexOf('else if (plannedWritesReplied)') < editGateBlock.indexOf('queueSetupRequest'), 'planned_writes reply must stay ahead of the default queue');
+assert.match(editGateBlock, /turnDecision\.queueWorker/);
 assert.match(editGateBlock, /turnDecision\.reply/);
 assert.doesNotMatch(editGateBlock, /plannedWritesReplied\) \{\s*reply = editGate\.receipt\.customer_facing_response/);
 

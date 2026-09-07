@@ -119,7 +119,7 @@ A dry-run receipt is green only when stop rules are `pass` or `hold`:
 - staging_bypass is not entitlement proof and must not set canUpload
 - customer_id alone is not owner/canEdit
 - trek-* live files must not keep inferFallbackPlan / planWithGrok / extractQuotedAdds
-- once the turn gate has planned_writes, do not queue a write worker and do not send Moved/Removed success copy (apply_not_on_turn)
+- once the turn gate has move/remove planned_writes, do not queue a write worker and do not send Moved/Removed success copy (apply_not_on_turn). add_thing planned writes keep no-apply turn copy and queue applyExistingTripEdit
 - dry-run receipt customer_facing_response must use the same no-apply copy; do not store Moved/Removed when writes_applied is empty
 - live TREK apply is a separate entry (queued first-pass worker or control-vacation --apply --trek-db / --local-snapshot), not the telegram turn
 - doctor must see committed proofs at features/proof/vac-verify-telegram-text-single-edit/, vac-verify-thing-media-stale/, and vac-verify-thing-media-visible/
