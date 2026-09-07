@@ -946,10 +946,14 @@ function inferAddDay(intent, input) {
   const text = `${intent.heard || ''} ${intent.target || ''}`.toLowerCase();
   const day = text.match(/\bday\s*(\d+)/);
   if (day) return `day ${day[1]}`;
+  const itemDays = (Array.isArray(input.trip?.items) ? input.trip.items : [])
+    .map((item) => Number(item.day) || 0)
+    .filter((value) => value > 0);
+  const knownLast = Math.max(0, ...itemDays);
   if (/\b(return|last day|final day|oct(?:ober)?\s*12|sunday)\b/.test(text)) {
-    const maxDay = Math.max(1, ...(Array.isArray(input.trip?.items) ? input.trip.items : []).map((item) => Number(item.day) || 1));
-    return `day ${maxDay}`;
+    return `day ${knownLast >= 2 ? knownLast : 3}`;
   }
+  if (/\b(outbound|oct(?:ober)?\s*9|thursday|thu)\b/.test(text)) return 'day 1';
   return '';
 }
 

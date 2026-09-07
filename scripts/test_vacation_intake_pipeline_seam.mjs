@@ -341,6 +341,21 @@ assert.equal(kimCarbone.receipt.planned_writes[0].title, 'Carbone at Aria');
 assert.equal(kimCarbone.receipt.planned_writes[0].category, 'restaurant');
 assert.equal(telegramTurnAfterGate(kimCarbone).reason, 'queue_add_thing_apply');
 
+const kimReturn = gateTelegramIntakeEdit({
+  text: 'Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com/shared/las-vegas-vacation-3/',
+  actor: actorFromIntake({ id: 'collaborator-kim-paid', role: 'telegram_collaborator', authorized: true, canEdit: true }),
+  trip: { trip_id: 'trip-vegas-live-001', title: 'Las Vegas Strip Vacation', status: 'live', items: vegasItems },
+}, { persist: false });
+assert.equal(kimReturn.failClosed, false);
+assert.equal(kimReturn.receipt.planned_writes[0].op, 'add_thing');
+assert.equal(kimReturn.receipt.planned_writes[0].title, 'LAS to SFO');
+assert.equal(kimReturn.receipt.planned_writes[0].category, 'flight');
+assert.equal(kimReturn.receipt.planned_writes[0].to, 'day 3');
+const kimReturnTurn = telegramTurnAfterGate(kimReturn);
+assert.equal(kimReturnTurn.queueWorker, true);
+assert.equal(kimReturnTurn.reason, 'queue_add_thing_apply');
+assert.doesNotMatch(kimReturnTurn.reply, /couldn't find a match/);
+
 const unpaidStagingGate = gateMediaUploadIntake({
   text: 'Upload this video to the Vegas vacation',
   actor: unpaidStagingActor,

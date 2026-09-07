@@ -61,6 +61,7 @@ Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com
 2026-09-07T18:45:48Z outbound
 I heard "Add return flight LAS to SFO Sun Oct 12 midday to https://travel.timesyncher.com/shared/las-vegas-vacation-3/", couldn't find a match, what do you mean?
 telegramTurn.reason=no_match queued=null
+(same add-requires-match fail as SFO→LAS. Neon already had seeded "LAS → SFO Sunday Oct 12" but matcher did not treat that as the target. New pipeline: add_thing title=LAS to SFO category=flight to=day 3 queue_add_thing_apply.)
 
 SCT shots (this turn; local 11:32–11:44 = 18:32–18:44Z):
 - shared-restaurants.png — vacation-3 Restaurants tab: "No restaurants match those tags."
