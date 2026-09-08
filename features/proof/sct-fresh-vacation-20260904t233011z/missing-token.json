@@ -8,7 +8,7 @@
     "TIMESYNCHER_INTAKE_TOKEN"
   ],
   "why": "vacation-staging admin create and vacation-request both 401 without the matching header. This Cloud Agent env does not have those secrets. Staging has them configured (401 Unauthorized, not 503 not configured).",
-  "last_checked_at": "2026-09-08T22:36:52Z",
+  "last_checked_at": "2026-09-08T22:38:16Z",
   "agent_env_still": {
     "TIMESYNCHER_ADMIN_TOKEN": "MISSING",
     "TIMESYNCHER_INTAKE_TOKEN": "MISSING",
@@ -17,7 +17,7 @@
   },
   "latest_probes": {
     "alias_admin_create": 401,
-    "board_admin_create": 401,
+    "board_admin_create": 307,
     "alias_vacation_request": 401,
     "alias_checkout_config": 503
   },
@@ -357,6 +357,7 @@
     "2026-09-08T21:49:17Z",
     "2026-09-08T22:05:06Z",
     "2026-09-08T22:20:51Z",
-    "2026-09-08T22:36:52Z"
+    "2026-09-08T22:36:52Z",
+    "2026-09-08T22:38:16Z"
   ]
 }
