@@ -125,6 +125,36 @@ export function validateReceiptForActivation({ session, receipt, requiredEulaVer
   return { ok: errors.length === 0, errors, receiptSha256: expected };
 }
 
+export async function activationStatusForSessionPersistent(store, sessionId, requiredEulaVersion) {
+  const session = await loadSessionPersistent(store, sessionId);
+  if (!session || session.unavailableReason) {
+    return {
+      ok: false,
+      sessionId,
+      requiredEulaVersion,
+      errors: [session?.unavailableReason || 'no valid accepted EULA receipt found'],
+    };
+  }
+  const receipt = await store.getJson(receiptKey(session.sessionId));
+  const validation = validateReceiptForActivation({ session, receipt, requiredEulaVersion });
+  if (validation.ok) {
+    return {
+      ok: true,
+      clientKey: session.clientKey,
+      sessionId: session.sessionId,
+      receiptSha256: validation.receiptSha256,
+      requiredEulaVersion,
+    };
+  }
+  return {
+    ok: false,
+    clientKey: session.clientKey,
+    sessionId: session.sessionId,
+    requiredEulaVersion,
+    errors: validation.errors?.length ? validation.errors : ['no valid accepted EULA receipt found'],
+  };
+}
+
 export async function activationStatusPersistent(store, clientKey, requiredEulaVersion) {
   const sessions = (await store.listJson('sessions')).filter((s) => s.clientKey === clientKey).sort((a,b) => String(b.acceptedAt || b.createdAt || '').localeCompare(String(a.acceptedAt || a.createdAt || '')));
   for (const session of sessions) {

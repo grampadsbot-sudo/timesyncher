@@ -1814,7 +1814,10 @@ async function syncHostedSharedItinerary(job, artifacts) {
   const apiBase = hostedApiBase();
   const workerToken = process.env.TIMESYNCHER_WORKER_TOKEN || '';
   const token = text(artifacts.trekSync?.token || '', 180);
-  if (!apiBase || !workerToken || !token) return { skipped: true };
+  if (!apiBase || !workerToken) {
+    throw new Error('Hosted shared itinerary sync is not configured (TIMESYNCHER_API_BASE_URL / TIMESYNCHER_WORKER_TOKEN).');
+  }
+  if (!token) return { skipped: true, reason: 'missing_trek_share_token' };
 
   const res = await fetch(`${apiBase}/api/worker-jobs`, {
     method: 'POST',

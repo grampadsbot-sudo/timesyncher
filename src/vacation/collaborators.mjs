@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import {
-  activationStatusPersistent,
+  activationStatusForSessionPersistent,
   createOnboardingSessionPersistent,
   loadDefaultEulaText,
 } from '../onboarding/eula-persistent-core.mjs';
@@ -139,9 +139,9 @@ export async function markCollaboratorInvitePaid(db, { inviteId, token = '', met
 export async function ensureCollaboratorEulaSession(invite, token, env = process.env) {
   const store = createPersistentStoreFromEnv(env);
   const sessionId = collaboratorEulaSessionId(invite);
-  const status = await activationStatusPersistent(
+  const status = await activationStatusForSessionPersistent(
     store,
-    collaboratorEulaClientKey(invite),
+    sessionId,
     env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
   );
   if (status.ok) {
@@ -242,7 +242,7 @@ export async function acceptCollaboratorInvite(db, {
       ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id || null},
       ${telegramChatId || null}, ${telegramUserId || null}, ${displayName || null},
       ${invite.plan_code}, ${invite.scope}, 'active',
-      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
+      ${env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION},
       ${{
         source: 'telegram_collaborator_invite',
         telegramUsername: username || null,

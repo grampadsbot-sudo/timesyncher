@@ -47,9 +47,18 @@ export class LocalJsonStore {
   }
 }
 
+export function isBlobUnreadable(error) {
+  const status = Number(error?.status || error?.statusCode || 0);
+  const message = String(error?.message || '');
+  return status === 403
+    || status === 404
+    || /Failed to fetch blob:\s*(403|404)\b/i.test(message);
+}
+
 export class VercelBlobStore {
-  constructor({ prefix = 'timesyncher-eula' } = {}) {
+  constructor({ prefix = 'timesyncher-eula', blobModule } = {}) {
     this.prefix = prefix.replace(/^\/+|\/+$/g, '');
+    this.blobModule = blobModule || null;
   }
 
   key(key) {
@@ -57,7 +66,7 @@ export class VercelBlobStore {
   }
 
   async blob() {
-    return await import('@vercel/blob');
+    return this.blobModule || await import('@vercel/blob');
   }
 
   async putJson(key, value) {
@@ -72,12 +81,19 @@ export class VercelBlobStore {
   }
 
   async getJson(key) {
-    const { get } = await this.blob();
-    const pathname = this.key(key);
-    const result = await get(pathname, { access: 'private', useCache: false });
-    if (!result || result.statusCode !== 200 || !result.stream) return null;
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text);
+    try {
+      const { get } = await this.blob();
+      const pathname = this.key(key);
+      const result = await get(pathname, { access: 'private', useCache: false });
+      if (!result || result.statusCode !== 200 || !result.stream) return null;
+      const text = await new Response(result.stream).text();
+      return JSON.parse(text);
+    } catch (error) {
+      // Private Blob stores often hide missing or other-store paths as 403, not 404.
+      // Treat those reads as empty so onboarding can recreate the session in this token's store.
+      if (isBlobUnreadable(error)) return null;
+      throw error;
+    }
   }
 
   async putText(key, text, contentType = 'text/plain') {
@@ -96,9 +112,14 @@ export class VercelBlobStore {
     const out = [];
     for (const item of result.blobs || []) {
       if (!item.pathname.endsWith('.json')) continue;
-      const response = await get(item.pathname, { access: 'private', useCache: false });
-      if (response?.statusCode === 200 && response.stream) {
-        out.push(JSON.parse(await new Response(response.stream).text()));
+      try {
+        const response = await get(item.url || item.pathname, { access: 'private', useCache: false });
+        if (response?.statusCode === 200 && response.stream) {
+          out.push(JSON.parse(await new Response(response.stream).text()));
+        }
+      } catch (error) {
+        if (isBlobUnreadable(error)) continue;
+        throw error;
       }
     }
     return out;
