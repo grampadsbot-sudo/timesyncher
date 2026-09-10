@@ -153,9 +153,9 @@ function userId() {
   return Number(user.id);
 }
 const cat = {
-  hotel: categoryId('Hotel', '#2563eb', 'Hotel'),
-  restaurant: categoryId('Restaurant', '#dc2626', 'Utensils'),
-  attraction: categoryId('Attraction', '#7c3aed', 'MapPin'),
+  hotel: categoryId('Hotel', '#2563eb', 'BedDouble'),
+  restaurant: categoryId('Restaurant', '#dc2626', 'UtensilsCrossed'),
+  attraction: categoryId('Attraction', '#7c3aed', 'Landmark'),
   transport: categoryId('Transport', '#0f766e', 'Plane'),
   store: categoryId('Store', '#d97706', 'ShoppingBag'),
   car: categoryId('Car', '#0891b2', 'Car'),
@@ -313,9 +313,9 @@ def user_id():
     return int(row['id'])
 
 cat = {
-    'hotel': category_id('Hotel', '#2563eb', 'Hotel'),
-    'restaurant': category_id('Restaurant', '#dc2626', 'Utensils'),
-    'attraction': category_id('Attraction', '#7c3aed', 'MapPin'),
+    'hotel': category_id('Hotel', '#2563eb', 'BedDouble'),
+    'restaurant': category_id('Restaurant', '#dc2626', 'UtensilsCrossed'),
+    'attraction': category_id('Attraction', '#7c3aed', 'Landmark'),
     'transport': category_id('Transport', '#0f766e', 'Plane'),
     'store': category_id('Store', '#d97706', 'ShoppingBag'),
     'car': category_id('Car', '#0891b2', 'Car'),

@@ -264,11 +264,12 @@ def geocode_address(address):
 
 def category_meta(kind):
     if kind == 'flight': return ('Transport', '#0f766e', 'Plane')
-    if kind == 'hotel': return ('Hotel', '#2563eb', 'Hotel')
-    if kind == 'restaurant': return ('Restaurant', '#dc2626', 'Utensils')
+    if kind == 'hotel': return ('Hotel', '#2563eb', 'BedDouble')
+    if kind == 'restaurant': return ('Restaurant', '#dc2626', 'UtensilsCrossed')
     if kind == 'store': return ('Store', '#d97706', 'ShoppingBag')
     if kind == 'car': return ('Car', '#0891b2', 'Car')
-    if kind == 'family_event': return ('Attraction', '#7c3aed', 'MapPin')
+    if kind == 'family_event': return ('Family Event', '#10b981', 'Users')
+    if kind == 'attraction' or kind == 'activity': return ('Attraction', '#7c3aed', 'Landmark')
     return ('Attraction', '#7c3aed', 'MapPin')
 
 def find_trip(token, request_text):

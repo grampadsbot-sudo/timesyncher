@@ -2,12 +2,16 @@
   "version": 2,
   "routes": [
     {
-      "src": "/shared/(.*)",
-      "dest": "https://travel.timesyncher.com/shared/$1"
+      "src": "/api/bind-thing-media",
+      "dest": "/api/bind-thing-media"
     },
     {
       "src": "/api/shared/(.*)",
-      "dest": "https://travel.timesyncher.com/api/shared/$1"
+      "dest": "/api/shared-trip?trekPath=$1"
+    },
+    {
+      "src": "/shared(?:/.*)?",
+      "dest": "/shared-app.html"
     },
     {
       "src": "/api/vacation-web-access",
