@@ -41,6 +41,15 @@ const bindings = [
   { id: 's1', thingId: 8872, thingName: 'Carbone', publicUrl: '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
   { id: 's2', thingId: 8871, thingName: 'Conservatory', publicUrl: '/ts-thing-media/las-vegas-vacation-3/conservatory-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
   { id: 's3', thingId: 8869, thingName: 'Bellagio', publicUrl: '/api/bind-thing-media?shareToken=x&id=vid&raw=1', mimeType: 'application/octet-stream', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
+  {
+    id: '6ba36f2a-e9f2-467e-9e61-3aac64fe165a',
+    thingId: 8869,
+    thingName: 'Bellagio',
+    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+    mimeType: 'application/octet-stream',
+    mediaKind: 'photo',
+    originalName: 'bellagio-fountain-night-video.mp4',
+  },
 ];
 
 assert.equal(isBoundStoryMediaUrl('/api/bind-thing-media?shareToken=x&id=1&raw=1'), true);
@@ -88,15 +97,29 @@ assert.doesNotMatch(html, /<video /);
 const hotelCard = html.match(/data-thing-id="8869"[\s\S]*?<\/article>/)[0];
 assert.match(hotelCard, /data-icon-type="hotel"/);
 assert.doesNotMatch(hotelCard, /✈️/);
-assert.match(hotelCard, /bellagio\.svg|cover-fallback/);
+assert.doesNotMatch(hotelCard, /6ba36f2a-e9f2-467e-9e61-3aac64fe165a/);
+assert.doesNotMatch(hotelCard, /data-cover-kind="photo"/);
+assert.match(hotelCard, /bellagio\.svg/);
+assert.match(hotelCard, /data-cover-kind="logo"|data-cover-fallback="1"/);
 const conservatoryCard = html.match(/data-thing-id="8871"[\s\S]*?<\/article>/)[0];
 assert.match(conservatoryCard, /data-icon-type="attraction"/);
 assert.doesNotMatch(conservatoryCard, /✈️/);
+assert.match(conservatoryCard, /conservatory-photo\.jpg/);
 const videoCover = pickStoryCover([
   { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
 ], '/ts-thing-logos/bellagio.svg');
 assert.equal(videoCover.kind, 'logo');
 assert.equal(videoCover.url, '/ts-thing-logos/bellagio.svg');
+const mislabeledNightVideo = pickStoryCover([
+  {
+    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+    mimeType: 'application/octet-stream',
+    mediaKind: 'photo',
+    originalName: 'bellagio-fountain-night-video.mp4',
+  },
+], '/ts-thing-logos/bellagio.svg');
+assert.equal(mislabeledNightVideo.kind, 'logo');
+assert.equal(mislabeledNightVideo.url, '/ts-thing-logos/bellagio.svg');
 
 const model = buildStyle2Model(shared, bindings, 'https://vacation-staging.timesyncher.com');
 assert.equal(model.airplaneAudit.length, 0);

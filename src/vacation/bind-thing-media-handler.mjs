@@ -11,6 +11,7 @@ import {
   mimeFromName,
   newBindingId,
   resolveThingFromShared,
+  sniffMediaType,
 } from './thing-media-bind.mjs';
 import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
@@ -192,8 +193,8 @@ async function handleBind(req, res) {
     throw Object.assign(new Error(`Upload exceeds ${MAX_BYTES} bytes.`), { statusCode: 413 });
   }
 
-  mimeType = mimeType || mimeFromName(fileName || sourceUrl, bytes ? 'application/octet-stream' : 'image/jpeg');
-  fileName = fileName || decodeURIComponent((sourceUrl.split('/').pop() || '')) || `${thing.name.replace(/\s+/g, '-').toLowerCase()}.${mimeType.includes('png') ? 'png' : 'jpg'}`;
+  fileName = fileName || decodeURIComponent((sourceUrl.split('/').pop() || '')) || `${thing.name.replace(/\s+/g, '-').toLowerCase()}.${String(mimeType).includes('png') ? 'png' : 'jpg'}`;
+  mimeType = sniffMediaType(bytes, fileName || sourceUrl, mimeType);
 
   const bindingId = newBindingId();
   let blobUrl = '';

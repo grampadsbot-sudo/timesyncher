@@ -254,6 +254,10 @@ export function publicBindingPath(shareToken, filename) {
 }
 
 export function toPublicBinding(row = {}) {
+  const originalName = row.originalName || row.original_name || '';
+  const storedMime = row.mimeType || row.mime_type || '';
+  const mimeType = sniffMediaType(null, originalName, storedMime);
+  const video = isVideoBinding({ ...row, mimeType, originalName });
   return {
     id: row.id,
     shareToken: row.shareToken || row.share_token,
@@ -263,9 +267,9 @@ export function toPublicBinding(row = {}) {
     dayId: Number(row.dayId || row.trek_day_id || 0) || null,
     dayNumber: Number(row.dayNumber || row.day_number || 0) || null,
     caption: row.caption || '',
-    mediaKind: row.mediaKind || row.media_kind || 'photo',
-    mimeType: row.mimeType || row.mime_type || 'image/jpeg',
-    originalName: row.originalName || row.original_name || '',
+    mediaKind: video ? 'video' : (isPhotoBinding({ ...row, mimeType, originalName }) ? 'photo' : (row.mediaKind || row.media_kind || 'photo')),
+    mimeType: mimeType || (video ? 'video/mp4' : storedMime || 'application/octet-stream'),
+    originalName,
     fileSizeBytes: Number(row.fileSizeBytes || row.file_size_bytes || 0) || null,
     publicUrl: row.publicUrl || row.public_url || row.url || '',
     storageProvider: row.storageProvider || row.storage_provider || 'url',
@@ -305,12 +309,7 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   for (const place of next.places) {
     const bound = byPlace.get(Number(place.id)) || [];
     if (!bound.length) continue;
-    const photo = bound.find((row) => {
-      const mime = String(row.mimeType || '');
-      const kind = String(row.mediaKind || '');
-      const url = String(row.publicUrl || row.originalName || '');
-      return (kind === 'photo' || mime.startsWith('image/')) && !/\.mp4(\?|#|$)/i.test(url) && !mime.startsWith('video/');
-    });
+    const photo = bound.find((row) => isPhotoBinding(row));
     if (!place.image_url && photo) place.image_url = photo.publicUrl;
     place.bound_media = bound;
   }
@@ -364,16 +363,58 @@ function pngChunk(type, data) {
   return Buffer.concat([length, typeBuf, data, crc]);
 }
 
+const VIDEO_EXT_RE = /\.(mp4|m4v|mov|webm|avi)(\?|#|$)/i;
+const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i;
+
 export function mimeFromName(name = '', fallback = 'image/jpeg') {
   const lower = String(name || '').toLowerCase();
   if (lower.endsWith('.png')) return 'image/png';
   if (lower.endsWith('.webp')) return 'image/webp';
   if (lower.endsWith('.gif')) return 'image/gif';
-  if (lower.endsWith('.mp4')) return 'video/mp4';
+  if (lower.endsWith('.mp4') || lower.endsWith('.m4v')) return 'video/mp4';
   if (lower.endsWith('.mov')) return 'video/quicktime';
   if (lower.endsWith('.webm')) return 'video/webm';
   if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
   return fallback;
+}
+
+export function sniffMediaType(bytes, name = '', stored = '') {
+  if (bytes && bytes.length >= 12) {
+    const buf = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
+    if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+    if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'image/png';
+    if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return 'image/gif';
+    if (buf.subarray(0, 4).toString('ascii') === 'RIFF' && buf.subarray(8, 12).toString('ascii') === 'WEBP') {
+      return 'image/webp';
+    }
+    if (buf.subarray(4, 8).toString('ascii') === 'ftyp') return 'video/mp4';
+  }
+  const fromName = mimeFromName(name, '');
+  if (fromName) return fromName;
+  if (stored && stored !== 'application/octet-stream') return stored;
+  return stored || 'application/octet-stream';
+}
+
+export function isVideoBinding(row = {}) {
+  const kind = String(row.mediaKind || row.media_kind || '').toLowerCase();
+  const mime = String(row.mimeType || row.mime_type || '').toLowerCase();
+  const name = String(row.originalName || row.original_name || row.filename || '');
+  const url = String(row.publicUrl || row.public_url || row.url || '');
+  if (kind === 'video' || mime.startsWith('video/')) return true;
+  if (VIDEO_EXT_RE.test(name) || VIDEO_EXT_RE.test(url)) return true;
+  if (/-video\./i.test(name) || /-video\./i.test(url)) return true;
+  return false;
+}
+
+export function isPhotoBinding(row = {}) {
+  if (isVideoBinding(row)) return false;
+  const kind = String(row.mediaKind || row.media_kind || '').toLowerCase();
+  const mime = String(row.mimeType || row.mime_type || '').toLowerCase();
+  const name = String(row.originalName || row.original_name || row.filename || '');
+  const url = String(row.publicUrl || row.public_url || row.url || '');
+  if (mime.startsWith('image/')) return true;
+  if (IMAGE_EXT_RE.test(name) || IMAGE_EXT_RE.test(url)) return true;
+  return kind === 'photo' && !mime && !name;
 }
 
 export function mediaKindFromMime(mime = '') {

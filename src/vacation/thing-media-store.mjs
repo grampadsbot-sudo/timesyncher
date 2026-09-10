@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { hasDatabase, sql } from './db.mjs';
 import {
   newBindingId,
+  sniffMediaType,
   toPublicBinding,
 } from './thing-media-bind.mjs';
 
@@ -239,9 +240,10 @@ export async function getBindingMedia(shareToken, id, env = process.env) {
   const row = rows[0];
   const bytes = bytesFromNeon(row?.file_bytes);
   if (!row || !bytes) return null;
+  const originalName = row.original_name || 'media';
   return {
     bytes,
-    mimeType: row.mime_type || 'application/octet-stream',
-    originalName: row.original_name || 'media',
+    mimeType: sniffMediaType(bytes, originalName, row.mime_type || ''),
+    originalName,
   };
 }

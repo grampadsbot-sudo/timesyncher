@@ -1,6 +1,6 @@
 import { timelineIcon, printThingIconHtml, isAirplaneGlyph, isVideoMediaUrl } from './timeline-icons.mjs';
 import { applyCapturedLogos, captureThingLogo } from './thing-logo-capture.mjs';
-import { toPublicBinding } from './thing-media-bind.mjs';
+import { isPhotoBinding, isVideoBinding, toPublicBinding } from './thing-media-bind.mjs';
 
 const BOILERPLATE_RE = /brought together your day-by-day plan, meals, shows, shopping, hotels, and saved notes/i;
 
@@ -60,13 +60,10 @@ function realTripSummary(shared = {}) {
   return `${trip.title || 'This vacation'} — day-by-day plan with meals, lodging, and flights.`;
 }
 
-function isPhotoBinding(row = {}) {
-  const mime = String(row.mimeType || '');
-  const kind = String(row.mediaKind || '');
-  const url = String(row.publicUrl || row.originalName || '');
-  if (kind === 'video' || mime.startsWith('video/') || isVideoMediaUrl(url) || /\.mp4(\?|#|$)/i.test(url)) return false;
-  if (kind === 'photo' || mime.startsWith('image/')) return true;
-  return /\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i.test(url);
+function storyCoverIsSafePhoto(cover, media = []) {
+  if (!cover?.url || cover.kind !== 'photo') return false;
+  const row = media.find((item) => item.publicUrl === cover.url) || { publicUrl: cover.url };
+  return isPhotoBinding(row) && !isVideoBinding(row) && !isVideoMediaUrl(cover.url);
 }
 
 function pickStoryCover(media = [], logoUrl = '') {
@@ -218,7 +215,7 @@ export function buildStyle2Model(sharedInput = {}, bindings = [], origin = '') {
     if (!story.resolved.isFlight && isAirplaneGlyph(story.resolved.icon)) {
       airplaneAudit.push(`story:${story.title}`);
     }
-    if (story.cover.url && isVideoMediaUrl(story.cover.url) && !story.resolved.isFlight) {
+    if (story.cover.kind === 'photo' && !storyCoverIsSafePhoto(story.cover, story.media)) {
       airplaneAudit.push(`story-cover-video:${story.title}`);
     }
   }
@@ -259,9 +256,14 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
     }
     const cover = story.cover;
     const fallback = `<div class="cover-fallback" data-cover-fallback="1">${mark}</div>`;
-    const mediaHtml = cover.url && (cover.kind === 'photo' || cover.kind === 'logo')
-      ? `<img class="cover" src="${esc(cover.url)}" alt="${esc(story.title)}" onerror="this.replaceWith(this.nextElementSibling)" />${fallback}`
-      : fallback;
+    if (cover.kind === 'photo' && !storyCoverIsSafePhoto(cover, story.media)) {
+      throw new Error(`Video used as story-card image for ${story.title}`);
+    }
+    const mediaHtml = storyCoverIsSafePhoto(cover, story.media)
+      ? `<img class="cover" data-cover-kind="photo" src="${esc(cover.url)}" alt="${esc(story.title)}" onerror="this.replaceWith(this.nextElementSibling)" />${fallback}`
+      : (cover.kind === 'logo' && cover.url && !isVideoMediaUrl(cover.url)
+        ? `<div class="cover-fallback" data-cover-kind="logo" data-cover-fallback="1"><img src="${esc(cover.url)}" alt="" /></div>`
+        : fallback);
     const excerpt = paragraphs(story.story).slice(0, 2).join('\n\n');
     return `<article class="story-card" data-story-card="1" data-thing-id="${esc(story.thingId)}" data-icon-type="${esc(type)}"><div class="thing-head">${mark}<h3>${esc(story.title)}</h3></div>${mediaHtml}<div class="body">${excerpt ? `<p>${esc(excerpt)}</p>` : ''}</div></article>`;
   }).join('') || '<p class="muted">No saved stories yet.</p>';

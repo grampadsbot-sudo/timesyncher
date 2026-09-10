@@ -138,7 +138,7 @@
           if (node.tagName === 'IMG') {
             node.addEventListener('error', () => mark(node, found), { once: true });
             const src = node.getAttribute('src') || '';
-            if (/\.mp4(\?|#|$)|video\//i.test(src)) mark(node, found);
+            if (/\.mp4(\?|#|$)|video\/|-video\./i.test(src)) mark(node, found);
           }
         });
       });

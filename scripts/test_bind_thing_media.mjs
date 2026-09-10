@@ -11,6 +11,10 @@ import {
   neonRawMediaPath,
   proofPngBuffer,
   resolveThingFromShared,
+  isPhotoBinding,
+  isVideoBinding,
+  sniffMediaType,
+  toPublicBinding,
 } from '../src/vacation/thing-media-bind.mjs';
 
 const shared = {
@@ -138,10 +142,39 @@ assert.equal(urlChoice.storeBytes, false);
 const noStore = chooseMediaStorage({ bytes: pngBytes, hasDatabase: false, blobUrl: '' });
 assert.equal(noStore.error, 'no-store');
 
+const mislabeled = toPublicBinding({
+  id: '6ba36f2a-e9f2-467e-9e61-3aac64fe165a',
+  thingId: 8869,
+  mediaKind: 'photo',
+  mimeType: 'application/octet-stream',
+  originalName: 'bellagio-fountain-night-video.mp4',
+  publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+});
+assert.equal(mislabeled.mediaKind, 'video');
+assert.equal(mislabeled.mimeType, 'video/mp4');
+assert.equal(isVideoBinding(mislabeled), true);
+assert.equal(isPhotoBinding(mislabeled), false);
+assert.equal(isPhotoBinding({
+  mediaKind: 'photo',
+  mimeType: 'application/octet-stream',
+  originalName: 'bellagio-fountain-night-video.mp4',
+  publicUrl: mislabeled.publicUrl,
+}), false);
+assert.equal(sniffMediaType(Buffer.from('....ftypisom........'), 'x.bin', 'application/octet-stream'), 'video/mp4');
+
+const hotelShared = {
+  trip: { id: 197 },
+  media: [],
+  places: [{ id: 8869, name: 'Bellagio', category_name: 'Hotel', image_url: null }],
+};
+const hotelMerged = mergeBindingsIntoShared(hotelShared, [mislabeled]);
+assert.ok(!hotelMerged.places[0].image_url);
+
 const handler = await readFile(new URL('../src/vacation/bind-thing-media-handler.mjs', import.meta.url), 'utf8');
 assert.match(handler, /chooseMediaStorage/);
 assert.match(handler, /getBindingMedia/);
 assert.match(handler, /storeBytes/);
+assert.match(handler, /sniffMediaType/);
 
 const store = await readFile(new URL('../src/vacation/thing-media-store.mjs', import.meta.url), 'utf8');
 assert.match(store, /file_bytes bytea/);
