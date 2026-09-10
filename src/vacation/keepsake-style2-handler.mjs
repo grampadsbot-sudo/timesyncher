@@ -27,8 +27,23 @@ function shareTokenFromPdfPath(pdfPath = '') {
   }
 }
 
-function isStyle2Report(name = '') {
-  return /^(keepsake|style-?2|journey|journey-book)$/i.test(String(name || '').replace(/\.pdf$/i, ''));
+export function isJourneyBookReport(name = '') {
+  const cleaned = String(name || '').replace(/\.pdf$/i, '').trim();
+  if (!cleaned) return true;
+  return !/^daily$/i.test(cleaned);
+}
+
+export function journeyBookGate({ pdfPath = '', report = '' } = {}) {
+  if (/\/daily(?:\/|\.pdf|$)/i.test(pdfPath) || !isJourneyBookReport(report)) {
+    return {
+      ok: false,
+      status: 404,
+      error: isJourneyBookReport(report)
+        ? 'Daily PDF remains on the TREK host. Use the style-2 Journey Book.'
+        : `No TimeSyncher Journey Book report named ${report}.`,
+    };
+  }
+  return { ok: true, status: 200 };
 }
 
 async function fetchShared(shareToken) {
@@ -56,11 +71,9 @@ export default async function handler(req, res) {
   if (!shareToken) {
     return sendJson(res, 400, { ok: false, error: 'shareToken is required for style-2 Journey Book.' });
   }
-  if (pdfPath && /\/daily\//.test(pdfPath)) {
-    return sendJson(res, 404, { ok: false, error: 'Daily PDF remains on the TREK host. Use report/keepsake or report/style-2.' });
-  }
-  if (pdfPath && !isStyle2Report(reportName) && /\/report\//.test(pdfPath)) {
-    return sendJson(res, 404, { ok: false, error: `No TimeSyncher style-2 report named ${reportName}.` });
+  const gate = journeyBookGate({ pdfPath, report: reportName });
+  if (!gate.ok) {
+    return sendJson(res, gate.status, { ok: false, error: gate.error });
   }
 
   try {

@@ -106,7 +106,9 @@
     const originalOpen = window.open;
     window.open = function patchedOpen(url, ...rest) {
       const href = String(url || '');
-      if (/\/api\/pdf\/shared\/[^/]+\/report\/(keepsake|style-?2)/i.test(href)) {
+      const isReport = /\/(?:api\/pdf\/)?shared\/[^/]+\/report\//i.test(href);
+      const isDaily = /\/report\/daily(?:\/|\.pdf|$|\?)/i.test(href);
+      if (isReport && !isDaily) {
         return originalOpen.call(this, style2, ...rest);
       }
       return originalOpen.call(this, url, ...rest);

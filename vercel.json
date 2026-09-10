@@ -18,6 +18,14 @@
       "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=style-2"
     },
     {
+      "src": "/shared/([^/]+)/report/daily(?:\\.pdf)?(?:/)?",
+      "dest": "/shared-app.html"
+    },
+    {
+      "src": "/shared/([^/]+)/report/([^/?]+)",
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=$2"
+    },
+    {
       "src": "/shared(?:/.*)?",
       "dest": "/shared-app.html"
     },

@@ -4,6 +4,10 @@ import { isPhotoBinding, isVideoBinding, toPublicBinding } from './thing-media-b
 import { backfillAssignments, includePrintMaps, itineraryMinThings } from './itinerary-minimums.mjs';
 import { qrSvg } from './qr-svg.mjs';
 
+export const PRODUCT_SOT_SLUG = 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910';
+export const PRODUCT_SOT_ALIAS = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
+export const PRODUCT_SOT_RECEIPT = 'bot-admin/receipts/cos-style-2-journey-book-product-standard-20260910';
+
 const BOILERPLATE_RE = /brought together your day-by-day plan, meals, shows, shopping, hotels, and saved notes/i;
 
 function esc(value) {
@@ -445,9 +449,12 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${esc(model.trip.title || 'Journey Book')} · Style 2</title>
+  <meta name="timesyncher-product-sot" content="${esc(PRODUCT_SOT_SLUG)}" />
+  <meta name="timesyncher-product-sot-alias" content="${esc(PRODUCT_SOT_ALIAS)}" />
+  <meta name="timesyncher-product-receipt" content="${esc(PRODUCT_SOT_RECEIPT)}" />
   ${styleBlock()}
 </head>
-<body data-min-things="${esc(model.minThings)}" data-place-count="${esc(model.placeCount)}" data-assigned-count="${esc(model.assignedCount)}">
+<body data-style="2" data-sole-layout="1" data-product-sot="${esc(PRODUCT_SOT_SLUG)}" data-product-sot-alias="${esc(PRODUCT_SOT_ALIAS)}" data-product-receipt="${esc(PRODUCT_SOT_RECEIPT)}" data-min-things="${esc(model.minThings)}" data-place-count="${esc(model.placeCount)}" data-assigned-count="${esc(model.assignedCount)}">
   <div class="no-print">
     <a href="/shared/${encodeURIComponent(token)}/">← Shared itinerary</a>
     <button type="button" onclick="window.print()">Save as PDF</button>

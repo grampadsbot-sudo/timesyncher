@@ -3,13 +3,23 @@
   if (!sharedMatch) return;
 
   const token = decodeURIComponent(sharedMatch[1]);
-  const rest = (sharedMatch[2] || '').replace(/\/+$/, '');
-  const params = new URLSearchParams(location.search);
-  const wantsStyle2 = rest === 'journey'
-    || params.get('style') === '2'
-    || /^(keepsake|style-?2)$/i.test(params.get('pdfReport') || '')
-    || params.get('printMode') === 'keepsake'
-    || window.__TS_JOURNEY_BOOK__;
+  function reportNameFromPath(pathname) {
+    const match = String(pathname || '').match(/^\/shared\/[^/]+\/report\/([^/?#]+)/i);
+    return match ? decodeURIComponent(match[1]).replace(/\.pdf$/i, '') : '';
+  }
+
+  function wantsJourneyBook() {
+    const rest = (location.pathname.match(/^\/shared\/[^/]+(?:\/(.*))?/) || [])[1] || '';
+    const cleaned = rest.replace(/\/+$/, '');
+    const params = new URLSearchParams(location.search);
+    const report = reportNameFromPath(location.pathname);
+    return cleaned === 'journey'
+      || params.get('style') === '2'
+      || /^(keepsake|style-?2)$/i.test(params.get('pdfReport') || '')
+      || params.get('printMode') === 'keepsake'
+      || window.__TS_JOURNEY_BOOK__
+      || (report && !/^daily$/i.test(report));
+  }
 
   function absUrl(value) {
     if (!value) return '';
@@ -96,8 +106,28 @@
     new MutationObserver(decorate).observe(document.body, { childList: true, subtree: true });
   }
 
+  function watchSpaReportRoutes() {
+    const origPush = history.pushState;
+    const origReplace = history.replaceState;
+    const maybeBook = () => {
+      if (wantsJourneyBook()) renderStyle2().catch(() => {});
+    };
+    history.pushState = function patchedPush(...args) {
+      const ret = origPush.apply(this, args);
+      queueMicrotask(maybeBook);
+      return ret;
+    };
+    history.replaceState = function patchedReplace(...args) {
+      const ret = origReplace.apply(this, args);
+      queueMicrotask(maybeBook);
+      return ret;
+    };
+    window.addEventListener('popstate', maybeBook);
+  }
+
   async function boot() {
-    if (wantsStyle2) {
+    watchSpaReportRoutes();
+    if (wantsJourneyBook()) {
       await renderStyle2();
       return;
     }

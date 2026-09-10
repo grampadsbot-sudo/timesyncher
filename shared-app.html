@@ -20,6 +20,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <script>
       window.__TS_JOURNEY_BOOK__ = /\/shared\/[^/]+\/journey\/?$/.test(location.pathname)
+        || (/\/shared\/[^/]+\/report\/(?!daily(?:\/|\.pdf|$))/i.test(location.pathname))
         || /[?&](style=2|pdfReport=keepsake|pdfReport=style-?2|printMode=keepsake)\b/.test(location.search);
       if (!window.__TS_JOURNEY_BOOK__) {
         const trek = document.createElement('script');
