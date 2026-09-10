@@ -413,9 +413,25 @@ overrides = load_overrides(token)
 results = []
 for item in items:
     results.append(insert_or_update_item(int(trip['id']), token, days, item, overrides))
+
+min_things = int(payload.get('minThings') or 8)
+places = all_rows('SELECT id, name, place_time FROM places WHERE trip_id=? ORDER BY id', (int(trip['id']),))
+assigned_ids = {int(row['place_id']) for row in all_rows('SELECT place_id FROM day_assignments WHERE day_id IN (SELECT id FROM days WHERE trip_id=?)', (int(trip['id']),))}
+backfilled = []
+unassigned = [row for row in places if int(row['id']) not in assigned_ids]
+day_i = 0
+while len(assigned_ids) < min_things and unassigned:
+    place = unassigned.pop(0)
+    day = days[day_i % len(days)]
+    day_i += 1
+    order_row = one('SELECT COALESCE(MAX(order_index), -1) + 1 AS next_index FROM day_assignments WHERE day_id=?', (int(day['id']),))
+    run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time) VALUES (?, ?, ?, ?, ?, ?)', (int(day['id']), int(place['id']), int(order_row['next_index']), 'Backfilled from existing trip things to meet itinerary minimum.', 'considering', place['place_time']))
+    assigned_ids.add(int(place['id']))
+    backfilled.append({'placeId': int(place['id']), 'title': place['name'], 'day': int(day['day_number'])})
+
 db.commit()
 base = (payload.get('publicBase') or 'https://vacation.timesyncher.com').rstrip('/')
-print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results) + (1 if date_range else 0)}))
+print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'backfilledItems': backfilled, 'placeCount': len(places), 'assignedCount': len(assigned_ids), 'minThings': min_things, 'shortfall': max(0, min_things - len(places)), 'dateRangeApplied': date_range, 'operationCount': len(results) + len(backfilled) + (1 if date_range else 0)}))
 `;
 
 async function main() {
@@ -428,6 +444,7 @@ async function main() {
     receivedAt: text(input.receivedAt || input.received_at || '', 80),
     publicBase: text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, ''),
     dbPath: text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || '', 500),
+    minThings: Number.parseInt(process.env.TIMESYNCHER_ITINERARY_MIN_THINGS || '8', 10) || 8,
   };
   const result = spawnSync('python3', ['-c', pythonCode], {
     input: JSON.stringify(payload),
