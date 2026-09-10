@@ -7,18 +7,23 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Completeness rule: `bot-admin/messages/time-syncher/feature-map-full-ui-inventory-rule-20260910`
 - Config dump (stamp, do not invent): `bot-admin/messages/time-syncher/keepsakes-config-defaults-20260910`
 - Skill: `skills/feature-map-full-ui-inventory`
-- Style-2 SoT: `bot-admin/messages/time-syncher/style-2-journey-book-standard`
+- Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 
 A live control missing from `features/` means the map is incomplete — do not claim verified. This map is **not** a verify-PASS. Hold certify. Skillify jobs 18–22 in flight.
 
-## Style-2 product path (export)
+## Style-2 product path (sole SoT)
 
-Layouts: **Style one** / **Style two** only. Export = **Style two**. Do not invent a third.
+Layouts: **style-1 / Style one** and **style-2 / Style two** only. Export = clicking **Layout 2 / Style two**, then PDF. Do not invent a third.
 
 1. Open `https://travel.timesyncher.com/shared/las-vegas-vacation-3/`
-2. **PDFs** → **Keepsakes ▸** → **Style two**
+2. **PDFs** → **Keepsakes ▸** → **Style two** (Layout 2)
 3. PDF: `/api/pdf/shared/las-vegas-vacation-3/report/keepsake-style-2.pdf`
 4. HTML preview: `?printMode=report&pdfReport=keepsake-style-2`
+
+Staging mirrors:
+
+- `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2`
+- `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2`
 
 Style one is `report/keepsake.pdf`.
 

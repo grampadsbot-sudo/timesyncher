@@ -15,7 +15,7 @@
     },
     {
       "src": "/shared/([^/]+)/journey(?:/)?",
-      "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=keepsake-style-2"
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=journey"
     },
     {
       "src": "/shared/([^/]+)/report/daily(?:\\.pdf)?(?:/)?",

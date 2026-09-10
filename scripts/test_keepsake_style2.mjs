@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
+import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mjs';
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
@@ -12,8 +12,12 @@ import {
   isProductStyleTwo,
   normalizeReportName,
   productPdfUrl,
+  productStyleTwoViewUrl,
+  wantsStyleTwoView,
   PRODUCT_STYLE_TWO_REPORT,
   PRODUCT_TREK_PUBLIC,
+  PRODUCT_SOT,
+  PRODUCT_SOT_TWIN as HANDLER_SOT_TWIN,
   forwardedKeepsakeSearch,
 } from '../src/vacation/keepsake-style2-handler.mjs';
 
@@ -90,8 +94,11 @@ assert.match(html, /data-sole-layout="1"/);
 assert.match(html, new RegExp(`data-product-sot="${PRODUCT_SOT_SLUG}"`));
 assert.match(html, new RegExp(`data-product-sot-alias="${PRODUCT_SOT_ALIAS}"`));
 assert.match(html, new RegExp(`data-product-receipt="${PRODUCT_SOT_RECEIPT}"`));
-assert.equal(PRODUCT_SOT_SLUG, 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910');
-assert.equal(PRODUCT_SOT_ALIAS, 'bot-admin/messages/time-syncher/style-2-journey-book-standard');
+assert.equal(PRODUCT_SOT_SLUG, 'bot-admin/messages/time-syncher/style-2-journey-book-standard');
+assert.equal(PRODUCT_SOT_ALIAS, PRODUCT_SOT_SLUG);
+assert.equal(PRODUCT_SOT_TWIN, 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910');
+assert.equal(PRODUCT_SOT, PRODUCT_SOT_SLUG);
+assert.equal(HANDLER_SOT_TWIN, PRODUCT_SOT_TWIN);
 assert.equal(PRODUCT_SOT_RECEIPT, 'bot-admin/receipts/cos-style-2-journey-book-product-standard-20260910');
 assert.match(html, /data-page="1"/);
 assert.match(html, /data-trip-directory="1"/);
@@ -183,7 +190,7 @@ assert.doesNotMatch(patch, /patchedOpen/);
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
 assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
-assert.match(vercel, /report=keepsake-style-2/);
+assert.match(vercel, /report=journey/);
 assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
 
 assert.equal(normalizeReportName('style-2'), PRODUCT_STYLE_TWO_REPORT);
@@ -199,6 +206,12 @@ assert.equal(journeyBookGate({ report: 'daily' }).ok, true);
 assert.equal(journeyBookGate({ report: 'keepsake-style-2' }).kind, 'style-two');
 assert.equal(journeyBookGate({ report: 'restaurants' }).kind, 'trek-report');
 
+assert.equal(wantsStyleTwoView({ report: 'journey' }), true);
+assert.equal(wantsStyleTwoView({ report: 'style-2' }), false);
+assert.equal(
+  productStyleTwoViewUrl({ shareToken: 'las-vegas-vacation-3' }),
+  `${PRODUCT_TREK_PUBLIC}/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2`,
+);
 const styleTwoUrl = productPdfUrl({
   shareToken: 'las-vegas-vacation-3',
   report: 'style-2',

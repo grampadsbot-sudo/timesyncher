@@ -10,6 +10,10 @@ function productTrekPublic() {
 
 export const PRODUCT_TREK_PUBLIC = productTrekPublic();
 
+/** Sole SoT. CoS dated twin is the same rules. */
+export const PRODUCT_SOT = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
+export const PRODUCT_SOT_TWIN = 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910';
+
 export const PRODUCT_STYLE_TWO_REPORT = 'keepsake-style-2';
 
 function sendRedirect(res, location) {
@@ -54,6 +58,19 @@ export function isDailyReport(name = '', pdfPath = '') {
 
 export function isProductStyleTwo(name = '') {
   return normalizeReportName(name) === PRODUCT_STYLE_TWO_REPORT;
+}
+
+export function wantsStyleTwoView({ report = '', view = '' } = {}) {
+  return /^journey$/i.test(String(report || '').replace(/\.pdf$/i, ''))
+    || view === '1'
+    || view === 'true';
+}
+
+export function productStyleTwoViewUrl({ shareToken, search = '' } = {}) {
+  const extra = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  extra.set('printMode', 'report');
+  extra.set('pdfReport', PRODUCT_STYLE_TWO_REPORT);
+  return `${PRODUCT_TREK_PUBLIC}/shared/${encodeURIComponent(shareToken)}/?${extra.toString()}`;
 }
 
 export function productPdfUrl({
@@ -119,12 +136,18 @@ export default async function handler(req, res) {
     return sendJson(res, 400, { ok: false, error: 'shareToken is required for Style two export.' });
   }
 
-  const location = productPdfUrl({
-    shareToken,
+  const search = forwardedKeepsakeSearch(url);
+  const location = wantsStyleTwoView({
     report: reportName,
-    pdfPath,
-    search: forwardedKeepsakeSearch(url),
-  });
+    view: url.searchParams.get('view') || '',
+  })
+    ? productStyleTwoViewUrl({ shareToken, search })
+    : productPdfUrl({
+      shareToken,
+      report: reportName,
+      pdfPath,
+      search,
+    });
 
   if (location.startsWith(originFromReq(req))) {
     return sendJson(res, 500, { ok: false, error: 'Refusing to redirect Style two onto this host.' });

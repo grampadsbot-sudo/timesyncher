@@ -4,8 +4,9 @@ import { isPhotoBinding, isVideoBinding, toPublicBinding } from './thing-media-b
 import { backfillAssignments, includePrintMaps, itineraryMinThings } from './itinerary-minimums.mjs';
 import { qrSvg } from './qr-svg.mjs';
 
-export const PRODUCT_SOT_SLUG = 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910';
-export const PRODUCT_SOT_ALIAS = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
+export const PRODUCT_SOT_SLUG = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
+export const PRODUCT_SOT_TWIN = 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910';
+export const PRODUCT_SOT_ALIAS = PRODUCT_SOT_SLUG;
 export const PRODUCT_SOT_RECEIPT = 'bot-admin/receipts/cos-style-2-journey-book-product-standard-20260910';
 
 const BOILERPLATE_RE = /brought together your day-by-day plan, meals, shows, shopping, hotels, and saved notes/i;
