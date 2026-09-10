@@ -2,15 +2,17 @@ import { Buffer } from 'node:buffer';
 
 import { requireMediaBindAuth } from './auth.mjs';
 import { cleanText, headerValue, readJson, sendJson } from './http.mjs';
+import { hasDatabase } from './db.mjs';
 import {
   TREK_SHARED_API_BASE,
+  chooseMediaStorage,
   mediaKindFromMime,
   mergeBindingsIntoShared,
   mimeFromName,
   newBindingId,
   resolveThingFromShared,
 } from './thing-media-bind.mjs';
-import { listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
+import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
 const MAX_BYTES = Number.parseInt(process.env.TIMESYNCHER_MEDIA_BIND_MAX_BYTES || '20971520', 10);
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
@@ -63,6 +65,7 @@ function opsHelp(host = 'https://<this-preview>') {
       'node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./carbone.jpg --apply-trek',
     ].join('\n'),
     auth: 'TIMESYNCHER_MEDIA_BIND_TOKEN, or TIMESYNCHER_ADMIN_TOKEN, or TIMESYNCHER_WORKER_TOKEN. Preview/vacation-staging hosts allow POST without a token so Cursor can prove the bind.',
+    storage: 'Multipart/file and fileBase64 bind to Neon (thing_media_bindings.file_bytes) when DATABASE_URL is set. Blob is optional and is skipped when it fails or is suspended. sourceUrl-only binds an already-hosted public URL with no upload.',
   };
 }
 
@@ -164,19 +167,6 @@ async function readBindInput(req) {
   };
 }
 
-async function bytesFromUrl(sourceUrl) {
-  const response = await fetch(sourceUrl);
-  if (!response.ok) {
-    throw Object.assign(new Error(`Could not fetch sourceUrl (${response.status}).`), { statusCode: 400 });
-  }
-  const mimeType = response.headers.get('content-type') || mimeFromName(sourceUrl);
-  const buffer = Buffer.from(await response.arrayBuffer());
-  if (buffer.length > MAX_BYTES) {
-    throw Object.assign(new Error(`sourceUrl exceeds ${MAX_BYTES} bytes.`), { statusCode: 413 });
-  }
-  return { bytes: buffer, mimeType, fileName: decodeURIComponent(sourceUrl.split('/').pop() || 'remote-media') };
-}
-
 async function handleBind(req, res) {
   requireMediaBindAuth(req, process.env);
   const input = await readBindInput(req);
@@ -189,53 +179,52 @@ async function handleBind(req, res) {
     thingName: input.thingName,
   });
 
+  const sourceUrl = cleanText(input.sourceUrl, 800);
   let bytes = input.bytes || null;
   let mimeType = input.mimeType || '';
   let fileName = input.fileName || '';
-  let publicUrl = cleanText(input.sourceUrl, 800);
-  let storageProvider = 'url';
-  let storagePathname = null;
 
-  if (!bytes && publicUrl) {
-    try {
-      const fetched = await bytesFromUrl(publicUrl);
-      bytes = fetched.bytes;
-      mimeType = mimeType || fetched.mimeType;
-      fileName = fileName || fetched.fileName;
-    } catch {
-      // URL-only bind is still valid when the file is already hosted.
-    }
-  }
-
-  if (!bytes && !publicUrl) {
+  if (!bytes && !sourceUrl) {
     throw Object.assign(new Error('Provide file, fileBase64, or sourceUrl.'), { statusCode: 400 });
   }
+  if (bytes && bytes.length > MAX_BYTES) {
+    throw Object.assign(new Error(`Upload exceeds ${MAX_BYTES} bytes.`), { statusCode: 413 });
+  }
 
-  mimeType = mimeType || mimeFromName(fileName, bytes ? 'application/octet-stream' : 'image/jpeg');
-  fileName = fileName || `${thing.name.replace(/\s+/g, '-').toLowerCase()}.${mimeType.includes('png') ? 'png' : 'jpg'}`;
+  mimeType = mimeType || mimeFromName(fileName || sourceUrl, bytes ? 'application/octet-stream' : 'image/jpeg');
+  fileName = fileName || decodeURIComponent((sourceUrl.split('/').pop() || '')) || `${thing.name.replace(/\s+/g, '-').toLowerCase()}.${mimeType.includes('png') ? 'png' : 'jpg'}`;
 
-  if (bytes) {
-    if (bytes.length > MAX_BYTES) {
-      throw Object.assign(new Error(`Upload exceeds ${MAX_BYTES} bytes.`), { statusCode: 413 });
-    }
+  const bindingId = newBindingId();
+  let blobUrl = '';
+  let storagePathname = null;
+  if (bytes && !hasDatabase(process.env)) {
     const blob = await putMediaBlob(bytes, {
       pathname: `thing-media/${shareToken}/${thing.thingId}-${Date.now()}-${fileName}`,
       contentType: mimeType,
       env: process.env,
     });
-    if (blob?.url) {
-      publicUrl = blob.url;
-      storageProvider = 'vercel-blob';
-      storagePathname = blob.pathname || null;
-    } else if (!publicUrl) {
-      const origin = originFromReq(req);
-      publicUrl = `${origin}/api/bind-thing-media?shareToken=${encodeURIComponent(shareToken)}&id=pending`;
-      storageProvider = 'request';
-    }
+    blobUrl = blob?.url || '';
+    storagePathname = blob?.pathname || null;
+  }
+
+  const storage = chooseMediaStorage({
+    bytes,
+    sourceUrl,
+    blobUrl,
+    hasDatabase: hasDatabase(process.env),
+    origin: originFromReq(req),
+    shareToken,
+    bindingId,
+  });
+  if (storage.error === 'no-store') {
+    throw Object.assign(new Error('File bind needs DATABASE_URL (Neon) or a working Blob store, or pass sourceUrl of an already-hosted file. Use CLI --write-public on a git deploy, or --apply-trek on the TREK host.'), { statusCode: 503 });
+  }
+  if (storage.error === 'no-input') {
+    throw Object.assign(new Error('Provide file, fileBase64, or sourceUrl.'), { statusCode: 400 });
   }
 
   const binding = {
-    id: newBindingId(),
+    id: bindingId,
     shareToken,
     trekTripId: thing.trekTripId,
     thingId: thing.thingId,
@@ -247,18 +236,16 @@ async function handleBind(req, res) {
     mimeType,
     originalName: fileName,
     fileSizeBytes: bytes?.length || null,
-    publicUrl,
-    storageProvider,
+    publicUrl: storage.publicUrl,
+    storageProvider: storage.storageProvider,
     storagePathname,
     trekApplyStatus: 'pending',
     createdAt: new Date().toISOString(),
   };
 
-  if (storageProvider === 'request' && bytes) {
-    throw Object.assign(new Error('File bind needs BLOB_READ_WRITE_TOKEN (or pass sourceUrl of an already-hosted file). Use the CLI --write-public path on a git deploy, or --apply-trek on the TREK host.'), { statusCode: 503 });
-  }
-
-  const saved = await saveBinding(binding, process.env);
+  const saved = await saveBinding(binding, process.env, {
+    bytes: storage.storeBytes ? bytes : null,
+  });
   const origin = originFromReq(req);
   return sendJson(res, 200, {
     ok: true,
@@ -282,11 +269,24 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const shareToken = cleanText(url.searchParams.get('shareToken') || url.searchParams.get('token'), 180);
+      const id = cleanText(url.searchParams.get('id'), 80);
+      const raw = url.searchParams.get('raw') === '1' || url.searchParams.get('raw') === 'true';
+      if (raw && shareToken && id) {
+        const media = await getBindingMedia(shareToken, id, process.env);
+        if (!media) {
+          return sendJson(res, 404, { ok: false, error: 'Bound media bytes were not found.' });
+        }
+        res.statusCode = 200;
+        res.setHeader('content-type', media.mimeType);
+        res.setHeader('cache-control', 'public, max-age=3600');
+        res.setHeader('content-disposition', `inline; filename="${media.originalName.replace(/"/g, '')}"`);
+        res.end(media.bytes);
+        return;
+      }
       if (!shareToken) {
         return sendJson(res, 200, { ok: true, ...opsHelp(originFromReq(req)) });
       }
       const bindings = await listBindings(shareToken, process.env);
-      const id = cleanText(url.searchParams.get('id'), 80);
       return sendJson(res, 200, {
         ok: true,
         shareToken,

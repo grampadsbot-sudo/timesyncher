@@ -4,9 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { requireMediaBindAuth, stagingMediaBindHost } from '../src/vacation/auth.mjs';
 import {
   SCT_VACATION3_MEDIA_PACK,
+  chooseMediaStorage,
   guessThingNameFromFilename,
   mapVacation3SctMediaFile,
   mergeBindingsIntoShared,
+  neonRawMediaPath,
   proofPngBuffer,
   resolveThingFromShared,
 } from '../src/vacation/thing-media-bind.mjs';
@@ -107,5 +109,39 @@ assert.match(vercel, /bind-thing-media/);
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
 assert.match(overlay, /\/shared\/.*\/journey/);
 assert.match(overlay, /bind-thing-media/);
+
+const pngBytes = proofPngBuffer({ label: 'neon' });
+const neonChoice = chooseMediaStorage({
+  bytes: pngBytes,
+  sourceUrl: '',
+  blobUrl: '',
+  hasDatabase: true,
+  origin: 'https://vacation-staging.timesyncher.com',
+  shareToken: 'las-vegas-vacation-3',
+  bindingId: 'bind-neon-1',
+});
+assert.equal(neonChoice.storageProvider, 'neon');
+assert.equal(neonChoice.storeBytes, true);
+assert.equal(neonChoice.publicUrl, `https://vacation-staging.timesyncher.com${neonRawMediaPath('las-vegas-vacation-3', 'bind-neon-1')}`);
+
+const urlChoice = chooseMediaStorage({
+  bytes: null,
+  sourceUrl: 'https://vacation-staging.timesyncher.com/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png',
+  hasDatabase: true,
+});
+assert.equal(urlChoice.storageProvider, 'url');
+assert.equal(urlChoice.storeBytes, false);
+
+const noStore = chooseMediaStorage({ bytes: pngBytes, hasDatabase: false, blobUrl: '' });
+assert.equal(noStore.error, 'no-store');
+
+const handler = await readFile(new URL('../src/vacation/bind-thing-media-handler.mjs', import.meta.url), 'utf8');
+assert.match(handler, /chooseMediaStorage/);
+assert.match(handler, /getBindingMedia/);
+assert.match(handler, /storeBytes/);
+
+const store = await readFile(new URL('../src/vacation/thing-media-store.mjs', import.meta.url), 'utf8');
+assert.match(store, /file_bytes bytea/);
+assert.match(store, /catch \{\s*return null;/);
 
 console.log('thing media bind tests passed');

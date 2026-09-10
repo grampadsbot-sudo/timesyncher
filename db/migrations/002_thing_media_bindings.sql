@@ -21,5 +21,7 @@ create table if not exists thing_media_bindings (
   check (media_kind in ('photo', 'video'))
 );
 
+alter table thing_media_bindings add column if not exists file_bytes bytea;
+
 create index if not exists thing_media_bindings_token_idx
   on thing_media_bindings (share_token, trek_place_id, created_at desc);

@@ -51,6 +51,7 @@ async function ensureNeonSchema(db) {
       updated_at timestamptz not null default now()
     )
   `;
+  await db`alter table thing_media_bindings add column if not exists file_bytes bytea`;
 }
 
 function hasBlob(env = process.env) {
@@ -59,12 +60,16 @@ function hasBlob(env = process.env) {
 
 export async function putMediaBlob(buffer, { pathname, contentType, env = process.env }) {
   if (!hasBlob(env)) return null;
-  const { put } = await import('@vercel/blob');
-  return await put(pathname, buffer, {
-    access: 'public',
-    addRandomSuffix: true,
-    contentType,
-  });
+  try {
+    const { put } = await import('@vercel/blob');
+    return await put(pathname, buffer, {
+      access: 'public',
+      addRandomSuffix: true,
+      contentType,
+    });
+  } catch {
+    return null;
+  }
 }
 
 async function readBlobIndex(shareToken, env = process.env) {
@@ -139,7 +144,7 @@ export async function listBindings(shareToken, env = process.env) {
   return collected;
 }
 
-export async function saveBinding(binding, env = process.env) {
+export async function saveBinding(binding, env = process.env, { bytes = null } = {}) {
   const row = {
     id: binding.id || newBindingId(),
     shareToken: binding.shareToken,
@@ -160,7 +165,8 @@ export async function saveBinding(binding, env = process.env) {
     createdAt: binding.createdAt || new Date().toISOString(),
   };
 
-  const stored = { neon: false, blob: false, local: false };
+  const stored = { neon: false, neonBytes: false, blob: false, local: false };
+  const fileBytes = bytes && bytes.length ? bytes : null;
 
   if (hasDatabase(env)) {
     const db = sql(env);
@@ -169,30 +175,73 @@ export async function saveBinding(binding, env = process.env) {
       insert into thing_media_bindings (
         id, share_token, trek_trip_id, trek_place_id, trek_day_id, day_number,
         thing_name, caption, media_kind, mime_type, original_name, file_size_bytes,
-        public_url, storage_provider, storage_pathname, trek_apply_status, metadata
+        public_url, storage_provider, storage_pathname, trek_apply_status, metadata, file_bytes
       ) values (
         ${row.id}, ${row.shareToken}, ${row.trekTripId}, ${row.thingId}, ${row.dayId}, ${row.dayNumber},
         ${row.thingName}, ${row.caption}, ${row.mediaKind}, ${row.mimeType}, ${row.originalName}, ${row.fileSizeBytes},
-        ${row.publicUrl}, ${row.storageProvider}, ${row.storagePathname}, ${row.trekApplyStatus}, ${{ source: 'bind-thing-media' }}
+        ${row.publicUrl}, ${row.storageProvider}, ${row.storagePathname}, ${row.trekApplyStatus}, ${{ source: 'bind-thing-media' }},
+        ${fileBytes}
       )
       on conflict (id) do update set
         public_url = excluded.public_url,
+        file_bytes = coalesce(excluded.file_bytes, thing_media_bindings.file_bytes),
         trek_apply_status = excluded.trek_apply_status,
         updated_at = now()
     `;
     stored.neon = true;
+    stored.neonBytes = Boolean(fileBytes);
   }
 
   if (hasBlob(env)) {
-    const existing = await readBlobIndex(row.shareToken, env);
-    const next = [row, ...existing.filter((item) => item.id !== row.id)];
-    await writeBlobIndex(row.shareToken, next, env);
-    stored.blob = true;
+    try {
+      const existing = await readBlobIndex(row.shareToken, env);
+      const next = [row, ...existing.filter((item) => item.id !== row.id)];
+      await writeBlobIndex(row.shareToken, next, env);
+      stored.blob = true;
+    } catch {
+      stored.blob = false;
+    }
   }
 
-  const local = [row, ...readJsonFile(localIndexPath(env)).filter((item) => item.id !== row.id)];
-  writeLocalIndex(local, env);
-  stored.local = true;
+  try {
+    const local = [row, ...readJsonFile(localIndexPath(env)).filter((item) => item.id !== row.id)];
+    writeLocalIndex(local, env);
+    stored.local = true;
+  } catch {
+    stored.local = false;
+  }
 
   return { binding: toPublicBinding(row), stored };
+}
+
+function bytesFromNeon(value) {
+  if (!value) return null;
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof Uint8Array) return Buffer.from(value);
+  if (typeof value === 'string') {
+    const hex = value.startsWith('\\x') ? value.slice(2) : value;
+    if (/^[0-9a-fA-F]+$/.test(hex) && hex.length % 2 === 0) return Buffer.from(hex, 'hex');
+    return Buffer.from(value, 'base64');
+  }
+  return null;
+}
+
+export async function getBindingMedia(shareToken, id, env = process.env) {
+  if (!hasDatabase(env) || !shareToken || !id) return null;
+  const db = sql(env);
+  await ensureNeonSchema(db);
+  const rows = await db`
+    select mime_type, original_name, file_bytes
+    from thing_media_bindings
+    where share_token = ${shareToken} and id = ${id}
+    limit 1
+  `;
+  const row = rows[0];
+  const bytes = bytesFromNeon(row?.file_bytes);
+  if (!row || !bytes) return null;
+  return {
+    bytes,
+    mimeType: row.mime_type || 'application/octet-stream',
+    originalName: row.original_name || 'media',
+  };
 }

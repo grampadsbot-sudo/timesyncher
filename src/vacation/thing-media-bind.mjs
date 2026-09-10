@@ -373,3 +373,35 @@ export function mimeFromName(name = '', fallback = 'image/jpeg') {
 export function mediaKindFromMime(mime = '') {
   return String(mime || '').startsWith('video/') ? 'video' : 'photo';
 }
+
+export function neonRawMediaPath(shareToken, bindingId) {
+  return `/api/bind-thing-media?shareToken=${encodeURIComponent(text(shareToken, 180))}&id=${encodeURIComponent(text(bindingId, 80))}&raw=1`;
+}
+
+export function chooseMediaStorage({
+  bytes = null,
+  sourceUrl = '',
+  blobUrl = '',
+  hasDatabase = false,
+  origin = '',
+  shareToken = '',
+  bindingId = '',
+} = {}) {
+  if (blobUrl) {
+    return { publicUrl: blobUrl, storageProvider: 'vercel-blob', storeBytes: false };
+  }
+  if (hasDatabase && bytes && bytes.length) {
+    return {
+      publicUrl: `${origin || ''}${neonRawMediaPath(shareToken, bindingId)}`,
+      storageProvider: 'neon',
+      storeBytes: true,
+    };
+  }
+  if (sourceUrl) {
+    return { publicUrl: sourceUrl, storageProvider: 'url', storeBytes: false };
+  }
+  if (bytes && bytes.length) {
+    return { publicUrl: '', storageProvider: 'request', storeBytes: false, error: 'no-store' };
+  }
+  return { publicUrl: '', storageProvider: '', storeBytes: false, error: 'no-input' };
+}
