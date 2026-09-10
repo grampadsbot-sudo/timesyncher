@@ -15,6 +15,7 @@ import {
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
+import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -125,6 +126,9 @@ function groupBy(items, key) {
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
+    if (url.searchParams.get('trekBundle') === '1') {
+      return await trekStyle2BundleHandler(req, res);
+    }
     if (url.searchParams.get('keepsakePdf') === '1' || /\/api\/pdf\/shared(?:\/|$)/.test(url.pathname)) {
       return await keepsakeStyle2Handler(req, res);
     }

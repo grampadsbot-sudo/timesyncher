@@ -8,6 +8,8 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Config dump (stamp, do not invent): `bot-admin/messages/time-syncher/keepsakes-config-defaults-20260910`
 - Skill: `skills/feature-map-full-ui-inventory`
 - Skills index: `features/skills-alignment.md`
+- Budget QA: `bot-admin/messages/time-syncher/keepsake-qa-budget-rules-20260910`
+- Config-ON PDF proof: `features/config-on-style-two-proof.md`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 
 A live control missing from `features/` means the map is incomplete — do not claim verified. This map is **not** a verify-PASS. Hold certify. Skillify jobs 18–22 in flight.
@@ -80,7 +82,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Reviews | 5-star review quote 1–3; print `★★★★★` | `ratings-reviews.md` |
 | Stories / media | Saved stories (Config); Edit caption; Play video | `media-stories.md` |
 | Collab | Checking edit access… / Saved to itinerary / View-only — editing requires an approved email invite | `collaborators.md` |
-| Budget | Overall trip budget / Trip total | `budget.md` |
+| Budget | Tab when `share_budget`; which things appear = live TREK rules only | `budget.md` |
 | Settings (TREK, not shared-guest header) | Mapbox / Google Maps / Weather / Invite / Copy link | `trek-settings.md` |
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |
 

@@ -66,11 +66,15 @@ export function wantsStyleTwoView({ report = '', view = '' } = {}) {
     || view === 'true';
 }
 
-export function productStyleTwoViewUrl({ shareToken, search = '' } = {}) {
+export function productStyleTwoViewUrl({
+  shareToken,
+  origin = 'https://vacation-staging.timesyncher.com',
+  search = '',
+} = {}) {
   const extra = new URLSearchParams(String(search || '').replace(/^\?/, ''));
   extra.set('printMode', 'report');
   extra.set('pdfReport', PRODUCT_STYLE_TWO_REPORT);
-  return `${PRODUCT_TREK_PUBLIC}/shared/${encodeURIComponent(shareToken)}/?${extra.toString()}`;
+  return `${String(origin || '').replace(/\/+$/, '')}/shared/${encodeURIComponent(shareToken)}/?${extra.toString()}`;
 }
 
 export function productPdfUrl({
@@ -86,7 +90,9 @@ export function productPdfUrl({
     return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}${suffix}${search}`;
   }
   const name = normalizeReportName(report);
-  return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
+  // zu() at keepsake-style-2.pdf omits Config-ON sections. Ae() is /keepsake.pdf.
+  const reportName = name === PRODUCT_STYLE_TWO_REPORT ? 'keepsake' : name;
+  return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}/report/${encodeURIComponent(reportName)}.pdf${search}`;
 }
 
 export function forwardedKeepsakeSearch(url) {
@@ -137,11 +143,13 @@ export default async function handler(req, res) {
   }
 
   const search = forwardedKeepsakeSearch(url);
-  const location = wantsStyleTwoView({
+  const origin = originFromReq(req);
+  const wantsView = wantsStyleTwoView({
     report: reportName,
     view: url.searchParams.get('view') || '',
-  })
-    ? productStyleTwoViewUrl({ shareToken, search })
+  });
+  const location = wantsView
+    ? productStyleTwoViewUrl({ shareToken, origin, search })
     : productPdfUrl({
       shareToken,
       report: reportName,
@@ -149,8 +157,8 @@ export default async function handler(req, res) {
       search,
     });
 
-  if (location.startsWith(originFromReq(req))) {
-    return sendJson(res, 500, { ok: false, error: 'Refusing to redirect Style two onto this host.' });
+  if (!wantsView && location.startsWith(origin)) {
+    return sendJson(res, 500, { ok: false, error: 'Refusing to redirect Style two PDF onto this host.' });
   }
 
   return sendRedirect(res, location);

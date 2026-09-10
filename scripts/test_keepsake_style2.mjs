@@ -20,6 +20,7 @@ import {
   PRODUCT_SOT_TWIN as HANDLER_SOT_TWIN,
   forwardedKeepsakeSearch,
 } from '../src/vacation/keepsake-style2-handler.mjs';
+import { patchStyleTwoToConfigRenderer, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 
 const shared = {
   trip: {
@@ -191,6 +192,7 @@ const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8'
 assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 assert.match(vercel, /report=journey/);
+assert.match(vercel, /trekBundle/);
 assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
 
 assert.equal(normalizeReportName('style-2'), PRODUCT_STYLE_TWO_REPORT);
@@ -210,7 +212,7 @@ assert.equal(wantsStyleTwoView({ report: 'journey' }), true);
 assert.equal(wantsStyleTwoView({ report: 'style-2' }), false);
 assert.equal(
   productStyleTwoViewUrl({ shareToken: 'las-vegas-vacation-3' }),
-  `${PRODUCT_TREK_PUBLIC}/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2`,
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2',
 );
 const styleTwoUrl = productPdfUrl({
   shareToken: 'las-vegas-vacation-3',
@@ -218,7 +220,11 @@ const styleTwoUrl = productPdfUrl({
 });
 assert.equal(
   styleTwoUrl,
-  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/keepsake-style-2.pdf`,
+  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/keepsake.pdf`,
+);
+assert.equal(
+  patchStyleTwoToConfigRenderer(`if(h==="report"&&g){${STYLE2_USES_ZU}}`),
+  `if(h==="report"&&g){${STYLE2_USES_AE}}`,
 );
 assert.equal(
   productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'restaurants' }),
@@ -245,7 +251,7 @@ assert.match(create, /Backfilled from existing trip things/);
 assert.doesNotMatch(create, /airport\|las\|boi/);
 
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
-assert.match(sharedApp, /index-0J54vUO3\.js/);
+assert.match(sharedApp, /index-BKun7ofk\.js/);
 assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
 assert.doesNotMatch(sharedApp, /pdfReport=keepsake/);
 

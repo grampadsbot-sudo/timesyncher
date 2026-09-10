@@ -6,7 +6,7 @@ Completer/skillify jobs 18–22 in flight. Hold certify. Do not claim Completer 
 | --- | --- |
 | `skills/gbrain-canonical-actions` | GBrain skills first; ignore conflicting bot-local skills (CoS job 9) |
 | `skills/style-2-journey-book-export` | Sole SoT `style-2-journey-book-standard`; Layout 2 / Style two only |
-| `skills/keepsake-qa` | Fail-closed QA of **product** Style two; no third layout |
+| `skills/keepsake-qa` | Fail-closed Style two Config honor + live Feature Map + **budget** inclusion |
 | `skills/thing-logo-icon-rules` | Logos at create; airplane flights-only; missing → category/default |
 | `skills/vacation-media-bind` | Neon bind API; no Blob; no tokens in chat/PR |
 | `skills/feature-map-full-ui-inventory` | Every live UI control in `features/`; stamp Config dump |

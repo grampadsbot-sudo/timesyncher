@@ -6,6 +6,10 @@
       "dest": "/api/vacation-itinerary?mediaBind=1"
     },
     {
+      "src": "/assets/index-BKun7ofk.js",
+      "dest": "/api/vacation-itinerary?trekBundle=1"
+    },
+    {
       "src": "/api/pdf/shared/(.*)",
       "dest": "/api/vacation-itinerary?keepsakePdf=1&pdfPath=$1"
     },
