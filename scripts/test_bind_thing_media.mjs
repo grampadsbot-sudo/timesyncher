@@ -68,13 +68,17 @@ assert.deepEqual(
   { mode: 'token' },
 );
 
-const api = await readFile(new URL('../api/bind-thing-media.mjs', import.meta.url), 'utf8');
+const api = await readFile(new URL('../src/vacation/bind-thing-media-handler.mjs', import.meta.url), 'utf8');
 assert.match(api, /\/api\/bind-thing-media/);
 assert.match(api, /shareToken/);
 assert.match(api, /sourceUrl/);
 
+const itinerary = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+assert.match(itinerary, /mediaBind/);
+assert.match(itinerary, /trekPath/);
+
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
-assert.match(vercel, /shared-trip/);
+assert.match(vercel, /vacation-itinerary\?trekPath/);
 assert.match(vercel, /bind-thing-media/);
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');

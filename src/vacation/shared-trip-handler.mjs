@@ -1,6 +1,6 @@
-import { cleanText, headerValue, sendJson } from '../src/vacation/http.mjs';
-import { TREK_SHARED_API_BASE, mergeBindingsIntoShared } from '../src/vacation/thing-media-bind.mjs';
-import { listBindings } from '../src/vacation/thing-media-store.mjs';
+import { cleanText, headerValue, sendJson } from './http.mjs';
+import { TREK_SHARED_API_BASE, mergeBindingsIntoShared } from './thing-media-bind.mjs';
+import { listBindings } from './thing-media-store.mjs';
 
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
 

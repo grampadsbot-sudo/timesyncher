@@ -12,6 +12,8 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
+import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -122,6 +124,12 @@ function groupBy(items, key) {
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
+    if (url.searchParams.has('trekPath') || /\/api\/shared(?:-trip)?(?:\/|$)/.test(url.pathname)) {
+      return await sharedTripHandler(req, res);
+    }
+    if (url.searchParams.get('mediaBind') === '1' || url.pathname.endsWith('/bind-thing-media')) {
+      return await bindThingMediaHandler(req, res);
+    }
     const db = sql(process.env);
     if (url.searchParams.get('webAccess') === '1' || url.pathname.endsWith('/vacation-web-access')) {
       return await handleWebAccess(req, res, db, url);

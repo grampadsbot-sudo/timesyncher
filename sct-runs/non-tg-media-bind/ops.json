@@ -1,0 +1,18 @@
+{
+  "note": "GBrain MCP was not authenticated. Receipt lives here and in the PR body.",
+  "slugRequested": "bot-admin/messages/time-syncher/cursor-non-tg-media-bind-<timestamp>",
+  "shareToken": "las-vegas-vacation-3",
+  "trekTripId": 197,
+  "proof": {
+    "thingId": 8872,
+    "thingName": "Carbone at Aria",
+    "file": "/workspace/public/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png",
+    "bindings": "/workspace/public/ts-thing-media/bindings.json",
+    "journeyBookPath": "/shared/las-vegas-vacation-3/journey"
+  },
+  "api": {
+    "GET": "/api/bind-thing-media?shareToken=las-vegas-vacation-3",
+    "POST": "/api/bind-thing-media"
+  },
+  "cli": "node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./photo.jpg"
+}

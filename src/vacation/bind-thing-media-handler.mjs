@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 
-import { requireMediaBindAuth } from '../src/vacation/auth.mjs';
-import { cleanText, headerValue, readJson, sendJson } from '../src/vacation/http.mjs';
+import { requireMediaBindAuth } from './auth.mjs';
+import { cleanText, headerValue, readJson, sendJson } from './http.mjs';
 import {
   TREK_SHARED_API_BASE,
   mediaKindFromMime,
@@ -9,8 +9,8 @@ import {
   mimeFromName,
   newBindingId,
   resolveThingFromShared,
-} from '../src/vacation/thing-media-bind.mjs';
-import { listBindings, putMediaBlob, saveBinding } from '../src/vacation/thing-media-store.mjs';
+} from './thing-media-bind.mjs';
+import { listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
 const MAX_BYTES = Number.parseInt(process.env.TIMESYNCHER_MEDIA_BIND_MAX_BYTES || '20971520', 10);
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
