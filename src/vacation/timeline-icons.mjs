@@ -157,10 +157,24 @@ export function resolveThingType(thing = {}, override = {}, rowType = '') {
   return inferThingTypeFromText(haystack(thing, override.category)) || 'other';
 }
 
+export const AIRPLANE_GLYPH_RE = /\u2708\uFE0F?|\u2708|✈️|^plane$/i;
+
+export function isAirplaneGlyph(value) {
+  return AIRPLANE_GLYPH_RE.test(text(value));
+}
+
 export function timelineCategoryIcon(type) {
+  if (type === 'flight') return '✈️';
   if (type === 'hotel-wake' || type === 'hotel-sleep') return '🛏️';
   if (type === 'travel' || type === 'travel-to-thing') return '🚗';
-  return CATEGORY_ICONS[type] || '📍';
+  const icon = CATEGORY_ICONS[type] || '📍';
+  if (isAirplaneGlyph(icon) && type !== 'flight') return '📍';
+  return icon;
+}
+
+export function sanitizeTimelineGlyph(icon, type) {
+  if (isAirplaneGlyph(icon) && type !== 'flight') return timelineCategoryIcon(type || 'other');
+  return text(icon) || timelineCategoryIcon(type || 'other');
 }
 
 export function thingLogoUrl(thing = {}, override = {}) {
@@ -186,4 +200,16 @@ export function timelineIcon(thing = {}, override = {}, rowType = '') {
 
 export function isAirplaneAllowed(type) {
   return type === 'flight';
+}
+
+export function printThingIconHtml(thing = {}, override = {}, rowType = '') {
+  const resolved = timelineIcon(thing, override, rowType);
+  if (resolved.logoUrl) {
+    const src = String(resolved.logoUrl)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
+    return `<img class="tiny-logo" src="${src}" alt="" />`;
+  }
+  return `<span class="thing-emoji">${resolved.icon}</span>`;
 }

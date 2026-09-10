@@ -29,7 +29,8 @@ function opsHelp(host = 'https://<this-preview>') {
       list: `GET ${host}/api/bind-thing-media?shareToken=las-vegas-vacation-3`,
       bindJson: `POST ${host}/api/bind-thing-media`,
       bindMultipart: `POST ${host}/api/bind-thing-media (multipart file)`,
-      journeyBook: `${host}/shared/las-vegas-vacation-3/journey`,
+      journeyBook: `${host}/shared/las-vegas-vacation-3/journey?style=2`,
+      style2Pdf: `${host}/api/pdf/shared/las-vegas-vacation-3/report/style-2`,
       thingOnShared: `${host}/shared/las-vegas-vacation-3/`,
     },
     jsonBody: {

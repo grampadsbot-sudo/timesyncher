@@ -6,8 +6,16 @@
       "dest": "/api/vacation-itinerary?mediaBind=1"
     },
     {
+      "src": "/api/pdf/shared/(.*)",
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&pdfPath=$1"
+    },
+    {
       "src": "/api/shared/(.*)",
       "dest": "/api/vacation-itinerary?trekPath=$1"
+    },
+    {
+      "src": "/shared/([^/]+)/journey(?:/)?",
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=style-2"
     },
     {
       "src": "/shared(?:/.*)?",

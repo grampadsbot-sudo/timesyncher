@@ -1,7 +1,9 @@
 import {
   inferThingTypeFromText,
+  isAirplaneGlyph,
   looksLikeFlightText,
   resolveThingType,
+  sanitizeTimelineGlyph,
   thingLogoUrl,
   timelineIcon,
 } from '../src/vacation/timeline-icons.mjs';
@@ -78,5 +80,13 @@ assert(timelineIcon(carbone, { category: 'other' }).icon === '🍽️', 'other o
 assert(thingLogoUrl(withLogo) === 'https://example.com/carbone.png', 'image_url is used as thing logo');
 assert(timelineIcon(withLogo).logoUrl === 'https://example.com/carbone.png', 'logo wins over category icon when present');
 assert(resolveThingType({ name: 'Random Las Vegas walk' }) !== 'flight', 'bare Las Vegas text is not a flight');
+assert(resolveThingType({ name: 'Bellagio Conservatory', category_name: 'Attraction' }) !== 'flight', 'Conservatory is not a flight');
+assert(resolveThingType({ name: 'Bellagio Conservatory', category_name: 'Attraction' }) !== 'car', 'attraction does not become car');
+assert(timelineIcon(carbone, { icon: '✈️' }).icon === '🍽️', 'stored airplane icon is not used for restaurants');
+assert(timelineIcon(shops, { icon: 'Plane' }).icon === '🛍️', 'Plane lucide is not a missing-logo fallback');
+assert(sanitizeTimelineGlyph('✈️', 'restaurant') === '🍽️', 'sanitize strips airplane from restaurants');
+assert(sanitizeTimelineGlyph('✈️', 'flight') === '✈️', 'sanitize keeps airplane on flights');
+assert(isAirplaneGlyph('✈️') === true, 'airplane glyph detected');
+assert(timelineIcon({ name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction' }).isFlight === false, 'research queue is not a flight');
 
 console.log('timeline icon tests passed');

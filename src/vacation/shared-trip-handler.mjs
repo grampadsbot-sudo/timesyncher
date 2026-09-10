@@ -1,6 +1,8 @@
 import { cleanText, headerValue, sendJson } from './http.mjs';
 import { TREK_SHARED_API_BASE, mergeBindingsIntoShared } from './thing-media-bind.mjs';
 import { listBindings } from './thing-media-store.mjs';
+import { applyCapturedLogos } from './thing-logo-capture.mjs';
+import { realTripSummary } from './keepsake-style2.mjs';
 
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
 
@@ -68,11 +70,18 @@ export default async function handler(req, res) {
 
   const shareToken = shareTokenFromTrekPath(trekPath);
   const bindings = shareToken ? await listBindings(shareToken, process.env) : [];
-  const merged = mergeBindingsIntoShared(shared, bindings);
+  const merged = applyCapturedLogos(mergeBindingsIntoShared(shared, bindings));
+  const overrides = merged.thingOverrides && typeof merged.thingOverrides === 'object' ? merged.thingOverrides : {};
+  merged.thingOverrides = {
+    ...overrides,
+    __keepsakeSummary: realTripSummary(merged),
+  };
   merged.timesyncherMediaBind = {
     count: bindings.length,
     source: '/api/bind-thing-media',
     journeyBookPath: `/shared/${encodeURIComponent(shareToken)}/journey`,
+    style2Path: `/shared/${encodeURIComponent(shareToken)}/journey?style=2`,
+    style2PdfPath: `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/style-2`,
   };
   return sendJson(res, 200, merged);
 }
