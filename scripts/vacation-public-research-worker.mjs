@@ -118,7 +118,7 @@ export function assertRequiredFirstPassMinimums(candidates = [], minimums = DEFA
   if (Object.keys(missing).length) {
     throw new Error(
       `initial website fill requires per-category mins restaurant>=${required.restaurant} store>=${required.store} rest>=${required.rest} `
-      + `(DEFAULT_FIRST_PASS_MINIMUMS in scripts/vacation-public-research-worker.mjs:12-16). `
+      + `(DEFAULT_FIRST_PASS_MINIMUMS in scripts/vacation-public-research-worker.mjs:13-16). `
       + `Got ${JSON.stringify(counts)}; missing ${JSON.stringify(missing)}. Under-min is fail-closed and cannot be skipped.`,
     );
   }

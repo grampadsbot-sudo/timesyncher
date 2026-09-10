@@ -19,6 +19,7 @@ import {
   createTelegramWebAccessSession,
   publicTripUrl,
 } from '../src/vacation/web-access.mjs';
+import { INITIAL_BUILD_CUE, persistIntakeTurnToGbrain } from '../src/vacation/tg-intake-gbrain.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
 const MAX_VIDEOS_PER_VACATION = 20;
@@ -500,7 +501,7 @@ export function vacationIdentityAck({ vacationName, text, queued }) {
     compactIntakeSummary(text),
     '',
     queued
-      ? 'I am turning that into the hosted TimeSyncher Vacation itinerary now. You can keep sending updates here while I work.'
+      ? INITIAL_BUILD_CUE
       : 'Now send me the destination, rough dates, who is traveling, budget range, must-do experiences, and anything you want avoided. Voice notes are fine.',
   ].join('\n');
 }
@@ -1325,9 +1326,9 @@ function setupReply({ startLinked, hasSession, text, kind }) {
     ].join('\n');
   }
   return [
-    'I am turning the information you sent into a hosted TimeSyncher Vacation itinerary.',
+    INITIAL_BUILD_CUE,
     '',
-    'I will send the itinerary link when the first pass is ready. You can keep sending any updates, must-do experiences, reservations, or preferences here while I work.',
+    'You can keep sending any updates, must-do experiences, reservations, or preferences here while I work.',
   ].join('\n');
 }
 
@@ -1702,15 +1703,26 @@ export default async function handler(req, res) {
       responseLatencyMs: Number.isFinite(latency) ? latency : null,
       onboardingStep: session.current_step,
     });
+    const gbrainIntake = persistIntakeTurnToGbrain({
+      prompt: text,
+      response: reply,
+      queued: Boolean(queued),
+      vacationName: replyPayload?.vacationName || sessionMetadata(session).vacationName || '',
+      telegramChatId,
+      inboundTranscriptId,
+      outboundTranscriptId,
+      receivedAt,
+    });
 
     return sendJson(res, 200, {
       ok: true,
       reply,
-      payload: { queued, ...replyPayload },
+      payload: { queued, ...replyPayload, gbrainIntake },
       telegramSessionId: session.id,
       inboundTranscriptId,
       outboundTranscriptId,
       queued,
+      gbrainIntake,
       responseLatencyMs: Number.isFinite(latency) ? latency : null,
     });
   } catch (error) {

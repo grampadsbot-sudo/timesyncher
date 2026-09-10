@@ -5,7 +5,7 @@ Autonomy: `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910
 
 **Not a total-of-8.** `TIMESYNCHER_ITINERARY_MIN_THINGS=8` is **void** as the product bar (Craig 2026-09-10).
 
-Craig recollection (~15 stores / ~15 restaurants / ~10 others) is **not** the stamp. Exact coded mins:
+Craig/CoS **confirmed** 2026-09-10. Exact coded mins (do not invent others):
 
 | Bucket | Count | File:line |
 | --- | --- | --- |

@@ -28,7 +28,7 @@ const ack = vacationIdentityAck({
 assert.match(ack, /working title/i);
 assert.match(ack, /seven nights/i);
 assert.match(ack, /Oahu\/Waikiki/i);
-assert.match(ack, /turning that into the hosted TimeSyncher Vacation itinerary now/i);
+assert.match(ack, /I'm building your initial itinerary now and it may take 10–15 minutes/i);
 assert.doesNotMatch(ack, /Now send me the destination/i);
 
 const detailsOnly = parseVacationIdentity('We are staying seven nights in Hawaii and starting in Oahu.');
