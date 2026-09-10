@@ -7,6 +7,7 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Completeness rule: `bot-admin/messages/time-syncher/feature-map-full-ui-inventory-rule-20260910`
 - Config dump (stamp, do not invent): `bot-admin/messages/time-syncher/keepsakes-config-defaults-20260910`
 - Skill: `skills/feature-map-full-ui-inventory`
+- Skills index: `features/skills-alignment.md`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 
 A live control missing from `features/` means the map is incomplete — do not claim verified. This map is **not** a verify-PASS. Hold certify. Skillify jobs 18–22 in flight.

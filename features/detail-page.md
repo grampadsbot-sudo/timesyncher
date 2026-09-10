@@ -11,6 +11,8 @@ Shared fields:
 - **Area**
 - **Start** (placeholder TBD)
 - **Duration** (placeholder TBD)
+- Timeline row control: **Open thing details**
+- Close: **×**
 
 Edit-state copy: see `collaborators.md`.
 
