@@ -4,7 +4,7 @@
 
   const token = decodeURIComponent(sharedMatch[1]);
   const rest = (sharedMatch[2] || '').replace(/\/+$/, '');
-  const isJourney = rest === 'journey' || new URLSearchParams(location.search).get('view') === 'journey';
+  const isJourney = rest === 'journey' || new URLSearchParams(location.search).get('view') === 'journey' || window.__TS_JOURNEY_BOOK__;
 
   function absUrl(value) {
     if (!value) return '';
