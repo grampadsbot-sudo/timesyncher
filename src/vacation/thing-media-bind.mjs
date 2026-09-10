@@ -14,7 +14,7 @@ export const FILENAME_THING_HINTS = [
   [/cosmo|shop/i, 'Cosmopolitan shops'],
   [/conservatory|bellagio.*cocktail|anniversary cocktail/i, 'Bellagio Conservatory'],
   [/bellagio|lodging|hotel|fountain/i, 'Bellagio'],
-  [/sfo.*las|outbound|depart/i, 'SFO to LAS'],
+  [/boarding|sfo.*las|outbound|depart/i, 'SFO to LAS'],
   [/las.*sfo|return|inbound/i, 'LAS to SFO'],
 ];
 
@@ -23,6 +23,144 @@ export const THINGS_NOT_ON_VACATION3 = [
   { pattern: /\bsphere\b/i, name: 'Sphere' },
   { pattern: /cirque/i, name: 'Cirque O' },
 ];
+
+export const SCT_VACATION3_MEDIA_DIR = '/workspace/sct-runs/story-draft-20260907/media';
+
+export const SCT_VACATION3_MEDIA_PACK = [
+  {
+    file: 'boarding-passes-photo.jpg',
+    action: 'bind',
+    targets: [
+      { thingId: 8877, thingName: 'SFO to LAS' },
+      { thingId: 8878, thingName: 'LAS to SFO' },
+    ],
+  },
+  {
+    file: 'carbone-late-hands-photo.jpg',
+    action: 'bind',
+    targets: [{ thingId: 8872, thingName: 'Carbone' }],
+  },
+  {
+    file: 'carbone-plates-photo.jpg',
+    action: 'bind',
+    targets: [{ thingId: 8872, thingName: 'Carbone' }],
+  },
+  {
+    file: 'cirque-program-photo.jpg',
+    action: 'skip',
+    skipName: 'Cirque O',
+    skipReason: 'Cirque O is not on trip 197',
+  },
+  {
+    file: 'conservatory-photo.jpg',
+    action: 'bind',
+    targets: [{ thingId: 8871, thingName: 'Bellagio Conservatory' }],
+  },
+  {
+    file: 'eggslut-sandwich-photo.jpg',
+    action: 'bind',
+    targets: [{ thingId: 8875, thingName: 'Eggslut' }],
+  },
+  {
+    file: 'high-roller-photo-01.jpg',
+    action: 'skip',
+    skipName: 'High Roller',
+    skipReason: 'High Roller is not on trip 197',
+  },
+  {
+    file: 'high-roller-photo-02.jpg',
+    action: 'skip',
+    skipName: 'High Roller',
+    skipReason: 'High Roller is not on trip 197',
+  },
+  {
+    file: 'high-roller-photo-03.jpg',
+    action: 'skip',
+    skipName: 'High Roller',
+    skipReason: 'High Roller is not on trip 197',
+  },
+  {
+    file: 'shake-shack-fries-photo.jpg',
+    action: 'bind',
+    targets: [{ thingId: 8873, thingName: 'Shake Shack' }],
+  },
+  {
+    file: 'sphere-late-photo-01.jpg',
+    action: 'skip',
+    skipName: 'Sphere',
+    skipReason: 'Sphere is not on trip 197',
+  },
+  {
+    file: 'sphere-late-photo-02.jpg',
+    action: 'skip',
+    skipName: 'Sphere',
+    skipReason: 'Sphere is not on trip 197',
+  },
+  {
+    file: 'bellagio-fountain-late-video.mp4',
+    action: 'bind',
+    targets: [{ thingId: 8869, thingName: 'Bellagio' }],
+  },
+  {
+    file: 'bellagio-fountain-night-video.mp4',
+    action: 'bind',
+    targets: [{ thingId: 8869, thingName: 'Bellagio' }],
+  },
+  {
+    file: 'sphere-led-video.mp4',
+    action: 'skip',
+    skipName: 'Sphere',
+    skipReason: 'Sphere is not on trip 197',
+  },
+];
+
+function basenameLower(filename = '') {
+  return String(filename || '').split('/').pop().trim().toLowerCase();
+}
+
+export function mapVacation3SctMediaFile(filename = '') {
+  const file = basenameLower(filename);
+  const exact = SCT_VACATION3_MEDIA_PACK.find((row) => row.file === file);
+  if (exact) {
+    return {
+      file,
+      action: exact.action,
+      targets: exact.targets ? exact.targets.map((target) => ({ ...target })) : [],
+      skipName: exact.skipName || '',
+      skipReason: exact.skipReason || '',
+      exact: true,
+    };
+  }
+  const guessed = guessThingNameFromFilename(file);
+  if (guessed.missing) {
+    return {
+      file,
+      action: 'skip',
+      targets: [],
+      skipName: guessed.thingName,
+      skipReason: `${guessed.thingName} is not on trip 197`,
+      exact: false,
+    };
+  }
+  if (guessed.thingName) {
+    return {
+      file,
+      action: 'bind',
+      targets: [{ thingId: 0, thingName: guessed.thingName }],
+      skipName: '',
+      skipReason: '',
+      exact: false,
+    };
+  }
+  return {
+    file,
+    action: 'unknown',
+    targets: [],
+    skipName: '',
+    skipReason: 'No Thing mapping for this filename',
+    exact: false,
+  };
+}
 
 function text(value, max = 240) {
   return cleanText(value, max);

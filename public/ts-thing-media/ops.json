@@ -18,5 +18,6 @@
   "trekHostNativeJourneyBook": "node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./photo.jpg --apply-trek",
   "auth": "TIMESYNCHER_MEDIA_BIND_TOKEN or TIMESYNCHER_ADMIN_TOKEN or TIMESYNCHER_WORKER_TOKEN. Preview and vacation-staging hosts allow POST without a token.",
   "sctMediaDirMissingHere": "/workspace/sct-runs/story-draft-20260907/media",
+  "mapOnly": "node scripts/bind-thing-media.mjs --map-only",
   "notOnTripYet": ["High Roller", "Sphere", "Cirque O"]
 }

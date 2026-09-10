@@ -3,32 +3,33 @@
 Share token: `las-vegas-vacation-3`
 TREK trip: `197`
 Bind API: `POST /api/bind-thing-media`
-CLI: `node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --file <path> --write-public`
+Exact map: `SCT_VACATION3_MEDIA_PACK` in `src/vacation/thing-media-bind.mjs`
+CLI: `node scripts/bind-thing-media.mjs --map-only`
 
 Expected SCT dir: `/workspace/sct-runs/story-draft-20260907/media/`
-This VM does not currently have those files. Filename hints below are how the CLI maps them.
 
-## Bind (on this trip)
+## Exact SCT pack
 
-| Filename hint | Thing | thingId | Day |
+| File | Action | Thing | thingId |
 |---|---|---|---|
-| `*conservatory*` `*cocktail*` | Bellagio Conservatory — Anniversary Cocktails | 8871 | 1 |
-| `*carbone*` | Carbone at Aria | 8872 | 1 |
-| `*shake*` | Shake Shack near Cosmo/Aria | 8873 | 2 |
-| `*lotus*` | Lotus of Siam | 8874 | 3 |
-| `*eggslut*` | Eggslut | 8875 | 3 |
-| `*cosmo*` `*shop*` | Cosmopolitan shops | 8876 | 2 |
-| `*sfo*las*` `*outbound*` `*depart*` | SFO to LAS Thu Oct 9 | 8877 | 1 |
-| `*las*sfo*` `*return*` `*inbound*` | LAS to SFO Sun Oct 12 | 8878 | 3 |
-| `*bellagio*` `*lodging*` `*hotel*` `*fountain*` | Bellagio — Alex & Kim Anniversary Stay | 8869 | 1 |
+| `boarding-passes-photo.jpg` | bind | SFO to LAS Thu Oct 9 | 8877 |
+| `boarding-passes-photo.jpg` | bind | LAS to SFO Sun Oct 12 | 8878 |
+| `carbone-late-hands-photo.jpg` | bind | Carbone at Aria | 8872 |
+| `carbone-plates-photo.jpg` | bind | Carbone at Aria | 8872 |
+| `conservatory-photo.jpg` | bind | Bellagio Conservatory — Anniversary Cocktails | 8871 |
+| `eggslut-sandwich-photo.jpg` | bind | Eggslut | 8875 |
+| `shake-shack-fries-photo.jpg` | bind | Shake Shack near Cosmo/Aria | 8873 |
+| `bellagio-fountain-late-video.mp4` | bind | Bellagio — Alex & Kim Anniversary Stay | 8869 |
+| `bellagio-fountain-night-video.mp4` | bind | Bellagio — Alex & Kim Anniversary Stay | 8869 |
+| `cirque-program-photo.jpg` | skip | Cirque O | — |
+| `high-roller-photo-01.jpg` | skip | High Roller | — |
+| `high-roller-photo-02.jpg` | skip | High Roller | — |
+| `high-roller-photo-03.jpg` | skip | High Roller | — |
+| `sphere-late-photo-01.jpg` | skip | Sphere | — |
+| `sphere-late-photo-02.jpg` | skip | Sphere | — |
+| `sphere-led-video.mp4` | skip | Sphere | — |
 
-## Skip until Things exist (note only)
-
-| Filename hint | Name |
-|---|---|
-| `*high-roller*` `*high_roller*` | High Roller |
-| `*sphere*` | Sphere |
-| `*cirque*` | Cirque O |
+Lotus of Siam (8874) and Cosmopolitan shops (8876) have no file in this pack.
 
 ## Batch command (when the SCT dir is present)
 

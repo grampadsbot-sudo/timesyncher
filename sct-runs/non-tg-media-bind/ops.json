@@ -14,5 +14,7 @@
     "GET": "/api/bind-thing-media?shareToken=las-vegas-vacation-3",
     "POST": "/api/bind-thing-media"
   },
-  "cli": "node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./photo.jpg"
+  "cli": "node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./photo.jpg",
+  "mapOnly": "node scripts/bind-thing-media.mjs --map-only",
+  "sctMediaDirMissingHere": "/workspace/sct-runs/story-draft-20260907/media"
 }

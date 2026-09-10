@@ -6,10 +6,12 @@ import { spawnSync } from 'node:child_process';
 
 import {
   FILENAME_THING_HINTS,
+  SCT_VACATION3_MEDIA_DIR,
+  SCT_VACATION3_MEDIA_PACK,
   THINGS_NOT_ON_VACATION3,
   TREK_SHARED_API_BASE,
   VACATION3_SHARE_TOKEN,
-  guessThingNameFromFilename,
+  mapVacation3SctMediaFile,
   mediaKindFromMime,
   mimeFromName,
   newBindingId,
@@ -253,7 +255,18 @@ async function main() {
   const makeProof = hasFlag('--proof');
   const sharedBase = arg('--shared-api', process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE);
 
-  const defaultMediaDir = '/workspace/sct-runs/story-draft-20260907/media';
+  const defaultMediaDir = SCT_VACATION3_MEDIA_DIR;
+  const mapOnly = hasFlag('--map-only');
+  if (mapOnly) {
+    console.log(JSON.stringify({
+      ok: true,
+      shareToken,
+      mediaDir: defaultMediaDir,
+      mediaDirExists: fs.existsSync(defaultMediaDir),
+      pack: SCT_VACATION3_MEDIA_PACK.map((row) => mapVacation3SctMediaFile(row.file)),
+    }, null, 2));
+    return;
+  }
   const files = collectFiles(fileArg, dirArg || (!fileArg && !urlArg && !makeProof && fs.existsSync(defaultMediaDir) ? defaultMediaDir : ''));
 
   if (makeProof && !files.length && !urlArg) {
@@ -290,24 +303,33 @@ async function main() {
   }
 
   for (const filePath of files) {
-    const guessed = guessThingNameFromFilename(filePath);
-    if (guessed.missing && !thingName && !thingId) {
-      skipped.push({ filePath, reason: `${guessed.thingName} is not on vacation-3 yet` });
+    const mapped = mapVacation3SctMediaFile(filePath);
+    if (mapped.action === 'skip' && !thingName && !thingId) {
+      skipped.push({ filePath, reason: mapped.skipReason || `${mapped.skipName} is not on vacation-3 yet` });
       continue;
     }
-    outputs.push(await bindOne({
-      shareToken,
-      shared,
-      thingName: thingName || guessed.thingName,
-      thingId,
-      filePath,
-      sourceUrl: urlArg,
-      caption,
-      writePublic,
-      applyTrekHost,
-      apiBase,
-      apiToken,
-    }));
+    if (mapped.action === 'unknown' && !thingName && !thingId) {
+      skipped.push({ filePath, reason: mapped.skipReason });
+      continue;
+    }
+    const targets = (thingName || thingId)
+      ? [{ thingId: Number(thingId || 0) || 0, thingName }]
+      : mapped.targets;
+    for (const target of targets) {
+      outputs.push(await bindOne({
+        shareToken,
+        shared,
+        thingName: target.thingName,
+        thingId: target.thingId || thingId,
+        filePath,
+        sourceUrl: urlArg,
+        caption,
+        writePublic,
+        applyTrekHost,
+        apiBase,
+        apiToken,
+      }));
+    }
   }
 
   console.log(JSON.stringify({

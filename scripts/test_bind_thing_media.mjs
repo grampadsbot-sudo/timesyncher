@@ -3,7 +3,9 @@ import { readFile } from 'node:fs/promises';
 
 import { requireMediaBindAuth, stagingMediaBindHost } from '../src/vacation/auth.mjs';
 import {
+  SCT_VACATION3_MEDIA_PACK,
   guessThingNameFromFilename,
+  mapVacation3SctMediaFile,
   mergeBindingsIntoShared,
   proofPngBuffer,
   resolveThingFromShared,
@@ -30,8 +32,29 @@ assert.equal(resolveThingFromShared(shared, { thingName: 'Carbone' }).thingId, 8
 assert.equal(resolveThingFromShared(shared, { thingId: 8872 }).name, 'Carbone at Aria');
 assert.equal(resolveThingFromShared(shared, { thingName: 'Conservatory' }).thingId, 8871);
 assert.equal(guessThingNameFromFilename('carbone-dinner.jpg').thingName, 'Carbone');
+assert.equal(guessThingNameFromFilename('boarding-passes-photo.jpg').thingName, 'SFO to LAS');
 assert.equal(guessThingNameFromFilename('high-roller.jpg').missing, true);
 assert.equal(guessThingNameFromFilename('sphere-show.jpg').missing, true);
+
+assert.equal(SCT_VACATION3_MEDIA_PACK.length, 15);
+const carboneHands = mapVacation3SctMediaFile('carbone-late-hands-photo.jpg');
+assert.equal(carboneHands.action, 'bind');
+assert.equal(carboneHands.targets[0].thingId, 8872);
+const boarding = mapVacation3SctMediaFile('/workspace/sct-runs/story-draft-20260907/media/boarding-passes-photo.jpg');
+assert.equal(boarding.action, 'bind');
+assert.deepEqual(boarding.targets.map((row) => row.thingId), [8877, 8878]);
+assert.equal(mapVacation3SctMediaFile('conservatory-photo.jpg').targets[0].thingId, 8871);
+assert.equal(mapVacation3SctMediaFile('shake-shack-fries-photo.jpg').targets[0].thingId, 8873);
+assert.equal(mapVacation3SctMediaFile('eggslut-sandwich-photo.jpg').targets[0].thingId, 8875);
+assert.equal(mapVacation3SctMediaFile('bellagio-fountain-late-video.mp4').targets[0].thingId, 8869);
+assert.equal(mapVacation3SctMediaFile('bellagio-fountain-night-video.mp4').targets[0].thingId, 8869);
+assert.equal(mapVacation3SctMediaFile('cirque-program-photo.jpg').action, 'skip');
+assert.equal(mapVacation3SctMediaFile('high-roller-photo-01.jpg').action, 'skip');
+assert.equal(mapVacation3SctMediaFile('high-roller-photo-02.jpg').action, 'skip');
+assert.equal(mapVacation3SctMediaFile('high-roller-photo-03.jpg').action, 'skip');
+assert.equal(mapVacation3SctMediaFile('sphere-late-photo-01.jpg').action, 'skip');
+assert.equal(mapVacation3SctMediaFile('sphere-late-photo-02.jpg').action, 'skip');
+assert.equal(mapVacation3SctMediaFile('sphere-led-video.mp4').action, 'skip');
 
 const merged = mergeBindingsIntoShared(shared, [{
   id: 'bind-1',
