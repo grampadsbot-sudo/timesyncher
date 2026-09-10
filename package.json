@@ -22,6 +22,7 @@
     "test:timeline-icons": "node scripts/test_timeline_icons.mjs",
     "test:thing-media-bind": "node scripts/test_bind_thing_media.mjs",
     "test:keepsake-style2": "node scripts/test_keepsake_style2.mjs",
+    "test:first-pass-minimums": "node scripts/test_first_pass_minimums.mjs",
     "bind:thing-media": "node scripts/bind-thing-media.mjs",
     "test:openclaw-control": "node scripts/test_openclaw_control.mjs",
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",

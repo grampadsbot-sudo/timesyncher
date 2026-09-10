@@ -1,7 +1,8 @@
 # Budget
 
 GBrain: `bot-admin/messages/time-syncher/keepsake-qa-budget-rules-20260910`  
-QA skill: `skills/keepsake-qa/skill`
+QA skill: `skills/keepsake-qa/skill`  
+Autonomy: `autonomous-app-customer-flow-20260910` — budget inclusion stays in product TREK code, not a babysit rewrite.
 
 Do **not** invent inclusion rules. This is the live TREK shared renderer in `index-BKun7ofk.js` (`q==="budget"`).
 

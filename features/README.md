@@ -10,6 +10,8 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Skills index: `features/skills-alignment.md`
 - Budget QA: `bot-admin/messages/time-syncher/keepsake-qa-budget-rules-20260910`
 - Config-ON PDF proof: `features/config-on-style-two-proof.md`
+- Initial fill (per-category **15 / 10 / 15**, not total-8): `features/min-things.md` / `bot-admin/messages/time-syncher/initial-min-things-rule-20260910`
+- Autonomy bar: `features/autonomous-app-customer-flow.md` / `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 
 A live control missing from `features/` means the map is incomplete — do not claim verified. This map is **not** a verify-PASS. Hold certify. Skillify jobs 18–22 in flight.
@@ -83,6 +85,8 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Stories / media | Saved stories (Config); Edit caption; Play video | `media-stories.md` |
 | Collab | Checking edit access… / Saved to itinerary / View-only — editing requires an approved email invite | `collaborators.md` |
 | Budget | Tab when `share_budget`; which things appear = live TREK rules only | `budget.md` |
+| Min things | Initial website fill **15 restaurants / 10 stores / 15 The Rest** (not total-8) | `min-things.md` |
+| Autonomy bar | Telegram customer flow → GBrain + code + website; no bot-babysit | `autonomous-app-customer-flow.md` |
 | Settings (TREK, not shared-guest header) | Mapbox / Google Maps / Weather / Invite / Copy link | `trek-settings.md` |
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |
 

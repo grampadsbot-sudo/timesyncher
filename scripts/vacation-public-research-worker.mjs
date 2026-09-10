@@ -9,11 +9,17 @@ import { runApprovedSourceAdapters } from './travel-source-adapter-runner.mjs';
 const execFileAsync = promisify(execFile);
 
 const VALID_CATEGORIES = new Set(['hotel', 'flight', 'car', 'restaurant', 'store', 'activity', 'tour', 'event', 'transport', 'decision']);
-const DEFAULT_FIRST_PASS_MINIMUMS = {
+/** Per-category initial website fill. Not a total-of-8. Do not invent replacements. */
+export const DEFAULT_FIRST_PASS_MINIMUMS = {
   restaurant: 15,
   store: 10,
   rest: 15,
 };
+
+function floorCategoryMin(value, floor) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.max(floor, parsed) : floor;
+}
 const PRIVATE_PATTERNS = [
   /\bg\s?mail\b/i,
   /\bgoogle\s+calendar\b/i,
@@ -89,21 +95,34 @@ function categoryCounts(candidates = []) {
   return counts;
 }
 
-function firstPassMinimums(input = {}) {
+export function firstPassMinimums(input = {}, env = process.env) {
   return {
-    restaurant: Number(input.minimums?.restaurant || process.env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_RESTAURANTS || DEFAULT_FIRST_PASS_MINIMUMS.restaurant),
-    store: Number(input.minimums?.store || process.env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_STORES || DEFAULT_FIRST_PASS_MINIMUMS.store),
-    rest: Number(input.minimums?.rest || process.env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_REST || DEFAULT_FIRST_PASS_MINIMUMS.rest),
+    restaurant: floorCategoryMin(input.minimums?.restaurant || env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_RESTAURANTS, DEFAULT_FIRST_PASS_MINIMUMS.restaurant),
+    store: floorCategoryMin(input.minimums?.store || env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_STORES, DEFAULT_FIRST_PASS_MINIMUMS.store),
+    rest: floorCategoryMin(input.minimums?.rest || env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_REST, DEFAULT_FIRST_PASS_MINIMUMS.rest),
   };
 }
 
-function firstPassMissingMinimums(candidates = [], minimums = DEFAULT_FIRST_PASS_MINIMUMS) {
+export function firstPassMissingMinimums(candidates = [], minimums = DEFAULT_FIRST_PASS_MINIMUMS) {
   const counts = categoryCounts(candidates);
   const missing = {};
   for (const key of ['restaurant', 'store', 'rest']) {
     if (counts[key] < minimums[key]) missing[key] = { count: counts[key], minimum: minimums[key] };
   }
   return { counts, missing };
+}
+
+export function assertRequiredFirstPassMinimums(candidates = [], minimums = DEFAULT_FIRST_PASS_MINIMUMS) {
+  const required = firstPassMinimums({ minimums }, {});
+  const { counts, missing } = firstPassMissingMinimums(candidates, required);
+  if (Object.keys(missing).length) {
+    throw new Error(
+      `initial website fill requires per-category mins restaurant>=${required.restaurant} store>=${required.store} rest>=${required.rest} `
+      + `(DEFAULT_FIRST_PASS_MINIMUMS in scripts/vacation-public-research-worker.mjs:12-16). `
+      + `Got ${JSON.stringify(counts)}; missing ${JSON.stringify(missing)}. Under-min is fail-closed and cannot be skipped.`,
+    );
+  }
+  return { ok: true, counts, minimums: required };
 }
 
 function hasThreeReviews(candidate) {

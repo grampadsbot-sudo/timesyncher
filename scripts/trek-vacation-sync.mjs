@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import { assertRequiredFirstPassMinimums } from './vacation-public-research-worker.mjs';
+
 const DEFAULT_PUBLIC_BASE = 'https://vacation.timesyncher.com';
 
 function readStdin() {
@@ -96,7 +98,11 @@ function genericPlan(payload) {
     ? Math.max(1, Math.min(31, Math.round((endMs - startMs) / 86400000) + 1))
     : 3;
   const bookingBoundary = 'TimeSyncher Vacation does not book, reserve, hold, purchase, or complete travel arrangements. Customers verify prices, availability, hours, seasonal details, and terms before booking or relying on any option.';
-  const researchedPlaces = (Array.isArray(payload.researchedThings) ? payload.researchedThings : []).map((thing, index) => trekPlaceFromResearchThing(thing, index, destination, bookingBoundary));
+  const researchedThings = Array.isArray(payload.researchedThings) ? payload.researchedThings : [];
+  if (researchedThings.length) {
+    assertRequiredFirstPassMinimums(researchedThings);
+  }
+  const researchedPlaces = researchedThings.map((thing, index) => trekPlaceFromResearchThing(thing, index, destination, bookingBoundary));
   const queuePlaces = [
     { key: 'research-lodging', type: 'hotel', name: `${destination} lodging research queue`, day: 1, time: '09:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue multiple lodging/hotel options from public sources with fees, location tradeoffs, availability caveats, and cancellation terms.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },
     { key: 'research-transport', type: 'car', name: `${destination} transport and car research queue`, day: 2, time: '10:00', area: 'Research', lat: null, lng: null, address: destination, website: '', price: 0, summary: 'Queue flights, airport transfers, rental cars, rideshare, transit, and parking logistics when relevant.', details: 'Not a recommendation yet. Requires live public research before customer-facing ranking.' },

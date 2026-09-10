@@ -24,4 +24,4 @@ Staging Style two export now uses **`Ae()`** (patch `keepsake-style-2"?zu()` →
 
 Restaurants/Stores headings follow product category filters — do not invent extra list rules.
 
-Hold certify.
+Autonomy bar (`autonomous-app-customer-flow-20260910`): Config→Style-two must hold on the website after Telegram create, without a bot rewriting the PDF. Hold certify.
