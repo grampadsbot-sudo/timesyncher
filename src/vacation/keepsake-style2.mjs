@@ -1,5 +1,5 @@
-import { timelineIcon, printThingIconHtml, isAirplaneGlyph } from './timeline-icons.mjs';
-import { applyCapturedLogos, isBoundStoryMediaUrl } from './thing-logo-capture.mjs';
+import { timelineIcon, printThingIconHtml, isAirplaneGlyph, isVideoMediaUrl } from './timeline-icons.mjs';
+import { applyCapturedLogos, captureThingLogo } from './thing-logo-capture.mjs';
 import { toPublicBinding } from './thing-media-bind.mjs';
 
 const BOILERPLATE_RE = /brought together your day-by-day plan, meals, shows, shopping, hotels, and saved notes/i;
@@ -60,6 +60,23 @@ function realTripSummary(shared = {}) {
   return `${trip.title || 'This vacation'} — day-by-day plan with meals, lodging, and flights.`;
 }
 
+function isPhotoBinding(row = {}) {
+  const mime = String(row.mimeType || '');
+  const kind = String(row.mediaKind || '');
+  const url = String(row.publicUrl || row.originalName || '');
+  if (kind === 'video' || mime.startsWith('video/') || isVideoMediaUrl(url) || /\.mp4(\?|#|$)/i.test(url)) return false;
+  if (kind === 'photo' || mime.startsWith('image/')) return true;
+  return /\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i.test(url);
+}
+
+function pickStoryCover(media = [], logoUrl = '') {
+  const photo = media.find((row) => isPhotoBinding(row) && row.publicUrl);
+  if (photo) return { kind: 'photo', url: photo.publicUrl };
+  const logo = text(logoUrl);
+  if (logo && !isVideoMediaUrl(logo)) return { kind: 'logo', url: logo };
+  return { kind: 'none', url: '' };
+}
+
 function listStories(shared, bindings, origin) {
   const byPlace = new Map();
   for (const raw of bindings) {
@@ -75,14 +92,22 @@ function listStories(shared, bindings, origin) {
     const story = storyText(place, override);
     const media = (byPlace.get(Number(place.id)) || []).filter((row) => row.publicUrl);
     if (!story && !media.length) continue;
+    const resolved = timelineIcon(place, override);
+    const logoUrl = absUrl(captureThingLogo(place, override), origin);
+    const mapped = media.map((row) => ({
+      ...row,
+      publicUrl: absUrl(row.publicUrl, origin),
+    }));
     stories.push({
       thingId: Number(place.id),
       title: displayName(place, override),
       story,
-      media: media.map((row) => ({
-        ...row,
-        publicUrl: absUrl(row.publicUrl, origin),
-      })),
+      media: mapped,
+      cover: pickStoryCover(mapped, logoUrl),
+      resolved,
+      logoUrl,
+      place,
+      override,
     });
   }
   return stories;
@@ -154,10 +179,13 @@ function styleBlock() {
     .summary-stat strong { display: block; font-size: 20px; color: #111827; }
     .stories-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 4px; }
     .story-card { border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; background: #fff; break-inside: avoid; }
-    .story-card img, .story-card video { width: 100%; height: 140px; object-fit: cover; background: #111; display: block; }
-    .story-card .body { padding: 10px 12px 12px; }
-    .story-card h3 { margin: 0 0 6px; font-size: 14px; }
-    .story-card p { margin: 0; font-size: 11.5px; line-height: 1.45; color: #334155; white-space: pre-wrap; }
+    .story-card .cover { width: 100%; height: 140px; object-fit: cover; background: #111; display: block; }
+    .story-card .cover-fallback { width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-bottom: 1px solid #e5e7eb; }
+    .story-card .cover-fallback img, .story-card .cover-fallback .thing-emoji { width: 48px; height: 48px; font-size: 28px; border: 0; background: transparent; }
+    .story-card .thing-head { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; padding: 10px 12px 0; }
+    .story-card .body { padding: 8px 12px 12px; }
+    .story-card h3 { margin: 0; font-size: 14px; }
+    .story-card p { margin: 6px 0 0; font-size: 11.5px; line-height: 1.45; color: #334155; white-space: pre-wrap; }
     .logo-list { columns: 2; column-gap: 18px; margin: 0 0 16px; padding: 0; list-style: none; }
     .logo-list li { break-inside: avoid; display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 0 0 7px; }
     .tiny-logo, .thing-emoji { width: 22px; height: 22px; object-fit: contain; border-radius: 6px; background: #f8fafc; border: 1px solid #e5e7eb; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
@@ -184,6 +212,14 @@ export function buildStyle2Model(sharedInput = {}, bindings = [], origin = '') {
     const resolved = timelineIcon(place, override);
     if (isAirplaneGlyph(resolved.icon) && !resolved.isFlight) {
       airplaneAudit.push(displayName(place, override));
+    }
+  }
+  for (const story of stories) {
+    if (!story.resolved.isFlight && isAirplaneGlyph(story.resolved.icon)) {
+      airplaneAudit.push(`story:${story.title}`);
+    }
+    if (story.cover.url && isVideoMediaUrl(story.cover.url) && !story.resolved.isFlight) {
+      airplaneAudit.push(`story-cover-video:${story.title}`);
     }
   }
   return {
@@ -216,15 +252,18 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
   ].map(([label, value]) => `<div class="summary-stat"><strong>${esc(value)}</strong>${esc(label)}</div>`).join('');
 
   const storyCards = model.stories.map((story) => {
-    const media = story.media[0];
-    const isVideo = media && (String(media.mimeType || '').startsWith('video/') || media.mediaKind === 'video');
-    const mediaHtml = media
-      ? (isVideo
-        ? `<video src="${esc(media.publicUrl)}" controls></video>`
-        : `<img src="${esc(media.publicUrl)}" alt="${esc(story.title)}" />`)
-      : '';
+    const type = story.resolved.isFlight ? 'flight' : story.resolved.type;
+    const mark = iconHtml(story.place, story.override);
+    if (!story.resolved.isFlight && isAirplaneGlyph(story.resolved.icon)) {
+      throw new Error(`Airplane leaked on story card ${story.title}`);
+    }
+    const cover = story.cover;
+    const fallback = `<div class="cover-fallback" data-cover-fallback="1">${mark}</div>`;
+    const mediaHtml = cover.url && (cover.kind === 'photo' || cover.kind === 'logo')
+      ? `<img class="cover" src="${esc(cover.url)}" alt="${esc(story.title)}" onerror="this.replaceWith(this.nextElementSibling)" />${fallback}`
+      : fallback;
     const excerpt = paragraphs(story.story).slice(0, 2).join('\n\n');
-    return `<article class="story-card">${mediaHtml}<div class="body"><h3>${esc(story.title)}</h3>${excerpt ? `<p>${esc(excerpt)}</p>` : ''}</div></article>`;
+    return `<article class="story-card" data-story-card="1" data-thing-id="${esc(story.thingId)}" data-icon-type="${esc(type)}"><div class="thing-head">${mark}<h3>${esc(story.title)}</h3></div>${mediaHtml}<div class="body">${excerpt ? `<p>${esc(excerpt)}</p>` : ''}</div></article>`;
   }).join('') || '<p class="muted">No saved stories yet.</p>';
 
   const page1 = `<section class="page keepsake-report" data-page="1" data-style="2">
@@ -272,4 +311,4 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
 </html>`;
 }
 
-export { BOILERPLATE_RE, realTripSummary, listStories };
+export { BOILERPLATE_RE, realTripSummary, listStories, pickStoryCover, isPhotoBinding };

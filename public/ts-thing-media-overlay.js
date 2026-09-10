@@ -8,6 +8,7 @@
   const wantsStyle2 = rest === 'journey'
     || params.get('style') === '2'
     || /^(keepsake|style-?2)$/i.test(params.get('pdfReport') || '')
+    || params.get('printMode') === 'keepsake'
     || window.__TS_JOURNEY_BOOK__;
 
   function absUrl(value) {

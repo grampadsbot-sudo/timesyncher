@@ -177,15 +177,24 @@ export function sanitizeTimelineGlyph(icon, type) {
   return text(icon) || timelineCategoryIcon(type || 'other');
 }
 
+export function isVideoMediaUrl(value = '') {
+  const source = text(value);
+  return /\.mp4(\?|#|$)/i.test(source)
+    || /[?&]raw=1\b/i.test(source) && /\.mp4\b/i.test(source)
+    || /video\//i.test(source);
+}
+
 export function thingLogoUrl(thing = {}, override = {}) {
-  return text(
-    override.logoUrl
-    || override.iconUrl
-    || thing.logoUrl
-    || thing.iconUrl
-    || thing.image_url
-    || thing.imageUrl
-  );
+  const candidates = [
+    override.logoUrl,
+    override.iconUrl,
+    thing.logoUrl,
+    thing.iconUrl,
+    thing.captured_logo_url,
+    thing.image_url,
+    thing.imageUrl,
+  ].map(text).filter(Boolean);
+  return candidates.find((url) => !isVideoMediaUrl(url)) || '';
 }
 
 export function timelineIcon(thing = {}, override = {}, rowType = '') {

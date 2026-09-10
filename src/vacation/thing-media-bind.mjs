@@ -305,7 +305,13 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   for (const place of next.places) {
     const bound = byPlace.get(Number(place.id)) || [];
     if (!bound.length) continue;
-    if (!place.image_url) place.image_url = bound[0].publicUrl;
+    const photo = bound.find((row) => {
+      const mime = String(row.mimeType || '');
+      const kind = String(row.mediaKind || '');
+      const url = String(row.publicUrl || row.originalName || '');
+      return (kind === 'photo' || mime.startsWith('image/')) && !/\.mp4(\?|#|$)/i.test(url) && !mime.startsWith('video/');
+    });
+    if (!place.image_url && photo) place.image_url = photo.publicUrl;
     place.bound_media = bound;
   }
   return next;

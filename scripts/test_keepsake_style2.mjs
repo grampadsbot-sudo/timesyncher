@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE } from '../src/vacation/keepsake-style2.mjs';
+import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mjs';
 
@@ -40,6 +40,7 @@ const shared = {
 const bindings = [
   { id: 's1', thingId: 8872, thingName: 'Carbone', publicUrl: '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
   { id: 's2', thingId: 8871, thingName: 'Conservatory', publicUrl: '/ts-thing-media/las-vegas-vacation-3/conservatory-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
+  { id: 's3', thingId: 8869, thingName: 'Bellagio', publicUrl: '/api/bind-thing-media?shareToken=x&id=vid&raw=1', mimeType: 'application/octet-stream', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
 ];
 
 assert.equal(isBoundStoryMediaUrl('/api/bind-thing-media?shareToken=x&id=1&raw=1'), true);
@@ -78,8 +79,24 @@ assert.match(html, /data-icon-type="restaurant"/);
 assert.match(html, /data-icon-type="store"/);
 assert.match(html, /data-icon-type="flight"/);
 
-const airplaneOnNonFlight = [...html.matchAll(/data-icon-type="(?!flight)[^"]+"[\s\S]{0,180}(?:✈️|&#9992;)/g)];
+const airplaneOnNonFlight = [...html.matchAll(/data-icon-type="(?!flight)[^"]+"[\s\S]{0,220}(?:✈️|&#9992;)/g)];
 assert.equal(airplaneOnNonFlight.length, 0, 'no airplane on non-flight rows');
+assert.match(html, /data-story-card="1"/);
+assert.match(html, /data-thing-id="8869"/);
+assert.doesNotMatch(html, /bellagio-fountain-night-video\.mp4/);
+assert.doesNotMatch(html, /<video /);
+const hotelCard = html.match(/data-thing-id="8869"[\s\S]*?<\/article>/)[0];
+assert.match(hotelCard, /data-icon-type="hotel"/);
+assert.doesNotMatch(hotelCard, /✈️/);
+assert.match(hotelCard, /bellagio\.svg|cover-fallback/);
+const conservatoryCard = html.match(/data-thing-id="8871"[\s\S]*?<\/article>/)[0];
+assert.match(conservatoryCard, /data-icon-type="attraction"/);
+assert.doesNotMatch(conservatoryCard, /✈️/);
+const videoCover = pickStoryCover([
+  { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
+], '/ts-thing-logos/bellagio.svg');
+assert.equal(videoCover.kind, 'logo');
+assert.equal(videoCover.url, '/ts-thing-logos/bellagio.svg');
 
 const model = buildStyle2Model(shared, bindings, 'https://vacation-staging.timesyncher.com');
 assert.equal(model.airplaneAudit.length, 0);
@@ -103,5 +120,12 @@ const create = await readFile(new URL('../scripts/trek-itinerary-edit.mjs', impo
 assert.match(create, /captured_logo/);
 assert.match(create, /image_url/);
 assert.doesNotMatch(create, /airport\|las\|boi/);
+
+const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
+assert.match(sharedApp, /pdfReport=keepsake/);
+
+const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
+assert.match(trek, /_t==="flight"\?"✈️"/);
+assert.doesNotMatch(trek, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');

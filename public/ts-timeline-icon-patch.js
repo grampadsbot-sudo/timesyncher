@@ -126,8 +126,29 @@
       lookup.set(place.name, resolved);
       if (override.title) lookup.set(override.title, resolved);
     }
+    function repairStoryCards() {
+      const titles = [...lookup.keys()].sort((a, b) => b.length - a.length);
+      document.querySelectorAll('.story-card, article.thing').forEach((card) => {
+        const title = text(card.querySelector('h3')?.textContent);
+        const hit = titles.find((name) => title === name || title.startsWith(name));
+        const found = hit ? lookup.get(hit) : null;
+        if (!found || found.isFlight) return;
+        card.querySelectorAll('.thing-emoji, .thing-logo, .tiny-logo').forEach((node) => {
+          if (AIRPLANE.test(text(node.textContent))) mark(node, found);
+          if (node.tagName === 'IMG') {
+            node.addEventListener('error', () => mark(node, found), { once: true });
+            const src = node.getAttribute('src') || '';
+            if (/\.mp4(\?|#|$)|video\//i.test(src)) mark(node, found);
+          }
+        });
+      });
+    }
     apply(lookup);
-    new MutationObserver(() => apply(lookup)).observe(document.body, { childList: true, subtree: true });
+    repairStoryCards();
+    new MutationObserver(() => {
+      apply(lookup);
+      repairStoryCards();
+    }).observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') {
