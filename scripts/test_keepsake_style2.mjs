@@ -6,7 +6,16 @@ import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundSto
 import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mjs';
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
 import { qrSvg } from '../src/vacation/qr-svg.mjs';
-import { isJourneyBookReport, journeyBookGate } from '../src/vacation/keepsake-style2-handler.mjs';
+import {
+  isJourneyBookReport,
+  journeyBookGate,
+  isProductStyleTwo,
+  normalizeReportName,
+  productPdfUrl,
+  PRODUCT_STYLE_TWO_REPORT,
+  PRODUCT_TREK_PUBLIC,
+  forwardedKeepsakeSearch,
+} from '../src/vacation/keepsake-style2-handler.mjs';
 
 const shared = {
   trip: {
@@ -161,36 +170,59 @@ assert.equal(filled.shortfall, 2);
 assert.match(qrSvg('https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=x&id=vid&raw=1'), /<svg[\s\S]*<rect/);
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
-assert.match(overlay, /style=2/);
-assert.match(overlay, /report\/style-2/);
-assert.match(overlay, /wantsJourneyBook/);
-assert.match(overlay, /\^daily\$/);
+assert.doesNotMatch(overlay, /wantsJourneyBook/);
+assert.doesNotMatch(overlay, /document\.write/);
+assert.doesNotMatch(overlay, /ts-journey-chip/);
+assert.doesNotMatch(overlay, /report\/style-2/);
 
 const patch = await readFile(new URL('../public/ts-timeline-icon-patch.js', import.meta.url), 'utf8');
 assert.match(patch, /AIRPLANE/);
-assert.match(patch, /style=2/);
-assert.match(patch, /isReport/);
-assert.match(patch, /isDaily/);
+assert.doesNotMatch(patch, /journey\?style=2/);
+assert.doesNotMatch(patch, /patchedOpen/);
 
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
 assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
+assert.match(vercel, /report=keepsake-style-2/);
 assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
 
-for (const report of ['restaurants', 'stores', 'rest', 'keepsake', 'style-2', 'itinerary', 'hotels', 'flights', '']) {
-  assert.equal(isJourneyBookReport(report), true, report);
-  assert.equal(journeyBookGate({ report }).ok, true, report);
-}
-assert.equal(isJourneyBookReport('daily'), false);
-assert.equal(journeyBookGate({ report: 'daily' }).status, 404);
-assert.equal(journeyBookGate({ pdfPath: 'tok/report/daily', report: 'daily' }).status, 404);
-assert.equal(journeyBookGate({ report: 'restaurants' }).ok, true);
+assert.equal(normalizeReportName('style-2'), PRODUCT_STYLE_TWO_REPORT);
+assert.equal(normalizeReportName(''), PRODUCT_STYLE_TWO_REPORT);
+assert.equal(normalizeReportName('keepsake-style-2.pdf'), PRODUCT_STYLE_TWO_REPORT);
+assert.equal(normalizeReportName('restaurants'), 'restaurants');
+assert.equal(isProductStyleTwo('style-2'), true);
+assert.equal(isProductStyleTwo('keepsake-style-2'), true);
+assert.equal(isProductStyleTwo('restaurants'), false);
+assert.equal(isJourneyBookReport('style-2'), true);
+assert.equal(isJourneyBookReport('restaurants'), false);
+assert.equal(journeyBookGate({ report: 'daily' }).ok, true);
+assert.equal(journeyBookGate({ report: 'keepsake-style-2' }).kind, 'style-two');
+assert.equal(journeyBookGate({ report: 'restaurants' }).kind, 'trek-report');
 
-const restaurantsHtml = renderStyle2Html(shared, bindings, {
-  origin: 'https://vacation-staging.timesyncher.com',
+const styleTwoUrl = productPdfUrl({
   shareToken: 'las-vegas-vacation-3',
+  report: 'style-2',
 });
-assert.equal(restaurantsHtml, html, 'restaurants/stores/keepsake must equal the sole Journey Book');
+assert.equal(
+  styleTwoUrl,
+  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/keepsake-style-2.pdf`,
+);
+assert.equal(
+  productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'restaurants' }),
+  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/restaurants.pdf`,
+);
+assert.equal(
+  productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'daily', pdfPath: 'las-vegas-vacation-3/daily/2.pdf' }),
+  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/daily/2.pdf`,
+);
+assert.match(
+  forwardedKeepsakeSearch(new URL('https://x.test/?ksLogo=0&ksMapOff=1,2,3&other=1')),
+  /^\?ksLogo=0&ksMapOff=1(?:,|%2C)2(?:,|%2C)3$/,
+);
+assert.doesNotMatch(
+  forwardedKeepsakeSearch(new URL('https://x.test/?ksLogo=0&other=1')),
+  /other=/,
+);
 
 const create = await readFile(new URL('../scripts/trek-itinerary-edit.mjs', import.meta.url), 'utf8');
 assert.match(create, /captured_logo/);
@@ -200,8 +232,9 @@ assert.match(create, /Backfilled from existing trip things/);
 assert.doesNotMatch(create, /airport\|las\|boi/);
 
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
-assert.match(sharedApp, /pdfReport=keepsake/);
-assert.match(sharedApp, /\(\?!daily/);
+assert.match(sharedApp, /index-0J54vUO3\.js/);
+assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
+assert.doesNotMatch(sharedApp, /pdfReport=keepsake/);
 
 const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
 assert.match(trek, /_t==="flight"\?"✈️"/);

@@ -3,24 +3,6 @@
   if (!sharedMatch) return;
 
   const token = decodeURIComponent(sharedMatch[1]);
-  function reportNameFromPath(pathname) {
-    const match = String(pathname || '').match(/^\/shared\/[^/]+\/report\/([^/?#]+)/i);
-    return match ? decodeURIComponent(match[1]).replace(/\.pdf$/i, '') : '';
-  }
-
-  function wantsJourneyBook() {
-    const rest = (location.pathname.match(/^\/shared\/[^/]+(?:\/(.*))?/) || [])[1] || '';
-    const cleaned = rest.replace(/\/+$/, '');
-    const params = new URLSearchParams(location.search);
-    const report = reportNameFromPath(location.pathname);
-    return cleaned === 'journey'
-      || params.get('style') === '2'
-      || /^(keepsake|style-?2)$/i.test(params.get('pdfReport') || '')
-      || params.get('printMode') === 'keepsake'
-      || window.__TS_JOURNEY_BOOK__
-      || (report && !/^daily$/i.test(report));
-  }
-
   function absUrl(value) {
     if (!value) return '';
     if (/^https?:\/\//i.test(value) || value.startsWith('data:')) return value;
@@ -52,16 +34,6 @@
     }
   }
 
-  async function renderStyle2() {
-    const dest = `/api/pdf/shared/${encodeURIComponent(token)}/report/style-2`;
-    const response = await fetch(dest, { credentials: 'omit' });
-    if (!response.ok) throw new Error('style-2 fetch failed');
-    const html = await response.text();
-    document.open();
-    document.write(html);
-    document.close();
-  }
-
   function detailHost() {
     const nodes = [...document.querySelectorAll('div,section,aside')];
     return nodes.find((el) => {
@@ -73,17 +45,7 @@
   }
 
   function injectThingPhotos(bindings) {
-    const chip = () => {
-      if (document.getElementById('ts-journey-chip')) return;
-      const el = document.createElement('a');
-      el.id = 'ts-journey-chip';
-      el.href = `/shared/${encodeURIComponent(token)}/journey?style=2`;
-      el.textContent = 'Journey Book';
-      el.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;background:#f5d37b;color:#1a1408;padding:10px 14px;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.35)';
-      document.body.appendChild(el);
-    };
     const decorate = () => {
-      chip();
       const host = detailHost();
       if (!host) return;
       for (const row of bindings) {
@@ -106,31 +68,7 @@
     new MutationObserver(decorate).observe(document.body, { childList: true, subtree: true });
   }
 
-  function watchSpaReportRoutes() {
-    const origPush = history.pushState;
-    const origReplace = history.replaceState;
-    const maybeBook = () => {
-      if (wantsJourneyBook()) renderStyle2().catch(() => {});
-    };
-    history.pushState = function patchedPush(...args) {
-      const ret = origPush.apply(this, args);
-      queueMicrotask(maybeBook);
-      return ret;
-    };
-    history.replaceState = function patchedReplace(...args) {
-      const ret = origReplace.apply(this, args);
-      queueMicrotask(maybeBook);
-      return ret;
-    };
-    window.addEventListener('popstate', maybeBook);
-  }
-
   async function boot() {
-    watchSpaReportRoutes();
-    if (wantsJourneyBook()) {
-      await renderStyle2();
-      return;
-    }
     const bindings = await loadBindings();
     injectThingPhotos(bindings);
   }

@@ -111,9 +111,10 @@ assert.match(vercel, /vacation-itinerary\?trekPath/);
 assert.match(vercel, /bind-thing-media/);
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
-assert.match(overlay, /\/shared\/.*\/journey/);
 assert.match(overlay, /bind-thing-media/);
-assert.match(overlay, /style=2/);
+assert.match(overlay, /DETAIL PAGE/);
+assert.doesNotMatch(overlay, /document\.write/);
+assert.doesNotMatch(overlay, /style=2/);
 assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 

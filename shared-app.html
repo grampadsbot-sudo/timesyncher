@@ -19,16 +19,12 @@
     <link rel="stylesheet" crossorigin href="/assets/index-CMNIAiAD.css" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <script>
-      window.__TS_JOURNEY_BOOK__ = /\/shared\/[^/]+\/journey\/?$/.test(location.pathname)
-        || (/\/shared\/[^/]+\/report\/(?!daily(?:\/|\.pdf|$))/i.test(location.pathname))
-        || /[?&](style=2|pdfReport=keepsake|pdfReport=style-?2|printMode=keepsake)\b/.test(location.search);
-      if (!window.__TS_JOURNEY_BOOK__) {
-        const trek = document.createElement('script');
-        trek.type = 'module';
-        trek.crossOrigin = 'anonymous';
-        trek.src = '/assets/index-0J54vUO3.js';
-        document.head.appendChild(trek);
-      }
+      window.__TS_JOURNEY_BOOK__ = false;
+      const trek = document.createElement('script');
+      trek.type = 'module';
+      trek.crossOrigin = 'anonymous';
+      trek.src = '/assets/index-0J54vUO3.js';
+      document.head.appendChild(trek);
     </script>
     <script src="/ts-timeline-icon-patch.js"></script>
     <script src="/ts-thing-media-overlay.js"></script>

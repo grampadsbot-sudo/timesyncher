@@ -101,22 +101,7 @@
     }
   }
 
-  function hijackPdfLinks() {
-    const style2 = `/shared/${encodeURIComponent(token)}/journey?style=2`;
-    const originalOpen = window.open;
-    window.open = function patchedOpen(url, ...rest) {
-      const href = String(url || '');
-      const isReport = /\/(?:api\/pdf\/)?shared\/[^/]+\/report\//i.test(href);
-      const isDaily = /\/report\/daily(?:\/|\.pdf|$|\?)/i.test(href);
-      if (isReport && !isDaily) {
-        return originalOpen.call(this, style2, ...rest);
-      }
-      return originalOpen.call(this, url, ...rest);
-    };
-  }
-
   async function boot() {
-    hijackPdfLinks();
     const response = await fetch(`/api/shared/${encodeURIComponent(token)}/`, { credentials: 'include' });
     if (!response.ok) return;
     const data = await response.json();
