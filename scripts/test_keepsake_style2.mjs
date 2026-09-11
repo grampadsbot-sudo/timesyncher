@@ -27,6 +27,8 @@ import {
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
+import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames } from '../src/vacation/keepsake-list-minimums.mjs';
+import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
   trip: {
@@ -247,6 +249,8 @@ assert.match(patch, /isPrintReport/);
 assert.match(patch, /print-media-qr/);
 assert.match(patch, /data:image\/svg\+xml/);
 assert.match(patch, /neon file bind proof/);
+assert.match(patch, /data-stories-bottom-margin/);
+assert.match(patch, /padding-bottom:72px/);
 assert.doesNotMatch(patch, /journey\?style=2/);
 assert.doesNotMatch(patch, /patchedOpen/);
 
@@ -367,6 +371,7 @@ const aeFixture = [
   STYLE2_USES_ZU,
   'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}',
   'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`',
+  'zr=fo(zt).length?`<div class="style2-thing-media">${fo(zt).map(Ba).join("")}</div>`:""',
   ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
@@ -384,6 +389,29 @@ assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
+assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
+assert.match(patchedAe, /data-print-ready="style2"/);
+assert.match(patchedAe, /data-style2-map="1"/);
+assert.match(patchedAe, /data-stories-bottom-margin="1"/);
+assert.match(patchedAe, /padding-bottom:72px/);
+assert.match(patchedAe, /data-print-fill="1"/);
+assert.match(patchedAe, /data-list-min=/);
+assert.match(patchedAe, /"Restaurants":15/);
+assert.match(patchedAe, /style2-thing-media/);
+assert.doesNotMatch(patchedAe, /zl=Qa\.map\(nr=>`<div class="keepsake-day">\$\{op\(/);
+assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
+  Restaurants: DEFAULT_FIRST_PASS_MINIMUMS.restaurant,
+  Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
+  'Shows, Tours and the Rest': DEFAULT_FIRST_PASS_MINIMUMS.rest,
+});
+assert.equal(padKeepsakeListNames('Restaurants', [
+  { name: 'Carbone at Aria' },
+  { name: 'Shake Shack near Cosmo/Aria' },
+  { name: 'Lotus of Siam' },
+  { name: 'Eggslut' },
+]).length, 11);
+assert.equal(padKeepsakeListNames('Stores', [{ name: 'Cosmopolitan shops' }]).length, 9);
+assert.equal(padKeepsakeListNames('Shows, Tours and the Rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());

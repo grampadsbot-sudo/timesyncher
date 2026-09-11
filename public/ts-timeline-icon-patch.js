@@ -162,6 +162,10 @@
     }
 
     if (isPrintReport()) {
+      const style = document.createElement('style');
+      style.dataset.tsStoriesMargin = '1';
+      style.textContent = '.keepsake-list-page[data-stories-bottom-margin="1"],.keepsake-list-page[data-stories-up-front="1"]{padding-bottom:72px}';
+      document.head.appendChild(style);
       stripPrintJunkMedia();
       inlinePrintVideoQr().catch(() => {});
       new MutationObserver(() => {
