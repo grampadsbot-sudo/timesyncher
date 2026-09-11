@@ -164,7 +164,12 @@
     if (isPrintReport()) {
       const style = document.createElement('style');
       style.dataset.tsStoriesMargin = '1';
-      style.textContent = '.keepsake-list-page[data-stories-bottom-margin="1"],.keepsake-list-page[data-stories-up-front="1"]{padding-bottom:72px}';
+      style.textContent = [
+        '.keepsake-list-page[data-stories-bottom-margin="1"],.keepsake-list-page[data-stories-up-front="1"]{padding-bottom:36mm!important;overflow:visible!important;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
+        '[data-stories-bottom-margin="1"] .recap-grid{padding-bottom:12mm}',
+        '[data-story-card],.story-card{break-inside:avoid;page-break-inside:avoid;-webkit-column-break-inside:avoid}',
+        '[data-story-card] .body,.story-card .body{padding-bottom:8mm;orphans:3;widows:3}',
+      ].join('');
       document.head.appendChild(style);
       stripPrintJunkMedia();
       inlinePrintVideoQr().catch(() => {});
