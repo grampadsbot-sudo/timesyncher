@@ -367,6 +367,7 @@ assert.equal(liveOverride.places.find((place) => String(place.id) === '8872').ca
 const carboneAssign = (liveOverride.assignments?.['1237'] || []).find((row) => /carbone/i.test(row.place?.name || ''));
 assert.equal(carboneAssign.place.lat, 36.1073);
 assert.equal(carboneAssign.place.lng, -115.1766);
+assert.equal(liveOverride.thingOverrides['place:8872'].timeline, true);
 assert.deepEqual(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), [36.1073, -115.1766]);
 assert.deepEqual(resolveThingCoords({ name: 'Shake Shack near Cosmo/Aria', address: 'Las Vegas Strip' }), [36.1097, -115.1739]);
 assert.equal(liveOverride.thingOverrides['place:8873'].lat, 36.1097);

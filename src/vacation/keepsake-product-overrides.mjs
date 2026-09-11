@@ -102,6 +102,9 @@ export function applyProductKeepsakeOverrides(shared = {}) {
         if (top.category) place.category = top.category;
         if (top.category_name) place.category_name = top.category_name;
         if (top.category_id) place.category_id = top.category_id;
+        if (id && next.thingOverrides[`place:${id}`]) {
+          next.thingOverrides[`place:${id}`] = { ...next.thingOverrides[`place:${id}`], timeline: true };
+        }
         return { ...row, place_id: id || row.place_id, place };
       }),
     ]));
