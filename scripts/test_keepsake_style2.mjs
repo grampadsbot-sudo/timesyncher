@@ -350,7 +350,11 @@ assert.equal(
 );
 
 const liveOverride = applyProductKeepsakeOverrides({
-  places: shared.places,
+  places: [
+    ...shared.places,
+    { id: 8874, name: 'Lotus of Siam', category_name: 'Restaurant' },
+    { id: 8875, name: 'Eggslut', category_name: 'Restaurant' },
+  ],
   assignments: shared.assignments,
   thingOverrides: {
     'place:8871': { title: 'Bellagio Conservatory — Anniversary Cocktails', category: 'other', story: 'wet petals' },
@@ -372,6 +376,18 @@ const carboneAssign = (liveOverride.assignments?.['1237'] || []).find((row) => /
 assert.equal(carboneAssign.place.lat, 36.1073);
 assert.equal(carboneAssign.place.lng, -115.1766);
 assert.equal(liveOverride.thingOverrides['place:8872'].timeline, true);
+assert.match(liveOverride.thingOverrides['place:8872'].summary, /Carbone|Italian-American|Aria/i);
+assert.equal(liveOverride.thingOverrides['place:8872'].happyHour, false);
+assert.match(liveOverride.thingOverrides['place:8872'].happyHourDetails, /No current happy-hour|ARIA/i);
+assert.match(liveOverride.thingOverrides['place:8873'].summary, /Shake Shack|burger/i);
+assert.equal(liveOverride.thingOverrides['place:8873'].happyHour, false);
+assert.match(liveOverride.thingOverrides['place:8874'].summary, /Northern Thai/i);
+assert.equal(liveOverride.thingOverrides['place:8874'].happyHour, true);
+assert.match(liveOverride.thingOverrides['place:8874'].happyHourDetails, /3–5pm|3-5/i);
+assert.match(liveOverride.thingOverrides['place:8875'].summary, /Fairfax|Eggslut/i);
+assert.equal(liveOverride.thingOverrides['place:8875'].happyHour, false);
+assert.match(liveOverride.thingOverrides['place:8876'].summary, /Cosmopolitan/i);
+assert.match(liveOverride.thingOverrides['place:8871'].summary, /Conservatory|cocktails/i);
 assert.deepEqual(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), [36.1073, -115.1766]);
 assert.deepEqual(resolveThingCoords({ name: 'Shake Shack near Cosmo/Aria', address: 'Las Vegas Strip' }), [36.1097, -115.1739]);
 assert.equal(liveOverride.thingOverrides['place:8873'].lat, 36.1097);
@@ -386,6 +402,9 @@ const aeFixture = [
   'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}',
   'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`',
   'zr=fo(zt).length?`<div class="style2-thing-media">${fo(zt).map(Ba).join("")}</div>`:""',
+  'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}',
+  'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`',
+  '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=',
   ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
   'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
   'Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
@@ -411,9 +430,14 @@ assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
-assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
+assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
 assert.match(patchedAe, /data-print-ready="style2"/);
-assert.match(patchedAe, /data-style2-map="1"/);
+assert.doesNotMatch(patchedAe, /\$\{Mc\(nr\)\}/);
+assert.match(patchedAe, /data-list-summary="1"/);
+assert.match(patchedAe, /data-row-summary="1"/);
+assert.match(patchedAe, /data-story-summary="1"/);
+assert.match(patchedAe, /data-story-body="1"/);
+assert.match(patchedAe, /data-daily-thing-media="1"/);
 assert.match(patchedAe, /data-stories-bottom-margin="1"/);
 assert.match(patchedAe, /padding-bottom:36mm/);
 assert.match(patchedAe, /data-stories-print-css="1"/);
@@ -422,7 +446,7 @@ assert.match(patchedAe, /data-print-fill="1"/);
 assert.match(patchedAe, /data-list-min=/);
 assert.match(patchedAe, /"Restaurants":15/);
 assert.match(patchedAe, /style2-thing-media/);
-assert.doesNotMatch(patchedAe, /zl=Qa\.map\(nr=>`<div class="keepsake-day">\$\{op\(/);
+assert.match(patchedAe, /data-print-ready="style2">\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
 assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
   Restaurants: DEFAULT_FIRST_PASS_MINIMUMS.restaurant,
   Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
