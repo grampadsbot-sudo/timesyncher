@@ -2,13 +2,16 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import {
+  isAllowedVacationWebsiteUrl,
   publicTripUrl,
   readCookie,
+  sharedTripWebsiteUrl,
   webAccessAcceptUrl,
   webAccessCookieHeader,
   webAccessCookieName,
   webAccessTelegramLaunchUrl,
   webAccessTokenHash,
+  websiteTripBase,
 } from '../src/vacation/web-access.mjs';
 import { webEditorInviteEmail } from '../src/vacation/email.mjs';
 
@@ -31,8 +34,32 @@ assert.notEqual(webAccessTokenHash('token', env), webAccessTokenHash('other', en
 assert.equal(webAccessCookieName(), 'ts_vacation_web_access');
 assert.match(webAccessCookieHeader('session-token', env), /HttpOnly/);
 assert.equal(readCookie({ headers: { cookie: 'a=1; ts_vacation_web_access=session-token; b=2' } }, webAccessCookieName()), 'session-token');
+assert.equal(websiteTripBase(env), 'https://vacation-staging.timesyncher.com');
+assert.equal(
+  sharedTripWebsiteUrl('las-vegas-vacation-3', env),
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/',
+);
 assert.equal(
   publicTripUrl({ metadata: { publicSlug: 'las-vegas-strip-vacation' } }, env),
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-strip-vacation/',
+);
+assert.equal(
+  isAllowedVacationWebsiteUrl('https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/', env),
+  true,
+);
+assert.equal(
+  isAllowedVacationWebsiteUrl('https://travel.timesyncher.com/shared/las-vegas-vacation-3/', env),
+  true,
+);
+assert.equal(
+  isAllowedVacationWebsiteUrl('https://example.com/shared/nope/', env),
+  false,
+);
+assert.equal(
+  publicTripUrl({ metadata: { publicSlug: 'las-vegas-strip-vacation' } }, {
+    TIMESYNCHER_SITE_BASE_URL: 'https://www.timesyncher.com/',
+    TIMESYNCHER_TRAVEL_BASE_URL: 'https://travel.timesyncher.com/',
+  }),
   'https://travel.timesyncher.com/shared/las-vegas-strip-vacation/',
 );
 
@@ -59,6 +86,7 @@ assert.match(migration, /telegram_collaborator/);
 const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /telegram_launch/);
+assert.match(api, /isAllowedVacationWebsiteUrl/);
 assert.match(api, /assert_can_edit/);
 assert.match(api, /set-cookie/);
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');

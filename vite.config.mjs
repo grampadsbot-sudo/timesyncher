@@ -17,6 +17,7 @@ export default defineConfig({
         adminOnboardings: resolve(__dirname, 'admin-onboardings.html'),
         openclawAdmin: resolve(__dirname, 'openclaw-admin.html'),
         itinerary: resolve(__dirname, 'itinerary.html'),
+        sharedApp: resolve(__dirname, 'shared-app.html'),
         onboardingEula: resolve(__dirname, 'onboarding-eula.html'),
       },
     },

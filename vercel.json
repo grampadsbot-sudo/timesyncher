@@ -2,12 +2,44 @@
   "version": 2,
   "routes": [
     {
-      "src": "/shared/(.*)",
-      "dest": "https://travel.timesyncher.com/shared/$1"
+      "src": "/api/bind-thing-media",
+      "dest": "/api/vacation-itinerary?mediaBind=1"
+    },
+    {
+      "src": "/assets/index-BKun7ofk.js",
+      "dest": "/api/vacation-itinerary?trekBundle=1"
+    },
+    {
+      "src": "/assets/index-CbEHlMj6.css",
+      "dest": "https://travel.timesyncher.com/assets/index-CbEHlMj6.css"
+    },
+    {
+      "src": "/api/pdf/qr\\.svg",
+      "dest": "/api/vacation-itinerary?pdfQr=1"
+    },
+    {
+      "src": "/api/pdf/shared/(.*)",
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&pdfPath=$1"
     },
     {
       "src": "/api/shared/(.*)",
-      "dest": "https://travel.timesyncher.com/api/shared/$1"
+      "dest": "/api/vacation-itinerary?trekPath=$1"
+    },
+    {
+      "src": "/shared/([^/]+)/journey(?:/)?",
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=journey"
+    },
+    {
+      "src": "/shared/([^/]+)/report/daily(?:\\.pdf)?(?:/)?",
+      "dest": "/shared-app.html"
+    },
+    {
+      "src": "/shared/([^/]+)/report/([^/?]+)",
+      "dest": "/api/vacation-itinerary?keepsakePdf=1&shareToken=$1&report=$2"
+    },
+    {
+      "src": "/shared(?:/.*)?",
+      "dest": "/shared-app.html"
     },
     {
       "src": "/api/vacation-web-access",
@@ -20,10 +52,6 @@
     {
       "src": "/manifest.webmanifest",
       "dest": "https://travel.timesyncher.com/manifest.webmanifest"
-    },
-    {
-      "src": "/registerSW.js",
-      "dest": "https://travel.timesyncher.com/registerSW.js"
     },
     {
       "src": "/accept/([^/]+)",

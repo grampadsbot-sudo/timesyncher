@@ -28,7 +28,7 @@ const ack = vacationIdentityAck({
 assert.match(ack, /working title/i);
 assert.match(ack, /seven nights/i);
 assert.match(ack, /Oahu\/Waikiki/i);
-assert.match(ack, /turning that into the hosted TimeSyncher Vacation itinerary now/i);
+assert.match(ack, /I'm building your initial itinerary now and it may take 10–15 minutes/i);
 assert.doesNotMatch(ack, /Now send me the destination/i);
 
 const detailsOnly = parseVacationIdentity('We are staying seven nights in Hawaii and starting in Oahu.');
@@ -75,11 +75,11 @@ const websiteLinkReply = vacationSupportReply({
     linked: true,
     trip: {
       title: 'Las Vegas Strip Vacation',
-      publicUrl: 'https://travel.timesyncher.com/shared/las-vegas-strip-vacation/',
+      publicUrl: 'https://vacation-staging.timesyncher.com/shared/las-vegas-strip-vacation/',
     },
     telegramWebAccess: {
       role: 'owner',
-      launchUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=owner-token&redirect=https%3A%2F%2Ftravel.timesyncher.com%2Fshared%2Flas-vegas-strip-vacation%2F',
+      launchUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=owner-token&redirect=https%3A%2F%2Fvacation-staging.timesyncher.com%2Fshared%2Flas-vegas-strip-vacation%2F',
     },
   },
 });

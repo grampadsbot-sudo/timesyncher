@@ -1,0 +1,20 @@
+[
+  {
+    "id": "71efdfd8-2ead-45d6-b361-d937d8be2ffe",
+    "shareToken": "las-vegas-vacation-3",
+    "trekTripId": 197,
+    "thingId": 8872,
+    "thingName": "Carbone at Aria",
+    "dayId": 1236,
+    "dayNumber": 1,
+    "caption": "Carbone at Aria",
+    "mediaKind": "photo",
+    "mimeType": "image/png",
+    "originalName": "carbone-bind-proof.png",
+    "fileSizeBytes": 857,
+    "publicUrl": "/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png",
+    "storageProvider": "public-repo",
+    "trekApplyStatus": "pending",
+    "createdAt": "2026-09-10T20:00:35.431Z"
+  }
+]
