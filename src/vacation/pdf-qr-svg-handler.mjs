@@ -26,7 +26,7 @@ export default function handlePdfQrSvg(req, res) {
   }
   res.statusCode = 200;
   res.setHeader('content-type', 'image/svg+xml; charset=utf-8');
-  res.setHeader('cache-control', 'public, max-age=86400');
+  res.setHeader('cache-control', 'no-store');
   res.end(qrSvg(payload, { size: PDF_QR_SIZE }));
   return true;
 }

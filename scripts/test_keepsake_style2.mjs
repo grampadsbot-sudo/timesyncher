@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { readFile, writeFile } from 'node:fs/promises';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl } from '../src/vacation/thing-logo-capture.mjs';
@@ -24,7 +25,7 @@ import {
   styleTwoLocationStaysOnStaging,
 } from '../src/vacation/keepsake-style2-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
-import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
+import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 
 const shared = {
@@ -374,15 +375,24 @@ assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);
 assert.match(patchedAe, /data-story-media-only="1"/);
-assert.match(patchedAe, /fo\(nr\)\.filter\(Oo=>/);
+assert.match(patchedAe, /fo\(nr\)\.filter\(Km\)\.map\(Ba\)/);
 assert.match(patchedAe, /neon file bind proof/);
 assert.match(patchedAe, /originalName/);
 assert.match(patchedAe, /\/api\/pdf\/qr\.svg\?data=\$\{encodeURIComponent\(So\(G\)\)\}&m=1/);
-assert.doesNotMatch(patchedAe, /fo\(nr\)\.map\(Ba\)/);
+assertStyleTwoPatchParses();
 assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
+const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
+assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
+const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
+assertPatchedStyleTwo(livePatched);
+assertStyleTwoPatchParses(livePatched);
+const patchedCheckPath = '/tmp/patched-style2-check.js';
+await writeFile(patchedCheckPath, livePatched);
+const patchedCheck = spawnSync('node', ['--check', patchedCheckPath], { encoding: 'utf8' });
+assert.equal(patchedCheck.status, 0, patchedCheck.stderr || 'patched TREK bundle failed node --check');
 assert.equal(
   productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'restaurants' }),
   `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/restaurants.pdf`,

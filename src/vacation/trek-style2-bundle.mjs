@@ -7,8 +7,7 @@ export const STYLE2_USES_AE = AE_STYLE2;
 
 const AE_LAYOUT_NEEDLE = 'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}';
 
-const AE_JUNK_MEDIA = 'Oo=>!/bind[- ]?proof|neon file bind proof/i.test(`${Oo.filename||Oo.original_name||Oo.originalName||""} ${Oo.caption||""} ${Oo.url||Oo.public_url||""} ${Oo.id||""}`)';
-const AE_LAYOUT_PATCH = `const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story&&fo(nr).filter(${AE_JUNK_MEDIA}).some(Oo=>Oo.kind==="photo"||Oo.kind==="video"))),ua=G.map(([nr,Oo])=>\`<div class="summary-stat"><strong>\${Oo.length}</strong>\${an(nr)}</div>\`).join(""),Rn=(nr,Oo,_i=!1)=>\`<section class="report-section"><h2>\${an(nr)}\${_i?" (continued)":""}</h2><ul class="logo-list">\${Oo.map(w).join("")}</ul></section>\`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const Vd=G.map(([nr,Oo])=>\`<section class="report-section" data-directory-bucket="\${an(nr)}"><h2>\${an(nr)}</h2><ul class="logo-list">\${Oo.map(w).join("")}</ul></section>\`).join(""),pc=Pr.summary?\`<p class="muted">Trip summary</p><div class="keepsake-summary">\${E().split(/\\n\\s*\\n/).map(nr=>\`<p>\${an(nr)}</p>\`).join("")}</div>\`:"",gr=Pr.eventSummary?\`<p class="keepsake-summary">You experienced \${Re.size} \${Re.size===1?"event":"events"} this vacation.</p>\`:"",js=Pr.stories&&zt.length?\`<section class="page keepsake-report keepsake-list-page" data-stories-up-front="1">\${Wi}<h2>Saved stories</h2><div class="recap-grid">\${zt.map(nr=>\`<article class="story-card" data-story-card="1" data-story-media-only="1"><h3>\${an(Bs(mr(nr)))}</h3>\${fo(nr).filter(${AE_JUNK_MEDIA}).map(Ba).join("")}\${ha(nr).story?\`<div class="body"><p>\${an(ha(nr).story)}</p></div>\`:""}</article>\`).join("")}</div></section>\`:"",zl=Qa.map(nr=>\`<div class="keepsake-day">\${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>\`).join(""),wn=\`<section class="page keepsake-report" data-page="1" data-trip-directory="1">\${Wi}<h1>\${an(la.title||"Vacation")}</h1>\${pc}\${gr}<div class="summary-grid">\${ua}</div>\${Vd}</section>\`,Qi=Pn.map(nr=>\`<section class="page keepsake-report keepsake-list-page" data-post-itinerary="1">\${Wi}\${nr}</section>\`).join("");return\`\${wn}\${js}\${zl}\${Qi}\``;
+const AE_LAYOUT_PATCH = 'const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" ")),zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"||Oo.kind==="video"))),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const Vd=G.map(([nr,Oo])=>`<section class="report-section" data-directory-bucket="${an(nr)}"><h2>${an(nr)}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`).join(""),pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page" data-stories-up-front="1">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(nr=>`<article class="story-card" data-story-card="1" data-story-media-only="1"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join("")}${ha(nr).story?`<div class="body"><p>${an(ha(nr).story)}</p></div>`:""}</article>`).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report" data-page="1" data-trip-directory="1">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Vd}</section>`,Qi=Pn.map(nr=>`<section class="page keepsake-report keepsake-list-page" data-post-itinerary="1">${Wi}${nr}</section>`).join("");return`${wn}${js}${zl}${Qi}`}';
 
 const HC_QR_NEEDLE = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`';
 const HC_QR_PATCH = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}&m=1`';
@@ -35,7 +34,20 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   return patched;
 }
 
+export function assertStyleTwoPatchParses(source = AE_LAYOUT_PATCH) {
+  const js = String(source || '');
+  const patch = js.includes(AE_LAYOUT_PATCH) ? AE_LAYOUT_PATCH : js;
+  const body = patch.replace(/\}$/, '');
+  try {
+    new Function(body);
+  } catch (error) {
+    throw new Error(`Style two Ae() layout patch does not parse: ${error && error.message || error}`);
+  }
+  return true;
+}
+
 export function assertPatchedStyleTwo(source = '') {
+  assertStyleTwoPatchParses(AE_LAYOUT_PATCH);
   const js = String(source || '');
   if (!js.includes(AE_STYLE2)) {
     throw new Error('Style two dispatch is not Ae().');
@@ -49,7 +61,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-story-media-only="1"') || js.includes('${zt.map(fs).join("")}')) {
     throw new Error('Style two Ae() pics-only stories patch did not apply.');
   }
-  if (!js.includes('neon file bind proof') || !js.includes('originalName') || !js.includes('fo(nr).filter(Oo=>')) {
+  if (!js.includes('fo(nr).filter(Km).map(Ba)') || !js.includes('neon file bind proof') || !js.includes('originalName')) {
     throw new Error('Style two Ae() junk-media story filter did not apply.');
   }
   if (!js.includes(HC_QR_PATCH)) {
