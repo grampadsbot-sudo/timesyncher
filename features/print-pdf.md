@@ -14,3 +14,5 @@ Live items (`index-BKun7ofk.js`):
 List PDFs are not a third keepsake layout.
 
 HTML preview: `printMode=report&pdfReport={name}` (daily: `printMode=daily&pdfDay={n}`).
+
+Staging Style two PDF (`/api/pdf/shared/{token}/report/style-2`) 302s to the staging `Ae()` print preview. It does not 302 to travel.

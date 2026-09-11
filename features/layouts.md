@@ -15,6 +15,6 @@ Product click: **PDFs** → **Keepsakes ▸** → **Style two** (Layout 2).
 Staging mirrors (thin SoT):
 
 - View: `/shared/las-vegas-vacation-3/journey?style=2` → product `?printMode=report&pdfReport=keepsake-style-2`
-- PDF: `/api/pdf/shared/las-vegas-vacation-3/report/style-2` → product `keepsake.pdf` (`Ae()`). Travel `keepsake-style-2.pdf` is `zu()` and omits Config-ON sections.
+- PDF: `/api/pdf/shared/las-vegas-vacation-3/report/style-2` → staging `Ae()` print (`?printMode=report&pdfReport=keepsake-style-2`). Do **not** 302 to travel (`zu()` / unpatched `keepsake.pdf`).
 
 Skill (in flight): `skills/style-2-journey-book-export`.

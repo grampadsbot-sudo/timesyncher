@@ -20,7 +20,8 @@ import {
   PRODUCT_SOT_TWIN as HANDLER_SOT_TWIN,
   forwardedKeepsakeSearch,
 } from '../src/vacation/keepsake-style2-handler.mjs';
-import { patchStyleTwoToConfigRenderer, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
+import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
+import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 
 const shared = {
   trip: {
@@ -217,15 +218,58 @@ assert.equal(
 const styleTwoUrl = productPdfUrl({
   shareToken: 'las-vegas-vacation-3',
   report: 'style-2',
+  origin: 'https://vacation-staging.timesyncher.com',
 });
 assert.equal(
   styleTwoUrl,
-  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/keepsake.pdf`,
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2',
 );
+assert.doesNotMatch(styleTwoUrl, /travel\.timesyncher\.com/);
 assert.equal(
   patchStyleTwoToConfigRenderer(`if(h==="report"&&g){${STYLE2_USES_ZU}}`),
   `if(h==="report"&&g){${STYLE2_USES_AE}}`,
 );
+
+const liveOverride = applyProductKeepsakeOverrides({
+  places: shared.places,
+  thingOverrides: {
+    'place:8871': { title: 'Bellagio Conservatory — Anniversary Cocktails', category: 'other', story: 'wet petals' },
+    'place:8872': { story: 'Spicy rigatoni' },
+    'place:8869': { title: 'Bellagio — Alex & Kim Anniversary Stay', category: 'hotel' },
+  },
+});
+assert.equal(liveOverride.thingOverrides['place:8872'].category, 'restaurant');
+assert.equal(liveOverride.thingOverrides['place:8876'].category, 'store');
+assert.equal(liveOverride.thingOverrides['place:8873'].category, 'restaurant');
+assert.equal(liveOverride.thingOverrides['place:8869'].category, 'hotel');
+assert.equal(liveOverride.thingOverrides['place:8877'].category, 'flight');
+assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'restaurant');
+assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'store');
+assert.ok(liveOverride.thingOverrides['place:8872'].lat);
+assert.ok(liveOverride.thingOverrides['place:8876'].lng);
+assert.deepEqual(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), [36.1073, -115.1766]);
+const buckets = keepsakeListBuckets(liveOverride);
+assert.ok(buckets.Restaurants.some((row) => row.place.name.includes('Carbone')));
+assert.ok(buckets.Stores.some((row) => row.place.name.includes('Cosmopolitan')));
+assert.ok(!buckets['Shows, Tours and the Rest'].some((row) => /carbone|cosmopolitan shops/i.test(row.place.name)));
+assert.ok(buckets.Hotels.some((row) => String(row.place.id) === '8869'));
+
+const aeFixture = [
+  STYLE2_USES_ZU,
+  'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}',
+  ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
+].join('\n');
+const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
+assertPatchedStyleTwo(patchedAe);
+assert.match(patchedAe, /data-trip-directory="1"/);
+assert.match(patchedAe, /data-directory-bucket=/);
+assert.match(patchedAe, /data-post-itinerary="1"/);
+assert.match(patchedAe, /data-story-media-only="1"/);
+assert.match(patchedAe, /fo\(nr\)\.map\(Ba\)/);
+assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
+assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
+assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
+assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
 assert.equal(
   productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'restaurants' }),
   `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/restaurants.pdf`,

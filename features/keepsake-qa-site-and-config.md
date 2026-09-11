@@ -6,11 +6,17 @@
 
 ## Verdict
 
-**FAIL verified.** Hold certify. Do not route PASS.
+**FAIL verified** on `keepsake-style-2-candidate-b5a344b.pdf`. Hold certify. Do not route PASS. Do not deliver that candidate.
 
-Remaining certify blocker:
+SCT CoS fix list (staging `Ae()`, not a third book):
 
-1. Product **travel** click path **Style two** still uses `zu()` (`keepsake-style-2.pdf`). That renderer **omits** Config-ON sections (Event summary, Saved stories section, lists, Day 1–3 maps). Staging product path uses `Ae()` and **does** honor those sections.
+1. Restaurants + Stores are own Config `de()` sections (place category → override.category). Do not dump those into Shows/Tours/Rest.
+2. Day1–3 maps: Config ON shows real mapped stops (venue coords), not empty `0 of N` / placeholder.
+3. Saved stories: pics/media only (`Ba()`), no logo/icon cards.
+4. Thing lists after trip end — not on p1 before itinerary/stories.
+5. p1 names+logos directory with those category buckets.
+
+Staging PDF `/report/style-2` stays on staging `Ae()` print. Travel click Style two is still `zu()` — residual.
 
 Feature Map walk found unmapped live detail/header facts. Those are **stamped** in `features/` from live `index-BKun7ofk.js` (not invented). Stamping closes the inventory gap; it does **not** certify.
 

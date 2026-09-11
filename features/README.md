@@ -31,7 +31,7 @@ Layouts: **style-1 / Style one** and **style-2 / Style two** only. Export = clic
 Staging mirrors (product path; no third layout):
 
 - `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2`
-- `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2` → 302 to travel `keepsake.pdf` (`Ae()`), because travel `keepsake-style-2.pdf` is `zu()` and omits Config-ON sections.
+- `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2` → staging `Ae()` print (no travel 302). Travel `keepsake-style-2.pdf` is still `zu()`.
 
 Style one is `report/keepsake.pdf`.
 

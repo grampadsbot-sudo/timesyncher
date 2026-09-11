@@ -82,6 +82,7 @@ export function productPdfUrl({
   report = PRODUCT_STYLE_TWO_REPORT,
   pdfPath = '',
   search = '',
+  origin = '',
 } = {}) {
   const token = encodeURIComponent(shareToken);
   if (isDailyReport(report, pdfPath)) {
@@ -90,9 +91,14 @@ export function productPdfUrl({
     return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}${suffix}${search}`;
   }
   const name = normalizeReportName(report);
-  // zu() at keepsake-style-2.pdf omits Config-ON sections. Ae() is /keepsake.pdf.
-  const reportName = name === PRODUCT_STYLE_TWO_REPORT ? 'keepsake' : name;
-  return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}/report/${encodeURIComponent(reportName)}.pdf${search}`;
+  if (name === PRODUCT_STYLE_TWO_REPORT) {
+    return productStyleTwoViewUrl({
+      shareToken,
+      origin: origin || 'https://vacation-staging.timesyncher.com',
+      search,
+    });
+  }
+  return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
 }
 
 export function forwardedKeepsakeSearch(url) {
@@ -148,18 +154,15 @@ export default async function handler(req, res) {
     report: reportName,
     view: url.searchParams.get('view') || '',
   });
-  const location = wantsView
+  const location = wantsView || isProductStyleTwo(reportName)
     ? productStyleTwoViewUrl({ shareToken, origin, search })
     : productPdfUrl({
       shareToken,
       report: reportName,
       pdfPath,
       search,
+      origin,
     });
-
-  if (!wantsView && location.startsWith(origin)) {
-    return sendJson(res, 500, { ok: false, error: 'Refusing to redirect Style two PDF onto this host.' });
-  }
 
   return sendRedirect(res, location);
 }

@@ -20,9 +20,9 @@ Live travel `…/report/keepsake.pdf` is TREK `Ae()`: the Config-coupled product
 | Day2 map | **missing** | present (Day 2 map) |
 | Day3 map | **missing** | present (Day 3 map) |
 
-Staging Style two export now uses **`Ae()`** (patch `keepsake-style-2"?zu()` → `Ae()`; PDF 302 to product `keepsake.pdf`). No Cursor HTML book.
+Staging Style two export uses **`Ae()`** (patch `keepsake-style-2"?zu()` → `Ae()` + Craig layout on that same renderer). PDF stays on staging print — no travel 302. No Cursor HTML book.
 
-Restaurants/Stores headings follow product category filters — do not invent extra list rules.
+Restaurants/Stores headings come from product `de()` after shared-trip writes `thingOverrides.category` from the place category (`Restaurant` / `Store`). Do not invent a third list renderer.
 
 QA 2026-09-10 (`keepsake-qa-site-and-config-20260910`): travel click Style two remains `zu()` → **FAIL verified**. Staging Style two PDF 302s to `Ae()` / `keepsake.pdf`. Hold certify.
 
