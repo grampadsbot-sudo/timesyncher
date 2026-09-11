@@ -14,4 +14,6 @@ Completer/skillify jobs 18–22 in flight. Hold certify. Do not claim Completer 
 
 **Sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard`  
 Config dump: `bot-admin/messages/time-syncher/keepsakes-config-defaults-20260910`  
-Autonomy: `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910` (Telegram flow → GBrain + code + website)
+Autonomy: `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910` (Telegram flow → GBrain + code + website)  
+Without bots: `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910` (do not wait on OpenClaw)  
+Keepsake QA: `bot-admin/messages/time-syncher/keepsake-qa-site-and-config-20260910` — travel Style two `zu()` **FAIL**; hold certify.

@@ -1,8 +1,11 @@
 # Autonomous Vacation app (product end-state)
 
-GBrain: `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`
+GBrain: `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`  
+Without bots: `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910`
 
-Craig stamp: Vacation rolls out through the **Telegram customer flow under test**, then **runs on its own**, driven by **GBrain + product code + website**. Not a forever bot-babysat demo. SCT proves the Telegram path. Do **not** invent deploy targets.
+Craig stamp: Vacation rolls out through the **Telegram customer flow under test**, then **runs on its own**, driven by **GBrain + product code + website**. Eventually **without Grok bots**. Not a forever bot-babysat demo. SCT proves the Telegram path. Do **not** invent deploy targets.
+
+OpenClaw has made progress but is **not close to ready** as the autonomous operator. Do **not** stall the product path waiting on OC. Keep moving GBrain + code + website + TG flow.
 
 ## Existing rollout path (no new hosts)
 
@@ -20,5 +23,6 @@ These must hold in **code + website** so a Telegram-created trip does not need a
 | Style two | Product path; Config ON → every ON section in PDF (`Ae()`) | `config-on-style-two-proof.md` |
 | Budget | Existing TREK inclusion only | `budget.md` |
 | Feature Map | Every live UI control | `README.md` |
+| Style-two Config | Travel click still `zu()` = FAIL; staging uses `Ae()` | `keepsake-qa-site-and-config.md` |
 
-Hold certify until that bar is QA-provable. SCT owns customer-flow proof; this repo owns code+site.
+Hold certify until that bar is QA-provable. SCT owns customer-flow proof; this repo owns code+site. Do not wait on OpenClaw.

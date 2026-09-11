@@ -10,8 +10,10 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Skills index: `features/skills-alignment.md`
 - Budget QA: `bot-admin/messages/time-syncher/keepsake-qa-budget-rules-20260910`
 - Config-ON PDF proof: `features/config-on-style-two-proof.md`
+- Keepsake QA (Config honor + live Feature Map): `features/keepsake-qa-site-and-config.md` / `bot-admin/messages/time-syncher/keepsake-qa-site-and-config-20260910` — **FAIL verified** (travel Style two = `zu()`). Hold certify.
 - Initial fill (per-category **15 / 10 / 15**, not total-8): `features/min-things.md` / `bot-admin/messages/time-syncher/initial-min-things-rule-20260910`
 - Autonomy bar: `features/autonomous-app-customer-flow.md` / `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`
+- Without bots (do not wait on OpenClaw): `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910`
 - TG intake track + build cue: `features/tg-intake.md` / `bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cue-20260910`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 
@@ -26,10 +28,10 @@ Layouts: **style-1 / Style one** and **style-2 / Style two** only. Export = clic
 3. PDF: `/api/pdf/shared/las-vegas-vacation-3/report/keepsake-style-2.pdf`
 4. HTML preview: `?printMode=report&pdfReport=keepsake-style-2`
 
-Staging mirrors:
+Staging mirrors (product path; no third layout):
 
 - `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2`
-- `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2`
+- `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2` → 302 to travel `keepsake.pdf` (`Ae()`), because travel `keepsake-style-2.pdf` is `zu()` and omits Config-ON sections.
 
 Style one is `report/keepsake.pdf`.
 
@@ -61,7 +63,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Surface | Live label / control | Feature file |
 | --- | --- | --- |
 | Header brand | TimeSyncher Vacation | `header-chrome.md` |
-| Language | Change language / Select language | `language.md` |
+| Language | Change language / Select language (login/landing, not shared-trip header) | `language.md` |
 | Trip view | **Config Options** → **Trip View** → Flights / Hotels / Cars (default ON) | `config-options-trip-view.md` |
 | Print menu | **PDFs** → menu title **Print / PDF** | `print-pdf.md` |
 | Daily PDF | Daily printout ▸ → Day N | `print-pdf.md` |
@@ -75,19 +77,21 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Map | “Only things tagged for this day + Timeline appear on the map below.” | `maps.md` |
 | Filters | All areas / All types | `filters.md` |
 | Empty states | No restaurants/stores match those tags; no timeline-tagged things | `empty-states.md` |
-| Detail | Detail page, Detail name, Days, Timeline, Status, Type, Area, Start, Duration | `detail-page.md` |
+| Detail | Detail page, Detail name, Days, Timeline, Status, Type, Area, Start, Duration, Price, Estimated travel time, Summary, Story, recap checkbox, Website, Details | `detail-page.md` |
+| Tags / chips | Restaurant tags / chips; Store tags / chips (live `ot` / `gt`) | `tags-chips.md` |
 | Status | considering / preferred / reservation / booked / eliminated | `status.md` |
 | Happy hour | Happy hour + Happy hour details | `happy-hour.md` |
 | Hotel fields | Stay days, Check-in/out date/time | `hotel-stay-fields.md` |
 | Flight fields | Takeoff, Connections, Layover | `flight-fields.md` |
 | Car fields | Rental company, Car type | `car-fields.md` |
-| Ratings | Rating / Yelp rating / Other rating | `ratings-reviews.md` |
+| Ratings | Google rating / Yelp rating / Other rating | `ratings-reviews.md` |
 | Reviews | 5-star review quote 1–3; print `★★★★★` | `ratings-reviews.md` |
 | Stories / media | Saved stories (Config); Edit caption; Play video | `media-stories.md` |
 | Collab | Checking edit access… / Saved to itinerary / View-only — editing requires an approved email invite | `collaborators.md` |
 | Budget | Tab when `share_budget`; which things appear = live TREK rules only | `budget.md` |
 | Min things | Initial website fill **15 restaurants / 10 stores / 15 The Rest** (not total-8) | `min-things.md` |
-| Autonomy bar | Telegram customer flow → GBrain + code + website; no bot-babysit | `autonomous-app-customer-flow.md` |
+| Autonomy bar | Telegram → GBrain + code + website; eventually **without bots**; do not wait on OpenClaw | `autonomous-app-customer-flow.md` |
+| Keepsake QA | Config honor + live Feature Map; travel Style two `zu()` = FAIL | `keepsake-qa-site-and-config.md` |
 | TG intake | Track Q&A in GBrain; 10–15 min build cue; then autonomous fill | `tg-intake.md` |
 | Settings (TREK, not shared-guest header) | Mapbox / Google Maps / Weather / Invite / Copy link | `trek-settings.md` |
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |

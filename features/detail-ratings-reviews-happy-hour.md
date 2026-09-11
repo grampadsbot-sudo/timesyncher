@@ -9,3 +9,4 @@ Split files (do not invent extra widgets):
 - `hotel-stay-fields.md`
 - `flight-fields.md`
 - `car-fields.md`
+- `tags-chips.md`
