@@ -26,7 +26,20 @@ const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return R
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
 const LIVE_TAB_NEEDLE = 'Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
-const LIVE_TAB_PATCH = `tsPad=(rows,kind,names,min)=>{const have=new Set(rows.map(G=>String(mr(G)||G.name||"").toLowerCase()));const extra=names.filter(n=>![...have].some(h=>h.includes(n.toLowerCase())||n.toLowerCase().includes(h))).slice(0,Math.max(0,min-rows.length)).map((name,i)=>({id:(kind==="restaurant"?910000:kind==="store"?920000:930000)+i+1,name,__tsLiveFill:1,category:kind==="rest"?"event":kind,lat:36.1147,lng:-115.1729,address:"Las Vegas"}));return rows.concat(extra)},tsFill=${JSON.stringify(LIVE_TAB_FILL)},tsMin=${JSON.stringify(LIVE_TAB_MINIMUMS)},Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),"store",tsFill.store,tsMin.store),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),"restaurant",tsFill.restaurant,tsMin.restaurant),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))),"rest",tsFill.rest,tsMin.rest)`;
+const LIVE_TAB_PATCH = `tsPad=(rows,kind,names,min)=>{const have=new Set(rows.map(G=>String(mr(G)||G.name||"").toLowerCase()).filter(Boolean));const extra=names.filter(n=>n&&![...have].some(h=>h.includes(n.toLowerCase())||n.toLowerCase().includes(h))).slice(0,Math.max(0,min-rows.length)).map((name,i)=>({id:(kind==="restaurant"?910000:kind==="store"?920000:930000)+i+1,name,__tsLiveFill:1,category:kind==="rest"?"event":kind,type:kind==="rest"?"event":kind,icon:kind==="restaurant"?"🍽️":kind==="store"?"🛍️":"🎟️",lat:36.1147,lng:-115.1729,address:"Nevada"}));return rows.concat(extra)},tsFill=${JSON.stringify(LIVE_TAB_FILL)},tsMin=${JSON.stringify(LIVE_TAB_MINIMUMS)},Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),"store",tsFill.store,tsMin.store),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),"restaurant",tsFill.restaurant,tsMin.restaurant),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))),"rest",tsFill.rest,tsMin.rest)`;
+
+const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
+const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
+
+const QN_RENDER_NEEDLE = 'Qn.map(G=>Oe(G))';
+const QN_RENDER_PATCH = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G))';
+const GN_RENDER_NEEDLE = 'Gn.map(G=>Oe(G))';
+const GN_RENDER_PATCH = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G))';
+const KI_RENDER_NEEDLE = 'ki.map(G=>Oe(G))';
+const KI_RENDER_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G))';
+
+const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
+const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([...Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}] }),...[...Oc||[],...Fs||[],...Po||[],...to||[]].filter(Xi=>Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])]).values())';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '') {
@@ -52,6 +65,21 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(LIVE_TAB_NEEDLE)) {
     patched = patched.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
+  }
+  if (patched.includes(IT_CATEGORY_NEEDLE)) {
+    patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
+  }
+  if (patched.includes(QN_RENDER_NEEDLE)) {
+    patched = patched.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
+  }
+  if (patched.includes(GN_RENDER_NEEDLE)) {
+    patched = patched.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
+  }
+  if (patched.includes(KI_RENDER_NEEDLE)) {
+    patched = patched.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
+  }
+  if (patched.includes(MO_BUDGET_NEEDLE)) {
+    patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
   }
   return patched;
 }
@@ -115,6 +143,15 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes('tsPad=') || !js.includes('__tsLiveFill:1') || !js.includes('"restaurant":15')) {
     throw new Error('Style two live tab 15/10/15 pad patch did not apply.');
+  }
+  if (!js.includes(IT_CATEGORY_PATCH) || js.includes(IT_CATEGORY_NEEDLE)) {
+    throw new Error('Style two live It() category-object patch did not apply.');
+  }
+  if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
+    throw new Error('Style two live tab render pad did not apply.');
+  }
+  if (!js.includes(MO_BUDGET_PATCH)) {
+    throw new Error('Style two live budget restaurant/store merge did not apply.');
   }
   return true;
 }
