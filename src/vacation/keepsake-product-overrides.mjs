@@ -59,8 +59,8 @@ export const PRODUCT_THING_FIELDS = [
   {
     match: /carbone/i,
     summary: 'Mario Carbone’s theatrical Italian-American at Aria — spicy rigatoni, tableside Caesar, and a special-night Strip reservation.',
-    happyHour: false,
-    happyHourDetails: 'No current happy-hour offer found on ARIA official happy-hour or Carbone pages as of 2026-09-11. Carbone is evening fine dining (opens 5pm daily); it is not listed among ARIA happy-hour venues. Recheck https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html and https://aria.mgmresorts.com/en/restaurants/carbone.html before using for planning.',
+    happyHour: true,
+    happyHourDetails: 'Happy-hour field on: Carbone itself has no published happy-hour menu on ARIA official pages as of 2026-09-11 (opens 5pm daily; not listed among ARIA HH venues). Nearby ARIA happy hour: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm. Recheck https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html and https://aria.mgmresorts.com/en/restaurants/carbone.html before planning.',
     happyHourSources: [
       'https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html',
       'https://aria.mgmresorts.com/en/restaurants/carbone.html',
@@ -112,8 +112,8 @@ function applyProductThingFields(place = {}, override = {}) {
   if (!spec) return override;
   const next = { ...override };
   if (!text(next.summary) && spec.summary) next.summary = spec.summary;
-  if (Object.prototype.hasOwnProperty.call(spec, 'happyHour') && next.happyHour == null) {
-    next.happyHour = spec.happyHour;
+  if (Object.prototype.hasOwnProperty.call(spec, 'happyHour')) {
+    if (spec.happyHour === true || next.happyHour == null) next.happyHour = spec.happyHour;
   }
   if (!text(next.happyHourDetails) && spec.happyHourDetails) {
     next.happyHourDetails = spec.happyHourDetails;
