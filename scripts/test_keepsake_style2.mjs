@@ -259,6 +259,10 @@ assert.match(patch, /break-inside:avoid/);
 assert.match(patch, /box-decoration-break:clone/);
 assert.match(patch, /display:block!important/);
 assert.match(patch, /injectStoriesPrintCss/);
+assert.match(patch, /display:table!important/);
+assert.match(patch, /data-two-col/);
+assert.match(patch, /serviceWorker/);
+assert.match(patch, /unregister/);
 assert.doesNotMatch(patch, /journey\?style=2/);
 assert.doesNotMatch(patch, /patchedOpen/);
 
@@ -377,6 +381,7 @@ assert.equal(carboneAssign.place.lat, 36.1073);
 assert.equal(carboneAssign.place.lng, -115.1766);
 assert.equal(liveOverride.thingOverrides['place:8872'].timeline, true);
 assert.match(liveOverride.thingOverrides['place:8872'].summary, /Carbone|Italian-American|Aria/i);
+assert.match(liveOverride.thingOverrides['place:8872'].longDetails, /Aria special-night|tableside Caesar|Bardot/i);
 assert.equal(liveOverride.thingOverrides['place:8872'].happyHour, true);
 assert.match(liveOverride.thingOverrides['place:8872'].happyHourDetails, /Happy-hour field on|ARIA/i);
 assert.match(liveOverride.thingOverrides['place:8873'].summary, /Shake Shack|burger/i);
@@ -414,6 +419,12 @@ const aeFixture = [
   'ki.map(G=>Oe(G))',
   'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
   'height:dn?900:300,marginBottom:12',
+  'ha=G=>le[Qt(G)]||{},Sn=',
+  'G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({})',
+  'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
+  '<div class="daily-grid">${js}<main class="daily-details">',
+  'js=`<aside class="daily-left">',
+  'return`<article class="thing daily-thing"><div class="thing-head">',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -446,7 +457,9 @@ assert.match(patchedAe, /data-print-fill="1"/);
 assert.match(patchedAe, /data-list-min=/);
 assert.match(patchedAe, /"Restaurants":15/);
 assert.match(patchedAe, /style2-thing-media/);
-assert.match(patchedAe, /data-print-ready="style2">\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
+assert.match(patchedAe, /data-print-ready="style2"/);
+assert.match(patchedAe, /data-two-col="1"/);
+assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
 assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
   Restaurants: DEFAULT_FIRST_PASS_MINIMUMS.restaurant,
   Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
@@ -475,6 +488,18 @@ assert.match(patchedAe, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/)
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant\)\.length===0/);
+assert.match(patchedAe, /tsFillOv=/);
+assert.match(patchedAe, /tsMergeLe=/);
+assert.match(patchedAe, /ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\)/);
+assert.match(patchedAe, /G!=null\?pe\(tsMergeLe\(G\)\):pe\(\{\}\)/);
+assert.match(patchedAe, /Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
+assert.match(patchedAe, /data-two-col-itinerary="1"/);
+assert.match(patchedAe, /data-two-col-details="1"/);
+assert.match(patchedAe, /data-two-col-print="1"/);
+assert.match(patchedAe, /<strong>Summary\.<\/strong>/);
+assert.match(patchedAe, /<strong>Story\.<\/strong>/);
+assert.match(patchedAe, /data-happy-hour=/);
+assert.match(patchedAe, /longDetails/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
@@ -513,6 +538,8 @@ assert.match(sharedApp, /index-BKun7ofk\.js/);
 assert.match(sharedApp, /href="\/assets\/index-CbEHlMj6\.css"/);
 assert.doesNotMatch(sharedApp, /crossorigin href="https:\/\/travel\.timesyncher\.com\/assets\/index-CbEHlMj6\.css"/);
 assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
+assert.match(sharedApp, /serviceWorker/);
+assert.match(sharedApp, /unregister/);
 assert.doesNotMatch(sharedApp, /pdfReport=keepsake/);
 assert.match(sharedApp, /Record voice note/);
 assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(shareToken\)\}\/audio-note/);

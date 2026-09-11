@@ -54,10 +54,6 @@
       "dest": "https://travel.timesyncher.com/manifest.webmanifest"
     },
     {
-      "src": "/registerSW.js",
-      "dest": "https://travel.timesyncher.com/registerSW.js"
-    },
-    {
       "src": "/accept/([^/]+)",
       "dest": "/api/eula?action=accept-page&sessionId=$1"
     }

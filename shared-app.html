@@ -19,6 +19,10 @@
     <link rel="stylesheet" href="/assets/index-CbEHlMj6.css" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((reg) => reg.unregister()));
+        if (window.caches) caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+      }
       window.__TS_JOURNEY_BOOK__ = false;
       const trek = document.createElement('script');
       trek.type = 'module';

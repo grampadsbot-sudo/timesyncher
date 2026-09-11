@@ -1,4 +1,5 @@
 import { LIVE_TAB_FILL, LIVE_TAB_MINIMUMS } from './keepsake-list-minimums.mjs';
+import { PRODUCT_THING_FIELDS } from './keepsake-product-overrides.mjs';
 
 const TRAVEL_BUNDLE = 'https://travel.timesyncher.com/assets/index-BKun7ofk.js';
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -9,7 +10,7 @@ export const STYLE2_USES_AE = AE_STYLE2;
 
 const AE_LAYOUT_NEEDLE = 'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}';
 
-const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(\" \")),Kf={\"Restaurants\":[\"Mon Ami Gabi\",\"Bardot Brasserie\",\"CATCH Las Vegas\",\"Javier's at Aria\",\"Estiatorio Milos\",\"Best Friend by Roy Choi\",\"Holsteins\",\"L'Atelier de Joël Robuchon\",\"Giada\",\"Yellowtail Japanese Restaurant\",\"Mott 32\",\"Jean Georges Steakhouse\",\"Lago by Julian Serrano\",\"Sichuan House\"],\"Stores\":[\"Crystals at Aria\",\"Grand Canal Shoppes\",\"Forum Shops at Caesars\",\"Fashion Show Mall\",\"Bellagio Shops\",\"Wynn Esplanade\",\"Harmon Corner\",\"Shoppes at Mandalay Place\",\"Venetian Shoppes\",\"Miracle Mile Shops\"],\"Shows, Tours and the Rest\":[\"Bellagio Fountains\",\"High Roller\",\"The Sphere\",\"Fremont Street Experience\",\"Neon Museum\",\"Atomic Museum\",\"Hoover Dam\",\"Red Rock Canyon\",\"STRAT SkyPod\",\"Welcome to Fabulous Las Vegas Sign\",\"LINQ Promenade\",\"O by Cirque du Soleil\",\"Absinthe\",\"Lake of Dreams\",\"High Tea Conservatory Walk\"]},padMin={\"Restaurants\":15,\"Stores\":10,\"Shows, Tours and the Rest\":15},zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind===\"photo\"||Oo.kind===\"video\"))),ua=G.map(([nr,Oo])=>`<div class=\"summary-stat\"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(\"\"),Rn=(nr,Oo,_i=!1)=>`<section class=\"report-section\"><h2>${an(nr)}${_i?\" (continued)\":\"\"}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join(\"\")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const Vd=G.map(([nr,Oo])=>`<section class=\"report-section\" data-directory-bucket=\"${an(nr)}\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`).join(\"\"),pc=Pr.summary?`<p class=\"muted\">Trip summary</p><div class=\"keepsake-summary\">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join(\"\")}</div>`:\"\",gr=Pr.eventSummary?`<p class=\"keepsake-summary\">You experienced ${Re.size} ${Re.size===1?\"event\":\"events\"} this vacation.</p>`:\"\",js=Pr.stories&&zt.length?`<section class=\"page keepsake-report keepsake-list-page\" data-stories-up-front=\"1\" data-stories-bottom-margin=\"1\" style=\"padding-bottom:36mm\">${Wi}<h2>Saved stories</h2><style data-stories-print-css=\"1\">[data-stories-bottom-margin=\"1\"] .recap-grid{display:block!important;grid-template-columns:none!important}[data-story-card],.story-card{display:block!important;break-inside:avoid!important;page-break-inside:avoid!important;padding-bottom:24mm!important}</style><div class=\"recap-grid\" style=\"display:block\">${zt.map(nr=>`<article class=\"story-card\" data-story-card=\"1\" data-story-media-only=\"1\" style=\"break-inside:avoid;page-break-inside:avoid;display:block;padding-bottom:24mm\"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join(\"\")}<div class=\"body\">${rr(nr)?`<p data-story-summary=\"1\">${an(Bs(rr(nr)))}</p>`:\"\"}${ha(nr).story?`<p data-story-body=\"1\">${an(ha(nr).story)}</p>`:\"\"}</div></article>`).join(\"\")}</div></section>`:\"\",zl=Qa.map(nr=>`<div class=\"keepsake-day\" data-print-ready=\"style2\">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(\"\"),wn=`<section class=\"page keepsake-report\" data-page=\"1\" data-trip-directory=\"1\">${Wi}<h1>${an(la.title||\"Vacation\")}</h1>${pc}${gr}<div class=\"summary-grid\">${ua}</div>${Vd}</section>`,Qi=G.map(([nr,Oo])=>{const min=padMin[nr]||0,have=new Set(Oo.map(item=>String(mr(item)||\"\"))),extra=(Kf[nr]||[]).filter(name=>![...have].some(h=>h.toLowerCase().includes(name.toLowerCase())||name.toLowerCase().includes(h.toLowerCase()))).slice(0,Math.max(0,min-Oo.length)),fill=extra.map(name=>`<li data-print-fill=\"1\"><span class=\"thing-emoji\">${nr===\"Restaurants\"?\"🍽️\":nr===\"Stores\"?\"🛍️\":\"🏛️\"}</span><span>${an(name)}</span></li>`).join(\"\");return `<section class=\"page keepsake-report keepsake-list-page\" data-post-itinerary=\"1\" data-list-min=\"${min}\">${Wi}<section class=\"report-section\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}${fill}</ul></section></section>`}).join(\"\");return`${wn}${js}${zl}${Qi}`}";
+const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(\" \")),Kf={\"Restaurants\":[\"Mon Ami Gabi\",\"Bardot Brasserie\",\"CATCH Las Vegas\",\"Javier's at Aria\",\"Estiatorio Milos\",\"Best Friend by Roy Choi\",\"Holsteins\",\"L'Atelier de Joël Robuchon\",\"Giada\",\"Yellowtail Japanese Restaurant\",\"Mott 32\",\"Jean Georges Steakhouse\",\"Lago by Julian Serrano\",\"Sichuan House\"],\"Stores\":[\"Crystals at Aria\",\"Grand Canal Shoppes\",\"Forum Shops at Caesars\",\"Fashion Show Mall\",\"Bellagio Shops\",\"Wynn Esplanade\",\"Harmon Corner\",\"Shoppes at Mandalay Place\",\"Venetian Shoppes\",\"Miracle Mile Shops\"],\"Shows, Tours and the Rest\":[\"Bellagio Fountains\",\"High Roller\",\"The Sphere\",\"Fremont Street Experience\",\"Neon Museum\",\"Atomic Museum\",\"Hoover Dam\",\"Red Rock Canyon\",\"STRAT SkyPod\",\"Welcome to Fabulous Las Vegas Sign\",\"LINQ Promenade\",\"O by Cirque du Soleil\",\"Absinthe\",\"Lake of Dreams\",\"High Tea Conservatory Walk\"]},padMin={\"Restaurants\":15,\"Stores\":10,\"Shows, Tours and the Rest\":15},zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind===\"photo\"||Oo.kind===\"video\"))),ua=G.map(([nr,Oo])=>`<div class=\"summary-stat\"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(\"\"),Rn=(nr,Oo,_i=!1)=>`<section class=\"report-section\"><h2>${an(nr)}${_i?\" (continued)\":\"\"}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join(\"\")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const Vd=G.map(([nr,Oo])=>`<section class=\"report-section\" data-directory-bucket=\"${an(nr)}\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`).join(\"\"),pc=Pr.summary?`<p class=\"muted\">Trip summary</p><div class=\"keepsake-summary\">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join(\"\")}</div>`:\"\",gr=Pr.eventSummary?`<p class=\"keepsake-summary\">You experienced ${Re.size} ${Re.size===1?\"event\":\"events\"} this vacation.</p>`:\"\",js=Pr.stories&&zt.length?`<section class=\"page keepsake-report keepsake-list-page\" data-stories-up-front=\"1\" data-stories-bottom-margin=\"1\" style=\"padding-bottom:36mm\">${Wi}<h2>Saved stories</h2><style data-stories-print-css=\"1\">[data-stories-bottom-margin=\"1\"] .recap-grid{display:block!important;grid-template-columns:none!important}[data-story-card],.story-card{display:block!important;break-inside:avoid!important;page-break-inside:avoid!important;padding-bottom:24mm!important}</style><div class=\"recap-grid\" style=\"display:block\">${zt.map(nr=>`<article class=\"story-card\" data-story-card=\"1\" data-story-media-only=\"1\" style=\"break-inside:avoid;page-break-inside:avoid;display:block;padding-bottom:24mm\"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join(\"\")}<div class=\"body\">${rr(nr)?`<p data-story-summary=\"1\" style=\"font-size:12px;color:#334155;margin:8px 0 6px\"><strong>Summary.</strong> ${an(Bs(rr(nr)))}</p>`:\"\"}${ha(nr).story?`<p data-story-body=\"1\" style=\"font-size:12px;color:#111827\"><strong>Story.</strong> ${an(ha(nr).story)}</p>`:\"\"}</div></article>`).join(\"\")}</div></section>`:\"\",zl=Qa.map(nr=>`<div class=\"keepsake-day\" data-print-ready=\"style2\" data-two-col=\"1\"><style data-two-col-print=\"1\">.keepsake-day .daily-grid,.daily-page .daily-grid{display:table!important;width:100%!important;table-layout:fixed!important}.keepsake-day .daily-left,.daily-page .daily-left{display:table-cell!important;width:38%!important;vertical-align:top!important;padding-right:14px}.keepsake-day .daily-details,.daily-page .daily-details{display:table-cell!important;width:62%!important;vertical-align:top!important}</style>${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(\"\"),wn=`<section class=\"page keepsake-report\" data-page=\"1\" data-trip-directory=\"1\">${Wi}<h1>${an(la.title||\"Vacation\")}</h1>${pc}${gr}<div class=\"summary-grid\">${ua}</div>${Vd}</section>`,Qi=G.map(([nr,Oo])=>{const min=padMin[nr]||0,have=new Set(Oo.map(item=>String(mr(item)||\"\"))),extra=(Kf[nr]||[]).filter(name=>![...have].some(h=>h.toLowerCase().includes(name.toLowerCase())||name.toLowerCase().includes(h.toLowerCase()))).slice(0,Math.max(0,min-Oo.length)),fill=extra.map(name=>`<li data-print-fill=\"1\"><span class=\"thing-emoji\">${nr===\"Restaurants\"?\"🍽️\":nr===\"Stores\"?\"🛍️\":\"🏛️\"}</span><span>${an(name)}</span></li>`).join(\"\");return `<section class=\"page keepsake-report keepsake-list-page\" data-post-itinerary=\"1\" data-list-min=\"${min}\">${Wi}<section class=\"report-section\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}${fill}</ul></section></section>`}).join(\"\");return`${wn}${js}${zl}${Qi}`}";
 
 
 
@@ -21,13 +22,41 @@ const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>!/bind[- ]?proof|neon file bind pro
 
 
 const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}';
-const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G);return`<li data-list-row="1" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div class="muted" data-list-summary="1" style="font-size:10px;font-weight:400;margin-top:2px;line-height:1.35">${an(Bs(zt))}</div>`:""}</span></li>`}';
+const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G);return`<li data-list-row="1" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
-const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${rr(_i.item)?`<div class="muted" data-row-summary="1" style="font-weight:400;font-size:10px;margin-top:2px;line-height:1.35">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
+const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${rr(_i.item)?`<div data-row-summary="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
 
 const DAILY_THING_NEEDLE = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=';
 const DAILY_THING_PATCH = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}${fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).length?`<div class="style2-thing-media" data-daily-thing-media="1">${fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).map(Ba).join("")}</div>`:""}</article>`},ws=';
+
+function productFieldsLiteral() {
+  return JSON.stringify(PRODUCT_THING_FIELDS.map((row) => ({
+    match: row.match.source,
+    summary: row.summary || '',
+    happyHour: Object.prototype.hasOwnProperty.call(row, 'happyHour') ? row.happyHour : null,
+    happyHourDetails: row.happyHourDetails || '',
+    longDetails: row.longDetails || '',
+  })));
+}
+
+const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const name=String((base&&base.title)||(thing&&(thing.name||thing.title))||"");const spec=tsPf.find(row=>row.match.test(name));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},tsMergeLe=trip=>{const ov={...((trip&&trip.thingOverrides&&typeof trip.thingOverrides=="object")?trip.thingOverrides:{})};for(const place of (trip&&Array.isArray(trip.places)?trip.places:[]))ov["place:"+place.id]=tsFillOv(ov["place:"+place.id]||{},place);return ov},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
+
+const PE_NEEDLE = 'G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({})';
+const PE_PATCH = 'G!=null?pe(tsMergeLe(G)):pe({})';
+
+const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
+const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
+
+const OP_GRID_NEEDLE = '<div class="daily-grid">${js}<main class="daily-details">';
+const OP_GRID_PATCH = '<div class="daily-grid" data-two-col="1" style="display:table;width:100%;table-layout:fixed">${js}<main class="daily-details" data-two-col-details="1" style="display:table-cell;width:62%;vertical-align:top">';
+
+const OP_LEFT_NEEDLE = 'js=`<aside class="daily-left">';
+const OP_LEFT_PATCH = 'js=`<aside class="daily-left" data-two-col-itinerary="1" style="display:table-cell;width:38%;vertical-align:top;padding-right:14px">';
+
+const DAILY_CARD_NEEDLE = 'return`<article class="thing daily-thing"><div class="thing-head">';
+const DAILY_CARD_PATCH = 'return`<article class="thing daily-thing" data-two-col-card="1" data-happy-hour="${zi(G)&&ha(G).happyHour?"1":"0"}"><div class="thing-head">';
 
 const SI_NYC_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]]]';
 const SI_VEGAS_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]],[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,[36.1097,-115.1739]],[/carbone/i,[36.1073,-115.1766]],[/cosmopolitan|eggslut/i,[36.1097,-115.1739]],[/lotus of siam/i,[36.1436,-115.1415]],[/las vegas strip|las vegas/i,[36.1147,-115.1729]]]';
@@ -88,6 +117,24 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(DAILY_THING_NEEDLE)) {
     patched = patched.replace(DAILY_THING_NEEDLE, DAILY_THING_PATCH);
+  }
+  if (patched.includes(HA_NEEDLE)) {
+    patched = patched.replace(HA_NEEDLE, HA_PATCH);
+  }
+  if (patched.includes(PE_NEEDLE)) {
+    patched = patched.replace(PE_NEEDLE, PE_PATCH);
+  }
+  if (patched.includes(DS_NEEDLE)) {
+    patched = patched.replace(DS_NEEDLE, DS_PATCH);
+  }
+  if (patched.includes(OP_GRID_NEEDLE)) {
+    patched = patched.replace(OP_GRID_NEEDLE, OP_GRID_PATCH);
+  }
+  if (patched.includes(OP_LEFT_NEEDLE)) {
+    patched = patched.replace(OP_LEFT_NEEDLE, OP_LEFT_PATCH);
+  }
+  if (patched.includes(DAILY_CARD_NEEDLE)) {
+    patched = patched.replace(DAILY_CARD_NEEDLE, DAILY_CARD_PATCH);
   }
   if (patched.includes(MN_CATEGORY_NEEDLE)) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
@@ -208,6 +255,30 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
     throw new Error('Style two live tab empty-state pad check did not apply.');
+  }
+  if (!js.includes('tsFillOv=') || !js.includes('tsMergeLe=') || !js.includes('ha=G=>tsFillOv(le[Qt(G)]||{},G)')) {
+    throw new Error('Style two ha() product-field fill did not apply.');
+  }
+  if (!js.includes(PE_PATCH) || js.includes(PE_NEEDLE)) {
+    throw new Error('Style two getSharedTrip pe() product merge did not apply.');
+  }
+  if (!js.includes(DS_PATCH) || js.includes('Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)')) {
+    throw new Error('Style two Ds() timeline ha() patch did not apply.');
+  }
+  if (!js.includes('data-two-col="1"') || !js.includes('data-two-col-itinerary="1"') || !js.includes('data-two-col-details="1"')) {
+    throw new Error('Style two op() print-stable two-col patch did not apply.');
+  }
+  if (!js.includes('data-two-col-print="1"') || !js.includes('display:table!important')) {
+    throw new Error('Style two Ae() two-col print CSS did not apply.');
+  }
+  if (!js.includes('<strong>Summary.</strong>') || !js.includes('<strong>Story.</strong>')) {
+    throw new Error('Style two labeled summary-before-story patch did not apply.');
+  }
+  if (!js.includes('data-happy-hour="${zi(G)&&ha(G).happyHour?"1":"0"}"')) {
+    throw new Error('Style two op() happy-hour card marker did not apply.');
+  }
+  if (!js.includes('carbone') || !js.includes('longDetails')) {
+    throw new Error('Style two client product fields are missing Carbone longDetails.');
   }
   return true;
 }
