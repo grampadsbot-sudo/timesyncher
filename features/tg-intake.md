@@ -4,7 +4,9 @@ GBrain SoT: `bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cu
 Skill: `skills/tg-intake-gbrain-track-and-build/skill`  
 Autonomy: `autonomous-app-customer-flow-20260910`
 
-Existing path only (no invented hosts): Telegram bot → `POST /api/vacation-telegram-turn` → worker drain → public research → TREK website.
+Existing path only (no invented hosts): Telegram bot → `POST /api/vacation-telegram-turn` → worker drain → public research → website.
+
+On vacation-staging, the website link uses `websiteTripBase` → `https://vacation-staging.timesyncher.com/shared/{token}/` so Style two is `Ae()` (Config honor) without a babysitter. Travel remains the default when the site base is not staging. `telegram_launch` accepts both existing hosts. Do not wait on OpenClaw.
 
 ## Rules
 

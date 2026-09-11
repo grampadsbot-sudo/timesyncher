@@ -12,4 +12,4 @@ Earlier walk “Requested device not found” is this recorder when the device/m
 
 Not a Keepsakes Config toggle. Do not invent extra media/QR switches.
 
-This repo’s `shared-app.html` (vacation-staging) does **not** include the injector. Feature Map inventory is the live travel shared page.
+Same injector is now in this repo’s `shared-app.html` so vacation-staging shared UI matches live travel. POST still goes to `/api/shared/{token}/audio-note` (proxied). Do not invent extra media/QR switches.

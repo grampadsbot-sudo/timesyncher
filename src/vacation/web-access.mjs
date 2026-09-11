@@ -14,6 +14,30 @@ function travelBase(env = process.env) {
   return String(env.TIMESYNCHER_TRAVEL_BASE_URL || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
 }
 
+/** Staging website already honors Style two Config (`Ae()`). Do not invent hosts. */
+export function websiteTripBase(env = process.env) {
+  const site = siteBase(env);
+  try {
+    if (/vacation-staging\.timesyncher\.com$/i.test(new URL(site).hostname)) return site;
+  } catch {
+    /* fall through */
+  }
+  return travelBase(env);
+}
+
+export function sharedTripWebsiteUrl(shareToken, env = process.env) {
+  const token = clean(shareToken, 220);
+  if (!token) return '';
+  return `${websiteTripBase(env)}/shared/${encodeURIComponent(token).replace(/%2F/gi, '/')}/`;
+}
+
+export function isAllowedVacationWebsiteUrl(value, env = process.env) {
+  const url = String(value || '').trim();
+  if (!url) return false;
+  const bases = [...new Set([travelBase(env), websiteTripBase(env), siteBase(env)])];
+  return bases.some((base) => url === base || url === `${base}/` || url.startsWith(`${base}/`));
+}
+
 function cookieDomain(env = process.env) {
   const configured = clean(env.TIMESYNCHER_WEB_ACCESS_COOKIE_DOMAIN || env.TIMESYNCHER_COOKIE_DOMAIN, 120);
   if (configured) return configured;
@@ -62,8 +86,8 @@ export function publicTripUrl(trip, env = process.env) {
   const explicitUrl = clean(trip?.metadata?.publicUrl || trip?.metadata?.public_url || trip?.metadata?.webItineraryUrl || '', 600);
   if (explicitUrl) return explicitUrl;
   const slug = clean(trip?.metadata?.sharedToken || trip?.metadata?.shareToken || trip?.metadata?.publicSlug || trip?.metadata?.source_token || trip?.metadata?.slug || '', 220);
-  if (slug) return `${travelBase(env)}/shared/${encodeURIComponent(slug).replace(/%2F/gi, '/')}/`;
-  return travelBase(env);
+  if (slug) return sharedTripWebsiteUrl(slug, env);
+  return websiteTripBase(env);
 }
 
 export async function ensureVacationWebAccessSchema(db) {

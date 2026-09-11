@@ -28,6 +28,198 @@
     </script>
     <script src="/ts-timeline-icon-patch.js"></script>
     <script src="/ts-thing-media-overlay.js"></script>
+    <style>
+      .ts-shared-audio-button {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.07);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+        font-size: 15px;
+        line-height: 1;
+        padding: 0;
+      }
+      .ts-shared-audio-button[disabled] {
+        cursor: not-allowed;
+        opacity: .58;
+      }
+      .ts-shared-audio-button.is-recording {
+        background: #b42318;
+        border-color: rgba(255,255,255,0.22);
+      }
+      .ts-shared-audio-toast {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: calc(18px + env(safe-area-inset-bottom));
+        z-index: 10000;
+        max-width: 520px;
+        margin: 0 auto;
+        border-radius: 8px;
+        background: rgba(15,23,42,.96);
+        color: #fff;
+        box-shadow: 0 18px 50px rgba(15,23,42,.28);
+        padding: 11px 13px;
+        font: 700 13px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+        text-align: center;
+      }
+      .ts-shared-audio-toast.ok {
+        background: rgba(6,95,70,.96);
+      }
+      .ts-shared-audio-toast.error {
+        background: rgba(153,27,27,.96);
+      }
+    </style>
+    <script>
+      (() => {
+        const sharedMatch = location.pathname.match(/^\/shared\/([^/]+)/);
+        if (!sharedMatch) return;
+        const shareToken = decodeURIComponent(sharedMatch[1]);
+        const maxAudioBytes = 4 * 1024 * 1024;
+        let recorder = null;
+        let stream = null;
+        let chunks = [];
+        let startedAt = 0;
+
+        function canRecord() {
+          return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+        }
+
+        function setIcon(button, name) {
+          if (name === 'stop') {
+            button.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.8" fill="currentColor"></rect></svg>';
+            return;
+          }
+          button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg>';
+        }
+
+        function toast(message, tone = '') {
+          let el = document.querySelector('.ts-shared-audio-toast');
+          if (!el) {
+            el = document.createElement('div');
+            el.className = 'ts-shared-audio-toast';
+            document.body.appendChild(el);
+          }
+          el.className = `ts-shared-audio-toast ${tone}`.trim();
+          el.textContent = message;
+          clearTimeout(el.__hideTimer);
+          el.__hideTimer = setTimeout(() => el.remove(), tone === 'error' ? 6500 : 4200);
+        }
+
+        function preferredType() {
+          const options = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+          return options.find((type) => window.MediaRecorder?.isTypeSupported?.(type)) || '';
+        }
+
+        function blobToDataUrl(blob) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Could not read audio note.'));
+            reader.readAsDataURL(blob);
+          });
+        }
+
+        async function submit(blob) {
+          const button = document.querySelector('[data-ts-shared-audio]');
+          if (button) button.disabled = true;
+          toast('Sending voice note...');
+          try {
+            const audioDataUrl = await blobToDataUrl(blob);
+            if (blob.size > maxAudioBytes) {
+              throw new Error('Audio note is too large. Please keep recordings under about 45 seconds.');
+            }
+            const durationSeconds = startedAt ? Math.round((Date.now() - startedAt) / 1000) : null;
+            const response = await fetch(`/api/shared/${encodeURIComponent(shareToken)}/audio-note`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ audioDataUrl, durationSeconds }),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.ok === false) throw new Error(result.error || 'Could not send voice note.');
+            toast('Voice note queued for this itinerary.', 'ok');
+          } catch (err) {
+            toast(err?.message || 'Could not send voice note.', 'error');
+          } finally {
+            if (button) {
+              button.disabled = false;
+              button.classList.remove('is-recording');
+              setIcon(button, 'mic');
+            }
+            startedAt = 0;
+          }
+        }
+
+        async function start(button) {
+          chunks = [];
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const type = preferredType();
+          recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+          recorder.addEventListener('dataavailable', (event) => {
+            if (event.data?.size) chunks.push(event.data);
+          });
+          recorder.addEventListener('stop', () => {
+            const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+            stream?.getTracks().forEach((track) => track.stop());
+            stream = null;
+            submit(blob);
+          }, { once: true });
+          startedAt = Date.now();
+          recorder.start();
+          button.classList.add('is-recording');
+          setIcon(button, 'stop');
+          toast('Recording...');
+        }
+
+        async function toggle(event) {
+          const button = event.currentTarget;
+          if (recorder?.state === 'recording') {
+            recorder.stop();
+            return;
+          }
+          try {
+            await start(button);
+          } catch (err) {
+            toast(err?.message || 'Microphone access was blocked.', 'error');
+          }
+        }
+
+        function installButton() {
+          if (document.querySelector('[data-ts-shared-audio]')) return true;
+          const tripButton = document.querySelector('[data-trip-view-root]');
+          const printButton = document.querySelector('[data-print-menu-root]');
+          const row = tripButton?.parentElement || printButton?.parentElement;
+          if (!row) return false;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'ts-shared-audio-button';
+          button.dataset.tsSharedAudio = '1';
+          button.setAttribute('aria-label', 'Record voice note');
+          button.title = 'Record voice note';
+          setIcon(button, 'mic');
+          if (!canRecord()) {
+            button.disabled = true;
+            button.title = 'Microphone recording is unavailable in this browser';
+          } else {
+            button.addEventListener('click', toggle);
+          }
+          row.insertBefore(button, printButton || null);
+          return true;
+        }
+
+        const observer = new MutationObserver(() => {
+          if (installButton()) observer.disconnect();
+        });
+        if (!installButton()) observer.observe(document.documentElement, { childList: true, subtree: true });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

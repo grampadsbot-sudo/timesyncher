@@ -5,6 +5,7 @@ import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import {
   acceptWebAccessInvite,
   createWebEditorInvite,
+  isAllowedVacationWebsiteUrl,
   loadWebAccessGrantBySessionToken,
   readCookie,
   requireWebEditAccess,
@@ -50,7 +51,7 @@ async function handleWebAccess(req, res, db, url) {
     const grant = await loadWebAccessGrantBySessionToken(db, token, process.env);
     if (!grant) return sendHtml(res, 404, '<!doctype html><title>Link expired</title><p>This Telegram website-edit link is invalid or expired. Ask the bot for a fresh vacation website link.</p>');
     const fallbackUrl = cleanText(grant.public_url, 600) || 'https://travel.timesyncher.com';
-    const redirectUrl = requestedRedirect && requestedRedirect.startsWith('https://travel.timesyncher.com/')
+    const redirectUrl = requestedRedirect && isAllowedVacationWebsiteUrl(requestedRedirect, process.env)
       ? requestedRedirect
       : fallbackUrl;
     res.statusCode = 302;

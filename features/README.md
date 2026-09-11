@@ -13,7 +13,7 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Keepsake QA (Config honor + live Feature Map): `features/keepsake-qa-site-and-config.md` / `bot-admin/messages/time-syncher/keepsake-qa-site-and-config-20260910` — **FAIL verified** (travel Style two = `zu()`). Hold certify.
 - Initial fill (per-category **15 / 10 / 15**, not total-8): `features/min-things.md` / `bot-admin/messages/time-syncher/initial-min-things-rule-20260910`
 - Autonomy bar: `features/autonomous-app-customer-flow.md` / `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`
-- Without bots (do not wait on OpenClaw): `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910`
+- Without bots (do not wait on OpenClaw): `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910` — TG on staging lands on vacation-staging `/shared/{token}/` (`Ae()` Style two)
 - TG intake track + build cue: `features/tg-intake.md` / `bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cue-20260910`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 

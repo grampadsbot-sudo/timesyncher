@@ -254,6 +254,8 @@ const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url),
 assert.match(sharedApp, /index-BKun7ofk\.js/);
 assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
 assert.doesNotMatch(sharedApp, /pdfReport=keepsake/);
+assert.match(sharedApp, /Record voice note/);
+assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(shareToken\)\}\/audio-note/);
 
 const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
 assert.match(trek, /_t==="flight"\?"✈️"/);

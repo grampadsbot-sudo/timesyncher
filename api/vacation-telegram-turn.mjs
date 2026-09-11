@@ -18,6 +18,7 @@ import {
 import {
   createTelegramWebAccessSession,
   publicTripUrl,
+  sharedTripWebsiteUrl,
 } from '../src/vacation/web-access.mjs';
 import { INITIAL_BUILD_CUE, persistIntakeTurnToGbrain } from '../src/vacation/tg-intake-gbrain.mjs';
 
@@ -828,7 +829,7 @@ async function vacationAccessSummary(db, session, { telegramChatId = '', telegra
     240,
   );
   const linkedPublicUrl = cleanText(linkedVacation?.url || linkedVacation?.publicUrl || linkedVacation?.webItineraryUrl, 600)
-    || (linkedShareToken ? `${String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || process.env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '')}/shared/${encodeURIComponent(linkedShareToken)}/` : '');
+    || sharedTripWebsiteUrl(linkedShareToken, process.env);
   const linkedTitle = cleanText(linkedVacation?.title || linkedVacation?.name || linkedVacation?.destination, 180);
   const isCollaboratorSession = String(session?.metadata?.telegramRole || '').toLowerCase() === 'collaborator';
   const collaborator = isCollaboratorSession ? await activeCollaboratorForTelegram(db, {

@@ -21,6 +21,7 @@ These must hold in **code + website** so a Telegram-created trip does not need a
 | --- | --- | --- |
 | Create / initial fill | **15 restaurants / 10 stores / 15 The Rest** (not total-8) | `min-things.md` (`scripts/vacation-public-research-worker.mjs:13-16`) |
 | Style two | Product path; Config ON → every ON section in PDF (`Ae()`) | `config-on-style-two-proof.md` |
+| TG → website | Staging site base lands on vacation-staging `/shared/{token}/` (Ae() Style two). Travel click `zu()` still FAIL. | `web-access.mjs` `websiteTripBase` |
 | Budget | Existing TREK inclusion only | `budget.md` |
 | Feature Map | Every live UI control | `README.md` |
 | Style-two Config | Travel click still `zu()` = FAIL; staging uses `Ae()` | `keepsake-qa-site-and-config.md` |
