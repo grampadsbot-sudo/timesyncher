@@ -398,6 +398,8 @@ assert.match(patchedAe, /data-print-ready="style2"/);
 assert.match(patchedAe, /data-style2-map="1"/);
 assert.match(patchedAe, /data-stories-bottom-margin="1"/);
 assert.match(patchedAe, /padding-bottom:36mm/);
+assert.match(patchedAe, /data-stories-print-css="1"/);
+assert.match(patchedAe, /break-inside:avoid/);
 assert.match(patchedAe, /data-print-fill="1"/);
 assert.match(patchedAe, /data-list-min=/);
 assert.match(patchedAe, /"Restaurants":15/);
