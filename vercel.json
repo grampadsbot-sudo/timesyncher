@@ -10,6 +10,10 @@
       "dest": "/api/vacation-itinerary?trekBundle=1"
     },
     {
+      "src": "/api/pdf/qr\\.svg",
+      "dest": "/api/vacation-itinerary?pdfQr=1"
+    },
+    {
       "src": "/api/pdf/shared/(.*)",
       "dest": "/api/vacation-itinerary?keepsakePdf=1&pdfPath=$1"
     },

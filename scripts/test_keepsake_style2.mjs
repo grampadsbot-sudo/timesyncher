@@ -5,7 +5,9 @@ import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pi
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mjs';
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
-import { qrSvg } from '../src/vacation/qr-svg.mjs';
+import { qrModules, qrSvg } from '../src/vacation/qr-svg.mjs';
+import handlePdfQrSvg, { allowedQrPayload, PDF_QR_SIZE } from '../src/vacation/pdf-qr-svg-handler.mjs';
+import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia } from '../src/vacation/thing-media-bind.mjs';
 import {
   isJourneyBookReport,
   journeyBookGate,
@@ -178,7 +180,58 @@ assert.equal(itineraryMinThings({}), 8);
 assert.ok(model.assignedCount >= Math.min(model.placeCount, model.minThings));
 const filled = backfillAssignments(shared, { TIMESYNCHER_ITINERARY_MIN_THINGS: '8' });
 assert.equal(filled.shortfall, 2);
-assert.match(qrSvg('https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=x&id=vid&raw=1'), /<svg[\s\S]*<rect/);
+const playbackUrl = 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1';
+const playbackQr = qrSvg(playbackUrl, { size: PDF_QR_SIZE });
+assert.match(playbackQr, /<svg[\s\S]*<rect/);
+assert.match(playbackQr, /fill="#fff"/);
+const darkRects = playbackQr.match(/<rect[^>]*fill="#000"/g) || [];
+assert.ok(darkRects.length >= 200, 'QR matrix has dark modules');
+assert.equal(darkRects.length, qrModules(playbackUrl).flat().filter(Boolean).length);
+assert.equal(allowedQrPayload(playbackUrl), true);
+assert.equal(allowedQrPayload('javascript:alert(1)'), false);
+const qrRes = { statusCode: 0, headers: {}, body: '', setHeader(key, value) { this.headers[String(key).toLowerCase()] = value; }, end(body) { this.body = body || ''; } };
+handlePdfQrSvg({ url: `/api/pdf/qr.svg?data=${encodeURIComponent(playbackUrl)}` }, qrRes);
+assert.equal(qrRes.statusCode, 200);
+assert.match(qrRes.headers['content-type'], /image\/svg\+xml/);
+assert.equal(qrRes.body, playbackQr);
+assert.doesNotMatch(qrRes.body, /camera|placeholder|NOT_FOUND/i);
+
+assert.equal(isKeepsakeJunkMedia({
+  filename: 'carbone-neon-bind-proof.png',
+  caption: 'Neon file bind proof',
+  url: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=x&id=c67aeea4&raw=1',
+}), true);
+assert.equal(isKeepsakeJunkMedia({
+  originalName: 'carbone-bind-proof.png',
+  caption: 'Carbone at Aria',
+  publicUrl: 'https://travel.timesyncher.com/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png',
+}), true);
+assert.equal(isKeepsakeJunkMedia({
+  filename: 'carbone-plates-photo.jpg',
+  caption: 'Carbone at Aria',
+  url: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=x&id=bb277e4a&raw=1',
+}), false);
+const stripped = stripKeepsakeJunkMedia({
+  media: [
+    { filename: 'carbone-plates-photo.jpg', caption: 'Carbone at Aria', url: '/plates.jpg' },
+    { filename: 'carbone-late-hands-photo.jpg', caption: 'Carbone at Aria', url: '/hands.jpg' },
+    { filename: 'carbone-neon-bind-proof.png', caption: 'Neon file bind proof', url: '/neon.png' },
+    { filename: 'carbone-bind-proof.png', caption: 'Carbone at Aria', url: 'https://travel.timesyncher.com/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png' },
+  ],
+  places: [{
+    id: 8872,
+    name: 'Carbone at Aria',
+    image_url: '/plates.jpg',
+    bound_media: [
+      { originalName: 'carbone-plates-photo.jpg', publicUrl: '/plates.jpg', mimeType: 'image/jpeg' },
+      { originalName: 'carbone-neon-bind-proof.png', caption: 'Neon file bind proof', publicUrl: '/neon.png' },
+    ],
+  }],
+});
+assert.equal(stripped.media.length, 2);
+assert.ok(stripped.media.every((item) => /plates|hands/.test(item.filename)));
+assert.equal(stripped.places[0].bound_media.length, 1);
+assert.doesNotMatch(JSON.stringify(stripped), /Neon file bind proof|bind-proof/i);
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
 assert.doesNotMatch(overlay, /wantsJourneyBook/);
@@ -195,10 +248,15 @@ assert.doesNotMatch(patch, /patchedOpen/);
 
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
 assert.match(vercel, /keepsakePdf/);
+assert.match(vercel, /pdfQr/);
+assert.match(vercel, /\/api\/pdf\/qr\\\\.svg/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 assert.match(vercel, /report=journey/);
 assert.match(vercel, /trekBundle/);
 assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
+const itinerarySrc = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+assert.match(itinerarySrc, /pdfQr/);
+assert.match(itinerarySrc, /handlePdfQrSvg/);
 
 assert.equal(normalizeReportName('style-2'), PRODUCT_STYLE_TWO_REPORT);
 assert.equal(normalizeReportName(''), PRODUCT_STYLE_TWO_REPORT);
@@ -312,7 +370,9 @@ assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);
 assert.match(patchedAe, /data-story-media-only="1"/);
-assert.match(patchedAe, /fo\(nr\)\.map\(Ba\)/);
+assert.match(patchedAe, /fo\(nr\)\.filter\(Oo=>/);
+assert.match(patchedAe, /neon file bind proof/);
+assert.doesNotMatch(patchedAe, /fo\(nr\)\.map\(Ba\)/);
 assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);

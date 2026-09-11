@@ -278,6 +278,45 @@ export function toPublicBinding(row = {}) {
   };
 }
 
+const KEEPSAKE_JUNK_MEDIA_RE = /bind[- ]?proof|neon file bind proof/i;
+
+export function isKeepsakeJunkMedia(item = {}) {
+  const blob = [
+    item.filename,
+    item.originalName,
+    item.original_name,
+    item.caption,
+    item.url,
+    item.publicUrl,
+    item.public_url,
+    item.thumbnail_url,
+    item.sourceUrl,
+    item.source_url,
+  ].map((value) => String(value || '')).join(' ');
+  return KEEPSAKE_JUNK_MEDIA_RE.test(blob);
+}
+
+/** Print/share only. Do not call from mergeBindingsIntoShared — bind tests keep proof rows. */
+export function stripKeepsakeJunkMedia(shared = {}) {
+  const media = Array.isArray(shared.media)
+    ? shared.media.filter((item) => !isKeepsakeJunkMedia(item))
+    : shared.media;
+  const places = Array.isArray(shared.places)
+    ? shared.places.map((place) => {
+      const bound = Array.isArray(place.bound_media)
+        ? place.bound_media.filter((item) => !isKeepsakeJunkMedia(item))
+        : place.bound_media;
+      const next = bound === place.bound_media ? { ...place } : { ...place, bound_media: bound };
+      if (isKeepsakeJunkMedia({ url: place.image_url, filename: place.image_url })) {
+        const photo = (bound || []).find((row) => isPhotoBinding(row));
+        next.image_url = photo?.publicUrl || photo?.public_url || photo?.url || null;
+      }
+      return next;
+    })
+    : shared.places;
+  return { ...shared, media, places };
+}
+
 export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   const next = {
     ...shared,

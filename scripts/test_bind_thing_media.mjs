@@ -8,6 +8,8 @@ import {
   guessThingNameFromFilename,
   mapVacation3SctMediaFile,
   mergeBindingsIntoShared,
+  isKeepsakeJunkMedia,
+  stripKeepsakeJunkMedia,
   neonRawMediaPath,
   proofPngBuffer,
   resolveThingFromShared,
@@ -74,6 +76,10 @@ const merged = mergeBindingsIntoShared(shared, [{
 assert.equal(merged.places[0].image_url, '/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png');
 assert.equal(merged.media[0].place_id, 8872);
 assert.match(merged.media[0].url, /carbone-bind-proof/);
+assert.equal(isKeepsakeJunkMedia(merged.media[0]), true);
+const printShared = stripKeepsakeJunkMedia(merged);
+assert.equal(printShared.media.length, 0);
+assert.equal(printShared.places[0].image_url, null);
 
 const png = proofPngBuffer({ label: 'test' });
 assert.equal(png.subarray(0, 8).toString('binary'), '\x89PNG\r\n\x1a\n');
@@ -105,6 +111,8 @@ assert.match(api, /sourceUrl/);
 const itinerary = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(itinerary, /mediaBind/);
 assert.match(itinerary, /trekPath/);
+assert.match(itinerary, /pdfQr/);
+assert.match(itinerary, /handlePdfQrSvg/);
 
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
 assert.match(vercel, /vacation-itinerary\?trekPath/);

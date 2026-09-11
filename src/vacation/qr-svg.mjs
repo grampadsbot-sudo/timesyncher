@@ -22,10 +22,10 @@ export function qrSvg(value, { size = 96 } = {}) {
   for (let r = 0; r < n; r += 1) {
     for (let c = 0; c < n; c += 1) {
       if (!modules[r][c]) continue;
-      rects += `<rect x="${((c + quiet) * cell).toFixed(2)}" y="${((r + quiet) * cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" />`;
+      rects += `<rect x="${((c + quiet) * cell).toFixed(2)}" y="${((r + quiet) * cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="#000"/>`;
     }
   }
-  return `<svg class="qr-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges" role="img" aria-label="QR">${rects}</svg>`;
+  return `<svg class="qr-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="${size}" height="${size}" fill="#fff"/>${rects}</svg>`;
 }
 
 export function qrDataUri(value, { size = 96 } = {}) {
