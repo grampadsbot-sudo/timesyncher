@@ -243,6 +243,10 @@ assert.doesNotMatch(overlay, /ts-journey-chip/);
 assert.doesNotMatch(overlay, /report\/style-2/);
 
 const patch = await readFile(new URL('../public/ts-timeline-icon-patch.js', import.meta.url), 'utf8');
+assert.match(patch, /isTinyIconSlot/);
+assert.match(patch, /rect\.width > 48/);
+assert.match(patch, /maxWidth = '22px'/);
+assert.doesNotMatch(patch, /img\.style\.width = '100%'/);
 assert.match(patch, /AIRPLANE/);
 assert.match(patch, /printMode/);
 assert.match(patch, /isPrintReport/);
@@ -386,10 +390,11 @@ const aeFixture = [
   'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
   'Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
   'It=G=>Mn(ha(G).category??Fn(G))',
-  'Qn.map(G=>Oe(G))',
-  'Gn.map(G=>Oe(G))',
+  'Qn.map(G=>Oe(G)),Qn.length===0',
+  'Gn.map(G=>Oe(G)),Gn.length===0',
   'ki.map(G=>Oe(G))',
   'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
+  'height:dn?900:300,marginBottom:12',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -442,6 +447,10 @@ assert.equal(padLiveTabRows('rest', [{ name: 'Bellagio Conservatory — Annivers
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("car"\)/);
 assert.match(patchedAe, /tsPad=/);
 assert.match(patchedAe, /__tsLiveFill:1/);
+assert.match(patchedAe, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
+assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
+assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
+assert.match(patchedAe, /tsPad\(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant\)\.length===0/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());

@@ -71,10 +71,20 @@
     document.head.appendChild(style);
   }
 
+  function isTinyIconSlot(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 48 || rect.height > 48) return false;
+    const label = text(el.textContent);
+    if (label.length > 8 && !AIRPLANE.test(label)) return false;
+    return true;
+  }
+
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
     if (/^H[1-6]$/.test(el.tagName)) return;
     if (el.closest('.print-media-card, .story-card, .logo-list, [data-trip-directory], [data-post-itinerary], [data-stories-up-front]')) return;
+    if (!isTinyIconSlot(el)) return;
     el.dataset.tsIconFixed = '1';
     el.dataset.tsIconType = resolved.type;
     if (resolved.logoUrl && !resolved.isFlight) {
@@ -83,8 +93,10 @@
       img.src = resolved.logoUrl;
       img.alt = '';
       img.className = 'tiny-logo';
-      img.style.width = '100%';
-      img.style.height = '100%';
+      img.style.width = '22px';
+      img.style.height = '22px';
+      img.style.maxWidth = '22px';
+      img.style.maxHeight = '22px';
       img.style.objectFit = 'contain';
       el.appendChild(img);
       return;

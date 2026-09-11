@@ -39,7 +39,17 @@ const KI_RENDER_NEEDLE = 'ki.map(G=>Oe(G))';
 const KI_RENDER_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
-const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([...Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}] }),...[...Oc||[],...Fs||[],...Po||[],...to||[]].filter(Xi=>Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])]).values())';
+const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+
+const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
+const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
+
+const QN_EMPTY_NEEDLE = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G)),Qn.length===0';
+const QN_EMPTY_PATCH = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G)),tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).length===0';
+const GN_EMPTY_NEEDLE = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G)),Gn.length===0';
+const GN_EMPTY_PATCH = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G)),tsPad(Gn,"store",tsFill.store,tsMin.store).length===0';
+const KI_EMPTY_NEEDLE = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G)),ki.length===0';
+const KI_EMPTY_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G)),tsPad(ki,"rest",tsFill.rest,tsMin.rest).length===0';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '') {
@@ -80,6 +90,18 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(MO_BUDGET_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
+  }
+  if (patched.includes(MAP_HEIGHT_NEEDLE)) {
+    patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
+  }
+  if (patched.includes(QN_EMPTY_NEEDLE)) {
+    patched = patched.replace(QN_EMPTY_NEEDLE, QN_EMPTY_PATCH);
+  }
+  if (patched.includes(GN_EMPTY_NEEDLE)) {
+    patched = patched.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
+  }
+  if (patched.includes(KI_EMPTY_NEEDLE)) {
+    patched = patched.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
   }
   return patched;
 }
@@ -150,8 +172,14 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (!js.includes(MO_BUDGET_PATCH)) {
-    throw new Error('Style two live budget restaurant/store merge did not apply.');
+  if (!js.includes(MO_BUDGET_PATCH) || !js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
+    throw new Error('Style two live budget timeline-selected Gt rows did not apply.');
+  }
+  if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
+    throw new Error('Style two live day-map height patch did not apply.');
+  }
+  if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
+    throw new Error('Style two live tab empty-state pad check did not apply.');
   }
   return true;
 }
@@ -178,5 +206,6 @@ export default async function handler(req, res) {
   res.statusCode = 200;
   res.setHeader('content-type', 'application/javascript; charset=utf-8');
   res.setHeader('cache-control', 'no-store');
+  res.setHeader('access-control-allow-origin', '*');
   res.end(patched);
 }
