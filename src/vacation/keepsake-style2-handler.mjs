@@ -16,11 +16,21 @@ export const PRODUCT_SOT_TWIN = 'bot-admin/messages/time-syncher/style-2-journey
 
 export const PRODUCT_STYLE_TWO_REPORT = 'keepsake-style-2';
 
-function sendRedirect(res, location) {
+function sendRedirect(res, location, extraHeaders = {}) {
   res.statusCode = 302;
   res.setHeader('location', location);
   res.setHeader('cache-control', 'no-store');
+  for (const [key, value] of Object.entries(extraHeaders)) res.setHeader(key, value);
   res.end();
+}
+
+export function styleTwoLocationStaysOnStaging(location = '', origin = '') {
+  const value = String(location || '');
+  if (!value || /travel\.timesyncher\.com/i.test(value)) return false;
+  if (!/pdfReport=keepsake-style-2/i.test(value)) return false;
+  const host = String(origin || '').replace(/\/+$/, '');
+  if (host && value.startsWith(host)) return true;
+  return /vacation-staging\.timesyncher\.com/i.test(value);
 }
 
 function originFromReq(req) {
@@ -163,6 +173,16 @@ export default async function handler(req, res) {
       search,
       origin,
     });
+
+  if (isProductStyleTwo(reportName) || wantsView) {
+    if (!styleTwoLocationStaysOnStaging(location, origin)) {
+      return sendJson(res, 500, {
+        ok: false,
+        error: 'Refusing Style two PDF redirect onto travel (zu() / unpatched keepsake.pdf). Stay on staging Ae().',
+      });
+    }
+    return sendRedirect(res, location, { 'x-timesyncher-style2': 'staging-ae' });
+  }
 
   return sendRedirect(res, location);
 }

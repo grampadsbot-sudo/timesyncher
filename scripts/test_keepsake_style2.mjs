@@ -19,7 +19,9 @@ import {
   PRODUCT_SOT,
   PRODUCT_SOT_TWIN as HANDLER_SOT_TWIN,
   forwardedKeepsakeSearch,
+  styleTwoLocationStaysOnStaging,
 } from '../src/vacation/keepsake-style2-handler.mjs';
+import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 
@@ -227,6 +229,47 @@ assert.equal(
   'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2',
 );
 assert.doesNotMatch(styleTwoUrl, /travel\.timesyncher\.com/);
+assert.equal(
+  styleTwoLocationStaysOnStaging(styleTwoUrl, 'https://vacation-staging.timesyncher.com'),
+  true,
+);
+assert.equal(
+  styleTwoLocationStaysOnStaging(
+    'https://travel.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/keepsake.pdf',
+    'https://vacation-staging.timesyncher.com',
+  ),
+  false,
+);
+
+function mockRes() {
+  const res = { statusCode: 0, headers: {}, body: '' };
+  res.setHeader = (key, value) => {
+    res.headers[String(key).toLowerCase()] = value;
+  };
+  res.end = (body) => {
+    res.body = body || '';
+  };
+  return res;
+}
+
+for (const url of [
+  '/api/vacation-itinerary?keepsakePdf=1&pdfPath=las-vegas-vacation-3/report/style-2',
+  '/api/vacation-itinerary?keepsakePdf=1&pdfPath=las-vegas-vacation-3/report/keepsake-style-2.pdf',
+  '/api/vacation-itinerary?keepsakePdf=1&shareToken=las-vegas-vacation-3&report=style-2',
+]) {
+  const res = mockRes();
+  await keepsakeStyle2Handler({
+    url,
+    headers: {
+      host: 'vacation-staging.timesyncher.com',
+      'x-forwarded-proto': 'https',
+    },
+  }, res);
+  assert.equal(res.statusCode, 302, url);
+  assert.equal(res.headers['x-timesyncher-style2'], 'staging-ae', url);
+  assert.match(res.headers.location, /vacation-staging\.timesyncher\.com\/shared\/las-vegas-vacation-3\/\?.*pdfReport=keepsake-style-2/);
+  assert.doesNotMatch(res.headers.location, /travel\.timesyncher\.com/);
+}
 assert.equal(
   patchStyleTwoToConfigRenderer(`if(h==="report"&&g){${STYLE2_USES_ZU}}`),
   `if(h==="report"&&g){${STYLE2_USES_AE}}`,

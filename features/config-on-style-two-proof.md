@@ -24,6 +24,6 @@ Staging Style two export uses **`Ae()`** (patch `keepsake-style-2"?zu()` → `Ae
 
 Restaurants/Stores headings come from product `de()` after shared-trip writes `thingOverrides.category` from the place category (`Restaurant` / `Store`). Do not invent a third list renderer.
 
-QA 2026-09-10 (`keepsake-qa-site-and-config-20260910`): travel click Style two remains `zu()` → **FAIL verified**. Staging Style two PDF 302s to `Ae()` / `keepsake.pdf`. Hold certify.
+QA 2026-09-11: travel click Style two remains `zu()` → **FAIL verified**. Staging Style two PDF 302s to staging `Ae()` print, not travel. Hold certify.
 
 Autonomy bar (`autonomous-app-customer-flow-20260910` + `autonomous-app-without-bots-20260910`): Config→Style-two must hold on the website after Telegram create, without a bot rewriting the PDF. Do not wait on OpenClaw. Hold certify.

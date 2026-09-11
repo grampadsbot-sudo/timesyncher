@@ -41,7 +41,7 @@ Renderer: `zu()` (`keepsake-style-2`). Pages: **5**.
 
 ### Staging product Style-two path (`Ae()`, Config-coupled)
 
-`GET …/api/pdf/shared/las-vegas-vacation-3/report/style-2` → 302 → travel `keepsake.pdf` (`Ae()`). Pages: **8**.
+`GET …/api/pdf/shared/las-vegas-vacation-3/report/style-2` → 302 → **staging** `Ae()` print (`?printMode=report&pdfReport=keepsake-style-2`). Does **not** 302 to travel.
 
 | Config ON | In `Ae()` PDF |
 |---|---|
@@ -55,7 +55,7 @@ Renderer: `zu()` (`keepsake-style-2`). Pages: **5**.
 
 Artifacts: `/opt/cursor/artifacts/keepsake-qa-20260910/` (`ae-p-1.png`, `ae-p-2.png`, `ae-map-4.png`, `zu-p-1.png`).
 
-**Close the travel click FAIL:** product must route Style two to `Ae()` (or a real product Style-two that honors Config). Do not invent a third renderer. Staging already 302s Style two PDF to product `keepsake.pdf`.
+**Close the travel click FAIL:** product must route Style two to `Ae()` (or a real product Style-two that honors Config). Do not invent a third renderer. Staging Style two PDF stays on staging `Ae()` print — never 302 to travel `zu()` / `keepsake.pdf`.
 
 ## Check 2 — live shared site vs Feature Map full UI inventory
 
