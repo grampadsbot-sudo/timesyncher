@@ -136,7 +136,40 @@
         });
       });
     }
-    if (isPrintReport()) return;
+    function stripPrintJunkMedia() {
+      document.querySelectorAll('.print-media-card, .story-card figure').forEach((el) => {
+        const img = el.querySelector('img');
+        const blob = `${el.textContent || ''} ${img?.getAttribute('src') || ''} ${img?.getAttribute('alt') || ''}`;
+        if (/bind[- ]?proof|neon file bind proof/i.test(blob)) el.remove();
+      });
+    }
+
+    async function inlinePrintVideoQr() {
+      const imgs = [...document.querySelectorAll('img.print-media-qr')];
+      await Promise.all(imgs.map(async (img) => {
+        if (img.dataset.tsQrInlined === '1') return;
+        const src = img.getAttribute('src') || '';
+        if (!/\/api\/pdf\/qr\.svg/i.test(src)) return;
+        const url = new URL(src, location.origin);
+        url.searchParams.set('m', '1');
+        const qr = await fetch(url.toString(), { cache: 'reload' });
+        if (!qr.ok) return;
+        const svg = await qr.text();
+        if (!/<svg[\s\S]*<rect/i.test(svg)) return;
+        img.dataset.tsQrInlined = '1';
+        img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      }));
+    }
+
+    if (isPrintReport()) {
+      stripPrintJunkMedia();
+      inlinePrintVideoQr().catch(() => {});
+      new MutationObserver(() => {
+        stripPrintJunkMedia();
+        inlinePrintVideoQr().catch(() => {});
+      }).observe(document.body, { childList: true, subtree: true });
+      return;
+    }
     apply(lookup);
     repairStoryCards();
     new MutationObserver(() => {
