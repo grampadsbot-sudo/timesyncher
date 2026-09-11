@@ -10,6 +10,10 @@
       "dest": "/api/vacation-itinerary?trekBundle=1"
     },
     {
+      "src": "/assets/index-CbEHlMj6.css",
+      "dest": "https://travel.timesyncher.com/assets/index-CbEHlMj6.css"
+    },
+    {
       "src": "/api/pdf/qr\\.svg",
       "dest": "/api/vacation-itinerary?pdfQr=1"
     },

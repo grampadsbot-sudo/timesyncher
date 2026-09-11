@@ -472,6 +472,8 @@ assert.doesNotMatch(create, /airport\|las\|boi/);
 
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
 assert.match(sharedApp, /index-BKun7ofk\.js/);
+assert.match(sharedApp, /href="\/assets\/index-CbEHlMj6\.css"/);
+assert.doesNotMatch(sharedApp, /crossorigin href="https:\/\/travel\.timesyncher\.com\/assets\/index-CbEHlMj6\.css"/);
 assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
 assert.doesNotMatch(sharedApp, /pdfReport=keepsake/);
 assert.match(sharedApp, /Record voice note/);
