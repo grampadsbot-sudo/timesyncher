@@ -37,6 +37,8 @@ A bucket block is omitted when planned total is 0, target is 0, and the bucket h
 
 Staging classifies `thingOverrides.category` / place category with restaurant **before** `car`, so Carbone / Lotus / Eggslut / Shake Shack land in **Restaurants** and Cosmopolitan shops in **Stores**. They must not dump into The Rest / Other Things only. Header **Config Options** is Trip View (Flights / Hotels / Cars), not Keepsakes Admin/Config — see `config-options-trip-view.md`.
 
+Live `a89c5a8` still only prints **Bellagio Conservatory** under the budget body (Add price). Restaurants/Stores headings exist in product chrome; itinerary restaurant/store rows were not in `Mo` on that walk. Hold certify.
+
 ## Amount (existing price parse)
 
 Price text is `overrides.price ?? thing.price` (`bi()`).
