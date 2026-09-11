@@ -64,6 +64,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | --- | --- | --- |
 | Header brand | TimeSyncher Vacation | `header-chrome.md` |
 | Language | Change language / Select language (login/landing, not shared-trip header) | `language.md` |
+| Voice note | **Record voice note** (live travel shared HTML inject) | `voice-note.md` |
 | Trip view | **Config Options** → **Trip View** → Flights / Hotels / Cars (default ON) | `config-options-trip-view.md` |
 | Print menu | **PDFs** → menu title **Print / PDF** | `print-pdf.md` |
 | Daily PDF | Daily printout ▸ → Day N | `print-pdf.md` |
@@ -96,4 +97,4 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Settings (TREK, not shared-guest header) | Mapbox / Google Maps / Weather / Invite / Copy link | `trek-settings.md` |
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |
 
-Not found on shared vacation-3 header in this dump: voice-note recorder, media toggle, QR toggle.
+Not found on shared vacation-3 header in this dump: media toggle, QR toggle. Voice note **is** live on travel shared HTML (`voice-note.md`).

@@ -67,22 +67,25 @@ Happy hour **not** on Carbone — `happy-hour.md` is restaurant/bar (`zi(Dt)`). 
 
 Empty Restaurants / Stores tabs match `empty-states.md`.
 
-**Order Keepsakes** is in the shared-trip header JS as an **icon** (`aria-label` always; text only when selected). A walk that only looks for the words is not a missing-control fail.
+**Order Keepsakes** is in the shared-trip header JS as an **icon** (`aria-label` always; text only when selected). Live walk: clicking the gift/box icon shows the text.
+
+**Record voice note** is live on travel shared HTML (`aria-label` verified in DOM). Not in TREK JS. See `voice-note.md`. Earlier “Requested device not found” is this recorder when mic/device is missing.
 
 **Change language** is login/landing chrome (`language.md`), not a shared-trip header `aria-label`.
 
 **Enter fullscreen** / **Exit fullscreen** are Mapbox `FullscreenControl` labels (`maps.md`), not a shared-header Expand button. Do not invent a header expand control.
 
+Happy hour **not** on Carbone in this walk: Carbone **Type** is `other` (The Rest), so `zi(Dt)` hides happy hour. Not a Feature Map miss.
+
 ### Gaps found on walk — now stamped (inventory only)
 
-| Live UI (product JS) | Before this QA | Stamp |
+| Live UI | Before this QA | Stamp |
 |---|---|---|
 | Detail **Price**, **Estimated travel time**, **Summary**, **Story**, recap checkbox, **Website**, **Details**, multi-day schedule | missing from `detail-page.md` | `detail-page.md` |
 | **Restaurant tags / chips** / **Store tags / chips** + live `ot` / `gt` | missing | `tags-chips.md` |
 | Ratings live label **Google rating** | mapped as “Rating” | `ratings-reviews.md` |
+| Header **Record voice note** | listed as “not in header dump” | `voice-note.md`, `header-chrome.md` |
 | Header icon-only vs language/fullscreen role | `header-chrome.md` incomplete | `header-chrome.md`, `language.md`, `maps.md`, `order-keepsakes.md` |
-
-Language icon on an earlier walk surfaced a device/mic error (“Requested device not found”). That is a device/runtime issue, not a Feature Map invention.
 
 ## Hold certify
 
