@@ -253,6 +253,8 @@ assert.match(patch, /data-stories-bottom-margin/);
 assert.match(patch, /padding-bottom:36mm/);
 assert.match(patch, /break-inside:avoid/);
 assert.match(patch, /box-decoration-break:clone/);
+assert.match(patch, /display:block!important/);
+assert.match(patch, /injectStoriesPrintCss/);
 assert.doesNotMatch(patch, /journey\?style=2/);
 assert.doesNotMatch(patch, /patchedOpen/);
 

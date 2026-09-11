@@ -54,6 +54,23 @@
     return new URLSearchParams(location.search).get('printMode') === 'report';
   }
 
+  function storiesPrintCss() {
+    return [
+      '.keepsake-list-page[data-stories-bottom-margin="1"],.keepsake-list-page[data-stories-up-front="1"]{padding-bottom:36mm!important;overflow:visible!important;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
+      '[data-stories-bottom-margin="1"] .recap-grid{display:block!important;padding-bottom:16mm}',
+      '[data-story-card],.story-card{display:block!important;break-inside:avoid!important;page-break-inside:avoid!important;-webkit-column-break-inside:avoid;padding-bottom:20mm!important;margin-bottom:8mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
+      '[data-story-card] .body,.story-card .body{break-inside:avoid!important;page-break-inside:avoid!important;padding-bottom:12mm;orphans:4;widows:4}',
+    ].join('');
+  }
+
+  function injectStoriesPrintCss() {
+    if (!isPrintReport() || document.querySelector('style[data-ts-stories-margin="1"]')) return;
+    const style = document.createElement('style');
+    style.dataset.tsStoriesMargin = '1';
+    style.textContent = storiesPrintCss();
+    document.head.appendChild(style);
+  }
+
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
     if (/^H[1-6]$/.test(el.tagName)) return;
@@ -162,15 +179,7 @@
     }
 
     if (isPrintReport()) {
-      const style = document.createElement('style');
-      style.dataset.tsStoriesMargin = '1';
-      style.textContent = [
-        '.keepsake-list-page[data-stories-bottom-margin="1"],.keepsake-list-page[data-stories-up-front="1"]{padding-bottom:36mm!important;overflow:visible!important;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
-        '[data-stories-bottom-margin="1"] .recap-grid{padding-bottom:12mm}',
-        '[data-story-card],.story-card{break-inside:avoid;page-break-inside:avoid;-webkit-column-break-inside:avoid}',
-        '[data-story-card] .body,.story-card .body{padding-bottom:8mm;orphans:3;widows:3}',
-      ].join('');
-      document.head.appendChild(style);
+      injectStoriesPrintCss();
       stripPrintJunkMedia();
       inlinePrintVideoQr().catch(() => {});
       new MutationObserver(() => {
@@ -187,8 +196,12 @@
     }).observe(document.body, { childList: true, subtree: true });
   }
 
+  injectStoriesPrintCss();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => boot().catch(() => {}), { once: true });
+    document.addEventListener('DOMContentLoaded', () => {
+      injectStoriesPrintCss();
+      boot().catch(() => {});
+    }, { once: true });
   } else {
     boot().catch(() => {});
   }
