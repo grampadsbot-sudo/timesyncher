@@ -248,6 +248,8 @@ assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'store');
 assert.ok(liveOverride.thingOverrides['place:8872'].lat);
 assert.ok(liveOverride.thingOverrides['place:8876'].lng);
 assert.deepEqual(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), [36.1073, -115.1766]);
+assert.deepEqual(resolveThingCoords({ name: 'Shake Shack near Cosmo/Aria', address: 'Las Vegas Strip' }), [36.1097, -115.1739]);
+assert.equal(liveOverride.thingOverrides['place:8873'].lat, 36.1097);
 const buckets = keepsakeListBuckets(liveOverride);
 assert.ok(buckets.Restaurants.some((row) => row.place.name.includes('Carbone')));
 assert.ok(buckets.Stores.some((row) => row.place.name.includes('Cosmopolitan')));

@@ -2,8 +2,8 @@ import { normalizeThingType, resolveThingType } from './timeline-icons.mjs';
 
 /** Product Si() is NYC-only. Same mechanism: name → coords for mapped itinerary stops. */
 export const PRODUCT_VENUE_COORDS = [
-  [/carbone|\baria\b/i, [36.1073, -115.1766]],
   [/shake\s*shack/i, [36.1097, -115.1739]],
+  [/carbone/i, [36.1073, -115.1766]],
   [/eggslut/i, [36.1097, -115.1739]],
   [/cosmopolitan|cosmo.*shop/i, [36.1097, -115.1739]],
   [/lotus of siam/i, [36.1436, -115.1415]],
