@@ -420,7 +420,6 @@ const aeFixture = [
   'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
-  'G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({})',
   'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
   '<div class="daily-grid">${js}<main class="daily-details">',
   'js=`<aside class="daily-left">',
@@ -489,9 +488,8 @@ assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant\)\.length===0/);
 assert.match(patchedAe, /tsFillOv=/);
-assert.match(patchedAe, /tsMergeLe=/);
 assert.match(patchedAe, /ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\)/);
-assert.match(patchedAe, /G!=null\?pe\(tsMergeLe\(G\)\):pe\(\{\}\)/);
+assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
 assert.match(patchedAe, /Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
 assert.match(patchedAe, /data-two-col-itinerary="1"/);
 assert.match(patchedAe, /data-two-col-details="1"/);

@@ -41,10 +41,7 @@ function productFieldsLiteral() {
 }
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
-const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const name=String((base&&base.title)||(thing&&(thing.name||thing.title))||"");const spec=tsPf.find(row=>row.match.test(name));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},tsMergeLe=trip=>{const ov={...((trip&&trip.thingOverrides&&typeof trip.thingOverrides=="object")?trip.thingOverrides:{})};for(const place of (trip&&Array.isArray(trip.places)?trip.places:[]))ov["place:"+place.id]=tsFillOv(ov["place:"+place.id]||{},place);return ov},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
-
-const PE_NEEDLE = 'G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({})';
-const PE_PATCH = 'G!=null?pe(tsMergeLe(G)):pe({})';
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const name=String((base&&base.title)||(thing&&(thing.name||thing.title))||"");const spec=tsPf.find(row=>row.match.test(name));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
 const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
@@ -120,9 +117,6 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(HA_NEEDLE)) {
     patched = patched.replace(HA_NEEDLE, HA_PATCH);
-  }
-  if (patched.includes(PE_NEEDLE)) {
-    patched = patched.replace(PE_NEEDLE, PE_PATCH);
   }
   if (patched.includes(DS_NEEDLE)) {
     patched = patched.replace(DS_NEEDLE, DS_PATCH);
@@ -256,11 +250,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
     throw new Error('Style two live tab empty-state pad check did not apply.');
   }
-  if (!js.includes('tsFillOv=') || !js.includes('tsMergeLe=') || !js.includes('ha=G=>tsFillOv(le[Qt(G)]||{},G)')) {
+  if (!js.includes('tsFillOv=') || !js.includes('ha=G=>tsFillOv(le[Qt(G)]||{},G)')) {
     throw new Error('Style two ha() product-field fill did not apply.');
-  }
-  if (!js.includes(PE_PATCH) || js.includes(PE_NEEDLE)) {
-    throw new Error('Style two getSharedTrip pe() product merge did not apply.');
   }
   if (!js.includes(DS_PATCH) || js.includes('Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)')) {
     throw new Error('Style two Ds() timeline ha() patch did not apply.');
