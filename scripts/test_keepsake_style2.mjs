@@ -186,6 +186,8 @@ assert.doesNotMatch(overlay, /report\/style-2/);
 
 const patch = await readFile(new URL('../public/ts-timeline-icon-patch.js', import.meta.url), 'utf8');
 assert.match(patch, /AIRPLANE/);
+assert.match(patch, /printMode/);
+assert.match(patch, /isPrintReport/);
 assert.doesNotMatch(patch, /journey\?style=2/);
 assert.doesNotMatch(patch, /patchedOpen/);
 

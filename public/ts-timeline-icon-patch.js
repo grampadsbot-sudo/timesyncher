@@ -50,8 +50,14 @@
     return { type, icon, logoUrl, isFlight: false };
   }
 
+  function isPrintReport() {
+    return new URLSearchParams(location.search).get('printMode') === 'report';
+  }
+
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
+    if (/^H[1-6]$/.test(el.tagName)) return;
+    if (el.closest('.print-media-card, .story-card, .logo-list, [data-trip-directory], [data-post-itinerary], [data-stories-up-front]')) return;
     el.dataset.tsIconFixed = '1';
     el.dataset.tsIconType = resolved.type;
     if (resolved.logoUrl && !resolved.isFlight) {
@@ -95,7 +101,7 @@
       const iconEl = [...row.querySelectorAll('span, div, i')].find((node) => {
         const value = text(node.textContent);
         return AIRPLANE.test(value) || (node.querySelector('svg') && node.childElementCount <= 2);
-      }) || el.previousElementSibling;
+      }) || (el.previousElementSibling && !/^H[1-6]$/.test(el.previousElementSibling.tagName) ? el.previousElementSibling : null);
       if (iconEl) mark(iconEl, resolved);
       seen.add(el);
     }
@@ -130,6 +136,7 @@
         });
       });
     }
+    if (isPrintReport()) return;
     apply(lookup);
     repairStoryCards();
     new MutationObserver(() => {
