@@ -23,4 +23,6 @@ Initial website fill cannot skip under those bucket counts.
 - `product-gbrain-dispatch.mjs` asserts **before** TREK sync (no `itinerary_research_update`-only gate, no `TIMESYNCHER_ALLOW_INCOMPLETE_RESEARCH_PASS` skip).
 - `trek-vacation-sync.mjs` asserts when `researchedThings` is present.
 
+Live shared tabs on vacation-staging pad to the same mins (Restaurants / Stores / The Rest) after product `Mn()` classifies restaurants correctly. Style-two PDF p1 directory stays real-trip counts; PDF end lists still pad separately.
+
 QA: `node scripts/test_first_pass_minimums.mjs`

@@ -35,6 +35,8 @@ A thing with no matching timeline row (after those type filters) does **not** ap
 
 A bucket block is omitted when planned total is 0, target is 0, and the bucket has no rows.
 
+Staging classifies `thingOverrides.category` / place category with restaurant **before** `car`, so Carbone / Lotus / Eggslut / Shake Shack land in **Restaurants** and Cosmopolitan shops in **Stores**. They must not dump into The Rest / Other Things only. Header **Config Options** is Trip View (Flights / Hotels / Cars), not Keepsakes Admin/Config — see `config-options-trip-view.md`.
+
 ## Amount (existing price parse)
 
 Price text is `overrides.price ?? thing.price` (`bi()`).

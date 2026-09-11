@@ -72,6 +72,39 @@ export function applyProductKeepsakeOverrides(shared = {}) {
       if (finiteCoord(place.lng) == null) place.lng = coords[1];
     }
     next.thingOverrides[key] = override;
+    if (category === 'restaurant') {
+      place.category_id = place.category_id || 2;
+      place.category_name = place.category_name || 'Restaurant';
+      place.category = place.category && typeof place.category === 'object'
+        ? { ...place.category, name: place.category.name || 'Restaurant' }
+        : { id: 2, name: 'Restaurant', icon: '🍽️' };
+    } else if (category === 'store') {
+      place.category_id = place.category_id || 11;
+      place.category_name = place.category_name || 'Store';
+      place.category = place.category && typeof place.category === 'object'
+        ? { ...place.category, name: place.category.name || 'Store' }
+        : { id: 11, name: 'Store', icon: '🛍️' };
+    }
+  }
+  const placesById = new Map(next.places.map((place) => [String(place.id), place]));
+  if (next.assignments && typeof next.assignments === 'object') {
+    next.assignments = Object.fromEntries(Object.entries(next.assignments).map(([dayId, rows]) => [
+      dayId,
+      (Array.isArray(rows) ? rows : []).map((row) => {
+        const place = row.place && typeof row.place === 'object' ? { ...row.place } : {};
+        const id = place.id || row.place_id;
+        const top = placesById.get(String(id)) || {};
+        const override = next.thingOverrides[`place:${id}`] || {};
+        if (finiteCoord(top.lat) != null) place.lat = top.lat;
+        if (finiteCoord(top.lng) != null) place.lng = top.lng;
+        if (finiteCoord(override.lat) != null) place.lat = override.lat;
+        if (finiteCoord(override.lng) != null) place.lng = override.lng;
+        if (top.category) place.category = top.category;
+        if (top.category_name) place.category_name = top.category_name;
+        if (top.category_id) place.category_id = top.category_id;
+        return { ...row, place_id: id || row.place_id, place };
+      }),
+    ]));
   }
   return next;
 }

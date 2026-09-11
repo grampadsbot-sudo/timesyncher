@@ -9,4 +9,6 @@ Detail fields (live):
 
 Print Style two renders review stars as `★★★★★` plus quote text.
 
+Blank rating/review fields on vacation-3 are empty product values (placeholders only). That is not a missing control. Do not invent scores or quotes.
+
 There is no separate media/QR Config toggle for reviews.

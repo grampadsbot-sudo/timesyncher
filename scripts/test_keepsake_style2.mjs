@@ -27,7 +27,7 @@ import {
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames } from '../src/vacation/keepsake-list-minimums.mjs';
+import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padLiveTabRows } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
@@ -347,6 +347,7 @@ assert.equal(
 
 const liveOverride = applyProductKeepsakeOverrides({
   places: shared.places,
+  assignments: shared.assignments,
   thingOverrides: {
     'place:8871': { title: 'Bellagio Conservatory — Anniversary Cocktails', category: 'other', story: 'wet petals' },
     'place:8872': { story: 'Spicy rigatoni' },
@@ -362,6 +363,10 @@ assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'restaurant'
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'store');
 assert.ok(liveOverride.thingOverrides['place:8872'].lat);
 assert.ok(liveOverride.thingOverrides['place:8876'].lng);
+assert.equal(liveOverride.places.find((place) => String(place.id) === '8872').category.name, 'Restaurant');
+const carboneAssign = (liveOverride.assignments?.['1237'] || []).find((row) => /carbone/i.test(row.place?.name || ''));
+assert.equal(carboneAssign.place.lat, 36.1073);
+assert.equal(carboneAssign.place.lng, -115.1766);
 assert.deepEqual(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), [36.1073, -115.1766]);
 assert.deepEqual(resolveThingCoords({ name: 'Shake Shack near Cosmo/Aria', address: 'Las Vegas Strip' }), [36.1097, -115.1739]);
 assert.equal(liveOverride.thingOverrides['place:8873'].lat, 36.1097);
@@ -377,6 +382,8 @@ const aeFixture = [
   'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`',
   'zr=fo(zt).length?`<div class="style2-thing-media">${fo(zt).map(Ba).join("")}</div>`:""',
   ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
+  'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
+  'Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -418,6 +425,17 @@ assert.equal(padKeepsakeListNames('Restaurants', [
 ]).length, 11);
 assert.equal(padKeepsakeListNames('Stores', [{ name: 'Cosmopolitan shops' }]).length, 9);
 assert.equal(padKeepsakeListNames('Shows, Tours and the Rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
+assert.equal(padLiveTabRows('restaurant', [
+  { name: 'Carbone at Aria' },
+  { name: 'Shake Shack near Cosmo/Aria' },
+  { name: 'Lotus of Siam' },
+  { name: 'Eggslut' },
+]).length, 11);
+assert.equal(padLiveTabRows('store', [{ name: 'Cosmopolitan shops' }]).length, 9);
+assert.equal(padLiveTabRows('rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
+assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("car"\)/);
+assert.match(patchedAe, /tsPad=/);
+assert.match(patchedAe, /__tsLiveFill:1/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());

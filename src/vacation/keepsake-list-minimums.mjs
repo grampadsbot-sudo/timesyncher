@@ -73,3 +73,33 @@ export function padKeepsakeListNames(bucket, existingRows = []) {
   });
   return extras.slice(0, Math.max(0, min - existingRows.length));
 }
+
+/** Live shared tabs only. Do not feed these rows into Style-two Ae() `G` / p1. */
+export const LIVE_TAB_MINIMUMS = {
+  restaurant: DEFAULT_FIRST_PASS_MINIMUMS.restaurant,
+  store: DEFAULT_FIRST_PASS_MINIMUMS.store,
+  rest: DEFAULT_FIRST_PASS_MINIMUMS.rest,
+};
+
+export const LIVE_TAB_FILL = {
+  restaurant: KEEPSAKE_LIST_FILL.Restaurants,
+  store: KEEPSAKE_LIST_FILL.Stores,
+  rest: KEEPSAKE_LIST_FILL['Shows, Tours and the Rest'],
+};
+
+export function padLiveTabRows(kind, existingRows = []) {
+  const names = padKeepsakeListNames(
+    kind === 'restaurant' ? 'Restaurants' : kind === 'store' ? 'Stores' : 'Shows, Tours and the Rest',
+    existingRows,
+  );
+  const baseId = kind === 'restaurant' ? 910000 : kind === 'store' ? 920000 : 930000;
+  return names.map((name, index) => ({
+    id: baseId + index + 1,
+    name,
+    __tsLiveFill: 1,
+    category: kind === 'rest' ? 'event' : kind,
+    lat: 36.1147,
+    lng: -115.1729,
+    address: 'Las Vegas',
+  }));
+}

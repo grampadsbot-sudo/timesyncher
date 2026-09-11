@@ -1,4 +1,4 @@
-import { KEEPSAKE_LIST_FILL, KEEPSAKE_LIST_MINIMUMS } from './keepsake-list-minimums.mjs';
+import { LIVE_TAB_FILL, LIVE_TAB_MINIMUMS } from './keepsake-list-minimums.mjs';
 
 const TRAVEL_BUNDLE = 'https://travel.timesyncher.com/assets/index-BKun7ofk.js';
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -22,6 +22,12 @@ const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>!/bind[- ]?proof|neon file bind pro
 const SI_NYC_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]]]';
 const SI_VEGAS_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]],[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,[36.1097,-115.1739]],[/carbone/i,[36.1073,-115.1766]],[/cosmopolitan|eggslut/i,[36.1097,-115.1739]],[/lotus of siam/i,[36.1436,-115.1415]],[/las vegas strip|las vegas/i,[36.1147,-115.1729]]]';
 
+const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
+const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
+
+const LIVE_TAB_NEEDLE = 'Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
+const LIVE_TAB_PATCH = `tsPad=(rows,kind,names,min)=>{const have=new Set(rows.map(G=>String(mr(G)||G.name||"").toLowerCase()));const extra=names.filter(n=>![...have].some(h=>h.includes(n.toLowerCase())||n.toLowerCase().includes(h))).slice(0,Math.max(0,min-rows.length)).map((name,i)=>({id:(kind==="restaurant"?910000:kind==="store"?920000:930000)+i+1,name,__tsLiveFill:1,category:kind==="rest"?"event":kind,lat:36.1147,lng:-115.1729,address:"Las Vegas"}));return rows.concat(extra)},tsFill=${JSON.stringify(LIVE_TAB_FILL)},tsMin=${JSON.stringify(LIVE_TAB_MINIMUMS)},Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),"store",tsFill.store,tsMin.store),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),"restaurant",tsFill.restaurant,tsMin.restaurant),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))),"rest",tsFill.rest,tsMin.rest)`;
+
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '') {
   const js = String(source || '');
@@ -40,6 +46,12 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(WD_MEDIA_NEEDLE)) {
     patched = patched.replace(WD_MEDIA_NEEDLE, WD_MEDIA_PATCH);
+  }
+  if (patched.includes(MN_CATEGORY_NEEDLE)) {
+    patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
+  }
+  if (patched.includes(LIVE_TAB_NEEDLE)) {
+    patched = patched.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
   }
   return patched;
 }
@@ -97,6 +109,12 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(WD_MEDIA_PATCH)) {
     throw new Error('Style two daily-thing media filter did not apply.');
+  }
+  if (!js.includes(MN_CATEGORY_PATCH) || js.includes(MN_CATEGORY_NEEDLE)) {
+    throw new Error('Style two live category Mn() restaurant-before-car patch did not apply.');
+  }
+  if (!js.includes('tsPad=') || !js.includes('__tsLiveFill:1') || !js.includes('"restaurant":15')) {
+    throw new Error('Style two live tab 15/10/15 pad patch did not apply.');
   }
   return true;
 }

@@ -2,7 +2,7 @@
 
 Header button `aria-label="Config Options"`. Menu title: **Trip View**.
 
-This is **not** Keepsakes Admin/Config.
+This is **not** Keepsakes Admin/Config (`PDFs → Keepsakes → Admin/Config`). Feature Map walks that open header **Config Options** and see Trip View are on this control. Do not treat the two Configs as one.
 
 | UI label | Key | Default |
 | --- | --- | --- |
