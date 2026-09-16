@@ -41,10 +41,16 @@ function productFieldsLiteral() {
 }
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
-const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const name=String((base&&base.title)||(thing&&(thing.name||thing.title))||"");const spec=tsPf.find(row=>row.match.test(name));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 
-const GET_TRIP_NEEDLE = 'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)';
-const GET_TRIP_PATCH = `getSharedTrip:e=>Rt.get(\`/shared/\${e}\`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>{const G=t&&t.data||{};const pf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")}));const fill=(base,thing)=>{const name=String((base&&base.title)||(thing&&(thing.name||thing.title))||"");const spec=pf.find(row=>row.match.test(name));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next};const ov={...((G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{})};for(const place of (Array.isArray(G.places)?G.places:[]))ov["place:"+place.id]=fill(ov["place:"+place.id]||{},place);G.thingOverrides=ov;return G})`;
+const PE_EFFECT_NEEDLE = 'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})';
+const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{A(G);const ov={...((G&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{})};if(typeof tsFillOv==="function"){for(const place of (Array.isArray(G&&G.places)?G.places:[]))ov["place:"+place.id]=tsFillOv(ov["place:"+place.id]||{},place)}pe(ov);me(!0);ge(!1)})';
+
+const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
+const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
+
+const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
+const HH_DETAILS_PATCH = 'value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
 const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
@@ -121,8 +127,14 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(HA_NEEDLE)) {
     patched = patched.replace(HA_NEEDLE, HA_PATCH);
   }
-  if (patched.includes(GET_TRIP_NEEDLE)) {
-    patched = patched.replace(GET_TRIP_NEEDLE, GET_TRIP_PATCH);
+  if (patched.includes(PE_EFFECT_NEEDLE)) {
+    patched = patched.replace(PE_EFFECT_NEEDLE, PE_EFFECT_PATCH);
+  }
+  while (patched.includes(HH_CHECK_NEEDLE)) {
+    patched = patched.replace(HH_CHECK_NEEDLE, HH_CHECK_PATCH);
+  }
+  if (patched.includes(HH_DETAILS_NEEDLE)) {
+    patched = patched.replace(HH_DETAILS_NEEDLE, HH_DETAILS_PATCH);
   }
   if (patched.includes(DS_NEEDLE)) {
     patched = patched.replace(DS_NEEDLE, DS_PATCH);
@@ -259,8 +271,17 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('tsFillOv=') || !js.includes('ha=G=>tsFillOv(le[Qt(G)]||{},G)')) {
     throw new Error('Style two ha() product-field fill did not apply.');
   }
-  if (!js.includes(GET_TRIP_PATCH) || js.includes(GET_TRIP_NEEDLE)) {
-    throw new Error('Style two getSharedTrip product HH merge did not apply.');
+  if (!js.includes('names.some(n=>row.match.test(n))')) {
+    throw new Error('Style two ha() must match thing.name, not only override title.');
+  }
+  if (!js.includes(PE_EFFECT_PATCH) || js.includes(PE_EFFECT_NEEDLE)) {
+    throw new Error('Style two live pe() product-field hydrate did not apply.');
+  }
+  if (js.includes(HH_CHECK_NEEDLE) || !js.includes(HH_CHECK_PATCH)) {
+    throw new Error('Style two live Happy hour checkbox product match did not apply.');
+  }
+  if (js.includes(HH_DETAILS_NEEDLE) || !js.includes(HH_DETAILS_PATCH)) {
+    throw new Error('Style two live Happy hour details product match did not apply.');
   }
   if (!js.includes(DS_PATCH) || js.includes('Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)')) {
     throw new Error('Style two Ds() timeline ha() patch did not apply.');

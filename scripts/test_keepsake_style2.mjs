@@ -263,10 +263,8 @@ assert.match(patch, /display:table!important/);
 assert.match(patch, /data-two-col/);
 assert.match(patch, /serviceWorker/);
 assert.match(patch, /unregister/);
-assert.match(patch, /happyHourDetails/);
-assert.match(patch, /XMLHttpRequest/);
-assert.match(patch, /fillTrip/);
-assert.match(patch, /aria\.mgmresorts\.com\/en\/restaurants\/happy-hour-at-aria/);
+assert.doesNotMatch(patch, /fillTrip/);
+assert.doesNotMatch(patch, /XMLHttpRequest\.prototype/);
 assert.doesNotMatch(patch, /journey\?style=2/);
 assert.doesNotMatch(patch, /patchedOpen/);
 
@@ -425,6 +423,9 @@ const aeFixture = [
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
   'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',
+  'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})',
+  'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"',
+  'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)',
   'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
   '<div class="daily-grid">${js}<main class="daily-details">',
   'js=`<aside class="daily-left">',
@@ -494,9 +495,11 @@ assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant\)\.length===0/);
 assert.match(patchedAe, /tsFillOv=/);
 assert.match(patchedAe, /ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\)/);
-assert.match(patchedAe, /getSharedTrip:e=>Rt\.get/);
-assert.match(patchedAe, /G\.thingOverrides=ov;return G/);
-assert.doesNotMatch(patchedAe, /getSharedTrip:e=>Rt\.get\(`\/shared\/\$\{e\}`,\{params:\{_ts:Date\.now\(\)\},headers:\{"Cache-Control":"no-cache"\}\}\)\.then\(t=>t\.data\)/);
+assert.match(patchedAe, /names\.some\(n=>row\.match\.test\(n\)\)/);
+assert.match(patchedAe, /getSharedTrip:e=>Rt\.get\(`\/shared\/\$\{e\}`,\{params:\{_ts:Date\.now\(\)\},headers:\{"Cache-Control":"no-cache"\}\}\)\.then\(t=>t\.data\)/);
+assert.doesNotMatch(patchedAe, /G\.thingOverrides=ov;return G/);
+assert.match(patchedAe, /tsPf\.some\(row=>row\.happyHour===true/);
+assert.match(patchedAe, /typeof tsFillOv==="function"/);
 assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
 assert.match(patchedAe, /Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
 assert.match(patchedAe, /data-two-col-itinerary="1"/);
