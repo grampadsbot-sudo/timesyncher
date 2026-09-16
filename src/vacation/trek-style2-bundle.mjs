@@ -70,6 +70,10 @@ const PDF_REPORT_PATCH = 'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&
 const SHARED_ROUTE_NEEDLE = 'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{})})';
 const SHARED_ROUTE_PATCH = 'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{})}),n.jsx(tc,{path:"/shared/:token/journey",element:n.jsx(wse,{})})';
 
+const SE_NEEDLE = 'function _se({title:e,html:t,styles:i}){return I.useEffect(()=>{const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body>${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()},[e,t,i]),n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
+
+const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
+
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
 const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
 
@@ -171,6 +175,9 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(SHARED_ROUTE_NEEDLE)) {
     patched = patched.replace(SHARED_ROUTE_NEEDLE, SHARED_ROUTE_PATCH);
+  }
+  if (patched.includes(SE_NEEDLE)) {
+    patched = patched.replace(SE_NEEDLE, SE_PATCH);
   }
   if (patched.includes(DS_NEEDLE)) {
     patched = patched.replace(DS_NEEDLE, DS_PATCH);
@@ -336,6 +343,9 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(SHARED_ROUTE_PATCH) || js.includes(SHARED_ROUTE_NEEDLE) && !js.includes('/shared/:token/journey')) {
     throw new Error('Style two must mount Ae() on /shared/:token/journey.');
+  }
+  if (js.includes(SE_NEEDLE) || !js.includes('data-ae-print="1"') || !js.includes('seGo=')) {
+    throw new Error('Style two _se() must write Ae() HTML immediately so QA CDP can see print bars.');
   }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');

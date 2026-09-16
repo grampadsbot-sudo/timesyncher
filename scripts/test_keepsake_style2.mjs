@@ -435,6 +435,7 @@ const aeFixture = [
   'h=c.get("printMode")||(i.includes("printMode=daily")?"daily":null)',
   'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&]+)/))==null?void 0:Bl[1])||null',
   'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{})})',
+  'function _se({title:e,html:t,styles:i}){return I.useEffect(()=>{const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body>${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()},[e,t,i]),n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}',
   'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
   '<div class="daily-grid">${js}<main class="daily-details">',
   'js=`<aside class="daily-left">',
@@ -525,6 +526,8 @@ assert.match(patchedAe, /Co=G=>ha\(G\)\.longDetails\|\|\(tsPf\.find/);
 assert.match(patchedAe, /ha\(G\)\.happyHour\|\|zi\(G\)/);
 assert.match(patchedAe, /data-happy-hour="\$\{ha\(G\)\.happyHour\?"1":"0"\}"/);
 assert.doesNotMatch(patchedAe, /ha\(nr\)\.story&&fo\(nr\)\.filter\(Km\)\.some/);
+assert.match(patchedAe, /data-ae-print="1"/);
+assert.match(patchedAe, /seGo=/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
@@ -568,6 +571,9 @@ assert.match(sharedApp, /unregister/);
 assert.match(sharedApp, /params\.set\('printMode', 'report'\)/);
 assert.match(sharedApp, /params\.set\('pdfReport', 'keepsake-style-2'\)/);
 assert.match(sharedApp, /\\\/shared\\\/\[\^\/\]\+\\\/journey\\\/\?\$/);
+assert.match(sharedApp, /x-vercel-protection-bypass/);
+assert.match(sharedApp, /Pause System Mitigations/);
+assert.match(sharedApp, /data-ae-print/);
 assert.match(sharedApp, /Record voice note/);
 assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(shareToken\)\}\/audio-note/);
 
