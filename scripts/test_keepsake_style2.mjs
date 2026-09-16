@@ -281,6 +281,8 @@ assert.match(patch, /flex-direction:column/);
 assert.match(patch, /print-media-card/);
 assert.match(patch, /padding-top:18mm/);
 assert.match(patch, /data-end-continuous/);
+assert.match(patch, /report-section>h2\{break-after:avoid/);
+assert.doesNotMatch(patch, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
 assert.doesNotMatch(patch, /display:table!important/);
 assert.doesNotMatch(patch, /daily-left.*38%/);
 assert.match(patch, /serviceWorker/);
@@ -492,6 +494,10 @@ const aeFixture = [
   'return`<article class="thing daily-thing"><div class="thing-head">',
   'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)',
   'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}',
+  'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}',
+  '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`',
+  'fs=G=>{const Re=_l(G),zt=[En(G),bi(G),Zr(G)].filter(Boolean).map(an).join(" · "),ua=[rr(G),Co(G),zi(G)?ha(G).happyHourDetails:"",ha(G).story].filter(Boolean).map(Rn=>`<p>${an(Rn)}</p>`).join("");return`<article class="thing"><div class="thing-head">${Re?`<img class="thing-logo" src="${an(Re)}" />`:`<span class="thing-emoji">${an(Pc(G))}</span>`}<div><h3>${an(Bs(mr(G)))}</h3>${zt?`<div class="thing-meta">${zt}</div>`:""}</div></div>${ua||`<p>${an(Fl(G))}</p>`}</article>`}',
+  'Kl=G=>String((G==null?void 0:G.url)||(G==null?void 0:G.mediaUrl)||(G==null?void 0:G.fileUrl)||(G==null?void 0:G.src)||(G==null?void 0:G.href)||(G==null?void 0:G.videoUrl)||(G==null?void 0:G.photoUrl)||"").trim()',
   '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}',
   '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}',
   '.page{padding:9mm}',
@@ -609,6 +615,16 @@ assert.match(patchedAe, /data-happy-hour="\$\{ha\(G\)\.happyHour\?"1":"0"\}"/);
 assert.doesNotMatch(patchedAe, /ha\(nr\)\.story&&fo\(nr\)\.filter\(Km\)\.some/);
 assert.match(patchedAe, /data-ae-print="1"/);
 assert.match(patchedAe, /seGo=/);
+assert.match(patchedAe, /location\.origin/);
+assert.match(patchedAe, /So\(G\.url\|\|G\.thumbnailUrl\)/);
+assert.match(patchedAe, /data-saved-story-thing="1"/);
+assert.match(patchedAe, /data-thing-bound-media="1"/);
+assert.match(patchedAe, /data-print-media="bound"/);
+assert.match(patchedAe, /data-continuous-cat="1"/);
+assert.match(patchedAe, /<\/ul>\$\{tsMapsOn/);
+assert.match(patchedAe, /G\.publicUrl/);
+assert.doesNotMatch(patchedAe, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
+assert.doesNotMatch(patchedAe, /const zt="https:\/\/travel\.timesyncher\.com",ua=new URL\(Re,zt\)/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());

@@ -75,7 +75,9 @@
       '.style2-page .daily-grid,.style2-page .daily-left{display:none!important}',
       '.page,.daily-page,.keepsake-report,.style2-page{padding-top:18mm!important;box-sizing:border-box}',
       '[data-end-continuous="1"]{break-after:auto;page-break-after:auto}',
-      '[data-end-continuous="1"] .report-section{break-inside:avoid;page-break-inside:avoid;break-before:auto;page-break-before:auto}',
+      '[data-end-continuous="1"] .report-section{break-inside:auto;page-break-inside:auto;break-before:auto;page-break-before:auto}',
+      '[data-end-continuous="1"] .report-section>h2{break-after:avoid;page-break-after:avoid}',
+      '[data-end-continuous="1"] .logo-list>li{break-inside:avoid;page-break-inside:avoid}',
     ].join('');
   }
 

@@ -6,6 +6,12 @@ SoT: `bot-admin/messages/time-syncher/cursor-project-style-two-contract-20260916
 
 Hold certify. Thin routes Cursor. CoS talk front. Do not kick SCT/QA unless Thin explicitly orders it.
 
+## PERMANENT INVARIANT — Saved-story Thing media (in product print code)
+
+SoTs: `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916`, `bot-admin/messages/time-syncher/saved-story-flag-on-thing-20260916`
+
+Saved Story is a **flag on the Thing** (no separate Story entity). Style one `Ae()` / `fs()` and Style two `Ae(true)` print code MUST always embed that Thing’s bound media (`places[].bound_media`, `fo()`, `/ts-thing-media`). This lives in `src/vacation/trek-style2-bundle.mjs` (`fo()` bound_media-first, `So()` print-origin URLs, `Ba()` url-before-thumbnail, `fs()` embeds `fo().map(Ba)`). Cursor chat/project memory is not a substitute. Placeholders while those URLs 200 = FAIL.
+
 ## FIVE HARD RULES (verbatim)
 
 1. One Style-one + one Style-two renderer only — patch those existing product files; any new parallel export/print/PDF template path = FAIL.
@@ -24,6 +30,9 @@ Hold certify. Thin routes Cursor. CoS talk front. Do not kick SCT/QA unless Thin
 - `bot-admin/messages/time-syncher/style-2-craig-fail-55ca70b-margin-maps-allthings-20260916`
 - `bot-admin/messages/time-syncher/style-2-craig-fail-55ca70b-no-category-pagebreak-20260916`
 - `bot-admin/messages/time-syncher/style-2-craig-fail-bed0620-20260916`
+- `bot-admin/messages/time-syncher/style-2-qa-fail-b396b63-20260916`
+- `bot-admin/messages/time-syncher/saved-story-flag-on-thing-20260916`
+- `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916`
 - `skills/keepsake-qa/skill`
 
 Feature Map (behavior inventory SoT): `features/README.md`. A UI claim without a Feature Map entry is incomplete.

@@ -17,6 +17,7 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - TG intake track + build cue: `features/tg-intake.md` / `bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cue-20260910`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
 - Cursor Project contract (five hard rules): `features/cursor-project-contract.md` / `bot-admin/messages/time-syncher/cursor-project-style-two-contract-20260916` — `AGENTS.md` + `.cursor/rules/style-two-keepsake-contract.mdc`
+- Saved-story Thing media (print-code invariant): `features/media-stories.md` / `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916` — flag on Thing; `Ae()` embeds `bound_media` / `/ts-thing-media`
 
 A live control missing from `features/` means the map is incomplete — do not claim verified. This map is **not** a verify-PASS. Hold certify. Skillify jobs 18–22 in flight.
 
@@ -89,7 +90,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Car fields | Rental company, Car type | `car-fields.md` |
 | Ratings | Google rating / Yelp rating / Other rating | `ratings-reviews.md` |
 | Reviews | 5-star review quote 1–3; print `★★★★★` | `ratings-reviews.md` |
-| Stories / media | Saved stories (Config); Edit caption; Play video | `media-stories.md` |
+| Stories / media | Saved stories (Config); flag on Thing; print embeds `bound_media` / `/ts-thing-media`; Edit caption; Play video | `media-stories.md` |
 | Collab | Checking edit access… / Saved to itinerary / View-only — editing requires an approved email invite | `collaborators.md` |
 | Budget | Tab when `share_budget`; which things appear = live TREK rules only | `budget.md` |
 | Min things | Initial website fill **15 restaurants / 10 stores / 15 The Rest** (not total-8) | `min-things.md` |
