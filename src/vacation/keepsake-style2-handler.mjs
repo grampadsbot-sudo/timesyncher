@@ -82,9 +82,10 @@ export function productStyleTwoViewUrl({
   search = '',
 } = {}) {
   const extra = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  extra.set('style', extra.get('style') || '2');
   extra.set('printMode', 'report');
   extra.set('pdfReport', PRODUCT_STYLE_TWO_REPORT);
-  return `${String(origin || '').replace(/\/+$/, '')}/shared/${encodeURIComponent(shareToken)}/?${extra.toString()}`;
+  return `${String(origin || '').replace(/\/+$/, '')}/shared/${encodeURIComponent(shareToken)}/journey?${extra.toString()}`;
 }
 
 export function productPdfUrl({

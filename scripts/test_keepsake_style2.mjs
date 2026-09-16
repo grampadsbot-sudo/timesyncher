@@ -250,6 +250,7 @@ assert.doesNotMatch(patch, /img\.style\.width = '100%'/);
 assert.match(patch, /AIRPLANE/);
 assert.match(patch, /printMode/);
 assert.match(patch, /isPrintReport/);
+assert.match(patch, /\\\/journey\\\/\?\$/);
 assert.match(patch, /print-media-qr/);
 assert.match(patch, /data:image\/svg\+xml/);
 assert.match(patch, /neon file bind proof/);
@@ -273,7 +274,9 @@ assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /pdfQr/);
 assert.match(vercel, /\/api\/pdf\/qr\\\\.svg/);
 assert.match(vercel, /\/api\/pdf\/shared/);
-assert.match(vercel, /report=journey/);
+assert.match(vercel, /\/shared\/\(\[\^\/\]\+\)\/journey\(\?:\/\)\?/);
+assert.match(vercel, /"dest": "\/shared-app.html"/);
+assert.doesNotMatch(vercel, /report=journey/);
 assert.match(vercel, /trekBundle/);
 assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
 const itinerarySrc = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
@@ -297,7 +300,7 @@ assert.equal(wantsStyleTwoView({ report: 'journey' }), true);
 assert.equal(wantsStyleTwoView({ report: 'style-2' }), false);
 assert.equal(
   productStyleTwoViewUrl({ shareToken: 'las-vegas-vacation-3' }),
-  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2',
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
 );
 const styleTwoUrl = productPdfUrl({
   shareToken: 'las-vegas-vacation-3',
@@ -306,7 +309,7 @@ const styleTwoUrl = productPdfUrl({
 });
 assert.equal(
   styleTwoUrl,
-  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/?printMode=report&pdfReport=keepsake-style-2',
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
 );
 assert.doesNotMatch(styleTwoUrl, /travel\.timesyncher\.com/);
 assert.equal(
@@ -347,7 +350,7 @@ for (const url of [
   }, res);
   assert.equal(res.statusCode, 302, url);
   assert.equal(res.headers['x-timesyncher-style2'], 'staging-ae', url);
-  assert.match(res.headers.location, /vacation-staging\.timesyncher\.com\/shared\/las-vegas-vacation-3\/\?.*pdfReport=keepsake-style-2/);
+  assert.match(res.headers.location, /vacation-staging\.timesyncher\.com\/shared\/las-vegas-vacation-3\/journey\?.*pdfReport=keepsake-style-2/);
   assert.doesNotMatch(res.headers.location, /travel\.timesyncher\.com/);
 }
 assert.equal(
@@ -426,6 +429,12 @@ const aeFixture = [
   'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})',
   'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"',
   'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)',
+  'Co=G=>ha(G).longDetails??Fl(G)',
+  'ua=zi(G)?ha(G).happyHourDetails:""',
+  'Zn=zi(zt)?ha(zt).happyHourDetails:""',
+  'h=c.get("printMode")||(i.includes("printMode=daily")?"daily":null)',
+  'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&]+)/))==null?void 0:Bl[1])||null',
+  'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{})})',
   'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
   '<div class="daily-grid">${js}<main class="daily-details">',
   'js=`<aside class="daily-left">',
@@ -509,6 +518,13 @@ assert.match(patchedAe, /<strong>Summary\.<\/strong>/);
 assert.match(patchedAe, /<strong>Story\.<\/strong>/);
 assert.match(patchedAe, /data-happy-hour=/);
 assert.match(patchedAe, /longDetails/);
+assert.match(patchedAe, /path:"\/shared\/:token\/journey"/);
+assert.match(patchedAe, /\?"report":null\)\|\|\(i\.includes\("printMode=daily"\)/);
+assert.match(patchedAe, /\?"keepsake-style-2":null\)/);
+assert.match(patchedAe, /Co=G=>ha\(G\)\.longDetails\|\|\(tsPf\.find/);
+assert.match(patchedAe, /ha\(G\)\.happyHour\|\|zi\(G\)/);
+assert.match(patchedAe, /data-happy-hour="\$\{ha\(G\)\.happyHour\?"1":"0"\}"/);
+assert.doesNotMatch(patchedAe, /ha\(nr\)\.story&&fo\(nr\)\.filter\(Km\)\.some/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
@@ -549,7 +565,9 @@ assert.doesNotMatch(sharedApp, /crossorigin href="https:\/\/travel\.timesyncher\
 assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
 assert.match(sharedApp, /serviceWorker/);
 assert.match(sharedApp, /unregister/);
-assert.doesNotMatch(sharedApp, /pdfReport=keepsake/);
+assert.match(sharedApp, /params\.set\('printMode', 'report'\)/);
+assert.match(sharedApp, /params\.set\('pdfReport', 'keepsake-style-2'\)/);
+assert.match(sharedApp, /\\\/shared\\\/\[\^\/\]\+\\\/journey\\\/\?\$/);
 assert.match(sharedApp, /Record voice note/);
 assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(shareToken\)\}\/audio-note/);
 

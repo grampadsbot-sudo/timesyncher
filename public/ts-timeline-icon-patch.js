@@ -56,7 +56,10 @@
   }
 
   function isPrintReport() {
-    return new URLSearchParams(location.search).get('printMode') === 'report';
+    const params = new URLSearchParams(location.search);
+    if (params.get('printMode') === 'report') return true;
+    const style = params.get('style');
+    return /\/journey\/?$/.test(location.pathname || '') && (style === '2' || style === 'style-2');
   }
 
   function storiesPrintCss() {
