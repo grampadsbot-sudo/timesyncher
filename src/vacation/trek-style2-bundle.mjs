@@ -10,7 +10,7 @@ export const STYLE2_USES_AE = AE_STYLE2;
 
 const AE_LAYOUT_NEEDLE = 'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}';
 
-const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(\" \")),zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class=\"summary-stat\"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(\"\"),Vd=G.map(([nr,Oo])=>`<section class=\"report-section\" data-directory-bucket=\"${an(nr)}\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`).join(\"\"),pc=Pr.summary?`<p class=\"muted\">Trip summary</p><div class=\"keepsake-summary\">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join(\"\")}</div>`:\"\",gr=Pr.eventSummary?`<p class=\"keepsake-summary\">You experienced ${Re.size} ${Re.size===1?\"event\":\"events\"} this vacation.</p>`:\"\",js=Pr.stories&&zt.length?`<section class=\"page keepsake-report keepsake-list-page\" data-stories-up-front=\"1\" data-stories-two-col=\"1\">${Wi}<h2>Saved stories</h2><style data-stories-print-css=\"1\">[data-stories-two-col=\"1\"] .recap-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px}[data-story-card],.story-card{break-inside:avoid!important;page-break-inside:avoid!important}</style><div class=\"recap-grid\" data-stories-grid=\"2\">${zt.map(nr=>`<article class=\"story-card\" data-story-card=\"1\" data-story-media-only=\"1\" style=\"break-inside:avoid;page-break-inside:avoid\"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join(\"\")}<div class=\"body\">${rr(nr)?`<p data-story-summary=\"1\" style=\"font-size:12px;color:#334155;margin:8px 0 6px\"><strong>Summary.</strong> ${an(Bs(rr(nr)))}</p>`:\"\"}${ha(nr).story?`<p data-story-body=\"1\" style=\"font-size:12px;color:#111827\"><strong>Story.</strong> ${an(ha(nr).story)}</p>`:\"\"}</div></article>`).join(\"\")}</div></section>`:\"\",zl=Qa.map(nr=>\`${Mc(nr)}\`).join(\"\"),wn=`<section class=\"page keepsake-report\" data-page=\"1\" data-trip-directory=\"1\">${Wi}<h1>${an(la.title||\"Vacation\")}</h1>${pc}${gr}<div class=\"summary-grid\">${ua}</div>${Vd}</section>`,Qi=G.map(([nr,Oo])=>`<section class=\"page keepsake-report keepsake-list-page\" data-post-itinerary=\"1\" data-end-two-col=\"1\">${Wi}<section class=\"report-section\"><h2>${an(nr)}</h2><ul class=\"logo-list\" data-end-list=\"1\" style=\"columns:2;column-gap:18px\">${Oo.map(w).join(\"\")}</ul></section></section>`).join(\"\");return`${wn}${js}${zl}${Qi}`}";
+const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(\" \")),zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class=\"summary-stat\"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(\"\"),Vd=G.map(([nr,Oo])=>`<section class=\"report-section\" data-directory-bucket=\"${an(nr)}\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`).join(\"\"),pc=Pr.summary?`<p class=\"muted\">Trip summary</p><div class=\"keepsake-summary\">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join(\"\")}</div>`:\"\",gr=Pr.eventSummary?`<p class=\"keepsake-summary\">You experienced ${Re.size} ${Re.size===1?\"event\":\"events\"} this vacation.</p>`:\"\",js=Pr.stories&&zt.length?`<section class=\"page keepsake-report keepsake-list-page\" data-stories-up-front=\"1\" data-stories-two-col=\"1\">${Wi}<h2>Saved stories</h2><style data-stories-print-css=\"1\">[data-stories-two-col=\"1\"] .recap-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px}[data-story-card],.story-card{break-inside:avoid!important;page-break-inside:avoid!important}.print-media-card{display:inline-block;margin:0 8px 8px 0;vertical-align:top}.print-media-card>img{width:92px;height:72px;object-fit:cover;border-radius:10px}.print-media-card.video>img.print-media-qr{width:72px;height:72px;object-fit:contain;background:#fff}.style2-page{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important}.style2-page h1{width:100%}.style2-day-opening{display:block!important;text-align:center!important;margin:0 auto 16px!important;max-width:560px!important;width:100%!important;float:none!important}.style2-timeline{display:inline-grid!important;margin:0 auto!important;text-align:left}.style2-details{width:100%!important;text-align:left!important;display:block!important;float:none!important;clear:both!important}.style2-page .daily-grid,.style2-page .daily-left{display:none!important}[data-end-two-col=\"1\"] .logo-list,.logo-list[data-end-list=\"1\"],[data-trip-directory=\"1\"] .logo-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px 18px!important;columns:unset!important}</style><div class=\"recap-grid\" data-stories-grid=\"2\">${zt.map(nr=>`<article class=\"story-card\" data-story-card=\"1\" data-story-media-only=\"1\" style=\"break-inside:avoid;page-break-inside:avoid\"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join(\"\")}<div class=\"body\">${rr(nr)?`<p data-story-summary=\"1\" style=\"font-size:12px;color:#334155;margin:8px 0 6px\"><strong>Summary.</strong> ${an(Bs(rr(nr)))}</p>`:\"\"}${ha(nr).story?`<p data-story-body=\"1\" style=\"font-size:12px;color:#111827\"><strong>Story.</strong> ${an(ha(nr).story)}</p>`:\"\"}</div></article>`).join(\"\")}</div></section>`:\"\",zl=Qa.map(nr=>\`<div data-style2-centered-day=\"1\">\${Mc(nr)}</div>\`).join(\"\"),wn=`<section class=\"page keepsake-report\" data-page=\"1\" data-trip-directory=\"1\">${Wi}<h1>${an(la.title||\"Vacation\")}</h1>${pc}${gr}<div class=\"summary-grid\">${ua}</div>${Vd}</section>`,Qi=G.map(([nr,Oo])=>`<section class=\"page keepsake-report keepsake-list-page\" data-post-itinerary=\"1\" data-end-two-col=\"1\">${Wi}<section class=\"report-section\"><h2>${an(nr)}</h2><ul class=\"logo-list\" data-end-list=\"1\" style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px 18px\">${Oo.map(w).join(\"\")}</ul></section></section>`).join(\"\");return`${wn}${js}${zl}${Qi}`}";
 
 
 const HC_QR_NEEDLE = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`';
@@ -21,13 +21,25 @@ const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>!/bind[- ]?proof|neon file bind pro
 
 
 const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}';
-const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
+const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
 const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${rr(_i.item)?`<div data-row-summary="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
 
 const SU_TITLE_NEEDLE = '<div class="timeline-title">${an(Bs(Zn.title))}</div>';
-const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${rr(Zn.item)?`<div data-row-summary="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
+const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${rr(Zn.item)?`<div data-row-summary="1" data-summary-src="thing" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
+
+const DE_AE_NEEDLE = 'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)';
+const DE_AE_PATCH = 'Ae=()=>{const G=de(!1).filter(([,nr])=>nr.length)';
+
+const FO_NEEDLE = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}';
+const FO_PATCH = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G)),..._d(G&&G.bound_media),..._d(G&&G.photos),..._d((ha(G)||{}).bound_media)].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}';
+
+const LOGO_LIST_CSS_NEEDLE = '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}';
+const LOGO_LIST_CSS_PATCH = '.logo-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:0 0 16px;padding:0;list-style:none}';
+
+const STYLE2_OPENING_NEEDLE = '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}';
+const STYLE2_OPENING_PATCH = '.style2-page{display:flex;flex-direction:column;align-items:center;text-align:center}.style2-page h1{font-size:20px;margin-bottom:10px;width:100%}.style2-day-opening{display:block;text-align:center;margin:0 auto 16px;max-width:560px;width:100%;float:none}';
 
 const DAILY_THING_NEEDLE = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=';
 const DAILY_THING_PATCH = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}${fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).length?`<div class="style2-thing-media" data-daily-thing-media="1">${fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).map(Ba).join("")}</div>`:""}</article>`},ws=';
@@ -153,6 +165,18 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(SU_TITLE_NEEDLE)) {
     patched = patched.replace(SU_TITLE_NEEDLE, SU_TITLE_PATCH);
   }
+  if (patched.includes(DE_AE_NEEDLE)) {
+    patched = patched.replace(DE_AE_NEEDLE, DE_AE_PATCH);
+  }
+  if (patched.includes(FO_NEEDLE)) {
+    patched = patched.replace(FO_NEEDLE, FO_PATCH);
+  }
+  if (patched.includes(LOGO_LIST_CSS_NEEDLE)) {
+    patched = patched.replace(LOGO_LIST_CSS_NEEDLE, LOGO_LIST_CSS_PATCH);
+  }
+  if (patched.includes(STYLE2_OPENING_NEEDLE)) {
+    patched = patched.replace(STYLE2_OPENING_NEEDLE, STYLE2_OPENING_PATCH);
+  }
   if (patched.includes(DAILY_THING_NEEDLE)) {
     patched = patched.replace(DAILY_THING_NEEDLE, DAILY_THING_PATCH);
   }
@@ -267,8 +291,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('[/bellagio|conservatory/i,[36.1126,-115.1767]]')) {
     throw new Error('Style two day-map geocode patch did not apply.');
   }
-  if (!js.includes('${Mc(nr)}') || !js.includes('data-print-ready="style2"') || !js.includes('data-stories-two-col="1"')) {
+  if (!js.includes('${Mc(nr)}') || !js.includes('data-style2-centered-day="1"') || !js.includes('data-print-ready="style2"') || !js.includes('data-stories-two-col="1"')) {
     throw new Error('Style two Ae() days must use product Mc() centered itinerary; stories must be two-column.');
+  }
+  if (!js.includes('flex-direction:column') || !js.includes('.style2-page .daily-left{display:none')) {
+    throw new Error('Style two Mc() day pages must force centered column, not Style-one left itinerary.');
   }
   if (js.includes('${op(nr,{includeMap:so(nr),brandHtml:Wi})}') || js.includes('data-two-col-print="1"') || js.includes('data-two-col-itinerary="1"')) {
     throw new Error('Style two Ae() days must not use Style-one left-column op() / daily-left 38%.');
@@ -291,8 +318,23 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('data-print-fill="1"') || js.includes('data-list-min=') || js.includes('"Restaurants":15')) {
     throw new Error('Style two end lists must be every stored thing with logos, not emoji fill extras.');
   }
-  if (!js.includes('data-end-two-col="1"') || !js.includes('data-end-list="1"') || !js.includes('columns:2;column-gap:18px')) {
+  if (!js.includes('data-end-two-col="1"') || !js.includes('data-end-list="1"') || !js.includes('grid-template-columns:1fr 1fr')) {
     throw new Error('Style two end-of-book lists must be two-column logo+summary rows.');
+  }
+  if (!js.includes(DE_AE_PATCH) || js.includes(DE_AE_NEEDLE)) {
+    throw new Error('Style two end lists must use de(false) so every stored thing is listed.');
+  }
+  if (!js.includes(FO_PATCH) || !js.includes('_d(G&&G.bound_media)')) {
+    throw new Error('Style two fo() must read bound_media so Saved Stories keep pics/QRs.');
+  }
+  if (!js.includes(LOGO_LIST_CSS_PATCH) || js.includes(LOGO_LIST_CSS_NEEDLE)) {
+    throw new Error('Style two logo-list CSS must be two-column grid for every category.');
+  }
+  if (!js.includes(STYLE2_OPENING_PATCH) || js.includes(STYLE2_OPENING_NEEDLE)) {
+    throw new Error('Style two product style2-page CSS must center the Mc() itinerary.');
+  }
+  if (!js.includes('data-summary-src="thing"')) {
+    throw new Error('Style two list summaries must be marked Thing-stored (rr/Co), not PDF invent.');
   }
   if (!js.includes(WD_MEDIA_PATCH)) {
     throw new Error('Style two daily-thing media filter did not apply.');

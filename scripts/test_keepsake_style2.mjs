@@ -8,7 +8,7 @@ import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mj
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
 import { qrModules, qrSvg } from '../src/vacation/qr-svg.mjs';
 import handlePdfQrSvg, { allowedQrPayload, PDF_QR_SIZE } from '../src/vacation/pdf-qr-svg-handler.mjs';
-import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia } from '../src/vacation/thing-media-bind.mjs';
+import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia, mergeBindingsIntoShared } from '../src/vacation/thing-media-bind.mjs';
 import {
   isJourneyBookReport,
   journeyBookGate,
@@ -236,6 +236,19 @@ assert.ok(stripped.media.every((item) => /plates|hands/.test(item.filename)));
 assert.equal(stripped.places[0].bound_media.length, 1);
 assert.doesNotMatch(JSON.stringify(stripped), /Neon file bind proof|bind-proof/i);
 
+const mergedMedia = mergeBindingsIntoShared({
+  places: [{ id: 8872, name: 'Carbone at Aria' }, { id: 8869, name: 'Bellagio' }],
+  media: [],
+}, [
+  { thingId: 8872, originalName: 'carbone-plates-photo.jpg', publicUrl: '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
+  { thingId: 8869, originalName: 'bellagio-fountain-night-video.mp4', publicUrl: '/ts-thing-media/las-vegas-vacation-3/bellagio-fountain-night-video.mp4', mimeType: 'video/mp4', mediaKind: 'video' },
+]);
+assert.equal(mergedMedia.media.length, 2);
+assert.equal(mergedMedia.places[0].photos.length, 1);
+assert.equal(mergedMedia.places[0].photos[0].url, '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg');
+assert.equal(mergedMedia.places[1].videos.length, 1);
+assert.match(mergedMedia.places[1].videos[0].url, /bellagio-fountain-night-video\.mp4/);
+
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
 assert.doesNotMatch(overlay, /wantsJourneyBook/);
 assert.doesNotMatch(overlay, /document\.write/);
@@ -260,7 +273,8 @@ assert.match(patch, /break-inside:avoid/);
 assert.match(patch, /injectStoriesPrintCss/);
 assert.match(patch, /style2-day-opening/);
 assert.match(patch, /style2-timeline/);
-assert.match(patch, /columns:2/);
+assert.match(patch, /flex-direction:column/);
+assert.match(patch, /print-media-card/);
 assert.doesNotMatch(patch, /display:table!important/);
 assert.doesNotMatch(patch, /daily-left.*38%/);
 assert.match(patch, /serviceWorker/);
@@ -442,6 +456,10 @@ const aeFixture = [
   '<div class="daily-grid">${js}<main class="daily-details">',
   'js=`<aside class="daily-left">',
   'return`<article class="thing daily-thing"><div class="thing-head">',
+  'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)',
+  'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}',
+  '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}',
+  '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -459,6 +477,12 @@ assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
 assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
+assert.match(patchedAe, /data-style2-centered-day="1"/);
+assert.match(patchedAe, /flex-direction:column/);
+assert.match(patchedAe, /de\(!1\)\.filter/);
+assert.match(patchedAe, /_d\(G&&G\.bound_media\)/);
+assert.match(patchedAe, /data-summary-src="thing"/);
+assert.match(patchedAe, /print-media-card/);
 assert.match(patchedAe, /data-print-ready="style2"/);
 assert.doesNotMatch(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
 assert.match(patchedAe, /data-list-summary="1"/);

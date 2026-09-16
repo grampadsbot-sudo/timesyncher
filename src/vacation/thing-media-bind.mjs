@@ -330,27 +330,38 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
     const list = byPlace.get(binding.thingId) || [];
     list.push(binding);
     byPlace.set(binding.thingId, list);
-    next.media.push({
+    const printRow = {
       id: binding.id,
       trip_id: binding.trekTripId,
       place_id: binding.thingId,
       day_id: binding.dayId,
       filename: binding.originalName,
       original_name: binding.originalName,
+      originalName: binding.originalName,
       mime_type: binding.mimeType,
+      mimeType: binding.mimeType,
       caption: binding.caption || binding.thingName,
       url: binding.publicUrl,
       public_url: binding.publicUrl,
+      publicUrl: binding.publicUrl,
       thumbnail_url: binding.publicUrl,
+      kind: binding.mediaKind,
+      mediaKind: binding.mediaKind,
       source: 'timesyncher-bind',
-    });
+    };
+    next.media.push(printRow);
+    list[list.length - 1] = { ...binding, ...printRow };
+    byPlace.set(binding.thingId, list);
   }
   for (const place of next.places) {
     const bound = byPlace.get(Number(place.id)) || [];
     if (!bound.length) continue;
     const photo = bound.find((row) => isPhotoBinding(row));
-    if (!place.image_url && photo) place.image_url = photo.publicUrl;
+    if (!place.image_url && photo) place.image_url = photo.publicUrl || photo.url;
     place.bound_media = bound;
+    place.media = bound;
+    place.photos = bound.filter((row) => isPhotoBinding(row));
+    place.videos = bound.filter((row) => isVideoBinding(row));
   }
   return next;
 }

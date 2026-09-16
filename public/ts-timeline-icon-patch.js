@@ -66,9 +66,13 @@
     return [
       '[data-stories-two-col="1"] .recap-grid,.recap-grid[data-stories-grid="2"]{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px}',
       '[data-story-card],.story-card{break-inside:avoid!important;page-break-inside:avoid!important}',
-      '[data-end-two-col="1"] .logo-list,.logo-list[data-end-list="1"]{columns:2!important;column-gap:18px!important}',
-      '.style2-day-opening{text-align:center!important;margin:0 auto 16px!important;max-width:650px}',
+      '.print-media-card{display:inline-block!important;margin:0 8px 8px 0}',
+      '[data-end-two-col="1"] .logo-list,.logo-list[data-end-list="1"],[data-trip-directory="1"] .logo-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px 18px!important;columns:unset!important}',
+      '.style2-page{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important}',
+      '.style2-day-opening{display:block!important;text-align:center!important;margin:0 auto 16px!important;max-width:560px!important;width:100%}',
       '.style2-timeline{display:inline-grid!important;margin:0 auto!important;text-align:left}',
+      '.style2-details{width:100%!important;text-align:left!important;display:block!important;clear:both!important}',
+      '.style2-page .daily-grid,.style2-page .daily-left{display:none!important}',
     ].join('');
   }
 
