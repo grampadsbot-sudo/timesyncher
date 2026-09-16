@@ -288,10 +288,13 @@ assert.match(patch, /style2-day-opening/);
 assert.match(patch, /style2-timeline/);
 assert.match(patch, /flex-direction:column/);
 assert.match(patch, /print-media-card/);
-assert.match(patch, /padding-top:18mm/);
+assert.match(patch, /padding:18mm 9mm 12mm 9mm/);
 assert.match(patch, /data-end-continuous/);
 assert.match(patch, /report-section>h2\{break-after:avoid/);
-assert.match(patch, /print-media-card>img\{width:260px/);
+assert.match(patch, /object-fit:contain/);
+assert.match(patch, /data-day-things-flow/);
+assert.match(patch, /data-last-page-logo/);
+assert.match(patch, /data-stories-packed/);
 assert.match(patch, /keepsake-day:last-child \.daily-page/);
 assert.doesNotMatch(patch, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
 assert.doesNotMatch(patch, /display:table!important/);
@@ -516,6 +519,12 @@ const aeFixture = [
   '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}',
   '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}',
   '.page{padding:9mm}',
+  'Pn=Rn.slice(0,2),Zn=[];for(let zr=2;zr<Rn.length;zr+=3)Zn.push(Rn.slice(zr,zr+3));const sr=`<section class="page daily-page style2-page" data-print-ready="style2">${cr}<h1>${an(la.title||"Trip")}</h1>${Su(G,Re,Rn.map(zr=>zr.item))}<main class="style2-details">${Pn.map(zr=>wd(zr,G)).join("")}</main></section>`,Xr=Zn.map((zr,Mo)=>`<section class="page daily-page style2-page" data-print-ready="style2">${cr}<h1>${an(la.title||"Trip")}</h1><div class="style2-continued">Day ${an(G.day_number)} continued${G.date?` · ${an(new Date(G.date+"T00:00:00Z").toLocaleDateString(z,{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}))}`:""}</div><main class="style2-details">${zr.map(Is=>wd(Is,G)).join("")}</main></section>`).join("");return sr+Xr}',
+  'zl=[];for(let _i=0;_i<Zn.length;_i+=3)zl.push(Zn.slice(_i,_i+3));zl.length||zl.push([]);const wn=Re.includeMap!==!1,Qi=zl.length+(wn?1:0),nr=zl.map((_i,Eo)=>`<section class="page daily-page" data-print-ready="daily">${zt}<h1>${an(la.title||"Trip")}</h1><div class="muted page-count">Daily printout page ${Eo+1} of ${Qi}</div><div class="daily-grid">${js}<main class="daily-details">${_i.map($r).join("")}</main></div></section>`).join(""),Oo=`<section class="page daily-page daily-map-page" data-print-ready="daily">${zt}<h1>${an(la.title||"Trip")}</h1><div class="muted page-count">Daily printout page ${Qi} of ${Qi}</div><h2>${an(G.title||`Day ${G.day_number}`)} map</h2><p class="map-caption">Actual itinerary map for Day ${an(G.day_number)}, bounded to the mapped Day-by-Day stops.</p>${pc}<div class="map-box">${Hl}</div></section>`;return nr+(wn?Oo:"")}',
+  'zt=Re.brandHtml??cr',
+  'Pn=ua.length?`<div class="style2-day-media">${ua.map(Ba).join("")}</div>`:""',
+  '.style2-page{height:257mm;min-height:257mm;overflow:hidden}',
+  'Hl=xa(Is,720,850)',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -529,7 +538,7 @@ assert.match(patchedAe, /originalName/);
 assert.match(patchedAe, /\/api\/pdf\/qr\.svg\?data=\$\{encodeURIComponent\(So\(G\)\)\}&m=1/);
 assertStyleTwoPatchParses();
 assert.match(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
-assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
+assert.match(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
 assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
@@ -540,16 +549,18 @@ assert.match(patchedAe, /_d\(G&&G\.bound_media\)/);
 assert.match(patchedAe, /data-summary-src="thing"/);
 assert.match(patchedAe, /print-media-card/);
 assert.match(patchedAe, /data-print-ready="style2"/);
-assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
+assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:""\}\)\}/);
 assert.match(patchedAe, /s2\?Qa\.map/);
 assert.match(patchedAe, /data-end-continuous="1"/);
 assert.match(patchedAe, /padding-top:18mm/);
 assert.match(patchedAe, /tsMapsOn=Qa\.some\(so\)/);
-assert.match(patchedAe, /data-category-map="1"/);
-assert.match(patchedAe, /xa\(Oo,720,280\)/);
+assert.doesNotMatch(patchedAe, /data-category-map="1"/);
+assert.doesNotMatch(patchedAe, /xa\(Oo,720,280\)/);
+assert.match(patchedAe, /data-endlist-maps="0"/);
 assert.match(patchedAe, /Ae\(!0\)/);
 assert.match(patchedAe, /Ae=\(s2\)=>/);
-assert.match(patchedAe, /padding:18mm 9mm 9mm 9mm/);
+assert.match(patchedAe, /padding:18mm 9mm 12mm 9mm/);
+assert.match(patchedAe, /@page\{margin-top:18mm/);
 assert.match(patchedAe, /data-list-summary="1"/);
 assert.match(patchedAe, /data-row-summary="1"/);
 assert.match(patchedAe, /data-story-summary="1"/);
@@ -639,11 +650,21 @@ assert.match(patchedAe, /data-print-media="bound"/);
 assert.match(patchedAe, /data-continuous-cat="1"/);
 assert.match(patchedAe, /data-cat-keep="1"/);
 assert.match(patchedAe, /data-style1-continuous="1"/);
-assert.match(patchedAe, /width:260px/);
+assert.match(patchedAe, /object-fit:contain/);
 assert.match(patchedAe, /<base href=/);
 assert.match(patchedAe, /_d\(G==null\?void 0:G\.bound_media\)/);
 assert.match(patchedAe, /data-cat-keep="1"/);
-assert.match(patchedAe, /\$\{tsMapsOn\?`<div class="map-box" data-category-map="1"/);
+assert.doesNotMatch(patchedAe, /\$\{tsMapsOn\?`<div class="map-box" data-category-map="1"/);
+assert.match(patchedAe, /data-day-things-2col="1"/);
+assert.match(patchedAe, /data-day-things-flow="1"/);
+assert.match(patchedAe, /data-stories-packed="1"/);
+assert.match(patchedAe, /data-last-page-logo="1"/);
+assert.match(patchedAe, /data-logo-last-only="1"/);
+assert.match(patchedAe, /data-summary-continued="1"/);
+assert.match(patchedAe, /data-day-map-page="1"/);
+assert.match(patchedAe, /kind!=="video"/);
+assert.doesNotMatch(patchedAe, /Pn=Rn\.slice\(0,2\)/);
+assert.doesNotMatch(patchedAe, /object-fit:cover/);
 assert.match(patchedAe, /G\.publicUrl/);
 assert.match(patchedAe, /bd\.length\?bd/);
 assert.match(patchedAe, /Oo\.item&&Oo\.item\.bound_media/);
