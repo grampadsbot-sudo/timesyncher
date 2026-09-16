@@ -282,6 +282,8 @@ assert.match(patch, /print-media-card/);
 assert.match(patch, /padding-top:18mm/);
 assert.match(patch, /data-end-continuous/);
 assert.match(patch, /report-section>h2\{break-after:avoid/);
+assert.match(patch, /print-media-card>img\{width:260px/);
+assert.match(patch, /keepsake-day:last-child \.daily-page/);
 assert.doesNotMatch(patch, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
 assert.doesNotMatch(patch, /display:table!important/);
 assert.doesNotMatch(patch, /daily-left.*38%/);
@@ -498,6 +500,9 @@ const aeFixture = [
   '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`',
   'fs=G=>{const Re=_l(G),zt=[En(G),bi(G),Zr(G)].filter(Boolean).map(an).join(" · "),ua=[rr(G),Co(G),zi(G)?ha(G).happyHourDetails:"",ha(G).story].filter(Boolean).map(Rn=>`<p>${an(Rn)}</p>`).join("");return`<article class="thing"><div class="thing-head">${Re?`<img class="thing-logo" src="${an(Re)}" />`:`<span class="thing-emoji">${an(Pc(G))}</span>`}<div><h3>${an(Bs(mr(G)))}</h3>${zt?`<div class="thing-meta">${zt}</div>`:""}</div></div>${ua||`<p>${an(Fl(G))}</p>`}</article>`}',
   'Kl=G=>String((G==null?void 0:G.url)||(G==null?void 0:G.mediaUrl)||(G==null?void 0:G.fileUrl)||(G==null?void 0:G.src)||(G==null?void 0:G.href)||(G==null?void 0:G.videoUrl)||(G==null?void 0:G.photoUrl)||"").trim()',
+  'Hs=G=>[..._d(G==null?void 0:G.media),..._d(G==null?void 0:G.photos)',
+  '.print-media-card{margin:0;width:92px;text-align:center;break-inside:avoid}.print-media-card>img{width:92px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #e5e7eb;background:#f8fafc}',
+  '.keepsake-list-page{break-before:page;page-break-before:always}',
   '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}',
   '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}',
   '.page{padding:9mm}',
@@ -616,13 +621,20 @@ assert.doesNotMatch(patchedAe, /ha\(nr\)\.story&&fo\(nr\)\.filter\(Km\)\.some/);
 assert.match(patchedAe, /data-ae-print="1"/);
 assert.match(patchedAe, /seGo=/);
 assert.match(patchedAe, /location\.origin/);
-assert.match(patchedAe, /So\(G\.url\|\|G\.thumbnailUrl\)/);
+assert.match(patchedAe, /So\(G\.url\|\|G\.thumbnailUrl\|\|G\.publicUrl\|\|G\.public_url\)/);
 assert.match(patchedAe, /data-saved-story-thing="1"/);
 assert.match(patchedAe, /data-thing-bound-media="1"/);
 assert.match(patchedAe, /data-print-media="bound"/);
 assert.match(patchedAe, /data-continuous-cat="1"/);
-assert.match(patchedAe, /<\/ul>\$\{tsMapsOn/);
+assert.match(patchedAe, /data-cat-keep="1"/);
+assert.match(patchedAe, /data-style1-continuous="1"/);
+assert.match(patchedAe, /width:260px/);
+assert.match(patchedAe, /<base href=/);
+assert.match(patchedAe, /_d\(G==null\?void 0:G\.bound_media\)/);
+assert.match(patchedAe, /data-cat-keep="1"/);
+assert.match(patchedAe, /\$\{tsMapsOn\?`<div class="map-box" data-category-map="1"/);
 assert.match(patchedAe, /G\.publicUrl/);
+assert.doesNotMatch(patchedAe, /print-media-card>img\{width:92px;height:72px/);
 assert.doesNotMatch(patchedAe, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
 assert.doesNotMatch(patchedAe, /const zt="https:\/\/travel\.timesyncher\.com",ua=new URL\(Re,zt\)/);
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
