@@ -1,7 +1,12 @@
 import crypto from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { crc32, deflateSync } from 'node:zlib';
 
 import { cleanText } from './http.mjs';
+
+/** Color-card stubs were 15–21KB @ 960×640; TREK placeholder canvases are 1024² @ 3071B. */
+export const PRINT_STUB_MAX_BYTES = 24 * 1024;
 
 export const TREK_SHARED_API_BASE = 'https://travel.timesyncher.com';
 export const VACATION3_SHARE_TOKEN = 'las-vegas-vacation-3';
@@ -253,6 +258,30 @@ export function publicBindingPath(shareToken, filename) {
   return `/ts-thing-media/${token}/${file}`;
 }
 
+export function publicMediaDiskPath(publicUrl = '') {
+  const rel = String(publicUrl || '').split('?')[0].replace(/^\/+/, '');
+  if (!rel.startsWith('ts-thing-media/') || rel.includes('..')) return '';
+  return join(process.cwd(), 'public', rel);
+}
+
+/** Inline real JPEG/PNG bytes for Ae() print. Refuses TREK/color-card stubs. */
+export function printDataUrlForPublicFile(publicUrl = '', mimeType = 'image/jpeg') {
+  const url = String(publicUrl || '');
+  const mime = String(mimeType || 'image/jpeg');
+  if (/^video\//i.test(mime) || /\.(mp4|mov|webm)(\?|#|$)/i.test(url)) return '';
+  if (!/^image\//i.test(mime) && !/\.(jpe?g|png|webp)(\?|#|$)/i.test(url)) return '';
+  const disk = publicMediaDiskPath(url);
+  if (!disk || !existsSync(disk)) return '';
+  let buf;
+  try {
+    buf = readFileSync(disk);
+  } catch {
+    return '';
+  }
+  if (!buf || buf.length <= PRINT_STUB_MAX_BYTES) return '';
+  return `data:${mime || 'image/jpeg'};base64,${buf.toString('base64')}`;
+}
+
 export function toPublicBinding(row = {}) {
   const originalName = row.originalName || row.original_name || '';
   const storedMime = row.mimeType || row.mime_type || '';
@@ -330,6 +359,9 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
     const list = byPlace.get(binding.thingId) || [];
     list.push(binding);
     byPlace.set(binding.thingId, list);
+    const printDataUrl = isPhotoBinding(binding)
+      ? printDataUrlForPublicFile(binding.publicUrl, binding.mimeType || 'image/jpeg')
+      : '';
     const printRow = {
       id: binding.id,
       trip_id: binding.trekTripId,
@@ -341,10 +373,12 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
       mime_type: binding.mimeType,
       mimeType: binding.mimeType,
       caption: binding.caption || binding.thingName,
-      url: binding.publicUrl,
+      url: printDataUrl || binding.publicUrl,
       public_url: binding.publicUrl,
       publicUrl: binding.publicUrl,
-      thumbnail_url: binding.publicUrl,
+      thumbnail_url: printDataUrl || binding.publicUrl,
+      printDataUrl: printDataUrl || undefined,
+      print_data_url: printDataUrl || undefined,
       kind: binding.mediaKind,
       mediaKind: binding.mediaKind,
       source: 'timesyncher-bind',

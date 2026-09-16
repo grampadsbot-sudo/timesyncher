@@ -6,7 +6,8 @@ const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
 // Saved-story flag lives on the Thing. Style one fs() + Style two Ae(true) always embed
-// that Thing's bound_media / /ts-thing-media in THIS print code (not Cursor memory).
+// that Thing's bound_media / /ts-thing-media image BYTES (printDataUrl) in THIS print code.
+// Drop TREK 1024² @ 3071B placeholder canvases and 960×640 color-card stubs.
 // SoTs: saved-story-media-in-print-code-20260916, saved-story-flag-on-thing-20260916.
 
 export const STYLE2_USES_ZU = ZU_STYLE2;
@@ -21,16 +22,16 @@ const HC_QR_NEEDLE = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`'
 const HC_QR_PATCH = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}&m=1`';
 
 const SO_NEEDLE = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
-const SO_PATCH = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt=(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com",ua=new URL(Re,zt);if(/\\/ts-thing-media\\/|\\/api\\/bind-thing-media\\b/i.test(ua.pathname+ua.search))return`${zt}${ua.pathname}${ua.search}${ua.hash}`;return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
+const SO_PATCH = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";if(/^data:|^blob:/i.test(Re))return Re;try{const zt=(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com",ua=new URL(Re,zt);if(/\\/ts-thing-media\\/|\\/api\\/bind-thing-media\\b/i.test(ua.pathname+ua.search))return`${zt}${ua.pathname}${ua.search}${ua.hash}`;return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
 
 const BA_NEEDLE = '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`';
-const BA_PATCH = '`<figure class="print-media-card" data-print-media="bound"><img src="${an(So(G.url||G.thumbnailUrl||G.publicUrl||G.public_url))}" alt="${an(Re)}" style="width:260px;max-width:100%;height:auto;max-height:200px;object-fit:cover" /><figcaption>${an(Re)}</figcaption></figure>`';
+const BA_PATCH = '`<figure class="print-media-card" data-print-media="bound"><img src="${an(So(G.printDataUrl||G.print_data_url||G.dataUrl||G.url||G.publicUrl||G.public_url||G.thumbnailUrl))}" alt="${an(Re)}" style="width:260px;max-width:100%;height:auto;max-height:200px;object-fit:cover" /><figcaption>${an(Re)}</figcaption></figure>`';
 
 const FS_NEEDLE = 'fs=G=>{const Re=_l(G),zt=[En(G),bi(G),Zr(G)].filter(Boolean).map(an).join(" · "),ua=[rr(G),Co(G),zi(G)?ha(G).happyHourDetails:"",ha(G).story].filter(Boolean).map(Rn=>`<p>${an(Rn)}</p>`).join("");return`<article class="thing"><div class="thing-head">${Re?`<img class="thing-logo" src="${an(Re)}" />`:`<span class="thing-emoji">${an(Pc(G))}</span>`}<div><h3>${an(Bs(mr(G)))}</h3>${zt?`<div class="thing-meta">${zt}</div>`:""}</div></div>${ua||`<p>${an(Fl(G))}</p>`}</article>`}';
 const FS_PATCH = 'fs=G=>{const Re=_l(G),zt=[En(G),bi(G),Zr(G)].filter(Boolean).map(an).join(" · "),ua=[rr(G),Co(G),zi(G)?ha(G).happyHourDetails:"",ha(G).story].filter(Boolean).map(Rn=>`<p>${an(Rn)}</p>`).join(""),Pn=fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" ")));return`<article class="thing" data-saved-story-thing="1" data-story-media="bound"><div class="thing-head">${Re?`<img class="thing-logo" src="${an(Re)}" />`:`<span class="thing-emoji">${an(Pc(G))}</span>`}<div><h3>${an(Bs(mr(G)))}</h3>${zt?`<div class="thing-meta">${zt}</div>`:""}</div></div>${Pn.length?`<div class="style2-thing-media" data-thing-bound-media="1">${Pn.map(Ba).join("")}</div>`:""}${ua||`<p>${an(Fl(G))}</p>`}</article>`}';
 
 const KL_NEEDLE = 'Kl=G=>String((G==null?void 0:G.url)||(G==null?void 0:G.mediaUrl)||(G==null?void 0:G.fileUrl)||(G==null?void 0:G.src)||(G==null?void 0:G.href)||(G==null?void 0:G.videoUrl)||(G==null?void 0:G.photoUrl)||"").trim()';
-const KL_PATCH = 'Kl=G=>String((G==null?void 0:G.url)||(G==null?void 0:G.publicUrl)||(G==null?void 0:G.public_url)||(G==null?void 0:G.mediaUrl)||(G==null?void 0:G.fileUrl)||(G==null?void 0:G.src)||(G==null?void 0:G.href)||(G==null?void 0:G.videoUrl)||(G==null?void 0:G.photoUrl)||"").trim()';
+const KL_PATCH = 'Kl=G=>String((G==null?void 0:G.printDataUrl)||(G==null?void 0:G.print_data_url)||(G==null?void 0:G.dataUrl)||(G==null?void 0:G.url)||(G==null?void 0:G.publicUrl)||(G==null?void 0:G.public_url)||(G==null?void 0:G.mediaUrl)||(G==null?void 0:G.fileUrl)||(G==null?void 0:G.src)||(G==null?void 0:G.href)||(G==null?void 0:G.videoUrl)||(G==null?void 0:G.photoUrl)||"").trim()';
 
 const HS_NEEDLE = 'Hs=G=>[..._d(G==null?void 0:G.media),..._d(G==null?void 0:G.photos)';
 const HS_PATCH = 'Hs=G=>[..._d(G==null?void 0:G.bound_media),..._d(G==null?void 0:G.media),..._d(G==null?void 0:G.photos)';
@@ -58,7 +59,10 @@ const DE_AE_NEEDLE = 'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)';
 const DE_AE_PATCH = 'Ae=(s2)=>{const G=de(!1).filter(([,nr])=>nr.length)';
 
 const FO_NEEDLE = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}';
-const FO_PATCH = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([..._d(G&&G.bound_media),..._d(G&&G.photos),..._d((ha(G)||{}).bound_media),...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}';
+const FO_PATCH = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));const bd=[..._d(G&&G.bound_media),..._d((ha(G)||{}).bound_media)];const rows=bd.length?bd:[..._d(G&&G.photos),...Rn,...Hs(G),...Hs(ha(G))];return Fo(rows.map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean).filter(Oo=>{const src=String(Oo.url||"");if(/^data:image\\//i.test(src))return src.length>12000;const blob=[Oo.filename,Oo.originalName,Oo.caption,src.slice(0,240),String(Oo.thumbnailUrl||"").slice(0,240),Oo.id].join(" ");return!/placeholder|1024.?1024|default[-_]?thumb|bind[- ]?proof|neon file bind proof/i.test(blob)}))}';
+
+const ND_NEEDLE = 'nd=G=>Fo(li(G))';
+const ND_PATCH = 'nd=G=>{const zt=`day:${G.id}`,ua=Zl(zt),Rn=(typeof Ci=="function"?Ci(G):[]).flatMap(Oo=>_d(Oo&&Oo.item&&Oo.item.bound_media));return Rn.length?Fo(Rn.map((Oo,sr)=>rp(Oo,sr,zt,ua)).filter(Boolean)):Fo(li(G))}';
 
 const LOGO_LIST_CSS_NEEDLE = '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}';
 const LOGO_LIST_CSS_PATCH = '.logo-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:0 0 16px;padding:0;list-style:none}';
@@ -119,7 +123,7 @@ const SHARED_ROUTE_PATCH = 'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{}
 
 const SE_NEEDLE = 'function _se({title:e,html:t,styles:i}){return I.useEffect(()=>{const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body>${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()},[e,t,i]),n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
-const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
+const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=async()=>{const imgs=Array.from(document.querySelectorAll(".print-media-card>img:not(.print-media-qr)"));await Promise.all(imgs.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/(jpeg|jpg|png|webp);base64,/i.test(x)&&x.length>12000){r.setAttribute("data-print-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(/^data:/i.test(z)&&z.length<12000){r.remove();return}const U=await fetch(z,{cache:"reload"});if(!U.ok){r.remove();return}const b=await U.blob();if(b.size<4096||b.size===3071){r.remove();return}let bmp=null;try{bmp=await createImageBitmap(b)}catch{}if(bmp&&bmp.width===1024&&bmp.height===1024&&b.size<8192){r.remove();return}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});r.src=data;r.setAttribute("data-print-inlined","1")}catch{r.remove()}}));const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}});if(document.body)document.body.setAttribute("data-print-media-ready","1")};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
 const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
@@ -219,6 +223,9 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(FO_NEEDLE)) {
     patched = patched.replace(FO_NEEDLE, FO_PATCH);
+  }
+  if (patched.includes(ND_NEEDLE)) {
+    patched = patched.replace(ND_NEEDLE, ND_PATCH);
   }
   if (patched.includes(LOGO_LIST_CSS_NEEDLE)) {
     patched = patched.replace(LOGO_LIST_CSS_NEEDLE, LOGO_LIST_CSS_PATCH);
@@ -379,8 +386,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(DE_AE_PATCH) || js.includes(DE_AE_NEEDLE)) {
     throw new Error('Style two end lists must use de(false) so every stored thing is listed.');
   }
-  if (!js.includes(FO_PATCH) || !js.includes('_d(G&&G.bound_media)')) {
+  if (!js.includes(FO_PATCH) || !js.includes('_d(G&&G.bound_media)') || !js.includes('bd.length?bd')) {
     throw new Error('Style two fo() must read bound_media so Saved Stories keep pics/QRs.');
+  }
+  if (!js.includes(ND_PATCH) || js.includes(ND_NEEDLE) && !js.includes('Oo.item.bound_media')) {
+    throw new Error('Style two day media nd() must embed Thing bound_media, not TREK placeholder tiles.');
   }
   if (!js.includes(LOGO_LIST_CSS_PATCH) || js.includes(LOGO_LIST_CSS_NEEDLE)) {
     throw new Error('Style two logo-list CSS must be two-column grid for every category.');
@@ -451,6 +461,9 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes(SE_NEEDLE) || !js.includes('data-ae-print="1"') || !js.includes('seGo=')) {
     throw new Error('Style two _se() must write Ae() HTML immediately so QA CDP can see print bars.');
   }
+  if (!js.includes('data-print-media-ready') || !js.includes('b.size===3071') || !js.includes('bmp.width===1024')) {
+    throw new Error('_se() must inline bound JPEG bytes and drop TREK 1024² 3071B stub canvases.');
+  }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');
   }
@@ -490,14 +503,23 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(SO_PATCH) || js.includes(SO_NEEDLE) || js.includes('const zt="https://travel.timesyncher.com",ua=new URL(Re,zt)')) {
     throw new Error('So() must resolve /ts-thing-media against the print origin, not travel placeholders.');
   }
+  if (!js.includes('/^data:|^blob:/') && !js.includes('/^data:|^blob:/i.test(Re)')) {
+    throw new Error('So() must pass through data: image bytes instead of wrapping them in new URL().');
+  }
   if (!js.includes(BA_PATCH) || js.includes('So(G.thumbnailUrl||G.url)')) {
     throw new Error('Ba() must embed bound Thing url before thumbnail placeholders.');
+  }
+  if (!js.includes('G.printDataUrl||G.print_data_url||G.dataUrl')) {
+    throw new Error('Ba() must embed printDataUrl image bytes for saved-story Thing photos.');
   }
   if (!js.includes(FS_PATCH) || !js.includes('data-saved-story-thing="1"') || !js.includes('data-thing-bound-media="1"') || !js.includes('${Pn.map(Ba).join("")}')) {
     throw new Error('Style one fs() must embed that Thing’s fo()/Ba() bound media in product print code.');
   }
   if (!js.includes(KL_PATCH) || js.includes(KL_NEEDLE)) {
     throw new Error('Kl() must read publicUrl so places[].bound_media rows resolve.');
+  }
+  if (!js.includes('G.printDataUrl)||(G==null?void 0:G.print_data_url)')) {
+    throw new Error('Kl() must prefer printDataUrl bytes over TREK thumbnail stubs.');
   }
   if (js.includes('[data-end-continuous="1"] .report-section{break-inside:avoid')) {
     throw new Error('Continuous category dumps must not keep whole-section break-inside:avoid (orphan Restaurants page).');

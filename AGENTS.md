@@ -10,7 +10,7 @@ Hold certify. Thin routes Cursor. CoS talk front. Do not kick SCT/QA unless Thin
 
 SoTs: `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916`, `bot-admin/messages/time-syncher/saved-story-flag-on-thing-20260916`
 
-Saved Story is a **flag on the Thing** (no separate Story entity). Style one `Ae()` / `fs()` and Style two `Ae(true)` print code MUST always embed that Thing’s bound media (`places[].bound_media`, `fo()`, `/ts-thing-media`). This lives in `src/vacation/trek-style2-bundle.mjs` (`fo()` bound_media-first, `So()` print-origin URLs, `Ba()` url-before-thumbnail, `fs()` embeds `fo().map(Ba)`). Cursor chat/project memory is not a substitute. Placeholders while those URLs 200 = FAIL.
+Saved Story is a **flag on the Thing** (no separate Story entity). Style one `Ae()` / `fs()` and Style two `Ae(true)` print code MUST always embed that Thing’s bound media (`places[].bound_media`, `fo()`, `/ts-thing-media`) as **actual image bytes** (`printDataUrl` / `data:image/jpeg`) in `src/vacation/trek-style2-bundle.mjs` (`fo()` bound_media-only when present, `Kl()`/`Ba()` printDataUrl-first, `So()` data: pass-through, `_se()` drops 1024²@3071B TREK stubs). Cursor chat/project memory is not a substitute. Placeholders while those URLs 200 = FAIL.
 
 ## FIVE HARD RULES (verbatim)
 

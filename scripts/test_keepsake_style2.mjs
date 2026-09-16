@@ -8,7 +8,7 @@ import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mj
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
 import { qrModules, qrSvg } from '../src/vacation/qr-svg.mjs';
 import handlePdfQrSvg, { allowedQrPayload, PDF_QR_SIZE } from '../src/vacation/pdf-qr-svg-handler.mjs';
-import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia, mergeBindingsIntoShared } from '../src/vacation/thing-media-bind.mjs';
+import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia, mergeBindingsIntoShared, printDataUrlForPublicFile, PRINT_STUB_MAX_BYTES } from '../src/vacation/thing-media-bind.mjs';
 import {
   isJourneyBookReport,
   journeyBookGate,
@@ -249,9 +249,18 @@ const mergedMedia = mergeBindingsIntoShared({
 ]);
 assert.equal(mergedMedia.media.length, 2);
 assert.equal(mergedMedia.places[0].photos.length, 1);
-assert.equal(mergedMedia.places[0].photos[0].url, '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg');
+assert.equal(mergedMedia.places[0].photos[0].publicUrl, '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg');
+assert.match(mergedMedia.places[0].photos[0].printDataUrl, /^data:image\/jpeg;base64,/);
+assert.ok(mergedMedia.places[0].photos[0].printDataUrl.length > 40_000, 'printDataUrl must be real photo bytes, not a 3071B stub');
+assert.match(mergedMedia.places[0].photos[0].url, /^data:image\/jpeg;base64,/);
 assert.equal(mergedMedia.places[1].videos.length, 1);
 assert.match(mergedMedia.places[1].videos[0].url, /bellagio-fountain-night-video\.mp4/);
+assert.equal(mergedMedia.places[1].videos[0].printDataUrl, undefined);
+
+const platesData = printDataUrlForPublicFile('/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', 'image/jpeg');
+assert.match(platesData, /^data:image\/jpeg;base64,/);
+assert.ok(Buffer.from(platesData.split(',')[1], 'base64').length > PRINT_STUB_MAX_BYTES);
+assert.equal(printDataUrlForPublicFile('/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png', 'image/png'), '');
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
 assert.doesNotMatch(overlay, /wantsJourneyBook/);
@@ -496,6 +505,7 @@ const aeFixture = [
   'return`<article class="thing daily-thing"><div class="thing-head">',
   'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)',
   'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}',
+  'nd=G=>Fo(li(G))',
   'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}',
   '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`',
   'fs=G=>{const Re=_l(G),zt=[En(G),bi(G),Zr(G)].filter(Boolean).map(an).join(" · "),ua=[rr(G),Co(G),zi(G)?ha(G).happyHourDetails:"",ha(G).story].filter(Boolean).map(Rn=>`<p>${an(Rn)}</p>`).join("");return`<article class="thing"><div class="thing-head">${Re?`<img class="thing-logo" src="${an(Re)}" />`:`<span class="thing-emoji">${an(Pc(G))}</span>`}<div><h3>${an(Bs(mr(G)))}</h3>${zt?`<div class="thing-meta">${zt}</div>`:""}</div></div>${ua||`<p>${an(Fl(G))}</p>`}</article>`}',
@@ -621,7 +631,8 @@ assert.doesNotMatch(patchedAe, /ha\(nr\)\.story&&fo\(nr\)\.filter\(Km\)\.some/);
 assert.match(patchedAe, /data-ae-print="1"/);
 assert.match(patchedAe, /seGo=/);
 assert.match(patchedAe, /location\.origin/);
-assert.match(patchedAe, /So\(G\.url\|\|G\.thumbnailUrl\|\|G\.publicUrl\|\|G\.public_url\)/);
+assert.match(patchedAe, /So\(G\.printDataUrl\|\|G\.print_data_url\|\|G\.dataUrl\|\|G\.url\|\|G\.publicUrl\|\|G\.public_url\|\|G\.thumbnailUrl\)/);
+assert.match(patchedAe, /if\(\/\^data:\|\^blob:\/i\.test\(Re\)\)return Re/);
 assert.match(patchedAe, /data-saved-story-thing="1"/);
 assert.match(patchedAe, /data-thing-bound-media="1"/);
 assert.match(patchedAe, /data-print-media="bound"/);
@@ -634,9 +645,32 @@ assert.match(patchedAe, /_d\(G==null\?void 0:G\.bound_media\)/);
 assert.match(patchedAe, /data-cat-keep="1"/);
 assert.match(patchedAe, /\$\{tsMapsOn\?`<div class="map-box" data-category-map="1"/);
 assert.match(patchedAe, /G\.publicUrl/);
+assert.match(patchedAe, /bd\.length\?bd/);
+assert.match(patchedAe, /Oo\.item&&Oo\.item\.bound_media/);
+assert.match(patchedAe, /data-print-media-ready/);
+assert.match(patchedAe, /b\.size===3071/);
+assert.match(patchedAe, /bmp\.width===1024/);
+assert.match(patchedAe, /G\.printDataUrl\)\|\|\(G==null\?void 0:G\.print_data_url\)/);
 assert.doesNotMatch(patchedAe, /print-media-card>img\{width:92px;height:72px/);
 assert.doesNotMatch(patchedAe, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
 assert.doesNotMatch(patchedAe, /const zt="https:\/\/travel\.timesyncher\.com",ua=new URL\(Re,zt\)/);
+
+const boundPhotos = [
+  'carbone-plates-photo.jpg',
+  'carbone-late-hands-photo.jpg',
+  'conservatory-photo.jpg',
+  'eggslut-sandwich-photo.jpg',
+  'shake-shack-fries-photo.jpg',
+  'boarding-passes-photo.jpg',
+];
+for (const name of boundPhotos) {
+  const path = new URL(`../public/ts-thing-media/las-vegas-vacation-3/${name}`, import.meta.url);
+  const bytes = await readFile(path);
+  assert.ok(bytes.length > PRINT_STUB_MAX_BYTES, `${name} must not be a color-card stub`);
+  assert.notEqual(bytes.length, 3071, `${name} must not be a TREK 1024 canvas`);
+  assert.equal(bytes[0], 0xff);
+  assert.equal(bytes[1], 0xd8);
+}
 const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());

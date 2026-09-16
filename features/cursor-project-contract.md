@@ -21,6 +21,6 @@ This is a **process / agent-fence** feature, not a new customer-facing control. 
 
 SoTs: `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916`, `bot-admin/messages/time-syncher/saved-story-flag-on-thing-20260916`
 
-Saved Story is a **flag on the Thing**. Product Style one / Style two `Ae()` print code always embeds that Thing’s bound media (`places[].bound_media` / `/ts-thing-media`). Cursor memory is not a substitute. Placeholders while those URLs 200 = FAIL. Implementation: `src/vacation/trek-style2-bundle.mjs`.
+Saved Story is a **flag on the Thing**. Product Style one / Style two `Ae()` print code always embeds that Thing’s bound media (`places[].bound_media` / `/ts-thing-media`) as **actual JPEG bytes** (`printDataUrl`). Cursor memory is not a substitute. Placeholders while those URLs 200 = FAIL. Implementation: `src/vacation/trek-style2-bundle.mjs`.
 
 Hold certify.
