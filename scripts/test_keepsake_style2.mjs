@@ -254,14 +254,15 @@ assert.match(patch, /\\\/journey\\\/\?\$/);
 assert.match(patch, /print-media-qr/);
 assert.match(patch, /data:image\/svg\+xml/);
 assert.match(patch, /neon file bind proof/);
-assert.match(patch, /data-stories-bottom-margin/);
-assert.match(patch, /padding-bottom:36mm/);
+assert.match(patch, /data-stories-two-col/);
+assert.match(patch, /grid-template-columns:1fr 1fr/);
 assert.match(patch, /break-inside:avoid/);
-assert.match(patch, /box-decoration-break:clone/);
-assert.match(patch, /display:block!important/);
 assert.match(patch, /injectStoriesPrintCss/);
-assert.match(patch, /display:table!important/);
-assert.match(patch, /data-two-col/);
+assert.match(patch, /style2-day-opening/);
+assert.match(patch, /style2-timeline/);
+assert.match(patch, /columns:2/);
+assert.doesNotMatch(patch, /display:table!important/);
+assert.doesNotMatch(patch, /daily-left.*38%/);
 assert.match(patch, /serviceWorker/);
 assert.match(patch, /unregister/);
 assert.doesNotMatch(patch, /fillTrip/);
@@ -414,6 +415,7 @@ const aeFixture = [
   'zr=fo(zt).length?`<div class="style2-thing-media">${fo(zt).map(Ba).join("")}</div>`:""',
   'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}',
   'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`',
+  '<div class="timeline-title">${an(Bs(Zn.title))}</div>',
   '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=',
   ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
   'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
@@ -456,25 +458,25 @@ assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
-assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
+assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.match(patchedAe, /data-print-ready="style2"/);
-assert.doesNotMatch(patchedAe, /\$\{Mc\(nr\)\}/);
+assert.doesNotMatch(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
 assert.match(patchedAe, /data-list-summary="1"/);
 assert.match(patchedAe, /data-row-summary="1"/);
 assert.match(patchedAe, /data-story-summary="1"/);
 assert.match(patchedAe, /data-story-body="1"/);
 assert.match(patchedAe, /data-daily-thing-media="1"/);
-assert.match(patchedAe, /data-stories-bottom-margin="1"/);
-assert.match(patchedAe, /padding-bottom:36mm/);
+assert.match(patchedAe, /data-stories-two-col="1"/);
+assert.match(patchedAe, /grid-template-columns:1fr 1fr/);
 assert.match(patchedAe, /data-stories-print-css="1"/);
 assert.match(patchedAe, /break-inside:avoid/);
-assert.match(patchedAe, /data-print-fill="1"/);
-assert.match(patchedAe, /data-list-min=/);
-assert.match(patchedAe, /"Restaurants":15/);
+assert.doesNotMatch(patchedAe, /data-print-fill="1"/);
+assert.match(patchedAe, /data-end-two-col="1"/);
+assert.match(patchedAe, /data-end-list="1"/);
 assert.match(patchedAe, /style2-thing-media/);
 assert.match(patchedAe, /data-print-ready="style2"/);
-assert.match(patchedAe, /data-two-col="1"/);
-assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
+assert.doesNotMatch(patchedAe, /data-two-col="1"/);
+assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
   Restaurants: DEFAULT_FIRST_PASS_MINIMUMS.restaurant,
   Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
@@ -513,9 +515,10 @@ assert.doesNotMatch(patchedAe, /typeof tsFillOv==="function"/);
 assert.match(patchedAe, /pe\(\(G!=null&&G\.thingOverrides&&typeof G\.thingOverrides=="object"\)\?G\.thingOverrides:\{\}\)/);
 assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
 assert.match(patchedAe, /Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
-assert.match(patchedAe, /data-two-col-itinerary="1"/);
-assert.match(patchedAe, /data-two-col-details="1"/);
-assert.match(patchedAe, /data-two-col-print="1"/);
+assert.match(patchedAe, /data-stories-grid="2"/);
+assert.match(patchedAe, /rr\(Zn\.item\)/);
+assert.doesNotMatch(patchedAe, /data-two-col-itinerary="1"/);
+assert.doesNotMatch(patchedAe, /data-two-col-print="1"/);
 assert.match(patchedAe, /<strong>Summary\.<\/strong>/);
 assert.match(patchedAe, /<strong>Story\.<\/strong>/);
 assert.match(patchedAe, /data-happy-hour=/);

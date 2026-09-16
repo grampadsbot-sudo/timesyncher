@@ -64,13 +64,11 @@
 
   function storiesPrintCss() {
     return [
-      '.keepsake-list-page[data-stories-bottom-margin="1"],.keepsake-list-page[data-stories-up-front="1"]{padding-bottom:36mm!important;overflow:visible!important;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
-      '[data-stories-bottom-margin="1"] .recap-grid{display:block!important;padding-bottom:16mm}',
-      '[data-story-card],.story-card{display:block!important;break-inside:avoid!important;page-break-inside:avoid!important;-webkit-column-break-inside:avoid;padding-bottom:20mm!important;margin-bottom:8mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
-      '[data-story-card] .body,.story-card .body{break-inside:avoid!important;page-break-inside:avoid!important;padding-bottom:12mm;orphans:4;widows:4}',
-      '.keepsake-day .daily-grid,.daily-page .daily-grid,.daily-grid[data-two-col="1"]{display:table!important;width:100%!important;table-layout:fixed!important}',
-      '.keepsake-day .daily-left,.daily-page .daily-left,.daily-grid[data-two-col="1"]>.daily-left{display:table-cell!important;width:38%!important;vertical-align:top!important;padding-right:14px}',
-      '.keepsake-day .daily-details,.daily-page .daily-details,.daily-grid[data-two-col="1"]>.daily-details{display:table-cell!important;width:62%!important;vertical-align:top!important}',
+      '[data-stories-two-col="1"] .recap-grid,.recap-grid[data-stories-grid="2"]{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px}',
+      '[data-story-card],.story-card{break-inside:avoid!important;page-break-inside:avoid!important}',
+      '[data-end-two-col="1"] .logo-list,.logo-list[data-end-list="1"]{columns:2!important;column-gap:18px!important}',
+      '.style2-day-opening{text-align:center!important;margin:0 auto 16px!important;max-width:650px}',
+      '.style2-timeline{display:inline-grid!important;margin:0 auto!important;text-align:left}',
     ].join('');
   }
 

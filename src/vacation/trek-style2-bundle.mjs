@@ -10,8 +10,7 @@ export const STYLE2_USES_AE = AE_STYLE2;
 
 const AE_LAYOUT_NEEDLE = 'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}';
 
-const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(\" \")),Kf={\"Restaurants\":[\"Mon Ami Gabi\",\"Bardot Brasserie\",\"CATCH Las Vegas\",\"Javier's at Aria\",\"Estiatorio Milos\",\"Best Friend by Roy Choi\",\"Holsteins\",\"L'Atelier de Joël Robuchon\",\"Giada\",\"Yellowtail Japanese Restaurant\",\"Mott 32\",\"Jean Georges Steakhouse\",\"Lago by Julian Serrano\",\"Sichuan House\"],\"Stores\":[\"Crystals at Aria\",\"Grand Canal Shoppes\",\"Forum Shops at Caesars\",\"Fashion Show Mall\",\"Bellagio Shops\",\"Wynn Esplanade\",\"Harmon Corner\",\"Shoppes at Mandalay Place\",\"Venetian Shoppes\",\"Miracle Mile Shops\"],\"Shows, Tours and the Rest\":[\"Bellagio Fountains\",\"High Roller\",\"The Sphere\",\"Fremont Street Experience\",\"Neon Museum\",\"Atomic Museum\",\"Hoover Dam\",\"Red Rock Canyon\",\"STRAT SkyPod\",\"Welcome to Fabulous Las Vegas Sign\",\"LINQ Promenade\",\"O by Cirque du Soleil\",\"Absinthe\",\"Lake of Dreams\",\"High Tea Conservatory Walk\"]},padMin={\"Restaurants\":15,\"Stores\":10,\"Shows, Tours and the Rest\":15},zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class=\"summary-stat\"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(\"\"),Rn=(nr,Oo,_i=!1)=>`<section class=\"report-section\"><h2>${an(nr)}${_i?\" (continued)\":\"\"}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join(\"\")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const Vd=G.map(([nr,Oo])=>`<section class=\"report-section\" data-directory-bucket=\"${an(nr)}\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`).join(\"\"),pc=Pr.summary?`<p class=\"muted\">Trip summary</p><div class=\"keepsake-summary\">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join(\"\")}</div>`:\"\",gr=Pr.eventSummary?`<p class=\"keepsake-summary\">You experienced ${Re.size} ${Re.size===1?\"event\":\"events\"} this vacation.</p>`:\"\",js=Pr.stories&&zt.length?`<section class=\"page keepsake-report keepsake-list-page\" data-stories-up-front=\"1\" data-stories-bottom-margin=\"1\" style=\"padding-bottom:36mm\">${Wi}<h2>Saved stories</h2><style data-stories-print-css=\"1\">[data-stories-bottom-margin=\"1\"] .recap-grid{display:block!important;grid-template-columns:none!important}[data-story-card],.story-card{display:block!important;break-inside:avoid!important;page-break-inside:avoid!important;padding-bottom:24mm!important}</style><div class=\"recap-grid\" style=\"display:block\">${zt.map(nr=>`<article class=\"story-card\" data-story-card=\"1\" data-story-media-only=\"1\" style=\"break-inside:avoid;page-break-inside:avoid;display:block;padding-bottom:24mm\"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join(\"\")}<div class=\"body\">${rr(nr)?`<p data-story-summary=\"1\" style=\"font-size:12px;color:#334155;margin:8px 0 6px\"><strong>Summary.</strong> ${an(Bs(rr(nr)))}</p>`:\"\"}${ha(nr).story?`<p data-story-body=\"1\" style=\"font-size:12px;color:#111827\"><strong>Story.</strong> ${an(ha(nr).story)}</p>`:\"\"}</div></article>`).join(\"\")}</div></section>`:\"\",zl=Qa.map(nr=>`<div class=\"keepsake-day\" data-print-ready=\"style2\" data-two-col=\"1\"><style data-two-col-print=\"1\">.keepsake-day .daily-grid,.daily-page .daily-grid{display:table!important;width:100%!important;table-layout:fixed!important}.keepsake-day .daily-left,.daily-page .daily-left{display:table-cell!important;width:38%!important;vertical-align:top!important;padding-right:14px}.keepsake-day .daily-details,.daily-page .daily-details{display:table-cell!important;width:62%!important;vertical-align:top!important}</style>${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(\"\"),wn=`<section class=\"page keepsake-report\" data-page=\"1\" data-trip-directory=\"1\">${Wi}<h1>${an(la.title||\"Vacation\")}</h1>${pc}${gr}<div class=\"summary-grid\">${ua}</div>${Vd}</section>`,Qi=G.map(([nr,Oo])=>{const min=padMin[nr]||0,have=new Set(Oo.map(item=>String(mr(item)||\"\"))),extra=(Kf[nr]||[]).filter(name=>![...have].some(h=>h.toLowerCase().includes(name.toLowerCase())||name.toLowerCase().includes(h.toLowerCase()))).slice(0,Math.max(0,min-Oo.length)),fill=extra.map(name=>`<li data-print-fill=\"1\"><span class=\"thing-emoji\">${nr===\"Restaurants\"?\"🍽️\":nr===\"Stores\"?\"🛍️\":\"🏛️\"}</span><span>${an(name)}</span></li>`).join(\"\");return `<section class=\"page keepsake-report keepsake-list-page\" data-post-itinerary=\"1\" data-list-min=\"${min}\">${Wi}<section class=\"report-section\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}${fill}</ul></section></section>`}).join(\"\");return`${wn}${js}${zl}${Qi}`}";
-
+const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(\" \")),zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class=\"summary-stat\"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(\"\"),Vd=G.map(([nr,Oo])=>`<section class=\"report-section\" data-directory-bucket=\"${an(nr)}\"><h2>${an(nr)}</h2><ul class=\"logo-list\">${Oo.map(w).join(\"\")}</ul></section>`).join(\"\"),pc=Pr.summary?`<p class=\"muted\">Trip summary</p><div class=\"keepsake-summary\">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join(\"\")}</div>`:\"\",gr=Pr.eventSummary?`<p class=\"keepsake-summary\">You experienced ${Re.size} ${Re.size===1?\"event\":\"events\"} this vacation.</p>`:\"\",js=Pr.stories&&zt.length?`<section class=\"page keepsake-report keepsake-list-page\" data-stories-up-front=\"1\" data-stories-two-col=\"1\">${Wi}<h2>Saved stories</h2><style data-stories-print-css=\"1\">[data-stories-two-col=\"1\"] .recap-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px}[data-story-card],.story-card{break-inside:avoid!important;page-break-inside:avoid!important}</style><div class=\"recap-grid\" data-stories-grid=\"2\">${zt.map(nr=>`<article class=\"story-card\" data-story-card=\"1\" data-story-media-only=\"1\" style=\"break-inside:avoid;page-break-inside:avoid\"><h3>${an(Bs(mr(nr)))}</h3>${fo(nr).filter(Km).map(Ba).join(\"\")}<div class=\"body\">${rr(nr)?`<p data-story-summary=\"1\" style=\"font-size:12px;color:#334155;margin:8px 0 6px\"><strong>Summary.</strong> ${an(Bs(rr(nr)))}</p>`:\"\"}${ha(nr).story?`<p data-story-body=\"1\" style=\"font-size:12px;color:#111827\"><strong>Story.</strong> ${an(ha(nr).story)}</p>`:\"\"}</div></article>`).join(\"\")}</div></section>`:\"\",zl=Qa.map(nr=>\`${Mc(nr)}\`).join(\"\"),wn=`<section class=\"page keepsake-report\" data-page=\"1\" data-trip-directory=\"1\">${Wi}<h1>${an(la.title||\"Vacation\")}</h1>${pc}${gr}<div class=\"summary-grid\">${ua}</div>${Vd}</section>`,Qi=G.map(([nr,Oo])=>`<section class=\"page keepsake-report keepsake-list-page\" data-post-itinerary=\"1\" data-end-two-col=\"1\">${Wi}<section class=\"report-section\"><h2>${an(nr)}</h2><ul class=\"logo-list\" data-end-list=\"1\" style=\"columns:2;column-gap:18px\">${Oo.map(w).join(\"\")}</ul></section></section>`).join(\"\");return`${wn}${js}${zl}${Qi}`}";
 
 
 const HC_QR_NEEDLE = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`';
@@ -22,10 +21,13 @@ const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>!/bind[- ]?proof|neon file bind pro
 
 
 const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}';
-const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G);return`<li data-list-row="1" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
+const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
 const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${rr(_i.item)?`<div data-row-summary="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
+
+const SU_TITLE_NEEDLE = '<div class="timeline-title">${an(Bs(Zn.title))}</div>';
+const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${rr(Zn.item)?`<div data-row-summary="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
 
 const DAILY_THING_NEEDLE = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=';
 const DAILY_THING_PATCH = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}${fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).length?`<div class="style2-thing-media" data-daily-thing-media="1">${fo(G).filter(Oo=>!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).map(Ba).join("")}</div>`:""}</article>`},ws=';
@@ -148,6 +150,9 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(OP_TITLE_NEEDLE)) {
     patched = patched.replace(OP_TITLE_NEEDLE, OP_TITLE_PATCH);
   }
+  if (patched.includes(SU_TITLE_NEEDLE)) {
+    patched = patched.replace(SU_TITLE_NEEDLE, SU_TITLE_PATCH);
+  }
   if (patched.includes(DAILY_THING_NEEDLE)) {
     patched = patched.replace(DAILY_THING_NEEDLE, DAILY_THING_PATCH);
   }
@@ -186,12 +191,6 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(DS_NEEDLE)) {
     patched = patched.replace(DS_NEEDLE, DS_PATCH);
-  }
-  if (patched.includes(OP_GRID_NEEDLE)) {
-    patched = patched.replace(OP_GRID_NEEDLE, OP_GRID_PATCH);
-  }
-  if (patched.includes(OP_LEFT_NEEDLE)) {
-    patched = patched.replace(OP_LEFT_NEEDLE, OP_LEFT_PATCH);
   }
   if (patched.includes(DAILY_CARD_NEEDLE)) {
     patched = patched.replace(DAILY_CARD_NEEDLE, DAILY_CARD_PATCH);
@@ -268,17 +267,17 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('[/bellagio|conservatory/i,[36.1126,-115.1767]]')) {
     throw new Error('Style two day-map geocode patch did not apply.');
   }
-  if (!js.includes('${op(nr,{includeMap:so(nr),brandHtml:Wi})}') || !js.includes('data-print-ready="style2"')) {
-    throw new Error('Style two Ae() days are not product op() two-column (left-justified).');
+  if (!js.includes('${Mc(nr)}') || !js.includes('data-print-ready="style2"') || !js.includes('data-stories-two-col="1"')) {
+    throw new Error('Style two Ae() days must use product Mc() centered itinerary; stories must be two-column.');
   }
-  if (js.includes('${Mc(nr)}')) {
-    throw new Error('Style two Ae() days drifted to centered Mc(); patch existing Ae()/op() only.');
+  if (js.includes('${op(nr,{includeMap:so(nr),brandHtml:Wi})}') || js.includes('data-two-col-print="1"') || js.includes('data-two-col-itinerary="1"')) {
+    throw new Error('Style two Ae() days must not use Style-one left-column op() / daily-left 38%.');
   }
   if (!js.includes(W_LIST_PATCH) || !js.includes('data-list-summary="1"')) {
     throw new Error('Style two list-row summary patch did not apply.');
   }
-  if (!js.includes(OP_TITLE_PATCH) || !js.includes('data-row-summary="1"')) {
-    throw new Error('Style two itinerary-row summary patch did not apply.');
+  if (!js.includes(OP_TITLE_PATCH) || !js.includes(SU_TITLE_PATCH) || !js.includes('data-row-summary="1"')) {
+    throw new Error('Style two itinerary-row summary must use stored rr() on Mc() and op() titles.');
   }
   if (!js.includes('data-story-summary="1"') || !js.includes('data-story-body="1"')) {
     throw new Error('Style two story summary-before-story patch did not apply.');
@@ -286,11 +285,14 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(DAILY_THING_PATCH) || !js.includes('data-daily-thing-media="1"')) {
     throw new Error('Style two daily-thing media patch did not apply.');
   }
-  if (!js.includes('data-stories-bottom-margin="1"') || !js.includes('padding-bottom:36mm') || !js.includes('data-stories-print-css="1"') || !js.includes('break-inside:avoid')) {
-    throw new Error('Style two Saved Stories bottom margin patch did not apply.');
+  if (!js.includes('data-stories-two-col="1"') || !js.includes('grid-template-columns:1fr 1fr') || !js.includes('data-stories-print-css="1"') || !js.includes('break-inside:avoid')) {
+    throw new Error('Style two Saved Stories must stay product two-column recap-grid.');
   }
-  if (!js.includes('data-list-min=') || !js.includes('data-print-fill="1"') || !js.includes('"Restaurants":15')) {
-    throw new Error('Style two end-list 15/10/15 fill patch did not apply.');
+  if (js.includes('data-print-fill="1"') || js.includes('data-list-min=') || js.includes('"Restaurants":15')) {
+    throw new Error('Style two end lists must be every stored thing with logos, not emoji fill extras.');
+  }
+  if (!js.includes('data-end-two-col="1"') || !js.includes('data-end-list="1"') || !js.includes('columns:2;column-gap:18px')) {
+    throw new Error('Style two end-of-book lists must be two-column logo+summary rows.');
   }
   if (!js.includes(WD_MEDIA_PATCH)) {
     throw new Error('Style two daily-thing media filter did not apply.');
@@ -358,11 +360,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(DS_PATCH) || js.includes('Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)')) {
     throw new Error('Style two Ds() timeline ha() patch did not apply.');
   }
-  if (!js.includes('data-two-col="1"') || !js.includes('data-two-col-itinerary="1"') || !js.includes('data-two-col-details="1"')) {
-    throw new Error('Style two op() print-stable two-col patch did not apply.');
+  if (js.includes('data-two-col="1"') || js.includes('data-two-col-itinerary="1"') || js.includes('data-two-col-details="1"')) {
+    throw new Error('Style two must not force Style-one daily-left two-col table layout.');
   }
-  if (!js.includes('data-two-col-print="1"') || !js.includes('display:table!important')) {
-    throw new Error('Style two Ae() two-col print CSS did not apply.');
+  if (js.includes('data-two-col-print="1"') || js.includes('display:table!important')) {
+    throw new Error('Style two must not inject left-column print CSS over Mc() centered itinerary.');
   }
   if (!js.includes('<strong>Summary.</strong>') || !js.includes('<strong>Story.</strong>')) {
     throw new Error('Style two labeled summary-before-story patch did not apply.');
