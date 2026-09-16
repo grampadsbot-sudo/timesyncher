@@ -44,7 +44,12 @@ const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
 const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 
 const PE_EFFECT_NEEDLE = 'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})';
-const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{A(G);const ov={...((G&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{})};if(typeof tsFillOv==="function"){for(const place of (Array.isArray(G&&G.places)?G.places:[]))ov["place:"+place.id]=tsFillOv(ov["place:"+place.id]||{},place)}pe(ov);me(!0);ge(!1)})';
+// Do not close over tsFillOv here. wse() returns the loading branch while P is
+// null, before the later `const tsFillOv=...` runs, so getSharedTrip.then() hit
+// TDZ ("Cannot access 'tsFillOv' before initialization") and .catch() set the
+// expired lock after A(G) had already applied the trip title. ha()/tsPf fill
+// product fields on the post-load render, after those consts exist.
+const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
 
 const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
 const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
@@ -317,8 +322,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('names.some(n=>row.match.test(n))')) {
     throw new Error('Style two ha() must match thing.name, not only override title.');
   }
-  if (!js.includes(PE_EFFECT_PATCH) || js.includes(PE_EFFECT_NEEDLE)) {
-    throw new Error('Style two live pe() product-field hydrate did not apply.');
+  if (!js.includes(PE_EFFECT_PATCH) || js.includes(PE_EFFECT_NEEDLE) || js.includes('typeof tsFillOv==="function"')) {
+    throw new Error('Style two live pe() hydrate must apply without closing over tsFillOv (wse TDZ expired lock).');
   }
   if (js.includes(HH_CHECK_NEEDLE) || !js.includes(HH_CHECK_PATCH)) {
     throw new Error('Style two live Happy hour checkbox product match did not apply.');
