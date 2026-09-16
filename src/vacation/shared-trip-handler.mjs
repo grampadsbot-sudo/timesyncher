@@ -3,6 +3,7 @@ import { TREK_SHARED_API_BASE, mergeBindingsIntoShared, stripKeepsakeJunkMedia }
 import { listBindings } from './thing-media-store.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyProductKeepsakeOverrides } from './keepsake-product-overrides.mjs';
+import { padKeepsakeSharedPlaces } from './keepsake-list-minimums.mjs';
 import { realTripSummary } from './keepsake-style2.mjs';
 
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
@@ -71,7 +72,7 @@ export default async function handler(req, res) {
 
   const shareToken = shareTokenFromTrekPath(trekPath);
   const bindings = shareToken ? await listBindings(shareToken, process.env) : [];
-  const merged = applyProductKeepsakeOverrides(applyCapturedLogos(stripKeepsakeJunkMedia(mergeBindingsIntoShared(shared, bindings))));
+  const merged = applyCapturedLogos(applyProductKeepsakeOverrides(padKeepsakeSharedPlaces(stripKeepsakeJunkMedia(mergeBindingsIntoShared(shared, bindings)))));
   const overrides = merged.thingOverrides && typeof merged.thingOverrides === 'object' ? merged.thingOverrides : {};
   merged.thingOverrides = {
     ...overrides,

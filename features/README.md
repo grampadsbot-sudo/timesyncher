@@ -16,6 +16,7 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Without bots (do not wait on OpenClaw): `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910` — TG on staging lands on vacation-staging `/shared/{token}/` (`Ae()` Style two)
 - TG intake track + build cue: `features/tg-intake.md` / `bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cue-20260910`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
+- Cursor Project contract (five hard rules): `features/cursor-project-contract.md` / `bot-admin/messages/time-syncher/cursor-project-style-two-contract-20260916` — `AGENTS.md` + `.cursor/rules/style-two-keepsake-contract.mdc`
 
 A live control missing from `features/` means the map is incomplete — do not claim verified. This map is **not** a verify-PASS. Hold certify. Skillify jobs 18–22 in flight.
 
@@ -30,10 +31,10 @@ Layouts: **style-1 / Style one** and **style-2 / Style two** only. Export = clic
 
 Staging mirrors (product path; no third layout):
 
-- `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2`
-- `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2` → staging `Ae()` print (no travel 302). Travel `keepsake-style-2.pdf` is still `zu()`.
-
-Style one is `report/keepsake.pdf`.
+- Style two: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2` → `Ae(true)` + `Mc()` centered
+- Style two PDF: `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/style-2` → staging print (no travel 302). Travel `keepsake-style-2.pdf` is still `zu()`.
+- Style one: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=1` → `Ae()` + `op()` left itinerary
+- Style one PDF: `https://vacation-staging.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/keepsake.pdf` → staging `Ae()` print (no travel 302).
 
 ## Keepsakes Config defaults (CoS live dump — stamp)
 
@@ -69,6 +70,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Print menu | **PDFs** → menu title **Print / PDF** | `print-pdf.md` |
 | Daily PDF | Daily printout ▸ → Day N | `print-pdf.md` |
 | Keepsake layouts | Keepsakes ▸ → **Style one** / **Style two** | `layouts.md` |
+| Cursor Project fence | Five hard rules on disk for cloud agents (not a customer control) | `cursor-project-contract.md` |
 | Keepsake config | Keepsakes ▸ → **Admin ▸** | `keepsakes-config.md` |
 | List PDFs | Restaurants / Stores / The Rest / Complete List | `print-pdf.md` |
 | Order | **Order Keepsakes** | `order-keepsakes.md` |

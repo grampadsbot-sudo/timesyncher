@@ -33,14 +33,14 @@
         if (!/\/shared\/[^/]+\/journey\/?$/.test(path)) return;
         const params = new URLSearchParams(location.search);
         const style = params.get('style');
-        if (style !== '2' && style !== 'style-2') return;
+        if (style !== '2' && style !== 'style-2' && style !== '1' && style !== 'style-1') return;
         let changed = false;
         if (!params.get('printMode')) {
           params.set('printMode', 'report');
           changed = true;
         }
         if (!params.get('pdfReport')) {
-          params.set('pdfReport', 'keepsake-style-2');
+          params.set('pdfReport', (style === '1' || style === 'style-1') ? 'keepsake' : 'keepsake-style-2');
           changed = true;
         }
         if (changed) {

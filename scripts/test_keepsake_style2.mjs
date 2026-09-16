@@ -13,21 +13,25 @@ import {
   isJourneyBookReport,
   journeyBookGate,
   isProductStyleTwo,
+  isProductStyleOne,
   normalizeReportName,
   productPdfUrl,
   productStyleTwoViewUrl,
+  productStyleOneViewUrl,
   wantsStyleTwoView,
   PRODUCT_STYLE_TWO_REPORT,
+  PRODUCT_STYLE_ONE_REPORT,
   PRODUCT_TREK_PUBLIC,
   PRODUCT_SOT,
   PRODUCT_SOT_TWIN as HANDLER_SOT_TWIN,
   forwardedKeepsakeSearch,
   styleTwoLocationStaysOnStaging,
+  styleOneLocationStaysOnStaging,
 } from '../src/vacation/keepsake-style2-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padLiveTabRows } from '../src/vacation/keepsake-list-minimums.mjs';
+import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
@@ -275,6 +279,8 @@ assert.match(patch, /style2-day-opening/);
 assert.match(patch, /style2-timeline/);
 assert.match(patch, /flex-direction:column/);
 assert.match(patch, /print-media-card/);
+assert.match(patch, /padding-top:18mm/);
+assert.match(patch, /data-end-continuous/);
 assert.doesNotMatch(patch, /display:table!important/);
 assert.doesNotMatch(patch, /daily-left.*38%/);
 assert.match(patch, /serviceWorker/);
@@ -317,6 +323,13 @@ assert.equal(
   productStyleTwoViewUrl({ shareToken: 'las-vegas-vacation-3' }),
   'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
 );
+assert.equal(
+  productStyleOneViewUrl({ shareToken: 'las-vegas-vacation-3' }),
+  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=1&printMode=report&pdfReport=keepsake',
+);
+assert.equal(isProductStyleOne('keepsake'), true);
+assert.equal(isProductStyleOne('keepsake-style-2'), false);
+assert.equal(PRODUCT_STYLE_ONE_REPORT, 'keepsake');
 const styleTwoUrl = productPdfUrl({
   shareToken: 'las-vegas-vacation-3',
   report: 'style-2',
@@ -329,6 +342,13 @@ assert.equal(
 assert.doesNotMatch(styleTwoUrl, /travel\.timesyncher\.com/);
 assert.equal(
   styleTwoLocationStaysOnStaging(styleTwoUrl, 'https://vacation-staging.timesyncher.com'),
+  true,
+);
+assert.equal(
+  styleOneLocationStaysOnStaging(
+    productStyleOneViewUrl({ shareToken: 'las-vegas-vacation-3' }),
+    'https://vacation-staging.timesyncher.com',
+  ),
   true,
 );
 assert.equal(
@@ -367,6 +387,20 @@ for (const url of [
   assert.equal(res.headers['x-timesyncher-style2'], 'staging-ae', url);
   assert.match(res.headers.location, /vacation-staging\.timesyncher\.com\/shared\/las-vegas-vacation-3\/journey\?.*pdfReport=keepsake-style-2/);
   assert.doesNotMatch(res.headers.location, /travel\.timesyncher\.com/);
+}
+{
+  const res = mockRes();
+  await keepsakeStyle2Handler({
+    url: '/api/vacation-itinerary?keepsakePdf=1&shareToken=las-vegas-vacation-3&report=keepsake',
+    headers: {
+      host: 'vacation-staging.timesyncher.com',
+      'x-forwarded-proto': 'https',
+    },
+  }, res);
+  assert.equal(res.statusCode, 302);
+  assert.equal(res.headers['x-timesyncher-style1'], 'staging-ae');
+  assert.match(res.headers.location, /journey\?.*style=1.*pdfReport=keepsake/);
+  assert.doesNotMatch(res.headers.location, /keepsake-style-2|travel\.timesyncher\.com/);
 }
 assert.equal(
   patchStyleTwoToConfigRenderer(`if(h==="report"&&g){${STYLE2_USES_ZU}}`),
@@ -460,6 +494,7 @@ const aeFixture = [
   'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}',
   '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}',
   '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}',
+  '.page{padding:9mm}',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -472,7 +507,7 @@ assert.match(patchedAe, /neon file bind proof/);
 assert.match(patchedAe, /originalName/);
 assert.match(patchedAe, /\/api\/pdf\/qr\.svg\?data=\$\{encodeURIComponent\(So\(G\)\)\}&m=1/);
 assertStyleTwoPatchParses();
-assert.doesNotMatch(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
+assert.match(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
 assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
@@ -484,7 +519,16 @@ assert.match(patchedAe, /_d\(G&&G\.bound_media\)/);
 assert.match(patchedAe, /data-summary-src="thing"/);
 assert.match(patchedAe, /print-media-card/);
 assert.match(patchedAe, /data-print-ready="style2"/);
-assert.doesNotMatch(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
+assert.match(patchedAe, /\$\{op\(nr,\{includeMap:so\(nr\),brandHtml:Wi\}\)\}/);
+assert.match(patchedAe, /s2\?Qa\.map/);
+assert.match(patchedAe, /data-end-continuous="1"/);
+assert.match(patchedAe, /padding-top:18mm/);
+assert.match(patchedAe, /tsMapsOn=Qa\.some\(so\)/);
+assert.match(patchedAe, /data-category-map="1"/);
+assert.match(patchedAe, /xa\(Oo,720,280\)/);
+assert.match(patchedAe, /Ae\(!0\)/);
+assert.match(patchedAe, /Ae=\(s2\)=>/);
+assert.match(patchedAe, /padding:18mm 9mm 9mm 9mm/);
 assert.match(patchedAe, /data-list-summary="1"/);
 assert.match(patchedAe, /data-row-summary="1"/);
 assert.match(patchedAe, /data-story-summary="1"/);
@@ -514,6 +558,14 @@ assert.equal(padKeepsakeListNames('Restaurants', [
 ]).length, 11);
 assert.equal(padKeepsakeListNames('Stores', [{ name: 'Cosmopolitan shops' }]).length, 9);
 assert.equal(padKeepsakeListNames('Shows, Tours and the Rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
+const paddedShared = padKeepsakeSharedPlaces(liveOverride);
+const paddedBuckets = keepsakeListBuckets(paddedShared);
+assert.ok(paddedBuckets.Restaurants.length >= KEEPSAKE_LIST_MINIMUMS.Restaurants);
+assert.ok(paddedBuckets.Stores.length >= KEEPSAKE_LIST_MINIMUMS.Stores);
+assert.ok(paddedBuckets['Shows, Tours and the Rest'].length >= KEEPSAKE_LIST_MINIMUMS['Shows, Tours and the Rest']);
+assert.match(paddedShared.thingOverrides['place:941001'].summary, /Mon Ami Gabi|steak-frites|Vegas/i);
+assert.equal(paddedShared.thingOverrides['place:941001'].timeline, false);
+assert.ok(paddedShared.places.some((place) => place.__tsKeepsakeFill === 1 && place.lat));
 assert.equal(padLiveTabRows('restaurant', [
   { name: 'Carbone at Aria' },
   { name: 'Shake Shack near Cosmo/Aria' },
@@ -549,7 +601,8 @@ assert.match(patchedAe, /data-happy-hour=/);
 assert.match(patchedAe, /longDetails/);
 assert.match(patchedAe, /path:"\/shared\/:token\/journey"/);
 assert.match(patchedAe, /\?"report":null\)\|\|\(i\.includes\("printMode=daily"\)/);
-assert.match(patchedAe, /\?"keepsake-style-2":null\)/);
+assert.match(patchedAe, /\?"keepsake-style-2":\(/);
+assert.match(patchedAe, /\?"keepsake":null\)/);
 assert.match(patchedAe, /Co=G=>ha\(G\)\.longDetails\|\|\(tsPf\.find/);
 assert.match(patchedAe, /ha\(G\)\.happyHour\|\|zi\(G\)/);
 assert.match(patchedAe, /data-happy-hour="\$\{ha\(G\)\.happyHour\?"1":"0"\}"/);
@@ -597,7 +650,9 @@ assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
 assert.match(sharedApp, /serviceWorker/);
 assert.match(sharedApp, /unregister/);
 assert.match(sharedApp, /params\.set\('printMode', 'report'\)/);
-assert.match(sharedApp, /params\.set\('pdfReport', 'keepsake-style-2'\)/);
+assert.match(sharedApp, /pdfReport/);
+assert.match(sharedApp, /keepsake-style-2/);
+assert.match(sharedApp, /style === '1'/);
 assert.match(sharedApp, /\\\/shared\\\/\[\^\/\]\+\\\/journey\\\/\?\$/);
 assert.match(sharedApp, /x-vercel-protection-bypass/);
 assert.match(sharedApp, /Pause System Mitigations/);

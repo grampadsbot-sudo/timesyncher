@@ -15,6 +15,7 @@ export const PRODUCT_SOT = 'bot-admin/messages/time-syncher/style-2-journey-book
 export const PRODUCT_SOT_TWIN = 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910';
 
 export const PRODUCT_STYLE_TWO_REPORT = 'keepsake-style-2';
+export const PRODUCT_STYLE_ONE_REPORT = 'keepsake';
 
 function sendRedirect(res, location, extraHeaders = {}) {
   res.statusCode = 302;
@@ -28,6 +29,15 @@ export function styleTwoLocationStaysOnStaging(location = '', origin = '') {
   const value = String(location || '');
   if (!value || /travel\.timesyncher\.com/i.test(value)) return false;
   if (!/pdfReport=keepsake-style-2/i.test(value)) return false;
+  const host = String(origin || '').replace(/\/+$/, '');
+  if (host && value.startsWith(host)) return true;
+  return /vacation-staging\.timesyncher\.com/i.test(value);
+}
+
+export function styleOneLocationStaysOnStaging(location = '', origin = '') {
+  const value = String(location || '');
+  if (!value || /travel\.timesyncher\.com/i.test(value)) return false;
+  if (!/pdfReport=keepsake(?:&|$)/i.test(value) || /pdfReport=keepsake-style-2/i.test(value)) return false;
   const host = String(origin || '').replace(/\/+$/, '');
   if (host && value.startsWith(host)) return true;
   return /vacation-staging\.timesyncher\.com/i.test(value);
@@ -70,10 +80,27 @@ export function isProductStyleTwo(name = '') {
   return normalizeReportName(name) === PRODUCT_STYLE_TWO_REPORT;
 }
 
+export function isProductStyleOne(name = '') {
+  const cleaned = String(name || '').replace(/\.pdf$/i, '').trim();
+  return /^keepsake$/i.test(cleaned) && !isProductStyleTwo(cleaned);
+}
+
 export function wantsStyleTwoView({ report = '', view = '' } = {}) {
   return /^journey$/i.test(String(report || '').replace(/\.pdf$/i, ''))
     || view === '1'
     || view === 'true';
+}
+
+export function productStyleOneViewUrl({
+  shareToken,
+  origin = 'https://vacation-staging.timesyncher.com',
+  search = '',
+} = {}) {
+  const extra = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  extra.set('style', extra.get('style') || '1');
+  extra.set('printMode', 'report');
+  extra.set('pdfReport', PRODUCT_STYLE_ONE_REPORT);
+  return `${String(origin || '').replace(/\/+$/, '')}/shared/${encodeURIComponent(shareToken)}/journey?${extra.toString()}`;
 }
 
 export function productStyleTwoViewUrl({
@@ -104,6 +131,13 @@ export function productPdfUrl({
   const name = normalizeReportName(report);
   if (name === PRODUCT_STYLE_TWO_REPORT) {
     return productStyleTwoViewUrl({
+      shareToken,
+      origin: origin || 'https://vacation-staging.timesyncher.com',
+      search,
+    });
+  }
+  if (isProductStyleOne(name) || isProductStyleOne(report)) {
+    return productStyleOneViewUrl({
       shareToken,
       origin: origin || 'https://vacation-staging.timesyncher.com',
       search,
@@ -167,13 +201,15 @@ export default async function handler(req, res) {
   });
   const location = wantsView || isProductStyleTwo(reportName)
     ? productStyleTwoViewUrl({ shareToken, origin, search })
-    : productPdfUrl({
-      shareToken,
-      report: reportName,
-      pdfPath,
-      search,
-      origin,
-    });
+    : isProductStyleOne(reportName)
+      ? productStyleOneViewUrl({ shareToken, origin, search })
+      : productPdfUrl({
+        shareToken,
+        report: reportName,
+        pdfPath,
+        search,
+        origin,
+      });
 
   if (isProductStyleTwo(reportName) || wantsView) {
     if (!styleTwoLocationStaysOnStaging(location, origin)) {
@@ -183,6 +219,16 @@ export default async function handler(req, res) {
       });
     }
     return sendRedirect(res, location, { 'x-timesyncher-style2': 'staging-ae' });
+  }
+
+  if (isProductStyleOne(reportName)) {
+    if (!styleOneLocationStaysOnStaging(location, origin)) {
+      return sendJson(res, 500, {
+        ok: false,
+        error: 'Refusing Style one PDF redirect onto travel. Stay on staging Ae() left itinerary.',
+      });
+    }
+    return sendRedirect(res, location, { 'x-timesyncher-style1': 'staging-ae' });
   }
 
   return sendRedirect(res, location);

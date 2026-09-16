@@ -1,3 +1,9 @@
+/**
+ * QUARANTINED — not a live Style one / Style two export, print, or PDF template.
+ * Product print is TREK `Ae()` (Style one, `op()` left) and `Ae(true)` (Style two, `Mc()` centered)
+ * via `trek-style2-bundle.mjs`. A new parallel HTML book = FAIL (cursor-project-style-two-contract-20260916).
+ * This module remains only for `realTripSummary` on GET and fixture tests.
+ */
 import { timelineIcon, printThingIconHtml, isAirplaneGlyph, isVideoMediaUrl, timelineCategoryIcon } from './timeline-icons.mjs';
 import { applyCapturedLogos, captureThingLogo } from './thing-logo-capture.mjs';
 import { isPhotoBinding, isVideoBinding, toPublicBinding } from './thing-media-bind.mjs';

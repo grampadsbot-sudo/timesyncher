@@ -73,6 +73,9 @@
       '.style2-timeline{display:inline-grid!important;margin:0 auto!important;text-align:left}',
       '.style2-details{width:100%!important;text-align:left!important;display:block!important;clear:both!important}',
       '.style2-page .daily-grid,.style2-page .daily-left{display:none!important}',
+      '.page,.daily-page,.keepsake-report,.style2-page{padding-top:18mm!important;box-sizing:border-box}',
+      '[data-end-continuous="1"]{break-after:auto;page-break-after:auto}',
+      '[data-end-continuous="1"] .report-section{break-inside:avoid;page-break-inside:avoid;break-before:auto;page-break-before:auto}',
     ].join('');
   }
 
