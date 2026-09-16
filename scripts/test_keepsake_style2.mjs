@@ -263,6 +263,10 @@ assert.match(patch, /display:table!important/);
 assert.match(patch, /data-two-col/);
 assert.match(patch, /serviceWorker/);
 assert.match(patch, /unregister/);
+assert.match(patch, /happyHourDetails/);
+assert.match(patch, /XMLHttpRequest/);
+assert.match(patch, /fillTrip/);
+assert.match(patch, /aria\.mgmresorts\.com\/en\/restaurants\/happy-hour-at-aria/);
 assert.doesNotMatch(patch, /journey\?style=2/);
 assert.doesNotMatch(patch, /patchedOpen/);
 
@@ -420,6 +424,7 @@ const aeFixture = [
   'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
+  'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',
   'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
   '<div class="daily-grid">${js}<main class="daily-details">',
   'js=`<aside class="daily-left">',
@@ -489,6 +494,9 @@ assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant\)\.length===0/);
 assert.match(patchedAe, /tsFillOv=/);
 assert.match(patchedAe, /ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\)/);
+assert.match(patchedAe, /getSharedTrip:e=>Rt\.get/);
+assert.match(patchedAe, /G\.thingOverrides=ov;return G/);
+assert.doesNotMatch(patchedAe, /getSharedTrip:e=>Rt\.get\(`\/shared\/\$\{e\}`,\{params:\{_ts:Date\.now\(\)\},headers:\{"Cache-Control":"no-cache"\}\}\)\.then\(t=>t\.data\)/);
 assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
 assert.match(patchedAe, /Re=ha\(G\)\)==null\?void 0:Re\.timeline/);
 assert.match(patchedAe, /data-two-col-itinerary="1"/);

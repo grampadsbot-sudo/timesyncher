@@ -4,6 +4,87 @@
 
   const token = decodeURIComponent(sharedMatch[1]);
   const AIRPLANE = /\u2708\uFE0F?|\u2708|✈️|^plane$/i;
+  const PRODUCT_HH = [
+    {
+      match: /carbone/i,
+      happyHour: true,
+      happyHourDetails: 'Happy-hour field on: Carbone itself has no published happy-hour menu on ARIA official pages as of 2026-09-11 (opens 5pm daily; not listed among ARIA HH venues). Nearby ARIA happy hour: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm. Recheck https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html and https://aria.mgmresorts.com/en/restaurants/carbone.html before planning.',
+      longDetails: 'Aria special-night reservation: theatrical Italian-American, spicy rigatoni and tableside Caesar. Opens 5pm daily. No published Carbone happy-hour menu on ARIA official pages as of 2026-09-11 (nearby: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm). Recheck https://aria.mgmresorts.com/en/restaurants/carbone.html and https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html before planning.',
+      summary: 'Mario Carbone’s theatrical Italian-American at Aria — spicy rigatoni, tableside Caesar, and a special-night Strip reservation.',
+    },
+    {
+      match: /lotus of siam/i,
+      happyHour: true,
+      happyHourDetails: 'Flamingo Rd bar happy hour Mon–Fri 3–5pm: $7 small plates (crispy rice lettuce wraps, satay, tartare cups), $4 sake / $5 beer / $6 wine / $8 cocktails as of recent 2025–2026 listings. Recheck before using for planning — hours change. Sources: https://happyhourvegas.com/happy-hour/lotus-of-siam/ and Las Vegas Advisor Lotus happy-hour report.',
+    },
+  ];
+
+  function blank(value) {
+    return !String(value || '').trim();
+  }
+
+  function fillOverride(base, thing) {
+    const name = String((base && base.title) || (thing && (thing.name || thing.title)) || '');
+    const spec = PRODUCT_HH.find((row) => row.match.test(name));
+    if (!spec) return base || {};
+    const next = { ...(base || {}) };
+    if (blank(next.summary) && spec.summary) next.summary = spec.summary;
+    if (spec.happyHour === true || next.happyHour == null) next.happyHour = spec.happyHour;
+    if (blank(next.happyHourDetails) && spec.happyHourDetails) next.happyHourDetails = spec.happyHourDetails;
+    if (blank(next.longDetails) && spec.longDetails) next.longDetails = spec.longDetails;
+    return next;
+  }
+
+  function fillTrip(data) {
+    if (!data || typeof data !== 'object') return data;
+    const ov = { ...(data.thingOverrides && typeof data.thingOverrides === 'object' ? data.thingOverrides : {}) };
+    for (const place of (Array.isArray(data.places) ? data.places : [])) {
+      ov[`place:${place.id}`] = fillOverride(ov[`place:${place.id}`] || {}, place);
+    }
+    return { ...data, thingOverrides: ov };
+  }
+
+  function isSharedTripUrl(url) {
+    const value = String(url || '');
+    return /\/api\/shared\/[^/?#]+\/?(?:\?|$)/.test(value) && !/edit-access|thing-fields|overrides|audio-note/.test(value);
+  }
+
+  const origFetch = window.fetch;
+  if (typeof origFetch === 'function') {
+    window.fetch = async function (input, init) {
+      const res = await origFetch.apply(this, arguments);
+      const url = String(typeof input === 'string' ? input : input && input.url || '');
+      const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if (method !== 'GET' || !isSharedTripUrl(url)) return res;
+      try {
+        const data = await res.clone().json();
+        return new Response(JSON.stringify(fillTrip(data)), { status: res.status, statusText: res.statusText, headers: res.headers });
+      } catch {
+        return res;
+      }
+    };
+  }
+
+  const xhrOpen = XMLHttpRequest.prototype.open;
+  const xhrSend = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function (method, url) {
+    this.__tsSharedTrip = String(method || 'GET').toUpperCase() === 'GET' && isSharedTripUrl(url);
+    return xhrOpen.apply(this, arguments);
+  };
+  XMLHttpRequest.prototype.send = function () {
+    if (this.__tsSharedTrip) {
+      this.addEventListener('readystatechange', () => {
+        if (this.readyState !== 4 || this.status < 200 || this.status >= 300 || this.__tsMerged) return;
+        try {
+          const merged = JSON.stringify(fillTrip(JSON.parse(this.responseText)));
+          this.__tsMerged = merged;
+          Object.defineProperty(this, 'responseText', { configurable: true, get() { return merged; } });
+          Object.defineProperty(this, 'response', { configurable: true, get() { return merged; } });
+        } catch {}
+      });
+    }
+    return xhrSend.apply(this, arguments);
+  };
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((reg) => reg.unregister()));
