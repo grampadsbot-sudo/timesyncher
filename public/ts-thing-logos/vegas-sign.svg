@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Welcome to Fabulous Las Vegas Sign">
   <rect width="64" height="64" rx="16" fill="#7f1d1d"/>
-  <ellipse cx="32" cy="28" rx="22" ry="14" fill="#facc15"/><text x="32" y="32" text-anchor="middle" font-family="Georgia,serif" font-size="9" font-weight="700" fill="#7f1d1d">VEGAS</text>
+  <ellipse cx="32" cy="26" rx="20" ry="12" fill="#facc15"/>
+  <ellipse cx="32" cy="26" rx="14" ry="7" fill="#7f1d1d"/>
+  <rect x="30" y="36" width="4" height="16" fill="#facc15"/>
+  <path d="M24 52h16l-2 4H26z" fill="#facc15"/>
+  <circle cx="18" cy="26" r="2" fill="#fde68a"/><circle cx="46" cy="26" r="2" fill="#fde68a"/>
 </svg>

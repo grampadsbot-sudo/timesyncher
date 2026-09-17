@@ -637,6 +637,8 @@ assert.match(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
 assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
+assert.match(patchedAe, /img.tiny-logo,img.thing-logo/);
+assert.match(patchedAe, /data-logo-inlined/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);

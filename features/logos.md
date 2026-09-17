@@ -1,6 +1,6 @@
 # Thing logos (list + detail)
 
-Bound brand marks on every Thing row. Product path: `thingOverrides.logoUrl` via `applyCapturedLogos` / `captureThingLogo` (`src/vacation/thing-logo-capture.mjs`). Files live in `/ts-thing-logos/`.
+Bound brand marks on every Thing row. Product path: `thingOverrides.logoUrl` via `applyCapturedLogos` / `captureThingLogo` (`src/vacation/thing-logo-capture.mjs`). **Bytes** live as static public files in `public/ts-thing-logos/` (`/ts-thing-logos/*.svg`). Pointers are path strings on `thingOverrides.logoUrl` / `place.captured_logo_url` (GET overlay) — not Neon logo bytes, not Vercel Blob (those stores are story media).
 
 ## Live list rule
 

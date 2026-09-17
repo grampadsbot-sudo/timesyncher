@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Neon Museum">
   <rect width="64" height="64" rx="16" fill="#111827"/>
-  <text x="32" y="40" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#f472b6">NEON</text><circle cx="16" cy="18" r="3" fill="#22d3ee"/><circle cx="48" cy="18" r="3" fill="#facc15"/>
+  <path d="M16 44c0-14 8-24 16-24s16 10 16 24" fill="none" stroke="#f472b6" stroke-width="3"/>
+  <path d="M20 40c2-10 6-16 12-16s10 6 12 16" fill="none" stroke="#22d3ee" stroke-width="2"/>
+  <circle cx="16" cy="18" r="3" fill="#22d3ee"/><circle cx="48" cy="18" r="3" fill="#facc15"/>
+  <circle cx="32" cy="14" r="2" fill="#f472b6"/>
 </svg>
