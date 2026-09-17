@@ -550,6 +550,8 @@ const aeFixture = [
   'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()',
   'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn',
   'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")',
+  '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}',
+  '.style2-details{display:grid;grid-template-columns:1fr;gap:10px}',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -741,6 +743,19 @@ assert.match(patchedAe, /\.daily-grid \.map-box\{height:205px\}/);
 assert.match(patchedAe, /\[data-print-ready=style2\] \.style2-details/);
 assert.match(patchedAe, /\[data-end-continuous\] \.map-box/);
 assert.match(patchedAe, /c\.get\("style"\)==="2"\|\|c\.get\("style"\)==="style-2"\)\?"keepsake-style-2"/);
+assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-columns:1fr;gap:10px\}/);
+assert.match(patchedAe, /\.style2-page \.thing,\.style2-thing/);
+assert.match(patchedAe, /break-before:auto!important;break-after:auto!important;page-break-before:auto/);
+assert.doesNotMatch(patchedAe, /\[data-style2-centered-day\]\{display:block!important;break-after:page/);
+assert.match(patchedAe, /\[data-style2-centered-day\]\{display:block!important;break-after:auto/);
+assert.doesNotMatch(patchedAe, /style="break-inside:avoid;page-break-inside:avoid;width:auto;max-width:100%"/);
+assert.match(patchedAe, /style="width:auto;max-width:100%"/);
+assert.doesNotMatch(patchedAe, /\.style2-page\{display:flex;flex-direction:column;align-items:center/);
+assert.match(patchedAe, /\.style2-page\{display:block!important/);
+assert.match(patchedAe, /\.thing\{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb/);
+assert.match(patchedAe, /\.style2-details\{display:block!important;column-count:2/);
+assert.match(patchedAe, /column-fill:auto/);
+assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-columns:1fr;gap:10px\}/);
 
 const boundPhotos = [
   'carbone-plates-photo.jpg',
