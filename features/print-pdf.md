@@ -17,4 +17,6 @@ HTML preview: `printMode=report&pdfReport={name}` (daily: `printMode=daily&pdfDa
 
 Staging Style two PDF (`/api/pdf/shared/{token}/report/style-2`) 302s to the staging `Ae(true)` print preview. Style one PDF (`/api/pdf/shared/{token}/report/keepsake.pdf`) 302s to staging `Ae()` left itinerary. Neither 302s to travel.
 
+Last-page brand (Config logo ON): **TimeSyncher [hourglass] Vacation** in a row (`data-hourglass-between="1"`). Not hourglass stacked above the words.
+
 Saved-story Things print their bound `/ts-thing-media` blobs from product `Ae()` (`fo()` / `fs()` / `Ba()` / `So()`). Placeholders while those URLs 200 = FAIL. End-of-book category dumps are continuous (`data-end-continuous`) — no orphan header-only page before Restaurants.

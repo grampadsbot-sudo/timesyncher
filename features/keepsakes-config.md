@@ -31,7 +31,7 @@ From `index-BKun7ofk.js`:
 
 | CoS option | Live button / heading |
 | --- | --- |
-| logo | TimeSyncher Vacation logo |
+| logo | TimeSyncher Vacation logo (print last page: TimeSyncher [hourglass] Vacation, hourglass between words) |
 | Initial summary page | Initial summary page |
 | Event summary | Event summary |
 | Saved stories | Saved stories |
