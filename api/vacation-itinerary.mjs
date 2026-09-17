@@ -144,6 +144,12 @@ function groupBy(items, key) {
   }, {});
 }
 
+function isStagingHost(req) {
+  const host = String(req.headers.host || '').toLowerCase();
+  return host.includes('vacation-staging.timesyncher.com')
+    || host.includes('timesyncher-vacation-staging');
+}
+
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
@@ -256,6 +262,10 @@ export default async function handler(req, res) {
       limit 200
     `;
     const origin = `https://${req.headers.host || 'vacation.timesyncher.com'}`;
+
+    if (isStagingHost(req)) {
+      res.setHeader('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+    }
 
     return sendJson(res, 200, {
       ok: true,
