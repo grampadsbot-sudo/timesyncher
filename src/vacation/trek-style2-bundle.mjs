@@ -50,10 +50,19 @@ const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-lo
 const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
-const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${rr(_i.item)?`<div data-row-summary="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
+const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&rr(_i.item)?`<div data-row-summary="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
 
 const SU_TITLE_NEEDLE = '<div class="timeline-title">${an(Bs(Zn.title))}</div>';
-const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${rr(Zn.item)?`<div data-row-summary="1" data-summary-src="thing" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
+const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))&&!/^Travel (to|from)\\b/i.test(String(Zn.title||""))&&rr(Zn.item)?`<div data-row-summary="1" data-summary-src="thing" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
+
+const DAY_CARD_OVERFLOW_NEEDLE = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
+const DAY_CARD_OVERFLOW_PATCH = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{"data-ts-day-timeline":"1",style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"visible",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
+
+const NR_POPUP_WRAP_NEEDLE = 'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58}';
+const NR_POPUP_WRAP_PATCH = 'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58,overflow:"visible"}';
+
+const NR_POPUP_NEEDLE = 'js&&n.jsxs("div",{style:{position:"absolute",zIndex:9e3,left:zt?-8:0,bottom:zt?48:66,width:248,background:"white",border:"1px solid #d1d5db",borderRadius:14,boxShadow:"0 18px 45px rgba(15,23,42,0.22)",padding:10},children:[';
+const NR_POPUP_PATCH = 'js&&n.jsxs("div",{"data-ts-pic-popup":"1",style:{position:"absolute",zIndex:9e3,left:zt?-8:0,bottom:zt?48:66,width:248,background:"white",border:"1px solid #d1d5db",borderRadius:14,boxShadow:"0 18px 45px rgba(15,23,42,0.22)",padding:10,overflow:"visible"},children:[n.jsx("span",{"aria-hidden":"true","data-ts-pic-popup-tip":"1",style:{position:"absolute",left:18,bottom:-7,width:14,height:14,background:"white",borderRight:"1px solid #d1d5db",borderBottom:"1px solid #d1d5db",transform:"rotate(45deg)",zIndex:0,boxSizing:"content-box",pointerEvents:"none"}}),';
 
 const DE_AE_NEEDLE = 'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)';
 const DE_AE_PATCH = 'Ae=(s2)=>{const G=de(!1).filter(([,nr])=>nr.length),Gs=de(!0).filter(([,nr])=>nr.length)';
@@ -293,6 +302,15 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(SU_TITLE_NEEDLE)) {
     patched = patched.replace(SU_TITLE_NEEDLE, SU_TITLE_PATCH);
   }
+  if (patched.includes(DAY_CARD_OVERFLOW_NEEDLE)) {
+    patched = patched.replace(DAY_CARD_OVERFLOW_NEEDLE, DAY_CARD_OVERFLOW_PATCH);
+  }
+  if (patched.includes(NR_POPUP_WRAP_NEEDLE)) {
+    patched = patched.replace(NR_POPUP_WRAP_NEEDLE, NR_POPUP_WRAP_PATCH);
+  }
+  if (patched.includes(NR_POPUP_NEEDLE)) {
+    patched = patched.replace(NR_POPUP_NEEDLE, NR_POPUP_PATCH);
+  }
   if (patched.includes(DE_AE_NEEDLE)) {
     patched = patched.replace(DE_AE_NEEDLE, DE_AE_PATCH);
   }
@@ -512,8 +530,14 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(W_LIST_PATCH) || !js.includes('data-list-summary="1"')) {
     throw new Error('Style two list-row summary patch did not apply.');
   }
-  if (!js.includes(OP_TITLE_PATCH) || !js.includes(SU_TITLE_PATCH) || !js.includes('data-row-summary="1"')) {
-    throw new Error('Style two itinerary-row summary must use stored rr() on Mc() and op() titles.');
+  if (!js.includes(OP_TITLE_PATCH) || !js.includes(SU_TITLE_PATCH) || !js.includes('data-row-summary="1"') || !js.includes('data-summary-thing-only="1"')) {
+    throw new Error('Style two itinerary-row summary must use stored rr() on Thing titles only.');
+  }
+  if (!js.includes('!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))') || !js.includes('!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))')) {
+    throw new Error('Itinerary Thing summary must skip travel-to / travel-from / hotel chrome rows.');
+  }
+  if (!js.includes(DAY_CARD_OVERFLOW_PATCH) || js.includes(DAY_CARD_OVERFLOW_NEEDLE) || !js.includes('"data-ts-pic-popup-tip":"1"') || !js.includes(NR_POPUP_PATCH) || js.includes(NR_POPUP_NEEDLE)) {
+    throw new Error('Day timeline photo popup tip must stay unclipped (overflow visible + caret).');
   }
   if (!js.includes('data-story-summary="1"') || !js.includes('data-story-body="1"')) {
     throw new Error('Style two story summary-before-story patch did not apply.');

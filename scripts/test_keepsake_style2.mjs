@@ -489,6 +489,9 @@ const aeFixture = [
   'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}',
   'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`',
   '<div class="timeline-title">${an(Bs(Zn.title))}</div>',
+  'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-faint, #e5e7eb)"},children:[',
+  'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58}',
+  'js&&n.jsxs("div",{style:{position:"absolute",zIndex:9e3,left:zt?-8:0,bottom:zt?48:66,width:248,background:"white",border:"1px solid #d1d5db",borderRadius:14,boxShadow:"0 18px 45px rgba(15,23,42,0.22)",padding:10},children:[',
   '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=',
   ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
   'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
@@ -591,6 +594,14 @@ assert.match(patchedAe, /padding:18mm 9mm 12mm 9mm/);
 assert.match(patchedAe, /@page\{size:Letter;margin-top:0/);
 assert.match(patchedAe, /data-list-summary="1"/);
 assert.match(patchedAe, /data-row-summary="1"/);
+assert.match(patchedAe, /data-summary-thing-only="1"/);
+assert.match(patchedAe, /!\/\^\(travel\|travel-to-thing\|flight\|transport\|hotel-wake\|hotel-event\|hotel-sleep\|hotel-checkout\)\$\/i\.test\(String\(_i\.type\|\|""\)\)/);
+assert.match(patchedAe, /!\/\^\(travel\|travel-to-thing\|flight\|transport\|hotel-wake\|hotel-event\|hotel-sleep\|hotel-checkout\)\$\/i\.test\(String\(Zn\.type\|\|""\)\)/);
+assert.match(patchedAe, /"data-ts-pic-popup-tip":"1"/);
+assert.match(patchedAe, /"data-ts-day-timeline":"1"/);
+assert.match(patchedAe, /"data-ts-pic-popup":"1"/);
+assert.match(patchedAe, /boxSizing:"content-box"/);
+assert.doesNotMatch(patchedAe, /Ki&&\(\(\)=>\{const G=Ki,Re=Ci\(G\),zt=li\(G\);return n\.jsxs\("div",\{style:\{background:"var\(--bg-card, white\)",borderRadius:14,overflow:"hidden"/);
 assert.match(patchedAe, /data-story-summary="1"/);
 assert.match(patchedAe, /data-story-body="1"/);
 assert.match(patchedAe, /data-daily-thing-media="1"/);
@@ -828,6 +839,9 @@ assert.match(sharedApp, /Pause System Mitigations/);
 assert.match(sharedApp, /data-ae-print/);
 assert.match(sharedApp, /Record voice note/);
 assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(shareToken\)\}\/audio-note/);
+assert.match(sharedApp, /data-ts-pic-popup-tip/);
+assert.match(sharedApp, /leaflet-popup-tip-container/);
+assert.match(sharedApp, /box-sizing: content-box !important/);
 
 const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
 assert.match(trek, /_t==="flight"\?"✈️"/);

@@ -63,6 +63,22 @@
         max-height: 22px !important;
         object-fit: contain !important;
       }
+      /* SITE: day timeline photo speech-bubble pointer must not clip */
+      [data-ts-day-timeline="1"],
+      [data-ts-pic-popup="1"] {
+        overflow: visible !important;
+      }
+      [data-ts-pic-popup-tip="1"] {
+        box-sizing: content-box !important;
+        overflow: visible !important;
+      }
+      .leaflet-popup-tip,
+      .mapboxgl-popup-tip {
+        box-sizing: content-box !important;
+      }
+      .leaflet-popup-tip-container {
+        overflow: visible !important;
+      }
       .ts-shared-audio-button {
         width: 30px;
         height: 30px;
