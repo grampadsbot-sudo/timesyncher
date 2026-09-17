@@ -85,6 +85,7 @@ assert.match(migration, /telegram_collaborator/);
 
 const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /create_web_editor_invite/);
+assert.match(api, /create_owner_website_session/);
 assert.match(api, /telegram_launch/);
 assert.match(api, /isAllowedVacationWebsiteUrl/);
 assert.match(api, /assert_can_edit/);

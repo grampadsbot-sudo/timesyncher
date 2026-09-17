@@ -1,4 +1,5 @@
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../../scripts/vacation-public-research-worker.mjs';
+import { captureThingLogo } from './thing-logo-capture.mjs';
 
 /** Print end-lists only. Do not invent other mins. */
 export const KEEPSAKE_LIST_MINIMUMS = {
@@ -101,6 +102,7 @@ export function padLiveTabRows(kind, existingRows = []) {
     lat: 36.1147,
     lng: -115.1729,
     address: 'Las Vegas',
+    logoUrl: captureThingLogo({ name }, { title: name, category: kind === 'rest' ? 'event' : kind }),
   }));
 }
 
@@ -222,6 +224,7 @@ export function padKeepsakeSharedPlaces(shared = {}) {
         address: 'Las Vegas',
         notes: summary,
         description: summary,
+        logoUrl: captureThingLogo({ name }, { title: name, category: meta.kind }),
       });
       next.thingOverrides[`place:${id}`] = {
         ...(next.thingOverrides[`place:${id}`] || {}),
@@ -232,6 +235,7 @@ export function padKeepsakeSharedPlaces(shared = {}) {
         lat,
         lng,
         timeline: false,
+        logoUrl: captureThingLogo({ name }, { title: name, category: meta.kind }),
       };
     });
   }

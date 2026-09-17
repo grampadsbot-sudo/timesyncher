@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Red Rock Canyon">
+  <rect width="64" height="64" rx="16" fill="#9a3412"/>
+  <path d="M8 48L22 22l10 14 8-10 16 22H8z" fill="#fdba74"/><path d="M8 48h48v4H8z" fill="#7c2d12"/>
+</svg>

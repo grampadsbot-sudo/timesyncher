@@ -261,6 +261,76 @@ export async function createTelegramWebAccessSession(db, {
   };
 }
 
+export async function findOwnerTripByShareToken(db, shareToken) {
+  const token = clean(shareToken, 240);
+  if (!token) return null;
+  const rows = await db`
+    select
+      trips.*,
+      customers.id as owner_customer_id,
+      customers.email as owner_email,
+      customers.display_name as owner_display_name
+    from trips
+    join customers on customers.id = trips.customer_id
+    where trips.metadata->>'sharedToken' = ${token}
+       or trips.metadata->>'shareToken' = ${token}
+       or trips.metadata->>'publicSlug' = ${token}
+       or trips.metadata->>'source_token' = ${token}
+       or trips.metadata->>'slug' = ${token}
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+export async function createOwnerWebsiteSessionByShareToken(db, {
+  shareToken,
+  email = '',
+  displayName = '',
+  env = process.env,
+}) {
+  const token = clean(shareToken, 240);
+  if (!token) throw Object.assign(new Error('shareToken is required.'), { statusCode: 400 });
+  const trip = await findOwnerTripByShareToken(db, token);
+  if (!trip) throw Object.assign(new Error('Vacation not found for that public share.'), { statusCode: 404 });
+  const ownerEmail = clean(trip.owner_email, 180).toLowerCase();
+  const requested = clean(email, 180).toLowerCase();
+  const publicUrl = sharedTripWebsiteUrl(token, env) || publicTripUrl(trip, env);
+  const ownerId = clean(trip.customer_id || trip.owner_customer_id, 80);
+  if (!requested || requested === ownerEmail) {
+    return createTelegramWebAccessSession(db, {
+      ownerCustomerId: ownerId,
+      tripId: trip.id,
+      email: ownerEmail || requested,
+      displayName: clean(displayName, 180) || clean(trip.owner_display_name, 180) || 'Owner',
+      role: 'owner',
+      metadata: {
+        source: 'cursor_owner_website_session',
+        shareToken: token,
+        publicUrl,
+      },
+      env,
+    });
+  }
+  const invite = await createWebEditorInvite(db, {
+    ownerCustomerId: ownerId,
+    tripId: trip.id,
+    email: requested,
+    displayName,
+    role: 'web_editor',
+    metadata: {
+      source: 'cursor_owner_website_session',
+      shareToken: token,
+      publicUrl,
+    },
+    env,
+  });
+  return {
+    ...invite,
+    sessionToken: invite.token,
+    launchUrl: invite.acceptUrl,
+  };
+}
+
 export async function loadWebAccessGrantByInviteToken(db, token, env = process.env) {
   if (!token) return null;
   await ensureVacationWebAccessSchema(db);

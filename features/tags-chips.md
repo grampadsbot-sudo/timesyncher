@@ -18,4 +18,10 @@ Live chip array `gt`:
 
 Grocery / Market, Pharmacy / Essentials, Convenience / Snacks, Juice / Smoothie, Coffee / Cafe, Bakery / Dessert, Health / Wellness, Organic / Natural Foods, Prepared Foods, Wine / Spirits, High-end Retail, Department Store, Boutique, Jewelry, Watches, Fashion / Apparel, Shoes, Beauty / Skincare, Gifts / Souvenirs, Books / Stationery, Home / Design, Electronics, Kids / Toys, Museum Shop, Luxury Mall / Shopping Center, Local NYC Specialty.
 
-These are product TREK arrays (NYC-oriented copy is existing code). Not Keepsakes Config toggles. List-tab filters remain **All areas** / **All types** (`filters.md`).
+These are product TREK arrays (NYC-oriented copy is existing code). Not Keepsakes Config toggles. Do not invent chips outside `ot` / `gt` (`timesyncher-travel-restaurant-tagger` / `timesyncher-travel-store-tagger`).
+
+## List-tab chips (blast radius)
+
+Restaurants tab chips `ci` and Stores tab chips `$n` harvest **only tags present on real Things in that tab’s current area-filtered list**. Exclude `__tsLiveFill` extras (they have no tags). Do not harvest from the unfiltered full `Oc` / `Fs` catalogs. Selected-tag filters (`Te` / `Je`) do not shrink the chip inventory.
+
+List-tab filters also use **All areas** (`filters.md`).

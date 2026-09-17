@@ -79,10 +79,11 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Flag tabs | Packing when `share_packing`; Chat when `share_collab` | `packing.md`, `collaborators.md` |
 | Day view | Vacation Day View, Day 1/2/3, timeline, day map copy | `day-view.md` |
 | Map | “Only things tagged for this day + Timeline appear on the map below.” | `maps.md` |
-| Filters | All areas / All types | `filters.md` |
+| Filters | All areas / All types (Rest types = types on Things in that list) | `filters.md` |
 | Empty states | No restaurants/stores match those tags; no timeline-tagged things | `empty-states.md` |
 | Detail | Detail page, Detail name, Days, Timeline, Status, Type, Area, Start, Duration, Price, Estimated travel time, Summary, Story, recap checkbox, Website, Details | `detail-page.md` |
-| Tags / chips | Restaurant tags / chips; Store tags / chips (live `ot` / `gt`) | `tags-chips.md` |
+| Tags / chips | Restaurant tags / chips; Store tags / chips (live `ot` / `gt`); list chips = tags on Things in that list | `tags-chips.md` |
+| Thing logos | Bound `/ts-thing-logos/` marks on list rows; no Admit One placeholder; airplane flights-only | `logos.md` |
 | Status | considering / preferred / reservation / booked / eliminated | `status.md` |
 | Happy hour | Happy hour + Happy hour details | `happy-hour.md` |
 | Hotel fields | Stay days, Check-in/out date/time | `hotel-stay-fields.md` |

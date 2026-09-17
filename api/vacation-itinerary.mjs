@@ -4,6 +4,7 @@ import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import {
   acceptWebAccessInvite,
+  createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
   isAllowedVacationWebsiteUrl,
   loadWebAccessGrantBySessionToken,
@@ -100,6 +101,24 @@ async function handleWebAccess(req, res, db, url) {
         status: invite.grant.status,
         acceptUrl: invite.acceptUrl,
         email,
+      });
+    }
+
+    if (body.action === 'create_owner_website_session') {
+      requireIntakeAuth(req, process.env);
+      const session = await createOwnerWebsiteSessionByShareToken(db, {
+        shareToken: cleanText(body.shareToken || body.publicSlug || body.token, 240),
+        email: cleanText(body.email, 180),
+        displayName: cleanText(body.displayName || body.name, 180),
+        env: process.env,
+      });
+      return sendJson(res, 200, {
+        ok: true,
+        grantId: session.grant.id,
+        status: session.grant.status,
+        role: session.grant.role,
+        publicUrl: session.grant.public_url,
+        launchUrl: session.launchUrl || session.acceptUrl,
       });
     }
 

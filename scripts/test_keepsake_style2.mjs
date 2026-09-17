@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
-import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, NAMED_THING_LOGOS, brandLogoPath, isPlaceholderLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mjs';
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
 import { qrModules, qrSvg } from '../src/vacation/qr-svg.mjs';
@@ -31,7 +31,7 @@ import {
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows } from '../src/vacation/keepsake-list-minimums.mjs';
+import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
@@ -92,6 +92,42 @@ assert.equal(logos.thingOverrides['place:8872'].logoUrl, '/ts-thing-logos/carbon
 assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
+
+const catalogNames = [
+  ...Object.keys(NAMED_THING_LOGOS),
+  ...LIVE_TAB_FILL.restaurant,
+  ...LIVE_TAB_FILL.store,
+  ...LIVE_TAB_FILL.rest,
+  ...KEEPSAKE_LIST_FILL.Restaurants,
+  ...KEEPSAKE_LIST_FILL.Stores,
+  ...KEEPSAKE_LIST_FILL['Shows, Tours and the Rest'],
+  'Bellagio Fountains',
+  'High Roller',
+  'The Sphere',
+  'Fremont Street Experience',
+  'Neon Museum',
+  'Atomic Museum',
+];
+for (const name of new Set(catalogNames)) {
+  const path = brandLogoPath({ name }, { title: name });
+  assert.equal(isPlaceholderLogoUrl(path), false, `real logo for ${name}`);
+  assert.match(path, /^\/ts-thing-logos\/.+\.svg$/, `bound brand path for ${name}`);
+  if (!/\bsfo\b|\blas to sfo\b|boarding pass/i.test(name)) {
+    assert.notEqual(path, '/ts-thing-logos/flight.svg', `no airplane fallback for ${name}`);
+  }
+}
+assert.equal(brandLogoPath({ name: 'Bellagio Fountains' }, { title: 'Bellagio Fountains' }), '/ts-thing-logos/bellagio-fountains.svg');
+assert.equal(brandLogoPath({ name: 'Bellagio Shops' }, { title: 'Bellagio Shops' }), '/ts-thing-logos/bellagio-shops.svg');
+assert.equal(captureThingLogo({ name: 'High Roller' }, { title: 'High Roller' }), '/ts-thing-logos/high-roller.svg');
+assert.equal(captureThingLogo({ name: 'Las Vegas transport and car research queue' }, { title: 'Las Vegas transport and car research queue' }), '/ts-thing-logos/car.svg');
+assert.doesNotMatch(captureThingLogo({ name: 'High Roller' }, {}), /data:image\/svg/);
+
+const paddedLogos = applyCapturedLogos(padKeepsakeSharedPlaces(shared));
+for (const place of paddedLogos.places) {
+  const logo = paddedLogos.thingOverrides[`place:${place.id}`]?.logoUrl || place.logoUrl;
+  assert.equal(isPlaceholderLogoUrl(logo), false, `padded ${place.name} has a real logo`);
+  assert.doesNotMatch(String(logo), /data:image\/svg\+xml/, `padded ${place.name} is not a letter-monogram fallback`);
+}
 
 const summary = realTripSummary(shared);
 assert.equal(BOILERPLATE_RE.test(summary), false);
@@ -495,7 +531,9 @@ const aeFixture = [
   '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=',
   ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
   'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
-  'Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
+  '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
+  'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)',
+  '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}',
   'It=G=>Mn(ha(G).category??Fn(G))',
   'Qn.map(G=>Oe(G)),Qn.length===0',
   'Gn.map(G=>Oe(G)),Gn.length===0',
@@ -558,6 +596,10 @@ const aeFixture = [
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
+assert.match(patchedAe, /tsListThings=\(rows\)/);
+assert.match(patchedAe, /logoUrl:tsLogo\(name\)/);
+assert.match(patchedAe, /Os\.filter\(G=>tsListThings\(Cc\)/);
+assert.match(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);
