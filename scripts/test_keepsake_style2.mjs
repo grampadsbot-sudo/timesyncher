@@ -753,8 +753,13 @@ assert.match(patchedAe, /style="width:auto;max-width:100%"/);
 assert.doesNotMatch(patchedAe, /\.style2-page\{display:flex;flex-direction:column;align-items:center/);
 assert.match(patchedAe, /\.style2-page\{display:block!important/);
 assert.match(patchedAe, /\.thing\{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb/);
-assert.match(patchedAe, /\.style2-details\{display:block!important;column-count:2/);
-assert.match(patchedAe, /column-fill:auto/);
+assert.match(patchedAe, /\.style2-details\{display:grid!important;grid-template-columns:1fr 1fr!important/);
+assert.doesNotMatch(patchedAe, /column-count:2/);
+assert.doesNotMatch(patchedAe, /overflow-wrap:anywhere/);
+assert.match(patchedAe, /overflow-wrap:break-word/);
+assert.match(patchedAe, /<div class="style2-thing-meta">\$\{an\(Mo\)\}<\/div><div class="thing-head">/);
+assert.doesNotMatch(patchedAe, /<div class="thing-head"><div class="style2-thing-meta">/);
+assert.match(patchedAe, /grid-template-columns:32px minmax\(0,1fr\)/);
 assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-columns:1fr;gap:10px\}/);
 
 const boundPhotos = [
