@@ -231,18 +231,26 @@
       }));
     }
 
-    if (isPrintReport()) {
-      document.title = String(document.title || '')
+    function vacationNameTitle() {
+      return String(document.title || '')
         .replace(/^TimeSyncher Vacation\s*[—–-]\s*/gi, '')
         .replace(/\s+(Summary|Keepsake Style 2)$/i, '')
         .trim() || 'Vacation';
+    }
+
+    if (isPrintReport()) {
+      document.title = vacationNameTitle();
       injectStoriesPrintCss();
       stripPrintJunkMedia();
       inlinePrintVideoQr().catch(() => {});
       new MutationObserver(() => {
+        const next = vacationNameTitle();
+        if (document.title !== next) document.title = next;
+        document.querySelectorAll('.print-brand,.pdf-page-counter,.page-count,.style2-cover').forEach((node) => node.remove());
+        document.querySelectorAll('[data-end-continuous] .map-box,[data-post-itinerary] .map-box').forEach((node) => node.remove());
         stripPrintJunkMedia();
         inlinePrintVideoQr().catch(() => {});
-      }).observe(document.body, { childList: true, subtree: true });
+      }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
       return;
     }
     apply(lookup);

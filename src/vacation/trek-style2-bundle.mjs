@@ -59,7 +59,7 @@ const DE_AE_NEEDLE = 'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)';
 const DE_AE_PATCH = 'Ae=(s2)=>{const G=de(!1).filter(([,nr])=>nr.length),Gs=de(!0).filter(([,nr])=>nr.length)';
 
 const FO_NEEDLE = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}';
-const FO_PATCH = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));const bd=[..._d(G&&G.bound_media),..._d((ha(G)||{}).bound_media)];const rows=bd.length?bd:[..._d(G&&G.photos),...Rn,...Hs(G),...Hs(ha(G))];return Fo(rows.map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean).filter(Oo=>{const src=String(Oo.url||"");if(/^data:image\\//i.test(src))return src.length>12000;const blob=[Oo.filename,Oo.originalName,Oo.caption,src.slice(0,240),String(Oo.thumbnailUrl||"").slice(0,240),Oo.id].join(" ");return!/placeholder|1024.?1024|default[-_]?thumb|bind[- ]?proof|neon file bind proof/i.test(blob)}))}';
+const FO_PATCH = 'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));const bd=[..._d(G&&G.bound_media),..._d(G&&G.item&&G.item.bound_media),..._d((ha(G)||{}).bound_media)];const rows=bd.length?bd:[..._d(G&&G.photos),...Rn,...Hs(G),...Hs(ha(G))];return Fo(rows.map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean).filter(Oo=>{const src=String(Oo.url||"");if(/^data:image\\//i.test(src))return src.length>12000;const blob=[Oo.filename,Oo.originalName,Oo.caption,src.slice(0,240),String(Oo.thumbnailUrl||"").slice(0,240),Oo.id].join(" ");return!/placeholder|1024.?1024|default[-_]?thumb|bind[- ]?proof|neon file bind proof/i.test(blob)}))}';
 
 const ND_NEEDLE = 'nd=G=>Fo(li(G))';
 const ND_PATCH = 'nd=G=>{const zt=`day:${G.id}`,ua=Zl(zt),Rn=(typeof Ci=="function"?Ci(G):[]).flatMap(Oo=>_d(Oo&&Oo.item&&Oo.item.bound_media));return Rn.length?Fo(Rn.map((Oo,sr)=>rp(Oo,sr,zt,ua)).filter(Boolean)):Fo(li(G))}';
@@ -68,7 +68,7 @@ const LOGO_LIST_CSS_NEEDLE = '.logo-list{columns:2;column-gap:18px;margin:0 0 16
 const LOGO_LIST_CSS_PATCH = '.logo-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:0 0 16px;padding:0;list-style:none}';
 
 const STYLE2_OPENING_NEEDLE = '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}';
-const STYLE2_OPENING_PATCH = '.style2-page{display:flex;flex-direction:column;align-items:center;text-align:center}.style2-page h1{font-size:20px;margin-bottom:10px;width:100%}.style2-day-opening{display:block;text-align:center;margin:0 auto 16px;max-width:560px;width:100%;float:none}';
+const STYLE2_OPENING_PATCH = '.style2-page{display:flex;flex-direction:column;align-items:center;text-align:center;height:auto!important;min-height:0!important;overflow:visible!important}.style2-page h1{font-size:20px;margin-bottom:10px;width:100%}.style2-day-opening{display:block;text-align:center;margin:0 auto 16px;max-width:560px;width:100%;float:none}.style2-page .style2-details,[data-print-ready=style2] .style2-details,[data-print-ready=style2] [data-day-things-flow="1"]{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px 12px!important;width:100%!important;text-align:left!important;align-items:start!important}';
 
 const DAILY_THING_NEEDLE = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=';
 const DAILY_THING_PATCH = '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}${fo(G).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).length?`<div class="style2-thing-media" data-daily-thing-media="1">${fo(G).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).map(Ba).join("")}</div>`:""}</article>`},ws=';
@@ -90,7 +90,7 @@ const STYLE2_HEIGHT_NEEDLE = '.style2-page{height:257mm;min-height:257mm;overflo
 const STYLE2_HEIGHT_PATCH = '.style2-page{height:auto!important;min-height:0!important;overflow:visible!important}';
 
 const PRINT_LOCK_NEEDLE = '.daily-page{height:257mm;min-height:257mm;overflow:hidden}.daily-grid{grid-template-columns:36% minmax(0,1fr);gap:12px}.daily-left{position:static}.map-box{height:205px}.daily-details{grid-template-columns:1fr;gap:8px}';
-const PRINT_LOCK_PATCH = '.daily-page{height:auto!important;min-height:0!important;overflow:visible!important}.daily-grid{grid-template-columns:38% minmax(0,1fr);gap:12px}.daily-left{position:static}.map-box{height:205px}.daily-details,[data-day-things-flow="1"]{grid-template-columns:1fr 1fr!important;gap:8px 12px!important;display:grid!important}';
+const PRINT_LOCK_PATCH = '.daily-page{height:auto!important;min-height:0!important;overflow:visible!important}.daily-grid{grid-template-columns:38% minmax(0,1fr);gap:12px}.daily-left{position:static}.daily-grid .map-box{height:205px}[data-day-map-page="1"] .map-box,[data-day-map-fill="1"],[data-style2-map] .map-box{height:auto!important;min-height:220mm!important;width:100%!important}.daily-details,[data-day-things-flow="1"]{grid-template-columns:1fr 1fr!important;gap:8px 12px!important;display:grid!important}';
 
 const THING_META_CSS_NEEDLE = '.style2-thing{position:relative;margin:0 0 10px;padding:12px 124px 12px 12px}.style2-thing h3{font-size:15px}.style2-thing-meta{position:absolute;top:12px;right:12px;width:100px;text-align:right;font-size:9.5px;line-height:1.35;font-weight:900;color:#475569}';
 const THING_META_CSS_PATCH = '.style2-thing{position:relative;margin:0 0 10px;padding:12px;display:flex;flex-direction:column;gap:4px}.style2-thing h3{font-size:15px;padding-right:0;max-width:100%;overflow-wrap:anywhere}.style2-thing-meta{position:static;top:auto;right:auto;width:auto;max-width:100%;text-align:left;font-size:9.5px;line-height:1.35;font-weight:900;color:#475569;margin:0 0 2px}';
@@ -109,6 +109,37 @@ const SE_TITLE_PATCH = 'zt=(la.title||"Vacation").replace(/^TimeSyncher Vacation
 
 const XA_DAY_NEEDLE = 'Hl=xa(Is,720,850)';
 const XA_DAY_PATCH = 'Hl=xa(Is,1100,1500)';
+
+
+const CR_NEEDLE = 'cr=\'<div class="print-brand"><span>TimeSyncher</span><img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="TimeSyncher" /><span>Vacation</span></div>\',Wi=Pr.logo?cr:""';
+const CR_PATCH = 'cr="",Wi=Pr.logo?"1":""';
+
+const ZU_FN_NEEDLE = 'zu=()=>{const G=Pr.summary?`<div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(zt=>`<p>${an(zt)}</p>`).join("")}</div>`:"";return`<section class="page keepsake-report style2-cover">${Wi}<h1>${an(la.title||"Vacation")} Keepsake</h1><p class="muted">Style two</p>${G}</section>`+Qa.map(zt=>Mc(zt)).join("")}';
+const ZU_FN_PATCH = 'zu=()=>Ae(!0)';
+
+const COUNTER_CSS_NEEDLE = '.pdf-page-counter{position:absolute;right:9mm;bottom:5mm;font-size:8px;color:#64748b;font-weight:600}';
+const COUNTER_CSS_PATCH = '.pdf-page-counter,.page-count,.muted.page-count{display:none!important;position:static!important;right:auto!important;bottom:auto!important}';
+
+const PRINT_BRAND_CSS_NEEDLE = '.print-brand{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}';
+const PRINT_BRAND_CSS_PATCH = '.print-brand,.print-brand .ts-logo{display:none!important}';
+
+const PDF_FINAL_LOGO_NEEDLE = '.pdf-final-logo{position:absolute;left:50%;bottom:5mm;transform:translateX(-50%);width:24px;height:24px;object-fit:contain}';
+const PDF_FINAL_LOGO_PATCH = '.pdf-final-logo{display:none!important}';
+
+const APAGE_ZERO_NEEDLE = '@page{size:Letter;margin:0}';
+const APAGE_ZERO_PATCH = '@page{size:Letter;margin-top:0;margin-bottom:16mm;margin-left:9mm;margin-right:9mm;@top-left{content:none}@top-right{content:none}@top-center{content:none}@bottom-left{content:none}@bottom-right{content:none}@bottom-center{content:"Page " counter(page) " of " counter(pages);font-size:10pt;text-align:center}}';
+
+const DAILY_MIN_NEEDLE = '.daily-page{break-after:page;page-break-after:always;min-height:100vh}';
+const DAILY_MIN_PATCH = '.daily-page{break-after:page;page-break-after:always;min-height:0}.daily-page.style2-page,[data-print-ready=style2]{min-height:0!important;height:auto!important;overflow:visible!important}';
+
+const OS_NEEDLE = 'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()';
+const OS_PATCH = 'os=(G,Re)=>String((G==null?void 0:G.printDataUrl)||(G==null?void 0:G.print_data_url)||(G==null?void 0:G.dataUrl)||(G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()';
+
+const RP_NEEDLE = 'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn';
+const RP_PATCH = 'return{id:Pn,kind:ms(G),url:(G&&(G.printDataUrl||G.print_data_url||G.dataUrl))||Rn,thumbnailUrl:(G&&(G.printDataUrl||G.print_data_url||G.dataUrl))||os(G,Rn),printDataUrl:G&&(G.printDataUrl||G.print_data_url||G.dataUrl)||undefined,print_data_url:G&&(G.print_data_url||G.printDataUrl||G.dataUrl)||undefined,caption:Zn';
+
+const DOC_TITLE_TOKEN_NEEDLE = 'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")';
+const DOC_TITLE_TOKEN_PATCH = 'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title=(P&&P.trip&&P.trip.title||"Vacation").replace(/^TimeSyncher Vacation\\s*[—–-]\\s*/i,"").trim()||"Vacation")';
 
 function productFieldsLiteral() {
   return JSON.stringify(PRODUCT_THING_FIELDS.map((row) => ({
@@ -147,10 +178,10 @@ const PRINT_HH_ZT_NEEDLE = 'Zn=zi(zt)?ha(zt).happyHourDetails:""';
 const PRINT_HH_ZT_PATCH = 'Zn=(ha(zt).happyHour||zi(zt))?(ha(zt).happyHourDetails||""):""';
 
 const PRINT_MODE_NEEDLE = 'h=c.get("printMode")||(i.includes("printMode=daily")?"daily":null)';
-const PRINT_MODE_PATCH = 'h=c.get("printMode")||((/\\/journey\\/?$/.test((typeof window<"u"?window.location.pathname:"")||t.pathname||"")&&(c.get("style")==="2"||c.get("style")==="style-2"||c.get("style")==="1"||c.get("style")==="style-1"))?"report":null)||(i.includes("printMode=daily")?"daily":null)';
+const PRINT_MODE_PATCH = 'h=c.get("printMode")||(c.get("style")==="2"||c.get("style")==="style-2"||((/\\/journey\\/?$/.test((typeof window<"u"?window.location.pathname:"")||t.pathname||"")&&(c.get("style")==="1"||c.get("style")==="style-1")))?"report":null)||(i.includes("printMode=daily")?"daily":null)';
 
 const PDF_REPORT_NEEDLE = 'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&]+)/))==null?void 0:Bl[1])||null';
-const PDF_REPORT_PATCH = 'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&]+)/))==null?void 0:Bl[1])||((/\\/journey\\/?$/.test((typeof window<"u"?window.location.pathname:"")||t.pathname||"")&&(c.get("style")==="2"||c.get("style")==="style-2"))?"keepsake-style-2":(/\\/journey\\/?$/.test((typeof window<"u"?window.location.pathname:"")||t.pathname||"")&&(c.get("style")==="1"||c.get("style")==="style-1"))?"keepsake":null)';
+const PDF_REPORT_PATCH = 'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&]+)/))==null?void 0:Bl[1])||((c.get("style")==="2"||c.get("style")==="style-2")?"keepsake-style-2":(/\\/journey\\/?$/.test((typeof window<"u"?window.location.pathname:"")||t.pathname||"")&&(c.get("style")==="1"||c.get("style")==="style-1"))?"keepsake":null)';
 
 const PAGE_PAD_NEEDLE = '.page{padding:9mm}';
 const PAGE_PAD_PATCH = '.page,.daily-page,.keepsake-report,.style2-page{padding:18mm 9mm 12mm 9mm!important;box-sizing:border-box;-webkit-box-decoration-break:clone;box-decoration-break:clone}@page{size:Letter;margin-top:0;margin-bottom:16mm;margin-left:9mm;margin-right:9mm;@top-left{content:none}@top-right{content:none}@top-center{content:none}@bottom-left{content:none}@bottom-right{content:none}@bottom-center{content:"Page " counter(page) " of " counter(pages);text-align:center}}';
@@ -160,7 +191,7 @@ const SHARED_ROUTE_PATCH = 'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{}
 
 const SE_NEEDLE = 'function _se({title:e,html:t,styles:i}){return I.useEffect(()=>{const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body>${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()},[e,t,i]),n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
-const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seTitle=String(e||"").replace(/^TimeSyncher Vacation\s*[—–-]\s*/gi,"").replace(/\s+(Summary|Keepsake Style 2)$/i,"").trim()||"Vacation";const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=async()=>{const imgs=Array.from(document.querySelectorAll(".print-media-card>img:not(.print-media-qr)"));await Promise.all(imgs.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/(jpeg|jpg|png|webp);base64,/i.test(x)&&x.length>12000){r.setAttribute("data-print-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(/^data:/i.test(z)&&z.length<12000){r.remove();return}const U=await fetch(z,{cache:"reload"});if(!U.ok){r.remove();return}const b=await U.blob();if(b.size<4096||b.size===3071){r.remove();return}let bmp=null;try{bmp=await createImageBitmap(b)}catch{}if(bmp&&bmp.width===1024&&bmp.height===1024&&b.size<8192){r.remove();return}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});r.src=data;r.setAttribute("data-print-inlined","1")}catch{r.remove()}}));document.querySelectorAll(".print-brand,.pdf-final-logo,.pdf-page-counter,.page-count").forEach(r=>r.remove());document.querySelectorAll("[data-last-logo-page]").forEach(r=>r.remove());const logoOn=!!document.querySelector(\'[data-config-logo="1"]\');if(logoOn&&!document.querySelector("[data-last-page-logo]")){const pages=Array.from(document.querySelectorAll(".page"));const lastContent=[...pages].reverse().find(r=>!r.matches(".daily-map-page,[data-day-map-page],[data-last-logo-page]")&&(r.querySelector(".thing,.style2-thing,.daily-thing,.logo-list li,[data-list-row],.story-card")||r.getAttribute("data-post-itinerary")==="1"))||pages[pages.length-1];if(lastContent){lastContent.setAttribute("data-last-content-page","1");const z=document.createElement("div");z.className="ts-last-page-logo";z.setAttribute("data-last-page-logo","1");z.innerHTML=\'<img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="TimeSyncher Vacation" /><span>TimeSyncher Vacation</span>\';lastContent.appendChild(z)}}if(document.body)document.body.setAttribute("data-print-media-ready","1")};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${seTitle.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
+const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seTitle=String(e||"").replace(/^TimeSyncher Vacation\s*[—–-]\s*/gi,"").replace(/\s+(Summary|Keepsake Style 2)$/i,"").trim()||"Vacation";const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=async()=>{const imgs=Array.from(document.querySelectorAll(".print-media-card>img:not(.print-media-qr)"));await Promise.all(imgs.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/(jpeg|jpg|png|webp);base64,/i.test(x)&&x.length>12000){r.setAttribute("data-print-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(/^data:/i.test(z)&&z.length<12000){r.remove();return}const U=await fetch(z,{cache:"reload"});if(!U.ok){r.remove();return}const b=await U.blob();if(b.size<4096||b.size===3071){r.remove();return}let bmp=null;try{bmp=await createImageBitmap(b)}catch{}if(bmp&&bmp.width===1024&&bmp.height===1024&&b.size<8192){r.remove();return}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});r.src=data;r.setAttribute("data-print-inlined","1")}catch{r.remove()}}));document.querySelectorAll(".print-brand,.pdf-final-logo,.pdf-page-counter,.page-count,.style2-cover").forEach(r=>r.remove());document.querySelectorAll("[data-end-continuous] .map-box,[data-post-itinerary] .map-box,[data-endlist-maps] .map-box,[data-end-continuous] .static-print-map").forEach(r=>r.remove());document.querySelectorAll("[data-last-logo-page]").forEach(r=>r.remove());const logoOn=!!document.querySelector(\'[data-config-logo="1"]\');if(logoOn&&!document.querySelector("[data-last-page-logo]")){const pages=Array.from(document.querySelectorAll(".page"));const lastContent=[...pages].reverse().find(r=>!r.matches(".daily-map-page,[data-day-map-page],[data-last-logo-page]")&&(r.querySelector(".thing,.style2-thing,.daily-thing,.logo-list li,[data-list-row],.story-card")||r.getAttribute("data-post-itinerary")==="1"))||pages[pages.length-1];if(lastContent){lastContent.setAttribute("data-last-content-page","1");const z=document.createElement("div");z.className="ts-last-page-logo";z.setAttribute("data-last-page-logo","1");z.innerHTML=\'<img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="TimeSyncher Vacation" /><span>TimeSyncher Vacation</span>\';lastContent.appendChild(z)}}if(document.body)document.body.setAttribute("data-print-media-ready","1")};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${seTitle.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
 const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
@@ -383,6 +414,36 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(XA_DAY_NEEDLE)) {
     patched = patched.replace(XA_DAY_NEEDLE, XA_DAY_PATCH);
+  }
+  if (patched.includes(CR_NEEDLE)) {
+    patched = patched.replace(CR_NEEDLE, CR_PATCH);
+  }
+  if (patched.includes(ZU_FN_NEEDLE)) {
+    patched = patched.replace(ZU_FN_NEEDLE, ZU_FN_PATCH);
+  }
+  if (patched.includes(COUNTER_CSS_NEEDLE)) {
+    patched = patched.replace(COUNTER_CSS_NEEDLE, COUNTER_CSS_PATCH);
+  }
+  if (patched.includes(PRINT_BRAND_CSS_NEEDLE)) {
+    patched = patched.replace(PRINT_BRAND_CSS_NEEDLE, PRINT_BRAND_CSS_PATCH);
+  }
+  if (patched.includes(PDF_FINAL_LOGO_NEEDLE)) {
+    patched = patched.replace(PDF_FINAL_LOGO_NEEDLE, PDF_FINAL_LOGO_PATCH);
+  }
+  if (patched.includes(APAGE_ZERO_NEEDLE)) {
+    patched = patched.replace(APAGE_ZERO_NEEDLE, APAGE_ZERO_PATCH);
+  }
+  if (patched.includes(DAILY_MIN_NEEDLE)) {
+    patched = patched.replace(DAILY_MIN_NEEDLE, DAILY_MIN_PATCH);
+  }
+  if (patched.includes(OS_NEEDLE)) {
+    patched = patched.replace(OS_NEEDLE, OS_PATCH);
+  }
+  if (patched.includes(RP_NEEDLE)) {
+    patched = patched.replace(RP_NEEDLE, RP_PATCH);
+  }
+  if (patched.includes(DOC_TITLE_TOKEN_NEEDLE)) {
+    patched = patched.replace(DOC_TITLE_TOKEN_NEEDLE, DOC_TITLE_TOKEN_PATCH);
   }
   return patched;
 }
@@ -677,6 +738,39 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('object-fit:cover') && js.includes('height:180px;object-fit:cover')) {
     throw new Error('Print pics must not use cover/180px crop.');
+  }
+  if (!js.includes(CR_PATCH) || js.includes('Wi=Pr.logo?cr:') || js.includes('class="print-brand"><span>TimeSyncher</span>')) {
+    throw new Error('Style two must neutralize TREK cr print-brand HTML; Wi stays a logo flag only.');
+  }
+  if (!js.includes(ZU_FN_PATCH) || js.includes('style2-cover">${Wi}') || (js.includes(ZU_FN_NEEDLE))) {
+    throw new Error('zu() must delegate to Ae(true); Style two must not emit the TREK cover stub.');
+  }
+  if (!js.includes(COUNTER_CSS_PATCH) || js.includes('.pdf-page-counter{position:absolute;right:9mm')) {
+    throw new Error('TREK pdf-page-counter must be hidden (footer-only centered Page x of y).');
+  }
+  if (!js.includes(PRINT_BRAND_CSS_PATCH) || js.includes('.print-brand{display:inline-flex')) {
+    throw new Error('TREK .print-brand hourglass lockup must be display:none on Style two pages.');
+  }
+  if (!js.includes(PDF_FINAL_LOGO_PATCH) || js.includes('.pdf-final-logo{position:absolute;left:50%')) {
+    throw new Error('Early pdf-final-logo must stay hidden; last-content logo uses data-last-page-logo.');
+  }
+  if (!js.includes(APAGE_ZERO_PATCH) || js.includes('@page{size:Letter;margin:0}')) {
+    throw new Error('TREK @page margin:0 must become vacation-name header + bottom-centered Page x of y.');
+  }
+  if (!js.includes(DAILY_MIN_PATCH) || js.includes('.daily-page{break-after:page;page-break-after:always;min-height:100vh}')) {
+    throw new Error('Style two daily pages must not force min-height 100vh half-blank cards.');
+  }
+  if (!js.includes('_d(G&&G.item&&G.item.bound_media)') || !js.includes(OS_PATCH) || !js.includes('printDataUrl:G&&(G.printDataUrl')) {
+    throw new Error('Style two fo()/os()/rp() must prefer Thing printDataUrl JPEGs over TREK thumbs.');
+  }
+  if (!js.includes('[data-style2-map] .map-box{height:auto') || !js.includes('.daily-grid .map-box{height:205px}')) {
+    throw new Error('Style two day maps must fill the page; Style one daily-grid maps stay 205px.');
+  }
+  if (!js.includes('[data-print-ready=style2] .style2-details') || !js.includes('grid-template-columns:1fr 1fr!important')) {
+    throw new Error('Style two Mc() details must pack 2-col continuous cards.');
+  }
+  if (!js.includes('[data-end-continuous] .map-box') || !js.includes('.style2-cover')) {
+    throw new Error('_se() must strip end-list maps and leftover zu() style2-cover.');
   }
   return true;
 }

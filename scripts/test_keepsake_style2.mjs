@@ -540,6 +540,16 @@ const aeFixture = [
   'return`<article class="thing style2-thing"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">',
   'document.title=`TimeSyncher Vacation — ${P.trip.title.replace(/^TimeSyncher Vacation\\s*[—-]\\s*/i,"")}`',
   'zt=G==="keepsake"?`${la.title||"TimeSyncher Vacation"} Summary`:G==="keepsake-style-2"?`${la.title||"TimeSyncher Vacation"} Keepsake Style 2`:`TimeSyncher Vacation ${G}`',
+  'cr=\'<div class="print-brand"><span>TimeSyncher</span><img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="TimeSyncher" /><span>Vacation</span></div>\',Wi=Pr.logo?cr:""',
+  'zu=()=>{const G=Pr.summary?`<div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(zt=>`<p>${an(zt)}</p>`).join("")}</div>`:"";return`<section class="page keepsake-report style2-cover">${Wi}<h1>${an(la.title||"Vacation")} Keepsake</h1><p class="muted">Style two</p>${G}</section>`+Qa.map(zt=>Mc(zt)).join("")}',
+  '.pdf-page-counter{position:absolute;right:9mm;bottom:5mm;font-size:8px;color:#64748b;font-weight:600}',
+  '.print-brand{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}',
+  '.pdf-final-logo{position:absolute;left:50%;bottom:5mm;transform:translateX(-50%);width:24px;height:24px;object-fit:contain}',
+  '@page{size:Letter;margin:0}',
+  '.daily-page{break-after:page;page-break-after:always;min-height:100vh}',
+  'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()',
+  'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn',
+  'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -710,6 +720,27 @@ assert.match(patchedAe, /G\.printDataUrl\)\|\|\(G==null\?void 0:G\.print_data_ur
 assert.doesNotMatch(patchedAe, /print-media-card>img\{width:92px;height:72px/);
 assert.doesNotMatch(patchedAe, /\[data-end-continuous="1"\] \.report-section\{break-inside:avoid/);
 assert.doesNotMatch(patchedAe, /const zt="https:\/\/travel\.timesyncher\.com",ua=new URL\(Re,zt\)/);
+assert.match(patchedAe, /cr="",Wi=Pr\.logo\?"1":""/);
+assert.doesNotMatch(patchedAe, /Wi=Pr\.logo\?cr:/);
+assert.match(patchedAe, /zu=\(\)=>Ae\(!0\)/);
+assert.doesNotMatch(patchedAe, /style2-cover">\$\{Wi\}/);
+assert.match(patchedAe, /\.pdf-page-counter,\.page-count,\.muted\.page-count\{display:none/);
+assert.doesNotMatch(patchedAe, /\.pdf-page-counter\{position:absolute;right:9mm/);
+assert.match(patchedAe, /\.print-brand,\.print-brand \.ts-logo\{display:none/);
+assert.doesNotMatch(patchedAe, /\.print-brand\{display:inline-flex/);
+assert.match(patchedAe, /\.pdf-final-logo\{display:none/);
+assert.match(patchedAe, /@bottom-center\{content:"Page " counter\(page\) " of " counter\(pages\)/);
+assert.doesNotMatch(patchedAe, /@page\{size:Letter;margin:0\}/);
+assert.match(patchedAe, /\[data-print-ready=style2\]\{min-height:0/);
+assert.doesNotMatch(patchedAe, /\.daily-page\{break-after:page;page-break-after:always;min-height:100vh\}/);
+assert.match(patchedAe, /_d\(G&&G\.item&&G\.item\.bound_media\)/);
+assert.match(patchedAe, /os=\(G,Re\)=>String\(\(G==null\?void 0:G\.printDataUrl\)/);
+assert.match(patchedAe, /printDataUrl:G&&\(G\.printDataUrl/);
+assert.match(patchedAe, /\[data-style2-map\] \.map-box\{height:auto/);
+assert.match(patchedAe, /\.daily-grid \.map-box\{height:205px\}/);
+assert.match(patchedAe, /\[data-print-ready=style2\] \.style2-details/);
+assert.match(patchedAe, /\[data-end-continuous\] \.map-box/);
+assert.match(patchedAe, /c\.get\("style"\)==="2"\|\|c\.get\("style"\)==="style-2"\)\?"keepsake-style-2"/);
 
 const boundPhotos = [
   'carbone-plates-photo.jpg',
