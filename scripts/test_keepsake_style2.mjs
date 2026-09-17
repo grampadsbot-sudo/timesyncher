@@ -299,6 +299,7 @@ assert.doesNotMatch(patch, /data-last-logo-page/);
 assert.match(patch, /data-print-chrome-header/);
 assert.match(patch, /@bottom-center/);
 assert.match(patch, /counter\(page\)/);
+assert.match(patch, /margin-top:0/);
 assert.match(patch, /style2-thing-meta\{position:static/);
 assert.match(patch, /data-endlist-maps/);
 assert.match(patch, /data-day-map-page/);
@@ -533,6 +534,12 @@ const aeFixture = [
   'Pn=ua.length?`<div class="style2-day-media">${ua.map(Ba).join("")}</div>`:""',
   '.style2-page{height:257mm;min-height:257mm;overflow:hidden}',
   'Hl=xa(Is,720,850)',
+  '.daily-page{height:257mm;min-height:257mm;overflow:hidden}.daily-grid{grid-template-columns:36% minmax(0,1fr);gap:12px}.daily-left{position:static}.map-box{height:205px}.daily-details{grid-template-columns:1fr;gap:8px}',
+  '.style2-thing{position:relative;margin:0 0 10px;padding:12px 124px 12px 12px}.style2-thing h3{font-size:15px}.style2-thing-meta{position:absolute;top:12px;right:12px;width:100px;text-align:right;font-size:9.5px;line-height:1.35;font-weight:900;color:#475569}',
+  '.style2-thing{padding-right:118px}',
+  'return`<article class="thing style2-thing"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">',
+  'document.title=`TimeSyncher Vacation — ${P.trip.title.replace(/^TimeSyncher Vacation\\s*[—-]\\s*/i,"")}`',
+  'zt=G==="keepsake"?`${la.title||"TimeSyncher Vacation"} Summary`:G==="keepsake-style-2"?`${la.title||"TimeSyncher Vacation"} Keepsake Style 2`:`TimeSyncher Vacation ${G}`',
 ].join('\n');
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
@@ -569,7 +576,7 @@ assert.match(patchedAe, /data-endlist-maps="0"/);
 assert.match(patchedAe, /Ae\(!0\)/);
 assert.match(patchedAe, /Ae=\(s2\)=>/);
 assert.match(patchedAe, /padding:18mm 9mm 12mm 9mm/);
-assert.match(patchedAe, /@page\{margin-top:18mm/);
+assert.match(patchedAe, /@page\{size:Letter;margin-top:0/);
 assert.match(patchedAe, /data-list-summary="1"/);
 assert.match(patchedAe, /data-row-summary="1"/);
 assert.match(patchedAe, /data-story-summary="1"/);
@@ -678,6 +685,12 @@ assert.match(patchedAe, /@top-center/);
 assert.match(patchedAe, /@bottom-center/);
 assert.match(patchedAe, /counter\(page\)/);
 assert.match(patchedAe, /style2-thing-meta\{position:static/);
+assert.match(patchedAe, /margin-top:0/);
+assert.doesNotMatch(patchedAe, /document\.title=`TimeSyncher Vacation —/);
+assert.doesNotMatch(patchedAe, /\.daily-page\{height:257mm;min-height:257mm;overflow:hidden\}/);
+assert.doesNotMatch(patchedAe, /\.daily-details\{grid-template-columns:1fr;gap:8px\}/);
+assert.match(patchedAe, /data-thing-card="1"/);
+assert.match(patchedAe, /seTitle=/);
 assert.match(patchedAe, /data-logo-last-only="1"/);
 assert.match(patchedAe, /\[data-day-map-page="1"\]\{break-before:page/);
 assert.match(patchedAe, /\[data-endlist-maps="0"\] \.map-box/);
