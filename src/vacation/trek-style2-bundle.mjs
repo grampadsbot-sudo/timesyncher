@@ -48,7 +48,7 @@ const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?p
 
 
 const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}';
-const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
+const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
 const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&rr(_i.item)?`<div data-row-summary="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
@@ -235,7 +235,7 @@ const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
-const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),zt=Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G));if(zt)return zt;if(qr(G))return pDe;return""}';
+const LIST_LOGO_PATCH = `_l=G=>{const named=(${logoLookupRuntimeSource()})(mr(G));if(named)return named;const Re=ha(G),raw=Re.logoUrl||Re.iconUrl||G.logoUrl||"";if(raw&&!/^data:image\\/svg\\+xml/i.test(String(raw)))return raw;return named||""}`;
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
@@ -607,7 +607,10 @@ export function assertPatchedStyleTwo(source = '') {
     throw new Error('Live tab fill extras must bind real logos, not Admit One / category emoji.');
   }
   if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE)) {
-    throw new Error('List logo resolver must prefer bound logoUrl over Admit One family placeholder.');
+    throw new Error('List logo resolver must prefer named brand path (tsLogo/mr) and skip data-URI letter tiles.');
+  }
+  if (!js.includes('data-logo-src=') || !js.includes('named=(') || !js.includes('data:image\\/svg\\+xml')) {
+    throw new Error('Print end-list _l() must bind named /ts-thing-logos paths and mark data-logo-src.');
   }
   if (!js.includes(IT_CATEGORY_PATCH) || js.includes(IT_CATEGORY_NEEDLE)) {
     throw new Error('Style two live It() category-object patch did not apply.');

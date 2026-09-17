@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, NAMED_THING_LOGOS, brandLogoPath, isPlaceholderLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
@@ -121,6 +121,38 @@ assert.equal(brandLogoPath({ name: 'Bellagio Shops' }, { title: 'Bellagio Shops'
 assert.equal(captureThingLogo({ name: 'High Roller' }, { title: 'High Roller' }), '/ts-thing-logos/high-roller.svg');
 assert.equal(captureThingLogo({ name: 'Las Vegas transport and car research queue' }, { title: 'Las Vegas transport and car research queue' }), '/ts-thing-logos/car.svg');
 assert.doesNotMatch(captureThingLogo({ name: 'High Roller' }, {}), /data:image\/svg/);
+
+const LETTER_TILE_RE = /<text\b[^>]*>\s*[A-Za-z0-9]{1,3}\s*<\/text>/i;
+const GENERIC_BAG_RE = /M26 24a6 6 0 0 1 12 0|M24 28a8 8 0 0 1 16 0/;
+const qaFailLogoFiles = [
+  'carbone.svg',
+  'shake-shack.svg',
+  'bardot-brasserie.svg',
+  'best-friend-roy-choi.svg',
+  'giada.svg',
+  'javiers-at-aria.svg',
+  'latelier-robuchon.svg',
+  'lotus-of-siam.svg',
+  'mon-ami-gabi.svg',
+  'mott-32.svg',
+  'fashion-show-mall.svg',
+  'harmon-corner.svg',
+  'wynn-esplanade.svg',
+  'jean-georges.svg',
+  'miracle-mile-shops.svg',
+  'sichuan-house.svg',
+  'cosmopolitan-shops.svg',
+  'bellagio-shops.svg',
+];
+for (const file of await readdir(new URL('../public/ts-thing-logos/', import.meta.url))) {
+  if (!file.endsWith('.svg')) continue;
+  const svg = await readFile(new URL(`../public/ts-thing-logos/${file}`, import.meta.url), 'utf8');
+  assert.doesNotMatch(svg, LETTER_TILE_RE, `${file} must be a pictorial mark, not a letter/monogram tile`);
+  if (qaFailLogoFiles.includes(file)) {
+    assert.doesNotMatch(svg, GENERIC_BAG_RE, `${file} must not be a generic shopping-bag pictogram`);
+    assert.match(svg, /<path |<circle |<ellipse |<rect x=/, `${file} must draw a distinctive mark`);
+  }
+}
 
 const paddedLogos = applyCapturedLogos(padKeepsakeSharedPlaces(shared));
 for (const place of paddedLogos.places) {
@@ -601,7 +633,10 @@ assertPatchedStyleTwo(patchedAe);
 assert.match(patchedAe, /tsListThings=\(rows\)/);
 assert.match(patchedAe, /logoUrl:tsLogo\(name\)/);
 assert.match(patchedAe, /Os\.filter\(G=>tsListThings\(Cc\)/);
-assert.match(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
+assert.match(patchedAe, /const named=\(/);
+assert.match(patchedAe, /data-logo-src=/);
+assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
+assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);

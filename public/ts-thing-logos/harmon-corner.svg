@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Harmon Corner">
   <rect width="64" height="64" rx="16" fill="#9a3412"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#ffedd5">HC</text>
+  <rect x="10" y="22" width="22" height="28" fill="#fed7aa"/>
+  <rect x="32" y="16" width="22" height="34" fill="#fdba74"/>
+  <rect x="16" y="28" width="6" height="8" fill="#9a3412"/><rect x="38" y="22" width="6" height="8" fill="#9a3412"/>
+  <path d="M32 16v34" stroke="#7c2d12" stroke-width="3"/>
+  <rect x="18" y="42" width="8" height="8" fill="#7c2d12"/>
 </svg>

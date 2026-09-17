@@ -1,4 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Bardot Brasserie">
   <rect width="64" height="64" rx="16" fill="#1e3a8a"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#dbeafe">BB</text>
+  <path d="M32 10l6 14H26z" fill="#dbeafe"/>
+  <path d="M24 24h16l-3 16H27z" fill="#93c5fd"/>
+  <path d="M26 40h12v6H26z" fill="#bfdbfe"/>
+  <ellipse cx="48" cy="22" rx="6" ry="8" fill="#fecdd3"/>
+  <path d="M48 30v10" stroke="#fecdd3" stroke-width="2"/>
+  <path d="M44 40h8" stroke="#fecdd3" stroke-width="2"/>
 </svg>

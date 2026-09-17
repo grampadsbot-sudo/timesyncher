@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Bellagio Shops">
   <rect width="64" height="64" rx="16" fill="#1e3a5f"/>
-  <path d="M18 28h28v20H18z" fill="#f5d37b"/><path d="M24 28a8 8 0 0 1 16 0" fill="none" stroke="#f5d37b" stroke-width="3"/>
+  <path d="M12 40h40v10H12z" fill="#f5d37b"/>
+  <path d="M16 40V28h8v12M28 40V24h8v16M40 40V28h8v12" fill="#93c5fd"/>
+  <path d="M20 28c2-10 6-14 12-16 6 2 10 6 12 16" fill="none" stroke="#7dd3fc" stroke-width="2.5"/>
+  <circle cx="24" cy="22" r="2" fill="#e0f2fe"/><circle cx="32" cy="16" r="2" fill="#e0f2fe"/><circle cx="40" cy="22" r="2" fill="#e0f2fe"/>
 </svg>

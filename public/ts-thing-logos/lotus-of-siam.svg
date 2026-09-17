@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Lotus of Siam">
   <rect width="64" height="64" rx="16" fill="#4c1d95"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="700" fill="#ede9fe">L</text>
+  <ellipse cx="32" cy="44" rx="16" ry="6" fill="#6d28d9"/>
+  <path d="M32 18c6 8 10 14 12 20-8 2-16 2-24 0 2-6 6-12 12-20z" fill="#e9d5ff"/>
+  <path d="M18 40c6-10 10-14 14-16 0 8-2 16-6 22-4-2-6-4-8-6z" fill="#c4b5fd"/>
+  <path d="M46 40c-6-10-10-14-14-16 0 8 2 16 6 22 4-2 6-4 8-6z" fill="#a78bfa"/>
+  <circle cx="32" cy="36" r="4" fill="#facc15"/>
 </svg>

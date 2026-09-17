@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Shake Shack">
   <rect width="64" height="64" rx="16" fill="#14532d"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#dcfce7">SS</text>
+  <path d="M16 28c0-6 8-10 16-10s16 4 16 10v4H16z" fill="#fde68a"/>
+  <rect x="16" y="32" width="32" height="8" rx="3" fill="#166534"/>
+  <path d="M16 40h32c0 7-8 12-16 12s-16-5-16-12z" fill="#fef3c7"/>
+  <circle cx="24" cy="30" r="2" fill="#dc2626"/><circle cx="40" cy="30" r="2" fill="#dc2626"/>
 </svg>
