@@ -14,6 +14,30 @@ function travelBase(env = process.env) {
   return String(env.TIMESYNCHER_TRAVEL_BASE_URL || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
 }
 
+/** Staging website already honors Style two Config (`Ae()`). Do not invent hosts. */
+export function websiteTripBase(env = process.env) {
+  const site = siteBase(env);
+  try {
+    if (/vacation-staging\.timesyncher\.com$/i.test(new URL(site).hostname)) return site;
+  } catch {
+    /* fall through */
+  }
+  return travelBase(env);
+}
+
+export function sharedTripWebsiteUrl(shareToken, env = process.env) {
+  const token = clean(shareToken, 220);
+  if (!token) return '';
+  return `${websiteTripBase(env)}/shared/${encodeURIComponent(token).replace(/%2F/gi, '/')}/`;
+}
+
+export function isAllowedVacationWebsiteUrl(value, env = process.env) {
+  const url = String(value || '').trim();
+  if (!url) return false;
+  const bases = [...new Set([travelBase(env), websiteTripBase(env), siteBase(env)])];
+  return bases.some((base) => url === base || url === `${base}/` || url.startsWith(`${base}/`));
+}
+
 function cookieDomain(env = process.env) {
   const configured = clean(env.TIMESYNCHER_WEB_ACCESS_COOKIE_DOMAIN || env.TIMESYNCHER_COOKIE_DOMAIN, 120);
   if (configured) return configured;
@@ -62,8 +86,8 @@ export function publicTripUrl(trip, env = process.env) {
   const explicitUrl = clean(trip?.metadata?.publicUrl || trip?.metadata?.public_url || trip?.metadata?.webItineraryUrl || '', 600);
   if (explicitUrl) return explicitUrl;
   const slug = clean(trip?.metadata?.sharedToken || trip?.metadata?.shareToken || trip?.metadata?.publicSlug || trip?.metadata?.source_token || trip?.metadata?.slug || '', 220);
-  if (slug) return `${travelBase(env)}/shared/${encodeURIComponent(slug).replace(/%2F/gi, '/')}/`;
-  return travelBase(env);
+  if (slug) return sharedTripWebsiteUrl(slug, env);
+  return websiteTripBase(env);
 }
 
 export async function ensureVacationWebAccessSchema(db) {
@@ -234,6 +258,76 @@ export async function createTelegramWebAccessSession(db, {
     },
     sessionToken,
     launchUrl: webAccessTelegramLaunchUrl(sessionToken, publicUrl, env),
+  };
+}
+
+export async function findOwnerTripByShareToken(db, shareToken) {
+  const token = clean(shareToken, 240);
+  if (!token) return null;
+  const rows = await db`
+    select
+      trips.*,
+      customers.id as owner_customer_id,
+      customers.email as owner_email,
+      customers.display_name as owner_display_name
+    from trips
+    join customers on customers.id = trips.customer_id
+    where trips.metadata->>'sharedToken' = ${token}
+       or trips.metadata->>'shareToken' = ${token}
+       or trips.metadata->>'publicSlug' = ${token}
+       or trips.metadata->>'source_token' = ${token}
+       or trips.metadata->>'slug' = ${token}
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+export async function createOwnerWebsiteSessionByShareToken(db, {
+  shareToken,
+  email = '',
+  displayName = '',
+  env = process.env,
+}) {
+  const token = clean(shareToken, 240);
+  if (!token) throw Object.assign(new Error('shareToken is required.'), { statusCode: 400 });
+  const trip = await findOwnerTripByShareToken(db, token);
+  if (!trip) throw Object.assign(new Error('Vacation not found for that public share.'), { statusCode: 404 });
+  const ownerEmail = clean(trip.owner_email, 180).toLowerCase();
+  const requested = clean(email, 180).toLowerCase();
+  const publicUrl = sharedTripWebsiteUrl(token, env) || publicTripUrl(trip, env);
+  const ownerId = clean(trip.customer_id || trip.owner_customer_id, 80);
+  if (!requested || requested === ownerEmail) {
+    return createTelegramWebAccessSession(db, {
+      ownerCustomerId: ownerId,
+      tripId: trip.id,
+      email: ownerEmail || requested,
+      displayName: clean(displayName, 180) || clean(trip.owner_display_name, 180) || 'Owner',
+      role: 'owner',
+      metadata: {
+        source: 'cursor_owner_website_session',
+        shareToken: token,
+        publicUrl,
+      },
+      env,
+    });
+  }
+  const invite = await createWebEditorInvite(db, {
+    ownerCustomerId: ownerId,
+    tripId: trip.id,
+    email: requested,
+    displayName,
+    role: 'web_editor',
+    metadata: {
+      source: 'cursor_owner_website_session',
+      shareToken: token,
+      publicUrl,
+    },
+    env,
+  });
+  return {
+    ...invite,
+    sessionToken: invite.token,
+    launchUrl: invite.acceptUrl,
   };
 }
 

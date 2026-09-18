@@ -41,7 +41,7 @@ function targetToken(input) {
 function inferCategory(title, requestText) {
   const hay = `${title} ${requestText}`.toLowerCase();
   if (/\bfamily_event\b|\bfamily event\b|grampa|grandpa|grandma|grandkid|homecooked|home-cooked|family|kids?|whiffle|tyler|torryn|keagan|cookout|reunion/.test(hay)) return 'family_event';
-  if (/\bflight|southwest|delta|united|american|jetblue|airport|las|boi|jfk|lga|ewr\b/.test(hay)) return 'flight';
+  if (/\bflight\b|southwest|jetblue|american airlines|\bdelta\b|airport|\b(sfo|jfk|lga|ewr|lax|ord|dfw)\b/.test(hay) || /\b[a-z]{3}\s+to\s+[a-z]{3}\b/.test(hay)) return 'flight';
   if (/\bhotel|lodging|inn|suite|resort|marriott|hilton|hyatt\b/.test(hay)) return 'hotel';
   if (/\brestaurant|breakfast|lunch|dinner|brewery|griddle|taco|thai|pasta|bolognese|tortilla|food|meal\b/.test(hay)) return 'restaurant';
   if (/\bstore|farm|market|shopping|grocery|winery|wine\b/.test(hay)) return 'store';
@@ -264,12 +264,33 @@ def geocode_address(address):
 
 def category_meta(kind):
     if kind == 'flight': return ('Transport', '#0f766e', 'Plane')
-    if kind == 'hotel': return ('Hotel', '#2563eb', 'Hotel')
-    if kind == 'restaurant': return ('Restaurant', '#dc2626', 'Utensils')
+    if kind == 'hotel': return ('Hotel', '#2563eb', 'BedDouble')
+    if kind == 'restaurant': return ('Restaurant', '#dc2626', 'UtensilsCrossed')
     if kind == 'store': return ('Store', '#d97706', 'ShoppingBag')
     if kind == 'car': return ('Car', '#0891b2', 'Car')
-    if kind == 'family_event': return ('Attraction', '#7c3aed', 'MapPin')
+    if kind == 'family_event': return ('Family Event', '#10b981', 'Users')
+    if kind == 'attraction' or kind == 'activity': return ('Attraction', '#7c3aed', 'Landmark')
     return ('Attraction', '#7c3aed', 'MapPin')
+
+def captured_logo(title, kind):
+    lower = (title or '').lower()
+    if 'carbone' in lower: return '/ts-thing-logos/carbone.svg'
+    if 'shake' in lower and 'shack' in lower: return '/ts-thing-logos/shake-shack.svg'
+    if 'eggslut' in lower: return '/ts-thing-logos/eggslut.svg'
+    if 'lotus' in lower: return '/ts-thing-logos/lotus-of-siam.svg'
+    if 'conservatory' in lower: return '/ts-thing-logos/bellagio-conservatory.svg'
+    if 'bellagio' in lower: return '/ts-thing-logos/bellagio.svg'
+    if 'cosmo' in lower or 'shop' in lower: return '/ts-thing-logos/cosmopolitan-shops.svg'
+    if kind == 'flight': return '/ts-thing-logos/flight.svg'
+    return ''
+
+def category_icon_emoji(kind):
+    if kind == 'flight': return '✈️'
+    if kind == 'hotel': return '🧳'
+    if kind == 'restaurant': return '🍽️'
+    if kind == 'store': return '🛍️'
+    if kind == 'car': return '🚗'
+    return '📍'
 
 def find_trip(token, request_text):
     if token:
@@ -337,12 +358,13 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     if not valid_coord(lat, lng) and address:
         lat, lng = geocode_address(address)
     has_coords = valid_coord(lat, lng)
+    logo_url = captured_logo(title, kind)
     if place:
         place_id = int(place['id'])
-        run("UPDATE places SET category_id=?, description=COALESCE(NULLIF(description, ''), ?), reservation_status=?, place_time=COALESCE(NULLIF(?, ''), place_time), notes=COALESCE(NULLIF(notes, ''), ?), address=COALESCE(NULLIF(?, ''), address), lat=COALESCE(?, lat), lng=COALESCE(?, lng), updated_at=CURRENT_TIMESTAMP WHERE id=?", (cat_id, summary, 'considering', item.get('time') or '', summary, address, float(lat) if has_coords else None, float(lng) if has_coords else None, place_id))
+        run("UPDATE places SET category_id=?, description=COALESCE(NULLIF(description, ''), ?), reservation_status=?, place_time=COALESCE(NULLIF(?, ''), place_time), notes=COALESCE(NULLIF(notes, ''), ?), address=COALESCE(NULLIF(?, ''), address), lat=COALESCE(?, lat), lng=COALESCE(?, lng), image_url=COALESCE(NULLIF(image_url, ''), ?), updated_at=CURRENT_TIMESTAMP WHERE id=?", (cat_id, summary, 'considering', item.get('time') or '', summary, address, float(lat) if has_coords else None, float(lng) if has_coords else None, logo_url or None, place_id))
         action = 'updated'
     else:
-        place_id = int(run('INSERT INTO places (trip_id, name, description, lat, lng, address, category_id, currency, reservation_status, place_time, duration_minutes, notes, transport_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (trip_id, title, summary, float(lat) if has_coords else None, float(lng) if has_coords else None, address or None, cat_id, 'USD', 'considering', item.get('time') or None, 90, summary, 'driving')))
+        place_id = int(run('INSERT INTO places (trip_id, name, description, lat, lng, address, category_id, currency, reservation_status, place_time, duration_minutes, notes, transport_mode, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (trip_id, title, summary, float(lat) if has_coords else None, float(lng) if has_coords else None, address or None, cat_id, 'USD', 'considering', item.get('time') or None, 90, summary, 'driving', logo_url or None)))
         action = 'added'
     day_num = int(item.get('day') or 1)
     if day_num < 1: day_num = 1
@@ -364,6 +386,8 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
         'price': '',
         'website': '',
         'travelTime': '',
+        'logoUrl': logo_url,
+        'icon': category_icon_emoji(kind),
         'sourceNote': 'Applied by TimeSyncher Vacation deterministic trip edit worker.',
     }
     if address:
@@ -389,9 +413,25 @@ overrides = load_overrides(token)
 results = []
 for item in items:
     results.append(insert_or_update_item(int(trip['id']), token, days, item, overrides))
+
+min_things = int(payload.get('minThings') or 8)
+places = all_rows('SELECT id, name, place_time FROM places WHERE trip_id=? ORDER BY id', (int(trip['id']),))
+assigned_ids = {int(row['place_id']) for row in all_rows('SELECT place_id FROM day_assignments WHERE day_id IN (SELECT id FROM days WHERE trip_id=?)', (int(trip['id']),))}
+backfilled = []
+unassigned = [row for row in places if int(row['id']) not in assigned_ids]
+day_i = 0
+while len(assigned_ids) < min_things and unassigned:
+    place = unassigned.pop(0)
+    day = days[day_i % len(days)]
+    day_i += 1
+    order_row = one('SELECT COALESCE(MAX(order_index), -1) + 1 AS next_index FROM day_assignments WHERE day_id=?', (int(day['id']),))
+    run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time) VALUES (?, ?, ?, ?, ?, ?)', (int(day['id']), int(place['id']), int(order_row['next_index']), 'Backfilled from existing trip things to meet itinerary minimum.', 'considering', place['place_time']))
+    assigned_ids.add(int(place['id']))
+    backfilled.append({'placeId': int(place['id']), 'title': place['name'], 'day': int(day['day_number'])})
+
 db.commit()
 base = (payload.get('publicBase') or 'https://vacation.timesyncher.com').rstrip('/')
-print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results) + (1 if date_range else 0)}))
+print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'backfilledItems': backfilled, 'placeCount': len(places), 'assignedCount': len(assigned_ids), 'minThings': min_things, 'shortfall': max(0, min_things - len(places)), 'dateRangeApplied': date_range, 'operationCount': len(results) + len(backfilled) + (1 if date_range else 0)}))
 `;
 
 async function main() {
@@ -404,6 +444,7 @@ async function main() {
     receivedAt: text(input.receivedAt || input.received_at || '', 80),
     publicBase: text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, ''),
     dbPath: text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || '', 500),
+    minThings: Number.parseInt(process.env.TIMESYNCHER_ITINERARY_MIN_THINGS || '8', 10) || 8,
   };
   const result = spawnSync('python3', ['-c', pythonCode], {
     input: JSON.stringify(payload),

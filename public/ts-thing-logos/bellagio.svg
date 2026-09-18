@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Bellagio">
+  <rect width="64" height="64" rx="16" fill="#1e3a5f"/>
+  <path d="M12 42c6-10 10-18 20-18s14 8 20 18" fill="none" stroke="#f5d37b" stroke-width="3"/>
+  <circle cx="32" cy="20" r="4" fill="#f5d37b"/>
+</svg>
