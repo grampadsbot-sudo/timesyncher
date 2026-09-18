@@ -645,6 +645,31 @@ const JEV_INTENTS = new Set([
   'unsafe_internal',
 ]);
 const JEV_WRITE_MODES = new Set(['none', 'create', 'edit', 'attach']);
+const JEV_CUSTOMER_ISSUE_TAGS = {
+  destination: 'Destination, city, area, resort, or where the customer wants to go.',
+  dates: 'Dates, timing, trip length, travel window, or schedule.',
+  travelers: 'Travel party, family, kids, spouse, accessibility group needs, or number of guests.',
+  budget: 'Budget, price, cost, plan economics, cheap/luxury preference, or spend limits.',
+  constraints_preferences: 'Customer preferences, dislikes, must-haves, dietary constraints, mobility, allergies, or vibe.',
+  lodging: 'Hotels, resorts, rooms, lodging, check-in/check-out, or where to stay.',
+  flights: 'Flights, airlines, airports, timing, layovers, or airfare.',
+  cars_transport: 'Rental cars, Uber/Lyft, taxis, trains, shuttles, parking, or local transport.',
+  restaurants_food: 'Restaurants, meals, bars, coffee, reservations, food style, or cuisine.',
+  activities_experiences: 'Activities, tours, shows, museums, beaches, hikes, events, tickets, or experiences.',
+  shopping: 'Shopping, stores, markets, boutiques, groceries, or souvenirs.',
+  media_upload: 'Photos, videos, media upload, attaching media to a vacation, or media add-ons.',
+  collaborator_access: 'Another person viewing, editing, collaborating, uploading, or using Telegram/web access.',
+  website_link: 'Shared itinerary link, website access, login link, app/site URL, or opening the vacation page.',
+  account_plan_access: 'Paid plan, entitlement, checkout, coupon, billing, refund, remaining vacations, or account state.',
+  product_support: 'How TimeSyncher works, support, bugs, errors, booking boundaries, or product behavior.',
+  approval: 'Approval, acceptance, confirmation, yes/go-ahead/looks-good signal.',
+  change_request: 'Explicit request to add, remove, swap, replace, revise, rename, regenerate, or otherwise edit.',
+  unsafe_internal: 'Secrets, private internals, stack traces, hidden implementation details, or sensitive account data.',
+};
+const JEV_ISSUE_TAG_NAMES = Object.freeze(Object.keys(JEV_CUSTOMER_ISSUE_TAGS));
+const JEV_ISSUE_TAG_SET = new Set(JEV_ISSUE_TAG_NAMES);
+const JEV_TAG_PROBABILITY_THRESHOLD = 0.55;
+const JEV_COVERAGE_THRESHOLD = 0.74;
 
 const JEV_VACATION_INTENT_QUESTIONS = {
   intent: {
@@ -680,6 +705,61 @@ const JEV_VACATION_INTENT_QUESTIONS = {
     instructions: 'Should TimeSyncher ask one clarifying question before any itinerary worker, write, or media attachment is allowed?',
   },
 };
+
+function jevIssueTagQuestions() {
+  return Object.fromEntries(JEV_ISSUE_TAG_NAMES.map((tag) => [
+    `tag_${tag}`,
+    {
+      type: 'noul',
+      instructions: `Is this issue present in the current customer turn? Tag: ${tag}. Meaning: ${JEV_CUSTOMER_ISSUE_TAGS[tag]} Select independently; multiple tags can be relevant.`,
+    },
+  ]));
+}
+
+function jevVacationIntentQuestions() {
+  return {
+    ...JEV_VACATION_INTENT_QUESTIONS,
+    ...jevIssueTagQuestions(),
+  };
+}
+
+function normalizeJevTagsFromAnswers(answers = {}) {
+  const tags = [];
+  const tagScores = {};
+  for (const tag of JEV_ISSUE_TAG_NAMES) {
+    const score = probabilityValue(answers[`tag_${tag}`]);
+    if (score === null) continue;
+    tagScores[tag] = score;
+    if (score >= JEV_TAG_PROBABILITY_THRESHOLD) tags.push(tag);
+  }
+  return { tags, tagScores };
+}
+
+function normalizeIssueTags(tags = []) {
+  if (!Array.isArray(tags)) return [];
+  return [...new Set(tags.map((tag) => cleanText(tag, 80)).filter((tag) => JEV_ISSUE_TAG_SET.has(tag)))];
+}
+
+function mergeIssueTags(...tagLists) {
+  return [...new Set(tagLists.flatMap((tags) => normalizeIssueTags(tags)))];
+}
+
+function jevCoverageQuestions(issueTags = []) {
+  const normalizedTags = normalizeIssueTags(issueTags);
+  return {
+    ...Object.fromEntries(normalizedTags.map((tag) => [
+      `covers_${tag}`,
+      {
+        type: 'noul',
+        instructions: `Does the draft customer response directly address this customer issue? Tag: ${tag}. Meaning: ${JEV_CUSTOMER_ISSUE_TAGS[tag]}`,
+      },
+    ])),
+    overall_ready: {
+      type: 'noul',
+      instructions: 'Is the draft response ready to send, with all customer issues addressed, no unsafe internal detail, and no missed support/account/travel concern?',
+    },
+  };
+}
 
 function jevRouterMode(env = process.env) {
   const mode = cleanText(env.JEV_ROUTER_MODE || env.TIMESYNCHER_JEV_ROUTER_MODE || 'off', 20).toLowerCase() || 'off';
@@ -730,6 +810,7 @@ function normalizeJevDecision(response, { mode = 'shadow' } = {}) {
   const writeConfidence = Number(writeAnswer.confidence);
   const confidenceValues = [intentConfidence, writeConfidence].filter(Number.isFinite);
   const confidence = confidenceValues.length ? Math.min(...confidenceValues) : 0;
+  const issueTagResult = normalizeJevTagsFromAnswers(answers);
   return {
     intent,
     write_mode: writeMode,
@@ -737,6 +818,8 @@ function normalizeJevDecision(response, { mode = 'shadow' } = {}) {
     confidence,
     source: 'openrouter_jev',
     mode,
+    issue_tags: issueTagResult.tags,
+    tag_scores: issueTagResult.tagScores,
     approval_signal: probabilityValue(answers.approval_signal),
     needs_clarification: probabilityValue(answers.needs_clarification),
     model: cleanText(response.model || JEV_MODEL, 120),
@@ -764,12 +847,152 @@ export async function jevVacationDecision(text, { env = process.env, fetchImpl =
     body: JSON.stringify({
       model: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_MODEL,
       state: boundedJevState({ text, session, payload, telegramChatId, telegramUserId }),
-      questions: JEV_VACATION_INTENT_QUESTIONS,
+      questions: jevVacationIntentQuestions(),
     }),
   });
   const json = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(json.error?.message || json.error || `OpenRouter Jev HTTP ${response.status}`);
   return normalizeJevDecision(json, { mode });
+}
+
+function deterministicIssueTags(text, { payload = {} } = {}) {
+  const turnTag = classifyTurn({
+    text,
+    speaker: 'customer',
+    direction: 'inbound',
+    channel: 'telegram',
+    payload,
+  });
+  const tagMap = {
+    media_upload_question: 'media_upload',
+    collaborator_access_question: 'collaborator_access',
+    website_link_question: 'website_link',
+    account_question: 'account_plan_access',
+    support_question: 'product_support',
+    approval_continue: 'approval',
+  };
+  return normalizeIssueTags([
+    ...(turnTag.tags || []),
+    ...(turnTag.tags || []).map((tag) => tagMap[tag]).filter(Boolean),
+  ]);
+}
+
+function supportIntentIssueTags(intent) {
+  const tagMap = {
+    account_question: 'account_plan_access',
+    support_question: 'product_support',
+    website_link_question: 'website_link',
+    media_upload_question: 'media_upload',
+    collaborator_access_question: 'collaborator_access',
+    ambiguous: 'product_support',
+    unsafe_internal: 'unsafe_internal',
+  };
+  return normalizeIssueTags([tagMap[intent?.intent]]);
+}
+
+export async function jevResponseCoverage(customerText, draftResponse, issueTags, { env = process.env, fetchImpl = fetch, signal } = {}) {
+  const mode = jevRouterMode(env);
+  const apiKey = jevApiKey(env);
+  const normalizedTags = normalizeIssueTags(issueTags);
+  if (mode === 'off' || !apiKey || !cleanText(customerText, 4000) || !cleanText(draftResponse, 4000) || !normalizedTags.length) {
+    return null;
+  }
+  const response = await fetchImpl(JEV_DECISIONS_URL, {
+    method: 'POST',
+    signal,
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+      'HTTP-Referer': 'https://timesyncher.com',
+      'X-Title': 'TimeSyncher Vacation Jev Response Coverage',
+    },
+    body: JSON.stringify({
+      model: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_MODEL,
+      state: {
+        current_turn: cleanText(customerText, 4000),
+        draft_response: cleanText(draftResponse, 4000),
+        issue_tags: normalizedTags,
+      },
+      questions: jevCoverageQuestions(normalizedTags),
+    }),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error?.message || json.error || `OpenRouter Jev coverage HTTP ${response.status}`);
+  const answers = json?.answers && typeof json.answers === 'object' ? json.answers : {};
+  const coverageScores = {};
+  const missingTags = [];
+  for (const tag of normalizedTags) {
+    const score = probabilityValue(answers[`covers_${tag}`]);
+    coverageScores[tag] = score;
+    if (score === null || score < JEV_COVERAGE_THRESHOLD) missingTags.push(tag);
+  }
+  const overallReady = probabilityValue(answers.overall_ready);
+  return {
+    ok: missingTags.length === 0 && (overallReady === null || overallReady >= JEV_COVERAGE_THRESHOLD),
+    source: 'openrouter_jev',
+    mode,
+    issue_tags: normalizedTags,
+    missing_tags: missingTags,
+    coverage_scores: coverageScores,
+    overall_ready: overallReady,
+    model: cleanText(json.model || JEV_MODEL, 120),
+    usage: json.usage || null,
+  };
+}
+
+export async function ensureJevResponseCoverage(customerText, draftResponse, issueTags, {
+  env = process.env,
+  fetchImpl = fetch,
+  repairDraft = null,
+  maxIterations = 2,
+} = {}) {
+  let response = draftResponse;
+  const attempts = [];
+  for (let iteration = 0; iteration <= maxIterations; iteration += 1) {
+    let coverage = null;
+    try {
+      const timeoutMs = Number.parseInt(env.JEV_RESPONSE_COVERAGE_TIMEOUT_MS || env.JEV_ROUTER_TIMEOUT_MS || '2500', 10);
+      const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? AbortSignal.timeout(Number.isFinite(timeoutMs) ? timeoutMs : 2500)
+        : undefined;
+      coverage = await jevResponseCoverage(customerText, response, issueTags, { env, fetchImpl, signal });
+    } catch (error) {
+      coverage = { ok: false, source: 'openrouter_jev', mode: jevRouterMode(env), error: cleanText(error?.message || error, 300) };
+    }
+    attempts.push({ iteration, coverage });
+    if (!coverage || coverage.ok || !coverage.missing_tags?.length || typeof repairDraft !== 'function' || iteration >= maxIterations) {
+      return {
+        response,
+        changed: response !== draftResponse,
+        coverage,
+        attempts,
+      };
+    }
+    const nextResponse = await repairDraft({
+      customerText,
+      draftResponse: response,
+      issueTags: normalizeIssueTags(issueTags),
+      missingTags: coverage.missing_tags,
+      coverage,
+      iteration,
+    });
+    const cleaned = cleanText(nextResponse, 4000);
+    if (!cleaned || cleaned === cleanText(response, 4000)) {
+      return {
+        response,
+        changed: response !== draftResponse,
+        coverage,
+        attempts,
+      };
+    }
+    response = cleaned;
+  }
+  return {
+    response,
+    changed: response !== draftResponse,
+    coverage: attempts.at(-1)?.coverage || null,
+    attempts,
+  };
 }
 
 function jevSupportIntentCandidate(jevDecision, { mode = 'shadow' } = {}) {
@@ -804,14 +1027,22 @@ export async function vacationSupportIntentWithJevShadow(text, { env = process.e
   const currentDecision = await vacationSupportIntentWithModel(text, { env, fetchImpl });
   const jevCandidate = jevSupportIntentCandidate(jevDecision, { mode });
   const selectedDecision = currentDecision || jevCandidate;
+  const issueTags = mergeIssueTags(
+    deterministicIssueTags(text, { payload }),
+    jevDecision?.issue_tags,
+    supportIntentIssueTags(currentDecision),
+    supportIntentIssueTags(jevCandidate),
+  );
   return {
     selectedDecision,
     currentDecision,
     jevDecision,
+    issueTags,
     comparison: mode === 'off' ? null : {
       mode,
       currentRouterDecision: currentDecision,
       jevDecision,
+      issueTags,
       selectedSource: selectedDecision?.source || null,
       jevInfluencedBehavior: Boolean(!currentDecision && jevCandidate && mode !== 'shadow'),
     },
@@ -1902,6 +2133,23 @@ export default async function handler(req, res) {
         }, kind);
         reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
       }
+    }
+    const jevIssueTags = mergeIssueTags(
+      deterministicIssueTags(text, { payload: body.payload || {} }),
+      supportRouterResult?.issueTags,
+      supportIntentIssueTags(supportIntent),
+    );
+    if (jevIssueTags.length) {
+      replyPayload.jevIssueTags = jevIssueTags;
+    }
+    const responseCoverageResult = await ensureJevResponseCoverage(text, reply, jevIssueTags, {});
+    if (responseCoverageResult?.coverage) {
+      reply = responseCoverageResult.response;
+      replyPayload.jevResponseCoverage = {
+        changed: responseCoverageResult.changed,
+        coverage: responseCoverageResult.coverage,
+        attempts: responseCoverageResult.attempts,
+      };
     }
     const respondedAt = new Date();
     const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());

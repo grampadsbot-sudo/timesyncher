@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 
 import {
+  ensureJevResponseCoverage,
   hasTripPlanningDetails,
+  jevResponseCoverage,
   jevVacationDecision,
   parseVacationIdentity,
   vacationSupportIntent,
@@ -232,6 +234,8 @@ const jevShadowDecision = await jevVacationDecision('Looks good, let us do it', 
     assert.equal(body.state.current_turn, 'Looks good, let us do it');
     assert.deepEqual(body.state.active_vacations, ['Las Vegas']);
     assert.equal(body.questions.intent.type, 'choice');
+    assert.equal(body.questions.tag_budget.type, 'noul');
+    assert.equal(body.questions.tag_restaurants_food.type, 'noul');
     return {
       ok: true,
       async json() {
@@ -243,6 +247,8 @@ const jevShadowDecision = await jevVacationDecision('Looks good, let us do it', 
             write_mode: { type: 'choice', choice: 'none', confidence: 0.92, probabilities: { none: 0.92 } },
             approval_signal: { type: 'noul', noul: 0.95 },
             needs_clarification: { type: 'noul', noul: 0.2 },
+            tag_approval: { type: 'noul', noul: 0.97 },
+            tag_change_request: { type: 'noul', noul: 0.12 },
           },
         };
       },
@@ -253,6 +259,7 @@ assert.equal(jevShadowDecision.intent, 'approval');
 assert.equal(jevShadowDecision.write_mode, 'none');
 assert.equal(jevShadowDecision.source, 'openrouter_jev');
 assert.equal(jevShadowDecision.approval_signal, 0.95);
+assert.deepEqual(jevShadowDecision.issue_tags, ['approval']);
 
 const jevShadowRouter = await vacationSupportIntentWithJevShadow('Looks good, let us do it', {
   env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'shadow' },
@@ -266,6 +273,8 @@ const jevShadowRouter = await vacationSupportIntentWithJevShadow('Looks good, le
           write_mode: { type: 'choice', choice: 'none', confidence: 0.91 },
           approval_signal: { type: 'noul', noul: 0.94 },
           needs_clarification: { type: 'noul', noul: 0.1 },
+          tag_approval: { type: 'noul', noul: 0.96 },
+          tag_budget: { type: 'noul', noul: 0.04 },
         },
       };
     },
@@ -275,6 +284,37 @@ assert.equal(jevShadowRouter.selectedDecision, null);
 assert.equal(jevShadowRouter.currentDecision, null);
 assert.equal(jevShadowRouter.comparison.mode, 'shadow');
 assert.equal(jevShadowRouter.comparison.jevInfluencedBehavior, false);
+assert.deepEqual(jevShadowRouter.issueTags, ['approval']);
+
+const multiTagJevDecision = await jevVacationDecision('Can you add kid-friendly dinners under $40 and send my wife the link?', {
+  env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'shadow' },
+  fetchImpl: async (url, options) => {
+    const body = JSON.parse(options.body);
+    assert.equal(body.questions.tag_travelers.type, 'noul');
+    assert.equal(body.questions.tag_budget.type, 'noul');
+    assert.equal(body.questions.tag_restaurants_food.type, 'noul');
+    assert.equal(body.questions.tag_collaborator_access.type, 'noul');
+    return {
+      ok: true,
+      async json() {
+        return {
+          answers: {
+            intent: { type: 'choice', choice: 'itinerary_action', confidence: 0.9 },
+            write_mode: { type: 'choice', choice: 'edit', confidence: 0.87 },
+            approval_signal: { type: 'noul', noul: 0.01 },
+            needs_clarification: { type: 'noul', noul: 0.16 },
+            tag_travelers: { type: 'noul', noul: 0.86 },
+            tag_budget: { type: 'noul', noul: 0.91 },
+            tag_restaurants_food: { type: 'noul', noul: 0.94 },
+            tag_collaborator_access: { type: 'noul', noul: 0.88 },
+            tag_flights: { type: 'noul', noul: 0.03 },
+          },
+        };
+      },
+    };
+  },
+});
+assert.deepEqual(multiTagJevDecision.issue_tags, ['travelers', 'budget', 'restaurants_food', 'collaborator_access']);
 
 const jevAssistRouter = await vacationSupportIntentWithJevShadow('What does this cost?', {
   env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'assist' },
@@ -315,6 +355,79 @@ const jevAssistDowngrade = await vacationSupportIntentWithJevShadow('Can this th
 assert.equal(jevAssistDowngrade.selectedDecision.intent, 'support_question');
 assert.equal(jevAssistDowngrade.selectedDecision.source, 'openrouter_jev_assist');
 assert.equal(jevAssistDowngrade.comparison.jevInfluencedBehavior, true);
+
+const coverageResult = await jevResponseCoverage(
+  'Can you add kid-friendly dinners under $40 and send my wife the link?',
+  'I can add kid-friendly dinners.',
+  ['travelers', 'budget', 'restaurants_food', 'collaborator_access'],
+  {
+    env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'shadow' },
+    fetchImpl: async (url, options) => {
+      assert.equal(url, 'https://openrouter.ai/api/alpha/decisions');
+      const body = JSON.parse(options.body);
+      assert.deepEqual(body.state.issue_tags, ['travelers', 'budget', 'restaurants_food', 'collaborator_access']);
+      assert.equal(body.questions.covers_budget.type, 'noul');
+      return {
+        ok: true,
+        async json() {
+          return {
+            answers: {
+              covers_travelers: { type: 'noul', noul: 0.92 },
+              covers_budget: { type: 'noul', noul: 0.28 },
+              covers_restaurants_food: { type: 'noul', noul: 0.91 },
+              covers_collaborator_access: { type: 'noul', noul: 0.19 },
+              overall_ready: { type: 'noul', noul: 0.35 },
+            },
+          };
+        },
+      };
+    },
+  },
+);
+assert.equal(coverageResult.ok, false);
+assert.deepEqual(coverageResult.missing_tags, ['budget', 'collaborator_access']);
+
+let coverageAttempt = 0;
+const repairedCoverage = await ensureJevResponseCoverage(
+  'Can you add kid-friendly dinners under $40 and send my wife the link?',
+  'I can add kid-friendly dinners.',
+  ['travelers', 'budget', 'restaurants_food', 'collaborator_access'],
+  {
+    env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'shadow' },
+    fetchImpl: async () => {
+      coverageAttempt += 1;
+      return {
+        ok: true,
+        async json() {
+          if (coverageAttempt === 1) {
+            return {
+              answers: {
+                covers_travelers: { type: 'noul', noul: 0.91 },
+                covers_budget: { type: 'noul', noul: 0.2 },
+                covers_restaurants_food: { type: 'noul', noul: 0.9 },
+                covers_collaborator_access: { type: 'noul', noul: 0.18 },
+                overall_ready: { type: 'noul', noul: 0.32 },
+              },
+            };
+          }
+          return {
+            answers: {
+              covers_travelers: { type: 'noul', noul: 0.93 },
+              covers_budget: { type: 'noul', noul: 0.89 },
+              covers_restaurants_food: { type: 'noul', noul: 0.91 },
+              covers_collaborator_access: { type: 'noul', noul: 0.86 },
+              overall_ready: { type: 'noul', noul: 0.9 },
+            },
+          };
+        },
+      };
+    },
+    repairDraft: async ({ draftResponse, missingTags }) => `${draftResponse} I will keep dinner picks under $40 where possible and handle your wife's access separately. Missing: ${missingTags.join(', ')}.`,
+  },
+);
+assert.equal(repairedCoverage.changed, true);
+assert.equal(repairedCoverage.coverage.ok, true);
+assert.equal(repairedCoverage.attempts.length, 2);
 
 assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null);
 
