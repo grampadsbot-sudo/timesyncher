@@ -687,6 +687,294 @@ const SUPPORT_ROUTER_INTENTS = new Set([
   'unsafe_internal',
 ]);
 
+const JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
+const JEV_MODEL = 'typesafe/jev-1.13';
+const JEV_ROUTER_MODES = new Set(['off', 'shadow', 'assist', 'primary']);
+const JEV_INTENTS = new Set([
+  'itinerary_action',
+  'account_question',
+  'support_question',
+  'media_attachment',
+  'approval',
+  'new_preference',
+  'ambiguous',
+  'unsafe_internal',
+]);
+const JEV_WRITE_MODES = new Set(['none', 'create', 'edit', 'attach']);
+const JEV_SEMANTIC_TAGS = [
+  'destination',
+  'dates',
+  'travelers',
+  'budget',
+  'constraints_preferences',
+  'lodging',
+  'flights',
+  'cars_transport',
+  'restaurants_food',
+  'activities_experiences',
+  'shopping',
+  'media_upload',
+  'website_link',
+  'collaborator_access',
+  'account_entitlement',
+  'pricing_billing',
+  'booking_boundary',
+  'technical_support',
+  'approval_continue',
+  'change_request',
+];
+const JEV_TAG_THRESHOLD = 0.55;
+
+const JEV_VACATION_INTENT_QUESTIONS = {
+  intent: {
+    type: 'choice',
+    instructions: 'Classify the current TimeSyncher Vacation Telegram customer turn. Choose the safest category based on the current turn and bounded context.',
+    criteria: {
+      itinerary_action: 'The current turn asks to create, update, refine, split, rename, add to, remove from, or otherwise change vacation itinerary content.',
+      account_question: 'The current turn asks about plan, purchase, access, entitlement, checkout, coupon, remaining vacations, or account state.',
+      support_question: 'The current turn asks how TimeSyncher Vacation works, asks for help, reports a problem, asks about booking boundaries, pricing, website links, or product behavior.',
+      media_attachment: 'The current turn attaches or describes media that should be associated with a vacation, assuming deterministic code can resolve the target vacation.',
+      approval: 'The current turn approves, accepts, confirms, or says the proposed plan looks good.',
+      new_preference: 'The current turn states a new travel preference or constraint but does not clearly ask for an immediate itinerary write.',
+      ambiguous: 'The current turn is unclear, depends on missing target vacation context, or needs one clarifying question before any side effect.',
+      unsafe_internal: 'The turn asks for or would require exposing internal systems, secrets, stack traces, private account data, or implementation details.',
+    },
+  },
+  write_mode: {
+    type: 'choice',
+    instructions: 'If deterministic TimeSyncher code were to act on this turn, what write mode is justified by the current turn alone?',
+    criteria: {
+      none: 'No create, edit, or attach side effect is justified by this current turn.',
+      create: 'The current turn explicitly asks to create or start a new vacation.',
+      edit: 'The current turn explicitly asks to update an existing vacation or itinerary.',
+      attach: 'The current turn clearly asks to attach media to a resolved vacation.',
+    },
+  },
+  approval_signal: {
+    type: 'noul',
+    instructions: 'Does the current customer turn approve or accept a proposed plan or answer?',
+  },
+  needs_clarification: {
+    type: 'noul',
+    instructions: 'Should TimeSyncher ask one clarifying question before any itinerary worker, write, or media attachment is allowed?',
+  },
+  ...Object.fromEntries(JEV_SEMANTIC_TAGS.map((tag) => [`tag_${tag}`, {
+    type: 'noul',
+    instructions: `Does the current customer turn include this issue or requirement: ${tag.replace(/_/g, ' ')}? Multiple tags can be true.`,
+  }])),
+};
+
+function jevRouterMode(env = process.env) {
+  const mode = cleanText(env.JEV_ROUTER_MODE || env.TIMESYNCHER_JEV_ROUTER_MODE || 'off', 20).toLowerCase() || 'off';
+  return JEV_ROUTER_MODES.has(mode) ? mode : 'off';
+}
+
+function jevApiKey(env = process.env) {
+  return env.OPENROUTER_API_KEY || env.TIMESYNCHER_OPENROUTER_API_KEY || env.JEV_OPENROUTER_API_KEY || '';
+}
+
+function boundedJevState({ text = '', session = null, payload = {}, telegramChatId = '', telegramUserId = '' } = {}) {
+  const metadata = sessionMetadata(session);
+  const payloadVacations = [
+    ...(Array.isArray(payload.linkedVacations) ? payload.linkedVacations : []),
+    ...(Array.isArray(payload.customerVacations) ? payload.customerVacations : []),
+  ];
+  const activeVacations = [
+    metadata.vacationName,
+    ...payloadVacations.map((item) => item?.title || item?.name || item?.destination).filter(Boolean),
+  ].map((value) => cleanText(value, 160)).filter(Boolean).slice(0, 8);
+  return {
+    current_turn: cleanText(text, 4000),
+    surface: 'telegram',
+    has_linked_customer: Boolean(session?.customer_id),
+    has_linked_trip: Boolean(session?.trip_id),
+    onboarding_step: cleanText(session?.current_step, 80) || null,
+    active_vacations: activeVacations,
+    known_vacation_name: cleanText(metadata.vacationName, 160) || null,
+    known_unforgettable_goal: cleanText(metadata.unforgettableGoal, 600) || null,
+    telegram_chat_present: Boolean(telegramChatId),
+    telegram_user_present: Boolean(telegramUserId),
+  };
+}
+
+function probabilityValue(answer) {
+  const value = Number(answer?.noul ?? answer?.probability ?? answer?.score);
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : null;
+}
+
+function normalizeJevDecision(response, { mode = 'shadow' } = {}) {
+  const answers = response?.answers && typeof response.answers === 'object' ? response.answers : {};
+  const intentAnswer = answers.intent || {};
+  const writeAnswer = answers.write_mode || answers.writeMode || {};
+  const intent = cleanText(intentAnswer.choice, 80);
+  const writeMode = cleanText(writeAnswer.choice || 'none', 40) || 'none';
+  if (!JEV_INTENTS.has(intent) || !JEV_WRITE_MODES.has(writeMode)) return null;
+  const intentConfidence = Number(intentAnswer.confidence);
+  const writeConfidence = Number(writeAnswer.confidence);
+  const confidenceValues = [intentConfidence, writeConfidence].filter(Number.isFinite);
+  const confidence = confidenceValues.length ? Math.min(...confidenceValues) : 0;
+  const semanticTags = JEV_SEMANTIC_TAGS
+    .map((tag) => ({ tag, score: probabilityValue(answers[`tag_${tag}`]) }))
+    .filter((item) => item.score !== null && item.score >= JEV_TAG_THRESHOLD)
+    .sort((a, b) => b.score - a.score);
+  return {
+    intent,
+    write_mode: writeMode,
+    shouldQueueWorker: ['create', 'edit'].includes(writeMode) || intent === 'itinerary_action',
+    confidence,
+    source: 'openrouter_jev',
+    mode,
+    approval_signal: probabilityValue(answers.approval_signal),
+    needs_clarification: probabilityValue(answers.needs_clarification),
+    model: cleanText(response.model || JEV_MODEL, 120),
+    usage: response.usage || null,
+    semantic_tags: semanticTags.map((item) => item.tag),
+    semantic_tag_scores: Object.fromEntries(semanticTags.map((item) => [item.tag, item.score])),
+    probabilities: {
+      intent: intentAnswer.probabilities || null,
+      write_mode: writeAnswer.probabilities || null,
+    },
+  };
+}
+
+function coverageQuestionKey(tag) {
+  return `covers_${tag}`;
+}
+
+function jevCoverageQuestions(tags = []) {
+  return Object.fromEntries(tags.map((tag) => [coverageQuestionKey(tag), {
+    type: 'noul',
+    instructions: `Does the assistant response directly address the customer issue tagged as ${String(tag).replace(/_/g, ' ')}?`,
+  }]));
+}
+
+function normalizeJevCoverage(response, tags = []) {
+  const answers = response?.answers && typeof response.answers === 'object' ? response.answers : {};
+  const coverage = Object.fromEntries(tags.map((tag) => [tag, probabilityValue(answers[coverageQuestionKey(tag)])]));
+  const missingTags = tags.filter((tag) => (coverage[tag] ?? 0) < 0.65);
+  return {
+    ok: missingTags.length === 0,
+    coverage,
+    missing_tags: missingTags,
+    source: 'openrouter_jev',
+    model: cleanText(response?.model || JEV_MODEL, 120),
+    usage: response?.usage || null,
+  };
+}
+
+export async function jevResponseCoverage({ customerText = '', responseText = '', tags = [], env = process.env, fetchImpl = fetch, signal } = {}) {
+  const mode = jevRouterMode(env);
+  const apiKey = jevApiKey(env);
+  const semanticTags = [...new Set((Array.isArray(tags) ? tags : []).map((tag) => cleanText(tag, 80)).filter((tag) => JEV_SEMANTIC_TAGS.includes(tag)))].slice(0, 12);
+  if (mode === 'off' || !apiKey || !cleanText(customerText, 4000) || !cleanText(responseText, 4000) || !semanticTags.length) return null;
+  const response = await fetchImpl(JEV_DECISIONS_URL, {
+    method: 'POST',
+    signal,
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+      'HTTP-Referer': 'https://timesyncher.com',
+      'X-Title': 'TimeSyncher Vacation Jev Response Coverage',
+    },
+    body: JSON.stringify({
+      model: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_MODEL,
+      state: {
+        customer_turn: cleanText(customerText, 4000),
+        assistant_response: cleanText(responseText, 4000),
+        required_tags: semanticTags,
+      },
+      questions: jevCoverageQuestions(semanticTags),
+    }),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error?.message || json.error || `OpenRouter Jev coverage HTTP ${response.status}`);
+  return normalizeJevCoverage(json, semanticTags);
+}
+
+export async function jevResponseCoverageSafe(input = {}) {
+  try {
+    const env = input.env || process.env;
+    const timeoutMs = Number.parseInt(env.JEV_ROUTER_TIMEOUT_MS || env.TIMESYNCHER_JEV_ROUTER_TIMEOUT_MS || '2500', 10);
+    const signal = input.signal || (typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+      ? AbortSignal.timeout(Number.isFinite(timeoutMs) ? timeoutMs : 2500)
+      : undefined);
+    return await jevResponseCoverage({ ...input, signal });
+  } catch (error) {
+    console.warn('TimeSyncher Vacation Jev response coverage skipped', error?.message || error);
+    return { ok: false, source: 'openrouter_jev', error: cleanText(error?.message || error, 300) };
+  }
+}
+
+export async function jevVacationDecision(text, { env = process.env, fetchImpl = fetch, signal, session = null, payload = {}, telegramChatId = '', telegramUserId = '' } = {}) {
+  const mode = jevRouterMode(env);
+  const apiKey = jevApiKey(env);
+  if (mode === 'off' || !apiKey || !cleanText(text, 4000)) return null;
+  const response = await fetchImpl(JEV_DECISIONS_URL, {
+    method: 'POST',
+    signal,
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+      'HTTP-Referer': 'https://timesyncher.com',
+      'X-Title': 'TimeSyncher Vacation Jev Shadow Router',
+    },
+    body: JSON.stringify({
+      model: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_MODEL,
+      state: boundedJevState({ text, session, payload, telegramChatId, telegramUserId }),
+      questions: JEV_VACATION_INTENT_QUESTIONS,
+    }),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error?.message || json.error || `OpenRouter Jev HTTP ${response.status}`);
+  return normalizeJevDecision(json, { mode });
+}
+
+function jevSupportIntentCandidate(jevDecision, { mode = 'shadow' } = {}) {
+  if (!jevDecision || mode === 'off' || mode === 'shadow') return null;
+  if (jevDecision.write_mode !== 'none' || jevDecision.confidence < 0.78) return null;
+  if (['account_question', 'support_question', 'ambiguous', 'unsafe_internal'].includes(jevDecision.intent)) {
+    return {
+      intent: jevDecision.intent,
+      write_mode: 'none',
+      shouldQueueWorker: false,
+      confidence: jevDecision.confidence,
+      source: `${jevDecision.source}_${mode}`,
+      reasons: ['jev_no_write_gate'],
+    };
+  }
+  return null;
+}
+
+export async function vacationSupportIntentWithJevShadow(text, { env = process.env, fetchImpl = fetch, session = null, payload = {}, telegramChatId = '', telegramUserId = '' } = {}) {
+  const mode = jevRouterMode(env);
+  let jevDecision = null;
+  try {
+    const timeoutMs = Number.parseInt(env.JEV_ROUTER_TIMEOUT_MS || env.TIMESYNCHER_JEV_ROUTER_TIMEOUT_MS || '2500', 10);
+    const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+      ? AbortSignal.timeout(Number.isFinite(timeoutMs) ? timeoutMs : 2500)
+      : undefined;
+    jevDecision = await jevVacationDecision(text, { env, fetchImpl, signal, session, payload, telegramChatId, telegramUserId });
+  } catch (error) {
+    console.warn('TimeSyncher Vacation Jev router shadow fallback', error?.message || error);
+    jevDecision = { ok: false, source: 'openrouter_jev', mode, error: cleanText(error?.message || error, 300) };
+  }
+  const currentDecision = await vacationSupportIntentWithModel(text, { env, fetchImpl });
+  const jevCandidate = jevSupportIntentCandidate(jevDecision, { mode });
+  const selectedDecision = currentDecision || jevCandidate;
+  return {
+    selectedDecision,
+    currentDecision,
+    jevDecision,
+    comparison: mode === 'off' ? null : {
+      mode,
+      currentRouterDecision: currentDecision,
+      jevDecision,
+      selectedSource: selectedDecision?.source || null,
+      jevInfluencedBehavior: Boolean(!currentDecision && jevCandidate && mode !== 'shadow'),
+    },
+  };
+}
+
 function normalizeRouterDecision(decision, source = 'grok') {
   if (!decision || typeof decision !== 'object') return null;
   const intent = cleanText(decision.intent, 80);
@@ -1693,7 +1981,31 @@ export default async function handler(req, res) {
     let reply;
     let replyPayload = {};
     const collaboratorInviteRequested = session?.customer_id && isCollaboratorInviteRequest(text) && !collaboratorStatusQuestion(text);
-    const supportIntent = collaboratorInviteRequested ? null : await vacationSupportIntentWithModel(text);
+    const supportRouterResult = collaboratorInviteRequested
+      ? { selectedDecision: null, currentDecision: null, jevDecision: null, comparison: null }
+      : await vacationSupportIntentWithJevShadow(text, {
+        session,
+        payload: body.payload || {},
+        telegramChatId,
+        telegramUserId,
+      });
+    const supportIntent = supportRouterResult.selectedDecision;
+    if (supportRouterResult.comparison) {
+      try {
+        await db`
+          update transcript_turns
+          set payload = coalesce(payload, '{}'::jsonb) || ${{
+            jevRouterComparison: {
+              ...supportRouterResult.comparison,
+              inboundTranscriptId,
+            },
+          }}
+          where id = ${inboundTranscriptId}
+        `;
+      } catch (error) {
+        console.warn('TimeSyncher Vacation Jev transcript comparison skipped', error?.message || error);
+      }
+    }
 
     if (startMatch) {
       if (onboarding) session = await markVoiceNotePracticePrompted(db, session);
@@ -1717,6 +2029,7 @@ export default async function handler(req, res) {
             },
         },
       };
+      if (supportRouterResult.comparison) replyPayload.jevRouterComparison = supportRouterResult.comparison;
     } else if (session?.customer_id && session.current_step === 'awaiting_voice_note_practice') {
       session = await markVoiceNotePracticeComplete(db, session);
       queued = await queueSetupRequest(db, session, text, {
@@ -1850,6 +2163,26 @@ export default async function handler(req, res) {
     }
     const respondedAt = new Date();
     const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
+    if (supportRouterResult?.comparison && !replyPayload.jevRouterComparison) {
+      replyPayload.jevRouterComparison = supportRouterResult.comparison;
+    }
+    const jevSemanticTags = supportRouterResult?.jevDecision?.semantic_tags || [];
+    if (supportRouterResult?.comparison && reply && jevSemanticTags.length) {
+      const coverage = await jevResponseCoverageSafe({
+        customerText: text,
+        responseText: reply,
+        tags: jevSemanticTags,
+      });
+      if (coverage) {
+        replyPayload.jevResponseCoverage = coverage;
+        if (replyPayload.jevRouterComparison) {
+          replyPayload.jevRouterComparison = {
+            ...replyPayload.jevRouterComparison,
+            responseCoverage: coverage,
+          };
+        }
+      }
+    }
     const outboundTranscriptId = await recordTranscript(db, {
       session,
       speaker: 'assistant',

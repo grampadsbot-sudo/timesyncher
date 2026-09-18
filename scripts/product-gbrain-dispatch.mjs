@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { jevResponseCoverageSafe } from '../api/vacation-telegram-turn.mjs';
 import { actorFromLiveSession, gateTelegramIntakeEdit, pipelineWriteDecision, selectLiveLockedTripThings } from '../src/vacation/intake-edit-bridge.mjs';
+import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -2136,6 +2138,77 @@ function customerResponse(job, artifacts) {
   return lines.join('\n').slice(0, 3900) || artifacts.initialItinerary || 'I started your TimeSyncher Vacation itinerary and saved the planning brief.';
 }
 
+function jevSemanticTagsFrom(job, artifacts) {
+  const input = asObject(job.input);
+  const payload = { ...asObject(job.payload), ...asObject(input.payload) };
+  const comparison = asObject(
+    artifacts.turnDecision?.jevRouterComparison ||
+    artifacts.turnDecision?.jevComparison ||
+    payload.jevRouterComparison ||
+    payload.jev_router_comparison ||
+    input.jevRouterComparison ||
+    input.jev_router_comparison,
+  );
+  const jevDecision = asObject(comparison.jevDecision || comparison.jev_decision || artifacts.turnDecision?.jevDecision || artifacts.turnDecision?.jev_decision);
+  const semanticTags = Array.isArray(jevDecision.semantic_tags) ? jevDecision.semantic_tags : [];
+  if (semanticTags.length) return semanticTags.map((tag) => text(tag, 80)).filter(Boolean).slice(0, 12);
+  const currentText = currentTurnText({ ...job, input, payload }) || artifacts.requestText || job.request_text || '';
+  return classifyTurn({
+    text: currentText,
+    speaker: 'customer',
+    direction: 'inbound',
+    channel: job.source || input.source || payload.source || 'worker',
+    payload,
+  }).tags.filter((tag) => !['customer_request'].includes(tag)).slice(0, 12);
+}
+
+function jevCoverageMode(env = process.env) {
+  return text(env.JEV_ROUTER_MODE || env.TIMESYNCHER_JEV_ROUTER_MODE || 'off', 20).toLowerCase();
+}
+
+function coverageRevisionLine(missingTags = []) {
+  const readable = missingTags
+    .map((tag) => text(tag, 80).replace(/_/g, ' '))
+    .filter(Boolean)
+    .slice(0, 6)
+    .join(', ');
+  return readable ? `I also noted these parts of your message for the next pass: ${readable}.` : '';
+}
+
+async function customerResponseWithJevCoverage(job, artifacts) {
+  let responseText = customerResponse(job, artifacts);
+  const requiredTags = jevSemanticTagsFrom(job, artifacts);
+  const coverage = await jevResponseCoverageSafe({
+    customerText: currentTurnText(job) || artifacts.requestText || job.request_text || '',
+    responseText,
+    tags: requiredTags,
+  });
+  const mode = jevCoverageMode();
+  let finalCoverage = coverage;
+  let revised = false;
+  if (coverage?.missing_tags?.length && ['assist', 'primary'].includes(mode)) {
+    const revisionLine = coverageRevisionLine(coverage.missing_tags);
+    if (revisionLine) {
+      responseText = [responseText, '', revisionLine].join('\n').slice(0, 3900);
+      revised = true;
+      finalCoverage = await jevResponseCoverageSafe({
+        customerText: currentTurnText(job) || artifacts.requestText || job.request_text || '',
+        responseText,
+        tags: requiredTags,
+      });
+    }
+  }
+  return {
+    customerResponseText: responseText,
+    jevResponseCoverage: finalCoverage ? {
+      ...finalCoverage,
+      required_tags: requiredTags,
+      revised,
+      mode,
+    } : null,
+  };
+}
+
 function customerVacationUrl(artifacts) {
   const candidates = [
     artifacts.customerVacationUrl,
@@ -2210,8 +2283,9 @@ async function main() {
   }
   const allowedSkills = manifest.allowedSkills || [];
   const artifacts = await buildArtifacts(job, manifest);
-  const customerResponseText = customerResponse(job, artifacts);
+  const { customerResponseText, jevResponseCoverage } = await customerResponseWithJevCoverage(job, artifacts);
   const turnInspector = buildTurnInspector(job, artifacts, customerResponseText);
+  if (jevResponseCoverage) turnInspector.jevResponseCoverage = jevResponseCoverage;
 
   const response = {
     customerResponse: customerResponseText,
@@ -2234,6 +2308,7 @@ async function main() {
       editApplied: Boolean(artifacts.editApplied),
       createNewTrip: Boolean(artifacts.createNewTrip),
       turnDecision: artifacts.turnDecision || artifacts.supportRouterDecision || null,
+      jevResponseCoverage,
       turnInspector,
       trekSync: artifacts.trekSync || null,
       researchSummary: {
