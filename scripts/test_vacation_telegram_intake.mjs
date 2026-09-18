@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 
 import {
   hasTripPlanningDetails,
+  jevVacationDecision,
   parseVacationIdentity,
   vacationSupportIntent,
+  vacationSupportIntentWithJevShadow,
   vacationSupportIntentWithModel,
   vacationSupportReply,
   vacationIdentityAck,
@@ -213,6 +215,106 @@ const fallbackMediaQuestion = await vacationSupportIntentWithModel('Am I able to
 });
 assert.equal(fallbackMediaQuestion.intent, 'media_upload_question');
 assert.equal(fallbackMediaQuestion.source, 'deterministic_fallback');
+
+const jevShadowDecision = await jevVacationDecision('Looks good, let us do it', {
+  env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'shadow' },
+  session: {
+    customer_id: 'customer_123',
+    trip_id: 'trip_123',
+    current_step: 'awaiting_trip_details',
+    metadata: { vacationName: 'Las Vegas' },
+  },
+  fetchImpl: async (url, options) => {
+    assert.equal(url, 'https://openrouter.ai/api/alpha/decisions');
+    assert.equal(options.headers.authorization, 'Bearer test-openrouter-key');
+    const body = JSON.parse(options.body);
+    assert.equal(body.model, 'typesafe/jev-1.13');
+    assert.equal(body.state.current_turn, 'Looks good, let us do it');
+    assert.deepEqual(body.state.active_vacations, ['Las Vegas']);
+    assert.equal(body.questions.intent.type, 'choice');
+    return {
+      ok: true,
+      async json() {
+        return {
+          model: 'typesafe/jev-1.13-test',
+          usage: { cost: 0.00001 },
+          answers: {
+            intent: { type: 'choice', choice: 'approval', confidence: 0.99, probabilities: { approval: 0.99 } },
+            write_mode: { type: 'choice', choice: 'none', confidence: 0.92, probabilities: { none: 0.92 } },
+            approval_signal: { type: 'noul', noul: 0.95 },
+            needs_clarification: { type: 'noul', noul: 0.2 },
+          },
+        };
+      },
+    };
+  },
+});
+assert.equal(jevShadowDecision.intent, 'approval');
+assert.equal(jevShadowDecision.write_mode, 'none');
+assert.equal(jevShadowDecision.source, 'openrouter_jev');
+assert.equal(jevShadowDecision.approval_signal, 0.95);
+
+const jevShadowRouter = await vacationSupportIntentWithJevShadow('Looks good, let us do it', {
+  env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'shadow' },
+  session: { customer_id: 'customer_123', trip_id: 'trip_123', metadata: { vacationName: 'Las Vegas' } },
+  fetchImpl: async () => ({
+    ok: true,
+    async json() {
+      return {
+        answers: {
+          intent: { type: 'choice', choice: 'approval', confidence: 0.99 },
+          write_mode: { type: 'choice', choice: 'none', confidence: 0.91 },
+          approval_signal: { type: 'noul', noul: 0.94 },
+          needs_clarification: { type: 'noul', noul: 0.1 },
+        },
+      };
+    },
+  }),
+});
+assert.equal(jevShadowRouter.selectedDecision, null);
+assert.equal(jevShadowRouter.currentDecision, null);
+assert.equal(jevShadowRouter.comparison.mode, 'shadow');
+assert.equal(jevShadowRouter.comparison.jevInfluencedBehavior, false);
+
+const jevAssistRouter = await vacationSupportIntentWithJevShadow('What does this cost?', {
+  env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'assist' },
+  fetchImpl: async () => ({
+    ok: true,
+    async json() {
+      return {
+        answers: {
+          intent: { type: 'choice', choice: 'support_question', confidence: 0.98 },
+          write_mode: { type: 'choice', choice: 'none', confidence: 0.95 },
+          approval_signal: { type: 'noul', noul: 0.01 },
+          needs_clarification: { type: 'noul', noul: 0.2 },
+        },
+      };
+    },
+  }),
+});
+assert.equal(jevAssistRouter.selectedDecision.intent, 'support_question');
+assert.equal(jevAssistRouter.selectedDecision.source, 'deterministic_fallback');
+assert.equal(jevAssistRouter.comparison.jevInfluencedBehavior, false);
+
+const jevAssistDowngrade = await vacationSupportIntentWithJevShadow('Can this thing do calendar stuff?', {
+  env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'assist' },
+  fetchImpl: async () => ({
+    ok: true,
+    async json() {
+      return {
+        answers: {
+          intent: { type: 'choice', choice: 'support_question', confidence: 0.96 },
+          write_mode: { type: 'choice', choice: 'none', confidence: 0.9 },
+          approval_signal: { type: 'noul', noul: 0.01 },
+          needs_clarification: { type: 'noul', noul: 0.2 },
+        },
+      };
+    },
+  }),
+});
+assert.equal(jevAssistDowngrade.selectedDecision.intent, 'support_question');
+assert.equal(jevAssistDowngrade.selectedDecision.source, 'openrouter_jev_assist');
+assert.equal(jevAssistDowngrade.comparison.jevInfluencedBehavior, true);
 
 assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null);
 
