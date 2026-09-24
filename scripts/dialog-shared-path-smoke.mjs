@@ -108,8 +108,8 @@ const customerResponse = String(parsed.customerResponse || '');
 const phrase = shared.smoke_bar_phrase || '';
 const generative = job.reply_mode === 'generative';
 const stamped = customerResponse.includes(DIALOG_TEST_FINGERPRINT) && phrase && customerResponse.includes(phrase);
-const generativeReady = !generative || (shared.jevRan === true && shared.modelTier != null && shared.responseModel);
-const ok = child.status === 0 && shared.ok !== false && stamped && generativeReady;
+const generativeReady = !generative || Boolean(shared.jevRan === true && shared.modelTier != null && shared.responseModel);
+const ok = Boolean(child.status === 0 && shared.ok !== false && stamped && generativeReady);
 
 process.stdout.write(`${JSON.stringify({
   ok,
