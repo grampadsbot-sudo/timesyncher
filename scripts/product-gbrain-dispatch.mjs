@@ -2001,7 +2001,7 @@ async function buildArtifacts(job, manifest) {
   return { requestText, destination, dates, methods, lane, vacationName, unforgettableGoal, things, budgetItems, supportNotes, initialItinerary, webItineraryUrl, researchedThings, trekSync, hostedSync, publicResearch, createNewTrip, turnDecision: routerDecision };
 }
 
-const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-cli-sync';
+const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 
 function customerResponse(job, artifacts) {
   const reply = renderCustomerResponse(job, artifacts);
