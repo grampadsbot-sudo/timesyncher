@@ -700,7 +700,7 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const checkout = checkoutBaseUrl(manifest);
   const lines = [];
   if (allVacations) {
-    lines.push(`For ${person}, full Telegram editing access across all of your vacations is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
+    lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
     lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
     if (wantsMedia) {
       lines.push(`Photo upload access across all vacations is ${photo.unlimitedVacationsAmountUsd ? `$${photo.unlimitedVacationsAmountUsd}` : '$9'}.`);
