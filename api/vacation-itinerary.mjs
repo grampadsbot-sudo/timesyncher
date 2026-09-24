@@ -146,12 +146,27 @@ function groupBy(items, key) {
   }, {});
 }
 
+function builtVacationSiteUrl(metadata) {
+  const meta = metadata && typeof metadata === 'object' ? metadata : {};
+  const explicit = String(meta.publicUrl || meta.public_url || meta.webItineraryUrl || '').trim();
+  const slug = String(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug || '').trim();
+  if (!explicit && !slug) return '';
+  const url = publicTripUrl({ metadata: meta }, process.env);
+  try {
+    const parsed = new URL(url);
+    if (!parsed.pathname || parsed.pathname === '/') return '';
+  } catch {
+    return '';
+  }
+  return url;
+}
+
 function vacationAppTripSummary(row) {
   const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const url = publicTripUrl({ metadata }, process.env);
+  const url = builtVacationSiteUrl(metadata);
   return {
     id: row.id,
-    title: row.title || 'Vacation',
+    title: row.title || '',
     destination: row.destination || '',
     startDate: row.start_date || null,
     endDate: row.end_date || null,

@@ -215,7 +215,7 @@
               <button type="button" class="secondary" id="backBtn">Back to Step 1</button>
               <button type="button" class="primary" id="payBtn">Pay securely</button>
             </div>
-            <div class="notice">Test page only. Use Stripe test cards until Stripe approval/live mode are ready. Do not enter real card data here.</div>
+            <div class="notice">Test purchases use coupon checkout. Enter the minted code and choose Redeem coupon. Do not click a live Stripe payment.</div>
           </div>
 
           <div id="status" class="status hidden"></div>
@@ -523,7 +523,7 @@
         payBtn.textContent = 'Redeeming coupon...';
         hideStatus();
         try {
-          const response = await fetch('/api/create-payment-intent', {
+          const response = await fetch('/api/checkout-coupon', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),
@@ -531,7 +531,11 @@
           const data = await response.json().catch(() => ({}));
           if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be redeemed.');
           setStatus('Coupon redeemed. Opening your TimeSyncher onboarding...', false);
-          window.location.href = data.onboarding?.onboardingUrl || '/order-success.html';
+          const nextUrl = data.session?.onboardingUrl
+            || (data.session?.token ? `/order-success.html?session=${encodeURIComponent(data.session.token)}` : '')
+            || data.onboarding?.onboardingUrl
+            || '/order-success.html';
+          window.location.href = nextUrl;
         } catch (error) {
           setStatus(error.message || 'Coupon could not be redeemed.', true);
           payBtn.disabled = false;

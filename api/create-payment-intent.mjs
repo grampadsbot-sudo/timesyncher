@@ -11,6 +11,7 @@ import {
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from '../src/vacation/email.mjs';
+import checkoutCouponHandler from './checkout-coupon.mjs';
 import {
   activateAccessPlanCheckout,
   activateFreeAccessPlanRows,
@@ -589,6 +590,18 @@ export default async function handler(req, res) {
         body,
         env: process.env,
       }));
+    }
+
+    const couponCode = clean(body.couponCode || body.coupon, 120);
+    if (couponCode) {
+      const replay = {
+        method: 'POST',
+        headers: req.headers || {},
+        async *[Symbol.asyncIterator]() {
+          yield Buffer.from(JSON.stringify(body));
+        },
+      };
+      return checkoutCouponHandler(replay, res);
     }
 
     let stripeConfig;

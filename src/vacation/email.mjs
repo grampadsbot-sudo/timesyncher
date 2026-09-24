@@ -1,4 +1,4 @@
-import { onboardingLink, telegramLink } from './onboarding.mjs';
+import { onboardingLink } from './onboarding.mjs';
 import { collaboratorTelegramLink } from './collaborators.mjs';
 import { webAccessAcceptUrl } from './web-access.mjs';
 
@@ -17,10 +17,6 @@ function fromEmail(env = process.env) {
 export function purchaseEmail({ contact, token, env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
   const onboardingUrl = onboardingLink(token, env);
-  const botUrl = telegramLink(token, env);
-  const iosUrl = 'https://apps.apple.com/app/telegram-messenger/id686449807';
-  const androidUrl = 'https://play.google.com/store/apps/details?id=org.telegram.messenger';
-  const macUrl = 'https://apps.apple.com/us/app/telegram/id747648890?mt=12';
   const subject = 'Your TimeSyncher Vacation purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
@@ -30,12 +26,8 @@ export function purchaseEmail({ contact, token, env = process.env }) {
     'Click the button below to review the TimeSyncher EULA and get started on your unforgettable TimeSyncher Vacation.',
     '',
     `Start TimeSyncher Vacation: ${onboardingUrl}`,
-    `Telegram bot link after EULA acceptance: ${botUrl}`,
     '',
-    'If Telegram is not installed:',
-    `iPhone/iPad: ${iosUrl}`,
-    `Android: ${androidUrl}`,
-    `Mac: ${macUrl}`,
+    'After you accept, open TimeSyncher Vacation to plan the trip. You can type, speak, and attach files there.',
     '',
     `Questions: ${supportEmail(env)}`,
   ].join('\n');
@@ -46,9 +38,7 @@ export function purchaseEmail({ contact, token, env = process.env }) {
     <p>Hi ${name},</p>
     <p>Click the button below to review the TimeSyncher EULA and get started on your unforgettable TimeSyncher Vacation.</p>
     <p><a href="${onboardingUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Start TimeSyncher Vacation</a></p>
-    <p>After EULA acceptance, you can also open the bot directly with this tokenized link:</p>
-    <p><a href="${botUrl}" style="color:#f5d37b;text-decoration:underline">${botUrl}</a></p>
-    <p>If Telegram is not installed: <a href="${iosUrl}" style="color:#f5d37b;text-decoration:underline">iPhone/iPad</a> · <a href="${androidUrl}" style="color:#f5d37b;text-decoration:underline">Android</a> · <a href="${macUrl}" style="color:#f5d37b;text-decoration:underline">Mac</a></p>
+    <p>After you accept, open TimeSyncher Vacation to plan the trip. You can type, speak, and attach files there.</p>
     <p style="color:#cfc2a9">Questions: <a href="mailto:${supportEmail(env)}" style="color:#f5d37b;text-decoration:underline">${supportEmail(env)}</a></p>
   </div>
 </body></html>`;

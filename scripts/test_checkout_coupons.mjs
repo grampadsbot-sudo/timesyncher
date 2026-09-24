@@ -47,5 +47,9 @@ assert(orderSuccessHtml.includes("Photo and video upload access has been added f
 assert(!orderSuccessHtml.includes('Photo and video upload access has been added for the selected vacation scope.'));
 assert(createPaymentIntentApi.includes("body.action === 'create_owner_media_payment_intent'"));
 assert(createPaymentIntentApi.includes("body.action === 'complete_staging_owner_media_checkout'"));
+assert(createPaymentIntentApi.includes('checkoutCouponHandler'));
+assert(createPaymentIntentApi.includes('body.couponCode || body.coupon'));
+assert(!orderSuccessHtml.toLowerCase().includes('telegram'));
+assert(!orderSuccessHtml.toLowerCase().includes('telegraph'));
 
 console.log('checkout coupon smoke passed');

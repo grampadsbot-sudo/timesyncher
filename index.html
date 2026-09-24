@@ -883,8 +883,10 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to redeem coupon.');
-        if (data.collaboratorInvite?.telegramUrl) {
-          window.location.href = data.collaboratorInvite.telegramUrl;
+        if (data.collaboratorInvite) {
+          window.location.href = '/order-success.html?collaboratorCheckout=complete';
+        } else if (data.status === 'owner_media_coupon_redeemed') {
+          window.location.href = '/order-success.html?ownerMediaCheckout=complete';
         } else {
           window.location.href = data.session?.onboardingUrl || `/order-success.html?session=${encodeURIComponent(data.session?.token || '')}`;
         }
