@@ -2001,7 +2001,17 @@ async function buildArtifacts(job, manifest) {
   return { requestText, destination, dates, methods, lane, vacationName, unforgettableGoal, things, budgetItems, supportNotes, initialItinerary, webItineraryUrl, researchedThings, trekSync, hostedSync, publicResearch, createNewTrip, turnDecision: routerDecision };
 }
 
+const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-cli-sync';
+
 function customerResponse(job, artifacts) {
+  const reply = renderCustomerResponse(job, artifacts);
+  if (process.env.TIMESYNCHER_DIALOG_TEST_MODE !== '1') return reply;
+  return String(reply).includes(DIALOG_TEST_FINGERPRINT)
+    ? reply
+    : `${DIALOG_TEST_FINGERPRINT}\n${reply}`.slice(0, 3900);
+}
+
+function renderCustomerResponse(job, artifacts) {
   const requestType = text(job.request_type || job.job_type || '', 80);
   const url = text(artifacts.webItineraryUrl || '', 500);
   const requestText = text(job.request_text || job.text || job.message || artifacts.requestText || '', 2000).toLowerCase();

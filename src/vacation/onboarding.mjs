@@ -27,6 +27,10 @@ export function onboardingLink(token, env = process.env) {
   return `${siteBase(env)}/order-success.html?session=${encodeURIComponent(token)}`;
 }
 
+export function vacationAppLink(token, env = process.env) {
+  return `${siteBase(env)}/vacation-app.html?session=${encodeURIComponent(token)}`;
+}
+
 export function telegramLink(token, env = process.env) {
   return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
 }
@@ -200,6 +204,7 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     session,
     token: session.token,
     onboardingUrl: onboardingLink(session.token, env),
+    vacationAppUrl: vacationAppLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact: cleanContact,
@@ -259,11 +264,16 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     contact: eulaContactFromOnboarding(row, contact),
     selectedFunctionality: [
       'vacation_planning_onboarding',
+      'in_app_text_voice_and_file_intake',
+      'telegram_fallback_intake',
       'telegram_voice_note_intake',
       'hosted_itinerary_generation',
       'purchase_receipts_and_support',
     ],
-    google: {},
+    google: {
+      returnUrl: vacationAppLink(row.token, env),
+      telegramFallbackUrl: row.telegram_deep_link || telegramLink(row.token, env),
+    },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
       text: loadDefaultEulaText(),
@@ -325,6 +335,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         session: row,
         token: row.token,
         onboardingUrl: onboardingLink(row.token, env),
+        vacationAppUrl: vacationAppLink(row.token, env),
         telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
         eula,
         contact,
@@ -391,6 +402,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     session,
     token: session.token,
     onboardingUrl: onboardingLink(session.token, env),
+    vacationAppUrl: vacationAppLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact,
@@ -431,6 +443,7 @@ export function publicSession(row, env = process.env, eula = null) {
     amountCents: row.amount_cents,
     currency: row.currency,
     onboardingUrl: onboardingLink(row.token, env),
+    vacationAppUrl: vacationAppLink(row.token, env),
     telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
     eula: eula ? {
       status: eula.status || (eula.ok ? 'accepted' : 'pending'),

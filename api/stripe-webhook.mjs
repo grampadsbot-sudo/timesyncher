@@ -5,6 +5,7 @@ import { buildOnboardingFromStripe } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 import { markCollaboratorInvitePaid } from '../src/vacation/collaborators.mjs';
 import { ownerMediaAddOns, recordOwnerMediaPurchase } from '../src/vacation/media-checkout.mjs';
+import { activateAccessPlanCheckout } from '../src/vacation/access-plan.mjs';
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -41,6 +42,20 @@ export default async function handler(req, res) {
       const paymentIntent = event.data.object;
       const db = sql(process.env);
       const metadata = paymentIntent.metadata || {};
+      if (metadata.product === 'timesyncher_vacation_access_plan' && metadata.access_plan_checkout_id) {
+        const result = await activateAccessPlanCheckout({
+          db,
+          checkoutId: metadata.access_plan_checkout_id,
+          paymentIntentId: paymentIntent.id,
+          env: process.env,
+        });
+        console.log('TimeSyncher access-plan checkout succeeded', {
+          paymentIntentId: paymentIntent.id,
+          accessPlanCheckoutId: metadata.access_plan_checkout_id,
+          activatedCount: result.activated?.length || 0,
+        });
+        return send(res, 200, { ok: true, received: true, type: event.type });
+      }
       if (metadata.product === 'timesyncher_vacation_telegram_collaborator' && metadata.invite_id) {
         const invite = await markCollaboratorInvitePaid(db, {
           inviteId: metadata.invite_id,

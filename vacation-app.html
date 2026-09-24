@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeSyncher Vacation App</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #15191f;
+      --muted: #677280;
+      --line: #d9e0e8;
+      --gold: #b4872d;
+      --gold-strong: #8b6518;
+      --paper: #f6f7f9;
+      --panel: #ffffff;
+      --soft: #eef2f6;
+      --blue: #2f6f9f;
+      --danger: #a23a2a;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    button, input, textarea { font: inherit; letter-spacing: 0; }
+    button { cursor: pointer; }
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+    .topbar {
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 10px clamp(12px, 3vw, 22px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .94);
+      backdrop-filter: blur(14px);
+      z-index: 4;
+    }
+    .brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 850;
+    }
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #120d02;
+      background: linear-gradient(135deg, #f2d989, var(--gold));
+      box-shadow: 0 8px 24px rgba(180, 135, 45, .24);
+      flex: 0 0 auto;
+    }
+    .brand small {
+      display: block;
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 12px;
+      margin-top: 1px;
+    }
+    .trip-menu { position: relative; }
+    .trip-button {
+      max-width: min(48vw, 380px);
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      font-weight: 750;
+    }
+    .trip-button span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trip-list {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      width: min(92vw, 420px);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 22px 70px rgba(24, 32, 42, .18);
+      padding: 8px;
+      transform-origin: top right;
+      transform: scale(.94) translateY(-8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .16s ease, opacity .16s ease;
+      z-index: 8;
+    }
+    .trip-menu.open .trip-list {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .trip-option {
+      width: 100%;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink);
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      text-align: left;
+    }
+    .trip-option:hover, .trip-option.active { background: var(--soft); }
+    .trip-option b, .trip-option small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trip-option small { color: var(--muted); margin-top: 2px; }
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: minmax(128px, var(--site-height, 52fr)) 10px minmax(220px, 48fr);
+    }
+    .site-pane, .chat-pane {
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .site-pane {
+      background: #dce2ea;
+      position: relative;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: white;
+    }
+    .site-empty {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .splitter {
+      border: 0;
+      border-top: 1px solid #cdd5df;
+      border-bottom: 1px solid #cdd5df;
+      background: linear-gradient(180deg, #edf1f5, #dfe6ee);
+      cursor: row-resize;
+      touch-action: none;
+      position: relative;
+    }
+    .splitter::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 54px;
+      height: 3px;
+      border-radius: 999px;
+      background: #9ca8b5;
+      transform: translate(-50%, -50%);
+    }
+    .chat-pane {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      background: var(--panel);
+    }
+    .messages {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px clamp(12px, 3vw, 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .bubble {
+      max-width: min(720px, 88%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      line-height: 1.42;
+      background: #f9fafb;
+      align-self: flex-start;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .bubble.user {
+      background: #e8f1f7;
+      border-color: #c4d8e6;
+      align-self: flex-end;
+    }
+    .bubble small {
+      display: block;
+      color: var(--muted);
+      font-weight: 750;
+      margin-bottom: 3px;
+    }
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 10px clamp(10px, 2.5vw, 18px);
+      background: rgba(255, 255, 255, .96);
+    }
+    .attachment-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #fbfcfd;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .compose-grid {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .icon-button, .send-button {
+      min-width: 42px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      display: inline-grid;
+      place-items: center;
+      font-weight: 850;
+    }
+    .icon-button.recording {
+      color: #fff;
+      border-color: var(--danger);
+      background: var(--danger);
+    }
+    .send-button {
+      padding: 0 14px;
+      color: #fff;
+      border-color: var(--blue);
+      background: var(--blue);
+    }
+    textarea {
+      width: 100%;
+      min-height: 42px;
+      max-height: 150px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 11px;
+      color: var(--ink);
+      background: #fbfcfd;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(47, 111, 159, .12);
+    }
+    .session-gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.9), rgba(246,247,249,.96)),
+        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2200&q=80") center/cover;
+    }
+    .gate-card {
+      width: min(520px, 100%);
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 8px;
+      background: rgba(255,255,255,.92);
+      padding: 20px;
+      box-shadow: 0 30px 90px rgba(24, 32, 42, .22);
+    }
+    .gate-card h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    .gate-card p { color: var(--muted); margin: 0 0 16px; line-height: 1.45; }
+    .session-form {
+      display: grid;
+      gap: 10px;
+    }
+    .session-form input {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 11px;
+    }
+    .session-form button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      color: #120d02;
+      background: linear-gradient(135deg, #f2d989, var(--gold));
+      font-weight: 850;
+    }
+    .error { color: var(--danger); font-weight: 750; }
+    @media (max-width: 700px) {
+      .topbar { grid-template-columns: 1fr; align-items: start; }
+      .trip-button { max-width: 100%; width: 100%; justify-content: space-between; }
+      .trip-list { left: 0; right: auto; width: 100%; }
+      .workspace { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); }
+      .compose-grid { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+      .bubble { max-width: 94%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    const root = document.getElementById('root');
+    const params = new URLSearchParams(location.search);
+    let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
+    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false };
+    const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    const icon = {
+      clip: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21.4 11.6-8.7 8.7a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.6-8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      mic: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 2 11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      check: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      chevron: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+    const MAX_INLINE_FILE_BYTES = 2 * 1024 * 1024;
+    const MAX_FILES_PER_TURN = 6;
+
+    function currentTrip() {
+      return state.vacations.find((trip) => trip.id === state.currentTripId) || state.vacations[0] || null;
+    }
+
+    function renderGate(message = '') {
+      root.innerHTML = `<main class="session-gate">
+        <section class="gate-card">
+          <div class="mark" aria-hidden="true">TS</div>
+          <h1>TimeSyncher Vacation</h1>
+          <p>Open your vacation workspace with the link from your welcome email.</p>
+          <form class="session-form" id="sessionForm">
+            <input name="session" placeholder="Vacation session token" value="${safe(sessionToken)}" autocomplete="off" required>
+            <button>Open app</button>
+            ${message ? `<div class="error">${safe(message)}</div>` : ''}
+          </form>
+        </section>
+      </main>`;
+      document.getElementById('sessionForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        sessionToken = event.currentTarget.session.value.trim();
+        localStorage.setItem('tsVacationAppSession', sessionToken);
+        loadApp();
+      });
+    }
+
+    function renderApp() {
+      const trip = currentTrip();
+      const hasSite = Boolean(trip?.publicUrl);
+      const welcome = hasSite
+        ? 'I can update this vacation from here. Send notes, voice dictation, photos, videos, reservations, or corrections.'
+        : 'Tell me about the vacation you want to build. You can type, use voice dictation, or attach vacation files.';
+      const turnMarkup = state.turns.length
+        ? state.turns.map((turn) => {
+          const user = turn.speaker === 'customer' || turn.direction === 'inbound';
+          return `<article class="bubble ${user ? 'user' : ''}"><small>${user ? 'You' : 'TimeSyncher'}</small>${safe(turn.body)}</article>`;
+        }).join('')
+        : `<article class="bubble"><small>TimeSyncher</small>${welcome}</article>`;
+      root.innerHTML = `<main class="app">
+        <header class="topbar">
+          <div class="brand"><span class="mark" aria-hidden="true">TS</span><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
+          <div class="trip-menu" id="tripMenu">
+            <button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(trip?.title || 'Choose vacation')}</span>${icon.chevron}</button>
+            <div class="trip-list" role="listbox">
+              ${state.vacations.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}">
+                <span>${item.id === trip?.id ? icon.check : ''}</span>
+                <span><b>${safe(item.title)}</b><small>${safe([item.destination, item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
+              </button>`).join('')}
+            </div>
+          </div>
+        </header>
+        <section class="workspace" id="workspace">
+          <div class="site-pane">
+            ${hasSite ? `<iframe title="${safe(trip.title)} website" src="${safe(trip.publicUrl)}"></iframe>` : `<div class="site-empty"><div><strong>Your vacation website will appear here.</strong><br><span>Start by telling TimeSyncher where you are going, when, who is coming, and what matters most.</span></div></div>`}
+          </div>
+          <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>
+          <section class="chat-pane" aria-label="Vacation chat">
+            <div class="messages" id="messages">
+              ${turnMarkup}
+            </div>
+            <form class="composer" id="composer">
+              <div class="attachment-row" id="attachmentRow"></div>
+              <div class="compose-grid">
+                <button class="icon-button" id="attachButton" type="button" title="Add vacation files">${icon.clip}</button>
+                <button class="icon-button" id="voiceButton" type="button" title="Voice mode">${icon.mic}</button>
+                <textarea id="messageText" name="message" placeholder="Message TimeSyncher Vacation" rows="1"></textarea>
+                <button class="send-button" type="submit" title="Send">${icon.send}</button>
+              </div>
+              <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
+            </form>
+          </section>
+        </section>
+      </main>`;
+      bindApp();
+      renderAttachments();
+    }
+
+    function bindApp() {
+      const menu = document.getElementById('tripMenu');
+      const button = document.getElementById('tripButton');
+      button.addEventListener('click', () => {
+        const open = !menu.classList.contains('open');
+        menu.classList.toggle('open', open);
+        button.setAttribute('aria-expanded', String(open));
+      });
+      document.addEventListener('click', (event) => {
+        if (!menu.contains(event.target)) menu.classList.remove('open');
+      }, { once: true });
+      document.querySelectorAll('.trip-option').forEach((option) => {
+        option.addEventListener('click', () => {
+          state.currentTripId = option.dataset.tripId;
+          state.turns = [];
+          loadApp(state.currentTripId);
+        });
+      });
+      document.getElementById('attachButton').addEventListener('click', () => document.getElementById('fileInput').click());
+      document.getElementById('fileInput').addEventListener('change', (event) => {
+        state.attachments = Array.from(event.target.files || []).slice(0, MAX_FILES_PER_TURN);
+        renderAttachments();
+      });
+      bindVoice();
+      bindSplitter();
+      document.getElementById('composer').addEventListener('submit', sendMessage);
+    }
+
+    function renderAttachments() {
+      const row = document.getElementById('attachmentRow');
+      if (!row) return;
+      row.innerHTML = state.attachments.map((file) => `<span class="chip">${safe(file.name)} · ${Math.ceil(file.size / 1024)} KB</span>`).join('');
+    }
+
+    function bindVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const voiceButton = document.getElementById('voiceButton');
+      if (!SpeechRecognition) {
+        voiceButton.disabled = true;
+        voiceButton.title = 'Voice dictation is not available in this browser';
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.onstart = () => {
+        state.voiceMode = true;
+        voiceButton.classList.add('recording');
+      };
+      recognition.onend = () => {
+        state.voiceMode = false;
+        voiceButton.classList.remove('recording');
+      };
+      recognition.onresult = (event) => {
+        const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
+        if (text) document.getElementById('messageText').value = text;
+      };
+      voiceButton.addEventListener('click', () => recognition.start());
+    }
+
+    function bindSplitter() {
+      const workspace = document.getElementById('workspace');
+      const splitter = document.getElementById('splitter');
+      let dragging = false;
+      const resize = (clientY) => {
+        const rect = workspace.getBoundingClientRect();
+        const pct = Math.min(76, Math.max(26, ((clientY - rect.top) / rect.height) * 100));
+        workspace.style.setProperty('--site-height', `${pct}fr`);
+      };
+      splitter.addEventListener('pointerdown', (event) => {
+        dragging = true;
+        splitter.setPointerCapture(event.pointerId);
+        resize(event.clientY);
+      });
+      splitter.addEventListener('pointermove', (event) => {
+        if (dragging) resize(event.clientY);
+      });
+      splitter.addEventListener('pointerup', () => { dragging = false; });
+    }
+
+    async function sendMessage(event) {
+      event.preventDefault();
+      const textarea = document.getElementById('messageText');
+      const text = textarea.value.trim();
+      if (!text && state.attachments.length === 0) return;
+      const messages = document.getElementById('messages');
+      messages.insertAdjacentHTML('beforeend', `<article class="bubble user"><small>You</small>${safe(text || 'Vacation files attached')}</article>`);
+      textarea.value = '';
+      const attachments = await Promise.all(state.attachments.map(filePayload));
+      state.attachments = [];
+      renderAttachments();
+      try {
+        const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ tripId: currentTrip()?.id, text, attachments, voiceMode: state.voiceMode, browserTranscription: true }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to send.');
+        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>Got it. I saved that for ${safe(data.trip?.title || 'this vacation')} and queued the update.</article>`);
+      } catch (error) {
+        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small><span class="error">${safe(error.message)}</span></article>`);
+      }
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function filePayload(file) {
+      const base = { name: file.name, type: file.type, size: file.size, lastModified: file.lastModified, inline: file.size <= MAX_INLINE_FILE_BYTES };
+      if (file.size > MAX_INLINE_FILE_BYTES) return Promise.resolve({ ...base, contentDataUrl: null, note: 'File is larger than inline web app intake limit.' });
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ ...base, contentDataUrl: String(reader.result || '') });
+        reader.onerror = () => resolve({ ...base, contentDataUrl: null, note: 'Browser could not read this file.' });
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function loadApp(tripId = '') {
+      if (!sessionToken) return renderGate();
+      try {
+        const query = new URLSearchParams({ app: '1', session: sessionToken });
+        if (tripId) query.set('tripId', tripId);
+        const res = await fetch(`/api/vacation-itinerary?${query.toString()}`);
+        const data = await res.json();
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to open app.');
+        localStorage.setItem('tsVacationAppSession', sessionToken);
+        state.session = data.session;
+        state.vacations = data.vacations || [];
+        state.turns = data.turns || [];
+        state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
+        renderApp();
+      } catch (error) {
+        renderGate(error.message);
+      }
+    }
+
+    loadApp();
+  </script>
+</body>
+</html>

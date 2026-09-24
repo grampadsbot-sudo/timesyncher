@@ -43,27 +43,29 @@
       <section class="hidden" id="eula" aria-label="EULA acceptance">
         <div class="choice">
           <h2>Review Terms &amp; Privacy</h2>
-          <p>Review and accept the TimeSyncher Terms &amp; Privacy details. After acceptance, TimeSyncher will guide you to Telegram onboarding.</p>
+          <p>Review and accept the TimeSyncher Terms &amp; Privacy details. After acceptance, TimeSyncher will open your vacation app.</p>
           <div class="button-row">
             <a class="button" id="acceptEula" href="#">Review and Continue</a>
           </div>
         </div>
       </section>
 
-      <section class="hidden" id="choices" aria-label="Telegram onboarding">
+      <section class="hidden" id="choices" aria-label="Vacation app onboarding">
         <div class="choice">
-          <h2>Install Telegram</h2>
+          <h2>Open Your Vacation App</h2>
+          <p>Start onboarding in the TimeSyncher Vacation app. You can type, use voice mode, and add vacation files there.</p>
           <div class="button-row">
-            <a class="button secondary" id="iosInstall" href="#">Install on iPhone/iPad</a>
-            <a class="button secondary" id="androidInstall" href="#">Install on Android</a>
-            <a class="button secondary" id="desktopInstall" href="#">Install on Mac</a>
+            <a class="button" id="openApp" href="#">Open TimeSyncher Vacation</a>
           </div>
         </div>
         <div class="choice">
-          <h2>Start Your TimeSyncher Vacation Planning</h2>
-          <p>Click the button below to launch your TimeSyncher Vacation Telegram conversation.</p>
+          <h2>Telegram Fallback</h2>
+          <p>Telegram is still available if you need it for fallback support or existing collaborator flows.</p>
           <div class="button-row">
-            <a class="button" id="openBot" href="#">Start TimeSyncher Vacation</a>
+            <a class="button secondary" id="openBot" href="#">Open Telegram Bot</a>
+            <a class="button secondary" id="iosInstall" href="#">Install on iPhone/iPad</a>
+            <a class="button secondary" id="androidInstall" href="#">Install on Android</a>
+            <a class="button secondary" id="desktopInstall" href="#">Install on Mac</a>
           </div>
         </div>
       </section>
@@ -151,6 +153,17 @@
         await track('owner_media_checkout_complete', location.href, 'page_view');
         return;
       }
+      if (params.get('accessPlanCheckout') === 'complete') {
+        const checkoutId = cleanParam(params.get('checkout'));
+        meta.textContent = 'Vacation access checkout complete.';
+        intro.classList.add('hidden');
+        setStatus('The access plan payment is complete. TimeSyncher is sending the right setup links and invites for the selected people.');
+        eula.classList.add('hidden');
+        choices.classList.add('hidden');
+        collaborator.classList.add('hidden');
+        await track('access_plan_checkout_complete', checkoutId || location.href, 'page_view');
+        return;
+      }
       const collaboratorInvite = params.get('collaboratorInvite') || '';
       if (collaboratorInvite) {
         state.token = collaboratorInvite;
@@ -192,6 +205,7 @@
         await track('eula_required', data.session.eula.acceptUrl, 'page_view');
         return;
       }
+      wireLink('openApp', 'vacation_app_open', data.session.vacationAppUrl);
       wireLink('openBot', 'telegram_open', data.session.telegramUrl);
       wireLink('iosInstall', 'telegram_ios', data.session.telegramInstall.ios);
       wireLink('androidInstall', 'telegram_android', data.session.telegramInstall.android);
