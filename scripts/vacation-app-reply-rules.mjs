@@ -8,6 +8,35 @@ export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
 
 const OPENROUTER_HOST = /openrouter\.ai/i;
 const JEV_DECISIONS_PATH = /\/api\/alpha\/decisions\/?$/i;
+const OPENROUTER_CHAT_PATH = /\/api\/v1\/chat\/completions\/?$/i;
+const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
+const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const JEV_DECISIONS_MODEL = 'typesafe/jev-1.13';
+
+// App/server OpenRouter chat fallback, cheap → strong.
+// Used only after Jev has already returned a tier and the Grok router is unset.
+// Not a substitute for the Jev pre-call (that stays on /api/alpha/decisions).
+// 1 google/gemini-2.5-flash-lite — cheapest adequate
+// 2 google/gemini-2.5-flash
+// 3 openai/gpt-4.1-mini
+// 4 anthropic/claude-sonnet-4.5
+// 5 anthropic/claude-opus-4.1 — strongest
+const OPENROUTER_TIER_CHAT_MODELS = {
+  1: 'google/gemini-2.5-flash-lite',
+  2: 'google/gemini-2.5-flash',
+  3: 'openai/gpt-4.1-mini',
+  4: 'anthropic/claude-sonnet-4.5',
+  5: 'anthropic/claude-opus-4.1',
+};
+
+// Decisions score is the 0-based weighted index of this list, so index 0 is tier 1.
+const JEV_MODEL_TIER_CRITERIA = [
+  '1 cheapest model that can still answer this vacation-app turn adequately',
+  '2 light inexpensive reasoning',
+  '3 balanced quality for a normal itinerary or product answer',
+  '4 stronger writing or judgment, including the one collab assessment after website build',
+  '5 strongest model for a hard, high-stakes, or ambiguous customer turn',
+];
 
 function text(value, max = 8000) {
   return String(value || '').trim().slice(0, max);
@@ -19,12 +48,32 @@ function isOpenRouterReplyUrl(value) {
   return !JEV_DECISIONS_PATH.test(url);
 }
 
-export function assertSharedReplyTargetAllowed(value, label = 'reply target') {
-  if (isOpenRouterReplyUrl(value)) {
-    const error = new Error(`refused: shared reply path will not call OpenRouter for customer replies (${label})`);
-    error.code = 'OPENROUTER_REPLY_REFUSED';
-    throw error;
-  }
+function isExplicitTieredOpenRouterChatUrl(value) {
+  const url = text(value, 500);
+  return Boolean(url) && OPENROUTER_HOST.test(url) && OPENROUTER_CHAT_PATH.test(url);
+}
+
+export function assertSharedReplyTargetAllowed(value, label = 'reply target', options = {}) {
+  if (!isOpenRouterReplyUrl(value)) return;
+  if (options.allowTieredOpenRouterChat && isExplicitTieredOpenRouterChatUrl(value)) return;
+  const error = new Error(`refused: shared reply path will not call OpenRouter for customer replies (${label})`);
+  error.code = 'OPENROUTER_REPLY_REFUSED';
+  throw error;
+}
+
+function appOpenRouterKey(env) {
+  return text(
+    env.TIMESYNCHER_JEV_CLASSIFY_TOKEN
+      || env.JEV_OPENROUTER_API_KEY
+      || env.TIMESYNCHER_JEV_OPENROUTER_API_KEY
+      || env.TIMESYNCHER_OPENROUTER_API_KEY
+      || env.OPENROUTER_API_KEY,
+    500,
+  );
+}
+
+function openRouterChatModelForTier(tier) {
+  return OPENROUTER_TIER_CHAT_MODELS[tier] || '';
 }
 
 function parseMachineContract(source) {
@@ -232,80 +281,183 @@ function normalizeJev(body, via) {
   const modelTier = Number.isInteger(tierValue) && tierValue >= 1 && tierValue <= 5 ? tierValue : null;
   const responseModel = text(source?.response_model || source?.responseModel || source?.recommended_model || source?.model, 120) || tierModel(modelTier);
   if (!modelTier && !responseModel) {
-    return { jevRan: false, via, error: 'jev response missing model tier', modelTier: null, responseModel: null };
+    return { jevRan: false, via, error: 'jev response missing model tier', modelTier: null, responseModel: null, extraContext: null };
   }
   return {
     jevRan: true,
     via,
     modelTier,
-    responseModel: responseModel || tierModel(modelTier),
+    responseModel: responseModel || tierModel(modelTier) || openRouterChatModelForTier(modelTier),
     routeType: text(source?.route_type || source?.routeType, 80) || null,
     extraContext: source?.extra_context || source?.extraContext || source?.context || null,
   };
 }
 
-export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {
-  const payload = {
-    current_turn: text(customerTurn, 4000),
-    context: {
-      channel: 'vacation-app',
-      stage: text(stage, 80) || 'vacation-app',
-      gate: text(gate, 80) || null,
-      screen: text(screen, 80) || 'vacation-app',
-      session: session && typeof session === 'object' ? session : {},
-      pipeline: SHARED_REPLY_PIPELINE,
-      rules_slug: REPLY_RULES_SLUG,
+function probabilityValue(answer) {
+  const value = Number(answer?.noul ?? answer?.probability ?? answer?.score);
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : null;
+}
+
+function shortSession(session) {
+  if (!session || typeof session !== 'object') return {};
+  const out = {};
+  for (const key of ['seed_id', 'seedId', 'vacationName', 'stage', 'gate', 'screen']) {
+    if (session[key]) out[key] = text(session[key], 120);
+  }
+  return out;
+}
+
+function vacationAppContext({ customerTurn, stage, gate, screen, session }) {
+  return {
+    channel: 'vacation-app',
+    stage: text(stage, 80) || 'vacation-app',
+    gate: text(gate, 80) || null,
+    screen: text(screen, 80) || 'vacation-app',
+    current_turn: text(customerTurn, 2000),
+    session: shortSession(session),
+    pipeline: SHARED_REPLY_PIPELINE,
+    rules_slug: REPLY_RULES_SLUG,
+  };
+}
+
+function decisionsPayload(context) {
+  return {
+    model: JEV_DECISIONS_MODEL,
+    state: context,
+    questions: {
+      model_tier: {
+        type: 'score',
+        instructions: 'Cheapest adequate model tier for this vacation-app customer turn. Criterion 1 is cheapest and criterion 5 is strongest. Prefer a stronger tier only for the single collab assessment after the initial website build.',
+        criteria: JEV_MODEL_TIER_CRITERIA,
+      },
+      route_type: {
+        type: 'choice',
+        instructions: 'Which vacation-app reply route should the generator follow?',
+        criteria: {
+          itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
+          notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
+          access_pricing: 'Price or access for a collaborator, editing, or media. Use unlimited vacations for the whole year when the plan is annual.',
+          collab_upsell: 'The one collab assessment after the initial website build. Do not repeat it.',
+          product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
+          general: 'Other vacation-app help that still follows the shared reply rules.',
+        },
+      },
+      needs_day_for_note: {
+        type: 'noul',
+        instructions: 'Does a good reply need to name which day a note belongs to?',
+        criteria: {
+          true: 'The customer is saving a note, asking where it goes, or the answer depends on a day.',
+          false: 'The turn does not need a day to place a note.',
+        },
+      },
     },
   };
-  const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500);
-  if (!url) {
+}
+
+function normalizeDecisions(body) {
+  const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
+  const tierAnswer = answers.model_tier || answers.modelTier || {};
+  const score = Number(tierAnswer.score);
+  let modelTier = null;
+  if (Number.isFinite(score)) {
+    modelTier = Math.min(5, Math.max(1, Math.round(score) + 1));
+  } else {
+    const direct = Number(tierAnswer.choice ?? tierAnswer.value ?? body?.model_tier ?? body?.modelTier);
+    if (Number.isInteger(direct) && direct >= 1 && direct <= 5) modelTier = direct;
+  }
+  const routeType = text(answers.route_type?.choice || answers.routeType?.choice, 80) || null;
+  const extraContext = {
+    routeType,
+    needsDayForNote: probabilityValue(answers.needs_day_for_note),
+    modelTierScore: Number.isFinite(score) ? score : null,
+    modelTierConfidence: Number.isFinite(Number(tierAnswer.confidence)) ? Number(tierAnswer.confidence) : null,
+  };
+  if (!modelTier) {
     return {
       jevRan: false,
-      via: 'not-configured',
+      via: 'openrouter-decisions',
       modelTier: null,
       responseModel: null,
-      error: 'Jev pre-call is not configured. Set TIMESYNCHER_JEV_CLASSIFY_URL. This VM cannot bind gbrain jev_classify_turn, and OpenRouter is not used to write replies.',
-      request: payload,
+      extraContext,
+      error: 'jev decisions response missing model_tier score',
     };
   }
+  return {
+    jevRan: true,
+    via: 'openrouter-decisions',
+    modelTier,
+    responseModel: openRouterChatModelForTier(modelTier),
+    routeType,
+    extraContext,
+  };
+}
+
+export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {
+  const context = vacationAppContext({ customerTurn, stage, gate, screen, session });
+  const gbrainPayload = {
+    current_turn: context.current_turn,
+    context,
+  };
+  const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
+  const decisions = JEV_DECISIONS_PATH.test(url);
+  const payload = decisions ? decisionsPayload(context) : gbrainPayload;
   if (isOpenRouterReplyUrl(url)) {
     return {
       jevRan: false,
       via: 'refused-openrouter-reply',
       modelTier: null,
       responseModel: null,
-      error: 'refused: Jev pre-call URL points at an OpenRouter reply endpoint',
+      extraContext: null,
+      error: 'refused: Jev pre-call URL points at an OpenRouter reply endpoint. Only /api/alpha/decisions is allowed for Jev.',
+      request: payload,
+    };
+  }
+  const key = appOpenRouterKey(env);
+  if (decisions && !key) {
+    return {
+      jevRan: false,
+      via: 'openrouter-decisions',
+      modelTier: null,
+      responseModel: null,
+      extraContext: null,
+      error: 'Jev pre-call needs an app/server OpenRouter key. Set OPENROUTER_API_KEY or TIMESYNCHER_OPENROUTER_API_KEY. Also accepted: TIMESYNCHER_JEV_CLASSIFY_TOKEN, JEV_OPENROUTER_API_KEY, TIMESYNCHER_JEV_OPENROUTER_API_KEY. Do not copy Dialog bot secrets. gbrain jev_classify_turn is not required.',
       request: payload,
     };
   }
   try {
-    const headers = { 'content-type': 'application/json', accept: 'application/json' };
-    const key = text(env.TIMESYNCHER_JEV_CLASSIFY_TOKEN || env.JEV_OPENROUTER_API_KEY || env.TIMESYNCHER_JEV_OPENROUTER_API_KEY, 500);
-    if (key && JEV_DECISIONS_PATH.test(url)) headers.authorization = `Bearer ${key}`;
+    const headers = {
+      'content-type': 'application/json',
+      accept: 'application/json',
+      ...(decisions && key ? { authorization: `Bearer ${key}` } : {}),
+      ...(decisions ? { 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': 'TimeSyncher Vacation App Jev' } : {}),
+    };
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(20000),
     });
     const body = await response.json().catch(() => ({}));
+    const via = decisions ? 'openrouter-decisions' : 'http-jev';
     if (!response.ok || body.ok === false) {
       return {
         jevRan: false,
-        via: 'http-jev',
+        via,
         modelTier: null,
         responseModel: null,
+        extraContext: null,
         error: text(body.error?.message || body.error || `Jev HTTP ${response.status}`, 300),
         request: payload,
       };
     }
-    return { ...normalizeJev(body, 'http-jev'), request: payload };
+    return { ...(decisions ? normalizeDecisions(body) : normalizeJev(body, via)), request: payload };
   } catch (error) {
     return {
       jevRan: false,
-      via: 'http-jev',
+      via: decisions ? 'openrouter-decisions' : 'http-jev',
       modelTier: null,
       responseModel: null,
+      extraContext: null,
       error: text(error?.message || error, 300),
       request: payload,
     };
@@ -322,16 +474,82 @@ function grokReplyUrl(env) {
   return /^https?:\/\//i.test(host) ? host.replace(/\/+$/, '') + routePath : `http://${host}:${port}${routePath}`;
 }
 
+function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel }) {
+  return {
+    pipeline: rules?.pipeline || SHARED_REPLY_PIPELINE,
+    rules_slug: rules?.slug || REPLY_RULES_SLUG,
+    rules: {
+      smoke_bar_id: rules?.smoke_bar_id || null,
+      access_pricing_language: rules?.access_pricing_language || null,
+      notes_where: rules?.notes_where || null,
+    },
+    jev: {
+      modelTier,
+      responseModel,
+      routeType: jev?.routeType || jev?.extraContext?.routeType || null,
+      extraContext: jev?.extraContext || null,
+    },
+    customer_turn: text(customerTurn, 4000),
+    stage: text(stage, 80),
+    screen: text(screen, 80),
+  };
+}
+
+function chatReplyText(content) {
+  if (typeof content === 'string') return text(content, 3500);
+  if (!Array.isArray(content)) return '';
+  return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
+}
+
+function replyRulesSystem(rules) {
+  return [
+    'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
+    'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
+    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
+    'Do not mention reservations, payments, checkout, or split-payer.',
+    `When access pricing comes up, say ${rules?.access_pricing_language || 'unlimited vacations for the whole year'}.`,
+    'Give the collab assessment at most once, and only after the initial website build.',
+    'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
+    'Write a short customer-facing answer.',
+  ].join('\n');
+}
+
 export async function callTieredModel({ rules, jev, customerTurn, stage, screen, env = process.env } = {}) {
   const modelTier = jev?.modelTier ?? null;
-  const responseModel = text(jev?.responseModel, 120) || tierModel(modelTier);
-  if (!jev?.jevRan || (!modelTier && !responseModel)) {
-    return { called: false, modelTier, responseModel: responseModel || null, reason: 'jev_did_not_choose_a_model' };
+  const suggestedModel = text(jev?.responseModel, 120) || openRouterChatModelForTier(modelTier) || tierModel(modelTier);
+  if (!jev?.jevRan || (!modelTier && !suggestedModel)) {
+    return { called: false, via: null, modelTier, responseModel: suggestedModel || null, reason: 'jev_did_not_choose_a_model' };
   }
-  const url = grokReplyUrl(env);
-  if (!url) {
-    return { called: false, modelTier, responseModel, reason: 'tiered_model_credentials_missing' };
+  const grokUrl = grokReplyUrl(env);
+  if (grokUrl) {
+    return callGrokTieredModel({
+      url: grokUrl,
+      rules,
+      jev,
+      customerTurn,
+      stage,
+      screen,
+      modelTier,
+      responseModel: tierModel(modelTier) || suggestedModel,
+      env,
+    });
   }
+  if (!modelTier) {
+    return { called: false, via: null, modelTier: null, responseModel: suggestedModel || null, reason: 'jev_did_not_choose_a_model' };
+  }
+  return callOpenRouterTieredChat({
+    rules,
+    jev,
+    customerTurn,
+    stage,
+    screen,
+    modelTier,
+    responseModel: openRouterChatModelForTier(modelTier) || suggestedModel,
+    env,
+  });
+}
+
+async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, screen, modelTier, responseModel, env }) {
   assertSharedReplyTargetAllowed(url, 'tiered model');
   const token = text(env.TIMESYNCHER_GROK_ROUTER_TOKEN || env.TIMESYNCHER_TIERED_MODEL_TOKEN, 500);
   try {
@@ -342,34 +560,69 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
         accept: 'application/json',
         ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({
-        pipeline: rules?.pipeline || SHARED_REPLY_PIPELINE,
-        rules_slug: rules?.slug || REPLY_RULES_SLUG,
-        rules: {
-          smoke_bar_id: rules?.smoke_bar_id || null,
-          access_pricing_language: rules?.access_pricing_language || null,
-          notes_where: rules?.notes_where || null,
-        },
-        jev: {
-          modelTier,
-          responseModel,
-          routeType: jev?.routeType || null,
-          extraContext: jev?.extraContext || null,
-        },
-        customer_turn: text(customerTurn, 4000),
-        stage: text(stage, 80),
-        screen: text(screen, 80),
-      }),
-      signal: AbortSignal.timeout(8000),
+      body: JSON.stringify(replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel })),
+      signal: AbortSignal.timeout(20000),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {
-      return { called: false, modelTier, responseModel, reason: text(body.error || `tiered model HTTP ${response.status}`, 300) };
+      return { called: false, via: 'grok-router', modelTier, responseModel, reason: text(body.error || `tiered model HTTP ${response.status}`, 300) };
     }
     const answer = text(body.answer || body.reply || body.customerResponse || body.text, 3500);
-    if (!answer) return { called: false, modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, modelTier, responseModel: text(body.model || responseModel, 120), text: answer };
+    if (!answer) return { called: false, via: 'grok-router', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
+    return { called: true, via: 'grok-router', modelTier, responseModel: text(body.model || responseModel, 120), text: answer };
   } catch (error) {
-    return { called: false, modelTier, responseModel, reason: text(error?.message || error, 300) };
+    return { called: false, via: 'grok-router', modelTier, responseModel, reason: text(error?.message || error, 300) };
+  }
+}
+
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, env }) {
+  const key = appOpenRouterKey(env);
+  if (!key) {
+    return {
+      called: false,
+      via: 'openrouter-chat',
+      modelTier,
+      responseModel,
+      reason: 'tiered_model_credentials_missing: set OPENROUTER_API_KEY or TIMESYNCHER_OPENROUTER_API_KEY for the app/server OpenRouter chat fallback',
+    };
+  }
+  assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
+  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel });
+  try {
+    const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${key}`,
+        'content-type': 'application/json',
+        accept: 'application/json',
+        'HTTP-Referer': 'https://timesyncher.com',
+        'X-Title': 'TimeSyncher Vacation App Shared Reply',
+      },
+      body: JSON.stringify({
+        model: responseModel,
+        temperature: 0.4,
+        max_tokens: 700,
+        messages: [
+          { role: 'system', content: replyRulesSystem(rules) },
+          { role: 'user', content: JSON.stringify(request) },
+        ],
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.ok === false) {
+      return {
+        called: false,
+        via: 'openrouter-chat',
+        modelTier,
+        responseModel,
+        reason: text(body.error?.message || body.error || `tiered model HTTP ${response.status}`, 300),
+      };
+    }
+    const answer = chatReplyText(body.choices?.[0]?.message?.content) || text(body.answer || body.reply || body.text, 3500);
+    if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel: text(body.model || responseModel, 120), text: answer };
+  } catch (error) {
+    return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
   }
 }

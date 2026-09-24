@@ -2168,8 +2168,10 @@ function sharedReplyMeta({ rules, jev, model, replySource, ok }) {
     content_hash: rules?.content_hash || null,
     replySource,
     jevRan: jev?.jevRan === true,
+    jevVia: jev?.via || null,
     modelTier: jev?.modelTier ?? model?.modelTier ?? null,
-    responseModel: jev?.responseModel || model?.responseModel || null,
+    responseModel: (model?.called && model.responseModel) || jev?.responseModel || model?.responseModel || null,
+    modelVia: model?.via || null,
     jevError: jev?.jevRan ? null : (jev?.error || null),
     modelReason: model?.called ? null : (model?.reason || null),
   };
