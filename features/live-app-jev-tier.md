@@ -1,0 +1,48 @@
+# Live composer reply: Jev classify, then model tier
+
+Customer chat on the vacation-app URL. SoT: `bot-admin/messages/time-syncher/craig-lock-live-app-jev-tier-feature-map-20260925`. Shared contract: `bot-admin/skills/time-syncher/vacation-app-reply-rules` (`pipeline: jev_precall_then_tiered_model`).
+
+Hold certify. This inventory is not a certify. The same path is what Dialog uses. It is not Dialog-only.
+
+## Customer path
+
+1. **Composer.** `vacation-app.html` posts the typed or dictated text to `/api/vacation-itinerary?app=1&session=`. The bubble is `data.reply` from that response. There is no canned “Got it. I saved that…” app line.
+2. **Jev classify.** `produceLiveAppReply` in `src/vacation/live-app-turn.mjs` calls `jevPrecall` from `scripts/vacation-app-reply-rules.mjs` before any reply model. The stored stamp is `payload.liveTranscript.jev`.
+3. **Tier.** When `jevRan` is true, the stamp has `modelTier` (1–5) and `routeType`. `callTieredModel` runs only after that tier exists.
+4. **Reply.** The app row `body` is the tiered model text the customer saw. `replyProducer` is `vacation-app-reply-rules`. If Jev does not run, the stamp is `jevRan: false` plus `reason`, and no app sentence is stored.
+
+## Retired reply
+
+Do not treat these as the composer reply:
+
+- The old canned bubble “Got it. I saved that…”
+- Dialog test fingerprint `TS-DIALOG-FINGERPRINT-20260924-bar2` on customer-visible text
+- OpenRouter self-call pack fill or `dialog_vacation_test_turn` invented replies
+
+## Sub-features
+
+- `composer-post` sends the customer text and renders only the returned reply.
+- `jev-classify` runs `jevPrecall` and stores `jevRan`, tier, and route, or `jevRan: false` and a reason.
+- `tier-reply` calls `callTieredModel` with that tier and stores the model text as the app turn.
+
+## How to get to it (user POV)
+
+- Open `vacation-app.html?session=` after the in-app terms are accepted.
+- Type in the composer, or use the mic when the browser can transcribe.
+- Read the TimeSyncher bubble. That text is the stored app turn.
+
+## Driving it with verify-live-app-jev-tier
+
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --self-check
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --transcript /opt/cursor/artifacts/vegas-live-dialog-pdf-20260925/transcript.json
+```
+
+`--session <token>` reads stored `transcript_turns` when `DATABASE_URL` is set. It does not send a new chat turn.
+
+## Gotchas
+
+- A customer turn with `jevRan: false` and a reason is an honest skip. Do not fill in a tier.
+- An app turn with `jevRan: false`, empty text, or `invented: true` fails the harness.
+- Pack-shape PDF rendering does not create replies. It only prints turns this path already stored.

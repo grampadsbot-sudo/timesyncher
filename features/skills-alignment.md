@@ -11,7 +11,7 @@ Completer/skillify jobs 18–22 in flight. Hold certify. Do not claim Completer 
 | `skills/vacation-media-bind` | Neon bind API; no Blob; no tokens in chat/PR |
 | `skills/feature-map-full-ui-inventory` | Every live UI control in `features/`; stamp Config dump |
 | `skills/tg-intake-gbrain-track-and-build` | Persist TG Q&A in GBrain; emit 10–15 min build cue |
-| `.cursor/skills/verify-timesyncher-vacation` | Post-purchase harness: email launch, then EULA inside the app URL, then chat. Fails if evidence skips email or EULA is only on order-success |
+| `.cursor/skills/verify-timesyncher-vacation` | Post-purchase harness: email launch, then EULA inside the app URL, then chat. Fails if evidence skips email or EULA is only on order-success. Live composer harness: Jev then tier on stored turns (`verify-live-app-jev-tier.mjs`) |
 
 **Sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard`  
 Config dump: `bot-admin/messages/time-syncher/keepsakes-config-defaults-20260910`  

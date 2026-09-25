@@ -29,6 +29,7 @@ Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving i
 ## Features
 
 - [Post-purchase email, then in-app EULA](./post-purchase-email-eula.md) covers purchase ack, the email launch link, EULA on the app URL, and onboarding chat.
+- [Live composer Jev tier](./live-app-jev-tier.md) covers Jev classify, then the model tier, then the stored reply. Product inventory: `features/live-app-jev-tier.md`.
 
 ## Retired
 

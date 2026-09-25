@@ -67,4 +67,17 @@ The harness only writes under a temp directory during `--self-check`, and it rem
 
 ## Helpers
 
-`node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs` is the only helper. Flags: `--doctor`, `--evidence <dir>`, `--live`, `--self-check`.
+`node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs` checks the email launch. Flags: `--doctor`, `--evidence <dir>`, `--live`, `--self-check`.
+
+## Live composer Jev tier
+
+Prove `features/live-app-jev-tier.md`. The composer reply is Jev, then that model tier, then the stored text. Same shared producer as Dialog.
+
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --self-check
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --transcript <live-transcript.json>
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --session <token>
+```
+
+The harness exits non-zero when the source path skips Jev, stamps a dialog fingerprint onto the customer reply, or a live app turn lacks `jevRan` plus tier and route. A skipped classify must be `jevRan: false` with a reason and no invented tier. `--session` only reads stored turns.
