@@ -36,29 +36,9 @@
     <section class="card">
       <img class="logo" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
       <h1>Purchase confirmed</h1>
-      <p id="intro">Let's get started with TimeSyncher Vacation.</p>
-      <div class="meta" id="meta">Loading onboarding session...</div>
+      <p id="intro">Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email to open TimeSyncher Vacation.</p>
+      <div class="meta" id="meta">Loading your purchase...</div>
       <div class="status hidden" id="status"></div>
-
-      <section class="hidden" id="eula" aria-label="EULA acceptance">
-        <div class="choice">
-          <h2>Review Terms &amp; Privacy</h2>
-          <p>Review and accept the TimeSyncher Terms &amp; Privacy details. After acceptance, TimeSyncher will open your vacation app.</p>
-          <div class="button-row">
-            <a class="button" id="acceptEula" href="#">Review and Continue</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="hidden" id="choices" aria-label="Vacation app onboarding">
-        <div class="choice">
-          <h2>Open Your Vacation App</h2>
-          <p>Start onboarding in the TimeSyncher Vacation app. You can type, speak, and add vacation files there.</p>
-          <div class="button-row">
-            <a class="button" id="openApp" href="#">Open TimeSyncher Vacation</a>
-          </div>
-        </div>
-      </section>
     </section>
   </main>
   <script>
@@ -66,8 +46,6 @@
     const meta = document.getElementById('meta');
     const statusBox = document.getElementById('status');
     const intro = document.getElementById('intro');
-    const choices = document.getElementById('choices');
-    const eula = document.getElementById('eula');
     const state = { token: params.get('session') || '', session: null };
 
     function setStatus(text, error = false) {
@@ -95,32 +73,11 @@
       }
     }
 
-    function trackedHref(target, href) {
-      return `/api/track-click?session=${encodeURIComponent(state.token)}&target=${encodeURIComponent(target)}&href=${encodeURIComponent(href)}`;
-    }
-
-    function wireLink(id, target, href) {
-      const el = document.getElementById(id);
-      el.href = trackedHref(target, href);
-      el.addEventListener('click', () => track(target, href));
-    }
-
-    function wireDirectLink(id, target, href) {
-      const el = document.getElementById(id);
-      el.href = href;
-      el.addEventListener('click', () => track(target, href));
-    }
-
-    function hideEntryChoices() {
-      eula.classList.add('hidden');
-      choices.classList.add('hidden');
-    }
-
     async function loadSession() {
       if (params.get('collaboratorCheckout') === 'complete') {
         meta.textContent = 'Access add-on purchased.';
+        intro.classList.add('hidden');
         setStatus('The invite email has been sent. The person you invited should use that email to finish setup.');
-        hideEntryChoices();
         await track('collaborator_checkout_complete', location.href, 'page_view');
         return;
       }
@@ -129,7 +86,6 @@
         meta.textContent = 'Owner media add-ons purchased.';
         intro.classList.add('hidden');
         setStatus(`Photo and video upload access has been added for ${ownerName || 'the owner account'}.`);
-        hideEntryChoices();
         await track('owner_media_checkout_complete', location.href, 'page_view');
         return;
       }
@@ -138,7 +94,6 @@
         meta.textContent = 'Vacation access checkout complete.';
         intro.classList.add('hidden');
         setStatus('The access plan payment is complete. TimeSyncher is sending the right setup links and invites for the selected people.');
-        hideEntryChoices();
         await track('access_plan_checkout_complete', checkoutId || location.href, 'page_view');
         return;
       }
@@ -146,13 +101,14 @@
       if (collaboratorInvite) {
         state.token = collaboratorInvite;
         meta.textContent = 'Your collaborator add-on is ready.';
+        intro.classList.add('hidden');
         setStatus('Check the invite email to finish setup.');
-        hideEntryChoices();
         await track('collaborator_invite_page', location.href, 'page_view');
         return;
       }
       if (params.get('collaboratorInviteCancelled')) {
         meta.textContent = 'Collaborator checkout was cancelled.';
+        intro.classList.add('hidden');
         setStatus('No collaborator access was added. The owner can request another checkout link.', true);
         return;
       }
@@ -167,18 +123,11 @@
       state.token = data.session.token;
       history.replaceState(null, '', `/order-success.html?session=${encodeURIComponent(state.token)}`);
       const who = data.session.customerName || data.session.email || 'your account';
-      meta.textContent = `An unforgettable vacation is awaiting ${who}.`;
+      const mailed = data.session.email ? ` Check ${data.session.email} and click the link in that email.` : '';
+      intro.textContent = 'Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email to open TimeSyncher Vacation.';
+      meta.textContent = `An unforgettable vacation is awaiting ${who}.${mailed}`;
       statusBox.classList.add('hidden');
-      hideEntryChoices();
-      if (!data.session.eula?.accepted) {
-        wireDirectLink('acceptEula', 'eula_accept_open', data.session.eula.acceptUrl);
-        eula.classList.remove('hidden');
-        await track('eula_required', data.session.eula.acceptUrl, 'page_view');
-        return;
-      }
-      wireLink('openApp', 'vacation_app_open', data.session.vacationAppUrl);
-      choices.classList.remove('hidden');
-      await track('onboarding_page', location.href, 'page_view');
+      await track('purchase_email_ack', location.href, 'page_view');
     }
 
     loadSession().catch((error) => {

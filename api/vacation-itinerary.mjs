@@ -21,6 +21,9 @@ import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
+import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
+import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -322,6 +325,24 @@ async function queueVacationAppTurn(db, session, tripId, body) {
   };
 }
 
+async function vacationAppEula(session, env = process.env) {
+  const status = await vacationEulaStatus(session, env);
+  const accepted = Boolean(status.ok || status.status === 'accepted');
+  const payload = {
+    accepted,
+    status: accepted ? 'accepted' : (status.status || 'pending'),
+    sessionId: status.sessionId || null,
+    version: null,
+    text: '',
+  };
+  if (accepted || !payload.sessionId) return payload;
+  const store = createPersistentStoreFromEnv(env);
+  const eulaSession = await loadSessionPersistent(store, payload.sessionId);
+  payload.version = eulaSession?.eula?.version || null;
+  payload.text = eulaSession?.eula?.text || '';
+  return payload;
+}
+
 async function handleVacationApp(req, res, db, url) {
   const token = cleanText(url.searchParams.get('session') || url.searchParams.get('token'), 180);
   if (!token) return sendJson(res, 400, { ok: false, error: 'session is required.' });
@@ -337,6 +358,7 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0]
       || null;
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
+    const eula = await vacationAppEula(session, process.env);
     return sendJson(res, 200, {
       ok: true,
       session: {
@@ -346,6 +368,7 @@ async function handleVacationApp(req, res, db, url) {
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
       },
+      eula,
       vacations,
       turns,
     });
