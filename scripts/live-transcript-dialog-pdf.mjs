@@ -36,14 +36,19 @@ export function assertLiveTranscript(doc) {
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
   let expect = 'customer';
-  for (const turn of turns) {
+  let start = 0;
+  if (turns[0]?.role === 'app') start = 1;
+  for (let index = 0; index < turns.length; index += 1) {
+    const turn = turns[index];
     if (turn.role !== 'customer' && turn.role !== 'app') {
       throw new Error(`refused: turn ${turn.turnIndex} role must be customer or app`);
     }
-    if (turn.role !== expect) {
-      throw new Error(`refused: turn ${turn.turnIndex} is ${turn.role}; expected ${expect} so every customer turn has the live app reply`);
+    if (index >= start) {
+      if (turn.role !== expect) {
+        throw new Error(`refused: turn ${turn.turnIndex} is ${turn.role}; expected ${expect} so every customer turn has the live app reply`);
+      }
+      expect = turn.role === 'customer' ? 'app' : 'customer';
     }
-    expect = turn.role === 'customer' ? 'app' : 'customer';
     const text = String(turn.text || '');
     if (!text.trim()) throw new Error(`refused: turn ${turn.turnIndex} text is empty`);
     if (turn.storedText != null && String(turn.storedText) !== text) {
@@ -129,61 +134,136 @@ function wrapLines(text, width) {
   return out;
 }
 
-function transcriptLines(doc) {
-  const summary = buildTimingSummary(doc);
-  const lines = [
-    'TimeSyncher Vacation live transcript',
-    `target_person: ${doc.targetPerson}`,
-    `capture: ${doc.capture}`,
+export function assessPackShape(doc, options = {}) {
+  const checked = assertLiveTranscript(doc);
+  const summary = buildTimingSummary(checked);
+  const missingAppOpen = checked.turns[0]?.role !== 'app';
+  const trip = String(options.trip || checked.tripTitle || checked.trip || '').trim() || 'untitled';
+  const head = String(options.head || checked.head || 'not-recorded');
+  const dpl = String(options.dpl || checked.dpl || 'not-recorded');
+  const tierCounts = {};
+  for (const turn of checked.turns) {
+    if (turn.jev?.jevRan !== true) continue;
+    const key = String(turn.jev.modelTier);
+    tierCounts[key] = (tierCounts[key] || 0) + 1;
+  }
+  const voiceStatus = summary.voiceTurns > 0
+    ? `${summary.voiceTurns} voice turn(s) in this live transcript`
+    : 'PARTIAL: no voice/STT turn in this live transcript';
+  return {
+    status: missingAppOpen ? 'PARTIAL' : 'DONE',
+    missing_app_open: missingAppOpen,
+    missing_app_open_next: missingAppOpen
+      ? 'Next live session must capture an app line the customer already saw before the first customer turn (onboarding opener). Do not invent that line.'
+      : null,
+    pack_id: `live-${checked.sessionToken || 'session'}`,
+    trip,
+    trip_title_source: (options.trip || checked.tripTitle || checked.trip) ? 'provided' : 'untitled_not_inferred',
+    source: 'live-app',
+    capture: checked.capture,
+    sessionToken: checked.sessionToken || null,
+    targetPerson: checked.targetPerson,
+    head,
+    dpl,
+    voiceStatus,
+    summary,
+    tierCounts,
+    grading: 'live text only',
+  };
+}
+
+function packPages(doc, shape) {
+  const name = doc.targetPerson;
+  const summary = shape.summary;
+  const tierLine = Object.keys(shape.tierCounts).sort().map((tier) => `tier ${tier}: ${shape.tierCounts[tier]}`).join(', ') || 'none';
+  const cover = [
+    `Dialog Pack - ${shape.trip} (live-app)`,
+    `pack_id: ${shape.pack_id}`,
+    `turns: ${summary.turnCount}`,
+    `customer_turns: ${summary.customerTurns}`,
+    `app_turns: ${summary.appTurns}`,
+    `capture=${doc.capture}`,
     `session: ${doc.sessionToken || ''}`,
+    `HEAD: ${shape.head}`,
+    `dpl: ${shape.dpl}`,
+    `voice: ${shape.voiceStatus}`,
+    `status: ${shape.status}`,
+    `missing_app_open: ${shape.missingAppOpen === true || shape.missing_app_open === true}`,
     '',
-    'OVERALL TIMING',
+    'source=live-app (not sim)',
+  ];
+  const meta = [
+    'Meta',
+    'source=live-app (not sim)',
+    '',
+    'Overall timing',
     `session_e2e_ms: ${summary.sessionE2eMs}`,
     `turns: ${summary.turnCount}`,
     `customer_turns: ${summary.customerTurns}`,
     `app_turns: ${summary.appTurns}`,
     `voice_turns: ${summary.voiceTurns}`,
     '',
-  ];
+    'Jev tier counts',
+    tierLine,
+    '',
+    shape.missing_app_open
+      ? 'APP open: missing from this live transcript. Not invented.'
+      : 'APP open: present as the first live app line.',
+    shape.missing_app_open_next || '',
+  ].filter((line) => line !== undefined);
+  const transcript = [`Full transcript - APP to ${name}:`, ''];
   for (const turn of doc.turns) {
-    lines.push(`TURN ${turn.turnIndex}`);
-    lines.push(`role: ${turn.role}`);
-    lines.push(`modality: ${turn.modality}`);
-    lines.push(`latency_ms: ${Number(turn.latencyMs)}`);
-    lines.push(`session_e2e_ms: ${Number(turn.sessionE2eMs)}`);
-    lines.push('Jev');
-    lines.push(`jevRan: ${turn.jev.jevRan === true}`);
-    if (turn.jev.jevRan === true) {
-      lines.push(`tier: ${turn.jev.modelTier}`);
-      lines.push(`route: ${turn.jev.routeType || ''}`);
-      lines.push(`context: ${JSON.stringify(turn.jev.extraContext || {})}`);
-      lines.push(`via: ${turn.jev.via || ''}`);
-    } else {
-      lines.push(`reason: ${turn.jev.reason || ''}`);
-      lines.push(`via: ${turn.jev.via || ''}`);
+    const label = turn.role === 'app'
+      ? `T${turn.turnIndex} APP to ${name}:`
+      : `T${turn.turnIndex} ${name}:`;
+    transcript.push(label);
+    transcript.push(...wrapLines(turn.text, 88));
+    if (turn.role === 'app') {
+      const tier = turn.jev?.jevRan === true ? `tier ${turn.jev.modelTier}` : `jevRan false (${turn.jev?.reason || 'skipped'})`;
+      const route = turn.jev?.routeType ? ` | ${turn.jev.routeType}` : '';
+      transcript.push(`${tier}${route} | ${Number(turn.latencyMs)} ms | e2e ${Number(turn.sessionE2eMs)} ms`);
     }
-    if (turn.role === 'customer') lines.push(`${doc.targetPerson}:`);
-    else lines.push(`APP to ${doc.targetPerson}:`);
-    lines.push(...wrapLines(turn.text, 88));
-    lines.push('');
+    transcript.push('');
   }
-  return lines.flatMap((line) => wrapLines(line, 92));
+  const notes = [
+    'Correction notes',
+    '',
+    'Blank page for a highlight pass.',
+    'No invented app copy on this page.',
+  ];
+  return [cover, meta, transcript, notes].map((lines) => lines.flatMap((line) => wrapLines(line, 92)));
+}
+
+function paginate(lines, pageSize, header) {
+  const pages = [];
+  let index = 0;
+  while (index < lines.length) {
+    const room = pages.length === 0 ? pageSize : pageSize - 2;
+    const slice = lines.slice(index, index + room);
+    pages.push(pages.length === 0 || !header ? slice : [header, '', ...slice]);
+    index += room;
+  }
+  return pages.length ? pages : [[]];
 }
 
 function pdfEscape(value) {
   return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 }
 
-export function renderLiveTranscriptPdf(doc) {
+export function renderLiveTranscriptPdf(doc, options = {}) {
   const checked = assertLiveTranscript(doc);
-  const lines = transcriptLines(checked);
-  const pageSize = 46;
-  const pages = [];
-  for (let index = 0; index < lines.length; index += pageSize) {
-    const slice = lines.slice(index, index + pageSize);
-    const commands = slice.map((line) => `(${pdfEscape(line)}) Tj T*`).join('\n');
-    pages.push(`BT /F1 11 Tf 54 748 Td 14 TL\n${commands}\nET`);
-  }
+  const shape = assessPackShape(checked, options);
+  const [cover, meta, transcript, notes] = packPages(checked, shape);
+  const pageLines = [
+    ...paginate(cover, 46),
+    ...paginate(meta, 46),
+    ...paginate(transcript, 46, `Full transcript - APP to ${checked.targetPerson}:`),
+    ...paginate(notes, 46),
+  ];
+  const pages = pageLines.map((lines) => {
+    const commands = lines.map((line) => `(${pdfEscape(line)}) Tj T*`).join('\n');
+    return `BT /F1 11 Tf 54 748 Td 14 TL\n${commands}\nET`;
+  });
   if (pages.length === 0) pages.push('BT /F1 11 Tf 54 748 Td ( ) Tj ET');
 
   const objects = new Map();
@@ -275,22 +355,57 @@ async function loadTranscript(args) {
   throw new Error('refused: pass --transcript, --jsonl, or --session. Dialog PDF will not invent a transcript.');
 }
 
+function qaInput(doc, shape) {
+  return {
+    pack_id: shape.pack_id,
+    source: 'live-app',
+    grading: 'live text only',
+    status: shape.status,
+    missing_app_open: shape.missing_app_open,
+    missing_app_open_next: shape.missing_app_open_next,
+    sessionToken: shape.sessionToken,
+    targetPerson: shape.targetPerson,
+    trip: shape.trip,
+    head: shape.head,
+    dpl: shape.dpl,
+    voice: shape.voiceStatus,
+    capture: shape.capture,
+    turns: doc.turns.map((turn) => ({
+      n: turn.turnIndex,
+      speaker: turn.role === 'app' ? `APP to ${doc.targetPerson}` : doc.targetPerson,
+      role: turn.role,
+      modality: turn.modality,
+      text: turn.text,
+      latency_ms: Number(turn.latencyMs),
+      session_e2e_ms: Number(turn.sessionE2eMs),
+      jevRan: turn.jev?.jevRan === true,
+      tier: turn.jev?.jevRan === true ? turn.jev.modelTier : null,
+      route: turn.jev?.routeType || null,
+    })),
+  };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.out) throw new Error('refused: --out PDF path is required');
   const transcript = assertLiveTranscript(await loadTranscript(args));
-  const pdf = renderLiveTranscriptPdf(transcript);
+  const shape = assessPackShape(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
+  const pdf = renderLiveTranscriptPdf(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
   if (args.dump) fs.writeFileSync(args.dump, `${JSON.stringify(transcript, null, 2)}\n`);
   if (args.jsonlOut) fs.writeFileSync(args.jsonlOut, transcriptToJsonl(transcript));
   if (args.timing) fs.writeFileSync(args.timing, `${JSON.stringify(buildTimingSummary(transcript), null, 2)}\n`);
+  if (args.state) fs.writeFileSync(args.state, `${JSON.stringify(qaInput(transcript, shape), null, 2)}\n`);
   process.stdout.write(`${JSON.stringify({
     ok: true,
+    status: shape.status,
+    missing_app_open: shape.missing_app_open,
     out: path.resolve(args.out),
+    pack_id: shape.pack_id,
     turns: transcript.turns.length,
     targetPerson: transcript.targetPerson,
-    sessionE2eMs: buildTimingSummary(transcript).sessionE2eMs,
+    sessionE2eMs: shape.summary.sessionE2eMs,
   })}\n`);
 }
 
