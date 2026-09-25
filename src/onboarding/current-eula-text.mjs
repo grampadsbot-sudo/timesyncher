@@ -9,7 +9,7 @@ These terms make the customer responsibilities, TimeSyncher service limits, and 
 
 ## 1. Parties and service
 
-TimeSyncher is provided by or on behalf of IBE Inc. TimeSyncher Vacation uses AI systems, software tools, Telegram intake, hosted itinerary pages, payment receipts, and support workflows to help customers plan and organize travel.
+TimeSyncher is provided by or on behalf of IBE Inc. TimeSyncher Vacation uses AI systems, software tools, hosted itinerary pages, payment receipts, and support workflows to help customers plan and organize travel.
 
 ## 2. Advisory-only service
 
@@ -31,7 +31,7 @@ Customers are responsible for checking important details before acting, includin
 
 ## 5. Third-party services
 
-TimeSyncher depends on third-party services such as AI model providers, Telegram, hosting/runtime providers, payment processors, mapping/search sources, and travel vendors. IBE Inc. does not control those third-party services and is not responsible for their outages, bugs, pricing, policies, data handling, or availability changes.
+TimeSyncher depends on third-party services such as AI model providers, hosting/runtime providers, payment processors, mapping/search sources, and travel vendors. IBE Inc. does not control those third-party services and is not responsible for their outages, bugs, pricing, policies, data handling, or availability changes.
 
 ## 6. Customer responsibilities
 

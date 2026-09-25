@@ -94,10 +94,14 @@ export function assertEvidencePack(files) {
 }
 
 async function readSource() {
-  const [orderSuccess, vacationApp] = await Promise.all([
+  const [orderSuccess, vacationApp, eulaText] = await Promise.all([
     readFile(path.join(root, 'order-success.html'), 'utf8'),
     readFile(path.join(root, 'vacation-app.html'), 'utf8'),
+    readFile(path.join(root, 'public/legal/terms-2026-06-advisory-only.md'), 'utf8'),
   ]);
+  if (/telegram|telegraph|bot-intake|bot intake/i.test(eulaText)) {
+    throw new Error('customer terms still name Telegram, telegraph, or bot intake');
+  }
   const email = purchaseEmail({
     contact: { firstName: 'Alex' },
     token: 'session-token',
