@@ -42,6 +42,12 @@ assert.match(api, /builtVacationSiteUrl/);
 assert.match(api, /contentDataUrl/);
 assert.match(api, /vacationAppEula/);
 assert.match(api, /eula,/);
+assert.match(api, /produceLiveAppReply/);
+assert.match(api, /liveTranscript/);
+assert.match(api, /jevStamp/);
+assert.match(page, /data\.reply/);
+assert.match(page, /voiceArmed/);
+assert.doesNotMatch(page, /Got it\. I saved that/);
 
 const vite = await readFile(new URL('../vite.config.mjs', import.meta.url), 'utf8');
 assert.match(vite, /vacationApp/);

@@ -214,6 +214,17 @@ function loadViaEnvCache(env) {
   }
 }
 
+function loadViaBundledSnapshot() {
+  try {
+    const file = new URL('./vacation-app-reply-rules-snapshot.json', import.meta.url);
+    const page = pageFromPayload(JSON.parse(fs.readFileSync(file, 'utf8')));
+    if (!page?.compiled_truth) return null;
+    return contractFromPage(page, 'bundled-get_page');
+  } catch {
+    return null;
+  }
+}
+
 export async function loadVacationAppReplyRules(env = process.env) {
   const http = await loadViaHttp(env);
   if (http?.ok) return http;
@@ -223,6 +234,8 @@ export async function loadVacationAppReplyRules(env = process.env) {
   if (brainFile?.ok) return brainFile;
   const cached = loadViaEnvCache(env);
   if (cached) return cached;
+  const bundled = loadViaBundledSnapshot();
+  if (bundled?.ok) return bundled;
   return {
     ok: false,
     via: 'unloaded',

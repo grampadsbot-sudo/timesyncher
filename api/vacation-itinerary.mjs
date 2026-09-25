@@ -24,6 +24,12 @@ import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
+import {
+  customerModality,
+  jevStamp,
+  liveTurnRecord,
+  produceLiveAppReply,
+} from '../src/vacation/live-app-turn.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -243,6 +249,7 @@ async function loadVacationAppTurns(db, session, tripId) {
 }
 
 async function queueVacationAppTurn(db, session, tripId, body) {
+  const started = Date.now();
   const text = cleanText(body.text || body.message, 12000);
   const attachments = Array.isArray(body.attachments)
     ? body.attachments.slice(0, 20).map((item) => ({
@@ -260,13 +267,39 @@ async function queueVacationAppTurn(db, session, tripId, body) {
   }
 
   const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
+  const modality = customerModality(body);
+  const prior = await db`
+    select count(*)::int as n,
+      min(coalesce(received_at, created_at)) as started_at
+    from transcript_turns
+    where customer_id = ${session.customer_id}
+      and trip_id = ${tripId}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+  `;
+  const priorCount = Number(prior[0]?.n || 0);
+  const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
+  const sessionE2eMs = () => Math.max(0, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
+  const customerTurnIndex = priorCount + 1;
+  const receivedAt = new Date().toISOString();
+  const customerLive = liveTurnRecord({
+    turnIndex: customerTurnIndex,
+    role: 'customer',
+    modality,
+    text: requestText,
+    at: receivedAt,
+    latencyMs: Date.now() - started,
+    sessionE2eMs: sessionE2eMs(),
+    jev: { jevRan: false, error: 'classify_pending' },
+  });
   const payload = {
     source: 'vacation_app',
     surface: 'vacation-app',
     attachments,
-    voiceMode: Boolean(body.voiceMode),
-    browserTranscription: Boolean(body.browserTranscription),
+    voiceMode: modality === 'voice',
+    browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
     selectedTripId: tripId,
+    liveTranscript: customerLive,
   };
   const turnTag = classifyTurn({
     text: requestText,
@@ -287,15 +320,19 @@ async function queueVacationAppTurn(db, session, tripId, body) {
     returning id, received_at, queued_at
   `;
   const requestId = requestRows[0].id;
-  await db`
+  const intakeLatency = Date.now() - started;
+  const turnRows = await db`
     insert into transcript_turns (
       customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+      received_at, response_latency_ms,
       turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
     )
     values (
       ${session.customer_id}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
+      now(), ${intakeLatency},
       ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
     )
+    returning id
   `;
   await db`
     insert into vacation_request_events (request_id, event_type, actor, details)
@@ -316,12 +353,83 @@ async function queueVacationAppTurn(db, session, tripId, body) {
     }})
     returning id
   `;
-  return {
+
+  let produced;
+  try {
+    produced = await produceLiveAppReply({ customerTurn: requestText, session, env: process.env });
+  } catch (error) {
+    produced = {
+      reply: null,
+      rules: null,
+      jev: { jevRan: false, error: error?.message || 'live dispatcher failed' },
+      model: null,
+      reason: error?.message || 'live dispatcher failed',
+    };
+  }
+  customerLive.jev = jevStamp(produced.jev);
+  customerLive.rules = produced.rules
+    ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
+    : null;
+  payload.liveTranscript = customerLive;
+  await db`
+    update transcript_turns
+    set payload = ${payload}
+    where id = ${turnRows[0].id}
+  `;
+
+  const exchangeLatency = Date.now() - started;
+  const base = {
     requestId,
     jobId: jobRows[0].id,
     receivedAt: requestRows[0].received_at,
     queuedAt: requestRows[0].queued_at,
     turnTag,
+    modality,
+    turnIndex: customerTurnIndex,
+    latencyMs: exchangeLatency,
+    sessionE2eMs: sessionE2eMs(),
+    jev: customerLive.jev,
+    reply: null,
+  };
+  if (!produced.reply) {
+    return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
+  }
+
+  const appLive = liveTurnRecord({
+    turnIndex: customerTurnIndex + 1,
+    role: 'app',
+    modality: 'text',
+    text: produced.reply,
+    at: new Date().toISOString(),
+    latencyMs: exchangeLatency,
+    sessionE2eMs: sessionE2eMs(),
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
+  });
+  const appPayload = {
+    source: 'vacation_app',
+    surface: 'vacation-app',
+    selectedTripId: tripId,
+    liveTranscript: appLive,
+  };
+  await db`
+    insert into transcript_turns (
+      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+      sent_at, response_latency_ms
+    )
+    values (
+      ${session.customer_id}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
+      now(), ${exchangeLatency}
+    )
+  `;
+  return {
+    ...base,
+    ok: true,
+    status: 'replied',
+    reply: produced.reply,
+    appTurnIndex: appLive.turnIndex,
+    error: null,
   };
 }
 
@@ -383,9 +491,7 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0];
     if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
     const queued = await queueVacationAppTurn(db, session, selected.id, body);
-    return sendJson(res, 201, {
-      ok: true,
-      status: 'queued',
+    return sendJson(res, queued.ok ? 201 : 502, {
       trip: selected,
       ...queued,
     });

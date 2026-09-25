@@ -1,0 +1,20 @@
+{
+  "slug": "bot-admin/skills/time-syncher/vacation-app-reply-rules",
+  "content_hash": "67209bca0aed60973e9e70d2cde784ddd6c012f127bb64d38d11cfb1af657705",
+  "frontmatter": {
+    "date": "2026-09-24T00:00:00.000Z",
+    "from": "thin-eggbot",
+    "kind": "shared_reply_skill_page",
+    "load": "get_page_until_skillify",
+    "status": "pre_skillify_contract",
+    "pipeline": "jev_precall_then_tiered_model",
+    "skillify": "blocked_until_nevada_oc",
+    "notes_where": "day_only_place_optional",
+    "product_sot": "dialog-v8-craig-pdf-notes-20260923",
+    "smoke_bar_id": "TS-SHARED-REPLY-SMOKE-BAR-20260924",
+    "smoke_bar_phrase": "shared-reply-smoke-phrase-beta",
+    "skills_canon_twin": "skills/vacation-app-reply-rules/skill",
+    "jev_sot": "vacation-app-reply-jev-then-model-20260924"
+  },
+  "compiled_truth": "# Vacation app reply rules (shared Dialog + app)\n\n**Operator slug (live callers today):** `bot-admin/skills/time-syncher/vacation-app-reply-rules`  \n**Skill Canon twin (skillify target):** `skills/vacation-app-reply-rules/skill`\n\nBoth the live app producer (`scripts/product-gbrain-dispatch.mjs` / shared path) and Dialog turns on that path must `get_page` this slug (or the skills/ twin) on every reply. After Nevada/OC skillify, same content as `get_skill vacation-app-reply-rules`. No divergent OpenRouter-only rulebook. No skillify submit until Nevada.\n\n## Required pipeline (every reply — Dialog and app)\n\n1. **Jev pre-call** with:\n   - app stage / gate / screen (where we are),\n   - customer’s latest response or question,\n   - enough session context for routing.\n2. Use Jev’s **model tier / choice** plus **extra context** for the generator.\n3. Call that **tiered model** with these reply rules + Jev context.\n4. Return that model’s response as the app/Dialog reply.\n\nDeterministic fallbacks (pricing fixtures, TEST_MODE stamps) may still run for smoke, but the default generative path is Jev → model → reply. Smoke should show Jev ran then a tiered model when the generative path is exercised.\n\n## Machine contract\n\n```yaml\npipeline: jev_precall_then_tiered_model\nsmoke_bar_id: TS-SHARED-REPLY-SMOKE-BAR-20260924\nsmoke_bar_phrase: shared-reply-smoke-phrase-beta\naccess_pricing_language: unlimited vacations for the whole year\nnotes_where: day_required_place_optional\ncollab_upsell: single_only_after_initial_site_build\nban_reservations_payments: true\nban_split_payer: true\nban_thing_customer_facing: true\nurl_policy: customer_associated_dropdown_never_push_to_collab_seats\n```\n\nWhen `TIMESYNCHER_DIALOG_TEST_MODE=1`, include `smoke_bar_phrase` (and ideally `smoke_bar_id`) in `customerResponse` so page edits move harness + direct. Also emit timing/meta: `jevRan`, `modelTier` / `responseModel` when the generative path runs.\n\n## Product bars (Dialog v8 stamps; v8 wins conflicts)\n\n1. **One collab assessment only** after initial website build begins — customer-facing; prefer stronger model tier for that turn. No repeat upsells.\n2. **No reservations or payments** language anywhere.\n3. **Notes-where:** which **day** (required) and place/activity (optional). Never say \"Thing\" to customers.\n4. **URL / onboarding:** customer URL owns vacations (dropdown when unlimited). Never push vacation URLs to collab seats as if they need them.\n5. **No split-payer** jargon.\n6. **Unlimited vacations for the whole year** — not \"multiple\" / vague \"all of your vacations\".\n7. Soft media-encourage OK occasionally; not a second full upsell.\n\n## Feedback loop\n\nCraig \"what the app should have said\" → stamp GBrain → edit **this page** (keep `skills/vacation-app-reply-rules/skill` in sync) → both Dialog shared-path and app producer move on next `get_page`.\n\n## Related\n\n- `skills/vacation-app-reply-rules/skill`\n- `bot-admin/messages/time-syncher/vacation-app-reply-jev-then-model-20260924`\n- `bot-admin/messages/time-syncher/dialog-v8-craig-pdf-notes-20260923`\n- `bot-admin/messages/time-syncher/dialog-app-shared-gbrain-skill-before-oc-20260924`\n- `bot-admin/messages/time-syncher/dialog-rules-sync-to-app-20260924`\n"
+}

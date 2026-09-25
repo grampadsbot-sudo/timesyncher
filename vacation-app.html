@@ -403,7 +403,7 @@
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
     let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
-    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, eula: null };
+    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     const icon = {
       clip: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21.4 11.6-8.7 8.7a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.6-8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -645,7 +645,10 @@
       };
       recognition.onresult = (event) => {
         const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
-        if (text) document.getElementById('messageText').value = text;
+        if (text) {
+          document.getElementById('messageText').value = text;
+          state.voiceArmed = true;
+        }
       };
       voiceButton.addEventListener('click', () => recognition.start());
     }
@@ -675,6 +678,8 @@
       const textarea = document.getElementById('messageText');
       const text = textarea.value.trim();
       if (!text && state.attachments.length === 0) return;
+      const voiceTurn = state.voiceArmed === true;
+      state.voiceArmed = false;
       const messages = document.getElementById('messages');
       messages.insertAdjacentHTML('beforeend', `<article class="bubble user"><small>You</small>${safe(text || 'Vacation files attached')}</article>`);
       textarea.value = '';
@@ -685,11 +690,17 @@
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ tripId: currentTrip()?.id, text, attachments, voiceMode: state.voiceMode, browserTranscription: true }),
+          body: JSON.stringify({
+            tripId: currentTrip()?.id,
+            text,
+            attachments,
+            voiceMode: voiceTurn,
+            browserTranscription: voiceTurn,
+          }),
         });
         const data = await res.json();
-        if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to send.');
-        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>Got it. I saved that for ${safe(data.trip?.title || 'this vacation')} and queued the update.</article>`);
+        if (!res.ok || data.ok === false || !data.reply) throw new Error(data.error || 'The app did not return a reply.');
+        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
       } catch (error) {
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small><span class="error">${safe(error.message)}</span></article>`);
       }

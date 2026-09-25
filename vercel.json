@@ -58,6 +58,12 @@
       "dest": "/api/eula?action=accept-page&sessionId=$1"
     }
   ],
+  "functions": {
+    "api/vacation-itinerary.mjs": {
+      "maxDuration": 60,
+      "includeFiles": "scripts/vacation-app-reply-rules-snapshot.json"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
