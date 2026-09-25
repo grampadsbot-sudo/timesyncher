@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { jevStamp } from '../src/vacation/live-app-turn.mjs';
+import { FIXED_OPENER_REASON, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY } from '../src/vacation/live-app-turn.mjs';
 import {
   assertLiveTranscript,
   assessPackShape,
@@ -120,6 +120,42 @@ const withOpen = liveDoc({
 const ready = assessPackShape(withOpen);
 assert.equal(ready.status, 'DONE');
 assert.equal(ready.missing_app_open, false);
+
+const fixedOpen = liveDoc({
+  turns: [
+    {
+      turnIndex: 1,
+      role: 'app',
+      modality: 'text',
+      text: ONBOARDING_OPENER_CHAT_ONLY,
+      at: '2026-09-25T21:00:00.000Z',
+      latencyMs: 0,
+      sessionE2eMs: 0,
+      jev: { jevRan: false, reason: FIXED_OPENER_REASON, modelTier: null, routeType: null },
+      replyProducer: LIVE_OPENER_PRODUCER,
+      fixedOpener: true,
+      invented: false,
+    },
+    { ...liveDoc().turns[0], turnIndex: 2 },
+    { ...liveDoc().turns[1], turnIndex: 3 },
+  ],
+});
+assert.equal(assessPackShape(fixedOpen).missing_app_open, false);
+assert.equal(assessPackShape(fixedOpen).status, 'DONE');
+const fixedText = extractPdfText(renderLiveTranscriptPdf(fixedOpen));
+assert.match(fixedText, /T1 APP to Craig:/);
+assert.match(fixedText, /Welcome\. Your vacation website is not built yet/);
+assert.match(fixedText, /jevRan false \(fixed_onboarding_opener\)/);
+rejects(liveDoc({
+  turns: [
+    liveDoc().turns[0],
+    {
+      ...fixedOpen.turns[0],
+      turnIndex: 2,
+    },
+    liveDoc().turns[1],
+  ],
+}), /did not come from vacation-app-reply-rules|without a real Jev/);
 const openText = extractPdfText(renderLiveTranscriptPdf(withOpen));
 assert.match(openText, /T1 APP to Craig:/);
 assert.match(openText, /Welcome\. Tell me where you are going\./);

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sql } from '../src/vacation/db.mjs';
 import {
+  LIVE_OPENER_PRODUCER,
   LIVE_REPLY_PRODUCER,
   LIVE_TRANSCRIPT_CAPTURE,
   loadLiveTranscriptByToken,
@@ -72,14 +73,24 @@ export function assertLiveTranscript(doc) {
     }
     if (turn.role === 'app') {
       if (turn.invented === true) throw new Error(`refused: turn ${turn.turnIndex} app text is marked invented`);
-      if (turn.replyProducer !== LIVE_REPLY_PRODUCER) {
-        throw new Error(`refused: turn ${turn.turnIndex} app text did not come from ${LIVE_REPLY_PRODUCER}`);
-      }
-      if (turn.jev.jevRan !== true) {
-        throw new Error(`refused: turn ${turn.turnIndex} app text exists without a real Jev classify`);
-      }
       if (text.includes(DIALOG_TEST_FINGERPRINT) || text.includes(CANNED_APP_REPLY) || BANNED_GENERATORS.test(text)) {
         throw new Error(`refused: turn ${turn.turnIndex} app text is invented or stamped for a dialog pack`);
+      }
+      const fixedOpener = index === 0 && (turn.fixedOpener === true || turn.replyProducer === LIVE_OPENER_PRODUCER);
+      if (fixedOpener) {
+        if (turn.replyProducer !== LIVE_OPENER_PRODUCER) {
+          throw new Error(`refused: turn ${turn.turnIndex} fixed opener did not come from ${LIVE_OPENER_PRODUCER}`);
+        }
+        if (turn.jev.jevRan !== false || !String(turn.jev.reason || '').trim()) {
+          throw new Error(`refused: turn ${turn.turnIndex} fixed opener must record jevRan false and a reason`);
+        }
+      } else {
+        if (turn.replyProducer !== LIVE_REPLY_PRODUCER) {
+          throw new Error(`refused: turn ${turn.turnIndex} app text did not come from ${LIVE_REPLY_PRODUCER}`);
+        }
+        if (turn.jev.jevRan !== true) {
+          throw new Error(`refused: turn ${turn.turnIndex} app text exists without a real Jev classify`);
+        }
       }
     }
   }

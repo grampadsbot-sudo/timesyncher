@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
+import { ONBOARDING_OPENER_CHAT_ONLY } from '../src/vacation/live-app-turn.mjs';
 
 const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 assert.match(page, /TimeSyncher Vacation App/);
@@ -48,6 +49,11 @@ assert.match(api, /jevStamp/);
 assert.match(page, /data\.reply/);
 assert.match(page, /voiceArmed/);
 assert.doesNotMatch(page, /Got it\. I saved that/);
+assert.ok(page.includes(ONBOARDING_OPENER_CHAT_ONLY.split('\n\n')[0]));
+assert.ok(page.includes('The website shows up here once it is actually up.'));
+assert.match(api, /ensureOnboardingOpener/);
+assert.match(api, /onboardingOpenerText/);
+assert.match(api, /FIXED_OPENER_REASON/);
 
 const vite = await readFile(new URL('../vite.config.mjs', import.meta.url), 'utf8');
 assert.match(vite, /vacationApp/);

@@ -529,7 +529,7 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to save terms acceptance.');
         state.eula = { ...(state.eula || {}), accepted: true, status: 'accepted' };
-        renderApp();
+        await loadApp();
       } catch (error) {
         errorBox.hidden = false;
         errorBox.textContent = error.message || 'Unable to save terms acceptance.';

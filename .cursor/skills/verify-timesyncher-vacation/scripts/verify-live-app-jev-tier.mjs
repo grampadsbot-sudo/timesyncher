@@ -8,6 +8,8 @@ import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE } from '../../../../scri
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
 const PRODUCER = 'vacation-app-reply-rules';
+const OPENER_PRODUCER = 'vacation-app-onboarding-opener';
+const OPENER_REASON = 'fixed_onboarding_opener';
 
 function argValue(flag) {
   const index = process.argv.indexOf(flag);
@@ -21,6 +23,9 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   }
   if (!/produceLiveAppReply/.test(api) || !/jevStamp/.test(api)) {
     errors.push('vacation-app API does not store the shared-producer reply and Jev stamp');
+  }
+  if (!/ensureOnboardingOpener/.test(api) || !/onboardingOpenerText/.test(api)) {
+    errors.push('vacation-app API does not store the customer-visible onboarding opener');
   }
   const jevAt = liveTurn.indexOf('await jevPrecall');
   const modelAt = liveTurn.indexOf('await callTieredModel');
@@ -78,22 +83,29 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
   }
   if (!turns.length) errors.push('live transcript has no turns');
   let ran = 0;
-  for (const turn of turns) {
+  turns.forEach((turn, index) => {
     errors.push(...jevErrors(turn));
     const text = String(turn.text || '');
-    if (turn.role === 'app') {
-      if (turn.invented === true) errors.push(`turn ${turn.turnIndex} app text is marked invented`);
-      if (turn.replyProducer !== PRODUCER) errors.push(`turn ${turn.turnIndex} app text is not from ${PRODUCER}`);
-      if (turn.jev?.jevRan !== true) errors.push(`turn ${turn.turnIndex} app text exists without Jev`);
-      if (!text.trim() || text.includes(CANNED) || text.includes(DIALOG_TEST_FINGERPRINT) || /dialog_vacation_test_turn|openrouter-selfcall/i.test(text)) {
-        errors.push(`turn ${turn.turnIndex} app text is empty, canned, or from a pack sim`);
-      }
-      if (turn.storedText != null && String(turn.storedText) !== text) {
-        errors.push(`turn ${turn.turnIndex} stored text does not match the customer-visible body`);
-      }
-      if (turn.jev?.jevRan === true) ran += 1;
+    if (turn.role !== 'app') return;
+    const fixedOpener = index === 0 && (turn.fixedOpener === true || turn.replyProducer === OPENER_PRODUCER);
+    if (turn.invented === true) errors.push(`turn ${turn.turnIndex} app text is marked invented`);
+    if (!text.trim() || text.includes(CANNED) || text.includes(DIALOG_TEST_FINGERPRINT) || /dialog_vacation_test_turn|openrouter-selfcall/i.test(text)) {
+      errors.push(`turn ${turn.turnIndex} app text is empty, canned, or from a pack sim`);
     }
-  }
+    if (turn.storedText != null && String(turn.storedText) !== text) {
+      errors.push(`turn ${turn.turnIndex} stored text does not match the customer-visible body`);
+    }
+    if (fixedOpener) {
+      if (turn.replyProducer !== OPENER_PRODUCER) errors.push(`turn ${turn.turnIndex} fixed opener is not from ${OPENER_PRODUCER}`);
+      if (turn.jev?.jevRan !== false || turn.jev?.reason !== OPENER_REASON) {
+        errors.push(`turn ${turn.turnIndex} fixed opener must record jevRan false and reason ${OPENER_REASON}`);
+      }
+      return;
+    }
+    if (turn.replyProducer !== PRODUCER) errors.push(`turn ${turn.turnIndex} app text is not from ${PRODUCER}`);
+    if (turn.jev?.jevRan !== true) errors.push(`turn ${turn.turnIndex} app text exists without Jev`);
+    if (turn.jev?.jevRan === true) ran += 1;
+  });
   if (requireRan && ran < 1) errors.push('no stored app turn records jevRan true with a tier');
   return errors;
 }
@@ -153,6 +165,28 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ text: `${CANNED} for this vacation.` })])).length);
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ invented: true })])).length);
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
+  const openerTurn = {
+    turnIndex: 1,
+    role: 'app',
+    modality: 'text',
+    text: 'Welcome. Your vacation website is not built yet, so this chat is the whole workspace.',
+    latencyMs: 0,
+    sessionE2eMs: 0,
+    replyProducer: OPENER_PRODUCER,
+    fixedOpener: true,
+    invented: false,
+    jev: { jevRan: false, reason: OPENER_REASON, modelTier: null, routeType: null },
+  };
+  assert.deepEqual(assertLiveTurns(liveDoc([
+    openerTurn,
+    sampleTurn({ turnIndex: 2 }),
+    appTurn({ turnIndex: 3 }),
+  ]), { requireRan: true }), []);
+  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), { ...openerTurn, turnIndex: 2 }])).length);
+  assert.ok(assertLiveTurns(liveDoc([{
+    ...openerTurn,
+    jev: { jevRan: true, modelTier: 1, routeType: 'general' },
+  }])).length);
   const sources = await readSources();
   assert.deepEqual(assertComposerSource(sources), []);
   process.stdout.write('live app jev tier self-check passed\n');

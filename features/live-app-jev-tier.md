@@ -10,6 +10,7 @@ Hold certify. This inventory is not a certify. The same path is what Dialog uses
 2. **Jev classify.** `produceLiveAppReply` in `src/vacation/live-app-turn.mjs` calls `jevPrecall` from `scripts/vacation-app-reply-rules.mjs` before any reply model. The stored stamp is `payload.liveTranscript.jev`.
 3. **Tier.** When `jevRan` is true, the stamp has `modelTier` (1–5) and `routeType`. `callTieredModel` runs only after that tier exists.
 4. **Reply.** The app row `body` is the tiered model text the customer saw. `replyProducer` is `vacation-app-reply-rules`. If Jev does not run, the stamp is `jevRan: false` plus `reason`, and no app sentence is stored.
+5. **Onboarding opener.** After terms are accepted, the first stored app row is the fixed welcome the customer sees in the empty workspace. `replyProducer` is `vacation-app-onboarding-opener`, `jevRan` is false, and the reason is `fixed_onboarding_opener`. That row is the product template, not a generated reply and not a PDF-only line. Later app rows still go through Jev, then tier.
 
 ## Retired reply
 
@@ -44,5 +45,5 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier
 ## Gotchas
 
 - A customer turn with `jevRan: false` and a reason is an honest skip. Do not fill in a tier.
-- An app turn with `jevRan: false`, empty text, or `invented: true` fails the harness.
+- An app turn with `jevRan: false` fails the harness, except the first stored row when it is the fixed onboarding opener (`fixed_onboarding_opener`). Empty text or `invented: true` still fails.
 - Pack-shape PDF rendering does not create replies. It only prints turns this path already stored.

@@ -7,7 +7,15 @@ import {
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
+export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
+export const FIXED_OPENER_REASON = 'fixed_onboarding_opener';
 export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
+export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here. Type a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
+export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. Your vacation website is not built yet, so this chat is the whole workspace.\n\nTell me where you are going, when, who is coming, and what matters most. Type in the box, or tap the microphone to the right of it and speak. The paperclip adds photos, reservations, and notes. The website shows up here once it is actually up.';
+
+export function onboardingOpenerText(hasSite) {
+  return hasSite ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
+}
 
 const CANNED_APP_REPLY = 'Got it. I saved that';
 
@@ -69,7 +77,8 @@ export function liveTurnRecord({
   };
   if (role === 'app') {
     record.replyProducer = replyProducer || LIVE_REPLY_PRODUCER;
-    record.dispatcher = LIVE_DISPATCHER;
+    record.fixedOpener = record.replyProducer === LIVE_OPENER_PRODUCER;
+    record.dispatcher = record.fixedOpener ? null : LIVE_DISPATCHER;
     record.invented = false;
     record.model = model
       ? {
@@ -187,6 +196,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       jev: live.jev && typeof live.jev === 'object' ? live.jev : null,
       replyProducer: live.replyProducer || null,
       dispatcher: live.dispatcher || null,
+      fixedOpener: live.fixedOpener === true,
       invented: live.invented === true,
       model: live.model || null,
       rules: live.rules || null,

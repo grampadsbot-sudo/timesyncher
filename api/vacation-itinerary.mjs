@@ -26,8 +26,11 @@ import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mj
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import {
   customerModality,
+  FIXED_OPENER_REASON,
   jevStamp,
+  LIVE_OPENER_PRODUCER,
   liveTurnRecord,
+  onboardingOpenerText,
   produceLiveAppReply,
 } from '../src/vacation/live-app-turn.mjs';
 
@@ -236,7 +239,7 @@ async function loadVacationAppTurns(db, session, tripId) {
       and trip_id = ${tripId}
       and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
     order by coalesce(received_at, sent_at, created_at) desc nulls last
-    limit 40
+    limit 120
   `;
   return rows.reverse().map((row) => ({
     speaker: row.speaker || 'customer',
@@ -248,7 +251,47 @@ async function loadVacationAppTurns(db, session, tripId) {
   }));
 }
 
-async function queueVacationAppTurn(db, session, tripId, body) {
+async function ensureOnboardingOpener(db, session, trip) {
+  const text = onboardingOpenerText(Boolean(trip?.publicUrl));
+  const live = liveTurnRecord({
+    turnIndex: 1,
+    role: 'app',
+    modality: 'text',
+    text,
+    at: new Date().toISOString(),
+    latencyMs: 0,
+    sessionE2eMs: 0,
+    jev: { jevRan: false, error: FIXED_OPENER_REASON },
+    replyProducer: LIVE_OPENER_PRODUCER,
+  });
+  const payload = {
+    source: 'vacation_app',
+    surface: 'vacation-app',
+    selectedTripId: trip.id,
+    liveTranscript: live,
+  };
+  await db`
+    insert into transcript_turns (
+      customer_id, trip_id, speaker, channel, body, payload, direction,
+      sent_at, response_latency_ms
+    )
+    select
+      ${session.customer_id}, ${trip.id}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
+      now(), 0
+    where not exists (
+      select 1
+      from transcript_turns
+      where customer_id = ${session.customer_id}
+        and trip_id = ${trip.id}
+        and channel = 'vacation-app'
+        and payload->'liveTranscript' is not null
+    )
+  `;
+}
+
+async function queueVacationAppTurn(db, session, trip, body) {
+  const tripId = trip.id;
+  await ensureOnboardingOpener(db, session, trip);
   const started = Date.now();
   const text = cleanText(body.text || body.message, 12000);
   const attachments = Array.isArray(body.attachments)
@@ -465,8 +508,9 @@ async function handleVacationApp(req, res, db, url) {
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0]
       || null;
-    const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
     const eula = await vacationAppEula(session, process.env);
+    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
+    const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
     return sendJson(res, 200, {
       ok: true,
       session: {
@@ -490,7 +534,9 @@ async function handleVacationApp(req, res, db, url) {
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
     if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
-    const queued = await queueVacationAppTurn(db, session, selected.id, body);
+    const eula = await vacationAppEula(session, process.env);
+    if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+    const queued = await queueVacationAppTurn(db, session, selected, body);
     return sendJson(res, queued.ok ? 201 : 502, {
       trip: selected,
       ...queued,
