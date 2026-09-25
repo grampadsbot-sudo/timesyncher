@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { checkoutOrderSummary } from './checkout-pricing.mjs';
-import { cleanText, ensureVacationEulaSession, onboardingLink, telegramLink, upsertCustomer } from './onboarding.mjs';
+import { cleanText, ensureVacationEulaSession, onboardingLink, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 import { queueOrSendPurchaseEmail } from './email.mjs';
 
 function token() {
@@ -145,6 +145,7 @@ async function createCouponOnboarding(db, { body, coupon, env, onOrderCreated = 
     session,
     token: session.token,
     onboardingUrl: onboardingLink(session.token, env),
+    vacationAppUrl: vacationAppLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact,
@@ -239,6 +240,7 @@ export async function redeemCheckoutCoupon(db, body = {}, env = process.env) {
       onboarding: {
         token: onboarding.token,
         onboardingUrl: onboarding.onboardingUrl,
+        vacationAppUrl: onboarding.vacationAppUrl,
         telegramUrl: onboarding.telegramUrl,
         eula: onboarding.eula,
       },

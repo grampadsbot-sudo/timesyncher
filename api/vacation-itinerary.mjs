@@ -2,12 +2,14 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
   isAllowedVacationWebsiteUrl,
   loadWebAccessGrantBySessionToken,
+  publicTripUrl,
   readCookie,
   requireWebEditAccess,
   webAccessCookieHeader,
@@ -19,6 +21,18 @@ import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
+import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
+import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
+import {
+  customerModality,
+  FIXED_OPENER_REASON,
+  jevStamp,
+  LIVE_OPENER_PRODUCER,
+  liveTurnRecord,
+  onboardingOpenerText,
+  produceLiveAppReply,
+} from '../src/vacation/live-app-turn.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -144,6 +158,394 @@ function groupBy(items, key) {
   }, {});
 }
 
+function builtVacationSiteUrl(metadata) {
+  const meta = metadata && typeof metadata === 'object' ? metadata : {};
+  const explicit = String(meta.publicUrl || meta.public_url || meta.webItineraryUrl || '').trim();
+  const slug = String(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug || '').trim();
+  if (!explicit && !slug) return '';
+  const url = publicTripUrl({ metadata: meta }, process.env);
+  try {
+    const parsed = new URL(url);
+    if (!parsed.pathname || parsed.pathname === '/') return '';
+  } catch {
+    return '';
+  }
+  return url;
+}
+
+function vacationAppTripSummary(row) {
+  const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const url = builtVacationSiteUrl(metadata);
+  return {
+    id: row.id,
+    title: row.title || '',
+    destination: row.destination || '',
+    startDate: row.start_date || null,
+    endDate: row.end_date || null,
+    status: row.status || 'planning',
+    current: Boolean(row.current),
+    publicUrl: url,
+    shareToken: metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug || null,
+  };
+}
+
+async function loadVacationAppSession(db, token) {
+  const rows = await db`
+    select
+      onboarding_sessions.id,
+      onboarding_sessions.token,
+      onboarding_sessions.customer_id,
+      onboarding_sessions.trip_id,
+      onboarding_sessions.status,
+      customers.display_name,
+      customers.first_name,
+      customers.last_name,
+      customers.email
+    from onboarding_sessions
+    left join customers on customers.id = onboarding_sessions.customer_id
+    where onboarding_sessions.token = ${token}
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+async function loadVacationAppTrips(db, session) {
+  const rows = await db`
+    select
+      trips.id,
+      trips.title,
+      trips.destination,
+      trips.start_date,
+      trips.end_date,
+      trips.status,
+      trips.metadata,
+      (trips.id = ${session.trip_id}) as current
+    from trips
+    where trips.customer_id = ${session.customer_id}
+    order by
+      (trips.id = ${session.trip_id}) desc,
+      trips.updated_at desc nulls last,
+      trips.created_at desc nulls last
+  `;
+  return rows.map(vacationAppTripSummary);
+}
+
+async function loadVacationAppTurns(db, session, tripId) {
+  if (!session?.customer_id || !tripId) return [];
+  const rows = await db`
+    select speaker, body, channel, payload, direction, received_at, sent_at, created_at
+    from transcript_turns
+    where customer_id = ${session.customer_id}
+      and trip_id = ${tripId}
+      and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
+    order by coalesce(received_at, sent_at, created_at) desc nulls last
+    limit 120
+  `;
+  return rows.reverse().map((row) => ({
+    speaker: row.speaker || 'customer',
+    body: row.body || '',
+    channel: row.channel || '',
+    direction: row.direction || '',
+    payload: row.payload && typeof row.payload === 'object' ? row.payload : {},
+    at: row.received_at || row.sent_at || row.created_at || null,
+  }));
+}
+
+async function ensureOnboardingOpener(db, session, trip) {
+  const text = onboardingOpenerText(Boolean(trip?.publicUrl));
+  const live = liveTurnRecord({
+    turnIndex: 1,
+    role: 'app',
+    modality: 'text',
+    text,
+    at: new Date().toISOString(),
+    latencyMs: 0,
+    sessionE2eMs: 0,
+    jev: { jevRan: false, error: FIXED_OPENER_REASON },
+    replyProducer: LIVE_OPENER_PRODUCER,
+  });
+  const payload = {
+    source: 'vacation_app',
+    surface: 'vacation-app',
+    selectedTripId: trip.id,
+    liveTranscript: live,
+  };
+  await db`
+    insert into transcript_turns (
+      customer_id, trip_id, speaker, channel, body, payload, direction,
+      sent_at, response_latency_ms
+    )
+    select
+      ${session.customer_id}, ${trip.id}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
+      now(), 0
+    where not exists (
+      select 1
+      from transcript_turns
+      where customer_id = ${session.customer_id}
+        and trip_id = ${trip.id}
+        and channel = 'vacation-app'
+        and payload->'liveTranscript' is not null
+    )
+  `;
+}
+
+async function queueVacationAppTurn(db, session, trip, body) {
+  const tripId = trip.id;
+  await ensureOnboardingOpener(db, session, trip);
+  const started = Date.now();
+  const text = cleanText(body.text || body.message, 12000);
+  const attachments = Array.isArray(body.attachments)
+    ? body.attachments.slice(0, 20).map((item) => ({
+      name: cleanText(item?.name, 240),
+      type: cleanText(item?.type, 160),
+      size: Number.parseInt(item?.size || '0', 10) || 0,
+      lastModified: Number.parseInt(item?.lastModified || '0', 10) || null,
+      inline: Boolean(item?.inline),
+      contentDataUrl: cleanText(item?.contentDataUrl, 3_000_000) || null,
+      note: cleanText(item?.note, 240) || null,
+    }))
+    : [];
+  if (!text && attachments.length === 0) {
+    throw Object.assign(new Error('Message text or an attachment is required.'), { statusCode: 400 });
+  }
+
+  const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
+  const modality = customerModality(body);
+  const prior = await db`
+    select count(*)::int as n,
+      min(coalesce(received_at, created_at)) as started_at
+    from transcript_turns
+    where customer_id = ${session.customer_id}
+      and trip_id = ${tripId}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+  `;
+  const priorCount = Number(prior[0]?.n || 0);
+  const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
+  const sessionE2eMs = () => Math.max(0, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
+  const customerTurnIndex = priorCount + 1;
+  const receivedAt = new Date().toISOString();
+  const customerLive = liveTurnRecord({
+    turnIndex: customerTurnIndex,
+    role: 'customer',
+    modality,
+    text: requestText,
+    at: receivedAt,
+    latencyMs: Date.now() - started,
+    sessionE2eMs: sessionE2eMs(),
+    jev: { jevRan: false, error: 'classify_pending' },
+  });
+  const payload = {
+    source: 'vacation_app',
+    surface: 'vacation-app',
+    attachments,
+    voiceMode: modality === 'voice',
+    browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
+    selectedTripId: tripId,
+    liveTranscript: customerLive,
+  };
+  const turnTag = classifyTurn({
+    text: requestText,
+    speaker: 'customer',
+    direction: 'inbound',
+    channel: 'vacation-app',
+    payload,
+  });
+  const requestRows = await db`
+    insert into vacation_requests (
+      customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
+      status, queued_at
+    )
+    values (
+      ${session.customer_id}, ${tripId}, 'vacation-app', 'trip_intake', ${requestText},
+      ${{ turnTag }}, ${payload}, 'queued', now()
+    )
+    returning id, received_at, queued_at
+  `;
+  const requestId = requestRows[0].id;
+  const intakeLatency = Date.now() - started;
+  const turnRows = await db`
+    insert into transcript_turns (
+      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+      received_at, response_latency_ms,
+      turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
+    )
+    values (
+      ${session.customer_id}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
+      now(), ${intakeLatency},
+      ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
+    )
+    returning id
+  `;
+  await db`
+    insert into vacation_request_events (request_id, event_type, actor, details)
+    values
+      (${requestId}, 'received', 'customer', ${payload}),
+      (${requestId}, 'queued', 'system', ${{ surface: 'vacation-app', turnTag }})
+  `;
+  const jobRows = await db`
+    insert into worker_jobs (request_id, trip_id, job_type, input)
+    values (${requestId}, ${tripId}, 'trip_intake', ${{
+      customerId: session.customer_id,
+      tripId,
+      requestId,
+      source: 'vacation-app',
+      requestType: 'trip_intake',
+      requestText,
+      payload,
+    }})
+    returning id
+  `;
+
+  let produced;
+  try {
+    produced = await produceLiveAppReply({ customerTurn: requestText, session, env: process.env });
+  } catch (error) {
+    produced = {
+      reply: null,
+      rules: null,
+      jev: { jevRan: false, error: error?.message || 'live dispatcher failed' },
+      model: null,
+      reason: error?.message || 'live dispatcher failed',
+    };
+  }
+  customerLive.jev = jevStamp(produced.jev);
+  customerLive.rules = produced.rules
+    ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
+    : null;
+  payload.liveTranscript = customerLive;
+  await db`
+    update transcript_turns
+    set payload = ${payload}
+    where id = ${turnRows[0].id}
+  `;
+
+  const exchangeLatency = Date.now() - started;
+  const base = {
+    requestId,
+    jobId: jobRows[0].id,
+    receivedAt: requestRows[0].received_at,
+    queuedAt: requestRows[0].queued_at,
+    turnTag,
+    modality,
+    turnIndex: customerTurnIndex,
+    latencyMs: exchangeLatency,
+    sessionE2eMs: sessionE2eMs(),
+    jev: customerLive.jev,
+    reply: null,
+  };
+  if (!produced.reply) {
+    return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
+  }
+
+  const appLive = liveTurnRecord({
+    turnIndex: customerTurnIndex + 1,
+    role: 'app',
+    modality: 'text',
+    text: produced.reply,
+    at: new Date().toISOString(),
+    latencyMs: exchangeLatency,
+    sessionE2eMs: sessionE2eMs(),
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
+  });
+  const appPayload = {
+    source: 'vacation_app',
+    surface: 'vacation-app',
+    selectedTripId: tripId,
+    liveTranscript: appLive,
+  };
+  await db`
+    insert into transcript_turns (
+      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+      sent_at, response_latency_ms
+    )
+    values (
+      ${session.customer_id}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
+      now(), ${exchangeLatency}
+    )
+  `;
+  return {
+    ...base,
+    ok: true,
+    status: 'replied',
+    reply: produced.reply,
+    appTurnIndex: appLive.turnIndex,
+    error: null,
+  };
+}
+
+async function vacationAppEula(session, env = process.env) {
+  const status = await vacationEulaStatus(session, env);
+  const accepted = Boolean(status.ok || status.status === 'accepted');
+  const payload = {
+    accepted,
+    status: accepted ? 'accepted' : (status.status || 'pending'),
+    sessionId: status.sessionId || null,
+    version: null,
+    text: '',
+  };
+  if (accepted || !payload.sessionId) return payload;
+  const store = createPersistentStoreFromEnv(env);
+  const eulaSession = await loadSessionPersistent(store, payload.sessionId);
+  payload.version = eulaSession?.eula?.version || null;
+  payload.text = eulaSession?.eula?.text || '';
+  return payload;
+}
+
+async function handleVacationApp(req, res, db, url) {
+  const token = cleanText(url.searchParams.get('session') || url.searchParams.get('token'), 180);
+  if (!token) return sendJson(res, 400, { ok: false, error: 'session is required.' });
+
+  const session = await loadVacationAppSession(db, token);
+  if (!session?.customer_id) return sendJson(res, 404, { ok: false, error: 'Vacation app session not found.' });
+
+  if (req.method === 'GET') {
+    const vacations = await loadVacationAppTrips(db, session);
+    const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
+    const selected = vacations.find((trip) => trip.id === requestedTripId)
+      || vacations.find((trip) => trip.id === session.trip_id)
+      || vacations[0]
+      || null;
+    const eula = await vacationAppEula(session, process.env);
+    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
+    const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
+    return sendJson(res, 200, {
+      ok: true,
+      session: {
+        token: session.token,
+        status: session.status,
+        customerName: session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        email: session.email || null,
+        currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
+      },
+      eula,
+      vacations,
+      turns,
+    });
+  }
+
+  if (req.method === 'POST') {
+    const body = await readJson(req);
+    const vacations = await loadVacationAppTrips(db, session);
+    const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
+    const selected = vacations.find((trip) => trip.id === requestedTripId)
+      || vacations.find((trip) => trip.id === session.trip_id)
+      || vacations[0];
+    if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
+    const eula = await vacationAppEula(session, process.env);
+    if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+    const queued = await queueVacationAppTurn(db, session, selected, body);
+    return sendJson(res, queued.ok ? 201 : 502, {
+      trip: selected,
+      ...queued,
+    });
+  }
+
+  return sendJson(res, 405, { ok: false, error: 'method not allowed' });
+}
+
 function isStagingHost(req) {
   const host = String(req.headers.host || '').toLowerCase();
   return host.includes('vacation-staging.timesyncher.com')
@@ -153,6 +555,9 @@ function isStagingHost(req) {
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
+    if (url.searchParams.get('app') === '1') {
+      return await handleVacationApp(req, res, sql(process.env), url);
+    }
     if (url.searchParams.get('trekBundle') === '1') {
       return await trekStyle2BundleHandler(req, res);
     }

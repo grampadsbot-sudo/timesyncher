@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>TimeSyncher Vacation Access Checkout</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <style>
+    :root { --bg:#070706; --panel:#14120f; --line:rgba(245,211,123,.26); --gold:#f5d37b; --muted:#cfc2a9; --sea:#62d6cf; --bad:#ff7468; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; background:radial-gradient(circle at top left, rgba(245,211,123,.14), transparent 32rem), var(--bg); color:#fffaf0; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif; line-height:1.5; }
+    main { width:min(920px, calc(100% - 32px)); margin:0 auto; padding:34px 0 56px; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--gold); font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+    .brand img { width:42px; height:42px; }
+    .card { margin-top:20px; border:1px solid var(--line); border-radius:8px; background:rgba(20,18,15,.9); box-shadow:0 30px 90px rgba(0,0,0,.38); overflow:hidden; }
+    .head { padding:24px; border-bottom:1px solid var(--line); }
+    h1 { margin:8px 0 8px; color:var(--gold); font-size:clamp(2rem, 6vw, 3.8rem); line-height:.98; letter-spacing:0; }
+    p { margin:0; color:#e9ddc6; }
+    .body { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr); gap:0; }
+    .items, .pay { padding:22px; }
+    .pay { border-left:1px solid var(--line); background:rgba(255,255,255,.035); }
+    .meta { color:var(--muted); font-size:.92rem; margin-top:10px; }
+    .line { display:grid; grid-template-columns:1fr auto; gap:14px; padding:14px 0; border-bottom:1px solid rgba(245,211,123,.15); }
+    .line:last-child { border-bottom:0; }
+    .line b { color:#fffaf0; }
+    .line small { display:block; color:var(--muted); margin-top:3px; }
+    .total { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:16px; border:1px solid var(--line); border-radius:8px; background:rgba(245,211,123,.08); font-weight:900; font-size:1.2rem; }
+    label { display:grid; gap:6px; color:#eadfca; font-size:.82rem; font-weight:800; margin-bottom:10px; }
+    input { width:100%; min-height:42px; border-radius:8px; border:1px solid rgba(245,211,123,.28); background:rgba(255,255,255,.07); color:#fff; padding:10px 12px; font:600 .95rem/1 Inter, system-ui, sans-serif; }
+    #paymentElement { min-height:110px; padding:14px; border:1px solid rgba(98,214,207,.35); border-radius:8px; background:rgba(98,214,207,.08); }
+    button { width:100%; margin-top:12px; min-height:46px; border:0; border-radius:999px; cursor:pointer; background:linear-gradient(135deg, #f5d37b, #b8892e); color:#090704; font-weight:900; font-size:.96rem; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .status { margin-top:14px; border:1px solid rgba(98,214,207,.35); border-radius:8px; padding:12px; color:#dffefa; background:rgba(98,214,207,.1); white-space:pre-wrap; }
+    .status.error { color:#ffd5d1; border-color:rgba(255,116,104,.55); background:rgba(255,116,104,.12); }
+    @media (max-width: 780px) { .body { grid-template-columns:1fr; } .pay { border-left:0; border-top:1px solid var(--line); } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><img src="/timesyncher-logo-gold.png" alt="" aria-hidden="true" />TimeSyncher Vacation</div>
+    <section class="card">
+      <div class="head">
+        <p id="eyebrow">Vacation access checkout</p>
+        <h1 id="title">Review access upgrades</h1>
+        <p id="subtitle">Loading checkout details...</p>
+      </div>
+      <div class="body">
+        <section class="items">
+          <div id="lines"></div>
+          <div class="total"><span>Total today</span><span id="total">$0</span></div>
+          <p class="meta" id="statusMeta"></p>
+        </section>
+        <section class="pay">
+          <label>Name<input id="name" autocomplete="name" /></label>
+          <label>Email<input id="email" type="email" autocomplete="email" /></label>
+          <div id="paymentElement">Loading payment...</div>
+          <button id="payButton" disabled>Pay securely</button>
+          <div id="status" class="status" hidden></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const checkoutId = params.get('checkout') || params.get('id') || '';
+    const lines = document.getElementById('lines');
+    const title = document.getElementById('title');
+    const subtitle = document.getElementById('subtitle');
+    const total = document.getElementById('total');
+    const statusMeta = document.getElementById('statusMeta');
+    const statusBox = document.getElementById('status');
+    const payButton = document.getElementById('payButton');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const paymentElement = document.getElementById('paymentElement');
+    let checkout = null;
+    let stripe = null;
+    let elements = null;
+    let stagingMode = false;
+
+    function money(cents, currency = 'usd') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: String(currency || 'usd').toUpperCase() }).format((Number(cents) || 0) / 100);
+    }
+
+    function setStatus(text, error = false) {
+      statusBox.textContent = text;
+      statusBox.hidden = false;
+      statusBox.classList.toggle('error', error);
+    }
+
+    async function post(body) {
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Request failed.');
+      return data;
+    }
+
+    function renderCheckout(data) {
+      checkout = data.checkout;
+      title.textContent = checkout.tripTitle ? `${checkout.tripTitle} access` : 'Vacation access';
+      subtitle.textContent = checkout.payerName ? `Checkout for ${checkout.payerName}` : 'Review and pay for selected access.';
+      nameInput.value = checkout.payerName || '';
+      emailInput.value = checkout.payerEmail || '';
+      lines.innerHTML = '';
+      for (const item of checkout.lineItems || []) {
+        const row = document.createElement('div');
+        row.className = 'line';
+        row.innerHTML = `<div><b>${item.label || item.role || 'Access'}</b><small>${item.email || item.name || ''}</small></div><strong>${money(item.amountCents, item.currency || checkout.currency)}</strong>`;
+        lines.appendChild(row);
+      }
+      total.textContent = money(checkout.amountCents, checkout.currency);
+      statusMeta.textContent = checkout.status === 'paid' ? 'This checkout is already paid.' : 'After payment, TimeSyncher will send the right invite/setup link to each person.';
+      payButton.disabled = checkout.status === 'paid';
+    }
+
+    async function setupPayment() {
+      const data = await post({
+        action: 'create_access_plan_payment_intent',
+        checkoutId,
+        name: nameInput.value,
+        email: emailInput.value,
+      });
+      if (data.mode === 'staging_card') {
+        stagingMode = true;
+        paymentElement.innerHTML = '<strong>Staging checkout</strong><p>Stripe is unavailable in this environment. Use the button below to complete the staging-card simulation.</p>';
+        payButton.textContent = 'Complete staging checkout';
+        payButton.disabled = false;
+        return;
+      }
+      const config = await fetch('/api/checkout-config').then((r) => r.json());
+      if (!config.ok) throw new Error(config.error || 'Stripe config failed.');
+      stripe = Stripe(config.publishableKey);
+      elements = stripe.elements({ clientSecret: data.clientSecret });
+      const element = elements.create('payment');
+      paymentElement.innerHTML = '';
+      element.mount('#paymentElement');
+      payButton.disabled = false;
+    }
+
+    async function pay() {
+      payButton.disabled = true;
+      setStatus('Processing...');
+      try {
+        if (stagingMode) {
+          await post({
+            action: 'complete_staging_access_plan_checkout',
+            checkoutId,
+            paymentIntentId: `staging_access_plan_${checkoutId}`,
+          });
+          location.href = `/order-success.html?accessPlanCheckout=complete&checkout=${encodeURIComponent(checkoutId)}`;
+          return;
+        }
+        const result = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            receipt_email: emailInput.value,
+            return_url: `${location.origin}/order-success.html?accessPlanCheckout=complete&checkout=${encodeURIComponent(checkoutId)}`,
+          },
+        });
+        if (result.error) throw new Error(result.error.message || 'Payment failed.');
+      } catch (error) {
+        setStatus(error.message || 'Payment failed.', true);
+        payButton.disabled = false;
+      }
+    }
+
+    payButton.addEventListener('click', pay);
+
+    (async function init() {
+      try {
+        if (!checkoutId) throw new Error('Missing checkout id.');
+        const data = await post({ action: 'access_plan_checkout_metadata', checkoutId });
+        if (!data.ok) throw new Error(data.error || 'Checkout not found.');
+        renderCheckout(data);
+        if (checkout.status !== 'paid') await setupPayment();
+      } catch (error) {
+        setStatus(error.message || 'Unable to load checkout.', true);
+        paymentElement.textContent = 'Payment unavailable.';
+      }
+    })();
+  </script>
+</body>
+</html>

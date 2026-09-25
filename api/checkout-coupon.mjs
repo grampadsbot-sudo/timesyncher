@@ -263,7 +263,7 @@ export default async function handler(req, res) {
         id: onboarding.session.id,
         token: onboarding.token,
         onboardingUrl: onboarding.onboardingUrl,
-        telegramUrl: onboarding.telegramUrl,
+        vacationAppUrl: onboarding.vacationAppUrl,
         eula: onboarding.eula,
       },
       order: {

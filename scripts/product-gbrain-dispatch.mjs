@@ -6,6 +6,15 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
 import { assertRequiredFirstPassMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import {
+  DIALOG_TEST_FINGERPRINT,
+  REPLY_RULES_SLUG,
+  callTieredModel,
+  isAccessPricingTurn,
+  jevPrecall,
+  loadVacationAppReplyRules,
+  stampSharedReply,
+} from './vacation-app-reply-rules.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -101,7 +110,7 @@ function transcriptTurns(job) {
 }
 
 function currentTurnText(job) {
-  return text(job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text);
+  return text(job.request_text || job.customer_turn || job.input?.requestText || job.input?.customer_turn || job.payload?.requestText || job.payload?.customer_turn || job.payload?.text);
 }
 
 function combinedRequestText(job) {
@@ -700,7 +709,7 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const checkout = checkoutBaseUrl(manifest);
   const lines = [];
   if (allVacations) {
-    lines.push(`For ${person}, full Telegram editing access across all of your vacations is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
+    lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
     lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
     if (wantsMedia) {
       lines.push(`Photo upload access across all vacations is ${photo.unlimitedVacationsAmountUsd ? `$${photo.unlimitedVacationsAmountUsd}` : '$9'}.`);
@@ -2002,6 +2011,14 @@ async function buildArtifacts(job, manifest) {
 }
 
 function customerResponse(job, artifacts) {
+  const reply = renderCustomerResponse(job, artifacts);
+  if (process.env.TIMESYNCHER_DIALOG_TEST_MODE !== '1') return reply;
+  return String(reply).includes(DIALOG_TEST_FINGERPRINT)
+    ? reply
+    : `${DIALOG_TEST_FINGERPRINT}\n${reply}`.slice(0, 3900);
+}
+
+function renderCustomerResponse(job, artifacts) {
   const requestType = text(job.request_type || job.job_type || '', 80);
   const url = text(artifacts.webItineraryUrl || '', 500);
   const requestText = text(job.request_text || job.text || job.message || artifacts.requestText || '', 2000).toLowerCase();
@@ -2140,24 +2157,31 @@ function buildTurnInspector(job, artifacts, customerResponseText) {
   };
 }
 
-async function main() {
-  const manifestPath = process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST || DEFAULT_MANIFEST;
-  const manifest = loadManifest(manifestPath);
-  const capabilities = buildCapabilityObject(manifest);
-  assertCapabilityObject(capabilities);
-  const input = JSON.parse((await readStdin()) || '{}');
-  const job = input.job || input;
-  const preflightDecision = currentTurnRouterDecisionModelFirst({ ...job, productManifest: manifest });
-  if (preflightDecision.shouldQueueWorker !== false) {
-    assertCustomerRequestAllowed(job, capabilities);
-  }
-  const allowedSkills = manifest.allowedSkills || [];
-  const artifacts = await buildArtifacts(job, manifest);
-  const customerResponseText = customerResponse(job, artifacts);
-  const turnInspector = buildTurnInspector(job, artifacts, customerResponseText);
+function sharedReplyMeta({ rules, jev, model, replySource, ok }) {
+  return {
+    ok,
+    slug: rules?.slug || REPLY_RULES_SLUG,
+    via: rules?.via || 'unloaded',
+    pipeline: rules?.pipeline || null,
+    smoke_bar_id: rules?.smoke_bar_id || null,
+    smoke_bar_phrase: rules?.smoke_bar_phrase || null,
+    content_hash: rules?.content_hash || null,
+    replySource,
+    jevRan: jev?.jevRan === true,
+    jevVia: jev?.via || null,
+    modelTier: jev?.modelTier ?? model?.modelTier ?? null,
+    responseModel: (model?.called && model.responseModel) || jev?.responseModel || model?.responseModel || null,
+    modelVia: model?.via || null,
+    jevError: jev?.jevRan ? null : (jev?.error || null),
+    modelReason: model?.called ? null : (model?.reason || null),
+  };
+}
 
+function emitProducerResponse({ manifest, capabilities, job, artifacts, customerResponseText, sharedReply, allowedSkills }) {
+  const turnInspector = buildTurnInspector(job, artifacts, customerResponseText);
   const response = {
     customerResponse: customerResponseText,
+    sharedReply,
     result: {
       handledBy: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
       productGbrain: manifest.name,
@@ -2199,9 +2223,113 @@ async function main() {
     },
     toolingUsed: ['product-gbrain-dispatch', ...allowedSkills, ...artifacts.methods],
   };
-
   assertToolingAllowed(response.toolingUsed, capabilities);
   console.log(JSON.stringify(response));
+}
+
+async function main() {
+  const manifestPath = process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST || DEFAULT_MANIFEST;
+  const manifest = loadManifest(manifestPath);
+  const capabilities = buildCapabilityObject(manifest);
+  assertCapabilityObject(capabilities);
+  const input = JSON.parse((await readStdin()) || '{}');
+  const job = input.job || input;
+  if (!text(job.request_text) && text(job.customer_turn)) job.request_text = text(job.customer_turn);
+  const testMode = process.env.TIMESYNCHER_DIALOG_TEST_MODE === '1';
+  const generative = job.reply_mode === 'generative' || job.generative === true;
+  const rules = (testMode || process.env.TIMESYNCHER_GBRAIN_HTTP_BASE || process.env.TIMESYNCHER_GBRAIN_GET_PAGE_URL || process.env.TIMESYNCHER_REPLY_RULES_PAGE_JSON)
+    ? await loadVacationAppReplyRules(process.env)
+    : null;
+  if (testMode && !rules?.ok) throw new Error(rules?.error || 'shared reply rules page failed to load');
+
+  if (generative) {
+    assertCustomerRequestAllowed(job, capabilities);
+    const turn = currentTurnText(job);
+    const jev = await jevPrecall({
+      customerTurn: turn,
+      stage: job.app_stage || job.stage || 'vacation_conversation',
+      gate: job.gate,
+      screen: job.screen || 'vacation-app',
+      session: { seed_id: job.seed_id || job.seedId || null },
+    });
+    const model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn: turn,
+      stage: job.app_stage || job.stage || 'vacation_conversation',
+      screen: job.screen || 'vacation-app',
+    });
+    const ready = Boolean(rules?.ok && jev.jevRan && model.called && model.text);
+    const customerResponseText = testMode && rules?.ok ? stampSharedReply(model.text || '', rules) : (model.text || '');
+    const sharedReply = sharedReplyMeta({ rules, jev, model, replySource: ready ? 'generative_tiered_model' : 'generative_blocked', ok: ready });
+    emitProducerResponse({
+      manifest,
+      capabilities,
+      job,
+      artifacts: {
+        methods: ['timesyncher-vacation-support-router'],
+        vacationName: null,
+        unforgettableGoal: null,
+        destination: null,
+        dates: null,
+        lane: null,
+        webItineraryUrl: null,
+        editApplied: false,
+        createNewTrip: false,
+        turnDecision: null,
+        supportRouterDecision: null,
+        researchedThings: [],
+        publicResearch: { status: 'generative_shared_reply' },
+        trekSync: null,
+        things: [],
+        budgetItems: [],
+        supportNotes: [],
+      },
+      customerResponseText,
+      sharedReply,
+      allowedSkills: manifest.allowedSkills || [],
+    });
+    if (!ready) process.exitCode = 1;
+    return;
+  }
+
+  const preflightDecision = currentTurnRouterDecisionModelFirst({ ...job, productManifest: manifest });
+  if (preflightDecision.shouldQueueWorker !== false) {
+    assertCustomerRequestAllowed(job, capabilities);
+  }
+  const allowedSkills = manifest.allowedSkills || [];
+  const artifacts = await buildArtifacts(job, manifest);
+  let customerResponseText = customerResponse(job, artifacts);
+  const pricingTurn = isAccessPricingTurn(currentTurnText(job));
+  if (testMode && rules?.ok) {
+    if (pricingTurn && rules.access_pricing_language && !customerResponseText.includes(rules.access_pricing_language)) {
+      throw new Error(`pricing reply missing access_pricing_language from ${REPLY_RULES_SLUG}: ${rules.access_pricing_language}`);
+    }
+    customerResponseText = stampSharedReply(customerResponseText, rules);
+  }
+  const jev = testMode ? await jevPrecall({
+    customerTurn: currentTurnText(job),
+    stage: job.app_stage || job.stage || (pricingTurn ? 'access_pricing' : 'vacation_conversation'),
+    gate: job.gate,
+    screen: job.screen || 'vacation-app',
+    session: { seed_id: job.seed_id || job.seedId || null },
+  }) : { jevRan: false, modelTier: null, responseModel: null };
+  const sharedReply = sharedReplyMeta({
+    rules,
+    jev,
+    model: null,
+    replySource: pricingTurn ? 'deterministic_pricing' : 'deterministic_producer',
+    ok: true,
+  });
+  emitProducerResponse({
+    manifest,
+    capabilities,
+    job,
+    artifacts,
+    customerResponseText,
+    sharedReply,
+    allowedSkills,
+  });
 }
 
 main().catch((error) => {

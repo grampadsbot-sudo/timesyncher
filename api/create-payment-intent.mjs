@@ -11,6 +11,17 @@ import {
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from '../src/vacation/email.mjs';
+import checkoutCouponHandler from './checkout-coupon.mjs';
+import {
+  activateAccessPlanCheckout,
+  activateFreeAccessPlanRows,
+  createAccessPlanCheckout,
+  listAccessPlan,
+  loadAccessPlanCheckout,
+  markAccessPlanCheckoutPaymentIntent,
+  publicAccessPlanCheckout,
+  saveAccessPlan,
+} from '../src/vacation/access-plan.mjs';
 
 const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
 const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
@@ -324,11 +335,156 @@ async function findOrCreateStripeCustomer(stripe, customer, metadata) {
   return stripe.customers.create(params);
 }
 
+function accessCheckoutId(body = {}) {
+  return clean(body.checkoutId || body.checkout, 80);
+}
+
+function accessPayerContact(checkout, body = {}) {
+  const fullName = clean(body.name || body.displayName || checkout.payer_name, 180);
+  const [firstName, ...lastParts] = fullName.split(/\s+/).filter(Boolean);
+  return {
+    email: clean(body.email || checkout.payer_email, 180).toLowerCase(),
+    firstName: clean(body.firstName || firstName, 80),
+    lastName: clean(body.lastName || lastParts.join(' '), 80),
+    displayName: fullName || clean(body.email || checkout.payer_email, 180),
+  };
+}
+
+async function accessPlanPaymentIntent({ db, stripe, body = {} }) {
+  const checkout = await loadAccessPlanCheckout(db, accessCheckoutId(body));
+  if (checkout.status === 'paid') throw Object.assign(new Error('This access-plan checkout is already paid.'), { statusCode: 409 });
+  const contact = accessPayerContact(checkout, body);
+  if (!contact.email || !contact.email.includes('@')) {
+    throw Object.assign(new Error('A valid payer email is required.'), { statusCode: 400 });
+  }
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: checkout.amount_cents,
+    currency: checkout.currency || CURRENCY,
+    automatic_payment_methods: { enabled: true },
+    receipt_email: contact.email,
+    description: `TimeSyncher Vacation access for ${checkout.trip_title || 'a vacation'}`,
+    metadata: {
+      product: 'timesyncher_vacation_access_plan',
+      access_plan_checkout_id: checkout.id,
+      owner_customer_id: checkout.owner_customer_id,
+      trip_id: checkout.trip_id || '',
+      payer_email: contact.email,
+      payer_name: contact.displayName,
+      row_ids: (checkout.accessPlanRows || []).map((row) => row.id).join(','),
+      source: 'access_plan_payment_element',
+    },
+  });
+  await markAccessPlanCheckoutPaymentIntent(db, checkout.id, paymentIntent.id);
+  return {
+    ok: true,
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+    amount: checkout.amount_cents,
+    currency: checkout.currency || CURRENCY,
+    checkout: publicAccessPlanCheckout({ ...checkout, stripe_payment_intent_id: paymentIntent.id }),
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'method not allowed' });
 
   try {
     const body = await readBody(req);
+    if (body.action === 'save_access_plan') {
+      requireIntakeAuth(req, process.env);
+      const db = sql(process.env);
+      return send(res, 200, await saveAccessPlan({
+        db,
+        ownerCustomerId: clean(body.ownerCustomerId || body.customerId, 80),
+        tripId: clean(body.tripId, 80),
+        onboardingSessionId: clean(body.onboardingSessionId || body.sessionId, 80),
+        rows: body.rows || body.accessPlan || [],
+        payer: body.payer || {},
+        replace: Boolean(body.replace),
+        env: process.env,
+      }));
+    }
+
+    if (body.action === 'list_access_plan') {
+      requireIntakeAuth(req, process.env);
+      const db = sql(process.env);
+      return send(res, 200, await listAccessPlan({
+        db,
+        ownerCustomerId: clean(body.ownerCustomerId || body.customerId, 80),
+        tripId: clean(body.tripId, 80),
+        checkoutId: clean(body.checkoutId, 80),
+      }));
+    }
+
+    if (body.action === 'activate_free_access_plan') {
+      requireIntakeAuth(req, process.env);
+      const db = sql(process.env);
+      return send(res, 200, await activateFreeAccessPlanRows({
+        db,
+        ownerCustomerId: clean(body.ownerCustomerId || body.customerId, 80),
+        tripId: clean(body.tripId, 80),
+        env: process.env,
+      }));
+    }
+
+    if (body.action === 'create_access_plan_checkout') {
+      requireIntakeAuth(req, process.env);
+      const db = sql(process.env);
+      return send(res, 200, await createAccessPlanCheckout({
+        db,
+        ownerCustomerId: clean(body.ownerCustomerId || body.customerId, 80),
+        tripId: clean(body.tripId, 80),
+        payerEmail: clean(body.payerEmail || body.email, 180),
+        payerName: clean(body.payerName || body.name, 180),
+        rowIds: body.rowIds || body.rows || [],
+        env: process.env,
+      }));
+    }
+
+    if (body.action === 'access_plan_checkout_metadata') {
+      const db = sql(process.env);
+      const checkout = await loadAccessPlanCheckout(db, accessCheckoutId(body));
+      return send(res, 200, { ok: true, checkout: publicAccessPlanCheckout(checkout) });
+    }
+
+    if (body.action === 'create_access_plan_payment_intent') {
+      const db = sql(process.env);
+      let stripeConfig;
+      try {
+        stripeConfig = stripeSecretKey(process.env);
+      } catch (error) {
+        if (stagingCardCheckoutAllowed(process.env)) {
+          const checkout = await loadAccessPlanCheckout(db, accessCheckoutId(body));
+          return send(res, 200, {
+            ok: true,
+            mode: 'staging_card',
+            stripeUnavailable: true,
+            amount: checkout.amount_cents,
+            currency: checkout.currency || CURRENCY,
+            checkout: publicAccessPlanCheckout(checkout),
+            error: error.message,
+          });
+        }
+        return send(res, 503, { ok: false, error: error.message || 'Stripe secret key is not configured yet.' });
+      }
+      const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
+      const result = await accessPlanPaymentIntent({ db, stripe, body });
+      return send(res, 200, { mode: stripeConfig.mode, ...result });
+    }
+
+    if (body.action === 'complete_staging_access_plan_checkout') {
+      if (!stagingCardCheckoutAllowed(process.env)) {
+        return send(res, 403, { ok: false, error: 'Staging card checkout is not enabled for this environment.' });
+      }
+      const db = sql(process.env);
+      return send(res, 200, await activateAccessPlanCheckout({
+        db,
+        checkoutId: accessCheckoutId(body),
+        paymentIntentId: clean(body.paymentIntentId || `staging_access_plan_${Date.now()}`, 140),
+        env: process.env,
+      }));
+    }
+
     if (body.action === 'create_collaborator_checkout') {
       requireIntakeAuth(req, process.env);
       try {
@@ -434,6 +590,18 @@ export default async function handler(req, res) {
         body,
         env: process.env,
       }));
+    }
+
+    const couponCode = clean(body.couponCode || body.coupon, 120);
+    if (couponCode) {
+      const replay = {
+        method: 'POST',
+        headers: req.headers || {},
+        async *[Symbol.asyncIterator]() {
+          yield Buffer.from(JSON.stringify(body));
+        },
+      };
+      return checkoutCouponHandler(replay, res);
     }
 
     let stripeConfig;

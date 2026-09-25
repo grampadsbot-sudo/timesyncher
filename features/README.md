@@ -13,6 +13,8 @@ Inventory of **live UI** on 2026-09-10. Do **not** invent controls.
 - Keepsake QA (Config honor + live Feature Map): `features/keepsake-qa-site-and-config.md` / `bot-admin/messages/time-syncher/keepsake-qa-site-and-config-20260910` — **FAIL verified** (travel Style two = `zu()`). Hold certify.
 - Initial fill (per-category **15 / 10 / 15**, not total-8): `features/min-things.md` / `bot-admin/messages/time-syncher/initial-min-things-rule-20260910`
 - Autonomy bar: `features/autonomous-app-customer-flow.md` / `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`
+- Post-purchase launch (email, then EULA inside the app URL): `features/post-purchase-email-eula.md` / `bot-admin/messages/time-syncher/post-purchase-email-then-app-eula-20260925`. Order-success Open App and standalone `/accept` are retired as that customer path. Verification: `.cursor/skills/verify-timesyncher-vacation/`
+- Live composer reply (Jev classify, then model tier, then the stored reply): `features/live-app-jev-tier.md` / `bot-admin/messages/time-syncher/craig-lock-live-app-jev-tier-feature-map-20260925`. Same shared producer as Dialog. Verification: `verify-live-app-jev-tier.mjs`
 - Without bots (do not wait on OpenClaw): `bot-admin/messages/time-syncher/autonomous-app-without-bots-20260910` — TG on staging lands on vacation-staging `/shared/{token}/` (`Ae()` Style two)
 - TG intake track + build cue: `features/tg-intake.md` / `bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cue-20260910`
 - Style-2 **sole SoT:** `bot-admin/messages/time-syncher/style-2-journey-book-standard` (CoS dated twin = same rules)
@@ -98,6 +100,8 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Autonomy bar | Telegram → GBrain + code + website; eventually **without bots**; do not wait on OpenClaw | `autonomous-app-customer-flow.md` |
 | Keepsake QA | Config honor + live Feature Map; travel Style two `zu()` = FAIL | `keepsake-qa-site-and-config.md` |
 | TG intake | Track Q&A in GBrain; 10–15 min build cue; then autonomous fill | `tg-intake.md` |
+| Post-purchase launch | Purchase ack points at the email. Email opens the app URL. EULA is that URL's first screen, then onboarding chat. Order-success Open App and `/accept` are retired for this path | `post-purchase-email-eula.md` |
+| Composer reply | Jev classify, then that model tier, then the reply the customer saw. Skip stores `jevRan: false` and a reason | `live-app-jev-tier.md` |
 | Settings (TREK, not shared-guest header) | Mapbox / Google Maps / Weather / Invite / Copy link | `trek-settings.md` |
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |
 
