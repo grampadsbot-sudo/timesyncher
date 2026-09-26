@@ -906,21 +906,43 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   const draftModel = String(model?.responseModel || '').trim();
   quality = correctFalsePriceMiss(dockQuality(quality, hardQualityFlags(reply, customerTurn, corpus), customerTurn), reply, customerTurn);
+  let rewriteMiss = 'no_rewrite_attempt';
   const needsAnotherPass = () => {
     const flags = hardQualityFlags(reply, customerTurn, corpus);
-    return quality.wantsRewrite || quality.score <= 3 || flags.split || flags.invented.length || flags.missingPrice || flags.missingAccess;
+    const hard = flags.split || flags.invented.length || flags.missingPrice || flags.missingAccess;
+    if (quality.rewritten === true && !hard) return false;
+    return quality.wantsRewrite || quality.score <= 3 || hard;
   };
   for (let attempt = 0; attempt < 2 && needsAnotherPass(); attempt += 1) {
     const flags = hardQualityFlags(reply, customerTurn, corpus);
     const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nReplace the draft completely. Do not keep the draft and add a paragraph. Do not start with the draft. Jev comment: ${quality.comment}\n${flags.invented.length ? `Do not name ${flags.invented.join(', ')}. Offer options only in the customer's own words.` : 'Do not name a place, activity, or venue the customer did not name.'}\n${flags.missingPrice ? `The reply must include this exact phrase once: ${UNLIMITED_PHRASE}.` : ''}\n${flags.missingAccess ? 'Offer the collaborator the choice between view access and edit access. Use both phrases. Do not choose for them.' : ''}\n${attempt === 1 ? 'The last rewrite repeated the draft. Write different sentences. Start with the day, the price, or the access choice this turn asked for.' : ''}\nDo not use the words split or splitting.\nDraft to replace:\n${reply}`, upsell));
     const rewriteModel = String(directed?.responseModel || '').trim();
-    if (!directed?.called || !isBakeoffModelId(rewriteModel)) continue;
+    if (!directed?.called || !isBakeoffModelId(rewriteModel)) {
+      rewriteMiss = 'rewrite_model';
+      continue;
+    }
     let rewritten = cleanCandidate(directed.text, upsell, postIntake, customerTurn, corpus);
-    if (!rewriteReplacesDraft(originalDraft, rewritten)) continue;
-    if (appTextBanned(rewritten) || replyLeavesDestination(rewritten, destination) || rewriteBreaksUpsell(rewritten, upsell, customerTurn)) continue;
+    if (!rewriteReplacesDraft(originalDraft, rewritten)) {
+      const raw = String(directed.text || '').trim();
+      const rawFlags = hardQualityFlags(raw, customerTurn, corpus);
+      const rawHard = rawFlags.split || rawFlags.invented.length || rawFlags.missingPrice || rawFlags.missingAccess;
+      if (!rawHard && rewriteReplacesDraft(originalDraft, raw) && !appTextBanned(raw) && !replyLeavesDestination(raw, destination) && !rewriteBreaksUpsell(raw, upsell, customerTurn)) {
+        rewritten = raw;
+      } else {
+        rewriteMiss = 'rewrite_same';
+        continue;
+      }
+    }
+    if (appTextBanned(rewritten) || replyLeavesDestination(rewritten, destination) || rewriteBreaksUpsell(rewritten, upsell, customerTurn)) {
+      rewriteMiss = 'rewrite_banned';
+      continue;
+    }
     let rejudged = await jevQualityRewrite({ customerTurn, draft: rewritten, env });
     if (!rejudged?.judged) rejudged = await jevQualityRewrite({ customerTurn, draft: rewritten, env });
-    if (!rejudged?.judged) continue;
+    if (!rejudged?.judged) {
+      rewriteMiss = 'rewrite_unjudged';
+      continue;
+    }
     const accepted = acceptQualityRewrite(originalDraft, rewritten);
     reply = accepted.text;
     quality = correctFalsePriceMiss(dockQuality(rejudged, hardQualityFlags(reply, customerTurn, corpus), customerTurn), reply, customerTurn);
@@ -952,7 +974,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       jev,
       model,
       quality,
-      reason: shippedFlags.split ? 'item34_ban' : (shippedFlags.invented.length ? 'invented_place' : (shippedFlags.missingPrice ? 'price_missing' : (shippedFlags.missingAccess ? 'access_choice_missing' : `quality_gate_score_${quality.score}`))),
+      reason: shippedFlags.split ? 'item34_ban' : (shippedFlags.invented.length ? 'invented_place' : (shippedFlags.missingPrice ? 'price_missing' : (shippedFlags.missingAccess ? 'access_choice_missing' : `quality_gate_score_${quality.score}:${rewriteMiss}`))),
     };
   }
   if (model && typeof model === 'object') model.quality = quality;
@@ -1006,6 +1028,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
       beats: Array.isArray(live.beats) ? live.beats : null,
       quality: live.quality && typeof live.quality === 'object' ? live.quality : null,
+      shippedModel: live.shippedModel || live.quality?.shippedModel || null,
+      draftModel: live.draftModel || live.quality?.draftModel || null,
+      rewriteModel: live.rewriteModel || live.quality?.rewriteModel || null,
       model: live.model || null,
       rules: live.rules || null,
     };
