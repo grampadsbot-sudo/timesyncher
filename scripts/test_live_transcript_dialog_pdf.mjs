@@ -50,6 +50,8 @@ assert.match(strippedSplit, /Fallon still gets a quiet afternoon/);
 assert.equal(item34BanHit('We are not split-payer on this trip.'), true);
 assert.equal(item34BanHit('That would be a split payment.'), true);
 assert.equal(item34BanHit('Stop splitting payment talk.'), true);
+assert.equal(item34BanHit('There is no extra cost for how you\u2019re splitting it up.'), true);
+assert.equal(item34BanHit('without requiring you to split up'), false);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY, replyProducer: LIVE_OPENER_PRODUCER },

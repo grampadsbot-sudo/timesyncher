@@ -160,7 +160,7 @@ function sentenceIsUpsell(sentence) {
   return UNLIMITED_PATTERN.test(sentence) || COLLAB_WELCOME.test(sentence);
 }
 
-export const ITEM34_BAN = /splitting payments|splitting payment|split payment|split-payer/i;
+export const ITEM34_BAN = /splitting payments|splitting payment|split payment|split-payer|split payer|splitting it up|how you['’]re splitting|how you are splitting|payment split|splitting the (?:cost|bill|pay)/i;
 
 export function item34BanHit(text) {
   return ITEM34_BAN.test(String(text || ''));

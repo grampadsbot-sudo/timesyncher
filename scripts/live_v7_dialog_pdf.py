@@ -94,7 +94,10 @@ def pdf_literals(data):
     return strings
 
 
-ITEM34_BAN = re.compile(r"splitting payments|splitting payment|split payment|split-payer", re.I)
+ITEM34_BAN = re.compile(
+    "splitting payments|splitting payment|split payment|split-payer|split payer|splitting it up|how you['\u2019]re splitting|how you are splitting|payment split|splitting the (?:cost|bill|pay)",
+    re.I,
+)
 
 
 def assert_item34(pack):
