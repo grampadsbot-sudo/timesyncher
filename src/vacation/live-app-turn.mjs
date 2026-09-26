@@ -1,6 +1,7 @@
 import {
   DIALOG_TEST_FINGERPRINT,
   callTieredModel,
+  isBakeoffModelId,
   jevPrecall,
   jevQualityRewrite,
   loadVacationAppReplyRules,
@@ -104,6 +105,9 @@ export function liveTurnRecord({
       if (record.quality.rewritten && model.quality.draft) {
         record.quality.draft = String(model.quality.draft);
       }
+      if (record.quality.rewritten && model.quality.rewriteModel) {
+        record.quality.rewriteModel = String(model.quality.rewriteModel);
+      }
     }
     record.model = model
       ? {
@@ -191,7 +195,11 @@ function sentenceIsUpsell(sentence) {
   return UNLIMITED_PATTERN.test(sentence) || COLLAB_WELCOME.test(sentence);
 }
 
-export const ITEM34_BAN = /splitting payments|splitting payment|split payment|split-payer|split payer|splitting it up|how you['’]re splitting|how you are splitting|payment split|splitting the (?:cost|bill|pay)/i;
+export const ITEM34_BAN = /splitting payments|splitting payment|split payment|split-payer|split payer|splitting it up|splitting anything up|how you['’]re splitting|how you are splitting|payment split|splitting the (?:cost|bill|pay)|split(?:ting)? (?:the |a |any )?(?:payment|payments|cost|costs|bill)|(?:payment|cost|bill) split/i;
+
+export function customerAsksPrice(text) {
+  return /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(text || ''));
+}
 
 export function item34BanHit(text) {
   return ITEM34_BAN.test(String(text || ''));
@@ -323,6 +331,48 @@ export function inventedGardenHit(reply, corpus) {
   if (/garden/i.test(known) && /garden[\s\S]{0,80}(?:if it rains|because of (?:the )?weather)|(?:if it rains|because of (?:the )?weather)[\s\S]{0,80}garden/i.test(text)
     && !/(?:if it rains|because of (?:the )?weather)[\s\S]{0,40}garden/i.test(known)) return true;
   return false;
+}
+
+const UNNAMED_VENUE = [
+  [/snorkel/i, 'snorkel'],
+  [/\bcruise\b/i, 'cruise'],
+  [/keauhou/i, 'Keauhou'],
+  [/volcano/i, 'Volcanoes'],
+  [/lava tube/i, 'lava tube'],
+  [/thurston/i, 'Thurston'],
+  [/pu['ʻ‘’]?uhonua|h[oō]naunau/i, 'Puuhonua o Honaunau'],
+  [/captain cook/i, 'Captain Cook'],
+  [/coffee farm/i, 'coffee farm'],
+  [/kahalu/i, 'Kahaluu'],
+  [/pu'?a mau/i, 'Pua Mau'],
+  [/arboretum/i, 'arboretum'],
+  [/botanical garden/i, 'botanical garden'],
+  [/national park/i, 'national park'],
+  [/resort pool/i, 'resort pool'],
+  [/\blagoon\b/i, 'lagoon'],
+  [/\bdock\b/i, 'dock'],
+];
+
+export function inventedVenueNames(reply, corpus) {
+  const value = String(reply || '');
+  const known = String(corpus || '');
+  const names = [];
+  for (const [pattern, label] of UNNAMED_VENUE) {
+    if (pattern.test(value) && !pattern.test(known)) names.push(label);
+  }
+  if (inventedGardenHit(value, known) && !names.length) names.push('a garden they did not name');
+  return names;
+}
+
+export function stripInventedVenues(reply, corpus) {
+  const paragraphs = String(reply || '').split(/\n{2,}/);
+  const kept = [];
+  for (const paragraph of paragraphs) {
+    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => inventedVenueNames(sentence, corpus).length === 0 && !inventedGardenHit(sentence, corpus));
+    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
+    if (joined && inventedVenueNames(joined, corpus).length === 0 && !inventedGardenHit(joined, corpus)) kept.push(joined);
+  }
+  return kept.join('\n\n').trim();
 }
 
 export function stripInventedGarden(reply, corpus) {
@@ -460,6 +510,64 @@ function thingPattern(title) {
   return null;
 }
 
+function swimPlanLabel(sentence) {
+  if (!/\bswim\b|house pool/i.test(sentence)) return '';
+  const dated = datedMentions(sentence)[0];
+  const day = dated ? formatMention({ ...dated, year: dated.year || null }, { withWeekday: true }) : '';
+  let plan = '';
+  if (/beach/i.test(sentence) && /house pool/i.test(sentence)) plan = 'beach or house pool';
+  else if (/house pool/i.test(sentence)) plan = 'house pool';
+  else if (/\bbeach\b/i.test(sentence)) plan = 'beach';
+  return [day, plan].filter(Boolean).join(' ');
+}
+
+const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+
+function weekdayInsideSpan(weekdayName, span) {
+  const target = WEEKDAY_INDEX[String(weekdayName || '').toLowerCase()];
+  if (target == null || !span?.start || !span?.end) return '';
+  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
+  const end = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
+  for (let cursor = start; cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
+    if (cursor.getUTCDay() !== target) continue;
+    return formatMention({
+      weekday: weekdayName,
+      month: cursor.getUTCMonth() + 1,
+      day: cursor.getUTCDate(),
+      year: cursor.getUTCFullYear(),
+    }, { withWeekday: true });
+  }
+  return '';
+}
+
+export function applyAgreedAppSwim(things, customerText, appText, span = null) {
+  if (!/\bswim\b/i.test(String(customerText || ''))) return things;
+  if (!/\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(String(customerText || ''))) return things;
+  const labels = [];
+  for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
+    const dated = datedMentions(sentence)[0];
+    if (dated) {
+      const label = formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true });
+      if (label) labels.push(label);
+      continue;
+    }
+    const weekday = sentence.match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i);
+    const resolved = weekday ? weekdayInsideSpan(weekday[1], span) : '';
+    if (resolved) labels.push(resolved);
+  }
+  if (!labels.length) return things;
+  return (Array.isArray(things) ? things : []).map((thing) => {
+    if (thing.title !== 'Swim') return thing;
+    const merged = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
+    for (const label of labels) {
+      if (merged.some((item) => item === label || item.startsWith(`${label} `))) continue;
+      merged.push(label);
+    }
+    return { ...thing, customerWhen: merged.join(' · ') };
+  });
+}
+
 function whenForThing(title, sentence, span) {
   if (title === 'Groceries' && /same day/i.test(sentence) && span?.startLabel) return span.startLabel;
   if (title === 'Swim' && /later in the week/i.test(sentence)) return 'later in the week';
@@ -529,7 +637,16 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     }
     const spanThing = thing.title === 'Big Island' || thing.title === 'Kailua-Kona house';
     let customerWhen = thing.customerWhen || '';
-    if (!customerWhen && !spanThing) {
+    if (thing.title === 'Swim') {
+      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
+      for (const hit of hits) {
+        const label = swimPlanLabel(hit);
+        if (!label) continue;
+        if (labels.some((item) => item === label || item.startsWith(`${label} `) || label.startsWith(`${item} `))) continue;
+        labels.push(label);
+      }
+      customerWhen = labels.join(' · ');
+    } else if (!customerWhen && !spanThing) {
       const datedHit = hits.find((hit) => datedMentions(hit)[0] && !/keep us on the big island|stay on the big island/i.test(hit));
       const dated = datedHit ? datedMentions(datedHit)[0] : null;
       if (dated) customerWhen = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
@@ -560,14 +677,79 @@ export function formatQualityLine(quality) {
   const score = Number(quality.score);
   if (!Number.isInteger(score) || score < 1 || score > 5) return '';
   const comment = String(quality.comment || '').replace(/\s+/g, ' ').trim();
-  const rewritten = quality.rewritten === true ? ' (rewritten)' : '';
+  let rewritten = '';
+  if (quality.rewritten === true) {
+    const model = String(quality.rewriteModel || '').trim();
+    rewritten = model ? ` (rewritten by ${model})` : ' (rewritten)';
+  }
   return `quality: ${score} — ${comment || 'Jev rated this reply'}${rewritten}`;
 }
 
-function applyUpsellPolicy(reply, upsell, postIntake) {
+export function rewriteReplacesDraft(draft, rewritten) {
+  const prior = String(draft || '').replace(/\s+/g, ' ').trim();
+  const next = String(rewritten || '').replace(/\s+/g, ' ').trim();
+  if (!next || next === prior) return false;
+  if (next.startsWith(prior)) return false;
+  const priorFirst = prior.split(/\n+/)[0];
+  const nextFirst = next.split(/\n+/)[0];
+  if (priorFirst.length > 40 && next.startsWith(priorFirst) && next.length > prior.length) return false;
+  return true;
+}
+
+export function hardQualityFlags(reply, customerTurn, corpus) {
+  return {
+    split: item34BanHit(reply),
+    invented: inventedVenueNames(reply, corpus),
+    missingPrice: customerAsksPrice(customerTurn) && !UNLIMITED_PATTERN.test(String(reply || '')),
+  };
+}
+
+export function dockQuality(quality, flags, customerTurn) {
+  const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+  const reasons = [];
+  if (flags?.invented?.length) reasons.push(`Names ${flags.invented.join(', ')} while answering "${ask}". Use only places and activities the customer named.`);
+  if (flags?.split) reasons.push(`Uses split or splitting payment phrasing while answering "${ask}".`);
+  if (flags?.missingPrice) reasons.push(`Does not name the price while answering "${ask}". The household plan is unlimited vacations for the whole year.`);
+  const rule = reasons.length > 0;
+  const score = rule ? Math.min(Number(quality?.score) || 1, 2) : Number(quality?.score);
+  return {
+    ...quality,
+    score,
+    comment: rule ? reasons[0] : quality?.comment,
+    wantsRewrite: quality?.wantsRewrite === true || score <= 3 || rule,
+  };
+}
+
+function keepPriceStripWelcome(text) {
+  const paragraphs = String(text || '').split(/\n{2,}/);
+  const kept = [];
+  for (const paragraph of paragraphs) {
+    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !isCollabWelcome(sentence));
+    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
+    if (joined) kept.push(joined);
+  }
+  return kept.join('\n\n').trim();
+}
+
+function applyUpsellPolicy(reply, upsell, postIntake, customerTurn = '') {
   if (upsell === 'allow-once' && postIntake) return ensurePostIntakeBeats(reply);
   if (upsell === 'allow-once') return ensureExactUpsellPhrase(reply);
+  if (customerAsksPrice(customerTurn)) return keepPriceStripWelcome(reply);
   return stripUpsell(reply);
+}
+
+function rewriteBreaksUpsell(text, upsell, customerTurn) {
+  if (upsell !== 'forbidden') return false;
+  if (isCollabWelcome(text)) return true;
+  if (customerAsksPrice(customerTurn)) return false;
+  return isFullUpsell(text) || UNLIMITED_PATTERN.test(text);
+}
+
+function cleanCandidate(text, upsell, postIntake, customerTurn, corpus) {
+  let value = applyUpsellPolicy(text, upsell, postIntake, customerTurn);
+  if (item34BanHit(value)) value = applyUpsellPolicy(stripItem34Ban(value), upsell, postIntake, customerTurn);
+  if (inventedVenueNames(value, corpus).length) value = applyUpsellPolicy(stripInventedVenues(value, corpus), upsell, postIntake, customerTurn);
+  return value;
 }
 
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env } = {}) {
@@ -627,14 +809,14 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     env,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
-  let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
+  let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   for (let attempt = 0; attempt < 2 && !String(reply || '').trim(); attempt += 1) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (reply && replyLeavesDestination(reply, destination)) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
     if (replyLeavesDestination(reply, destination)) {
       return {
         reply: null,
@@ -645,34 +827,25 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       };
     }
   }
-  if (upsell === 'forbidden' && (isFullUpsell(reply) || isCollabWelcome(reply) || UNLIMITED_PATTERN.test(reply))) {
-    model = await callTieredModel(modelArgs(`${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`, 'forbidden'));
-    reply = stripUpsell(model?.called && model.text ? String(model.text) : '');
+  if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
+    const nudge = customerAsksPrice(customerTurn)
+      ? `${customerTurn}\n\nAnswer the price with ${UNLIMITED_PHRASE}. Do not add a second collaborator welcome. Do not use the word split.`
+      : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
+    model = await callTieredModel(modelArgs(nudge, 'forbidden'));
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
-  if (item34BanHit(reply)) {
-    model = await callTieredModel(modelArgs(`${customerTurn}\n\nRewrite the reply. Do not describe seats as a split. Kimberly's seat is already covered. Tyler and Lauren each have their own seat. Do not use the word split. Keep the vacation answer.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
-  }
-  if (item34BanHit(reply)) {
-    reply = stripItem34Ban(reply);
-    reply = applyUpsellPolicy(reply, upsell, postIntake);
-  }
-  if (inventedGardenHit(reply, corpus)) {
-    model = await callTieredModel(modelArgs(`${customerTurn}\n\nRewrite. Use the customer's word gardens. Do not name Kahaluu, Pua Mau, an arboretum, or a botanical garden. Do not move the garden because of weather.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
-  }
-  if (inventedGardenHit(reply, corpus)) reply = applyUpsellPolicy(stripInventedGarden(reply, corpus), upsell, postIntake);
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
-  if (!reply || banned || item34BanHit(reply) || inventedGardenHit(reply, corpus) || (upsell === 'forbidden' && (isFullUpsell(reply) || UNLIMITED_PATTERN.test(reply) || isCollabWelcome(reply)))) {
+  if (!reply || banned) {
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: item34BanHit(reply) ? 'item34_ban' : (inventedGardenHit(reply, corpus) ? 'invented_garden' : (banned || (upsell === 'forbidden' && reply ? 'unsolicited_upsell' : model?.reason || 'live dispatcher returned no reply'))),
+      reason: banned || model?.reason || 'live dispatcher returned no reply',
     };
   }
+  const originalDraft = reply;
   let quality = await jevQualityRewrite({ customerTurn, draft: reply, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: reply, env });
   if (!quality?.judged) {
@@ -684,23 +857,45 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       reason: quality?.reason || 'quality_unjudged',
     };
   }
-  if (quality.wantsRewrite) {
-    const draftBeforeRewrite = reply;
-    const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nJev asked for a rewrite before the customer sees this. Jev comment: ${quality.comment}\nDraft to replace:\n${reply}`, upsell));
-    let rewritten = applyUpsellPolicy(directed?.called && directed.text ? String(directed.text) : '', upsell, postIntake);
-    if (item34BanHit(rewritten)) rewritten = applyUpsellPolicy(stripItem34Ban(rewritten), upsell, postIntake);
-    if (inventedGardenHit(rewritten, corpus)) rewritten = applyUpsellPolicy(stripInventedGarden(rewritten, corpus), upsell, postIntake);
-    const rewriteBanned = appTextBanned(rewritten);
-    const rewriteUpsell = upsell === 'forbidden' && (isFullUpsell(rewritten) || UNLIMITED_PATTERN.test(rewritten) || isCollabWelcome(rewritten));
-    if (rewritten && !rewriteBanned && !item34BanHit(rewritten) && !inventedGardenHit(rewritten, corpus) && !replyLeavesDestination(rewritten, destination) && !rewriteUpsell) {
-      const accepted = acceptQualityRewrite(draftBeforeRewrite, rewritten);
-      reply = accepted.text;
-      quality.rewritten = accepted.rewritten;
-      if (accepted.rewritten) quality.draft = accepted.draft;
-      if (model && typeof model === 'object' && directed?.genLatencyMs == null) {
-        model.genLatencyMs = Math.max(0, Date.now() - genStarted);
-      }
+  quality = dockQuality(quality, hardQualityFlags(reply, customerTurn, corpus), customerTurn);
+  for (let attempt = 0; attempt < 2 && (quality.wantsRewrite || quality.score <= 3 || hardQualityFlags(reply, customerTurn, corpus).split || hardQualityFlags(reply, customerTurn, corpus).invented.length || hardQualityFlags(reply, customerTurn, corpus).missingPrice); attempt += 1) {
+    const flags = hardQualityFlags(reply, customerTurn, corpus);
+    const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nReplace the draft completely. Do not keep the draft and add a paragraph. Jev comment: ${quality.comment}\n${flags.invented.length ? `Do not name ${flags.invented.join(', ')}. Offer options only in the customer's own words.` : 'Do not name a place, activity, or venue the customer did not name.'}\n${flags.missingPrice ? `The reply must include this exact phrase once: ${UNLIMITED_PHRASE}.` : ''}\nDo not use split, splitting, "splitting anything up", or "splitting it up".\nDraft to replace:\n${reply}`, upsell));
+    const rewriteModel = String(directed?.responseModel || '').trim();
+    if (!directed?.called || !isBakeoffModelId(rewriteModel)) continue;
+    let rewritten = cleanCandidate(directed.text, upsell, postIntake, customerTurn, corpus);
+    if (!rewriteReplacesDraft(originalDraft, rewritten)) continue;
+    if (appTextBanned(rewritten) || replyLeavesDestination(rewritten, destination) || rewriteBreaksUpsell(rewritten, upsell, customerTurn)) continue;
+    const rejudged = await jevQualityRewrite({ customerTurn, draft: rewritten, env });
+    if (!rejudged?.judged) continue;
+    const accepted = acceptQualityRewrite(originalDraft, rewritten);
+    reply = accepted.text;
+    quality = dockQuality(rejudged, hardQualityFlags(reply, customerTurn, corpus), customerTurn);
+    quality.rewritten = accepted.rewritten;
+    if (accepted.rewritten) {
+      quality.draft = accepted.draft;
+      quality.rewriteModel = rewriteModel;
     }
+    if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
+  }
+  const shippedFlags = hardQualityFlags(reply, customerTurn, corpus);
+  const shippedFail = !reply
+    || appTextBanned(reply)
+    || shippedFlags.split
+    || shippedFlags.invented.length
+    || shippedFlags.missingPrice
+    || replyLeavesDestination(reply, destination)
+    || rewriteBreaksUpsell(reply, upsell, customerTurn)
+    || ((quality.score <= 3 || quality.wantsRewrite) && quality.rewritten !== true);
+  if (shippedFail) {
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      quality,
+      reason: shippedFlags.split ? 'item34_ban' : (shippedFlags.invented.length ? 'invented_place' : (shippedFlags.missingPrice ? 'price_missing' : 'quality_gate')),
+    };
   }
   if (model && typeof model === 'object') model.quality = quality;
   return { reply, rules, jev, model, quality, reason: null };

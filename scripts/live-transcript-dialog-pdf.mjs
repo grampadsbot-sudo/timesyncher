@@ -9,7 +9,9 @@ import {
   LIVE_OPENER_PRODUCER,
   LIVE_REPLY_PRODUCER,
   LIVE_TRANSCRIPT_CAPTURE,
+  customerAsksPrice,
   formatQualityLine,
+  inventedVenueNames,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -44,6 +46,7 @@ export function assertLiveTranscript(doc) {
   if (!targetPerson) throw new Error('refused: Dialog PDF needs target_person for APP to <target_person> labels');
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
+  const customerCorpus = turns.filter((turn) => turn.role === 'customer').map((turn) => turn.text).join('\n');
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -116,9 +119,29 @@ export function assertLiveTranscript(doc) {
       if (!qualityLine || /not judged/i.test(qualityLine)) {
         throw new Error(`refused: turn ${turn.turnIndex} quality is not judged`);
       }
+      const venues = inventedVenueNames(text, customerCorpus);
+      if (venues.length) throw new Error(`refused: turn ${turn.turnIndex} names ${venues.join(', ')}`);
+      const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
+      if (priorCustomer && customerAsksPrice(priorCustomer.text) && !/unlimited vacations for the whole year/i.test(text)) {
+        throw new Error(`refused: turn ${turn.turnIndex} price question has no price`);
+      }
+      if (turn.quality?.rewritten === true) {
+        const rewriteModel = String(turn.quality.rewriteModel || '');
+        if (!isBakeoffModelId(rewriteModel) && rewriteModel !== 'typesafe/jev-1.13') {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite model is not a bake-off tier or Jev`);
+        }
+      }
     }
     }
   }
+  const commentCounts = {};
+  for (const turn of turns) {
+    const comment = String(turn.quality?.comment || '').trim();
+    if (!comment) continue;
+    commentCounts[comment] = (commentCounts[comment] || 0) + 1;
+  }
+  const repeated = Object.entries(commentCounts).find(([, count]) => count >= 5);
+  if (repeated) throw new Error(`refused: Jev comment repeats ${repeated[1]} times`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   return { ...doc, targetPerson, turns };
 }

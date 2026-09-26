@@ -33,6 +33,7 @@ import {
   onboardingOpenerText,
   postIntakeUpsellTurn,
   produceLiveAppReply,
+  applyAgreedAppSwim,
   applyCustomerNotes,
   intakeFacts,
   thingsFromIntake,
@@ -515,6 +516,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     {
       collaborator: Boolean(seat),
       speakerName,
+      appReply: produced.reply,
     },
     postIntakeUpsellTurn(requestText, priorTurns) ? requestText : '',
   );
@@ -615,11 +617,21 @@ async function ensureIntakeItinerary(db, tripId, text) {
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '' } = {}, intakeText = '') {
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '') {
   if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText);
   const current = await loadTripThings(db, tripId);
   if (!current.length || !String(text || '').trim()) return current;
-  const next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  const tripRows = await db`
+    select start_date, end_date
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const start = tripRows[0]?.start_date || null;
+  const end = tripRows[0]?.end_date || null;
+  const year = start ? new Date(start).getUTCFullYear() : null;
+  let next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
     const prior = current.find((item) => item.id === thing.id);
     if (!prior) continue;
