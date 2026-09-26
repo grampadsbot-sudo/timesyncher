@@ -915,7 +915,22 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   };
   for (let attempt = 0; attempt < 2 && needsAnotherPass(); attempt += 1) {
     const flags = hardQualityFlags(reply, customerTurn, corpus);
-    const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nReplace the draft completely. Do not keep the draft and add a paragraph. Do not start with the draft. Jev comment: ${quality.comment}\n${flags.invented.length ? `Do not name ${flags.invented.join(', ')}. Offer options only in the customer's own words.` : 'Do not name a place, activity, or venue the customer did not name.'}\n${flags.missingPrice ? `The reply must include this exact phrase once: ${UNLIMITED_PHRASE}.` : ''}\n${flags.missingAccess ? 'Offer the collaborator the choice between view access and edit access. Use both phrases. Do not choose for them.' : ''}\n${attempt === 1 ? 'The last rewrite repeated the draft. Write different sentences. Start with the day, the price, or the access choice this turn asked for.' : ''}\nDo not use the words split or splitting.\nDraft to replace:\n${reply}`, upsell));
+    const opening = String(reply || '').split(/(?<=[.!?])\s+/)[0].slice(0, 160);
+    const prompt = [
+      customerTurn,
+      'Replace the draft completely. Do not keep the draft and add a paragraph. Do not start with the draft.',
+      `Jev comment: ${quality.comment}`,
+      flags.invented.length ? `Do not name ${flags.invented.join(', ')}. Offer options only in the customer's own words.` : 'Do not name a place, activity, or venue the customer did not name.',
+      flags.missingPrice ? `The reply must include this exact phrase once: ${UNLIMITED_PHRASE}.` : '',
+      flags.missingAccess ? 'Offer the collaborator the choice between view access and edit access. Use both phrases. Do not choose for them.' : '',
+      'Do not use the words split or splitting.',
+      attempt === 0
+        ? `Draft to replace:\n${reply}`
+        : `The last rewrite repeated the draft. Do not start with "${opening}". Write new sentences and do not paste the previous reply.`,
+    ].filter(Boolean).join('\n');
+    const args = modelArgs(prompt, upsell);
+    if (attempt > 0) args.jev = { ...jev, jevRan: true, modelTier: Math.min(4, Number(jev?.modelTier || 2) + 1) };
+    const directed = await callTieredModel(args);
     const rewriteModel = String(directed?.responseModel || '').trim();
     if (!directed?.called || !isBakeoffModelId(rewriteModel)) {
       rewriteMiss = 'rewrite_model';
