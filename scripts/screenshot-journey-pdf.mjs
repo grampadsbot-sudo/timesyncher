@@ -264,7 +264,13 @@ async function main() {
           clipped = true;
         }
       }
-      if (!clipped) await page.screenshot({ path: image });
+      if (!clipped) {
+        if (clipSelector || clipRect) {
+          gap(title, file, 'the named surface was not on screen to capture');
+          return false;
+        }
+        await page.screenshot({ path: image });
+      }
       const hash = createHash('sha256').update(await readFile(image)).digest('hex');
       const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
       if (prior) {
@@ -515,7 +521,16 @@ async function main() {
           note: sharedUrl,
           clipRect: await clipAround('Day-by-Day', { height: 168, padTop: 12 }),
         });
-        await shot('header-chrome', 'Initial itinerary', 'Header brand', { file: 'header-chrome.md', note: sharedUrl, clipSelector: 'header' });
+        await shot('header-chrome', 'Initial itinerary', 'Header brand', {
+          file: 'header-chrome.md',
+          note: sharedUrl,
+          clipRect: await page.evaluate(() => {
+            const logo = document.querySelector('img');
+            const box = logo?.getBoundingClientRect();
+            const bottom = box ? box.bottom + 16 : 88;
+            return { x: 0, y: 0, width: Math.min(1280, window.innerWidth), height: Math.max(64, Math.min(140, bottom)) };
+          }),
+        });
         await page.evaluate(() => window.scrollTo(0, 0));
         await shot('autonomy', 'Initial itinerary', 'Autonomy bar', { file: 'autonomous-app-customer-flow.md', note: 'Guest navigation on the real shared app.', clipSelector: '[data-ts-guest-nav]' });
         await shot('packing', 'Initial itinerary', 'Packing', { file: 'packing.md', note: 'Packing tab stays hidden while share_packing is off.', clipSelector: '[data-ts-guest-nav] button:last-child' });
