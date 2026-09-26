@@ -299,7 +299,7 @@ async function ensureOnboardingOpener(db, session, trip) {
         jevScoreDraft: 5,
         jevScoreRewrite: null,
         jevNote: 'Fixed opener before the first customer line.',
-        interimReply: null,
+        interimReply: { text: null, model: null, ms: null },
         latencyMs: { draft: 0, rewrite: null, total: 0 },
         flagged: false,
       },

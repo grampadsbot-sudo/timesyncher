@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, isTemplateInterim, isTemplateNote, nearIdenticalRewrite, noteForTurn, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, isTemplateInterim, interimProblems, isTemplateNote, nearIdenticalRewrite, noteForTurn, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { qualityCommentCriteria, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertJevRewriteLabels,
@@ -121,7 +121,12 @@ assert.equal(nearIdenticalRewrite('Thursday is a town walk in Kailua-Kona.', 'Th
 assert.equal(isTemplateNote('Clear day shape that stays with the customer words.', 'Thursday town walk'), true);
 assert.equal(isTemplateNote(noteForTurn('Thursday is a town walk.', 'misses_ask'), 'Thursday is a town walk.'), false);
 assert.equal(isTemplateInterim('Got it. I saved that.', 'Thursday town walk'), true);
+assert.equal(isTemplateInterim('Sure, the Thursday walk can stay.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thursday is a town walk.'), false);
+assert.deepEqual(interimProblems([
+  { turnIndex: 2, role: 'app', interimReply: { text: 'The town walk on Thursday can stay light.', model: 'google/gemini-2.5-flash-lite', ms: 400 } },
+  { turnIndex: 4, role: 'app', interimReply: { text: 'The town walk on Thursday can stay light.', model: 'google/gemini-2.5-flash-lite', ms: 500 } },
+]), ['interim reply repeats across turns 2 and 4']);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 2, rewrite: 'A different Thursday town walk stays.', rewriteScore: 4 }).rewritten, true);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).flagged, true);
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape.');
@@ -342,6 +347,9 @@ assert.match(text, /timing: jev=400ms gen=2400ms model=qwen\/qwen3-235b-a22b-250
 assert.match(text, /quality: 4 .*Harbor morning plan for Craig/);
 assert.match(text, /draftModel: qwen\/qwen3-235b-a22b-2507/);
 assert.match(text, /flagged: false/);
+assert.match(jevRewritePdf, /interimReply\.text: The harbor morning/);
+assert.match(jevRewritePdf, /interimReply\.model: google\/gemini-2\.5-flash-lite/);
+assert.match(jevRewritePdf, /interimReply\.ms: 900/);
 assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
 assert.match(text, /v7 overall/);

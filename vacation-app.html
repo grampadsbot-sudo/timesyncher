@@ -762,7 +762,7 @@
       const attachments = await Promise.all(state.attachments.map(filePayload));
       state.attachments = [];
       renderAttachments();
-      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping"><small>TimeSyncher</small>…</article>`);
+      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>TimeSyncher</small>…</article>`);
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',

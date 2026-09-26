@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
-import { item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
+import { interimProblems, isTemplateInterim, item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -81,8 +81,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/jevQualityRewrite/.test(liveTurn) || !/finishTierRewrite/.test(liveTurn) || !/INTERIM_MODEL/.test(liveTurn) || !/export async function jevQualityRewrite/.test(replyRules)) {
     errors.push('shared producer does not let Jev score and the tier model rewrite');
   }
-  if (!/status: 'interim'/.test(liveTurn) || !/interimFromTierOne/.test(liveTurn)) {
-    errors.push('a low score does not send an interim reply before the tier rewrite');
+  if (!/status: 'interim'/.test(liveTurn) || !/interimFromTierOne/.test(liveTurn) || !/forceModel: INTERIM_MODEL/.test(liveTurn)) {
+    errors.push('a low score does not send a Flash Lite interim from the customer turn');
+  }
+  if (!/isTemplateInterim/.test(liveTurn) || !/interimProblems/.test(liveTurn) || !/no template fallback|text = ''/.test(liveTurn)) {
+    errors.push('interim replies can fall back to a template');
   }
   if (!/building the itinerary/.test(liveTurn) || !/Post-intake:/.test(replyRules)) {
     errors.push('shared producer does not acknowledge the itinerary and give the collab welcome right after long intake');
@@ -344,6 +347,11 @@ async function selfCheck() {
     sampleTurn(),
     appTurn({ quality: null }),
   ])).some((error) => /not judged/.test(error)));
+  assert.equal(isTemplateInterim('Got it. Thursday stays.', 'Thursday town walk'), true);
+  assert.ok(interimProblems([
+    { turnIndex: 2, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'google/gemini-2.5-flash-lite', ms: 10 } },
+    { turnIndex: 4, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'google/gemini-2.5-flash-lite', ms: 11 } },
+  ]).some((error) => /repeats across turns/.test(error)));
   process.stdout.write('live app jev tier self-check passed\n');
 }
 

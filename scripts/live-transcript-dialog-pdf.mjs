@@ -16,6 +16,7 @@ import {
   rewriteCreditLabel,
   isTemplateNote,
   isTemplateInterim,
+  interimProblems,
   nearIdenticalRewrite,
   item34BanHit,
   loadLiveTranscriptByToken,
@@ -172,13 +173,8 @@ export function assertLiveTranscript(doc) {
   }
   const repeated = Object.entries(commentCounts).find(([, count]) => count >= 5);
   if (repeated) throw new Error(`refused: Jev comment repeats ${repeated[1]} times`);
-  const interimTexts = [];
-  for (const turn of turns) {
-    const interim = String(turn.interimReply?.text || '').trim();
-    if (!interim) continue;
-    if (interimTexts.includes(interim)) throw new Error('refused: interim reply repeats across turns');
-    interimTexts.push(interim);
-  }
+  const interim = interimProblems(turns);
+  if (interim.length) throw new Error(`refused: ${interim[0]}`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   return { ...doc, targetPerson, turns };
 }
@@ -579,9 +575,7 @@ export function liveV7Pack(doc, shape) {
 
 function producerLogLine(turn) {
   const latency = turn.modelLatency || {};
-  const interim = turn.interimReply?.text
-    ? `${turn.interimReply.text} (${turn.interimReply.model || ''}, ${Number(turn.interimReply.ms) || 0}ms)`
-    : 'none';
+  const interim = turn.interimReply && typeof turn.interimReply === 'object' ? turn.interimReply : {};
   return [
     `draftModel: ${turn.draftModel || ''}`,
     `rewriteModel: ${turn.rewriteModel || 'none'}`,
@@ -589,7 +583,9 @@ function producerLogLine(turn) {
     `jevScoreDraft: ${turn.jevScoreDraft ?? ''}`,
     `jevScoreRewrite: ${turn.jevScoreRewrite ?? 'none'}`,
     `jevNote: ${turn.jevNote || ''}`,
-    `interimReply: ${interim}`,
+    `interimReply.text: ${interim.text || 'none'}`,
+    `interimReply.model: ${interim.model || 'none'}`,
+    `interimReply.ms: ${Number.isFinite(Number(interim.ms)) ? Number(interim.ms) : 'none'}`,
     `latencyMs: draft=${latency.draft ?? ''} rewrite=${latency.rewrite ?? 'none'} total=${latency.total ?? ''}`,
     `flagged: ${turn.flagged === true}`,
   ].join(' | ');

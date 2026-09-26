@@ -766,7 +766,7 @@ export function isTemplateNote(note, customerTurn) {
   return !words.some((word) => blob.includes(word));
 }
 
-const INTERIM_STOCK = /^(got it\b|sure[,.!]?\s|okay[,.!]?\s*$|^ok[,.!]?\s*$|the plan stays\b|i am building the itinerary\b)/i;
+const INTERIM_STOCK = /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i;
 
 export function isTemplateInterim(text, customerTurn) {
   const value = String(text || '').trim();
@@ -774,6 +774,29 @@ export function isTemplateInterim(text, customerTurn) {
   const words = String(customerTurn || '').toLowerCase().match(/[a-z0-9]{4,}/g) || [];
   const blob = value.toLowerCase();
   return !words.some((word) => blob.includes(word));
+}
+
+export function interimProblems(turns) {
+  const problems = [];
+  const seen = new Map();
+  for (const turn of Array.isArray(turns) ? turns : []) {
+    const interim = turn?.interimReply;
+    const text = String(interim?.text || '').trim();
+    if (!text) continue;
+    const prior = (Array.isArray(turns) ? turns : []).slice(0, (turns || []).indexOf(turn)).reverse().find((item) => item?.role === 'customer');
+    if (prior && isTemplateInterim(text, prior.text)) {
+      problems.push(`turn ${turn.turnIndex} interim reply is a template`);
+    } else if (!prior && /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i.test(text)) {
+      problems.push(`turn ${turn.turnIndex} interim reply is a template`);
+    }
+    const key = text.toLowerCase().replace(/\s+/g, ' ');
+    if (seen.has(key)) problems.push(`interim reply repeats across turns ${seen.get(key)} and ${turn.turnIndex}`);
+    else seen.set(key, turn.turnIndex);
+    if (interim?.model && interim.model !== 'google/gemini-2.5-flash-lite') {
+      problems.push(`turn ${turn.turnIndex} interim model is not google/gemini-2.5-flash-lite`);
+    }
+  }
+  return problems;
 }
 
 export function nearIdenticalRewrite(draft, rewritten) {
@@ -1126,7 +1149,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     jevScoreDraft: quality.score,
     jevScoreRewrite: null,
     jevNote,
-    interimReply: null,
+    interimReply: { text: null, model: null, ms: null },
     latencyMs: { draft: draftLatencyMs, rewrite: null, total: draftLatencyMs },
     flagged: false,
   };
@@ -1184,11 +1207,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
 
 async function interimFromTierOne({ rules, customerTurn, destination, env }) {
   const started = Date.now();
-  const systemExtra = 'Write one or two new sentences that use a concrete detail from this customer message. Do not use a stock greeting. Do not say Got it. This is a short note while the full answer is still being written.';
-  const call = (extra) => callTieredModel({
+  const systemExtra = 'Answer this customer turn in one or two new sentences. Use a detail they just wrote. Do not open with Got it, Sure, or Okay.';
+  const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },
-    customerTurn: extra ? `${customerTurn}\n\n${systemExtra}` : customerTurn,
+    customerTurn,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
     destination,
@@ -1200,13 +1223,13 @@ async function interimFromTierOne({ rules, customerTurn, destination, env }) {
     timeoutMs: 8000,
     systemExtra,
   });
-  let model = await call(false);
+  let model = await call();
   let text = String(model?.text || '').trim();
   if (isTemplateInterim(text, customerTurn)) {
-    model = await call(true);
+    model = await call();
     text = String(model?.text || '').trim();
   }
-  if (isTemplateInterim(text, customerTurn)) text = '';
+  if (isTemplateInterim(text, customerTurn) || model?.responseModel !== INTERIM_MODEL) text = '';
   return { text, model: INTERIM_MODEL, ms: Math.max(0, Date.now() - started) };
 }
 
