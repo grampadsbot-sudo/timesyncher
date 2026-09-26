@@ -601,39 +601,70 @@ function splitBeat(answer) {
   return { text: kept.join('\n').trim(), beats: beats.filter(Boolean) };
 }
 
-export function parseJevQuality(raw) {
-  const source = String(raw || '');
-  const start = source.indexOf('{');
-  const end = source.lastIndexOf('}');
-  if (start < 0 || end <= start) return { judged: false, reason: 'quality_unparsed' };
-  let body;
-  try {
-    body = JSON.parse(source.slice(start, end + 1));
-  } catch {
-    return { judged: false, reason: 'quality_unparsed' };
-  }
-  const score = Number(body.score);
-  if (!Number.isInteger(score) || score < 1 || score > 5) return { judged: false, reason: 'quality_score_missing' };
-  const comment = text(body.comment, 400);
-  if (!comment) return { judged: false, reason: 'quality_comment_missing' };
-  const rewrite = text(body.rewrite, 3500);
-  const rewritten = Boolean(rewrite) && !/^keep$/i.test(rewrite);
+export const JEV_QUALITY_COMMENTS = {
+  clear_day: 'Clear day shape that stays with the customer words.',
+  thin_reply: 'Too thin. Say more about the people and the day.',
+  invented_place: 'Do not invent a place the customer did not name.',
+  off_brief: 'The reply misses what the customer asked.',
+  strong_welcome: 'The itinerary acknowledgment and collaborator welcome are in place.',
+  garden_words: 'Use the customer word gardens. Do not name a garden they did not name.',
+  split_language: 'Remove any split-payment wording.',
+  destination_lock: 'Stay on the destination the customer named.',
+};
+
+export function qualityFromDecisions(body) {
+  const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
+  const scoreRaw = Number(answers.overall_quality?.score);
+  if (!Number.isFinite(scoreRaw)) return { judged: false, reason: 'quality_score_missing', model: JEV_DECISIONS_MODEL };
+  const score = Math.max(1, Math.min(5, Math.round(scoreRaw) + 1));
+  const comment = JEV_QUALITY_COMMENTS[text(answers.comment?.choice, 80)];
+  if (!comment) return { judged: false, reason: 'quality_comment_missing', model: JEV_DECISIONS_MODEL };
+  const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite';
   return {
     judged: true,
     score,
     comment,
-    rewrite: rewritten ? rewrite : '',
-    rewritten,
+    rewrite: '',
+    rewritten: false,
+    wantsRewrite,
     model: JEV_DECISIONS_MODEL,
   };
 }
 
 export async function jevQualityRewrite({ customerTurn, draft, env = process.env } = {}) {
   const key = appOpenRouterKey(env);
+  const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
+  if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
   if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
-  assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'jev quality', { allowTieredOpenRouterChat: true });
+  const payload = {
+    model: JEV_DECISIONS_MODEL,
+    state: {
+      customer_turn: text(customerTurn, 6000),
+      draft: text(draft, 3500),
+    },
+    questions: {
+      overall_quality: {
+        type: 'score',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent.',
+        criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
+      },
+      disposition: {
+        type: 'choice',
+        instructions: 'Should the customer see this draft, or should it be rewritten before they see it?',
+        criteria: {
+          keep: 'The draft should stand as the customer-facing reply.',
+          rewrite: 'Replace the draft. It misses the customer, invents a place, or breaks a product rule.',
+        },
+      },
+      comment: {
+        type: 'choice',
+        instructions: 'Pick the one comment that best fits this draft.',
+        criteria: JEV_QUALITY_COMMENTS,
+      },
+    },
+  };
   try {
-    const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${key}`,
@@ -642,32 +673,14 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
         'HTTP-Referer': 'https://timesyncher.com',
         'X-Title': 'TimeSyncher Vacation App Jev Quality',
       },
-      body: JSON.stringify({
-        model: JEV_DECISIONS_MODEL,
-        temperature: 0,
-        max_tokens: 700,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are Jev rating one vacation-app reply. Return only JSON {"score":1,"comment":"...","rewrite":""}. score is an integer 1 through 5. comment is one sentence about this reply. rewrite is empty when the reply should stand. When the reply should change, rewrite is the full customer-facing replacement. Never say splitting payments, split payment, or split-payer. If the customer said gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, or a weather excuse for a garden.',
-          },
-          {
-            role: 'user',
-            content: JSON.stringify({
-              customer_turn: text(customerTurn, 6000),
-              draft: text(draft, 3500),
-            }),
-          },
-        ],
-      }),
-      signal: AbortSignal.timeout(25000),
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
     });
     const body = await response.json().catch(() => ({}));
-    if (!response.ok) return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
-    const answer = chatReplyText(body.choices?.[0]?.message?.content);
-    const parsed = parseJevQuality(answer);
-    parsed.model = JEV_DECISIONS_MODEL;
-    return parsed;
+    if (!response.ok || body.ok === false) {
+      return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
+    }
+    return qualityFromDecisions(body);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }

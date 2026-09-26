@@ -478,8 +478,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       reason: quality?.reason || 'quality_unjudged',
     };
   }
-  if (quality.rewrite) {
-    let rewritten = applyUpsellPolicy(quality.rewrite, upsell, postIntake);
+  if (quality.wantsRewrite) {
+    const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nJev asked for a rewrite before the customer sees this. Jev comment: ${quality.comment}\nDraft to replace:\n${reply}`, upsell));
+    let rewritten = applyUpsellPolicy(directed?.called && directed.text ? String(directed.text) : '', upsell, postIntake);
     if (item34BanHit(rewritten)) rewritten = applyUpsellPolicy(stripItem34Ban(rewritten), upsell, postIntake);
     if (inventedGardenHit(rewritten, corpus)) rewritten = applyUpsellPolicy(stripInventedGarden(rewritten, corpus), upsell, postIntake);
     const rewriteBanned = appTextBanned(rewritten);
@@ -487,9 +488,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     if (rewritten && !rewriteBanned && !item34BanHit(rewritten) && !inventedGardenHit(rewritten, corpus) && !replyLeavesDestination(rewritten, destination) && !rewriteUpsell) {
       reply = rewritten;
       quality.rewritten = true;
-    } else {
-      quality.rewritten = false;
-      quality.rewrite = '';
+      if (model && typeof model === 'object' && directed?.genLatencyMs == null) {
+        model.genLatencyMs = Math.max(0, Date.now() - genStarted);
+      }
     }
   }
   if (model && typeof model === 'object') model.quality = quality;

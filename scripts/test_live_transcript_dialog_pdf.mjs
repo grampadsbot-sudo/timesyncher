@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
 import { customerPullsAccess, destinationFromTexts, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, inventedGardenHit, isFullUpsell, isLongIntake, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
-import { parseJevQuality } from './vacation-app-reply-rules.mjs';
+import { qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertLiveTranscript,
   assessPackShape,
@@ -74,8 +74,21 @@ assert.deepEqual(intakeThings.map((thing) => thing.title), ['Big Island', 'Garde
 assert.equal(intakeThings.some((thing) => /kahalu|arboretum/i.test(thing.title)), false);
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten)');
 assert.equal(formatQualityLine({ judged: false, score: 4, comment: 'no' }), '');
-assert.equal(parseJevQuality('{"score":5,"comment":"Kept.","rewrite":""}').judged, true);
-assert.equal(parseJevQuality('no json').judged, false);
+assert.equal(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 3 },
+    comment: { choice: 'clear_day' },
+    disposition: { choice: 'keep' },
+  },
+}).score, 4);
+assert.equal(qualityFromDecisions({ answers: { comment: { choice: 'clear_day' } } }).judged, false);
+assert.equal(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 2 },
+    comment: { choice: 'garden_words' },
+    disposition: { choice: 'rewrite' },
+  },
+}).wantsRewrite, true);
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'customer', text: longIntake },
   { turnIndex: 2, role: 'app', text: intakeReply },
