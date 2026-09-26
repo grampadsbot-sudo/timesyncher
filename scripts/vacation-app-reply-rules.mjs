@@ -533,8 +533,10 @@ function grokReplyUrl(env) {
   return /^https?:\/\//i.test(host) ? host.replace(/\/+$/, '') + routePath : `http://${host}:${port}${routePath}`;
 }
 
-function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel }) {
+function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory }) {
   return {
+    destination_lock: text(destination, 160) || null,
+    recent_turns: Array.isArray(memory) ? memory.slice(-12) : [],
     pipeline: rules?.pipeline || SHARED_REPLY_PIPELINE,
     rules_slug: rules?.slug || REPLY_RULES_SLUG,
     rules: {
@@ -560,10 +562,14 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
-function replyRulesSystem(rules) {
+function replyRulesSystem(rules, destination) {
+  const lock = text(destination, 160);
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
     'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
+    lock
+      ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to Tulum, Cartagena, or any other city or island.`
+      : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
     `When access or price comes up, welcome the whole family onto this vacation as collaborators and include this phrase inside that welcome: ${rules?.access_pricing_language || 'unlimited vacations for the whole year'}. Do not answer with only that phrase.`,
@@ -587,7 +593,7 @@ function splitBeat(answer) {
   return { text: kept.join('\n').trim(), beats: beats.filter(Boolean) };
 }
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, env = process.env } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, env = process.env } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = openRouterChatModelForTier(modelTier);
   if (!jev?.jevRan || !isBakeoffModelId(responseModel)) {
@@ -601,6 +607,8 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     screen,
     modelTier,
     responseModel,
+    destination,
+    memory,
     env,
   });
 }
@@ -631,7 +639,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, env }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, env }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -643,7 +651,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     };
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
-  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel });
+  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory });
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -659,7 +667,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: replyRulesSystem(rules) },
+          { role: 'system', content: replyRulesSystem(rules, destination) },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),

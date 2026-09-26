@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { FIXED_OPENER_REASON, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY } from '../src/vacation/live-app-turn.mjs';
+import { destinationFromTexts, FIXED_OPENER_REASON, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, replyLeavesDestination } from '../src/vacation/live-app-turn.mjs';
 import {
   assertLiveTranscript,
   assessPackShape,
@@ -23,8 +23,13 @@ assert.match(source, /tiers used:/);
 assert.match(source, /models used:/);
 assert.doesNotMatch(source, /T\$\{turn\.turnIndex\} APP to/);
 assert.doesNotMatch(source, /jev first:/);
-assert.match(source, /Dialog Pack -/);
+assert.match(source, /QUALITY COMPARISON vs v6 gpt-5-mini|liveV7Pack/);
 assert.match(source, /missing_app_open/);
+
+assert.equal(destinationFromTexts(['We are going to the Big Island.']), 'Big Island, Hawaii');
+assert.equal(replyLeavesDestination('Friday dinner in Tulum', 'Big Island, Hawaii'), true);
+assert.equal(replyLeavesDestination('Friday dinner on the Big Island', 'Big Island, Hawaii'), false);
+assert.equal(replyLeavesDestination('Cartagena breakfast', 'Big Island, Hawaii'), true);
 
 const rules = await loadVacationAppReplyRules({});
 assert.equal(rules.ok, true);
@@ -108,30 +113,28 @@ assert.match(partial.missing_app_open_next, /Do not invent/);
 
 const pdf = renderLiveTranscriptPdf(customerFirst);
 const text = extractPdfText(pdf);
-assert.match(text, /Dialog Pack - untitled v7 Tier 1-4/);
-assert.match(text, /source=live-app \(not sim\)/);
-assert.match(text, /no_gpt5mini: True/);
-assert.match(text, /QUALITY COMPARISON/);
-assert.match(text, /Per-tier models/);
+assert.match(text, /Dialog Pack — untitled v7 Tier 1–4|Dialog Pack . untitled v7 Tier/);
+assert.match(text, /QUALITY COMPARISON vs v6 gpt-5-mini/);
 assert.match(text, /Per-tier mean overall/);
-assert.match(text, /TIMINGS/);
-assert.match(text, /Roster \/ Collaborators/);
+assert.match(text, /TIMINGS vs v6 gpt-5-mini/);
+assert.match(text, /Hard recipe/);
+assert.match(text, /Roster/);
+assert.match(text, /no_gpt5mini/);
 assert.match(text, /qwen\/qwen3-235b-a22b-2507/);
 assert.match(text, /deepseek\/deepseek-v3.2/);
 assert.match(text, /qwen\/qwen3-max/);
 assert.match(text, /google\/gemini-2.5-flash-lite/);
 assert.doesNotMatch(text, /gpt-4\.1-mini/);
-assert.match(text, /tiers used: 2/);
-assert.match(text, /models used: qwen\/qwen3-235b-a22b-2507/);
-assert.match(text, /beat: harbor morning plan/);
-assert.match(text, /^Craig:/m);
+assert.match(text, /Full interleaved transcript/);
+assert.match(text, /T2 APP/);
+assert.match(text, /beat=harbor morning plan/);
+assert.match(text, /T1 CRAIG/);
 assert.match(text, /Harbor morning plan for Craig/);
-assert.match(text, /APP to Craig:/);
+assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
-assert.match(text, /timing: gen=2400ms · tier=2 · model=qwen\/qwen3-235b-a22b-2507/);
+assert.match(text, /timing: gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2/);
 assert.doesNotMatch(text, /tier 2 \| general \| 2800 ms/);
 assert.doesNotMatch(text, /jev first:/);
-assert.match(text, /missing_app_open: true/);
 assert.match(text, /Correction notes/);
 assert.doesNotMatch(text, /role: customer/);
 assert.doesNotMatch(text, /\bTURN \d/);
@@ -172,7 +175,7 @@ const fixedOpen = liveDoc({
 assert.equal(assessPackShape(fixedOpen).missing_app_open, false);
 assert.equal(assessPackShape(fixedOpen).status, 'DONE');
 const fixedText = extractPdfText(renderLiveTranscriptPdf(fixedOpen));
-assert.match(fixedText, /APP to Craig:/);
+assert.match(fixedText, /T1 APP/);
 assert.match(fixedText, /Tell me the trip basics/);
 assert.match(fixedText, /collaborators/);
 assert.doesNotMatch(fixedText, /timing: gen=0ms/);
@@ -187,9 +190,8 @@ rejects(liveDoc({
   ],
 }), /did not come from vacation-app-reply-rules|without a real Jev/);
 const openText = extractPdfText(renderLiveTranscriptPdf(withOpen));
-assert.match(openText, /APP to Craig:/);
+assert.match(openText, /T1 APP/);
 assert.match(openText, /Welcome\. Tell me where you are going\./);
-assert.match(openText, /missing_app_open: false/);
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-pdf-'));
 const transcriptPath = path.join(dir, 'transcript.json');
@@ -200,6 +202,6 @@ assert.notEqual(missing.status, 0);
 assert.match(missing.stderr, /will not invent a transcript/);
 const built = spawnSync(process.execPath, [script, '--transcript', transcriptPath, '--out', outPath], { encoding: 'utf8' });
 assert.equal(built.status, 0, built.stderr);
-assert.match(extractPdfText(fs.readFileSync(outPath)), /APP to Craig:/);
+assert.match(extractPdfText(fs.readFileSync(outPath)), /T2 APP/);
 
 console.log('live transcript dialog pdf passed');

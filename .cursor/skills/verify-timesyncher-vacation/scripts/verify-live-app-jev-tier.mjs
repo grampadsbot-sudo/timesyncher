@@ -62,6 +62,9 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/tier_models\.json/.test(replyRules) || !/tier_outside_bakeoff_map/.test(replyRules)) {
     errors.push('shared producer does not fail closed when tier_models.json drifts');
   }
+  if (!/Destination lock/.test(replyRules) || !/replyLeavesDestination/.test(liveTurn)) {
+    errors.push('shared producer does not lock replies to the customer destination');
+  }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');
   }
