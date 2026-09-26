@@ -102,16 +102,19 @@ export function sharedTripFromIntake({ trip, things }) {
       reservation_status: 'considering',
       notes: summary,
     });
+    const dayIds = [];
     thingOverrides[`place:${id}`] = {
       timeline: true,
       status: 'considering',
       category: kind.category,
       summary,
       longDetails: [thing.who ? `Who: ${thing.who}` : '', thing.whenLabel, thing.customerWhen].filter(Boolean).join(' · '),
+      dayIds,
     };
     for (const date of assignDates(thing, year, tripDates)) {
       const day = dayByDate.get(date);
       if (!day) continue;
+      dayIds.push(day.id);
       const key = String(day.id);
       const rows = assignments[key] || [];
       rows.push({

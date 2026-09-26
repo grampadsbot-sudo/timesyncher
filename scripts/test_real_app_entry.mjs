@@ -41,8 +41,9 @@ assert.equal(shared.timesyncherIntake, true);
 assert.equal(shared.days.length, 10);
 assert.equal(shared.places.length, 2);
 const swim = shared.places.find((place) => place.name === 'Swim');
-assert.equal(shared.thingOverrides[`place:${swim.id}`].timeline, true);
 const monday = shared.days.find((day) => day.date === '2026-04-06');
+assert.equal(shared.thingOverrides[`place:${swim.id}`].timeline, true);
+assert.deepEqual(shared.thingOverrides[`place:${swim.id}`].dayIds, [monday.id]);
 assert.ok((shared.assignments[String(monday.id)] || []).some((row) => row.place_id === swim.id));
 assert.equal(shared.places.some((place) => /Las Vegas/i.test(place.name)), false);
 
