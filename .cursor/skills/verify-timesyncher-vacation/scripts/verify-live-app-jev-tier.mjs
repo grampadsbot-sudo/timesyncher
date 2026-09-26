@@ -41,6 +41,17 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!liveTurn.includes(PRODUCER)) {
     errors.push('live app turns are not marked vacation-app-reply-rules');
   }
+  const timedAt = liveTurn.indexOf('jevLatencyMs');
+  if (timedAt < 0 || modelAt < 0 || timedAt > modelAt || !/jevBeforeModel = true/.test(liveTurn)) {
+    errors.push('live reply path does not record Jev classify ms before the model call');
+  }
+  if (!/modelId/.test(liveTurn)) errors.push('live app turns do not store the bake-off model id');
+  if (!/real banter/.test(replyRules) || !/whole family/.test(replyRules)) {
+    errors.push('shared producer does not ask for banter and a family collaborator welcome');
+  }
+  if (!/Use 3, 4, or 5/.test(replyRules)) {
+    errors.push('Jev tier criteria do not allow tiers beyond 1-2 when the turn needs them');
+  }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');
   }
@@ -104,6 +115,14 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
     }
     if (turn.replyProducer !== PRODUCER) errors.push(`turn ${turn.turnIndex} app text is not from ${PRODUCER}`);
     if (turn.jev?.jevRan !== true) errors.push(`turn ${turn.turnIndex} app text exists without Jev`);
+    const modelId = String(turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || '');
+    if (!modelId.includes('/')) errors.push(`turn ${turn.turnIndex} app reply is missing the bake-off model id`);
+    if (!Number.isFinite(Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs))) {
+      errors.push(`turn ${turn.turnIndex} is missing Jev classify ms`);
+    }
+    if (turn.jevBeforeModel !== true && turn.jev?.jevBeforeModel !== true) {
+      errors.push(`turn ${turn.turnIndex} does not prove Jev ran before the model`);
+    }
     if (turn.jev?.jevRan === true) ran += 1;
   });
   if (requireRan && ran < 1) errors.push('no stored app turn records jevRan true with a tier');
@@ -130,7 +149,11 @@ function appTurn(overrides = {}) {
     text: 'Start with the harbor walk.',
     replyProducer: PRODUCER,
     invented: false,
-    jev: { jevRan: true, modelTier: 2, routeType: 'itinerary_advice' },
+    jev: { jevRan: true, modelTier: 2, routeType: 'itinerary_advice', responseModel: 'google/gemini-2.5-flash', jevLatencyMs: 120, jevBeforeModel: true },
+    modelId: 'google/gemini-2.5-flash',
+    jevLatencyMs: 120,
+    genLatencyMs: 400,
+    jevBeforeModel: true,
     ...overrides,
   });
 }

@@ -58,9 +58,13 @@ function liveDoc(overrides = {}) {
         at: '2026-09-25T21:00:03.000Z',
         latencyMs: 2800,
         sessionE2eMs: 3000,
-        jev: { jevRan: true, modelTier: 2, routeType: 'general', extraContext: { routeType: 'general' }, via: 'openrouter-decisions' },
+        jev: { jevRan: true, modelTier: 2, routeType: 'general', extraContext: { routeType: 'general' }, via: 'openrouter-decisions', responseModel: 'google/gemini-2.5-flash', jevLatencyMs: 400, jevBeforeModel: true },
         replyProducer: 'vacation-app-reply-rules',
         invented: false,
+        modelId: 'google/gemini-2.5-flash',
+        jevLatencyMs: 400,
+        genLatencyMs: 2400,
+        jevBeforeModel: true,
       },
     ],
     ...overrides,
@@ -100,7 +104,8 @@ assert.match(text, /T1 Craig:/);
 assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP to Craig:/);
 assert.match(text, /Start with the harbor walk/);
-assert.match(text, /tier 2 \| general \| 2800 ms/);
+assert.match(text, /timing: gen=2400ms · tier=2 · model=google\/gemini-2.5-flash/);
+assert.match(text, /jev first: 400ms · route=general/);
 assert.match(text, /Jev tier counts/);
 assert.match(text, /missing_app_open: true/);
 assert.match(text, /Correction notes/);
@@ -144,8 +149,8 @@ assert.equal(assessPackShape(fixedOpen).missing_app_open, false);
 assert.equal(assessPackShape(fixedOpen).status, 'DONE');
 const fixedText = extractPdfText(renderLiveTranscriptPdf(fixedOpen));
 assert.match(fixedText, /T1 APP to Craig:/);
-assert.match(fixedText, /Welcome\. Your vacation website is not built yet/);
-assert.match(fixedText, /jevRan false \(fixed_onboarding_opener\)/);
+assert.match(fixedText, /Tell me the trip basics/);
+assert.match(fixedText, /jev first: skipped \(fixed_onboarding_opener\)/);
 rejects(liveDoc({
   turns: [
     liveDoc().turns[0],

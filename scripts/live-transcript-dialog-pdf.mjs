@@ -88,10 +88,22 @@ export function assertLiveTranscript(doc) {
         if (turn.replyProducer !== LIVE_REPLY_PRODUCER) {
           throw new Error(`refused: turn ${turn.turnIndex} app text did not come from ${LIVE_REPLY_PRODUCER}`);
         }
-        if (turn.jev.jevRan !== true) {
-          throw new Error(`refused: turn ${turn.turnIndex} app text exists without a real Jev classify`);
-        }
+      if (turn.jev.jevRan !== true) {
+        throw new Error(`refused: turn ${turn.turnIndex} app text exists without a real Jev classify`);
       }
+      const modelId = String(turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || '').trim();
+      if (!modelId.includes('/')) {
+        throw new Error(`refused: turn ${turn.turnIndex} app reply is missing the bake-off model id`);
+      }
+      const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
+      const genMs = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
+      if (!Number.isFinite(jevMs) || !Number.isFinite(genMs)) {
+        throw new Error(`refused: turn ${turn.turnIndex} is missing Jev classify ms or gen ms`);
+      }
+      if (turn.jevBeforeModel !== true && turn.jev?.jevBeforeModel !== true) {
+        throw new Error(`refused: turn ${turn.turnIndex} does not prove Jev ran before the model`);
+      }
+    }
     }
   }
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
@@ -118,12 +130,30 @@ export function buildTimingSummary(doc) {
       jevRan: turn.jev?.jevRan === true,
       modelTier: turn.jev?.jevRan === true ? turn.jev.modelTier : null,
       routeType: turn.jev?.routeType || null,
+      modelId: turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || null,
+      jevLatencyMs: Number.isFinite(Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs)) ? Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs) : null,
+      genLatencyMs: Number.isFinite(Number(turn.genLatencyMs ?? turn.model?.genLatencyMs)) ? Number(turn.genLatencyMs ?? turn.model?.genLatencyMs) : null,
+      jevBeforeModel: turn.jevBeforeModel === true || turn.jev?.jevBeforeModel === true,
     })),
   };
 }
 
 function pdfAscii(value) {
-  return String(value ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/[^\n\x20-\x7E]/g, '?');
+  return String(value ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/[^\n\x20-\x7E·]/g, '?');
+}
+
+function appTimingLines(turn) {
+  const fixed = turn.fixedOpener === true || (turn.replyProducer === LIVE_OPENER_PRODUCER && turn.jev?.jevRan !== true);
+  if (fixed) return [`jev first: skipped (${turn.jev?.reason || 'fixed_onboarding_opener'})`];
+  const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
+  const tier = turn.jev?.modelTier;
+  const model = turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || 'unknown';
+  const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
+  const route = turn.jev?.routeType ? ` · route=${turn.jev.routeType}` : '';
+  return [
+    `timing: gen=${gen}ms · tier=${tier} · model=${model}`,
+    `jev first: ${jevMs}ms${route} · e2e ${Number(turn.sessionE2eMs)}ms`,
+  ];
 }
 
 function wrapLines(text, width) {
@@ -229,11 +259,7 @@ function packPages(doc, shape) {
       : `T${turn.turnIndex} ${name}:`;
     transcript.push(label);
     transcript.push(...wrapLines(turn.text, 88));
-    if (turn.role === 'app') {
-      const tier = turn.jev?.jevRan === true ? `tier ${turn.jev.modelTier}` : `jevRan false (${turn.jev?.reason || 'skipped'})`;
-      const route = turn.jev?.routeType ? ` | ${turn.jev.routeType}` : '';
-      transcript.push(`${tier}${route} | ${Number(turn.latencyMs)} ms | e2e ${Number(turn.sessionE2eMs)} ms`);
-    }
+    if (turn.role === 'app') transcript.push(...appTimingLines(turn));
     transcript.push('');
   }
   const notes = [
@@ -258,7 +284,7 @@ function paginate(lines, pageSize, header) {
 }
 
 function pdfEscape(value) {
-  return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/·/g, '\\267');
 }
 
 export function renderLiveTranscriptPdf(doc, options = {}) {
@@ -318,7 +344,7 @@ export function extractPdfText(buffer) {
   const pattern = /\(((?:\\.|[^\\)])*)\)\s*Tj/g;
   let match = pattern.exec(raw);
   while (match) {
-    parts.push(match[1].replace(/\\([\\()])/g, '$1'));
+    parts.push(match[1].replace(/\\([0-7]{1,3})/g, (_, oct) => String.fromCharCode(parseInt(oct, 8))).replace(/\\([\\()])/g, '$1'));
     match = pattern.exec(raw);
   }
   return parts.join('\n');
@@ -392,6 +418,10 @@ function qaInput(doc, shape) {
       jevRan: turn.jev?.jevRan === true,
       tier: turn.jev?.jevRan === true ? turn.jev.modelTier : null,
       route: turn.jev?.routeType || null,
+      modelId: turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || null,
+      jevLatencyMs: Number.isFinite(Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs)) ? Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs) : null,
+      genLatencyMs: Number.isFinite(Number(turn.genLatencyMs ?? turn.model?.genLatencyMs)) ? Number(turn.genLatencyMs ?? turn.model?.genLatencyMs) : null,
+      jevBeforeModel: turn.jevBeforeModel === true || turn.jev?.jevBeforeModel === true,
     })),
   };
 }

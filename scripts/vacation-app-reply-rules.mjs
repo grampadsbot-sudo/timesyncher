@@ -340,7 +340,7 @@ function decisionsPayload(context) {
     questions: {
       model_tier: {
         type: 'score',
-        instructions: 'Cheapest adequate model tier for this vacation-app customer turn. Criterion 1 is cheapest and criterion 5 is strongest. Prefer a stronger tier only for the single collab assessment after the initial website build.',
+        instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 5 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3, 4, or 5 when the reply needs richer banter, a multi-day plan, a family collaborator welcome, or a judgment call. Do not pin every turn to tier 1.',
         criteria: JEV_MODEL_TIER_CRITERIA,
       },
       route_type: {
@@ -349,7 +349,7 @@ function decisionsPayload(context) {
         criteria: {
           itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
           notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
-          access_pricing: 'Price or access for a collaborator, editing, or media. Use unlimited vacations for the whole year when the plan is annual.',
+          access_pricing: 'Price or access for family collaborators, editing, or media. Welcome the whole household onto the vacation, and use unlimited vacations for the whole year when the plan is annual.',
           collab_upsell: 'The one collab assessment after the initial website build. Do not repeat it.',
           product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
           general: 'Other vacation-app help that still follows the shared reply rules.',
@@ -520,10 +520,11 @@ function replyRulesSystem(rules) {
     'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
-    `When access pricing comes up, say ${rules?.access_pricing_language || 'unlimited vacations for the whole year'}.`,
+    `When access or price comes up, welcome the whole family onto this vacation as collaborators and include this phrase inside that welcome: ${rules?.access_pricing_language || 'unlimited vacations for the whole year'}. Do not answer with only that phrase.`,
+    'If the customer mentions a partner, kids, family, or friends, invite that household in: they join the same trip, add notes, and help shape the days.',
     'Give the collab assessment at most once, and only after the initial website build.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-    'Write a short customer-facing answer.',
+    'Write a few sentences of real banter. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
   ].join('\n');
 }
 
@@ -613,8 +614,8 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
       },
       body: JSON.stringify({
         model: responseModel,
-        temperature: 0.4,
-        max_tokens: 700,
+        temperature: 0.55,
+        max_tokens: 900,
         messages: [
           { role: 'system', content: replyRulesSystem(rules) },
           { role: 'user', content: JSON.stringify(request) },

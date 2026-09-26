@@ -7,7 +7,8 @@ The vacation-app composer classifies the customer turn with Jev, then calls that
 - `composer-post` posts the customer text and renders `data.reply` only.
 - `jev-classify` stores `jevRan` with tier and route, or `jevRan: false` and a reason.
 - `tier-reply` stores the tiered-model text as the app turn from `vacation-app-reply-rules`.
-- `onboarding-opener` stores the fixed welcome the customer sees as turn 1 after Agree. `jevRan` is false with reason `fixed_onboarding_opener`. It is not a generated reply.
+- `onboarding-opener` stores the full welcome the customer sees as turn 1 after Agree: trip basics and a family collaborator path. `jevRan` is false with reason `fixed_onboarding_opener`. It is not a generated reply.
+- `model-timing` stores the bake-off model id, Jev classify ms, and gen ms, and records that Jev finished before the model call.
 
 ## How to get to it (user POV)
 
