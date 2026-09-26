@@ -48,3 +48,4 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier
 - An app turn with `jevRan: false` fails the harness, except the first stored row when it is the fixed onboarding opener (`fixed_onboarding_opener`). Empty text or `invented: true` still fails.
 - A generated app turn without a `provider/model` id, without `jevLatencyMs`, or without `jevBeforeModel: true` fails the harness.
 - Pack-shape PDF rendering does not create replies. It only prints turns this path already stored.
+- The printed APP timing line is `timing: gen=<ms> · tier=<N> · model=<provider/model>`. Cover lists `tiers used` and `models used`. Jev classify ms and `jevBeforeModel` stay on the stored turn. Do not print `tier N | route | X ms | e2e` as that line.

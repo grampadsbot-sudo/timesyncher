@@ -150,16 +150,15 @@ function pdfAscii(value) {
 
 function appTimingLines(turn) {
   const fixed = turn.fixedOpener === true || (turn.replyProducer === LIVE_OPENER_PRODUCER && turn.jev?.jevRan !== true);
-  if (fixed) return [`jev first: skipped (${turn.jev?.reason || 'fixed_onboarding_opener'})`];
+  if (fixed || turn.jev?.jevRan !== true) return [];
   const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
   const tier = turn.jev?.modelTier;
   const model = turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || 'unknown';
-  const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
-  const route = turn.jev?.routeType ? ` · route=${turn.jev.routeType}` : '';
-  return [
-    `timing: gen=${gen}ms · tier=${tier} · model=${model}`,
-    `jev first: ${jevMs}ms${route} · e2e ${Number(turn.sessionE2eMs)}ms`,
-  ];
+  return [`timing: gen=${gen}ms · tier=${tier} · model=${model}`];
+}
+
+function modelIdOf(turn) {
+  return String(turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || '').trim();
 }
 
 function wrapLines(text, width) {
@@ -189,11 +188,20 @@ export function assessPackShape(doc, options = {}) {
   const head = String(options.head || checked.head || 'not-recorded');
   const dpl = String(options.dpl || checked.dpl || 'not-recorded');
   const tierCounts = {};
+  const modelIds = new Set();
+  let generated = 0;
+  let jevFirst = 0;
   for (const turn of checked.turns) {
-    if (turn.jev?.jevRan !== true) continue;
+    if (turn.role !== 'app' || turn.jev?.jevRan !== true) continue;
+    generated += 1;
     const key = String(turn.jev.modelTier);
     tierCounts[key] = (tierCounts[key] || 0) + 1;
+    const modelId = modelIdOf(turn);
+    if (modelId) modelIds.add(modelId);
+    if (turn.jevBeforeModel === true || turn.jev?.jevBeforeModel === true) jevFirst += 1;
   }
+  const tiersUsed = Object.keys(tierCounts).sort();
+  const modelsUsed = [...modelIds].sort();
   const voiceStatus = summary.voiceTurns > 0
     ? `${summary.voiceTurns} voice turn(s) in this live transcript`
     : 'PARTIAL: no voice/STT turn in this live transcript';
@@ -215,6 +223,9 @@ export function assessPackShape(doc, options = {}) {
     voiceStatus,
     summary,
     tierCounts,
+    tiersUsed,
+    modelsUsed,
+    jevFirst: generated > 0 && jevFirst === generated,
     grading: 'live text only',
   };
 }
@@ -222,48 +233,46 @@ export function assessPackShape(doc, options = {}) {
 function packPages(doc, shape) {
   const name = doc.targetPerson;
   const summary = shape.summary;
-  const tierLine = Object.keys(shape.tierCounts).sort().map((tier) => `tier ${tier}: ${shape.tierCounts[tier]}`).join(', ') || 'none';
+  const tiersUsed = (shape.tiersUsed || []).join(', ') || 'none';
+  const modelsUsed = (shape.modelsUsed || []).join(', ') || 'none';
   const cover = [
     `Dialog Pack - ${shape.trip} (live-app)`,
     `pack_id: ${shape.pack_id}`,
     `turns: ${summary.turnCount}`,
-    `customer_turns: ${summary.customerTurns}`,
-    `app_turns: ${summary.appTurns}`,
-    `capture=${doc.capture}`,
+    `tiers used: ${tiersUsed}`,
+    `models used: ${modelsUsed}`,
+    'source=live-app (not sim)',
+  ];
+  const meta = [
+    'Meta',
+    'source=live-app (not sim)',
+    `pack_id: ${shape.pack_id}`,
+    `turns: ${summary.turnCount}`,
+    `tiers used: ${tiersUsed}`,
+    `models used: ${modelsUsed}`,
     `session: ${doc.sessionToken || ''}`,
     `HEAD: ${shape.head}`,
     `dpl: ${shape.dpl}`,
     `voice: ${shape.voiceStatus}`,
     `status: ${shape.status}`,
     `missing_app_open: ${shape.missingAppOpen === true || shape.missing_app_open === true}`,
-    '',
-    'source=live-app (not sim)',
-  ];
-  const meta = [
-    'Meta',
-    'source=live-app (not sim)',
-    '',
-    'Overall timing',
+    `jev_first: ${shape.jevFirst === true ? 'yes' : 'no'}`,
     `session_e2e_ms: ${summary.sessionE2eMs}`,
-    `turns: ${summary.turnCount}`,
-    `customer_turns: ${summary.customerTurns}`,
-    `app_turns: ${summary.appTurns}`,
-    `voice_turns: ${summary.voiceTurns}`,
-    '',
-    'Jev tier counts',
-    tierLine,
-    '',
     shape.missing_app_open
       ? 'APP open: missing from this live transcript. Not invented.'
-      : 'APP open: present as the first live app line.',
+      : 'APP open: stored live opener before the first customer line.',
     shape.missing_app_open_next || '',
   ].filter((line) => line !== undefined);
-  const transcript = [`Full transcript - APP to ${name}:`, ''];
+  const transcript = [];
   for (const turn of doc.turns) {
-    const label = turn.role === 'app'
-      ? `T${turn.turnIndex} APP to ${name}:`
-      : `T${turn.turnIndex} ${name}:`;
+    const label = turn.role === 'app' ? `APP to ${name}:` : `${name}:`;
     transcript.push(label);
+    if (turn.role === 'app' && Array.isArray(turn.beats)) {
+      for (const beat of turn.beats) {
+        const value = String(beat || '').trim();
+        if (value) transcript.push(`beat: ${value}`);
+      }
+    }
     transcript.push(...wrapLines(turn.text, 88));
     if (turn.role === 'app') transcript.push(...appTimingLines(turn));
     transcript.push('');
@@ -300,7 +309,7 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   const pageLines = [
     ...paginate(cover, 46),
     ...paginate(meta, 46),
-    ...paginate(transcript, 46, `Full transcript - APP to ${checked.targetPerson}:`),
+    ...paginate(transcript, 46),
     ...paginate(notes, 46),
   ];
   const pages = pageLines.map((lines) => {

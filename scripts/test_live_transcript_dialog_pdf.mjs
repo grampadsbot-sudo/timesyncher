@@ -18,7 +18,11 @@ const source = fs.readFileSync(script, 'utf8');
 assert.doesNotMatch(source, /dialog_vacation_test_turn\s*\(/);
 assert.doesNotMatch(source, /callTieredModel|jevPrecall|chat\/completions|openrouter\.ai/);
 assert.match(source, /OpenRouter self-call or dialog_vacation_test_turn pack/);
-assert.match(source, /T\$\{turn\.turnIndex\} APP to \$\{name\}:/);
+assert.match(source, /APP to \$\{name\}:/);
+assert.match(source, /tiers used:/);
+assert.match(source, /models used:/);
+assert.doesNotMatch(source, /T\$\{turn\.turnIndex\} APP to/);
+assert.doesNotMatch(source, /jev first:/);
 assert.match(source, /Dialog Pack -/);
 assert.match(source, /missing_app_open/);
 
@@ -99,14 +103,15 @@ const pdf = renderLiveTranscriptPdf(customerFirst);
 const text = extractPdfText(pdf);
 assert.match(text, /Dialog Pack - untitled \(live-app\)/);
 assert.match(text, /source=live-app \(not sim\)/);
-assert.match(text, /Full transcript - APP to Craig:/);
-assert.match(text, /T1 Craig:/);
+assert.match(text, /tiers used: 2/);
+assert.match(text, /models used: google\/gemini-2.5-flash/);
+assert.match(text, /^Craig:/m);
 assert.match(text, /Harbor morning plan for Craig/);
-assert.match(text, /T2 APP to Craig:/);
+assert.match(text, /APP to Craig:/);
 assert.match(text, /Start with the harbor walk/);
 assert.match(text, /timing: gen=2400ms · tier=2 · model=google\/gemini-2.5-flash/);
-assert.match(text, /jev first: 400ms · route=general/);
-assert.match(text, /Jev tier counts/);
+assert.doesNotMatch(text, /tier 2 \| general \| 2800 ms/);
+assert.doesNotMatch(text, /jev first:/);
 assert.match(text, /missing_app_open: true/);
 assert.match(text, /Correction notes/);
 assert.doesNotMatch(text, /role: customer/);
@@ -148,9 +153,10 @@ const fixedOpen = liveDoc({
 assert.equal(assessPackShape(fixedOpen).missing_app_open, false);
 assert.equal(assessPackShape(fixedOpen).status, 'DONE');
 const fixedText = extractPdfText(renderLiveTranscriptPdf(fixedOpen));
-assert.match(fixedText, /T1 APP to Craig:/);
+assert.match(fixedText, /APP to Craig:/);
 assert.match(fixedText, /Tell me the trip basics/);
-assert.match(fixedText, /jev first: skipped \(fixed_onboarding_opener\)/);
+assert.match(fixedText, /collaborators/);
+assert.doesNotMatch(fixedText, /timing: gen=0ms/);
 rejects(liveDoc({
   turns: [
     liveDoc().turns[0],
@@ -162,7 +168,7 @@ rejects(liveDoc({
   ],
 }), /did not come from vacation-app-reply-rules|without a real Jev/);
 const openText = extractPdfText(renderLiveTranscriptPdf(withOpen));
-assert.match(openText, /T1 APP to Craig:/);
+assert.match(openText, /APP to Craig:/);
 assert.match(openText, /Welcome\. Tell me where you are going\./);
 assert.match(openText, /missing_app_open: false/);
 
