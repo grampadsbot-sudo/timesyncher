@@ -1,11 +1,13 @@
 ---
 name: verify-timesyncher-vacation
-description: "Drive TimeSyncher Vacation post-purchase proof on vacation-staging: coupon or purchase ack, purchase email launch link, EULA as the first screen of the app URL, then onboarding chat. Use when checking that path or when evidence might skip the email or leave EULA on order-success."
+description: "Re-runnable TimeSyncher Vacation verification. Drives the real shared app on vacation-staging and overwrites a per-feature PASS/FAIL/GAP table. Use for /maintain-verification-skill, after an app merge, or the weekly verification pass."
 ---
 
-# Verify TimeSyncher Vacation post-purchase launch
+# Verify TimeSyncher Vacation
 
-Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path.
+The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
+
+Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path. After a trip has a shared site, the app iframe is that real itinerary.
 
 ## Launch
 
@@ -81,3 +83,29 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier
 ```
 
 The harness exits non-zero when the source path skips Jev, stamps a dialog fingerprint onto the customer reply, or a live app turn lacks `jevRan` plus tier and route. A skipped classify must be `jevRan: false` with a reason and no invented tier. `--session` only reads stored turns.
+
+## Feature map drive
+
+This is the command `/maintain-verification-skill` re-runs after every app merge and weekly. It is idempotent: it overwrites `<out>/VERIFY.md` and `<out>/verify/*.png`, and it does not redeem a coupon or insert staging rows.
+
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs --self-check
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs --out <dir>
+```
+
+`<dir>` defaults to `.cursor/skills/verify-timesyncher-vacation/output`, which is not committed. The same input overwrites the same table. QA reads that table: one row per feature file, result `PASS`, `FAIL`, or `GAP`.
+
+The real-app gate is required. The command runs `npm run test:real-app-entry` first and refuses a clean table when that gate fails. A doctor failure overwrites the same table with `Doctor FAIL` so a later run cannot leave an older PASS table in place. A product gap stays a `GAP` row. Do not delete or soften the feature file.
+
+A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
+
+## Screenshot journey
+
+Every test run also builds the Screenshot Journey PDF from these feature files. The script is idempotent: it overwrites `screenshot-journey.pdf`, the page PNGs under `journey-pages/`, and the `## Screenshot journey` section of `VERIFY.md`. It does not redeem a coupon and it does not click Agree.
+
+```bash
+node scripts/screenshot-journey-pdf.mjs --self-check
+node scripts/screenshot-journey-pdf.mjs --out <dir> --session-url <app-url> --shared-url <intake-url> --eula-url <pending-app-url>
+```
+
+The real-app gate runs first. A feature file with no screenshot is a GAP in the PDF contents page and in `VERIFY.md`. Shell screens are refused. `--eula-url` is a pending app URL used only for the EULA page. Omit it and that page is a gap.

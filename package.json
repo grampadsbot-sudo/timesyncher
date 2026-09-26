@@ -19,6 +19,7 @@
     "test:checkout-coupons:legacy": "node scripts/test_checkout_coupons.mjs",
     "test:vacation-collaborators": "node scripts/test_vacation_collaborators.mjs",
     "test:vacation-web-access": "node scripts/test_vacation_web_access.mjs",
+    "test:real-app-entry": "node scripts/test_real_app_entry.mjs",
     "test:timeline-icons": "node scripts/test_timeline_icons.mjs",
     "test:thing-media-bind": "node scripts/test_bind_thing_media.mjs",
     "test:keepsake-style2": "node scripts/test_keepsake_style2.mjs",

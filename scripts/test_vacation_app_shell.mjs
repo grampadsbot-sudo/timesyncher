@@ -20,9 +20,9 @@ assert.match(page, /\/timesyncher-logo-gold\.png/);
 assert.match(page, /alt="TimeSyncher"/);
 assert.match(page, /no vacations yet/);
 assert.match(page, /function tripBadge/);
-assert.match(page, /data-collaborator-notes/);
-assert.match(page, /data-intake-rule/);
-assert.match(page, /data-when/);
+assert.doesNotMatch(page, /data-screen="itinerary"/);
+assert.doesNotMatch(page, /data-screen="thing"/);
+assert.doesNotMatch(page, /aria-label="Vacation path"/);
 assert.match(page, /workspace\.chat-only/);
 assert.match(page, /realSiteUrl/);
 assert.doesNotMatch(page, /class="mark"[^>]*>TS</);
@@ -42,6 +42,7 @@ assert.match(api, /queueVacationAppTurn/);
 assert.match(api, /vacation-app/);
 assert.match(api, /worker_jobs/);
 assert.match(api, /transcript_turns/);
+assert.match(api, /delete from transcript_turns where id = \$\{turnRows\[0\]\.id\}/);
 assert.match(api, /classifyTurn/);
 assert.match(api, /publicTripUrl/);
 assert.match(api, /builtVacationSiteUrl/);
@@ -88,15 +89,16 @@ assert.doesNotMatch(orderSuccess, /telegram|telegraph/i);
 
 const confirmed = purchaseEmail({
   contact: { firstName: 'Alex' },
-  token: 'session-token',
+  publicSlug: 'intake-eab1cbb15144',
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.equal(
   confirmed.launchUrl,
-  'https://vacation-staging.timesyncher.com/vacation-app.html?session=session-token',
+  'https://vacation-staging.timesyncher.com/shared/intake-eab1cbb15144/',
 );
-assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=session-token/);
-assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=session-token"/);
+assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\//);
+assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
+assert.doesNotMatch(confirmed.htmlBody, /vacation-app\.html/);
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);
 
 const orderTest = await readFile(new URL('../order-test.html', import.meta.url), 'utf8');

@@ -1,11 +1,11 @@
-# Post-purchase verification map
+# TimeSyncher Vacation verification map
 
-Maintained source for the TimeSyncher Vacation purchase-launch path. Product inventory: `features/post-purchase-email-eula.md`. Read this index, then drive the feature file.
+GBrain Feature Map is canonical. The repo `features/` mirror is the inventory. This directory is the drive. Target the real shared app (`/shared/las-vegas-vacation-3/` and an intake `/shared/intake-…` trip). Never the deleted card shell.
 
 ## Baseline preconditions
 
 - Staging alias `https://vacation-staging.timesyncher.com` is the only host.
-- Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor` before a live drive.
+- Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs`. It doctors, runs the real-app gate, and overwrites the PASS/FAIL/GAP table.
 - Evidence for a redeem already captured lives in `/opt/cursor/artifacts/craig-811-email-eula-20260925/` unless the run names another directory.
 - Do not treat order-success Open App or `/accept` as a substitute entry point.
 
@@ -24,12 +24,23 @@ Maintained source for the TimeSyncher Vacation purchase-launch path. Product inv
 
 ## Feature entry contract
 
-Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving it with verify-post-purchase-email-eula`, and `Gotchas`.
+Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving it`, and `Gotchas`. `verify-feature-map.mjs` drives every file and writes the PASS/FAIL/GAP table.
 
 ## Features
 
-- [Post-purchase email, then in-app EULA](./post-purchase-email-eula.md) covers purchase ack, the email launch link, EULA on the app URL, and onboarding chat.
-- [Live composer Jev tier](./live-app-jev-tier.md) covers Jev classify, then the model tier, then the stored reply. Product inventory: `features/live-app-jev-tier.md`.
+- [Post-purchase email, then in-app EULA](./post-purchase-email-eula.md)
+- [Live composer Jev tier](./live-app-jev-tier.md)
+- [Standard itinerary layout](./itinerary-layout.md)
+- [Slider bars](./slider-bars.md)
+- [Thing pages](./thing-pages.md)
+- [Post-intake welcome](./post-intake-welcome.md)
+- [Jev quality line](./jev-quality-line.md)
+- [Keepsake Style one](./keepsake-style-one.md)
+- [Keepsake Style two](./keepsake-style-two.md)
+- [Keepsakes config defaults](./keepsakes-config.md)
+- [Dialog screenshot gate](./dialog-screenshot-gate.md)
+- [Email opens the real app](./real-app-email-entry.md)
+- Header, language, voice note, maps, filters, empty states, tags, logos, status, happy hour, hotel, flight, car, ratings, stories, collaborators, budget, packing, print, order keepsakes, trip view, navigation, settings, min things, autonomy, keepsake QA, Telegram intake, and the Cursor contract each have a sibling file with the same drive shape.
 
 ## Retired
 

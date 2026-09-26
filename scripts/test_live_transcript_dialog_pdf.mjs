@@ -5,13 +5,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyCustomerNotes, customerPullsAccess, destinationFromTexts, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, intakeFacts, inventedGardenHit, isFullUpsell, isLongIntake, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
-import { qualityFromDecisions } from './vacation-app-reply-rules.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { qualityCommentCriteria, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
+  assertJevRewriteLabels,
   assertLiveTranscript,
   assessPackShape,
   extractPdfText,
   formatLiveTimingLine,
+  jevRewriteLabelCounts,
   renderLiveTranscriptPdf,
 } from './live-transcript-dialog-pdf.mjs';
 
@@ -52,7 +54,15 @@ assert.equal(item34BanHit('We are not split-payer on this trip.'), true);
 assert.equal(item34BanHit('That would be a split payment.'), true);
 assert.equal(item34BanHit('Stop splitting payment talk.'), true);
 assert.equal(item34BanHit('There is no extra cost for how you\u2019re splitting it up.'), true);
-assert.equal(item34BanHit('without requiring you to split up'), false);
+assert.equal(item34BanHit('without requiring you to split up'), true);
+assert.equal(item34BanHit('You are not splitting anything.'), true);
+assert.equal(customerAsksAccessChoice('Can Marcus Chen and Aunt Jean each choose view access or edit access?'), true);
+const accessAsk = 'Can each collaborator choose view access or edit access?';
+assert.equal(hardQualityFlags('Thursday is a garden or a town walk.', accessAsk, 'gardens').missingAccess, true);
+assert.equal(hardQualityFlags('You can choose view access or edit access.', accessAsk, 'gardens').missingAccess, false);
+assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Thursday is a garden.', accessAsk, 'gardens'), accessAsk).wantsRewrite, true);
+assert.equal(item34BanHit('without stacking costs or splitting anything up'), true);
+assert.equal(item34BanHit('Do not split the payment across seats.'), true);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
 const longIntake = `${'okay voice note dumping. Big Island Hawaii, gardens, swim, groceries, dinner, family, April. '.repeat(8)}Kimberly wants gardens.`;
 assert.equal(isLongIntake(longIntake), true);
@@ -101,7 +111,47 @@ assert.equal(locked.find((thing) => thing.title === 'Big Island').customerWhen, 
 assert.equal(acceptQualityRewrite('Draft stays.', 'Draft stays.').rewritten, false);
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').rewritten, true);
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').text, 'The rewrite the customer sees.');
-assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten)');
+assert.equal(rewriteReplacesDraft('The draft stays here.', 'The draft stays here. Extra paragraph about a cruise.'), false);
+assert.equal(rewriteReplacesDraft('The draft stays here.', 'Monday is the beach or the house pool. The household plan is unlimited vacations for the whole year.'), true);
+assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape.');
+assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1 — Misses the price.');
+const priceDraft = 'This trip already holds space for all eight of you. You are covered for Kimberly. Tyler has his own. Lauren has hers.';
+const priceChoices = jevReplacementChoices({ customerTurn: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.', draft: priceDraft, corpus: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' });
+assert.ok(priceChoices.length >= 1);
+assert.match(priceChoices[0], /unlimited vacations for the whole year/);
+assert.equal(priceChoices.every((choice) => rewriteReplacesDraft(priceDraft, choice)), true);
+assert.equal(priceChoices.some((choice) => /\b(?:split|splitting)\b/i.test(choice)), false);
+const swimDraft = 'If Monday April sixth rains, the swim still happens later. The beach plan stays, and the house pool is the backup.';
+const swimAsk = 'If Monday April sixth rains, what is the backup for Tyler so the swim still happens later and the beach plan does not just vanish?';
+const swimChoices = jevReplacementChoices({ customerTurn: swimAsk, draft: swimDraft, corpus: swimAsk });
+assert.ok(swimChoices.length >= 1);
+assert.match(swimChoices[0], /house pool/);
+assert.equal(swimChoices.every((choice) => rewriteReplacesDraft(swimDraft, choice)), true);
+assert.deepEqual(inventedVenueNames('A morning snorkel cruise and Hawaiʻi Volcanoes, then Puʻuhonua o Hōnaunau and Captain Cook.', 'Kimberly wants gardens. Tyler wants a swim.'), ['snorkel', 'cruise', 'Volcanoes', 'Puuhonua o Honaunau', 'Captain Cook']);
+assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', 'Tyler wants a swim on the beach or the house pool.'), []);
+const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
+assert.equal(customerAsksPrice(priceAsk), true);
+assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'Does not give the price for "How much is it?".', wantsRewrite: true }, 'The household plan is unlimited vacations for the whole year.', priceAsk).score, 4);
+assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, true);
+assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').score <= 2, true);
+assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').wantsRewrite, true);
+const windyBeach = applyCustomerNotes(goldThings, 'Tyler wants a swim, including one later in the week if the beach is windy.');
+assert.equal(windyBeach.find((thing) => thing.title === 'Swim').customerWhen, '');
+const rainSwim = applyCustomerNotes(goldThings, 'If Monday April sixth rains, what is the backup for Tyler so the swim still happens later and the beach plan does not just vanish?');
+assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach');
+const mondaySwim = applyCustomerNotes(rainSwim, 'This is Tyler. Monday April sixth swim is the beach unless it is windy, then the house pool. Save that on Monday.');
+assert.equal(mondaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+const span = { start: '2026-04-03', end: '2026-04-12', year: 2026 };
+const inventedTuesday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Tuesday, April 7th opens gently for that second swim.', span);
+assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+const appOnlyThursday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
+assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+const thursdaySwim = applyAgreedAppSwim(mondaySwim, 'I still want one later swim on Thursday at Kailua-Kona.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
+assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Thu Apr 9');
+const comments = qualityCommentCriteria('How much is it?', 'No price here.');
+const otherComments = qualityCommentCriteria('Read Monday April sixth back.', 'Monday is the beach.');
+assert.notEqual(comments.answers_this_ask, otherComments.answers_this_ask);
+assert.match(comments.missing_price, /How much is it/);
 assert.equal(formatQualityLine({ judged: false, score: 4, comment: 'no' }), '');
 assert.equal(qualityFromDecisions({
   answers: {
@@ -116,6 +166,13 @@ assert.equal(qualityFromDecisions({
     overall_quality: { score: 2 },
     comment: { choice: 'garden_words' },
     disposition: { choice: 'rewrite' },
+  },
+}).wantsRewrite, true);
+assert.equal(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 1 },
+    comment: { choice: 'off_brief' },
+    disposition: { choice: 'keep' },
   },
 }).wantsRewrite, true);
 assert.deepEqual(upsellAudit([
@@ -175,6 +232,7 @@ function liveDoc(overrides = {}) {
         genLatencyMs: 2400,
         jevBeforeModel: true,
         quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: false },
+        shippedModel: 'qwen/qwen3-235b-a22b-2507',
       },
     ],
     ...overrides,
@@ -207,6 +265,30 @@ rejects(liveDoc({
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, text: 'Since you are splitting payments, Kimberly is covered.' } : turn)),
 }), /split-payment jargon/);
+const jevRewrite = liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: true, model: 'typesafe/jev-1.13', rewriteModel: 'typesafe/jev-1.13', draft: 'Draft the customer did not see.' },
+    shippedModel: 'typesafe/jev-1.13',
+    draftModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteModel: 'typesafe/jev-1.13',
+  } : turn)),
+});
+assertLiveTranscript(jevRewrite);
+const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
+assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
+assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
+assert.match(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
+assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('rewritten by Jev (typesafe/jev-1.13)', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: true, rewriteModel: 'qwen/qwen3-235b-a22b-2507' },
+    shippedModel: 'qwen/qwen3-235b-a22b-2507',
+    draftModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+  } : turn)),
+}), /typesafe\/jev-1\.13/);
 
 const customerFirst = liveDoc();
 const partial = assessPackShape(customerFirst);

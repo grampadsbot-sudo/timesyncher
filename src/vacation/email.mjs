@@ -1,6 +1,5 @@
-import { vacationAppLink } from './onboarding.mjs';
 import { collaboratorTelegramLink } from './collaborators.mjs';
-import { webAccessAcceptUrl } from './web-access.mjs';
+import { sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -14,9 +13,17 @@ function fromEmail(env = process.env) {
   return env.TIMESYNCHER_EMAIL_FROM || `TimeSyncher Vacation <${supportEmail(env)}>`;
 }
 
-export function purchaseEmail({ contact, token, env = process.env }) {
+export function purchaseLaunchUrl({ publicUrl, publicSlug, env = process.env } = {}) {
+  const explicit = cleanText(publicUrl, 500);
+  if (explicit.includes('/shared/')) return explicit;
+  const slug = cleanText(publicSlug, 180);
+  if (slug) return sharedTripWebsiteUrl(slug, env);
+  return `${websiteTripBase(env)}/shared/`;
+}
+
+export function purchaseEmail({ contact, publicUrl, publicSlug, env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
-  const launchUrl = vacationAppLink(token, env);
+  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, env });
   const subject = 'Your TimeSyncher Vacation purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
@@ -144,7 +151,17 @@ async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
 export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env) {
   const to = cleanText(onboarding.contact?.email, 180).toLowerCase();
   if (!to) return { ok: false, status: 'skipped', reason: 'missing email' };
-  const message = purchaseEmail({ contact: onboarding.contact, token: onboarding.token, env });
+  let publicSlug = cleanText(onboarding.publicSlug, 180);
+  if (!publicSlug && onboarding.tripId) {
+    const slugRows = await db`
+      select metadata->>'publicSlug' as slug
+      from trips
+      where id = ${onboarding.tripId}
+      limit 1
+    `;
+    publicSlug = cleanText(slugRows[0]?.slug, 180);
+  }
+  const message = purchaseEmail({ contact: onboarding.contact, publicSlug, publicUrl: onboarding.publicUrl, env });
 
   const existing = await db`
     select id, status
@@ -178,7 +195,11 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
   const rows = existing[0]
     ? await db`
         update outbound_emails
-        set provider = ${provider},
+        set to_email = ${to},
+          subject = ${message.subject},
+          html_body = ${message.htmlBody},
+          text_body = ${message.textBody},
+          provider = ${provider},
           provider_message_id = ${providerMessageId},
           status = ${status},
           error_summary = ${errorSummary},
@@ -261,7 +282,11 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
   const rows = existing[0]
     ? await db`
         update outbound_emails
-        set provider = ${provider},
+        set to_email = ${to},
+          subject = ${message.subject},
+          html_body = ${message.htmlBody},
+          text_body = ${message.textBody},
+          provider = ${provider},
           provider_message_id = ${providerMessageId},
           status = ${status},
           error_summary = ${errorSummary},

@@ -9,7 +9,11 @@ import {
   LIVE_OPENER_PRODUCER,
   LIVE_REPLY_PRODUCER,
   LIVE_TRANSCRIPT_CAPTURE,
+  customerAsksAccessChoice,
+  customerAsksPrice,
   formatQualityLine,
+  inventedVenueNames,
+  JEV_REWRITE_LABEL,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -44,6 +48,7 @@ export function assertLiveTranscript(doc) {
   if (!targetPerson) throw new Error('refused: Dialog PDF needs target_person for APP to <target_person> labels');
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
+  const customerCorpus = turns.filter((turn) => turn.role === 'customer').map((turn) => turn.text).join('\n');
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -116,9 +121,39 @@ export function assertLiveTranscript(doc) {
       if (!qualityLine || /not judged/i.test(qualityLine)) {
         throw new Error(`refused: turn ${turn.turnIndex} quality is not judged`);
       }
+      const venues = inventedVenueNames(text, customerCorpus);
+      if (venues.length) throw new Error(`refused: turn ${turn.turnIndex} names ${venues.join(', ')}`);
+      const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
+      if (priorCustomer && customerAsksPrice(priorCustomer.text) && !/unlimited vacations for the whole year/i.test(text)) {
+        throw new Error(`refused: turn ${turn.turnIndex} price question has no price`);
+      }
+      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
+        throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
+      }
+      const shippedModel = String(turn.shippedModel || '').trim();
+      if (!isBakeoffModelId(shippedModel) && shippedModel !== 'typesafe/jev-1.13') {
+        throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier or Jev`);
+      }
+      if (turn.quality?.rewritten === true && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim())) {
+        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel or rewriteModel`);
+      }
+      if (turn.quality?.rewritten === true) {
+        const rewriteModel = String(turn.quality.rewriteModel || turn.rewriteModel || '');
+        if (rewriteModel !== 'typesafe/jev-1.13' || String(turn.shippedModel || '') !== 'typesafe/jev-1.13') {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite must be typesafe/jev-1.13`);
+        }
+      }
     }
     }
   }
+  const commentCounts = {};
+  for (const turn of turns) {
+    const comment = String(turn.quality?.comment || '').trim();
+    if (!comment) continue;
+    commentCounts[comment] = (commentCounts[comment] || 0) + 1;
+  }
+  const repeated = Object.entries(commentCounts).find(([, count]) => count >= 5);
+  if (repeated) throw new Error(`refused: Jev comment repeats ${repeated[1]} times`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   return { ...doc, targetPerson, turns };
 }
@@ -480,7 +515,9 @@ export function liveV7Pack(doc, shape) {
       const beat = Array.isArray(turn.beats) && turn.beats.length ? turn.beats.join(',') : (generatedTurn ? 'live' : 'open');
       const model = modelIdOf(turn);
       const meta = [`n=${turn.turnIndex}`, `beat=${beat}`];
-      if (generatedTurn) meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
+      if (generatedTurn) {
+        meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
+      }
       const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
       const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
       const maxTokens = Number(turn.maxTokens ?? turn.model?.maxTokens ?? 900);
@@ -490,6 +527,7 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
+        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? JEV_REWRITE_LABEL : '',
         quality: generatedTurn ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
@@ -503,6 +541,20 @@ export function liveV7Pack(doc, shape) {
   };
 }
 
+export function jevRewriteLabelCounts(doc, pdfText) {
+  const rewrittenTurns = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true).length;
+  const rewriteLabels = String(pdfText || '').split(JEV_REWRITE_LABEL).length - 1;
+  return { rewrittenTurns, rewriteLabels, ok: rewrittenTurns === rewriteLabels };
+}
+
+export function assertJevRewriteLabels(doc, pdfText) {
+  const counts = jevRewriteLabelCounts(doc, pdfText);
+  if (!counts.ok) {
+    throw new Error(`refused: bar 15 rewritten turns ${counts.rewrittenTurns} but PDF labels ${counts.rewriteLabels}`);
+  }
+  return counts;
+}
+
 export function renderLiveTranscriptPdf(doc, options = {}) {
   const checked = assertLiveTranscript(doc);
   const shape = assessPackShape(checked, options);
@@ -512,7 +564,9 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   if (result.status !== 0) {
     throw new Error(`refused: v7 PDF chrome failed: ${result.stderr?.toString() || result.status}`);
   }
-  return Buffer.from(result.stdout);
+  const pdf = Buffer.from(result.stdout);
+  assertJevRewriteLabels(checked, extractPdfText(pdf));
+  return pdf;
 }
 
 
@@ -608,6 +662,7 @@ async function main() {
   const transcript = assertLiveTranscript(await loadTranscript(args));
   const shape = assessPackShape(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
   const pdf = renderLiveTranscriptPdf(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
+  const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
   if (args.dump) fs.writeFileSync(args.dump, `${JSON.stringify(transcript, null, 2)}\n`);
@@ -621,6 +676,8 @@ async function main() {
     out: path.resolve(args.out),
     pack_id: shape.pack_id,
     turns: transcript.turns.length,
+    rewrittenTurns: labelCounts.rewrittenTurns,
+    rewriteLabels: labelCounts.rewriteLabels,
     targetPerson: transcript.targetPerson,
     sessionE2eMs: shape.summary.sessionE2eMs,
   })}\n`);

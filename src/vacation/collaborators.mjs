@@ -61,7 +61,11 @@ function clean(value, max = 500) {
 }
 
 function botUsername(env = process.env) {
-  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || 'TimeSyncherVacationBot').trim().replace(/^@/, '');
+  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || 'TimeSyncherVacationBot')
+    .replace(/\\n/g, '')
+    .replace(/^["']|["']$/g, '')
+    .trim()
+    .replace(/^@/, '');
 }
 
 export function collaboratorTelegramLink(token, env = process.env) {
