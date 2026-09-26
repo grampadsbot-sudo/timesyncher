@@ -547,7 +547,11 @@ async function main() {
         gap('Slider bars', 'slider-bars.md', 'Vacation Day View was not on the intake trip');
       }
       if (await page.$('[aria-label="Record voice note"]')) {
-        await shot('voice-note', 'Initial itinerary', 'Voice note', { file: 'voice-note.md', note: sharedUrl });
+        await shot('voice-note', 'Initial itinerary', 'Voice note', {
+          file: 'voice-note.md',
+          note: sharedUrl,
+          clipSelector: '[aria-label="Record voice note"]',
+        });
       } else {
         gap('Voice note', 'voice-note.md', 'Record voice note is not on the intake trip');
       }
