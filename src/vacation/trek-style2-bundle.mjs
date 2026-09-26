@@ -222,6 +222,8 @@ const OP_LEFT_PATCH = 'js=`<aside class="daily-left" data-two-col-itinerary="1" 
 const DAILY_CARD_NEEDLE = 'return`<article class="thing daily-thing"><div class="thing-head">';
 const DAILY_CARD_PATCH = 'return`<article class="thing daily-thing" data-two-col-card="1" data-happy-hour="${ha(G).happyHour?"1":"0"}"><div class="thing-head">';
 
+const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side / Morningside","Midtown / Central Park South","Times Square / Hell’s Kitchen","Chelsea / Greenwich Village","Greenwich Village / West Village","Downtown / Harbor","Hudson River / Harbor","Airport / Transit","Citywide / Flexible"]';
+const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Puna / Kalapana","Islandwide / Flexible"]';
 const SI_NYC_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]]]';
 const SI_VEGAS_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]],[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,[36.1097,-115.1739]],[/carbone/i,[36.1073,-115.1766]],[/cosmopolitan|eggslut/i,[36.1097,-115.1739]],[/lotus of siam/i,[36.1436,-115.1415]],[/las vegas strip|las vegas/i,[36.1147,-115.1729]]]';
 
@@ -273,6 +275,23 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(SI_NYC_TAIL) && !patched.includes('[/bellagio|conservatory/i,[36.1126,-115.1767]]')) {
     patched = patched.replace(SI_NYC_TAIL, SI_VEGAS_TAIL);
   }
+  if (patched.includes(AREA_CHIP_NYC)) {
+    patched = patched.replace(AREA_CHIP_NYC, AREA_CHIP_BIG_ISLAND);
+  }
+  const areaRenames = [
+    ['Upper West Side / Lincoln Center', 'Keauhou / Kahaluu'],
+    ['Upper West Side / Morningside', 'Waikoloa / Kohala Coast'],
+    ['Midtown / Central Park South', 'Waimea / Kamuela'],
+    ['Times Square / Hell’s Kitchen', 'Kailua-Kona / Alii Drive'],
+    ["Times Square / Hell's Kitchen", 'Kailua-Kona / Alii Drive'],
+    ['Chelsea / Greenwich Village', 'Hilo / Bayfront'],
+    ['Greenwich Village / West Village', 'Volcano / Hawaii Volcanoes'],
+    ['Downtown / Harbor', 'Captain Cook / Kealakekua'],
+    ['Hudson River / Harbor', 'Waipio / Hamakua'],
+    ['Airport / Transit', 'Puna / Kalapana'],
+    ['Citywide / Flexible', 'Islandwide / Flexible'],
+  ];
+  for (const [from, to] of areaRenames) patched = patched.replaceAll(from, to);
   if (patched.includes(HC_QR_NEEDLE)) {
     patched = patched.replace(HC_QR_NEEDLE, HC_QR_PATCH);
   }
@@ -857,6 +876,12 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes('[data-end-continuous] .map-box') || !js.includes('.style2-cover')) {
     throw new Error('_se() must strip end-list maps and leftover zu() style2-cover.');
+  }
+  if (js.includes('Times Square') || js.includes(AREA_CHIP_NYC)) {
+    throw new Error('Area chips must be Big Island places, not Times Square.');
+  }
+  if (js.includes('Ya=["') && !js.includes('Kailua-Kona / Alii Drive')) {
+    throw new Error('Area chips must list Kailua-Kona / Alii Drive.');
   }
   return true;
 }

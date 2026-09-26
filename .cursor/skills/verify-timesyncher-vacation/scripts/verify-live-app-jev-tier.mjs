@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
-import { item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
+import { interimProblems, isTemplateInterim, item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -75,11 +75,17 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/never say "splitting payments"/.test(replyRules) || !/splitting anything up/.test(replyRules) || !/stripItem34Ban/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
     errors.push('shared producer does not fail closed on split-payment jargon');
   }
-  if (!/rewriteModel/.test(liveTurn) || !/rewritten by/.test(liveTurn) || !/dockQuality/.test(liveTurn) || !/shippedModel/.test(liveTurn) || !/draftModel/.test(liveTurn)) {
+  if (!/rewriteModel/.test(liveTurn) || !/rewriteCreditLabel/.test(liveTurn) || !/dockQuality/.test(liveTurn) || !/shippedModel/.test(liveTurn) || !/draftModel/.test(liveTurn)) {
     errors.push('shared producer does not gate a low score into a recorded rewrite');
   }
-  if (!/jevQualityRewrite/.test(liveTurn) || !/quality_unjudged/.test(liveTurn) || !/export async function jevQualityRewrite/.test(replyRules)) {
-    errors.push('shared producer does not judge every app reply with Jev');
+  if (!/jevQualityRewrite/.test(liveTurn) || !/finishTierRewrite/.test(liveTurn) || !/INTERIM_MODEL/.test(liveTurn) || !/export async function jevQualityRewrite/.test(replyRules)) {
+    errors.push('shared producer does not let Jev score and the tier model rewrite');
+  }
+  if (!/status: 'interim'/.test(liveTurn) || !/interimFromTierOne/.test(liveTurn) || !/forceModel: INTERIM_MODEL/.test(liveTurn)) {
+    errors.push('a low score does not send a Flash Lite interim from the customer turn');
+  }
+  if (!/isTemplateInterim/.test(liveTurn) || !/interimProblems/.test(liveTurn) || !/no template fallback|text = ''/.test(liveTurn)) {
+    errors.push('interim replies can fall back to a template');
   }
   if (!/building the itinerary/.test(liveTurn) || !/Post-intake:/.test(replyRules)) {
     errors.push('shared producer does not acknowledge the itinerary and give the collab welcome right after long intake');
@@ -93,8 +99,8 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/function tripBadge/.test(vacationApp) || !/intakeShareSlug/.test(api) || !/index-BKun7ofk\.js/.test(sharedApp)) {
     errors.push('vacation app does not publish the intake into the shared itinerary');
   }
-  if (!/quality\.draft/.test(liveTurn) || !/acceptQualityRewrite/.test(liveTurn)) {
-    errors.push('a Jev rewrite is not stored apart from the customer-facing reply');
+  if (!/quality\.draft/.test(liveTurn) || !/nearIdenticalRewrite/.test(liveTurn) || !/shipChoice/.test(liveTurn)) {
+    errors.push('a tier rewrite is not stored apart from the customer-facing reply');
   }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');
@@ -341,6 +347,11 @@ async function selfCheck() {
     sampleTurn(),
     appTurn({ quality: null }),
   ])).some((error) => /not judged/.test(error)));
+  assert.equal(isTemplateInterim('Got it. Thursday stays.', 'Thursday town walk'), true);
+  assert.ok(interimProblems([
+    { turnIndex: 2, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'google/gemini-2.5-flash-lite', ms: 10 } },
+    { turnIndex: 4, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'google/gemini-2.5-flash-lite', ms: 11 } },
+  ]).some((error) => /repeats across turns/.test(error)));
   process.stdout.write('live app jev tier self-check passed\n');
 }
 

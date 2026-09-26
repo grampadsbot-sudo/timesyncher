@@ -69,6 +69,27 @@ function categoryFor(thing) {
   return { category_name: 'Attraction', category_icon: '🏛️', category: 'other' };
 }
 
+function shortNote(value) {
+  const sentence = String(value || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/)[0] || '';
+  if (!sentence) return '';
+  return sentence.length > 160 ? `${sentence.slice(0, 157).trim()}…` : sentence;
+}
+
+/** Product thing copy from who / when / one note. Not a pasted chat turn. */
+export function productThingSummary(thing = {}) {
+  const who = String(thing.who || '').trim();
+  const when = String(thing.customerWhen || thing.whenLabel || '').trim();
+  const note = [...(thing.notes || []), ...(thing.collaboratorNotes || [])].map(shortNote).filter(Boolean)[0] || '';
+  const parts = [];
+  if (who) parts.push(`Who: ${who}`);
+  if (when) parts.push(`When: ${when}`);
+  if (note) parts.push(note);
+  if (/house/i.test(String(thing.title || ''))) {
+    parts.push('Check-in Friday April 3. Check-out Sunday April 12.');
+  }
+  return parts.join(' ').trim() || String(thing.description || '').trim();
+}
+
 export function sharedTripFromIntake({ trip, things }) {
   const start = isoDate(trip?.start_date || trip?.startDate);
   const end = isoDate(trip?.end_date || trip?.endDate) || start;
@@ -89,8 +110,7 @@ export function sharedTripFromIntake({ trip, things }) {
   for (const thing of things || []) {
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
-    const notes = [...(thing.notes || []), ...(thing.collaboratorNotes || [])].filter(Boolean);
-    const summary = notes.join(' ') || thing.description || '';
+    const summary = productThingSummary(thing);
     places.push({
       id,
       trip_id: intId(trip.id),

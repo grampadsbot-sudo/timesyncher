@@ -569,7 +569,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
   const upsellLine = postIntake
-    ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain that family and friends can join as collaborators, add notes, and help shape the days. Include this exact phrase once: ${phrase}. This is the one full welcome. Do not wait for a later price question.`
+    ? 'Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Do not say unlimited, you\'ve got unlimited, or name a price. The price belongs on a later price question.'
     : (upsell === 'allow-once'
       ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
       : (priceAsk
@@ -586,9 +586,11 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
     'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", "splitting it up", or "splitting anything up". Never use the words split or splitting at all. If one seat is already covered and another person has their own seat, say that.',
-    /\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
-      ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
-      : 'When the customer does not ask about access, do not add an access menu.',
+    postIntake
+      ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
+      : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+        ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+        : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
@@ -641,10 +643,12 @@ export function qualityFromDecisions(body, criteria = null) {
   const comment = (criteria && criteria[choice]) || JEV_QUALITY_COMMENTS[choice] || '';
   if (!comment) return { judged: false, reason: 'quality_comment_missing', model: JEV_DECISIONS_MODEL };
   const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite' || score <= 3;
+  const jevFocus = text(answers.fix_focus?.choice, 40);
   return {
     judged: true,
     score,
     comment,
+    jevFocus,
     rewrite: '',
     rewritten: false,
     wantsRewrite,
@@ -667,7 +671,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 only when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, or uses split or splitting payment phrasing.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, or uses split or splitting payment phrasing. A price question with no real price is criterion 3 or lower.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
@@ -682,6 +686,17 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
         type: 'choice',
         instructions: 'Pick the comment that names what this draft did with this customer sentence. The comment must quote this turn, not a generic label.',
         criteria,
+      },
+      fix_focus: {
+        type: 'choice',
+        instructions: 'Jev scores only. Pick the one-line fix this exact turn needs. Do not write a replacement reply.',
+        criteria: {
+          missing_price: `Name the price while answering "${text(customerTurn, 80)}".`,
+          unnamed_place: `Take out the place they did not name and answer "${text(customerTurn, 80)}".`,
+          payment_wording: `Name the seats without split wording while answering "${text(customerTurn, 80)}".`,
+          misses_ask: `Answer "${text(customerTurn, 80)}" and keep the days they already named.`,
+          keep: `Keep the reply. It answers "${text(customerTurn, 80)}".`,
+        },
       },
     },
   };
@@ -759,10 +774,12 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
   }
 }
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env } = {}) {
+export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
+
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '' } = {}) {
   const modelTier = Number(jev?.modelTier);
-  const responseModel = openRouterChatModelForTier(modelTier);
-  if (!jev?.jevRan || !isBakeoffModelId(responseModel)) {
+  const responseModel = forceModel || openRouterChatModelForTier(modelTier);
+  if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
     return { called: false, via: null, modelTier: Number.isInteger(modelTier) ? modelTier : null, responseModel: responseModel || null, reason: 'model_not_in_bakeoff_map' };
   }
   return callOpenRouterTieredChat({
@@ -771,13 +788,15 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     customerTurn,
     stage,
     screen,
-    modelTier,
+    modelTier: forceModel ? (Number.isInteger(modelTier) ? modelTier : 1) : modelTier,
     responseModel,
     destination,
     memory,
     upsell,
     postIntake,
     env,
+    timeoutMs,
+    systemExtra,
   });
 }
 
@@ -807,7 +826,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '' }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -835,11 +854,11 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: replyRulesSystem(rules, destination, upsell, postIntake, customerTurn) },
+          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn)}${systemExtra ? `\n\n${systemExtra}` : ''}` },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),
-      signal: AbortSignal.timeout(90000),
+      signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : 90000),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {

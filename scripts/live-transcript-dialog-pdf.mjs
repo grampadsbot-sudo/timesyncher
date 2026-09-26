@@ -13,7 +13,11 @@ import {
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
-  JEV_REWRITE_LABEL,
+  rewriteCreditLabel,
+  isTemplateNote,
+  isTemplateInterim,
+  interimProblems,
+  nearIdenticalRewrite,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -131,16 +135,31 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
       }
       const shippedModel = String(turn.shippedModel || '').trim();
-      if (!isBakeoffModelId(shippedModel) && shippedModel !== 'typesafe/jev-1.13') {
-        throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier or Jev`);
+      if (!isBakeoffModelId(shippedModel)) {
+        throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier`);
       }
       if (turn.quality?.rewritten === true && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim())) {
         throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel or rewriteModel`);
       }
+      if (!String(turn.draftModel || '').trim() || !isBakeoffModelId(String(turn.draftModel))) {
+        throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
+      }
+      if (!String(turn.jevNote || '').trim() || isTemplateNote(turn.jevNote, priorCustomer?.text || turn.jevNote)) {
+        throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
+      }
+      if (!Number.isInteger(Number(turn.jevScoreDraft))) {
+        throw new Error(`refused: turn ${turn.turnIndex} is missing jevScoreDraft`);
+      }
       if (turn.quality?.rewritten === true) {
         const rewriteModel = String(turn.quality.rewriteModel || turn.rewriteModel || '');
-        if (rewriteModel !== 'typesafe/jev-1.13' || String(turn.shippedModel || '') !== 'typesafe/jev-1.13') {
-          throw new Error(`refused: turn ${turn.turnIndex} rewrite must be typesafe/jev-1.13`);
+        if (!isBakeoffModelId(rewriteModel) || rewriteModel === 'typesafe/jev-1.13') {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite must be the tier model`);
+        }
+        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
+        }
+        if (nearIdenticalRewrite(turn.quality?.draft || '', text)) {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
         }
       }
     }
@@ -154,6 +173,8 @@ export function assertLiveTranscript(doc) {
   }
   const repeated = Object.entries(commentCounts).find(([, count]) => count >= 5);
   if (repeated) throw new Error(`refused: Jev comment repeats ${repeated[1]} times`);
+  const interim = interimProblems(turns);
+  if (interim.length) throw new Error(`refused: ${interim[0]}`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   return { ...doc, targetPerson, turns };
 }
@@ -332,13 +353,13 @@ function packPages(doc, shape) {
     }),
     '',
     'TIMINGS',
-    'turn | tier | model | gen ms | jev ms',
+    'turn | tier | jev ms | model | gen ms',
     ...(generated.length
       ? generated.map((turn) => {
         const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
         const jev = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
         const model = modelIdOf(turn);
-        return `${turn.turnIndex} | ${turn.jev?.modelTier} | ${model} | ${gen} | ${jev}`;
+        return `${turn.turnIndex} | ${turn.jev?.modelTier} | ${jev} | ${model} | ${gen}`;
       })
       : ['none']),
     '',
@@ -405,12 +426,22 @@ function pdfEscape(value) {
 }
 
 export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens }) {
-  const line = `timing: gen=${gen}ms model=${model} tier=${tier} jev=${jevMs}ms max_tokens=${maxTokens}`;
+  const line = `timing: jev=${jevMs}ms gen=${gen}ms model=${model} tier=${tier} max_tokens=${maxTokens}`;
   if (/zev/i.test(line)) throw new Error('refused: timing line contained zev');
-  if (!/^timing: gen=\d+ms model=\S+ tier=[1-4] jev=\d+ms max_tokens=\d+$/.test(line)) {
-    throw new Error('refused: timing line is not jev=');
+  if (!/^timing: jev=\d+ms gen=\d+ms model=\S+ tier=[1-4] max_tokens=\d+$/.test(line)) {
+    throw new Error('refused: timing line is not jev first then model');
   }
   return line;
+}
+
+export function assertRosterRoleBlock(doc) {
+  if (!doc?.party) return rosterLines(doc);
+  const lines = rosterLines(doc);
+  const blob = lines.join('\n');
+  if (!/Kids \(silent\):/.test(blob) || !/\bViewer:/.test(blob) || !/\bEditor:/.test(blob)) {
+    throw new Error('refused: roster_role_block missing Kids, Viewer, or Editor');
+  }
+  return lines;
 }
 
 function timingStats(values) {
@@ -506,7 +537,7 @@ export function liveV7Pack(doc, shape) {
       ['source', 'live-vacation-app'],
       ['tier_models', 'dialog-runners/tier_models.json'],
     ],
-    roster: rosterLines(doc),
+    roster: assertRosterRoleBlock(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
     judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality}. Jev scored and commented on every generated reply.`,
     turns: (doc.turns || []).map((turn) => {
@@ -527,8 +558,9 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? JEV_REWRITE_LABEL : '',
-        quality: generatedTurn ? formatQualityLine(turn.quality) : '',
+        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel) : '',
+        producer_log: app ? producerLogLine(turn) : '',
+        quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,
@@ -541,10 +573,29 @@ export function liveV7Pack(doc, shape) {
   };
 }
 
+function producerLogLine(turn) {
+  const latency = turn.modelLatency || {};
+  const interim = turn.interimReply && typeof turn.interimReply === 'object' ? turn.interimReply : {};
+  return [
+    `draftModel: ${turn.draftModel || ''}`,
+    `rewriteModel: ${turn.rewriteModel || 'none'}`,
+    `shippedModel: ${turn.shippedModel || ''}`,
+    `jevScoreDraft: ${turn.jevScoreDraft ?? ''}`,
+    `jevScoreRewrite: ${turn.jevScoreRewrite ?? 'none'}`,
+    `jevNote: ${turn.jevNote || ''}`,
+    `interimReply.text: ${interim.text || 'none'}`,
+    `interimReply.model: ${interim.model || 'none'}`,
+    `interimReply.ms: ${Number.isFinite(Number(interim.ms)) ? Number(interim.ms) : 'none'}`,
+    `latencyMs: draft=${latency.draft ?? ''} rewrite=${latency.rewrite ?? 'none'} total=${latency.total ?? ''}`,
+    `flagged: ${turn.flagged === true}`,
+  ].join(' | ');
+}
+
 export function jevRewriteLabelCounts(doc, pdfText) {
-  const rewrittenTurns = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true).length;
-  const rewriteLabels = String(pdfText || '').split(JEV_REWRITE_LABEL).length - 1;
-  return { rewrittenTurns, rewriteLabels, ok: rewrittenTurns === rewriteLabels };
+  const rewritten = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true);
+  const pdf = String(pdfText || '');
+  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel))).length;
+  return { rewrittenTurns: rewritten.length, rewriteLabels, ok: rewritten.length === rewriteLabels };
 }
 
 export function assertJevRewriteLabels(doc, pdfText) {

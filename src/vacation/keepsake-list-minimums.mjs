@@ -66,10 +66,10 @@ export function namesAlreadyListed(rows = []) {
   return rows.map((row) => text(row?.name || row?.title || row)).filter(Boolean);
 }
 
-export function padKeepsakeListNames(bucket, existingRows = []) {
+export function padKeepsakeListNames(bucket, existingRows = [], fill = KEEPSAKE_LIST_FILL) {
   const min = KEEPSAKE_LIST_MINIMUMS[bucket] || 0;
   const have = namesAlreadyListed(existingRows);
-  const extras = (KEEPSAKE_LIST_FILL[bucket] || []).filter((name) => {
+  const extras = (fill[bucket] || []).filter((name) => {
     const needle = text(name);
     return !have.some((row) => row.includes(needle) || needle.includes(row));
   });
@@ -150,6 +150,99 @@ export const KEEPSAKE_FILL_DETAILS = {
   'High Tea Conservatory Walk': { lat: 36.1129, lng: -115.1764, summary: 'A slow Bellagio Conservatory walk with tea nearby — first-pass Rest fill beside the anniversary Conservatory story.' },
 };
 
+/** Real Big Island catalog for timesyncherIntake trips. Vegas fill stays on the reference trip. */
+export const BIG_ISLAND_LIST_FILL = {
+  Restaurants: [
+    "Huggo's",
+    'Ulu Ocean Grill',
+    "Merriman's Waimea",
+    "Jackie Rey's Ohana Grill",
+    'The Fish Hopper',
+    'Kona Brewing Company',
+    'Lava Lava Beach Club',
+    "Quinn's Almost by the Sea",
+    'Daylight Mind Coffee Company',
+    'Manago Hotel Restaurant',
+    'Cafe Pesto',
+    "Brown's Beach House",
+    'CanoeHouse',
+    'Island Lava Java',
+    'Pine Tree Cafe',
+  ],
+  Stores: [
+    "Kings' Shops",
+    "Queens' MarketPlace",
+    'Kona Commons',
+    'Hilo Hattie',
+    'Keauhou Shopping Center',
+    'Kona International Market',
+    'KTA Super Stores',
+    'Waimea Town Center',
+    'Prince Kuhio Plaza',
+    'Kona Inn Shopping Village',
+  ],
+  'Shows, Tours and the Rest': [
+    'Hawaiʻi Volcanoes National Park',
+    'Akaka Falls State Park',
+    'Punaluʻu Black Sand Beach',
+    'Hapuna Beach',
+    'Mauna Kea Visitor Information Station',
+    'Rainbow Falls',
+    'Puʻuhonua o Hōnaunau',
+    'Waipio Valley Lookout',
+    'Kealakekua Bay',
+    'Pololu Valley Lookout',
+    'Kua Bay',
+    'Kahaluʻu Beach Park',
+    'Liliʻuokalani Gardens',
+    'Kaloko-Honokohau National Historical Park',
+    'Papakōlea Green Sand Beach',
+  ],
+};
+
+export const BIG_ISLAND_FILL_DETAILS = {
+  "Huggo's": { lat: 19.6394, lng: -155.9958, address: '75-5828 Kahakai Rd, Kailua-Kona', summary: "Kailua-Kona oceanfront dining on the rocks. Dinner and a bar with live music beside Aliʻi Drive." },
+  'Ulu Ocean Grill': { lat: 19.9167, lng: -155.8869, address: 'Four Seasons Hualalai, Kaʻupulehu', summary: 'Beachfront restaurant at Four Seasons Hualalai. Hawaiian seafood with a published happy hour at the ocean bar.' },
+  "Merriman's Waimea": { lat: 20.0231, lng: -155.6705, address: 'Opelo Plaza, Waimea', summary: 'Waimea farm-to-table dining room from Peter Merriman. A Kohala table, not a Kailua-Kona walk-in.' },
+  "Jackie Rey's Ohana Grill": { lat: 19.6398, lng: -155.9902, address: '75-5995 Kuakini Hwy, Kailua-Kona', summary: 'Ohana grill on Kuakini Highway. Local plates and a family table in Kailua-Kona.' },
+  'The Fish Hopper': { lat: 19.6402, lng: -155.9964, address: '75-5683 Aliʻi Dr, Kailua-Kona', summary: 'Aliʻi Drive seafood room with a harbor view. Lunch and dinner in Kailua-Kona.' },
+  'Kona Brewing Company': { lat: 19.6391, lng: -155.9942, address: '74-5612 Pawai Pl, Kailua-Kona', summary: 'Kailua-Kona brewpub. Pizza, beer, and a casual table near the industrial park.' },
+  'Lava Lava Beach Club': { lat: 19.9136, lng: -155.8864, address: '69-1081 Kuʻualiʻi Pl, Waikoloa', summary: 'Waikoloa beach club restaurant on ʻA-Bay. Toes-in-the-sand dining on the Kohala coast.' },
+  "Quinn's Almost by the Sea": { lat: 19.6424, lng: -155.9961, address: '75-5655 Palani Rd, Kailua-Kona', summary: 'Palani Road fish and chips. A casual Kailua-Kona counter just up from the harbor.' },
+  'Daylight Mind Coffee Company': { lat: 19.6396, lng: -155.9956, address: '75-5770 Aliʻi Dr, Kailua-Kona', summary: 'Aliʻi Drive coffee and brunch. A morning table before the waterfront walk.' },
+  'Manago Hotel Restaurant': { lat: 19.4917, lng: -155.9217, address: '82-6155 Mamalahoa Hwy, Captain Cook', summary: 'Captain Cook family dining room at the Manago Hotel. Pork chops and a south-Kona supper.' },
+  'Cafe Pesto': { lat: 19.7256, lng: -155.0876, address: '308 Kamehameha Ave, Hilo', summary: 'Hilo Bayfront pizza and pasta. A sit-down meal after the downtown Hilo walk.' },
+  "Brown's Beach House": { lat: 19.8322, lng: -155.9884, address: 'Fairmont Orchid, Kohala Coast', summary: 'Fairmont Orchid beachfront dining. Kohala coast dinner with the lawn and the ocean.' },
+  'CanoeHouse': { lat: 19.9484, lng: -155.8586, address: 'Mauna Lani, Kohala Coast', summary: 'Mauna Lani restaurant in the old canoe house. Kohala coast dinner, not a Kailua-Kona night.' },
+  'Island Lava Java': { lat: 19.6392, lng: -155.9951, address: '75-5801 Aliʻi Dr, Kailua-Kona', summary: 'Aliʻi Drive breakfast and coffee. A Kailua-Kona morning table on the waterfront.' },
+  'Pine Tree Cafe': { lat: 19.6378, lng: -155.9876, address: '73-4354 Mamalahoa Hwy, Kailua-Kona', summary: 'Kailua-Kona plate-lunch counter. Local breakfast and lunch on the highway.' },
+  "Kings' Shops": { lat: 19.9272, lng: -155.8868, address: '69-250 Waikoloa Beach Dr, Waikoloa', summary: 'Waikoloa Beach Resort shops. Kohala coast retail between the hotels.' },
+  "Queens' MarketPlace": { lat: 19.9138, lng: -155.8806, address: '69-201 Waikoloa Beach Dr, Waikoloa', summary: 'Waikoloa open-air shops and market. A Kohala coast retail stop.' },
+  'Kona Commons': { lat: 19.6494, lng: -155.9944, address: '75-5591 Palani Rd, Kailua-Kona', summary: 'Kailua-Kona shopping center on Palani Road. Everyday stores above the harbor.' },
+  'Hilo Hattie': { lat: 19.7062, lng: -155.0658, address: 'Prince Kuhio Plaza, Hilo', summary: 'Hilo aloha-wear shop at Prince Kuhio Plaza. A Hilo retail stop.' },
+  'Keauhou Shopping Center': { lat: 19.5734, lng: -155.9618, address: '78-6831 Aliʻi Dr, Keauhou', summary: 'Keauhou retail center south of Kailua-Kona. Groceries and shops on Aliʻi Drive.' },
+  'Kona International Market': { lat: 19.6488, lng: -156.0002, address: '74-5533 Luhia St, Kailua-Kona', summary: 'Covered market stalls in Kailua-Kona. Local goods off the highway.' },
+  'KTA Super Stores': { lat: 19.6399, lng: -155.9854, address: '74-5594 Palani Rd, Kailua-Kona', summary: 'Kailua-Kona grocery. The house-stocking store for a Kona stay.' },
+  'Waimea Town Center': { lat: 20.0228, lng: -155.6678, address: '65-1158 Mamalahoa Hwy, Waimea', summary: 'Waimea town shops on the highway. Upcountry retail in Kamuela.' },
+  'Prince Kuhio Plaza': { lat: 19.6974, lng: -155.0632, address: '111 E Puainako St, Hilo', summary: 'Hilo mall. The main indoor shopping center on the Hilo side.' },
+  'Kona Inn Shopping Village': { lat: 19.6393, lng: -155.9946, address: '75-5744 Aliʻi Dr, Kailua-Kona', summary: 'Aliʻi Drive shops in the old Kona Inn. Waterfront retail in Kailua-Kona.' },
+  'Hawaiʻi Volcanoes National Park': { lat: 19.4194, lng: -155.2885, address: 'Hawaii Volcanoes National Park', summary: 'Kīlauea and the national park on the volcano. A full-day outing from Kailua-Kona.' },
+  'Akaka Falls State Park': { lat: 19.8542, lng: -155.1534, address: 'Akaka Falls Rd, Honomu', summary: 'Hāmākua coast waterfall loop. A short paved walk to the falls.' },
+  'Punaluʻu Black Sand Beach': { lat: 19.1364, lng: -155.5053, address: 'Punaluʻu, Kaʻū', summary: 'Kaʻū black sand beach. Turtles and the south-shore stop on the way to the volcano.' },
+  'Hapuna Beach': { lat: 19.9916, lng: -155.8264, address: 'Hapuna Beach State Recreation Area', summary: 'Kohala white-sand beach. A swim day on the west coast.' },
+  'Mauna Kea Visitor Information Station': { lat: 19.7603, lng: -155.4564, address: 'Mauna Kea Access Rd', summary: 'Onizuka Center at 9,200 feet. Stargazing and the summit road from there.' },
+  'Rainbow Falls': { lat: 19.7194, lng: -155.1106, address: 'Waiānuenue Ave, Hilo', summary: 'Hilo waterfall at Waiānuenue. A short stop above the bayfront.' },
+  'Puʻuhonua o Hōnaunau': { lat: 19.4219, lng: -155.9103, address: 'Hōnaunau', summary: 'Place of Refuge on the south Kona coast. The royal grounds and the cove.' },
+  'Waipio Valley Lookout': { lat: 20.1182, lng: -155.5884, address: 'Waipio Valley Rd, Honokaʻa', summary: 'Lookout above Waipiʻo Valley. The Hāmākua view, not a drive down the road.' },
+  'Kealakekua Bay': { lat: 19.4772, lng: -155.9217, address: 'Napoʻopoʻo, Captain Cook', summary: 'South Kona bay at Captain Cook. Clear water and the monument across the bay.' },
+  'Pololu Valley Lookout': { lat: 20.2036, lng: -155.7334, address: 'Akoni Pule Hwy, North Kohala', summary: 'North Kohala lookout at the end of the highway. Valley and cliff view.' },
+  'Kua Bay': { lat: 19.8102, lng: -156.0086, address: 'Maniniʻowali, Kekaha Kai', summary: 'Maniniʻowali white-sand cove. A swim beach north of the airport.' },
+  'Kahaluʻu Beach Park': { lat: 19.5804, lng: -155.9622, address: '78-6625 Aliʻi Dr, Keauhou', summary: 'Keauhou snorkel cove on Aliʻi Drive. A shallow swim south of Kailua-Kona.' },
+  'Liliʻuokalani Gardens': { lat: 19.7272, lng: -155.0668, address: 'Banyan Dr, Hilo', summary: 'Hilo bayfront Japanese garden. A quiet walk on Banyan Drive.' },
+  'Kaloko-Honokohau National Historical Park': { lat: 19.6788, lng: -156.0236, address: 'Honokōhau, Kailua-Kona', summary: 'National historical park north of Kailua-Kona. Fishponds and the coast trail.' },
+  'Papakōlea Green Sand Beach': { lat: 18.9364, lng: -155.6464, address: 'Kaʻū', summary: 'Green sand beach at South Point. A long Kaʻū hike, not a Kailua-Kona afternoon.' },
+};
+
 const FILL_BUCKET_META = {
   Restaurants: {
     kind: 'restaurant',
@@ -187,7 +280,27 @@ function listBucketForPlace(place = {}) {
  * Pad shared.places + thingOverrides so Style one / Style two Ae() de(false) lists
  * meet first-pass mins. Extras are Thing-stored (summary + coords). Hotels are not filled.
  */
+function catalogForShared(shared = {}) {
+  if (shared.timesyncherIntake === true) {
+    return {
+      fill: BIG_ISLAND_LIST_FILL,
+      details: BIG_ISLAND_FILL_DETAILS,
+      fallbackAddress: 'Kailua-Kona, Hawaii',
+      fallbackLat: 19.64,
+      fallbackLng: -155.996,
+    };
+  }
+  return {
+    fill: KEEPSAKE_LIST_FILL,
+    details: KEEPSAKE_FILL_DETAILS,
+    fallbackAddress: 'Las Vegas',
+    fallbackLat: 36.1147,
+    fallbackLng: -115.1729,
+  };
+}
+
 export function padKeepsakeSharedPlaces(shared = {}) {
+  const catalog = catalogForShared(shared);
   const next = {
     ...shared,
     places: Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [],
@@ -205,13 +318,15 @@ export function padKeepsakeSharedPlaces(shared = {}) {
     if (existingByBucket[bucket]) existingByBucket[bucket].push(place);
   }
   for (const [bucket, meta] of Object.entries(FILL_BUCKET_META)) {
-    const extras = padKeepsakeListNames(bucket, existingByBucket[bucket] || []);
+    const extras = padKeepsakeListNames(bucket, existingByBucket[bucket] || [], catalog.fill);
     extras.forEach((name, index) => {
-      const detail = KEEPSAKE_FILL_DETAILS[name] || {};
+      const detail = catalog.details[name] || {};
       const id = meta.baseId + index + 1;
-      const lat = Number(detail.lat) || 36.1147;
-      const lng = Number(detail.lng) || -115.1729;
-      const summary = detail.summary || `${name} — Las Vegas first-pass catalog.`;
+      const lat = Number(detail.lat) || catalog.fallbackLat;
+      const lng = Number(detail.lng) || catalog.fallbackLng;
+      const summary = detail.summary || `${name} — ${catalog.fallbackAddress} first-pass catalog.`;
+      const address = detail.address || catalog.fallbackAddress;
+      const happyHour = /Ulu Ocean Grill/i.test(name);
       next.places.push({
         id,
         name,
@@ -222,7 +337,7 @@ export function padKeepsakeSharedPlaces(shared = {}) {
         category_icon: meta.icon,
         lat,
         lng,
-        address: 'Las Vegas',
+        address,
         notes: summary,
         description: summary,
         logoUrl: captureThingLogo({ name }, { title: name, category: meta.kind }),
@@ -235,7 +350,10 @@ export function padKeepsakeSharedPlaces(shared = {}) {
         longDetails: summary,
         lat,
         lng,
+        address,
         timeline: false,
+        happyHour: happyHour ? true : undefined,
+        happyHourDetails: happyHour ? 'Ocean bar happy hour at Ulu Ocean Grill, Four Seasons Hualalai.' : undefined,
         logoUrl: captureThingLogo({ name }, { title: name, category: meta.kind }),
       };
     });

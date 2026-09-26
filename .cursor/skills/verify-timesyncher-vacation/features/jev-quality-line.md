@@ -6,7 +6,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## Sub-features
 
-- A rewritten APP turn is labeled exactly rewritten by Jev (typesafe/jev-1.13). The stored line is quality: score — comment. The customer bubble is the shipped text, not the draft.
+- Jev (`typesafe/jev-1.13`) only scores. The score line and the one-line fix note are in the Dialog PDF and the JSONL log. They are not painted in the customer app. A rewritten turn is labeled `rewritten by <tier model> (Jev note)`.
 
 ## How to get to it (user POV)
 

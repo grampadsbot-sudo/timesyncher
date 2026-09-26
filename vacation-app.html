@@ -545,6 +545,7 @@
     }
 
     function renderEula() {
+      document.title = 'Review Terms & Privacy';
       const eula = state.eula || {};
       const name = state.session?.customerName || '';
       root.innerHTML = `<main class="app">
@@ -597,7 +598,16 @@
             body: JSON.stringify({ action: 'seat-join' }),
           });
           const joinData = await joinRes.json().catch(() => ({}));
-          if (!joinRes.ok || joinData.ok === false || (joinData.status !== 'already_joined' && !joinData.reply)) {
+          if (!joinRes.ok || joinData.ok === false) throw new Error(joinData.error || 'Seat join was not stored.');
+          if (joinData.status === 'interim') {
+            const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ action: 'finish-rewrite', tripId: state.session?.currentTripId }),
+            });
+            const fin = await finRes.json().catch(() => ({}));
+            if (!finRes.ok || fin.ok === false || !fin.reply) throw new Error(fin.error || 'Seat join was not stored.');
+          } else if (joinData.status !== 'already_joined' && !joinData.reply) {
             throw new Error(joinData.error || 'Seat join was not stored.');
           }
         }
@@ -615,8 +625,8 @@
       const siteUrl = realSiteUrl(trip?.publicUrl);
       const hasSite = Boolean(siteUrl);
       const welcome = hasSite
-        ? 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. They add notes and help shape the days with you. When price comes up, the household plan to name is unlimited vacations for the whole year.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.'
-        : 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. They join the same trip, add notes, and help shape the days. When you ask about price, the plan to name is unlimited vacations for the whole year.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
+        ? 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.'
+        : 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
       const turnMarkup = state.turns.length
         ? state.turns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
@@ -761,6 +771,7 @@
       const attachments = await Promise.all(state.attachments.map(filePayload));
       state.attachments = [];
       renderAttachments();
+      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>TimeSyncher</small>…</article>`);
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
@@ -774,21 +785,41 @@
           }),
         });
         const data = await res.json();
-        if (!res.ok || data.ok === false || !data.reply) throw new Error(data.error || 'The app did not return a reply.');
-        if (Array.isArray(data.itinerary)) state.things = data.itinerary;
-        if (data.vacation?.id) {
-          const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
-          if (index >= 0) state.vacations[index] = data.vacation;
-          else state.vacations.push(data.vacation);
-          const label = document.getElementById('tripLabel');
-          if (label) label.textContent = tripBadge(data.vacation);
-          if (!hadSite && realSiteUrl(data.vacation.publicUrl)) {
-            await loadApp(data.vacation.id);
-            return;
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'The app did not return a reply.');
+        if (data.status === 'interim') {
+          const typing = document.getElementById('tsTyping');
+          if (data.interimReply?.text && typing) {
+            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>TimeSyncher</small>${safe(data.interimReply.text)}</article>`);
           }
+          const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ action: 'finish-rewrite', tripId: currentTrip()?.id }),
+          });
+          const fin = await finRes.json();
+          document.getElementById('tsTyping')?.remove();
+          if (!finRes.ok || fin.ok === false || !fin.reply) throw new Error(fin.error || 'The app did not return a reply.');
+          if (Array.isArray(fin.itinerary)) state.things = fin.itinerary;
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(fin.reply)}</article>`);
+        } else {
+          document.getElementById('tsTyping')?.remove();
+          if (!data.reply) throw new Error(data.error || 'The app did not return a reply.');
+          if (Array.isArray(data.itinerary)) state.things = data.itinerary;
+          if (data.vacation?.id) {
+            const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
+            if (index >= 0) state.vacations[index] = data.vacation;
+            else state.vacations.push(data.vacation);
+            const label = document.getElementById('tripLabel');
+            if (label) label.textContent = tripBadge(data.vacation);
+            if (!hadSite && realSiteUrl(data.vacation.publicUrl)) {
+              await loadApp(data.vacation.id);
+              return;
+            }
+          }
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
         }
-        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
       } catch (error) {
+        document.getElementById('tsTyping')?.remove();
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small><span class="error">${safe(error.message)}</span></article>`);
       }
       messages.scrollTop = messages.scrollHeight;

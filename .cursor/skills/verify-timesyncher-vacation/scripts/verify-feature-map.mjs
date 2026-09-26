@@ -63,11 +63,11 @@ const checks = [
   ['trek-settings.md', 'TREK settings', 'verify-settings.png', (o) => (o.settings ? 'PASS' : 'GAP')],
   ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.intakeMin ? 'PASS' : 'GAP')],
   ['post-intake-welcome.md', 'Post-intake welcome', 'verify-post-intake.png', (o) => (o.postIntake ? 'PASS' : 'GAP')],
-  ['jev-quality-line.md', 'Jev quality line', 'verify-jev-quality.png', (o) => (o.qualityOnScreen ? 'PASS' : 'GAP')],
+  ['jev-quality-line.md', 'Jev quality line', 'verify-jev-quality.png', (o) => (o.qualityOnScreen ? 'FAIL' : 'PASS')],
   ['dialog-screenshot-gate.md', 'Dialog screenshot gate', 'verify-screenshot-gate.png', (o) => (o.layout && o.slider && o.detail && !o.shell ? 'PASS' : 'FAIL')],
   ['autonomous-app-customer-flow.md', 'Autonomy bar', 'verify-autonomy.png', (o) => (o.header && !o.shell ? 'PASS' : 'GAP')],
   ['keepsake-qa.md', 'Keepsake QA', 'verify-keepsake-qa.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
-  ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', () => 'GAP'],
+  ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', (o) => (o.telegramFill ? 'PASS' : 'GAP')],
   ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', () => 'GAP'],
   ['real-app-email-entry.md', 'Email opens the real app', 'verify-eula.png', (o) => (o.emailIsShared ? 'PASS' : 'GAP')],
 ];
@@ -258,7 +258,16 @@ async function drive() {
     navigation: has(text, 'Open navigation') || has(text, 'Close navigation'),
     settings: has(text, 'Mapbox') || has(text, 'Copy link'),
     empty: has(text, 'No timeline-tagged things yet') || has(text, 'match those tags'),
+    telegramFill: has(text, "Huggo") || has(text, 'Kailua-Kona') || has(text, 'Ulu Ocean'),
   };
+  if (await clickIncludes('Open navigation')) {
+    text = await bodyText();
+    obs.navigation = has(text, 'Open navigation') || has(text, 'Close navigation');
+  }
+  if (await clickIncludes('Settings')) {
+    text = await bodyText();
+    obs.settings = has(text, 'Mapbox') || has(text, 'Copy link');
+  }
   await shot('verify-header-chrome.png');
   await shot('verify-itinerary-layout.png');
   await shot('verify-slider-bars.png');

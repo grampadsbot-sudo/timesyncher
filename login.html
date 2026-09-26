@@ -20,7 +20,7 @@
     h1 { margin: 0 0 4px; font-size: 24px; line-height: 1.2; }
     .sub { margin: 0 0 26px; color: #9ca3af; font-size: 14px; }
     label { display: block; margin: 0 0 6px; color: #374151; font-size: 13px; font-weight: 700; }
-    input { width: 100%; min-height: 44px; margin: 0 0 16px; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; color: var(--ink); font: inherit; }
+    input, select { width: 100%; min-height: 44px; margin: 0 0 16px; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; color: var(--ink); font: inherit; background: white; }
     button, .button { width: 100%; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: var(--ink); color: white; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }
     .note { margin: 18px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
     @media (max-width: 860px) {
@@ -43,6 +43,10 @@
       <div class="card">
         <h1>Sign In</h1>
         <p class="sub">Welcome back</p>
+        <label for="language">Language</label>
+        <select id="language" aria-label="Language">
+          <option value="en" selected>English</option>
+        </select>
         <form onsubmit="event.preventDefault();">
           <label for="email">Email</label>
           <input id="email" type="email" autocomplete="email" placeholder="your@email.com" />

@@ -206,6 +206,8 @@ def build(pack):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):
             block.append(Paragraph(guard_timing(turn.get("timing")), styles["Tim"]))
+        if turn.get("producer_log"):
+            block.append(Paragraph(latin(turn.get("producer_log")), styles["Qual"]))
         story.append(CondPageBreak(1.6 * inch))
         for flowable in block:
             story.append(flowable)
