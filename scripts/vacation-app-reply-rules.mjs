@@ -12,7 +12,8 @@ const JEV_DECISIONS_PATH = /\/api\/alpha\/decisions\/?$/i;
 const OPENROUTER_CHAT_PATH = /\/api\/v1\/chat\/completions\/?$/i;
 const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
 const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const JEV_DECISIONS_MODEL = 'typesafe/jev-1.13';
+export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
+const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 
 // Bake-off map only. dialog-runners/tier_models.json must match these four ids.
 // A drifted file, a tier outside 1-4, or any gpt-*mini model refuses the reply.
@@ -704,6 +705,57 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     return qualityFromDecisions(body, criteria);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
+  }
+}
+
+export async function jevChooseRewrite({ customerTurn, draft, options, env = process.env } = {}) {
+  const choices = [...new Set((Array.isArray(options) ? options : []).map((item) => text(item, 1500)).filter(Boolean))];
+  if (!choices.length) return { ok: false, text: '', reason: 'jev_rewrite_missing', model: JEV_DECISIONS_MODEL };
+  const key = appOpenRouterKey(env);
+  const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
+  if (!JEV_DECISIONS_PATH.test(url)) return { ok: false, text: '', reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
+  if (!key) return { ok: false, text: '', reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
+  const criteria = {};
+  choices.forEach((item, index) => {
+    criteria[`r${index + 1}`] = item;
+  });
+  const payload = {
+    model: JEV_DECISIONS_MODEL,
+    state: {
+      customer_turn: text(customerTurn, 6000),
+      draft: text(draft, 3500),
+    },
+    questions: {
+      replacement: {
+        type: 'choice',
+        instructions: 'Pick the full customer-facing replacement. It must replace the draft. Do not keep the draft and add a paragraph.',
+        criteria,
+      },
+    },
+  };
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${key}`,
+        'content-type': 'application/json',
+        accept: 'application/json',
+        'HTTP-Referer': 'https://timesyncher.com',
+        'X-Title': 'TimeSyncher Vacation App Jev Quality',
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.ok === false) {
+      return { ok: false, text: '', reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
+    }
+    const choice = text(body?.answers?.replacement?.choice, 40);
+    const picked = criteria[choice] || '';
+    if (!picked) return { ok: false, text: '', reason: 'jev_rewrite_missing', model: JEV_DECISIONS_MODEL };
+    return { ok: true, text: picked, reason: '', model: JEV_DECISIONS_MODEL };
+  } catch (error) {
+    return { ok: false, text: '', reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }
 }
 

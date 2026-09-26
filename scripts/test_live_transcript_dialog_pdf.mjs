@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { qualityCommentCriteria, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertLiveTranscript,
@@ -111,8 +111,14 @@ assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').text, 'The rewrite the customer sees.');
 assert.equal(rewriteReplacesDraft('The draft stays here.', 'The draft stays here. Extra paragraph about a cruise.'), false);
 assert.equal(rewriteReplacesDraft('The draft stays here.', 'Monday is the beach or the house pool. The household plan is unlimited vacations for the whole year.'), true);
-assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten)');
-assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Answers the Monday swim.', rewritten: true, rewriteModel: 'qwen/qwen3-235b-a22b-2507' }), 'quality: 4 — Answers the Monday swim. (rewritten by qwen/qwen3-235b-a22b-2507)');
+assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten by Jev)');
+assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1 — Misses the price. (rewritten by Jev)');
+const priceDraft = 'This trip already holds space for all eight of you. You are covered for Kimberly. Tyler has his own. Lauren has hers.';
+const priceChoices = jevReplacementChoices({ customerTurn: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.', draft: priceDraft, corpus: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' });
+assert.ok(priceChoices.length >= 1);
+assert.match(priceChoices[0], /unlimited vacations for the whole year/);
+assert.equal(priceChoices.every((choice) => rewriteReplacesDraft(priceDraft, choice)), true);
+assert.equal(priceChoices.some((choice) => /\b(?:split|splitting)\b/i.test(choice)), false);
 assert.deepEqual(inventedVenueNames('A morning snorkel cruise and Hawaiʻi Volcanoes, then Puʻuhonua o Hōnaunau and Captain Cook.', 'Kimberly wants gardens. Tyler wants a swim.'), ['snorkel', 'cruise', 'Volcanoes', 'Puuhonua o Honaunau', 'Captain Cook']);
 assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', 'Tyler wants a swim on the beach or the house pool.'), []);
 const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
@@ -251,6 +257,26 @@ rejects(liveDoc({
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, text: 'Since you are splitting payments, Kimberly is covered.' } : turn)),
 }), /split-payment jargon/);
+const jevRewrite = liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: true, model: 'typesafe/jev-1.13', rewriteModel: 'typesafe/jev-1.13', draft: 'Draft the customer did not see.' },
+    shippedModel: 'typesafe/jev-1.13',
+    draftModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteModel: 'typesafe/jev-1.13',
+  } : turn)),
+});
+assertLiveTranscript(jevRewrite);
+assert.match(extractPdfText(renderLiveTranscriptPdf(jevRewrite)), /rewritten by Jev/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: true, rewriteModel: 'qwen/qwen3-235b-a22b-2507' },
+    shippedModel: 'qwen/qwen3-235b-a22b-2507',
+    draftModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+  } : turn)),
+}), /typesafe\/jev-1\.13/);
 
 const customerFirst = liveDoc();
 const partial = assessPackShape(customerFirst);
