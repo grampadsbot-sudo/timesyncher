@@ -5,7 +5,7 @@ GBrain Feature Map is canonical. The repo `features/` mirror is the inventory. T
 ## Baseline preconditions
 
 - Staging alias `https://vacation-staging.timesyncher.com` is the only host.
-- Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor` before a live drive.
+- Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs`. It doctors, runs the real-app gate, and overwrites the PASS/FAIL/GAP table.
 - Evidence for a redeem already captured lives in `/opt/cursor/artifacts/craig-811-email-eula-20260925/` unless the run names another directory.
 - Do not treat order-success Open App or `/accept` as a substitute entry point.
 
@@ -24,7 +24,7 @@ GBrain Feature Map is canonical. The repo `features/` mirror is the inventory. T
 
 ## Feature entry contract
 
-Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving it with verify-post-purchase-email-eula`, and `Gotchas`.
+Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving it`, and `Gotchas`. `verify-feature-map.mjs` drives every file and writes the PASS/FAIL/GAP table.
 
 ## Features
 

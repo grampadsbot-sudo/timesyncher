@@ -1,6 +1,6 @@
 ---
 name: verify-timesyncher-vacation
-description: "Drive TimeSyncher Vacation post-purchase proof on vacation-staging: coupon or purchase ack, purchase email launch link, EULA as the first screen of the app URL, then onboarding chat. Use when checking that path or when evidence might skip the email or leave EULA on order-success."
+description: "Re-runnable TimeSyncher Vacation verification. Drives the real shared app on vacation-staging and overwrites a per-feature PASS/FAIL/GAP table. Use for /maintain-verification-skill, after an app merge, or the weekly verification pass."
 ---
 
 # Verify TimeSyncher Vacation
@@ -86,6 +86,15 @@ The harness exits non-zero when the source path skips Jev, stamps a dialog finge
 
 ## Feature map drive
 
-Read `features/README.md`, then drive every feature file on the staging alias. Screenshot each one. A control the app no longer shows is a product gap: leave the feature file as written.
+This is the command `/maintain-verification-skill` re-runs after every app merge and weekly. It is idempotent: it overwrites `<out>/VERIFY.md` and `<out>/verify/*.png`, and it does not redeem a coupon or insert staging rows.
 
-Doctor before the first drive. It fails if order-success offers Open App, or if the app document or bundle still contains the deleted shell cards.
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs --self-check
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs --out <dir>
+```
+
+`<dir>` defaults to `.cursor/skills/verify-timesyncher-vacation/output`, which is not committed. The same input overwrites the same table. QA reads that table: one row per feature file, result `PASS`, `FAIL`, or `GAP`.
+
+The real-app gate is required. The command runs `npm run test:real-app-entry` first and refuses a clean table when that gate fails. A doctor failure overwrites the same table with `Doctor FAIL` so a later run cannot leave an older PASS table in place. A product gap stays a `GAP` row. Do not delete or soften the feature file.
+
+A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
