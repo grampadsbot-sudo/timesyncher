@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE } from '../../../../scripts/vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -49,8 +49,18 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/real banter/.test(replyRules) || !/whole family/.test(replyRules)) {
     errors.push('shared producer does not ask for banter and a family collaborator welcome');
   }
-  if (!/Use 3, 4, or 5/.test(replyRules)) {
-    errors.push('Jev tier criteria do not allow tiers beyond 1-2 when the turn needs them');
+  if (!/Use 3 or 4/.test(replyRules)) {
+    errors.push('Jev tier criteria do not allow tiers 3 and 4 when the turn needs them');
+  }
+  const map = bakeoffTierModels();
+  for (const tier of [1, 2, 3, 4]) {
+    if (!replyRules.includes(map[tier])) errors.push(`shared producer map is missing ${map[tier]}`);
+  }
+  if (/openai\/gpt-4\.1-mini/.test(replyRules) || !/gpt-\.\*mini/.test(replyRules)) {
+    errors.push('shared producer does not fail closed on gpt mini models');
+  }
+  if (!/tier_models\.json/.test(replyRules) || !/tier_outside_bakeoff_map/.test(replyRules)) {
+    errors.push('shared producer does not fail closed when tier_models.json drifts');
   }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');
@@ -116,7 +126,7 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
     if (turn.replyProducer !== PRODUCER) errors.push(`turn ${turn.turnIndex} app text is not from ${PRODUCER}`);
     if (turn.jev?.jevRan !== true) errors.push(`turn ${turn.turnIndex} app text exists without Jev`);
     const modelId = String(turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || '');
-    if (!modelId.includes('/')) errors.push(`turn ${turn.turnIndex} app reply is missing the bake-off model id`);
+    if (!isBakeoffModelId(modelId)) errors.push(`turn ${turn.turnIndex} model is outside the bake-off map`);
     if (!Number.isFinite(Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs))) {
       errors.push(`turn ${turn.turnIndex} is missing Jev classify ms`);
     }
@@ -126,6 +136,24 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
     if (turn.jev?.jevRan === true) ran += 1;
   });
   if (requireRan && ran < 1) errors.push('no stored app turn records jevRan true with a tier');
+  return errors;
+}
+
+export function assertGoldSessionDepth(doc) {
+  const errors = [];
+  const turns = Array.isArray(doc?.turns) ? doc.turns : [];
+  const apps = turns.filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
+  if (apps.length < 20) errors.push(`long_intake_and_depth: ${apps.length} generated app turns, need at least 20`);
+  const lengths = apps.map((turn) => String(turn.text || '').trim().split(/\s+/).filter(Boolean).length).sort((a, b) => a - b);
+  const median = lengths.length ? lengths[Math.floor((lengths.length - 1) / 2)] : 0;
+  if (median < 40) errors.push(`banter richness: median app words ${median}, need at least 40`);
+  const blob = turns.map((turn) => String(turn.text || '')).join('\n');
+  if (!/voice note|ramble/i.test(blob) || blob.length < 1200) {
+    errors.push('missing long trip intake');
+  }
+  if (!/collaborat/i.test(blob)) errors.push('missing collaborator onboard');
+  const opener = turns[0];
+  if (opener?.role !== 'app') errors.push('missing app open');
   return errors;
 }
 
@@ -149,8 +177,8 @@ function appTurn(overrides = {}) {
     text: 'Start with the harbor walk.',
     replyProducer: PRODUCER,
     invented: false,
-    jev: { jevRan: true, modelTier: 2, routeType: 'itinerary_advice', responseModel: 'google/gemini-2.5-flash', jevLatencyMs: 120, jevBeforeModel: true },
-    modelId: 'google/gemini-2.5-flash',
+    jev: { jevRan: true, modelTier: 2, routeType: 'itinerary_advice', responseModel: 'qwen/qwen3-235b-a22b-2507', jevLatencyMs: 120, jevBeforeModel: true },
+    modelId: 'qwen/qwen3-235b-a22b-2507',
     jevLatencyMs: 120,
     genLatencyMs: 400,
     jevBeforeModel: true,
@@ -188,6 +216,8 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ text: `${CANNED} for this vacation.` })])).length);
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ invented: true })])).length);
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
+  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'openai/gpt-4.1-mini' })])).some((error) => /bake-off map/.test(error)));
+  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash' })])).some((error) => /bake-off map/.test(error)));
   const openerTurn = {
     turnIndex: 1,
     role: 'app',
@@ -256,6 +286,7 @@ async function main() {
     ? JSON.parse(await readFile(transcriptPath, 'utf8'))
     : await loadSession(session);
   const errors = assertLiveTurns(doc, { requireRan: true });
+  if (process.argv.includes('--gold-depth')) errors.push(...assertGoldSessionDepth(doc));
   if (errors.length) {
     fail(errors);
     return;

@@ -1,0 +1,10 @@
+{
+  "no_gpt5mini": true,
+  "source": "Craig bake-off 2026-09-22. Live app producer must match these ids exactly.",
+  "models": {
+    "1": "google/gemini-2.5-flash-lite",
+    "2": "qwen/qwen3-235b-a22b-2507",
+    "3": "deepseek/deepseek-v3.2",
+    "4": "qwen/qwen3-max"
+  }
+}

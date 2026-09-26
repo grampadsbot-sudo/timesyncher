@@ -86,6 +86,9 @@ export function liveTurnRecord({
     record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
     record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null;
     record.jevBeforeModel = jev?.jevBeforeModel === true && jev?.jevRan === true;
+    if (Array.isArray(model?.beats) && model.beats.length) {
+      record.beats = model.beats.map((beat) => String(beat || '').trim()).filter(Boolean);
+    }
     record.model = model
       ? {
         called: Boolean(model.called),
@@ -217,6 +220,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       genLatencyMs: Number.isFinite(Number(live.genLatencyMs ?? live.model?.genLatencyMs)) ? Number(live.genLatencyMs ?? live.model?.genLatencyMs) : null,
       jevLatencyMs: Number.isFinite(Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs)) ? Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs) : null,
       jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
+      beats: Array.isArray(live.beats) ? live.beats : null,
       model: live.model || null,
       rules: live.rules || null,
     };

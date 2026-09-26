@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
@@ -13,29 +14,64 @@ const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
 const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const JEV_DECISIONS_MODEL = 'typesafe/jev-1.13';
 
-// App/server OpenRouter chat fallback, cheap → strong.
-// Used only after Jev has already returned a tier and the Grok router is unset.
-// Not a substitute for the Jev pre-call (that stays on /api/alpha/decisions).
-// 1 google/gemini-2.5-flash-lite — cheapest adequate
-// 2 google/gemini-2.5-flash
-// 3 openai/gpt-4.1-mini
-// 4 anthropic/claude-sonnet-4.5
-// 5 anthropic/claude-opus-4.1 — strongest
-const OPENROUTER_TIER_CHAT_MODELS = {
+// Bake-off map only. dialog-runners/tier_models.json must match these four ids.
+// A drifted file, a tier outside 1-4, or any gpt-*mini model refuses the reply.
+const BAKEOFF_TIER_MODELS = {
   1: 'google/gemini-2.5-flash-lite',
-  2: 'google/gemini-2.5-flash',
-  3: 'openai/gpt-4.1-mini',
-  4: 'anthropic/claude-sonnet-4.5',
-  5: 'anthropic/claude-opus-4.1',
+  2: 'qwen/qwen3-235b-a22b-2507',
+  3: 'deepseek/deepseek-v3.2',
+  4: 'qwen/qwen3-max',
 };
+const BAKEOFF_MODEL_IDS = new Set(Object.values(BAKEOFF_TIER_MODELS));
+const BANNED_GPT_MINI = /gpt-.*mini/i;
+const TIER_MODELS_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '../dialog-runners/tier_models.json');
+
+function bakeoffMapFromFile(parsed) {
+  const models = parsed?.models && typeof parsed.models === 'object' ? parsed.models : parsed;
+  const out = {};
+  for (const tier of [1, 2, 3, 4]) {
+    out[tier] = text(models?.[tier] ?? models?.[String(tier)], 120);
+  }
+  return out;
+}
+
+export function assertBakeoffMap(map) {
+  for (const tier of [1, 2, 3, 4]) {
+    const model = text(map?.[tier] ?? map?.[String(tier)], 120);
+    if (model !== BAKEOFF_TIER_MODELS[tier]) {
+      throw new Error(`refused: tier_models.json drifted at tier ${tier}`);
+    }
+    if (BANNED_GPT_MINI.test(model)) throw new Error(`refused: tier ${tier} is a banned gpt mini model`);
+  }
+  return true;
+}
+
+function loadBakeoffMap() {
+  const parsed = JSON.parse(fs.readFileSync(TIER_MODELS_FILE, 'utf8'));
+  if (parsed?.no_gpt5mini !== true) throw new Error('refused: tier_models.json drifted (no_gpt5mini)');
+  const map = bakeoffMapFromFile(parsed);
+  assertBakeoffMap(map);
+  return map;
+}
+
+const OPENROUTER_TIER_CHAT_MODELS = loadBakeoffMap();
+
+export function isBakeoffModelId(modelId) {
+  const model = text(modelId, 120);
+  if (!model || BANNED_GPT_MINI.test(model)) return false;
+  return BAKEOFF_MODEL_IDS.has(model);
+}
+
+export function bakeoffTierModels() {
+  return { ...OPENROUTER_TIER_CHAT_MODELS };
+}
 
 // Decisions score is the 0-based weighted index of this list, so index 0 is tier 1.
 const JEV_MODEL_TIER_CRITERIA = [
   '1 cheapest model that can still answer this vacation-app turn adequately',
   '2 light inexpensive reasoning',
-  '3 balanced quality for a normal itinerary or product answer',
-  '4 stronger writing or judgment, including the one collab assessment after website build',
-  '5 strongest model for a hard, high-stakes, or ambiguous customer turn',
+  '3 balanced quality for a normal itinerary, richer banter, or a family collaborator welcome',
+  '4 stronger writing or judgment, including a multi-day plan or the one collab assessment after website build',
 ];
 
 function text(value, max = 8000) {
@@ -326,7 +362,7 @@ function vacationAppContext({ customerTurn, stage, gate, screen, session }) {
     stage: text(stage, 80) || 'vacation-app',
     gate: text(gate, 80) || null,
     screen: text(screen, 80) || 'vacation-app',
-    current_turn: text(customerTurn, 2000),
+    current_turn: text(customerTurn, 6000),
     session: shortSession(session),
     pipeline: SHARED_REPLY_PIPELINE,
     rules_slug: REPLY_RULES_SLUG,
@@ -340,7 +376,7 @@ function decisionsPayload(context) {
     questions: {
       model_tier: {
         type: 'score',
-        instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 5 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3, 4, or 5 when the reply needs richer banter, a multi-day plan, a family collaborator welcome, or a judgment call. Do not pin every turn to tier 1.',
+        instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 4 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3 or 4 when the reply needs richer banter, a multi-day plan, a family collaborator welcome, or a judgment call. Do not pin every turn to tier 1. There is no tier 5.',
         criteria: JEV_MODEL_TIER_CRITERIA,
       },
       route_type: {
@@ -373,10 +409,10 @@ function normalizeDecisions(body) {
   const score = Number(tierAnswer.score);
   let modelTier = null;
   if (Number.isFinite(score)) {
-    modelTier = Math.min(5, Math.max(1, Math.round(score) + 1));
+    modelTier = Math.round(score) + 1;
   } else {
     const direct = Number(tierAnswer.choice ?? tierAnswer.value ?? body?.model_tier ?? body?.modelTier);
-    if (Number.isInteger(direct) && direct >= 1 && direct <= 5) modelTier = direct;
+    if (Number.isInteger(direct)) modelTier = direct;
   }
   const routeType = text(answers.route_type?.choice || answers.routeType?.choice, 80) || null;
   const extraContext = {
@@ -385,6 +421,16 @@ function normalizeDecisions(body) {
     modelTierScore: Number.isFinite(score) ? score : null,
     modelTierConfidence: Number.isFinite(Number(tierAnswer.confidence)) ? Number(tierAnswer.confidence) : null,
   };
+  if (!Number.isInteger(modelTier) || modelTier < 1 || modelTier > 4 || !openRouterChatModelForTier(modelTier)) {
+    return {
+      jevRan: false,
+      via: 'openrouter-decisions',
+      modelTier: null,
+      responseModel: null,
+      extraContext,
+      error: 'tier_outside_bakeoff_map',
+    };
+  }
   if (!modelTier) {
     return {
       jevRan: false,
@@ -502,7 +548,7 @@ function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, 
       routeType: jev?.routeType || jev?.extraContext?.routeType || null,
       extraContext: jev?.extraContext || null,
     },
-    customer_turn: text(customerTurn, 4000),
+    customer_turn: text(customerTurn, 12000),
     stage: text(stage, 80),
     screen: text(screen, 80),
   };
@@ -524,32 +570,28 @@ function replyRulesSystem(rules) {
     'If the customer mentions a partner, kids, family, or friends, invite that household in: they join the same trip, add notes, and help shape the days.',
     'Give the collab assessment at most once, and only after the initial website build.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-    'Write a few sentences of real banter. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
+    'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
+    'End with one final line that starts with BEAT: and a three-to-six word label of what this turn did. Do not put BEAT anywhere else.',
   ].join('\n');
 }
 
+function splitBeat(answer) {
+  const lines = String(answer || '').split('\n');
+  const beats = [];
+  const kept = [];
+  for (const line of lines) {
+    const match = line.trim().match(/^BEAT:\s*(.+)$/i);
+    if (match) beats.push(text(match[1], 80));
+    else kept.push(line);
+  }
+  return { text: kept.join('\n').trim(), beats: beats.filter(Boolean) };
+}
+
 export async function callTieredModel({ rules, jev, customerTurn, stage, screen, env = process.env } = {}) {
-  const modelTier = jev?.modelTier ?? null;
-  const suggestedModel = text(jev?.responseModel, 120) || openRouterChatModelForTier(modelTier) || tierModel(modelTier);
-  if (!jev?.jevRan || (!modelTier && !suggestedModel)) {
-    return { called: false, via: null, modelTier, responseModel: suggestedModel || null, reason: 'jev_did_not_choose_a_model' };
-  }
-  const grokUrl = grokReplyUrl(env);
-  if (grokUrl) {
-    return callGrokTieredModel({
-      url: grokUrl,
-      rules,
-      jev,
-      customerTurn,
-      stage,
-      screen,
-      modelTier,
-      responseModel: tierModel(modelTier) || suggestedModel,
-      env,
-    });
-  }
-  if (!modelTier) {
-    return { called: false, via: null, modelTier: null, responseModel: suggestedModel || null, reason: 'jev_did_not_choose_a_model' };
+  const modelTier = Number(jev?.modelTier);
+  const responseModel = openRouterChatModelForTier(modelTier);
+  if (!jev?.jevRan || !isBakeoffModelId(responseModel)) {
+    return { called: false, via: null, modelTier: Number.isInteger(modelTier) ? modelTier : null, responseModel: responseModel || null, reason: 'model_not_in_bakeoff_map' };
   }
   return callOpenRouterTieredChat({
     rules,
@@ -558,7 +600,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     stage,
     screen,
     modelTier,
-    responseModel: openRouterChatModelForTier(modelTier) || suggestedModel,
+    responseModel,
     env,
   });
 }
@@ -621,7 +663,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(90000),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {
@@ -635,7 +677,13 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     }
     const answer = chatReplyText(body.choices?.[0]?.message?.content) || text(body.answer || body.reply || body.text, 3500);
     if (!answer) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel: text(body.model || responseModel, 120), text: answer };
+    const returned = text(body.model || responseModel, 120);
+    if (returned !== responseModel || !isBakeoffModelId(returned)) {
+      return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'model_not_in_bakeoff_map' };
+    }
+    const visible = splitBeat(answer);
+    if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
   }

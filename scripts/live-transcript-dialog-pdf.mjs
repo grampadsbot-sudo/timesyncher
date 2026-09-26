@@ -10,7 +10,11 @@ import {
   loadLiveTranscriptByToken,
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
-import { DIALOG_TEST_FINGERPRINT } from './vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
+
+const V6_GPT5_MINI_P50_MS = 28834;
+const V6_GPT5_MINI_P95_MS = 39693;
+const ROSTER_NAMES = ['Kimberly', 'Tyler', 'Lauren'];
 
 const BANNED_GENERATORS = /dialog_vacation_test_turn|dialog-pdf-openrouter-selfcall|openrouter-selfcall/i;
 const CANNED_APP_REPLY = 'Got it. I saved that';
@@ -92,8 +96,8 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: turn ${turn.turnIndex} app text exists without a real Jev classify`);
       }
       const modelId = String(turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || '').trim();
-      if (!modelId.includes('/')) {
-        throw new Error(`refused: turn ${turn.turnIndex} app reply is missing the bake-off model id`);
+      if (!isBakeoffModelId(modelId)) {
+        throw new Error(`refused: turn ${turn.turnIndex} model is outside the bake-off map`);
       }
       const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
       const genMs = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
@@ -230,18 +234,72 @@ export function assessPackShape(doc, options = {}) {
   };
 }
 
+function percentile(values, p) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  return sorted[index];
+}
+
+function generatedAppTurns(doc) {
+  return (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
+}
+
 function packPages(doc, shape) {
   const name = doc.targetPerson;
   const summary = shape.summary;
   const tiersUsed = (shape.tiersUsed || []).join(', ') || 'none';
   const modelsUsed = (shape.modelsUsed || []).join(', ') || 'none';
+  const generated = generatedAppTurns(doc);
+  const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
+  const p50 = percentile(gens, 50);
+  const p95 = percentile(gens, 95);
+  const speed = p50 ? (V6_GPT5_MINI_P50_MS / p50).toFixed(1) : 'n/a';
+  const map = bakeoffTierModels();
+  const roster = ROSTER_NAMES.filter((person) => (doc.turns || []).some((turn) => String(turn.text || '').includes(person)));
   const cover = [
-    `Dialog Pack - ${shape.trip} (live-app)`,
+    `Dialog Pack - ${shape.trip} v7 Tier 1-4`,
     `pack_id: ${shape.pack_id}`,
-    `turns: ${summary.turnCount}`,
+    `turns=${summary.turnCount} (customer ${summary.customerTurns} / app ${summary.appTurns})`,
+    'no_gpt5mini: True',
+    'source=live-app (not sim)',
     `tiers used: ${tiersUsed}`,
     `models used: ${modelsUsed}`,
-    'source=live-app (not sim)',
+    '',
+    'QUALITY COMPARISON',
+    'vs v6 gpt-5-mini (published mainModel reference, not this session)',
+    'metric | v6 gpt-5-mini | this live session',
+    `gen p50 ms | ${V6_GPT5_MINI_P50_MS} | ${p50 ?? 'n/a'}`,
+    `gen p95 ms | ${V6_GPT5_MINI_P95_MS} | ${p95 ?? 'n/a'}`,
+    `speed vs v6 p50 | 1x | ${speed}x`,
+    '',
+    'Per-tier models',
+    'tier | model',
+    ...[1, 2, 3, 4].map((tier) => `T${tier} | ${map[tier]}`),
+    '',
+    'Per-tier mean overall',
+    'tier | model | turns | mean gen ms',
+    ...[1, 2, 3, 4].map((tier) => {
+      const rows = generated.filter((turn) => Number(turn.jev?.modelTier) === tier);
+      const mean = rows.length
+        ? Math.round(rows.reduce((sum, turn) => sum + Number(turn.genLatencyMs ?? turn.model?.genLatencyMs ?? 0), 0) / rows.length)
+        : 'n/a';
+      return `T${tier} | ${map[tier]} | ${rows.length} | ${mean}`;
+    }),
+    '',
+    'TIMINGS',
+    'turn | tier | model | gen ms | jev ms',
+    ...(generated.length
+      ? generated.map((turn) => {
+        const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
+        const jev = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
+        const model = modelIdOf(turn);
+        return `${turn.turnIndex} | ${turn.jev?.modelTier} | ${model} | ${gen} | ${jev}`;
+      })
+      : ['none']),
+    '',
+    'Roster / Collaborators',
+    roster.length ? `named in this live transcript: ${roster.join(', ')}` : 'named in this live transcript: none recorded',
   ];
   const meta = [
     'Meta',

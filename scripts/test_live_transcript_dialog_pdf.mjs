@@ -62,10 +62,11 @@ function liveDoc(overrides = {}) {
         at: '2026-09-25T21:00:03.000Z',
         latencyMs: 2800,
         sessionE2eMs: 3000,
-        jev: { jevRan: true, modelTier: 2, routeType: 'general', extraContext: { routeType: 'general' }, via: 'openrouter-decisions', responseModel: 'google/gemini-2.5-flash', jevLatencyMs: 400, jevBeforeModel: true },
+        jev: { jevRan: true, modelTier: 2, routeType: 'general', extraContext: { routeType: 'general' }, via: 'openrouter-decisions', responseModel: 'qwen/qwen3-235b-a22b-2507', jevLatencyMs: 400, jevBeforeModel: true },
         replyProducer: 'vacation-app-reply-rules',
         invented: false,
-        modelId: 'google/gemini-2.5-flash',
+        modelId: 'qwen/qwen3-235b-a22b-2507',
+        beats: ['harbor morning plan'],
         jevLatencyMs: 400,
         genLatencyMs: 2400,
         jevBeforeModel: true,
@@ -92,6 +93,12 @@ rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, text: 'Got it. I saved that for Vegas and queued the update.' } : turn)),
 }), /canned|invented|dialog pack/);
 rejects(liveDoc({ generator: 'dialog_vacation_test_turn' }), /dialog_vacation_test_turn/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, modelId: 'openai/gpt-4.1-mini', jev: { ...turn.jev, responseModel: 'openai/gpt-4.1-mini' } } : turn)),
+}), /bake-off map/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, modelId: 'google/gemini-2.5-flash', jev: { ...turn.jev, responseModel: 'google/gemini-2.5-flash' } } : turn)),
+}), /bake-off map/);
 
 const customerFirst = liveDoc();
 const partial = assessPackShape(customerFirst);
@@ -101,15 +108,27 @@ assert.match(partial.missing_app_open_next, /Do not invent/);
 
 const pdf = renderLiveTranscriptPdf(customerFirst);
 const text = extractPdfText(pdf);
-assert.match(text, /Dialog Pack - untitled \(live-app\)/);
+assert.match(text, /Dialog Pack - untitled v7 Tier 1-4/);
 assert.match(text, /source=live-app \(not sim\)/);
+assert.match(text, /no_gpt5mini: True/);
+assert.match(text, /QUALITY COMPARISON/);
+assert.match(text, /Per-tier models/);
+assert.match(text, /Per-tier mean overall/);
+assert.match(text, /TIMINGS/);
+assert.match(text, /Roster \/ Collaborators/);
+assert.match(text, /qwen\/qwen3-235b-a22b-2507/);
+assert.match(text, /deepseek\/deepseek-v3.2/);
+assert.match(text, /qwen\/qwen3-max/);
+assert.match(text, /google\/gemini-2.5-flash-lite/);
+assert.doesNotMatch(text, /gpt-4\.1-mini/);
 assert.match(text, /tiers used: 2/);
-assert.match(text, /models used: google\/gemini-2.5-flash/);
+assert.match(text, /models used: qwen\/qwen3-235b-a22b-2507/);
+assert.match(text, /beat: harbor morning plan/);
 assert.match(text, /^Craig:/m);
 assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /APP to Craig:/);
 assert.match(text, /Start with the harbor walk/);
-assert.match(text, /timing: gen=2400ms · tier=2 · model=google\/gemini-2.5-flash/);
+assert.match(text, /timing: gen=2400ms · tier=2 · model=qwen\/qwen3-235b-a22b-2507/);
 assert.doesNotMatch(text, /tier 2 \| general \| 2800 ms/);
 assert.doesNotMatch(text, /jev first:/);
 assert.match(text, /missing_app_open: true/);
