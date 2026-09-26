@@ -280,6 +280,27 @@ async function main() {
     return true;
   }
 
+  async function clipAround(phrase, { height = 320, padTop = 24 } = {}) {
+    return page.evaluate((needle, clipHeight, topPad) => {
+      const needleText = needle.toLowerCase();
+      const node = [...document.querySelectorAll('body *')].find((item) => {
+        const text = (item.innerText || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        return text.includes(needleText) && text.length < 400;
+      });
+      const target = node || [...document.querySelectorAll('body *')].find((item) => (item.innerText || '').toLowerCase().includes(needleText));
+      if (!target) return null;
+      target.scrollIntoView({ block: 'center' });
+      const box = target.getBoundingClientRect();
+      const y = Math.max(0, box.y - topPad);
+      return {
+        x: 0,
+        y,
+        width: Math.min(1280, window.innerWidth),
+        height: Math.max(140, Math.min(clipHeight, window.innerHeight - y)),
+      };
+    }, phrase, height, padTop);
+  }
+
   async function go(url, ready = '') {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 });
     if (ready) {
@@ -489,7 +510,11 @@ async function main() {
       const layout = ['Day-by-Day', 'Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest'].every((label) => has(text, label));
       const slider = has(text, 'Vacation Day View') && has(text, 'Day 1');
       if (layout) {
-        await shot('itinerary-layout', 'Initial itinerary', 'Standard itinerary layout', { file: 'itinerary-layout.md', note: sharedUrl });
+        await shot('itinerary-layout', 'Initial itinerary', 'Standard itinerary layout', {
+          file: 'itinerary-layout.md',
+          note: sharedUrl,
+          clipRect: await clipAround('Day-by-Day', { height: 168, padTop: 12 }),
+        });
         await shot('header-chrome', 'Initial itinerary', 'Header brand', { file: 'header-chrome.md', note: sharedUrl, clipSelector: 'header' });
         await page.evaluate(() => window.scrollTo(0, 0));
         await shot('autonomy', 'Initial itinerary', 'Autonomy bar', { file: 'autonomous-app-customer-flow.md', note: 'Guest navigation on the real shared app.', clipSelector: '[data-ts-guest-nav]' });
@@ -546,7 +571,11 @@ async function main() {
         if (day === 5 && (has(dayText, 'No timeline-tagged') || has(dayText, 'match those tags') || has(dayText, 'Nothing'))) {
           mark('empty-states.md');
         }
-        await shot(`day-${String(day).padStart(2, '0')}`, 'Initial itinerary', label, { file: day === 5 ? 'empty-states.md' : 'slider-bars.md', note: day === 5 ? 'Day 5 on the intake trip.' : 'Intake trip day chip.' });
+        await shot(`day-${String(day).padStart(2, '0')}`, 'Initial itinerary', label, {
+          file: day === 5 ? 'empty-states.md' : 'slider-bars.md',
+          note: day === 5 ? 'Day 5 on the intake trip.' : 'Intake trip day chip.',
+          clipRect: await clipAround(label, { height: 640, padTop: 8 }),
+        });
       }
 
       const tabs = ['Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest', 'Budget'];
@@ -602,19 +631,39 @@ async function main() {
             await shot(id, 'Initial itinerary', `${name} detail`, { file: 'thing-pages.md', note: 'Intake trip Detail page.' });
             openedThings.add(name);
             if (!captured.has('dialog-screenshot-gate.md')) {
-              await shot('screenshot-gate', 'Initial itinerary', 'Dialog screenshot gate', { file: 'dialog-screenshot-gate.md', note: 'Real Detail page, no card shell.' });
+              await shot('screenshot-gate', 'Initial itinerary', 'Dialog screenshot gate', {
+                file: 'dialog-screenshot-gate.md',
+                note: 'Real Detail page, no card shell.',
+                clipRect: await clipAround('Detail page', { height: 220, padTop: 16 }),
+              });
             }
             if (!captured.has('status.md') && (has(detailText, 'considering') || has(detailText, 'Status'))) {
-              await shot(`status-${id}`, 'Initial itinerary', 'Status', { file: 'status.md', note: `${name} detail.` });
+              await shot(`status-${id}`, 'Initial itinerary', 'Status', {
+                file: 'status.md',
+                note: `${name} detail.`,
+                clipRect: await clipAround(has(detailText, 'considering') ? 'considering' : 'Status', { height: 220, padTop: 20 }),
+              });
             }
             if (!captured.has('media-stories.md') && has(detailText, 'Story')) {
-              await shot(`stories-${id}`, 'Initial itinerary', 'Stories and media', { file: 'media-stories.md', note: `${name} detail.` });
+              await shot(`stories-${id}`, 'Initial itinerary', 'Stories and media', {
+                file: 'media-stories.md',
+                note: `${name} detail.`,
+                clipRect: await clipAround('Story', { height: 240, padTop: 20 }),
+              });
             }
             if (!captured.has('ratings-reviews.md') && (has(detailText, 'Google') || has(detailText, 'Yelp'))) {
-              await shot(`ratings-${id}`, 'Initial itinerary', 'Ratings and reviews', { file: 'ratings-reviews.md', note: `${name} detail.` });
+              await shot(`ratings-${id}`, 'Initial itinerary', 'Ratings and reviews', {
+                file: 'ratings-reviews.md',
+                note: `${name} detail.`,
+                clipRect: await clipAround(has(detailText, 'Google') ? 'Google' : 'Yelp', { height: 220, padTop: 20 }),
+              });
             }
             if (!captured.has('hotel-stay-fields.md') && (has(detailText, 'Check-in') || has(detailText, 'Stay'))) {
-              await shot(`hotel-${id}`, 'Initial itinerary', 'Hotel stay fields', { file: 'hotel-stay-fields.md', note: `${name} detail.` });
+              await shot(`hotel-${id}`, 'Initial itinerary', 'Hotel stay fields', {
+                file: 'hotel-stay-fields.md',
+                note: `${name} detail.`,
+                clipRect: await clipAround(has(detailText, 'Check-in') ? 'Check-in' : 'Stay', { height: 220, padTop: 20 }),
+              });
             }
             await page.keyboard.press('Escape').catch(() => {});
             await sleep(200);
@@ -674,6 +723,7 @@ async function main() {
         await shot('min-things', 'Initial itinerary', 'Initial fill minimums', {
           file: 'min-things.md',
           note: 'Big Island intake trip meets restaurant 15, store 10, and attraction 15.',
+          clipRect: await clipAround('Ulu Ocean', { height: 420, padTop: 40 }),
         });
       }
     } else {
@@ -759,6 +809,7 @@ async function main() {
       await shot('final-itinerary-layout', 'Final itinerary', 'Standard itinerary layout', {
         file: 'itinerary-layout.md',
         note: 'Live trip after collaborator notes. Not the pre-collaborator snapshot.',
+        clipRect: await clipAround('Day-by-Day', { height: 220, padTop: 8 }),
       });
       for (let day = 1; day <= 10; day += 1) {
         const label = `Day ${day}`;
@@ -769,6 +820,7 @@ async function main() {
         await shot(`final-day-${String(day).padStart(2, '0')}`, 'Final itinerary', label, {
           file: 'slider-bars.md',
           note: 'Live trip after collaborator notes.',
+          clipRect: await clipAround(label, { height: 640, padTop: 8 }),
         });
       }
       for (const label of ['Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest', 'Budget']) {
