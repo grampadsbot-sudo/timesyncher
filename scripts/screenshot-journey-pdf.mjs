@@ -438,7 +438,16 @@ async function main() {
             node = walker.nextNode();
           }
           const range = document.createRange();
-          range.selectNodeContents(match || bubble);
+          if (match) {
+            const content = match.textContent || '';
+            const index = content.toLowerCase().indexOf(needleText);
+            const start = index >= 0 ? index : 0;
+            const end = Math.min(content.length, start + needleText.length);
+            range.setStart(match, start);
+            range.setEnd(match, end);
+          } else {
+            range.selectNodeContents(bubble);
+          }
           if (scroller) {
             const lineTop = range.getBoundingClientRect().top;
             const paneTop = scroller.getBoundingClientRect().top;
