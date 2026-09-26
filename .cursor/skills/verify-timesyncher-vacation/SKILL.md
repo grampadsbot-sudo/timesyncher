@@ -98,3 +98,14 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs -
 The real-app gate is required. The command runs `npm run test:real-app-entry` first and refuses a clean table when that gate fails. A doctor failure overwrites the same table with `Doctor FAIL` so a later run cannot leave an older PASS table in place. A product gap stays a `GAP` row. Do not delete or soften the feature file.
 
 A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
+
+## Screenshot journey
+
+Every test run also builds the Screenshot Journey PDF from these feature files. The script is idempotent: it overwrites `screenshot-journey.pdf`, the page PNGs under `journey-pages/`, and the `## Screenshot journey` section of `VERIFY.md`. It does not redeem a coupon and it does not click Agree.
+
+```bash
+node scripts/screenshot-journey-pdf.mjs --self-check
+node scripts/screenshot-journey-pdf.mjs --out <dir> --session-url <app-url> --shared-url <intake-url> --eula-url <pending-app-url>
+```
+
+The real-app gate runs first. A feature file with no screenshot is a GAP in the PDF contents page and in `VERIFY.md`. Shell screens are refused. `--eula-url` is a pending app URL used only for the EULA page. Omit it and that page is a gap.
