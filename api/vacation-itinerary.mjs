@@ -21,6 +21,7 @@ import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
@@ -33,6 +34,7 @@ import {
   onboardingOpenerText,
   postIntakeUpsellTurn,
   produceLiveAppReply,
+  applyAgreedAppSwim,
   applyCustomerNotes,
   intakeFacts,
   thingsFromIntake,
@@ -477,6 +479,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     reply: null,
   };
   if (!produced.reply) {
+    await db`delete from transcript_turns where id = ${turnRows[0].id}`;
     return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
   }
 
@@ -515,9 +518,11 @@ async function queueVacationAppTurn(db, session, trip, body) {
     {
       collaborator: Boolean(seat),
       speakerName,
+      appReply: produced.reply,
     },
     postIntakeUpsellTurn(requestText, priorTurns) ? requestText : '',
   );
+  if (itinerary.length) await publishIntakeShare(db, tripId);
   const vacationRows = await db`
     select id, title, destination, start_date, end_date, status, metadata
     from trips
@@ -551,6 +556,23 @@ function thingView(row) {
     notes,
     collaboratorNotes,
   };
+}
+
+async function publishIntakeShare(db, tripId) {
+  const slug = intakeShareSlug(tripId);
+  if (!slug) return;
+  const things = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
+  if (!Number(things[0]?.n)) return;
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug: slug, intakeShare: true }},
+        updated_at = now()
+    where id = ${tripId}
+      and coalesce(metadata->>'sharedToken', '') = ''
+      and coalesce(metadata->>'shareToken', '') = ''
+      and coalesce(metadata->>'source_token', '') = ''
+      and coalesce(metadata->>'publicSlug', '') in ('', ${slug})
+  `;
 }
 
 async function loadTripThings(db, tripId) {
@@ -615,11 +637,21 @@ async function ensureIntakeItinerary(db, tripId, text) {
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '' } = {}, intakeText = '') {
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '') {
   if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText);
   const current = await loadTripThings(db, tripId);
   if (!current.length || !String(text || '').trim()) return current;
-  const next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  const tripRows = await db`
+    select start_date, end_date
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const start = tripRows[0]?.start_date || null;
+  const end = tripRows[0]?.end_date || null;
+  const year = start ? new Date(start).getUTCFullYear() : null;
+  let next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
     const prior = current.find((item) => item.id === thing.id);
     if (!prior) continue;
@@ -680,6 +712,8 @@ async function handleVacationApp(req, res, db, url) {
     const eula = await vacationAppEula(session, process.env);
     if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
+    if (selected) await publishIntakeShare(db, selected.id);
+    const published = selected ? await loadVacationAppTrips(db, session) : vacations;
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
     return sendJson(res, 200, {
@@ -693,7 +727,7 @@ async function handleVacationApp(req, res, db, url) {
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
-      vacations,
+      vacations: published,
       turns,
       itinerary,
     });
