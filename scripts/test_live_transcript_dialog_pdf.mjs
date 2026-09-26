@@ -94,6 +94,10 @@ assert.equal(goldThings.some((thing) => /kahalu|arboretum|botanical/i.test(JSON.
 const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
 assert.match(noted.find((thing) => thing.title === 'Gardens').collaboratorNotes[0], /Sunday April fifth/);
 assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, 'Sun Apr 5');
+assert.equal(noted.find((thing) => thing.title === 'Kailua-Kona house').collaboratorNotes.length, 0);
+const locked = applyCustomerNotes(goldThings, 'Say that back in a human way, and keep us on the Big Island.', { collaborator: false });
+assert.equal(locked.find((thing) => thing.title === 'Big Island').who, '');
+assert.equal(locked.find((thing) => thing.title === 'Big Island').customerWhen, '');
 assert.equal(acceptQualityRewrite('Draft stays.', 'Draft stays.').rewritten, false);
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').rewritten, true);
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').text, 'The rewrite the customer sees.');

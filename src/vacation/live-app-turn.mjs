@@ -441,9 +441,11 @@ export function intakeSpan(text) {
 }
 
 function whoIn(sentence) {
-  const match = String(sentence || '').match(/\b([A-Z][a-z]{2,})\b/);
-  if (!match || WHO_SKIP.has(match[1])) return '';
-  return match[1];
+  const named = String(sentence || '').match(/\b([A-Z][a-z]{2,})\s+wants\b/);
+  if (named && !WHO_SKIP.has(named[1])) return named[1];
+  const forWhom = String(sentence || '').match(/\bfor\s+([A-Z][a-z]{2,})\b/);
+  if (forWhom && !WHO_SKIP.has(forWhom[1])) return forWhom[1];
+  return '';
 }
 
 function thingPattern(title) {
@@ -454,7 +456,7 @@ function thingPattern(title) {
   if (key === 'dinner') return /\bdinner\b/i;
   if (key === 'swim') return /\bswim/i;
   if (key === 'town walk') return /town walk/i;
-  if (key === 'kailua-kona house') return /kailua-kona/i;
+  if (key === 'kailua-kona house') return /\bhouse\b/i;
   return null;
 }
 
@@ -525,12 +527,14 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       if ([...notes, ...collaboratorNotes, ...bucket].some((note) => sameNote(note, line))) continue;
       bucket.push(line);
     }
+    const spanThing = thing.title === 'Big Island' || thing.title === 'Kailua-Kona house';
     let customerWhen = thing.customerWhen || '';
-    if (!customerWhen) {
-      const dated = hits.map((hit) => datedMentions(hit)[0]).find(Boolean);
+    if (!customerWhen && !spanThing) {
+      const datedHit = hits.find((hit) => datedMentions(hit)[0] && !/keep us on the big island|stay on the big island/i.test(hit));
+      const dated = datedHit ? datedMentions(datedHit)[0] : null;
       if (dated) customerWhen = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
     }
-    const who = thing.who || whoIn(hits[0]) || '';
+    const who = thing.who || whoIn(hits.join(' ')) || '';
     return {
       ...thing,
       who,
