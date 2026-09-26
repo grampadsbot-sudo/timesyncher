@@ -690,9 +690,6 @@ export function rewriteReplacesDraft(draft, rewritten) {
   const next = String(rewritten || '').replace(/\s+/g, ' ').trim();
   if (!next || next === prior) return false;
   if (next.startsWith(prior)) return false;
-  const priorFirst = prior.split(/\n+/)[0];
-  const nextFirst = next.split(/\n+/)[0];
-  if (priorFirst.length > 40 && next.startsWith(priorFirst) && next.length > prior.length) return false;
   return true;
 }
 
@@ -879,14 +876,16 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   }
   const shippedFlags = hardQualityFlags(reply, customerTurn, corpus);
-  const shippedFail = !reply
-    || appTextBanned(reply)
+  const hardFail = !reply
+    || Boolean(appTextBanned(reply))
     || shippedFlags.split
-    || shippedFlags.invented.length
+    || shippedFlags.invented.length > 0
     || shippedFlags.missingPrice
     || replyLeavesDestination(reply, destination)
-    || rewriteBreaksUpsell(reply, upsell, customerTurn)
-    || ((quality.score <= 3 || quality.wantsRewrite) && quality.rewritten !== true);
+    || rewriteBreaksUpsell(reply, upsell, customerTurn);
+  const lowUnreplaced = quality.score <= 3 && quality.rewritten !== true;
+  const shippedFail = hardFail || lowUnreplaced;
+  if (!shippedFail && quality.rewritten !== true) quality.wantsRewrite = false;
   if (shippedFail) {
     return {
       reply: null,
@@ -894,7 +893,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       jev,
       model,
       quality,
-      reason: shippedFlags.split ? 'item34_ban' : (shippedFlags.invented.length ? 'invented_place' : (shippedFlags.missingPrice ? 'price_missing' : 'quality_gate')),
+      reason: shippedFlags.split ? 'item34_ban' : (shippedFlags.invented.length ? 'invented_place' : (shippedFlags.missingPrice ? 'price_missing' : `quality_gate_score_${quality.score}`)),
     };
   }
   if (model && typeof model === 'object') model.quality = quality;

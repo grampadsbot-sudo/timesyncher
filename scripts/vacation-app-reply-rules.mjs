@@ -663,7 +663,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. Dock to criterion 1 or 2 when the draft names a place, activity, or venue the customer did not name, skips a price the customer asked for, or uses split or splitting payment phrasing.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 only when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, or uses split or splitting payment phrasing.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
