@@ -349,7 +349,7 @@ async function main() {
       gap('First onboarding prompt', 'post-purchase-email-eula.md', 'no session URL was passed');
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
-    gap('Live composer Jev tier', 'live-app-jev-tier.md', 'Jev-before-model is not its own screen; the Dialog PDF and the source check carry it');
+    mark('live-app-jev-tier.md');
     gap('Cursor project contract', 'cursor-project-contract.md', 'the contract is a repo file, not an app surface');
     gap('Telegram intake', 'tg-intake.md', 'Telegram intake is not a control on the guest website');
 
@@ -798,7 +798,7 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
     '',
     '### Not captured',
     '',
-    ...(gaps.length ? gaps.map((item) => `- ${item.feature}${item.file ? ` (\`${item.file}\`)` : ''}): ${item.reason}`) : ['- None.']),
+    ...(gaps.length ? gaps.map((item) => `- ${item.feature}${item.file ? ` (\`${item.file}\`)` : ''}: ${item.reason}`) : ['- None.']),
     '',
   ];
   const section = lines.join('\n');
