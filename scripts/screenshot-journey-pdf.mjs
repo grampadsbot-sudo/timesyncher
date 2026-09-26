@@ -707,12 +707,19 @@ async function main() {
         await page.keyboard.press('Escape').catch(() => {});
       }
       if (await clickAria(page, 'Order Keepsakes')) {
-        await shot('order-keepsakes', 'Initial itinerary', 'Order Keepsakes', { file: 'order-keepsakes.md' });
+        const orderText = await bodyText(page);
+        if (/detail page/i.test(orderText)) {
+          gap('Order Keepsakes', 'order-keepsakes.md', 'Order Keepsakes did not leave the Thing detail');
+        } else {
+          await shot('order-keepsakes', 'Initial itinerary', 'Order Keepsakes', { file: 'order-keepsakes.md' });
+        }
         await page.keyboard.press('Escape').catch(() => {});
       }
       if (await clickAria(page, 'Config Options')) {
         const configText = await bodyText(page);
-        if (has(configText, 'TRIP VIEW')) {
+        if (/detail page/i.test(configText)) {
+          gap('Trip View config', 'config-options-trip-view.md', 'Config Options did not leave the Thing detail');
+        } else if (has(configText, 'TRIP VIEW')) {
           await shot('trip-view', 'Initial itinerary', 'Trip View config', { file: 'config-options-trip-view.md' });
         }
         await page.keyboard.press('Escape').catch(() => {});
