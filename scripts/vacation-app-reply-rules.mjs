@@ -70,8 +70,8 @@ export function bakeoffTierModels() {
 const JEV_MODEL_TIER_CRITERIA = [
   '1 cheapest model that can still answer this vacation-app turn adequately',
   '2 light inexpensive reasoning',
-  '3 balanced quality for a normal itinerary, richer banter, or a family collaborator welcome',
-  '4 stronger writing or judgment, including a multi-day plan or the one collab assessment after website build',
+  '3 balanced quality for a normal itinerary, richer banter, or a multi-day plan',
+  '4 stronger writing or judgment, including the one collab assessment when the customer asks about price or joining',
 ];
 
 function text(value, max = 8000) {
@@ -376,7 +376,7 @@ function decisionsPayload(context) {
     questions: {
       model_tier: {
         type: 'score',
-        instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 4 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3 or 4 when the reply needs richer banter, a multi-day plan, a family collaborator welcome, or a judgment call. Do not pin every turn to tier 1. There is no tier 5.',
+        instructions: 'Pick the model tier this vacation-app turn needs. Criterion 1 is cheapest and criterion 4 is strongest. Use 1 or 2 for a simple acknowledgment. Use 3 or 4 when the reply needs richer banter, a multi-day plan, or a judgment call. Do not pin every turn to tier 1. A family mention is not by itself a collaborator welcome. There is no tier 5.',
         criteria: JEV_MODEL_TIER_CRITERIA,
       },
       route_type: {
@@ -385,8 +385,8 @@ function decisionsPayload(context) {
         criteria: {
           itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
           notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
-          access_pricing: 'Price or access for family collaborators, editing, or media. Welcome the whole household onto the vacation, and use unlimited vacations for the whole year when the plan is annual.',
-          collab_upsell: 'The one collab assessment after the initial website build. Do not repeat it.',
+          access_pricing: 'The customer asked about price, access, or joining as collaborators. Not a day plan that only names family.',
+          collab_upsell: 'The one collab assessment, only when the customer asked to join and it has not been given. Do not use this for day advice.',
           product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
           general: 'Other vacation-app help that still follows the shared reply rules.',
         },
@@ -533,9 +533,10 @@ function grokReplyUrl(env) {
   return /^https?:\/\//i.test(host) ? host.replace(/\/+$/, '') + routePath : `http://${host}:${port}${routePath}`;
 }
 
-function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory }) {
+function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell }) {
   return {
     destination_lock: text(destination, 160) || null,
+    single_upsell: upsell === 'allow-once' ? 'allow-once' : 'forbidden',
     recent_turns: Array.isArray(memory) ? memory.slice(-12) : [],
     pipeline: rules?.pipeline || SHARED_REPLY_PIPELINE,
     rules_slug: rules?.slug || REPLY_RULES_SLUG,
@@ -562,8 +563,12 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
-function replyRulesSystem(rules, destination) {
+function replyRulesSystem(rules, destination, upsell) {
   const lock = text(destination, 160);
+  const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
+  const upsellLine = upsell === 'allow-once'
+    ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
+    : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`;
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
     'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
@@ -572,9 +577,8 @@ function replyRulesSystem(rules, destination) {
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
-    `When access or price comes up, welcome the whole family onto this vacation as collaborators and include this phrase inside that welcome: ${rules?.access_pricing_language || 'unlimited vacations for the whole year'}. Do not answer with only that phrase.`,
-    'If the customer mentions a partner, kids, family, or friends, invite that household in: they join the same trip, add notes, and help shape the days.',
-    'Give the collab assessment at most once, and only after the initial website build.',
+    upsellLine,
+    'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
     'End with one final line that starts with BEAT: and a three-to-six word label of what this turn did. Do not put BEAT anywhere else.',
@@ -593,7 +597,7 @@ function splitBeat(answer) {
   return { text: kept.join('\n').trim(), beats: beats.filter(Boolean) };
 }
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, env = process.env } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, env = process.env } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = openRouterChatModelForTier(modelTier);
   if (!jev?.jevRan || !isBakeoffModelId(responseModel)) {
@@ -609,6 +613,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     responseModel,
     destination,
     memory,
+    upsell,
     env,
   });
 }
@@ -639,7 +644,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, env }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, env }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -651,7 +656,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     };
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
-  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory });
+  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell });
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -667,7 +672,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: replyRulesSystem(rules, destination) },
+          { role: 'system', content: replyRulesSystem(rules, destination, upsell) },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),

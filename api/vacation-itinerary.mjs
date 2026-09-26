@@ -404,10 +404,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       and trip_id = ${tripId}
       and channel = 'vacation-app'
       and payload->'liveTranscript' is not null
-    order by coalesce(received_at, sent_at, created_at) asc
-    limit 40
+    order by coalesce(received_at, sent_at, created_at) desc
+    limit 120
   `;
-  const priorTurns = memoryRows.map((row) => ({
+  const priorTurns = [...memoryRows].reverse().map((row) => ({
     role: row.speaker === 'app' ? 'app' : 'customer',
     text: row.body || '',
   }));

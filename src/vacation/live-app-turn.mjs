@@ -123,6 +123,110 @@ export function replyLeavesDestination(reply, destination) {
   return OTHER_DESTINATION.test(String(reply || ''));
 }
 
+const UNLIMITED_PHRASE = 'unlimited vacations for the whole year';
+const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
+const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
+
+export function customerPullsAccess(text) {
+  const value = String(text || '');
+  if (/\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(value)) return true;
+  if (/\bcollaborat/i.test(value)) return true;
+  if (/\b(family|household|editing|full) access\b/i.test(value)) return true;
+  if (/\bjoin (?:this|the) (?:same )?(?:trip|vacation)\b/i.test(value) && /\b(family|friend|them|everyone|household)\b/i.test(value)) return true;
+  return false;
+}
+
+export function isCollabWelcome(text) {
+  return COLLAB_WELCOME.test(String(text || ''));
+}
+
+export function isFullUpsell(text) {
+  const value = String(text || '');
+  return UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value);
+}
+
+export function isFixedOpenerText(text) {
+  const value = String(text || '');
+  return value === ONBOARDING_OPENER_CHAT_ONLY
+    || value === ONBOARDING_OPENER_WITH_SITE
+    || /your website is not built yet/i.test(value)
+    || /i can update this vacation from here/i.test(value);
+}
+
+function sentenceIsUpsell(sentence) {
+  return UNLIMITED_PATTERN.test(sentence) || COLLAB_WELCOME.test(sentence);
+}
+
+export function stripUpsell(text) {
+  const paragraphs = String(text || '').split(/\n{2,}/);
+  const kept = [];
+  for (const paragraph of paragraphs) {
+    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !sentenceIsUpsell(sentence));
+    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
+    if (joined) kept.push(joined);
+  }
+  return kept.join('\n\n').trim();
+}
+
+export function ensureExactUpsellPhrase(text) {
+  const value = String(text || '').trim();
+  if (UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value)) {
+    return value.replace(UNLIMITED_PATTERN, UNLIMITED_PHRASE);
+  }
+  const welcome = `Welcome them onto this vacation as collaborators. The household plan is ${UNLIMITED_PHRASE}.`;
+  return value ? `${value}\n\n${welcome}` : welcome;
+}
+
+export function sessionHasFullUpsell(priorTurns) {
+  return (Array.isArray(priorTurns) ? priorTurns : []).some((turn) => {
+    if (turn?.role === 'customer') return false;
+    const text = String(turn?.text || '');
+    if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) return false;
+    return isFullUpsell(text);
+  });
+}
+
+export function upsellModeForTurn(customerTurn, priorTurns) {
+  if (customerPullsAccess(customerTurn) && !sessionHasFullUpsell(priorTurns)) return 'allow-once';
+  return 'forbidden';
+}
+
+export function upsellAudit(turns) {
+  const list = Array.isArray(turns) ? turns : [];
+  let full = 0;
+  const unsolicitedFull = [];
+  const softEmbeds = [];
+  const unsolicitedWelcome = [];
+  let lastCustomer = '';
+  for (const turn of list) {
+    const text = String(turn?.text || '');
+    if (turn?.role !== 'app') {
+      if (turn?.role === 'customer') lastCustomer = text;
+      continue;
+    }
+    if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) continue;
+    const pulled = customerPullsAccess(lastCustomer);
+    const phrase = UNLIMITED_PATTERN.test(text);
+    const welcome = isCollabWelcome(text);
+    const fullBlock = isFullUpsell(text);
+    if (fullBlock) {
+      full += 1;
+      if (!pulled || full > 1) unsolicitedFull.push(turn.turnIndex ?? null);
+    } else if (welcome && !pulled) {
+      unsolicitedWelcome.push(turn.turnIndex ?? null);
+    } else if (phrase && !pulled) {
+      softEmbeds.push(turn.turnIndex ?? null);
+    }
+  }
+  return {
+    full,
+    unsolicitedFull,
+    unsolicitedWelcome,
+    softEmbeds,
+    ok: unsolicitedFull.length === 0 && unsolicitedWelcome.length === 0 && softEmbeds.length === 0 && full <= 1,
+  };
+}
+
 function memoryTurns(priorTurns) {
   return (Array.isArray(priorTurns) ? priorTurns : []).slice(-12).map((turn) => ({
     role: turn.role === 'app' ? 'app' : 'customer',
@@ -140,14 +244,21 @@ function appTextBanned(text) {
   return '';
 }
 
+function applyUpsellPolicy(reply, upsell) {
+  if (upsell === 'allow-once') return ensureExactUpsellPhrase(reply);
+  return stripUpsell(reply);
+}
+
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env } = {}) {
   const rules = await loadVacationAppReplyRules(env);
-  const memory = memoryTurns(priorTurns);
+  const history = Array.isArray(priorTurns) ? priorTurns : [];
+  const memory = memoryTurns(history);
   const destination = destinationFromTexts([
     tripTitle,
-    ...memory.map((turn) => turn.text),
+    ...history.map((turn) => turn.text),
     customerTurn,
   ]);
+  const upsell = upsellModeForTurn(customerTurn, history);
   const jevStarted = Date.now();
   const jev = await jevPrecall({
     customerTurn,
@@ -180,29 +291,22 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   jev.jevBeforeModel = true;
   const genStarted = Date.now();
-  let model = await callTieredModel({
+  const modelArgs = (turnText, mode) => ({
     rules,
     jev,
-    customerTurn,
+    customerTurn: turnText,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
     destination,
     memory,
+    upsell: mode,
     env,
   });
-  let reply = model?.called && model.text ? String(model.text) : '';
+  let model = await callTieredModel(modelArgs(customerTurn, upsell));
+  let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
   if (reply && replyLeavesDestination(reply, destination)) {
-    model = await callTieredModel({
-      rules,
-      jev,
-      customerTurn: `${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`,
-      stage: 'vacation_conversation',
-      screen: 'vacation-app',
-      destination,
-      memory,
-      env,
-    });
-    reply = model?.called && model.text ? String(model.text) : '';
+    model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
     if (replyLeavesDestination(reply, destination)) {
       return {
         reply: null,
@@ -213,15 +317,19 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       };
     }
   }
+  if (upsell === 'forbidden' && (isFullUpsell(reply) || isCollabWelcome(reply) || UNLIMITED_PATTERN.test(reply))) {
+    model = await callTieredModel(modelArgs(`${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`, 'forbidden'));
+    reply = stripUpsell(model?.called && model.text ? String(model.text) : '');
+  }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
-  if (!reply || banned) {
+  if (!reply || banned || (upsell === 'forbidden' && (isFullUpsell(reply) || UNLIMITED_PATTERN.test(reply) || isCollabWelcome(reply)))) {
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: banned || model?.reason || 'live dispatcher returned no reply',
+      reason: banned || (upsell === 'forbidden' && reply ? 'unsolicited_upsell' : model?.reason || 'live dispatcher returned no reply'),
     };
   }
   return { reply, rules, jev, model, reason: null };

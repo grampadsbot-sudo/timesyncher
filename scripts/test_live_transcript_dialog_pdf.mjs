@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { destinationFromTexts, FIXED_OPENER_REASON, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, replyLeavesDestination } from '../src/vacation/live-app-turn.mjs';
+import { customerPullsAccess, destinationFromTexts, FIXED_OPENER_REASON, isFullUpsell, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, replyLeavesDestination, sessionHasFullUpsell, stripUpsell, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import {
   assertLiveTranscript,
   assessPackShape,
@@ -30,6 +30,22 @@ assert.equal(destinationFromTexts(['We are going to the Big Island.']), 'Big Isl
 assert.equal(replyLeavesDestination('Friday dinner in Tulum', 'Big Island, Hawaii'), true);
 assert.equal(replyLeavesDestination('Friday dinner on the Big Island', 'Big Island, Hawaii'), false);
 assert.equal(replyLeavesDestination('Cartagena breakfast', 'Big Island, Hawaii'), true);
+assert.equal(customerPullsAccess('Walk me through Thursday with Kimberly.'), false);
+assert.equal(customerPullsAccess('How much if they join as collaborators?'), true);
+assert.equal(upsellModeForTurn('Friday dinner on the Big Island.', []), 'forbidden');
+assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', []), 'allow-once');
+const dayWithCloser = 'Thursday is a town walk in Kailua-Kona. Welcome the whole family as collaborators with unlimited vacations for the whole year.';
+assert.equal(stripUpsell(dayWithCloser), 'Thursday is a town walk in Kailua-Kona.');
+assert.equal(isFullUpsell(dayWithCloser), true);
+assert.equal(sessionHasFullUpsell([{ role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY }]), false);
+assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
+assert.deepEqual(upsellAudit([
+  { turnIndex: 1, role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY, replyProducer: LIVE_OPENER_PRODUCER },
+  { turnIndex: 2, role: 'customer', text: 'How much if they join as collaborators?' },
+  { turnIndex: 3, role: 'app', text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' },
+  { turnIndex: 4, role: 'customer', text: 'Read the week back on the Big Island.' },
+  { turnIndex: 5, role: 'app', text: 'Monday starts in Kailua-Kona.' },
+]).unsolicitedFull, []);
 
 const rules = await loadVacationAppReplyRules({});
 assert.equal(rules.ok, true);
