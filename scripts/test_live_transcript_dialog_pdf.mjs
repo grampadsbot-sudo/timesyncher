@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { customerPullsAccess, destinationFromTexts, FIXED_OPENER_REASON, isFullUpsell, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { customerPullsAccess, destinationFromTexts, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, inventedGardenHit, isFullUpsell, isLongIntake, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { parseJevQuality } from './vacation-app-reply-rules.mjs';
 import {
   assertLiveTranscript,
   assessPackShape,
@@ -53,6 +54,32 @@ assert.equal(item34BanHit('Stop splitting payment talk.'), true);
 assert.equal(item34BanHit('There is no extra cost for how you\u2019re splitting it up.'), true);
 assert.equal(item34BanHit('without requiring you to split up'), false);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
+const longIntake = `${'okay voice note dumping. Big Island Hawaii, gardens, swim, groceries, dinner, family, April. '.repeat(8)}Kimberly wants gardens.`;
+assert.equal(isLongIntake(longIntake), true);
+assert.equal(isLongIntake('Walk me through Thursday with Kimberly.'), false);
+assert.equal(postIntakeUpsellTurn(longIntake, []), true);
+assert.equal(upsellModeForTurn(longIntake, []), 'allow-once');
+assert.equal(upsellModeForTurn('How much if they join as collaborators?', [
+  { role: 'customer', text: longIntake },
+  { role: 'app', text: 'I am building the itinerary from that dump. Welcome them as collaborators. The household plan is unlimited vacations for the whole year.' },
+]), 'forbidden');
+const intakeReply = ensurePostIntakeBeats('Sunday is a garden morning.');
+assert.match(intakeReply, /building the itinerary/);
+assert.match(intakeReply, /collaborat/);
+assert.match(intakeReply, /unlimited vacations for the whole year/);
+assert.equal(inventedGardenHit('Visit the Kahaluu garden if it rains.', 'Kimberly wants gardens.'), true);
+assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Kimberly wants gardens.'), false);
+const intakeThings = thingsFromIntake('Big Island Hawaii. Kimberly wants gardens. Groceries the same day. Friday is the dinner. Tyler wants a swim. A house in Kailua-Kona.');
+assert.deepEqual(intakeThings.map((thing) => thing.title), ['Big Island', 'Gardens', 'Groceries', 'Dinner', 'Swim', 'Kailua-Kona house']);
+assert.equal(intakeThings.some((thing) => /kahalu|arboretum/i.test(thing.title)), false);
+assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten)');
+assert.equal(formatQualityLine({ judged: false, score: 4, comment: 'no' }), '');
+assert.equal(parseJevQuality('{"score":5,"comment":"Kept.","rewrite":""}').judged, true);
+assert.equal(parseJevQuality('no json').judged, false);
+assert.deepEqual(upsellAudit([
+  { turnIndex: 1, role: 'customer', text: longIntake },
+  { turnIndex: 2, role: 'app', text: intakeReply },
+]).unsolicitedFull, []);
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY, replyProducer: LIVE_OPENER_PRODUCER },
   { turnIndex: 2, role: 'customer', text: 'How much if they join as collaborators?' },
@@ -105,6 +132,7 @@ function liveDoc(overrides = {}) {
         jevLatencyMs: 400,
         genLatencyMs: 2400,
         jevBeforeModel: true,
+        quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: false },
       },
     ],
     ...overrides,
@@ -166,6 +194,8 @@ assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
 assert.match(text, /timing: gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 jev=400ms max_tokens=900/);
+assert.match(text, /quality: 4 - Clear day shape/);
+assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
 assert.match(text, /v7 overall/);
 assert.match(text, /Owner: Craig \(Owner\)/);
@@ -307,7 +337,7 @@ const poison = {
     meta: 'n=37',
     app: true,
     text: 'Monday swim stays on the Big Island.',
-    quality: 'quality: not judged',
+    quality: 'quality: 4 — Clear day shape.',
     timing: 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 zev=222ms max_tokens=900',
   }],
 };
@@ -336,5 +366,18 @@ const bannedPack = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog
 });
 assert.notEqual(bannedPack.status, 0);
 assert.match(bannedPack.stderr?.toString() || '', /split-payment jargon/);
+const unjudged = {
+  ...poison,
+  turns: [{ ...poison.turns[0], quality: 'quality: not judged', timing: 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 jev=222ms max_tokens=900' }],
+};
+const unjudgedPack = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
+  input: JSON.stringify(unjudged),
+  maxBuffer: 8 * 1024 * 1024,
+});
+assert.notEqual(unjudgedPack.status, 0);
+assert.match(unjudgedPack.stderr?.toString() || '', /not judged/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, quality: null } : turn)),
+}), /not judged/);
 
 console.log('live transcript dialog pdf passed');

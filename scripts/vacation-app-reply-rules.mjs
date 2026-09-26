@@ -563,18 +563,21 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
-function replyRulesSystem(rules, destination, upsell) {
+function replyRulesSystem(rules, destination, upsell, postIntake) {
   const lock = text(destination, 160);
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
-  const upsellLine = upsell === 'allow-once'
-    ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
-    : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`;
+  const upsellLine = postIntake
+    ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain that family and friends can join as collaborators, add notes, and help shape the days. Include this exact phrase once: ${phrase}. This is the one full welcome. Do not wait for a later price question.`
+    : (upsell === 'allow-once'
+      ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
+      : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`);
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
     'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to Tulum, Cartagena, or any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
+    'Garden wording: if the customer says gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, a botanical garden, or a weather excuse that moves the garden.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
     'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", or "splitting it up". If one seat is already covered and another person has their own seat, say that. Do not frame seats, cost, or who pays as a split.',
@@ -598,7 +601,79 @@ function splitBeat(answer) {
   return { text: kept.join('\n').trim(), beats: beats.filter(Boolean) };
 }
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, env = process.env } = {}) {
+export function parseJevQuality(raw) {
+  const source = String(raw || '');
+  const start = source.indexOf('{');
+  const end = source.lastIndexOf('}');
+  if (start < 0 || end <= start) return { judged: false, reason: 'quality_unparsed' };
+  let body;
+  try {
+    body = JSON.parse(source.slice(start, end + 1));
+  } catch {
+    return { judged: false, reason: 'quality_unparsed' };
+  }
+  const score = Number(body.score);
+  if (!Number.isInteger(score) || score < 1 || score > 5) return { judged: false, reason: 'quality_score_missing' };
+  const comment = text(body.comment, 400);
+  if (!comment) return { judged: false, reason: 'quality_comment_missing' };
+  const rewrite = text(body.rewrite, 3500);
+  const rewritten = Boolean(rewrite) && !/^keep$/i.test(rewrite);
+  return {
+    judged: true,
+    score,
+    comment,
+    rewrite: rewritten ? rewrite : '',
+    rewritten,
+    model: JEV_DECISIONS_MODEL,
+  };
+}
+
+export async function jevQualityRewrite({ customerTurn, draft, env = process.env } = {}) {
+  const key = appOpenRouterKey(env);
+  if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
+  assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'jev quality', { allowTieredOpenRouterChat: true });
+  try {
+    const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${key}`,
+        'content-type': 'application/json',
+        accept: 'application/json',
+        'HTTP-Referer': 'https://timesyncher.com',
+        'X-Title': 'TimeSyncher Vacation App Jev Quality',
+      },
+      body: JSON.stringify({
+        model: JEV_DECISIONS_MODEL,
+        temperature: 0,
+        max_tokens: 700,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Jev rating one vacation-app reply. Return only JSON {"score":1,"comment":"...","rewrite":""}. score is an integer 1 through 5. comment is one sentence about this reply. rewrite is empty when the reply should stand. When the reply should change, rewrite is the full customer-facing replacement. Never say splitting payments, split payment, or split-payer. If the customer said gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, or a weather excuse for a garden.',
+          },
+          {
+            role: 'user',
+            content: JSON.stringify({
+              customer_turn: text(customerTurn, 6000),
+              draft: text(draft, 3500),
+            }),
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
+    const answer = chatReplyText(body.choices?.[0]?.message?.content);
+    const parsed = parseJevQuality(answer);
+    parsed.model = JEV_DECISIONS_MODEL;
+    return parsed;
+  } catch (error) {
+    return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
+  }
+}
+
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = openRouterChatModelForTier(modelTier);
   if (!jev?.jevRan || !isBakeoffModelId(responseModel)) {
@@ -615,6 +690,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     destination,
     memory,
     upsell,
+    postIntake,
     env,
   });
 }
@@ -645,7 +721,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, env }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -673,7 +749,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: replyRulesSystem(rules, destination, upsell) },
+          { role: 'system', content: replyRulesSystem(rules, destination, upsell, postIntake) },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),

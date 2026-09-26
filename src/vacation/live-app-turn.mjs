@@ -2,6 +2,7 @@ import {
   DIALOG_TEST_FINGERPRINT,
   callTieredModel,
   jevPrecall,
+  jevQualityRewrite,
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
@@ -92,6 +93,15 @@ export function liveTurnRecord({
     if (Array.isArray(model?.beats) && model.beats.length) {
       record.beats = model.beats.map((beat) => String(beat || '').trim()).filter(Boolean);
     }
+    if (model?.quality?.judged === true) {
+      record.quality = {
+        judged: true,
+        score: Number(model.quality.score),
+        comment: String(model.quality.comment || ''),
+        rewritten: model.quality.rewritten === true,
+        model: model.quality.model || null,
+      };
+    }
     record.model = model
       ? {
         called: Boolean(model.called),
@@ -129,6 +139,20 @@ export function replyLeavesDestination(reply, destination) {
 const UNLIMITED_PHRASE = 'unlimited vacations for the whole year';
 const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
 const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
+
+export function isLongIntake(text) {
+  const value = String(text || '').trim();
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length < 70) return false;
+  const place = /big island|hawai|kailua-kona|voice note|ramble/i.test(value);
+  const shape = /garden|swim|grocer|dinner|family|april|coming/i.test(value);
+  return place && shape;
+}
+
+export function postIntakeUpsellTurn(customerTurn, priorTurns) {
+  if (!isLongIntake(customerTurn)) return false;
+  return !(Array.isArray(priorTurns) ? priorTurns : []).some((turn) => turn?.role === 'customer' && isLongIntake(turn.text));
+}
 
 export function customerPullsAccess(text) {
   const value = String(text || '');
@@ -188,6 +212,17 @@ export function stripUpsell(text) {
   return kept.join('\n\n').trim();
 }
 
+const ITINERARY_ACK = 'I am building the itinerary from that dump.';
+const COLLAB_OPTIONS = 'Family and friends can join this same vacation as collaborators. They add notes and help shape the days.';
+
+export function ensurePostIntakeBeats(text) {
+  let value = ensureExactUpsellPhrase(text);
+  if (!/building the itinerary/i.test(value)) value = `${ITINERARY_ACK}\n\n${value}`.trim();
+  if (!/collaborat/i.test(value)) value = `${value}\n\n${COLLAB_OPTIONS}`.trim();
+  if (!UNLIMITED_PATTERN.test(value)) value = ensureExactUpsellPhrase(value);
+  return value;
+}
+
 export function ensureExactUpsellPhrase(text) {
   const value = String(text || '').trim();
   if (UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value)) {
@@ -207,7 +242,8 @@ export function sessionHasFullUpsell(priorTurns) {
 }
 
 export function upsellModeForTurn(customerTurn, priorTurns) {
-  if (customerPullsAccess(customerTurn) && !sessionHasFullUpsell(priorTurns)) return 'allow-once';
+  if (sessionHasFullUpsell(priorTurns)) return 'forbidden';
+  if (customerPullsAccess(customerTurn) || postIntakeUpsellTurn(customerTurn, priorTurns)) return 'allow-once';
   return 'forbidden';
 }
 
@@ -218,14 +254,19 @@ export function upsellAudit(turns) {
   const softEmbeds = [];
   const unsolicitedWelcome = [];
   let lastCustomer = '';
+  const priorCustomers = [];
   for (const turn of list) {
     const text = String(turn?.text || '');
     if (turn?.role !== 'app') {
-      if (turn?.role === 'customer') lastCustomer = text;
+      if (turn?.role === 'customer') {
+        lastCustomer = text;
+        priorCustomers.push(text);
+      }
       continue;
     }
     if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) continue;
-    const pulled = customerPullsAccess(lastCustomer);
+    const pulled = customerPullsAccess(lastCustomer)
+      || postIntakeUpsellTurn(lastCustomer, priorCustomers.slice(0, -1).map((prior) => ({ role: 'customer', text: prior })));
     const phrase = UNLIMITED_PATTERN.test(text);
     const welcome = isCollabWelcome(text);
     const fullBlock = isFullUpsell(text);
@@ -264,7 +305,61 @@ function appTextBanned(text) {
   return '';
 }
 
-function applyUpsellPolicy(reply, upsell) {
+const INVENTED_GARDEN = /kahalu|pu'?a mau|arboretum|botanical garden/i;
+
+export function inventedGardenHit(reply, corpus) {
+  const text = String(reply || '');
+  const known = String(corpus || '');
+  if (/kahalu/i.test(text) && !/kahalu/i.test(known)) return true;
+  if (/pu'?a mau/i.test(text) && !/pu'?a mau/i.test(known)) return true;
+  if (/arboretum|botanical garden/i.test(text) && !/arboretum|botanical garden/i.test(known)) return true;
+  if (/garden/i.test(known) && /garden[\s\S]{0,80}(?:if it rains|because of (?:the )?weather)|(?:if it rains|because of (?:the )?weather)[\s\S]{0,80}garden/i.test(text)
+    && !/(?:if it rains|because of (?:the )?weather)[\s\S]{0,40}garden/i.test(known)) return true;
+  return false;
+}
+
+export function stripInventedGarden(reply, corpus) {
+  const paragraphs = String(reply || '').split(/\n{2,}/);
+  const kept = [];
+  for (const paragraph of paragraphs) {
+    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !inventedGardenHit(sentence, corpus));
+    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
+    if (joined && !inventedGardenHit(joined, corpus)) kept.push(joined);
+  }
+  return kept.join('\n\n').trim();
+}
+
+export function thingsFromIntake(text) {
+  const value = String(text || '');
+  const sentence = (pattern) => value.split(/(?<=[.!?])\s+/).find((part) => pattern.test(part)) || '';
+  const things = [];
+  const add = (title, category, pattern) => {
+    if (!pattern.test(value) || INVENTED_GARDEN.test(title)) return;
+    const description = sentence(pattern).replace(/\s+/g, ' ').trim() || title;
+    if (INVENTED_GARDEN.test(description) && !INVENTED_GARDEN.test(value)) return;
+    things.push({ title, category, description });
+  };
+  if (/big island/i.test(value)) add('Big Island', 'activity', /big island/i);
+  if (/garden/i.test(value)) add('Gardens', 'activity', /garden/i);
+  if (/grocer/i.test(value)) add('Groceries', 'activity', /grocer/i);
+  if (/\bdinner\b/i.test(value)) add('Dinner', 'restaurant', /\bdinner\b/i);
+  if (/\bswim\b/i.test(value)) add('Swim', 'activity', /\bswim\b/i);
+  if (/town walk/i.test(value)) add('Town walk', 'activity', /town walk/i);
+  if (/house/i.test(value) && /kailua-kona/i.test(value)) add('Kailua-Kona house', 'hotel', /house/i);
+  return things;
+}
+
+export function formatQualityLine(quality) {
+  if (!quality || quality.judged !== true) return '';
+  const score = Number(quality.score);
+  if (!Number.isInteger(score) || score < 1 || score > 5) return '';
+  const comment = String(quality.comment || '').replace(/\s+/g, ' ').trim();
+  const rewritten = quality.rewritten === true ? ' (rewritten)' : '';
+  return `quality: ${score} — ${comment || 'Jev rated this reply'}${rewritten}`;
+}
+
+function applyUpsellPolicy(reply, upsell, postIntake) {
+  if (upsell === 'allow-once' && postIntake) return ensurePostIntakeBeats(reply);
   if (upsell === 'allow-once') return ensureExactUpsellPhrase(reply);
   return stripUpsell(reply);
 }
@@ -278,7 +373,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     ...history.map((turn) => turn.text),
     customerTurn,
   ]);
+  const postIntake = postIntakeUpsellTurn(customerTurn, history);
   const upsell = upsellModeForTurn(customerTurn, history);
+  const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const jevStarted = Date.now();
   const jev = await jevPrecall({
     customerTurn,
@@ -320,17 +417,18 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     destination,
     memory,
     upsell: mode,
+    postIntake,
     env,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
-  let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+  let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
   for (let attempt = 0; attempt < 2 && !String(reply || '').trim(); attempt += 1) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
   }
   if (reply && replyLeavesDestination(reply, destination)) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
     if (replyLeavesDestination(reply, destination)) {
       return {
         reply: null,
@@ -347,24 +445,55 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   if (item34BanHit(reply)) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nRewrite the reply. Do not describe seats as a split. Kimberly's seat is already covered. Tyler and Lauren each have their own seat. Do not use the word split. Keep the vacation answer.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
   }
   if (item34BanHit(reply)) {
     reply = stripItem34Ban(reply);
-    if (upsell === 'allow-once') reply = ensureExactUpsellPhrase(reply);
+    reply = applyUpsellPolicy(reply, upsell, postIntake);
   }
+  if (inventedGardenHit(reply, corpus)) {
+    model = await callTieredModel(modelArgs(`${customerTurn}\n\nRewrite. Use the customer's word gardens. Do not name Kahaluu, Pua Mau, an arboretum, or a botanical garden. Do not move the garden because of weather.`, upsell));
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake);
+  }
+  if (inventedGardenHit(reply, corpus)) reply = applyUpsellPolicy(stripInventedGarden(reply, corpus), upsell, postIntake);
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
-  if (!reply || banned || item34BanHit(reply) || (upsell === 'forbidden' && (isFullUpsell(reply) || UNLIMITED_PATTERN.test(reply) || isCollabWelcome(reply)))) {
+  if (!reply || banned || item34BanHit(reply) || inventedGardenHit(reply, corpus) || (upsell === 'forbidden' && (isFullUpsell(reply) || UNLIMITED_PATTERN.test(reply) || isCollabWelcome(reply)))) {
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: item34BanHit(reply) ? 'item34_ban' : (banned || (upsell === 'forbidden' && reply ? 'unsolicited_upsell' : model?.reason || 'live dispatcher returned no reply')),
+      reason: item34BanHit(reply) ? 'item34_ban' : (inventedGardenHit(reply, corpus) ? 'invented_garden' : (banned || (upsell === 'forbidden' && reply ? 'unsolicited_upsell' : model?.reason || 'live dispatcher returned no reply'))),
     };
   }
-  return { reply, rules, jev, model, reason: null };
+  let quality = await jevQualityRewrite({ customerTurn, draft: reply, env });
+  if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: reply, env });
+  if (!quality?.judged) {
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: quality?.reason || 'quality_unjudged',
+    };
+  }
+  if (quality.rewrite) {
+    let rewritten = applyUpsellPolicy(quality.rewrite, upsell, postIntake);
+    if (item34BanHit(rewritten)) rewritten = applyUpsellPolicy(stripItem34Ban(rewritten), upsell, postIntake);
+    if (inventedGardenHit(rewritten, corpus)) rewritten = applyUpsellPolicy(stripInventedGarden(rewritten, corpus), upsell, postIntake);
+    const rewriteBanned = appTextBanned(rewritten);
+    const rewriteUpsell = upsell === 'forbidden' && (isFullUpsell(rewritten) || UNLIMITED_PATTERN.test(rewritten) || isCollabWelcome(rewritten));
+    if (rewritten && !rewriteBanned && !item34BanHit(rewritten) && !inventedGardenHit(rewritten, corpus) && !replyLeavesDestination(rewritten, destination) && !rewriteUpsell) {
+      reply = rewritten;
+      quality.rewritten = true;
+    } else {
+      quality.rewritten = false;
+      quality.rewrite = '';
+    }
+  }
+  if (model && typeof model === 'object') model.quality = quality;
+  return { reply, rules, jev, model, quality, reason: null };
 }
 
 function payloadObject(payload) {
@@ -413,6 +542,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       maxTokens: Number.isFinite(Number(live.maxTokens ?? live.model?.maxTokens)) ? Number(live.maxTokens ?? live.model?.maxTokens) : null,
       jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
       beats: Array.isArray(live.beats) ? live.beats : null,
+      quality: live.quality && typeof live.quality === 'object' ? live.quality : null,
       model: live.model || null,
       rules: live.rules || null,
     };

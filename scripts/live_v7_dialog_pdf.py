@@ -100,6 +100,18 @@ ITEM34_BAN = re.compile(
 )
 
 
+def assert_quality(pack):
+    blob = json.dumps(pack)
+    if re.search(r"not judged", blob, re.I):
+        raise SystemExit("refused: quality line is not judged")
+    for turn in pack.get("turns") or []:
+        quality = str(turn.get("quality") or "")
+        if not quality:
+            continue
+        if not re.match(r"quality:\s*[1-5]\b", quality):
+            raise SystemExit("refused: quality line missing a Jev score")
+
+
 def assert_item34(pack):
     blob = "\n".join(str(turn.get("text") or "") for turn in (pack.get("turns") or []))
     if ITEM34_BAN.search(blob):
@@ -141,6 +153,7 @@ def tbl(rows, col_widths):
 
 
 def build(pack):
+    assert_quality(pack)
     assert_item34(pack)
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Title"], fontSize=16, spaceAfter=8, alignment=TA_CENTER))

@@ -31,7 +31,9 @@ import {
   LIVE_OPENER_PRODUCER,
   liveTurnRecord,
   onboardingOpenerText,
+  postIntakeUpsellTurn,
   produceLiveAppReply,
+  thingsFromIntake,
 } from '../src/vacation/live-app-turn.mjs';
 import {
   openCollaboratorAppSeats,
@@ -502,14 +504,59 @@ async function queueVacationAppTurn(db, session, trip, body) {
       now(), ${exchangeLatency}
     )
   `;
+  const itinerary = postIntakeUpsellTurn(requestText, priorTurns)
+    ? await ensureIntakeItinerary(db, tripId, requestText)
+    : await loadTripThings(db, tripId);
   return {
     ...base,
     ok: true,
     status: 'replied',
     reply: produced.reply,
     appTurnIndex: appLive.turnIndex,
+    itinerary,
     error: null,
   };
+}
+
+async function loadTripThings(db, tripId) {
+  if (!tripId) return [];
+  const rows = await db`
+    select id, category, title, description
+    from trip_things
+    where trip_id = ${tripId}
+    order by created_at asc
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    description: row.description || '',
+  }));
+}
+
+async function ensureIntakeItinerary(db, tripId, text) {
+  const planned = thingsFromIntake(text);
+  if (!planned.length) return loadTripThings(db, tripId);
+  const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
+  if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
+  if (/big island|hawai/i.test(text)) {
+    await db`
+      update trips
+      set destination = case when coalesce(destination, '') = '' then 'Big Island, Hawaii' else destination end,
+          updated_at = now()
+      where id = ${tripId}
+    `;
+  }
+  for (const thing of planned) {
+    await db`
+      insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
+      values (
+        ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
+        'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, '{"source":"long-intake"}'::jsonb
+      )
+    `;
+  }
+  return loadTripThings(db, tripId);
 }
 
 async function vacationAppEula(session, env = process.env) {
@@ -547,6 +594,7 @@ async function handleVacationApp(req, res, db, url) {
     const eula = await vacationAppEula(session, process.env);
     if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
+    const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
     return sendJson(res, 200, {
       ok: true,
@@ -561,6 +609,7 @@ async function handleVacationApp(req, res, db, url) {
       eula,
       vacations,
       turns,
+      itinerary,
     });
   }
 
