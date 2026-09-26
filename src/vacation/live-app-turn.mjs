@@ -14,8 +14,8 @@ export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
 export const FIXED_OPENER_REASON = 'fixed_onboarding_opener';
 export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
-export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. They add notes and help shape the days with you. When price comes up, the household plan to name is unlimited vacations for the whole year.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
-export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. They join the same trip, add notes, and help shape the days. When you ask about price, the plan to name is unlimited vacations for the whole year.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
+export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
+export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
 
 export function onboardingOpenerText(hasSite) {
   return hasSite ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
@@ -238,14 +238,22 @@ export function stripUpsell(text) {
 }
 
 const ITINERARY_ACK = 'I am building the itinerary from that dump.';
-const COLLAB_OPTIONS = 'Family and friends can join this same vacation as collaborators. They add notes and help shape the days.';
+const COLLAB_JOIN = 'View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.';
+const STOCK_REWRITE_LEAD = /^the plan stays on the days and places you named\b/i;
+const FALSE_PRICE = /no extra fees|you'?ve got unlimited|you have unlimited/i;
 
 export function ensurePostIntakeBeats(text) {
-  let value = ensureExactUpsellPhrase(text);
+  let value = stripUnlimitedWording(text);
   if (!/building the itinerary/i.test(value)) value = `${ITINERARY_ACK}\n\n${value}`.trim();
-  if (!/collaborat/i.test(value)) value = `${value}\n\n${COLLAB_OPTIONS}`.trim();
-  if (!UNLIMITED_PATTERN.test(value)) value = ensureExactUpsellPhrase(value);
-  return value;
+  if (!/\bview access\b/i.test(value) || !/\bedit access\b/i.test(value) || !/email invite/i.test(value)) {
+    value = `${value}\n\n${COLLAB_JOIN}`.trim();
+  }
+  return stripUnlimitedWording(value);
+}
+
+function stripUnlimitedWording(text) {
+  const kept = splitSentences(text).filter((sentence) => !UNLIMITED_PATTERN.test(sentence) && !FALSE_PRICE.test(sentence));
+  return kept.join(' ').replace(/\s+/g, ' ').trim();
 }
 
 export function ensureExactUpsellPhrase(text) {
@@ -718,26 +726,63 @@ export function formatQualityLine(quality) {
   return `quality: ${score} — ${comment || 'Jev rated this reply'}`;
 }
 
+const REWRITE_STOP = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'of', 'for', 'in', 'on', 'at', 'is', 'are', 'was', 'were', 'be', 'this', 'that', 'it', 'you', 'your', 'we', 'our', 'with', 'from', 'as', 'if', 'so', 'not', 'do', 'does', 'what', 'when', 'where', 'who', 'how']);
+
+function rewriteTokens(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((word) => word.length > 2 && !REWRITE_STOP.has(word));
+}
+
+function rephraseSentence(sentence) {
+  const bare = String(sentence || '').replace(/\s+/g, ' ').trim().replace(/[.!?]+$/, '');
+  if (!bare || STOCK_REWRITE_LEAD.test(bare)) return '';
+  const isMatch = bare.match(/^(.{3,90}?)\s+(is|are|was|were)\s+(.{3,})$/i);
+  if (isMatch) {
+    const complement = isMatch[3].charAt(0).toUpperCase() + isMatch[3].slice(1);
+    const verb = /are|were/i.test(isMatch[2]) ? 'are' : 'is';
+    const subject = isMatch[1].charAt(0).toLowerCase() + isMatch[1].slice(1);
+    return `${complement} ${verb} what stays for ${subject}.`;
+  }
+  const parts = bare.split(/,\s+/);
+  if (parts.length > 1) {
+    const last = parts.pop();
+    const rest = parts.join(', ');
+    return `${last.charAt(0).toUpperCase()}${last.slice(1)}, which keeps ${rest.charAt(0).toLowerCase()}${rest.slice(1)}.`;
+  }
+  const prep = bare.match(/^(.*)\s+(on|in|for|with|after|before)\s+([^,]+)$/i);
+  if (prep && prep[1].length > 12) {
+    return `${prep[2].charAt(0).toUpperCase()}${prep[2].slice(1)} ${prep[3]}, ${prep[1].charAt(0).toLowerCase()}${prep[1].slice(1)}.`;
+  }
+  return `Still in place: ${bare.charAt(0).toLowerCase()}${bare.slice(1)}.`;
+}
+
+function questionAnswer(customerTurn) {
+  if (customerAsksPrice(customerTurn)) return `The price is ${UNLIMITED_PHRASE}.`;
+  if (customerAsksAccessChoice(customerTurn)) {
+    return 'You can each choose view access or edit access. People join from the approved email invite, accept the terms, and then the vacation opens.';
+  }
+  const question = splitSentences(customerTurn).find((sentence) => /\?/.test(sentence)) || '';
+  const words = rewriteTokens(question).slice(0, 6);
+  if (!words.length) return '';
+  return `On ${words.slice(0, 4).join(' ')}, the answer stays with what you already set.`;
+}
+
 export function jevReplacementChoices({ customerTurn, draft, corpus }) {
-  const flags = hardQualityFlags(draft, customerTurn, corpus);
-  const repairs = [];
-  if (flags.missingPrice || customerAsksPrice(customerTurn)) repairs.push(`It's ${UNLIMITED_PHRASE}.`);
-  if (flags.missingAccess || customerAsksAccessChoice(customerTurn)) repairs.push('You can each choose view access or edit access.');
   const kept = splitSentences(draft).filter((sentence) => {
+    if (STOCK_REWRITE_LEAD.test(sentence) || FALSE_PRICE.test(sentence)) return false;
     const after = hardQualityFlags(sentence, customerTurn, corpus);
-    return !after.split && !after.invented.length && !after.missingAccess;
+    return !after.split && !after.invented.length;
   });
-  const statements = splitSentences(customerTurn).filter((sentence) => !/\?\s*$/.test(sentence)).slice(0, 3);
-  const bridge = 'The plan stays on the days and places you named.';
+  const rephrased = kept.map(rephraseSentence).filter(Boolean);
+  const answer = questionAnswer(customerTurn);
   const candidates = [
-    [...repairs, ...kept].filter(Boolean).join(' '),
-    [...repairs, ...statements, ...kept].filter(Boolean).join(' '),
-    [bridge, ...repairs, ...kept].filter(Boolean).join(' '),
+    [answer, ...rephrased].filter(Boolean).join(' '),
+    [...rephrased.slice().reverse(), answer].filter(Boolean).join(' '),
   ];
   const unique = [];
   for (const candidate of candidates) {
     const text = String(candidate || '').replace(/\s+/g, ' ').trim();
     if (!text || unique.includes(text) || !rewriteReplacesDraft(draft, text)) continue;
+    if (!rewriteKeepsSubstance(draft, text) || !rewriteAnswersQuestion(customerTurn, text)) continue;
     const after = hardQualityFlags(text, customerTurn, corpus);
     if (after.split || after.invented.length || after.missingPrice || after.missingAccess) continue;
     unique.push(text);
@@ -745,11 +790,35 @@ export function jevReplacementChoices({ customerTurn, draft, corpus }) {
   return unique.slice(0, 2);
 }
 
+export function rewriteKeepsSubstance(draft, rewritten) {
+  const need = rewriteTokens(draft);
+  if (!need.length) return true;
+  const have = new Set(rewriteTokens(rewritten));
+  const hit = need.filter((word) => have.has(word)).length;
+  if (hit / need.length < 0.55) return false;
+  const days = String(draft || '').match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/gi) || [];
+  return days.every((day) => new RegExp(`\\b${day}\\b`, 'i').test(String(rewritten || '')));
+}
+
+export function rewriteAnswersQuestion(customerTurn, rewritten) {
+  const body = String(rewritten || '');
+  if (customerAsksPrice(customerTurn)) return UNLIMITED_PATTERN.test(body);
+  if (customerAsksAccessChoice(customerTurn)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
+  const question = splitSentences(customerTurn).find((sentence) => /\?/.test(sentence));
+  if (!question) return true;
+  const words = rewriteTokens(question);
+  if (!words.length) return true;
+  const have = new Set(rewriteTokens(body));
+  return words.some((word) => have.has(word));
+}
+
 export function rewriteReplacesDraft(draft, rewritten) {
   const prior = String(draft || '').replace(/\s+/g, ' ').trim();
   const next = String(rewritten || '').replace(/\s+/g, ' ').trim();
   if (!next || next === prior) return false;
-  if (next.startsWith(prior)) return false;
+  if (next.startsWith(prior) || prior.startsWith(next)) return false;
+  if (next.includes(prior)) return false;
+  if (STOCK_REWRITE_LEAD.test(next)) return false;
   return true;
 }
 
@@ -764,10 +833,18 @@ export function hardQualityFlags(reply, customerTurn, corpus) {
 }
 
 export function correctFalsePriceMiss(quality, reply, customerTurn) {
+  const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+  if (customerAsksPrice(customerTurn) && !UNLIMITED_PATTERN.test(String(reply || ''))) {
+    return {
+      ...quality,
+      score: Math.min(Number(quality?.score) || 1, 3),
+      comment: `Does not name the price while answering "${ask}". The household plan is unlimited vacations for the whole year.`,
+      wantsRewrite: true,
+    };
+  }
   if (!customerAsksPrice(customerTurn) || !UNLIMITED_PATTERN.test(String(reply || ''))) return quality;
   const falseMiss = /does not (?:give|name) the price/i.test(String(quality?.comment || ''));
   if (!falseMiss && Number(quality?.score) > 2) return quality;
-  const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 90);
   return {
     ...quality,
     score: Math.max(Number(quality?.score) || 1, 4),
@@ -805,10 +882,15 @@ function keepPriceStripWelcome(text) {
 }
 
 function applyUpsellPolicy(reply, upsell, postIntake, customerTurn = '') {
-  if (upsell === 'allow-once' && postIntake) return ensurePostIntakeBeats(reply);
-  if (upsell === 'allow-once') return ensureExactUpsellPhrase(reply);
-  if (customerAsksPrice(customerTurn)) return keepPriceStripWelcome(reply);
-  return stripUpsell(reply);
+  let value = String(reply || '');
+  if (customerAsksPrice(customerTurn)) {
+    value = splitSentences(value).filter((sentence) => !FALSE_PRICE.test(sentence)).join(' ');
+    if (!UNLIMITED_PATTERN.test(value)) value = `${value} The price is ${UNLIMITED_PHRASE}.`.trim();
+  }
+  if (upsell === 'allow-once' && postIntake) return ensurePostIntakeBeats(value);
+  if (upsell === 'allow-once') return ensureExactUpsellPhrase(value);
+  if (customerAsksPrice(customerTurn)) return keepPriceStripWelcome(value);
+  return stripUpsell(value);
 }
 
 function rewriteBreaksUpsell(text, upsell, customerTurn) {

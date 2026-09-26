@@ -81,8 +81,11 @@ assert.equal(upsellModeForTurn('How much if they join as collaborators?', [
 ]), 'forbidden');
 const intakeReply = ensurePostIntakeBeats('Sunday is a garden morning.');
 assert.match(intakeReply, /building the itinerary/);
-assert.match(intakeReply, /collaborat/);
-assert.match(intakeReply, /unlimited vacations for the whole year/);
+assert.match(intakeReply, /view access/i);
+assert.match(intakeReply, /edit access/i);
+assert.match(intakeReply, /email invite/i);
+assert.doesNotMatch(intakeReply, /unlimited vacations for the whole year/);
+assert.doesNotMatch(intakeReply, /you've got unlimited/);
 assert.equal(inventedGardenHit('Visit the Kahaluu garden if it rains.', 'Kimberly wants gardens.'), true);
 assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Kimberly wants gardens.'), false);
 const intakeThings = thingsFromIntake('Big Island Hawaii. Kimberly wants gardens. Groceries the same day. Friday is the dinner. Tyler wants a swim. A house in Kailua-Kona.');
@@ -132,6 +135,7 @@ assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.
 const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
 assert.equal(customerAsksPrice(priceAsk), true);
 assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'Does not give the price for "How much is it?".', wantsRewrite: true }, 'The household plan is unlimited vacations for the whole year.', priceAsk).score, 4);
+assert.equal(correctFalsePriceMiss({ judged: true, score: 4, comment: 'Says no extra fees.', wantsRewrite: false }, 'There are no extra fees.', priceAsk).score <= 3, true);
 assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, true);
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').score <= 2, true);
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').wantsRewrite, true);
@@ -317,7 +321,7 @@ assert.match(text, /T1 CRAIG/);
 assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
-assert.match(text, /timing: gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 jev=400ms max_tokens=900/);
+assert.match(text, /timing: jev=400ms gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 max_tokens=900/);
 assert.match(text, /quality: 4 - Clear day shape/);
 assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
@@ -443,7 +447,7 @@ const timingLine = formatLiveTimingLine({
   jevMs: 222,
   maxTokens: 900,
 });
-assert.equal(timingLine, 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 jev=222ms max_tokens=900');
+assert.equal(timingLine, 'timing: jev=222ms gen=750ms model=google/gemini-2.5-flash-lite tier=1 max_tokens=900');
 assert.equal(timingLine.includes('zev'), false);
 const poison = {
   title: 't',

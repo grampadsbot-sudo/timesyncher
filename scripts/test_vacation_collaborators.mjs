@@ -59,10 +59,16 @@ const email = buildCollaboratorInviteEmail({
     trip_title: 'Caldwell vacation',
   },
   token: 'invite-token',
+  acceptUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=invite-token',
+  publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-example/',
   env: { TIMESYNCHER_TELEGRAM_BOT_USERNAME: 'TimeSyncherVacationStagingBot' },
 });
-assert.match(email.subject, /Craig invited you to help with Caldwell vacation/);
-assert.match(email.textBody, /Craig invited you to join Caldwell vacation/);
-assert.match(email.textBody, /https:\/\/t\.me\/TimeSyncherVacationStagingBot\?start=invite-token/);
+assert.match(email.subject, /Craig invited you to edit Caldwell vacation/);
+assert.match(email.textBody, /View access/);
+assert.match(email.textBody, /Edit access/);
+assert.match(email.textBody, /approved email invite/);
+assert.match(email.textBody, /vacation-web-access\?action=accept/);
+assert.doesNotMatch(email.textBody, /t\.me/);
+assert.doesNotMatch(email.htmlBody, /Telegram/);
 
 console.log('vacation collaborator policy regression passed');

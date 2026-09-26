@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
+import { createWebEditorInvite } from './web-access.mjs';
 import { ensureVacationEulaSession, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
@@ -48,10 +49,20 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, se
       requestedFor: name,
       metadata: { payer, email, displayName: name, channel: 'vacation-app' },
     });
+    const web = await createWebEditorInvite(db, {
+      ownerCustomerId,
+      tripId,
+      email,
+      displayName: name,
+      role: 'web_editor',
+      metadata: { payer, channel: 'email-invite' },
+    });
     const sent = await queueOrSendCollaboratorInviteEmail(db, {
       invite,
       token,
       contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
+      acceptUrl: web.acceptUrl,
+      publicUrl: web.grant?.public_url || '',
     });
     opened.push({
       name,

@@ -332,13 +332,13 @@ function packPages(doc, shape) {
     }),
     '',
     'TIMINGS',
-    'turn | tier | model | gen ms | jev ms',
+    'turn | tier | jev ms | model | gen ms',
     ...(generated.length
       ? generated.map((turn) => {
         const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
         const jev = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
         const model = modelIdOf(turn);
-        return `${turn.turnIndex} | ${turn.jev?.modelTier} | ${model} | ${gen} | ${jev}`;
+        return `${turn.turnIndex} | ${turn.jev?.modelTier} | ${jev} | ${model} | ${gen}`;
       })
       : ['none']),
     '',
@@ -405,12 +405,22 @@ function pdfEscape(value) {
 }
 
 export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens }) {
-  const line = `timing: gen=${gen}ms model=${model} tier=${tier} jev=${jevMs}ms max_tokens=${maxTokens}`;
+  const line = `timing: jev=${jevMs}ms gen=${gen}ms model=${model} tier=${tier} max_tokens=${maxTokens}`;
   if (/zev/i.test(line)) throw new Error('refused: timing line contained zev');
-  if (!/^timing: gen=\d+ms model=\S+ tier=[1-4] jev=\d+ms max_tokens=\d+$/.test(line)) {
-    throw new Error('refused: timing line is not jev=');
+  if (!/^timing: jev=\d+ms gen=\d+ms model=\S+ tier=[1-4] max_tokens=\d+$/.test(line)) {
+    throw new Error('refused: timing line is not jev first then model');
   }
   return line;
+}
+
+export function assertRosterRoleBlock(doc) {
+  if (!doc?.party) return rosterLines(doc);
+  const lines = rosterLines(doc);
+  const blob = lines.join('\n');
+  if (!/Kids \(silent\):/.test(blob) || !/\bViewer:/.test(blob) || !/\bEditor:/.test(blob)) {
+    throw new Error('refused: roster_role_block missing Kids, Viewer, or Editor');
+  }
+  return lines;
 }
 
 function timingStats(values) {
@@ -506,7 +516,7 @@ export function liveV7Pack(doc, shape) {
       ['source', 'live-vacation-app'],
       ['tier_models', 'dialog-runners/tier_models.json'],
     ],
-    roster: rosterLines(doc),
+    roster: assertRosterRoleBlock(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
     judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality}. Jev scored and commented on every generated reply.`,
     turns: (doc.turns || []).map((turn) => {
@@ -528,7 +538,7 @@ export function liveV7Pack(doc, shape) {
         app,
         text: String(turn.text || ''),
         rewrite_label: generatedTurn && turn.quality?.rewritten === true ? JEV_REWRITE_LABEL : '',
-        quality: generatedTurn ? formatQualityLine(turn.quality) : '',
+        quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,

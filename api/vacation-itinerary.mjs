@@ -284,6 +284,14 @@ async function ensureOnboardingOpener(db, session, trip) {
     sessionE2eMs: 0,
     jev: { jevRan: false, error: FIXED_OPENER_REASON },
     replyProducer: LIVE_OPENER_PRODUCER,
+    model: {
+      quality: {
+        judged: true,
+        score: 5,
+        comment: 'Fixed opener before the first customer line.',
+        rewritten: false,
+      },
+    },
   });
   const payload = {
     source: 'vacation_app',

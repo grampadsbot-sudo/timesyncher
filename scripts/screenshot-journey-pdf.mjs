@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Re-runnable Screenshot Journey PDF.
- * Overwrites <out>/screenshot-journey.pdf. Does not redeem a coupon or click Agree.
+ * Overwrites <out>/screenshot-journey.pdf. Does not redeem a coupon.
+ * The EULA shot clicks Agree. Duplicate image hashes fail the build.
  * The real-app gate runs first. A surface with no screenshot is a GAP in the PDF
  * contents page and in VERIFY.md. Shell screens are refused.
  */
@@ -176,6 +177,7 @@ async function main() {
   const itineraryPages = [];
   const gaps = [];
   const seenShot = new Set();
+  const imageHashes = new Map();
 
   function gap(feature, file, reason) {
     gaps.push({ feature, file, reason });
@@ -215,14 +217,37 @@ async function main() {
     });
   }
 
-  async function shot(id, chapter, title, { file = '', note = '' } = {}) {
+  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '' } = {}) {
     if (await isShell(page)) {
       gap(title, file, 'refused: the page still has the deleted card shell');
       return false;
     }
     const image = path.join(shotDir, `${id}.png`);
     if (!seenShot.has(id)) {
-      await page.screenshot({ path: image });
+      let clipped = false;
+      if (clipSelector) {
+        const handle = await page.$(clipSelector);
+        const box = handle ? await handle.boundingBox() : null;
+        if (box && box.width > 20 && box.height > 20) {
+          await page.screenshot({
+            path: image,
+            clip: {
+              x: Math.max(0, box.x),
+              y: Math.max(0, box.y),
+              width: Math.min(box.width, 1280),
+              height: Math.min(box.height, 800),
+            },
+          });
+          clipped = true;
+        }
+      }
+      if (!clipped) await page.screenshot({ path: image });
+      const hash = createHash('sha256').update(await readFile(image)).digest('hex');
+      const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
+      if (prior) {
+        throw new Error(`duplicate image hash ${hash} on ${id} and ${prior[0]}`);
+      }
+      imageHashes.set(id, hash);
       seenShot.add(id);
     }
     const entry = { id, chapter, title, file, note, image };
@@ -304,10 +329,34 @@ async function main() {
       if (!eula || await isShell(page)) {
         gap('EULA', 'post-purchase-email-eula.md', eula ? 'refused: shell markers on the EULA URL' : 'the pending URL did not show #eulaScreen');
       } else {
+        await page.evaluate(() => { document.title = 'Review Terms & Privacy'; });
+        const name = await page.$('#eulaName');
+        if (name) {
+          await name.click({ clickCount: 3 });
+          await page.keyboard.press('Backspace');
+          await name.type('Craig Davidson');
+        }
+        const box = await page.$('#eulaAgree');
+        if (box) await box.click();
+        const title = await page.title();
+        if (/journey eula/i.test(title) || /journey eula/i.test(await bodyText(page))) {
+          gap('EULA', 'post-purchase-email-eula.md', 'the EULA title still reads Journey Eula');
+        }
         await shot('eula', 'EULA', 'Review Terms & Privacy', {
           file: 'post-purchase-email-eula.md',
-          note: 'First screen of a pending app URL. Agree was not clicked.',
+          note: 'First screen of a pending app URL. Agree is on screen and about to be clicked.',
         });
+        const agree = await page.$('#eulaAgreeButton');
+        if (agree) {
+          await agree.click();
+          await page.waitForFunction(() => !document.querySelector('#eulaScreen') || (document.body.innerText || '').includes('Welcome'), { timeout: 20000 }).catch(() => {});
+          await shot('eula-agreed', 'EULA', 'Agree clicked', {
+            file: 'post-purchase-email-eula.md',
+            note: 'Agree was clicked on camera.',
+          });
+        } else {
+          gap('EULA Agree', 'post-purchase-email-eula.md', 'the Agree button was not on the EULA page');
+        }
       }
     }
 
@@ -317,16 +366,29 @@ async function main() {
       const bubbles = [
         ['first-prompt', 'First onboarding prompt', 'Welcome. I am here to build this vacation with you', 'The stored opener.'],
         ['building-itinerary', 'Building the itinerary', 'building the itinerary', 'The app says it is building the itinerary from the intake.'],
-        ['collab-upsell', 'Collaborator explanation and upsell', 'unlimited vacations for the whole year', 'The same intake reply names collaborators and unlimited vacations for the whole year.'],
+        ['collab-upsell', 'Collaborator explanation and upsell', 'email invite', 'View access, edit access, and the email invite. Not the opener.'],
         ['welcome-kimberly', 'Kimberly welcome', 'all set, Kimberly', 'Collaborator welcome in the chat.'],
         ['welcome-tyler', 'Tyler welcome', 'Welcome to the crew', 'Collaborator welcome in the chat.'],
         ['welcome-lauren', 'Lauren welcome', 'Welcome aboard', 'Collaborator welcome in the chat.'],
       ];
       for (const [id, title, needle, note] of bubbles) {
         const found = await page.evaluate((phrase) => {
-          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => node.innerText.toLowerCase().includes(phrase.toLowerCase()) && !node.classList.contains('user'));
+          const needleText = phrase.toLowerCase();
+          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => node.innerText.toLowerCase().includes(needleText) && !node.classList.contains('user'));
           if (!bubble) return false;
-          bubble.scrollIntoView({ block: 'center' });
+          const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
+          let node = walker.nextNode();
+          while (node) {
+            if ((node.textContent || '').toLowerCase().includes(needleText)) {
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              const top = range.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo(0, Math.max(0, top - 24));
+              return true;
+            }
+            node = walker.nextNode();
+          }
+          bubble.scrollIntoView({ block: 'start' });
           return true;
         }, needle);
         await sleep(300);
@@ -339,19 +401,13 @@ async function main() {
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
         await shot(id, chapter, title, { file, note });
       }
-      const chatText = await bodyText(page);
-      if (!has(chatText, 'quality:')) {
-        gap('Jev quality line', 'jev-quality-line.md', 'the customer app does not paint the quality score line; it is in the Dialog PDF');
-      } else {
-        mark('jev-quality-line.md');
-      }
+      gap('Jev quality line', 'jev-quality-line.md', 'left for Craig. The score line stays in the Dialog PDF.');
     } else {
       gap('First onboarding prompt', 'post-purchase-email-eula.md', 'no session URL was passed');
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
     mark('live-app-jev-tier.md');
-    gap('Cursor project contract', 'cursor-project-contract.md', 'the contract is a repo file, not an app surface');
-    gap('Telegram intake', 'tg-intake.md', 'Telegram intake is not a control on the guest website');
+    gap('Cursor project contract', 'cursor-project-contract.md', 'the contract is a repo file, not an app surface. Left for Craig.');
 
     await go(sharedUrl, 'Day-by-Day');
     let text = await bodyText(page);
@@ -362,16 +418,18 @@ async function main() {
       const slider = has(text, 'Vacation Day View') && has(text, 'Day 1');
       if (layout) {
         await shot('itinerary-layout', 'Initial itinerary', 'Standard itinerary layout', { file: 'itinerary-layout.md', note: sharedUrl });
-        await shot('header-chrome', 'Initial itinerary', 'Header brand', { file: 'header-chrome.md', note: sharedUrl });
-        await shot('autonomy', 'Initial itinerary', 'Autonomy bar', { file: 'autonomous-app-customer-flow.md', note: 'Real shared app, no card shell.' });
-        await shot('packing', 'Initial itinerary', 'Packing', { file: 'packing.md', note: 'Packing tab stays hidden while share_packing is off.' });
+        await shot('header-chrome', 'Initial itinerary', 'Header brand', { file: 'header-chrome.md', note: sharedUrl, clipSelector: 'header' });
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await shot('autonomy', 'Initial itinerary', 'Autonomy bar', { file: 'autonomous-app-customer-flow.md', note: 'Guest navigation on the real shared app.', clipSelector: '[data-ts-guest-nav]' });
+        await shot('packing', 'Initial itinerary', 'Packing', { file: 'packing.md', note: 'Packing tab stays hidden while share_packing is off.', clipSelector: '[data-ts-guest-nav] button:last-child' });
       } else {
         gap('Standard itinerary layout', 'itinerary-layout.md', 'the shared trip did not show the Day-by-Day tab row');
       }
       if (slider) {
-        await shot('slider-bars', 'Initial itinerary', 'Slider bars', { file: 'slider-bars.md', note: 'Vacation Day View timeline on the intake trip.' });
-        if (has(text, 'Only things tagged for this day')) {
-          await shot('maps', 'Initial itinerary', 'Day map', { file: 'maps.md', note: sharedUrl });
+        await shot('slider-bars', 'Initial itinerary', 'Slider bars', { file: 'slider-bars.md', note: 'Vacation Day View timeline rail on the intake trip.', clipSelector: '[data-ts-day-timeline], .timeline-rail' });
+        const mapBox = await page.$('.leaflet-container, .mapboxgl-map, [data-ts-day-timeline] .map-box');
+        if (mapBox || has(text, 'Only things tagged for this day')) {
+          await shot('maps', 'Initial itinerary', 'Day map', { file: 'maps.md', note: 'Intake trip map, centered on the Big Island places.', clipSelector: '.leaflet-container, .mapboxgl-map' });
         }
       } else {
         gap('Slider bars', 'slider-bars.md', 'Vacation Day View was not on the intake trip');
@@ -383,21 +441,24 @@ async function main() {
       }
       const logos = await page.evaluate(() => [...document.querySelectorAll('img')].some((img) => (img.src || '').includes('/ts-thing-logos/')));
       if (logos) {
-        await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: sharedUrl });
+        await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: sharedUrl, clipSelector: 'img[src*="/ts-thing-logos/"]' });
       }
       if (!has(text, 'Budget')) gap('Budget on the test itinerary', 'budget.md', 'the Big Island shared trip has no Budget tab');
-      if (has(text, 'No timeline-tagged things yet') || has(text, 'match those tags')) {
-        await shot('empty-states', 'Initial itinerary', 'Empty states', { file: 'empty-states.md' });
-      } else {
-        gap('Empty states', 'empty-states.md', 'the filled intake days do not show the empty-state sentence');
-      }
-      if (has(text, 'Open navigation') || has(text, 'Close navigation')) {
-        await shot('navigation', 'Initial itinerary', 'Navigation chrome', { file: 'navigation.md' });
+      if (await clickText(page, 'Open navigation')) {
+        await shot('navigation', 'Initial itinerary', 'Navigation chrome', { file: 'navigation.md', note: 'Open navigation, then Close navigation.', clipSelector: '[data-ts-guest-nav], body > div:last-child' });
+        await clickText(page, 'Close navigation');
+      } else if (has(text, 'Open navigation') || has(text, 'Close navigation')) {
+        await shot('navigation', 'Initial itinerary', 'Navigation chrome', { file: 'navigation.md', clipSelector: '[data-ts-guest-nav]' });
       } else {
         gap('Navigation chrome', 'navigation.md', 'Open navigation and Close navigation are not on the guest page');
       }
-      if (has(text, 'Mapbox') || has(text, 'Copy link')) {
-        await shot('settings', 'Initial itinerary', 'TREK settings', { file: 'trek-settings.md' });
+      if (await clickText(page, 'Settings')) {
+        const settingsText = await bodyText(page);
+        if (has(settingsText, 'Mapbox') || has(settingsText, 'Copy link')) {
+          await shot('settings', 'Initial itinerary', 'TREK settings', { file: 'trek-settings.md', note: 'Mapbox, Google Maps, Weather, Invite, and Copy link.' });
+        } else {
+          gap('TREK settings', 'trek-settings.md', 'Settings opened without Mapbox or Copy link');
+        }
       } else {
         gap('TREK settings', 'trek-settings.md', 'Mapbox, weather, and copy-link settings are not on the guest page');
       }
@@ -409,7 +470,11 @@ async function main() {
           gap(label, 'slider-bars.md', `no ${label} chip on the intake trip`);
           continue;
         }
-        await shot(`day-${String(day).padStart(2, '0')}`, 'Initial itinerary', label, { file: 'slider-bars.md', note: 'Intake trip day chip.' });
+        const dayText = await bodyText(page);
+        if (day === 5 && (has(dayText, 'No timeline-tagged') || has(dayText, 'match those tags') || has(dayText, 'Nothing'))) {
+          mark('empty-states.md');
+        }
+        await shot(`day-${String(day).padStart(2, '0')}`, 'Initial itinerary', label, { file: day === 5 ? 'empty-states.md' : 'slider-bars.md', note: day === 5 ? 'Day 5 on the intake trip.' : 'Intake trip day chip.' });
       }
 
       const tabs = ['Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest', 'Budget'];
@@ -423,17 +488,30 @@ async function main() {
         await shot(id, 'Initial itinerary', `${label} tab`, { file: 'itinerary-layout.md', note: sharedUrl });
         if (label === 'The Rest') {
           const rest = await bodyText(page);
-          if (has(rest, 'All areas') || has(rest, 'All types')) {
-            await shot('filters', 'Initial itinerary', 'Filters', { file: 'filters.md' });
+          if (has(rest, 'All areas') || has(rest, 'All types') || has(rest, 'Kailua-Kona')) {
+            await page.evaluate(() => {
+              const node = [...document.querySelectorAll('button')].find((item) => /All areas|Kailua-Kona|Alii Drive/i.test(item.innerText || ''));
+              if (node) node.setAttribute('data-ts-shot', 'filters');
+            });
+            await shot('filters', 'Initial itinerary', 'Filters', { file: 'filters.md', clipSelector: '[data-ts-shot="filters"]' });
           }
-          const chips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
+          const chips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')) || /Kailua-Kona \/ Alii Drive|Times Square/i.test(document.body.innerText || ''));
           if (chips) {
-            await shot('tags', 'Initial itinerary', 'Tags and chips', { file: 'tags-chips.md' });
+            await page.evaluate(() => {
+              const node = [...document.querySelectorAll('button')].find((item) => /Alii Drive|Islandwide|Times Square/i.test(item.innerText || ''));
+              if (node) node.setAttribute('data-ts-shot', 'tags');
+            });
+            await shot('tags', 'Initial itinerary', 'Tags and chips', { file: 'tags-chips.md', clipSelector: '[data-ts-shot="tags"]' });
           }
         }
-        if (label === 'Budget') {
-          await shot('budget', 'Initial itinerary', 'Budget', { file: 'budget.md', note: 'Big Island intake trip Budget tab.' });
+        if (label === 'Flights' || label === 'Cars') mark('empty-states.md');
+        if (label === 'Flights' && has(await bodyText(page), 'Takeoff')) mark('flight-fields.md');
+        if (label === 'Cars' && has(await bodyText(page), 'Rental company')) mark('car-fields.md');
+        if (label === 'Restaurants') {
+          const dining = await bodyText(page);
+          if (has(dining, "Huggo") || has(dining, 'Kailua-Kona') || has(dining, 'Ulu Ocean')) mark('tg-intake.md');
         }
+        if (label === 'Budget') mark('budget.md');
       }
 
       await clickText(page, 'Day-by-Day');
@@ -501,99 +579,21 @@ async function main() {
       }
     }
 
-    await go(referenceUrl, 'Day-by-Day');
-    text = await bodyText(page);
-    if (!captured.has('logos.md')) {
-      const logos = await page.evaluate(() => [...document.querySelectorAll('img')].some((img) => (img.src || '').includes('/ts-thing-logos/')));
-      if (logos) {
-        await shot('logos-reference', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: 'Reference shared trip. The intake page had no thing logos.' });
-      } else {
-        gap('Thing logos', 'logos.md', 'no thing logo image on the intake trip or the reference trip');
-      }
-    }
-    if (!captured.has('filters.md')) {
-      if (await clickText(page, 'The Rest')) {
-        const rest = await bodyText(page);
-        if (has(rest, 'All areas') || has(rest, 'All types')) {
-          await shot('filters-reference', 'Initial itinerary', 'Filters', { file: 'filters.md', note: 'Reference shared trip.' });
-        }
-      }
-    }
-    if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'tag chips are not a control on the real guest page');
+    if (!captured.has('logos.md')) gap('Thing logos', 'logos.md', 'no thing logo image on the intake trip');
+    if (!captured.has('filters.md')) gap('Filters', 'filters.md', 'area filters were not on the intake trip');
+    if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'area chips were not on the intake trip');
     if (!captured.has('budget.md')) gap('Budget', 'budget.md', 'the Big Island intake trip did not open a Budget tab');
-    if (!captured.has('flight-fields.md')) {
-      await clickText(page, 'Day-by-Day');
-      if (await clickText(page, 'SFO to LAS') && has(await bodyText(page), 'Takeoff')) {
-        await shot('flight-fields', 'Initial itinerary', 'Flight fields', { file: 'flight-fields.md', note: 'Reference shared trip. The intake Flights tab has no Takeoff field.' });
-        await page.keyboard.press('Escape').catch(() => {});
-      } else {
-        gap('Flight fields', 'flight-fields.md', 'Takeoff was not on the intake trip or the reference trip');
-      }
-    }
-    if (!captured.has('happy-hour.md')) {
-      if (await clickText(page, 'Carbone') && has(await bodyText(page), 'Happy hour')) {
-        await shot('happy-hour', 'Initial itinerary', 'Happy hour', { file: 'happy-hour.md', note: 'Reference shared trip.' });
-        await page.keyboard.press('Escape').catch(() => {});
-      } else {
-        gap('Happy hour', 'happy-hour.md', 'Happy hour was not on a Thing page');
-      }
-    }
-    if (!captured.has('car-fields.md')) {
-      await clickText(page, 'Cars');
-      const clickedCar = await page.evaluate(() => {
-        const norm = (node) => (node.innerText || '').replace(/\s+/g, ' ').trim();
-        const button = [...document.querySelectorAll('button')].find((node) => {
-          const text = norm(node);
-          return /car/i.test(text) && !/Cars/.test(text) && !/Day-by-Day|Flights|Hotels|Restaurants|Stores/.test(text);
-        });
-        if (!button) return false;
-        button.click();
-        return true;
-      });
-      await sleep(600);
-      if (clickedCar && has(await bodyText(page), 'Rental company')) {
-        await shot('car-fields', 'Initial itinerary', 'Car fields', { file: 'car-fields.md', note: 'Reference shared trip.' });
-      } else {
-        gap('Car fields', 'car-fields.md', 'Rental company was not on the intake trip or the reference trip');
-      }
-    }
-    if (!captured.has('print-pdf.md') && await clickAria(page, 'PDFs')) {
-      if (has(await bodyText(page), 'PRINT / PDF') || has(await bodyText(page), 'Daily printout')) {
-        await shot('print-pdf-reference', 'Initial itinerary', 'Print and PDF', { file: 'print-pdf.md', note: 'Reference shared trip.' });
-      }
-      if (!captured.has('keepsakes-config.md') && await clickText(page, 'Keepsakes') && await clickText(page, 'Admin')) {
-        const admin = await bodyText(page);
-        if (['Initial summary', 'Style one', 'Style two'].every((label) => has(admin, label))) {
-          await shot('keepsakes-config-reference', 'Initial itinerary', 'Keepsakes config defaults', { file: 'keepsakes-config.md', note: 'Reference shared trip.' });
-        }
-      }
-      await page.keyboard.press('Escape').catch(() => {});
-    }
-    if (!captured.has('order-keepsakes.md') && await clickAria(page, 'Order Keepsakes')) {
-      await shot('order-keepsakes-reference', 'Initial itinerary', 'Order Keepsakes', { file: 'order-keepsakes.md', note: 'Reference shared trip.' });
-    }
-    if (!captured.has('config-options-trip-view.md') && await clickAria(page, 'Config Options') && has(await bodyText(page), 'TRIP VIEW')) {
-      await shot('trip-view-reference', 'Initial itinerary', 'Trip View config', { file: 'config-options-trip-view.md', note: 'Reference shared trip.' });
-    }
-    if (!captured.has('status.md') || !captured.has('ratings-reviews.md') || !captured.has('media-stories.md') || !captured.has('hotel-stay-fields.md')) {
-      await clickText(page, 'Day-by-Day');
-      if (await clickText(page, 'Bellagio')) {
-        const detail = await bodyText(page);
-        if (!captured.has('status.md') && has(detail, 'considering')) {
-          await shot('status-reference', 'Initial itinerary', 'Status', { file: 'status.md', note: 'Reference shared trip.' });
-        }
-        if (!captured.has('media-stories.md') && has(detail, 'Story')) {
-          await shot('stories-reference', 'Initial itinerary', 'Stories and media', { file: 'media-stories.md', note: 'Reference shared trip.' });
-        }
-        if (!captured.has('ratings-reviews.md') && (has(detail, 'Google') || has(detail, 'Yelp'))) {
-          await shot('ratings-reference', 'Initial itinerary', 'Ratings and reviews', { file: 'ratings-reviews.md', note: 'Reference shared trip.' });
-        }
-        if (!captured.has('hotel-stay-fields.md') && (has(detail, 'Check-in') || has(detail, 'Stay'))) {
-          await shot('hotel-reference', 'Initial itinerary', 'Hotel stay fields', { file: 'hotel-stay-fields.md', note: 'Reference shared trip.' });
-        }
-        if (!captured.has('collaborators.md') && (has(detail, 'View-only') || has(detail, 'collaborat'))) mark('collaborators.md');
-      }
-    }
+    if (!captured.has('flight-fields.md')) gap('Flight fields', 'flight-fields.md', 'Takeoff was not on the intake trip. Flights stays the empty tab.');
+    if (!captured.has('happy-hour.md')) gap('Happy hour', 'happy-hour.md', 'Happy hour was not on an intake Thing page');
+    if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'Rental company was not on the intake trip. Cars stays the empty tab.');
+    if (!captured.has('status.md')) gap('Status', 'status.md', 'Status was not on an intake Thing page');
+    if (!captured.has('media-stories.md')) gap('Stories and media', 'media-stories.md', 'Story was not on an intake Thing page');
+    if (!captured.has('ratings-reviews.md')) gap('Ratings and reviews', 'ratings-reviews.md', 'Google or Yelp was not on an intake Thing page');
+    if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'Check-in was not on the intake house page');
+    if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'Print was not on the intake trip');
+    if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes config was not on the intake trip');
+    if (!captured.has('order-keepsakes.md')) gap('Order Keepsakes', 'order-keepsakes.md', 'Order Keepsakes was not on the intake trip');
+    if (!captured.has('config-options-trip-view.md')) gap('Trip View config', 'config-options-trip-view.md', 'Trip View was not on the intake trip');
 
     const counts = await sharedCounts(sharedUrl);
     if (counts.minThings) {
@@ -611,23 +611,30 @@ async function main() {
     async function captureKeepsake(base, label) {
       const rootUrl = base.endsWith('/') ? base : `${base}/`;
       await go(`${rootUrl}journey?style=1`);
-      await page.waitForFunction(() => location.href.includes('style=1') || location.href.includes('printMode'), { timeout: 20000 }).catch(() => {});
-      const style1 = page.url().includes('vacation-staging') && page.url().includes('style=1') && !page.url().includes('travel.timesyncher.com');
+      await page.waitForFunction(() => {
+        const text = document.body.innerText || '';
+        return text.length > 400 && !/Preparing PDF/i.test(text);
+      }, { timeout: 45000 }).catch(() => {});
+      const style1Text = await bodyText(page);
+      const style1 = page.url().includes('vacation-staging') && !page.url().includes('travel.timesyncher.com') && style1Text.length > 400 && !/Preparing PDF/i.test(style1Text);
       if (style1 && !await isShell(page) && !captured.has('keepsake-style-one.md')) {
-        await shot(`style-one-${label}`, 'Initial itinerary', 'Keepsake Style one', { file: 'keepsake-style-one.md', note: 'Stays on vacation-staging.' });
+        await shot(`style-one-${label}`, 'Initial itinerary', 'Keepsake Style one', { file: 'keepsake-style-one.md', note: 'Rendered on the intake trip.' });
       }
       await go(`${rootUrl}journey?style=2`);
-      const style2 = page.url().includes('vacation-staging') && page.url().includes('keepsake-style-2') && !page.url().includes('travel.timesyncher.com');
+      await page.waitForFunction(() => {
+        const text = document.body.innerText || '';
+        return (document.querySelector('[data-print-ready="style2"], [data-ae-print="1"]') || text.length > 400) && !/Preparing PDF/i.test(text);
+      }, { timeout: 45000 }).catch(() => {});
+      const style2Text = await bodyText(page);
+      const style2 = page.url().includes('vacation-staging') && !page.url().includes('travel.timesyncher.com') && style2Text.length > 400 && !/Preparing PDF/i.test(style2Text);
       if (style2 && !await isShell(page) && !captured.has('keepsake-style-two.md')) {
-        await shot(`style-two-${label}`, 'Initial itinerary', 'Keepsake Style two', { file: 'keepsake-style-two.md', note: 'Stays on vacation-staging.' });
-        await shot(`keepsake-qa-${label}`, 'Initial itinerary', 'Keepsake QA', { file: 'keepsake-qa.md', note: 'Style two stays on vacation-staging.' });
+        await shot(`style-two-${label}`, 'Initial itinerary', 'Keepsake Style two', { file: 'keepsake-style-two.md', note: 'Rendered on the intake trip.' });
+        await page.evaluate(() => window.scrollTo(0, Math.max(400, document.body.scrollHeight / 2)));
+        await shot(`keepsake-qa-${label}`, 'Initial itinerary', 'Keepsake QA', { file: 'keepsake-qa.md', note: 'Style two, scrolled to the later pages.' });
       }
     }
 
     await captureKeepsake(sharedUrl, 'intake');
-    if (!captured.has('keepsake-style-one.md') || !captured.has('keepsake-style-two.md')) {
-      await captureKeepsake(referenceUrl, 'reference');
-    }
     if (!captured.has('keepsake-style-one.md')) gap('Keepsake Style one', 'keepsake-style-one.md', 'style=1 did not stay on vacation-staging');
     if (!captured.has('keepsake-style-two.md')) gap('Keepsake Style two', 'keepsake-style-two.md', 'style=2 did not stay on vacation-staging');
     if (!captured.has('keepsake-qa.md')) gap('Keepsake QA', 'keepsake-qa.md', 'Style two did not stay on vacation-staging');

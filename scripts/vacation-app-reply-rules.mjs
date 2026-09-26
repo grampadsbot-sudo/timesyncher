@@ -569,7 +569,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
   const upsellLine = postIntake
-    ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain that family and friends can join as collaborators, add notes, and help shape the days. Include this exact phrase once: ${phrase}. This is the one full welcome. Do not wait for a later price question.`
+    ? 'Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Do not say unlimited, you\'ve got unlimited, or name a price. The price belongs on a later price question.'
     : (upsell === 'allow-once'
       ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
       : (priceAsk
@@ -586,9 +586,11 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
     'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", "splitting it up", or "splitting anything up". Never use the words split or splitting at all. If one seat is already covered and another person has their own seat, say that.',
-    /\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
-      ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
-      : 'When the customer does not ask about access, do not add an access menu.',
+    postIntake
+      ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
+      : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+        ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+        : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
@@ -667,7 +669,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 only when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, or uses split or splitting payment phrasing.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, or uses split or splitting payment phrasing. A price question with no real price is criterion 3 or lower.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
