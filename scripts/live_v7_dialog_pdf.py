@@ -200,6 +200,8 @@ def build(pack):
             f"<b>{latin(turn.get('label'))}</b> <font size='6.5' color='#666'>[{latin(turn.get('meta'))}]</font><br/>{latin(turn.get('text'))}",
             style,
         )]
+        if turn.get("rewrite_label"):
+            block.append(Paragraph(latin(turn.get("rewrite_label")), styles["Qual"]))
         if turn.get("quality"):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):

@@ -8,10 +8,12 @@ import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
 import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { qualityCommentCriteria, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
+  assertJevRewriteLabels,
   assertLiveTranscript,
   assessPackShape,
   extractPdfText,
   formatLiveTimingLine,
+  jevRewriteLabelCounts,
   renderLiveTranscriptPdf,
 } from './live-transcript-dialog-pdf.mjs';
 
@@ -111,8 +113,8 @@ assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees
 assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').text, 'The rewrite the customer sees.');
 assert.equal(rewriteReplacesDraft('The draft stays here.', 'The draft stays here. Extra paragraph about a cruise.'), false);
 assert.equal(rewriteReplacesDraft('The draft stays here.', 'Monday is the beach or the house pool. The household plan is unlimited vacations for the whole year.'), true);
-assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten by Jev)');
-assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1 — Misses the price. (rewritten by Jev)');
+assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape.');
+assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1 — Misses the price.');
 const priceDraft = 'This trip already holds space for all eight of you. You are covered for Kimberly. Tyler has his own. Lauren has hers.';
 const priceChoices = jevReplacementChoices({ customerTurn: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.', draft: priceDraft, corpus: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' });
 assert.ok(priceChoices.length >= 1);
@@ -273,7 +275,11 @@ const jevRewrite = liveDoc({
   } : turn)),
 });
 assertLiveTranscript(jevRewrite);
-assert.match(extractPdfText(renderLiveTranscriptPdf(jevRewrite)), /rewritten by Jev/);
+const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
+assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
+assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
+assert.match(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
+assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('rewritten by Jev (typesafe/jev-1.13)', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,

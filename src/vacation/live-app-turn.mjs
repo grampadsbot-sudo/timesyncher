@@ -708,14 +708,14 @@ export function acceptQualityRewrite(draft, rewritten) {
   return { text: next, rewritten: true, draft: prior };
 }
 
+export const JEV_REWRITE_LABEL = 'rewritten by Jev (typesafe/jev-1.13)';
+
 export function formatQualityLine(quality) {
   if (!quality || quality.judged !== true) return '';
   const score = Number(quality.score);
   if (!Number.isInteger(score) || score < 1 || score > 5) return '';
   const comment = String(quality.comment || '').replace(/\s+/g, ' ').trim();
-  let rewritten = '';
-  if (quality.rewritten === true) rewritten = ' (rewritten by Jev)';
-  return `quality: ${score} — ${comment || 'Jev rated this reply'}${rewritten}`;
+  return `quality: ${score} — ${comment || 'Jev rated this reply'}`;
 }
 
 export function jevReplacementChoices({ customerTurn, draft, corpus }) {

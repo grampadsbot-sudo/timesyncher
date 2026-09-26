@@ -13,6 +13,7 @@ import {
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
+  JEV_REWRITE_LABEL,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -516,7 +517,6 @@ export function liveV7Pack(doc, shape) {
       const meta = [`n=${turn.turnIndex}`, `beat=${beat}`];
       if (generatedTurn) {
         meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
-        if (turn.quality?.rewritten === true) meta.push('rewritten by Jev');
       }
       const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
       const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
@@ -527,6 +527,7 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
+        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? JEV_REWRITE_LABEL : '',
         quality: generatedTurn ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
@@ -540,6 +541,20 @@ export function liveV7Pack(doc, shape) {
   };
 }
 
+export function jevRewriteLabelCounts(doc, pdfText) {
+  const rewrittenTurns = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true).length;
+  const rewriteLabels = String(pdfText || '').split(JEV_REWRITE_LABEL).length - 1;
+  return { rewrittenTurns, rewriteLabels, ok: rewrittenTurns === rewriteLabels };
+}
+
+export function assertJevRewriteLabels(doc, pdfText) {
+  const counts = jevRewriteLabelCounts(doc, pdfText);
+  if (!counts.ok) {
+    throw new Error(`refused: bar 15 rewritten turns ${counts.rewrittenTurns} but PDF labels ${counts.rewriteLabels}`);
+  }
+  return counts;
+}
+
 export function renderLiveTranscriptPdf(doc, options = {}) {
   const checked = assertLiveTranscript(doc);
   const shape = assessPackShape(checked, options);
@@ -549,7 +564,9 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   if (result.status !== 0) {
     throw new Error(`refused: v7 PDF chrome failed: ${result.stderr?.toString() || result.status}`);
   }
-  return Buffer.from(result.stdout);
+  const pdf = Buffer.from(result.stdout);
+  assertJevRewriteLabels(checked, extractPdfText(pdf));
+  return pdf;
 }
 
 
@@ -645,6 +662,7 @@ async function main() {
   const transcript = assertLiveTranscript(await loadTranscript(args));
   const shape = assessPackShape(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
   const pdf = renderLiveTranscriptPdf(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
+  const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
   if (args.dump) fs.writeFileSync(args.dump, `${JSON.stringify(transcript, null, 2)}\n`);
@@ -658,6 +676,8 @@ async function main() {
     out: path.resolve(args.out),
     pack_id: shape.pack_id,
     turns: transcript.turns.length,
+    rewrittenTurns: labelCounts.rewrittenTurns,
+    rewriteLabels: labelCounts.rewriteLabels,
     targetPerson: transcript.targetPerson,
     sessionE2eMs: shape.summary.sessionE2eMs,
   })}\n`);
