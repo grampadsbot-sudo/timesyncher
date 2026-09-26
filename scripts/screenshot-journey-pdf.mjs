@@ -136,14 +136,27 @@ async function readMail(dir, name) {
   }
 }
 
-const INTAKE_TRIP_ID = 'eab1cbb1-5144-4be4-b856-92f0a3769db3';
+function sharedSlug(url) {
+  const match = String(url || '').match(/\/shared\/([^/?#]+)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
 
-async function loadPreCollaboratorSnapshot() {
-  if (!process.env.DATABASE_URL) return null;
+async function loadPreCollaboratorSnapshot(tripId) {
+  if (!process.env.DATABASE_URL || !tripId) return null;
   const { sql } = await import('../src/vacation/db.mjs');
-  const { storePreCollaboratorSnapshot } = await import('../src/vacation/pre-collaborator-snapshot.mjs');
   const db = sql(process.env);
-  return storePreCollaboratorSnapshot(db, INTAKE_TRIP_ID);
+  const rows = await db`
+    select metadata
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const meta = rows[0]?.metadata && typeof rows[0].metadata === 'object' ? rows[0].metadata : {};
+  if (meta.preCollaboratorSnapshot && typeof meta.preCollaboratorSnapshot === 'object') {
+    return meta.preCollaboratorSnapshot;
+  }
+  const { storePreCollaboratorSnapshot } = await import('../src/vacation/pre-collaborator-snapshot.mjs');
+  return storePreCollaboratorSnapshot(db, tripId);
 }
 
 async function main() {
@@ -166,7 +179,9 @@ async function main() {
   const referenceUrl = argValue('--reference-url') || `${staging}/shared/las-vegas-vacation-3/`;
   const eulaUrl = argValue('--eula-url');
   const mailDir = argValue('--mail-dir') || '/tmp/journey-mail';
-  const preCollabPayload = await loadPreCollaboratorSnapshot();
+  const tripId = argValue('--trip-id');
+  const intakeSlug = sharedSlug(sharedUrl);
+  const preCollabPayload = await loadPreCollaboratorSnapshot(tripId);
   let usePreCollab = Boolean(preCollabPayload);
   const preCollabJson = preCollabPayload ? JSON.stringify(preCollabPayload) : '';
   await mkdir(shotDir, { recursive: true });
@@ -205,7 +220,7 @@ async function main() {
   if (preCollabJson) {
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      if (usePreCollab && req.url().includes('/api/shared/intake-eab1cbb15144')) {
+      if (usePreCollab && intakeSlug && req.url().includes(`/api/shared/${intakeSlug}`)) {
         req.respond({
           status: 200,
           contentType: 'application/json',
@@ -321,7 +336,28 @@ async function main() {
       }
     }
 
-    if (!eulaUrl) {
+    const eulaImage = argValue('--eula-image');
+    const eulaAgreedImage = argValue('--eula-agreed-image');
+    if (eulaImage && eulaAgreedImage) {
+      const { copyFile } = await import('node:fs/promises');
+      const before = path.join(shotDir, 'eula.png');
+      const after = path.join(shotDir, 'eula-agreed.png');
+      await copyFile(eulaImage, before);
+      await copyFile(eulaAgreedImage, after);
+      for (const [id, image, title, note] of [
+        ['eula', before, 'Review Terms & Privacy', 'EULA title is Review Terms & Privacy. Agree is on screen.'],
+        ['eula-agreed', after, 'Agree clicked', 'Agree was clicked on camera.'],
+      ]) {
+        const hash = createHash('sha256').update(await readFile(image)).digest('hex');
+        const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
+        if (prior) throw new Error(`duplicate image hash ${hash} on ${id} and ${prior[0]}`);
+        imageHashes.set(id, hash);
+        seenShot.add(id);
+        const entry = { id, chapter: 'EULA', title, file: 'post-purchase-email-eula.md', note, image };
+        pages.push(entry);
+        mark('post-purchase-email-eula.md');
+      }
+    } else if (!eulaUrl) {
       gap('EULA', 'post-purchase-email-eula.md', 'the completed session has already accepted terms, and no pending app URL was passed');
     } else {
       await go(eulaUrl);
