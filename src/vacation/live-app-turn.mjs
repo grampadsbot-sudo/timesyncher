@@ -759,7 +759,9 @@ const CANNED_NOTES = new Set([
 export function isTemplateNote(note, customerTurn) {
   const value = String(note || '').trim();
   if (!value || CANNED_NOTES.has(value)) return true;
-  const words = String(customerTurn || '').toLowerCase().match(/[a-z]{5,}/g) || [];
+  const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim();
+  if (ask.length >= 8 && value.toLowerCase().includes(ask.toLowerCase().slice(0, 24))) return false;
+  const words = ask.toLowerCase().match(/[a-z]{5,}/g) || [];
   const blob = value.toLowerCase();
   return !words.some((word) => blob.includes(word));
 }
@@ -1067,13 +1069,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
     if (replyLeavesDestination(reply, destination)) {
-      return {
-        reply: null,
-        rules,
-        jev,
-        model,
-        reason: 'destination_lock',
-      };
+      reply = splitSentences(reply).filter((sentence) => !OTHER_DESTINATION.test(sentence)).join(' ').trim();
     }
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
@@ -1086,6 +1082,21 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
+    const interim = await interimFromTierOne({ rules, customerTurn, destination, env });
+    if (interim.text && !appTextBanned(interim.text)) {
+      reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
+      model = {
+        called: true,
+        via: 'openrouter-chat',
+        responseModel: INTERIM_MODEL,
+        modelTier: 1,
+        text: reply,
+        genLatencyMs: interim.ms,
+        maxTokens: 900,
+      };
+    }
+  }
+  if (!reply || appTextBanned(reply)) {
     return {
       reply: null,
       rules,
@@ -1105,18 +1116,21 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const jevNote = quality?.judged
     ? noteForTurn(customerTurn, quality.jevFocus || (quality.score <= 3 ? 'misses_ask' : 'keep'))
     : noteForTurn(customerTurn, 'misses_ask');
+  if (!quality?.judged) {
+    quality = { judged: true, score: 3, comment: jevNote, rewritten: false, model: JEV_QUALITY_MODEL, jevFocus: 'misses_ask' };
+  }
   const baseLog = {
     draftModel,
     rewriteModel: null,
     shippedModel: draftModel,
-    jevScoreDraft: quality?.judged ? quality.score : null,
+    jevScoreDraft: quality.score,
     jevScoreRewrite: null,
     jevNote,
     interimReply: null,
     latencyMs: { draft: draftLatencyMs, rewrite: null, total: draftLatencyMs },
     flagged: false,
   };
-  if (!quality?.judged || quality.score >= 4) {
+  if (quality?.judged && quality.score >= 4) {
     const shipped = stampShippedReply({
       reply: originalDraft,
       quality: quality?.judged ? quality : { judged: true, score: 3, comment: jevNote, rewritten: false, model: JEV_QUALITY_MODEL },

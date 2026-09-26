@@ -563,7 +563,7 @@ export function liveV7Pack(doc, shape) {
         app,
         text: String(turn.text || ''),
         rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel) : '',
-        producer_log: generatedTurn ? producerLogLine(turn) : '',
+        producer_log: app ? producerLogLine(turn) : '',
         quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,

@@ -292,6 +292,17 @@ async function ensureOnboardingOpener(db, session, trip) {
         comment: 'Fixed opener before the first customer line.',
         rewritten: false,
       },
+      log: {
+        draftModel: null,
+        rewriteModel: null,
+        shippedModel: null,
+        jevScoreDraft: 5,
+        jevScoreRewrite: null,
+        jevNote: 'Fixed opener before the first customer line.',
+        interimReply: null,
+        latencyMs: { draft: 0, rewrite: null, total: 0 },
+        flagged: false,
+      },
     },
   });
   const payload = {

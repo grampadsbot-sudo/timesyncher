@@ -839,6 +839,9 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
     '`scripts/screenshot-journey-pdf.mjs` overwrites `screenshot-journey.pdf`. The real-app gate runs first. The script does not redeem a coupon.',
     '',
     `Captured feature files: ${captured.size} of ${featureCount}.`,
+    captured.has('jev-quality-line.md')
+      ? 'jev-quality-line: PASS. The score line is in the Dialog PDF and the JSONL log. The customer app does not show it.'
+      : 'jev-quality-line: GAP. The customer app showed a Jev score line.',
     `screenshot-journey.pdf sha256 \`${sha}\`.`,
     '',
     '### Not captured',
