@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { customerPullsAccess, destinationFromTexts, FIXED_OPENER_REASON, isFullUpsell, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, replyLeavesDestination, sessionHasFullUpsell, stripUpsell, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { customerPullsAccess, destinationFromTexts, FIXED_OPENER_REASON, isFullUpsell, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import {
   assertLiveTranscript,
   assessPackShape,
@@ -39,6 +39,19 @@ const dayWithCloser = 'Thursday is a town walk in Kailua-Kona. Welcome the whole
 assert.equal(stripUpsell(dayWithCloser), 'Thursday is a town walk in Kailua-Kona.');
 assert.equal(isFullUpsell(dayWithCloser), true);
 assert.equal(sessionHasFullUpsell([{ role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY }]), false);
+const splitWelcome = 'With all three of you joining as collaborators, the household plan is unlimited vacations for the whole year. Since you are splitting payments, Kimberly is covered by you and Tyler and Lauren have their own seats. Fallon still gets a quiet afternoon.';
+assert.equal(item34BanHit(splitWelcome), true);
+assert.equal(item34BanHit('Kimberly\'s seat is already covered. Tyler has his own seat.'), false);
+assert.equal(item34BanHit('Collaborators: Kimberly Davidson (payer=owner)'), false);
+const strippedSplit = stripItem34Ban(splitWelcome);
+assert.equal(item34BanHit(strippedSplit), false);
+assert.match(strippedSplit, /unlimited vacations for the whole year/);
+assert.match(strippedSplit, /Fallon still gets a quiet afternoon/);
+assert.equal(item34BanHit('We are not split-payer on this trip.'), true);
+assert.equal(item34BanHit('That would be a split payment.'), true);
+assert.equal(item34BanHit('Stop splitting payment talk.'), true);
+assert.equal(item34BanHit('There is no extra cost for how you\u2019re splitting it up.'), true);
+assert.equal(item34BanHit('without requiring you to split up'), false);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY, replyProducer: LIVE_OPENER_PRODUCER },
@@ -121,6 +134,9 @@ rejects(liveDoc({
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, modelId: 'google/gemini-2.5-flash', jev: { ...turn.jev, responseModel: 'google/gemini-2.5-flash' } } : turn)),
 }), /bake-off map/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, text: 'Since you are splitting payments, Kimberly is covered.' } : turn)),
+}), /split-payment jargon/);
 
 const customerFirst = liveDoc();
 const partial = assessPackShape(customerFirst);
@@ -306,5 +322,19 @@ assert.equal(poisonedPdf.includes(Buffer.from('jev=222ms')), true);
 const poisonedText = extractPdfText(poisonedPdf);
 assert.match(poisonedText, /jev=222ms/);
 assert.equal(poisonedText.includes('zev'), false);
+const item34 = {
+  ...poison,
+  turns: [{
+    ...poison.turns[0],
+    text: 'Since you are splitting payments, Kimberly is covered by you.',
+    timing: 'timing: gen=5154ms model=qwen/qwen3-max tier=4 jev=147ms max_tokens=900',
+  }],
+};
+const bannedPack = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
+  input: JSON.stringify(item34),
+  maxBuffer: 8 * 1024 * 1024,
+});
+assert.notEqual(bannedPack.status, 0);
+assert.match(bannedPack.stderr?.toString() || '', /split-payment jargon/);
 
 console.log('live transcript dialog pdf passed');

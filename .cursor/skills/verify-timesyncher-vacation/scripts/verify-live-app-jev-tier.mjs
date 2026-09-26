@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
-import { replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
+import { item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -72,6 +72,9 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/Destination lock/.test(replyRules) || !/replyLeavesDestination/.test(liveTurn)) {
     errors.push('shared producer does not lock replies to the customer destination');
   }
+  if (!/never say "splitting payments"/.test(replyRules) || !/stripItem34Ban/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
+    errors.push('shared producer does not fail closed on split-payment jargon');
+  }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');
   }
@@ -117,6 +120,7 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
   turns.forEach((turn, index) => {
     errors.push(...jevErrors(turn));
     const text = String(turn.text || '');
+    if (item34BanHit(text)) errors.push(`turn ${turn.turnIndex} uses split-payment jargon`);
     if (turn.role !== 'app') return;
     const fixedOpener = index === 0 && (turn.fixedOpener === true || turn.replyProducer === OPENER_PRODUCER);
     if (turn.invented === true) errors.push(`turn ${turn.turnIndex} app text is marked invented`);
@@ -294,6 +298,14 @@ async function selfCheck() {
     sampleTurn({ text: 'Big Island week in Kailua-Kona.' }),
     appTurn({ text: 'Friday dinner in Tulum.' }),
   ])).length);
+  assert.ok(assertLiveTurns(liveDoc([
+    sampleTurn({ text: 'We are splitting payments across the seats.' }),
+    appTurn(),
+  ])).some((error) => /split-payment jargon/.test(error)));
+  assert.ok(assertLiveTurns(liveDoc([
+    sampleTurn(),
+    appTurn({ text: 'Since you are splitting payments, Kimberly is covered.' }),
+  ])).some((error) => /split-payment jargon/.test(error)));
   process.stdout.write('live app jev tier self-check passed\n');
 }
 

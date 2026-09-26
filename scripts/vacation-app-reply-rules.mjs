@@ -577,6 +577,7 @@ function replyRulesSystem(rules, destination, upsell) {
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
+    'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", or "splitting it up". If one seat is already covered and another person has their own seat, say that. Do not frame seats, cost, or who pays as a split.',
     upsellLine,
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',

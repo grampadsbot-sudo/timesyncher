@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Live-app Dialog PDF in the v7 Tier 1-4 reportlab chrome."""
 import json
+import re
 import sys
 from io import BytesIO
 
@@ -93,6 +94,23 @@ def pdf_literals(data):
     return strings
 
 
+ITEM34_BAN = re.compile(
+    "splitting payments|splitting payment|split payment|split-payer|split payer|splitting it up|how you['\u2019]re splitting|how you are splitting|payment split|splitting the (?:cost|bill|pay)",
+    re.I,
+)
+
+
+def assert_item34(pack):
+    blob = "\n".join(str(turn.get("text") or "") for turn in (pack.get("turns") or []))
+    if ITEM34_BAN.search(blob):
+        raise SystemExit("refused: transcript contains split-payment jargon")
+
+
+def assert_item34_bytes(pdf_bytes):
+    if ITEM34_BAN.search(pdf_bytes.decode("latin1", errors="ignore")):
+        raise SystemExit("refused: PDF contains split-payment jargon")
+
+
 def assert_timing_bytes(pdf_bytes):
     literals = pdf_literals(pdf_bytes)
     timings = [item.decode("latin1") for item in literals if item.startswith(b"timing:")]
@@ -123,6 +141,7 @@ def tbl(rows, col_widths):
 
 
 def build(pack):
+    assert_item34(pack)
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Title"], fontSize=16, spaceAfter=8, alignment=TA_CENTER))
     styles.add(ParagraphStyle(name="Section", parent=styles["Heading1"], fontSize=12, spaceBefore=10, spaceAfter=6))
@@ -205,6 +224,7 @@ def build(pack):
     doc.build(story, onFirstPage=paint, onLaterPages=paint)
     pdf_bytes = buffer.getvalue()
     assert_timing_bytes(pdf_bytes)
+    assert_item34_bytes(pdf_bytes)
     return pdf_bytes
 
 

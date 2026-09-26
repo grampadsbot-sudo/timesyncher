@@ -9,6 +9,7 @@ import {
   LIVE_OPENER_PRODUCER,
   LIVE_REPLY_PRODUCER,
   LIVE_TRANSCRIPT_CAPTURE,
+  item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
@@ -58,6 +59,7 @@ export function assertLiveTranscript(doc) {
     }
     const text = String(turn.text || '');
     if (!text.trim()) throw new Error(`refused: turn ${turn.turnIndex} text is empty`);
+    if (item34BanHit(text)) throw new Error(`refused: turn ${turn.turnIndex} uses split-payment jargon`);
     if (turn.storedText != null && String(turn.storedText) !== text) {
       throw new Error(`refused: turn ${turn.turnIndex} stored text does not match the customer-visible body`);
     }
