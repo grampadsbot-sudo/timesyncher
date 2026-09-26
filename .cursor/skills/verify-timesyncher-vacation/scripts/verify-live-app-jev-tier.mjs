@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
+import { replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -46,8 +47,14 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
     errors.push('live reply path does not record Jev classify ms before the model call');
   }
   if (!/modelId/.test(liveTurn)) errors.push('live app turns do not store the bake-off model id');
-  if (!/real banter/.test(replyRules) || !/whole family/.test(replyRules)) {
-    errors.push('shared producer does not ask for banter and a family collaborator welcome');
+  if (!/real banter/.test(replyRules) || !/Single upsell/.test(replyRules) || !/at most one full collab/.test(replyRules)) {
+    errors.push('shared producer does not keep a single customer-pulled collab upsell');
+  }
+  if (!/unlimited vacations for the whole year/.test(replyRules)) {
+    errors.push('shared producer drops the exact unlimited-vacations phrase');
+  }
+  if (!/limit 120/.test(api)) {
+    errors.push('vacation-app memory does not keep the early intake for the destination lock');
   }
   if (!/Use 3 or 4/.test(replyRules)) {
     errors.push('Jev tier criteria do not allow tiers 3 and 4 when the turn needs them');
@@ -139,6 +146,30 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
     if (turn.jev?.jevRan === true) ran += 1;
   });
   if (requireRan && ran < 1) errors.push('no stored app turn records jevRan true with a tier');
+  return errors;
+}
+
+export function assertSingleUpsell(doc) {
+  const audit = upsellAudit(doc?.turns);
+  const errors = [];
+  if (audit.unsolicitedFull.length) errors.push(`unsolicited full upsell at turns ${audit.unsolicitedFull.join(', ')}`);
+  if (audit.unsolicitedWelcome.length) errors.push(`unsolicited collab welcome at turns ${audit.unsolicitedWelcome.join(', ')}`);
+  if (audit.softEmbeds.length) errors.push(`unlimited phrase embedded without a pull at turns ${audit.softEmbeds.join(', ')}`);
+  if (audit.full > 1) errors.push(`full upsell count ${audit.full}, at most one`);
+  return errors;
+}
+
+export function assertDestinationStick(doc) {
+  const errors = [];
+  const turns = Array.isArray(doc?.turns) ? doc.turns : [];
+  const blob = turns.map((turn) => String(turn.text || '')).join('\n');
+  if (!/big island|kailua-kona|hawai/i.test(blob)) return errors;
+  for (const turn of turns) {
+    if (turn.role !== 'app') continue;
+    if (replyLeavesDestination(turn.text, 'Big Island, Hawaii')) {
+      errors.push(`turn ${turn.turnIndex} leaves the Big Island`);
+    }
+  }
   return errors;
 }
 
@@ -245,6 +276,24 @@ async function selfCheck() {
   }])).length);
   const sources = await readSources();
   assert.deepEqual(assertComposerSource(sources), []);
+  const opener = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace.';
+  const pulled = liveDoc([
+    { ...openerTurn, text: opener },
+    sampleTurn({ turnIndex: 2, text: 'How much if they join as collaborators? Name unlimited vacations for the whole year.' }),
+    appTurn({ turnIndex: 3, text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' }),
+    sampleTurn({ turnIndex: 4, text: 'Friday dinner on the Big Island. Name the day and the place.' }),
+    appTurn({ turnIndex: 5, text: 'Friday dinner stays in Kailua-Kona with Kimberly.' }),
+  ]);
+  assert.deepEqual(assertSingleUpsell(pulled), []);
+  assert.ok(assertSingleUpsell(liveDoc([
+    sampleTurn({ turnIndex: 1, text: 'Walk Thursday with Kimberly.' }),
+    appTurn({ turnIndex: 2, text: 'Thursday is a town walk. Welcome the whole family as collaborators with unlimited vacations for the whole year.' }),
+  ])).length);
+  assert.deepEqual(assertDestinationStick(pulled), []);
+  assert.ok(assertDestinationStick(liveDoc([
+    sampleTurn({ text: 'Big Island week in Kailua-Kona.' }),
+    appTurn({ text: 'Friday dinner in Tulum.' }),
+  ])).length);
   process.stdout.write('live app jev tier self-check passed\n');
 }
 
@@ -289,6 +338,8 @@ async function main() {
     ? JSON.parse(await readFile(transcriptPath, 'utf8'))
     : await loadSession(session);
   const errors = assertLiveTurns(doc, { requireRan: true });
+  errors.push(...assertSingleUpsell(doc));
+  errors.push(...assertDestinationStick(doc));
   if (process.argv.includes('--gold-depth')) errors.push(...assertGoldSessionDepth(doc));
   if (errors.length) {
     fail(errors);
