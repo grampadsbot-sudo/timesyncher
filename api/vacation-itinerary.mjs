@@ -37,6 +37,7 @@ import {
   openCollaboratorAppSeats,
   recordDialogParty,
   seatFromSession,
+  seatJoinCustomerText,
   transcriptCustomerId,
 } from '../src/vacation/collaborator-app-seat.mjs';
 
@@ -546,14 +547,16 @@ async function handleVacationApp(req, res, db, url) {
     const eula = await vacationAppEula(session, process.env);
     if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
+    const seat = seatFromSession(session);
     return sendJson(res, 200, {
       ok: true,
       session: {
         token: session.token,
         status: session.status,
-        customerName: seatFromSession(session)?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        customerName: seat?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
+        seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
       vacations,
@@ -585,6 +588,17 @@ async function handleVacationApp(req, res, db, url) {
     if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
     const eula = await vacationAppEula(session, process.env);
     if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+    if (body.action === 'seat-join') {
+      const seat = seatFromSession(session);
+      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records pay, EULA, and join.' });
+      const text = seatJoinCustomerText(seat);
+      const prior = await loadVacationAppTurns(db, session, selected.id);
+      if (prior.some((turn) => turn.speaker === 'customer' && String(turn.body || '').includes(text))) {
+        return sendJson(res, 200, { ok: true, status: 'already_joined', reply: null });
+      }
+      const queuedJoin = await queueVacationAppTurn(db, session, selected, { text, modality: 'text' });
+      return sendJson(res, queuedJoin.ok ? 201 : 502, { trip: selected, ...queuedJoin });
+    }
     const queued = await queueVacationAppTurn(db, session, selected, body);
     return sendJson(res, queued.ok ? 201 : 502, {
       trip: selected,

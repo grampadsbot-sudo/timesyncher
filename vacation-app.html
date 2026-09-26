@@ -529,6 +529,17 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to save terms acceptance.');
         state.eula = { ...(state.eula || {}), accepted: true, status: 'accepted' };
+        if (state.session?.seat) {
+          const joinRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ action: 'seat-join' }),
+          });
+          const joinData = await joinRes.json().catch(() => ({}));
+          if (!joinRes.ok || joinData.ok === false || (joinData.status !== 'already_joined' && !joinData.reply)) {
+            throw new Error(joinData.error || 'Seat join was not stored.');
+          }
+        }
         await loadApp();
       } catch (error) {
         errorBox.hidden = false;

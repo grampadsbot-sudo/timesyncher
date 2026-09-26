@@ -22,6 +22,14 @@ export function transcriptCustomerId(session) {
   return seatFromSession(session)?.ownerCustomerId || session?.customer_id || null;
 }
 
+export function seatJoinCustomerText(seat) {
+  const name = clean(seat?.displayName, 180) || 'Collaborator';
+  const paid = String(seat?.payer || 'owner') === 'owner'
+    ? `${name}: Craig paid for this seat with the coupon.`
+    : `${name} paid for my own seat with the coupon.`;
+  return `${paid} I accepted the EULA terms and clicked join. Keep us on the Big Island.`;
+}
+
 export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, seats } = {}) {
   if (!ownerCustomerId || !tripId) {
     throw Object.assign(new Error('Owner session is missing a vacation.'), { statusCode: 409 });

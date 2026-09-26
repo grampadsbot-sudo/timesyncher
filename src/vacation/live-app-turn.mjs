@@ -307,6 +307,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+  for (let attempt = 0; attempt < 2 && !String(reply || '').trim(); attempt += 1) {
+    model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+  }
   if (reply && replyLeavesDestination(reply, destination)) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
