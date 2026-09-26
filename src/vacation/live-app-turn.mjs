@@ -720,14 +720,19 @@ export function formatQualityLine(quality) {
 
 export function jevReplacementChoices({ customerTurn, draft, corpus }) {
   const flags = hardQualityFlags(draft, customerTurn, corpus);
-  const statements = splitSentences(customerTurn).filter((sentence) => !/\?\s*$/.test(sentence)).slice(0, 4);
   const repairs = [];
   if (flags.missingPrice || customerAsksPrice(customerTurn)) repairs.push(`It's ${UNLIMITED_PHRASE}.`);
   if (flags.missingAccess || customerAsksAccessChoice(customerTurn)) repairs.push('You can each choose view access or edit access.');
-  const echo = statements.join(' ');
+  const kept = splitSentences(draft).filter((sentence) => {
+    const after = hardQualityFlags(sentence, customerTurn, corpus);
+    return !after.split && !after.invented.length && !after.missingAccess;
+  });
+  const statements = splitSentences(customerTurn).filter((sentence) => !/\?\s*$/.test(sentence)).slice(0, 3);
+  const bridge = 'The plan stays on the days and places you named.';
   const candidates = [
-    [repairs.join(' '), echo, 'The plan stays on the days and places you named.'].filter(Boolean).join(' '),
-    [echo, repairs.join(' '), 'I will keep this to what you just said.'].filter(Boolean).join(' '),
+    [...repairs, ...kept].filter(Boolean).join(' '),
+    [...repairs, ...statements, ...kept].filter(Boolean).join(' '),
+    [bridge, ...repairs, ...kept].filter(Boolean).join(' '),
   ];
   const unique = [];
   for (const candidate of candidates) {
@@ -737,7 +742,7 @@ export function jevReplacementChoices({ customerTurn, draft, corpus }) {
     if (after.split || after.invented.length || after.missingPrice || after.missingAccess) continue;
     unique.push(text);
   }
-  return unique;
+  return unique.slice(0, 2);
 }
 
 export function rewriteReplacesDraft(draft, rewritten) {
