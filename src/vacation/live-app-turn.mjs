@@ -510,15 +510,44 @@ function thingPattern(title) {
   return null;
 }
 
+function swimDayKey(label) {
+  const match = String(label || '').match(/^((?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) [A-Z][a-z]{2,3} \d{1,2})/);
+  return match ? match[1] : '';
+}
+
+function swimLabelRank(label) {
+  if (/beach or house pool/i.test(label)) return 3;
+  if (/house pool|\bbeach\b/i.test(label)) return 2;
+  return 1;
+}
+
+function mergeSwimLabel(labels, label) {
+  const day = swimDayKey(label);
+  if (!day) return;
+  const idx = labels.findIndex((item) => swimDayKey(item) === day);
+  if (idx < 0) {
+    labels.push(label);
+    return;
+  }
+  if (swimLabelRank(label) > swimLabelRank(labels[idx])) labels[idx] = label;
+}
+
 function swimPlanLabel(sentence) {
   if (!/\bswim\b|house pool/i.test(sentence)) return '';
   const dated = datedMentions(sentence)[0];
-  const day = dated ? formatMention({ ...dated, year: dated.year || null }, { withWeekday: true }) : '';
+  if (!dated) return '';
+  const day = formatMention({ ...dated, year: dated.year || null }, { withWeekday: true });
+  if (!day) return '';
   let plan = '';
   if (/beach/i.test(sentence) && /house pool/i.test(sentence)) plan = 'beach or house pool';
   else if (/house pool/i.test(sentence)) plan = 'house pool';
   else if (/\bbeach\b/i.test(sentence)) plan = 'beach';
   return [day, plan].filter(Boolean).join(' ');
+}
+
+function customerNamedWeekday(customerText, weekdayName) {
+  if (!weekdayName) return false;
+  return new RegExp(`\\b${weekdayName}\\b`, 'i').test(String(customerText || ''));
 }
 
 const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
@@ -548,12 +577,14 @@ export function applyAgreedAppSwim(things, customerText, appText, span = null) {
   for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
     const dated = datedMentions(sentence)[0];
     if (dated) {
+      if (!customerNamedWeekday(customerText, dated.weekday)) continue;
       const label = formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true });
       if (label) labels.push(label);
       continue;
     }
     const weekday = sentence.match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i);
-    const resolved = weekday ? weekdayInsideSpan(weekday[1], span) : '';
+    if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
+    const resolved = weekdayInsideSpan(weekday[1], span);
     if (resolved) labels.push(resolved);
   }
   if (!labels.length) return things;
@@ -638,13 +669,8 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     const spanThing = thing.title === 'Big Island' || thing.title === 'Kailua-Kona house';
     let customerWhen = thing.customerWhen || '';
     if (thing.title === 'Swim') {
-      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
-      for (const hit of hits) {
-        const label = swimPlanLabel(hit);
-        if (!label) continue;
-        if (labels.some((item) => item === label || item.startsWith(`${label} `) || label.startsWith(`${item} `))) continue;
-        labels.push(label);
-      }
+      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part));
+      for (const hit of hits) mergeSwimLabel(labels, swimPlanLabel(hit));
       customerWhen = labels.join(' · ');
     } else if (!customerWhen && !spanThing) {
       const datedHit = hits.find((hit) => datedMentions(hit)[0] && !/keep us on the big island|stay on the big island/i.test(hit));
