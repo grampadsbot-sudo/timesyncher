@@ -478,6 +478,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     reply: null,
   };
   if (!produced.reply) {
+    await db`delete from transcript_turns where id = ${turnRows[0].id}`;
     return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
   }
 
