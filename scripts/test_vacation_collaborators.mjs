@@ -46,6 +46,10 @@ assert.equal(
   collaboratorTelegramLink('abc 123', { TIMESYNCHER_TELEGRAM_BOT_USERNAME: 'TimeSyncherVacationStagingBot' }),
   'https://t.me/TimeSyncherVacationStagingBot?start=abc%20123',
 );
+assert.equal(
+  collaboratorTelegramLink('abc', { TIMESYNCHER_TELEGRAM_BOT_USERNAME: '"TimeSyncherVacationStagingBot\\n"' }),
+  'https://t.me/TimeSyncherVacationStagingBot?start=abc',
+);
 
 const email = buildCollaboratorInviteEmail({
   contact: { firstName: 'Kim', email: 'kim@example.com' },
