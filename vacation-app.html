@@ -197,9 +197,49 @@
     }
     .chat-pane {
       display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       background: var(--panel);
     }
+    .path-nav {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .path-nav button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+    .path-nav button.active {
+      border-color: var(--gold);
+      color: var(--gold-strong);
+      font-weight: 750;
+    }
+    .itinerary-screen, .thing-screen {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px clamp(12px, 3vw, 24px);
+    }
+    .itinerary-screen h1, .thing-screen h1 { margin: 0 0 8px; font-size: 22px; }
+    .thing-list { list-style: none; margin: 0; padding: 0; }
+    .thing-list button, .thing-back {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin: 8px 0;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    .thing-list small, .thing-screen .thing-category, .thing-screen .thing-meta { color: var(--muted); font-weight: 700; }
+    .thing-when { display: block; color: var(--gold-strong); font-weight: 750; margin-top: 4px; }
+    .thing-list p, .intake-rule { margin: 4px 0 12px; }
+    .thing-notes, .collaborator-notes { margin: 12px 0; padding: 0; }
+    .collaborator-notes { border-top: 1px solid var(--line); padding-top: 12px; }
+    .collaborator-notes h2 { margin: 0 0 8px; font-size: 16px; }
     .messages {
       min-height: 0;
       overflow: auto;
@@ -403,7 +443,7 @@
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
     let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
-    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null };
+    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     const icon = {
       clip: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21.4 11.6-8.7 8.7a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.6-8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -443,14 +483,35 @@
 
     function isPlaceholderTrip(trip) {
       if (!trip) return true;
+      const hasPlan = Boolean(String(trip.destination || '').trim() || trip.startDate || trip.endDate);
+      if (hasPlan) return false;
       const title = String(trip.title || '').trim();
       if (!title) return true;
       const key = title.toLowerCase();
       if (PLACEHOLDER_TITLES.has(key)) return true;
-      const hasPlan = Boolean(String(trip.destination || '').trim() || trip.startDate || trip.endDate);
       if (key === 'vegas anniversary' && !hasPlan) return true;
       if (String(trip.status || '').toLowerCase() === 'onboarding' && !String(trip.destination || '').trim() && !realSiteUrl(trip.publicUrl)) return true;
       return false;
+    }
+
+    function dateParts(value) {
+      const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!match) return null;
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return { y: match[1], m: Number(match[2]), d: Number(match[3]), mon: months[Number(match[2]) - 1] };
+    }
+
+    function tripBadge(trip) {
+      if (!trip || isPlaceholderTrip(trip)) return 'no vacations yet';
+      const place = String(trip.destination || trip.title || '').split(',')[0].trim();
+      const start = dateParts(trip.startDate);
+      const end = dateParts(trip.endDate);
+      if (place && start && end) {
+        if (start.y === end.y && start.m === end.m) return `${place} ${start.mon} ${start.d}–${end.d} ${start.y}`;
+        if (start.y === end.y) return `${place} ${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`;
+        return `${place} ${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
+      }
+      return place || 'no vacations yet';
     }
 
     function realVacations() {
@@ -556,32 +617,18 @@
       const welcome = hasSite
         ? 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. They add notes and help shape the days with you. When price comes up, the household plan to name is unlimited vacations for the whole year.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.'
         : 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. They join the same trip, add notes, and help shape the days. When you ask about price, the plan to name is unlimited vacations for the whole year.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
+      const thing = state.things.find((item) => item.id === state.thingId) || null;
+      const pathNav = `<nav class="path-nav" aria-label="Vacation path">
+        <button type="button" data-path="onboarding" class="${state.screen === 'onboarding' ? 'active' : ''}">Onboarding</button>
+        <button type="button" data-path="itinerary" class="${state.screen === 'itinerary' || state.screen === 'thing' ? 'active' : ''}" ${state.things.length ? '' : 'disabled'}>Itinerary</button>
+      </nav>`;
       const turnMarkup = state.turns.length
         ? state.turns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
           return `<article class="bubble ${user ? 'user' : ''}"><small>${user ? 'You' : 'TimeSyncher'}</small>${safe(turn.body)}</article>`;
         }).join('')
         : `<article class="bubble"><small>TimeSyncher</small>${welcome}</article>`;
-      root.innerHTML = `<main class="app">
-        <header class="topbar">
-          <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
-          ${trips.length > 1 ? `<div class="trip-menu" id="tripMenu">
-            <button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(trip.title)}</span>${icon.chevron}</button>
-            <div class="trip-list" role="listbox">
-              ${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}">
-                <span>${item.id === trip?.id ? icon.check : ''}</span>
-                <span><b>${safe(item.title)}</b><small>${safe([item.destination, item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
-              </button>`).join('')}
-            </div>
-          </div>` : `<div class="trip-label" id="tripLabel">${safe(trip?.title || 'no vacations yet')}</div>`}
-        </header>
-        <section class="workspace${hasSite ? '' : ' chat-only'}" id="workspace">
-          ${hasSite ? `<div class="site-pane"><iframe title="${safe(trip.title)} website" src="${safe(siteUrl)}"></iframe></div>
-          <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
-          <section class="chat-pane" aria-label="Vacation chat">
-            <div class="messages" id="messages">
-              ${turnMarkup}
-            </div>
+      const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>
             <form class="composer" id="composer">
               <div class="attachment-row" id="attachmentRow"></div>
               <div class="compose-grid">
@@ -591,7 +638,51 @@
                 <button class="send-button" type="submit" title="Send">${icon.send}</button>
               </div>
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
-            </form>
+            </form>`;
+      const whenLine = (item) => [item?.whenLabel, item?.customerWhen].filter(Boolean).join(' · ');
+      const noteLine = (item) => (Array.isArray(item?.notes) && item.notes[0]) || item?.description || '';
+      const itineraryPane = `<section class="itinerary-screen" id="itineraryScreen" data-screen="itinerary" aria-label="Itinerary">
+        <h1>Itinerary</h1>
+        <p data-intake-span>${safe(trip?.intakeSpan || 'Built from the long intake.')}</p>
+        ${trip?.intakeRule ? `<p class="intake-rule" data-intake-rule>${safe(trip.intakeRule)}</p>` : ''}
+        <ul class="thing-list">${state.things.map((item) => `<li><button type="button" data-thing-id="${safe(item.id)}"><b>${safe(item.title)}</b>${whenLine(item) ? `<span class="thing-when" data-when="${safe(whenLine(item))}">${safe(whenLine(item))}</span>` : ''}</button><small>${safe([item.category, item.who].filter(Boolean).join(' · '))}</small>${noteLine(item) ? `<p>${safe(noteLine(item))}</p>` : ''}</li>`).join('')}</ul>
+      </section>`;
+      const thingNotes = Array.isArray(thing?.notes) ? thing.notes : [];
+      const collaboratorNotes = Array.isArray(thing?.collaboratorNotes) ? thing.collaboratorNotes : [];
+      const thingPane = `<section class="thing-screen" id="thingScreen" data-screen="thing" aria-label="Thing page">
+        <button class="thing-back" type="button" data-path="itinerary">Back to itinerary</button>
+        <h1>${safe(thing?.title || '')}</h1>
+        <p class="thing-category">${safe(thing?.category || '')}</p>
+        ${thing?.who ? `<p class="thing-meta" data-who>Who: ${safe(thing.who)}</p>` : ''}
+        ${whenLine(thing) ? `<p class="thing-meta" data-when>When: ${safe(whenLine(thing))}</p>` : ''}
+        <ul class="thing-notes" data-notes>${thingNotes.map((note) => `<li>${safe(note)}</li>`).join('')}</ul>
+        <section class="collaborator-notes" data-collaborator-notes>
+          <h2>Collaborator notes</h2>
+          ${collaboratorNotes.length ? `<ul>${collaboratorNotes.map((note) => `<li>${safe(note)}</li>`).join('')}</ul>` : '<p>No collaborator notes yet.</p>'}
+        </section>
+      </section>`;
+      const body = state.screen === 'thing' && thing
+        ? thingPane
+        : (state.screen === 'itinerary' && state.things.length ? itineraryPane : onboardingPane);
+      root.innerHTML = `<main class="app">
+        <header class="topbar">
+          <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
+          ${trips.length > 1 ? `<div class="trip-menu" id="tripMenu">
+            <button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button>
+            <div class="trip-list" role="listbox">
+              ${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}">
+                <span>${item.id === trip?.id ? icon.check : ''}</span>
+                <span><b>${safe(item.title)}</b><small>${safe([item.destination, item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
+              </button>`).join('')}
+            </div>
+          </div>` : `<div class="trip-label" id="tripLabel">${safe(tripBadge(trip))}</div>`}
+        </header>
+        <section class="workspace${hasSite ? '' : ' chat-only'}" id="workspace">
+          ${hasSite ? `<div class="site-pane"><iframe title="${safe(trip.title)} website" src="${safe(siteUrl)}"></iframe></div>
+          <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
+          <section class="chat-pane" aria-label="Vacation chat">
+            ${pathNav}
+            ${body}
           </section>
         </section>
       </main>`;
@@ -619,13 +710,30 @@
           });
         });
       }
-      document.getElementById('attachButton').addEventListener('click', () => document.getElementById('fileInput').click());
+      document.querySelectorAll('[data-path]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const next = button.dataset.path;
+          if (next === 'itinerary' && !state.things.length) return;
+          state.screen = next === 'thing' ? 'thing' : next;
+          renderApp();
+        });
+      });
+      document.querySelectorAll('[data-thing-id]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.thingId = button.dataset.thingId;
+          state.screen = 'thing';
+          renderApp();
+        });
+      });
+      if (document.getElementById('splitter')) bindSplitter();
+      const attachButton = document.getElementById('attachButton');
+      if (!attachButton) return;
+      attachButton.addEventListener('click', () => document.getElementById('fileInput').click());
       document.getElementById('fileInput').addEventListener('change', (event) => {
         state.attachments = Array.from(event.target.files || []).slice(0, MAX_FILES_PER_TURN);
         renderAttachments();
       });
       bindVoice();
-      if (document.getElementById('splitter')) bindSplitter();
       document.getElementById('composer').addEventListener('submit', sendMessage);
     }
 
@@ -711,6 +819,16 @@
         });
         const data = await res.json();
         if (!res.ok || data.ok === false || !data.reply) throw new Error(data.error || 'The app did not return a reply.');
+        if (Array.isArray(data.itinerary)) state.things = data.itinerary;
+        if (data.vacation?.id) {
+          const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
+          if (index >= 0) state.vacations[index] = data.vacation;
+          else state.vacations.push(data.vacation);
+          const label = document.getElementById('tripLabel');
+          if (label) label.textContent = tripBadge(data.vacation);
+          const itineraryButton = document.querySelector('[data-path="itinerary"]');
+          if (itineraryButton && state.things.length) itineraryButton.disabled = false;
+        }
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
       } catch (error) {
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small><span class="error">${safe(error.message)}</span></article>`);
@@ -742,6 +860,10 @@
         state.eula = data.eula || null;
         state.vacations = data.vacations || [];
         state.turns = data.turns || [];
+        state.things = Array.isArray(data.itinerary) ? data.itinerary : [];
+        if (state.screen === 'thing' && !state.things.some((item) => item.id === state.thingId)) {
+          state.screen = state.things.length ? 'itinerary' : 'onboarding';
+        }
         state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
         if (state.eula?.accepted !== true) {
           renderEula();

@@ -31,7 +31,11 @@ import {
   LIVE_OPENER_PRODUCER,
   liveTurnRecord,
   onboardingOpenerText,
+  postIntakeUpsellTurn,
   produceLiveAppReply,
+  applyCustomerNotes,
+  intakeFacts,
+  thingsFromIntake,
 } from '../src/vacation/live-app-turn.mjs';
 import {
   openCollaboratorAppSeats,
@@ -193,6 +197,8 @@ function vacationAppTripSummary(row) {
     current: Boolean(row.current),
     publicUrl: url,
     shareToken: metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug || null,
+    intakeRule: metadata.intakeRule || '',
+    intakeSpan: metadata.intakeSpan || '',
   };
 }
 
@@ -502,14 +508,141 @@ async function queueVacationAppTurn(db, session, trip, body) {
       now(), ${exchangeLatency}
     )
   `;
+  const itinerary = await recordCustomerThingNotes(
+    db,
+    tripId,
+    requestText,
+    {
+      collaborator: Boolean(seat),
+      speakerName,
+    },
+    postIntakeUpsellTurn(requestText, priorTurns) ? requestText : '',
+  );
+  const vacationRows = await db`
+    select id, title, destination, start_date, end_date, status, metadata
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
   return {
     ...base,
     ok: true,
     status: 'replied',
     reply: produced.reply,
     appTurnIndex: appLive.turnIndex,
+    itinerary,
+    vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
     error: null,
   };
+}
+
+function thingView(row) {
+  const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const notes = Array.isArray(meta.notes) ? meta.notes : (row.description ? [row.description] : []);
+  const collaboratorNotes = Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [];
+  return {
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    description: row.description || notes.join(' '),
+    who: meta.who || '',
+    whenLabel: meta.whenLabel || '',
+    customerWhen: meta.customerWhen || '',
+    notes,
+    collaboratorNotes,
+  };
+}
+
+async function loadTripThings(db, tripId) {
+  if (!tripId) return [];
+  const rows = await db`
+    select id, category, title, description, metadata
+    from trip_things
+    where trip_id = ${tripId}
+    order by created_at asc
+  `;
+  return rows.map(thingView);
+}
+
+async function ensureIntakeItinerary(db, tripId, text) {
+  const facts = intakeFacts(text);
+  const planned = facts.things.length ? facts.things : thingsFromIntake(text);
+  if (!planned.length) return loadTripThings(db, tripId);
+  const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
+  if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
+  const span = facts.span;
+  if (span?.destination || span?.start) {
+    await db`
+      update trips
+      set title = case
+            when ${span.placeTitle || ''} <> '' and title in (
+              'Vacation', 'TimeSyncher Vacation Coupon Checkout', 'TimeSyncher Vacation Setup', 'TimeSyncher Vacation Admin Test'
+            ) then ${span.placeTitle || 'Vacation'}
+            else title
+          end,
+          destination = case
+            when coalesce(destination, '') = '' then ${span.destination || ''}
+            else destination
+          end,
+          start_date = coalesce(start_date, ${span.start || null}::date),
+          end_date = coalesce(end_date, ${span.end || null}::date),
+          status = case when status = 'onboarding' then 'planning' else status end,
+          metadata = coalesce(metadata, '{}'::jsonb) || ${{
+            intakeRule: facts.rule || '',
+            intakeSpan: span.spanLabel || '',
+            intakeBadge: span.badge || '',
+          }},
+          updated_at = now()
+      where id = ${tripId}
+    `;
+  }
+  for (const thing of planned) {
+    await db`
+      insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
+      values (
+        ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
+        'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
+          source: 'long-intake',
+          who: thing.who || '',
+          whenLabel: thing.whenLabel || '',
+          customerWhen: '',
+          notes: thing.notes || [],
+          collaboratorNotes: [],
+        }}
+      )
+    `;
+  }
+  return loadTripThings(db, tripId);
+}
+
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '' } = {}, intakeText = '') {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText);
+  const current = await loadTripThings(db, tripId);
+  if (!current.length || !String(text || '').trim()) return current;
+  const next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  for (const thing of next) {
+    const prior = current.find((item) => item.id === thing.id);
+    if (!prior) continue;
+    if (JSON.stringify({
+      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who,
+    }) === JSON.stringify({
+      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who,
+    })) continue;
+    await db`
+      update trip_things
+      set description = ${thing.description || prior.description || ''},
+          metadata = coalesce(metadata, '{}'::jsonb) || ${{
+            who: thing.who || '',
+            whenLabel: thing.whenLabel || prior.whenLabel || '',
+            customerWhen: thing.customerWhen || '',
+            notes: thing.notes || [],
+            collaboratorNotes: thing.collaboratorNotes || [],
+          }},
+          updated_at = now()
+      where id = ${thing.id}
+    `;
+  }
+  return loadTripThings(db, tripId);
 }
 
 async function vacationAppEula(session, env = process.env) {
@@ -547,6 +680,7 @@ async function handleVacationApp(req, res, db, url) {
     const eula = await vacationAppEula(session, process.env);
     if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
+    const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
     return sendJson(res, 200, {
       ok: true,
@@ -561,6 +695,7 @@ async function handleVacationApp(req, res, db, url) {
       eula,
       vacations,
       turns,
+      itinerary,
     });
   }
 

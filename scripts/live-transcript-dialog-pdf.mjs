@@ -9,6 +9,7 @@ import {
   LIVE_OPENER_PRODUCER,
   LIVE_REPLY_PRODUCER,
   LIVE_TRANSCRIPT_CAPTURE,
+  formatQualityLine,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -110,6 +111,10 @@ export function assertLiveTranscript(doc) {
       }
       if (turn.jevBeforeModel !== true && turn.jev?.jevBeforeModel !== true) {
         throw new Error(`refused: turn ${turn.turnIndex} does not prove Jev ran before the model`);
+      }
+      const qualityLine = formatQualityLine(turn.quality);
+      if (!qualityLine || /not judged/i.test(qualityLine)) {
+        throw new Error(`refused: turn ${turn.turnIndex} quality is not judged`);
       }
     }
     }
@@ -402,6 +407,10 @@ export function rosterLines(doc) {
 
 export function liveV7Pack(doc, shape) {
   const generated = (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
+  const scores = generated.map((turn) => Number(turn.quality?.score)).filter((score) => Number.isInteger(score) && score >= 1 && score <= 5);
+  const meanQuality = scores.length ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(3) : '0';
+  const histogram = [5, 4, 3, 2, 1].map((score) => `${score}×${scores.filter((item) => item === score).length}`).join(', ');
+  const needsRepair = scores.filter((score) => score <= 2).length;
   const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
@@ -426,20 +435,29 @@ export function liveV7Pack(doc, shape) {
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,
-    headline: 'Live app capture. Quality scores are not judged on this drop. Timings are measured gen ms.',
+    headline: 'Live app capture. Jev judged every generated reply. Timings are measured gen ms.',
     quality_rows: [
       ['Metric', 'v6 gpt-5-mini', 'v7 Tier 1–4'],
       ['App turns', '23', String(generated.length)],
-      ['Mean overall_quality', '3.913', 'not judged'],
-      ['Histogram (overall)', '5×6, 4×13, 2×4', 'not judged'],
-      ['needs_repair', '15', 'not judged'],
-      ['Dialog rollup overall', '3', 'not judged'],
-      ['Dialog needs_repair', 'True', 'not judged'],
-      ['Dialog response_ready', 'False', 'not judged'],
+      ['Mean overall_quality', '3.913', meanQuality],
+      ['Histogram (overall)', '5×6, 4×13, 2×4', histogram],
+      ['needs_repair', '15', String(needsRepair)],
+      ['Dialog rollup overall', '3', meanQuality],
+      ['Dialog needs_repair', 'True', needsRepair > 0 ? 'True' : 'False'],
+      ['Dialog response_ready', 'False', Number(meanQuality) >= 3 ? 'True' : 'False'],
     ],
     tier_rows: [
       ['Tier', 'Model', 'Mean overall'],
-      ...[1, 2, 3, 4].map((tier) => [`T${tier}`, map[tier], 'not judged']),
+      ...[1, 2, 3, 4].map((tier) => {
+        const tierScores = generated
+          .filter((turn) => Number(turn.jev?.modelTier) === tier)
+          .map((turn) => Number(turn.quality?.score))
+          .filter((score) => Number.isInteger(score));
+        const tierMean = tierScores.length
+          ? (tierScores.reduce((sum, score) => sum + score, 0) / tierScores.length).toFixed(3)
+          : '0';
+        return [`T${tier}`, map[tier], tierMean];
+      }),
     ],
     timing_rows: timingRows,
     speedup: `Speedup (p50): this live session is ${speed}× faster than v6 gpt-5-mini main (~28834ms → ~${overall.p50}ms). Metric: live genLatencyMs vs published v6 mainModelElapsedMs.`,
@@ -455,7 +473,7 @@ export function liveV7Pack(doc, shape) {
     ],
     roster: rosterLines(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
-    judge: 'response_ready=n/a · needs_repair=n/a. scores: not judged. This live drop has no dialog judge.',
+    judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality}. Jev scored and commented on every generated reply.`,
     turns: (doc.turns || []).map((turn) => {
       const app = turn.role === 'app';
       const generatedTurn = app && turn.jev?.jevRan === true;
@@ -472,7 +490,7 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        quality: generatedTurn ? 'quality: not judged' : '',
+        quality: generatedTurn ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,

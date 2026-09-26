@@ -75,6 +75,24 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/never say "splitting payments"/.test(replyRules) || !/stripItem34Ban/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
     errors.push('shared producer does not fail closed on split-payment jargon');
   }
+  if (!/jevQualityRewrite/.test(liveTurn) || !/quality_unjudged/.test(liveTurn) || !/export async function jevQualityRewrite/.test(replyRules)) {
+    errors.push('shared producer does not judge every app reply with Jev');
+  }
+  if (!/building the itinerary/.test(liveTurn) || !/Post-intake:/.test(replyRules)) {
+    errors.push('shared producer does not acknowledge the itinerary and give the collab welcome right after long intake');
+  }
+  if (!/data-screen="itinerary"/.test(vacationApp) || !/data-screen="thing"/.test(vacationApp) || !/data-screen="onboarding"/.test(vacationApp)) {
+    errors.push('vacation app is missing the onboarding, itinerary, and thing screens');
+  }
+  if (!/thingsFromIntake/.test(api) || !/whenLabel/.test(api) || !/collaboratorNotes/.test(api)) {
+    errors.push('vacation app does not build dated things and collaborator notes from the long intake');
+  }
+  if (!/function tripBadge/.test(vacationApp) || !/data-collaborator-notes/.test(vacationApp)) {
+    errors.push('vacation app badge stays on no vacations yet after the itinerary is built');
+  }
+  if (!/quality\.draft/.test(liveTurn) || !/acceptQualityRewrite/.test(liveTurn)) {
+    errors.push('a Jev rewrite is not stored apart from the customer-facing reply');
+  }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');
   }
@@ -146,6 +164,14 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
     }
     if (turn.jevBeforeModel !== true && turn.jev?.jevBeforeModel !== true) {
       errors.push(`turn ${turn.turnIndex} does not prove Jev ran before the model`);
+    }
+    const score = Number(turn.quality?.score);
+    const comment = String(turn.quality?.comment || '').trim();
+    if (turn.quality?.judged !== true || !Number.isInteger(score) || score < 1 || score > 5 || !comment) {
+      errors.push(`turn ${turn.turnIndex} quality is not judged`);
+    }
+    if (/not judged/i.test(text) || /not judged/i.test(comment)) {
+      errors.push(`turn ${turn.turnIndex} quality is not judged`);
     }
     if (turn.jev?.jevRan === true) ran += 1;
   });
@@ -220,6 +246,7 @@ function appTurn(overrides = {}) {
     jevLatencyMs: 120,
     genLatencyMs: 400,
     jevBeforeModel: true,
+    quality: { judged: true, score: 4, comment: 'Clear day shape.', rewritten: false },
     ...overrides,
   });
 }
@@ -306,6 +333,10 @@ async function selfCheck() {
     sampleTurn(),
     appTurn({ text: 'Since you are splitting payments, Kimberly is covered.' }),
   ])).some((error) => /split-payment jargon/.test(error)));
+  assert.ok(assertLiveTurns(liveDoc([
+    sampleTurn(),
+    appTurn({ quality: null }),
+  ])).some((error) => /not judged/.test(error)));
   process.stdout.write('live app jev tier self-check passed\n');
 }
 
