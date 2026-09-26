@@ -397,9 +397,29 @@ async function queueVacationAppTurn(db, session, trip, body) {
     returning id
   `;
 
+  const memoryRows = await db`
+    select speaker, body
+    from transcript_turns
+    where customer_id = ${session.customer_id}
+      and trip_id = ${tripId}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+    order by coalesce(received_at, sent_at, created_at) asc
+    limit 40
+  `;
+  const priorTurns = memoryRows.map((row) => ({
+    role: row.speaker === 'app' ? 'app' : 'customer',
+    text: row.body || '',
+  }));
   let produced;
   try {
-    produced = await produceLiveAppReply({ customerTurn: requestText, session, env: process.env });
+    produced = await produceLiveAppReply({
+      customerTurn: requestText,
+      session,
+      priorTurns,
+      tripTitle: trip?.title || '',
+      env: process.env,
+    });
   } catch (error) {
     produced = {
       reply: null,

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sql } from '../src/vacation/db.mjs';
@@ -10,7 +12,11 @@ import {
   loadLiveTranscriptByToken,
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
-import { DIALOG_TEST_FINGERPRINT } from './vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
+
+const V6_GPT5_MINI_P50_MS = 28834;
+const V6_GPT5_MINI_P95_MS = 39693;
+const ROSTER_NAMES = ['Kimberly', 'Tyler', 'Lauren'];
 
 const BANNED_GENERATORS = /dialog_vacation_test_turn|dialog-pdf-openrouter-selfcall|openrouter-selfcall/i;
 const CANNED_APP_REPLY = 'Got it. I saved that';
@@ -92,8 +98,8 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: turn ${turn.turnIndex} app text exists without a real Jev classify`);
       }
       const modelId = String(turn.modelId || turn.model?.responseModel || turn.jev?.responseModel || '').trim();
-      if (!modelId.includes('/')) {
-        throw new Error(`refused: turn ${turn.turnIndex} app reply is missing the bake-off model id`);
+      if (!isBakeoffModelId(modelId)) {
+        throw new Error(`refused: turn ${turn.turnIndex} model is outside the bake-off map`);
       }
       const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
       const genMs = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
@@ -230,18 +236,72 @@ export function assessPackShape(doc, options = {}) {
   };
 }
 
+function percentile(values, p) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  return sorted[index];
+}
+
+function generatedAppTurns(doc) {
+  return (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
+}
+
 function packPages(doc, shape) {
   const name = doc.targetPerson;
   const summary = shape.summary;
   const tiersUsed = (shape.tiersUsed || []).join(', ') || 'none';
   const modelsUsed = (shape.modelsUsed || []).join(', ') || 'none';
+  const generated = generatedAppTurns(doc);
+  const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
+  const p50 = percentile(gens, 50);
+  const p95 = percentile(gens, 95);
+  const speed = p50 ? (V6_GPT5_MINI_P50_MS / p50).toFixed(1) : 'n/a';
+  const map = bakeoffTierModels();
+  const roster = ROSTER_NAMES.filter((person) => (doc.turns || []).some((turn) => String(turn.text || '').includes(person)));
   const cover = [
-    `Dialog Pack - ${shape.trip} (live-app)`,
+    `Dialog Pack - ${shape.trip} v7 Tier 1-4`,
     `pack_id: ${shape.pack_id}`,
-    `turns: ${summary.turnCount}`,
+    `turns=${summary.turnCount} (customer ${summary.customerTurns} / app ${summary.appTurns})`,
+    'no_gpt5mini: True',
+    'source=live-app (not sim)',
     `tiers used: ${tiersUsed}`,
     `models used: ${modelsUsed}`,
-    'source=live-app (not sim)',
+    '',
+    'QUALITY COMPARISON',
+    'vs v6 gpt-5-mini (published mainModel reference, not this session)',
+    'metric | v6 gpt-5-mini | this live session',
+    `gen p50 ms | ${V6_GPT5_MINI_P50_MS} | ${p50 ?? 'n/a'}`,
+    `gen p95 ms | ${V6_GPT5_MINI_P95_MS} | ${p95 ?? 'n/a'}`,
+    `speed vs v6 p50 | 1x | ${speed}x`,
+    '',
+    'Per-tier models',
+    'tier | model',
+    ...[1, 2, 3, 4].map((tier) => `T${tier} | ${map[tier]}`),
+    '',
+    'Per-tier mean overall',
+    'tier | model | turns | mean gen ms',
+    ...[1, 2, 3, 4].map((tier) => {
+      const rows = generated.filter((turn) => Number(turn.jev?.modelTier) === tier);
+      const mean = rows.length
+        ? Math.round(rows.reduce((sum, turn) => sum + Number(turn.genLatencyMs ?? turn.model?.genLatencyMs ?? 0), 0) / rows.length)
+        : 'n/a';
+      return `T${tier} | ${map[tier]} | ${rows.length} | ${mean}`;
+    }),
+    '',
+    'TIMINGS',
+    'turn | tier | model | gen ms | jev ms',
+    ...(generated.length
+      ? generated.map((turn) => {
+        const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
+        const jev = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
+        const model = modelIdOf(turn);
+        return `${turn.turnIndex} | ${turn.jev?.modelTier} | ${model} | ${gen} | ${jev}`;
+      })
+      : ['none']),
+    '',
+    'Roster / Collaborators',
+    roster.length ? `named in this live transcript: ${roster.join(', ')}` : 'named in this live transcript: none recorded',
   ];
   const meta = [
     'Meta',
@@ -302,67 +362,115 @@ function pdfEscape(value) {
   return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/·/g, '\\267');
 }
 
+function timingStats(values) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (!sorted.length) return { count: 0, p50: 'n/a', p95: 'n/a', mean: 'n/a', max: 'n/a' };
+  const pick = (p) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1))];
+  const mean = Math.round(sorted.reduce((sum, value) => sum + value, 0) / sorted.length);
+  return { count: sorted.length, p50: pick(50), p95: pick(95), mean, max: sorted[sorted.length - 1] };
+}
+
+export function liveV7Pack(doc, shape) {
+  const generated = (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
+  const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
+  const overall = timingStats(gens);
+  const map = bakeoffTierModels();
+  const roster = ROSTER_NAMES.filter((person) => (doc.turns || []).some((turn) => String(turn.text || '').includes(person)));
+  const trip = shape.trip || 'untitled';
+  const title = `Dialog Pack — ${trip} v7 Tier 1–4`;
+  const timingRows = [
+    ['Pack', 'Model(s)', 'n', 'p50 ms', 'p95 ms', 'mean ms', 'max ms'],
+    ['v6', 'openai/gpt-5-mini', '23', '28834', '39693', '27833', '44762'],
+    ['this live session', 'T1–4 bake-off', String(overall.count), String(overall.p50), String(overall.p95), String(overall.mean), String(overall.max)],
+  ];
+  for (const tier of [1, 2, 3, 4]) {
+    const rows = generated.filter((turn) => Number(turn.jev?.modelTier) === tier);
+    const stats = timingStats(rows.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs)));
+    timingRows.push([`v7 T${tier}`, map[tier], String(stats.count), String(stats.p50), String(stats.p95), String(stats.mean), String(stats.max)]);
+  }
+  const speed = Number.isFinite(Number(overall.p50)) && Number(overall.p50) > 0
+    ? (V6_GPT5_MINI_P50_MS / Number(overall.p50)).toFixed(2)
+    : 'n/a';
+  const name = String(doc.targetPerson || 'customer').toUpperCase();
+  return {
+    title,
+    pack_id: shape.pack_id,
+    footer_id: shape.pack_id,
+    turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,
+    headline: 'Live app capture. Quality scores are not judged on this drop. Timings are measured gen ms.',
+    quality_rows: [
+      ['Metric', 'v6 gpt-5-mini', 'this live session'],
+      ['App turns', '23', String(generated.length)],
+      ['Mean overall_quality', '3.913', 'not judged'],
+      ['Histogram (overall)', '5×6, 4×13, 2×4', 'not judged'],
+      ['needs_repair', '15', 'not judged'],
+      ['Dialog rollup overall', '3', 'not judged'],
+      ['Dialog needs_repair', 'True', 'not judged'],
+      ['Dialog response_ready', 'False', 'not judged'],
+    ],
+    tier_rows: [
+      ['Tier', 'Model', 'Mean overall'],
+      ...[1, 2, 3, 4].map((tier) => [`T${tier}`, map[tier], 'not judged']),
+    ],
+    timing_rows: timingRows,
+    speedup: `Speedup (p50): this live session is ${speed}× faster than v6 gpt-5-mini main (~28834ms → ~${overall.p50}ms). Metric: live genLatencyMs vs published v6 mainModelElapsedMs.`,
+    recipe: [
+      ['mode', 'live-app'],
+      ['canonical', 'tier_models.json'],
+      ['no_gpt5mini', 'True'],
+      ['no_freestyle_app', 'True'],
+      ['no_dialog_app_respond', 'True'],
+      ['no_dialog_vacation_test_turn', 'True'],
+      ['source', 'live-vacation-app'],
+      ['tier_models', 'dialog-runners/tier_models.json'],
+    ],
+    roster: [
+      `Owner: ${doc.targetPerson || 'unknown'}`,
+      roster.length ? `Named in this live transcript: ${roster.join(', ')}` : 'Named in this live transcript: none recorded',
+    ],
+    beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
+    judge: 'response_ready=n/a · needs_repair=n/a. scores: not judged. This live drop has no dialog judge.',
+    turns: (doc.turns || []).map((turn) => {
+      const app = turn.role === 'app';
+      const generatedTurn = app && turn.jev?.jevRan === true;
+      const beat = Array.isArray(turn.beats) && turn.beats.length ? turn.beats.join(',') : (generatedTurn ? 'live' : 'open');
+      const model = modelIdOf(turn);
+      const meta = [`n=${turn.turnIndex}`, `beat=${beat}`];
+      if (generatedTurn) meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
+      const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
+      return {
+        label: `T${turn.turnIndex} ${app ? 'APP' : name}`,
+        meta: meta.join(' · '),
+        app,
+        text: String(turn.text || ''),
+        quality: generatedTurn ? 'quality: not judged' : '',
+        timing: generatedTurn ? `timing: gen=${gen}ms model=${model} tier=${turn.jev.modelTier}` : '',
+      };
+    }),
+  };
+}
+
 export function renderLiveTranscriptPdf(doc, options = {}) {
   const checked = assertLiveTranscript(doc);
   const shape = assessPackShape(checked, options);
-  const [cover, meta, transcript, notes] = packPages(checked, shape);
-  const pageLines = [
-    ...paginate(cover, 46),
-    ...paginate(meta, 46),
-    ...paginate(transcript, 46),
-    ...paginate(notes, 46),
-  ];
-  const pages = pageLines.map((lines) => {
-    const commands = lines.map((line) => `(${pdfEscape(line)}) Tj T*`).join('\n');
-    return `BT /F1 11 Tf 54 748 Td 14 TL\n${commands}\nET`;
-  });
-  if (pages.length === 0) pages.push('BT /F1 11 Tf 54 748 Td ( ) Tj ET');
-
-  const objects = new Map();
-  let nextId = 1;
-  const fontId = nextId++;
-  const pagesId = nextId++;
-  const pageIds = [];
-  const contentIds = [];
-  for (const stream of pages) {
-    const contentId = nextId++;
-    contentIds.push(contentId);
-    objects.set(contentId, `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`);
-    const pageId = nextId++;
-    pageIds.push(pageId);
-    objects.set(pageId, `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontId} 0 R >> >> >>`);
+  const pack = liveV7Pack(checked, shape);
+  const script = fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url));
+  const result = spawnSync('python3', [script], { input: JSON.stringify(pack), maxBuffer: 16 * 1024 * 1024 });
+  if (result.status !== 0) {
+    throw new Error(`refused: v7 PDF chrome failed: ${result.stderr?.toString() || result.status}`);
   }
-  objects.set(fontId, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
-  objects.set(pagesId, `<< /Type /Pages /Count ${pageIds.length} /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] >>`);
-  const catalogId = nextId++;
-  objects.set(catalogId, `<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
-
-  let pdf = '%PDF-1.4\n';
-  const offsets = [0];
-  for (let id = 1; id < nextId; id += 1) {
-    offsets[id] = Buffer.byteLength(pdf);
-    pdf += `${id} 0 obj\n${objects.get(id)}\nendobj\n`;
-  }
-  const xref = Buffer.byteLength(pdf);
-  pdf += `xref\n0 ${nextId}\n`;
-  pdf += '0000000000 65535 f \n';
-  for (let id = 1; id < nextId; id += 1) {
-    pdf += `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
-  }
-  pdf += `trailer\n<< /Size ${nextId} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
-  return Buffer.from(pdf, 'latin1');
+  return Buffer.from(result.stdout);
 }
 
+
 export function extractPdfText(buffer) {
-  const raw = Buffer.from(buffer).toString('latin1');
-  const parts = [];
-  const pattern = /\(((?:\\.|[^\\)])*)\)\s*Tj/g;
-  let match = pattern.exec(raw);
-  while (match) {
-    parts.push(match[1].replace(/\\([0-7]{1,3})/g, (_, oct) => String.fromCharCode(parseInt(oct, 8))).replace(/\\([\\()])/g, '$1'));
-    match = pattern.exec(raw);
-  }
-  return parts.join('\n');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-pdf-text-'));
+  const file = path.join(dir, 'in.pdf');
+  fs.writeFileSync(file, Buffer.from(buffer));
+  const result = spawnSync('python3', ['-c', 'from pypdf import PdfReader; import sys; print("\\n".join((p.extract_text() or "") for p in PdfReader(sys.argv[1]).pages))', file], { encoding: 'utf8' });
+  fs.rmSync(dir, { recursive: true, force: true });
+  if (result.status !== 0) throw new Error(result.stderr || 'pdf text extract failed');
+  return result.stdout;
 }
 
 function readJson(file) {

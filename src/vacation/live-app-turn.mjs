@@ -86,6 +86,9 @@ export function liveTurnRecord({
     record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
     record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null;
     record.jevBeforeModel = jev?.jevBeforeModel === true && jev?.jevRan === true;
+    if (Array.isArray(model?.beats) && model.beats.length) {
+      record.beats = model.beats.map((beat) => String(beat || '').trim()).filter(Boolean);
+    }
     record.model = model
       ? {
         called: Boolean(model.called),
@@ -107,6 +110,26 @@ export function liveTurnRecord({
   return record;
 }
 
+const OTHER_DESTINATION = /\b(tulum|cartagena|cancun|cancún|maui|kauai|puerto vallarta|\bcabo\b)\b/i;
+
+export function destinationFromTexts(texts) {
+  const blob = (Array.isArray(texts) ? texts : [texts]).join('\n');
+  if (/big island/i.test(blob) || /hawai/i.test(blob) || /kailua-kona/i.test(blob)) return 'Big Island, Hawaii';
+  return '';
+}
+
+export function replyLeavesDestination(reply, destination) {
+  if (!/big island/i.test(String(destination || ''))) return false;
+  return OTHER_DESTINATION.test(String(reply || ''));
+}
+
+function memoryTurns(priorTurns) {
+  return (Array.isArray(priorTurns) ? priorTurns : []).slice(-12).map((turn) => ({
+    role: turn.role === 'app' ? 'app' : 'customer',
+    text: String(turn.text || '').slice(0, 1500),
+  }));
+}
+
 function appTextBanned(text) {
   const value = String(text || '');
   if (!value.trim()) return 'app reply text is empty';
@@ -117,8 +140,14 @@ function appTextBanned(text) {
   return '';
 }
 
-export async function produceLiveAppReply({ customerTurn, session, env = process.env } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env } = {}) {
   const rules = await loadVacationAppReplyRules(env);
+  const memory = memoryTurns(priorTurns);
+  const destination = destinationFromTexts([
+    tripTitle,
+    ...memory.map((turn) => turn.text),
+    customerTurn,
+  ]);
   const jevStarted = Date.now();
   const jev = await jevPrecall({
     customerTurn,
@@ -151,16 +180,40 @@ export async function produceLiveAppReply({ customerTurn, session, env = process
   }
   jev.jevBeforeModel = true;
   const genStarted = Date.now();
-  const model = await callTieredModel({
+  let model = await callTieredModel({
     rules,
     jev,
     customerTurn,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
+    destination,
+    memory,
     env,
   });
+  let reply = model?.called && model.text ? String(model.text) : '';
+  if (reply && replyLeavesDestination(reply, destination)) {
+    model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn: `${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`,
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination,
+      memory,
+      env,
+    });
+    reply = model?.called && model.text ? String(model.text) : '';
+    if (replyLeavesDestination(reply, destination)) {
+      return {
+        reply: null,
+        rules,
+        jev,
+        model,
+        reason: 'destination_lock',
+      };
+    }
+  }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
-  const reply = model?.called && model.text ? String(model.text) : '';
   const banned = appTextBanned(reply);
   if (!reply || banned) {
     return {
@@ -217,6 +270,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       genLatencyMs: Number.isFinite(Number(live.genLatencyMs ?? live.model?.genLatencyMs)) ? Number(live.genLatencyMs ?? live.model?.genLatencyMs) : null,
       jevLatencyMs: Number.isFinite(Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs)) ? Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs) : null,
       jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
+      beats: Array.isArray(live.beats) ? live.beats : null,
       model: live.model || null,
       rules: live.rules || null,
     };

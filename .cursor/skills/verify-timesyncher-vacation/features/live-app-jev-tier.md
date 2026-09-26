@@ -8,7 +8,7 @@ The vacation-app composer classifies the customer turn with Jev, then calls that
 - `jev-classify` stores `jevRan` with tier and route, or `jevRan: false` and a reason.
 - `tier-reply` stores the tiered-model text as the app turn from `vacation-app-reply-rules`.
 - `onboarding-opener` stores the full welcome the customer sees as turn 1 after Agree: trip basics and a family collaborator path. `jevRan` is false with reason `fixed_onboarding_opener`. It is not a generated reply.
-- `model-timing` stores the bake-off model id, Jev classify ms, and gen ms, and records that Jev finished before the model call. The PDF prints `timing: gen=<ms> · tier=<N> · model=<id>` and lists tiers used and models used on the cover.
+- `model-timing` stores the bake-off model id, Jev classify ms, and gen ms, and records that Jev finished before the model call. Legal ids are only T1 `google/gemini-2.5-flash-lite`, T2 `qwen/qwen3-235b-a22b-2507`, T3 `deepseek/deepseek-v3.2`, and T4 `qwen/qwen3-max` from `dialog-runners/tier_models.json`. A gpt mini id or any other model fails the check. The PDF prints `timing: gen=<ms> · tier=<N> · model=<id>` and a v7 cover with quality comparison, per-tier models, and a timings table.
 
 ## How to get to it (user POV)
 
