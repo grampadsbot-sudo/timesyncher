@@ -48,7 +48,7 @@ export class LocalJsonStore {
 }
 
 function blobDenied(error) {
-  return /403|access denied|valid token/i.test(String(error?.message || error));
+  return /403|access denied|valid token|suspended/i.test(String(error?.message || error));
 }
 
 async function eulaDb() {
