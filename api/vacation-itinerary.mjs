@@ -33,6 +33,12 @@ import {
   onboardingOpenerText,
   produceLiveAppReply,
 } from '../src/vacation/live-app-turn.mjs';
+import {
+  openCollaboratorAppSeats,
+  recordDialogParty,
+  seatFromSession,
+  transcriptCustomerId,
+} from '../src/vacation/collaborator-app-seat.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -200,7 +206,8 @@ async function loadVacationAppSession(db, token) {
       customers.display_name,
       customers.first_name,
       customers.last_name,
-      customers.email
+      customers.email,
+      onboarding_sessions.metadata
     from onboarding_sessions
     left join customers on customers.id = onboarding_sessions.customer_id
     where onboarding_sessions.token = ${token}
@@ -210,6 +217,7 @@ async function loadVacationAppSession(db, token) {
 }
 
 async function loadVacationAppTrips(db, session) {
+  const seat = seatFromSession(session);
   const rows = await db`
     select
       trips.id,
@@ -222,6 +230,7 @@ async function loadVacationAppTrips(db, session) {
       (trips.id = ${session.trip_id}) as current
     from trips
     where trips.customer_id = ${session.customer_id}
+      or (${seat?.ownerTripId || null}::uuid is not null and trips.id = ${seat?.ownerTripId || null})
     order by
       (trips.id = ${session.trip_id}) desc,
       trips.updated_at desc nulls last,
@@ -231,11 +240,12 @@ async function loadVacationAppTrips(db, session) {
 }
 
 async function loadVacationAppTurns(db, session, tripId) {
-  if (!session?.customer_id || !tripId) return [];
+  const customerId = transcriptCustomerId(session);
+  if (!customerId || !tripId) return [];
   const rows = await db`
     select speaker, body, channel, payload, direction, received_at, sent_at, created_at
     from transcript_turns
-    where customer_id = ${session.customer_id}
+    where customer_id = ${customerId}
       and trip_id = ${tripId}
       and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
     order by coalesce(received_at, sent_at, created_at) desc nulls last
@@ -252,6 +262,7 @@ async function loadVacationAppTurns(db, session, tripId) {
 }
 
 async function ensureOnboardingOpener(db, session, trip) {
+  if (seatFromSession(session)) return;
   const text = onboardingOpenerText(Boolean(trip?.publicUrl));
   const live = liveTurnRecord({
     turnIndex: 1,
@@ -311,11 +322,14 @@ async function queueVacationAppTurn(db, session, trip, body) {
 
   const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
   const modality = customerModality(body);
+  const seat = seatFromSession(session);
+  const transcriptOwnerId = transcriptCustomerId(session);
+  const speakerName = seat?.displayName || [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
   const prior = await db`
     select count(*)::int as n,
       min(coalesce(received_at, created_at)) as started_at
     from transcript_turns
-    where customer_id = ${session.customer_id}
+    where customer_id = ${transcriptOwnerId}
       and trip_id = ${tripId}
       and channel = 'vacation-app'
       and payload->'liveTranscript' is not null
@@ -334,6 +348,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     latencyMs: Date.now() - started,
     sessionE2eMs: sessionE2eMs(),
     jev: { jevRan: false, error: 'classify_pending' },
+    speakerName,
   });
   const payload = {
     source: 'vacation_app',
@@ -357,7 +372,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       status, queued_at
     )
     values (
-      ${session.customer_id}, ${tripId}, 'vacation-app', 'trip_intake', ${requestText},
+      ${transcriptOwnerId}, ${tripId}, 'vacation-app', 'trip_intake', ${requestText},
       ${{ turnTag }}, ${payload}, 'queued', now()
     )
     returning id, received_at, queued_at
@@ -371,7 +386,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
     )
     values (
-      ${session.customer_id}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
+      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
       now(), ${intakeLatency},
       ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
     )
@@ -386,7 +401,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
   const jobRows = await db`
     insert into worker_jobs (request_id, trip_id, job_type, input)
     values (${requestId}, ${tripId}, 'trip_intake', ${{
-      customerId: session.customer_id,
+      customerId: transcriptOwnerId,
       tripId,
       requestId,
       source: 'vacation-app',
@@ -400,7 +415,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
   const memoryRows = await db`
     select speaker, body
     from transcript_turns
-    where customer_id = ${session.customer_id}
+    where customer_id = ${transcriptOwnerId}
       and trip_id = ${tripId}
       and channel = 'vacation-app'
       and payload->'liveTranscript' is not null
@@ -482,7 +497,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       sent_at, response_latency_ms
     )
     values (
-      ${session.customer_id}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
+      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
       now(), ${exchangeLatency}
     )
   `;
@@ -536,7 +551,7 @@ async function handleVacationApp(req, res, db, url) {
       session: {
         token: session.token,
         status: session.status,
-        customerName: session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        customerName: seatFromSession(session)?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
       },
@@ -548,6 +563,20 @@ async function handleVacationApp(req, res, db, url) {
 
   if (req.method === 'POST') {
     const body = await readJson(req);
+    if (body.action === 'open-seats') {
+      if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
+      const seats = await openCollaboratorAppSeats(db, {
+        ownerCustomerId: session.customer_id,
+        tripId: session.trip_id,
+        seats: body.seats,
+      });
+      return sendJson(res, 200, { ok: true, seats });
+    }
+    if (body.action === 'record-party') {
+      if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
+      const party = await recordDialogParty(db, session.trip_id, body.party);
+      return sendJson(res, 200, { ok: true, party });
+    }
     const vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
     const selected = vacations.find((trip) => trip.id === requestedTripId)

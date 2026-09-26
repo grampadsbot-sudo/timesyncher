@@ -70,7 +70,7 @@ def build(pack):
     story.append(Paragraph("Per-tier mean overall (v7)", styles["SubSec"]))
     story.append(tbl(pack.get("tier_rows") or [], [0.6 * inch, 3.2 * inch, 1.4 * inch]))
     story.append(Paragraph("TIMINGS vs v6 gpt-5-mini", styles["Section"]))
-    story.append(tbl(pack.get("timing_rows") or [], [1.15 * inch, 2.15 * inch, 0.45 * inch, 0.65 * inch, 0.65 * inch, 0.65 * inch, 0.65 * inch]))
+    story.append(tbl(pack.get("timing_rows") or [], [0.85 * inch, 2.15 * inch, 0.4 * inch, 0.7 * inch, 0.7 * inch, 0.7 * inch, 0.7 * inch]))
     story.append(Paragraph(latin(pack.get("speedup")), styles["Body"]))
     story.append(Paragraph("Hard recipe", styles["Section"]))
     for key, value in pack.get("recipe") or []:

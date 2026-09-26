@@ -47,6 +47,23 @@ export class LocalJsonStore {
   }
 }
 
+function blobDenied(error) {
+  return /403|access denied|valid token|suspended/i.test(String(error?.message || error));
+}
+
+async function eulaDb() {
+  const { sql } = await import('../vacation/db.mjs');
+  const db = sql(process.env);
+  await db`
+    create table if not exists eula_store_objects (
+      key text primary key,
+      document jsonb,
+      updated_at timestamptz not null default now()
+    )
+  `;
+  return db;
+}
+
 export class VercelBlobStore {
   constructor({ prefix = 'timesyncher-eula' } = {}) {
     this.prefix = prefix.replace(/^\/+|\/+$/g, '');
@@ -61,36 +78,83 @@ export class VercelBlobStore {
   }
 
   async putJson(key, value) {
-    const { put } = await this.blob();
-    const body = JSON.stringify(value, null, 2) + '\n';
-    return await put(this.key(key), body, {
-      access: 'private',
-      addRandomSuffix: false,
-      contentType: 'application/json',
-      allowOverwrite: true,
-    });
+    try {
+      const { put } = await this.blob();
+      const body = JSON.stringify(value, null, 2) + '\n';
+      return await put(this.key(key), body, {
+        access: 'private',
+        addRandomSuffix: false,
+        contentType: 'application/json',
+        allowOverwrite: true,
+      });
+    } catch (error) {
+      if (!blobDenied(error)) throw error;
+      const db = await eulaDb();
+      await db`
+        insert into eula_store_objects (key, document, updated_at)
+        values (${this.key(key)}, ${value}, now())
+        on conflict (key) do update set document = excluded.document, updated_at = now()
+      `;
+      return { key: this.key(key), fallback: 'database' };
+    }
   }
 
   async getJson(key) {
-    const { get } = await this.blob();
-    const pathname = this.key(key);
-    const result = await get(pathname, { access: 'private', useCache: false });
-    if (!result || result.statusCode !== 200 || !result.stream) return null;
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text);
+    try {
+      const { get } = await this.blob();
+      const pathname = this.key(key);
+      const result = await get(pathname, { access: 'private', useCache: false });
+      if (!result || result.statusCode !== 200 || !result.stream) return null;
+      const text = await new Response(result.stream).text();
+      return JSON.parse(text);
+    } catch (error) {
+      if (!blobDenied(error)) throw error;
+      const db = await eulaDb();
+      const rows = await db`select document from eula_store_objects where key = ${this.key(key)} limit 1`;
+      return rows[0]?.document || null;
+    }
   }
 
   async putText(key, text, contentType = 'text/plain') {
-    const { put } = await this.blob();
-    return await put(this.key(key), text, {
-      access: 'private',
-      addRandomSuffix: false,
-      contentType,
-      allowOverwrite: true,
-    });
+    try {
+      const { put } = await this.blob();
+      return await put(this.key(key), text, {
+        access: 'private',
+        addRandomSuffix: false,
+        contentType,
+        allowOverwrite: true,
+      });
+    } catch (error) {
+      if (!blobDenied(error)) throw error;
+      const db = await eulaDb();
+      const document = { kind: 'text', text, contentType };
+      await db`
+        insert into eula_store_objects (key, document, updated_at)
+        values (${this.key(key)}, ${document}, now())
+        on conflict (key) do update set document = excluded.document, updated_at = now()
+      `;
+      return { key: this.key(key), fallback: 'database' };
+    }
   }
 
   async listJson(prefix) {
+    try {
+      return await this.listBlobJson(prefix);
+    } catch (error) {
+      if (!blobDenied(error)) throw error;
+      const db = await eulaDb();
+      const like = `${this.key(prefix)}%`;
+      const rows = await db`
+        select document
+        from eula_store_objects
+        where key like ${like}
+          and key like '%.json'
+      `;
+      return rows.map((row) => row.document).filter(Boolean);
+    }
+  }
+
+  async listBlobJson(prefix) {
     const { get, list } = await this.blob();
     const result = await list({ prefix: this.key(prefix) });
     const out = [];

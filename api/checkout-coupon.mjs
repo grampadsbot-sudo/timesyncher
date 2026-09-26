@@ -10,6 +10,7 @@ import {
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
+import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
 
 const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
 const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
@@ -185,6 +186,7 @@ export default async function handler(req, res) {
           totalAmountCents: originalAmountCents,
         },
       });
+      const joined = await joinCollaboratorAppSession(db, { invite, contact, env: process.env });
       const email = await queueOrSendCollaboratorInviteEmail(db, {
         invite,
         token: collaboratorInviteToken,
@@ -204,6 +206,9 @@ export default async function handler(req, res) {
           id: invite.id,
           status: invite.status,
           telegramUrl: collaboratorTelegramLink(collaboratorInviteToken, process.env),
+          vacationAppUrl: joined.vacationAppUrl,
+          token: joined.token,
+          payer: joined.payer,
           tripTitle: invite.trip_title || null,
           requestedFor: contact.displayName,
           accessAddOns: addOns,

@@ -66,12 +66,14 @@ export function liveTurnRecord({
   replyProducer = null,
   model = null,
   rules = null,
+  speakerName = null,
 }) {
   const record = {
     turnIndex,
     role,
     modality,
     text: String(text || ''),
+    speakerName: speakerName ? String(speakerName) : null,
     at,
     latencyMs,
     sessionE2eMs,
@@ -84,6 +86,7 @@ export function liveTurnRecord({
     record.invented = false;
     record.modelId = model?.responseModel || (record.fixedOpener ? null : jev?.responseModel) || null;
     record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
+    record.maxTokens = Number.isFinite(Number(model?.maxTokens)) ? Number(model.maxTokens) : null;
     record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null;
     record.jevBeforeModel = jev?.jevBeforeModel === true && jev?.jevRan === true;
     if (Array.isArray(model?.beats) && model.beats.length) {
@@ -365,6 +368,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       role: live.role,
       modality: live.modality,
       text,
+      speakerName: live.speakerName || null,
       storedText: live.text == null ? text : String(live.text),
       at: iso(live.at || row.received_at || row.sent_at || row.created_at),
       latencyMs: Number(live.latencyMs ?? row.response_latency_ms),
@@ -377,6 +381,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       modelId: live.modelId || live.model?.responseModel || live.jev?.responseModel || null,
       genLatencyMs: Number.isFinite(Number(live.genLatencyMs ?? live.model?.genLatencyMs)) ? Number(live.genLatencyMs ?? live.model?.genLatencyMs) : null,
       jevLatencyMs: Number.isFinite(Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs)) ? Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs) : null,
+      maxTokens: Number.isFinite(Number(live.maxTokens ?? live.model?.maxTokens)) ? Number(live.maxTokens ?? live.model?.maxTokens) : null,
       jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
       beats: Array.isArray(live.beats) ? live.beats : null,
       model: live.model || null,
@@ -427,7 +432,35 @@ export async function loadLiveTranscriptByToken(db, token) {
       and payload->'liveTranscript' is not null
     order by coalesce(received_at, sent_at, created_at) asc
   `;
-  return liveTranscriptFromRows({ session, rows });
+  const doc = liveTranscriptFromRows({ session, rows });
+  const tripRows = await db`
+    select metadata
+    from trips
+    where id = ${session.trip_id}
+    limit 1
+  `;
+  const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
+  const collabRows = await db`
+    select display_name, metadata
+    from vacation_collaborators
+    where owner_customer_id = ${session.customer_id}
+      and trip_id = ${session.trip_id}
+      and status = 'active'
+    order by accepted_at asc nulls last, created_at asc
+  `;
+  const stored = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
+  const collaborators = collabRows.map((row) => {
+    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    return { name: row.display_name, payer: meta.payer || 'owner' };
+  });
+  doc.party = {
+    primary: stored.primary || { name: doc.customerName || doc.targetPerson, role: 'Owner' },
+    collaborators: collaborators.length ? collaborators : (stored.collaborators || []),
+    preference_subjects: stored.preference_subjects || stored.kids || [],
+    viewers: stored.viewers || [],
+    editors: stored.editors || [],
+  };
+  return doc;
 }
 
 export function transcriptToJsonl(doc) {
