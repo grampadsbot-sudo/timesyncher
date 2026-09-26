@@ -139,7 +139,13 @@ export function buildTimingSummary(doc) {
 }
 
 function pdfAscii(value) {
-  return String(value ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/[^\n\x20-\x7E·]/g, '?');
+  return String(value ?? '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/[^\n\x20-\x7E·]/g, '?');
 }
 
 function appTimingLines(turn) {
