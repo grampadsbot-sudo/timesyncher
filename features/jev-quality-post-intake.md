@@ -16,4 +16,4 @@ Hold certify. This inventory is not a certify.
 
 - Open the app URL and agree to the terms. That is Onboarding.
 - Send the long trip dump. Read the reply that says the itinerary is being built and names the household plan.
-- Choose Itinerary, then open each Thing.
+- Choose Itinerary, then open each Thing. Those shell cards are not the Feature Map itinerary. A shot of them fails `features/dialog-screenshot-gate.md`.
