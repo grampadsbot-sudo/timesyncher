@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import (
-    KeepTogether,
+    CondPageBreak,
     PageBreak,
     Paragraph,
     SimpleDocTemplate,
@@ -25,7 +25,20 @@ def esc(value):
 
 
 def latin(value):
-    return esc(value)
+    text = "" if value is None else str(value)
+    text = (
+        text.replace("\f", " ")
+        .replace("\u2019", "'")
+        .replace("\u2018", "'")
+        .replace("\u201c", '"')
+        .replace("\u201d", '"')
+        .replace("\u2014", "-")
+        .replace("\u2013", "-")
+        .replace("\u02bb", "'")
+        .replace("\u02bc", "'")
+        .replace("\u2026", "...")
+    )
+    return esc(text)
 
 
 def tbl(rows, col_widths):
@@ -95,7 +108,9 @@ def build(pack):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):
             block.append(Paragraph(latin(turn.get("timing")), styles["Tim"]))
-        story.append(KeepTogether(block))
+        story.append(CondPageBreak(1.6 * inch))
+        for flowable in block:
+            story.append(flowable)
     story.append(PageBreak())
     story.append(Paragraph("Beat index", styles["Section"]))
     story.append(Paragraph(latin(pack.get("beats") or "(none stored)"), styles["Body"]))
@@ -119,8 +134,9 @@ def build(pack):
         pagesize=letter,
         leftMargin=0.7 * inch,
         rightMargin=0.7 * inch,
-        topMargin=0.6 * inch,
-        bottomMargin=0.6 * inch,
+        topMargin=0.65 * inch,
+        bottomMargin=0.85 * inch,
+        pageCompression=0,
     )
     doc.build(story, onFirstPage=paint, onLaterPages=paint)
     return buffer.getvalue()

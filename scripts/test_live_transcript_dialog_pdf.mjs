@@ -183,6 +183,17 @@ assert.match(seatedText, /Collaborators: Kimberly Davidson \(payer=owner\), Tyle
 assert.match(seatedText, /Kids \(silent\): Torren 8, Peyton 6, Keegan 4, Fallon 2/);
 assert.match(seatedText, /Viewer: Marcus Chen · Editor: Aunt Jean/);
 assert.match(seatedText, /T3 KIMBERLY/);
+const longBody = `Garden note start. ${'Kailua-Kona garden morning. '.repeat(80)}Garden note end.\f`;
+const longDoc = liveDoc({
+  turns: [
+    { ...liveDoc().turns[0], text: 'Short customer line about the Big Island.' },
+    { ...liveDoc().turns[1], text: longBody },
+  ],
+});
+const longText = extractPdfText(renderLiveTranscriptPdf(longDoc));
+assert.match(longText, /Garden note start/);
+assert.match(longText, /Garden note end/);
+assert.doesNotMatch(longText, /\f/);
 assert.doesNotMatch(text, /tier 2 \| general \| 2800 ms/);
 assert.doesNotMatch(text, /jev first:/);
 assert.match(text, /Correction notes/);
