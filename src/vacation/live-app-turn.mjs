@@ -10,8 +10,8 @@ export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
 export const FIXED_OPENER_REASON = 'fixed_onboarding_opener';
 export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
-export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here. Type a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
-export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. Your vacation website is not built yet, so this chat is the whole workspace.\n\nTell me where you are going, when, who is coming, and what matters most. Type in the box, or tap the microphone to the right of it and speak. The paperclip adds photos, reservations, and notes. The website shows up here once it is actually up.';
+export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. They add notes and help shape the days with you. When price comes up, the household plan to name is unlimited vacations for the whole year.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
+export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. They join the same trip, add notes, and help shape the days. When you ask about price, the plan to name is unlimited vacations for the whole year.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
 
 export function onboardingOpenerText(hasSite) {
   return hasSite ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
@@ -40,6 +40,8 @@ export function jevStamp(jev) {
       extraContext: jev.extraContext ?? null,
       via: jev.via || null,
       responseModel: jev.responseModel || null,
+      jevLatencyMs: Number.isFinite(Number(jev.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null,
+      jevBeforeModel: jev.jevBeforeModel === true,
     };
   }
   return {
@@ -80,12 +82,17 @@ export function liveTurnRecord({
     record.fixedOpener = record.replyProducer === LIVE_OPENER_PRODUCER;
     record.dispatcher = record.fixedOpener ? null : LIVE_DISPATCHER;
     record.invented = false;
+    record.modelId = model?.responseModel || (record.fixedOpener ? null : jev?.responseModel) || null;
+    record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
+    record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null;
+    record.jevBeforeModel = jev?.jevBeforeModel === true && jev?.jevRan === true;
     record.model = model
       ? {
         called: Boolean(model.called),
         via: model.via || null,
         responseModel: model.responseModel || null,
         modelTier: model.modelTier ?? null,
+        genLatencyMs: record.genLatencyMs,
       }
       : null;
   }
@@ -112,6 +119,7 @@ function appTextBanned(text) {
 
 export async function produceLiveAppReply({ customerTurn, session, env = process.env } = {}) {
   const rules = await loadVacationAppReplyRules(env);
+  const jevStarted = Date.now();
   const jev = await jevPrecall({
     customerTurn,
     stage: 'vacation_conversation',
@@ -119,6 +127,7 @@ export async function produceLiveAppReply({ customerTurn, session, env = process
     session: { seed_id: session?.token || null },
     env,
   });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!rules?.ok) {
     return {
       reply: null,
@@ -134,9 +143,14 @@ export async function produceLiveAppReply({ customerTurn, session, env = process
       rules,
       jev,
       model: null,
+      jevLatencyMs: jev?.jevLatencyMs ?? null,
+      genLatencyMs: null,
+      jevBeforeModel: false,
       reason: jev?.error || 'jev_skipped',
     };
   }
+  jev.jevBeforeModel = true;
+  const genStarted = Date.now();
   const model = await callTieredModel({
     rules,
     jev,
@@ -145,6 +159,7 @@ export async function produceLiveAppReply({ customerTurn, session, env = process
     screen: 'vacation-app',
     env,
   });
+  if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const reply = model?.called && model.text ? String(model.text) : '';
   const banned = appTextBanned(reply);
   if (!reply || banned) {
@@ -198,6 +213,10 @@ export function liveTranscriptFromRows({ session, rows }) {
       dispatcher: live.dispatcher || null,
       fixedOpener: live.fixedOpener === true,
       invented: live.invented === true,
+      modelId: live.modelId || live.model?.responseModel || live.jev?.responseModel || null,
+      genLatencyMs: Number.isFinite(Number(live.genLatencyMs ?? live.model?.genLatencyMs)) ? Number(live.genLatencyMs ?? live.model?.genLatencyMs) : null,
+      jevLatencyMs: Number.isFinite(Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs)) ? Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs) : null,
+      jevBeforeModel: live.jevBeforeModel === true || live.jev?.jevBeforeModel === true,
       model: live.model || null,
       rules: live.rules || null,
     };
