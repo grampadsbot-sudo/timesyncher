@@ -65,6 +65,9 @@ assert.match(seatJoinCustomerText({ displayName: 'Kimberly Davidson', payer: 'ow
 assert.match(seatJoinCustomerText({ displayName: 'Tyler Davidson', payer: 'tyler' }), /EULA terms/);
 assert.match(seatJoinCustomerText({ displayName: 'Lauren Davidson', payer: 'lauren' }), /clicked join/);
 assert.match(page, /action: 'seat-join'/);
+const acceptEula = page.slice(page.indexOf('async function acceptEula'), page.indexOf('function renderApp'));
+assert.match(acceptEula, /status === 'interim'/);
+assert.match(acceptEula, /action: 'finish-rewrite'/);
 assert.match(api, /ensureOnboardingOpener/);
 assert.match(api, /onboardingOpenerText/);
 assert.match(api, /FIXED_OPENER_REASON/);

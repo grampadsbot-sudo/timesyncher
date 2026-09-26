@@ -598,7 +598,16 @@
             body: JSON.stringify({ action: 'seat-join' }),
           });
           const joinData = await joinRes.json().catch(() => ({}));
-          if (!joinRes.ok || joinData.ok === false || (joinData.status !== 'already_joined' && !joinData.reply)) {
+          if (!joinRes.ok || joinData.ok === false) throw new Error(joinData.error || 'Seat join was not stored.');
+          if (joinData.status === 'interim') {
+            const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ action: 'finish-rewrite', tripId: state.session?.currentTripId }),
+            });
+            const fin = await finRes.json().catch(() => ({}));
+            if (!finRes.ok || fin.ok === false || !fin.reply) throw new Error(fin.error || 'Seat join was not stored.');
+          } else if (joinData.status !== 'already_joined' && !joinData.reply) {
             throw new Error(joinData.error || 'Seat join was not stored.');
           }
         }
