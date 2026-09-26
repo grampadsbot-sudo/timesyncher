@@ -35,6 +35,7 @@ import {
   onboardingOpenerText,
   postIntakeUpsellTurn,
   produceLiveAppReply,
+  finishTierRewrite,
   applyAgreedAppSwim,
   applyCustomerNotes,
   intakeFacts,
@@ -487,6 +488,30 @@ async function queueVacationAppTurn(db, session, trip, body) {
     jev: customerLive.jev,
     reply: null,
   };
+  if (produced.status === 'interim' && produced.pending) {
+    const pending = {
+      ...produced.pending,
+      customerTurnIndex,
+      requestId,
+      speakerName,
+      collaborator: Boolean(seat),
+      tripId,
+    };
+    await db`
+      update onboarding_sessions
+      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ pendingRewrite: pending }},
+        updated_at = now()
+      where id = ${session.id}
+    `;
+    return {
+      ...base,
+      ok: true,
+      status: 'interim',
+      interimReply: produced.interimReply,
+      reply: produced.interimReply?.text || '',
+      error: null,
+    };
+  }
   if (!produced.reply) {
     await db`delete from transcript_turns where id = ${turnRows[0].id}`;
     return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
@@ -753,6 +778,59 @@ async function handleVacationApp(req, res, db, url) {
         seats: body.seats,
       });
       return sendJson(res, 200, { ok: true, seats });
+    }
+    if (body.action === 'finish-rewrite') {
+      const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
+      const pending = meta.pendingRewrite;
+      if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
+      const finished = await finishTierRewrite({ pending, env: process.env });
+      if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
+      const appLive = liveTurnRecord({
+        turnIndex: Number(pending.customerTurnIndex) + 1,
+        role: 'app',
+        modality: 'text',
+        text: finished.reply,
+        at: new Date().toISOString(),
+        latencyMs: finished.log?.latencyMs?.total || 0,
+        sessionE2eMs: 0,
+        jev: finished.jev,
+        model: finished.model,
+        rules: finished.rules,
+        speakerName: pending.speakerName || null,
+      });
+      await db`
+        insert into transcript_turns (
+          customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+          sent_at, response_latency_ms
+        )
+        values (
+          ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
+          ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
+          'outbound', now(), ${finished.log?.latencyMs?.total || 0}
+        )
+      `;
+      const itinerary = await recordCustomerThingNotes(
+        db,
+        pending.tripId,
+        pending.customerTurn,
+        { collaborator: pending.collaborator === true, speakerName: pending.speakerName || '', appReply: finished.reply },
+        pending.postIntake === true ? pending.customerTurn : '',
+      );
+      if (itinerary.length) await publishIntakeShare(db, pending.tripId);
+      await db`
+        update onboarding_sessions
+        set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
+          updated_at = now()
+        where id = ${session.id}
+      `;
+      return sendJson(res, 200, {
+        ok: true,
+        status: 'replied',
+        reply: finished.reply,
+        interimReply: finished.log?.interimReply || pending.interimReply || null,
+        itinerary,
+        error: null,
+      });
     }
     if (body.action === 'record-party') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });

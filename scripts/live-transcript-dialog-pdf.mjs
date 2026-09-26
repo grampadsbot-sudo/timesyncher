@@ -13,7 +13,10 @@ import {
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
-  JEV_REWRITE_LABEL,
+  rewriteCreditLabel,
+  isTemplateNote,
+  isTemplateInterim,
+  nearIdenticalRewrite,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -131,16 +134,31 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
       }
       const shippedModel = String(turn.shippedModel || '').trim();
-      if (!isBakeoffModelId(shippedModel) && shippedModel !== 'typesafe/jev-1.13') {
-        throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier or Jev`);
+      if (!isBakeoffModelId(shippedModel)) {
+        throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier`);
       }
       if (turn.quality?.rewritten === true && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim())) {
         throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel or rewriteModel`);
       }
+      if (!String(turn.draftModel || '').trim() || !isBakeoffModelId(String(turn.draftModel))) {
+        throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
+      }
+      if (!String(turn.jevNote || '').trim() || isTemplateNote(turn.jevNote, priorCustomer?.text || turn.jevNote)) {
+        throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
+      }
+      if (!Number.isInteger(Number(turn.jevScoreDraft))) {
+        throw new Error(`refused: turn ${turn.turnIndex} is missing jevScoreDraft`);
+      }
       if (turn.quality?.rewritten === true) {
         const rewriteModel = String(turn.quality.rewriteModel || turn.rewriteModel || '');
-        if (rewriteModel !== 'typesafe/jev-1.13' || String(turn.shippedModel || '') !== 'typesafe/jev-1.13') {
-          throw new Error(`refused: turn ${turn.turnIndex} rewrite must be typesafe/jev-1.13`);
+        if (!isBakeoffModelId(rewriteModel) || rewriteModel === 'typesafe/jev-1.13') {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite must be the tier model`);
+        }
+        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
+        }
+        if (nearIdenticalRewrite(turn.quality?.draft || '', text)) {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
         }
       }
     }
@@ -154,6 +172,13 @@ export function assertLiveTranscript(doc) {
   }
   const repeated = Object.entries(commentCounts).find(([, count]) => count >= 5);
   if (repeated) throw new Error(`refused: Jev comment repeats ${repeated[1]} times`);
+  const interimTexts = [];
+  for (const turn of turns) {
+    const interim = String(turn.interimReply?.text || '').trim();
+    if (!interim) continue;
+    if (interimTexts.includes(interim)) throw new Error('refused: interim reply repeats across turns');
+    interimTexts.push(interim);
+  }
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
   return { ...doc, targetPerson, turns };
 }
@@ -537,7 +562,8 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? JEV_REWRITE_LABEL : '',
+        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel) : '',
+        producer_log: generatedTurn ? producerLogLine(turn) : '',
         quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
@@ -551,10 +577,29 @@ export function liveV7Pack(doc, shape) {
   };
 }
 
+function producerLogLine(turn) {
+  const latency = turn.modelLatency || {};
+  const interim = turn.interimReply?.text
+    ? `${turn.interimReply.text} (${turn.interimReply.model || ''}, ${Number(turn.interimReply.ms) || 0}ms)`
+    : 'none';
+  return [
+    `draftModel: ${turn.draftModel || ''}`,
+    `rewriteModel: ${turn.rewriteModel || 'none'}`,
+    `shippedModel: ${turn.shippedModel || ''}`,
+    `jevScoreDraft: ${turn.jevScoreDraft ?? ''}`,
+    `jevScoreRewrite: ${turn.jevScoreRewrite ?? 'none'}`,
+    `jevNote: ${turn.jevNote || ''}`,
+    `interimReply: ${interim}`,
+    `latencyMs: draft=${latency.draft ?? ''} rewrite=${latency.rewrite ?? 'none'} total=${latency.total ?? ''}`,
+    `flagged: ${turn.flagged === true}`,
+  ].join(' | ');
+}
+
 export function jevRewriteLabelCounts(doc, pdfText) {
-  const rewrittenTurns = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true).length;
-  const rewriteLabels = String(pdfText || '').split(JEV_REWRITE_LABEL).length - 1;
-  return { rewrittenTurns, rewriteLabels, ok: rewrittenTurns === rewriteLabels };
+  const rewritten = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true);
+  const pdf = String(pdfText || '');
+  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel))).length;
+  return { rewrittenTurns: rewritten.length, rewriteLabels, ok: rewritten.length === rewriteLabels };
 }
 
 export function assertJevRewriteLabels(doc, pdfText) {

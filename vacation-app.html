@@ -762,6 +762,7 @@
       const attachments = await Promise.all(state.attachments.map(filePayload));
       state.attachments = [];
       renderAttachments();
+      messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping"><small>TimeSyncher</small>…</article>`);
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
@@ -775,21 +776,41 @@
           }),
         });
         const data = await res.json();
-        if (!res.ok || data.ok === false || !data.reply) throw new Error(data.error || 'The app did not return a reply.');
-        if (Array.isArray(data.itinerary)) state.things = data.itinerary;
-        if (data.vacation?.id) {
-          const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
-          if (index >= 0) state.vacations[index] = data.vacation;
-          else state.vacations.push(data.vacation);
-          const label = document.getElementById('tripLabel');
-          if (label) label.textContent = tripBadge(data.vacation);
-          if (!hadSite && realSiteUrl(data.vacation.publicUrl)) {
-            await loadApp(data.vacation.id);
-            return;
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'The app did not return a reply.');
+        if (data.status === 'interim') {
+          const typing = document.getElementById('tsTyping');
+          if (data.interimReply?.text && typing) {
+            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>TimeSyncher</small>${safe(data.interimReply.text)}</article>`);
           }
+          const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ action: 'finish-rewrite', tripId: currentTrip()?.id }),
+          });
+          const fin = await finRes.json();
+          document.getElementById('tsTyping')?.remove();
+          if (!finRes.ok || fin.ok === false || !fin.reply) throw new Error(fin.error || 'The app did not return a reply.');
+          if (Array.isArray(fin.itinerary)) state.things = fin.itinerary;
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(fin.reply)}</article>`);
+        } else {
+          document.getElementById('tsTyping')?.remove();
+          if (!data.reply) throw new Error(data.error || 'The app did not return a reply.');
+          if (Array.isArray(data.itinerary)) state.things = data.itinerary;
+          if (data.vacation?.id) {
+            const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
+            if (index >= 0) state.vacations[index] = data.vacation;
+            else state.vacations.push(data.vacation);
+            const label = document.getElementById('tripLabel');
+            if (label) label.textContent = tripBadge(data.vacation);
+            if (!hadSite && realSiteUrl(data.vacation.publicUrl)) {
+              await loadApp(data.vacation.id);
+              return;
+            }
+          }
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
         }
-        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
       } catch (error) {
+        document.getElementById('tsTyping')?.remove();
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small><span class="error">${safe(error.message)}</span></article>`);
       }
       messages.scrollTop = messages.scrollHeight;

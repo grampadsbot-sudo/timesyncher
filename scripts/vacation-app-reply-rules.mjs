@@ -643,10 +643,12 @@ export function qualityFromDecisions(body, criteria = null) {
   const comment = (criteria && criteria[choice]) || JEV_QUALITY_COMMENTS[choice] || '';
   if (!comment) return { judged: false, reason: 'quality_comment_missing', model: JEV_DECISIONS_MODEL };
   const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite' || score <= 3;
+  const jevFocus = text(answers.fix_focus?.choice, 40);
   return {
     judged: true,
     score,
     comment,
+    jevFocus,
     rewrite: '',
     rewritten: false,
     wantsRewrite,
@@ -684,6 +686,17 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
         type: 'choice',
         instructions: 'Pick the comment that names what this draft did with this customer sentence. The comment must quote this turn, not a generic label.',
         criteria,
+      },
+      fix_focus: {
+        type: 'choice',
+        instructions: 'Jev scores only. Pick the one-line fix this exact turn needs. Do not write a replacement reply.',
+        criteria: {
+          missing_price: `Name the price while answering "${text(customerTurn, 80)}".`,
+          unnamed_place: `Take out the place they did not name and answer "${text(customerTurn, 80)}".`,
+          payment_wording: `Name the seats without split wording while answering "${text(customerTurn, 80)}".`,
+          misses_ask: `Answer "${text(customerTurn, 80)}" and keep the days they already named.`,
+          keep: `Keep the reply. It answers "${text(customerTurn, 80)}".`,
+        },
       },
     },
   };
@@ -761,10 +774,12 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
   }
 }
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env } = {}) {
+export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
+
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '' } = {}) {
   const modelTier = Number(jev?.modelTier);
-  const responseModel = openRouterChatModelForTier(modelTier);
-  if (!jev?.jevRan || !isBakeoffModelId(responseModel)) {
+  const responseModel = forceModel || openRouterChatModelForTier(modelTier);
+  if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
     return { called: false, via: null, modelTier: Number.isInteger(modelTier) ? modelTier : null, responseModel: responseModel || null, reason: 'model_not_in_bakeoff_map' };
   }
   return callOpenRouterTieredChat({
@@ -773,13 +788,15 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     customerTurn,
     stage,
     screen,
-    modelTier,
+    modelTier: forceModel ? (Number.isInteger(modelTier) ? modelTier : 1) : modelTier,
     responseModel,
     destination,
     memory,
     upsell,
     postIntake,
     env,
+    timeoutMs,
+    systemExtra,
   });
 }
 
@@ -809,7 +826,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '' }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -837,11 +854,11 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: replyRulesSystem(rules, destination, upsell, postIntake, customerTurn) },
+          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn)}${systemExtra ? `\n\n${systemExtra}` : ''}` },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),
-      signal: AbortSignal.timeout(90000),
+      signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : 90000),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {

@@ -437,7 +437,9 @@ async function main() {
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
         await shot(id, chapter, title, { file, note });
       }
-      gap('Jev quality line', 'jev-quality-line.md', 'left for Craig. The score line stays in the Dialog PDF.');
+      const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
+      if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
+      else mark('jev-quality-line.md');
     } else {
       gap('First onboarding prompt', 'post-purchase-email-eula.md', 'no session URL was passed');
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
