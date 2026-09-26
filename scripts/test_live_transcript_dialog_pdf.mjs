@@ -148,7 +148,41 @@ assert.match(text, /T1 CRAIG/);
 assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
-assert.match(text, /timing: gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2/);
+assert.match(text, /timing: gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 jev=400ms max_tokens=900/);
+assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
+assert.match(text, /v7 overall/);
+assert.match(text, /Owner: Craig \(Owner\)/);
+const seated = liveDoc({
+  customerName: 'Craig Davidson',
+  party: {
+    primary: { name: 'Craig Davidson', role: 'Owner' },
+    collaborators: [
+      { name: 'Kimberly Davidson', payer: 'owner' },
+      { name: 'Tyler Davidson', payer: 'tyler' },
+      { name: 'Lauren Davidson', payer: 'lauren' },
+    ],
+    preference_subjects: [
+      { name: 'Torren', age: 8 },
+      { name: 'Peyton', age: 6 },
+      { name: 'Keegan', age: 4 },
+      { name: 'Fallon', age: 2 },
+    ],
+    viewers: [{ name: 'Marcus Chen' }],
+    editors: [{ name: 'Aunt Jean' }],
+  },
+  turns: [
+    { ...liveDoc().turns[0], speakerName: 'Craig Davidson' },
+    liveDoc().turns[1],
+    { ...liveDoc().turns[0], turnIndex: 3, text: 'The garden morning in Kailua-Kona still works.', speakerName: 'Kimberly Davidson' },
+    { ...liveDoc().turns[1], turnIndex: 4 },
+  ],
+});
+const seatedText = extractPdfText(renderLiveTranscriptPdf(seated));
+assert.match(seatedText, /Owner: Craig Davidson \(Owner\)/);
+assert.match(seatedText, /Collaborators: Kimberly Davidson \(payer=owner\), Tyler Davidson \(payer=tyler\), Lauren Davidson \(payer=lauren\)/);
+assert.match(seatedText, /Kids \(silent\): Torren 8, Peyton 6, Keegan 4, Fallon 2/);
+assert.match(seatedText, /Viewer: Marcus Chen · Editor: Aunt Jean/);
+assert.match(seatedText, /T3 KIMBERLY/);
 assert.doesNotMatch(text, /tier 2 \| general \| 2800 ms/);
 assert.doesNotMatch(text, /jev first:/);
 assert.match(text, /Correction notes/);

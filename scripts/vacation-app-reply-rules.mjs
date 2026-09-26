@@ -696,7 +696,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     }
     const visible = splitBeat(answer);
     if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900 };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
   }

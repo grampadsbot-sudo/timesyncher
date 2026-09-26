@@ -370,18 +370,36 @@ function timingStats(values) {
   return { count: sorted.length, p50: pick(50), p95: pick(95), mean, max: sorted[sorted.length - 1] };
 }
 
+export function rosterLines(doc) {
+  const party = doc?.party || {};
+  const primary = party.primary || {};
+  const owner = primary.name || doc?.customerName || doc?.targetPerson || 'unknown';
+  const lines = [`Owner: ${owner} (${primary.role || 'Owner'})`];
+  const collaborators = Array.isArray(party.collaborators) ? party.collaborators : [];
+  if (collaborators.length) {
+    lines.push(`Collaborators: ${collaborators.map((person) => `${person.name} (payer=${person.payer || 'owner'})`).join(', ')}`);
+  }
+  const kids = Array.isArray(party.preference_subjects) ? party.preference_subjects : [];
+  if (kids.length) lines.push(`Kids (silent): ${kids.map((kid) => `${kid.name} ${kid.age}`).join(', ')}`);
+  const viewers = Array.isArray(party.viewers) ? party.viewers : [];
+  const editors = Array.isArray(party.editors) ? party.editors : [];
+  if (viewers.length || editors.length) {
+    lines.push(`Viewer: ${viewers.map((person) => person.name).join(', ')} · Editor: ${editors.map((person) => person.name).join(', ')}`);
+  }
+  return lines;
+}
+
 export function liveV7Pack(doc, shape) {
   const generated = (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
   const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
-  const roster = ROSTER_NAMES.filter((person) => (doc.turns || []).some((turn) => String(turn.text || '').includes(person)));
   const trip = shape.trip || 'untitled';
   const title = `Dialog Pack — ${trip} v7 Tier 1–4`;
   const timingRows = [
     ['Pack', 'Model(s)', 'n', 'p50 ms', 'p95 ms', 'mean ms', 'max ms'],
     ['v6', 'openai/gpt-5-mini', '23', '28834', '39693', '27833', '44762'],
-    ['this live session', 'T1–4 bake-off', String(overall.count), String(overall.p50), String(overall.p95), String(overall.mean), String(overall.max)],
+    ['v7 overall', 'T1–4 cycle', String(overall.count), String(overall.p50), String(overall.p95), String(overall.mean), String(overall.max)],
   ];
   for (const tier of [1, 2, 3, 4]) {
     const rows = generated.filter((turn) => Number(turn.jev?.modelTier) === tier);
@@ -399,7 +417,7 @@ export function liveV7Pack(doc, shape) {
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,
     headline: 'Live app capture. Quality scores are not judged on this drop. Timings are measured gen ms.',
     quality_rows: [
-      ['Metric', 'v6 gpt-5-mini', 'this live session'],
+      ['Metric', 'v6 gpt-5-mini', 'v7 Tier 1–4'],
       ['App turns', '23', String(generated.length)],
       ['Mean overall_quality', '3.913', 'not judged'],
       ['Histogram (overall)', '5×6, 4×13, 2×4', 'not judged'],
@@ -424,10 +442,7 @@ export function liveV7Pack(doc, shape) {
       ['source', 'live-vacation-app'],
       ['tier_models', 'dialog-runners/tier_models.json'],
     ],
-    roster: [
-      `Owner: ${doc.targetPerson || 'unknown'}`,
-      roster.length ? `Named in this live transcript: ${roster.join(', ')}` : 'Named in this live transcript: none recorded',
-    ],
+    roster: rosterLines(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
     judge: 'response_ready=n/a · needs_repair=n/a. scores: not judged. This live drop has no dialog judge.',
     turns: (doc.turns || []).map((turn) => {
@@ -438,13 +453,16 @@ export function liveV7Pack(doc, shape) {
       const meta = [`n=${turn.turnIndex}`, `beat=${beat}`];
       if (generatedTurn) meta.push(`model=${model}`, `tier=${turn.jev.modelTier}`);
       const gen = Number(turn.genLatencyMs ?? turn.model?.genLatencyMs);
+      const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
+      const maxTokens = Number(turn.maxTokens ?? turn.model?.maxTokens ?? 900);
+      const speaker = app ? 'APP' : String(turn.speakerName || name).split(/\s+/)[0].toUpperCase();
       return {
-        label: `T${turn.turnIndex} ${app ? 'APP' : name}`,
+        label: `T${turn.turnIndex} ${speaker}`,
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
         quality: generatedTurn ? 'quality: not judged' : '',
-        timing: generatedTurn ? `timing: gen=${gen}ms model=${model} tier=${turn.jev.modelTier}` : '',
+        timing: generatedTurn ? `timing: gen=${gen}ms model=${model} tier=${turn.jev.modelTier} jev=${jevMs}ms max_tokens=${maxTokens}` : '',
       };
     }),
   };
