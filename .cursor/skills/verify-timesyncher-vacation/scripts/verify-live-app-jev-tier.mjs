@@ -17,7 +17,7 @@ function argValue(flag) {
   return index === -1 ? '' : (process.argv[index + 1] || '');
 }
 
-export function assertComposerSource({ vacationApp, api, liveTurn, replyRules }) {
+export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, sharedApp = '' }) {
   const errors = [];
   if (!/data\.reply/.test(vacationApp) || /Got it\. I saved that/.test(vacationApp)) {
     errors.push('composer does not render the live reply, or it still has the canned bubble');
@@ -84,14 +84,14 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/building the itinerary/.test(liveTurn) || !/Post-intake:/.test(replyRules)) {
     errors.push('shared producer does not acknowledge the itinerary and give the collab welcome right after long intake');
   }
-  if (!/data-screen="itinerary"/.test(vacationApp) || !/data-screen="thing"/.test(vacationApp) || !/data-screen="onboarding"/.test(vacationApp)) {
-    errors.push('vacation app is missing the onboarding, itinerary, and thing screens');
+  if (!/data-screen="onboarding"/.test(vacationApp) || /data-screen="itinerary"/.test(vacationApp) || /data-screen="thing"/.test(vacationApp) || /aria-label="Vacation path"/.test(vacationApp)) {
+    errors.push('vacation app still serves the shell itinerary cards instead of the shared app');
   }
   if (!/thingsFromIntake/.test(api) || !/whenLabel/.test(api) || !/collaboratorNotes/.test(api)) {
     errors.push('vacation app does not build dated things and collaborator notes from the long intake');
   }
-  if (!/function tripBadge/.test(vacationApp) || !/data-collaborator-notes/.test(vacationApp)) {
-    errors.push('vacation app badge stays on no vacations yet after the itinerary is built');
+  if (!/function tripBadge/.test(vacationApp) || !/intakeShareSlug/.test(api) || !/index-BKun7ofk\.js/.test(sharedApp)) {
+    errors.push('vacation app does not publish the intake into the shared itinerary');
   }
   if (!/quality\.draft/.test(liveTurn) || !/acceptQualityRewrite/.test(liveTurn)) {
     errors.push('a Jev rewrite is not stored apart from the customer-facing reply');
@@ -259,13 +259,14 @@ function liveDoc(turns) {
 }
 
 async function readSources() {
-  const [vacationApp, api, liveTurn, replyRules] = await Promise.all([
+  const [vacationApp, api, liveTurn, replyRules, sharedApp] = await Promise.all([
     readFile(path.join(root, 'vacation-app.html'), 'utf8'),
     readFile(path.join(root, 'api/vacation-itinerary.mjs'), 'utf8'),
     readFile(path.join(root, 'src/vacation/live-app-turn.mjs'), 'utf8'),
     readFile(path.join(root, 'scripts/vacation-app-reply-rules.mjs'), 'utf8'),
+    readFile(path.join(root, 'shared-app.html'), 'utf8'),
   ]);
-  return { vacationApp, api, liveTurn, replyRules };
+  return { vacationApp, api, liveTurn, replyRules, sharedApp };
 }
 
 function fail(errors) {

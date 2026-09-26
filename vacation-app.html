@@ -617,11 +617,6 @@
       const welcome = hasSite
         ? 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. They add notes and help shape the days with you. When price comes up, the household plan to name is unlimited vacations for the whole year.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.'
         : 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. They join the same trip, add notes, and help shape the days. When you ask about price, the plan to name is unlimited vacations for the whole year.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
-      const thing = state.things.find((item) => item.id === state.thingId) || null;
-      const pathNav = `<nav class="path-nav" aria-label="Vacation path">
-        <button type="button" data-path="onboarding" class="${state.screen === 'onboarding' ? 'active' : ''}">Onboarding</button>
-        <button type="button" data-path="itinerary" class="${state.screen === 'itinerary' || state.screen === 'thing' ? 'active' : ''}" ${state.things.length ? '' : 'disabled'}>Itinerary</button>
-      </nav>`;
       const turnMarkup = state.turns.length
         ? state.turns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
@@ -639,31 +634,7 @@
               </div>
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
             </form>`;
-      const whenLine = (item) => [item?.whenLabel, item?.customerWhen].filter(Boolean).join(' · ');
-      const noteLine = (item) => (Array.isArray(item?.notes) && item.notes[0]) || item?.description || '';
-      const itineraryPane = `<section class="itinerary-screen" id="itineraryScreen" data-screen="itinerary" aria-label="Itinerary">
-        <h1>Itinerary</h1>
-        <p data-intake-span>${safe(trip?.intakeSpan || 'Built from the long intake.')}</p>
-        ${trip?.intakeRule ? `<p class="intake-rule" data-intake-rule>${safe(trip.intakeRule)}</p>` : ''}
-        <ul class="thing-list">${state.things.map((item) => `<li><button type="button" data-thing-id="${safe(item.id)}"><b>${safe(item.title)}</b>${whenLine(item) ? `<span class="thing-when" data-when="${safe(whenLine(item))}">${safe(whenLine(item))}</span>` : ''}</button><small>${safe([item.category, item.who].filter(Boolean).join(' · '))}</small>${noteLine(item) ? `<p>${safe(noteLine(item))}</p>` : ''}</li>`).join('')}</ul>
-      </section>`;
-      const thingNotes = Array.isArray(thing?.notes) ? thing.notes : [];
-      const collaboratorNotes = Array.isArray(thing?.collaboratorNotes) ? thing.collaboratorNotes : [];
-      const thingPane = `<section class="thing-screen" id="thingScreen" data-screen="thing" aria-label="Thing page">
-        <button class="thing-back" type="button" data-path="itinerary">Back to itinerary</button>
-        <h1>${safe(thing?.title || '')}</h1>
-        <p class="thing-category">${safe(thing?.category || '')}</p>
-        ${thing?.who ? `<p class="thing-meta" data-who>Who: ${safe(thing.who)}</p>` : ''}
-        ${whenLine(thing) ? `<p class="thing-meta" data-when>When: ${safe(whenLine(thing))}</p>` : ''}
-        <ul class="thing-notes" data-notes>${thingNotes.map((note) => `<li>${safe(note)}</li>`).join('')}</ul>
-        <section class="collaborator-notes" data-collaborator-notes>
-          <h2>Collaborator notes</h2>
-          ${collaboratorNotes.length ? `<ul>${collaboratorNotes.map((note) => `<li>${safe(note)}</li>`).join('')}</ul>` : '<p>No collaborator notes yet.</p>'}
-        </section>
-      </section>`;
-      const body = state.screen === 'thing' && thing
-        ? thingPane
-        : (state.screen === 'itinerary' && state.things.length ? itineraryPane : onboardingPane);
+      const body = onboardingPane;
       root.innerHTML = `<main class="app">
         <header class="topbar">
           <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
@@ -681,7 +652,6 @@
           ${hasSite ? `<div class="site-pane"><iframe title="${safe(trip.title)} website" src="${safe(siteUrl)}"></iframe></div>
           <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
           <section class="chat-pane" aria-label="Vacation chat">
-            ${pathNav}
             ${body}
           </section>
         </section>
@@ -710,21 +680,6 @@
           });
         });
       }
-      document.querySelectorAll('[data-path]').forEach((button) => {
-        button.addEventListener('click', () => {
-          const next = button.dataset.path;
-          if (next === 'itinerary' && !state.things.length) return;
-          state.screen = next === 'thing' ? 'thing' : next;
-          renderApp();
-        });
-      });
-      document.querySelectorAll('[data-thing-id]').forEach((button) => {
-        button.addEventListener('click', () => {
-          state.thingId = button.dataset.thingId;
-          state.screen = 'thing';
-          renderApp();
-        });
-      });
       if (document.getElementById('splitter')) bindSplitter();
       const attachButton = document.getElementById('attachButton');
       if (!attachButton) return;
@@ -797,6 +752,7 @@
       const textarea = document.getElementById('messageText');
       const text = textarea.value.trim();
       if (!text && state.attachments.length === 0) return;
+      const hadSite = Boolean(realSiteUrl(currentTrip()?.publicUrl));
       const voiceTurn = state.voiceArmed === true;
       state.voiceArmed = false;
       const messages = document.getElementById('messages');
@@ -826,8 +782,10 @@
           else state.vacations.push(data.vacation);
           const label = document.getElementById('tripLabel');
           if (label) label.textContent = tripBadge(data.vacation);
-          const itineraryButton = document.querySelector('[data-path="itinerary"]');
-          if (itineraryButton && state.things.length) itineraryButton.disabled = false;
+          if (!hadSite && realSiteUrl(data.vacation.publicUrl)) {
+            await loadApp(data.vacation.id);
+            return;
+          }
         }
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
       } catch (error) {
@@ -861,9 +819,6 @@
         state.vacations = data.vacations || [];
         state.turns = data.turns || [];
         state.things = Array.isArray(data.itinerary) ? data.itinerary : [];
-        if (state.screen === 'thing' && !state.things.some((item) => item.id === state.thingId)) {
-          state.screen = state.things.length ? 'itinerary' : 'onboarding';
-        }
         state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
         if (state.eula?.accepted !== true) {
           renderEula();
