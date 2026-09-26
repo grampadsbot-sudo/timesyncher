@@ -232,7 +232,7 @@ async function main() {
     });
   }
 
-  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '' } = {}) {
+  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '', clipRect = null } = {}) {
     if (await isShell(page)) {
       gap(title, file, 'refused: the page still has the deleted card shell');
       return false;
@@ -240,7 +240,15 @@ async function main() {
     const image = path.join(shotDir, `${id}.png`);
     if (!seenShot.has(id)) {
       let clipped = false;
-      if (clipSelector) {
+      if (clipRect && clipRect.width > 20 && clipRect.height > 20) {
+        const x = Math.max(0, Math.min(clipRect.x, 1200));
+        const y = Math.max(0, Math.min(clipRect.y, 820));
+        const width = Math.max(40, Math.min(clipRect.width, 1280 - x));
+        const height = Math.max(40, Math.min(clipRect.height, 900 - y));
+        await page.screenshot({ path: image, clip: { x, y, width, height } });
+        clipped = true;
+      }
+      if (!clipped && clipSelector) {
         const handle = await page.$(clipSelector);
         const box = handle ? await handle.boundingBox() : null;
         if (box && box.width > 20 && box.height > 20) {
@@ -408,7 +416,7 @@ async function main() {
         ['welcome-lauren', 'Lauren welcome', 'officially joining', 'Collaborator welcome in the chat.', false],
       ];
       for (const [id, title, needle, note, skipOpener] of bubbles) {
-        const found = await page.evaluate((phrase, skipWelcome) => {
+        const clipRect = await page.evaluate((phrase, skipWelcome) => {
           const needleText = phrase.toLowerCase();
           const bubble = [...document.querySelectorAll('article.bubble')].find((node) => {
             if (node.classList.contains('user')) return false;
@@ -417,23 +425,42 @@ async function main() {
             if (skipWelcome && text.includes('welcome. i am here to build')) return false;
             return true;
           });
-          if (!bubble) return false;
-          document.querySelectorAll('[data-journey-bubble]').forEach((node) => node.removeAttribute('data-journey-bubble'));
-          bubble.setAttribute('data-journey-bubble', '1');
+          if (!bubble) return null;
           const scroller = document.getElementById('messages');
-          if (scroller) scroller.scrollTop = Math.max(0, bubble.offsetTop - 8);
-          bubble.scrollIntoView({ block: 'center' });
-          return true;
+          const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
+          let match = null;
+          let node = walker.nextNode();
+          while (node) {
+            if ((node.textContent || '').toLowerCase().includes(needleText)) {
+              match = node;
+              break;
+            }
+            node = walker.nextNode();
+          }
+          const range = document.createRange();
+          range.selectNodeContents(match || bubble);
+          if (scroller) {
+            const lineTop = range.getBoundingClientRect().top;
+            const paneTop = scroller.getBoundingClientRect().top;
+            scroller.scrollTop += lineTop - paneTop - 36;
+          }
+          const line = range.getBoundingClientRect();
+          const pane = (scroller || bubble).getBoundingClientRect();
+          const x = Math.max(line.x, pane.x);
+          const y = Math.max(8, Math.min(line.y - 28, pane.y + 8));
+          const width = Math.min(Math.max(line.width, 640), pane.width, 1100);
+          const height = Math.min(340, Math.max(180, pane.bottom - y - 8));
+          return { x, y, width, height };
         }, needle, skipOpener);
         await sleep(300);
         const chapter = id.startsWith('welcome-') ? 'Collaborator welcome' : 'Onboarding';
         const file = id.startsWith('welcome-') ? 'collaborators.md' : (id === 'collab-upsell' ? 'post-intake-welcome.md' : 'post-purchase-email-eula.md');
-        if (!found) {
+        if (!clipRect) {
           gap(title, file, `the chat has no app bubble containing "${needle}"`);
           continue;
         }
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
-        await shot(id, chapter, title, { file, note, clipSelector: '[data-journey-bubble="1"]' });
+        await shot(id, chapter, title, { file, note, clipRect });
       }
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
       if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
