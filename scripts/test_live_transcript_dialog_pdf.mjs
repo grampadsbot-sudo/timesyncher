@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { customerPullsAccess, destinationFromTexts, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, inventedGardenHit, isFullUpsell, isLongIntake, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyCustomerNotes, customerPullsAccess, destinationFromTexts, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, intakeFacts, inventedGardenHit, isFullUpsell, isLongIntake, item34BanHit, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertLiveTranscript,
@@ -78,6 +78,25 @@ assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Ki
 const intakeThings = thingsFromIntake('Big Island Hawaii. Kimberly wants gardens. Groceries the same day. Friday is the dinner. Tyler wants a swim. A house in Kailua-Kona.');
 assert.deepEqual(intakeThings.map((thing) => thing.title), ['Big Island', 'Gardens', 'Groceries', 'Dinner', 'Swim', 'Kailua-Kona house']);
 assert.equal(intakeThings.some((thing) => /kahalu|arboretum/i.test(thing.title)), false);
+const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
+const goldFacts = intakeFacts(goldIntake);
+assert.equal(goldFacts.span.badge, 'Big Island Apr 3–12 2026');
+assert.equal(goldFacts.span.start, '2026-04-03');
+assert.equal(goldFacts.span.end, '2026-04-12');
+assert.match(goldFacts.rule, /two big activities/);
+const goldThings = goldFacts.things;
+assert.equal(goldThings.find((thing) => thing.title === 'Groceries').whenLabel, 'Fri Apr 3');
+assert.equal(goldThings.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
+assert.equal(goldThings.find((thing) => thing.title === 'Swim').whenLabel, 'later in the week');
+assert.equal(goldThings.find((thing) => thing.title === 'Swim').who, 'Tyler');
+assert.match(goldThings.find((thing) => thing.title === 'Groceries').notes[0], /SpeediShuttle/);
+assert.equal(goldThings.some((thing) => /kahalu|arboretum|botanical/i.test(JSON.stringify(thing))), false);
+const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
+assert.match(noted.find((thing) => thing.title === 'Gardens').collaboratorNotes[0], /Sunday April fifth/);
+assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, 'Sun Apr 5');
+assert.equal(acceptQualityRewrite('Draft stays.', 'Draft stays.').rewritten, false);
+assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').rewritten, true);
+assert.equal(acceptQualityRewrite('Draft stays.', 'The rewrite the customer sees.').text, 'The rewrite the customer sees.');
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape. (rewritten)');
 assert.equal(formatQualityLine({ judged: false, score: 4, comment: 'no' }), '');
 assert.equal(qualityFromDecisions({

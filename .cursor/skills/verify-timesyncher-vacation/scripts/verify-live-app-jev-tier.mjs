@@ -84,8 +84,14 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/data-screen="itinerary"/.test(vacationApp) || !/data-screen="thing"/.test(vacationApp) || !/data-screen="onboarding"/.test(vacationApp)) {
     errors.push('vacation app is missing the onboarding, itinerary, and thing screens');
   }
-  if (!/thingsFromIntake/.test(api)) {
-    errors.push('vacation app does not build things from the long intake');
+  if (!/thingsFromIntake/.test(api) || !/whenLabel/.test(api) || !/collaboratorNotes/.test(api)) {
+    errors.push('vacation app does not build dated things and collaborator notes from the long intake');
+  }
+  if (!/function tripBadge/.test(vacationApp) || !/data-collaborator-notes/.test(vacationApp)) {
+    errors.push('vacation app badge stays on no vacations yet after the itinerary is built');
+  }
+  if (!/quality\.draft/.test(liveTurn) || !/acceptQualityRewrite/.test(liveTurn)) {
+    errors.push('a Jev rewrite is not stored apart from the customer-facing reply');
   }
   if (!replyRules.includes(SHARED_REPLY_PIPELINE) || !/export async function jevPrecall/.test(replyRules) || !/export async function callTieredModel/.test(replyRules)) {
     errors.push('shared producer contract is missing Jev-then-tier exports');

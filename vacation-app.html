@@ -234,7 +234,12 @@
       border-radius: 8px;
       background: #fff;
     }
-    .thing-list small, .thing-screen .thing-category { color: var(--muted); font-weight: 700; }
+    .thing-list small, .thing-screen .thing-category, .thing-screen .thing-meta { color: var(--muted); font-weight: 700; }
+    .thing-when { display: block; color: var(--gold-strong); font-weight: 750; margin-top: 4px; }
+    .thing-list p, .intake-rule { margin: 4px 0 12px; }
+    .thing-notes, .collaborator-notes { margin: 12px 0; padding: 0; }
+    .collaborator-notes { border-top: 1px solid var(--line); padding-top: 12px; }
+    .collaborator-notes h2 { margin: 0 0 8px; font-size: 16px; }
     .messages {
       min-height: 0;
       overflow: auto;
@@ -478,14 +483,35 @@
 
     function isPlaceholderTrip(trip) {
       if (!trip) return true;
+      const hasPlan = Boolean(String(trip.destination || '').trim() || trip.startDate || trip.endDate);
+      if (hasPlan) return false;
       const title = String(trip.title || '').trim();
       if (!title) return true;
       const key = title.toLowerCase();
       if (PLACEHOLDER_TITLES.has(key)) return true;
-      const hasPlan = Boolean(String(trip.destination || '').trim() || trip.startDate || trip.endDate);
       if (key === 'vegas anniversary' && !hasPlan) return true;
       if (String(trip.status || '').toLowerCase() === 'onboarding' && !String(trip.destination || '').trim() && !realSiteUrl(trip.publicUrl)) return true;
       return false;
+    }
+
+    function dateParts(value) {
+      const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!match) return null;
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return { y: match[1], m: Number(match[2]), d: Number(match[3]), mon: months[Number(match[2]) - 1] };
+    }
+
+    function tripBadge(trip) {
+      if (!trip || isPlaceholderTrip(trip)) return 'no vacations yet';
+      const place = String(trip.destination || trip.title || '').split(',')[0].trim();
+      const start = dateParts(trip.startDate);
+      const end = dateParts(trip.endDate);
+      if (place && start && end) {
+        if (start.y === end.y && start.m === end.m) return `${place} ${start.mon} ${start.d}–${end.d} ${start.y}`;
+        if (start.y === end.y) return `${place} ${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`;
+        return `${place} ${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
+      }
+      return place || 'no vacations yet';
     }
 
     function realVacations() {
@@ -613,16 +639,27 @@
               </div>
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
             </form>`;
+      const whenLine = (item) => [item?.whenLabel, item?.customerWhen].filter(Boolean).join(' · ');
+      const noteLine = (item) => (Array.isArray(item?.notes) && item.notes[0]) || item?.description || '';
       const itineraryPane = `<section class="itinerary-screen" id="itineraryScreen" data-screen="itinerary" aria-label="Itinerary">
         <h1>Itinerary</h1>
-        <p>Built from the long intake.</p>
-        <ul class="thing-list">${state.things.map((item) => `<li><button type="button" data-thing-id="${safe(item.id)}">${safe(item.title)}</button><small>${safe(item.category)}</small></li>`).join('')}</ul>
+        <p data-intake-span>${safe(trip?.intakeSpan || 'Built from the long intake.')}</p>
+        ${trip?.intakeRule ? `<p class="intake-rule" data-intake-rule>${safe(trip.intakeRule)}</p>` : ''}
+        <ul class="thing-list">${state.things.map((item) => `<li><button type="button" data-thing-id="${safe(item.id)}"><b>${safe(item.title)}</b>${whenLine(item) ? `<span class="thing-when" data-when="${safe(whenLine(item))}">${safe(whenLine(item))}</span>` : ''}</button><small>${safe([item.category, item.who].filter(Boolean).join(' · '))}</small>${noteLine(item) ? `<p>${safe(noteLine(item))}</p>` : ''}</li>`).join('')}</ul>
       </section>`;
+      const thingNotes = Array.isArray(thing?.notes) ? thing.notes : [];
+      const collaboratorNotes = Array.isArray(thing?.collaboratorNotes) ? thing.collaboratorNotes : [];
       const thingPane = `<section class="thing-screen" id="thingScreen" data-screen="thing" aria-label="Thing page">
         <button class="thing-back" type="button" data-path="itinerary">Back to itinerary</button>
         <h1>${safe(thing?.title || '')}</h1>
         <p class="thing-category">${safe(thing?.category || '')}</p>
-        <p>${safe(thing?.description || '')}</p>
+        ${thing?.who ? `<p class="thing-meta" data-who>Who: ${safe(thing.who)}</p>` : ''}
+        ${whenLine(thing) ? `<p class="thing-meta" data-when>When: ${safe(whenLine(thing))}</p>` : ''}
+        <ul class="thing-notes" data-notes>${thingNotes.map((note) => `<li>${safe(note)}</li>`).join('')}</ul>
+        <section class="collaborator-notes" data-collaborator-notes>
+          <h2>Collaborator notes</h2>
+          ${collaboratorNotes.length ? `<ul>${collaboratorNotes.map((note) => `<li>${safe(note)}</li>`).join('')}</ul>` : '<p>No collaborator notes yet.</p>'}
+        </section>
       </section>`;
       const body = state.screen === 'thing' && thing
         ? thingPane
@@ -631,14 +668,14 @@
         <header class="topbar">
           <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
           ${trips.length > 1 ? `<div class="trip-menu" id="tripMenu">
-            <button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(trip.title)}</span>${icon.chevron}</button>
+            <button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button>
             <div class="trip-list" role="listbox">
               ${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}">
                 <span>${item.id === trip?.id ? icon.check : ''}</span>
                 <span><b>${safe(item.title)}</b><small>${safe([item.destination, item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
               </button>`).join('')}
             </div>
-          </div>` : `<div class="trip-label" id="tripLabel">${safe(trip?.title || 'no vacations yet')}</div>`}
+          </div>` : `<div class="trip-label" id="tripLabel">${safe(tripBadge(trip))}</div>`}
         </header>
         <section class="workspace${hasSite ? '' : ' chat-only'}" id="workspace">
           ${hasSite ? `<div class="site-pane"><iframe title="${safe(trip.title)} website" src="${safe(siteUrl)}"></iframe></div>
@@ -783,6 +820,15 @@
         const data = await res.json();
         if (!res.ok || data.ok === false || !data.reply) throw new Error(data.error || 'The app did not return a reply.');
         if (Array.isArray(data.itinerary)) state.things = data.itinerary;
+        if (data.vacation?.id) {
+          const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
+          if (index >= 0) state.vacations[index] = data.vacation;
+          else state.vacations.push(data.vacation);
+          const label = document.getElementById('tripLabel');
+          if (label) label.textContent = tripBadge(data.vacation);
+          const itineraryButton = document.querySelector('[data-path="itinerary"]');
+          if (itineraryButton && state.things.length) itineraryButton.disabled = false;
+        }
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
       } catch (error) {
         messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small><span class="error">${safe(error.message)}</span></article>`);

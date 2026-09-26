@@ -101,6 +101,9 @@ export function liveTurnRecord({
         rewritten: model.quality.rewritten === true,
         model: model.quality.model || null,
       };
+      if (record.quality.rewritten && model.quality.draft) {
+        record.quality.draft = String(model.quality.draft);
+      }
     }
     record.model = model
       ? {
@@ -333,15 +336,159 @@ export function stripInventedGarden(reply, corpus) {
   return kept.join('\n\n').trim();
 }
 
-export function thingsFromIntake(text) {
+const MONTHS = {
+  january: 1, jan: 1, february: 2, feb: 2, march: 3, mar: 3, april: 4, apr: 4, may: 5,
+  june: 6, jun: 6, july: 7, jul: 7, august: 8, aug: 8, september: 9, sept: 9, sep: 9,
+  october: 10, oct: 10, november: 11, nov: 11, december: 12, dec: 12,
+};
+const MONTH_ABBR = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_WORDS = {
+  first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10,
+  eleventh: 11, twelfth: 12, thirteenth: 13, fourteenth: 14, fifteenth: 15, sixteenth: 16, seventeenth: 17,
+  eighteenth: 18, nineteenth: 19, twentieth: 20, 'twenty-first': 21, 'twenty-second': 22, 'twenty-third': 23,
+  'twenty-fourth': 24, 'twenty-fifth': 25, 'twenty-sixth': 26, 'twenty-seventh': 27, 'twenty-eighth': 28,
+  'twenty-ninth': 29, thirtieth: 30, 'thirty-first': 31,
+};
+const WEEKDAY_ABBR = { sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat' };
+const WHO_SKIP = new Set(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Base', 'Big', 'SpeediShuttle', 'Kids', 'Four', 'What', 'Keep', 'This', 'The']);
+
+function splitSentences(text) {
+  return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+
+function parseYear(text) {
+  const digits = String(text || '').match(/\b(20\d{2})\b/);
+  if (digits) return Number(digits[1]);
+  const words = String(text || '').toLowerCase();
+  const teens = { five: 2025, six: 2026, seven: 2027, eight: 2028, nine: 2029 };
+  const match = words.match(/\btwenty[\s-]+twenty[\s-]*(five|six|seven|eight|nine)\b/);
+  return match ? teens[match[1]] : null;
+}
+
+function parseDayToken(token) {
+  const word = String(token || '').toLowerCase();
+  if (DAY_WORDS[word]) return DAY_WORDS[word];
+  const digits = word.match(/^(\d{1,2})/);
+  const day = digits ? Number(digits[1]) : 0;
+  return day >= 1 && day <= 31 ? day : 0;
+}
+
+export function datedMentions(text) {
+  const year = parseYear(text);
+  const re = /\b(?:(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s+)?(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\.?\s+(\d{1,2}(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty-first|twenty-second|twenty-third|twenty-fourth|twenty-fifth|twenty-sixth|twenty-seventh|twenty-eighth|twenty-ninth|thirtieth|thirty-first)\b/gi;
+  const found = [];
+  let match = re.exec(String(text || ''));
+  while (match) {
+    const month = MONTHS[match[2].toLowerCase()];
+    const day = parseDayToken(match[3]);
+    if (month && day) {
+      found.push({
+        weekday: match[1] || '',
+        month,
+        day,
+        year: parseYear(match[0]) || year,
+        raw: match[0],
+      });
+    }
+    match = re.exec(String(text || ''));
+  }
+  return found;
+}
+
+function weekdayAbbr(mention) {
+  if (mention?.weekday && WEEKDAY_ABBR[mention.weekday.toLowerCase()]) return WEEKDAY_ABBR[mention.weekday.toLowerCase()];
+  if (!mention?.year) return '';
+  const date = new Date(Date.UTC(mention.year, mention.month - 1, mention.day));
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()] || '';
+}
+
+function formatMention(mention, { withWeekday = true, withYear = false } = {}) {
+  if (!mention) return '';
+  const weekday = withWeekday ? weekdayAbbr(mention) : '';
+  const year = withYear && mention.year ? ` ${mention.year}` : '';
+  return `${weekday ? `${weekday} ` : ''}${MONTH_ABBR[mention.month]} ${mention.day}${year}`.trim();
+}
+
+export function intakeSpan(text) {
+  const mentions = datedMentions(text);
+  if (!mentions.length) return null;
+  const year = mentions.find((item) => item.year)?.year || parseYear(text);
+  const start = { ...mentions[0], year: mentions[0].year || year };
+  const end = { ...mentions[mentions.length - 1], year: mentions[mentions.length - 1].year || year };
+  const place = /big island/i.test(text) ? 'Big Island' : '';
+  const startIso = start.year ? `${start.year}-${String(start.month).padStart(2, '0')}-${String(start.day).padStart(2, '0')}` : '';
+  const endIso = end.year ? `${end.year}-${String(end.month).padStart(2, '0')}-${String(end.day).padStart(2, '0')}` : '';
+  const sameMonth = start.month === end.month && start.year === end.year;
+  const badgeRange = !endIso || (startIso === endIso)
+    ? formatMention(start, { withWeekday: false, withYear: true })
+    : (sameMonth
+      ? `${MONTH_ABBR[start.month]} ${start.day}–${end.day}${start.year ? ` ${start.year}` : ''}`
+      : `${formatMention(start, { withWeekday: false, withYear: false })}–${formatMention(end, { withWeekday: false, withYear: true })}`);
+  const spanLabel = startIso === endIso
+    ? formatMention(start, { withWeekday: true, withYear: true })
+    : `${formatMention(start, { withWeekday: true })}–${formatMention(end, { withWeekday: true, withYear: true })}`;
+  return {
+    destination: place ? `${place}, Hawaii` : '',
+    placeTitle: place,
+    start: startIso,
+    end: endIso || startIso,
+    startLabel: formatMention(start, { withWeekday: true }),
+    endLabel: formatMention(end, { withWeekday: true, withYear: true }),
+    spanLabel,
+    badge: place ? `${place} ${badgeRange}`.trim() : badgeRange,
+    year: year || null,
+  };
+}
+
+function whoIn(sentence) {
+  const match = String(sentence || '').match(/\b([A-Z][a-z]{2,})\b/);
+  if (!match || WHO_SKIP.has(match[1])) return '';
+  return match[1];
+}
+
+function thingPattern(title) {
+  const key = String(title || '').toLowerCase();
+  if (key === 'big island') return /big island/i;
+  if (key === 'gardens') return /garden/i;
+  if (key === 'groceries') return /grocer/i;
+  if (key === 'dinner') return /\bdinner\b/i;
+  if (key === 'swim') return /\bswim/i;
+  if (key === 'town walk') return /town walk/i;
+  if (key === 'kailua-kona house') return /kailua-kona/i;
+  return null;
+}
+
+function whenForThing(title, sentence, span) {
+  if (title === 'Groceries' && /same day/i.test(sentence) && span?.startLabel) return span.startLabel;
+  if (title === 'Swim' && /later in the week/i.test(sentence)) return 'later in the week';
+  if ((title === 'Big Island' || title === 'Kailua-Kona house') && span?.spanLabel) return span.spanLabel;
+  const dated = datedMentions(sentence)[0];
+  return dated ? formatMention({ ...dated, year: dated.year || span?.year }) : '';
+}
+
+export function intakeFacts(text) {
   const value = String(text || '');
-  const sentence = (pattern) => value.split(/(?<=[.!?])\s+/).find((part) => pattern.test(part)) || '';
+  const sentences = splitSentences(value);
+  const span = intakeSpan(value);
+  const rule = sentences.find((part) => /two big activities/i.test(part)) || '';
   const things = [];
   const add = (title, category, pattern) => {
     if (!pattern.test(value) || INVENTED_GARDEN.test(title)) return;
-    const description = sentence(pattern).replace(/\s+/g, ' ').trim() || title;
+    const matched = sentences.filter((part) => pattern.test(part) && !(INVENTED_GARDEN.test(part) && !INVENTED_GARDEN.test(value)));
+    const notes = matched.length ? matched : [title];
+    if (title === 'Big Island' && rule && !notes.some((note) => note === rule)) notes.push(rule);
+    const description = notes.join(' ');
     if (INVENTED_GARDEN.test(description) && !INVENTED_GARDEN.test(value)) return;
-    things.push({ title, category, description });
+    things.push({
+      title,
+      category,
+      description,
+      who: whoIn(notes[0]) || '',
+      whenLabel: whenForThing(title, notes.join(' '), span),
+      customerWhen: '',
+      notes,
+      collaboratorNotes: [],
+    });
   };
   if (/big island/i.test(value)) add('Big Island', 'activity', /big island/i);
   if (/garden/i.test(value)) add('Gardens', 'activity', /garden/i);
@@ -350,7 +497,58 @@ export function thingsFromIntake(text) {
   if (/\bswim\b/i.test(value)) add('Swim', 'activity', /\bswim\b/i);
   if (/town walk/i.test(value)) add('Town walk', 'activity', /town walk/i);
   if (/house/i.test(value) && /kailua-kona/i.test(value)) add('Kailua-Kona house', 'hotel', /house/i);
-  return things;
+  return { span, rule, things };
+}
+
+export function thingsFromIntake(text) {
+  return intakeFacts(text).things;
+}
+
+function sameNote(left, right) {
+  return String(left || '').replace(/\s+/g, ' ').trim().toLowerCase() === String(right || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '' } = {}) {
+  const sentences = splitSentences(text);
+  return (Array.isArray(things) ? things : []).map((thing) => {
+    const pattern = thingPattern(thing.title);
+    if (!pattern) return thing;
+    const hits = sentences.filter((part) => pattern.test(part));
+    if (!hits.length) return thing;
+    const notes = Array.isArray(thing.notes) ? [...thing.notes] : [];
+    const collaboratorNotes = Array.isArray(thing.collaboratorNotes) ? [...thing.collaboratorNotes] : [];
+    const bucket = collaborator ? collaboratorNotes : notes;
+    for (const hit of hits) {
+      const line = collaborator && speakerName && !hit.includes(String(speakerName).split(/\s+/)[0])
+        ? `${speakerName}: ${hit}`
+        : hit;
+      if ([...notes, ...collaboratorNotes, ...bucket].some((note) => sameNote(note, line))) continue;
+      bucket.push(line);
+    }
+    let customerWhen = thing.customerWhen || '';
+    if (!customerWhen) {
+      const dated = hits.map((hit) => datedMentions(hit)[0]).find(Boolean);
+      if (dated) customerWhen = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
+    }
+    const who = thing.who || whoIn(hits[0]) || '';
+    return {
+      ...thing,
+      who,
+      notes,
+      collaboratorNotes,
+      customerWhen,
+      description: [...notes, ...collaboratorNotes].join(' '),
+    };
+  });
+}
+
+export function acceptQualityRewrite(draft, rewritten) {
+  const prior = String(draft || '').trim();
+  const next = String(rewritten || '').trim();
+  if (!next || next.replace(/\s+/g, ' ') === prior.replace(/\s+/g, ' ')) {
+    return { text: prior, rewritten: false, draft: '' };
+  }
+  return { text: next, rewritten: true, draft: prior };
 }
 
 export function formatQualityLine(quality) {
@@ -483,6 +681,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     };
   }
   if (quality.wantsRewrite) {
+    const draftBeforeRewrite = reply;
     const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nJev asked for a rewrite before the customer sees this. Jev comment: ${quality.comment}\nDraft to replace:\n${reply}`, upsell));
     let rewritten = applyUpsellPolicy(directed?.called && directed.text ? String(directed.text) : '', upsell, postIntake);
     if (item34BanHit(rewritten)) rewritten = applyUpsellPolicy(stripItem34Ban(rewritten), upsell, postIntake);
@@ -490,8 +689,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     const rewriteBanned = appTextBanned(rewritten);
     const rewriteUpsell = upsell === 'forbidden' && (isFullUpsell(rewritten) || UNLIMITED_PATTERN.test(rewritten) || isCollabWelcome(rewritten));
     if (rewritten && !rewriteBanned && !item34BanHit(rewritten) && !inventedGardenHit(rewritten, corpus) && !replyLeavesDestination(rewritten, destination) && !rewriteUpsell) {
-      reply = rewritten;
-      quality.rewritten = true;
+      const accepted = acceptQualityRewrite(draftBeforeRewrite, rewritten);
+      reply = accepted.text;
+      quality.rewritten = accepted.rewritten;
+      if (accepted.rewritten) quality.draft = accepted.draft;
       if (model && typeof model === 'object' && directed?.genLatencyMs == null) {
         model.genLatencyMs = Math.max(0, Date.now() - genStarted);
       }

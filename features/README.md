@@ -103,7 +103,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | TG intake | Track Q&A in GBrain; 10–15 min build cue; then autonomous fill | `tg-intake.md` |
 | Post-purchase launch | Purchase ack points at the email. Email opens the app URL. EULA is that URL's first screen, then onboarding chat. Order-success Open App and `/accept` are retired for this path | `post-purchase-email-eula.md` |
 | Composer reply | Jev classify, then that model tier, then the reply the customer saw. Skip stores `jevRan: false` and a reason | `live-app-jev-tier.md` |
-| Jev quality and post-intake | Every generated reply stores a Jev score and comment. Optional Jev rewrite is the customer reply. The long intake builds the itinerary, explains collaborators, and gives the one unlimited welcome. Onboarding, Itinerary, and each Thing page are in the app | `jev-quality-post-intake.md` |
+| Jev quality and post-intake | Every generated reply stores a Jev score and comment. A kept rewrite is the customer reply, and the draft is stored beside it. The long intake builds the itinerary, sets the trip badge and day placement from customer words, explains collaborators, and gives the one unlimited welcome. Onboarding, Itinerary, and each Thing page with collaborator notes are in the app | `jev-quality-post-intake.md` |
 | Settings (TREK, not shared-guest header) | Mapbox / Google Maps / Weather / Invite / Copy link | `trek-settings.md` |
 | Nav chrome (TREK bundle) | Open/Close navigation; Move up/down | `navigation.md` |
 
