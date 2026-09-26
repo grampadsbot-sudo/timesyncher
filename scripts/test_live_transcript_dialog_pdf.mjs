@@ -10,6 +10,7 @@ import {
   assertLiveTranscript,
   assessPackShape,
   extractPdfText,
+  formatLiveTimingLine,
   renderLiveTranscriptPdf,
 } from './live-transcript-dialog-pdf.mjs';
 
@@ -264,5 +265,46 @@ assert.match(missing.stderr, /will not invent a transcript/);
 const built = spawnSync(process.execPath, [script, '--transcript', transcriptPath, '--out', outPath], { encoding: 'utf8' });
 assert.equal(built.status, 0, built.stderr);
 assert.match(extractPdfText(fs.readFileSync(outPath)), /T2 APP/);
+
+const timingLine = formatLiveTimingLine({
+  gen: 750,
+  model: 'google/gemini-2.5-flash-lite',
+  tier: 1,
+  jevMs: 222,
+  maxTokens: 900,
+});
+assert.equal(timingLine, 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 jev=222ms max_tokens=900');
+assert.equal(timingLine.includes('zev'), false);
+const poison = {
+  title: 't',
+  pack_id: 't',
+  turns_line: 't',
+  headline: 't',
+  quality_rows: [['pack', 'v6', 'v7']],
+  tier_rows: [['Tier', 'Model', 'Mean']],
+  timing_rows: [['slice', 'model', 'n', 'p50', 'p95', 'mean', 'max']],
+  speedup: 's',
+  judge: 'j',
+  footer_id: 't',
+  turns: [{
+    label: 'T37 APP',
+    meta: 'n=37',
+    app: true,
+    text: 'Monday swim stays on the Big Island.',
+    quality: 'quality: not judged',
+    timing: 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 zev=222ms max_tokens=900',
+  }],
+};
+const poisoned = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
+  input: JSON.stringify(poison),
+  maxBuffer: 8 * 1024 * 1024,
+});
+assert.equal(poisoned.status, 0, poisoned.stderr?.toString());
+const poisonedPdf = Buffer.from(poisoned.stdout);
+assert.equal(poisonedPdf.includes(Buffer.from('zev=')), false);
+assert.equal(poisonedPdf.includes(Buffer.from('jev=222ms')), true);
+const poisonedText = extractPdfText(poisonedPdf);
+assert.match(poisonedText, /jev=222ms/);
+assert.equal(poisonedText.includes('zev'), false);
 
 console.log('live transcript dialog pdf passed');

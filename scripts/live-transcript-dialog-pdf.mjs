@@ -362,6 +362,15 @@ function pdfEscape(value) {
   return pdfAscii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/·/g, '\\267');
 }
 
+export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens }) {
+  const line = `timing: gen=${gen}ms model=${model} tier=${tier} jev=${jevMs}ms max_tokens=${maxTokens}`;
+  if (/zev/i.test(line)) throw new Error('refused: timing line contained zev');
+  if (!/^timing: gen=\d+ms model=\S+ tier=[1-4] jev=\d+ms max_tokens=\d+$/.test(line)) {
+    throw new Error('refused: timing line is not jev=');
+  }
+  return line;
+}
+
 function timingStats(values) {
   const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
   if (!sorted.length) return { count: 0, p50: 'n/a', p95: 'n/a', mean: 'n/a', max: 'n/a' };
@@ -462,7 +471,13 @@ export function liveV7Pack(doc, shape) {
         app,
         text: String(turn.text || ''),
         quality: generatedTurn ? 'quality: not judged' : '',
-        timing: generatedTurn ? `timing: gen=${gen}ms model=${model} tier=${turn.jev.modelTier} jev=${jevMs}ms max_tokens=${maxTokens}` : '',
+        timing: generatedTurn ? formatLiveTimingLine({
+          gen,
+          model,
+          tier: turn.jev.modelTier,
+          jevMs,
+          maxTokens,
+        }) : '',
       };
     }),
   };

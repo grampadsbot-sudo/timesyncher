@@ -41,6 +41,70 @@ def latin(value):
     return esc(text)
 
 
+def guard_timing(value):
+    """Timing lines may only say jev=. zev= is a typo and is rewritten, then refused if it remains."""
+    text = latin(value).replace("zev=", "jev=")
+    if "zev" in text.lower():
+        raise SystemExit("refused: timing line contains zev")
+    if "jev=" not in text:
+        raise SystemExit("refused: timing line missing jev=")
+    return text
+
+
+def pdf_literals(data):
+    strings = []
+    index = 0
+    while True:
+        start = data.find(b"(", index)
+        if start < 0:
+            break
+        cursor = start + 1
+        chars = bytearray()
+        while cursor < len(data):
+            byte = data[cursor]
+            if byte == 0x5C:
+                cursor += 1
+                if cursor >= len(data):
+                    break
+                nxt = data[cursor]
+                if nxt in b"nrtbf":
+                    chars.append({ord("n"): 10, ord("r"): 13, ord("t"): 9, ord("b"): 8, ord("f"): 12}[nxt])
+                elif nxt in b"()\\":
+                    chars.append(nxt)
+                elif 48 <= nxt <= 55:
+                    octal = bytearray([nxt])
+                    for _ in range(2):
+                        if cursor + 1 < len(data) and 48 <= data[cursor + 1] <= 55:
+                            cursor += 1
+                            octal.append(data[cursor])
+                        else:
+                            break
+                    chars.append(int(bytes(octal), 8) & 0xFF)
+                else:
+                    chars.append(nxt)
+                cursor += 1
+                continue
+            if byte == 0x29:
+                break
+            chars.append(byte)
+            cursor += 1
+        strings.append(bytes(chars))
+        index = cursor + 1
+    return strings
+
+
+def assert_timing_bytes(pdf_bytes):
+    literals = pdf_literals(pdf_bytes)
+    timings = [item.decode("latin1") for item in literals if item.startswith(b"timing:")]
+    if not timings:
+        raise SystemExit("refused: PDF has no timing lines")
+    blob = "\n".join(timings)
+    if "zev" in blob.lower() or b"zev=" in pdf_bytes:
+        raise SystemExit("refused: PDF timing emitted zev")
+    if any("jev=" not in line for line in timings):
+        raise SystemExit("refused: PDF timing line missing jev=")
+
+
 def tbl(rows, col_widths):
     safe = [[latin(cell) for cell in row] for row in rows]
     table = Table(safe, colWidths=col_widths)
@@ -107,7 +171,7 @@ def build(pack):
         if turn.get("quality"):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):
-            block.append(Paragraph(latin(turn.get("timing")), styles["Tim"]))
+            block.append(Paragraph(guard_timing(turn.get("timing")), styles["Tim"]))
         story.append(CondPageBreak(1.6 * inch))
         for flowable in block:
             story.append(flowable)
@@ -139,7 +203,9 @@ def build(pack):
         pageCompression=0,
     )
     doc.build(story, onFirstPage=paint, onLaterPages=paint)
-    return buffer.getvalue()
+    pdf_bytes = buffer.getvalue()
+    assert_timing_bytes(pdf_bytes)
+    return pdf_bytes
 
 
 def main():
