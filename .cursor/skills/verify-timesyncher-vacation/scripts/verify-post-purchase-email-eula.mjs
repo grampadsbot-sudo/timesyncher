@@ -141,6 +141,12 @@ async function doctor() {
   else {
     const js = await fetch(new URL(script, staging)).then((response) => response.text());
     if (!js.includes('eulaScreen') || !js.includes('eulaAgreeButton')) errors.push('live app bundle has no in-app EULA screen');
+    if (/data-screen="itinerary"|data-screen="thing"|aria-label="Vacation path"/.test(js)) {
+      errors.push('live app bundle still serves the deleted shell cards');
+    }
+  }
+  if (/data-screen="itinerary"|data-screen="thing"|aria-label="Vacation path"/.test(appHtml)) {
+    errors.push('live app document still serves the deleted shell cards');
   }
   return errors;
 }

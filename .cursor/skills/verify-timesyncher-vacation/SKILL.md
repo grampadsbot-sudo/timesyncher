@@ -3,9 +3,11 @@ name: verify-timesyncher-vacation
 description: "Drive TimeSyncher Vacation post-purchase proof on vacation-staging: coupon or purchase ack, purchase email launch link, EULA as the first screen of the app URL, then onboarding chat. Use when checking that path or when evidence might skip the email or leave EULA on order-success."
 ---
 
-# Verify TimeSyncher Vacation post-purchase launch
+# Verify TimeSyncher Vacation
 
-Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path.
+The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
+
+Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path. After a trip has a shared site, the app iframe is that real itinerary.
 
 ## Launch
 
@@ -81,3 +83,9 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier
 ```
 
 The harness exits non-zero when the source path skips Jev, stamps a dialog fingerprint onto the customer reply, or a live app turn lacks `jevRan` plus tier and route. A skipped classify must be `jevRan: false` with a reason and no invented tier. `--session` only reads stored turns.
+
+## Feature map drive
+
+Read `features/README.md`, then drive every feature file on the staging alias. Screenshot each one. A control the app no longer shows is a product gap: leave the feature file as written.
+
+Doctor before the first drive. It fails if order-success offers Open App, or if the app document or bundle still contains the deleted shell cards.

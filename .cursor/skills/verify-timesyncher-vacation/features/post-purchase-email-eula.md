@@ -33,4 +33,5 @@ Preconditions:
 - Reopening an app URL after Agree shows chat, not the EULA. First-paint proof has to come from the pending session capture.
 - The words "open TimeSyncher Vacation" inside the email-ack sentence are not an Open App button. Fail on `#openApp` or a button named Open TimeSyncher Vacation.
 - Collaborator `/accept` links are a different flow. They do not satisfy this path.
+- After the trip has a shared site, the workspace iframe is the real itinerary (`/shared/…`). The deleted Onboarding/Itinerary cards are not this feature.
 - A screenshot of order-success EULA without the purchase email is a failed drive.
