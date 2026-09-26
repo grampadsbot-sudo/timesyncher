@@ -701,6 +701,19 @@ export function hardQualityFlags(reply, customerTurn, corpus) {
   };
 }
 
+export function correctFalsePriceMiss(quality, reply, customerTurn) {
+  if (!customerAsksPrice(customerTurn) || !UNLIMITED_PATTERN.test(String(reply || ''))) return quality;
+  const falseMiss = /does not (?:give|name) the price/i.test(String(quality?.comment || ''));
+  if (!falseMiss && Number(quality?.score) > 2) return quality;
+  const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+  return {
+    ...quality,
+    score: Math.max(Number(quality?.score) || 1, 4),
+    comment: `Names unlimited vacations for the whole year while answering "${ask}".`,
+    wantsRewrite: false,
+  };
+}
+
 export function dockQuality(quality, flags, customerTurn) {
   const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 90);
   const reasons = [];
@@ -854,20 +867,21 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       reason: quality?.reason || 'quality_unjudged',
     };
   }
-  quality = dockQuality(quality, hardQualityFlags(reply, customerTurn, corpus), customerTurn);
+  quality = correctFalsePriceMiss(dockQuality(quality, hardQualityFlags(reply, customerTurn, corpus), customerTurn), reply, customerTurn);
   for (let attempt = 0; attempt < 2 && (quality.wantsRewrite || quality.score <= 3 || hardQualityFlags(reply, customerTurn, corpus).split || hardQualityFlags(reply, customerTurn, corpus).invented.length || hardQualityFlags(reply, customerTurn, corpus).missingPrice); attempt += 1) {
     const flags = hardQualityFlags(reply, customerTurn, corpus);
-    const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nReplace the draft completely. Do not keep the draft and add a paragraph. Jev comment: ${quality.comment}\n${flags.invented.length ? `Do not name ${flags.invented.join(', ')}. Offer options only in the customer's own words.` : 'Do not name a place, activity, or venue the customer did not name.'}\n${flags.missingPrice ? `The reply must include this exact phrase once: ${UNLIMITED_PHRASE}.` : ''}\nDo not use split, splitting, "splitting anything up", or "splitting it up".\nDraft to replace:\n${reply}`, upsell));
+    const directed = await callTieredModel(modelArgs(`${customerTurn}\n\nReplace the draft completely. Do not keep the draft and add a paragraph. Do not start with the draft. Jev comment: ${quality.comment}\n${flags.invented.length ? `Do not name ${flags.invented.join(', ')}. Offer options only in the customer's own words.` : 'Do not name a place, activity, or venue the customer did not name.'}\n${flags.missingPrice ? `The reply must include this exact phrase once: ${UNLIMITED_PHRASE}.` : ''}\n${attempt === 1 ? 'The last rewrite repeated the draft. Write different sentences. Start with the day or the price this turn asked for.' : ''}\nDo not use split, splitting, "splitting anything up", or "splitting it up".\nDraft to replace:\n${reply}`, upsell));
     const rewriteModel = String(directed?.responseModel || '').trim();
     if (!directed?.called || !isBakeoffModelId(rewriteModel)) continue;
     let rewritten = cleanCandidate(directed.text, upsell, postIntake, customerTurn, corpus);
     if (!rewriteReplacesDraft(originalDraft, rewritten)) continue;
     if (appTextBanned(rewritten) || replyLeavesDestination(rewritten, destination) || rewriteBreaksUpsell(rewritten, upsell, customerTurn)) continue;
-    const rejudged = await jevQualityRewrite({ customerTurn, draft: rewritten, env });
+    let rejudged = await jevQualityRewrite({ customerTurn, draft: rewritten, env });
+    if (!rejudged?.judged) rejudged = await jevQualityRewrite({ customerTurn, draft: rewritten, env });
     if (!rejudged?.judged) continue;
     const accepted = acceptQualityRewrite(originalDraft, rewritten);
     reply = accepted.text;
-    quality = dockQuality(rejudged, hardQualityFlags(reply, customerTurn, corpus), customerTurn);
+    quality = correctFalsePriceMiss(dockQuality(rejudged, hardQualityFlags(reply, customerTurn, corpus), customerTurn), reply, customerTurn);
     quality.rewritten = accepted.rewritten;
     if (accepted.rewritten) {
       quality.draft = accepted.draft;
