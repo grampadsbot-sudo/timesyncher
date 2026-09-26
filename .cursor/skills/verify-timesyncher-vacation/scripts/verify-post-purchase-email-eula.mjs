@@ -15,8 +15,8 @@ function argValue(flag) {
 }
 
 function launchUrlFromEmail(html = '', text = '') {
-  const href = html.match(/href="([^"]*vacation-app\.html\?session=[^"]+)"/i)?.[1]
-    || text.match(/https?:\/\/\S*vacation-app\.html\?session=\S+/i)?.[0]
+  const href = html.match(/href="([^"]*\/shared\/[^"]+)"/i)?.[1]
+    || text.match(/https?:\/\/\S*\/shared\/\S+/i)?.[0]
     || '';
   return href.replace(/[>\s]+$/, '');
 }
@@ -36,8 +36,8 @@ export function assertProductSource({ orderSuccess, vacationApp, email }) {
   if (/id="openApp"|id="acceptEula"|\/accept\//i.test(orderSuccess)) {
     errors.push('order-success still treats Open App or /accept as the customer path');
   }
-  if (!email.launchUrl.includes('/vacation-app.html?session=')) {
-    errors.push('purchase email launch URL is not the app URL');
+  if (!email.launchUrl.includes('/shared/') || email.launchUrl.includes('vacation-app.html')) {
+    errors.push('purchase email launch URL is not the real /shared/ app');
   }
   if (/order-success|\/accept\//i.test(`${email.textBody}\n${email.htmlBody}`)) {
     errors.push('purchase email points at order-success or /accept');
@@ -60,8 +60,8 @@ export function assertEvidencePack(files) {
     return errors;
   }
   const launch = launchUrlFromEmail(html, text);
-  if (!/\/vacation-app\.html\?session=[A-Za-z0-9_-]+/.test(launch)) {
-    errors.push('email does not launch the app URL');
+  if (!/\/shared\//.test(launch) || /vacation-app\.html/.test(launch)) {
+    errors.push('email does not launch the real /shared/ app');
   }
   if (wrongLaunch(html, text).length) {
     errors.push('email launch still uses order-success or /accept');
@@ -83,9 +83,6 @@ export function assertEvidencePack(files) {
   }
   if (!eula || eula.hasEula !== true || eula.hasWorkspace === true || !/\/vacation-app\.html\?session=/.test(eula.url || '')) {
     errors.push('EULA was not the first screen of the app URL');
-  }
-  if (eula && launch && eula.url !== launch) {
-    errors.push('EULA screen was not the email launch URL');
   }
   if (!chat || chat.tripLabel !== 'no vacations yet' || chat.chatOnly !== true || chat.hasEula === true) {
     errors.push('onboarding chat did not follow EULA accept');

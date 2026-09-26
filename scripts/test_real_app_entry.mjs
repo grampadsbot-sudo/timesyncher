@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { purchaseEmail } from '../src/vacation/email.mjs';
 import { intakeShareSlug, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
+import { padKeepsakeSharedPlaces } from '../src/vacation/keepsake-list-minimums.mjs';
 
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
@@ -21,6 +23,7 @@ assert.match(bundle, /Day-by-Day/);
 assert.match(api, /publishIntakeShare/);
 assert.match(handler, /intakeSharedResponse/);
 assert.match(handler, /timesyncherIntake|sharedTripFromIntake/);
+assert.match(api, /storePreCollaboratorSnapshot/);
 
 const tripId = 'eab1cbb1-5144-4be4-b856-92f0a3769db3';
 assert.equal(intakeShareSlug(tripId), 'intake-eab1cbb15144');
@@ -46,5 +49,21 @@ assert.equal(shared.thingOverrides[`place:${swim.id}`].timeline, true);
 assert.deepEqual(shared.thingOverrides[`place:${swim.id}`].dayIds, [monday.id]);
 assert.ok((shared.assignments[String(monday.id)] || []).some((row) => row.place_id === swim.id));
 assert.equal(shared.places.some((place) => /Las Vegas/i.test(place.name)), false);
+assert.equal(shared.permissions.share_budget, true);
+assert.equal(shared.budget.length, 1);
+assert.equal(shared.budget[0].total_price, null);
+const padded = padKeepsakeSharedPlaces(shared);
+const count = (name) => padded.places.filter((place) => place.category_name === name).length;
+assert.ok(count('Restaurant') >= 15, `restaurants ${count('Restaurant')}`);
+assert.ok(count('Store') >= 10, `stores ${count('Store')}`);
+assert.ok(count('Attraction') >= 15, `attractions ${count('Attraction')}`);
+const email = purchaseEmail({
+  contact: { firstName: 'Verify' },
+  publicSlug: 'intake-eab1cbb15144',
+  env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
+});
+assert.match(email.launchUrl, /\/shared\/intake-eab1cbb15144\/$/);
+assert.doesNotMatch(email.htmlBody, /vacation-app\.html/);
+assert.match(email.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
 
 console.log('real app entry gate passed');

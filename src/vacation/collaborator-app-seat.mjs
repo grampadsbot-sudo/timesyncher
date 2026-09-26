@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
+import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { ensureVacationEulaSession, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
@@ -47,12 +48,18 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, se
       requestedFor: name,
       metadata: { payer, email, displayName: name, channel: 'vacation-app' },
     });
+    const sent = await queueOrSendCollaboratorInviteEmail(db, {
+      invite,
+      token,
+      contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
+    });
     opened.push({
       name,
       email,
       payer,
       inviteId: invite.id,
       inviteToken: token,
+      emailStatus: sent.status,
     });
   }
   if (!opened.length) throw Object.assign(new Error('Name and email are required for each seat.'), { statusCode: 400 });

@@ -89,15 +89,16 @@ assert.doesNotMatch(orderSuccess, /telegram|telegraph/i);
 
 const confirmed = purchaseEmail({
   contact: { firstName: 'Alex' },
-  token: 'session-token',
+  publicSlug: 'intake-eab1cbb15144',
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.equal(
   confirmed.launchUrl,
-  'https://vacation-staging.timesyncher.com/vacation-app.html?session=session-token',
+  'https://vacation-staging.timesyncher.com/shared/intake-eab1cbb15144/',
 );
-assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=session-token/);
-assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=session-token"/);
+assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\//);
+assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
+assert.doesNotMatch(confirmed.htmlBody, /vacation-app\.html/);
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);
 
 const orderTest = await readFile(new URL('../order-test.html', import.meta.url), 'utf8');

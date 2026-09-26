@@ -55,7 +55,7 @@ async function intakeSharedResponse(shareToken) {
     where trip_id = ${trip.id}
     order by created_at asc
   `;
-  return sharedTripFromIntake({
+  return padKeepsakeSharedPlaces(sharedTripFromIntake({
     trip,
     things: things.map((row) => {
       const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
@@ -71,7 +71,7 @@ async function intakeSharedResponse(shareToken) {
         collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
       };
     }),
-  });
+  }));
 }
 
 export default async function handler(req, res) {

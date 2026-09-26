@@ -25,6 +25,7 @@ export const KEEPSAKE_LIST_FILL = {
     'Jean Georges Steakhouse',
     'Lago by Julian Serrano',
     'Sichuan House',
+    'Carbone',
   ],
   Stores: [
     'Crystals at Aria',

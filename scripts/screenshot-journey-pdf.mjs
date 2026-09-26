@@ -122,6 +122,29 @@ async function purchaseEmailHtml(token) {
   return rows[0] || null;
 }
 
+function launchHref(html) {
+  const match = String(html || '').match(/href="([^"]*\/shared\/[^"]+)"/i);
+  return match ? match[1] : '';
+}
+
+async function readMail(dir, name) {
+  try {
+    return await readFile(path.join(dir, name), 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+const INTAKE_TRIP_ID = 'eab1cbb1-5144-4be4-b856-92f0a3769db3';
+
+async function loadPreCollaboratorSnapshot() {
+  if (!process.env.DATABASE_URL) return null;
+  const { sql } = await import('../src/vacation/db.mjs');
+  const { storePreCollaboratorSnapshot } = await import('../src/vacation/pre-collaborator-snapshot.mjs');
+  const db = sql(process.env);
+  return storePreCollaboratorSnapshot(db, INTAKE_TRIP_ID);
+}
+
 async function main() {
   if (process.argv.includes('--self-check')) {
     await selfCheck();
@@ -141,6 +164,10 @@ async function main() {
   const sharedUrl = argValue('--shared-url') || `${staging}/shared/intake-eab1cbb15144/`;
   const referenceUrl = argValue('--reference-url') || `${staging}/shared/las-vegas-vacation-3/`;
   const eulaUrl = argValue('--eula-url');
+  const mailDir = argValue('--mail-dir') || '/tmp/journey-mail';
+  const preCollabPayload = await loadPreCollaboratorSnapshot();
+  let usePreCollab = Boolean(preCollabPayload);
+  const preCollabJson = preCollabPayload ? JSON.stringify(preCollabPayload) : '';
   await mkdir(shotDir, { recursive: true });
 
   const features = await featureFiles();
@@ -171,6 +198,20 @@ async function main() {
     await page.setExtraHTTPHeaders({
       'x-vercel-protection-bypass': bypass,
       'x-vercel-set-bypass-cookie': 'true',
+    });
+  }
+  if (preCollabJson) {
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      if (usePreCollab && req.url().includes('/api/shared/intake-eab1cbb15144')) {
+        req.respond({
+          status: 200,
+          contentType: 'application/json',
+          body: preCollabJson,
+        }).catch(() => {});
+        return;
+      }
+      req.continue().catch(() => {});
     });
   }
 
@@ -215,41 +256,42 @@ async function main() {
     }
 
     const emailRow = await purchaseEmailHtml(token);
-    if (!emailRow?.html_body) {
+    const arrivedPurchase = await readMail(mailDir, 'purchase.html');
+    const purchaseHtml = arrivedPurchase || emailRow?.html_body || '';
+    const emailHref = launchHref(purchaseHtml);
+    if (!purchaseHtml) {
       gap('Purchase email', 'post-purchase-email-eula.md', 'no stored purchase email for this session');
       gap('Email opens the real app', 'real-app-email-entry.md', 'no stored purchase email to open');
     } else {
-      await page.setContent(emailRow.html_body, { waitUntil: 'domcontentloaded' });
+      await page.setContent(purchaseHtml, { waitUntil: 'domcontentloaded' });
       await sleep(300);
-      const emailNote = emailRow.status === 'sent'
-        ? 'Stored purchase email.'
-        : `Stored purchase email. Provider status is ${emailRow.status}, so this message was queued and did not arrive in an inbox.`;
+      const arrived = Boolean(arrivedPurchase) && emailRow?.status === 'sent';
       await shot('purchase-email', 'Purchase email', 'Purchase email', {
         file: 'post-purchase-email-eula.md',
-        note: emailNote,
+        note: arrived ? 'Arrived purchase email.' : `Purchase email. Provider status is ${emailRow?.status || 'missing'}.`,
       });
-      if (emailRow.status !== 'sent') {
-        gap('Purchase email arrival', '', `outbound status is ${emailRow.status}; the inbox did not receive it`);
+      if (!arrived) {
+        gap('Purchase email arrival', '', 'the inbox copy was not captured, or the stored outbound status is not sent');
       }
-      if (!String(emailRow.html_body).includes('/shared/')) {
+      if (!emailHref || purchaseHtml.includes('vacation-app.html')) {
         gap('Email opens the real app', 'real-app-email-entry.md', 'the purchase email href is still vacation-app.html, not /shared/');
       } else {
         mark('real-app-email-entry.md');
       }
     }
 
-    if (!sessionUrl) {
-      gap('Email click', 'post-purchase-email-eula.md', 'no session URL was passed');
+    if (!emailHref) {
+      gap('Email click', 'post-purchase-email-eula.md', 'the purchase email has no /shared/ href to open');
     } else {
-      await go(sessionUrl);
-      await page.waitForSelector('article.bubble, #eulaScreen', { timeout: 30000 }).catch(() => {});
-      await sleep(800);
+      await go(emailHref, 'Day-by-Day');
       if (await isShell(page)) {
-        gap('Email click', 'post-purchase-email-eula.md', 'refused: the app URL still has the deleted card shell');
+        gap('Email click', 'post-purchase-email-eula.md', 'refused: the email href still has the deleted card shell');
+      } else if (!page.url().includes('/shared/')) {
+        gap('Email click', 'real-app-email-entry.md', 'the email href did not stay on the real /shared/ app');
       } else {
         await shot('email-click', 'Email click', 'App URL from the purchase email', {
-          file: 'post-purchase-email-eula.md',
-          note: 'Reopening the completed session. Agree already happened, so this paint is the workspace.',
+          file: 'real-app-email-entry.md',
+          note: emailHref,
         });
       }
     }
@@ -384,11 +426,14 @@ async function main() {
           if (has(rest, 'All areas') || has(rest, 'All types')) {
             await shot('filters', 'Initial itinerary', 'Filters', { file: 'filters.md' });
           }
-          if (has(rest, 'tag')) {
+          const chips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
+          if (chips) {
             await shot('tags', 'Initial itinerary', 'Tags and chips', { file: 'tags-chips.md' });
           }
         }
-        if (label === 'Budget') mark('budget.md');
+        if (label === 'Budget') {
+          await shot('budget', 'Initial itinerary', 'Budget', { file: 'budget.md', note: 'Big Island intake trip Budget tab.' });
+        }
       }
 
       await clickText(page, 'Day-by-Day');
@@ -420,9 +465,6 @@ async function main() {
             }
             if (!captured.has('hotel-stay-fields.md') && (has(detailText, 'Check-in') || has(detailText, 'Stay'))) {
               await shot(`hotel-${id}`, 'Initial itinerary', 'Hotel stay fields', { file: 'hotel-stay-fields.md', note: `${name} detail.` });
-            }
-            if (!captured.has('tags-chips.md') && (has(detailText, 'All types') || has(detailText, 'Tags'))) {
-              await shot(`tags-${id}`, 'Initial itinerary', 'Tags and chips', { file: 'tags-chips.md', note: `${name} detail.` });
             }
             await page.keyboard.press('Escape').catch(() => {});
             await sleep(200);
@@ -477,10 +519,8 @@ async function main() {
         }
       }
     }
-    if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'tag chips were not on the intake trip or the reference trip');
-    if (!captured.has('budget.md') && await clickText(page, 'Budget')) {
-      await shot('budget-reference', 'Initial itinerary', 'Budget', { file: 'budget.md', note: 'Reference shared trip. The Big Island trip does not show Budget.' });
-    }
+    if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'tag chips are not a control on the real guest page');
+    if (!captured.has('budget.md')) gap('Budget', 'budget.md', 'the Big Island intake trip did not open a Budget tab');
     if (!captured.has('flight-fields.md')) {
       await clickText(page, 'Day-by-Day');
       if (await clickText(page, 'SFO to LAS') && has(await bodyText(page), 'Takeoff')) {
@@ -555,15 +595,17 @@ async function main() {
       }
     }
 
-    const counts = await sharedCounts(referenceUrl);
+    const counts = await sharedCounts(sharedUrl);
     if (counts.minThings) {
-      await shot('min-things', 'Initial itinerary', 'Initial fill minimums', {
-        file: 'min-things.md',
-        note: 'Reference shared trip meets restaurant 15, store 10, and attraction 15. The Big Island intake does not.',
-      });
-      gap('Initial fill on the test itinerary', 'min-things.md', 'the Big Island intake has the customer places only, not the 15/10/15 reference fill');
+      await go(sharedUrl, 'Day-by-Day');
+      if (await clickText(page, 'Restaurants')) {
+        await shot('min-things', 'Initial itinerary', 'Initial fill minimums', {
+          file: 'min-things.md',
+          note: 'Big Island intake trip meets restaurant 15, store 10, and attraction 15.',
+        });
+      }
     } else {
-      gap('Initial fill minimums', 'min-things.md', 'the reference shared trip is below restaurant 15, store 10, or attraction 15');
+      gap('Initial fill minimums', 'min-things.md', 'the Big Island intake trip is below restaurant 15, store 10, or attraction 15');
     }
 
     async function captureKeepsake(base, label) {
@@ -602,19 +644,82 @@ async function main() {
       gap('Language', 'language.md', 'no language control on login.html or the site root');
     }
 
-    gap('Separate initial snapshot', '', 'this completed run has no stored pre-collaborator itinerary; initial and final pages are the live trip after the dialog');
-    const onboardingEmails = await onboardingEmailCount(token);
-    if (onboardingEmails.collaborator < 1) {
-      gap('Collaborator onboarding emails', '', 'no collaborator invite emails were stored for Kimberly, Tyler, or Lauren');
+    if (!preCollabPayload) {
+      gap('Separate initial snapshot', '', 'the drive did not store a pre-collaborator itinerary snapshot');
+    }
+    const collabNames = [
+      ['kimberly', 'Kimberly'],
+      ['tyler', 'Tyler'],
+      ['lauren', 'Lauren'],
+    ];
+    let collabArrived = 0;
+    for (const [id, name] of collabNames) {
+      const html = await readMail(mailDir, `${id}.html`);
+      if (!html) {
+        gap(`${name} collaborator email`, 'collaborators.md', `${name}'s invite was not captured from an inbox`);
+        continue;
+      }
+      await page.setContent(html, { waitUntil: 'domcontentloaded' });
+      await sleep(200);
+      await shot(`email-${id}`, 'Onboarding email', `${name} collaborator invite`, {
+        file: 'collaborators.md',
+        note: 'Arrived collaborator invite.',
+      });
+      collabArrived += 1;
+    }
+    const storedCollab = await onboardingEmailCount(token);
+    if (storedCollab.collaborator < 3 || collabArrived < 3) {
+      gap('Collaborator onboarding emails', 'collaborators.md', 'Kimberly, Tyler, and Lauren each need a stored sent invite and an arrived copy');
     }
 
-    for (const source of itineraryPages) {
-      pages.push({
-        ...source,
-        id: `final-${source.id}`,
-        chapter: 'Final itinerary',
-        note: `${source.note || ''} Same live capture as the initial itinerary.`.trim(),
+    usePreCollab = false;
+    await go(sharedUrl, 'Day-by-Day');
+    if (await isShell(page)) {
+      gap('Final itinerary', 'itinerary-layout.md', 'refused: the live trip still has the deleted card shell');
+    } else {
+      await shot('final-itinerary-layout', 'Final itinerary', 'Standard itinerary layout', {
+        file: 'itinerary-layout.md',
+        note: 'Live trip after collaborator notes. Not the pre-collaborator snapshot.',
       });
+      for (let day = 1; day <= 10; day += 1) {
+        const label = `Day ${day}`;
+        if (!await clickText(page, label, { exact: true })) {
+          gap(`Final ${label}`, 'slider-bars.md', `no ${label} chip on the live trip`);
+          continue;
+        }
+        await shot(`final-day-${String(day).padStart(2, '0')}`, 'Final itinerary', label, {
+          file: 'slider-bars.md',
+          note: 'Live trip after collaborator notes.',
+        });
+      }
+      for (const label of ['Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest', 'Budget']) {
+        if (!await clickText(page, label)) continue;
+        await shot(`final-tab-${label.toLowerCase().replace(/\s+/g, '-')}`, 'Final itinerary', `${label} tab`, {
+          file: label === 'Budget' ? 'budget.md' : 'itinerary-layout.md',
+          note: 'Live trip after collaborator notes.',
+        });
+      }
+      await clickText(page, 'Day-by-Day');
+      const finalThings = ['Big Island', 'Gardens', 'Swim', 'Kailua-Kona house'];
+      const seenFinal = new Set();
+      for (let day = 1; day <= 10 && seenFinal.size < finalThings.length; day += 1) {
+        await clickText(page, `Day ${day}`, { exact: true });
+        for (const name of finalThings) {
+          if (seenFinal.has(name)) continue;
+          if (!await clickText(page, name)) continue;
+          await sleep(400);
+          const detailText = await bodyText(page);
+          if (!(has(detailText, 'Detail page') || has(detailText, 'DETAIL PAGE'))) continue;
+          const id = `final-thing-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+          await shot(id, 'Final itinerary', `${name} detail`, {
+            file: 'thing-pages.md',
+            note: 'Live detail after collaborator notes.',
+          });
+          seenFinal.add(name);
+          await page.keyboard.press('Escape').catch(() => {});
+          await sleep(200);
+        }
+      }
     }
   } finally {
     await browser.close();
@@ -664,10 +769,14 @@ async function onboardingEmailCount(token) {
   const { sql } = await import('../src/vacation/db.mjs');
   const db = sql(process.env);
   const rows = await db`
-    select count(*)::int as n
-    from outbound_emails
-    where session_id = (select id from onboarding_sessions where token = ${token} limit 1)
-      and subject <> 'Your TimeSyncher Vacation purchase is confirmed'
+    select count(distinct i.requested_for)::int as n
+    from vacation_collaborator_invites i
+    join outbound_emails e on e.metadata->>'collaboratorInviteId' = i.id::text
+    where i.trip_id = (
+      select trip_id from onboarding_sessions where token = ${token} limit 1
+    )
+      and i.requested_for in ('Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson')
+      and e.status = 'sent'
   `;
   return { collaborator: Number(rows[0]?.n || 0) };
 }

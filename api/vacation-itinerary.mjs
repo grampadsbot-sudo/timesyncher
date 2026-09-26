@@ -22,6 +22,7 @@ import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
@@ -573,6 +574,7 @@ async function publishIntakeShare(db, tripId) {
       and coalesce(metadata->>'source_token', '') = ''
       and coalesce(metadata->>'publicSlug', '') in ('', ${slug})
   `;
+  await storePreCollaboratorSnapshot(db, tripId);
 }
 
 async function loadTripThings(db, tripId) {

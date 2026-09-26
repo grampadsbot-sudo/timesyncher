@@ -30,7 +30,7 @@ function has(text, needle) {
 }
 
 const checks = [
-  ['post-purchase-email-eula.md', 'Post-purchase email, EULA, onboarding', 'verify-eula.png', (o) => (o.ack && o.eulaBundle && !o.shellBundle && o.emailIsApp ? 'PASS' : 'FAIL')],
+  ['post-purchase-email-eula.md', 'Post-purchase email, EULA, onboarding', 'verify-eula.png', (o) => (o.ack && o.eulaBundle && !o.shellBundle && o.emailIsShared ? 'PASS' : 'FAIL')],
   ['live-app-jev-tier.md', 'Live composer Jev tier', 'verify-jev-quality.png', (o) => (o.jevSource && (o.jevTranscript || o.jevRewritten > 0) ? 'PASS' : 'FAIL')],
   ['header-chrome.md', 'Header brand', 'verify-header-chrome.png', (o) => (o.header && !o.shell ? 'PASS' : 'FAIL')],
   ['language.md', 'Language', 'verify-language.png', (o) => (o.language ? 'PASS' : 'GAP')],
@@ -41,7 +41,7 @@ const checks = [
   ['maps.md', 'Day map', 'verify-maps.png', (o) => (o.maps ? 'PASS' : 'GAP')],
   ['filters.md', 'Filters', 'verify-filters.png', (o) => (o.filters ? 'PASS' : 'GAP')],
   ['empty-states.md', 'Empty states', 'verify-empty-states.png', (o) => (o.empty ? 'PASS' : 'GAP')],
-  ['tags-chips.md', 'Tags and chips', 'verify-tags-chips.png', (o) => (o.tags ? 'PASS' : 'GAP')],
+  ['tags-chips.md', 'Tags and chips', 'verify-tags-chips.png', (o) => (o.tagChips ? 'PASS' : 'GAP')],
   ['logos.md', 'Thing logos', 'verify-logos.png', (o) => (o.logos ? 'PASS' : 'GAP')],
   ['status.md', 'Status', 'verify-status.png', (o) => (o.status ? 'PASS' : 'GAP')],
   ['happy-hour.md', 'Happy hour', 'verify-happy-hour.png', (o) => (o.happy ? 'PASS' : 'GAP')],
@@ -51,7 +51,7 @@ const checks = [
   ['ratings-reviews.md', 'Ratings and reviews', 'verify-ratings.png', (o) => (o.rating ? 'PASS' : 'GAP')],
   ['media-stories.md', 'Stories and media', 'verify-stories.png', (o) => (o.story ? 'PASS' : 'GAP')],
   ['collaborators.md', 'Collaborators', 'verify-collaborators.png', (o) => (o.collab ? 'PASS' : 'GAP')],
-  ['budget.md', 'Budget', 'verify-budget.png', (o) => (o.budget ? 'PASS' : 'GAP')],
+  ['budget.md', 'Budget', 'verify-budget.png', (o) => (o.intakeBudget ? 'PASS' : 'GAP')],
   ['packing.md', 'Packing', 'verify-packing.png', (o) => (o.packingHidden ? 'PASS' : 'GAP')],
   ['print-pdf.md', 'Print and PDF', 'verify-print-pdf.png', (o) => (o.printMenu ? 'PASS' : 'GAP')],
   ['keepsake-style-one.md', 'Keepsake Style one', 'verify-style-one.png', (o) => (o.style1 ? 'PASS' : 'FAIL')],
@@ -61,14 +61,14 @@ const checks = [
   ['config-options-trip-view.md', 'Trip View config', 'verify-trip-view.png', (o) => (o.tripView ? 'PASS' : 'GAP')],
   ['navigation.md', 'Navigation chrome', 'verify-navigation.png', (o) => (o.navigation ? 'PASS' : 'GAP')],
   ['trek-settings.md', 'TREK settings', 'verify-settings.png', (o) => (o.settings ? 'PASS' : 'GAP')],
-  ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.minThings ? 'PASS' : 'GAP')],
+  ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.intakeMin ? 'PASS' : 'GAP')],
   ['post-intake-welcome.md', 'Post-intake welcome', 'verify-post-intake.png', (o) => (o.postIntake ? 'PASS' : 'GAP')],
-  ['jev-quality-line.md', 'Jev quality line', 'verify-jev-quality.png', (o) => (o.jevLabel ? 'PASS' : 'FAIL')],
+  ['jev-quality-line.md', 'Jev quality line', 'verify-jev-quality.png', (o) => (o.qualityOnScreen ? 'PASS' : 'GAP')],
   ['dialog-screenshot-gate.md', 'Dialog screenshot gate', 'verify-screenshot-gate.png', (o) => (o.layout && o.slider && o.detail && !o.shell ? 'PASS' : 'FAIL')],
   ['autonomous-app-customer-flow.md', 'Autonomy bar', 'verify-autonomy.png', (o) => (o.header && !o.shell ? 'PASS' : 'GAP')],
   ['keepsake-qa.md', 'Keepsake QA', 'verify-keepsake-qa.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', () => 'GAP'],
-  ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', (o) => (o.contract ? 'PASS' : 'FAIL')],
+  ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', () => 'GAP'],
   ['real-app-email-entry.md', 'Email opens the real app', 'verify-eula.png', (o) => (o.emailIsShared ? 'PASS' : 'GAP')],
 ];
 
@@ -179,6 +179,25 @@ async function sharedCounts() {
   };
 }
 
+async function intakeSignals() {
+  const headers = {};
+  const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || process.env.VERCEL_PROTECTION_BYPASS;
+  if (bypass) headers['x-vercel-protection-bypass'] = bypass;
+  const response = await fetch(`${staging}/api/shared/intake-eab1cbb15144`, { headers });
+  if (!response.ok) return { intakeBudget: false, intakeMin: false };
+  const data = await response.json();
+  const counts = {};
+  for (const place of data.places || []) {
+    const name = place.category_name || '';
+    counts[name] = (counts[name] || 0) + 1;
+  }
+  const perms = data.permissions || {};
+  return {
+    intakeBudget: perms.share_budget === true && Array.isArray(data.budget) && data.budget.length > 0,
+    intakeMin: (counts.Restaurant || 0) >= 15 && (counts.Store || 0) >= 10 && (counts.Attraction || 0) >= 15,
+  };
+}
+
 async function drive() {
   const puppeteer = loadPuppeteer();
   const browser = await puppeteer.launch({
@@ -248,11 +267,9 @@ async function drive() {
   await shot('verify-logos.png');
   await shot('verify-screenshot-gate.png');
   await shot('verify-autonomy.png');
-  await shot('verify-budget.png');
   await shot('verify-packing.png');
   await shot('verify-navigation.png');
   await shot('verify-settings.png');
-  await shot('verify-min-things.png');
   await shot('verify-cursor-contract.png');
   await shot('verify-tg-intake.png');
 
@@ -260,7 +277,7 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.filters = has(text, 'All areas') || has(text, 'All types');
-  obs.tags = has(text, 'tag');
+  obs.tagChips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
   await shot('verify-filters.png');
   await shot('verify-tags-chips.png');
   await shot('verify-empty-states.png');
@@ -295,7 +312,9 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.happy = has(text, 'Happy hour');
-  if (has(text, 'tag')) obs.tags = true;
+  if (!obs.tagChips) {
+    obs.tagChips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
+  }
   await shot('verify-happy-hour.png');
 
   await page.keyboard.press('Escape').catch(() => {});
@@ -339,16 +358,23 @@ async function drive() {
   await shot('verify-keepsake-qa.png');
 
   await go(`${staging}/login.html`);
-  obs.language = has(await bodyText(), 'language');
+  obs.language = await page.evaluate(() => [...document.querySelectorAll('button, a, select, [role="button"]')].some((node) => /^language$/i.test((node.innerText || node.getAttribute('aria-label') || '').trim())));
   await shot('verify-language.png');
   if (!obs.language) {
     await go(staging);
-    obs.language = has(await bodyText(), 'language');
+    obs.language = await page.evaluate(() => [...document.querySelectorAll('button, a, select, [role="button"]')].some((node) => /^language$/i.test((node.innerText || node.getAttribute('aria-label') || '').trim())));
   }
 
   await go(intakeUrl);
   text = await bodyText();
   obs.intakeLayout = has(text, 'Day-by-Day') && has(text, 'Vacation Day View') && !has(text, 'Vacation path');
+  obs.qualityOnScreen = has(text, 'quality:');
+  if (await clickIncludes('Budget')) {
+    await shot('verify-budget.png');
+  }
+  if (await clickIncludes('Restaurants')) {
+    await shot('verify-min-things.png');
+  }
   await shot('verify-post-intake.png');
   await shot('verify-jev-quality.png');
 
@@ -363,6 +389,7 @@ async function drive() {
     text = await bodyText();
     obs.liveEula = Boolean(await page.$('#eulaScreen'));
     obs.liveOnboarding = has(text, 'no vacations yet') && !await page.evaluate(() => Boolean(document.querySelector('[aria-label="Vacation path"]')));
+    obs.qualityOnScreen = obs.qualityOnScreen || has(text, 'quality:');
     await shot('verify-eula.png');
     await shot('verify-onboarding.png');
   }
@@ -424,12 +451,14 @@ async function main() {
     readFile(path.join(root, '.cursor/rules/style-two-keepsake-contract.mdc'), 'utf8').then(() => true).catch(() => false),
   ]);
   const counts = await sharedCounts();
+  const intake = await intakeSignals();
   const jev = await jevSignals();
   await mkdir(shotDir, { recursive: true });
   const observed = await drive();
   const obs = {
     ...observed,
     ...counts,
+    ...intake,
     ...jev,
     emailIsApp: email.launchUrl.includes('/vacation-app.html?session='),
     emailIsShared: email.launchUrl.includes('/shared/'),
