@@ -160,6 +160,23 @@ function sentenceIsUpsell(sentence) {
   return UNLIMITED_PATTERN.test(sentence) || COLLAB_WELCOME.test(sentence);
 }
 
+export const ITEM34_BAN = /splitting payments|splitting payment|split payment|split-payer/i;
+
+export function item34BanHit(text) {
+  return ITEM34_BAN.test(String(text || ''));
+}
+
+export function stripItem34Ban(text) {
+  const paragraphs = String(text || '').split(/\n{2,}/);
+  const kept = [];
+  for (const paragraph of paragraphs) {
+    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !item34BanHit(sentence));
+    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
+    if (joined && !item34BanHit(joined)) kept.push(joined);
+  }
+  return kept.join('\n\n').trim();
+}
+
 export function stripUpsell(text) {
   const paragraphs = String(text || '').split(/\n{2,}/);
   const kept = [];
@@ -328,15 +345,23 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`, 'forbidden'));
     reply = stripUpsell(model?.called && model.text ? String(model.text) : '');
   }
+  if (item34BanHit(reply)) {
+    model = await callTieredModel(modelArgs(`${customerTurn}\n\nRewrite the reply. Do not describe seats as a split. Kimberly's seat is already covered. Tyler and Lauren each have their own seat. Do not use the word split. Keep the vacation answer.`, upsell));
+    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell);
+  }
+  if (item34BanHit(reply)) {
+    reply = stripItem34Ban(reply);
+    if (upsell === 'allow-once') reply = ensureExactUpsellPhrase(reply);
+  }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
-  if (!reply || banned || (upsell === 'forbidden' && (isFullUpsell(reply) || UNLIMITED_PATTERN.test(reply) || isCollabWelcome(reply)))) {
+  if (!reply || banned || item34BanHit(reply) || (upsell === 'forbidden' && (isFullUpsell(reply) || UNLIMITED_PATTERN.test(reply) || isCollabWelcome(reply)))) {
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: banned || (upsell === 'forbidden' && reply ? 'unsolicited_upsell' : model?.reason || 'live dispatcher returned no reply'),
+      reason: item34BanHit(reply) ? 'item34_ban' : (banned || (upsell === 'forbidden' && reply ? 'unsolicited_upsell' : model?.reason || 'live dispatcher returned no reply')),
     };
   }
   return { reply, rules, jev, model, reason: null };
