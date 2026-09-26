@@ -584,7 +584,10 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     'Garden wording: if the customer says gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, a botanical garden, or a weather excuse that moves the garden.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, checkout, or split-payer.',
-    'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", "splitting it up", or "splitting anything up". Never use split or splitting for a payment, a cost, or a bill. If one seat is already covered and another person has their own seat, say that.',
+    'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", "splitting it up", or "splitting anything up". Never use the words split or splitting at all. If one seat is already covered and another person has their own seat, say that.',
+    /\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+      ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+      : 'When the customer does not ask about access, do not add an access menu.',
     upsellLine,
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',

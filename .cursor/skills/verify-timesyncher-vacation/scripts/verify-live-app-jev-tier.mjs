@@ -75,7 +75,7 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules })
   if (!/never say "splitting payments"/.test(replyRules) || !/splitting anything up/.test(replyRules) || !/stripItem34Ban/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
     errors.push('shared producer does not fail closed on split-payment jargon');
   }
-  if (!/rewriteModel/.test(liveTurn) || !/rewritten by/.test(liveTurn) || !/dockQuality/.test(liveTurn)) {
+  if (!/rewriteModel/.test(liveTurn) || !/rewritten by/.test(liveTurn) || !/dockQuality/.test(liveTurn) || !/shippedModel/.test(liveTurn) || !/draftModel/.test(liveTurn)) {
     errors.push('shared producer does not gate a low score into a recorded rewrite');
   }
   if (!/jevQualityRewrite/.test(liveTurn) || !/quality_unjudged/.test(liveTurn) || !/export async function jevQualityRewrite/.test(replyRules)) {

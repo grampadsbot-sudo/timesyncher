@@ -9,6 +9,7 @@ import {
   LIVE_OPENER_PRODUCER,
   LIVE_REPLY_PRODUCER,
   LIVE_TRANSCRIPT_CAPTURE,
+  customerAsksAccessChoice,
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
@@ -124,6 +125,16 @@ export function assertLiveTranscript(doc) {
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
       if (priorCustomer && customerAsksPrice(priorCustomer.text) && !/unlimited vacations for the whole year/i.test(text)) {
         throw new Error(`refused: turn ${turn.turnIndex} price question has no price`);
+      }
+      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
+        throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
+      }
+      const shippedModel = String(turn.shippedModel || '').trim();
+      if (!isBakeoffModelId(shippedModel) && shippedModel !== 'typesafe/jev-1.13') {
+        throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier or Jev`);
+      }
+      if (turn.quality?.rewritten === true && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim())) {
+        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel or rewriteModel`);
       }
       if (turn.quality?.rewritten === true) {
         const rewriteModel = String(turn.quality.rewriteModel || '');
