@@ -151,7 +151,11 @@ export function isLongIntake(text) {
 
 export function postIntakeUpsellTurn(customerTurn, priorTurns) {
   if (!isLongIntake(customerTurn)) return false;
-  return !(Array.isArray(priorTurns) ? priorTurns : []).some((turn) => turn?.role === 'customer' && isLongIntake(turn.text));
+  const priors = Array.isArray(priorTurns) ? [...priorTurns] : [];
+  while (priors.length && priors.at(-1)?.role === 'customer' && String(priors.at(-1).text || '') === String(customerTurn || '')) {
+    priors.pop();
+  }
+  return !priors.some((turn) => turn?.role === 'customer' && isLongIntake(turn.text));
 }
 
 export function customerPullsAccess(text) {

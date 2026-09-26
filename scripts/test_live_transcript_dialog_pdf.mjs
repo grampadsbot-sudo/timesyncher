@@ -58,6 +58,12 @@ const longIntake = `${'okay voice note dumping. Big Island Hawaii, gardens, swim
 assert.equal(isLongIntake(longIntake), true);
 assert.equal(isLongIntake('Walk me through Thursday with Kimberly.'), false);
 assert.equal(postIntakeUpsellTurn(longIntake, []), true);
+assert.equal(postIntakeUpsellTurn(longIntake, [{ role: 'customer', text: longIntake }]), true);
+assert.equal(postIntakeUpsellTurn(longIntake, [
+  { role: 'customer', text: longIntake },
+  { role: 'app', text: 'I am building the itinerary from that dump.' },
+  { role: 'customer', text: longIntake },
+]), false);
 assert.equal(upsellModeForTurn(longIntake, []), 'allow-once');
 assert.equal(upsellModeForTurn('How much if they join as collaborators?', [
   { role: 'customer', text: longIntake },
