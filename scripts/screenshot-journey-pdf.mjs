@@ -400,33 +400,31 @@ async function main() {
       await go(sessionUrl);
       await page.waitForFunction(() => document.querySelectorAll('article.bubble').length >= 5, { timeout: 30000 }).catch(() => {});
       const bubbles = [
-        ['first-prompt', 'First onboarding prompt', 'Welcome. I am here to build this vacation with you', 'The stored opener.'],
-        ['building-itinerary', 'Building the itinerary', 'building the itinerary', 'The app says it is building the itinerary from the intake.'],
-        ['collab-upsell', 'Collaborator explanation and upsell', 'email invite', 'View access, edit access, and the email invite. Not the opener.'],
-        ['welcome-kimberly', 'Kimberly welcome', 'all set, Kimberly', 'Collaborator welcome in the chat.'],
-        ['welcome-tyler', 'Tyler welcome', 'Welcome to the crew', 'Collaborator welcome in the chat.'],
-        ['welcome-lauren', 'Lauren welcome', 'Welcome aboard', 'Collaborator welcome in the chat.'],
+        ['first-prompt', 'First onboarding prompt', 'Welcome. I am here to build this vacation with you', 'The stored opener.', false],
+        ['building-itinerary', 'Building the itinerary', 'building the itinerary', 'The app says it is building the itinerary from the intake.', true],
+        ['collab-upsell', 'Collaborator explanation and upsell', 'email invite', 'View access, edit access, and the email invite. Not the opener.', true],
+        ['welcome-kimberly', 'Kimberly welcome', 'Welcome aboard, Kimberly', 'Collaborator welcome in the chat.', false],
+        ['welcome-tyler', 'Tyler welcome', 'Welcome to the trip, Tyler', 'Collaborator welcome in the chat.', false],
+        ['welcome-lauren', 'Lauren welcome', 'officially joining', 'Collaborator welcome in the chat.', false],
       ];
-      for (const [id, title, needle, note] of bubbles) {
-        const found = await page.evaluate((phrase) => {
+      for (const [id, title, needle, note, skipOpener] of bubbles) {
+        const found = await page.evaluate((phrase, skipWelcome) => {
           const needleText = phrase.toLowerCase();
-          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => node.innerText.toLowerCase().includes(needleText) && !node.classList.contains('user'));
+          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => {
+            if (node.classList.contains('user')) return false;
+            const text = node.innerText.toLowerCase();
+            if (!text.includes(needleText)) return false;
+            if (skipWelcome && text.includes('welcome. i am here to build')) return false;
+            return true;
+          });
           if (!bubble) return false;
-          const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
-          let node = walker.nextNode();
-          while (node) {
-            if ((node.textContent || '').toLowerCase().includes(needleText)) {
-              const range = document.createRange();
-              range.selectNodeContents(node);
-              const top = range.getBoundingClientRect().top + window.scrollY;
-              window.scrollTo(0, Math.max(0, top - 24));
-              return true;
-            }
-            node = walker.nextNode();
-          }
-          bubble.scrollIntoView({ block: 'start' });
+          document.querySelectorAll('[data-journey-bubble]').forEach((node) => node.removeAttribute('data-journey-bubble'));
+          bubble.setAttribute('data-journey-bubble', '1');
+          const scroller = document.getElementById('messages');
+          if (scroller) scroller.scrollTop = Math.max(0, bubble.offsetTop - 8);
+          bubble.scrollIntoView({ block: 'center' });
           return true;
-        }, needle);
+        }, needle, skipOpener);
         await sleep(300);
         const chapter = id.startsWith('welcome-') ? 'Collaborator welcome' : 'Onboarding';
         const file = id.startsWith('welcome-') ? 'collaborators.md' : (id === 'collab-upsell' ? 'post-intake-welcome.md' : 'post-purchase-email-eula.md');
@@ -435,7 +433,7 @@ async function main() {
           continue;
         }
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
-        await shot(id, chapter, title, { file, note });
+        await shot(id, chapter, title, { file, note, clipSelector: '[data-journey-bubble="1"]' });
       }
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
       if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
