@@ -992,22 +992,39 @@ async function main() {
         await page.keyboard.press('Escape').catch(() => {});
       }
       await clickText(page, 'Day-by-Day');
-      if (await clickAria(page, 'PDFs')) {
-        const printText = await bodyText(page);
+      await page.keyboard.press('Escape').catch(() => {});
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const printOpened = await page.evaluate(() => {
+        const button = document.querySelector('[aria-label="PDFs"]');
+        if (!button) return false;
+        button.scrollIntoView({ block: 'center', inline: 'center' });
+        button.click();
+        return true;
+      });
+      if (printOpened) {
+        await sleep(500);
+        let printText = await bodyText(page);
+        if (!has(printText, 'Print / PDF') && !has(printText, 'Daily printout')) {
+          await page.evaluate(() => document.querySelector('[aria-label="PDFs"]')?.click());
+          await sleep(400);
+          printText = await bodyText(page);
+        }
         if (has(printText, 'Print / PDF') || has(printText, 'Daily printout')) {
           await shot('print-pdf', 'Initial itinerary', 'Print and PDF', {
             file: 'print-pdf.md',
-            note: 'Print / PDF menu: Daily printout and list PDFs.',
-            clipRect: await clipAround('Print / PDF', { height: 360, padTop: 24 }),
+            note: 'Print / PDF menu: Daily printout and list PDFs. Layout 1 and Layout 2 are Style one and Style two.',
+            clipRect: await clipAround(has(printText, 'Print / PDF') ? 'Print / PDF' : 'Daily printout', { height: 420, padTop: 24 }),
           });
         }
         if (await clickText(page, 'Keepsakes')) {
+          await sleep(300);
+          if (await clickText(page, 'Admin')) await sleep(300);
           const keepsakeText = await bodyText(page);
-          if (has(keepsakeText, 'Style one') || has(keepsakeText, 'Admin')) {
+          if (has(keepsakeText, 'TimeSyncher Vacation logo') || has(keepsakeText, 'Initial summary page') || has(keepsakeText, 'Style one')) {
             await shot('keepsakes-config', 'Initial itinerary', 'Keepsakes config', {
               file: 'keepsakes-config.md',
-              note: 'Keepsakes menu with Style one, Style two, and Admin.',
-              clipRect: await clipAround('Keepsakes', { height: 360, padTop: 24 }),
+              note: 'Admin gear on the front page: logo, summary, and the other keepsake sections.',
+              clipRect: await clipAround(has(keepsakeText, 'TimeSyncher Vacation logo') ? 'TimeSyncher Vacation logo' : 'Keepsakes', { height: 460, padTop: 36 }),
             });
           }
         }
@@ -1048,6 +1065,35 @@ async function main() {
     if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'The Cars tab did not show car Things.');
     if (!captured.has('status.md')) gap('Status', 'status.md', 'no Thing detail showed a status');
     if (!captured.has('media-stories.md')) gap('Stories and media', 'media-stories.md', 'no Thing detail showed a Story field');
+    if (!captured.has('ratings-reviews.md')) {
+      await clickText(page, 'Restaurants');
+      const restaurantNames = await page.evaluate(() => [...document.querySelectorAll('button')]
+        .map((node) => (node.innerText || '').replace(/\s+/g, ' ').trim())
+        .filter((text) => text && text.length > 2 && text.length < 42 && !/^(day \d+|all |pdfs|keepsakes|order|close|open|settings)$/i.test(text))
+        .slice(0, 18));
+      for (const name of restaurantNames) {
+        if (captured.has('ratings-reviews.md')) break;
+        if (!await clickText(page, name, { exact: true })) continue;
+        await sleep(300);
+        const ratingBox = await page.evaluate(() => {
+          const label = [...document.querySelectorAll('label')].find((node) => /^Google rating\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+          if (!label) return null;
+          const input = label.querySelector('input');
+          if (!/\d/.test(String(input?.value || '').trim())) return null;
+          label.scrollIntoView({ block: 'center' });
+          const box = label.parentElement.getBoundingClientRect();
+          return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(280, Math.max(140, box.height + 24)) };
+        });
+        if (ratingBox) {
+          await shot('ratings-sourced', 'Initial itinerary', 'Ratings and reviews', {
+            file: 'ratings-reviews.md',
+            note: `${name} detail with a sourced rating.`,
+            clipRect: ratingBox,
+          });
+        }
+        await page.keyboard.press('Escape').catch(() => {});
+      }
+    }
     if (!captured.has('ratings-reviews.md')) {
       const emptyRating = await page.evaluate(() => [...document.querySelectorAll('label')].some((node) => /^google rating\b/i.test((node.innerText || '').trim()) && !/\d/.test(String(node.querySelector('input')?.value || '')))).catch(() => false);
       if (emptyRating) gap('Ratings and reviews', 'ratings-reviews.md', 'an empty Google rating box is still on the detail');

@@ -153,8 +153,17 @@ def tbl(rows, col_widths):
 
 
 def build(pack):
-    assert_quality(pack)
-    assert_item34(pack)
+    fails = [str(line) for line in (pack.get("content_fails") or []) if str(line).strip()]
+    if pack.get("record_fails"):
+        for check in (assert_quality, assert_item34):
+            try:
+                check(pack)
+            except SystemExit as exc:
+                fails.append(f"FAIL. {exc}")
+        pack = {**pack, "content_fails": fails}
+    else:
+        assert_quality(pack)
+        assert_item34(pack)
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Title"], fontSize=16, spaceAfter=8, alignment=TA_CENTER))
     styles.add(ParagraphStyle(name="Section", parent=styles["Heading1"], fontSize=12, spaceBefore=10, spaceAfter=6))
@@ -182,6 +191,13 @@ def build(pack):
     story.append(Spacer(1, 6))
     story.append(Paragraph("QUALITY COMPARISON vs v6 gpt-5-mini", styles["Section"]))
     story.append(Paragraph(f"<b>Headline:</b> {latin(pack.get('headline'))}", styles["Headline"]))
+    fail_lines = [str(line) for line in (pack.get("content_fails") or []) if str(line).strip()]
+    if fail_lines:
+        story.append(Paragraph("Content checks", styles["Section"]))
+        for line in fail_lines:
+            story.append(Paragraph(latin(line if str(line).startswith("FAIL") else f"FAIL. {line}"), styles["Body"]))
+    else:
+        story.append(Paragraph("Content checks: none.", styles["Body"]))
     story.append(tbl(pack.get("quality_rows") or [], [1.7 * inch, 2.4 * inch, 2.6 * inch]))
     story.append(Spacer(1, 6))
     story.append(Paragraph("Per-tier mean overall (v7)", styles["SubSec"]))
@@ -256,7 +272,8 @@ def build(pack):
     doc.build(story, onFirstPage=paint, onLaterPages=paint)
     pdf_bytes = buffer.getvalue()
     assert_timing_bytes(pdf_bytes)
-    assert_item34_bytes(pdf_bytes)
+    if not pack.get("record_fails"):
+        assert_item34_bytes(pdf_bytes)
     return pdf_bytes
 
 

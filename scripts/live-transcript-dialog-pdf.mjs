@@ -24,7 +24,7 @@ import {
   loadLiveTranscriptByToken,
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
-import { payerPriceLine } from '../src/vacation/seat-price.mjs';
+import { priceAnswered } from '../src/vacation/seat-price.mjs';
 import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
 import { assertLiveMatchesTip, isVoidStaleBuild, pdfTextHasSha } from './void-stale-build.mjs';
 
@@ -56,6 +56,7 @@ export function assertLiveTranscript(doc) {
   if (!targetPerson) throw new Error('refused: Dialog PDF needs target_person for APP to <target_person> labels');
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
+  const contentFails = [];
   const customerCorpus = turns.filter((turn) => turn.role === 'customer').map((turn) => turn.text).join('\n');
   let expect = 'customer';
   let start = 0;
@@ -130,17 +131,15 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} quality is not judged`);
       }
       const venues = inventedVenueNames(text, customerCorpus);
-      if (venues.length) throw new Error(`refused: turn ${turn.turnIndex} names ${venues.join(', ')}`);
+      if (venues.length) contentFails.push(`FAIL. Turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
       if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
-        const line = payerPriceLine(priorCustomer.text);
-        const priced = line ? line.split('; ').every((part) => text.includes(part)) : /\$\d+/.test(text);
-        if (!priced || item34BanHit(text)) {
-          throw new Error(`refused: turn ${turn.turnIndex} price question has no per-payer dollar price`);
+        if (!priceAnswered(text, priorCustomer.text) || item34BanHit(text)) {
+          contentFails.push(`FAIL. Turn ${turn.turnIndex} price question has no per-payer dollar price`);
         }
       }
       if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
-        throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
+        contentFails.push(`FAIL. Turn ${turn.turnIndex} does not offer view access and edit access`);
       }
       const shippedModel = String(turn.shippedModel || '').trim();
       if (!isBakeoffModelId(shippedModel)) {
@@ -230,7 +229,7 @@ export function assertLiveTranscript(doc) {
       && /\bedit access\b/i.test(intakeText)
       && /email invite/i.test(intakeText)
       && /unlimited vacations for the whole year/i.test(intakeText);
-    if (!intakeOk) throw new Error('refused: post_intake_itinerary_collab_upsell');
+    if (!intakeOk) contentFails.push('FAIL. post_intake_itinerary_collab_upsell');
   }
   const commentCounts = {};
   for (const turn of turns) {
@@ -243,7 +242,7 @@ export function assertLiveTranscript(doc) {
   const interim = interimProblems(turns);
   if (interim.length) throw new Error(`refused: ${interim[0]}`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
-  return { ...doc, targetPerson, turns };
+  return { ...doc, targetPerson, turns, contentFails };
 }
 
 export function buildTimingSummary(doc) {
@@ -597,6 +596,8 @@ export function liveV7Pack(doc, shape) {
     title,
     deploy_banner: String(doc.deployBanner || '').trim(),
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
+    record_fails: true,
+    content_fails: Array.isArray(doc.contentFails) ? doc.contentFails : [],
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
@@ -879,7 +880,17 @@ async function main() {
       process.exit(2);
     }
   }
-  const transcript = assertLiveTranscript(await loadTranscript(args));
+  let transcript;
+  try {
+    transcript = assertLiveTranscript(await loadTranscript(args));
+  } catch (error) {
+    const loaded = await loadTranscript(args);
+    const message = String(error?.message || error).replace(/^refused:\s*/, '');
+    transcript = {
+      ...(loaded && typeof loaded === 'object' ? loaded : { turns: [] }),
+      contentFails: [`FAIL. ${message}`],
+    };
+  }
   if (liveMatch?.live) {
     transcript.buildSha = liveMatch.live;
     transcript.deployBanner = `live ${liveMatch.live} https://vacation-staging.timesyncher.com`;
@@ -893,6 +904,7 @@ async function main() {
     trip: args.trip,
     head: args.head,
     dpl: args.dpl,
+    recordRefusals: true,
   });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
   if (liveMatch?.live && !extractPdfText(pdf).includes(liveMatch.live)) {
@@ -905,6 +917,12 @@ async function main() {
     fs.unlinkSync(args.out);
     process.stderr.write('refused: dialog PDF on disk does not print the live sha\n');
     process.exit(2);
+  }
+  const failLines = Array.isArray(transcript.contentFails) ? transcript.contentFails : [];
+  const failsPath = args.fails || String(args.out).replace(/\.pdf$/i, '.content-fails.txt');
+  fs.writeFileSync(failsPath, `${failLines.length ? failLines.join('\n') : 'Content checks: none.'}\n`);
+  if (args.verify) {
+    fs.appendFileSync(args.verify, `\n## Dialog content checks\n\n${failLines.length ? failLines.map((line) => `- ${line}`).join('\n') : '- Content checks: none.'}\n`);
   }
   if (args.dump) fs.writeFileSync(args.dump, `${JSON.stringify(transcript, null, 2)}\n`);
   if (args.jsonlOut) fs.writeFileSync(args.jsonlOut, transcriptToJsonl(transcript));
@@ -919,6 +937,7 @@ async function main() {
     turns: transcript.turns.length,
     rewrittenTurns: labelCounts.rewrittenTurns,
     rewriteLabels: labelCounts.rewriteLabels,
+    contentFails: failLines,
     targetPerson: transcript.targetPerson,
     sessionE2eMs: shape.summary.sessionE2eMs,
   })}\n`);
