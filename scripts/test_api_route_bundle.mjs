@@ -131,7 +131,9 @@ const link = orderPage('intake-example', 'Big Island Family', '');
 assert.match(link, /Anyone with this link can order/);
 assert.match(link, /not limited to the customer/);
 assert.match(link, /Opened without the trip owner session/);
-assert.match(link, /Place keepsake order/);
+assert.doesNotMatch(link, /Place keepsake order/);
+assert.doesNotMatch(link, /<form/i);
+assert.doesNotMatch(link, /data-keepsake-order-action/);
 assert.doesNotMatch(link, /Checkout and payment/);
 assert.doesNotMatch(link, /card number/i);
 

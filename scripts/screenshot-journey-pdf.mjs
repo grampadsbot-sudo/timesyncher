@@ -1236,8 +1236,10 @@ async function main() {
       await guest.setViewport({ width: 1280, height: 900 });
       await guest.goto(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => {});
       const guestText = await guest.evaluate(() => document.body.innerText || '').catch(() => '');
-      if (/anyone with this link/i.test(guestText) && /place keepsake order/i.test(guestText) && /without the trip owner session/i.test(guestText)) {
-        await guest.type('input[name="buyerName"]', 'Riley Guest').catch(() => {});
+      const guestHtml = await guest.evaluate(() => document.documentElement.outerHTML || '').catch(() => '');
+      const shareable = /anyone with this link/i.test(guestText) && /without the trip owner session/i.test(guestText);
+      const orderAction = /place keepsake order/i.test(guestText) || /data-keepsake-order-action/i.test(guestHtml) || /<form[\s>]/i.test(guestHtml);
+      if (shareable && !orderAction) {
         const image = path.join(shotDir, 'order-keepsakes-guest.png');
         await guest.screenshot({ path: image });
         pages.push({
@@ -1245,7 +1247,7 @@ async function main() {
           chapter: 'After the gold conversation',
           title: 'Order Keepsakes',
           file: 'order-keepsakes.md',
-          note: 'Riley Guest opened the shareable keepsake link. The page says the trip owner session is absent, and the order action is visible.',
+          note: 'Riley Guest opened the shareable keepsake URL. The page says the trip owner session is absent.',
           image,
         });
         mark('order-keepsakes.md');
@@ -1254,13 +1256,17 @@ async function main() {
       if (!captured.has('order-keepsakes.md')) {
       await go(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, 'Order this keepsake');
       const orderText = await bodyText(page);
-      if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link')) {
+      const orderHtml = await page.content().catch(() => '');
+      const orderAction = /place keepsake order/i.test(orderText) || /data-keepsake-order-action/i.test(orderHtml) || /<form[\s>]/i.test(orderHtml);
+      if (orderAction) {
+        gap('Order Keepsakes', 'order-keepsakes.md', 'The keepsake URL showed an order form.');
+      } else if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link') && has(orderText, 'without the trip owner session')) {
         await shot('order-keepsakes-link', 'After the gold conversation', 'Order Keepsakes', {
           file: 'order-keepsakes.md',
-          note: 'Shareable buy link. Anyone with the trip keepsake URL can order.',
+          note: 'The shareable keepsake URL opened. The page says the trip owner session is absent.',
         });
       } else {
-        gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake order link did not open.');
+        gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake URL did not open.');
       }
       }
     }

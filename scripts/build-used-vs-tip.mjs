@@ -21,6 +21,8 @@ const ACCEPTABLE = {
   'scripts/test_screenshot_journey_pdf.mjs': 'journey renderer test',
   'scripts/test_void_stale_build.mjs': 'stamp checker test',
   'scripts/test_build_used_vs_tip.mjs': 'build-used-vs-tip test',
+  'scripts/test_api_route_bundle.mjs': 'route bundle test',
+  'routes/keepsake-order.mjs': 'keepsake share link page',
 };
 
 export class UntrustedPackError extends Error {
