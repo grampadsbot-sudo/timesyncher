@@ -10,7 +10,10 @@ const API_BASE = (process.env.TIMESYNCHER_API_BASE_URL || 'https://vacation.time
 const INTAKE_TOKEN = process.env.TIMESYNCHER_INTAKE_TOKEN || '';
 const OPENAI_API_KEY = process.env.TIMESYNCHER_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '';
 const STT_MODEL = process.env.TIMESYNCHER_STT_MODEL || 'whisper-1';
-const IMAGE_SCREENSHOT_CLASSIFIER_MODEL = process.env.TIMESYNCHER_IMAGE_SCREENSHOT_CLASSIFIER_MODEL || 'gpt-4o-mini';
+const TIER1_CLASSIFIER_MODEL = 'google/gemini-2.5-flash-lite';
+const IMAGE_SCREENSHOT_CLASSIFIER_MODEL = process.env.TIMESYNCHER_IMAGE_SCREENSHOT_CLASSIFIER_MODEL || TIER1_CLASSIFIER_MODEL;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || process.env.TIMESYNCHER_OPENROUTER_API_KEY || '';
+const BANNED_GPT_MINI = /gpt-.*mini/i;
 const OFFSET_FILE = process.env.TIMESYNCHER_TELEGRAM_OFFSET_FILE || './telegram-vacation.offset';
 const INGRESS_CACHE_DIR = process.env.TIMESYNCHER_TELEGRAM_INGRESS_CACHE_DIR || './telegram-ingress-cache';
 const INGRESS_RETENTION_DAYS = Math.max(1, Number.parseInt(process.env.TIMESYNCHER_TELEGRAM_INGRESS_RETENTION_DAYS || '30', 10));
@@ -778,7 +781,10 @@ async function classifyPhotoSupportScreenshot(media, cached, { cacheDir = '' } =
       extractedText: media.caption,
     };
   }
-  if (!OPENAI_API_KEY || !cached?.bytes?.length) return null;
+  if (BANNED_GPT_MINI.test(IMAGE_SCREENSHOT_CLASSIFIER_MODEL) || !cached?.bytes?.length) return null;
+  const openRouter = !/^gpt-/i.test(IMAGE_SCREENSHOT_CLASSIFIER_MODEL);
+  const classifierKey = openRouter ? OPENROUTER_API_KEY : OPENAI_API_KEY;
+  if (!classifierKey) return null;
 
   const imageBytes = cached.bytes;
   const dataUrl = `data:${media.mimeType || 'image/jpeg'};base64,${imageBytes.toString('base64')}`;
@@ -789,13 +795,18 @@ async function classifyPhotoSupportScreenshot(media, cached, { cacheDir = '' } =
     'Return unclear if you cannot tell.',
     'Use OCR. Include the most relevant visible text in extractedText.',
   ].join('\n');
+  const classifierHeaders = {
+    authorization: `Bearer ${classifierKey}`,
+    'content-type': 'application/json',
+  };
+  if (openRouter) {
+    classifierHeaders['HTTP-Referer'] = 'https://timesyncher.com';
+    classifierHeaders['X-Title'] = 'TimeSyncher Vacation Intake';
+  }
 
-  const { response, json } = await fetchJsonWithRetry('https://api.openai.com/v1/chat/completions', {
+  const { response, json } = await fetchJsonWithRetry(openRouter ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      authorization: `Bearer ${OPENAI_API_KEY}`,
-      'content-type': 'application/json',
-    },
+    headers: classifierHeaders,
     body: JSON.stringify({
       model: IMAGE_SCREENSHOT_CLASSIFIER_MODEL,
       response_format: { type: 'json_object' },
@@ -810,8 +821,8 @@ async function classifyPhotoSupportScreenshot(media, cached, { cacheDir = '' } =
       ],
       max_tokens: 300,
     }),
-  }, 'OpenAI image screenshot classifier');
-  if (!response.ok) throw new Error(json.error?.message || `OpenAI image screenshot classifier ${response.status}`);
+  }, openRouter ? 'OpenRouter image screenshot classifier' : 'OpenAI image screenshot classifier');
+  if (!response.ok) throw new Error(json.error?.message || `image screenshot classifier ${response.status}`);
 
   const parsed = parseJsonObject(json.choices?.[0]?.message?.content || '');
   const kind = cleanText(parsed?.kind, 80);

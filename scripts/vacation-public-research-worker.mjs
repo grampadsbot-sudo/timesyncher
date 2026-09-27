@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { runApprovedSourceAdapters } from './travel-source-adapter-runner.mjs';
+import { jevRelevanceScore, scoreWebPoisInParallel, searchPois, synthesizeFromIds } from '../src/vacation/poi-search.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -64,19 +65,11 @@ function finiteNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-function distanceKm(a = {}, b = {}) {
-  const lat1 = finiteNumber(a.lat);
-  const lng1 = finiteNumber(a.lng);
-  const lat2 = finiteNumber(b.lat);
-  const lng2 = finiteNumber(b.lng);
-  if ([lat1, lng1, lat2, lng2].some((value) => value === null)) return null;
-  const radians = (degrees) => degrees * Math.PI / 180;
-  const earthKm = 6371;
-  const dLat = radians(lat2 - lat1);
-  const dLng = radians(lng2 - lng1);
-  const s1 = Math.sin(dLat / 2) ** 2;
-  const s2 = Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 2 * earthKm * Math.asin(Math.sqrt(s1 + s2));
+function houseRadiusPlace(candidate = {}) {
+  return Boolean(candidate.poiId)
+    && finiteNumber(candidate.lat) !== null
+    && finiteNumber(candidate.lng) !== null
+    && Boolean(publicUrl(candidate.website));
 }
 
 function categoryBucket(category) {
@@ -135,7 +128,7 @@ function isReviewEligible(candidate) {
 
 function missingThingDetails(candidates = []) {
   const missingReviews = candidates
-    .filter((candidate) => isReviewEligible(candidate) && !hasThreeReviews(candidate))
+    .filter((candidate) => isReviewEligible(candidate) && !houseRadiusPlace(candidate) && !hasThreeReviews(candidate))
     .map((candidate) => candidate.title);
   const missingHappyHour = candidates
     .filter((candidate) => {
@@ -152,6 +145,7 @@ function missingThingDetails(candidates = []) {
 
 function firstPassReadyCandidate(candidate = {}) {
   if (finiteNumber(candidate.lat) === null || finiteNumber(candidate.lng) === null) return false;
+  if (houseRadiusPlace(candidate)) return true;
   if (isReviewEligible(candidate) && !hasThreeReviews(candidate)) return false;
   if (text(candidate.category, 40).toLowerCase() === 'restaurant') {
     const sources = Array.isArray(candidate.happyHourSources) ? candidate.happyHourSources.filter(Boolean) : [];
@@ -288,6 +282,8 @@ export function normalizeCandidate(raw = {}, context = {}) {
     fitScores: raw.fitScores && typeof raw.fitScores === 'object' ? raw.fitScores : {},
     verifiedAt,
     expiresAt,
+    poiId: text(raw.poiId || '', 160),
+    structuredPoi: Boolean(raw.structuredPoi),
     metadata: {
       provider: text(context.provider || 'public-research-worker', 120),
       researchedAt: now,
@@ -382,170 +378,82 @@ async function runPerplexityResearch(input, queries, startedAt) {
   return { provider: 'live-perplexity', rawCandidates: parseProviderCandidates(content) };
 }
 
-function placesApiKey() {
-  if (process.env.GOOGLE_PLACES_API_KEY) return process.env.GOOGLE_PLACES_API_KEY;
-  const secretPath = process.env.TIMESYNCHER_GOOGLE_PLACES_API_KEY_FILE || '/home/timesyncher-agent/timestopper-vacation-worker/.google-places-api-key';
-  try {
-    return fs.readFileSync(secretPath, 'utf8').trim();
-  } catch {
-    return '';
+function houseOrigin(artifacts = {}) {
+  const places = [artifacts.house, artifacts.lodging, artifacts.origin, artifacts.stay];
+  for (const place of places) {
+    if (!place || typeof place !== 'object') continue;
+    const lat = finiteNumber(place.lat ?? place.latitude);
+    const lng = finiteNumber(place.lng ?? place.longitude);
+    if (lat !== null && lng !== null) return { lat, lng };
   }
+  const lat = finiteNumber(artifacts.houseLat ?? artifacts.originLat);
+  const lng = finiteNumber(artifacts.houseLng ?? artifacts.originLng);
+  if (lat !== null && lng !== null) return { lat, lng };
+  return null;
 }
 
-async function placesTextSearch(apiKey, query, { center = null, radiusMeters = 50000, pageSize = 20 } = {}) {
-  const body = { textQuery: query, pageSize };
-  if (center) {
-    body.locationBias = {
-      circle: {
-        center: { latitude: center.lat, longitude: center.lng },
-        radius: radiusMeters,
-      },
-    };
-  }
-  const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': [
-        'places.id',
-        'places.displayName',
-        'places.formattedAddress',
-        'places.location',
-        'places.websiteUri',
-        'places.googleMapsUri',
-        'places.types',
-        'places.rating',
-        'places.userRatingCount',
-        'places.reviews',
-        'places.editorialSummary',
-      ].join(','),
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Google Places searchText failed: ${res.status} ${await res.text()}`.slice(0, 1000));
-  const parsed = await res.json();
-  return Array.isArray(parsed.places) ? parsed.places : [];
-}
-
-async function placesDestinationCenter(apiKey, destination) {
-  const places = await placesTextSearch(apiKey, destination, { pageSize: 1 });
-  const place = places[0];
-  const lat = finiteNumber(place?.location?.latitude);
-  const lng = finiteNumber(place?.location?.longitude);
-  return lat === null || lng === null ? null : { lat, lng };
-}
-
-function reviewSnippetsFromPlace(place = {}) {
-  const reviews = Array.isArray(place.reviews) ? place.reviews : [];
-  return reviews.map((review) => {
-    const body = text(review.text?.text || review.originalText?.text || '', 420);
-    const author = text(review.authorAttribution?.displayName || 'Public review', 80);
-    return body ? `${author}: ${body}` : '';
-  }).filter(Boolean).slice(0, 3);
-}
-
-function placesCandidate(place = {}, { category, destination, retrievedAt }) {
-  const name = text(place.displayName?.text || place.displayName || 'Place option', 160);
-  const mapsUrl = publicUrl(place.googleMapsUri);
-  const website = publicUrl(place.websiteUri) || mapsUrl;
-  const sources = [
-    website ? { label: place.websiteUri ? 'Official website / public listing' : 'Google Maps public listing', url: website, retrievedAt } : null,
-    mapsUrl && mapsUrl !== website ? { label: 'Google Maps public listing', url: mapsUrl, retrievedAt } : null,
-  ].filter(Boolean);
-  const ratingText = place.rating ? `Visible Google rating: ${place.rating}${place.userRatingCount ? ` from ${place.userRatingCount} reviews` : ''}.` : '';
-  const editorial = text(place.editorialSummary?.text || '', 500);
-  const reviews = reviewSnippetsFromPlace(place);
-  while (reviews.length < 3) {
-    reviews.push(ratingText || `Public Places listing found for ${name}; review text was not exposed by the Places response, so recheck current traveler reviews before final planning.`);
-  }
-  const noHappyHourDetails = `No current happy-hour offer found in Google Places/public listing data as of ${retrievedAt.slice(0, 10)}; recheck the restaurant's current website/menu/social listings before using for planning.`;
+function poiCandidate(poi, { destination, retrievedAt }) {
+  const category = poi.category === 'grocery' || poi.category === 'store' ? 'store' : (poi.category === 'garden' ? 'activity' : poi.category);
+  const url = publicUrl(poi.url);
+  const restaurant = category === 'restaurant';
   return {
     category,
-    subtype: Array.isArray(place.types) ? place.types.slice(0, 3).join(', ') : '',
-    title: name,
-    summary: `${name} is a ${category === 'restaurant' ? 'restaurant' : category === 'store' ? 'shopping/store' : 'destination option'} near ${destination}${ratingText ? ` (${ratingText.replace(/\.$/, '')})` : ''}.`,
-    details: [
-      editorial,
-      place.formattedAddress ? `Address: ${text(place.formattedAddress, 240)}.` : '',
-      ratingText,
-      'Source: Google Places New/public web listing. Verify current hours, closures, prices, menus, tickets, and availability before relying on this option.',
-    ].filter(Boolean).join('\n'),
-    website,
-    address: text(place.formattedAddress || '', 240),
-    lat: finiteNumber(place.location?.latitude),
-    lng: finiteNumber(place.location?.longitude),
-    review1: reviews[0] || '',
-    review2: reviews[1] || '',
-    review3: reviews[2] || '',
-    reviewSources: sources.map((source) => source.url),
-    googleRating: place.rating ? String(place.rating) : '',
+    title: poi.name,
+    summary: `${poi.name} is listed in the house-radius ${poi.category || category} results.`,
+    details: `POI ${poi.id} from ${poi.source}. Measured from the house or lodging.`,
+    website: url,
+    lat: finiteNumber(poi.lat),
+    lng: finiteNumber(poi.lng),
+    poiId: poi.id,
+    structuredPoi: poi.source !== 'brave',
+    sources: url ? [{
+      label: poi.source === 'osm' ? 'OpenStreetMap' : (poi.source === 'fsq-os-places' ? 'Foursquare OS Places' : 'Brave Search'),
+      url,
+      retrievedAt,
+    }] : [],
     happyHour: false,
-    happyHourDetails: category === 'restaurant' ? noHappyHourDetails : '',
-    happyHourSources: category === 'restaurant' ? sources.map((source) => source.url) : [],
-    sources,
+    happyHourDetails: restaurant ? `No happy-hour offer is stored on ${poi.id}.` : '',
+    happyHourSources: restaurant && url ? [url] : [],
     verificationStatus: 'source_checked',
-    caveats: ['Google Places snapshot only; verify current hours, closures, prices, reservations/tickets, accessibility, and whether this fits the trip style before final itinerary placement.'],
-    sourceCaveats: ['Deterministic Google Places API New lane from the GBrain web-search contract.'],
-    sourceQuality: {
-      sourceCount: sources.length,
-      adapterCount: 1,
-      safetyClass: 'approved_public_read_only',
-      confidence: sources.length ? 'medium' : 'needs_source_url',
-      lastVerifiedAt: retrievedAt,
-      expiresAt: addDaysIso(retrievedAt, 7),
-    },
-    qualitySignals: {
-      freshness: 'live_google_places_new_snapshot',
-      specificity: 'destination_biased_and_distance_filtered',
-      caveatCount: 2,
-    },
-    adapterSources: [{ adapterId: 'google-places-new-deterministic-fallback', sourceId: text(place.id || mapsUrl || name, 160), safetyClass: 'approved_public_read_only', fetchedAt: retrievedAt, status: 'live_read_only_google_places_new_passed' }],
-    verifiedAt: retrievedAt,
-    expiresAt: addDaysIso(retrievedAt, 7),
+    caveats: ['POI database record. Verify hours before planning.'],
+    sourceCaveats: ['House-radius Foursquare OS Places and OpenStreetMap. Brave runs only when that database is thin.'],
+    area: destination,
   };
 }
 
-async function runGooglePlacesFallbackResearch(input, queries, startedAt) {
-  if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_PLACES_FALLBACK === '1') return null;
-  const apiKey = placesApiKey();
-  const destination = text(input.artifacts?.destination || '', 160);
-  if (!apiKey || !destination) return null;
-  const retrievedAt = new Date().toISOString();
-  const center = await placesDestinationCenter(apiKey, destination);
-  if (!center) return null;
-  const radiusMeters = Math.min(50000, Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_PLACES_RADIUS_METERS || 50000));
-  const maxDistanceKm = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_MAX_DISTANCE_KM || 80);
-  const searchPlan = [
-    ['restaurant', [`best restaurants in ${destination}`, `happy hour restaurants in ${destination}`, `family restaurants in ${destination}`]],
-    ['store', [`shopping in ${destination}`, `grocery markets and local stores in ${destination}`, `boutiques and shopping centers near ${destination}`]],
-    ['activity', [`things to do in ${destination}`, `parks museums wineries attractions near ${destination}`, `family activities events sightseeing near ${destination}`]],
-  ];
-  const rawCandidates = [];
-  const seen = new Set();
-  for (const [category, categoryQueries] of searchPlan) {
-    for (const query of categoryQueries) {
-      const places = await placesTextSearch(apiKey, query, { center, radiusMeters, pageSize: 20 });
-      for (const place of places) {
-        const lat = finiteNumber(place.location?.latitude);
-        const lng = finiteNumber(place.location?.longitude);
-        const candidateDistance = distanceKm(center, { lat, lng });
-        if (candidateDistance === null || candidateDistance > maxDistanceKm) continue;
-        const key = text(place.id || `${place.displayName?.text || ''}:${place.formattedAddress || ''}`, 240).toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        rawCandidates.push(placesCandidate(place, { category, destination, retrievedAt }));
-      }
-    }
+async function runHousePoiResearch(input, startedAt) {
+  const artifacts = input.artifacts || {};
+  const origin = houseOrigin(artifacts);
+  if (!origin) return null;
+  const braveKey = input.braveKey ?? (process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || '');
+  const dateBucket = text(artifacts.dates?.startDate || artifacts.dates?.dateText || '', 40);
+  const collected = [];
+  for (const category of ['grocery', 'restaurant', 'store', 'activity']) {
+    const found = await searchPois({
+      origin,
+      category,
+      dateBucket,
+      fsqRecords: Array.isArray(input.fsqRecords) ? input.fsqRecords : [],
+      fetchImpl: input.fetchImpl,
+      braveKey,
+      now: input.now,
+    });
+    collected.push(...(found.pois || []));
   }
-  return rawCandidates.length ? {
-    provider: 'live-google-places-new',
-    rawCandidates,
-    elapsedMs: Date.now() - startedAt,
-    center,
-    radiusMeters,
-    maxDistanceKm,
-  } : null;
+  const scoreOne = input.scorePoi || ((poi) => jevRelevanceScore(poi, {
+    fetchImpl: input.fetchImpl,
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+  }));
+  const scored = await scoreWebPoisInParallel(collected, scoreOne);
+  const citedIds = Array.isArray(input.citedPoiIds) ? input.citedPoiIds : scored.map((poi) => poi.id);
+  const allowed = new Set(synthesizeFromIds(citedIds, scored).map((poi) => poi.id));
+  const destination = text(artifacts.destination || '', 160);
+  const retrievedAt = new Date().toISOString();
+  const rawCandidates = scored
+    .filter((poi) => allowed.has(poi.id) && finiteNumber(poi.lat) !== null && finiteNumber(poi.lng) !== null)
+    .map((poi) => poiCandidate(poi, { destination, retrievedAt }));
+  if (!rawCandidates.length) return null;
+  return { provider: 'house-radius-poi', rawCandidates, elapsedMs: Date.now() - startedAt, origin };
 }
 
 export async function runPublicResearch(input = {}) {
@@ -564,7 +472,7 @@ export async function runPublicResearch(input = {}) {
   } else {
     let providerError = null;
     try {
-      provider = await runGooglePlacesFallbackResearch(input, queries, startedAt);
+      provider = await runHousePoiResearch(input, startedAt);
     } catch (error) {
       providerError = error;
     }
@@ -587,7 +495,7 @@ export async function runPublicResearch(input = {}) {
     }
   }
   if (!provider) {
-    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after probing deterministic Google Places API New, explicit Perplexity fallback, and paid Ubuntu Grok web_search fallback. Ensure the Google Places key file is readable, set TIMESYNCHER_PUBLIC_RESEARCH_PROVIDER=perplexity with PERPLEXITY_API_KEY when needed, or pass a fixture for smoke tests.' };
+    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after the house-radius POI database, Brave when that database is thin, explicit Perplexity fallback, and paid Ubuntu Grok web_search fallback. Pass a house or lodging lat/lng, set BRAVE_SEARCH_API_KEY or BRAVE_API_KEY for thin asks, set PERPLEXITY_API_KEY when needed, or pass a fixture for smoke tests.' };
   }
   const candidates = provider.rawCandidates
     .map((candidate) => normalizeCandidate(candidate, { provider: provider.provider, retrievedAt, destination }))

@@ -69,6 +69,7 @@ const checks = [
   ['keepsake-qa.md', 'Keepsake QA', 'verify-keepsake-qa.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', (o) => (o.telegramFill ? 'PASS' : 'GAP')],
   ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', () => 'GAP'],
+  ['search-redesign.md', 'Search redesign', 'verify-search-redesign.png', () => 'GAP'],
   ['real-app-email-entry.md', 'Email opens the real app', 'verify-eula.png', (o) => (o.emailIsShared ? 'PASS' : 'GAP')],
 ];
 

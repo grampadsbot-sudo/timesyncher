@@ -7,6 +7,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 ## Sub-features
 
 - A flight Thing has Takeoff, Connections, and Layover.
+- Search asks for a preferred airline before filtering. A named airline shows that airline. No preference shows at most one option per airline. See `features/search-redesign.md`.
 
 ## How to get to it (user POV)
 

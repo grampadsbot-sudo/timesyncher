@@ -61,15 +61,13 @@
       "kind": "printing_press_cli",
       "label": "Printing Press Wanderlust GOAT",
       "safetyClass": "unofficial_read_only",
-      "enabled": true,
+      "enabled": false,
       "allowsBookingOrPayment": false,
       "allowedCategories": ["activity", "tour", "event", "restaurant", "store", "decision"],
       "timeoutMs": 120000,
       "binaryPath": "/home/ubishere9995/.local/bin/wanderlust-goat-pp-cli",
       "runAsUser": "ubishere9995",
-      "secretFiles": {
-        "GOOGLE_PLACES_API_KEY": "/home/timesyncher-agent/timestopper-vacation-worker/.google-places-api-key"
-      },
+      "secretFiles": {},
       "inputPolicy": {
         "customerPii": "minimal_trip_context_only",
         "privateSources": "blocked",
@@ -79,7 +77,7 @@
         "required": ["category", "title", "summary", "details", "sources"],
         "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
       },
-      "smokeStatus": "passed_read_only_live_goat_google_places_2026-06-15"
+      "smokeStatus": "disabled_google_places_seed_removed"
     },
     {
       "id": "printingpress-roadside-america",

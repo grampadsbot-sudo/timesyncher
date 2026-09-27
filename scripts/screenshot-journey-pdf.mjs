@@ -614,6 +614,7 @@ async function main() {
     }
     mark('live-app-jev-tier.md');
     gap('Cursor project contract', 'cursor-project-contract.md', 'cursor-project-contract.md is a repo file. The shared app has no contract screen.');
+    gap('Search redesign', 'search-redesign.md', 'search-redesign.md is a research rule. The shared app has no search screen.');
 
     await go(sharedUrl, 'Day-by-Day');
     let text = await bodyText(page);

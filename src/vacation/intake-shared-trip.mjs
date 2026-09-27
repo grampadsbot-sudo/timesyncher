@@ -85,7 +85,11 @@ export function productThingSummary(thing = {}) {
   const whenBit = when ? ` on ${when}` : '';
   if (/grocer/i.test(title)) return `Groceries${whenBit || ' on Fri Apr 3'}, the arrival day, after the airport shuttle.`;
   if (/garden/i.test(title)) return `Garden time${whoBit}${whenBit}. One garden block, not two big activities.`;
-  if (/\bswim\b/i.test(title)) return `A swim${whoBit}${whenBit}. The wind backup is the house pool.`;
+  if (/\bswim\b/i.test(title)) {
+    const wind = String(thing.windBackup || '').trim();
+    const base = `A swim${whoBit}${whenBit}.`.replace(/\s+/g, ' ').trim();
+    return wind ? `${base} ${wind}` : base;
+  }
   if (/\bdinner\b/i.test(title)) return `Dinner${whoBit}${whenBit}.`;
   if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
   if (/house/i.test(title)) return `The Kailua-Kona house. Check-in Friday April 3. Check-out Sunday April 12.`;
@@ -232,7 +236,23 @@ function reviewLines(name, summary) {
   };
 }
 
-export function applyThingPresentation(shared = {}) {
+export function windLookupPointsFromThings(things = []) {
+  const points = [];
+  const seen = new Set();
+  for (const thing of things || []) {
+    const name = String(thing.title || thing.name || '').trim();
+    const coords = coordsFor(name);
+    if (!coords || !/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    points.push({ name, lat: coords[0], lng: coords[1] });
+  }
+  return points;
+}
+
+export function applyThingPresentation(shared = {}, options = {}) {
+  const windBackup = String(options.windBackup || '').trim();
   const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
   const thingOverrides = { ...(shared.thingOverrides || {}) };
   const put = (place, extra) => {
@@ -241,7 +261,11 @@ export function applyThingPresentation(shared = {}) {
   };
   for (const place of places) {
     const name = String(place.name || '').trim();
-    const summary = productThingSummary({ title: name, summary: place.description || place.notes || '' });
+    const summary = productThingSummary({
+      title: name,
+      summary: place.description || place.notes || '',
+      windBackup: /\bswim\b/i.test(name) ? windBackup : '',
+    });
     place.description = summary;
     place.notes = summary;
     const coords = coordsFor(name);

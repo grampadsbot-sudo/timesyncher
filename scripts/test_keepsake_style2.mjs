@@ -631,7 +631,9 @@ const aeFixture = [
 const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
 assert.match(patchedAe, /tsListThings=\(rows\)/);
-assert.match(patchedAe, /logoUrl:tsLogo\(name\)/);
+assert.doesNotMatch(patchedAe, /logoUrl:tsLogo\(name\)/);
+assert.doesNotMatch(patchedAe, /lat:36\.1147/);
+assert.doesNotMatch(patchedAe, /address:"Nevada"/);
 assert.match(patchedAe, /Os\.filter\(G=>tsListThings\(Cc\)/);
 assert.match(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
@@ -718,21 +720,26 @@ assert.ok(paddedBuckets['Shows, Tours and the Rest'].length >= KEEPSAKE_LIST_MIN
 assert.match(paddedShared.thingOverrides['place:941001'].summary, /Mon Ami Gabi|steak-frites|Vegas/i);
 assert.equal(paddedShared.thingOverrides['place:941001'].timeline, false);
 assert.ok(paddedShared.places.some((place) => place.__tsKeepsakeFill === 1 && place.lat));
-assert.equal(padLiveTabRows('restaurant', [
+const liveRestaurants = [
   { name: 'Carbone at Aria' },
   { name: 'Shake Shack near Cosmo/Aria' },
   { name: 'Lotus of Siam' },
   { name: 'Eggslut' },
-]).length, 11);
-assert.equal(padLiveTabRows('store', [{ name: 'Cosmopolitan shops' }]).length, 9);
-assert.equal(padLiveTabRows('rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
+];
+assert.deepEqual(padLiveTabRows('restaurant', liveRestaurants).map((row) => row.name), liveRestaurants.map((row) => row.name));
+assert.deepEqual(padLiveTabRows('store', [{ name: 'Cosmopolitan shops' }]).map((row) => row.name), ['Cosmopolitan shops']);
+assert.deepEqual(padLiveTabRows('rest', [
+  { name: 'Bellagio Conservatory — Anniversary Cocktails' },
+  { name: 'Mon Ami Gabi', __tsLiveFill: 1, lat: 36.1147, lng: -115.1729, address: 'Las Vegas' },
+]).map((row) => row.name), ['Bellagio Conservatory — Anniversary Cocktails']);
+assert.equal(JSON.stringify(padLiveTabRows('restaurant', liveRestaurants)).includes('36.1147'), false);
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("car"\)/);
-assert.match(patchedAe, /tsPad=/);
-assert.match(patchedAe, /__tsLiveFill:1/);
+assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
+assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
 assert.match(patchedAe, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
-assert.match(patchedAe, /tsPad\(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant\)\.length===0/);
+assert.match(patchedAe, /tsPad\(Qn\)\.length===0/);
 assert.match(patchedAe, /tsFillOv=/);
 assert.match(patchedAe, /ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\)/);
 assert.match(patchedAe, /names\.some\(n=>row\.match\.test\(n\)\)/);

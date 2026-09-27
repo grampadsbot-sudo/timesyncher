@@ -1,0 +1,293 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {
+  clearPoiCache,
+  flightPlan,
+  lowestRentalPrices,
+  overpassQuery,
+  parseOverpass,
+  scoreWebPoisInParallel,
+  searchFsqRecords,
+  searchPois,
+  synthesizeFromIds,
+  POI_RADIUS_METERS,
+  THIN_POI_COUNT,
+} from '../src/vacation/poi-search.mjs';
+import { clearWindCache, lookupWindBackup, windBackupSentence } from '../src/vacation/wind-backup.mjs';
+import { productThingSummary } from '../src/vacation/intake-shared-trip.mjs';
+import { runPublicResearch } from './vacation-public-research-worker.mjs';
+
+const house = { lat: 19.649, lng: -155.994 };
+
+function record(id, name, lat, lng, category) {
+  return { id, name, lat, lng, category };
+}
+
+assert.equal(POI_RADIUS_METERS.grocery, 8000);
+assert.equal(POI_RADIUS_METERS.restaurant, 10000);
+assert.equal(POI_RADIUS_METERS.store, 10000);
+assert.equal(POI_RADIUS_METERS.garden, 40000);
+assert.equal(POI_RADIUS_METERS.activity, 40000);
+assert.equal(THIN_POI_COUNT, 3);
+
+const near = searchFsqRecords([
+  record('a', 'KTA Super Stores', 19.64, -155.99, 'grocery'),
+  record('b', 'Kona', 19.64, -155.99, 'grocery'),
+  record('far', 'Far Market', 21.3, -157.8, 'grocery'),
+], { origin: house, radiusMeters: 8000, category: 'grocery' });
+assert.deepEqual(near.map((poi) => poi.id), ['fsq:a']);
+assert.match(near[0].url, /^https:\/\//);
+
+const osm = parseOverpass({
+  elements: [
+    { type: 'node', id: 9, lat: 19.65, lon: -155.99, tags: { name: 'Huggo\'s' } },
+    { type: 'node', id: 10, lat: 19.65, lon: -155.99, tags: { name: 'Big Island' } },
+    { type: 'way', id: 11, center: { lat: 19.66, lon: -156.0 }, tags: { name: 'Kahaluu Beach' } },
+  ],
+}, 'restaurant');
+assert.deepEqual(osm.map((poi) => poi.id), ['osm:node/9', 'osm:way/11']);
+assert.equal(osm[0].url, 'https://www.openstreetmap.org/node/9');
+assert.match(overpassQuery({ lat: house.lat, lng: house.lng, radiusMeters: 8000, category: 'grocery' }), /around:8000,19.649,-155.994/);
+
+clearPoiCache();
+let fetches = [];
+const thick = await searchPois({
+  origin: house,
+  category: 'restaurant',
+  fsqRecords: [1, 2, 3].map((n) => record(`r${n}`, `Table ${n}`, 19.65, -155.99, 'restaurant')),
+  fetchImpl: async (url) => {
+    fetches.push(url);
+    throw new Error(`unexpected fetch ${url}`);
+  },
+  braveKey: 'brave-test',
+});
+assert.equal(thick.pois.length, 3);
+assert.equal(thick.brave, false);
+assert.equal(fetches.length, 0);
+const again = await searchPois({
+  origin: house,
+  category: 'restaurant',
+  fsqRecords: [],
+  fetchImpl: async (url) => {
+    fetches.push(url);
+    throw new Error(`cache miss ${url}`);
+  },
+  braveKey: 'brave-test',
+});
+assert.equal(again.cache, 'hit');
+assert.equal(fetches.length, 0);
+assert.deepEqual(again.pois.map((poi) => poi.id), thick.pois.map((poi) => poi.id));
+
+clearPoiCache();
+fetches = [];
+const osmBacked = await searchPois({
+  origin: house,
+  category: 'store',
+  fsqRecords: [record('only', 'Island Market', 19.65, -155.99, 'store')],
+  braveKey: 'brave-test',
+  fetchImpl: async (url) => {
+    fetches.push(String(url));
+    if (String(url).includes('overpass')) {
+      return { ok: true, json: async () => ({ elements: [1, 2, 3].map((n) => ({ type: 'node', id: 100 + n, lat: 19.65, lon: -155.99, tags: { name: `Shop ${n}` } })) }) };
+    }
+    throw new Error(`brave ran with a full OSM set ${url}`);
+  },
+});
+assert.equal(osmBacked.brave, false);
+assert.equal(fetches.filter((url) => url.includes('brave')).length, 0);
+assert.ok(osmBacked.pois.some((poi) => poi.id === 'osm:node/101'));
+
+clearPoiCache();
+fetches = [];
+const thin = await searchPois({
+  origin: house,
+  category: 'activity',
+  dateBucket: '2026-04-03',
+  fsqRecords: [],
+  braveKey: 'brave-test',
+  now: 1_000,
+  fetchImpl: async (url) => {
+    fetches.push(String(url));
+    if (String(url).includes('overpass')) return { ok: true, json: async () => ({ elements: [] }) };
+    if (String(url).includes('brave')) {
+      return { ok: true, json: async () => ({ web: { results: [{ title: 'Puuhonua o Honaunau', url: 'https://www.nps.gov/puho/', lat: 19.42, lng: -155.91 }] } }) };
+    }
+    throw new Error(`unexpected ${url}`);
+  },
+});
+assert.equal(thin.brave, true);
+assert.equal(thin.pois.filter((poi) => poi.source === 'brave').length, 1);
+assert.equal(fetches.filter((url) => url.includes('overpass')).length, 1);
+const braveCached = await searchPois({
+  origin: house,
+  category: 'activity',
+  dateBucket: '2026-04-03',
+  fsqRecords: [],
+  braveKey: 'brave-test',
+  now: 1_000 + 60_000,
+  fetchImpl: async () => {
+    throw new Error('short brave cache should not refetch');
+  },
+});
+assert.equal(braveCached.cache, 'hit');
+assert.equal(braveCached.pois.some((poi) => poi.source === 'brave'), true);
+await searchPois({
+  origin: house,
+  category: 'activity',
+  dateBucket: '2026-04-03',
+  fsqRecords: [],
+  braveKey: 'brave-test',
+  now: 1_000 + (8 * 60 * 60 * 1000) + 1,
+  fetchImpl: async (url) => {
+    fetches.push(String(url));
+    if (String(url).includes('overpass')) throw new Error('database cache should still hold');
+    return { ok: true, json: async () => ({ web: { results: [{ title: 'Puuhonua o Honaunau', url: 'https://www.nps.gov/puho/', lat: 19.42, lng: -155.91 }] } }) };
+  },
+});
+assert.equal(fetches.filter((url) => url.includes('brave')).length, 2);
+assert.equal(fetches.filter((url) => url.includes('overpass')).length, 1);
+
+let active = 0;
+let maxActive = 0;
+const mixed = [
+  { id: 'fsq:kept', name: 'Island Market', source: 'fsq-os-places', url: 'https://example.com/market', lat: 1, lng: 2 },
+  ...[0, 1, 2, 3, 4].map((n) => ({ id: `brave:${n}`, name: `Web ${n}`, source: 'brave', url: `https://example.com/${n}`, lat: 1, lng: 2 })),
+];
+const scored = await scoreWebPoisInParallel(mixed, async (poi) => {
+  active += 1;
+  maxActive = Math.max(maxActive, active);
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  active -= 1;
+  return poi.id.endsWith('0') ? 2 : 4;
+});
+assert.ok(maxActive >= 2);
+assert.ok(scored.some((poi) => poi.id === 'fsq:kept' && poi.jevScore === undefined));
+assert.equal(scored.some((poi) => poi.id === 'brave:0'), false);
+assert.equal(scored.filter((poi) => poi.source === 'brave').length, 4);
+
+const cited = synthesizeFromIds(['fsq:kept', 'fsq:missing', 'osm:node/1'], [
+  { id: 'fsq:kept', name: 'Island Market' },
+  { id: 'osm:node/1', name: 'Kona' },
+  { id: 'fsq:other', name: 'Huggo\'s' },
+]);
+assert.deepEqual(cited.map((poi) => poi.id), ['fsq:kept']);
+
+assert.equal(flightPlan('').ask, true);
+assert.deepEqual(flightPlan('When do we fly?').options, []);
+const united = flightPlan('We want United', [
+  { airline: 'United', price: 400 },
+  { airline: 'United', price: 450 },
+  { airline: 'Delta', price: 300 },
+]);
+assert.equal(united.ask, false);
+assert.deepEqual(united.options.map((option) => option.price), [400, 450]);
+const open = flightPlan('no preference', [
+  { airline: 'United', price: 400 },
+  { airline: 'United', price: 450 },
+  { airline: 'Delta', price: 300 },
+  { airline: 'Alaska', price: 320 },
+]);
+assert.equal(open.ask, false);
+assert.deepEqual(open.options.map((option) => option.airline), ['United', 'Delta', 'Alaska']);
+
+const offers = [
+  { brand: 'Alamo', price: 90 },
+  { brand: 'Budget', price: 40 },
+  { brand: 'Budget', price: 41 },
+  { brand: 'Dollar', price: 42 },
+  { brand: 'Enterprise', price: 43 },
+  { brand: 'Hertz', price: 44 },
+  { brand: 'National', price: 45 },
+  { brand: 'Thrifty', price: 46 },
+  { brand: 'Avis', price: 47 },
+  { brand: 'Sixt', price: 48 },
+  { brand: 'Fox', price: 49 },
+  { brand: 'Payless', price: 80 },
+];
+assert.equal(lowestRentalPrices(offers).length, 10);
+assert.equal(lowestRentalPrices(offers)[0].brand, 'Budget');
+assert.equal(lowestRentalPrices(offers).some((offer) => offer.brand === 'Alamo'), false);
+assert.equal(lowestRentalPrices(offers, { eliminatedBrands: ['Budget'] }).some((offer) => offer.brand === 'Budget'), false);
+assert.equal(lowestRentalPrices(offers, { eliminatedBrands: ['Budget'] })[0].price, 42);
+assert.equal(lowestRentalPrices(Array.from({ length: 12 }, (_, index) => ({ brand: 'Budget', price: index + 1 }))).length, 10);
+
+assert.equal(windBackupSentence([]), '');
+assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /Kahaluu/);
+assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /12 mph/);
+assert.doesNotMatch(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /house pool/);
+assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 22 }, { name: 'House', windMph: 18 }]), /House at 18 mph/);
+assert.match(productThingSummary({ title: 'Swim', who: 'Tyler', customerWhen: 'Mon Apr 6' }), /^A swim for Tyler on Mon Apr 6\.$/);
+assert.doesNotMatch(productThingSummary({ title: 'Swim' }), /house pool/);
+assert.match(productThingSummary({ title: 'Swim', windBackup: 'The wind backup is Kahaluu, where the forecast wind is 12 mph.' }), /Kahaluu/);
+
+clearWindCache();
+const nwsUrls = [];
+const nws = await lookupWindBackup([{ name: 'Kahaluu Beach', lat: 19.58, lng: -155.96 }], {
+  startDate: '2026-04-06',
+  endDate: '2026-04-06',
+  fetchImpl: async (url) => {
+    nwsUrls.push(String(url));
+    if (String(url).includes('api.weather.gov/points')) {
+      return { ok: true, json: async () => ({ properties: { forecastHourly: 'https://api.weather.gov/gridpoints/HFO/1,1/forecast/hourly' } }) };
+    }
+    if (String(url).includes('forecast/hourly')) {
+      return { ok: true, json: async () => ({ properties: { periods: [{ startTime: '2026-04-06T18:00:00Z', windSpeed: '12 mph' }] } }) };
+    }
+    throw new Error(`open-meteo should wait ${url}`);
+  },
+});
+assert.match(nws, /Kahaluu Beach/);
+assert.equal(nwsUrls.some((url) => url.includes('open-meteo')), false);
+
+clearWindCache();
+const meteo = await lookupWindBackup([{ name: 'House', lat: 19.649, lng: -155.994 }], {
+  startDate: '2026-04-03',
+  fetchImpl: async (url) => {
+    if (String(url).includes('weather.gov')) return { ok: false, json: async () => ({}) };
+    assert.match(String(url), /open-meteo/);
+    return { ok: true, json: async () => ({ hourly: { time: ['2026-04-03T00:00'], wind_speed_10m: [16.09] } }) };
+  },
+});
+assert.match(meteo, /10 mph/);
+
+clearWindCache();
+const missing = await lookupWindBackup([{ name: 'House', lat: 19.649, lng: -155.994 }], {
+  startDate: '2026-04-03',
+  fetchImpl: async () => ({ ok: false, json: async () => ({}) }),
+});
+assert.equal(missing, '');
+const hung = await lookupWindBackup([{ name: 'House', lat: 19.649, lng: -155.994 }], {
+  timeoutMs: 30,
+  fetchImpl: () => new Promise(() => {}),
+});
+assert.equal(hung, '');
+
+const workerText = fs.readFileSync(new URL('./vacation-public-research-worker.mjs', import.meta.url), 'utf8');
+const telegramText = fs.readFileSync(new URL('./telegram-vacation-intake-bot.mjs', import.meta.url), 'utf8');
+const runnerText = fs.readFileSync(new URL('./travel-source-adapter-runner.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(workerText, /places\.googleapis\.com/);
+assert.doesNotMatch(workerText, /live-google-places-new/);
+assert.match(workerText, /house-radius-poi/);
+assert.match(telegramText, /google\/gemini-2\.5-flash-lite/);
+assert.doesNotMatch(telegramText, /gpt-4o-mini/);
+assert.match(telegramText, /openrouter\.ai\/api\/v1\/chat\/completions/);
+assert.match(runnerText, /async function runWanderlustGoat\(\) \{\n  return \[\];\n\}/);
+
+clearPoiCache();
+const researched = await runPublicResearch({
+  artifacts: { destination: 'Big Island', house: house, dates: { startDate: '2026-04-03' } },
+  fsqRecords: [record('grill', 'Ulu Ocean Grill', 19.65, -155.99, 'restaurant')],
+  citedPoiIds: ['fsq:grill', 'fsq:invented'],
+  braveKey: '',
+  fetchImpl: async (url) => {
+    if (String(url).includes('places.googleapis.com')) throw new Error('google places returned');
+    if (String(url).includes('overpass')) return { ok: true, json: async () => ({ elements: [] }) };
+    throw new Error(`unexpected research fetch ${url}`);
+  },
+  scorePoi: async () => 5,
+});
+assert.equal(researched.provider, 'house-radius-poi');
+assert.deepEqual(researched.candidates.map((candidate) => candidate.poiId), ['fsq:grill']);
+assert.equal(researched.candidates.some((candidate) => /invented|Kona|Big Island/.test(candidate.title)), false);
+
+console.log('poi search ok');

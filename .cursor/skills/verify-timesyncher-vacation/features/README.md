@@ -40,7 +40,8 @@ Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving i
 - [Keepsakes config defaults](./keepsakes-config.md)
 - [Dialog screenshot gate](./dialog-screenshot-gate.md)
 - [Email opens the real app](./real-app-email-entry.md)
-- Header, language, voice note, maps, filters, empty states, tags, logos, status, happy hour, hotel, flight, car, ratings, stories, collaborators, budget, packing, print, order keepsakes, trip view, navigation, settings, min things, autonomy, keepsake QA, Telegram intake, and the Cursor contract each have a sibling file with the same drive shape.
+- [Search redesign](./search-redesign.md)
+- Header, language, voice note, maps, filters, empty states, tags, logos, status, happy hour, hotel, flight, car, ratings, stories, collaborators, budget, packing, print, order keepsakes, trip view, navigation, settings, min things, autonomy, keepsake QA, Telegram intake, the Cursor contract, and the search redesign each have a sibling file with the same drive shape.
 
 ## Retired
 

@@ -1,4 +1,3 @@
-import { LIVE_TAB_FILL, LIVE_TAB_MINIMUMS } from './keepsake-list-minimums.mjs';
 import { PRODUCT_THING_FIELDS } from './keepsake-product-overrides.mjs';
 import { logoLookupRuntimeSource } from './thing-logo-capture.mjs';
 
@@ -231,7 +230,7 @@ const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return R
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
-const LIVE_TAB_PATCH = `tsPad=(rows,kind,names,min)=>{const have=new Set(rows.map(G=>String(mr(G)||G.name||"").toLowerCase()).filter(Boolean));const extra=names.filter(n=>n&&![...have].some(h=>h.includes(n.toLowerCase())||n.toLowerCase().includes(h))).slice(0,Math.max(0,min-rows.length)).map((name,i)=>({id:(kind==="restaurant"?910000:kind==="store"?920000:930000)+i+1,name,__tsLiveFill:1,category:kind==="rest"?"event":kind,type:kind==="rest"?"event":kind,icon:kind==="restaurant"?"🍽️":kind==="store"?"🛍️":"🎟️",logoUrl:tsLogo(name),lat:36.1147,lng:-115.1729,address:"Nevada"}));return rows.concat(extra)},tsFill=${JSON.stringify(LIVE_TAB_FILL)},tsMin=${JSON.stringify(LIVE_TAB_MINIMUMS)},tsLogo=${logoLookupRuntimeSource()},tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),"store",tsFill.store,tsMin.store),ci=ot.filter(G=>tsListThings(Oc).some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),"restaurant",tsFill.restaurant,tsMin.restaurant),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))),"rest",tsFill.rest,tsMin.rest)`;
+const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=ot.filter(G=>tsListThings(Oc).some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 
 const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -243,11 +242,11 @@ const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const QN_RENDER_NEEDLE = 'Qn.map(G=>Oe(G))';
-const QN_RENDER_PATCH = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G))';
+const QN_RENDER_PATCH = 'tsPad(Qn).map(G=>Oe(G))';
 const GN_RENDER_NEEDLE = 'Gn.map(G=>Oe(G))';
-const GN_RENDER_PATCH = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G))';
+const GN_RENDER_PATCH = 'tsPad(Gn).map(G=>Oe(G))';
 const KI_RENDER_NEEDLE = 'ki.map(G=>Oe(G))';
-const KI_RENDER_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G))';
+const KI_RENDER_PATCH = 'tsPad(ki).map(G=>Oe(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
@@ -255,12 +254,12 @@ const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
 
-const QN_EMPTY_NEEDLE = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G)),Qn.length===0';
-const QN_EMPTY_PATCH = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G)),tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).length===0';
-const GN_EMPTY_NEEDLE = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G)),Gn.length===0';
-const GN_EMPTY_PATCH = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G)),tsPad(Gn,"store",tsFill.store,tsMin.store).length===0';
-const KI_EMPTY_NEEDLE = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G)),ki.length===0';
-const KI_EMPTY_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G)),tsPad(ki,"rest",tsFill.rest,tsMin.rest).length===0';
+const QN_EMPTY_NEEDLE = 'tsPad(Qn).map(G=>Oe(G)),Qn.length===0';
+const QN_EMPTY_PATCH = 'tsPad(Qn).map(G=>Oe(G)),tsPad(Qn).length===0';
+const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
+const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
+const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
+const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '') {
@@ -610,8 +609,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(MN_CATEGORY_PATCH) || js.includes(MN_CATEGORY_NEEDLE)) {
     throw new Error('Style two live category Mn() restaurant-before-car patch did not apply.');
   }
-  if (!js.includes('tsPad=') || !js.includes('__tsLiveFill:1') || !js.includes('"restaurant":15')) {
-    throw new Error('Style two live tab 15/10/15 pad patch did not apply.');
+  if (!js.includes('tsPad=(rows)=>rows')) {
+    throw new Error('Live tabs must return the trip rows only.');
+  }
+  if (js.includes('__tsLiveFill:1') || js.includes('lat:36.1147') || js.includes('address:"Nevada"') || js.includes('logoUrl:tsLogo(name)')) {
+    throw new Error('Live tabs must not pad Las Vegas names or coordinates.');
   }
   if (!js.includes('tsListThings=') || !js.includes('tsListThings(Fs)') || !js.includes('tsListThings(Oc)')) {
     throw new Error('Live list tag chips must harvest only tags on Things in that list.');
@@ -621,9 +623,6 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
     throw new Error('Rest type chips must be types present on Things in that Rest list.');
-  }
-  if (!js.includes('logoUrl:tsLogo(name)') || !js.includes('tsLogo=')) {
-    throw new Error('Live tab fill extras must bind real logos, not Admit One / category emoji.');
   }
   if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE)) {
     throw new Error('List logo resolver must prefer named brand path (tsLogo/mr) and skip data-URI letter tiles.');
