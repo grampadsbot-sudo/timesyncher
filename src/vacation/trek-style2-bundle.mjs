@@ -170,7 +170,7 @@ function productFieldsLiteral() {
 const FLIGHT_ROW_NEEDLE = '||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_ROW_PATCH = '||Re||"Airline"';
 const FLIGHT_FIELDS_NEEDLE = 'bn(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
-const FLIGHT_FIELDS_PATCH = '(bn(Dt)||/koa arrival/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
+const FLIGHT_FIELDS_PATCH = '(bn(Dt)||/koa arrival|kona arrival/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
 const CAR_FIELDS_NEEDLE = 'Mi(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
 const CAR_FIELDS_PATCH = '(Mi(Dt)||/speedishuttle/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
 
@@ -919,7 +919,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('||"Airline"') && (js.includes(FLIGHT_ROW_NEEDLE) || !js.includes(FLIGHT_ROW_PATCH))) {
     throw new Error('Flight list rows must show the full thing name, including KOA arrival.');
   }
-  if (js.includes('children:["Takeoff"') && !js.includes('/koa arrival/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {
+  if (js.includes('children:["Takeoff"') && !js.includes('/koa arrival|kona arrival/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {
     throw new Error('Open flight detail must render Takeoff, Connections, and Layover for KOA arrival.');
   }
   if (js.includes('children:["Rental company"') && !js.includes('/speedishuttle/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {

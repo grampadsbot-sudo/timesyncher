@@ -616,9 +616,10 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     seatWelcomeLine(customerTurn),
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.',
-    'Use the saved trip dates, swims, gardens, and roles. If a swim day or a garden day is not on the saved trip, do not announce it. Do not say a garden or a swim is already set unless that day is saved. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range.',
+    'Use the saved trip dates, swims, gardens, and roles. If a swim day or a garden day is not on the saved trip, do not announce it. Do not say a garden or a swim is already set unless that day is saved. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. The arrival day is arrival and groceries only. Do not add a house-pool dip or a second outing on that day. Friday is not midweek.',
+    'The account holder in the Traveling roster is on the trip. Do not leave them off. Do not say just the crew and list only the children.',
     'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. Lauren\'s rule, when it is saved, is that she does not want two big activities stacked on the same day. Do not call that rule locked in and do not change it to back-to-back heavy days.',
-    'When the customer asks for two options on a day, do not offer a swim or a garden unless that activity is already saved on that day. Do not repeat a paragraph.',
+    'When the customer asks for two options on a day, do not offer a swim or a garden unless that activity is already saved on that day. Offer a town walk or a dinner when those are the named choices. Do not repeat a paragraph.',
     'Do not invent a picnic or a beachside picnic. Do not invent an activity the customer did not name.',
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan holds steady for the whole group, or that little Fallon and the others are covered.',
@@ -752,15 +753,15 @@ export function qualityFromDecisions(body, _criteria = null, customerTurn = '', 
   const rawNote = extractJevFreeNote(body);
   const contradicts = Boolean(rawNote) && noteContradictsDraft(rawNote, draft);
   const template = Boolean(rawNote) && isTemplateNote(rawNote, customerTurn);
-  const wantsRewrite = disposition === 'rewrite' || score <= 2;
+  const wantsRewrite = score <= 2;
   return {
     judged: true,
     score,
     scoreRaw,
     disposition,
-    comment: rawNote || null,
-    jevNote: rawNote || null,
-    jevNoteReason: rawNote ? null : 'jev_no_free_text',
+    comment: null,
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
     noteUnusable: contradicts || template,
     noteUnusableReason: contradicts ? 'note_contradicts_draft' : (template ? 'template_note' : null),
     jevFocus,

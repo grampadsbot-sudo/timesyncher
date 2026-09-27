@@ -87,6 +87,12 @@ function rawScore(value) {
   return Number.isFinite(score) ? score : null;
 }
 
+function finiteOrNull(value) {
+  if (value == null || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
 export function liveTurnRecord({
   turnIndex,
   role,
@@ -168,14 +174,16 @@ export function liveTurnRecord({
       record.rewriteJevScoreRaw = log.rewriteModel || log.rewriteText ? rawScore(log.rewriteJevScoreRaw) : null;
       record.rewriteJevDisposition = log.rewriteJevDisposition || null;
       record.rewriteJevFixFocus = log.rewriteJevFixFocus || null;
-      record.rejudgeMs = Number.isFinite(Number(log.rejudgeMs)) ? Number(log.rejudgeMs) : null;
+      record.rejudgeMs = finiteOrNull(log.rejudgeMs);
       record.rawModelText = log.rawModelText == null ? null : String(log.rawModelText);
       record.draftFactCheck = log.draftFactCheck || null;
       record.rewriteFactCheck = log.rewriteFactCheck || null;
       if (log.rewriteFailReason) record.rewriteFailReason = String(log.rewriteFailReason);
       if (Array.isArray(log.rewriteAttempts)) record.rewriteAttempts = log.rewriteAttempts;
-      record.jevNote = log.jevNote || null;
-      record.jevNoteReason = log.jevNoteReason || null;
+      record.jevNote = null;
+      record.jevNoteReason = log.jevNoteReason || 'jev_no_free_text';
+      record.rewriterChange = log.rewriterChange || null;
+      record.savedTrip = log.savedTrip || null;
       record.interimReply = log.interimReply || null;
       record.modelLatency = log.latencyMs || null;
       record.flagged = log.flagged === true;
@@ -361,7 +369,7 @@ function projectCustomerRecord(priorTurns, customerTurn = '') {
     party,
     planOwned: false,
     rule: intakeFacts(corpus).rule || '',
-    addressedTo: /this is tyler/i.test(String(customerTurn || '')) ? 'Tyler' : '',
+    addressedTo: (String(customerTurn || '').match(/\bthis is ([A-Z][a-z]+)/i) || [])[1] || '',
   };
 }
 
@@ -373,7 +381,9 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     return when ? `${thing.title}: ${when}` : thing.title;
   }).filter(Boolean);
   const party = record?.party && typeof record.party === 'object' ? record.party : {};
+  const owner = party.primary?.name ? [{ name: party.primary.name, payer: 'account holder' }] : [];
   const travelers = [
+    ...owner,
     ...(Array.isArray(party.collaborators) ? party.collaborators : []),
     ...(Array.isArray(party.preference_subjects) ? party.preference_subjects : []),
   ].filter((person) => person?.name);
@@ -666,6 +676,27 @@ function spanStartLabel(span) {
   return spanDateLabel(start);
 }
 
+function laterFridayLabel(span) {
+  if (!span?.start || !span?.end) return '';
+  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
+  const end = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
+  let seen = 0;
+  let found = '';
+  for (let cursor = start; cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
+    if (cursor.getUTCDay() !== WEEKDAY_INDEX.friday) continue;
+    seen += 1;
+    if (seen === 1) continue;
+    found = formatMention({
+      weekday: 'Friday',
+      month: cursor.getUTCMonth() + 1,
+      day: cursor.getUTCDate(),
+      year: cursor.getUTCFullYear(),
+    }, { withWeekday: true });
+  }
+  return found;
+}
+
 function arrivalSwimLabel(label, arrival) {
   const day = swimDayKey(label);
   return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
@@ -689,6 +720,11 @@ export function applyAgreedAppSwim(things, customerText, appText, span = null) {
       if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
       const resolved = weekdayInsideSpan(weekday[1], span);
       if (resolved && !arrivalSwimLabel(resolved, arrival)) labels.push(resolved);
+    }
+    const namedDay = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
+    if (!namedDay) {
+      const later = laterFridayLabel(span);
+      if (later && !labels.includes(later)) labels.push(later);
     }
   }
   return (Array.isArray(things) ? things : []).map((thing) => {
@@ -748,6 +784,12 @@ export function thingsFromIntake(text) {
   return intakeFacts(text).things;
 }
 
+function activitySentenceCommits(hit) {
+  if (/\?/.test(hit)) return false;
+  if (!/\bif\b/i.test(hit)) return true;
+  return /\b(keep|put|save|add|set)\b/i.test(hit) && datedMentions(hit).length > 0;
+}
+
 function sameNote(left, right) {
   return String(left || '').replace(/\s+/g, ' ').trim().toLowerCase() === String(right || '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
@@ -801,7 +843,7 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     } else if (thing.title === 'Swim') {
       const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part));
       for (const hit of hits) {
-        if (/\?/.test(hit) || /\bif\b/i.test(hit)) continue;
+        if (!activitySentenceCommits(hit)) continue;
         mergeSwimLabel(labels, swimPlanLabel(hit));
       }
       customerWhen = labels.join(' · ');
@@ -809,7 +851,7 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
       for (const hit of hits) {
         if (/keep us on the big island|stay on the big island/i.test(hit)) continue;
-        if (/\?/.test(hit) || /\bif\b/i.test(hit)) continue;
+        if (!activitySentenceCommits(hit)) continue;
         for (const dated of datedMentions(hit)) {
           const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
           if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
@@ -848,17 +890,26 @@ export function acceptQualityRewrite(draft, rewritten) {
   return { text: next, rewritten: true, draft: prior };
 }
 
-export function rewriteCreditLabel(model, note = '') {
-  const credit = `rewritten by ${String(model || '').trim()}`;
-  return String(note || '').trim() ? `${credit} (Jev note)` : credit;
+export function rewriteCreditLabel(model, change = '') {
+  const line = String(change || '').replace(/\s+/g, ' ').trim();
+  if (!line) return '';
+  return `Rewriter (${String(model || '').trim()}): ${line}`;
+}
+
+export function splitRewriteChange(text) {
+  const raw = String(text || '').replace(/\r\n/g, '\n').trim();
+  const match = raw.match(/(?:^|\n)WHAT_I_CHANGED:\s*(.+)\s*$/i);
+  if (!match) return { reply: raw, change: '' };
+  return {
+    reply: raw.slice(0, match.index).trim(),
+    change: match[1].replace(/\s+/g, ' ').trim(),
+  };
 }
 
 export function mustRewriteQuality(quality) {
   if (quality?.hardFlag === true) return true;
   if (quality?.wantsRewrite === true) return true;
   const score = Number(quality?.score);
-  const disposition = String(quality?.disposition || '');
-  if (disposition === 'rewrite') return true;
   return Number.isFinite(score) && score <= 2;
 }
 
@@ -961,8 +1012,10 @@ export function savedTripFacts(record = {}) {
     ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
   ].filter((person) => person.name);
   const owners = {};
-  if (/kimberly/i.test(String(garden?.who || ''))) owners.gardens = 'Kimberly';
-  if (/tyler/i.test(String(swim?.who || ''))) owners.swim = 'Tyler';
+  const gardenWho = String(garden?.who || '').match(/\b([A-Z][a-z]{2,})\b/);
+  const swimWho = String(swim?.who || '').match(/\b([A-Z][a-z]{2,})\b/);
+  if (gardenWho) owners.gardens = gardenWho[1];
+  if (swimWho) owners.swim = swimWho[1];
   const activities = things.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean);
   return {
     span,
@@ -972,6 +1025,7 @@ export function savedTripFacts(record = {}) {
     planOwned: record.planOwned === true,
     activities,
     notTraveling,
+    ownerName: party.primary?.name || '',
     rule: String(record.rule || ''),
     addressedTo: String(record.addressedTo || ''),
     corpus: '',
@@ -991,7 +1045,7 @@ function pushError(errors, line) {
 }
 
 const RANGE_END = /\b(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?apr(?:il)?\s+\d{1,2}(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?(?:apr(?:il)?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
-const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)?\b|\bpacked\b(?!\s+list)|\bhead(?:ing)? out\b|\bafter checkout\b|\bone last time\b/i;
+const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bhead(?:ing)? out\b(?!\s+mid-)|\bafter checkout\b|\bone last time\b/i;
 
 export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
@@ -1015,19 +1069,37 @@ export function draftFactErrors(reply, facts = {}) {
   if (/picnic/i.test(body) && !(facts.activities || []).some((item) => /picnic/i.test(item))) {
     pushError(errors, 'a picnic was not named');
   }
-  if (/kimberly/i.test(facts.owners?.gardens || '') && /tyler(?:'|’)s\s+gardens?/i.test(body)) {
-    pushError(errors, 'the gardens are Kimberly\'s, not Tyler\'s');
+  const gardenOwner = String(facts.owners?.gardens || '');
+  const gardenClaim = body.match(/\b([A-Z][a-z]+)(?:'|’)s\s+gardens?\b/);
+  if (gardenOwner && gardenClaim && gardenClaim[1].toLowerCase() !== gardenOwner.toLowerCase()) {
+    pushError(errors, `the gardens are ${gardenOwner}'s, not ${gardenClaim[1]}'s`);
   }
-  if (facts.addressedTo === 'Tyler' && /kimberly/i.test(facts.owners?.gardens || '') && /your (?:two )?garden/i.test(body)) {
-    pushError(errors, 'the gardens are Kimberly\'s, not Tyler\'s');
+  if (gardenOwner && facts.addressedTo && facts.addressedTo.toLowerCase() !== gardenOwner.toLowerCase() && /your (?:two )?garden/i.test(body)) {
+    pushError(errors, `the gardens are ${gardenOwner}'s, not ${facts.addressedTo}'s`);
   }
-  if (/two big activities/i.test(facts.rule || '') && /locked in|back-to-back heavy/i.test(body)) {
+  if (/two big activities/i.test(facts.rule || '') && (/back-to-back heavy/i.test(body) || /two big activities[^.]{0,48}locked/i.test(body) || /locked[^.]{0,48}two big activities/i.test(body))) {
     pushError(errors, 'Lauren\'s rule is no two big activities stacked on the same day');
+  }
+  const ownerName = String(facts.ownerName || '').trim();
+  const ownerFirst = ownerName.split(/\s+/)[0] || '';
+  if (ownerFirst && /\bjust the crew\b|\bfull party\b|\bparty of eight\b/i.test(body) && !new RegExp(`\\b${ownerFirst}\\b`, 'i').test(body)) {
+    pushError(errors, `${ownerName} is traveling`);
+  }
+  if (/\bmidweek\b/i.test(body) && /\bfriday\b/i.test(body)) {
+    pushError(errors, 'Friday is not midweek');
   }
   const paragraphs = body.split(/\n{2,}/).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
   const repeatedSentences = splitSentences(body).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
   if (new Set(paragraphs).size !== paragraphs.length || new Set(repeatedSentences).size !== repeatedSentences.length) {
     pushError(errors, 'a paragraph is repeated');
+  }
+  const arrivalStamp = span?.start ? dayStamp(`${MONTH_ABBR[Number(String(span.start).slice(5, 7))]} ${Number(String(span.start).slice(8, 10))}`) : '';
+  if (arrivalStamp && !swimDays.includes(arrivalStamp)) {
+    for (const paragraph of body.split(/\n{2,}/)) {
+      if (looseDayStamps(paragraph, span).includes(arrivalStamp) && /\bhouse pool\b|\bdip into\b/i.test(paragraph)) {
+        pushError(errors, `a swim on ${arrivalStamp} was not set by the customer`);
+      }
+    }
   }
   const sentences = splitSentences(body);
   const tripEnd = endWeekday(span);
@@ -1036,18 +1108,16 @@ export function draftFactErrors(reply, facts = {}) {
     const sentence = sentences[index];
     const next = sentences[index + 1] || '';
     const previous = sentences[index - 1] || '';
-    const swimNegated = /\b(?:do not|don't|won't|will not|is not|isn't|not set|never)\b/i.test(sentence);
-    if (/\bswim\b/i.test(sentence) && !swimNegated) {
-      const stamps = [...looseDayStamps(previous, span), ...looseDayStamps(sentence, span), ...looseDayStamps(next, span)];
-      const swimStamps = looseDayStamps(sentence, span);
-      const attached = swimStamps.length ? swimStamps : stamps;
+    const swimDenied = /\b(?:isn't set|is not set|won't lock|will not lock|not already set|not a swim)\b/i.test(sentence);
+    if (/\bswim\b|\bhouse pool\b|\bdip into\b/i.test(sentence) && !swimDenied) {
+      const attached = looseDayStamps(sentence, span);
       if (attached.length && !dayIsSet(attached, swimDays)) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
     }
     if (/garden/i.test(sentence)) {
       const stamps = looseDayStamps(sentence, span);
-      const denied = /\b(?:not already|isn't|is not|won't|don't|do not|will not)\b/i.test(sentence);
+      const denied = /\b(?:isn't set|is not set|won't lock|will not lock|not already set)\b/i.test(sentence);
       const already = /already set|locked in/i.test(sentence) && !denied;
       if (!denied && stamps.length && !dayIsSet(stamps, gardenDays)) {
         pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
@@ -1267,6 +1337,7 @@ export function shipChoice({
   rewriteScore = null,
   draftFactErrors = [],
   rewriteFactErrors = [],
+  holding = '',
 }) {
   const rewriteOk = Boolean(String(rewrite || '').trim()) && !nearIdenticalRewrite(draft, rewrite);
   const draftCount = (Array.isArray(draftFactErrors) ? draftFactErrors : []).length;
@@ -1275,17 +1346,25 @@ export function shipChoice({
   const rewriteRaw = Number(rewriteScore);
   const scoredLower = !Number.isFinite(rewriteRaw) || !Number.isFinite(draftRaw) || rewriteRaw < draftRaw;
   if (rewriteOk && rewriteCount === 0 && !scoredLower) {
-    return { text: String(rewrite).trim(), rewritten: true, flagged: false, failReason: '' };
+    return { text: String(rewrite).trim(), rewritten: true, flagged: false, failReason: '', holding: false };
   }
   let failReason = '';
   if (rewriteCount > 0) failReason = 'rewrite_fact_check_held';
   else if (scoredLower && rewriteOk) failReason = 'rewrite_scored_lower';
   else if (!rewriteOk) failReason = 'rewrite_not_shipped';
+  if (draftCount > 0) {
+    const hold = String(holding || '').trim();
+    if (hold) {
+      return { text: hold, rewritten: false, flagged: true, failReason: failReason || 'holding_reply', holding: true };
+    }
+    return { text: '', rewritten: false, flagged: true, failReason: failReason || 'draft_held', holding: false };
+  }
   return {
     text: draft,
     rewritten: false,
-    flagged: draftCount > 0 || rewriteCount > 0,
+    flagged: rewriteCount > 0,
     failReason,
+    holding: false,
   };
 }
 
@@ -1294,8 +1373,7 @@ export function formatQualityLine(quality) {
   const score = Number(quality.score);
   if (!Number.isFinite(score) || score < 1 || score > 5) return '';
   const shown = Number.isInteger(score) ? String(score) : String(Math.round(score * 1000) / 1000);
-  const comment = String(quality.comment || '').replace(/\s+/g, ' ').trim();
-  return comment ? `quality: ${shown} — ${comment}` : `quality: ${shown}`;
+  return `quality: ${shown}`;
 }
 
 const REWRITE_STOP = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'of', 'for', 'in', 'on', 'at', 'is', 'are', 'was', 'were', 'be', 'this', 'that', 'it', 'you', 'your', 'we', 'our', 'with', 'from', 'as', 'if', 'so', 'not', 'do', 'does', 'what', 'when', 'where', 'who', 'how']);
@@ -1568,11 +1646,20 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
     quality = applyAccuracyRewrite(quality, factErrors);
-    quality = await settleJevNote(quality, customerTurn, originalDraft, env);
+    quality.jevNote = null;
+    quality.comment = null;
+    quality.jevNoteReason = 'jev_no_free_text';
     quality.judgeMs = draftQualityMs;
   }
-  const jevNote = quality?.jevNote || null;
+  const jevNote = null;
   const draftFactLine = factErrors.length ? factErrors.join('; ') : 'ok';
+  const savedTripLog = {
+    start: tripFacts.span?.start || '',
+    end: tripFacts.span?.end || '',
+    swimDays: tripFacts.swimDays || [],
+    gardenDays: tripFacts.gardenDays || [],
+    owner: tripFacts.ownerName || '',
+  };
   const baseLog = {
     draftModel,
     rewriteModel: null,
@@ -1593,7 +1680,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rawModelText: model?.text == null ? null : String(model.text),
     jevScoreRewrite: null,
     jevNote,
-    jevNoteReason: quality?.jevNoteReason || (jevNote ? null : 'jev_no_free_text'),
+    jevNoteReason: 'jev_no_free_text',
+    rewriterChange: null,
+    savedTrip: savedTripLog,
     interimReply: { text: null, model: null, ms: null },
     latencyMs: { draft: draftLatencyMs, rewrite: null, jevDraft: draftQualityMs, jevRewrite: null, total: draftLatencyMs + draftQualityMs },
     flagged: false,
@@ -1780,10 +1869,11 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const draftErrors = draftFactErrors(pending?.draft, facts);
   async function askRewrite(failure) {
     const started = Date.now();
+    const scoreRaw = rawScore(pending?.quality?.scoreRaw);
     const called = await callTieredModel({
       rules,
       jev: pending?.jev,
-      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. The scoring failure is: ${failure || 'the draft missed this turn'}. Keep only days and places the customer already named. Do not paste the draft.\nDraft:\n${pending?.draft || ''}`,
+      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep only days and places the customer already named. Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence about what you changed.\nDraft:\n${pending?.draft || ''}`,
       stage: 'vacation_conversation',
       screen: 'vacation-app',
       destination: pending?.destination || '',
@@ -1798,8 +1888,8 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars || 0,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph.',
-        failure ? `The scoring failure is: ${failure}. Fix that failure.` : '',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder is traveling. Do not leave them off the party. Do not add a pool dip on the arrival day. Do not call Friday midweek. End with one line WHAT_I_CHANGED: and a single sentence.',
+        failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
@@ -1812,8 +1902,9 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   }
   function acceptText(called) {
     const modelText = called?.called && called.text ? String(called.text).trim() : '';
-    const rewritten = modelText ? cleanCandidate(modelText) : '';
-    return { modelText, rewritten, called };
+    const split = splitRewriteChange(modelText);
+    const rewritten = split.reply ? cleanCandidate(split.reply) : '';
+    return { modelText, rewritten, change: split.change, called };
   }
   let attempt = await askRewrite(pending?.failureReason);
   let rewriteMs = attempt.ms;
@@ -1823,6 +1914,15 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteMs += again.ms;
     const second = acceptText(again.called);
     if (second.modelText) {
+      attempt = again;
+      parsed = second;
+    }
+  }
+  if (parsed.rewritten && !parsed.change) {
+    const again = await askRewrite(`${pending?.failureReason || 'fact check'}; the reply omitted WHAT_I_CHANGED`);
+    rewriteMs += again.ms;
+    const second = acceptText(again.called);
+    if (second.modelText && second.change) {
       attempt = again;
       parsed = second;
     }
@@ -1840,10 +1940,11 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     }
   }
   const model = attempt.called;
-  const { modelText, rewritten } = parsed;
+  const { modelText, rewritten, change } = parsed;
   let failReason = '';
   if (!modelText) failReason = model?.reason || 'rewrite_empty';
   else if (!rewritten) failReason = 'rewrite_rejected';
+  else if (!change) failReason = 'rewrite_change_missing';
   else if (nearIdenticalRewrite(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
   else if (appTextBanned(rewritten)) failReason = 'rewrite_banned';
   else if (replyLeavesDestination(rewritten, pending?.destination)) failReason = 'rewrite_left_destination';
@@ -1861,12 +1962,16 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
         pending.customerTurn,
       );
       rewriteQuality = applyAccuracyRewrite(rewriteQuality, rewriteErrors);
-      rewriteQuality = await settleJevNote(rewriteQuality, pending.customerTurn, judgedText, env);
+      rewriteQuality.jevNote = null;
+      rewriteQuality.jevNoteReason = 'jev_no_free_text';
+      rewriteQuality.comment = null;
       rewriteQuality.judgeMs = null;
     } else {
       failReason = failReason || 'rewrite_not_judged';
     }
   }
+  const holdingText = String(pending?.interimReply?.text || '').trim();
+  const holdingErrors = holdingText ? draftFactErrors(holdingText, facts) : ['holding empty'];
   const choice = shipChoice({
     draft: pending.draft,
     rewrite: failReason ? '' : rewritten,
@@ -1874,7 +1979,9 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteScore: rawScore(rewriteQuality?.scoreRaw),
     draftFactErrors: draftErrors,
     rewriteFactErrors: failReason ? [] : rewriteErrors,
+    holding: holdingErrors.length ? '' : holdingText,
   });
+  const shippedText = choice.text || (draftErrors.length ? holdingText : pending.draft);
   if (!choice.rewritten && !failReason) {
     failReason = choice.failReason === 'rewrite_fact_check_held'
       ? `rewrite_fact_check_held: ${rewriteErrors.join('; ')}`
@@ -1886,7 +1993,6 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const shippedModel = choice.rewritten ? rewriteModel : pending.draftModel;
   const shippedScore = choice.rewritten && rewriteQuality?.judged ? rewriteQuality.score : pending.draftScore;
   const shippedQuality = choice.rewritten && rewriteQuality?.judged ? rewriteQuality : pending.quality;
-  const shippedNote = shippedQuality?.jevNote || null;
   const judgeMs = choice.rewritten ? rewriteQualityMs : (Number(pending.quality?.judgeMs) || draftQualityMs);
   const draftFactLine = draftErrors.length ? draftErrors.join('; ') : 'ok';
   const rewriteFactLine = modelText ? (rewriteErrors.length ? rewriteErrors.join('; ') : 'ok') : 'none';
@@ -1921,8 +2027,16 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rejudgeMs: judgedText ? rewriteQualityMs : null,
     rawModelText: pending.rawModelText == null ? null : String(pending.rawModelText),
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
-    jevNote: shippedNote,
-    jevNoteReason: shippedNote ? null : (shippedQuality?.jevNoteReason || 'jev_no_free_text'),
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
+    rewriterChange: choice.rewritten ? (change || null) : null,
+    savedTrip: {
+      start: facts.span?.start || '',
+      end: facts.span?.end || '',
+      swimDays: facts.swimDays || [],
+      gardenDays: facts.gardenDays || [],
+      owner: facts.ownerName || '',
+    },
     interimReply: pending.interimReply || { text: null, model: null, ms: null },
     latencyMs: {
       draft: pending.draftLatencyMs,
@@ -1936,11 +2050,14 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const quality = {
     ...(choice.rewritten && rewriteQuality?.judged ? rewriteQuality : pending.quality),
     score: shippedScore,
-    comment: shippedNote,
+    comment: null,
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
+    rewriterChange: choice.rewritten ? (change || null) : null,
     judgeMs,
   };
   const stamped = stampShippedReply({
-    reply: choice.text,
+    reply: shippedText,
     quality,
     draftModel: pending.draftModel,
     log,
@@ -2015,7 +2132,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       rewriteJevScoreRaw: live.rewriteModel || live.rewriteText ? rawScore(live.rewriteJevScoreRaw) : null,
       rewriteJevDisposition: live.rewriteJevDisposition || null,
       rewriteJevFixFocus: live.rewriteJevFixFocus || null,
-      rejudgeMs: Number.isFinite(Number(live.rejudgeMs)) ? Number(live.rejudgeMs) : null,
+      rejudgeMs: finiteOrNull(live.rejudgeMs),
+      rewriterChange: live.rewriterChange || live.quality?.rewriterChange || null,
+      savedTrip: live.savedTrip || null,
       rawModelText: live.rawModelText == null ? null : String(live.rawModelText),
       draftFactCheck: live.draftFactCheck || null,
       rewriteFactCheck: live.rewriteFactCheck || null,

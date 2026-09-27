@@ -233,6 +233,10 @@ def build(pack):
 
     def paint(canvas, doc_):
         canvas.saveState()
+        if banner:
+            canvas.setFont("Helvetica", 8)
+            canvas.setFillColor(colors.HexColor("#0b3d91"))
+            canvas.drawString(0.7 * inch, letter[1] - 0.42 * inch, banner.split("\n")[0][:140])
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#666666"))
         canvas.drawString(0.7 * inch, 0.4 * inch, footer[:80])

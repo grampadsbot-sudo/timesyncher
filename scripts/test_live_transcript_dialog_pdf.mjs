@@ -164,10 +164,22 @@ const tied = shipChoice({
 });
 assert.equal(tied.rewritten, false);
 assert.equal(tied.flagged, true);
+assert.equal(tied.text, '');
 assert.equal(tied.failReason, 'rewrite_fact_check_held');
-assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape.');
-assert.equal(formatQualityLine({ judged: true, score: 2.76, comment: 'Thin day.', rewritten: false }), 'quality: 2.76 — Thin day.');
-assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1 — Misses the price.');
+const heldClean = shipChoice({
+  draft: 'Tuesday is a swim.',
+  rewrite: 'Tuesday stays a swim.',
+  draftScore: 2,
+  rewriteScore: 3,
+  draftFactErrors: ['a swim on apr 7 was not set by the customer'],
+  rewriteFactErrors: ['a swim on apr 7 was not set by the customer'],
+  holding: 'Tuesday can be a town walk.',
+});
+assert.equal(heldClean.text, 'Tuesday can be a town walk.');
+assert.equal(heldClean.holding, true);
+assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4');
+assert.equal(formatQualityLine({ judged: true, score: 2.76, comment: 'Thin day.', rewritten: false }), 'quality: 2.76');
+assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1');
 const priceAskLine = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.';
 const priceLine = payerPriceLine(priceAskLine);
 assert.match(priceLine, /Kimberly \$27, paid by you/);
@@ -243,9 +255,9 @@ const mondaySwim = applyCustomerNotes(rainSwim, 'This is Tyler. Monday April six
 assert.equal(mondaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
 const span = { start: '2026-04-03', end: '2026-04-12', year: 2026 };
 const inventedTuesday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Tuesday, April 7th opens gently for that second swim.', span);
-assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Fri Apr 10');
 const appOnlyThursday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
-assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Fri Apr 10');
 const thursdaySwim = applyAgreedAppSwim(mondaySwim, 'I still want one later swim on Thursday at Kailua-Kona.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
 assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Thu Apr 9');
 assert.equal(isTemplateNote('The draft holds the named days and then Thursday stays open.', 'Thursday is a town walk.'), true);
@@ -286,7 +298,7 @@ assert.equal(mustRewriteQuality(qualityFromDecisions({
     overall_quality: { score: 3 },
     disposition: { choice: 'rewrite' },
   },
-})), true);
+})), false);
 const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is Kimberly\'s second garden. Tyler wants a swim. Monday April 6 is the beach swim. Friday April 10 is the later swim.');
 assert.deepEqual(draftFactErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.', setFacts), []);
 assert.deepEqual(draftFactErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.', setFacts), []);
@@ -298,7 +310,12 @@ assert.ok(draftFactErrors('You\'re all set with the unlimited plan.', earlyFacts
 assert.ok(draftFactErrors('Tuesday after checkout we use the house pool one last time.', earlyFacts).some((line) => /not the trip end/.test(line)));
 assert.ok(draftFactErrors('Kimberly\'s second garden morning is already set for Thursday April 9.', earlyFacts).some((line) => /not already set/.test(line)));
 assert.ok(draftFactErrors('You are all set for the unlimited vacations plan from April 3-10. Aunt Jean can edit, no extra charge. The swim can shift to Tuesday the 7th.', earlyFacts).length >= 3);
-assert.ok(draftFactErrors('Let us slide that second swim later. How about Thursday, April 9th?', earlyFacts).some((line) => /swim on apr 9/.test(line)));
+assert.equal(draftFactErrors('Let us slide that second swim later. How about Thursday, April 9th?', earlyFacts).some((line) => /swim on apr 9/.test(line)), false);
+assert.ok(draftFactErrors('Thursday, April 9th can hold that second swim.', earlyFacts).some((line) => /swim on apr 9/.test(line)));
+assert.ok(draftFactErrors('Friday, April 10th dinner is a solid midweek milestone.', earlyFacts).some((line) => /not midweek/.test(line)));
+assert.ok(draftFactErrors('Friday, April 3rd is arrival. Maybe dip into the house pool.', earlyFacts).some((line) => /swim on apr 3/.test(line)));
+const keptGarden = applyCustomerNotes(goldThings, 'If we add a second garden, keep it on Thursday April ninth and leave Wednesday afternoon empty.');
+assert.match(keptGarden.find((thing) => thing.title === 'Gardens').customerWhen, /Thu Apr 9/);
 assert.ok(draftFactErrors('Welcome aboard, Tyler. Your two garden days are locked in.', customerTripFacts([], 'Kimberly wants gardens. This is Tyler. I paid for my own seat.')).some((line) => /Kimberly/.test(line)));
 assert.ok(draftFactErrors('A beachside picnic on Tuesday.', earlyFacts).some((line) => /picnic/.test(line)));
 assert.ok(draftFactErrors('Wednesday April 8th is open, or simply pack with no rush.', earlyFacts).some((line) => /not the trip end/.test(line)));
@@ -447,6 +464,7 @@ const jevRewrite = liveDoc({
     jevScoreRewrite: 5,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
+    rewriterChange: 'Kept the harbor morning and named only the walk.',
     interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'google/gemini-2.5-flash-lite', ms: 900 },
     flagged: false,
   } : turn)),
@@ -455,11 +473,11 @@ assertLiveTranscript(jevRewrite);
 const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
-assert.match(jevRewritePdf, /rewritten by qwen\/qwen3-235b-a22b-2507/);
-assert.doesNotMatch(jevRewritePdf, /rewritten by qwen\/qwen3-235b-a22b-2507 \(Jev note\)/);
+assert.match(jevRewritePdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Kept the harbor morning and named only the walk/);
+assert.doesNotMatch(jevRewritePdf, /\(Jev note\)/);
 assert.doesNotMatch(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
 assert.doesNotMatch(jevRewritePdf, /scored and commented on every generated reply/);
-assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('rewritten by qwen/qwen3-235b-a22b-2507', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
+assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('Rewriter (qwen/qwen3-235b-a22b-2507): Kept the harbor morning and named only the walk.', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,
@@ -497,7 +515,8 @@ assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
 assert.match(text, /timing: jev=400ms gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 max_tokens=900/);
-assert.match(text, /quality: 4 .*Harbor morning is answered cleanly/);
+assert.match(text, /quality: 4/);
+assert.doesNotMatch(text, /quality: 4 —/);
 assert.match(text, /jevRan: true · model typesafe\/jev-1\.13 · score 4 · judge 400ms/);
 assert.equal(text.split('jevRan:').length - 1, 1);
 assert.doesNotMatch(text, /× the v6 gen-only p50/);

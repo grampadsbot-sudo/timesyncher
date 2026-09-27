@@ -111,7 +111,7 @@ export function productThingSummary(thing = {}) {
   if (/house/i.test(title)) return when ? `The Kailua-Kona house, ${when}.` : 'The Kailua-Kona house.';
   if (/big island/i.test(title)) return when ? `Big Island, ${when}. People matter more than a packed list.` : 'Big Island. People matter more than a packed list.';
   if (/speedishuttle/i.test(title)) return 'SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.';
-  if (/koa arrival/i.test(title)) return when ? `Arrival into Kona on ${when}, then the shuttle and groceries the same day.` : 'Arrival into Kona, then the shuttle and groceries the same day.';
+  if (/koa arrival|kona arrival/i.test(title)) return when ? `Arrival into Kona on ${when}, then the shuttle and groceries the same day.` : 'Arrival into Kona, then the shuttle and groceries the same day.';
   const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
   if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
   return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
@@ -155,7 +155,7 @@ export function sharedTripFromIntake({ trip, things }) {
       status: 'considering',
       category: kind.category,
       summary,
-      longDetails: [thing.who ? `Who: ${thing.who}` : '', thing.whenLabel, thing.customerWhen].filter(Boolean).join(' · '),
+      longDetails: [thing.who ? `Who: ${thing.who}` : '', ...new Set([thing.whenLabel, thing.customerWhen].map((part) => String(part || '').trim()).filter(Boolean))].join(' · '),
       dayIds,
     };
     for (const date of assignDates(thing, year, tripDates)) {
@@ -227,6 +227,7 @@ const PLACE_COORDS = {
   'Big Island': [19.64, -155.99, 'Hawaiʻi'],
   SpeediShuttle: [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
   'KOA arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
+  'Kona arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
 };
 
 function coordsFor(name) {
@@ -346,19 +347,20 @@ export function applyThingPresentation(shared = {}, options = {}) {
       ...sourcedRatings('SpeediShuttle', options),
     });
   }
-  if (!places.some((place) => /koa arrival/i.test(place.name || ''))) {
-    const id = intId(`${shared.trip?.id || 'trip'}:koa-arrival`);
+  const flightName = /\bKOA\b/.test(JSON.stringify(shared.trip || {})) ? 'KOA arrival' : 'Kona arrival';
+  if (!places.some((place) => /koa arrival|kona arrival/i.test(place.name || ''))) {
+    const id = intId(`${shared.trip?.id || 'trip'}:kona-arrival`);
     const place = {
       id,
       trip_id: shared.trip?.id,
-      name: 'KOA arrival',
-      description: productThingSummary({ title: 'KOA arrival' }),
+      name: flightName,
+      description: productThingSummary({ title: flightName }),
       category_name: 'Flight',
       category: { name: 'Flight', icon: '✈️' },
       reservation_status: 'considering',
-      notes: productThingSummary({ title: 'KOA arrival' }),
+      notes: productThingSummary({ title: flightName }),
     };
-    const koa = coordsFor('KOA arrival');
+    const koa = coordsFor(flightName);
     if (koa) {
       place.lat = koa[0];
       place.lng = koa[1];
@@ -378,8 +380,8 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lat: place.lat,
       lng: place.lng,
       address: place.address,
-      logoUrl: captureThingLogo(place, { title: 'KOA arrival', category: 'flight' }),
-      ...sourcedRatings('KOA arrival', options),
+      logoUrl: captureThingLogo(place, { title: flightName, category: 'flight' }),
+      ...sourcedRatings(flightName, options),
     });
   }
   return { ...shared, places, thingOverrides };

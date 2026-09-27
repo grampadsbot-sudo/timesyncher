@@ -95,6 +95,7 @@ const former = [
   { path: '/api/vacation-request', handler: 'vacation-request' },
   { path: '/api/vacation-telegram-turn', handler: 'vacation-telegram-turn' },
   { path: '/api/version', handler: 'version' },
+  { path: '/api/keepsake-order?slug=intake-example', handler: 'keepsake-order' },
   { path: '/api/worker-jobs', handler: 'worker-jobs' },
   { path: '/api/bind-thing-media', handler: 'bind-thing-media', includes: 'mediaBind=1' },
   { path: '/api/vacation-web-access', handler: 'vacation-web-access', includes: 'webAccess=1' },

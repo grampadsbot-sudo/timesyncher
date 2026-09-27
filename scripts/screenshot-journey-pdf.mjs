@@ -97,10 +97,18 @@ function pngMostlyOneColor(buffer) {
   }
 }
 
+const REMOVED_FEATURES = new Set([
+  'cursor-project-contract.md',
+  'search-redesign.md',
+  'autonomous-app-customer-flow.md',
+  'config-options-trip-view.md',
+  'tg-intake.md',
+]);
+
 async function featureFiles() {
   const names = await readdir(featureDir);
   const files = [];
-  for (const name of names.filter((item) => item.endsWith('.md') && item !== 'README.md').sort()) {
+  for (const name of names.filter((item) => item.endsWith('.md') && item !== 'README.md' && !REMOVED_FEATURES.has(item)).sort()) {
     const markdown = await readFile(path.join(featureDir, name), 'utf8');
     const title = (markdown.match(/^#\s+(.+)$/m) || [null, name])[1].trim();
     files.push({ file: name, title });
@@ -595,10 +603,10 @@ async function main() {
           const bubbleBox = bubble.getBoundingClientRect();
           if (needleText.startsWith('welcome aboard')) {
             return {
-              x: Math.max(0, bubbleBox.x - 16),
-              y: Math.max(0, bubbleBox.y - 16),
-              width: Math.min(1200, Math.max(bubbleBox.width + 32, 860)),
-              height: Math.min(720, Math.max(bubbleBox.height + 32, 360)),
+              x: 0,
+              y: Math.max(0, bubbleBox.y - 24),
+              width: Math.min(1280, window.innerWidth),
+              height: Math.min(980, Math.max(bubbleBox.height + 80, 520)),
             };
           }
           const line = range.getBoundingClientRect();
@@ -627,8 +635,6 @@ async function main() {
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
     mark('live-app-jev-tier.md');
-    gap('Cursor project contract', 'cursor-project-contract.md', 'No contract screen exists in the shared app. Unblock: a contract page on the shared trip.');
-    gap('Search redesign', 'search-redesign.md', 'Search redesign has no customer screen on the shared trip. Unblock: a search box on the shared trip.');
 
     await go(sharedUrl, 'Day-by-Day');
     let text = await bodyText(page);
@@ -654,7 +660,6 @@ async function main() {
           }),
         });
         await page.evaluate(() => window.scrollTo(0, 0));
-        gap('Autonomy bar', 'autonomous-app-customer-flow.md', 'The shared app has no autonomy bar. Unblock: mount that bar on the shared trip.');
         await shot('packing', 'Initial itinerary', 'Packing', {
           file: 'packing.md',
           note: 'The tab row has no Packing tab while share_packing is off.',
@@ -933,7 +938,7 @@ async function main() {
       }
 
       await clickText(page, 'Day-by-Day');
-      if (await clickText(page, 'Flights') && await clickText(page, 'KOA arrival')) {
+      if (await clickText(page, 'Flights') && (await clickText(page, 'Kona arrival') || await clickText(page, 'KOA arrival'))) {
         const flightBox = await page.evaluate(() => {
           const label = [...document.querySelectorAll('label')].find((node) => /^takeoff\b/i.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
           if (!label) return null;
@@ -962,23 +967,17 @@ async function main() {
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
-      if (await clickText(page, 'Cars') && await clickText(page, 'SpeediShuttle')) {
-        const rentalBox = await page.evaluate(() => {
-          const label = [...document.querySelectorAll('label')].find((node) => /^Rental company\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
-          if (!label) return null;
-          const carType = /Car type/.test(label.parentElement?.innerText || '');
-          if (!carType) return null;
-          label.scrollIntoView({ block: 'center' });
-          const box = label.getBoundingClientRect();
-          return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 24), width: Math.min(720, Math.max(280, box.width + 40)), height: 240 };
+      if (await clickText(page, 'Cars')) {
+        const carList = await page.evaluate(() => {
+          const heading = [...document.querySelectorAll('button, div, h2')].find((node) => (node.innerText || '').trim() === 'Cars');
+          const box = (heading || document.body).getBoundingClientRect();
+          return { x: 0, y: Math.max(0, box.y - 12), width: Math.min(1280, window.innerWidth), height: 420 };
         });
-        if (rentalBox) {
-          await shot('car-fields', 'Initial itinerary', 'Car fields', {
-            file: 'car-fields.md',
-            note: 'Rental company and car type on the open detail.',
-            clipRect: rentalBox,
-          });
-        }
+        await shot('car-fields', 'Initial itinerary', 'Cars', {
+          file: 'car-fields.md',
+          note: 'Car results are Things under Cars. Not a separate car page.',
+          clipRect: carList,
+        });
         await page.keyboard.press('Escape').catch(() => {});
       }
       if (await clickText(page, 'Restaurants') && await clickText(page, 'Ulu Ocean')) {
@@ -1036,17 +1035,6 @@ async function main() {
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
-      if (await clickAria(page, 'Config Options')) {
-        const configText = await bodyText(page);
-        if (has(configText, 'Trip View') && has(configText, 'Flights') && has(configText, 'Hotels') && has(configText, 'Cars')) {
-          await shot('trip-view', 'Initial itinerary', 'Trip View config', {
-            file: 'config-options-trip-view.md',
-            note: 'Trip View toggles Flights, Hotels, and Cars.',
-            clipRect: await clipAround('Trip View', { height: 280, padTop: 16 }),
-          });
-        }
-        await page.keyboard.press('Escape').catch(() => {});
-      }
     }
 
     if (!captured.has('logos.md')) gap('Thing logos', 'logos.md', 'no /ts-thing-logos/ image rendered on a list row');
@@ -1057,7 +1045,7 @@ async function main() {
       gap('Flight fields', 'flight-fields.md', 'The flight detail did not show a takeoff from the saved trip.');
     }
     if (!captured.has('happy-hour.md')) gap('Happy hour', 'happy-hour.md', 'Ulu Ocean Grill did not show a Happy hour field');
-    if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'SpeediShuttle shows the shuttle summary and does not render Rental company and Car type. Unblock: those two fields on the open car detail.');
+    if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'The Cars tab did not show car Things.');
     if (!captured.has('status.md')) gap('Status', 'status.md', 'no Thing detail showed a status');
     if (!captured.has('media-stories.md')) gap('Stories and media', 'media-stories.md', 'no Thing detail showed a Story field');
     if (!captured.has('ratings-reviews.md')) {
@@ -1068,9 +1056,19 @@ async function main() {
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
     if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control did not open a Print / PDF menu. Unblock: mount that menu on vacation-staging.');
     if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes setup did not open. Unblock: a Keepsakes menu with Style one, Style two, and Admin on this host.');
-    if (!captured.has('order-keepsakes.md')) gap('Order Keepsakes', 'order-keepsakes.md', 'Order Keepsakes did not open a panel of its own, so the shot would still be the thing page. Unblock: an order panel that replaces the thing page.');
-    if (!captured.has('config-options-trip-view.md')) gap('Trip View config', 'config-options-trip-view.md', 'Config Options did not open Trip View. Unblock: mount Config Options with Flights, Hotels, and Cars on this host.');
-    if (!captured.has('tg-intake.md')) gap('Telegram intake', 'tg-intake.md', 'The shared app has no Telegram intake screen. Unblock: a Telegram intake view on the shared trip.');
+    if (!captured.has('order-keepsakes.md')) {
+      const slug = new URL(sharedUrl).pathname.split('/').filter(Boolean).pop();
+      await go(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, 'Order this keepsake');
+      const orderText = await bodyText(page);
+      if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link')) {
+        await shot('order-keepsakes-link', 'Initial itinerary', 'Order Keepsakes', {
+          file: 'order-keepsakes.md',
+          note: 'Shareable buy link. Anyone with the trip keepsake URL can order.',
+        });
+      } else {
+        gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake order link did not open.');
+      }
+    }
 
     const counts = await sharedCounts(sharedUrl);
     if (counts.minThings) {

@@ -9,6 +9,7 @@ import trackClick from '../routes/track-click.mjs';
 import vacationItinerary from '../routes/vacation-itinerary.mjs';
 import vacationRequest from '../routes/vacation-request.mjs';
 import vacationTelegramTurn from '../routes/vacation-telegram-turn.mjs';
+import keepsakeOrder from '../routes/keepsake-order.mjs';
 import version from '../routes/version.mjs';
 import workerJobs from '../routes/worker-jobs.mjs';
 
@@ -24,6 +25,7 @@ const handlers = {
   'vacation-itinerary': vacationItinerary,
   'vacation-request': vacationRequest,
   'vacation-telegram-turn': vacationTelegramTurn,
+  'keepsake-order': keepsakeOrder,
   version,
   'worker-jobs': workerJobs,
   'bind-thing-media': vacationItinerary,

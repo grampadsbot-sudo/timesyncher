@@ -170,6 +170,22 @@ export async function readLiveBuildSha(options = {}) {
   return readDeploymentMetaSha(deploymentId, options);
 }
 
+export function pdfTextHasSha(file, sha) {
+  const result = spawnSync('pdftotext', [file, '-'], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+  if (result.status !== 0) return false;
+  return String(result.stdout || '').includes(String(sha || ''));
+}
+
+export async function assertBothPdfsMatchLive(dialogPdf, journeyPdf, options = {}) {
+  const match = await assertLiveMatchesTip(options);
+  for (const file of [dialogPdf, journeyPdf]) {
+    if (!pdfTextHasSha(file, match.live)) {
+      throw new Error(`refused: ${file} does not print live sha ${match.live}`);
+    }
+  }
+  return match;
+}
+
 export async function assertLiveMatchesTip(options = {}) {
   const tip = options.tip || readTipSha(options.cwd || root);
   const live = options.live ?? await readLiveBuildSha(options);

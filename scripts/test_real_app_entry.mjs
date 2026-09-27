@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { intakeShareSlug, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import { padKeepsakeSharedPlaces } from '../src/vacation/keepsake-list-minimums.mjs';
+import { lowestCarOffers, withoutCarBrand } from '../src/vacation/car-offers.mjs';
 
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
@@ -70,4 +71,12 @@ assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/sha
 assert.doesNotMatch(email.htmlBody, /vacation-app\.html/);
 assert.match(email.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
 
+const offers = [
+  { brand: 'Alamo', price: 80 },
+  { brand: 'Budget', price: 41 },
+  { brand: 'Hertz', price: 55 },
+  { brand: 'National', price: 42 },
+];
+assert.deepEqual(lowestCarOffers(offers, 2).map((row) => row.brand), ['Budget', 'National']);
+assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budget'), false);
 console.log('real app entry gate passed');

@@ -26,7 +26,7 @@ import {
 } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine } from '../src/vacation/seat-price.mjs';
 import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
-import { assertLiveMatchesTip, isVoidStaleBuild, readTipSha, voidDocumentStamp } from './void-stale-build.mjs';
+import { assertLiveMatchesTip, isVoidStaleBuild, pdfTextHasSha } from './void-stale-build.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
@@ -204,6 +204,9 @@ export function assertLiveTranscript(doc) {
         const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;
         if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite attempt was not logged`);
+        }
+        if (turn.quality?.rewritten === true && !String(turn.rewriterChange || turn.quality?.rewriterChange || '').trim()) {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewriter change line`);
         }
         if (turn.quality?.rewritten === true && nearIdenticalRewrite(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
@@ -572,7 +575,7 @@ export function liveV7Pack(doc, shape) {
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
   const trip = shape.trip || 'untitled';
-  const title = `Dialog Pack — ${trip} v7 Tier 1–4`;
+  const title = /big island/i.test(String(trip)) ? 'Big Island Family v7' : `Dialog Pack — ${trip} v7 Tier 1–4`;
   const timingRows = [
     ['Pack', 'Model(s)', 'n', 'p50 ms', 'p95 ms', 'mean ms', 'max ms'],
     ['v6', 'openai/gpt-5-mini', '23', '28834', '39693', '27833', '44762'],
@@ -651,10 +654,10 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.jevNote) : '',
+        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange) : '',
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
-        quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
+        quality: generatedTurn ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,
@@ -712,19 +715,20 @@ function producerLogLine(turn) {
     `draftJevScoreRaw: ${Number.isFinite(Number(turn.draftJevScoreRaw)) ? Number(turn.draftJevScoreRaw) : 'none'}`,
     `draftJevDisposition: ${turn.draftJevDisposition || 'none'}`,
     `draftJevFixFocus: ${turn.draftJevFixFocus || 'none'}`,
-    `rewriteJevScoreRaw: ${Number.isFinite(Number(turn.rewriteJevScoreRaw)) ? Number(turn.rewriteJevScoreRaw) : 'none'}`,
+    `rewriteJevScoreRaw: ${turn.rewriteJevScoreRaw == null ? 'null' : Number(turn.rewriteJevScoreRaw)}`,
     `rewriteJevDisposition: ${turn.rewriteJevDisposition || 'none'}`,
     `rewriteJevFixFocus: ${turn.rewriteJevFixFocus || 'none'}`,
     `draftFactCheck: ${turn.draftFactCheck || 'none'}`,
     `rewriteFactCheck: ${turn.rewriteFactCheck || 'none'}`,
-    `rejudgeMs: ${Number.isFinite(Number(turn.rejudgeMs)) ? Number(turn.rejudgeMs) : 'none'}`,
+    `rejudgeMs: ${turn.rejudgeMs == null ? 'null' : Number(turn.rejudgeMs)}`,
+    `savedTrip: ${turn.savedTrip ? JSON.stringify(turn.savedTrip) : 'null'}`,
   ].join(' | ');
 }
 
 export function jevRewriteLabelCounts(doc, pdfText) {
   const rewritten = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true);
   const pdf = String(pdfText || '');
-  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.jevNote))).length;
+  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange))).length;
   return { rewrittenTurns: rewritten.length, rewriteLabels, ok: rewritten.length === rewriteLabels };
 }
 
@@ -861,45 +865,51 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.out) throw new Error('refused: --out PDF path is required');
   if (!args.transcript && !args.jsonl && !args.session) await loadTranscript(args);
-  let voidError = null;
+  let liveMatch = null;
   if (!args.fixture) {
     try {
-      await assertLiveMatchesTip();
+      liveMatch = await assertLiveMatchesTip();
     } catch (error) {
       if (!isVoidStaleBuild(error)) throw error;
-      voidError = error;
+      process.stderr.write(`${error.message}\nrefused: dialog stamp does not match the tip\n`);
+      process.exit(2);
+    }
+    if (!liveMatch?.live || liveMatch.live !== liveMatch.tip) {
+      process.stderr.write('refused: dialog stamp is empty or does not match the tip\n');
+      process.exit(2);
     }
   }
-  const transcript = voidError ? await loadTranscript(args) : assertLiveTranscript(await loadTranscript(args));
-  if (!voidError) transcript.buildSha = readTipSha();
-  if (!voidError && process.env.R5_DEPLOY_BANNER) transcript.deployBanner = process.env.R5_DEPLOY_BANNER;
-  if (voidError) {
-    transcript.void = true;
-    transcript.deployBanner = voidDocumentStamp(voidError.live, voidError.tip);
+  const transcript = assertLiveTranscript(await loadTranscript(args));
+  if (liveMatch?.live) {
+    transcript.buildSha = liveMatch.live;
+    transcript.deployBanner = `live ${liveMatch.live} https://vacation-staging.timesyncher.com`;
   }
   const shape = assessPackShape(transcript, {
     trip: args.trip,
     head: args.head,
     dpl: args.dpl,
-    skipAssert: Boolean(voidError),
   });
   const pdf = renderLiveTranscriptPdf(transcript, {
     trip: args.trip,
     head: args.head,
     dpl: args.dpl,
-    recordRefusals: Boolean(voidError),
   });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
+  if (liveMatch?.live && !extractPdfText(pdf).includes(liveMatch.live)) {
+    process.stderr.write('refused: dialog PDF does not print the live sha\n');
+    process.exit(2);
+  }
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
+  if (liveMatch?.live && !pdfTextHasSha(args.out, liveMatch.live)) {
+    fs.unlinkSync(args.out);
+    process.stderr.write('refused: dialog PDF on disk does not print the live sha\n');
+    process.exit(2);
+  }
   if (args.dump) fs.writeFileSync(args.dump, `${JSON.stringify(transcript, null, 2)}\n`);
   if (args.jsonlOut) fs.writeFileSync(args.jsonlOut, transcriptToJsonl(transcript));
   if (args.timing) fs.writeFileSync(args.timing, `${JSON.stringify(buildTimingSummary(transcript), null, 2)}\n`);
   if (args.state) fs.writeFileSync(args.state, `${JSON.stringify(qaInput(transcript, shape), null, 2)}\n`);
-  if (voidError) {
-    process.stderr.write(`${voidError.message}\n`);
-    process.exit(2);
-  }
   process.stdout.write(`${JSON.stringify({
     ok: true,
     status: shape.status,
