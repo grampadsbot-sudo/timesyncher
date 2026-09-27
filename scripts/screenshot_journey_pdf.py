@@ -25,7 +25,8 @@ def build(manifest, dest):
         "h1": ParagraphStyle("h1", fontName="Times-Bold", fontSize=16, leading=20, textColor=colors.HexColor("#1a1a1a"), spaceAfter=8),
         "void": ParagraphStyle("void", fontName="Times-Bold", fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6),
         "h2": ParagraphStyle("h2", fontName="Times-Bold", fontSize=12, leading=15, textColor=colors.HexColor("#1a1a1a"), spaceBefore=8, spaceAfter=4),
-        "body": ParagraphStyle("body", fontName="Times-Roman", fontSize=10, leading=13, alignment=TA_LEFT),
+        "body": ParagraphStyle("body", fontName="Times-Roman", fontSize=9, leading=11, alignment=TA_LEFT),
+        "vs": ParagraphStyle("vs", fontName="Times-Roman", fontSize=6.5, leading=8, alignment=TA_LEFT, textColor=colors.HexColor("#1a1a1a")),
         "gap": ParagraphStyle("gap", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#6b2d2d")),
         "exempt": ParagraphStyle("exempt", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#3d4a32")),
         "cap": ParagraphStyle("cap", fontName="Times-Bold", fontSize=11, leading=14, spaceAfter=2),
@@ -41,8 +42,8 @@ def build(manifest, dest):
     if vs_tip:
         for line in vs_tip.splitlines():
             if line.strip():
-                story.append(Paragraph(esc(line), styles["body"]))
-        story.append(Spacer(1, 8))
+                story.append(Paragraph(esc(line), styles["vs"]))
+        story.append(Spacer(1, 4))
     story.append(Paragraph(esc(manifest.get("title") or "Screenshot Journey"), styles["h1"]))
     story.append(Paragraph(esc(manifest.get("subtitle") or "Real app screens. The deleted card shell is not included."), styles["body"]))
     story.append(Spacer(1, 8))
