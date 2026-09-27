@@ -1,3 +1,4 @@
+import { CAR_OFFER_POOL, lowestCarOffers } from './car-offers.mjs';
 import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
 
@@ -311,6 +312,7 @@ export function applyThingPresentation(shared = {}, options = {}) {
       extra.restaurantTags = ['Seafood', 'Cocktail Bar / Happy Hour'];
       extra.happyHour = true;
       extra.happyHourDetails = 'Ocean bar happy hour at Ulu Ocean Grill. Recheck the Four Seasons Hualalai listing before the trip.';
+      extra.review1 = extra.happyHourDetails;
     } else if (/huggo/i.test(name) || /fish hopper/i.test(name)) {
       extra.restaurantTags = ['Seafood'];
     }
@@ -384,5 +386,29 @@ export function applyThingPresentation(shared = {}, options = {}) {
       ...sourcedRatings(flightName, options),
     });
   }
-  return { ...shared, places, thingOverrides };
+  const shownCars = lowestCarOffers(CAR_OFFER_POOL, 10);
+  for (const offer of shownCars) {
+    if (places.some((place) => String(place.name || '').toLowerCase() === offer.brand.toLowerCase())) continue;
+    const id = intId(`${shared.trip?.id || 'trip'}:car:${offer.brand}`);
+    const place = {
+      id,
+      trip_id: shared.trip?.id,
+      name: offer.brand,
+      description: `$${offer.price} a day`,
+      category_name: 'Car',
+      category: { name: 'Car', icon: '🚗' },
+      reservation_status: 'considering',
+      notes: `$${offer.price} a day`,
+      price: offer.price,
+    };
+    places.push(place);
+    put(place, {
+      category: 'car',
+      rentalCompany: offer.brand,
+      summary: place.description,
+      price: offer.price,
+      logoUrl: captureThingLogo(place, { title: offer.brand, category: 'car' }),
+    });
+  }
+  return { ...shared, places, thingOverrides, carOfferPool: CAR_OFFER_POOL };
 }

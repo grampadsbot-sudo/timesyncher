@@ -898,6 +898,7 @@ const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun
 assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
 const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
 assertPatchedStyleTwo(livePatched);
+assert.equal(livePatched.includes('children:"Trip View"'), false);
 assertStyleTwoPatchParses(livePatched);
 const patchedCheckPath = '/tmp/patched-style2-check.js';
 await writeFile(patchedCheckPath, livePatched);
