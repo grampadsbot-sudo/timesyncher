@@ -1223,7 +1223,7 @@ export function draftFactErrors(reply, facts = {}) {
         pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
       }
     }
-    if (WALK_RE.test(sentence) && (facts.townWalkDays || []).length) {
+    if (WALK_RE.test(sentence)) {
       const stamps = clauseStamps(sentence, span, WALK_RE);
       if (stamps.length && !dayIsSet(stamps, facts.townWalkDays)) {
         pushError(errors, `a town walk on ${stamps[0]} was not set by the customer`);

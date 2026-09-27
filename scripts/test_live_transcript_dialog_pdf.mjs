@@ -301,7 +301,7 @@ assert.equal(mustRewriteQuality(qualityFromDecisions({
     disposition: { choice: 'rewrite' },
   },
 })), false);
-const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is Kimberly\'s second garden. Tyler wants a swim. Monday April 6 is the beach swim. Friday April 10 is the later swim.');
+const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is Kimberly\'s second garden. Tyler wants a swim. Monday April 6 is the beach swim. Friday April 10 is the later swim. Thursday April 9 is a town walk.');
 assert.deepEqual(draftFactErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.', setFacts), []);
 assert.deepEqual(draftFactErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.', setFacts), []);
 const earlyFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Tyler wants a swim. Monday April 6 is the beach swim.');
