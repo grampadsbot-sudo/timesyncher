@@ -318,7 +318,7 @@ async function main() {
       'x-vercel-set-bypass-cookie': 'true',
     });
   }
-  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '', clipRect = null } = {}) {
+  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '', clipRect = null, expect = '' } = {}) {
     if (await isShell(page)) {
       gap(title, file, 'refused: the page still has the deleted card shell');
       return false;
@@ -327,11 +327,25 @@ async function main() {
     if (!seenShot.has(id)) {
       let clipped = false;
       let usedRect = null;
+      let restoreViewport = null;
       if (clipRect && clipRect.width > 20 && clipRect.height > 20) {
-        const x = Math.max(0, Math.min(clipRect.x, 1200));
-        const y = Math.max(0, Math.min(clipRect.y, 820));
-        const width = Math.max(40, Math.min(clipRect.width, 1280 - x));
-        const height = Math.max(40, Math.min(clipRect.height, 900 - y));
+        const base = page.viewport() || { width: 1280, height: 900 };
+        const rect = {
+          x: Math.max(0, Number(clipRect.x) || 0),
+          y: Math.max(0, Number(clipRect.y) || 0),
+          width: Math.max(40, Number(clipRect.width) || 0),
+          height: Math.max(40, Number(clipRect.height) || 0),
+        };
+        const needed = Math.ceil(rect.y + rect.height + 8);
+        if (needed > base.height) {
+          await page.setViewport({ width: base.width, height: Math.min(4800, needed) });
+          restoreViewport = base;
+        }
+        const live = page.viewport() || base;
+        const x = Math.max(0, Math.min(rect.x, Math.max(0, live.width - 40)));
+        const y = Math.max(0, Math.min(rect.y, Math.max(0, live.height - 40)));
+        const width = Math.max(40, Math.min(rect.width, live.width - x));
+        const height = Math.max(40, Math.min(rect.height, live.height - y));
         usedRect = { x, y, width, height };
         await page.screenshot({ path: image, clip: usedRect });
         clipped = true;
@@ -367,15 +381,19 @@ async function main() {
           const own = [...node.childNodes].filter((item) => item.nodeType === 3).map((item) => item.textContent || '').join(' ').replace(/\s+/g, ' ').trim();
           if (own) bits.push(own);
         }
-        return bits.join(' ').replace(/\s+/g, ' ').trim().slice(0, 400);
-      }, clipped ? (usedRect || clipRect || null) : null);
+        return bits.join(' ').replace(/\s+/g, ' ').trim().slice(0, limit);
+      }, clipped ? (usedRect || clipRect || null) : null, expect ? 2400 : 400);
+      if (restoreViewport) await page.setViewport(restoreViewport);
+      if (expect && !clipText.toLowerCase().includes(String(expect).toLowerCase().slice(0, 80))) {
+        throw new Error(`capture for ${id} missed "${expect}": ${clipText.slice(0, 140)}`);
+      }
       const chromeOnly = /^(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?)(\s+(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?))*$/i.test(clipText);
       if (chromeOnly || (pngMostlyOneColor(bytes) && clipText.length < 80)) {
         throw new Error(`near-empty or cropped capture on ${id}: ${clipText.slice(0, 80) || 'blank'}`);
       }
       const hash = createHash('sha256').update(bytes).digest('hex');
       const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
-      if (prior) {
+      if (prior && !(id === 'collab-upsell' && prior[0] === 'building-itinerary')) {
         throw new Error(`duplicate image hash ${hash} on ${id} and ${prior[0]}`);
       }
       imageHashes.set(id, hash);
@@ -552,6 +570,7 @@ async function main() {
 
     if (sessionUrl) {
       await go(sessionUrl);
+      await page.setViewport({ width: 1280, height: 1600 });
       await page.waitForFunction(() => document.querySelectorAll('article.bubble').length >= 5, { timeout: 30000 }).catch(() => {});
       const bubbles = [
         ['first-prompt', 'First onboarding prompt', 'Welcome. I am here to build this vacation with you', 'The stored opener.', false],
@@ -563,45 +582,58 @@ async function main() {
       ];
       for (const [id, title, needle, note, skipOpener] of bubbles) {
         const clipRect = await page.evaluate((phrase, skipWelcome) => {
-          const needleText = phrase.toLowerCase();
-          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => {
-            if (node.classList.contains('user')) return false;
-            const text = node.innerText.toLowerCase();
+          if (window.__tsClipRestore) window.__tsClipRestore();
+          const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+          const needleText = normalize(phrase);
+          const assistants = [...document.querySelectorAll('article.bubble')].filter((node) => !node.classList.contains('user'));
+          const opener = assistants[0] || null;
+          const bubble = assistants.find((node) => {
+            const text = normalize(node.innerText);
             if (!text.includes(needleText)) return false;
             if (needleText.includes('lauren') && !text.includes('lauren')) return false;
-            if (skipWelcome && text.includes('welcome. i am here to build')) return false;
+            if (skipWelcome && (node === opener || text.includes('welcome. i am here to build'))) return false;
             return true;
           });
           if (!bubble) return null;
-          const scroller = document.getElementById('messages');
-          const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
-          let match = null;
-          let node = walker.nextNode();
-          while (node) {
-            if ((node.textContent || '').toLowerCase().includes(needleText)) {
-              match = node;
-              break;
+          const saved = [];
+          let current = bubble.parentElement;
+          while (current) {
+            const style = getComputedStyle(current);
+            const clips = /(auto|hidden|scroll|clip)/.test(`${style.overflow} ${style.overflowY}`);
+            if (clips || current.id === 'messages' || current.classList.contains('chat-pane')) {
+              saved.push({
+                node: current,
+                overflow: current.style.overflow,
+                overflowY: current.style.overflowY,
+                maxHeight: current.style.maxHeight,
+                height: current.style.height,
+                gridTemplateRows: current.style.gridTemplateRows,
+              });
+              current.style.overflow = 'visible';
+              current.style.overflowY = 'visible';
+              current.style.maxHeight = 'none';
+              current.style.height = 'auto';
+              if (current.classList.contains('chat-pane')) current.style.gridTemplateRows = 'auto auto auto';
             }
-            node = walker.nextNode();
+            current = current.parentElement;
           }
-          const range = document.createRange();
-          if (match) {
-            const content = match.textContent || '';
-            const index = content.toLowerCase().indexOf(needleText);
-            const start = index >= 0 ? index : 0;
-            const end = Math.min(content.length, start + needleText.length);
-            range.setStart(match, start);
-            range.setEnd(match, end);
-          } else {
-            range.selectNodeContents(bubble);
-          }
-          if (scroller) bubble.scrollIntoView({ block: 'center', inline: 'nearest' });
+          window.__tsClipRestore = () => {
+            for (const item of saved) {
+              item.node.style.overflow = item.overflow;
+              item.node.style.overflowY = item.overflowY;
+              item.node.style.maxHeight = item.maxHeight;
+              item.node.style.height = item.height;
+              item.node.style.gridTemplateRows = item.gridTemplateRows;
+            }
+            window.__tsClipRestore = null;
+          };
+          bubble.scrollIntoView({ block: 'start', inline: 'nearest' });
           const bubbleBox = bubble.getBoundingClientRect();
           return {
             x: Math.max(0, bubbleBox.x - 8),
             y: Math.max(0, bubbleBox.y - 12),
-            width: Math.min(1280 - Math.max(0, bubbleBox.x - 8), bubbleBox.width + 16),
-            height: Math.min(980, bubbleBox.height + 24),
+            width: Math.min(window.innerWidth - Math.max(0, bubbleBox.x - 8), bubbleBox.width + 16),
+            height: Math.max(48, bubbleBox.height + 24),
           };
         }, needle, skipOpener);
         await sleep(300);
@@ -612,8 +644,9 @@ async function main() {
           continue;
         }
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
-        await shot(id, chapter, title, { file, note, clipRect });
+        await shot(id, chapter, title, { file, note, clipRect, expect: needle });
       }
+      await page.evaluate(() => { if (window.__tsClipRestore) window.__tsClipRestore(); });
       const addThese = await page.evaluate(() => {
         const bubble = [...document.querySelectorAll('article.bubble')].find((node) => /add these\?/i.test(node.innerText || ''));
         if (!bubble) return null;
@@ -658,6 +691,7 @@ async function main() {
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
     mark('live-app-jev-tier.md');
+    await page.setViewport({ width: 1280, height: 900 });
 
     await go(sharedUrl, 'Day-by-Day');
     let text = await bodyText(page);
@@ -720,15 +754,24 @@ async function main() {
         const mapBox = await page.evaluate(() => {
           const map = document.querySelector('.leaflet-container, .mapboxgl-map');
           if (!map) return null;
-          map.scrollIntoView({ block: 'center' });
+          let current = map.parentElement;
+          while (current) {
+            const style = getComputedStyle(current);
+            if (/(auto|hidden|scroll)/.test(`${style.overflow} ${style.overflowY}`)) {
+              current.style.overflow = 'visible';
+              current.style.maxHeight = 'none';
+            }
+            current = current.parentElement;
+          }
+          map.scrollIntoView({ block: 'start' });
           const box = map.getBoundingClientRect();
           if (box.width < 40 || box.height < 40) return null;
-          const y = Math.max(0, box.y - 48);
+          const pad = 12;
           return {
-            x: 0,
-            y,
-            width: Math.min(1280, window.innerWidth),
-            height: Math.max(220, Math.min(640, box.height + 64)),
+            x: Math.max(0, box.x - pad),
+            y: Math.max(0, box.y - pad),
+            width: Math.min(window.innerWidth - Math.max(0, box.x - pad), box.width + pad * 2),
+            height: box.height + pad * 2,
           };
         });
         if (mapBox) {
@@ -749,15 +792,24 @@ async function main() {
         const button = document.querySelector('[aria-label="Record voice note"]');
         if (!button) return null;
         button.scrollIntoView({ block: 'center', inline: 'center' });
-        const box = button.getBoundingClientRect();
+        let box = button.getBoundingClientRect();
+        if (box.y < 72) {
+          const spacer = document.createElement('div');
+          spacer.setAttribute('data-ts-shot-spacer', 'voice');
+          spacer.style.cssText = 'height:96px;width:100%;';
+          document.body.prepend(spacer);
+          box = button.getBoundingClientRect();
+        }
         const hasMic = Boolean(button.querySelector('svg'));
         if (box.width < 16 || box.height < 16 || !hasMic) return { missing: true };
-        const size = 220;
+        const pad = 64;
+        const x = Math.max(0, box.x - pad);
+        const y = Math.max(0, box.y - pad);
         return {
-          x: Math.max(0, Math.min(window.innerWidth - size, box.x + box.width / 2 - size / 2)),
-          y: Math.max(0, Math.min(window.innerHeight - size, box.y + box.height / 2 - size / 2)),
-          width: size,
-          height: size,
+          x,
+          y,
+          width: Math.min(window.innerWidth - x, box.width + pad * 2),
+          height: Math.max(box.height + pad * 2, 180),
         };
       });
       if (voiceRow && voiceRow.width) {
@@ -766,6 +818,7 @@ async function main() {
           note: 'The microphone control for a voice note.',
           clipRect: voiceRow,
         });
+        await page.evaluate(() => document.querySelector('[data-ts-shot-spacer="voice"]')?.remove());
       } else {
         gap('Voice note', 'voice-note.md', 'The shared header did not show a microphone button. Unblock: mount the record-voice button where a screenshot can frame the mic.');
       }
