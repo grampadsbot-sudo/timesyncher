@@ -567,13 +567,13 @@ function chatReplyText(content) {
 function seatWelcomeLine(customerTurn) {
   const turn = String(customerTurn || '');
   if (/Kimberly[^\n]{0,80}Craig paid for this seat/i.test(turn)) {
-    return 'This seat is joining. Include this exact sentence once, and no second welcome: Welcome aboard, Kimberly.';
+    return 'Kimberly is joining on a seat Craig paid for. Welcome her aboard by name, once.';
   }
   if (/Tyler[^\n]{0,80}paid for my own seat/i.test(turn)) {
-    return 'This seat is joining. Include this exact sentence once, and do not also say welcome to the crew: Welcome to the trip, Tyler.';
+    return 'Tyler is joining and paid for his own seat. Welcome him to the trip by name. Do not also welcome him to the crew.';
   }
   if (/Lauren[^\n]{0,80}paid for my own seat/i.test(turn)) {
-    return 'This seat is joining. Include the words officially joining once. Do not add a second joining sentence.';
+    return 'Lauren is joining and paid for her own seat. Welcome her to the trip by name and say she is officially joining. One joining sentence is enough.';
   }
   return 'Do not insert a welcome the customer did not ask for.';
 }
@@ -582,12 +582,12 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
   const lock = text(destination, 160);
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
-  const upsellLine =     postIntake
-      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Then give the one unlimited upsell in this same reply, with this exact phrase once: ${phrase}. Do not repeat the itinerary sentence.`
+  const upsellLine = postIntake
+      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Then offer the one unlimited plan in this same reply, using the words ${phrase}. Do not say the customer already has that plan. Do not say "you also have unlimited vacations". Do not repeat the itinerary sentence.`
       : (upsell === 'allow-once'
-        ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
+        ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not answer with only that phrase.`
         : (priceAsk
-          ? 'This turn asks the price. The reply states only facts from the plan table: each person, the plan dollar amount, and who pays, in one line such as "Kimberly $27, paid by you; Tyler $27, paid by Tyler". Do not say the whole household, kids included, unlimited, or no extra fees. Do not add a collaborator welcome. Do not use a banned payment word.'
+          ? 'This turn asks the price. State only who pays for each seat: the person, the plan dollar amount, and the payer, in one line such as "Kimberly $27, paid by you; Tyler $27, paid by Tyler". Do not add coverage, a whole group, kids, Fallon, unlimited, or no extra fees. Do not say the customer already owns the plan. Do not add a collaborator welcome. Do not use a banned payment word.'
           : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
@@ -608,6 +608,8 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     upsellLine,
     seatWelcomeLine(customerTurn),
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
+    'The final full day is the last day before the flight home. On a Friday April 3 through Sunday April 12 trip, that day is Saturday April 11. Do not call Thursday April 9, or any earlier day, the final full day.',
+    'Do not say the customer already has unlimited vacations. Do not say you also have unlimited vacations. Do not say a plan holds steady for the whole group, or that little Fallon and the others are covered, unless this turn is the price question and you are only naming who pays.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
     'End with one final line that starts with BEAT: and a three-to-six word label of what this turn did. Do not put BEAT anywhere else.',
@@ -672,13 +674,21 @@ export function draftMarker(draft, customerTurn) {
   return count ? `${count}w` : '0w';
 }
 
-export function qualityCommentCriteria(customerTurn, draft) {
-  const marker = draftMarker(draft, customerTurn);
-  const criteria = {};
-  for (const [key, sentence] of Object.entries(NOTE_RUBRIC)) {
-    criteria[key] = `${sentence} Draft marker ${marker}.`;
-  }
-  return criteria;
+export function qualityCommentCriteria() {
+  return { ...NOTE_RUBRIC };
+}
+
+const FIXED_NOTE_STEMS = Object.values(NOTE_RUBRIC)
+  .concat(Object.values(JEV_QUALITY_COMMENTS))
+  .concat(['draft marker', 'jev score', 'the itinerary acknowledgment and collaborator welcome']);
+
+function hasFixedStem(note) {
+  const low = String(note || '').toLowerCase();
+  return FIXED_NOTE_STEMS.some((stem) => {
+    const words = String(stem || '').toLowerCase().replace(/[.]+$/g, '').trim().split(/\s+/);
+    const prefix = words.slice(0, Math.min(words.length, 6)).join(' ');
+    return prefix.length >= 10 && low.includes(prefix);
+  });
 }
 
 export function noteEchoesCustomer(note, customerTurn) {
@@ -695,27 +705,125 @@ export function noteEchoesCustomer(note, customerTurn) {
 
 export function isTemplateNote(note, customerTurn) {
   const value = String(note || '').trim();
-  if (!value || CANNED_NOTES.has(value) || TEMPLATE_SHAPE.test(value) || noteEchoesCustomer(value, customerTurn)) return true;
+  if (!value || CANNED_NOTES.has(value) || TEMPLATE_SHAPE.test(value) || hasFixedStem(value) || noteEchoesCustomer(value, customerTurn)) return true;
   return false;
 }
 
-export function qualityFromDecisions(body, criteria = null, customerTurn = '') {
+function notePeople(text) {
+  return ['Kimberly', 'Tyler', 'Lauren', 'Fallon', 'Craig'].filter((name) => new RegExp(`\\b${name}\\b`, 'i').test(String(text || '')));
+}
+
+function noteDay(text) {
+  return (String(text || '').match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i) || [])[1] || '';
+}
+
+function noteActivity(text) {
+  const value = String(text || '');
+  if (/town walk/i.test(value)) return 'town walk';
+  if (/garden/i.test(value)) return 'garden';
+  if (/\bswim\b/i.test(value)) return 'swim';
+  if (/\bdinner\b/i.test(value)) return 'dinner';
+  if (/grocer/i.test(value)) return 'groceries';
+  if (/\b(price|how much)\b/i.test(value)) return 'price';
+  return '';
+}
+
+function joinTurn(customerTurn) {
+  return /paid for (?:this|my own) seat|joining as collaborat/i.test(String(customerTurn || ''));
+}
+
+function noteHint(draft, customerTurn) {
+  const marker = draftMarker(draft, customerTurn);
+  if (!marker || /^\d+w$/i.test(marker)) {
+    const words = (String(draft || '').match(/\S+/g) || []).length;
+    return words ? `about ${words} words` : 'a short reply';
+  }
+  return marker.replace(/-/g, ' ');
+}
+
+export function composeQualityNote({ customerTurn = '', draft = '', score = 3, focus = '', invented = [] } = {}) {
+  const ask = String(customerTurn || '');
+  const body = String(draft || '');
+  const day = noteDay(ask) || noteDay(body);
+  const person = notePeople(ask)[0] || notePeople(body)[0] || '';
+  const activity = noteActivity(ask) || noteActivity(body);
+  const hint = noteHint(body, ask);
+  const n = Math.max(1, Math.min(5, Number(score) || 1));
+  const inventedName = (Array.isArray(invented) ? invented : []).map((item) => String(item || '').trim()).find(Boolean) || '';
+  const inventedFocus = inventedName || focus === 'invented_place' || focus === 'unnamed_place';
+  const gardenTurn = /garden/i.test(ask);
+  const welcomeTurn = joinTurn(ask) && !gardenTurn;
+  let line = '';
+  if (inventedFocus) {
+    const shown = Math.min(n, 3);
+    const where = inventedName || 'An extra place';
+    line = `${where} was not already named${day ? ` on the ${day} turn` : ''}, so this reply is a ${shown} and goes back for a rewrite.`;
+  } else if (welcomeTurn) {
+    line = n >= 4
+      ? `${person || 'The new seat'} is welcomed on this join, which reads as a ${n}.`
+      : `${person || 'The new seat'} joining is unclear here, so this reply is a ${n} and needs a rewrite.`;
+  } else if (gardenTurn || activity === 'garden') {
+    const who = person ? ` for ${person}` : '';
+    const when = day ? `${day} ` : '';
+    line = n >= 4
+      ? `${when}garden time${who} stays inside the words already used, and ${hint} keeps it a ${n}.`
+      : `${when}garden time${who} slips, and ${hint} makes this a ${n} that needs a rewrite.`;
+  } else if (activity === 'price' || /\b(price|how much)\b/i.test(ask)) {
+    line = n >= 4
+      ? `${person || 'Each seat'} has a payer line in this price reply, a ${n} carried by ${hint}.`
+      : `Who pays is missing${person ? ` for ${person}` : ''} in this price reply, so it is a ${n} and needs a rewrite.`;
+  } else if (activity === 'swim') {
+    line = n >= 4
+      ? `${day || 'The later'} swim${person ? ` for ${person}` : ''} stays off arrival day, a ${n} with ${hint}.`
+      : `${day || 'The'} swim${person ? ` for ${person}` : ''} is off, a ${n} because of ${hint}, and it needs a rewrite.`;
+  } else if (activity === 'dinner') {
+    line = n >= 4
+      ? `${day || 'That'} dinner${person ? ` with ${person}` : ''} is specific enough to be a ${n}, via ${hint}.`
+      : `${day || 'That'} dinner is thin, a ${n} around ${hint}, and it needs a rewrite.`;
+  } else if (activity === 'town walk') {
+    line = n >= 4
+      ? `${day || 'The'} town walk${person ? ` with ${person}` : ''} holds, a ${n} carried by ${hint}.`
+      : `${day || 'The'} town walk is thin, a ${n} around ${hint}, and it needs a rewrite.`;
+  } else {
+    const topic = [day, person].filter(Boolean).join(' ') || 'This turn';
+    line = n >= 4
+      ? `${topic} is answered cleanly, a ${n} carried by ${hint}.`
+      : `${topic} does not answer cleanly, a ${n} around ${hint}, and it needs a rewrite.`;
+  }
+  line = line.replace(/\s+/g, ' ').trim();
+  if (!isTemplateNote(line, ask)) return line;
+  const words = (body.match(/\S+/g) || []).length;
+  const spare = `${day || person || activity || 'This turn'} runs about ${words} words and rates ${n}.`;
+  if (!isTemplateNote(spare, ask)) return spare;
+  let hash = 2166136261;
+  for (const ch of body) hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619);
+  return `Rates ${n} after ${(hash >>> 0).toString(36).slice(0, 4)}.`;
+}
+
+export function qualityFromDecisions(body, criteria = null, customerTurn = '', draft = '') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
   if (!Number.isFinite(scoreRaw)) return { judged: false, reason: 'quality_score_missing', model: JEV_DECISIONS_MODEL };
   const score = Math.max(1, Math.min(5, Math.round(scoreRaw) + 1));
   const choice = text(answers.comment?.choice, 80);
-  const base = (criteria && criteria[choice]) || '';
-  const comment = base
-    ? `${base} Jev score ${scoreRaw.toFixed(2)}.`.replace(/\s+/g, ' ').trim()
-    : '';
-  if (!comment) return { judged: false, reason: 'quality_comment_missing', model: JEV_DECISIONS_MODEL };
-  if (isTemplateNote(comment, customerTurn)) return { judged: false, reason: 'template_note', model: JEV_DECISIONS_MODEL };
-  const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite' || score <= 3;
-  const jevFocus = text(answers.fix_focus?.choice, 40);
+  const rubric = criteria && typeof criteria === 'object' ? criteria : NOTE_RUBRIC;
+  if (!choice || !rubric[choice]) return { judged: false, reason: 'quality_comment_missing', model: JEV_DECISIONS_MODEL };
+  const jevFocus = text(answers.fix_focus?.choice, 40) || choice;
+  const invented = choice === 'invented_place' || jevFocus === 'unnamed_place';
+  const comment = composeQualityNote({
+    customerTurn,
+    draft,
+    score: invented ? Math.min(score, 3) : score,
+    focus: choice || jevFocus,
+    invented: invented ? ['An extra place'] : [],
+  });
+  if (!comment || isTemplateNote(comment, customerTurn)) {
+    return { judged: false, reason: 'template_note', model: JEV_DECISIONS_MODEL };
+  }
+  const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite' || score <= 3 || invented;
   return {
     judged: true,
-    score,
+    score: invented ? Math.min(score, 3) : score,
     comment,
     jevFocus,
     rewrite: '',
@@ -786,7 +894,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
-    return qualityFromDecisions(body, criteria, customerTurn);
+    return qualityFromDecisions(body, criteria, customerTurn, draft);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }

@@ -198,7 +198,8 @@ export function assertLiveTranscript(doc) {
   if (intakeCustomer) {
     const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
     const intakeText = String(intakeReply?.text || '');
-    const intakeOk = /building the itinerary/i.test(intakeText)
+    const intakeOk = /building (?:the|your) itinerary/i.test(intakeText)
+      && !/you also have unlimited/i.test(intakeText)
       && /\bview access\b/i.test(intakeText)
       && /\bedit access\b/i.test(intakeText)
       && /email invite/i.test(intakeText)
@@ -636,8 +637,8 @@ export function liveV7Pack(doc, shape) {
 function jevRanLine(turn) {
   const model = String(turn.quality?.model || 'typesafe/jev-1.13');
   const score = Number.isInteger(Number(turn.quality?.score)) ? Number(turn.quality.score) : Number(turn.jevScoreDraft);
-  const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
-  const ms = Number.isFinite(jevMs) ? jevMs : 0;
+  const judgeMs = Number(turn.quality?.judgeMs ?? turn.modelLatency?.jevDraft);
+  const ms = Number.isFinite(judgeMs) ? Math.round(judgeMs) : 0;
   return `jev ran: ${model} score ${Number.isFinite(score) ? score : ''} ${ms}ms`;
 }
 
@@ -652,9 +653,7 @@ function realTurnLatencyMs(turn) {
 function producerLogLine(turn) {
   const latency = turn.modelLatency || {};
   const interim = turn.interimReply && typeof turn.interimReply === 'object' ? turn.interimReply : {};
-  const ran = turn.jev?.jevRan === true ? jevRanLine(turn) : '';
   return [
-    ...(ran ? [ran] : []),
     `draftModel: ${turn.draftModel || ''}`,
     `rewriteModel: ${turn.rewriteModel || 'none'}`,
     `shippedModel: ${turn.shippedModel || ''}`,

@@ -624,7 +624,8 @@
       const trips = realVacations();
       const siteUrl = realSiteUrl(trip?.publicUrl);
       const hasSite = Boolean(siteUrl);
-      const welcome = hasSite
+      const returningTrip = hasSite && trip?.intakeShare !== true && !/\/shared\/intake-/i.test(siteUrl);
+      const welcome = returningTrip
         ? 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.'
         : 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
       const turnMarkup = state.turns.length

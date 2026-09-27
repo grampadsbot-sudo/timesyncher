@@ -53,13 +53,29 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
+function laterFridayIso(tripDates) {
+  const arrival = tripDates[0] || '';
+  const fridays = tripDates.filter((date) => new Date(`${date}T00:00:00Z`).getUTCDay() === 5 && date !== arrival);
+  return fridays.length ? fridays[fridays.length - 1] : '';
+}
+
 function assignDates(thing, year, tripDates) {
   if (thing.title === 'Groceries') {
     const arrival = namedDates(thing.whenLabel || 'Fri Apr 3', year).filter((date) => tripDates.includes(date));
     if (arrival.length) return [arrival[0]];
   }
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
-  const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
+  let unique = [...new Set(named)].filter((date) => tripDates.includes(date));
+  if (thing.title === 'Swim') {
+    const arrival = tripDates[0] || '';
+    unique = unique.filter((date) => date !== arrival);
+    const later = /later in the week|later swim/i.test(`${thing.whenLabel || ''} ${thing.customerWhen || ''} ${(thing.notes || []).join(' ')}`);
+    if (later) {
+      const friday = laterFridayIso(tripDates);
+      if (friday && !unique.includes(friday)) unique.push(friday);
+    }
+    return unique;
+  }
   if (!unique.length) return tripDates.slice(0, 1);
   const spansTrip = /big island|house/i.test(String(thing.title || ''));
   if (spansTrip && unique.length >= 2) {

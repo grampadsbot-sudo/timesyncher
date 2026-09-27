@@ -33,6 +33,7 @@ import {
   LIVE_OPENER_PRODUCER,
   liveTurnRecord,
   onboardingOpenerText,
+  tripIsReturning,
   postIntakeUpsellTurn,
   produceLiveAppReply,
   finishTierRewrite,
@@ -202,6 +203,7 @@ function vacationAppTripSummary(row) {
     current: Boolean(row.current),
     publicUrl: url,
     shareToken: metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug || null,
+    intakeShare: metadata.intakeShare === true,
     intakeRule: metadata.intakeRule || '',
     intakeSpan: metadata.intakeSpan || '',
   };
@@ -275,7 +277,7 @@ async function loadVacationAppTurns(db, session, tripId) {
 
 async function ensureOnboardingOpener(db, session, trip) {
   if (seatFromSession(session)) return;
-  const text = onboardingOpenerText(Boolean(trip?.publicUrl));
+  const text = onboardingOpenerText(tripIsReturning(trip));
   const live = liveTurnRecord({
     turnIndex: 1,
     role: 'app',
@@ -509,6 +511,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       collaborator: Boolean(seat),
       tripId,
       sessionStartedMs,
+      wallStarted: started,
     };
     await db`
       update onboarding_sessions
@@ -818,13 +821,14 @@ async function handleVacationApp(req, res, db, url) {
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
+      const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
       const appLive = liveTurnRecord({
         turnIndex: Number(pending.customerTurnIndex) + 1,
         role: 'app',
         modality: 'text',
         text: finished.reply,
         at: new Date().toISOString(),
-        latencyMs: finished.log?.latencyMs?.total || 0,
+        latencyMs: wallMs,
         sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
         jev: finished.jev,
         model: finished.model,
@@ -839,7 +843,7 @@ async function handleVacationApp(req, res, db, url) {
         values (
           ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
           ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
-          'outbound', now(), ${finished.log?.latencyMs?.total || 0}
+          'outbound', now(), ${wallMs}
         )
       `;
       const itinerary = await recordCustomerThingNotes(

@@ -7,6 +7,7 @@ import {
   jevQualityRewrite,
   JEV_QUALITY_MODEL,
   isTemplateNote,
+  composeQualityNote,
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
@@ -22,8 +23,18 @@ export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
 export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
 export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
 
-export function onboardingOpenerText(hasSite) {
-  return hasSite ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
+export function tripIsReturning(trip) {
+  if (!trip || typeof trip !== 'object') return false;
+  const meta = trip.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
+  if (trip.intakeShare === true || meta.intakeShare === true) return false;
+  const slug = String(trip.shareToken || trip.publicSlug || meta.publicSlug || meta.shareToken || meta.sharedToken || '');
+  const url = String(trip.publicUrl || meta.publicUrl || meta.public_url || '');
+  if (/^intake-/i.test(slug) || /\/shared\/intake-/i.test(url)) return false;
+  return Boolean(url.trim() || slug.trim());
+}
+
+export function onboardingOpenerText(returning) {
+  return returning ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
 }
 
 const CANNED_APP_REPLY = 'Got it. I saved that';
@@ -114,6 +125,7 @@ export function liveTurnRecord({
         comment: String(model.quality.comment || ''),
         rewritten: model.quality.rewritten === true,
         model: model.quality.model || null,
+        judgeMs: Number.isFinite(Number(model.quality.judgeMs)) ? Number(model.quality.judgeMs) : null,
       };
       if (record.quality.rewritten && model.quality.draft) {
         record.quality.draft = String(model.quality.draft);
@@ -265,36 +277,8 @@ export function stripUpsell(text) {
   return kept.join('\n\n').trim();
 }
 
-const ITINERARY_ACK = 'I am building the itinerary from that dump.';
-const COLLAB_JOIN = 'View access lets family and friends see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.';
 const STOCK_REWRITE_LEAD = /^the plan stays on the days and places you named\b/i;
-const FALSE_PRICE = /no extra fees|you'?ve got unlimited|you have unlimited/i;
-
-const UPSELL_LINE = `Welcome them onto this vacation as collaborators. The household plan is ${UNLIMITED_PHRASE}.`;
-
-export function ensurePostIntakeBeats(text) {
-  let value = stripUnlimitedWording(text);
-  if (!/building the itinerary/i.test(value)) value = `${ITINERARY_ACK}\n\n${value}`.trim();
-  if (!/\bview access\b/i.test(value) || !/\bedit access\b/i.test(value) || !/email invite/i.test(value)) {
-    value = `${value}\n\n${COLLAB_JOIN}`.trim();
-  }
-  if (!isFullUpsell(value)) value = `${value}\n\n${UPSELL_LINE}`.trim();
-  return value;
-}
-
-function stripUnlimitedWording(text) {
-  const kept = splitSentences(text).filter((sentence) => !UNLIMITED_PATTERN.test(sentence) && !FALSE_PRICE.test(sentence));
-  return kept.join(' ').replace(/\s+/g, ' ').trim();
-}
-
-export function ensureExactUpsellPhrase(text) {
-  const value = String(text || '').trim();
-  if (UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value)) {
-    return value.replace(UNLIMITED_PATTERN, UNLIMITED_PHRASE);
-  }
-  const welcome = `Welcome them onto this vacation as collaborators. The household plan is ${UNLIMITED_PHRASE}.`;
-  return value ? `${value}\n\n${welcome}` : welcome;
-}
+const FALSE_PRICE = /no extra fees|you'?ve got unlimited|you have unlimited|you also have unlimited/i;
 
 export function sessionHasFullUpsell(priorTurns) {
   return (Array.isArray(priorTurns) ? priorTurns : []).some((turn) => {
@@ -620,35 +604,67 @@ function weekdayInsideSpan(weekdayName, span) {
   return '';
 }
 
+function spanDateLabel(date) {
+  return formatMention({
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+    year: date.getUTCFullYear(),
+  }, { withWeekday: true });
+}
+
+function spanStartLabel(span) {
+  if (!span?.start) return 'Fri Apr 3';
+  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(start.getTime())) return 'Fri Apr 3';
+  return spanDateLabel(start);
+}
+
+function laterFridayLabel(span) {
+  if (!span?.start || !span?.end) return '';
+  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
+  const end = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
+  let found = '';
+  for (let cursor = new Date(start); cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
+    if (cursor.getUTCDay() !== 5 || cursor.getTime() === start.getTime()) continue;
+    found = spanDateLabel(cursor);
+  }
+  return found;
+}
+
+function arrivalSwimLabel(label, arrival) {
+  const day = swimDayKey(label);
+  return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
+}
+
 export function applyAgreedAppSwim(things, customerText, appText, span = null) {
   if (!/\bswim\b/i.test(String(customerText || ''))) return things;
-  if (!/\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(String(customerText || ''))) return things;
+  const arrival = spanStartLabel(span);
+  const wantsLater = /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(String(customerText || ''));
   const labels = [];
-  for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
-    const dated = datedMentions(sentence)[0];
-    if (dated) {
-      if (!customerNamedWeekday(customerText, dated.weekday)) continue;
-      const label = formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true });
-      if (label) labels.push(label);
-      continue;
+  if (wantsLater) {
+    for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
+      const dated = datedMentions(sentence)[0];
+      if (dated) {
+        if (!customerNamedWeekday(customerText, dated.weekday)) continue;
+        const label = formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true });
+        if (label && !arrivalSwimLabel(label, arrival)) labels.push(label);
+        continue;
+      }
+      const weekday = sentence.match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i);
+      if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
+      const resolved = weekdayInsideSpan(weekday[1], span);
+      if (resolved && !arrivalSwimLabel(resolved, arrival)) labels.push(resolved);
     }
-    const weekday = sentence.match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i);
-    if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
-    const resolved = weekdayInsideSpan(weekday[1], span);
-    if (resolved) labels.push(resolved);
+    const namedWeekday = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
+    if (/\blater\b/i.test(String(customerText || '')) && !namedWeekday) {
+      const later = laterFridayLabel(span);
+      if (later) labels.push(later);
+    }
   }
-  if (!labels.length && /\blater\b/i.test(String(customerText || '')) && /\bfriday\b/i.test(String(appText || '')) && /\bswim\b/i.test(String(appText || ''))) {
-    const sentence = splitSentences(appText).find((part) => /\bfriday\b/i.test(part));
-    const dated = sentence ? datedMentions(sentence)[0] : null;
-    const label = dated
-      ? formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true })
-      : weekdayInsideSpan('Friday', span);
-    if (label) labels.push(label);
-  }
-  if (!labels.length) return things;
   return (Array.isArray(things) ? things : []).map((thing) => {
     if (thing.title !== 'Swim') return thing;
-    const merged = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
+    const merged = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => part && !arrivalSwimLabel(part, arrival));
     for (const label of labels) {
       if (merged.some((item) => item === label || item.startsWith(`${label} `))) continue;
       merged.push(label);
@@ -753,9 +769,9 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     if (thing.title === 'Groceries' && /Fri Apr 3|same day/i.test(String(thing.whenLabel || ''))) {
       customerWhen = 'Fri Apr 3';
     } else if (thing.title === 'Swim') {
-      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part));
+      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part) && !/^Fri Apr 3\b/i.test(part));
       for (const hit of hits) mergeSwimLabel(labels, swimPlanLabel(hit));
-      customerWhen = labels.join(' · ');
+      customerWhen = labels.filter((part) => !/^Fri Apr 3\b/i.test(part)).join(' · ');
     } else if (thing.title === 'Gardens' || thing.title === 'Dinner' || thing.title === 'Town walk') {
       const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
       for (const hit of hits) {
@@ -973,24 +989,48 @@ function keepPriceStripWelcome(text) {
   return kept.join('\n\n').trim();
 }
 
-const UNSUPPORTED_PRICE = /whole household|kids included/i;
+const COVERAGE_CLAIM = /whole household|kids included|whole group|little fallon|holds steady|and the others|you also have|already (?:own|have)|unlimited vacation/i;
 
 export function priceFactsOnly(reply) {
-  return splitSentences(reply).flatMap((sentence) => {
-    if (item34BanHit(sentence) || FALSE_PRICE.test(sentence)) return [];
-    if (!UNSUPPORTED_PRICE.test(sentence)) return [sentence];
-    const cleaned = sentence
-      .replace(/[,.]?\s*whole household,?\s*kids included[.!?]?/ig, '')
-      .replace(/\bfor the whole household\b/ig, '')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-    if (!cleaned || !/\$\d+/.test(cleaned) || UNSUPPORTED_PRICE.test(cleaned)) return [];
-    return [cleaned];
-  }).join(' ').trim();
+  const found = [];
+  for (const sentence of splitSentences(reply)) {
+    if (!sentence || item34BanHit(sentence) || FALSE_PRICE.test(sentence)) continue;
+    const matches = sentence.match(/[A-Za-z][A-Za-z' ]{0,40}\$\d[\d,]*(?:\.\d{2})?,\s*paid by [^.;]+/g) || [];
+    for (const match of matches) {
+      const clause = match.split(/\s*,?\s+and\s+/i)[0].replace(/[,.\s]+$/g, '').trim();
+      if (!clause || COVERAGE_CLAIM.test(clause) || item34BanHit(clause)) continue;
+      found.push(clause);
+    }
+  }
+  return found.join('; ').trim();
+}
+
+export function correctFinalFullDay(text) {
+  return splitSentences(text).map((sentence) => {
+    const thursdayFinal = /\b(?:thursday|thu)\b/i.test(sentence)
+      && /\b(?:april|apr)\.?\s*9(?:th)?\b/i.test(sentence)
+      && /\b(?:final|last) full day\b/i.test(sentence);
+    if (!thursdayFinal) return sentence;
+    return sentence
+      .replace(/\bthursday\b/ig, 'Saturday')
+      .replace(/\bthu\b/ig, 'Sat')
+      .replace(/\bapril\s+9(?:th)?\b/ig, 'April 11')
+      .replace(/\bapr\.?\s+9(?:th)?\b/ig, 'Apr 11');
+  }).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function stripOwnedUnlimited(text) {
+  return splitSentences(text).map((sentence) => sentence
+    .replace(/\byou also have unlimited vacations for the whole year\b/gi, 'The plan offers unlimited vacations for the whole year')
+    .replace(/\byou have unlimited vacations for the whole year\b/gi, 'The plan offers unlimited vacations for the whole year')
+    .replace(/\byou'?ve got unlimited vacations for the whole year\b/gi, 'The plan offers unlimited vacations for the whole year'))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function applyUpsellPolicy(reply, upsell, postIntake, customerTurn = '') {
-  const value = String(reply || '');
+  const value = correctFinalFullDay(stripOwnedUnlimited(reply));
   if (customerAsksPrice(customerTurn)) return keepPriceStripWelcome(priceFactsOnly(value));
   if (upsell === 'forbidden') return stripUpsell(value);
   return value.trim();
@@ -1126,10 +1166,18 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
+    quality = alignJudgedNote(quality, customerTurn, originalDraft, draftFlags);
+    quality.judgeMs = draftQualityMs;
     if (isTemplateNote(quality.comment, customerTurn)) {
       const again = await jevQualityRewrite({ customerTurn, draft: originalDraft, env });
-      if (again?.judged && !isTemplateNote(again.comment, customerTurn)) {
-        quality = correctFalsePriceMiss(dockQuality({ ...quality, ...again, comment: again.comment }, draftFlags), originalDraft, customerTurn);
+      if (again?.judged) {
+        quality = alignJudgedNote(
+          correctFalsePriceMiss(dockQuality({ ...quality, ...again }, draftFlags), originalDraft, customerTurn),
+          customerTurn,
+          originalDraft,
+          draftFlags,
+        );
+        quality.judgeMs = draftQualityMs;
       }
     }
   }
@@ -1256,6 +1304,19 @@ async function interimFromTierOne({ rules, customerTurn, destination, env }) {
   return { text, model: INTERIM_MODEL, ms: Math.max(0, Date.now() - started) };
 }
 
+function alignJudgedNote(quality, customerTurn, draft, flags) {
+  if (!quality?.judged) return quality;
+  const comment = composeQualityNote({
+    customerTurn,
+    draft,
+    score: quality.score,
+    focus: quality.jevFocus || '',
+    invented: flags?.invented || [],
+  });
+  if (!comment || isTemplateNote(comment, customerTurn)) return { ...quality, comment: comment || quality.comment || '' };
+  return { ...quality, comment };
+}
+
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
   const shippedRewrite = log.shippedRewrite === true;
   const next = {
@@ -1324,11 +1385,14 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, env });
     if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, env });
     if (rewriteQuality?.judged) {
+      const rewriteFlags = hardQualityFlags(judgedText, pending.customerTurn, pending.corpus);
       rewriteQuality = correctFalsePriceMiss(
-        dockQuality(rewriteQuality, hardQualityFlags(judgedText, pending.customerTurn, pending.corpus)),
+        dockQuality(rewriteQuality, rewriteFlags),
         judgedText,
         pending.customerTurn,
       );
+      rewriteQuality = alignJudgedNote(rewriteQuality, pending.customerTurn, judgedText, rewriteFlags);
+      rewriteQuality.judgeMs = null;
     } else {
       failReason = failReason || 'rewrite_not_judged';
     }
@@ -1345,6 +1409,16 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const draftQualityMs = Number(pending.qualityJevMs) || 0;
   const rewriteModel = String(model?.responseModel || pending.draftModel || '').trim();
   const shippedModel = choice.rewritten ? rewriteModel : pending.draftModel;
+  const shippedScore = choice.rewritten && rewriteQuality?.judged ? rewriteQuality.score : pending.draftScore;
+  const shippedFlags = hardQualityFlags(choice.text, pending.customerTurn, pending.corpus);
+  const shippedNote = composeQualityNote({
+    customerTurn: pending.customerTurn,
+    draft: choice.text,
+    score: shippedScore,
+    focus: (choice.rewritten ? rewriteQuality?.jevFocus : pending.quality?.jevFocus) || '',
+    invented: shippedFlags.invented || [],
+  });
+  const judgeMs = choice.rewritten ? rewriteQualityMs : (Number(pending.quality?.judgeMs) || draftQualityMs);
   const log = {
     draftModel: pending.draftModel,
     draftText: pending.draft,
@@ -1355,7 +1429,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     shippedModel,
     jevScoreDraft: pending.draftScore,
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
-    jevNote: pending.jevNote,
+    jevNote: shippedNote || pending.jevNote,
     interimReply: pending.interimReply || { text: null, model: null, ms: null },
     latencyMs: {
       draft: pending.draftLatencyMs,
@@ -1366,7 +1440,12 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     },
     flagged: choice.flagged,
   };
-  const quality = choice.rewritten && rewriteQuality?.judged ? { ...rewriteQuality, comment: pending.jevNote || rewriteQuality.comment } : pending.quality;
+  const quality = {
+    ...(choice.rewritten && rewriteQuality?.judged ? rewriteQuality : pending.quality),
+    score: shippedScore,
+    comment: shippedNote || pending.jevNote || '',
+    judgeMs,
+  };
   const stamped = stampShippedReply({
     reply: choice.text,
     quality,

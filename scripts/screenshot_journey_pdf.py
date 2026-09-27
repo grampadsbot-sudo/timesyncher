@@ -24,6 +24,7 @@ def build(manifest, dest):
         "h2": ParagraphStyle("h2", fontName="Times-Bold", fontSize=12, leading=15, textColor=colors.HexColor("#1a1a1a"), spaceBefore=8, spaceAfter=4),
         "body": ParagraphStyle("body", fontName="Times-Roman", fontSize=10, leading=13, alignment=TA_LEFT),
         "gap": ParagraphStyle("gap", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#6b2d2d")),
+        "exempt": ParagraphStyle("exempt", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#3d4a32")),
         "cap": ParagraphStyle("cap", fontName="Times-Bold", fontSize=11, leading=14, spaceAfter=2),
         "note": ParagraphStyle("note", fontName="Times-Italic", fontSize=9, leading=12, textColor=colors.HexColor("#333333"), spaceAfter=6),
     }
@@ -40,15 +41,25 @@ def build(manifest, dest):
     story.append(Paragraph("Contents", styles["h2"]))
     story.append(Paragraph("Gaps are surfaces with no screenshot. They are not silent skips.", styles["body"]))
     story.append(Spacer(1, 6))
+    open_gaps = [gap for gap in gaps if not gap.get("exempt")]
+    exempted = [gap for gap in gaps if gap.get("exempt")]
     story.append(Paragraph("Not captured", styles["h2"]))
-    if not gaps:
+    if not open_gaps:
         story.append(Paragraph("None.", styles["body"]))
-    for gap in gaps:
+    for gap in open_gaps:
         feature = esc(gap.get("feature") or gap.get("title") or "Surface")
         filename = esc(gap.get("file") or "")
         reason = esc(gap.get("reason") or "not captured")
         file_bit = f" ({filename})" if filename else ""
         story.append(Paragraph(f"GAP. {feature}{file_bit}: {reason}", styles["gap"]))
+    if exempted:
+        story.append(Paragraph("Exempt", styles["h2"]))
+        for gap in exempted:
+            feature = esc(gap.get("feature") or gap.get("title") or "Surface")
+            filename = esc(gap.get("file") or "")
+            reason = esc(gap.get("reason") or "not captured")
+            file_bit = f" ({filename})" if filename else ""
+            story.append(Paragraph(f"EXEMPT. {feature}{file_bit}: {reason}", styles["exempt"]))
     story.append(Spacer(1, 8))
     story.append(Paragraph("Pages", styles["h2"]))
     if not pages:

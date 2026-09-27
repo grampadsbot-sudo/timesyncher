@@ -45,8 +45,9 @@ assert.equal(shared.days.length, 10);
 assert.equal(shared.places.length, 2);
 const swim = shared.places.find((place) => place.name === 'Swim');
 const monday = shared.days.find((day) => day.date === '2026-04-06');
+const laterFriday = shared.days.find((day) => day.date === '2026-04-10');
 assert.equal(shared.thingOverrides[`place:${swim.id}`].timeline, true);
-assert.deepEqual(shared.thingOverrides[`place:${swim.id}`].dayIds, [monday.id]);
+assert.deepEqual(shared.thingOverrides[`place:${swim.id}`].dayIds, [monday.id, laterFriday.id]);
 assert.ok((shared.assignments[String(monday.id)] || []).some((row) => row.place_id === swim.id));
 assert.equal(shared.places.some((place) => /Las Vegas/i.test(place.name)), false);
 assert.equal(shared.permissions.share_budget, true);
@@ -66,6 +67,7 @@ const email = purchaseEmail({
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.match(email.launchUrl, /\/shared\/intake-eab1cbb15144\/$/);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/</);
 assert.doesNotMatch(email.htmlBody, /vacation-app\.html/);
 assert.match(email.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
 

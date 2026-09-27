@@ -43,6 +43,7 @@ export function purchaseEmail({ contact, publicUrl, publicSlug, env = process.en
     <p>Hi ${name},</p>
     <p>Your TimeSyncher Vacation purchase is confirmed. Click the link in this email to open TimeSyncher Vacation.</p>
     <p><a href="${launchUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open TimeSyncher Vacation</a></p>
+    <p><a href="${launchUrl}" style="color:#f5d37b;word-break:break-all">${launchUrl}</a></p>
     <p style="color:#cfc2a9">Questions: <a href="mailto:${supportEmail(env)}" style="color:#f5d37b;text-decoration:underline">${supportEmail(env)}</a></p>
   </div>
 </body></html>`;
