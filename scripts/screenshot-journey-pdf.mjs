@@ -544,7 +544,7 @@ async function main() {
       } else {
         await shot('email-click', 'Email click', 'App URL from the purchase email', {
           file: 'real-app-email-entry.md',
-          note: emailHref,
+          note: 'The purchase email opened the app URL.',
         });
       }
     }
@@ -566,7 +566,7 @@ async function main() {
         if (prior) throw new Error(`duplicate image hash ${hash} on ${id} and ${prior[0]}`);
         imageHashes.set(id, hash);
         seenShot.add(id);
-        const entry = { id, chapter: 'EULA', title, file: 'post-purchase-email-eula.md', note, image };
+        const entry = { id, chapter: 'EULA', title, file: 'post-purchase-email-eula.md', note, image, captureBuild: driveLive };
         pages.push(entry);
         mark('post-purchase-email-eula.md');
       }
@@ -728,12 +728,12 @@ async function main() {
       if (layout) {
         await shot('itinerary-layout', 'After the gold conversation', 'Standard itinerary layout', {
           file: 'itinerary-layout.md',
-          note: sharedUrl,
+          note: 'Intake trip.',
           clipRect: await clipAround('Day-by-Day', { height: 168, padTop: 12 }),
         });
         await shot('header-chrome', 'After the gold conversation', 'Header brand', {
           file: 'header-chrome.md',
-          note: sharedUrl,
+          note: 'Intake trip.',
           clipRect: await page.evaluate(() => {
             const logo = document.querySelector('img');
             const box = logo?.getBoundingClientRect();
@@ -861,7 +861,7 @@ async function main() {
         };
       });
       if (logoBox) {
-        await shot('logos', 'After the gold conversation', 'Thing logos', { file: 'logos.md', note: sharedUrl, clipRect: logoBox });
+        await shot('logos', 'After the gold conversation', 'Thing logos', { file: 'logos.md', note: 'Intake trip.', clipRect: logoBox });
       }
       if (!has(text, 'Budget')) gap('Budget on the test itinerary', 'budget.md', 'the Big Island shared trip has no Budget tab');
       const navPanel = await page.evaluate(() => {
@@ -928,7 +928,7 @@ async function main() {
           continue;
         }
         const id = `tab-${label.toLowerCase().replace(/\s+/g, '-')}`;
-        await shot(id, 'After the gold conversation', `${label} tab`, { file: 'itinerary-layout.md', note: sharedUrl });
+        await shot(id, 'After the gold conversation', `${label} tab`, { file: 'itinerary-layout.md', note: 'Intake trip.' });
         if (label === 'The Rest') {
           const rest = await bodyText(page);
           if (has(rest, 'All areas') || has(rest, 'All types')) {
@@ -1112,18 +1112,31 @@ async function main() {
           clipRect: carClip,
         });
         const removedBrand = await page.evaluate(() => {
-          if (typeof window.__tsMountCarBrands === 'function') window.__tsMountCarBrands();
-          const button = document.querySelector('[data-ts-remove-brand]');
-          if (!button) return '';
-          button.click();
-          return button.dataset.tsRemoveBrand || button.textContent || '';
+          const clicks = [];
+          for (let i = 0; i < 4; i += 1) {
+            if (typeof window.__tsMountCarBrands === 'function') window.__tsMountCarBrands();
+            const button = document.querySelector('[data-ts-remove-brand]');
+            if (!button) break;
+            clicks.push((button.dataset.tsRemoveBrand || button.textContent || '').replace(/\s+/g, ' ').trim());
+            button.click();
+          }
+          const visible = [...document.querySelectorAll('button, article, li')].filter((node) => {
+            const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
+            if (!label || label.length > 90 || /^remove /i.test(label) || /^cars$/i.test(label)) return false;
+            return /speedishuttle/i.test(label) && node.getBoundingClientRect().height > 8 && getComputedStyle(node).display !== 'none';
+          }).map((node) => (node.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 70));
+          return { clicks, visible: [...new Set(visible)] };
         });
-        if (removedBrand) {
+        if (removedBrand.clicks?.length) {
           await sleep(300);
+          const left = removedBrand.visible || [];
+          const note = left.length
+            ? `The Cars list after Remove. Still on screen: ${left.join('; ')}. Priced rows: ${priced}.`
+            : `The Cars list after Remove. SpeediShuttle is not on this image. No priced rental row is on this image.`;
           await shot('car-brand-removed', 'After the gold conversation', 'Cars brand removed', {
             file: 'car-fields.md',
-            note: `Removed ${removedBrand} on the Cars tab. The image is the list after that brand is hidden.`,
-            clipRect: carList,
+            note,
+            clipRect: carClip,
           });
         }
         await page.keyboard.press('Escape').catch(() => {});
@@ -1186,7 +1199,7 @@ async function main() {
               file: 'keepsakes-config.md',
               note: 'Keepsakes config: logo, summary, and Style sections. Not the restaurant detail behind the menu.',
               clipRect: keepsakeClip,
-              expect: has(keepsakeText, 'Style one') ? 'Style' : 'Keepsake',
+              expect: 'logo',
             });
           }
         }
