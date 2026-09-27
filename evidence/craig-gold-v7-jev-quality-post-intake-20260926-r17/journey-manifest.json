@@ -1,0 +1,690 @@
+{
+  "title": "Screenshot Journey",
+  "subtitle": "Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.",
+  "void": false,
+  "deployBanner": "live 9bbb3554fd3ac60dcefa7ac20f20b49ffa49cfc0 https://vacation-staging.timesyncher.com",
+  "pageCount": 85,
+  "pages": [
+    {
+      "id": "purchase",
+      "chapter": "Purchase",
+      "title": "Purchase confirmed",
+      "file": "post-purchase-email-eula.md",
+      "note": "Order-success acknowledgement. No Open App button.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/purchase.png"
+    },
+    {
+      "id": "purchase-email",
+      "chapter": "Purchase email",
+      "title": "Purchase email",
+      "file": "post-purchase-email-eula.md",
+      "note": "Arrived purchase email.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/purchase-email.png"
+    },
+    {
+      "id": "email-click",
+      "chapter": "Email click",
+      "title": "App URL from the purchase email",
+      "file": "real-app-email-entry.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/email-click.png"
+    },
+    {
+      "id": "eula",
+      "chapter": "EULA",
+      "title": "Review Terms & Privacy",
+      "file": "post-purchase-email-eula.md",
+      "note": "EULA title is Review Terms & Privacy. Agree is on screen.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/eula.png"
+    },
+    {
+      "id": "eula-agreed",
+      "chapter": "EULA",
+      "title": "Agree clicked",
+      "file": "post-purchase-email-eula.md",
+      "note": "Agree was clicked on camera.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/eula-agreed.png"
+    },
+    {
+      "id": "first-prompt",
+      "chapter": "Onboarding",
+      "title": "First onboarding prompt",
+      "file": "post-purchase-email-eula.md",
+      "note": "The stored opener.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/first-prompt.png"
+    },
+    {
+      "id": "building-itinerary",
+      "chapter": "Onboarding",
+      "title": "Building the itinerary",
+      "file": "post-purchase-email-eula.md",
+      "note": "The app says it is building the itinerary from the intake.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/building-itinerary.png"
+    },
+    {
+      "id": "collab-upsell",
+      "chapter": "Onboarding",
+      "title": "Collaborator explanation and upsell",
+      "file": "post-intake-welcome.md",
+      "note": "First app bubble that contains unlimited vacations.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/collab-upsell.png"
+    },
+    {
+      "id": "welcome-kimberly",
+      "chapter": "Collaborator welcome",
+      "title": "Kimberly welcome",
+      "file": "collaborators.md",
+      "note": "Collaborator welcome in the chat.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/welcome-kimberly.png"
+    },
+    {
+      "id": "welcome-tyler",
+      "chapter": "Collaborator welcome",
+      "title": "Tyler welcome",
+      "file": "collaborators.md",
+      "note": "Collaborator welcome in the chat.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/welcome-tyler.png"
+    },
+    {
+      "id": "welcome-lauren",
+      "chapter": "Collaborator welcome",
+      "title": "Lauren welcome",
+      "file": "collaborators.md",
+      "note": "Collaborator welcome in the chat.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/welcome-lauren.png"
+    },
+    {
+      "id": "itinerary-layout",
+      "chapter": "Initial itinerary",
+      "title": "Standard itinerary layout",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/itinerary-layout.png"
+    },
+    {
+      "id": "header-chrome",
+      "chapter": "Initial itinerary",
+      "title": "Header brand",
+      "file": "header-chrome.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/header-chrome.png"
+    },
+    {
+      "id": "packing",
+      "chapter": "Initial itinerary",
+      "title": "Packing",
+      "file": "packing.md",
+      "note": "The tab row has no Packing tab while share_packing is off.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/packing.png"
+    },
+    {
+      "id": "slider-bars",
+      "chapter": "Initial itinerary",
+      "title": "Day chip slider",
+      "file": "slider-bars.md",
+      "note": "The Vacation Day View day-chip row. Not a Day-by-Day crop.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/slider-bars.png"
+    },
+    {
+      "id": "maps",
+      "chapter": "Initial itinerary",
+      "title": "Day map",
+      "file": "maps.md",
+      "note": "Day map under Vacation Day View, with the timeline-tagged places.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/maps.png"
+    },
+    {
+      "id": "voice-note",
+      "chapter": "Initial itinerary",
+      "title": "Voice note",
+      "file": "voice-note.md",
+      "note": "The microphone control for a voice note.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/voice-note.png"
+    },
+    {
+      "id": "logos",
+      "chapter": "Initial itinerary",
+      "title": "Thing logos",
+      "file": "logos.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/logos.png"
+    },
+    {
+      "id": "navigation",
+      "chapter": "Initial itinerary",
+      "title": "Navigation chrome",
+      "file": "navigation.md",
+      "note": "The guest Open navigation panel, with Close navigation and the day tabs.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/navigation.png"
+    },
+    {
+      "id": "settings",
+      "chapter": "Initial itinerary",
+      "title": "TREK settings",
+      "file": "trek-settings.md",
+      "note": "Mapbox, Google Maps, Weather, Invite, and Copy link.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/settings.png"
+    },
+    {
+      "id": "day-01",
+      "chapter": "Initial itinerary",
+      "title": "Day 1",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-01.png"
+    },
+    {
+      "id": "day-02",
+      "chapter": "Initial itinerary",
+      "title": "Day 2",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-02.png"
+    },
+    {
+      "id": "day-03",
+      "chapter": "Initial itinerary",
+      "title": "Day 3",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-03.png"
+    },
+    {
+      "id": "day-04",
+      "chapter": "Initial itinerary",
+      "title": "Day 4",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-04.png"
+    },
+    {
+      "id": "day-05",
+      "chapter": "Initial itinerary",
+      "title": "Day 5",
+      "file": "empty-states.md",
+      "note": "Day 5 on the intake trip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-05.png"
+    },
+    {
+      "id": "day-06",
+      "chapter": "Initial itinerary",
+      "title": "Day 6",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-06.png"
+    },
+    {
+      "id": "day-07",
+      "chapter": "Initial itinerary",
+      "title": "Day 7",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-07.png"
+    },
+    {
+      "id": "day-08",
+      "chapter": "Initial itinerary",
+      "title": "Day 8",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-08.png"
+    },
+    {
+      "id": "day-09",
+      "chapter": "Initial itinerary",
+      "title": "Day 9",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-09.png"
+    },
+    {
+      "id": "day-10",
+      "chapter": "Initial itinerary",
+      "title": "Day 10",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/day-10.png"
+    },
+    {
+      "id": "tab-flights",
+      "chapter": "Initial itinerary",
+      "title": "Flights tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-flights.png"
+    },
+    {
+      "id": "tab-hotels",
+      "chapter": "Initial itinerary",
+      "title": "Hotels tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-hotels.png"
+    },
+    {
+      "id": "tab-cars",
+      "chapter": "Initial itinerary",
+      "title": "Cars tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-cars.png"
+    },
+    {
+      "id": "tab-restaurants",
+      "chapter": "Initial itinerary",
+      "title": "Restaurants tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-restaurants.png"
+    },
+    {
+      "id": "tags",
+      "chapter": "Initial itinerary",
+      "title": "Tags and chips",
+      "file": "tags-chips.md",
+      "note": "Restaurant tag chips on the intake list.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tags.png"
+    },
+    {
+      "id": "tab-stores",
+      "chapter": "Initial itinerary",
+      "title": "Stores tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-stores.png"
+    },
+    {
+      "id": "tab-the-rest",
+      "chapter": "Initial itinerary",
+      "title": "The Rest tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-the-rest.png"
+    },
+    {
+      "id": "filters",
+      "chapter": "Initial itinerary",
+      "title": "Filters",
+      "file": "filters.md",
+      "note": "All areas and All types on The Rest.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/filters.png"
+    },
+    {
+      "id": "tab-budget",
+      "chapter": "Initial itinerary",
+      "title": "Budget tab",
+      "file": "itinerary-layout.md",
+      "note": "https://vacation-staging.timesyncher.com/shared/intake-e321c3e5014c/",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/tab-budget.png"
+    },
+    {
+      "id": "thing-big-island",
+      "chapter": "Initial itinerary",
+      "title": "Big Island detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/thing-big-island.png"
+    },
+    {
+      "id": "screenshot-gate",
+      "chapter": "Initial itinerary",
+      "title": "Dialog screenshot gate",
+      "file": "dialog-screenshot-gate.md",
+      "note": "Real Detail page, no card shell.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/screenshot-gate.png"
+    },
+    {
+      "id": "status-thing-big-island",
+      "chapter": "Initial itinerary",
+      "title": "Status",
+      "file": "status.md",
+      "note": "Big Island detail.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/status-thing-big-island.png"
+    },
+    {
+      "id": "stories-thing-big-island",
+      "chapter": "Initial itinerary",
+      "title": "Stories and media",
+      "file": "media-stories.md",
+      "note": "Big Island detail.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/stories-thing-big-island.png"
+    },
+    {
+      "id": "hotel-thing-big-island",
+      "chapter": "Initial itinerary",
+      "title": "Hotel stay fields",
+      "file": "hotel-stay-fields.md",
+      "note": "Big Island detail.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/hotel-thing-big-island.png"
+    },
+    {
+      "id": "thing-groceries",
+      "chapter": "Initial itinerary",
+      "title": "Groceries detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/thing-groceries.png"
+    },
+    {
+      "id": "thing-kailua-kona-house",
+      "chapter": "Initial itinerary",
+      "title": "Kailua-Kona house detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/thing-kailua-kona-house.png"
+    },
+    {
+      "id": "thing-gardens",
+      "chapter": "Initial itinerary",
+      "title": "Gardens detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/thing-gardens.png"
+    },
+    {
+      "id": "thing-swim",
+      "chapter": "Initial itinerary",
+      "title": "Swim detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/thing-swim.png"
+    },
+    {
+      "id": "flight-fields",
+      "chapter": "Initial itinerary",
+      "title": "Flight fields",
+      "file": "flight-fields.md",
+      "note": "KOA arrival flight fields from the trip, not a hard-coded connection or layover.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/flight-fields.png"
+    },
+    {
+      "id": "car-fields",
+      "chapter": "Initial itinerary",
+      "title": "Cars",
+      "file": "car-fields.md",
+      "note": "Car results are Things under Cars. Ten lowest prices, no brand left out of the pool.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/car-fields.png"
+    },
+    {
+      "id": "happy-hour",
+      "chapter": "Initial itinerary",
+      "title": "Happy hour",
+      "file": "happy-hour.md",
+      "note": "Ulu Ocean Grill happy hour.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/happy-hour.png"
+    },
+    {
+      "id": "print-pdf",
+      "chapter": "Initial itinerary",
+      "title": "Print and PDF",
+      "file": "print-pdf.md",
+      "note": "Print / PDF menu: Daily printout and list PDFs. Layout 1 and Layout 2 are Style one and Style two.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/print-pdf.png"
+    },
+    {
+      "id": "keepsakes-config",
+      "chapter": "Initial itinerary",
+      "title": "Keepsakes config",
+      "file": "keepsakes-config.md",
+      "note": "Admin gear on the front page: logo, summary, and the other keepsake sections.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/keepsakes-config.png"
+    },
+    {
+      "id": "ratings-sourced",
+      "chapter": "Initial itinerary",
+      "title": "Ratings and reviews",
+      "file": "ratings-reviews.md",
+      "note": "Order Keepsakes detail with a sourced rating.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/ratings-sourced.png"
+    },
+    {
+      "id": "order-keepsakes-guest",
+      "chapter": "Initial itinerary",
+      "title": "Order Keepsakes",
+      "file": "order-keepsakes.md",
+      "note": "A non-owner opened the shareable keepsake buy link.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/order-keepsakes-guest.png"
+    },
+    {
+      "id": "min-things",
+      "chapter": "Initial itinerary",
+      "title": "Initial fill minimums",
+      "file": "min-things.md",
+      "note": "Big Island intake trip meets restaurant 15, store 10, and attraction 15.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/min-things.png"
+    },
+    {
+      "id": "style-one-intake",
+      "chapter": "Initial itinerary",
+      "title": "Keepsake Style one",
+      "file": "keepsake-style-one.md",
+      "note": "Rendered on the intake trip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/style-one-intake.png"
+    },
+    {
+      "id": "style-two-intake",
+      "chapter": "Initial itinerary",
+      "title": "Keepsake Style two",
+      "file": "keepsake-style-two.md",
+      "note": "Rendered on the intake trip.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/style-two-intake.png"
+    },
+    {
+      "id": "keepsake-qa-intake",
+      "chapter": "Initial itinerary",
+      "title": "Keepsake QA",
+      "file": "keepsake-qa.md",
+      "note": "Style two, scrolled to the later pages.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/keepsake-qa-intake.png"
+    },
+    {
+      "id": "language",
+      "chapter": "Initial itinerary",
+      "title": "Language",
+      "file": "language.md",
+      "note": "",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/language.png"
+    },
+    {
+      "id": "email-kimberly",
+      "chapter": "Onboarding email",
+      "title": "Kimberly collaborator invite",
+      "file": "collaborators.md",
+      "note": "Arrived collaborator invite.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/email-kimberly.png"
+    },
+    {
+      "id": "email-tyler",
+      "chapter": "Onboarding email",
+      "title": "Tyler collaborator invite",
+      "file": "collaborators.md",
+      "note": "Arrived collaborator invite.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/email-tyler.png"
+    },
+    {
+      "id": "email-lauren",
+      "chapter": "Onboarding email",
+      "title": "Lauren collaborator invite",
+      "file": "collaborators.md",
+      "note": "Arrived collaborator invite.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/email-lauren.png"
+    },
+    {
+      "id": "final-itinerary-layout",
+      "chapter": "Final itinerary",
+      "title": "Standard itinerary layout",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Not the pre-collaborator snapshot.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-itinerary-layout.png"
+    },
+    {
+      "id": "final-day-01",
+      "chapter": "Final itinerary",
+      "title": "Day 1",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-01.png"
+    },
+    {
+      "id": "final-day-02",
+      "chapter": "Final itinerary",
+      "title": "Day 2",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-02.png"
+    },
+    {
+      "id": "final-day-03",
+      "chapter": "Final itinerary",
+      "title": "Day 3",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-03.png"
+    },
+    {
+      "id": "final-day-04",
+      "chapter": "Final itinerary",
+      "title": "Day 4",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-04.png"
+    },
+    {
+      "id": "final-day-05",
+      "chapter": "Final itinerary",
+      "title": "Day 5",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-05.png"
+    },
+    {
+      "id": "final-day-06",
+      "chapter": "Final itinerary",
+      "title": "Day 6",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-06.png"
+    },
+    {
+      "id": "final-day-07",
+      "chapter": "Final itinerary",
+      "title": "Day 7",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-07.png"
+    },
+    {
+      "id": "final-day-08",
+      "chapter": "Final itinerary",
+      "title": "Day 8",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-08.png"
+    },
+    {
+      "id": "final-day-09",
+      "chapter": "Final itinerary",
+      "title": "Day 9",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-09.png"
+    },
+    {
+      "id": "final-day-10",
+      "chapter": "Final itinerary",
+      "title": "Day 10",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-day-10.png"
+    },
+    {
+      "id": "final-tab-flights",
+      "chapter": "Final itinerary",
+      "title": "Flights tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-flights.png"
+    },
+    {
+      "id": "final-tab-hotels",
+      "chapter": "Final itinerary",
+      "title": "Hotels tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-hotels.png"
+    },
+    {
+      "id": "final-tab-cars",
+      "chapter": "Final itinerary",
+      "title": "Cars tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-cars.png"
+    },
+    {
+      "id": "final-tab-restaurants",
+      "chapter": "Final itinerary",
+      "title": "Restaurants tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-restaurants.png"
+    },
+    {
+      "id": "final-tab-stores",
+      "chapter": "Final itinerary",
+      "title": "Stores tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-stores.png"
+    },
+    {
+      "id": "final-tab-the-rest",
+      "chapter": "Final itinerary",
+      "title": "The Rest tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-the-rest.png"
+    },
+    {
+      "id": "final-tab-budget",
+      "chapter": "Final itinerary",
+      "title": "Budget tab",
+      "file": "budget.md",
+      "note": "Live trip after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-tab-budget.png"
+    },
+    {
+      "id": "final-thing-big-island",
+      "chapter": "Final itinerary",
+      "title": "Big Island detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-thing-big-island.png"
+    },
+    {
+      "id": "final-thing-kailua-kona-house",
+      "chapter": "Final itinerary",
+      "title": "Kailua-Kona house detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-thing-kailua-kona-house.png"
+    },
+    {
+      "id": "final-thing-gardens",
+      "chapter": "Final itinerary",
+      "title": "Gardens detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-thing-gardens.png"
+    },
+    {
+      "id": "final-thing-swim",
+      "chapter": "Final itinerary",
+      "title": "Swim detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes.",
+      "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/final-thing-swim.png"
+    }
+  ],
+  "gaps": []
+}
