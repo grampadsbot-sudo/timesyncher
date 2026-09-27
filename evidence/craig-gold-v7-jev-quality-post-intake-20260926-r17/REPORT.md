@@ -1,6 +1,6 @@
 # r17 Big Island Family v7 — hold certify
 
-Deployed tip `ef226e696c7bb0320b596b0d651a6890c03fdd8e` on https://vacation-staging.timesyncher.com. Live `/api/version` returns that sha. Both PDFs print it. `assertBothPdfsMatchLive` ran from the journey build and printed `both PDFs match live ef226e696c7bb0320b596b0d651a6890c03fdd8e`.
+Deployed tip `918cf5143f90ecaf805855e556dca36316c712af` on https://vacation-staging.timesyncher.com. Live `/api/version` returns that sha. Both PDFs print it. `assertBothPdfsMatchLive` ran from the journey build and printed `both PDFs match live 918cf5143f90ecaf805855e556dca36316c712af`.
 
 No second staging deploy. The Vercel `workspace` project was left alone. No merge.
 
@@ -16,9 +16,16 @@ Session wall 181936 ms. Real per-turn median 5324 ms. Gen-only median 4524 ms. G
 
 Models on the generated turns: T1 `google/gemini-2.5-flash-lite`, T2 `qwen/qwen3-235b-a22b-2507`, T3 `deepseek/deepseek-v3.2`, T4 `qwen/qwen3-max`. Jev is `typesafe/jev-1.13`. The allowlist is unchanged. Jev notes are null on every turn (`jevNoteReason: jev_no_free_text`). Code did not write reply sentences.
 
-## Held turns
+## Held rewrites
 
-Two turns shipped an interim and are marked `held: true` and `flagged: held`. The shipped model is `google/gemini-2.5-flash-lite`. The printed score is the Jev score of that shipped text.
+A drafted rewrite that does not ship is not a shipped rewrite. The dialog PDF prints the Jev score of the shipped text and `rewrite drafted, held: <reason>`. It prints no rewriter change line on that turn. A change line appears only when the rewritten reply is the one that shipped.
+
+T17 and T35 each drafted a rewrite and held it (`rewrite_near_draft`). The PDF lines are:
+
+- T17: `quality: 4.03 · rewrite drafted, held: rewrite_near_draft`
+- T35: `quality: 3.93 · rewrite drafted, held: rewrite_near_draft`
+
+The shipped model on both is `google/gemini-2.5-flash-lite`. The PDF also marks them `flagged: held`.
 
 | Turn | Shipped score | What shipped |
 | --- | --- | --- |
@@ -29,7 +36,7 @@ The canned line "I am keeping this reply to the saved trip" is absent. T9 and T2
 
 ## Rewrites
 
-Five turns have `rewritten: true`. Three of those kept a change line from the rewrite model. Two (T5, T19) had the change line dropped, so the PDF has no rewriter line for them. Eight rewrite attempts were logged.
+Five turns have `rewritten: true` because the rewritten reply shipped. Three of those kept a change line from the rewrite model. Two (T5, T19) had the change line dropped, so the PDF has no rewriter line for them. T17 and T35 are not in that count. Eight rewrite attempts were logged.
 
 Shipped change lines:
 
@@ -53,7 +60,7 @@ T47 keeps Thursday, April 9 as gardens plus the town walk, and says that is not 
 
 ## Opener
 
-T1 `jevScoreDraft` is null. `latencyMs`, `sessionE2eMs`, and `interimReply.ms` are null in the stored turn and in the dialog PDF. `jevScoreRaw` and `draftJevScoreRaw` print `null` in this pack PDF. The tip's producer log still passes a null raw score through `Number()`, which prints 0. This pack was rendered with that coercion removed, then the script was restored so the branch tip stays the deployed sha. A fresh run of the tip script also rejects the three rewriter lines, because pypdf wraps them and `latin()` straightens apostrophes, so `pdf.includes(label)` misses two of the three. The lines are in the PDF. The pack-time check folded whitespace and those punctuation marks, then the script was restored.
+T1 `jevScoreDraft` is null. `latencyMs`, `sessionE2eMs`, `interimReply.ms`, `jevScoreRaw`, and `draftJevScoreRaw` are null in the stored turn and in the dialog PDF. The producer log prints null for a null raw score. The rewrite-label check folds PDF line wraps and the apostrophes the PDF renderer straightens, so the three shipped change lines match.
 
 ## Journey
 
@@ -69,7 +76,7 @@ Captured in the journey:
 | Keepsakes config | Admin gear, then Keepsakes |
 | Ratings and reviews | Ulu Ocean Grill happy-hour sentence in the review field |
 | Cars as Things | Cars tab lists the ten lowest-price rentals, Payless through National |
-| Order Keepsakes | Guest page, no owner session: anyone with the link can order, Layout 1 and Layout 2 |
+| Order Keepsakes | Guest page, no owner session. The shareable link is open. Checkout and payment are off |
 | Purchase, email, EULA, welcomes | Purchase confirmed, purchase email, email click, EULA first, Agree, Kimberly, Tyler, Lauren |
 
 GAPs outside the feature-file table:
@@ -91,7 +98,7 @@ Feature-file gaps in VERIFY.md: none. 36 of 36 feature files captured. The custo
 | Already built | Print/PDF Layout 1 and Layout 2 | Captured |
 | Already built | Keepsakes config | Captured |
 | Already built | Ratings and reviews | Captured on Ulu Ocean Grill |
-| Build | Order Keepsakes | Guest URL captured |
+| Build | Order Keepsakes | Guest URL captured. `TIMESYNCHER_KEEPSAKE_CHECKOUT` is unset, so checkout and payment are off |
 | Car is not a page | Cars as Things | Ten lowest prices captured. Brand removal was not captured |
 
 ## What 54b6de9 changed versus b0f8802
@@ -150,10 +157,10 @@ Shipped model, labeled score of the shipped text, and latency. The opener has nu
 
 | File | sha256 |
 | --- | --- |
-| dialog-gold-v7-jev-quality.pdf | `b5e9cc89c10a73fb4ad12916ad73c3f8167c931499fcedf9f9d43d05271f69ec` |
-| screenshot-journey.pdf | `264dc8def09e8edae363cc617bf7b4abceaa0d13e0707c00cf49670d71e2af31` |
-| journey-manifest.json | `6f8e36e7b7357c3b54a7c5c9535099f55dcef87d930b5f3ef3c7f6577d187c57` |
-| live-transcript.jsonl | `be34cded5bb13f8932f295bbf7173583b4db0f83307bc248cde125b8db515325` |
-| VERIFY.md | `7bbe7916068c11dadce28faf940b720eb57b570c1c913c79909771544078a303` |
+| dialog-gold-v7-jev-quality.pdf | `c9d916a10f55552ceeb22f55818d95e0851357c3be40ae5d82bceab373718ec6` |
+| screenshot-journey.pdf | `3663591af47f95c4e1fd96c6cb4cdd1d3589e188c5b5d5c16be07af4159e271b` |
+| journey-manifest.json | `c5a54aa1d261b97e506d0702bead35ffeb986efad0156d022efdb498ad301810` |
+| live-transcript.jsonl | `2ced95aa82cce3312845f7a7c753a93d58da8e3e13f1d3241f6b7e176ce6e25f` |
+| VERIFY.md | `8cff66b8e743771071adfae9bd639a4b848725e9f1974af883d357d51c48899d` |
 
 Hold certify. No merge.

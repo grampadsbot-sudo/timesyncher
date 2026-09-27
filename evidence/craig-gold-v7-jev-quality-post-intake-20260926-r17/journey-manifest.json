@@ -2,7 +2,7 @@
   "title": "Screenshot Journey",
   "subtitle": "Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.",
   "void": false,
-  "deployBanner": "live ef226e696c7bb0320b596b0d651a6890c03fdd8e https://vacation-staging.timesyncher.com",
+  "deployBanner": "live 918cf5143f90ecaf805855e556dca36316c712af https://vacation-staging.timesyncher.com",
   "pageCount": 85,
   "pages": [
     {
@@ -442,7 +442,7 @@
       "chapter": "Initial itinerary",
       "title": "Order Keepsakes",
       "file": "order-keepsakes.md",
-      "note": "A non-owner opened the shareable keepsake buy link. Anyone with the URL can order.",
+      "note": "A non-owner opened the shareable keepsake buy link. Checkout and payment are off (TIMESYNCHER_KEEPSAKE_CHECKOUT unset).",
       "image": "/opt/cursor/artifacts/craig-gold-v7-jev-quality-post-intake-20260926-r17/journey-pages/order-keepsakes-guest.png"
     },
     {
