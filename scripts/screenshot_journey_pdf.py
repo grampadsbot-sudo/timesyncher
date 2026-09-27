@@ -85,7 +85,9 @@ def build(manifest, dest):
         filename = esc(gap.get("file") or "")
         reason = esc(gap.get("reason") or "not captured")
         file_bit = f" ({filename})" if filename else ""
-        story.append(Paragraph(f"GAP. {feature}{file_bit}: {reason}", styles["gap"]))
+        label = "N/A" if gap.get("exempt") else "GAP"
+        style = styles["exempt"] if gap.get("exempt") else styles["gap"]
+        story.append(Paragraph(f"{label}. {feature}{file_bit}: {reason}", style))
     story.append(Spacer(1, 8))
     story.append(Paragraph("Pages", styles["h2"]))
     if not pages:
@@ -100,7 +102,7 @@ def build(manifest, dest):
         story.append(PageBreak())
         capture = str(page.get("captureBuild") or "").strip()
         if capture:
-            story.append(CaptureStamp(f"live {capture} https://vacation-staging.timesyncher.com"))
+            story.append(CaptureStamp(f"Capture build {capture} https://vacation-staging.timesyncher.com"))
         chapter = esc(page.get("chapter") or "")
         title = esc(page.get("title") or "")
         filename = esc(page.get("file") or "")
@@ -119,7 +121,7 @@ def build(manifest, dest):
     def stamp_page(canvas, doc_):
         canvas.saveState()
         canvas.setFont("Times-Roman", 8)
-        canvas.drawString(0.7 * inch, letter[1] - 0.42 * inch, banner.split("\n")[0][:140])
+        canvas.drawString(0.7 * inch, letter[1] - 0.42 * inch, f"Capture build {banner.split(chr(10))[0]}"[:140])
         canvas.restoreState()
 
     doc = SimpleDocTemplate(

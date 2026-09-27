@@ -391,13 +391,23 @@ async function main() {
       }, clipped ? (usedRect || clipRect || null) : null, expect ? 2400 : 400);
       if (restoreViewport) await page.setViewport(restoreViewport);
       if (expect && !clipText.toLowerCase().includes(String(expect).toLowerCase().slice(0, 80))) {
-        throw new Error(`capture for ${id} missed "${expect}": ${clipText.slice(0, 140)}`);
+        gap(title, file, `capture for ${id} missed "${expect}"`);
+        return false;
+      }
+      let shotBytes = bytes;
+      if (pngMostlyOneColor(shotBytes)) {
+        await page.evaluate(() => {
+          document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+        });
+        await page.screenshot({ path: image });
+        shotBytes = await readFile(image);
       }
       const chromeOnly = /^(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?)(\s+(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?))*$/i.test(clipText);
-      if (chromeOnly || (pngMostlyOneColor(bytes) && clipText.length < 80)) {
-        throw new Error(`near-empty or cropped capture on ${id}: ${clipText.slice(0, 80) || 'blank'}`);
+      if (chromeOnly || pngMostlyOneColor(shotBytes)) {
+        gap(title, file, `blank capture rejected for ${id}`);
+        return false;
       }
-      const hash = createHash('sha256').update(bytes).digest('hex');
+      const hash = createHash('sha256').update(shotBytes).digest('hex');
       const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
       if (prior && !(id === 'collab-upsell' && prior[0] === 'building-itinerary')) {
         throw new Error(`duplicate image hash ${hash} on ${id} and ${prior[0]}`);
@@ -419,6 +429,25 @@ async function main() {
     if (chapter === 'After the gold conversation') itineraryPages.push(entry);
     mark(file);
     return true;
+  }
+
+  async function clipMenu(selector, phrases) {
+    return page.evaluate((rootSelector, labels) => {
+      document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+      const root = document.querySelector(rootSelector);
+      if (!root) return null;
+      const text = (root.innerText || '').replace(/\s+/g, ' ').trim();
+      const lower = text.toLowerCase();
+      if (!labels.every((phrase) => lower.includes(String(phrase).toLowerCase()))) return null;
+      root.scrollIntoView({ block: 'center', inline: 'nearest' });
+      const box = root.getBoundingClientRect();
+      if (box.width < 40 || box.height < 40) return null;
+      const width = Math.min(window.innerWidth, 760);
+      const height = Math.min(window.innerHeight, Math.max(300, box.height + 140));
+      const x = Math.max(0, Math.min(Math.max(0, box.x - 16), window.innerWidth - width));
+      const y = Math.max(0, Math.min(Math.max(0, box.y - 80), window.innerHeight - height));
+      return { x, y, width, height };
+    }, selector, phrases);
   }
 
   async function clipOverlay(needles) {
@@ -558,8 +587,8 @@ async function main() {
       await copyFile(eulaImage, before);
       await copyFile(eulaAgreedImage, after);
       for (const [id, image, title, note] of [
-        ['eula', before, 'Review Terms & Privacy', 'EULA title is Review Terms & Privacy. Agree is on screen.'],
-        ['eula-agreed', after, 'Agree clicked', 'Agree was clicked on camera.'],
+        ['eula', before, 'Review Terms & Privacy', `EULA title is Review Terms & Privacy. Agree is on screen. Capture build ${driveLive}.`],
+        ['eula-agreed', after, 'Agree clicked', `Agree was clicked on camera. Capture build ${driveLive}.`],
       ]) {
         const hash = createHash('sha256').update(await readFile(image)).digest('hex');
         const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
@@ -593,7 +622,7 @@ async function main() {
         }
         await shot('eula', 'EULA', 'Review Terms & Privacy', {
           file: 'post-purchase-email-eula.md',
-          note: 'First screen of a pending app URL. Agree is on screen and about to be clicked.',
+          note: 'First screen of a pending app URL. Agree is on screen and about to be clicked. Capture build is printed on this page.',
         });
         const agree = await page.$('#eulaAgreeButton');
         if (agree) {
@@ -601,7 +630,7 @@ async function main() {
           await page.waitForFunction(() => !document.querySelector('#eulaScreen') || (document.body.innerText || '').includes('Welcome'), { timeout: 20000 }).catch(() => {});
           await shot('eula-agreed', 'EULA', 'Agree clicked', {
             file: 'post-purchase-email-eula.md',
-            note: 'Agree was clicked on camera.',
+            note: 'Agree was clicked on camera. Capture build is printed on this page.',
           });
         } else {
           gap('EULA Agree', 'post-purchase-email-eula.md', 'the Agree button was not on the EULA page');
@@ -692,22 +721,6 @@ async function main() {
         await shot(id, chapter, title, { file, note, clipRect, expect: needle });
       }
       await page.evaluate(() => { if (window.__tsClipRestore) window.__tsClipRestore(); });
-      const addThese = await page.evaluate(() => {
-        const bubble = [...document.querySelectorAll('article.bubble')].find((node) => /add these\?/i.test(node.innerText || ''));
-        if (!bubble) return null;
-        bubble.scrollIntoView({ block: 'center' });
-        const box = bubble.getBoundingClientRect();
-        return { x: 0, y: Math.max(0, box.y - 24), width: Math.min(1280, window.innerWidth), height: Math.min(720, Math.max(280, box.height + 48)) };
-      });
-      if (addThese) {
-        await shot('chat-search-add', 'Onboarding', 'Chat search', {
-          note: 'The chat box is the search. The reply asks add these?',
-          clipRect: addThese,
-        });
-      } else {
-        gap('Chat search', '', 'Search was removed from the feature map. This journey does not rebuild a search screen.');
-        gap('Autonomy', '', 'The autonomy bar was removed from the feature map. N/A.');
-      }
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
       if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
       else mark('jev-quality-line.md');
@@ -715,6 +728,8 @@ async function main() {
       gap('First onboarding prompt', 'post-purchase-email-eula.md', 'no session URL was passed');
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
+    gap('Search', 'search-redesign.md', 'N/A. Search was removed from the Feature Map by Craig\'s ruling (SoT jev-note-and-feature-map-gaps-20260927). This journey does not rebuild it.', { exempt: true });
+    gap('Autonomy', 'autonomous-app-customer-flow.md', 'N/A. The autonomy bar was removed from the Feature Map by Craig\'s ruling (SoT jev-note-and-feature-map-gaps-20260927). This journey does not rebuild it.', { exempt: true });
     mark('live-app-jev-tier.md');
     await page.setViewport({ width: 1280, height: 900 });
 
@@ -827,15 +842,11 @@ async function main() {
         }
         const hasMic = Boolean(button.querySelector('svg'));
         if (box.width < 16 || box.height < 16 || !hasMic) return { missing: true };
-        const pad = 64;
-        const x = Math.max(0, box.x - pad);
-        const y = Math.max(0, box.y - pad);
-        return {
-          x,
-          y,
-          width: Math.min(window.innerWidth - x, box.width + pad * 2),
-          height: Math.max(box.height + pad * 2, 180),
-        };
+        const width = Math.min(window.innerWidth, 720);
+        const height = 320;
+        const x = Math.max(0, Math.min(box.x - 80, window.innerWidth - width));
+        const y = Math.max(0, Math.min(box.y - 80, window.innerHeight - height));
+        return { x, y, width, height };
       });
       if (voiceRow && voiceRow.width) {
         await shot('voice-note', 'After the gold conversation', 'Voice note', {
@@ -871,11 +882,13 @@ async function main() {
         const panel = [...document.querySelectorAll('div')].find((node) => !node.hidden && (node.innerText || '').includes('Close navigation') && node.getBoundingClientRect().height > 40);
         if (!panel) return { missing: true };
         const box = panel.getBoundingClientRect();
+        const width = Math.min(window.innerWidth, 720);
+        const height = Math.min(window.innerHeight, Math.max(320, box.height + 80));
         return {
-          x: Math.max(0, box.x - 8),
-          y: Math.max(0, box.y - 8),
-          width: Math.max(200, Math.min(420, box.width + 16)),
-          height: Math.max(160, Math.min(420, box.height + 16)),
+          x: Math.max(0, Math.min(box.x - 24, window.innerWidth - width)),
+          y: Math.max(0, Math.min(box.y - 48, window.innerHeight - height)),
+          width,
+          height,
         };
       });
       if (navPanel && !navPanel.missing) {
@@ -902,6 +915,9 @@ async function main() {
         gap('TREK settings', 'trek-settings.md', 'Mapbox, weather, and copy-link settings are not on the guest page');
       }
 
+      await page.evaluate(() => {
+        document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+      });
       for (let day = 1; day <= 10; day += 1) {
         const label = `Day ${day}`;
         const opened = await clickText(page, label, { exact: true });
@@ -1104,27 +1120,19 @@ async function main() {
           gap('Car fields', 'car-fields.md', 'A car row is the Car type placeholder.');
         }
         const shown = (labels || []).join(', ') || 'no named car row';
-        await shot('car-fields', 'After the gold conversation', 'Cars', {
-          file: 'car-fields.md',
-          note: priced >= 10
-            ? `Cars tab shows ${shown}. The ten lowest prices are on the page. Live brand removal is the Remove control on those rows.`
-            : `Cars tab shows ${shown}. Priced rows on this image: ${priced}. No fixed brand pool. Live brand removal uses the Remove control on the rows that are on screen.`,
-          clipRect: carClip,
-        });
-        const removedBrand = await page.evaluate(() => {
-          if (typeof window.__tsMountCarBrands === 'function') window.__tsMountCarBrands();
-          const button = document.querySelector('[data-ts-remove-brand]');
-          if (!button) return '';
-          button.click();
-          return button.dataset.tsRemoveBrand || button.textContent || '';
-        });
-        if (removedBrand) {
-          await sleep(300);
-          await shot('car-brand-removed', 'After the gold conversation', 'Cars brand removed', {
+        if (priced >= 10) {
+          await shot('car-fields', 'After the gold conversation', 'Cars', {
             file: 'car-fields.md',
-            note: `Removed ${removedBrand} on the Cars tab. The image is the list after that brand is hidden.`,
-            clipRect: carList,
+            note: `Cars tab shows ${shown}. The ten lowest prices are on the page.`,
+            clipRect: carClip,
           });
+        } else {
+          await shot('car-fields', 'After the gold conversation', 'Cars', {
+            file: 'car-fields.md',
+            note: `Cars tab shows ${shown}. This image is the live car Thing. It is not ten priced rentals.`,
+            clipRect: carClip,
+          });
+          gap('Ten lowest car prices', 'car-fields.md', 'GAP: no live rental price source is available within the allowed tools. There is no Kayak or other rental feed, Google Places is not allowed, and lowestCarOffers only lists places that already have a numeric price. The only car Thing here is SpeediShuttle, which has no price. Removing that one unpriced row leaves an empty list, so this journey does not publish an empty list as brand removal.');
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
@@ -1133,8 +1141,8 @@ async function main() {
         if (has(hourText, 'Happy hour') || has(hourText, 'happy hour')) {
           await shot('happy-hour', 'After the gold conversation', 'Happy hour', {
             file: 'happy-hour.md',
-            note: 'Ulu Ocean Grill happy hour field.',
-            clipRect: await clipOverlay(['Happy hour', 'happy hour']) || await clipAround('Happy hour', { height: 260, padTop: 24 }),
+            note: 'Ulu Ocean Grill happy hour field as stored on the detail. No clock time is added.',
+            clipRect: await clipAround('Happy hour', { height: 360, padTop: 48 }),
           });
         }
         await page.keyboard.press('Escape').catch(() => {});
@@ -1161,32 +1169,31 @@ async function main() {
           await sleep(400);
           printText = await bodyText(page);
         }
-        const printClip = await clipOverlay(['Layout 1', 'Layout 2', 'Print / PDF', 'Daily printout']);
-        if ((has(printText, 'Print / PDF') || has(printText, 'Daily printout') || has(printText, 'Layout 1')) && printClip) {
+        const printClip = await clipMenu('[data-print-menu-root]', ['Print / PDF', 'Daily printout']);
+        if (printClip) {
           await shot('print-pdf', 'After the gold conversation', 'Print and PDF', {
             file: 'print-pdf.md',
-            note: 'Print / PDF menu: Daily printout and list PDFs. Layout 1 and Layout 2 are Style one and Style two.',
+            note: 'Print / PDF menu with Daily printout. The clip is the open menu, not a Thing editor.',
             clipRect: printClip,
-            expect: has(printText, 'Layout 1') ? 'Layout 1' : 'Print',
+            expect: 'Daily printout',
           });
         }
-        if (await clickText(page, 'Keepsakes') || await clickText(page, 'Keepsakes ▸')) {
-          await sleep(300);
-          if (!(await clickText(page, 'Admin')) && !(await clickText(page, 'Admin ▸'))) {
-            await page.evaluate(() => {
-              const button = [...document.querySelectorAll('button')].find((node) => /^admin\b/i.test((node.innerText || '').trim()));
-              button?.click();
-            });
-          }
-          await sleep(300);
-          const keepsakeText = await bodyText(page);
-          const keepsakeClip = await clipOverlay(['TimeSyncher Vacation logo', 'Initial summary page', 'Style one', 'Layout 1']);
-          if ((has(keepsakeText, 'TimeSyncher Vacation logo') || has(keepsakeText, 'Initial summary page') || has(keepsakeText, 'Style one')) && keepsakeClip) {
+        const keepsakeOpened = await page.evaluate(() => {
+          const button = document.querySelector('[data-keepsake-menu-root] button');
+          if (!button) return false;
+          button.scrollIntoView({ block: 'center', inline: 'center' });
+          button.click();
+          return true;
+        });
+        if (keepsakeOpened) {
+          await sleep(400);
+          const keepsakeClip = await clipMenu('[data-keepsake-menu-root]', ['Style one', 'Style two']);
+          if (keepsakeClip) {
             await shot('keepsakes-config', 'After the gold conversation', 'Keepsakes config', {
               file: 'keepsakes-config.md',
-              note: 'Keepsakes config: logo, summary, and Style sections. Not the restaurant detail behind the menu.',
+              note: 'Keepsakes menu with Style one and Style two. Not a Thing edit window.',
               clipRect: keepsakeClip,
-              expect: has(keepsakeText, 'Style one') ? 'Style' : 'Keepsake',
+              expect: 'Style one',
             });
           }
         }
@@ -1259,8 +1266,8 @@ async function main() {
     }
     if (!captured.has('ratings-reviews.md')) {
       const emptyRating = await page.evaluate(() => [...document.querySelectorAll('label')].some((node) => /^google rating\b/i.test((node.innerText || '').trim()) && !/\d/.test(String(node.querySelector('input')?.value || '')))).catch(() => false);
-      if (emptyRating) gap('Ratings and reviews', 'ratings-reviews.md', 'an empty Google rating box is still on the detail');
-      else gap('Ratings and reviews', 'ratings-reviews.md', 'no sourced rating screenshot was captured');
+      if (emptyRating) gap('Ratings and reviews', 'ratings-reviews.md', 'GAP: the live trip has no rating digit. The bundle renders Google, Yelp, and Other rating labels only when the stored string contains a digit, and this trip\'s things do not. No rating was invented.');
+      else gap('Ratings and reviews', 'ratings-reviews.md', 'GAP: no sourced rating digit was on screen. The bundle renders those labels only when the stored string contains a digit. No rating was invented.');
     }
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
     if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control did not open a Print / PDF menu. Unblock: mount that menu on vacation-staging.');
@@ -1431,6 +1438,9 @@ async function main() {
         note: 'Live trip after collaborator notes. Not the pre-collaborator snapshot.',
         clipRect: await clipAround('Vacation Day View', { height: 640, padTop: 40 }),
       });
+      await page.evaluate(() => {
+        document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+      });
       for (let day = 1; day <= 10; day += 1) {
         const label = `Day ${day}`;
         if (!await clickText(page, label, { exact: true })) {
@@ -1589,7 +1599,7 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
       ? 'jev-quality-line: PASS. The score line is in the Dialog PDF and the JSONL log. The customer app does not show it.'
       : 'jev-quality-line: GAP. The customer app showed a Jev score line.',
     `screenshot-journey.pdf sha256 \`${sha}\`.`,
-    'Search and the autonomy bar were removed from the feature map. This journey records them as N/A and does not rebuild either screen.',
+    'Search and the autonomy bar were removed from the Feature Map by Craig\'s ruling (SoT jev-note-and-feature-map-gaps-20260927). This journey records them as N/A and does not rebuild either screen.',
     'Trip View is removed from the app bundle.',
     '',
     '### Not captured',

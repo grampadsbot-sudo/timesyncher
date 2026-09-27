@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeFacts, interimCanShip, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -13,6 +13,7 @@ import {
   assertLiveTranscript,
   assessPackShape,
   dialogPackTitle,
+  shippedRewriteLabel,
   extractPdfText,
   formatLiveTimingLine,
   jevRewriteLabelCounts,
@@ -376,6 +377,31 @@ assert.ok(draftFactErrors('The later swim can sit between Monday and the Friday 
 assert.ok(draftFactErrors('So, Craig, you are set with the crew—Torren, Peyton, Keegan, and little Fallon.', { ...earlyFacts, ownerName: 'Craig' }).some((line) => /Craig is traveling/.test(line)));
 assert.equal(verifiedRewriteChange('Removed the whole crew and included Craig.', 'the whole crew of eight', 'Craig and the whole crew of eight'), '');
 assert.equal(verifiedRewriteChange('Removed the implication that both options were already saved.', 'Tuesday is a town walk or a house-pool swim.', 'Tuesday is a town walk or a house-pool swim.'), '');
+const savedRemoval = 'Removed the claim that a swim was already saved on April 10th, as it was not yet on the saved itinerary.';
+assert.equal(verifiedRewriteChange(savedRemoval, 'For Tyler\'s swim later in the week, I have that saved for the second Friday of the trip, April 10th.', 'Groceries are saved for your arrival on Friday, April 3rd. For Tyler\'s swim later in the week, I can slot that in.'), savedRemoval);
+assert.equal(verifiedRewriteChange('Removed false claim that a swim was saved on April 10 and corrected it to April 6 as per the itinerary.', 'Since the swim is set for Monday, April 6th at the beach.', 'The swim is saved for Monday, April 6th at the beach, not April 10th, so we have corrected that.'), '');
+assert.equal(shippedRewriteLabel({ held: false, quality: { rewritten: true, rewriterChange: null }, rewriteText: 'Hello\nWHAT_I_CHANGED: Removed a swim on April 10.', rewriterChange: null, rewriteModel: 'deepseek/deepseek-v3.2' }), '');
+const beatHolding = shipChoice({
+  draft: 'Tuesday is a swim.',
+  draftScore: 2.94,
+  rewrite: 'Tuesday can be a town walk or a dinner.',
+  rewriteScore: 2.72,
+  draftFactErrors: ['a swim on apr 7 was not set by the customer'],
+  holding: 'Tuesday is open.',
+  holdingScore: 2.53,
+});
+assert.equal(beatHolding.rewritten, true);
+assert.equal(draftFactErrors('If Monday, April 6th rains, the beach swim can shift to April 10th as a backup.', earlyFacts).some((line) => /apr 10/.test(line)), false);
+assert.equal(draftFactErrors('Kimberly is interested in a second garden or a town walk on Thursday, April 9.', earlyFacts).some((line) => /apr 9/.test(line)), false);
+assert.equal(draftFactErrors('The swim is saved for Monday, April 6th, not April 10th.', setFacts).some((line) => /apr 10/.test(line)), false);
+assert.ok(draftFactErrors('The plan matches, so we\'ve corrected that.', earlyFacts).some((line) => /invented a correction/.test(line)));
+assert.ok(draftFactErrors('Your two garden mornings and your later swim are set.', { ...setFacts, addressedTo: 'Lauren', owners: { gardens: 'Kimberly', swim: 'Tyler' } }).length >= 2);
+assert.equal(draftFactErrors('We added a second swim on Fri Apr 10 at Kailua-Kona, right after the town walk and before dinner.', { ...setFacts, customerTurn: 'I still want one later swim in the week.', laterFriday: 'Friday April 10', townWalkDays: ['apr 9'] }).some((line) => /town walk on apr 10/.test(line)), false);
+assert.equal(draftFactErrors('Lauren\'s rule about no two big activities stacked is locked in.', { ...setFacts, rule: 'Lauren does not want two big activities stacked on the same day.' }).some((line) => /stacked on the same day/.test(line)), false);
+assert.deepEqual(beatsMatchingReply(['Set arrival and swim days.'], 'Groceries are saved for your arrival. For Tyler\'s swim later in the week, I can slot that in.'), []);
+assert.equal(interimCanShip('It sounds like a wonderful trip is coming together. I can help you plan that out.', 'This is Lauren. Tuesday April seventh should be one big thing. I will pick after you offer two options.', setFacts), false);
+assert.equal(JSON.parse(transcriptToJsonl({ sessionToken: 'secret-token', live: true, turns: [] }).split('\n')[0]).sessionToken, null);
+assert.doesNotMatch(transcriptToJsonl({ sessionToken: 'secret-token', live: true, turns: [] }), /secret-token/);
 assert.equal(verifiedRewriteChange('Added Tyler and Lauren to the list of traveling companions.', 'Welcome aboard.', 'Welcome aboard. The town walk is also on the list.'), '');
 const absentParty = { notTraveling: [{ name: 'Marcus Chen', role: 'viewer' }, { name: 'Aunt Jean', role: 'editor' }] };
 assert.equal(draftFactErrors('For Marcus Chen and Aunt Jean, since they are not traveling with your crew, they can each have view access.', absentParty).some((line) => /not on the trip/.test(line)), false);

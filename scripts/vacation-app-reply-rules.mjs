@@ -618,7 +618,9 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.',
     'Use the saved trip dates, swims, gardens, and roles. If a swim day or a garden day is not on the saved trip, do not announce it. Do not say a garden or a swim is already set unless that day is saved. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. The arrival day is arrival and groceries only. Do not add a house-pool dip, a pool dip, or a second outing on that day. Friday is not midweek.',
     'The account holder in the Traveling roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children. A person who just joined is a collaborator, not the account holder. Do not say party of eight unless the people you just listed are eight. Four unnamed friends count in that list. Do not say just the crew, the whole crew, or a crew of eight unless the account holder is in that list.',
-    'When the customer asks for a later swim and does not name a weekday, say the swim is saved on the second Friday of the trip. Do not leave that swim as later in the week or between other days.',
+    'When the customer asks for a later swim and does not name a weekday, say the swim is saved on the second Friday of the trip and name that day. Do not leave that swim as later in the week or between other days. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
+    'Address the person who is speaking. Do not tell Lauren that Kimberly\'s gardens or Tyler\'s swim are hers.',
+    'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
     'Do not put a town walk on a day that is not already the town walk day.',
     'When the customer asks to add a place, name the matches and ask "add these?" The chat box is the search. There is no separate search screen.',
     'On the long trip dump, use the words "building the itinerary".',
@@ -632,7 +634,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     trip?.roster ? String(trip.roster) : '',
     trip?.dates ? String(trip.dates) : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
-    'End with one final line that starts with BEAT: and a three-to-six word label of what this turn did. Do not put BEAT anywhere else.',
+    'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',
   ].filter(Boolean).join('\n');
 }
 
