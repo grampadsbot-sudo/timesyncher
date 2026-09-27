@@ -1,4 +1,4 @@
-import { CAR_OFFER_POOL, lowestCarOffers } from './car-offers.mjs';
+import { lowestCarOffers } from './car-offers.mjs';
 import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
 
@@ -312,7 +312,6 @@ export function applyThingPresentation(shared = {}, options = {}) {
       extra.restaurantTags = ['Seafood', 'Cocktail Bar / Happy Hour'];
       extra.happyHour = true;
       extra.happyHourDetails = 'Ocean bar happy hour at Ulu Ocean Grill. Recheck the Four Seasons Hualalai listing before the trip.';
-      extra.review1 = extra.happyHourDetails;
     } else if (/huggo/i.test(name) || /fish hopper/i.test(name)) {
       extra.restaurantTags = ['Seafood'];
     }
@@ -386,7 +385,12 @@ export function applyThingPresentation(shared = {}, options = {}) {
       ...sourcedRatings(flightName, options),
     });
   }
-  const shownCars = lowestCarOffers(CAR_OFFER_POOL, 10);
+  const shownCars = lowestCarOffers(
+    places
+      .filter((place) => /car/i.test(String(place.category_name || '')) && Number.isFinite(Number(place.price)) && String(place.name || '').trim())
+      .map((place) => ({ brand: place.name, price: Number(place.price) })),
+    10,
+  );
   for (const offer of shownCars) {
     if (places.some((place) => String(place.name || '').toLowerCase() === offer.brand.toLowerCase())) continue;
     const id = intId(`${shared.trip?.id || 'trip'}:car:${offer.brand}`);
@@ -410,5 +414,5 @@ export function applyThingPresentation(shared = {}, options = {}) {
       logoUrl: captureThingLogo(place, { title: offer.brand, category: 'car' }),
     });
   }
-  return { ...shared, places, thingOverrides, carOfferPool: CAR_OFFER_POOL };
+  return { ...shared, places, thingOverrides, carOfferPool: shownCars };
 }

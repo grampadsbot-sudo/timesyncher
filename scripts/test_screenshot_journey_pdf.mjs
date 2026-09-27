@@ -16,10 +16,12 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
 const image = path.join(dir, 'pixel.png');
 writeFileSync(image, png);
 const stamp = 'live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com';
+const buildVsTip = 'build used vs tip: 0123456789abcdef0123456789abcdef01234567 equals the tip';
 const manifest = {
   title: 'Screenshot Journey',
   subtitle: 'fixture',
   deployBanner: stamp,
+  buildVsTip,
   pages: [{ id: 'purchase', chapter: 'Purchase', title: 'Purchase confirmed', file: 'post-purchase-email-eula.md', note: 'fixture', image }],
   gaps: [{ feature: 'Language', file: 'language.md', reason: 'no language control' }],
 };
@@ -49,7 +51,7 @@ const text = spawnSync('python3', ['-c', `
 import sys
 from pypdf import PdfReader
 text = "\\n".join(page.extract_text() or "" for page in PdfReader(sys.argv[1]).pages)
-need = ["Contents", "GAP. Language", "language.md", "Purchase confirmed", "0123456789abcdef0123456789abcdef01234567"]
+need = ["Contents", "GAP. Language", "language.md", "Purchase confirmed", "0123456789abcdef0123456789abcdef01234567", "build used vs tip:", "equals the tip"]
 missing = [item for item in need if item not in text]
 if missing:
     raise SystemExit("missing " + ", ".join(missing))

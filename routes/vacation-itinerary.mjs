@@ -360,6 +360,23 @@ async function queueVacationAppTurn(db, session, trip, body) {
   const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
   const modality = customerModality(body);
   const seat = seatFromSession(session);
+  if (!seat) {
+    const holder = [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
+    if (holder) {
+      await db`
+        update trips
+        set metadata = jsonb_set(
+          coalesce(metadata, '{}'::jsonb),
+          '{dialogParty,primary}',
+          ${JSON.stringify({ name: holder, role: 'Owner' })}::jsonb,
+          true
+        ),
+          updated_at = now()
+        where id = ${tripId}
+          and coalesce(metadata#>>'{dialogParty,primary,name}', '') = ''
+      `;
+    }
+  }
   const transcriptOwnerId = transcriptCustomerId(session);
   const speakerName = seat?.displayName || [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
   const prior = await db`
@@ -648,6 +665,15 @@ async function ensureIntakeItinerary(db, tripId, text) {
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
   const span = facts.span;
+  const priorRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
+  const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
+  const party = completeRosterParty({
+    party: priorParty,
+    customerName: priorParty.primary?.name || '',
+    turns: [{ role: 'customer', text }],
+  });
+  if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
   if (span?.destination || span?.start) {
     await db`
       update trips
@@ -668,7 +694,7 @@ async function ensureIntakeItinerary(db, tripId, text) {
             intakeRule: facts.rule || '',
             intakeSpan: span.spanLabel || '',
             intakeBadge: span.badge || '',
-            dialogParty: completeRosterParty({ turns: [{ role: 'customer', text }] }),
+            dialogParty: party,
           }},
           updated_at = now()
       where id = ${tripId}

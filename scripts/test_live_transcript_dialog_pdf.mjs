@@ -12,6 +12,7 @@ import {
   assertJevRewriteLabels,
   assertLiveTranscript,
   assessPackShape,
+  dialogPackTitle,
   extractPdfText,
   formatLiveTimingLine,
   jevRewriteLabelCounts,
@@ -138,6 +139,8 @@ assert.equal(gardenAndWalk.find((thing) => thing.title === 'Gardens').customerWh
 assert.equal(isTemplateInterim('Got it. I saved that.', 'Thursday town walk'), true);
 assert.equal(isTemplateInterim('Sure, the Thursday walk can stay.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thursday is a town walk.'), false);
+assert.equal(isTemplateInterim('I am building the itinerary.', 'Build the itinerary and send an email invite.'), true);
+assert.equal(isTemplateInterim('I am building the itinerary from that now. View access lets them see the days. Edit access lets them add notes after you approve an email invite.', 'Please build the itinerary and send an email invite.'), false);
 assert.deepEqual(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'google/gemini-2.5-flash-lite', ms: 400 } },
   { turnIndex: 4, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'google/gemini-2.5-flash-lite', ms: 500 } },
@@ -151,7 +154,21 @@ assert.match(interimProblems([
 assert.match(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: 'Thursday stays a town walk.', model: 'google/gemini-2.5-flash-lite', ms: 200 } },
 ])[0], /non-rewrite turn has an interim/);
-assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 2, rewrite: 'A different Thursday town walk stays.', rewriteScore: 4 }).rewritten, true);
+assert.equal(dialogPackTitle('Big Island Family'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
+assert.equal(dialogPackTitle('Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
+assert.equal(draftFactErrors("Sunday's garden stays with Kimberly.", { owners: { gardens: 'Kimberly' }, gardenDays: ['apr 5'], span: { start: '2026-04-03', end: '2026-04-12' } }).some((error) => /Sunday/.test(error)), false);
+assert.ok(draftFactErrors('With Craig, Torren, Peyton, Keegan, Fallon, and the four friends making a party of eight.', { ownerName: 'Craig Davidson' }).some((error) => /lists 9 people/.test(error)));
+const fullParty = { travelers: ['Craig Davidson', 'Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson', 'Torren', 'Peyton', 'Keegan', 'Fallon'] };
+assert.ok(draftFactErrors('Craig, Kimberly, Lauren, Torren, Peyton, Keegan, and Fallon are all set.', fullParty).some((error) => /Tyler is traveling/.test(error)));
+assert.equal(draftFactErrors('Torren, Peyton, Keegan, and Fallon are with you.', fullParty).some((error) => /Tyler is traveling/.test(error)), false);
+assert.ok(draftFactErrors('The already-saved backup swim is on Friday, April 10.', { swimDays: [], span: { start: '2026-04-03', end: '2026-04-12' } }).some((error) => /swim/.test(error)));
+assert.equal(verifiedRewriteChange('I moved the later swim to Friday, April 10.', 'The later swim is on Friday, April 10.', 'The later swim is on Friday, April 10.'), '');
+assert.equal(shipChoice({
+  draft: 'Welcome aboard Tyler for the Big Island week with the garden on Sunday.',
+  draftScore: 3,
+  rewrite: 'Welcome aboard Tyler. The Big Island week keeps the garden on Sunday and the swim on Monday.',
+  rewriteScore: 4,
+}).rewritten, true);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).rewritten, false);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).failReason, 'rewrite_scored_lower');
 const tied = shipChoice({
@@ -313,6 +330,16 @@ const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Su
 assert.deepEqual(draftFactErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.', setFacts), []);
 assert.deepEqual(draftFactErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.', setFacts), []);
 const earlyFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Tyler wants a swim. Monday April 6 is the beach swim.');
+assert.equal(draftFactErrors('I have the house from April 3rd to the 12th. Tyler\'s swim is on the list.', earlyFacts).some((error) => /swim on apr 3/.test(error)), false);
+assert.equal(draftFactErrors('The trip runs from April 3 to 12, whether that is groceries or joining the town walk.', { ...setFacts, townWalkDays: [] }).some((error) => /town walk on apr 3/.test(error)), false);
+assert.equal(draftFactErrors('Notes can land on Sun Apr 5 gardens, Mon Apr 6 beach swim, Fri Apr 10 dinner, or the town walk.', { ...setFacts, townWalkDays: [] }).some((error) => /town walk on apr 5/.test(error)), false);
+assert.equal(priceAnswered('Your seat covers Kimberly at $27, paid by you. Tyler takes his own seat at $27, paid by him, and Lauren takes hers at $27, paid by her.', 'I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.'), true);
+assert.equal(priceAnswered('You will cover Kimberly’s $27, Tyler will pay his own $27, and Lauren will pay her own $27.', 'I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.'), true);
+assert.ok(draftFactErrors('For the swim later in the week, I will save that for Friday, April 10th.', earlyFacts).some((error) => /claimed as saved/.test(error)));
+assert.ok(draftFactErrors('That later swim is saved on the second Friday of the trip.', earlyFacts).some((error) => /claimed as saved/.test(error)));
+assert.ok(draftFactErrors('Since Tyler wanted a swim later in the week anyway, we have already saved that backup for the second Friday.', earlyFacts).some((error) => /claimed as saved/.test(error)));
+assert.equal(draftFactErrors('The later swim is saved on the second Friday.', { ...earlyFacts, customerTurn: 'I still want one later swim in the week at Kailua-Kona.' }).some((error) => /claimed as saved/.test(error)), false);
+assert.equal(draftFactErrors('The crew for this adventure includes Torren, Peyton, Keegan, and Fallon, along with your four unnamed friends.', { ownerName: 'Craig Davidson' }).some((error) => /is traveling/.test(error)), false);
 assert.ok(draftFactErrors('Tuesday the 7th can hold a morning swim.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.equal(draftFactErrors('The swim isn\'t set for a specific day yet, so we won\'t lock it to Monday, April 6.', earlyFacts).some((line) => /swim on apr 6/.test(line)), false);
 assert.equal(draftFactErrors('The garden on April 12 is not already set.', earlyFacts).some((line) => /garden on apr 12/.test(line)), false);
@@ -774,5 +801,20 @@ assert.match(unjudgedPack.stderr?.toString() || '', /not judged/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, quality: null } : turn)),
 }), /not judged/);
+
+const driveSha = 'e830a5d177fcb5091cf127129ca9ea9481c4b5e2';
+const stamped = liveDoc({
+  buildSha: driveSha,
+  deployBanner: `live ${driveSha} https://vacation-staging.timesyncher.com`,
+  buildVsTip: `build used vs tip: ${driveSha} equals the tip`,
+});
+stamped.turns = stamped.turns.map((turn) => ({ ...turn, buildSha: driveSha }));
+const stampedText = extractPdfText(renderLiveTranscriptPdf(stamped, { trip: 'Big Island Family' }));
+assert.match(stampedText, new RegExp(driveSha));
+assert.match(stampedText, /build used vs tip:/);
+assert.match(stampedText, /equals the tip/);
+assert.match(stampedText, /Dialog Pack — Big Island Family v7 Tier 1–4/);
+const publisherSource = fs.readFileSync(script, 'utf8');
+assert.equal(publisherSource.includes('transcript.buildSha ='), false);
 
 console.log('live transcript dialog pdf passed');

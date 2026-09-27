@@ -19,7 +19,7 @@ import {
   isTemplateNote,
   isTemplateInterim,
   interimProblems,
-  nearIdenticalRewrite,
+  rewriteReplacesDraft,
   completeRosterParty,
   item34BanHit,
   loadLiveTranscriptByToken,
@@ -27,7 +27,8 @@ import {
 } from '../src/vacation/live-app-turn.mjs';
 import { priceAnswered } from '../src/vacation/seat-price.mjs';
 import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
-import { assertLiveMatchesTip, isVoidStaleBuild, pdfTextHasSha } from './void-stale-build.mjs';
+import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
+import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
@@ -200,7 +201,11 @@ export function assertLiveTranscript(doc) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewrite text`);
         }
         const labeledRewrite = Number(turn.jevScoreRewrite);
-        if (String(turn.rewriteText || '').trim() && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
+        const shippedRewrite = turn.quality?.rewritten === true;
+        if (shippedRewrite && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
+          throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
+        }
+        if (!shippedRewrite && turn.jevScoreRewrite != null && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
         if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
@@ -210,7 +215,7 @@ export function assertLiveTranscript(doc) {
         if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite attempt was not logged`);
         }
-        if (turn.quality?.rewritten === true && nearIdenticalRewrite(turn.quality?.draft || '', text)) {
+        if (turn.quality?.rewritten === true && !rewriteReplacesDraft(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
         }
         if (!String(turn.quality?.draft || turn.log?.draftText || '').trim() && turn.quality?.rewritten === true) {
@@ -558,6 +563,13 @@ export function rosterLines(doc) {
   return lines;
 }
 
+export function dialogPackTitle(trip) {
+  const raw = String(trip || '').trim();
+  if (/^Dialog Pack\b/.test(raw)) return raw;
+  const label = raw.replace(/\s+v7(?:\s+Tier\s+1[–-]4)?\s*$/i, '').trim() || 'untitled';
+  return `Dialog Pack \u2014 ${label} v7 Tier 1\u20134`;
+}
+
 export function liveV7Pack(doc, shape) {
   const generated = (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
   const labeledOf = (turn) => {
@@ -578,8 +590,7 @@ export function liveV7Pack(doc, shape) {
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
   const trip = shape.trip || 'untitled';
-  const tripLabel = String(trip).trim() || 'untitled';
-  const title = /\bv7\b/i.test(tripLabel) ? tripLabel : `Dialog Pack — ${tripLabel} v7 Tier 1–4`;
+  const title = dialogPackTitle(trip);
   const timingRows = [
     ['Pack', 'Model(s)', 'n', 'p50 ms', 'p95 ms', 'mean ms', 'max ms'],
     ['v6', 'openai/gpt-5-mini', '23', '28834', '39693', '27833', '44762'],
@@ -600,6 +611,7 @@ export function liveV7Pack(doc, shape) {
   return {
     title,
     deploy_banner: String(doc.deployBanner || '').trim(),
+    build_vs_tip: String(doc.buildVsTip || '').trim(),
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
     record_fails: false,
     content_fails: [],
@@ -904,28 +916,25 @@ function qaInput(doc, shape) {
   };
 }
 
+function exitUntrusted(error) {
+  process.stderr.write(`${error?.message || error}\n`);
+  process.exit(2);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.out) throw new Error('refused: --out PDF path is required');
-  if (!args.transcript && !args.jsonl && !args.session) await loadTranscript(args);
-  let liveMatch = null;
+  const transcript = assertLiveTranscript(await loadTranscript(args));
+  let driveSha = '';
   if (!args.fixture) {
     try {
-      liveMatch = await assertLiveMatchesTip();
+      driveSha = driveShaFromTranscript(transcript);
+      transcript.buildVsTip = buildUsedVsTipLine(driveSha, readTipSha());
+      transcript.deployBanner = driveBanner(driveSha);
     } catch (error) {
-      if (!isVoidStaleBuild(error)) throw error;
-      process.stderr.write(`${error.message}\nrefused: dialog stamp does not match the tip\n`);
-      process.exit(2);
+      if (!isUntrustedPack(error)) throw error;
+      exitUntrusted(error);
     }
-    if (!liveMatch?.live || liveMatch.live !== liveMatch.tip) {
-      process.stderr.write('refused: dialog stamp is empty or does not match the tip\n');
-      process.exit(2);
-    }
-  }
-  const transcript = assertLiveTranscript(await loadTranscript(args));
-  if (liveMatch?.live) {
-    transcript.buildSha = liveMatch.live;
-    transcript.deployBanner = `live ${liveMatch.live} https://vacation-staging.timesyncher.com`;
   }
   const shape = assessPackShape(transcript, {
     trip: args.trip,
@@ -938,16 +947,15 @@ async function main() {
     dpl: args.dpl,
   });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
-  if (liveMatch?.live && !extractPdfText(pdf).includes(liveMatch.live)) {
-    process.stderr.write('refused: dialog PDF does not print the live sha\n');
-    process.exit(2);
+  const rendered = extractPdfText(pdf);
+  if (driveSha && (!rendered.includes(driveSha) || !rendered.includes('build used vs tip:'))) {
+    exitUntrusted(new Error('untrusted: dialog PDF does not print the drive build'));
   }
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
-  if (liveMatch?.live && !pdfTextHasSha(args.out, liveMatch.live)) {
+  if (driveSha && !pdfTextHasSha(args.out, driveSha)) {
     fs.unlinkSync(args.out);
-    process.stderr.write('refused: dialog PDF on disk does not print the live sha\n');
-    process.exit(2);
+    exitUntrusted(new Error('untrusted: dialog PDF on disk does not print the drive build'));
   }
   const failLines = Array.isArray(transcript.contentFails) ? transcript.contentFails : [];
   const failsPath = args.fails || String(args.out).replace(/\.pdf$/i, '.content-fails.txt');

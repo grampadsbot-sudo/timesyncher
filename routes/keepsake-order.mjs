@@ -10,6 +10,7 @@ export function orderPage(slug, title, notice) {
 <body>
   <h1>Order this keepsake</h1>
   <p data-keepsake-buy-link="${safeSlug}">Anyone with this link can order the keepsake for ${safeTitle}. This is not limited to the customer who built the trip.</p>
+  <p data-keepsake-guest="1">Opened without the trip owner session.</p>
   ${note}
 </body>
 </html>`;

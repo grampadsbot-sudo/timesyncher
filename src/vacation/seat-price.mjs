@@ -44,7 +44,17 @@ export function priceClauseSatisfied(part, reply) {
   if (!match) return false;
   const name = match[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const payer = match[3].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`${name}(?:['’]s)? \\$${match[2]}, paid by ${payer}`).test(body);
+  const selfPay = match[1].toLowerCase() === match[3].toLowerCase();
+  const payerPattern = selfPay ? `(?:${payer}|him|her)` : payer;
+  if (new RegExp(`${name}(?:['’]s)?(?:\\s+(?!\\$)[\\w'’]+){0,8}\\s+\\$${match[2]}, paid by ${payerPattern}`, 'i').test(body)) return true;
+  const namedAmount = new RegExp(`${name}['’]s\\s+\\$${match[2]}`, 'i');
+  if (match[3].toLowerCase() === 'you' && namedAmount.test(body)) {
+    return new RegExp(`you(?:['’]ll| will)?\\s+(?:cover|pay)\\s+${name}['’]s\\s+\\$${match[2]}`, 'i').test(body);
+  }
+  if (selfPay) {
+    return new RegExp(`${name}\\s+will\\s+pay\\s+(?:his|her|their)\\s+own\\s+\\$${match[2]}|${name}\\s+(?:covers|pays)\\s+(?:his|her|their)\\s+own\\s+\\$${match[2]}`, 'i').test(body);
+  }
+  return false;
 }
 
 export function priceAnswered(reply, customerTurn, env = process.env) {

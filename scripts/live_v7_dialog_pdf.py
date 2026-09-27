@@ -10,6 +10,8 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     CondPageBreak,
     PageBreak,
@@ -23,6 +25,10 @@ from reportlab.platypus import (
 
 def esc(value):
     return ("" if value is None else str(value)).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def cover_title(value):
+    return esc("" if value is None else str(value))
 
 
 def latin(value):
@@ -153,13 +159,14 @@ def tbl(rows, col_widths):
 
 
 def build(pack):
+    pdfmetrics.registerFont(TTFont("DejaVuSans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
     pending = [str(line).strip() for line in (pack.get("content_fails") or []) if str(line).strip()]
     if pending:
         raise SystemExit("content check failed: " + "; ".join(pending))
     assert_quality(pack)
     assert_item34(pack)
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Title"], fontSize=16, spaceAfter=8, alignment=TA_CENTER))
+    styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Title"], fontName="DejaVuSans", fontSize=16, spaceAfter=8, alignment=TA_CENTER))
     styles.add(ParagraphStyle(name="Section", parent=styles["Heading1"], fontSize=12, spaceBefore=10, spaceAfter=6))
     styles.add(ParagraphStyle(name="SubSec", parent=styles["Heading2"], fontSize=10, spaceBefore=8, spaceAfter=4))
     styles.add(ParagraphStyle(name="Body", parent=styles["Normal"], fontSize=8.5, leading=11))
@@ -179,7 +186,13 @@ def build(pack):
     if banner:
         story.append(Paragraph(latin(banner), styles["Headline"]))
         story.append(Spacer(1, 8))
-    story.append(Paragraph(latin(pack.get("title")), styles["CoverTitle"]))
+    vs_tip = str(pack.get("build_vs_tip") or "").strip()
+    if vs_tip:
+        for line in vs_tip.splitlines():
+            if line.strip():
+                story.append(Paragraph(latin(line), styles["Meta"]))
+        story.append(Spacer(1, 6))
+    story.append(Paragraph(cover_title(pack.get("title")), styles["CoverTitle"]))
     story.append(Paragraph(latin(f"pack_id: {pack.get('pack_id')}"), styles["Meta"]))
     story.append(Paragraph(latin(pack.get("turns_line")), styles["Meta"]))
     story.append(Spacer(1, 6))

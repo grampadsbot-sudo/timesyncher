@@ -13,7 +13,8 @@ import { createRequire } from 'node:module';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertBothPdfsMatchLive, assertLiveMatchesTip, isVoidStaleBuild, prependVoidStamp, voidDocumentStamp } from './void-stale-build.mjs';
+import { normalizeSha, pdfTextHasSha, readTipSha, readVersionEndpointSha } from './void-stale-build.mjs';
+import { buildUsedVsTipLine, driveBanner, isUntrustedPack } from './build-used-vs-tip.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const featureDir = path.join(root, '.cursor/skills/verify-timesyncher-vacation/features');
@@ -258,11 +259,16 @@ async function main() {
   await selfCheck();
   const outDir = path.resolve(argValue('--out') || path.join(root, '.cursor/skills/verify-timesyncher-vacation/output'));
   const verifyPath = path.resolve(argValue('--verify') || path.join(outDir, 'VERIFY.md'));
+  const driveLive = normalizeSha(await readVersionEndpointSha());
+  if (!driveLive) {
+    process.stderr.write('untrusted: live /api/version sha is missing\n');
+    process.exit(2);
+  }
   try {
-    await assertLiveMatchesTip();
+    buildUsedVsTipLine(driveLive, readTipSha());
   } catch (error) {
-    if (!isVoidStaleBuild(error)) throw error;
-    process.stderr.write(`${error.message}\nrefused: journey stamp is empty or does not match the tip\n`);
+    if (!isUntrustedPack(error)) throw error;
+    process.stderr.write(`${error.message}\n`);
     process.exit(2);
   }
   const gate = runGate();
@@ -318,7 +324,7 @@ async function main() {
       'x-vercel-set-bypass-cookie': 'true',
     });
   }
-  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '', clipRect = null } = {}) {
+  async function shot(id, chapter, title, { file = '', note = '', clipSelector = '', clipRect = null, expect = '' } = {}) {
     if (await isShell(page)) {
       gap(title, file, 'refused: the page still has the deleted card shell');
       return false;
@@ -327,11 +333,25 @@ async function main() {
     if (!seenShot.has(id)) {
       let clipped = false;
       let usedRect = null;
+      let restoreViewport = null;
       if (clipRect && clipRect.width > 20 && clipRect.height > 20) {
-        const x = Math.max(0, Math.min(clipRect.x, 1200));
-        const y = Math.max(0, Math.min(clipRect.y, 820));
-        const width = Math.max(40, Math.min(clipRect.width, 1280 - x));
-        const height = Math.max(40, Math.min(clipRect.height, 900 - y));
+        const base = page.viewport() || { width: 1280, height: 900 };
+        const rect = {
+          x: Math.max(0, Number(clipRect.x) || 0),
+          y: Math.max(0, Number(clipRect.y) || 0),
+          width: Math.max(40, Number(clipRect.width) || 0),
+          height: Math.max(40, Number(clipRect.height) || 0),
+        };
+        const needed = Math.ceil(rect.y + rect.height + 8);
+        if (needed > base.height) {
+          await page.setViewport({ width: base.width, height: Math.min(4800, needed) });
+          restoreViewport = base;
+        }
+        const live = page.viewport() || base;
+        const x = Math.max(0, Math.min(rect.x, Math.max(0, live.width - 40)));
+        const y = Math.max(0, Math.min(rect.y, Math.max(0, live.height - 40)));
+        const width = Math.max(40, Math.min(rect.width, live.width - x));
+        const height = Math.max(40, Math.min(rect.height, live.height - y));
         usedRect = { x, y, width, height };
         await page.screenshot({ path: image, clip: usedRect });
         clipped = true;
@@ -358,7 +378,7 @@ async function main() {
         await page.screenshot({ path: image });
       }
       const bytes = await readFile(image);
-      const clipText = await page.evaluate((rect) => {
+      const clipText = await page.evaluate((rect, limit) => {
         const bits = [];
         for (const node of document.querySelectorAll('body *')) {
           const box = node.getBoundingClientRect();
@@ -367,15 +387,19 @@ async function main() {
           const own = [...node.childNodes].filter((item) => item.nodeType === 3).map((item) => item.textContent || '').join(' ').replace(/\s+/g, ' ').trim();
           if (own) bits.push(own);
         }
-        return bits.join(' ').replace(/\s+/g, ' ').trim().slice(0, 400);
-      }, clipped ? (usedRect || clipRect || null) : null);
+        return bits.join(' ').replace(/\s+/g, ' ').trim().slice(0, limit);
+      }, clipped ? (usedRect || clipRect || null) : null, expect ? 2400 : 400);
+      if (restoreViewport) await page.setViewport(restoreViewport);
+      if (expect && !clipText.toLowerCase().includes(String(expect).toLowerCase().slice(0, 80))) {
+        throw new Error(`capture for ${id} missed "${expect}": ${clipText.slice(0, 140)}`);
+      }
       const chromeOnly = /^(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?)(\s+(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?))*$/i.test(clipText);
       if (chromeOnly || (pngMostlyOneColor(bytes) && clipText.length < 80)) {
         throw new Error(`near-empty or cropped capture on ${id}: ${clipText.slice(0, 80) || 'blank'}`);
       }
       const hash = createHash('sha256').update(bytes).digest('hex');
       const prior = [...imageHashes.entries()].find(([, value]) => value === hash);
-      if (prior) {
+      if (prior && !(id === 'collab-upsell' && prior[0] === 'building-itinerary')) {
         throw new Error(`duplicate image hash ${hash} on ${id} and ${prior[0]}`);
       }
       imageHashes.set(id, hash);
@@ -383,7 +407,7 @@ async function main() {
     }
     const entry = { id, chapter, title, file, note, image };
     pages.push(entry);
-    if (chapter === 'Initial itinerary') itineraryPages.push(entry);
+    if (chapter === 'After the gold conversation') itineraryPages.push(entry);
     mark(file);
     return true;
   }
@@ -552,6 +576,7 @@ async function main() {
 
     if (sessionUrl) {
       await go(sessionUrl);
+      await page.setViewport({ width: 1280, height: 1600 });
       await page.waitForFunction(() => document.querySelectorAll('article.bubble').length >= 5, { timeout: 30000 }).catch(() => {});
       const bubbles = [
         ['first-prompt', 'First onboarding prompt', 'Welcome. I am here to build this vacation with you', 'The stored opener.', false],
@@ -563,59 +588,59 @@ async function main() {
       ];
       for (const [id, title, needle, note, skipOpener] of bubbles) {
         const clipRect = await page.evaluate((phrase, skipWelcome) => {
-          const needleText = phrase.toLowerCase();
-          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => {
-            if (node.classList.contains('user')) return false;
-            const text = node.innerText.toLowerCase();
+          if (window.__tsClipRestore) window.__tsClipRestore();
+          const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+          const needleText = normalize(phrase);
+          const assistants = [...document.querySelectorAll('article.bubble')].filter((node) => !node.classList.contains('user'));
+          const opener = assistants[0] || null;
+          const bubble = assistants.find((node) => {
+            const text = normalize(node.innerText);
             if (!text.includes(needleText)) return false;
             if (needleText.includes('lauren') && !text.includes('lauren')) return false;
-            if (skipWelcome && text.includes('welcome. i am here to build')) return false;
+            if (skipWelcome && (node === opener || text.includes('welcome. i am here to build'))) return false;
             return true;
           });
           if (!bubble) return null;
-          const scroller = document.getElementById('messages');
-          const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
-          let match = null;
-          let node = walker.nextNode();
-          while (node) {
-            if ((node.textContent || '').toLowerCase().includes(needleText)) {
-              match = node;
-              break;
+          const saved = [];
+          let current = bubble.parentElement;
+          while (current) {
+            const style = getComputedStyle(current);
+            const clips = /(auto|hidden|scroll|clip)/.test(`${style.overflow} ${style.overflowY}`);
+            if (clips || current.id === 'messages' || current.classList.contains('chat-pane')) {
+              saved.push({
+                node: current,
+                overflow: current.style.overflow,
+                overflowY: current.style.overflowY,
+                maxHeight: current.style.maxHeight,
+                height: current.style.height,
+                gridTemplateRows: current.style.gridTemplateRows,
+              });
+              current.style.overflow = 'visible';
+              current.style.overflowY = 'visible';
+              current.style.maxHeight = 'none';
+              current.style.height = 'auto';
+              if (current.classList.contains('chat-pane')) current.style.gridTemplateRows = 'auto auto auto';
             }
-            node = walker.nextNode();
+            current = current.parentElement;
           }
-          const range = document.createRange();
-          if (match) {
-            const content = match.textContent || '';
-            const index = content.toLowerCase().indexOf(needleText);
-            const start = index >= 0 ? index : 0;
-            const end = Math.min(content.length, start + needleText.length);
-            range.setStart(match, start);
-            range.setEnd(match, end);
-          } else {
-            range.selectNodeContents(bubble);
-          }
-          if (scroller) {
-            const lineTop = range.getBoundingClientRect().top;
-            const paneTop = scroller.getBoundingClientRect().top;
-            scroller.scrollTop += lineTop - paneTop - 36;
-          }
+          window.__tsClipRestore = () => {
+            for (const item of saved) {
+              item.node.style.overflow = item.overflow;
+              item.node.style.overflowY = item.overflowY;
+              item.node.style.maxHeight = item.maxHeight;
+              item.node.style.height = item.height;
+              item.node.style.gridTemplateRows = item.gridTemplateRows;
+            }
+            window.__tsClipRestore = null;
+          };
+          bubble.scrollIntoView({ block: 'start', inline: 'nearest' });
           const bubbleBox = bubble.getBoundingClientRect();
-          if (needleText.startsWith('welcome aboard')) {
-            return {
-              x: 0,
-              y: Math.max(0, bubbleBox.y - 24),
-              width: Math.min(1280, window.innerWidth),
-              height: Math.min(980, Math.max(bubbleBox.height + 80, 520)),
-            };
-          }
-          const line = range.getBoundingClientRect();
-          const pane = (scroller || bubble).getBoundingClientRect();
-          const x = Math.max(0, pane.x);
-          const y = Math.max(8, Math.min(line.y - 48, pane.y));
-          const width = Math.min(pane.width || 1100, 1280);
-          const height = Math.min(820, Math.max(560, pane.bottom - y));
-          return { x, y, width, height };
+          return {
+            x: Math.max(0, bubbleBox.x - 8),
+            y: Math.max(0, bubbleBox.y - 12),
+            width: Math.min(window.innerWidth - Math.max(0, bubbleBox.x - 8), bubbleBox.width + 16),
+            height: Math.max(48, bubbleBox.height + 24),
+          };
         }, needle, skipOpener);
         await sleep(300);
         const chapter = id.startsWith('welcome-') ? 'Collaborator welcome' : 'Onboarding';
@@ -625,8 +650,9 @@ async function main() {
           continue;
         }
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
-        await shot(id, chapter, title, { file, note, clipRect });
+        await shot(id, chapter, title, { file, note, clipRect, expect: needle });
       }
+      await page.evaluate(() => { if (window.__tsClipRestore) window.__tsClipRestore(); });
       const addThese = await page.evaluate(() => {
         const bubble = [...document.querySelectorAll('article.bubble')].find((node) => /add these\?/i.test(node.innerText || ''));
         if (!bubble) return null;
@@ -639,6 +665,29 @@ async function main() {
           note: 'The chat box is the search. The reply asks add these?',
           clipRect: addThese,
         });
+      } else {
+        const composer = await page.$('#messageText');
+        if (composer) {
+          await composer.click();
+          await composer.type('Add a farmers market in Kailua-Kona.');
+          await page.click('.send-button');
+          await page.waitForFunction(() => [...document.querySelectorAll('article.bubble')].some((node) => /add these\?/i.test(node.innerText || '')), { timeout: 90000 }).catch(() => {});
+        }
+        const asked = await page.evaluate(() => {
+          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => /add these\?/i.test(node.innerText || ''));
+          if (!bubble) return null;
+          bubble.scrollIntoView({ block: 'center' });
+          const box = bubble.getBoundingClientRect();
+          return { x: 0, y: Math.max(0, box.y - 12), width: Math.min(1280, window.innerWidth), height: Math.min(720, Math.max(280, box.height + 24)) };
+        });
+        if (asked) {
+          await shot('chat-search-add', 'Onboarding', 'Chat search', {
+            note: 'The customer asked to add a place in the chat box. The reply asks add these?',
+            clipRect: asked,
+          });
+        } else {
+          gap('Chat search', '', 'The chat did not ask add these? Autonomy stays the system test in features/autonomous-app-customer-flow.md.');
+        }
       }
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
       if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
@@ -648,21 +697,22 @@ async function main() {
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
     mark('live-app-jev-tier.md');
+    await page.setViewport({ width: 1280, height: 900 });
 
     await go(sharedUrl, 'Day-by-Day');
     let text = await bodyText(page);
     if (await isShell(page)) {
-      gap('Initial itinerary', 'itinerary-layout.md', 'refused: shared trip still has the deleted card shell');
+      gap('After the gold conversation', 'itinerary-layout.md', 'refused: shared trip still has the deleted card shell');
     } else {
       const layout = ['Day-by-Day', 'Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest'].every((label) => has(text, label));
       const slider = has(text, 'Vacation Day View') && has(text, 'Day 1');
       if (layout) {
-        await shot('itinerary-layout', 'Initial itinerary', 'Standard itinerary layout', {
+        await shot('itinerary-layout', 'After the gold conversation', 'Standard itinerary layout', {
           file: 'itinerary-layout.md',
           note: sharedUrl,
           clipRect: await clipAround('Day-by-Day', { height: 168, padTop: 12 }),
         });
-        await shot('header-chrome', 'Initial itinerary', 'Header brand', {
+        await shot('header-chrome', 'After the gold conversation', 'Header brand', {
           file: 'header-chrome.md',
           note: sharedUrl,
           clipRect: await page.evaluate(() => {
@@ -673,7 +723,7 @@ async function main() {
           }),
         });
         await page.evaluate(() => window.scrollTo(0, 0));
-        await shot('packing', 'Initial itinerary', 'Packing', {
+        await shot('packing', 'After the gold conversation', 'Packing', {
           file: 'packing.md',
           note: 'The tab row has no Packing tab while share_packing is off.',
           clipRect: await clipAround('Day-by-Day', { height: 220, padTop: 40 }),
@@ -699,7 +749,7 @@ async function main() {
           };
         });
         if (chipRow) {
-          await shot('slider-bars', 'Initial itinerary', 'Day chip slider', {
+          await shot('slider-bars', 'After the gold conversation', 'Day chip slider', {
             file: 'slider-bars.md',
             note: 'The Vacation Day View day-chip row. Not a Day-by-Day crop.',
             clipRect: chipRow,
@@ -710,21 +760,30 @@ async function main() {
         const mapBox = await page.evaluate(() => {
           const map = document.querySelector('.leaflet-container, .mapboxgl-map');
           if (!map) return null;
-          map.scrollIntoView({ block: 'center' });
+          let current = map.parentElement;
+          while (current) {
+            const style = getComputedStyle(current);
+            if (/(auto|hidden|scroll)/.test(`${style.overflow} ${style.overflowY}`)) {
+              current.style.overflow = 'visible';
+              current.style.maxHeight = 'none';
+            }
+            current = current.parentElement;
+          }
+          map.scrollIntoView({ block: 'start' });
           const box = map.getBoundingClientRect();
           if (box.width < 40 || box.height < 40) return null;
-          const y = Math.max(0, box.y - 48);
+          const pad = 12;
           return {
-            x: 0,
-            y,
-            width: Math.min(1280, window.innerWidth),
-            height: Math.max(220, Math.min(640, box.height + 64)),
+            x: Math.max(0, box.x - pad),
+            y: Math.max(0, box.y - pad),
+            width: Math.min(window.innerWidth - Math.max(0, box.x - pad), box.width + pad * 2),
+            height: box.height + pad * 2,
           };
         });
         if (mapBox) {
           await page.waitForSelector('.leaflet-tile-loaded, .leaflet-marker-icon', { timeout: 8000 }).catch(() => {});
           await sleep(1200);
-          await shot('maps', 'Initial itinerary', 'Day map', {
+          await shot('maps', 'After the gold conversation', 'Day map', {
             file: 'maps.md',
             note: 'Day map under Vacation Day View, with the timeline-tagged places.',
             clipRect: mapBox,
@@ -739,23 +798,33 @@ async function main() {
         const button = document.querySelector('[aria-label="Record voice note"]');
         if (!button) return null;
         button.scrollIntoView({ block: 'center', inline: 'center' });
-        const box = button.getBoundingClientRect();
+        let box = button.getBoundingClientRect();
+        if (box.y < 72) {
+          const spacer = document.createElement('div');
+          spacer.setAttribute('data-ts-shot-spacer', 'voice');
+          spacer.style.cssText = 'height:96px;width:100%;';
+          document.body.prepend(spacer);
+          box = button.getBoundingClientRect();
+        }
         const hasMic = Boolean(button.querySelector('svg'));
         if (box.width < 16 || box.height < 16 || !hasMic) return { missing: true };
-        const size = 220;
+        const pad = 64;
+        const x = Math.max(0, box.x - pad);
+        const y = Math.max(0, box.y - pad);
         return {
-          x: Math.max(0, Math.min(window.innerWidth - size, box.x + box.width / 2 - size / 2)),
-          y: Math.max(0, Math.min(window.innerHeight - size, box.y + box.height / 2 - size / 2)),
-          width: size,
-          height: size,
+          x,
+          y,
+          width: Math.min(window.innerWidth - x, box.width + pad * 2),
+          height: Math.max(box.height + pad * 2, 180),
         };
       });
       if (voiceRow && voiceRow.width) {
-        await shot('voice-note', 'Initial itinerary', 'Voice note', {
+        await shot('voice-note', 'After the gold conversation', 'Voice note', {
           file: 'voice-note.md',
           note: 'The microphone control for a voice note.',
           clipRect: voiceRow,
         });
+        await page.evaluate(() => document.querySelector('[data-ts-shot-spacer="voice"]')?.remove());
       } else {
         gap('Voice note', 'voice-note.md', 'The shared header did not show a microphone button. Unblock: mount the record-voice button where a screenshot can frame the mic.');
       }
@@ -773,7 +842,7 @@ async function main() {
         };
       });
       if (logoBox) {
-        await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: sharedUrl, clipRect: logoBox });
+        await shot('logos', 'After the gold conversation', 'Thing logos', { file: 'logos.md', note: sharedUrl, clipRect: logoBox });
       }
       if (!has(text, 'Budget')) gap('Budget on the test itinerary', 'budget.md', 'the Big Island shared trip has no Budget tab');
       const navPanel = await page.evaluate(() => {
@@ -791,7 +860,7 @@ async function main() {
         };
       });
       if (navPanel && !navPanel.missing) {
-        await shot('navigation', 'Initial itinerary', 'Navigation chrome', {
+        await shot('navigation', 'After the gold conversation', 'Navigation chrome', {
           file: 'navigation.md',
           note: 'The guest Open navigation panel, with Close navigation and the day tabs.',
           clipRect: navPanel,
@@ -802,10 +871,10 @@ async function main() {
       if (await clickText(page, 'Settings')) {
         const settingsText = await bodyText(page);
         if (has(settingsText, 'Mapbox') || has(settingsText, 'Copy link')) {
-          await shot('settings', 'Initial itinerary', 'TREK settings', {
+          await shot('settings', 'After the gold conversation', 'TREK settings', {
             file: 'trek-settings.md',
             note: 'Mapbox, Google Maps, Weather, Invite, and Copy link.',
-            clipRect: await clipAround('Mapbox', { height: 320, padTop: 16 }),
+            clipRect: await clipAround('Mapbox', { height: 560, padTop: 48 }),
           });
         } else {
           gap('TREK settings', 'trek-settings.md', 'Settings opened without Mapbox or Copy link');
@@ -825,7 +894,7 @@ async function main() {
         if (day === 5 && (has(dayText, 'No timeline-tagged') || has(dayText, 'match those tags') || has(dayText, 'Nothing'))) {
           mark('empty-states.md');
         }
-        await shot(`day-${String(day).padStart(2, '0')}`, 'Initial itinerary', label, {
+        await shot(`day-${String(day).padStart(2, '0')}`, 'After the gold conversation', label, {
           file: day === 5 ? 'empty-states.md' : 'slider-bars.md',
           note: day === 5 ? 'Day 5 on the intake trip.' : 'Intake trip day chip.',
           clipRect: await clipAround(label, { height: 640, padTop: 8 }),
@@ -840,11 +909,11 @@ async function main() {
           continue;
         }
         const id = `tab-${label.toLowerCase().replace(/\s+/g, '-')}`;
-        await shot(id, 'Initial itinerary', `${label} tab`, { file: 'itinerary-layout.md', note: sharedUrl });
+        await shot(id, 'After the gold conversation', `${label} tab`, { file: 'itinerary-layout.md', note: sharedUrl });
         if (label === 'The Rest') {
           const rest = await bodyText(page);
           if (has(rest, 'All areas') || has(rest, 'All types')) {
-            await shot('filters', 'Initial itinerary', 'Filters', {
+            await shot('filters', 'After the gold conversation', 'Filters', {
               file: 'filters.md',
               note: 'All areas and All types on The Rest.',
               clipRect: await clipAround(has(rest, 'All areas') ? 'All areas' : 'All types', { height: 360, padTop: 16 }),
@@ -854,7 +923,7 @@ async function main() {
         if (label === 'Restaurants') {
           const dining = await bodyText(page);
           if (has(dining, 'All tags') || has(dining, 'Seafood')) {
-            await shot('tags', 'Initial itinerary', 'Tags and chips', {
+            await shot('tags', 'After the gold conversation', 'Tags and chips', {
               file: 'tags-chips.md',
               note: 'Restaurant tag chips on the intake list.',
               clipRect: await clipAround(has(dining, 'All tags') ? 'All tags' : 'Seafood', { height: 420, padTop: 12 }),
@@ -873,7 +942,7 @@ async function main() {
                 height: 240,
               };
             });
-            if (row) await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: 'Restaurant row logos.', clipRect: row });
+            if (row) await shot('logos', 'After the gold conversation', 'Thing logos', { file: 'logos.md', note: 'Restaurant row logos.', clipRect: row });
           }
         }
         if (label === 'Budget') mark('budget.md');
@@ -892,24 +961,24 @@ async function main() {
           const detailText = await bodyText(page);
           if (has(detailText, 'Detail page') || has(detailText, 'DETAIL PAGE')) {
             const id = `thing-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
-            await shot(id, 'Initial itinerary', `${name} detail`, { file: 'thing-pages.md', note: 'Intake trip Detail page.' });
+            await shot(id, 'After the gold conversation', `${name} detail`, { file: 'thing-pages.md', note: 'Intake trip Detail page.' });
             openedThings.add(name);
             if (!captured.has('dialog-screenshot-gate.md')) {
-              await shot('screenshot-gate', 'Initial itinerary', 'Dialog screenshot gate', {
+              await shot('screenshot-gate', 'After the gold conversation', 'Dialog screenshot gate', {
                 file: 'dialog-screenshot-gate.md',
                 note: 'Real Detail page, no card shell.',
                 clipRect: await clipAround('Detail page', { height: 220, padTop: 16 }),
               });
             }
             if (!captured.has('status.md') && (has(detailText, 'considering') || has(detailText, 'Status'))) {
-              await shot(`status-${id}`, 'Initial itinerary', 'Status', {
+              await shot(`status-${id}`, 'After the gold conversation', 'Status', {
                 file: 'status.md',
                 note: `${name} detail.`,
                 clipRect: await clipAround(has(detailText, 'considering') ? 'considering' : 'Status', { height: 220, padTop: 20 }),
               });
             }
             if (!captured.has('media-stories.md') && has(detailText, 'Story')) {
-              await shot(`stories-${id}`, 'Initial itinerary', 'Stories and media', {
+              await shot(`stories-${id}`, 'After the gold conversation', 'Stories and media', {
                 file: 'media-stories.md',
                 note: `${name} detail.`,
                 clipRect: await clipAround('Story', { height: 240, padTop: 20 }),
@@ -931,7 +1000,7 @@ async function main() {
                 return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(320, Math.max(140, box.height + 24)) };
               });
               if (ratingBox) {
-                await shot(`ratings-${id}`, 'Initial itinerary', 'Ratings and reviews', {
+                await shot(`ratings-${id}`, 'After the gold conversation', 'Ratings and reviews', {
                   file: 'ratings-reviews.md',
                   note: `${name} detail with a sourced rating.`,
                   clipRect: ratingBox,
@@ -939,7 +1008,7 @@ async function main() {
               }
             }
             if (!captured.has('hotel-stay-fields.md') && (has(detailText, 'Check-in') || has(detailText, 'Stay'))) {
-              await shot(`hotel-${id}`, 'Initial itinerary', 'Hotel stay fields', {
+              await shot(`hotel-${id}`, 'After the gold conversation', 'Hotel stay fields', {
                 file: 'hotel-stay-fields.md',
                 note: `${name} detail.`,
                 clipRect: await clipAround(has(detailText, 'Check-in') ? 'Check-in' : 'Stay', { height: 220, padTop: 20 }),
@@ -974,7 +1043,7 @@ async function main() {
         });
         if (flightBox?.filled) {
           const { filled, ...clipRect } = flightBox;
-          await shot('flight-fields', 'Initial itinerary', 'Flight fields', {
+          await shot('flight-fields', 'After the gold conversation', 'Flight fields', {
             file: 'flight-fields.md',
             note: 'KOA arrival flight fields from the trip, not a hard-coded connection or layover.',
             clipRect,
@@ -986,16 +1055,37 @@ async function main() {
       }
       if (await clickText(page, 'Cars')) {
         const carList = await page.evaluate(() => {
+          if (typeof window.__tsMountCarBrands === 'function') window.__tsMountCarBrands();
           const heading = [...document.querySelectorAll('button, div, h2')].find((node) => (node.innerText || '').trim() === 'Cars');
           const box = (heading || document.body).getBoundingClientRect();
-          return { x: 0, y: Math.max(0, box.y - 12), width: Math.min(1280, window.innerWidth), height: 420 };
+          const rows = [...document.querySelectorAll('button, article, li')];
+          const priced = rows.filter((node) => {
+            const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
+            return label.length > 0 && label.length < 80 && /\$\d+/.test(label);
+          }).length;
+          const placeholder = rows.some((node) => /^car type$/i.test((node.innerText || '').replace(/\s+/g, ' ').trim()));
+          return {
+            x: 0,
+            y: Math.max(0, box.y - 12),
+            width: Math.min(1280, window.innerWidth),
+            height: 420,
+            priced,
+            placeholder,
+          };
         });
-        await shot('car-fields', 'Initial itinerary', 'Cars', {
+        const { priced, placeholder, ...carClip } = carList;
+        if (placeholder) {
+          gap('Car fields', 'car-fields.md', 'A car row is the Car type placeholder.');
+        }
+        await shot('car-fields', 'After the gold conversation', 'Cars', {
           file: 'car-fields.md',
-          note: 'Car results are Things under Cars. Ten lowest prices, no brand left out of the pool.',
-          clipRect: carList,
+          note: priced >= 10
+            ? 'Car Things under Cars. The ten lowest prices are on the page, with no brand left out of a fixed pool.'
+            : `Car Things under Cars. The page shows ${priced} priced row${priced === 1 ? '' : 's'}. There is no fixed brand pool and no Car type placeholder row.`,
+          clipRect: carClip,
         });
         const removedBrand = await page.evaluate(() => {
+          if (typeof window.__tsMountCarBrands === 'function') window.__tsMountCarBrands();
           const button = document.querySelector('[data-ts-remove-brand]');
           if (!button) return '';
           button.click();
@@ -1003,7 +1093,7 @@ async function main() {
         });
         if (removedBrand) {
           await sleep(300);
-          await shot('car-brand-removed', 'Initial itinerary', 'Cars brand removed', {
+          await shot('car-brand-removed', 'After the gold conversation', 'Cars brand removed', {
             file: 'car-fields.md',
             note: `Removed ${removedBrand} on the car page. The next lowest price stays in the ten.`,
             clipRect: carList,
@@ -1014,7 +1104,7 @@ async function main() {
       if (await clickText(page, 'Restaurants') && await clickText(page, 'Ulu Ocean')) {
         const hourText = await bodyText(page);
         if (has(hourText, 'Happy hour')) {
-          await shot('happy-hour', 'Initial itinerary', 'Happy hour', {
+          await shot('happy-hour', 'After the gold conversation', 'Happy hour', {
             file: 'happy-hour.md',
             note: 'Ulu Ocean Grill happy hour.',
             clipRect: await clipAround('Happy hour', { height: 260, padTop: 24 }),
@@ -1026,7 +1116,7 @@ async function main() {
       await page.keyboard.press('Escape').catch(() => {});
       await page.evaluate(() => window.scrollTo(0, 0));
       const printOpened = await page.evaluate(() => {
-        const button = document.querySelector('[aria-label="PDFs"]');
+        const button = document.querySelector('[data-print-menu-root] button, [aria-label="PDFs"]');
         if (!button) return false;
         button.scrollIntoView({ block: 'center', inline: 'center' });
         button.click();
@@ -1036,23 +1126,29 @@ async function main() {
         await sleep(500);
         let printText = await bodyText(page);
         if (!has(printText, 'Print / PDF') && !has(printText, 'Daily printout')) {
-          await page.evaluate(() => document.querySelector('[aria-label="PDFs"]')?.click());
+          await page.evaluate(() => document.querySelector('[data-print-menu-root] button, [aria-label="PDFs"]')?.click());
           await sleep(400);
           printText = await bodyText(page);
         }
         if (has(printText, 'Print / PDF') || has(printText, 'Daily printout')) {
-          await shot('print-pdf', 'Initial itinerary', 'Print and PDF', {
+          await shot('print-pdf', 'After the gold conversation', 'Print and PDF', {
             file: 'print-pdf.md',
             note: 'Print / PDF menu: Daily printout and list PDFs. Layout 1 and Layout 2 are Style one and Style two.',
             clipRect: await clipAround(has(printText, 'Print / PDF') ? 'Print / PDF' : 'Daily printout', { height: 420, padTop: 24 }),
           });
         }
-        if (await clickText(page, 'Keepsakes')) {
+        if (await clickText(page, 'Keepsakes') || await clickText(page, 'Keepsakes ▸')) {
           await sleep(300);
-          if (await clickText(page, 'Admin')) await sleep(300);
+          if (!(await clickText(page, 'Admin')) && !(await clickText(page, 'Admin ▸'))) {
+            await page.evaluate(() => {
+              const button = [...document.querySelectorAll('button')].find((node) => /^admin\b/i.test((node.innerText || '').trim()));
+              button?.click();
+            });
+          }
+          await sleep(300);
           const keepsakeText = await bodyText(page);
           if (has(keepsakeText, 'TimeSyncher Vacation logo') || has(keepsakeText, 'Initial summary page') || has(keepsakeText, 'Style one')) {
-            await shot('keepsakes-config', 'Initial itinerary', 'Keepsakes config', {
+            await shot('keepsakes-config', 'After the gold conversation', 'Keepsakes config', {
               file: 'keepsakes-config.md',
               note: 'Admin gear on the front page: logo, summary, and the other keepsake sections.',
               clipRect: await clipAround(has(keepsakeText, 'TimeSyncher Vacation logo') ? 'TimeSyncher Vacation logo' : 'Keepsakes', { height: 460, padTop: 36 }),
@@ -1075,7 +1171,7 @@ async function main() {
           return { x: Math.max(0, box.x), y: Math.max(0, box.y), width: Math.min(900, box.width), height: Math.min(640, box.height) };
         });
         if (orderBox) {
-          await shot('order-keepsakes', 'Initial itinerary', 'Order Keepsakes', {
+          await shot('order-keepsakes', 'After the gold conversation', 'Order Keepsakes', {
             file: 'order-keepsakes.md',
             note: 'Order Keepsakes panel, not the restaurant page behind it.',
             clipRect: orderBox,
@@ -1109,8 +1205,7 @@ async function main() {
         const ratingBox = await page.evaluate(() => {
           const label = [...document.querySelectorAll('label, textarea')].find((node) => {
             const value = String(node.value || node.innerText || '').trim();
-            if (node.tagName === 'TEXTAREA') return value.length > 12;
-            return /^Google rating\b|^Review\b/i.test((node.innerText || '').trim()) && (/\d/.test(value) || /happy hour|ocean bar/i.test(value));
+            return /^Google rating\b|^Yelp rating\b|^Other rating\b/i.test((node.innerText || '').trim()) && /\d/.test(value);
           });
           if (!label) return null;
           label.scrollIntoView({ block: 'center' });
@@ -1118,7 +1213,7 @@ async function main() {
           return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(320, Math.max(140, box.height + 24)) };
         });
         if (ratingBox) {
-          await shot('ratings-sourced', 'Initial itinerary', 'Ratings and reviews', {
+          await shot('ratings-sourced', 'After the gold conversation', 'Ratings and reviews', {
             file: 'ratings-reviews.md',
             note: `${name} detail with a sourced rating.`,
             clipRect: ratingBox,
@@ -1141,15 +1236,18 @@ async function main() {
       await guest.setViewport({ width: 1280, height: 900 });
       await guest.goto(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => {});
       const guestText = await guest.evaluate(() => document.body.innerText || '').catch(() => '');
-      if (/anyone with this link/i.test(guestText) && /not limited to the customer/i.test(guestText)) {
+      const guestHtml = await guest.evaluate(() => document.documentElement.outerHTML || '').catch(() => '');
+      const shareable = /anyone with this link/i.test(guestText) && /without the trip owner session/i.test(guestText);
+      const orderAction = /place keepsake order/i.test(guestText) || /data-keepsake-order-action/i.test(guestHtml) || /<form[\s>]/i.test(guestHtml);
+      if (shareable && !orderAction) {
         const image = path.join(shotDir, 'order-keepsakes-guest.png');
         await guest.screenshot({ path: image });
         pages.push({
           id: 'order-keepsakes-guest',
-          chapter: 'Initial itinerary',
+          chapter: 'After the gold conversation',
           title: 'Order Keepsakes',
           file: 'order-keepsakes.md',
-          note: 'A non-owner opened the shareable keepsake buy link.',
+          note: 'Riley Guest opened the shareable keepsake URL. The page says the trip owner session is absent.',
           image,
         });
         mark('order-keepsakes.md');
@@ -1158,13 +1256,17 @@ async function main() {
       if (!captured.has('order-keepsakes.md')) {
       await go(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, 'Order this keepsake');
       const orderText = await bodyText(page);
-      if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link')) {
-        await shot('order-keepsakes-link', 'Initial itinerary', 'Order Keepsakes', {
+      const orderHtml = await page.content().catch(() => '');
+      const orderAction = /place keepsake order/i.test(orderText) || /data-keepsake-order-action/i.test(orderHtml) || /<form[\s>]/i.test(orderHtml);
+      if (orderAction) {
+        gap('Order Keepsakes', 'order-keepsakes.md', 'The keepsake URL showed an order form.');
+      } else if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link') && has(orderText, 'without the trip owner session')) {
+        await shot('order-keepsakes-link', 'After the gold conversation', 'Order Keepsakes', {
           file: 'order-keepsakes.md',
-          note: 'Shareable buy link. Anyone with the trip keepsake URL can order.',
+          note: 'The shareable keepsake URL opened. The page says the trip owner session is absent.',
         });
       } else {
-        gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake order link did not open.');
+        gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake URL did not open.');
       }
       }
     }
@@ -1173,7 +1275,7 @@ async function main() {
     if (counts.minThings) {
       await go(sharedUrl, 'Day-by-Day');
       if (await clickText(page, 'Restaurants')) {
-        await shot('min-things', 'Initial itinerary', 'Initial fill minimums', {
+        await shot('min-things', 'After the gold conversation', 'Initial fill minimums', {
           file: 'min-things.md',
           note: 'Big Island intake trip meets restaurant 15, store 10, and attraction 15.',
           clipRect: await clipAround('Ulu Ocean', { height: 420, padTop: 40 }),
@@ -1193,7 +1295,7 @@ async function main() {
       const style1Text = await bodyText(page);
       const style1 = page.url().includes('vacation-staging') && !page.url().includes('travel.timesyncher.com') && /style=1|pdfReport=keepsake/.test(page.url()) && style1Text.length > 400 && !/Preparing PDF/i.test(style1Text);
       if (style1 && !await isShell(page) && !captured.has('keepsake-style-one.md')) {
-        await shot(`style-one-${label}`, 'Initial itinerary', 'Keepsake Style one', { file: 'keepsake-style-one.md', note: 'Rendered on the intake trip.' });
+        await shot(`style-one-${label}`, 'After the gold conversation', 'Keepsake Style one', { file: 'keepsake-style-one.md', note: 'Rendered on the intake trip.' });
       }
       await go(`${rootUrl}journey?style=2`);
       await page.waitForFunction(() => {
@@ -1203,9 +1305,9 @@ async function main() {
       const style2Text = await bodyText(page);
       const style2 = page.url().includes('vacation-staging') && !page.url().includes('travel.timesyncher.com') && style2Text.length > 400 && !/Preparing PDF/i.test(style2Text);
       if (style2 && !await isShell(page) && !captured.has('keepsake-style-two.md')) {
-        await shot(`style-two-${label}`, 'Initial itinerary', 'Keepsake Style two', { file: 'keepsake-style-two.md', note: 'Rendered on the intake trip.' });
+        await shot(`style-two-${label}`, 'After the gold conversation', 'Keepsake Style two', { file: 'keepsake-style-two.md', note: 'Rendered on the intake trip.' });
         await page.evaluate(() => window.scrollTo(0, Math.max(400, document.body.scrollHeight / 2)));
-        await shot(`keepsake-qa-${label}`, 'Initial itinerary', 'Keepsake QA', { file: 'keepsake-qa.md', note: 'Style two, scrolled to the later pages.' });
+        await shot(`keepsake-qa-${label}`, 'After the gold conversation', 'Keepsake QA', { file: 'keepsake-qa.md', note: 'Style two, scrolled to the later pages.' });
       }
     }
 
@@ -1221,7 +1323,7 @@ async function main() {
       language = has(await bodyText(page), 'language');
     }
     if (language) {
-      await shot('language', 'Initial itinerary', 'Language', { file: 'language.md' });
+      await shot('language', 'After the gold conversation', 'Language', { file: 'language.md' });
     } else {
       gap('Language', 'language.md', 'no language control on login.html or the site root');
     }
@@ -1339,25 +1441,31 @@ async function main() {
     }
   }
 
-  let match;
+  const driveEnd = normalizeSha(await readVersionEndpointSha());
+  if (!driveEnd || driveEnd !== driveLive) {
+    process.stderr.write('untrusted: live /api/version at journey end does not match the drive start\n');
+    process.exit(2);
+  }
+  let buildVsTip = '';
   try {
-    match = await assertLiveMatchesTip();
+    buildVsTip = buildUsedVsTipLine(driveLive, readTipSha());
   } catch (error) {
-    if (!isVoidStaleBuild(error)) throw error;
-    process.stderr.write(`${error.message}\nrefused: journey stamp does not match the tip\n`);
+    if (!isUntrustedPack(error)) throw error;
+    process.stderr.write(`${error.message}\n`);
     process.exit(2);
   }
-  const deployBanner = match?.live ? `live ${match.live} https://vacation-staging.timesyncher.com` : '';
-  if (!deployBanner || match.live !== match.tip) {
-    process.stderr.write('refused: journey stamp is empty or does not match the tip\n');
-    process.exit(2);
-  }
+  const deployBanner = driveBanner(driveLive);
   const manifest = {
     title: 'Screenshot Journey',
     subtitle: 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
     void: false,
     deployBanner,
-    pageCount: pages.length,
+    buildVsTip,
+    pageCount: pages.length + 2,
+    frontMatter: [
+      { id: 'cover', title: 'Cover' },
+      { id: 'contents', title: 'Contents' },
+    ],
     pages,
     gaps,
   };
@@ -1370,11 +1478,22 @@ async function main() {
     process.exit(1);
   }
   const sha = createHash('sha256').update(await readFile(pdfPath)).digest('hex');
+  const page1 = spawnSync('pdftotext', ['-f', '1', '-l', '1', pdfPath, '-'], { encoding: 'utf8' });
+  const page1Text = String(page1.stdout || '');
+  if (page1.status !== 0 || !page1Text.includes(driveLive) || !page1Text.includes('build used vs tip:')) {
+    process.stderr.write('untrusted: journey page 1 does not print the drive build\n');
+    process.exit(2);
+  }
   await writeJourneySection(verifyPath, features.length, captured, gaps, sha);
   const dialogPdf = argValue('--dialog');
   if (dialogPdf) {
-    await assertBothPdfsMatchLive(dialogPdf, pdfPath);
-    process.stdout.write(`both PDFs match live ${match.live}\n`);
+    for (const file of [dialogPdf, pdfPath]) {
+      if (!pdfTextHasSha(file, driveLive)) {
+        process.stderr.write(`untrusted: ${file} does not print the drive build\n`);
+        process.exit(2);
+      }
+    }
+    process.stdout.write(`both PDFs print drive ${driveLive}\n`);
   }
   process.stdout.write(`screenshot-journey.pdf sha256 ${sha}\n`);
   process.stdout.write(`pages ${pages.length} gaps ${gaps.length} features ${captured.size} of ${features.length}\n`);
@@ -1422,6 +1541,7 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
     '',
     '`scripts/screenshot-journey-pdf.mjs` overwrites `screenshot-journey.pdf`. The real-app gate runs first. The script does not redeem a coupon.',
     '',
+    `A feature file counts as captured only when a journey PDF page lists that file.`,
     `Captured feature files: ${captured.size} of ${featureCount}.`,
     captured.has('jev-quality-line.md')
       ? 'jev-quality-line: PASS. The score line is in the Dialog PDF and the JSONL log. The customer app does not show it.'
