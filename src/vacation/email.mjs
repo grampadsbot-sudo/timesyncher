@@ -1,5 +1,5 @@
-import { collaboratorTelegramLink } from './collaborators.mjs';
-import { sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
+import { collaboratorEulaAcceptUrl, collaboratorTelegramLink } from './collaborators.mjs';
+import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -240,9 +240,23 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
   return { ok: status !== 'failed', status, emailId: rows[0].id, provider, errorSummary };
 }
 
+export function collaboratorInviteTargets({ acceptUrl = '', publicUrl = '', invite = null, trip = null, env = process.env } = {}) {
+  const link = cleanText(acceptUrl, 600) || (invite?.id ? collaboratorEulaAcceptUrl(invite, env) : '');
+  const site = cleanText(publicUrl, 600) || (trip ? publicTripUrl(trip, env) : '');
+  return { acceptUrl: link, publicUrl: site };
+}
+
 export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, contact, acceptUrl = '', publicUrl = '' }, env = process.env) {
   const to = cleanText(contact?.email || invite?.requested_email, 180).toLowerCase();
   if (!to) return { ok: false, status: 'skipped', reason: 'missing email' };
+  let trip = null;
+  if (!cleanText(publicUrl, 600) && invite?.trip_id && db) {
+    const trips = await db`select title, metadata from trips where id = ${invite.trip_id} limit 1`;
+    trip = trips[0] || null;
+  }
+  const targets = collaboratorInviteTargets({ acceptUrl, publicUrl, invite, trip, env });
+  acceptUrl = targets.acceptUrl;
+  publicUrl = targets.publicUrl;
   const normalizedContact = {
     ...contact,
     email: to,
