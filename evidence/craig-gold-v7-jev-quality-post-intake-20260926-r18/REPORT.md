@@ -1,20 +1,42 @@
 # r18 Big Island Family v7 — hold certify
 
-Graded tip `e830a5d177fcb5091cf127129ca9ea9481c4b5e2`.
+Drive build `e830a5d177fcb5091cf127129ca9ea9481c4b5e2`.
 
-Commit time: 2026-09-27 20:21:47 UTC (10:21:47 HST).
+Commit time of that build: 2026-09-27 20:21:47 UTC (10:21:47 HST).
 
 Drive start: 2026-09-27T20:23:11.762Z (10:23:11 HST).
 
 Drive end: 2026-09-27T20:26:02.198Z (10:26:02 HST).
 
-That tip was deployed to https://vacation-staging.timesyncher.com before the drive. Live `/api/version` matched it at drive start and at drive end. The sha stored on the turns is that tip. Both PDFs print `live e830a5d177fcb5091cf127129ca9ea9481c4b5e2 https://vacation-staging.timesyncher.com`. The journey build printed `both PDFs match live e830a5d177fcb5091cf127129ca9ea9481c4b5e2`. Render did not overwrite `buildSha`.
+That build was deployed to https://vacation-staging.timesyncher.com before the drive. Live `/api/version` matched it at drive start and at drive end. The sha stored on every turn is that build. Both PDFs print `live e830a5d177fcb5091cf127129ca9ea9481c4b5e2 https://vacation-staging.timesyncher.com`. Render did not overwrite `buildSha`.
 
-This evidence commit is the only commit of this drive. No merge. The Vercel `workspace` project was left alone.
+Code tip named on the covers: `7e1b25df8ad89304bb05775b9dcfb492422fa7e7` (2026-09-27 20:47:54 UTC, 10:47:54 HST).
 
-Local `vercel build` of this tip wrote 1 function: `.vercel/output/functions/api/[...route].func`.
+## build used vs tip
 
-Local curls against this tip: `GET /` 200, `GET /api/version` 200 and the body sha is the tip, `GET /api/shared/las-vegas-vacation-3` 200, `GET /api/vacation-itinerary?app=1` 400 (`session is required.`).
+```
+build used vs tip: drive e830a5d177fcb5091cf127129ca9ea9481c4b5e2 is older than tip 7e1b25df8ad89304bb05775b9dcfb492422fa7e7
+a263b0f5e3d1506d4467a7985e18f0b44b12e544
+Pass the clip-text limit into the journey page.
+files: scripts/screenshot-journey-pdf.mjs
+acceptable: scripts/screenshot-journey-pdf.mjs (journey capture script); reply code at the drive build is identical to the tip.
+5dbbe5a2db41dc40490eb91593181728cc5d7ede
+Print the drive build against the tip without restamping.
+files: scripts/build-used-vs-tip.mjs, scripts/live-transcript-dialog-pdf.mjs, scripts/live_v7_dialog_pdf.py, scripts/screenshot-journey-pdf.mjs, scripts/screenshot_journey_pdf.py, scripts/test_build_used_vs_tip.mjs, scripts/test_live_transcript_dialog_pdf.mjs, scripts/test_screenshot_journey_pdf.mjs
+acceptable: scripts/build-used-vs-tip.mjs (build-used-vs-tip line); scripts/live-transcript-dialog-pdf.mjs (dialog PDF renderer); scripts/live_v7_dialog_pdf.py (dialog PDF renderer); scripts/screenshot-journey-pdf.mjs (journey capture script); scripts/screenshot_journey_pdf.py (journey PDF renderer); scripts/test_build_used_vs_tip.mjs (build-used-vs-tip test); scripts/test_live_transcript_dialog_pdf.mjs (dialog renderer test); scripts/test_screenshot_journey_pdf.mjs (journey renderer test); reply code at the drive build is identical to the tip.
+7e1b25df8ad89304bb05775b9dcfb492422fa7e7
+Fit the build-used line on journey page 1.
+files: scripts/screenshot_journey_pdf.py
+acceptable: scripts/screenshot_journey_pdf.py (journey PDF renderer); reply code at the drive build is identical to the tip.
+```
+
+The preferred path is to deploy the final tip first, then drive once, so the drive build equals the tip. Reply code at `e830a5d177fcb5091cf127129ca9ea9481c4b5e2` is identical to `7e1b25df8ad89304bb05775b9dcfb492422fa7e7`, so this pack stays on the one drive.
+
+The drive was recorded once. Hold certify. No merge. The Vercel `workspace` project was left alone.
+
+Local `vercel build` of the drive build wrote 1 function: `.vercel/output/functions/api/[...route].func`.
+
+Local curls against the drive build: `GET /` 200, `GET /api/version` 200 and the body sha is `e830a5d177fcb5091cf127129ca9ea9481c4b5e2`, `GET /api/shared/las-vegas-vacation-3` 200, `GET /api/vacation-itinerary?app=1` 400 (`session is required.`).
 
 ## Scale
 
@@ -69,12 +91,12 @@ VERIFY counts a feature file only when a journey page lists it: 35 of 36. It doe
 | Voice note | PDF page 19. The microphone control is in the frame. |
 | Bubbles | PDF pages 8–10 are the opener, the itinerary reply, and the collaborator upsell. |
 
-The capture script passes the clip-text length into the page. That argument was in the working tree for this journey and is the code commit after `e830a5d`. It does not change the app. The app was not redeployed for it. Both PDF banners stay `e830a5d`.
+The commits after the drive are the build-used list above. They change the capture script and the PDF renderers. The app was not redeployed. Both PDF banners stay on the drive build.
 
 ## sha256
 
-- `dialog-gold-v7-jev-quality.pdf` `f1447d1ee2e64c6687fa695e78d0dc83546ff6a5762488ba789939e23999c080`
-- `screenshot-journey.pdf` `7e0dc018ff8c52941fcbcb049053372107d0972bed67d470f07ebcb5c6434924`
-- `journey-manifest.json` `5f1bd4996cdc1160d0aed1e689bede945d209668f612251efeb45bbfbad99502`
+- `dialog-gold-v7-jev-quality.pdf` `7216902f952d426f721ab1cd909e1659fefbe949f4596fa167b1c9e36b1fdaa2`
+- `screenshot-journey.pdf` `4695fe349105129bb1bf61add2e8fc23d5b6a6e02c94c5a2aea5bad6ede4b486`
+- `journey-manifest.json` `7fbb6aeb4554cd953f2278a2a9a380bf120437d298efe31eac307d4280cce74f`
 - `live-transcript.jsonl` `e92969f62cde50cf84d80fd0ae356284108e3fdc10c7ac5984922492d7e1cca8`
 - `VERIFY.md` `96b0ad743d2583528bab9ba92c1ea479e2c4d40bd46b97d41f80019033fd190e`
