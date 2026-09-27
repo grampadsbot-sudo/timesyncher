@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -177,7 +177,15 @@ const heldClean = shipChoice({
 });
 assert.equal(heldClean.text, 'Tuesday can be a town walk.');
 assert.equal(heldClean.holding, true);
-assert.equal(heldClean.flagged, false);
+assert.equal(heldClean.held, true);
+assert.equal(heldClean.rewritten, false);
+assert.equal(heldRewriteLine({
+  held: true,
+  rewriteText: 'Tuesday stays a swim.',
+  rewriteFailReason: 'rewrite_fact_check_held: a swim on apr 7 was not set by the customer',
+  quality: { rewritten: false, judged: true, score: 4 },
+}), 'rewrite drafted, held: rewrite_fact_check_held: a swim on apr 7 was not set by the customer');
+assert.equal(heldRewriteLine({ held: false, rewriteText: 'Tuesday stays a swim.', quality: { rewritten: true } }), '');
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4');
 assert.equal(formatQualityLine({ judged: true, score: 2.76, comment: 'Thin day.', rewritten: false }), 'quality: 2.76');
 assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1');
@@ -252,7 +260,7 @@ assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite
 const windyBeach = applyCustomerNotes(goldThings, 'Tyler wants a swim, including one later in the week if the beach is windy.');
 assert.equal(windyBeach.find((thing) => thing.title === 'Swim').customerWhen, '');
 const rainSwim = applyCustomerNotes(goldThings, 'If Monday April sixth rains, what is the backup for Tyler so the swim still happens later and the beach plan does not just vanish?');
-assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, '');
+assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach');
 const mondaySwim = applyCustomerNotes(rainSwim, 'This is Tyler. Monday April sixth swim is the beach unless it is windy, then the house pool. Save that on Monday.');
 assert.equal(mondaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
 const span = { start: '2026-04-03', end: '2026-04-12', year: 2026 };
@@ -301,7 +309,7 @@ assert.equal(mustRewriteQuality(qualityFromDecisions({
     disposition: { choice: 'rewrite' },
   },
 })), false);
-const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is Kimberly\'s second garden. Tyler wants a swim. Monday April 6 is the beach swim. Friday April 10 is the later swim.');
+const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is Kimberly\'s second garden. Tyler wants a swim. Monday April 6 is the beach swim. Friday April 10 is the later swim. Thursday April 9 is a town walk.');
 assert.deepEqual(draftFactErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.', setFacts), []);
 assert.deepEqual(draftFactErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.', setFacts), []);
 const earlyFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Tyler wants a swim. Monday April 6 is the beach swim.');
@@ -316,7 +324,15 @@ assert.equal(draftFactErrors('Let us slide that second swim later. How about Thu
 assert.ok(draftFactErrors('Thursday, April 9th can hold that second swim.', earlyFacts).some((line) => /swim on apr 9/.test(line)));
 assert.ok(draftFactErrors('Friday, April 10th dinner is a solid midweek milestone.', earlyFacts).some((line) => /not midweek/.test(line)));
 assert.ok(draftFactErrors('Friday, April 3rd is arrival. Maybe dip into the house pool.', earlyFacts).some((line) => /swim on apr 3/.test(line)));
-assert.ok(draftFactErrors('Friday, April 3rd is arrival only. A pool dip can wait until later.', earlyFacts).some((line) => /swim on apr 3/.test(line)));
+assert.equal(draftFactErrors('Friday, April 3rd is arrival only. A pool dip can wait until later.', earlyFacts).some((line) => /swim on apr 3/.test(line)), false);
+assert.equal(draftFactErrors('Just head out when everyone is ready.', earlyFacts).some((line) => /trip end/.test(line)), false);
+assert.equal(draftFactErrors('Sunday April 5 is a garden morning. It is not a packed schedule.', earlyFacts).some((line) => /trip end/.test(line)), false);
+assert.equal(draftFactErrors('A swim later in the week and dinner on Friday the 10th.', setFacts).some((line) => /swim on apr 10/.test(line)), false);
+assert.equal(draftFactErrors('The garden visit stays in place, and the town walk can shift to Tuesday the 7th.', { ...setFacts, townWalkDays: ['apr 9'] }).some((line) => /garden on apr 7/.test(line)), false);
+assert.ok(draftFactErrors('That leaves a town walk and a dinner for Friday the 10th.', { ...setFacts, townWalkDays: ['apr 9'] }).some((line) => /town walk on apr 10/.test(line)));
+assert.ok(draftFactErrors('The later swim can sit between Monday and the Friday dinner on the 10th.', { ...setFacts, customerTurn: 'I still want one later swim in the week.', laterFriday: 'Friday April 10' }).some((line) => /later swim is saved/.test(line)));
+assert.ok(draftFactErrors('So, Craig, you are set with the crew—Torren, Peyton, Keegan, and little Fallon.', { ...earlyFacts, ownerName: 'Craig' }).some((line) => /Craig is traveling/.test(line)));
+assert.equal(verifiedRewriteChange('Removed the whole crew and included Craig.', 'the whole crew of eight', 'Craig and the whole crew of eight'), '');
 assert.ok(draftFactErrors('Tuesday, April 7 is the anchor day. One option is a classic swim day at the house pool.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.ok(draftFactErrors('Tuesday, April 7, is wide open. Here are two options: a town walk, or a swim at the beach.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 const dateSpan = { start: new Date('2026-04-03T00:00:00.000Z'), end: new Date('2026-04-12T00:00:00.000Z') };
@@ -482,6 +498,30 @@ const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
 assert.match(jevRewritePdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Kept the harbor morning and named only the walk/);
+const heldDraft = liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
+    held: true,
+    quality: { judged: true, score: 4.03, rewritten: false, model: 'typesafe/jev-1.13', judgeMs: 400, draft: 'Start with the harbor walk, then keep the afternoon open.' },
+    shippedModel: 'google/gemini-2.5-flash-lite',
+    draftModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteText: 'Tuesday stays a swim on the beach.',
+    rewriteFailReason: 'rewrite_near_draft',
+    rewriterChange: 'Removed the beach swim.',
+    jevScoreDraft: 4.03,
+    jevScoreRewrite: 3,
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
+    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'google/gemini-2.5-flash-lite', ms: 900 },
+    rewriteAttempts: [{ text: 'Tuesday stays a swim on the beach.', model: 'qwen/qwen3-235b-a22b-2507', score: 3, ms: 1200, error: 'rewrite_near_draft' }],
+  } : turn)),
+});
+const heldPdf = extractPdfText(renderLiveTranscriptPdf(heldDraft));
+assert.match(heldPdf, /quality: 4\.03 · rewrite drafted, held: rewrite_near_draft/);
+assert.doesNotMatch(heldPdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Removed the beach swim/);
+assert.equal(jevRewriteLabelCounts(heldDraft, heldPdf).rewrittenTurns, 0);
 assert.doesNotMatch(jevRewritePdf, /\(Jev note\)/);
 assert.doesNotMatch(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
 assert.doesNotMatch(jevRewritePdf, /scored and commented on every generated reply/);
@@ -618,8 +658,11 @@ const fixedOpen = liveDoc({
       modality: 'text',
       text: ONBOARDING_OPENER_CHAT_ONLY,
       at: '2026-09-25T21:00:00.000Z',
-      latencyMs: 0,
-      sessionE2eMs: 0,
+      latencyMs: null,
+      sessionE2eMs: null,
+      jevScoreDraft: null,
+      jevScoreRaw: null,
+      draftJevScoreRaw: null,
       jev: { jevRan: false, reason: FIXED_OPENER_REASON, modelTier: null, routeType: null },
       replyProducer: LIVE_OPENER_PRODUCER,
       fixedOpener: true,
@@ -636,6 +679,9 @@ assert.match(fixedText, /T1 APP/);
 assert.match(fixedText, /Tell me the trip basics/);
 assert.match(fixedText, /collaborators/);
 assert.doesNotMatch(fixedText, /timing: gen=0ms/);
+assert.match(fixedText, /jevScoreDraft: null/);
+assert.match(fixedText, /jevScoreRaw: null/);
+assert.match(fixedText, /draftJevScoreRaw: null/);
 rejects(liveDoc({
   turns: [
     liveDoc().turns[0],

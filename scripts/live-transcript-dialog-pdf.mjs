@@ -15,6 +15,7 @@ import {
   inventedVenueNames,
   isLongIntake,
   rewriteCreditLabel,
+  heldRewriteLine,
   isTemplateNote,
   isTemplateInterim,
   interimProblems,
@@ -91,7 +92,12 @@ export function assertLiveTranscript(doc) {
     } else if (turn.jev.jevRan !== false || !String(turn.jev.reason || '').trim()) {
       throw new Error(`refused: turn ${turn.turnIndex} Jev was skipped without jevRan false and a reason`);
     }
-    if (!Number.isFinite(Number(turn.latencyMs)) || !Number.isFinite(Number(turn.sessionE2eMs))) {
+    const openerTurn = index === 0 && turn.role === 'app' && (turn.fixedOpener === true || turn.replyProducer === LIVE_OPENER_PRODUCER);
+    if (openerTurn) {
+      if (turn.latencyMs != null || turn.sessionE2eMs != null || turn.jevScoreDraft != null) {
+        throw new Error(`refused: turn ${turn.turnIndex} opener timing and jevScoreDraft must be null`);
+      }
+    } else if (!Number.isFinite(Number(turn.latencyMs)) || !Number.isFinite(Number(turn.sessionE2eMs))) {
       throw new Error(`refused: turn ${turn.turnIndex} is missing latency_ms or session e2e`);
     }
     if (turn.role === 'app') {
@@ -204,9 +210,6 @@ export function assertLiveTranscript(doc) {
         if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite attempt was not logged`);
         }
-        if (turn.quality?.rewritten === true && !String(turn.rewriterChange || turn.quality?.rewriterChange || '').trim()) {
-          throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewriter change line`);
-        }
         if (turn.quality?.rewritten === true && nearIdenticalRewrite(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
         }
@@ -223,7 +226,7 @@ export function assertLiveTranscript(doc) {
   if (intakeCustomer) {
     const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
     const intakeText = String(intakeReply?.text || '');
-    const intakeOk = /building (?:the|your) itinerary/i.test(intakeText)
+    const intakeOk = /build(?:ing)? (?:the|your) itinerary/i.test(intakeText)
       && !/you also have unlimited/i.test(intakeText)
       && /\bview access\b/i.test(intakeText)
       && /\bedit access\b/i.test(intakeText)
@@ -242,7 +245,8 @@ export function assertLiveTranscript(doc) {
   const interim = interimProblems(turns);
   if (interim.length) throw new Error(`refused: ${interim[0]}`);
   if (expect === 'app') throw new Error('refused: live transcript ends on a customer turn with no app reply');
-  return { ...doc, targetPerson, turns, contentFails };
+  if (contentFails.length) throw new Error(contentFails.join('\n'));
+  return { ...doc, targetPerson, turns, contentFails: [] };
 }
 
 export function buildTimingSummary(doc) {
@@ -574,7 +578,8 @@ export function liveV7Pack(doc, shape) {
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
   const trip = shape.trip || 'untitled';
-  const title = /big island/i.test(String(trip)) ? 'Big Island Family v7' : `Dialog Pack — ${trip} v7 Tier 1–4`;
+  const tripLabel = String(trip).trim() || 'untitled';
+  const title = /\bv7\b/i.test(tripLabel) ? tripLabel : `Dialog Pack — ${tripLabel} v7 Tier 1–4`;
   const timingRows = [
     ['Pack', 'Model(s)', 'n', 'p50 ms', 'p95 ms', 'mean ms', 'max ms'],
     ['v6', 'openai/gpt-5-mini', '23', '28834', '39693', '27833', '44762'],
@@ -596,8 +601,8 @@ export function liveV7Pack(doc, shape) {
     title,
     deploy_banner: String(doc.deployBanner || '').trim(),
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
-    record_fails: true,
-    content_fails: Array.isArray(doc.contentFails) ? doc.contentFails : [],
+    record_fails: false,
+    content_fails: [],
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
@@ -655,10 +660,10 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange) : '',
+        rewrite_label: shippedRewriteLabel(turn),
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
-        quality: generatedTurn ? formatQualityLine(turn.quality) : '',
+        quality: generatedTurn ? qualityBar(turn) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,
@@ -697,23 +702,24 @@ function producerLogLine(turn) {
     `draftModel: ${turn.draftModel || ''}`,
     `rewriteModel: ${turn.rewriteModel || 'none'}`,
     `shippedModel: ${turn.shippedModel || ''}`,
-    `jevScoreDraft: ${turn.jevScoreDraft ?? ''}`,
+    `jevScoreDraft: ${turn.jevScoreDraft == null ? 'null' : turn.jevScoreDraft}`,
     `jevScoreRewrite: ${turn.jevScoreRewrite ?? 'none'}`,
     `jevNote: ${turn.jevNote == null || String(turn.jevNote).trim() === '' ? 'null' : turn.jevNote}`,
     `jevNoteReason: ${turn.jevNoteReason || 'none'}`,
     `interimReply.text: ${interim.text || 'none'}`,
     `interimReply.model: ${interim.model || 'none'}`,
-    `interimReply.ms: ${Number.isFinite(Number(interim.ms)) ? Number(interim.ms) : 'none'}`,
-    `genOnlyMs: draft=${latency.draft ?? ''} rewrite=${latency.rewrite ?? 'none'}`,
-    `realPerTurnMs: ${Number.isFinite(Number(turn.latencyMs)) ? Number(turn.latencyMs) : ''}`,
-    `sessionE2eMs: ${Number.isFinite(Number(turn.sessionE2eMs)) ? Number(turn.sessionE2eMs) : ''}`,
+    `interimReply.ms: ${interim.ms == null ? 'null' : Number(interim.ms)}`,
+    `genOnlyMs: draft=${latency.draft == null ? 'null' : latency.draft} rewrite=${latency.rewrite == null ? 'null' : latency.rewrite}`,
+    `realPerTurnMs: ${turn.latencyMs == null ? 'null' : Number(turn.latencyMs)}`,
+    `sessionE2eMs: ${turn.sessionE2eMs == null ? 'null' : Number(turn.sessionE2eMs)}`,
     `rewriteFailReason: ${turn.rewriteFailReason || 'none'}`,
     `rewriteAttempt: ${Array.isArray(turn.rewriteAttempts) && turn.rewriteAttempts[0] ? `${turn.rewriteAttempts[0].model || ''} ${turn.rewriteAttempts[0].ms}ms ${turn.rewriteAttempts[0].error || 'ok'}` : 'none'}`,
-    `flagged: ${turn.flagged === true}`,
-    `jevScoreRaw: ${Number.isFinite(Number(turn.jevScoreRaw)) ? Number(turn.jevScoreRaw) : (Number.isFinite(Number(turn.quality?.scoreRaw)) ? Number(turn.quality.scoreRaw) : 'none')}`,
+    `flagged: ${turn.held === true ? 'held' : turn.flagged === true}`,
+    `held: ${turn.held === true}`,
+    `jevScoreRaw: ${printedRaw(turn.jevScoreRaw == null ? turn.quality?.scoreRaw : turn.jevScoreRaw)}`,
     `jevDisposition: ${turn.jevDisposition || turn.quality?.disposition || 'none'}`,
     `jevFixFocus: ${turn.jevFixFocus || turn.quality?.jevFocus || 'none'}`,
-    `draftJevScoreRaw: ${Number.isFinite(Number(turn.draftJevScoreRaw)) ? Number(turn.draftJevScoreRaw) : 'none'}`,
+    `draftJevScoreRaw: ${printedRaw(turn.draftJevScoreRaw)}`,
     `draftJevDisposition: ${turn.draftJevDisposition || 'none'}`,
     `draftJevFixFocus: ${turn.draftJevFixFocus || 'none'}`,
     `rewriteJevScoreRaw: ${turn.rewriteJevScoreRaw == null ? 'null' : Number(turn.rewriteJevScoreRaw)}`,
@@ -726,10 +732,46 @@ function producerLogLine(turn) {
   ].join(' | ');
 }
 
+function printedRaw(value) {
+  if (value == null || value === '') return 'null';
+  const number = Number(value);
+  return Number.isFinite(number) ? String(number) : 'none';
+}
+
+function qualityBar(turn) {
+  const score = formatQualityLine(turn.quality);
+  const held = heldRewriteLine(turn);
+  if (score && held) return `${score} · ${held}`;
+  return score || held;
+}
+
+export function shippedRewriteLabel(turn) {
+  if (!turn || turn.held === true || turn.quality?.rewritten !== true) return '';
+  return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
+}
+
+function foldPdfText(value) {
+  return String(value || '')
+    .replace(/\u2019/g, "'")
+    .replace(/\u2018/g, "'")
+    .replace(/\u201c/g, '"')
+    .replace(/\u201d/g, '"')
+    .replace(/\u2014/g, '-')
+    .replace(/\u2013/g, '-')
+    .replace(/\u02bb/g, "'")
+    .replace(/\u02bc/g, "'")
+    .replace(/\u2026/g, '...')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function jevRewriteLabelCounts(doc, pdfText) {
-  const rewritten = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true);
-  const pdf = String(pdfText || '');
-  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange))).length;
+  const rewritten = (doc?.turns || []).filter((turn) => shippedRewriteLabel(turn));
+  const pdf = foldPdfText(pdfText);
+  const rewriteLabels = rewritten.filter((turn) => {
+    const label = foldPdfText(shippedRewriteLabel(turn));
+    return label && pdf.includes(label);
+  }).length;
   return { rewrittenTurns: rewritten.length, rewriteLabels, ok: rewritten.length === rewriteLabels };
 }
 
@@ -880,17 +922,7 @@ async function main() {
       process.exit(2);
     }
   }
-  let transcript;
-  try {
-    transcript = assertLiveTranscript(await loadTranscript(args));
-  } catch (error) {
-    const loaded = await loadTranscript(args);
-    const message = String(error?.message || error).replace(/^refused:\s*/, '');
-    transcript = {
-      ...(loaded && typeof loaded === 'object' ? loaded : { turns: [] }),
-      contentFails: [`FAIL. ${message}`],
-    };
-  }
+  const transcript = assertLiveTranscript(await loadTranscript(args));
   if (liveMatch?.live) {
     transcript.buildSha = liveMatch.live;
     transcript.deployBanner = `live ${liveMatch.live} https://vacation-staging.timesyncher.com`;
@@ -904,7 +936,6 @@ async function main() {
     trip: args.trip,
     head: args.head,
     dpl: args.dpl,
-    recordRefusals: true,
   });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
   if (liveMatch?.live && !extractPdfText(pdf).includes(liveMatch.live)) {

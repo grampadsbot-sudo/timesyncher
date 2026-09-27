@@ -134,7 +134,7 @@ export function liveTurnRecord({
     if (model?.quality?.judged === true) {
       record.quality = {
         judged: true,
-        score: Number(model.quality.score),
+        score: scored(model.quality.score),
         scoreRaw: Number.isFinite(Number(model.quality.scoreRaw)) ? Number(model.quality.scoreRaw) : null,
         disposition: model.quality.disposition || null,
         jevFocus: model.quality.jevFocus || null,
@@ -187,6 +187,7 @@ export function liveTurnRecord({
       record.interimReply = log.interimReply || null;
       record.modelLatency = log.latencyMs || null;
       record.flagged = log.flagged === true;
+      record.held = log.held === true;
     }
     record.model = model
       ? {
@@ -791,9 +792,10 @@ export function thingsFromIntake(text) {
 }
 
 function activitySentenceCommits(hit) {
-  if (/\?/.test(hit)) return false;
-  if (!/\bif\b/i.test(hit)) return true;
-  return /\b(keep|put|save|add|set)\b/i.test(hit) && datedMentions(hit).length > 0;
+  const dated = datedMentions(hit).length > 0;
+  if (/\bif\b/i.test(hit) && !dated) return false;
+  if (/\?/.test(hit) && !dated) return false;
+  return true;
 }
 
 function sameNote(left, right) {
@@ -912,6 +914,36 @@ export function splitRewriteChange(text) {
   };
 }
 
+function sentenceHas(text, pattern) {
+  return splitSentences(text).some((sentence) => pattern.test(sentence));
+}
+
+export function verifiedRewriteChange(change, draft, shipped) {
+  const line = String(change || '').replace(/\s+/g, ' ').trim();
+  if (!line) return '';
+  const shippedText = String(shipped || '');
+  const draftText = String(draft || '');
+  if (/\b(removed|dropped|deleted|cut)\b/i.test(line)) {
+    for (const phrase of ['the whole crew', 'just the crew', 'party of eight', 'crew of eight', 'full party']) {
+      if (line.toLowerCase().includes(phrase) && shippedText.toLowerCase().includes(phrase)) return '';
+    }
+    const days = [...line.matchAll(/\b(\d{1,2})\b/g)].map((match) => Number(match[1])).filter((day) => day >= 1 && day <= 31);
+    if (days.length && /\b(swim|garden|town walk|april|apr)\b/i.test(line)) {
+      const activity = /\bswim\b/i.test(line) ? /\bswim\b/i : /\bgarden\b/i.test(line) ? /garden/i : /town walk/i.test(line) ? /town walk/i : null;
+      const dayRe = (day) => new RegExp(`\\b(?:april|apr)\\.?\\s+${day}\\b|\\b${day}(?:st|nd|rd|th)\\b`, 'i');
+      const placed = (text, day) => splitSentences(text).some((sentence) => {
+        if (activity && !activity.test(sentence)) return false;
+        if (/\boff that day\b|\bkeep\b[^.]{0,40}\boff\b/i.test(sentence)) return false;
+        return dayRe(day).test(sentence);
+      });
+      const removedAny = days.some((day) => placed(draftText, day) && !placed(shippedText, day));
+      if (!removedAny) return '';
+    }
+  }
+  if (sentenceHas(line, /removed|dropped/i) && sentenceHas(shippedText, /the whole crew|just the crew/i) && /crew/i.test(line)) return '';
+  return line;
+}
+
 export function mustRewriteQuality(quality) {
   if (quality?.hardFlag === true) return true;
   if (quality?.wantsRewrite === true) return true;
@@ -938,7 +970,7 @@ function customerCorpus(priorTurns, customerTurn = '') {
 }
 
 function dayStamp(label) {
-  const match = String(label || '').toLowerCase().match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\.?\s+(\d{1,2})\b/);
+  const match = String(label || '').toLowerCase().match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/);
   return match ? `${match[1].slice(0, 3)} ${Number(match[2])}` : '';
 }
 
@@ -1011,6 +1043,7 @@ export function savedTripFacts(record = {}) {
   const things = Array.isArray(record.things) ? record.things : [];
   const swim = things.find((thing) => /\bswim\b/i.test(String(thing?.title || '')));
   const garden = things.find((thing) => /garden/i.test(String(thing?.title || '')));
+  const townWalk = things.find((thing) => /town walk/i.test(String(thing?.title || '')));
   const span = record.span?.end ? record.span : spanFromIso(record.start, record.end);
   const party = record.party && typeof record.party === 'object' ? record.party : {};
   const notTraveling = [
@@ -1027,6 +1060,7 @@ export function savedTripFacts(record = {}) {
     span,
     swimDays: [...new Set([...stampsFromWhen(swim?.customerWhen), ...stampsFromWhen(swim?.whenLabel)])],
     gardenDays: [...new Set([...stampsFromWhen(garden?.customerWhen), ...stampsFromWhen(garden?.whenLabel)])],
+    townWalkDays: [...new Set([...stampsFromWhen(townWalk?.customerWhen), ...stampsFromWhen(townWalk?.whenLabel)])],
     owners,
     planOwned: record.planOwned === true,
     activities,
@@ -1051,7 +1085,43 @@ function pushError(errors, line) {
 }
 
 const RANGE_END = /\b(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?apr(?:il)?\s+\d{1,2}(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?(?:apr(?:il)?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
-const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bhead(?:ing)? out\b(?!\s+mid-)|\bafter checkout\b|\bone last time\b/i;
+const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+schedule)(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bafter checkout\b|\bone last time\b/i;
+const SWIM_RE = /\bswim\b|\bhouse pool\b|\bpool dip\b|\bdip into\b|\ba dip\b/i;
+const GARDEN_RE = /garden/i;
+const WALK_RE = /town walk/i;
+const DINNER_RE = /\bdinner\b/i;
+const ACTIVITY_RES = [SWIM_RE, GARDEN_RE, WALK_RE, DINNER_RE];
+const ACTIVITY_DENIAL = /\b(?:isn't set|is not set|won't lock|will not lock|not already set|not a swim|off that day)\b|\bkeep\b[^.]{0,48}\boff\b|\bnot on\b/i;
+
+function activityClauses(sentence) {
+  return String(sentence || '').split(/\s*(?:,|;|\band\b)\s*/i).map((part) => part.trim()).filter(Boolean);
+}
+
+function otherActivity(clause, activityRe) {
+  return ACTIVITY_RES.some((pattern) => pattern !== activityRe && pattern.test(clause) && !activityRe.test(clause));
+}
+
+function clauseStamps(sentence, span, activityRe) {
+  const clauses = activityClauses(sentence);
+  const stamps = new Set();
+  clauses.forEach((clause, index) => {
+    if (!activityRe.test(clause) || ACTIVITY_DENIAL.test(clause)) return;
+    const local = looseDayStamps(clause, span);
+    if (local.length) {
+      local.forEach((stamp) => stamps.add(stamp));
+      return;
+    }
+    if (/\blater in the week\b|\blater in the day\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
+    for (const neighbor of [clauses[index - 1], clauses[index + 1]].filter(Boolean)) {
+      if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
+      looseDayStamps(neighbor, span).forEach((stamp) => stamps.add(stamp));
+    }
+    if (!stamps.size && activityRe === WALK_RE && /\band\b/i.test(sentence)) {
+      looseDayStamps(sentence, span).forEach((stamp) => stamps.add(stamp));
+    }
+  });
+  return [...stamps];
+}
 
 export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
@@ -1088,8 +1158,15 @@ export function draftFactErrors(reply, facts = {}) {
   }
   const ownerName = String(facts.ownerName || '').trim();
   const ownerFirst = ownerName.split(/\s+/)[0] || '';
-  if (ownerFirst && /\bjust the crew\b|\bfull party\b|\bparty of eight\b/i.test(body) && !new RegExp(`\\b${ownerFirst}\\b`, 'i').test(body)) {
-    pushError(errors, `${ownerName} is traveling`);
+  if (ownerFirst) {
+    const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
+    const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
+    if (crewList && /(?:,|\band\b)/i.test(crewList[1]) && /\b[A-Z][a-z]{2,}\b/.test(crewList[1]) && !ownerRe.test(crewList[1])) {
+      pushError(errors, `${ownerName} is traveling`);
+    }
+    if (/\bjust the crew\b|\bfull party\b|\bparty of eight\b|\bcrew of eight\b|\bwhole crew\b/i.test(body) && !ownerRe.test(body)) {
+      pushError(errors, `${ownerName} is traveling`);
+    }
   }
   if (/\bmidweek\b/i.test(body) && /\bfriday\b/i.test(body)) {
     pushError(errors, 'Friday is not midweek');
@@ -1100,12 +1177,23 @@ export function draftFactErrors(reply, facts = {}) {
     pushError(errors, 'a paragraph is repeated');
   }
   const arrivalStamp = span?.start ? dayStamp(`${MONTH_ABBR[Number(String(span.start).slice(5, 7))]} ${Number(String(span.start).slice(8, 10))}`) : '';
-  if (arrivalStamp && !swimDays.includes(arrivalStamp)) {
-    for (const paragraph of body.split(/\n{2,}/)) {
-      if (looseDayStamps(paragraph, span).includes(arrivalStamp) && /\bhouse pool\b|\bpool dip\b|\bdip into\b|\ba dip\b/i.test(paragraph)) {
-        pushError(errors, `a swim on ${arrivalStamp} was not set by the customer`);
-      }
-    }
+  const laterFriday = dayStamp(facts.laterFriday || '');
+  const customerTurn = String(facts.customerTurn || '');
+  const wantsLaterSwim = /\bswim\b/i.test(customerTurn)
+    && /\blater\b|\bstill want\b|\banother\b|\bsecond\b/i.test(customerTurn)
+    && !/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(customerTurn);
+  if (wantsLaterSwim && laterFriday) {
+    const told = splitSentences(body).some((sentence) => {
+      if (!SWIM_RE.test(sentence)) return false;
+      const day = Number(String(laterFriday).split(' ')[1]);
+      const namesFriday = looseDayStamps(sentence, span).includes(laterFriday)
+        || new RegExp(String(facts.laterFriday || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(sentence)
+        || (day && new RegExp(`\\bfriday\\b[^.]{0,48}\\b${day}(?:st|nd|rd|th)?\\b`, 'i').test(sentence));
+      if (!namesFriday) return false;
+      if (/\bbetween\b|\blater in the week\b/i.test(sentence) && !/\bsaved\b|\bset\b/i.test(sentence)) return false;
+      return true;
+    });
+    if (!told) pushError(errors, `the later swim is saved on ${facts.laterFriday || laterFriday}`);
   }
   const sentences = splitSentences(body);
   const tripEnd = endWeekday(span);
@@ -1114,22 +1202,31 @@ export function draftFactErrors(reply, facts = {}) {
     const sentence = sentences[index];
     const next = sentences[index + 1] || '';
     const previous = sentences[index - 1] || '';
-    const swimDenied = /\b(?:isn't set|is not set|won't lock|will not lock|not already set|not a swim)\b/i.test(sentence);
-    if (/\bswim\b|\bhouse pool\b|\bpool dip\b|\bdip into\b/i.test(sentence) && !swimDenied) {
-      let attached = looseDayStamps(sentence, span);
+    const swimDenied = ACTIVITY_DENIAL.test(sentence) && SWIM_RE.test(sentence);
+    if (SWIM_RE.test(sentence) && !swimDenied) {
+      let attached = clauseStamps(sentence, span, SWIM_RE);
       if (!attached.length && /\boption\b|\bor a swim\b|\bswim day\b/i.test(sentence)) {
+        attached = looseDayStamps(previous, span);
+      }
+      if (!attached.length && /\bdip\b|\bpool\b|\bswim\b/i.test(sentence) && !/\blater\b|\bwait\b|\bbetween\b|\bin the week\b/i.test(sentence) && /\barrival\b/i.test(previous)) {
         attached = looseDayStamps(previous, span);
       }
       if (attached.length && !dayIsSet(attached, swimDays)) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
     }
-    if (/garden/i.test(sentence)) {
-      const stamps = looseDayStamps(sentence, span);
-      const denied = /\b(?:isn't set|is not set|won't lock|will not lock|not already set)\b/i.test(sentence);
+    if (GARDEN_RE.test(sentence)) {
+      const stamps = clauseStamps(sentence, span, GARDEN_RE);
+      const denied = ACTIVITY_DENIAL.test(sentence);
       const already = /already set|locked in/i.test(sentence) && !denied;
       if (!denied && stamps.length && !dayIsSet(stamps, gardenDays)) {
         pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
+      }
+    }
+    if (WALK_RE.test(sentence)) {
+      const stamps = clauseStamps(sentence, span, WALK_RE);
+      if (stamps.length && !dayIsSet(stamps, facts.townWalkDays)) {
+        pushError(errors, `a town walk on ${stamps[0]} was not set by the customer`);
       }
     }
     for (const person of facts.notTraveling || []) {
@@ -1139,8 +1236,8 @@ export function draftFactErrors(reply, facts = {}) {
       }
     }
     if (DEPARTURE.test(sentence)) {
-      const stamps = [...looseDayStamps(sentence, span), ...looseDayStamps(previous, span)];
-      const named = weekdayName(sentence) || weekdayName(previous);
+      const stamps = looseDayStamps(sentence, span);
+      const named = weekdayName(sentence);
       const onEnd = (stamps.length && endStamp && stamps.includes(endStamp)) || (named && tripEnd && named === tripEnd && (!stamps.length || stamps.includes(endStamp)));
       if (!onEnd) {
         pushError(errors, `${stamps[0] || named || 'that phrase'} is not the trip end`);
@@ -1355,7 +1452,7 @@ export function shipChoice({
   const rewriteRaw = Number(rewriteScore);
   const scoredLower = !Number.isFinite(rewriteRaw) || !Number.isFinite(draftRaw) || rewriteRaw < draftRaw;
   if (rewriteOk && rewriteCount === 0 && !scoredLower) {
-    return { text: String(rewrite).trim(), rewritten: true, flagged: false, failReason: '', holding: false };
+    return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
   }
   let failReason = '';
   if (rewriteCount > 0) failReason = 'rewrite_fact_check_held';
@@ -1364,17 +1461,29 @@ export function shipChoice({
   if (draftCount > 0) {
     const hold = String(holding || '').trim();
     if (hold) {
-      return { text: hold, rewritten: false, flagged: false, failReason: failReason || 'holding_reply', holding: true };
+      return { text: hold, rewritten: false, flagged: false, held: true, failReason: failReason || 'holding_reply', holding: true };
     }
-    return { text: '', rewritten: false, flagged: true, failReason: failReason || 'draft_held', holding: false };
+    return { text: '', rewritten: false, flagged: true, held: true, failReason: failReason || 'draft_held', holding: false };
   }
   return {
     text: draft,
     rewritten: false,
     flagged: false,
+    held: false,
     failReason,
     holding: false,
   };
+}
+
+export function interimCanShip(text, customerTurn, facts = {}) {
+  const value = String(text || '').trim();
+  if (!value || isTemplateInterim(value, customerTurn)) return false;
+  const customer = String(customerTurn || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
+  if (draftFactErrors(value, facts).length) return false;
+  if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
+  return true;
 }
 
 export function formatQualityLine(quality) {
@@ -1383,6 +1492,15 @@ export function formatQualityLine(quality) {
   if (!Number.isFinite(score) || score < 1 || score > 5) return '';
   const shown = Number.isInteger(score) ? String(score) : String(Math.round(score * 1000) / 1000);
   return `quality: ${shown}`;
+}
+
+export function heldRewriteLine(turn) {
+  if (!turn || turn.held !== true || turn.quality?.rewritten === true) return '';
+  const drafted = String(turn.rewriteText || '').trim()
+    || (Array.isArray(turn.rewriteAttempts) && turn.rewriteAttempts.some((item) => String(item?.text || '').trim()));
+  if (!drafted) return '';
+  const reason = String(turn.rewriteFailReason || '').replace(/\s+/g, ' ').trim() || 'held';
+  return `rewrite drafted, held: ${reason}`;
 }
 
 const REWRITE_STOP = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'of', 'for', 'in', 'on', 'at', 'is', 'are', 'was', 'were', 'be', 'this', 'that', 'it', 'you', 'your', 'we', 'our', 'with', 'from', 'as', 'if', 'so', 'not', 'do', 'does', 'what', 'when', 'where', 'who', 'how']);
@@ -1543,6 +1661,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session);
   const tripContext = draftingFacts(history, customerTurn, mergedTrip);
   const tripFacts = savedTripFacts(mergedTrip);
+  tripFacts.customerTurn = String(customerTurn || '');
+  tripFacts.laterFriday = laterFridayLabel(tripFacts.span);
   const planLine = customerAsksPrice(customerTurn) ? payerPriceLine(customerTurn, env) : '';
   const seatDollars = planSeatDollars(env);
   const planTable = planLine
@@ -1727,7 +1847,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   const interimStarted = Date.now();
   const interimReply = await interimFromTierOne({ rules, customerTurn, destination, env });
-  interimReply.ms = Math.max(interimReply.ms || 0, Date.now() - interimStarted);
+  interimReply.ms = String(interimReply.text || '').trim() ? Math.max(Number(interimReply.ms) || 0, Date.now() - interimStarted) : null;
   const pending = {
     customerTurn,
     draft: originalDraft,
@@ -1821,7 +1941,8 @@ async function interimFromTierOne({ rules, customerTurn, destination, env }) {
     text = String(model?.text || '').trim();
   }
   if (isTemplateInterim(text, customerTurn) || model?.responseModel !== INTERIM_MODEL) text = '';
-  return { text, model: INTERIM_MODEL, ms: Math.max(0, Date.now() - started) };
+  const elapsed = Date.now() - started;
+  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null };
 }
 
 async function settleJevNote(quality, customerTurn, draft, env) {
@@ -1927,33 +2048,12 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       parsed = second;
     }
   }
-  if (parsed.rewritten && !parsed.change) {
-    const again = await askRewrite(`${pending?.failureReason || 'fact check'}; the reply omitted WHAT_I_CHANGED`);
-    rewriteMs += again.ms;
-    const second = acceptText(again.called);
-    if (second.modelText && second.change) {
-      attempt = again;
-      parsed = second;
-    }
-  }
   let rewriteErrors = parsed.rewritten ? draftFactErrors(parsed.rewritten, facts) : [];
-  if (parsed.rewritten && rewriteErrors.length) {
-    const again = await askRewrite(`${pending?.failureReason || 'fact check'}; ${rewriteErrors.join('; ')}`);
-    rewriteMs += again.ms;
-    const second = acceptText(again.called);
-    const secondErrors = second.rewritten ? draftFactErrors(second.rewritten, facts) : [];
-    if (second.modelText && secondErrors.length < rewriteErrors.length) {
-      attempt = again;
-      parsed = second;
-      rewriteErrors = secondErrors;
-    }
-  }
   const model = attempt.called;
   const { modelText, rewritten, change } = parsed;
   let failReason = '';
   if (!modelText) failReason = model?.reason || 'rewrite_empty';
   else if (!rewritten) failReason = 'rewrite_rejected';
-  else if (!change) failReason = 'rewrite_change_missing';
   else if (nearIdenticalRewrite(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
   else if (appTextBanned(rewritten)) failReason = 'rewrite_banned';
   else if (replyLeavesDestination(rewritten, pending?.destination)) failReason = 'rewrite_left_destination';
@@ -1979,9 +2079,9 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       failReason = failReason || 'rewrite_not_judged';
     }
   }
-  const safeHolding = 'I am keeping this reply to the saved trip.';
-  const holdingText = String(pending?.interimReply?.text || '').trim();
-  const holdingErrors = holdingText ? draftFactErrors(holdingText, facts) : ['holding empty'];
+  const holdingText = interimCanShip(pending?.interimReply?.text, pending?.customerTurn, facts)
+    ? String(pending.interimReply.text).trim()
+    : '';
   let choice = shipChoice({
     draft: pending.draft,
     rewrite: failReason ? '' : rewritten,
@@ -1989,16 +2089,38 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteScore: rawScore(rewriteQuality?.scoreRaw),
     draftFactErrors: draftErrors,
     rewriteFactErrors: failReason ? [] : rewriteErrors,
-    holding: holdingErrors.length ? '' : holdingText,
+    holding: holdingText,
   });
   if (!choice.text) {
     choice = {
-      text: safeHolding,
+      text: String(pending.draft || '').trim(),
       rewritten: false,
       flagged: false,
-      failReason: choice.failReason || 'holding_reply',
-      holding: true,
+      held: true,
+      failReason: choice.failReason || 'draft_held',
+      holding: false,
     };
+  }
+  let holdingQuality = null;
+  if (choice.holding && choice.text) {
+    holdingQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: choice.text, tripContext: pending.tripContext, planLine: pending.planLine, env });
+    if (!holdingQuality?.judged) {
+      holdingQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: choice.text, tripContext: pending.tripContext, planLine: pending.planLine, env });
+    }
+    if (holdingQuality?.judged) {
+      holdingQuality.jevNote = null;
+      holdingQuality.comment = null;
+      holdingQuality.jevNoteReason = 'jev_no_free_text';
+    } else {
+      choice = {
+        text: String(pending.draft || '').trim(),
+        rewritten: false,
+        flagged: false,
+        held: true,
+        failReason: choice.failReason || 'holding_unscored',
+        holding: false,
+      };
+    }
   }
   const shippedText = choice.text;
   if (!choice.rewritten && !failReason) {
@@ -2009,9 +2131,19 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const rewriteQualityMs = Math.max(0, Date.now() - rewriteQualityStarted);
   const draftQualityMs = Number(pending.qualityJevMs) || 0;
   const rewriteModel = String(model?.responseModel || pending.draftModel || '').trim();
-  const shippedModel = choice.rewritten ? rewriteModel : pending.draftModel;
-  const shippedScore = choice.rewritten && rewriteQuality?.judged ? rewriteQuality.score : pending.draftScore;
-  const shippedQuality = choice.rewritten && rewriteQuality?.judged ? rewriteQuality : pending.quality;
+  const shownChange = choice.rewritten ? (verifiedRewriteChange(change, pending.draft, shippedText) || null) : null;
+  let shippedModel = pending.draftModel;
+  let shippedScore = pending.draftScore;
+  let shippedQuality = pending.quality;
+  if (choice.rewritten && rewriteQuality?.judged) {
+    shippedModel = rewriteModel;
+    shippedScore = rewriteQuality.score;
+    shippedQuality = rewriteQuality;
+  } else if (choice.holding && holdingQuality?.judged) {
+    shippedModel = pending.interimReply?.model || INTERIM_MODEL;
+    shippedScore = holdingQuality.score;
+    shippedQuality = holdingQuality;
+  }
   const judgeMs = choice.rewritten ? rewriteQualityMs : (Number(pending.quality?.judgeMs) || draftQualityMs);
   const draftFactLine = draftErrors.length ? draftErrors.join('; ') : 'ok';
   const rewriteFactLine = modelText ? (rewriteErrors.length ? rewriteErrors.join('; ') : 'ok') : 'none';
@@ -2031,7 +2163,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteAttempts: [rewriteAttempt],
     shippedRewrite: choice.rewritten,
     shippedModel,
-    jevScoreDraft: pending.draftScore,
+    jevScoreDraft: choice.holding ? shippedScore : pending.draftScore,
     jevScoreRaw: rawScore(shippedQuality?.scoreRaw) ?? rawScore(pending.quality?.scoreRaw),
     jevDisposition: shippedQuality?.disposition || pending.quality?.disposition || null,
     jevFixFocus: shippedQuality?.jevFocus || pending.quality?.jevFocus || null,
@@ -2048,7 +2180,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
-    rewriterChange: choice.rewritten ? (change || null) : null,
+    rewriterChange: shownChange,
     savedTrip: {
       start: facts.span?.start || '',
       end: facts.span?.end || '',
@@ -2064,15 +2196,17 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       jevRewrite: rewriteQualityMs,
       total: Number(pending.draftLatencyMs || 0) + rewriteMs + Number(pending.interimReply?.ms || 0) + draftQualityMs + rewriteQualityMs,
     },
-    flagged: choice.flagged,
+    flagged: choice.flagged === true && choice.held !== true,
+    held: choice.held === true,
   };
   const quality = {
-    ...(choice.rewritten && rewriteQuality?.judged ? rewriteQuality : pending.quality),
+    ...shippedQuality,
     score: shippedScore,
     comment: null,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
-    rewriterChange: choice.rewritten ? (change || null) : null,
+    rewriterChange: shownChange,
+    rewritten: choice.rewritten === true,
     judgeMs,
   };
   const stamped = stampShippedReply({
@@ -2082,7 +2216,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     log,
     draft: pending.draft,
   });
-  stamped.model.responseModel = pending.model?.responseModel || pending.draftModel;
+  stamped.model.responseModel = choice.holding ? shippedModel : (pending.model?.responseModel || pending.draftModel);
   stamped.model.modelTier = pending.model?.modelTier ?? pending.jev?.modelTier ?? null;
   stamped.model.genLatencyMs = pending.draftLatencyMs;
   stamped.model.beats = pending.model?.beats || null;
@@ -2123,8 +2257,8 @@ export function liveTranscriptFromRows({ session, rows }) {
       speakerName: live.speakerName || null,
       storedText: live.text == null ? text : String(live.text),
       at: iso(live.at || row.received_at || row.sent_at || row.created_at),
-      latencyMs: Number(live.latencyMs ?? row.response_latency_ms),
-      sessionE2eMs: Number(live.sessionE2eMs),
+      latencyMs: live.latencyMs == null ? null : Number(live.latencyMs ?? row.response_latency_ms),
+      sessionE2eMs: live.sessionE2eMs == null ? null : Number(live.sessionE2eMs),
       jev: live.jev && typeof live.jev === 'object' ? live.jev : null,
       replyProducer: live.replyProducer || null,
       dispatcher: live.dispatcher || null,
@@ -2165,6 +2299,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       interimReply: live.interimReply || null,
       modelLatency: live.modelLatency || null,
       flagged: live.flagged === true,
+      held: live.held === true,
       model: live.model || null,
       rules: live.rules || null,
     };

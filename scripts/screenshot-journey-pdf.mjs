@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertLiveMatchesTip, isVoidStaleBuild, prependVoidStamp, voidDocumentStamp } from './void-stale-build.mjs';
+import { assertBothPdfsMatchLive, assertLiveMatchesTip, isVoidStaleBuild, prependVoidStamp, voidDocumentStamp } from './void-stale-build.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const featureDir = path.join(root, '.cursor/skills/verify-timesyncher-vacation/features');
@@ -611,10 +611,10 @@ async function main() {
           }
           const line = range.getBoundingClientRect();
           const pane = (scroller || bubble).getBoundingClientRect();
-          const x = Math.max(line.x, pane.x);
-          const y = Math.max(8, Math.min(line.y - 28, pane.y + 8));
-          const width = Math.min(Math.max(line.width, 640), pane.width, 1100);
-          const height = Math.min(340, Math.max(180, pane.bottom - y - 8));
+          const x = Math.max(0, pane.x);
+          const y = Math.max(8, Math.min(line.y - 48, pane.y));
+          const width = Math.min(pane.width || 1100, 1280);
+          const height = Math.min(820, Math.max(560, pane.bottom - y));
           return { x, y, width, height };
         }, needle, skipOpener);
         await sleep(300);
@@ -626,6 +626,19 @@ async function main() {
         }
         if (id === 'building-itinerary') mark('post-intake-welcome.md');
         await shot(id, chapter, title, { file, note, clipRect });
+      }
+      const addThese = await page.evaluate(() => {
+        const bubble = [...document.querySelectorAll('article.bubble')].find((node) => /add these\?/i.test(node.innerText || ''));
+        if (!bubble) return null;
+        bubble.scrollIntoView({ block: 'center' });
+        const box = bubble.getBoundingClientRect();
+        return { x: 0, y: Math.max(0, box.y - 24), width: Math.min(1280, window.innerWidth), height: Math.min(720, Math.max(280, box.height + 48)) };
+      });
+      if (addThese) {
+        await shot('chat-search-add', 'Onboarding', 'Chat search', {
+          note: 'The chat box is the search. The reply asks add these?',
+          clipRect: addThese,
+        });
       }
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
       if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
@@ -904,14 +917,18 @@ async function main() {
             }
             if (!captured.has('ratings-reviews.md')) {
               const ratingBox = await page.evaluate(() => {
-                const label = [...document.querySelectorAll('label')].find((node) => /^Google rating\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+                const label = [...document.querySelectorAll('label, textarea')].find((node) => {
+                  const text = (node.innerText || node.value || '').trim();
+                  if (node.tagName === 'TEXTAREA') return text.length > 12;
+                  return /^Google rating\b|^Review\b/i.test(text) && node.getBoundingClientRect().width > 40 && (/\d/.test(text) || /happy hour|ocean bar/i.test(text));
+                });
                 if (!label) return null;
-                const input = label.querySelector('input');
-                const value = String(input?.value || '').trim();
-                if (!/\d/.test(value)) return null;
+                const input = label.querySelector('input, textarea');
+                const value = String(input?.value || label.innerText || '').trim();
+                if (!/\d/.test(value) && !/happy hour|ocean bar|review/i.test(value)) return null;
                 label.scrollIntoView({ block: 'center' });
-                const box = label.parentElement.getBoundingClientRect();
-                return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(280, Math.max(140, box.height + 24)) };
+                const box = (label.parentElement || label).getBoundingClientRect();
+                return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(320, Math.max(140, box.height + 24)) };
               });
               if (ratingBox) {
                 await shot(`ratings-${id}`, 'Initial itinerary', 'Ratings and reviews', {
@@ -975,9 +992,23 @@ async function main() {
         });
         await shot('car-fields', 'Initial itinerary', 'Cars', {
           file: 'car-fields.md',
-          note: 'Car results are Things under Cars. Not a separate car page.',
+          note: 'Car results are Things under Cars. Ten lowest prices, no brand left out of the pool.',
           clipRect: carList,
         });
+        const removedBrand = await page.evaluate(() => {
+          const button = document.querySelector('[data-ts-remove-brand]');
+          if (!button) return '';
+          button.click();
+          return button.dataset.tsRemoveBrand || button.textContent || '';
+        });
+        if (removedBrand) {
+          await sleep(300);
+          await shot('car-brand-removed', 'Initial itinerary', 'Cars brand removed', {
+            file: 'car-fields.md',
+            note: `Removed ${removedBrand} on the car page. The next lowest price stays in the ten.`,
+            clipRect: carList,
+          });
+        }
         await page.keyboard.press('Escape').catch(() => {});
       }
       if (await clickText(page, 'Restaurants') && await clickText(page, 'Ulu Ocean')) {
@@ -1076,13 +1107,15 @@ async function main() {
         if (!await clickText(page, name, { exact: true })) continue;
         await sleep(300);
         const ratingBox = await page.evaluate(() => {
-          const label = [...document.querySelectorAll('label')].find((node) => /^Google rating\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+          const label = [...document.querySelectorAll('label, textarea')].find((node) => {
+            const value = String(node.value || node.innerText || '').trim();
+            if (node.tagName === 'TEXTAREA') return value.length > 12;
+            return /^Google rating\b|^Review\b/i.test((node.innerText || '').trim()) && (/\d/.test(value) || /happy hour|ocean bar/i.test(value));
+          });
           if (!label) return null;
-          const input = label.querySelector('input');
-          if (!/\d/.test(String(input?.value || '').trim())) return null;
           label.scrollIntoView({ block: 'center' });
-          const box = label.parentElement.getBoundingClientRect();
-          return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(280, Math.max(140, box.height + 24)) };
+          const box = (label.parentElement || label).getBoundingClientRect();
+          return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(320, Math.max(140, box.height + 24)) };
         });
         if (ratingBox) {
           await shot('ratings-sourced', 'Initial itinerary', 'Ratings and reviews', {
@@ -1104,6 +1137,25 @@ async function main() {
     if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes setup did not open. Unblock: a Keepsakes menu with Style one, Style two, and Admin on this host.');
     if (!captured.has('order-keepsakes.md')) {
       const slug = new URL(sharedUrl).pathname.split('/').filter(Boolean).pop();
+      const guest = await browser.newPage();
+      await guest.setViewport({ width: 1280, height: 900 });
+      await guest.goto(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => {});
+      const guestText = await guest.evaluate(() => document.body.innerText || '').catch(() => '');
+      if (/anyone with this link/i.test(guestText) && /not limited to the customer/i.test(guestText)) {
+        const image = path.join(shotDir, 'order-keepsakes-guest.png');
+        await guest.screenshot({ path: image });
+        pages.push({
+          id: 'order-keepsakes-guest',
+          chapter: 'Initial itinerary',
+          title: 'Order Keepsakes',
+          file: 'order-keepsakes.md',
+          note: 'A non-owner opened the shareable keepsake buy link.',
+          image,
+        });
+        mark('order-keepsakes.md');
+      }
+      await guest.close();
+      if (!captured.has('order-keepsakes.md')) {
       await go(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, 'Order this keepsake');
       const orderText = await bodyText(page);
       if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link')) {
@@ -1113,6 +1165,7 @@ async function main() {
         });
       } else {
         gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake order link did not open.');
+      }
       }
     }
 
@@ -1304,6 +1357,7 @@ async function main() {
     subtitle: 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
     void: false,
     deployBanner,
+    pageCount: pages.length,
     pages,
     gaps,
   };
@@ -1317,6 +1371,11 @@ async function main() {
   }
   const sha = createHash('sha256').update(await readFile(pdfPath)).digest('hex');
   await writeJourneySection(verifyPath, features.length, captured, gaps, sha);
+  const dialogPdf = argValue('--dialog');
+  if (dialogPdf) {
+    await assertBothPdfsMatchLive(dialogPdf, pdfPath);
+    process.stdout.write(`both PDFs match live ${match.live}\n`);
+  }
   process.stdout.write(`screenshot-journey.pdf sha256 ${sha}\n`);
   process.stdout.write(`pages ${pages.length} gaps ${gaps.length} features ${captured.size} of ${features.length}\n`);
 }
@@ -1368,6 +1427,8 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
       ? 'jev-quality-line: PASS. The score line is in the Dialog PDF and the JSONL log. The customer app does not show it.'
       : 'jev-quality-line: GAP. The customer app showed a Jev score line.',
     `screenshot-journey.pdf sha256 \`${sha}\`.`,
+    'Autonomy stays a system test: features/autonomous-app-customer-flow.md and bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910. It is not a screen in this journey.',
+    'Trip View is removed from the app bundle. The chat box is the search.',
     '',
     '### Not captured',
     '',

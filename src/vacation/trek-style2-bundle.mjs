@@ -523,7 +523,16 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  return hideUnsourcedRatings(patched);
+  return stripTripView(hideUnsourcedRatings(patched));
+}
+
+function stripTripView(source) {
+  const js = String(source || '');
+  const start = js.indexOf('n.jsxs("div",{"data-trip-view-root":!0');
+  if (start < 0) return js;
+  const print = js.indexOf('n.jsxs("div",{"data-print-menu-root":!0', start);
+  if (print < 0 || js[print - 1] !== ',') return js;
+  return js.slice(0, start) + js.slice(print);
 }
 
 function hideUnsourcedRatings(source) {

@@ -129,6 +129,7 @@
     if (!el || el.dataset.tsIconFixed === '1') return;
     if (/^H[1-6]$/.test(el.tagName)) return;
     if (el.closest('.print-media-card, .story-card, .logo-list, [data-trip-directory], [data-post-itinerary], [data-stories-up-front]')) return;
+    if (el.closest('[data-print-menu-root], [data-trip-view-root], button[aria-label], [role="button"][aria-label]')) return;
     if (!isTinyIconSlot(el)) return;
     el.dataset.tsIconFixed = '1';
     el.dataset.tsIconType = resolved.type;

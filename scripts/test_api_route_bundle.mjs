@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import handler, { publicApiRequest } from '../api/[...route].mjs';
+import { orderPage } from '../routes/keepsake-order.mjs';
 
 const apiFiles = (await readdir(new URL('../api/', import.meta.url))).filter((name) => name.endsWith('.mjs'));
 assert.deepEqual(apiFiles, ['[...route].mjs']);
@@ -125,5 +126,13 @@ assert.equal(firstRoute('/assets/index-BKun7ofk.js'), null);
 assert.equal(firstRoute('/assets/index-CbEHlMj6.css'), null);
 assert.equal(firstRoute('/shared/las-vegas-vacation-3').route.dest, '/shared-app.html');
 assert.equal(firstRoute('/'), null);
+
+const link = orderPage('intake-example', 'Big Island Family v7', '');
+assert.match(link, /Anyone with this link can order/);
+assert.match(link, /not limited to the customer/);
+assert.match(link, /data-keepsake-buy-link="intake-example"/);
+assert.doesNotMatch(link, /Place keepsake order/);
+assert.doesNotMatch(link, /Checkout and payment/);
+assert.doesNotMatch(link, /<form/i);
 
 console.log('api route bundle ok');
