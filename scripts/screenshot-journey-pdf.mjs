@@ -1149,7 +1149,7 @@ async function main() {
           chapter: 'Initial itinerary',
           title: 'Order Keepsakes',
           file: 'order-keepsakes.md',
-          note: 'A non-owner opened the shareable keepsake buy link. Anyone with the URL can order.',
+          note: 'A non-owner opened the shareable keepsake buy link. Checkout and payment are off (TIMESYNCHER_KEEPSAKE_CHECKOUT unset).',
           image,
         });
         mark('order-keepsakes.md');

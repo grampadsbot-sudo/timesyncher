@@ -1494,6 +1494,15 @@ export function formatQualityLine(quality) {
   return `quality: ${shown}`;
 }
 
+export function heldRewriteLine(turn) {
+  if (!turn || turn.held !== true || turn.quality?.rewritten === true) return '';
+  const drafted = String(turn.rewriteText || '').trim()
+    || (Array.isArray(turn.rewriteAttempts) && turn.rewriteAttempts.some((item) => String(item?.text || '').trim()));
+  if (!drafted) return '';
+  const reason = String(turn.rewriteFailReason || '').replace(/\s+/g, ' ').trim() || 'held';
+  return `rewrite drafted, held: ${reason}`;
+}
+
 const REWRITE_STOP = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'of', 'for', 'in', 'on', 'at', 'is', 'are', 'was', 'were', 'be', 'this', 'that', 'it', 'you', 'your', 'we', 'our', 'with', 'from', 'as', 'if', 'so', 'not', 'do', 'does', 'what', 'when', 'where', 'who', 'how']);
 
 function rewriteTokens(value) {
