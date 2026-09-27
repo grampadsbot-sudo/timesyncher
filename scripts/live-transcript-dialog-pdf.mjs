@@ -165,6 +165,8 @@ export function assertLiveTranscript(doc) {
         if (nearIdenticalRewrite(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
         }
+      } else if (String(turn.interimReply?.text || '').trim()) {
+        throw new Error(`refused: turn ${turn.turnIndex} non-rewrite turn has an interim reply`);
       }
     }
     }
@@ -513,6 +515,7 @@ export function liveV7Pack(doc, shape) {
   const name = String(doc.targetPerson || 'customer').toUpperCase();
   return {
     title,
+    deploy_banner: String(doc.deployBanner || '').trim(),
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,

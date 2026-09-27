@@ -795,7 +795,9 @@ async function handleVacationApp(req, res, db, url) {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
       const pending = meta.pendingRewrite;
       if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
-      const finished = await finishTierRewrite({ pending, env: process.env });
+      const finished = pending.resolved?.reply
+        ? pending.resolved
+        : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
       const appLive = liveTurnRecord({
         turnIndex: Number(pending.customerTurnIndex) + 1,

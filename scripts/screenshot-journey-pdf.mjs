@@ -1075,6 +1075,7 @@ async function main() {
   const manifest = {
     title: 'Screenshot Journey',
     subtitle: 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
+    deployBanner: process.env.R5_DEPLOY_BANNER || '',
     pages,
     gaps,
   };

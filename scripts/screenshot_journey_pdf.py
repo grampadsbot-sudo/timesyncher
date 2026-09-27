@@ -27,6 +27,10 @@ def build(manifest, dest):
         "note": ParagraphStyle("note", fontName="Times-Italic", fontSize=9, leading=12, textColor=colors.HexColor("#333333"), spaceAfter=6),
     }
     story = []
+    banner = str(manifest.get("deployBanner") or "").strip()
+    if banner:
+        story.append(Paragraph(esc(banner), styles["body"]))
+        story.append(Spacer(1, 8))
     story.append(Paragraph(esc(manifest.get("title") or "Screenshot Journey"), styles["h1"]))
     story.append(Paragraph(esc(manifest.get("subtitle") or "Real app screens. The deleted card shell is not included."), styles["body"]))
     story.append(Spacer(1, 8))

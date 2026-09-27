@@ -168,6 +168,10 @@ def build(pack):
     styles.add(ParagraphStyle(name="Headline", parent=styles["Normal"], fontSize=9.5, leading=12, textColor=colors.HexColor("#0b3d91"), spaceBefore=4, spaceAfter=4))
 
     story = []
+    banner = str(pack.get("deploy_banner") or "").strip()
+    if banner:
+        story.append(Paragraph(latin(banner), styles["Headline"]))
+        story.append(Spacer(1, 8))
     story.append(Paragraph(latin(pack.get("title")), styles["CoverTitle"]))
     story.append(Paragraph(latin(f"pack_id: {pack.get('pack_id')}"), styles["Meta"]))
     story.append(Paragraph(latin(pack.get("turns_line")), styles["Meta"]))

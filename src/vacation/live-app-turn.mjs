@@ -821,22 +821,29 @@ export function isTemplateInterim(text, customerTurn) {
 export function interimProblems(turns) {
   const problems = [];
   const seen = new Map();
-  for (const turn of Array.isArray(turns) ? turns : []) {
+  const list = Array.isArray(turns) ? turns : [];
+  for (const turn of list) {
+    if (turn?.role && turn.role !== 'app') continue;
     const interim = turn?.interimReply;
     const text = String(interim?.text || '').trim();
-    if (!text) continue;
-    const prior = (Array.isArray(turns) ? turns : []).slice(0, (turns || []).indexOf(turn)).reverse().find((item) => item?.role === 'customer');
-    if (prior && isTemplateInterim(text, prior.text)) {
-      problems.push(`turn ${turn.turnIndex} interim reply is a template`);
-    } else if (!prior && /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i.test(text)) {
-      problems.push(`turn ${turn.turnIndex} interim reply is a template`);
+    const rewritten = turn?.quality?.rewritten === true;
+    const prior = list.slice(0, list.indexOf(turn)).reverse().find((item) => item?.role === 'customer');
+    const template = prior
+      ? isTemplateInterim(text, prior.text)
+      : /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i.test(text);
+    if (rewritten) {
+      if (!text || template) problems.push(`turn ${turn.turnIndex} rewrite is missing an interim reply`);
+      else if (interim?.model !== 'google/gemini-2.5-flash-lite') {
+        problems.push(`turn ${turn.turnIndex} interim model is not google/gemini-2.5-flash-lite`);
+      }
+    } else if (text) {
+      problems.push(`turn ${turn.turnIndex} non-rewrite turn has an interim reply`);
+      if (template) problems.push(`turn ${turn.turnIndex} interim reply is a template`);
     }
+    if (!text) continue;
     const key = text.toLowerCase().replace(/\s+/g, ' ');
     if (seen.has(key)) problems.push(`interim reply repeats across turns ${seen.get(key)} and ${turn.turnIndex}`);
     else seen.set(key, turn.turnIndex);
-    if (interim?.model && interim.model !== 'google/gemini-2.5-flash-lite') {
-      problems.push(`turn ${turn.turnIndex} interim model is not google/gemini-2.5-flash-lite`);
-    }
   }
   return problems;
 }
@@ -1219,34 +1226,47 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const interimStarted = Date.now();
   const interimReply = await interimFromTierOne({ rules, customerTurn, destination, env });
   interimReply.ms = Math.max(interimReply.ms || 0, Date.now() - interimStarted);
+  const pending = {
+    customerTurn,
+    draft: originalDraft,
+    draftModel,
+    draftScore: quality.score,
+    jevNote,
+    quality,
+    jev,
+    upsell,
+    postIntake,
+    destination,
+    corpus,
+    interimReply,
+    draftLatencyMs,
+    model: {
+      called: Boolean(model?.called),
+      via: model?.via || null,
+      responseModel: model?.responseModel || null,
+      modelTier: model?.modelTier ?? null,
+      genLatencyMs: draftLatencyMs,
+      maxTokens: model?.maxTokens ?? null,
+      beats: model?.beats || null,
+    },
+  };
+  const finished = await finishTierRewrite({ pending, env });
+  if (!finished.log?.shippedRewrite || !String(interimReply.text || '').trim()) {
+    return {
+      reply: finished.reply,
+      rules,
+      jev,
+      model: finished.model,
+      quality: finished.quality,
+      log: finished.log,
+      reason: finished.reason,
+    };
+  }
   return {
     reply: null,
     status: 'interim',
     interimReply,
-    pending: {
-      customerTurn,
-      draft: originalDraft,
-      draftModel,
-      draftScore: quality.score,
-      jevNote,
-      quality,
-      jev,
-      upsell,
-      postIntake,
-      destination,
-      corpus,
-      interimReply,
-      draftLatencyMs,
-      model: {
-        called: Boolean(model?.called),
-        via: model?.via || null,
-        responseModel: model?.responseModel || null,
-        modelTier: model?.modelTier ?? null,
-        genLatencyMs: draftLatencyMs,
-        maxTokens: model?.maxTokens ?? null,
-        beats: model?.beats || null,
-      },
-    },
+    pending: { ...pending, resolved: finished },
     rules,
     jev,
     model,
@@ -1381,7 +1401,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     jevScoreDraft: pending.draftScore,
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevNote: pending.jevNote,
-    interimReply: pending.interimReply || null,
+    interimReply: choice.rewritten ? (pending.interimReply || null) : { text: null, model: null, ms: null },
     latencyMs: {
       draft: pending.draftLatencyMs,
       rewrite: rewriteMs,
