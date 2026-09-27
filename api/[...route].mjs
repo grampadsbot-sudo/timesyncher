@@ -33,6 +33,8 @@ const handlers = {
   'shared-trip': vacationItinerary,
 };
 
+const ROUTING_QUERY_KEYS = new Set(['route', '...route']);
+
 function routeParts(req) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   let parts = url.pathname.split('/').filter(Boolean);
@@ -40,10 +42,32 @@ function routeParts(req) {
   if (parts.length === 1 && parts[0] === '[...route]') parts = [];
   if (parts.length) return parts;
   const queryRoute = req.query?.route || req.query?.['...route'] || url.searchParams.get('...route') || url.searchParams.get('route');
-  if (Array.isArray(queryRoute)) return queryRoute.map((part) => String(part || '')).filter(Boolean);
+  if (Array.isArray(queryRoute)) return queryRoute.flatMap((part) => String(part || '').split('/')).filter(Boolean);
   if (queryRoute) return String(queryRoute).split('/').filter(Boolean);
   return [];
 }
+
+function publicApiRequest(req) {
+  const url = new URL(req.url || '/', 'https://timesyncher.com');
+  const parts = routeParts(req);
+  const params = new URLSearchParams(url.search);
+  if (req.query && typeof req.query === 'object') {
+    for (const [key, value] of Object.entries(req.query)) {
+      if (ROUTING_QUERY_KEYS.has(key) || params.has(key)) continue;
+      const values = Array.isArray(value) ? value : [value];
+      for (const item of values) {
+        if (item != null && item !== '') params.append(key, String(item));
+      }
+    }
+  }
+  for (const key of ROUTING_QUERY_KEYS) params.delete(key);
+  const path = `/api/${parts.map((part) => encodeURIComponent(part)).join('/')}`;
+  const qs = params.toString();
+  req.url = qs ? `${path}?${qs}` : path;
+  return { parts, head: parts[0] || '', url: req.url, handler: handlers[parts[0]] ? parts[0] : null };
+}
+
+export { publicApiRequest };
 
 function sendJson(res, status, body) {
   res.statusCode = status;
@@ -53,8 +77,8 @@ function sendJson(res, status, body) {
 }
 
 export default async function handler(req, res) {
-  const [head] = routeParts(req);
-  const fn = handlers[head];
+  const described = publicApiRequest(req);
+  const fn = handlers[described.head];
   if (!fn) return sendJson(res, 404, { ok: false, error: 'not found' });
   return fn(req, res);
 }

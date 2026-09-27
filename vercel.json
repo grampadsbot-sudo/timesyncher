@@ -12,14 +12,6 @@
       "dest": "/api/[...route]?...route=bind-thing-media&mediaBind=1"
     },
     {
-      "src": "/assets/index-BKun7ofk.js",
-      "dest": "/api/[...route]?...route=vacation-itinerary&trekBundle=1"
-    },
-    {
-      "src": "/assets/index-CbEHlMj6.css",
-      "dest": "https://travel.timesyncher.com/assets/index-CbEHlMj6.css"
-    },
-    {
       "src": "/api/pdf/qr\\.svg",
       "dest": "/api/[...route]?...route=pdf&pdfQr=1"
     },
@@ -62,6 +54,10 @@
     {
       "src": "/accept/([^/]+)",
       "dest": "/api/[...route]?...route=eula&action=accept-page&sessionId=$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/[...route]?...route=$1"
     }
   ],
   "functions": {
