@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, isTemplateInterim, interimProblems, isTemplateNote, nearIdenticalRewrite, noteForTurn, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, isTemplateInterim, interimProblems, isTemplateNote, mustRewriteQuality, nearIdenticalRewrite, noteForTurn, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { qualityCommentCriteria, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertJevRewriteLabels,
@@ -84,7 +84,8 @@ assert.match(intakeReply, /building the itinerary/);
 assert.match(intakeReply, /view access/i);
 assert.match(intakeReply, /edit access/i);
 assert.match(intakeReply, /email invite/i);
-assert.doesNotMatch(intakeReply, /unlimited vacations for the whole year/);
+assert.match(intakeReply, /unlimited vacations for the whole year/);
+assert.match(intakeReply, /view access/i);
 assert.doesNotMatch(intakeReply, /you've got unlimited/);
 assert.equal(inventedGardenHit('Visit the Kahaluu garden if it rains.', 'Kimberly wants gardens.'), true);
 assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Kimberly wants gardens.'), false);
@@ -120,6 +121,16 @@ assert.equal(nearIdenticalRewrite('Thursday is a town walk.', 'The plan stays on
 assert.equal(nearIdenticalRewrite('Thursday is a town walk in Kailua-Kona.', 'The town walk stays on Thursday in Kailua-Kona, and the afternoon is not a second big activity.'), false);
 assert.equal(isTemplateNote('Clear day shape that stays with the customer words.', 'Thursday town walk'), true);
 assert.equal(isTemplateNote(noteForTurn('Thursday is a town walk.', 'misses_ask'), 'Thursday is a town walk.'), false);
+assert.equal(isTemplateNote('Keep the reply. It answers "Thursday is a town walk."', 'Thursday is a town walk.'), true);
+assert.equal(isTemplateNote(noteForTurn('Thursday is a town walk.', 'keep', 'Thursday stays a town walk in Kailua-Kona.'), 'Thursday is a town walk.'), false);
+assert.equal(mustRewriteQuality({ score: 3, jevFocus: 'keep', comment: 'Answers "Thursday is a town walk."' }, {}), true);
+assert.equal(mustRewriteQuality({ score: 4, jevFocus: 'keep', comment: 'Name the price while answering "How much is it?".' }, {}), true);
+assert.equal(mustRewriteQuality({ score: 5, jevFocus: 'keep', comment: 'Answers "Thursday is a town walk." and stays with that wording.' }, {}), false);
+assert.equal(inventedVenueNames('The community center swim is the backup.', 'Tyler wants a swim.').includes('community center'), true);
+const saturdayGroceries = applyCustomerNotes(goldThings, 'Saturday April fourth is groceries only.');
+assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, 'Fri Apr 3');
+const thursdayGarden = applyCustomerNotes(goldThings, 'Thursday April ninth is the second garden morning.');
+assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
 assert.equal(isTemplateInterim('Got it. I saved that.', 'Thursday town walk'), true);
 assert.equal(isTemplateInterim('Sure, the Thursday walk can stay.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thursday is a town walk.'), false);
@@ -147,7 +158,7 @@ assert.deepEqual(inventedVenueNames('A morning snorkel cruise and Hawaiʻi Volca
 assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', 'Tyler wants a swim on the beach or the house pool.'), []);
 const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
 assert.equal(customerAsksPrice(priceAsk), true);
-assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'Does not give the price for "How much is it?".', wantsRewrite: true }, 'The household plan is unlimited vacations for the whole year.', priceAsk).score, 4);
+assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'Does not give the price for "How much is it?".', wantsRewrite: true }, 'The price is $27 for unlimited vacations for the whole year.', priceAsk).score, 4);
 assert.equal(correctFalsePriceMiss({ judged: true, score: 4, comment: 'Says no extra fees.', wantsRewrite: false }, 'There are no extra fees.', priceAsk).score <= 3, true);
 assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, true);
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').score <= 2, true);
@@ -248,11 +259,11 @@ function liveDoc(overrides = {}) {
         jevLatencyMs: 400,
         genLatencyMs: 2400,
         jevBeforeModel: true,
-        quality: { judged: true, score: 4, comment: 'Keep the reply. It answers "Harbor morning plan for Craig".', rewritten: false },
+        quality: { judged: true, score: 4, comment: 'Answers "Harbor morning plan for Craig" and stays with that wording: "Start with the harbor walk".', rewritten: false },
         shippedModel: 'qwen/qwen3-235b-a22b-2507',
         draftModel: 'qwen/qwen3-235b-a22b-2507',
         jevScoreDraft: 4,
-        jevNote: 'Keep the reply. It answers "Harbor morning plan for Craig".',
+        jevNote: 'Answers "Harbor morning plan for Craig" and stays with that wording: "Start with the harbor walk".',
         flagged: false,
         modelLatency: { draft: 2400, rewrite: null, total: 2400 },
       },
@@ -271,6 +282,13 @@ rejects(liveDoc({ turns: [liveDoc().turns[0]] }), /no app reply/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, text: '' } : turn)),
 }), /text is empty/);
+rejects(liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    jevNote: 'Keep the reply. It answers "Harbor morning plan for Craig".',
+    quality: { ...turn.quality, comment: 'Keep the reply. It answers "Harbor morning plan for Craig".' },
+  } : turn)),
+}), /template/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, invented: true } : turn)),
 }), /invented/);
@@ -347,7 +365,7 @@ assert.match(text, /timing: jev=400ms gen=2400ms model=qwen\/qwen3-235b-a22b-250
 assert.match(text, /quality: 4 .*Harbor morning plan for Craig/);
 assert.match(text, /draftModel: qwen\/qwen3-235b-a22b-2507/);
 assert.match(text, /flagged: false/);
-assert.match(jevRewritePdf, /interimReply\.text: The harbor morning/);
+assert.match(jevRewritePdf, /interimReply\.text: The\s+harbor morning/);
 assert.match(jevRewritePdf, /interimReply\.model: google\/gemini-2\.5-flash-lite/);
 assert.match(jevRewritePdf, /interimReply\.ms: 900/);
 assert.doesNotMatch(text, /not judged/);
@@ -376,7 +394,7 @@ const seated = liveDoc({
     { ...liveDoc().turns[0], speakerName: 'Craig Davidson' },
     liveDoc().turns[1],
     { ...liveDoc().turns[0], turnIndex: 3, text: 'The garden morning in Kailua-Kona still works.', speakerName: 'Kimberly Davidson' },
-    { ...liveDoc().turns[1], turnIndex: 4, jevNote: 'Keep the reply. It answers "The garden morning in Kailua-Kona still works".', quality: { ...liveDoc().turns[1].quality, comment: 'Keep the reply. It answers "The garden morning in Kailua-Kona still works".' } },
+    { ...liveDoc().turns[1], turnIndex: 4, jevNote: 'Answers "The garden morning in Kailua-Kona still works" and stays with that wording: "Start with the harbor walk".', quality: { ...liveDoc().turns[1].quality, comment: 'Answers "The garden morning in Kailua-Kona still works" and stays with that wording: "Start with the harbor walk".' } },
   ],
 });
 const seatedText = extractPdfText(renderLiveTranscriptPdf(seated));
@@ -389,7 +407,7 @@ const longBody = `Garden note start. ${'Kailua-Kona garden morning. '.repeat(80)
 const longDoc = liveDoc({
   turns: [
     { ...liveDoc().turns[0], text: 'Short customer line about the Big Island.' },
-    { ...liveDoc().turns[1], text: longBody, jevNote: 'Keep the reply. It answers "Short customer line about the Big Island".', quality: { ...liveDoc().turns[1].quality, comment: 'Keep the reply. It answers "Short customer line about the Big Island".' } },
+    { ...liveDoc().turns[1], text: longBody, jevNote: 'Answers "Short customer line about the Big Island" and stays with that wording: "Garden note start".', quality: { ...liveDoc().turns[1].quality, comment: 'Answers "Short customer line about the Big Island" and stays with that wording: "Garden note start".' } },
   ],
 });
 const longText = extractPdfText(renderLiveTranscriptPdf(longDoc));

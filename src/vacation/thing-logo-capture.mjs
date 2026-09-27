@@ -201,7 +201,7 @@ export function captureThingLogo(thing = {}, override = {}, rowType = '') {
   if (imageUrl && !isBoundStoryMediaUrl(imageUrl) && !isPlaceholderLogoUrl(imageUrl)) return imageUrl;
   if (resolved.type === 'flight') return '/ts-thing-logos/flight.svg';
   if (resolved.type === 'car' || resolved.type === 'transport') return '/ts-thing-logos/car.svg';
-  return generatedLogoDataUri(thing, override, resolved.type);
+  return '/ts-thing-logos/place.svg';
 }
 
 export function applyCapturedLogos(shared = {}) {

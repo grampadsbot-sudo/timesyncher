@@ -13,6 +13,7 @@ import {
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
+  isLongIntake,
   rewriteCreditLabel,
   isTemplateNote,
   isTemplateInterim,
@@ -119,17 +120,17 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: turn ${turn.turnIndex} is missing Jev classify ms or gen ms`);
       }
       if (turn.jevBeforeModel !== true && turn.jev?.jevBeforeModel !== true) {
-        throw new Error(`refused: turn ${turn.turnIndex} does not prove Jev ran before the model`);
+        throw new Error(`refused: jev_first_then_model turn ${turn.turnIndex}`);
       }
       const qualityLine = formatQualityLine(turn.quality);
-      if (!qualityLine || /not judged/i.test(qualityLine)) {
-        throw new Error(`refused: turn ${turn.turnIndex} quality is not judged`);
+      if (!qualityLine || /not judged/i.test(qualityLine) || turn.quality?.judged !== true) {
+        throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} quality is not judged`);
       }
       const venues = inventedVenueNames(text, customerCorpus);
       if (venues.length) throw new Error(`refused: turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
-      if (priorCustomer && customerAsksPrice(priorCustomer.text) && !/unlimited vacations for the whole year/i.test(text)) {
-        throw new Error(`refused: turn ${turn.turnIndex} price question has no price`);
+      if (priorCustomer && customerAsksPrice(priorCustomer.text) && !(/\$\d+/.test(text) && /unlimited vacations for the whole year/i.test(text))) {
+        throw new Error(`refused: turn ${turn.turnIndex} price question has no dollar price`);
       }
       if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
         throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
@@ -138,8 +139,11 @@ export function assertLiveTranscript(doc) {
       if (!isBakeoffModelId(shippedModel)) {
         throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier`);
       }
-      if (turn.quality?.rewritten === true && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim())) {
-        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel or rewriteModel`);
+      if ((turn.quality?.rewritten === true || turn.flagged === true) && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim() || !String(turn.rewriteText || turn.quality?.draft || '').trim())) {
+        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel, rewriteModel, or the rewrite text`);
+      }
+      if (!turn.fixedOpener && turn.replyProducer !== 'vacation-app-onboarding-opener' && !(Number(turn.sessionE2eMs) > 0)) {
+        throw new Error(`refused: turn ${turn.turnIndex} sessionE2eMs is not a real elapsed time`);
       }
       if (!String(turn.draftModel || '').trim() || !isBakeoffModelId(String(turn.draftModel))) {
         throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
@@ -164,6 +168,17 @@ export function assertLiveTranscript(doc) {
       }
     }
     }
+  }
+  const intakeCustomer = turns.find((turn) => turn.role === 'customer' && isLongIntake(turn.text));
+  if (intakeCustomer) {
+    const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
+    const intakeText = String(intakeReply?.text || '');
+    const intakeOk = /building the itinerary/i.test(intakeText)
+      && /\bview access\b/i.test(intakeText)
+      && /\bedit access\b/i.test(intakeText)
+      && /email invite/i.test(intakeText)
+      && /unlimited vacations for the whole year/i.test(intakeText);
+    if (!intakeOk) throw new Error('refused: post_intake_itinerary_collab_upsell');
   }
   const commentCounts = {};
   for (const turn of turns) {

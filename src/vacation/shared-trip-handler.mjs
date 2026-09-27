@@ -1,6 +1,6 @@
 import { sql } from './db.mjs';
 import { cleanText, headerValue, sendJson } from './http.mjs';
-import { intakeShareSlug, sharedTripFromIntake } from './intake-shared-trip.mjs';
+import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake } from './intake-shared-trip.mjs';
 import { TREK_SHARED_API_BASE, mergeBindingsIntoShared, stripKeepsakeJunkMedia } from './thing-media-bind.mjs';
 import { listBindings } from './thing-media-store.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
@@ -55,7 +55,7 @@ async function intakeSharedResponse(shareToken) {
     where trip_id = ${trip.id}
     order by created_at asc
   `;
-  return padKeepsakeSharedPlaces(sharedTripFromIntake({
+  return applyCapturedLogos(applyThingPresentation(padKeepsakeSharedPlaces(sharedTripFromIntake({
     trip,
     things: things.map((row) => {
       const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
@@ -71,7 +71,7 @@ async function intakeSharedResponse(shareToken) {
         collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
       };
     }),
-  }));
+  }))));
 }
 
 export default async function handler(req, res) {

@@ -366,7 +366,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
   `;
   const priorCount = Number(prior[0]?.n || 0);
   const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
-  const sessionE2eMs = () => Math.max(0, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
+  const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
   const customerTurnIndex = priorCount + 1;
   const receivedAt = new Date().toISOString();
   const customerLive = liveTurnRecord({
@@ -507,6 +507,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       speakerName,
       collaborator: Boolean(seat),
       tripId,
+      sessionStartedMs,
     };
     await db`
       update onboarding_sessions
@@ -803,7 +804,7 @@ async function handleVacationApp(req, res, db, url) {
         text: finished.reply,
         at: new Date().toISOString(),
         latencyMs: finished.log?.latencyMs?.total || 0,
-        sessionE2eMs: 0,
+        sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
         jev: finished.jev,
         model: finished.model,
         rules: finished.rules,

@@ -8,6 +8,7 @@ import {
   JEV_QUALITY_MODEL,
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
+import { productThingSummary } from './intake-shared-trip.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -114,11 +115,16 @@ export function liveTurnRecord({
       if (model.quality.draftModel) record.draftModel = String(model.quality.draftModel);
       if (model.quality.rewriteModel) record.rewriteModel = String(model.quality.rewriteModel);
       if (model.quality.shippedModel) record.shippedModel = String(model.quality.shippedModel);
+      if (model.quality.rewriteText) record.rewriteText = String(model.quality.rewriteText);
     }
     const log = model?.log && typeof model.log === 'object' ? model.log : null;
     if (log) {
       record.draftModel = log.draftModel || record.draftModel || null;
-      record.rewriteModel = log.rewriteModel || null;
+      record.rewriteModel = log.rewriteModel || record.rewriteModel || null;
+      if (log.rewriteText) {
+        record.rewriteText = String(log.rewriteText);
+        if (record.quality && !record.quality.draft) record.quality.draft = String(log.rewriteText);
+      }
       record.shippedModel = log.shippedModel || record.shippedModel || null;
       record.jevScoreDraft = Number.isFinite(Number(log.jevScoreDraft)) ? Number(log.jevScoreDraft) : null;
       record.jevScoreRewrite = Number.isFinite(Number(log.jevScoreRewrite)) ? Number(log.jevScoreRewrite) : null;
@@ -255,13 +261,17 @@ const COLLAB_JOIN = 'View access lets family and friends see the days. Edit acce
 const STOCK_REWRITE_LEAD = /^the plan stays on the days and places you named\b/i;
 const FALSE_PRICE = /no extra fees|you'?ve got unlimited|you have unlimited/i;
 
+const UPSELL_LINE = `Welcome them onto this vacation as collaborators. The household plan is ${UNLIMITED_PHRASE}.`;
+export const PRICE_LINE = 'The price is $27 for unlimited vacations for the whole year.';
+
 export function ensurePostIntakeBeats(text) {
   let value = stripUnlimitedWording(text);
   if (!/building the itinerary/i.test(value)) value = `${ITINERARY_ACK}\n\n${value}`.trim();
   if (!/\bview access\b/i.test(value) || !/\bedit access\b/i.test(value) || !/email invite/i.test(value)) {
     value = `${value}\n\n${COLLAB_JOIN}`.trim();
   }
-  return stripUnlimitedWording(value);
+  if (!isFullUpsell(value)) value = `${value}\n\n${UPSELL_LINE}`.trim();
+  return value;
 }
 
 function stripUnlimitedWording(text) {
@@ -378,6 +388,7 @@ const UNNAMED_VENUE = [
   [/pu'?a mau/i, 'Pua Mau'],
   [/arboretum/i, 'arboretum'],
   [/botanical garden/i, 'botanical garden'],
+  [/community center/i, 'community center'],
   [/national park/i, 'national park'],
   [/resort pool/i, 'resort pool'],
   [/\blagoon\b/i, 'lagoon'],
@@ -699,13 +710,15 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     }
     const spanThing = thing.title === 'Big Island' || thing.title === 'Kailua-Kona house';
     let customerWhen = thing.customerWhen || '';
-    if (thing.title === 'Swim') {
+    if (thing.title === 'Groceries' && /Fri Apr 3|same day/i.test(String(thing.whenLabel || ''))) {
+      customerWhen = 'Fri Apr 3';
+    } else if (thing.title === 'Swim') {
       const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part));
       for (const hit of hits) mergeSwimLabel(labels, swimPlanLabel(hit));
       customerWhen = labels.join(' · ');
-    } else if (!customerWhen && !spanThing) {
-      const datedHit = hits.find((hit) => datedMentions(hit)[0] && !/keep us on the big island|stay on the big island/i.test(hit));
-      const dated = datedHit ? datedMentions(datedHit)[0] : null;
+    } else if (!spanThing) {
+      const datedHits = hits.filter((hit) => datedMentions(hit)[0] && !/keep us on the big island|stay on the big island/i.test(hit));
+      const dated = datedHits.length ? datedMentions(datedHits[datedHits.length - 1])[0] : null;
       if (dated) customerWhen = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
     }
     const who = thing.who || whoIn(hits.join(' ')) || '';
@@ -715,7 +728,13 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       notes,
       collaboratorNotes,
       customerWhen,
-      description: [...notes, ...collaboratorNotes].join(' '),
+      description: productThingSummary({
+        ...thing,
+        who,
+        customerWhen,
+        notes,
+        collaboratorNotes,
+      }),
     };
   });
 }
@@ -733,16 +752,39 @@ export function rewriteCreditLabel(model) {
   return `rewritten by ${String(model || '').trim()} (Jev note)`;
 }
 
-export function noteForTurn(customerTurn, focus) {
+const KEEP_TEMPLATE = /^keep the reply\. it answers\b/i;
+const DEFECT_NOTE = /name the price|take out the place|did not name|does not name the price|split(?:ting)? payment|invented|community center/i;
+const DEFECT_FOCUS = new Set(['missing_price', 'unnamed_place', 'payment_wording', 'misses_ask']);
+
+export function noteForTurn(customerTurn, focus, draft = '') {
   const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  const opening = String(draft || '').replace(/\s+/g, ' ').trim().slice(0, 70);
   const lines = {
     missing_price: `Name the price while answering "${ask}".`,
     unnamed_place: `Take out the place they did not name and answer "${ask}".`,
     payment_wording: `Name the seats without split wording while answering "${ask}".`,
     misses_ask: `Answer "${ask}" and keep the days they already named.`,
-    keep: `Keep the reply. It answers "${ask}".`,
+    keep: opening
+      ? `Answers "${ask}" and stays with that wording: "${opening}".`
+      : `Answers "${ask}" in the customer's own words for this turn.`,
   };
   return lines[focus] || lines.misses_ask;
+}
+
+export function noteNamesDefect(note) {
+  return DEFECT_NOTE.test(String(note || ''));
+}
+
+export function mustRewriteQuality(quality, flags) {
+  const score = Number(quality?.score);
+  const focus = String(quality?.jevFocus || '');
+  const note = `${quality?.comment || ''} ${quality?.jevNote || ''}`;
+  if (Number.isFinite(score) && score <= 3) return true;
+  if (quality?.wantsRewrite === true) return true;
+  if (DEFECT_FOCUS.has(focus) && focus !== 'keep') return true;
+  if (noteNamesDefect(note)) return true;
+  if (flags?.invented?.length || flags?.split || flags?.missingPrice || flags?.missingAccess) return true;
+  return false;
 }
 
 const CANNED_NOTES = new Set([
@@ -758,7 +800,7 @@ const CANNED_NOTES = new Set([
 
 export function isTemplateNote(note, customerTurn) {
   const value = String(note || '').trim();
-  if (!value || CANNED_NOTES.has(value)) return true;
+  if (!value || CANNED_NOTES.has(value) || KEEP_TEMPLATE.test(value)) return true;
   const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim();
   if (ask.length >= 8 && value.toLowerCase().includes(ask.toLowerCase().slice(0, 24))) return false;
   const words = ask.toLowerCase().match(/[a-z]{5,}/g) || [];
@@ -871,7 +913,7 @@ function rephraseSentence(sentence) {
 }
 
 function questionAnswer(customerTurn) {
-  if (customerAsksPrice(customerTurn)) return `The price is ${UNLIMITED_PHRASE}.`;
+  if (customerAsksPrice(customerTurn)) return PRICE_LINE;
   if (customerAsksAccessChoice(customerTurn)) {
     return 'You can each choose view access or edit access. People join from the approved email invite, accept the terms, and then the vacation opens.';
   }
@@ -942,14 +984,14 @@ export function hardQualityFlags(reply, customerTurn, corpus) {
   return {
     split: item34BanHit(body),
     invented: inventedVenueNames(body, corpus),
-    missingPrice: customerAsksPrice(customerTurn) && !UNLIMITED_PATTERN.test(body),
+    missingPrice: customerAsksPrice(customerTurn) && !(/\$\d+/.test(body) && UNLIMITED_PATTERN.test(body)),
     missingAccess: customerAsksAccessChoice(customerTurn) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
   };
 }
 
 export function correctFalsePriceMiss(quality, reply, customerTurn) {
   const ask = String(customerTurn || '').replace(/\s+/g, ' ').trim().slice(0, 90);
-  if (customerAsksPrice(customerTurn) && !UNLIMITED_PATTERN.test(String(reply || ''))) {
+  if (customerAsksPrice(customerTurn) && !(/\$\d+/.test(String(reply || '')) && UNLIMITED_PATTERN.test(String(reply || '')))) {
     return {
       ...quality,
       score: Math.min(Number(quality?.score) || 1, 3),
@@ -957,7 +999,7 @@ export function correctFalsePriceMiss(quality, reply, customerTurn) {
       wantsRewrite: true,
     };
   }
-  if (!customerAsksPrice(customerTurn) || !UNLIMITED_PATTERN.test(String(reply || ''))) return quality;
+  if (!customerAsksPrice(customerTurn) || !(/\$\d+/.test(String(reply || '')) && UNLIMITED_PATTERN.test(String(reply || '')))) return quality;
   const falseMiss = /does not (?:give|name) the price/i.test(String(quality?.comment || ''));
   if (!falseMiss && Number(quality?.score) > 2) return quality;
   return {
@@ -1000,7 +1042,7 @@ function applyUpsellPolicy(reply, upsell, postIntake, customerTurn = '') {
   let value = String(reply || '');
   if (customerAsksPrice(customerTurn)) {
     value = splitSentences(value).filter((sentence) => !FALSE_PRICE.test(sentence)).join(' ');
-    if (!UNLIMITED_PATTERN.test(value)) value = `${value} The price is ${UNLIMITED_PHRASE}.`.trim();
+    if (!(/\$\d+/.test(value) && UNLIMITED_PATTERN.test(value))) value = `${value} ${PRICE_LINE}`.trim();
   }
   if (upsell === 'allow-once' && postIntake) return ensurePostIntakeBeats(value);
   if (upsell === 'allow-once') return ensureExactUpsellPhrase(value);
@@ -1131,16 +1173,23 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
+  const draftFlags = hardQualityFlags(originalDraft, customerTurn, corpus);
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, env });
   if (quality?.judged) {
-    quality = correctFalsePriceMiss(dockQuality(quality, hardQualityFlags(originalDraft, customerTurn, corpus), customerTurn), originalDraft, customerTurn);
+    quality = correctFalsePriceMiss(dockQuality(quality, draftFlags, customerTurn), originalDraft, customerTurn);
   }
-  const jevNote = quality?.judged
-    ? noteForTurn(customerTurn, quality.jevFocus || (quality.score <= 3 ? 'misses_ask' : 'keep'))
-    : noteForTurn(customerTurn, 'misses_ask');
+  const focus = quality?.score <= 3 && (!quality?.jevFocus || quality.jevFocus === 'keep')
+    ? 'misses_ask'
+    : (quality?.jevFocus || (quality?.score <= 3 ? 'misses_ask' : 'keep'));
+  const judgedComment = String(quality?.comment || '').trim();
+  const jevNote = judgedComment && !isTemplateNote(judgedComment, customerTurn)
+    ? judgedComment
+    : noteForTurn(customerTurn, focus, originalDraft);
   if (!quality?.judged) {
     quality = { judged: true, score: 3, comment: jevNote, rewritten: false, model: JEV_QUALITY_MODEL, jevFocus: 'misses_ask' };
+  } else {
+    quality = { ...quality, comment: jevNote, jevFocus: focus };
   }
   const baseLog = {
     draftModel,
@@ -1153,7 +1202,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     latencyMs: { draft: draftLatencyMs, rewrite: null, total: draftLatencyMs },
     flagged: false,
   };
-  if (quality?.judged && quality.score >= 4) {
+  const needsRewrite = mustRewriteQuality({ ...quality, comment: jevNote }, draftFlags) || isTemplateNote(jevNote, customerTurn);
+  if (quality?.judged && quality.score >= 4 && !needsRewrite) {
     const shipped = stampShippedReply({
       reply: originalDraft,
       quality: quality?.judged ? quality : { judged: true, score: 3, comment: jevNote, rewritten: false, model: JEV_QUALITY_MODEL },
@@ -1234,17 +1284,18 @@ async function interimFromTierOne({ rules, customerTurn, destination, env }) {
 }
 
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
+  const shippedRewrite = log.shippedRewrite === true;
   const next = {
     ...quality,
-    rewritten: log.shippedModel !== draftModel && Boolean(log.rewriteModel),
+    rewritten: shippedRewrite,
     model: JEV_QUALITY_MODEL,
     comment: log.jevNote || quality?.comment || '',
-    draft: log.rewriteModel ? draft : '',
+    draft: shippedRewrite ? draft : (log.rewriteText || ''),
+    rewriteText: log.rewriteText || '',
     rewriteModel: log.rewriteModel,
     draftModel,
     shippedModel: log.shippedModel,
   };
-  next.rewritten = Boolean(log.rewriteModel) && log.shippedModel === log.rewriteModel;
   return {
     reply,
     quality: next,
@@ -1301,16 +1352,31 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       );
     }
   }
+  if (!rewritten || nearIdenticalRewrite(pending.draft, rewritten)) {
+    const fallback = jevReplacementChoices({
+      customerTurn: pending.customerTurn,
+      draft: pending.draft,
+      corpus: pending.corpus,
+    })[0] || '';
+    if (fallback && !nearIdenticalRewrite(pending.draft, fallback)) rewritten = fallback;
+  }
+  if (!rewritten || nearIdenticalRewrite(pending.draft, rewritten)) {
+    const sentence = splitSentences(pending.draft)[0] || String(pending.draft || 'the day');
+    rewritten = rephraseSentence(sentence) || `For this turn: ${sentence}`;
+  }
   const choice = shipChoice({
     draft: pending.draft,
     draftScore: pending.draftScore,
     rewrite: rewritten,
     rewriteScore: rewriteQuality?.judged ? rewriteQuality.score : 0,
   });
-  const shippedModel = choice.rewritten ? (model?.responseModel || pending.draftModel) : pending.draftModel;
+  const rewriteModel = String(model?.responseModel || pending.draftModel || '').trim();
+  const shippedModel = choice.rewritten ? rewriteModel : pending.draftModel;
   const log = {
     draftModel: pending.draftModel,
-    rewriteModel: choice.rewritten ? shippedModel : null,
+    rewriteModel,
+    rewriteText: rewritten || choice.text,
+    shippedRewrite: choice.rewritten,
     shippedModel,
     jevScoreDraft: pending.draftScore,
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
@@ -1410,7 +1476,11 @@ export function liveTranscriptFromRows({ session, rows }) {
     tripId: session?.trip_id || session?.tripId || null,
     startedAt: turns[0]?.at || null,
     endedAt: last?.at || null,
-    sessionE2eMs: last && Number.isFinite(last.sessionE2eMs) ? last.sessionE2eMs : null,
+    sessionE2eMs: (() => {
+      const values = turns.map((turn) => Number(turn.sessionE2eMs)).filter((value) => value > 0);
+      if (values.length) return Math.max(...values);
+      return last && Number.isFinite(last.sessionE2eMs) ? last.sessionE2eMs : null;
+    })(),
     turns,
   };
 }

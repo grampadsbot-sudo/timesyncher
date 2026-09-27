@@ -569,11 +569,11 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
   const upsellLine = postIntake
-    ? 'Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Do not say unlimited, you\'ve got unlimited, or name a price. The price belongs on a later price question.'
+    ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Then give the one unlimited upsell in this same reply, with this exact phrase once: ${phrase}.`
     : (upsell === 'allow-once'
       ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
       : (priceAsk
-        ? `This turn asks the price after the one welcome was already given. Answer with this exact phrase once: ${phrase}. Do not add a second collaborator welcome. Do not say split, splitting, "splitting anything up", or "splitting it up".`
+        ? `This turn asks the price. Ship a real dollar price: The price is $27 for ${phrase}. Do not add a second collaborator welcome. Do not say split, splitting, "splitting anything up", or "splitting it up".`
         : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
