@@ -1036,7 +1036,7 @@ export function draftFactErrors(reply, facts = {}) {
     const sentence = sentences[index];
     const next = sentences[index + 1] || '';
     const previous = sentences[index - 1] || '';
-    const swimNegated = /\b(?:do not|don't)\b[^.]*\bswim\b|\bswim\b[^.]*\b(?:do not|don't)\b/i.test(sentence);
+    const swimNegated = /\b(?:do not|don't|won't|will not|is not|isn't|not set|never)\b/i.test(sentence);
     if (/\bswim\b/i.test(sentence) && !swimNegated) {
       const stamps = [...looseDayStamps(previous, span), ...looseDayStamps(sentence, span), ...looseDayStamps(next, span)];
       const swimStamps = looseDayStamps(sentence, span);
@@ -1047,8 +1047,9 @@ export function draftFactErrors(reply, facts = {}) {
     }
     if (/garden/i.test(sentence)) {
       const stamps = looseDayStamps(sentence, span);
-      const already = /already set|locked in/i.test(sentence);
-      if (stamps.length && !dayIsSet(stamps, gardenDays)) {
+      const denied = /\b(?:not already|isn't|is not|won't|don't|do not|will not)\b/i.test(sentence);
+      const already = /already set|locked in/i.test(sentence) && !denied;
+      if (!denied && stamps.length && !dayIsSet(stamps, gardenDays)) {
         pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
       }
     }
