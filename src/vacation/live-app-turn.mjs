@@ -1206,7 +1206,7 @@ export function draftFactErrors(reply, facts = {}) {
   if (ownerFirst) {
     const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
     const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
-    const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b/i.test(crewList[1]);
+    const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b|\byour\b/i.test(crewList[1]);
     if (crewList && !crewAddressesOwner && /(?:,|\band\b)/i.test(crewList[1]) && /\b[A-Z][a-z]{2,}\b/.test(crewList[1]) && !ownerRe.test(crewList[1])) {
       pushError(errors, `${ownerName} is traveling`);
     }
@@ -1263,7 +1263,9 @@ export function draftFactErrors(reply, facts = {}) {
       }
     }
     if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|i(?:'|’)ll save|we(?:'|’)ll save|save that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
-      const claimed = looseDayStamps(sentence, span);
+      const laterStamp = dayStamp(facts.laterFriday || laterFridayLabel(span));
+      let claimed = looseDayStamps(sentence, span);
+      if (/\bsecond friday\b/i.test(sentence) && laterStamp && !claimed.includes(laterStamp)) claimed = [...claimed, laterStamp];
       if (claimed.length && !dayIsSet(claimed, swimDays)) {
         pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
       } else if (!claimed.length && !swimDays.length) {
@@ -1719,7 +1721,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
       primary: holder ? { name: holder, role: 'Owner' } : (saved?.party?.primary || null),
     },
     customerName: holder,
-    turns: [{ role: 'customer', text: saved?.party ? customerTurn : customerCorpus(priorTurns, customerTurn) }],
+    turns: [{ role: 'customer', text: customerCorpus(priorTurns, customerTurn) }],
   });
   const span = saved?.start ? spanFromIso(saved.start, saved.end || saved.start) : projected.span;
   return {
@@ -2025,6 +2027,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');
+  const unusable = (value) => isTemplateInterim(value, customerTurn) || draftFactErrors(value, facts).length > 0;
   const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },
@@ -2042,15 +2045,15 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   });
   let model = await call();
   let text = String(model?.text || '').trim();
-  if (isTemplateInterim(text, customerTurn)) {
+  if (unusable(text)) {
     model = await call();
     text = String(model?.text || '').trim();
   }
-  if (isTemplateInterim(text, customerTurn)) {
+  if (unusable(text)) {
     model = await call();
     text = String(model?.text || '').trim();
   }
-  if (isTemplateInterim(text, customerTurn) || model?.responseModel !== INTERIM_MODEL) text = '';
+  if (unusable(text) || model?.responseModel !== INTERIM_MODEL) text = '';
   const elapsed = Date.now() - started;
   return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null };
 }
@@ -2206,7 +2209,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewriteFactErrors: failReason ? [] : rewriteErrors,
     holding: holdingText,
   });
-  if (!choice.text) {
+  if (!choice.text && !draftErrors.length) {
     choice = {
       text: String(pending.draft || '').trim(),
       rewritten: false,
@@ -2214,6 +2217,15 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       held: true,
       failReason: choice.failReason || 'draft_held',
       holding: false,
+    };
+  } else if (!choice.text && holdingText) {
+    choice = {
+      text: holdingText,
+      rewritten: false,
+      flagged: false,
+      held: true,
+      failReason: choice.failReason || 'holding_reply',
+      holding: true,
     };
   }
   let holdingQuality = null;
@@ -2226,7 +2238,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       holdingQuality.jevNote = null;
       holdingQuality.comment = null;
       holdingQuality.jevNoteReason = 'jev_no_free_text';
-    } else {
+    } else if (!draftErrors.length) {
       choice = {
         text: String(pending.draft || '').trim(),
         rewritten: false,
