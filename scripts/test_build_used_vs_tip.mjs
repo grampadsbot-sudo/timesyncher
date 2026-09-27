@@ -48,6 +48,7 @@ assert.match(older, /journey capture script/);
 assert.match(older, /reply code at the drive build is identical to the tip/);
 assert.equal(isReplyCodePath('src/vacation/live-app-turn.mjs'), true);
 assert.equal(isReplyCodePath('scripts/screenshot-journey-pdf.mjs'), false);
+assert.equal(isReplyCodePath('routes/keepsake-order.mjs'), false);
 assert.equal(isReplyCodePath('evidence/pack/REPORT.md'), false);
 
 const root = fileURLToPath(new URL('..', import.meta.url));
