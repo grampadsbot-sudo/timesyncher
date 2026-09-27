@@ -222,7 +222,7 @@ const DAILY_CARD_NEEDLE = 'return`<article class="thing daily-thing"><div class=
 const DAILY_CARD_PATCH = 'return`<article class="thing daily-thing" data-two-col-card="1" data-happy-hour="${ha(G).happyHour?"1":"0"}"><div class="thing-head">';
 
 const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side / Morningside","Midtown / Central Park South","Times Square / Hell’s Kitchen","Chelsea / Greenwich Village","Greenwich Village / West Village","Downtown / Harbor","Hudson River / Harbor","Airport / Transit","Citywide / Flexible"]';
-const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Puna / Kalapana","Islandwide / Flexible"]';
+const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Kailua-Kona / Palani","Islandwide / Flexible"]';
 const SI_NYC_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]]]';
 const SI_VEGAS_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]],[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,[36.1097,-115.1739]],[/carbone/i,[36.1073,-115.1766]],[/cosmopolitan|eggslut/i,[36.1097,-115.1739]],[/lotus of siam/i,[36.1436,-115.1415]],[/las vegas strip|las vegas/i,[36.1147,-115.1729]]]';
 
@@ -287,7 +287,7 @@ export function patchStyleTwoToConfigRenderer(source = '') {
     ['Greenwich Village / West Village', 'Volcano / Hawaii Volcanoes'],
     ['Downtown / Harbor', 'Captain Cook / Kealakekua'],
     ['Hudson River / Harbor', 'Waipio / Hamakua'],
-    ['Airport / Transit', 'Puna / Kalapana'],
+    ['Airport / Transit', 'Kailua-Kona / Palani'],
     ['Citywide / Flexible', 'Islandwide / Flexible'],
   ];
   for (const [from, to] of areaRenames) patched = patched.replaceAll(from, to);

@@ -203,14 +203,15 @@ def build(pack):
     story.append(Paragraph("Mark in-app corrections here. Each APP turn shows model + tier.", styles["Meta"]))
     for turn in pack.get("turns") or []:
         style = styles["TurnApp"] if turn.get("app") else styles["TurnCust"]
-        block = [Paragraph(
-            f"<b>{latin(turn.get('label'))}</b> <font size='6.5' color='#666'>[{latin(turn.get('meta'))}]</font><br/>{latin(turn.get('text'))}",
-            style,
-        )]
-        if turn.get("rewrite_label"):
-            block.append(Paragraph(latin(turn.get("rewrite_label")), styles["Qual"]))
+        block = []
         if turn.get("jev_ran"):
             block.append(Paragraph(latin(turn.get("jev_ran")), styles["Tim"]))
+        block.append(Paragraph(
+            f"<b>{latin(turn.get('label'))}</b> <font size='6.5' color='#666'>[{latin(turn.get('meta'))}]</font><br/>{latin(turn.get('text'))}",
+            style,
+        ))
+        if turn.get("rewrite_label"):
+            block.append(Paragraph(latin(turn.get("rewrite_label")), styles["Qual"]))
         if turn.get("quality"):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):

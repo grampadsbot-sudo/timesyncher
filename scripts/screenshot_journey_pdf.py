@@ -41,25 +41,15 @@ def build(manifest, dest):
     story.append(Paragraph("Contents", styles["h2"]))
     story.append(Paragraph("Gaps are surfaces with no screenshot. They are not silent skips.", styles["body"]))
     story.append(Spacer(1, 6))
-    open_gaps = [gap for gap in gaps if not gap.get("exempt")]
-    exempted = [gap for gap in gaps if gap.get("exempt")]
     story.append(Paragraph("Not captured", styles["h2"]))
-    if not open_gaps:
+    if not gaps:
         story.append(Paragraph("None.", styles["body"]))
-    for gap in open_gaps:
+    for gap in gaps:
         feature = esc(gap.get("feature") or gap.get("title") or "Surface")
         filename = esc(gap.get("file") or "")
         reason = esc(gap.get("reason") or "not captured")
         file_bit = f" ({filename})" if filename else ""
         story.append(Paragraph(f"GAP. {feature}{file_bit}: {reason}", styles["gap"]))
-    if exempted:
-        story.append(Paragraph("Exempt", styles["h2"]))
-        for gap in exempted:
-            feature = esc(gap.get("feature") or gap.get("title") or "Surface")
-            filename = esc(gap.get("file") or "")
-            reason = esc(gap.get("reason") or "not captured")
-            file_bit = f" ({filename})" if filename else ""
-            story.append(Paragraph(f"EXEMPT. {feature}{file_bit}: {reason}", styles["exempt"]))
     story.append(Spacer(1, 8))
     story.append(Paragraph("Pages", styles["h2"]))
     if not pages:

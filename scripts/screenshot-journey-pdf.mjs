@@ -599,8 +599,8 @@ async function main() {
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
     mark('live-app-jev-tier.md');
-    gap('Cursor project contract', 'cursor-project-contract.md', 'No contract screen exists in the shared app. The file is a repo document, so this surface is exempt.', { exempt: true });
-    gap('Search redesign', 'search-redesign.md', 'Search redesign has no customer screen on the shared trip, so this surface is exempt.', { exempt: true });
+    gap('Cursor project contract', 'cursor-project-contract.md', 'No contract screen exists in the shared app. Unblock: a contract page on the shared trip.');
+    gap('Search redesign', 'search-redesign.md', 'Search redesign has no customer screen on the shared trip. Unblock: a search box on the shared trip.');
 
     await go(sharedUrl, 'Day-by-Day');
     let text = await bodyText(page);
@@ -626,7 +626,7 @@ async function main() {
           }),
         });
         await page.evaluate(() => window.scrollTo(0, 0));
-        gap('Autonomy bar', 'autonomous-app-customer-flow.md', 'The shared app has no autonomy bar. A Day-by-Day crop is not that screen, so this surface is exempt.', { exempt: true });
+        gap('Autonomy bar', 'autonomous-app-customer-flow.md', 'The shared app has no autonomy bar. Unblock: mount that bar on the shared trip.');
         await shot('packing', 'Initial itinerary', 'Packing', {
           file: 'packing.md',
           note: 'The tab row has no Packing tab while share_packing is off.',
@@ -692,27 +692,26 @@ async function main() {
       const voiceRow = await page.evaluate(() => {
         const button = document.querySelector('[aria-label="Record voice note"]');
         if (!button) return null;
-        const row = button.parentElement || button;
-        const box = row.getBoundingClientRect();
-        const text = (row.innerText || button.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
-        if (box.width < 24 || box.height < 20) return { thin: true, text };
+        button.scrollIntoView({ block: 'center', inline: 'center' });
+        const box = button.getBoundingClientRect();
+        const hasMic = Boolean(button.querySelector('svg'));
+        if (box.width < 16 || box.height < 16 || !hasMic) return { missing: true };
+        const size = 220;
         return {
-          thin: text.length < 12,
-          text,
-          x: 0,
-          y: Math.max(0, box.y - 12),
-          width: Math.min(1280, window.innerWidth),
-          height: Math.max(88, Math.min(160, box.height + 28)),
+          x: Math.max(0, Math.min(window.innerWidth - size, box.x + box.width / 2 - size / 2)),
+          y: Math.max(0, Math.min(window.innerHeight - size, box.y + box.height / 2 - size / 2)),
+          width: size,
+          height: size,
         };
       });
-      if (voiceRow && !voiceRow.thin && voiceRow.width) {
+      if (voiceRow && voiceRow.width) {
         await shot('voice-note', 'Initial itinerary', 'Voice note', {
           file: 'voice-note.md',
-          note: 'The record-voice control in the shared header.',
+          note: 'The microphone control for a voice note.',
           clipRect: voiceRow,
         });
       } else {
-        gap('Voice note', 'voice-note.md', 'the shared app has no voice-note screen. A Day-by-Day crop is not that control.');
+        gap('Voice note', 'voice-note.md', 'The shared header did not show a microphone button. Unblock: mount the record-voice button where a screenshot can frame the mic.');
       }
       const logoBox = await page.evaluate(() => {
         const img = [...document.querySelectorAll('img')].find((node) => (node.src || '').includes('/ts-thing-logos/'));
@@ -906,12 +905,20 @@ async function main() {
         await page.keyboard.press('Escape').catch(() => {});
       }
       if (await clickText(page, 'Cars') && await clickText(page, 'SpeediShuttle')) {
-        const carText = await bodyText(page);
-        if (has(carText, 'Rental company')) {
+        const rentalBox = await page.evaluate(() => {
+          const label = [...document.querySelectorAll('label')].find((node) => /^Rental company\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+          if (!label) return null;
+          const carType = /Car type/.test(label.parentElement?.innerText || '');
+          if (!carType) return null;
+          label.scrollIntoView({ block: 'center' });
+          const box = label.getBoundingClientRect();
+          return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 24), width: Math.min(720, Math.max(280, box.width + 40)), height: 240 };
+        });
+        if (rentalBox) {
           await shot('car-fields', 'Initial itinerary', 'Car fields', {
             file: 'car-fields.md',
-            note: 'SpeediShuttle rental company and car type.',
-            clipRect: await clipAround('Rental company', { height: 240, padTop: 24 }),
+            note: 'Rental company and car type on the open detail.',
+            clipRect: rentalBox,
           });
         }
         await page.keyboard.press('Escape').catch(() => {});
@@ -950,15 +957,23 @@ async function main() {
         await page.keyboard.press('Escape').catch(() => {});
       }
       if (await clickAria(page, 'Order Keepsakes')) {
-        await sleep(400);
-        const orderText = await bodyText(page);
-        const panel = /style one|style two|keepsake admin|shipping address|order keepsakes/i.test(orderText);
-        const restaurantOnly = /ulu ocean/i.test(orderText) && !/style one|order keepsakes/i.test(orderText);
-        if (panel && !restaurantOnly) {
+        await sleep(500);
+        const orderBox = await page.evaluate(() => {
+          const overlay = [...document.querySelectorAll('div')].find((node) => {
+            const style = getComputedStyle(node);
+            const text = (node.innerText || '').replace(/\s+/g, ' ');
+            const box = node.getBoundingClientRect();
+            return style.position === 'fixed' && box.width > 240 && box.height > 160 && /order keepsakes|shipping address|style one/i.test(text) && !/ulu ocean/i.test(text);
+          });
+          if (!overlay) return null;
+          const box = overlay.getBoundingClientRect();
+          return { x: Math.max(0, box.x), y: Math.max(0, box.y), width: Math.min(900, box.width), height: Math.min(640, box.height) };
+        });
+        if (orderBox) {
           await shot('order-keepsakes', 'Initial itinerary', 'Order Keepsakes', {
             file: 'order-keepsakes.md',
-            note: 'Order Keepsakes panel opened from the shared header.',
-            clipRect: await clipAround('Order Keepsakes', { height: 220, padTop: 16 }),
+            note: 'Order Keepsakes panel, not the restaurant page behind it.',
+            clipRect: orderBox,
           });
         }
         await page.keyboard.press('Escape').catch(() => {});
@@ -980,18 +995,18 @@ async function main() {
     if (!captured.has('filters.md')) gap('Filters', 'filters.md', 'The Rest list did not render All areas or All types');
     if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'the restaurants list did not render All tags or Seafood chips');
     if (!captured.has('budget.md')) gap('Budget', 'budget.md', 'the shared app did not open a Budget tab');
-    if (!captured.has('flight-fields.md')) gap('Flight fields', 'flight-fields.md', 'KOA arrival does not render Takeoff, Connections, and Layover on this shared page, so the flight-field screen is exempt.', { exempt: true });
+    if (!captured.has('flight-fields.md')) gap('Flight fields', 'flight-fields.md', 'KOA arrival does not render Takeoff, Connections, and Layover. Unblock: those fields on the open flight detail.');
     if (!captured.has('happy-hour.md')) gap('Happy hour', 'happy-hour.md', 'Ulu Ocean Grill did not show a Happy hour field');
-    if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'SpeediShuttle does not render Rental company and Car type on this shared page, so the car-field screen is exempt.', { exempt: true });
+    if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'SpeediShuttle shows the shuttle summary and does not render Rental company and Car type. Unblock: those two fields on the open car detail.');
     if (!captured.has('status.md')) gap('Status', 'status.md', 'no Thing detail showed a status');
     if (!captured.has('media-stories.md')) gap('Stories and media', 'media-stories.md', 'no Thing detail showed a Story field');
     if (!captured.has('ratings-reviews.md')) gap('Ratings and reviews', 'ratings-reviews.md', 'no Thing detail showed Google or Yelp');
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
-    if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control is not mounted on this host, so there is no Print / PDF menu. Exempt.', { exempt: true });
-    if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes setup lives inside the Print / PDF menu, which is not mounted on this host. Exempt.', { exempt: true });
-    if (!captured.has('order-keepsakes.md')) gap('Order Keepsakes', 'order-keepsakes.md', 'The shared header did not show an Order Keepsakes control.');
-    if (!captured.has('config-options-trip-view.md')) gap('Trip View config', 'config-options-trip-view.md', 'Config Options is not mounted on this host, so Trip View setup cannot open. Exempt.', { exempt: true });
-    if (!captured.has('tg-intake.md')) gap('Telegram intake', 'tg-intake.md', 'The shared app has no Telegram intake screen. Listed once and exempt.', { exempt: true });
+    if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control did not open a Print / PDF menu. Unblock: mount that menu on vacation-staging.');
+    if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes setup did not open. Unblock: a Keepsakes menu with Style one, Style two, and Admin on this host.');
+    if (!captured.has('order-keepsakes.md')) gap('Order Keepsakes', 'order-keepsakes.md', 'Order Keepsakes did not open a panel of its own, so the shot would still be the thing page. Unblock: an order panel that replaces the thing page.');
+    if (!captured.has('config-options-trip-view.md')) gap('Trip View config', 'config-options-trip-view.md', 'Config Options did not open Trip View. Unblock: mount Config Options with Flights, Hotels, and Cars on this host.');
+    if (!captured.has('tg-intake.md')) gap('Telegram intake', 'tg-intake.md', 'The shared app has no Telegram intake screen. Unblock: a Telegram intake view on the shared trip.');
 
     const counts = await sharedCounts(sharedUrl);
     if (counts.minThings) {

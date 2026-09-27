@@ -24,7 +24,7 @@ import {
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine } from '../src/vacation/seat-price.mjs';
-import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
 import { assertLiveMatchesTip, isVoidStaleBuild, readTipSha, voidDocumentStamp } from './void-stale-build.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
@@ -145,8 +145,18 @@ export function assertLiveTranscript(doc) {
       if (!isBakeoffModelId(shippedModel)) {
         throw new Error(`refused: turn ${turn.turnIndex} shipped model is not a bake-off tier`);
       }
-      if ((turn.quality?.rewritten === true || turn.flagged === true) && (!String(turn.draftModel || '').trim() || !String(turn.rewriteModel || '').trim() || !String(turn.rewriteText || turn.quality?.draft || '').trim())) {
-        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel, rewriteModel, or the rewrite text`);
+      const rewriteMarked = turn.quality?.rewritten === true || turn.flagged === true;
+      if (rewriteMarked && !String(turn.draftModel || '').trim()) {
+        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing draftModel`);
+      }
+      if (rewriteMarked && !String(turn.rewriteModel || '').trim()) {
+        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing rewriteModel`);
+      }
+      if (turn.quality?.rewritten === true && !String(turn.rewriteText || '').trim()) {
+        throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewrite text`);
+      }
+      if (turn.flagged === true && !String(turn.rewriteText || '').trim() && !String(turn.rewriteFailReason || '').trim()) {
+        throw new Error(`refused: turn ${turn.turnIndex} failed rewrite has no text and no error`);
       }
       if (!turn.fixedOpener && turn.replyProducer !== 'vacation-app-onboarding-opener' && !(Number(turn.sessionE2eMs) > 0)) {
         throw new Error(`refused: turn ${turn.turnIndex} sessionE2eMs is not a real elapsed time`);
@@ -155,8 +165,14 @@ export function assertLiveTranscript(doc) {
         throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
       }
       const customerText = priorCustomer?.text || '';
-      if (!String(turn.jevNote || '').trim() || isTemplateNote(turn.jevNote, customerText)) {
+      const jevNote = turn.jevNote == null ? '' : String(turn.jevNote).trim();
+      const jevNoteReason = String(turn.jevNoteReason || turn.quality?.jevNoteReason || '').trim();
+      if (!jevNote) {
+        if (!jevNoteReason) throw new Error(`refused: turn ${turn.turnIndex} jevNote is null without a reason`);
+      } else if (isTemplateNote(jevNote, customerText)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
+      } else if (noteContradictsDraft(jevNote, text)) {
+        throw new Error(`refused: turn ${turn.turnIndex} Jev note contradicts the draft`);
       }
       if (String(turn.quality?.comment || '').trim() && isTemplateNote(turn.quality.comment, customerText)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
@@ -181,6 +197,10 @@ export function assertLiveTranscript(doc) {
         }
         if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
+        }
+        const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;
+        if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite attempt was not logged`);
         }
         if (turn.quality?.rewritten === true && nearIdenticalRewrite(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
@@ -639,7 +659,7 @@ function jevRanLine(turn) {
   const score = Number.isInteger(Number(turn.quality?.score)) ? Number(turn.quality.score) : Number(turn.jevScoreDraft);
   const judgeMs = Number(turn.quality?.judgeMs ?? turn.modelLatency?.jevDraft);
   const ms = Number.isFinite(judgeMs) ? Math.round(judgeMs) : 0;
-  return `jev ran: ${model} score ${Number.isFinite(score) ? score : ''} ${ms}ms`;
+  return `jevRan: true · model ${model} · score ${Number.isFinite(score) ? score : ''} · judge ${ms}ms`;
 }
 
 function realTurnLatencyMs(turn) {
@@ -659,7 +679,8 @@ function producerLogLine(turn) {
     `shippedModel: ${turn.shippedModel || ''}`,
     `jevScoreDraft: ${turn.jevScoreDraft ?? ''}`,
     `jevScoreRewrite: ${turn.jevScoreRewrite ?? 'none'}`,
-    `jevNote: ${turn.jevNote || ''}`,
+    `jevNote: ${turn.jevNote == null || String(turn.jevNote).trim() === '' ? 'null' : turn.jevNote}`,
+    `jevNoteReason: ${turn.jevNoteReason || 'none'}`,
     `interimReply.text: ${interim.text || 'none'}`,
     `interimReply.model: ${interim.model || 'none'}`,
     `interimReply.ms: ${Number.isFinite(Number(interim.ms)) ? Number(interim.ms) : 'none'}`,
@@ -667,6 +688,7 @@ function producerLogLine(turn) {
     `realPerTurnMs: ${Number.isFinite(Number(turn.latencyMs)) ? Number(turn.latencyMs) : ''}`,
     `sessionE2eMs: ${Number.isFinite(Number(turn.sessionE2eMs)) ? Number(turn.sessionE2eMs) : ''}`,
     `rewriteFailReason: ${turn.rewriteFailReason || 'none'}`,
+    `rewriteAttempt: ${Array.isArray(turn.rewriteAttempts) && turn.rewriteAttempts[0] ? `${turn.rewriteAttempts[0].model || ''} ${turn.rewriteAttempts[0].ms}ms ${turn.rewriteAttempts[0].error || 'ok'}` : 'none'}`,
     `flagged: ${turn.flagged === true}`,
   ].join(' | ');
 }
