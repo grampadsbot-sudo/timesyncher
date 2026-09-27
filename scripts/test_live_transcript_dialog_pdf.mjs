@@ -12,6 +12,7 @@ import {
   assertJevRewriteLabels,
   assertLiveTranscript,
   assessPackShape,
+  dialogPackTitle,
   extractPdfText,
   formatLiveTimingLine,
   jevRewriteLabelCounts,
@@ -151,7 +152,21 @@ assert.match(interimProblems([
 assert.match(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: 'Thursday stays a town walk.', model: 'google/gemini-2.5-flash-lite', ms: 200 } },
 ])[0], /non-rewrite turn has an interim/);
-assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 2, rewrite: 'A different Thursday town walk stays.', rewriteScore: 4 }).rewritten, true);
+assert.equal(dialogPackTitle('Big Island Family'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
+assert.equal(dialogPackTitle('Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
+assert.equal(draftFactErrors("Sunday's garden stays with Kimberly.", { owners: { gardens: 'Kimberly' }, gardenDays: ['apr 5'], span: { start: '2026-04-03', end: '2026-04-12' } }).some((error) => /Sunday/.test(error)), false);
+assert.ok(draftFactErrors('With Craig, Torren, Peyton, Keegan, Fallon, and the four friends making a party of eight.', { ownerName: 'Craig Davidson' }).some((error) => /lists 9 people/.test(error)));
+const fullParty = { travelers: ['Craig Davidson', 'Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson', 'Torren', 'Peyton', 'Keegan', 'Fallon'] };
+assert.ok(draftFactErrors('Craig, Kimberly, Lauren, Torren, Peyton, Keegan, and Fallon are all set.', fullParty).some((error) => /Tyler is traveling/.test(error)));
+assert.equal(draftFactErrors('Torren, Peyton, Keegan, and Fallon are with you.', fullParty).some((error) => /Tyler is traveling/.test(error)), false);
+assert.ok(draftFactErrors('The already-saved backup swim is on Friday, April 10.', { swimDays: [], span: { start: '2026-04-03', end: '2026-04-12' } }).some((error) => /swim/.test(error)));
+assert.equal(verifiedRewriteChange('I moved the later swim to Friday, April 10.', 'The later swim is on Friday, April 10.', 'The later swim is on Friday, April 10.'), '');
+assert.equal(shipChoice({
+  draft: 'Welcome aboard Tyler for the Big Island week with the garden on Sunday.',
+  draftScore: 3,
+  rewrite: 'Welcome aboard Tyler. The Big Island week keeps the garden on Sunday and the swim on Monday.',
+  rewriteScore: 4,
+}).rewritten, true);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).rewritten, false);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).failReason, 'rewrite_scored_lower');
 const tied = shipChoice({

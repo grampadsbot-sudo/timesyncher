@@ -558,6 +558,13 @@ export function rosterLines(doc) {
   return lines;
 }
 
+export function dialogPackTitle(trip) {
+  const raw = String(trip || '').trim();
+  if (/^Dialog Pack\b/.test(raw)) return raw;
+  const label = raw.replace(/\s+v7(?:\s+Tier\s+1[–-]4)?\s*$/i, '').trim() || 'untitled';
+  return `Dialog Pack \u2014 ${label} v7 Tier 1\u20134`;
+}
+
 export function liveV7Pack(doc, shape) {
   const generated = (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
   const labeledOf = (turn) => {
@@ -578,8 +585,7 @@ export function liveV7Pack(doc, shape) {
   const overall = timingStats(gens);
   const map = bakeoffTierModels();
   const trip = shape.trip || 'untitled';
-  const tripLabel = String(trip).trim() || 'untitled';
-  const title = /\bv7\b/i.test(tripLabel) ? tripLabel : `Dialog Pack — ${tripLabel} v7 Tier 1–4`;
+  const title = dialogPackTitle(trip);
   const timingRows = [
     ['Pack', 'Model(s)', 'n', 'p50 ms', 'p95 ms', 'mean ms', 'max ms'],
     ['v6', 'openai/gpt-5-mini', '23', '28834', '39693', '27833', '44762'],
@@ -923,9 +929,14 @@ async function main() {
     }
   }
   const transcript = assertLiveTranscript(await loadTranscript(args));
+  const driveSha = String(transcript.buildSha || '').trim();
+  const driveEnd = String(transcript.driveBuildEnd || driveSha).trim();
   if (liveMatch?.live) {
-    transcript.buildSha = liveMatch.live;
-    transcript.deployBanner = `live ${liveMatch.live} https://vacation-staging.timesyncher.com`;
+    if (!driveSha || transcript.buildMismatch === true || driveSha !== driveEnd || driveSha !== liveMatch.live || liveMatch.live !== liveMatch.tip) {
+      process.stderr.write('refused: drive build, live version, and tested tip are not the same sha\n');
+      process.exit(2);
+    }
+    transcript.deployBanner = `live ${driveSha} https://vacation-staging.timesyncher.com`;
   }
   const shape = assessPackShape(transcript, {
     trip: args.trip,

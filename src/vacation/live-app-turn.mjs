@@ -93,6 +93,10 @@ function finiteOrNull(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+export function runningBuildSha(env = process.env) {
+  return String(env.VERCEL_GIT_COMMIT_SHA || env.TIMESYNCHER_BUILD_SHA || '').trim();
+}
+
 export function liveTurnRecord({
   turnIndex,
   role,
@@ -106,6 +110,7 @@ export function liveTurnRecord({
   model = null,
   rules = null,
   speakerName = null,
+  buildSha = runningBuildSha(),
 }) {
   const record = {
     turnIndex,
@@ -116,6 +121,7 @@ export function liveTurnRecord({
     at,
     latencyMs,
     sessionE2eMs,
+    buildSha: String(buildSha || '').trim() || null,
     jev: jevStamp(jev),
   };
   if (role === 'app') {
@@ -392,8 +398,11 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     ...(Array.isArray(party.viewers) ? party.viewers.map((person) => person?.name && `${person.name} (viewer)`) : []),
     ...(Array.isArray(party.editors) ? party.editors.map((person) => person?.name && `${person.name} (editor)`) : []),
   ].filter(Boolean);
+  const corpus = customerCorpus(priorTurns, customerTurn);
+  const unnamedFriends = /four friends are still unnamed/i.test(corpus) ? ' Four friends are still unnamed and count in the party.' : '';
+  const holder = owner[0]?.name ? ` The account holder is ${owner[0].name}. A collaborator who just joined is not the account holder.` : '';
   const roster = [
-    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.` : '',
+    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${unnamedFriends}${holder}` : '',
     absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
   const span = record?.span || null;
@@ -923,6 +932,19 @@ export function verifiedRewriteChange(change, draft, shipped) {
   if (!line) return '';
   const shippedText = String(shipped || '');
   const draftText = String(draft || '');
+  if (/\bmoved\b/i.test(line)) {
+    const days = [...line.matchAll(/\b(\d{1,2})\b/g)].map((match) => Number(match[1])).filter((day) => day >= 1 && day <= 31);
+    const activity = /\bswim\b/i.test(line) ? /\bswim\b/i : /\bgarden\b/i.test(line) ? /garden/i : /town walk/i.test(line) ? /town walk/i : null;
+    if (activity && days.length) {
+      const already = days.some((day) => splitSentences(draftText).some((sentence) => activity.test(sentence) && new RegExp(`\\b${day}\\b`).test(sentence)));
+      if (already) return '';
+    }
+  }
+  if (/\b(include|included|including|corrected the group)\b/i.test(line)) {
+    const names = [...line.matchAll(/\b([A-Z][a-z]{2,})\b/g)].map((match) => match[1]);
+    const missing = names.filter((name) => !/^(April|Friday|Sunday|Monday|Tuesday|Wednesday|Thursday|Saturday|Big|Island|What|Fixed|Removed)$/.test(name) && !new RegExp(`\\b${name}\\b`).test(shippedText));
+    if (missing.length) return '';
+  }
   if (/\b(removed|dropped|deleted|cut)\b/i.test(line)) {
     for (const phrase of ['the whole crew', 'just the crew', 'party of eight', 'crew of eight', 'full party']) {
       if (line.toLowerCase().includes(phrase) && shippedText.toLowerCase().includes(phrase)) return '';
@@ -1065,6 +1087,11 @@ export function savedTripFacts(record = {}) {
     planOwned: record.planOwned === true,
     activities,
     notTraveling,
+    travelers: [
+      party.primary?.name,
+      ...(Array.isArray(party.collaborators) ? party.collaborators.map((person) => person?.name) : []),
+      ...(Array.isArray(party.preference_subjects) ? party.preference_subjects.map((person) => person?.name) : []),
+    ].filter(Boolean),
     ownerName: party.primary?.name || '',
     rule: String(record.rule || ''),
     addressedTo: String(record.addressedTo || ''),
@@ -1147,7 +1174,8 @@ export function draftFactErrors(reply, facts = {}) {
   }
   const gardenOwner = String(facts.owners?.gardens || '');
   const gardenClaim = body.match(/\b([A-Z][a-z]+)(?:'|’)s\s+gardens?\b/);
-  if (gardenOwner && gardenClaim && gardenClaim[1].toLowerCase() !== gardenOwner.toLowerCase()) {
+  const weekdayNameClaim = gardenClaim && /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.test(gardenClaim[1]);
+  if (gardenOwner && gardenClaim && !weekdayNameClaim && gardenClaim[1].toLowerCase() !== gardenOwner.toLowerCase()) {
     pushError(errors, `the gardens are ${gardenOwner}'s, not ${gardenClaim[1]}'s`);
   }
   if (gardenOwner && facts.addressedTo && facts.addressedTo.toLowerCase() !== gardenOwner.toLowerCase() && /your (?:two )?garden/i.test(body)) {
@@ -1161,10 +1189,11 @@ export function draftFactErrors(reply, facts = {}) {
   if (ownerFirst) {
     const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
     const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
-    if (crewList && /(?:,|\band\b)/i.test(crewList[1]) && /\b[A-Z][a-z]{2,}\b/.test(crewList[1]) && !ownerRe.test(crewList[1])) {
+    const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b/i.test(crewList[1]);
+    if (crewList && !crewAddressesOwner && /(?:,|\band\b)/i.test(crewList[1]) && /\b[A-Z][a-z]{2,}\b/.test(crewList[1]) && !ownerRe.test(crewList[1])) {
       pushError(errors, `${ownerName} is traveling`);
     }
-    if (/\bjust the crew\b|\bfull party\b|\bparty of eight\b|\bcrew of eight\b|\bwhole crew\b/i.test(body) && !ownerRe.test(body)) {
+    if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bparty of eight\b|\bcrew of eight\b|\bwhole crew\b/i.test(body)) {
       pushError(errors, `${ownerName} is traveling`);
     }
   }
@@ -1203,7 +1232,8 @@ export function draftFactErrors(reply, facts = {}) {
     const next = sentences[index + 1] || '';
     const previous = sentences[index - 1] || '';
     const swimDenied = ACTIVITY_DENIAL.test(sentence) && SWIM_RE.test(sentence);
-    if (SWIM_RE.test(sentence) && !swimDenied) {
+    const optional = /\bchoice\b|\bwould you like\b|\?/.test(sentence);
+    if (SWIM_RE.test(sentence) && !swimDenied && !optional) {
       let attached = clauseStamps(sentence, span, SWIM_RE);
       if (!attached.length && /\boption\b|\bor a swim\b|\bswim day\b/i.test(sentence)) {
         attached = looseDayStamps(previous, span);
@@ -1215,7 +1245,15 @@ export function draftFactErrors(reply, facts = {}) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
     }
-    if (GARDEN_RE.test(sentence)) {
+    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
+      const claimed = looseDayStamps(sentence, span);
+      if (claimed.length && !dayIsSet(claimed, swimDays)) {
+        pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
+      } else if (!claimed.length && !swimDays.length) {
+        pushError(errors, 'a swim was claimed as saved when it is not');
+      }
+    }
+    if (GARDEN_RE.test(sentence) && !optional) {
       const stamps = clauseStamps(sentence, span, GARDEN_RE);
       const denied = ACTIVITY_DENIAL.test(sentence);
       const already = /already set|locked in/i.test(sentence) && !denied;
@@ -1223,15 +1261,39 @@ export function draftFactErrors(reply, facts = {}) {
         pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
       }
     }
-    if (WALK_RE.test(sentence)) {
+    if (WALK_RE.test(sentence) && !optional) {
       const stamps = clauseStamps(sentence, span, WALK_RE);
       if (stamps.length && !dayIsSet(stamps, facts.townWalkDays)) {
         pushError(errors, `a town walk on ${stamps[0]} was not set by the customer`);
       }
+      if (/\b(noted|saved|scheduled)\b/i.test(sentence) && !stamps.length && !(facts.townWalkDays || []).length) {
+        pushError(errors, 'a town walk was noted but not saved');
+      }
+    }
+    const partyCount = sentence.match(/\bparty of (six|seven|eight|nine|ten|\d+)\b/i);
+    if (partyCount) {
+      const words = { six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+      const claimed = words[partyCount[1].toLowerCase()] || Number(partyCount[1]);
+      const names = new Set((sentence.match(/\b[A-Z][a-z]{2,}\b/g) || []).filter((name) => !/^(April|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Big|Island|With|Option|Both|Which)$/.test(name)));
+      const friends = /\bfour friends\b/i.test(sentence) ? 4 : 0;
+      const listed = names.size + friends;
+      if (listed && listed !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${listed} people`);
+    }
+    if (ownerFirst && /\baccount holder\b/i.test(sentence) && facts.addressedTo && facts.addressedTo.toLowerCase() !== ownerFirst.toLowerCase()) {
+      pushError(errors, `the account holder is ${ownerName}`);
+    }
+    const travelerFirst = [...new Set((facts.travelers || []).map((name) => String(name || '').split(/\s+/)[0]).filter((name) => name.length > 2))];
+    if (travelerFirst.length >= 3) {
+      const mentioned = travelerFirst.filter((name) => new RegExp(`\\b${name}\\b`, 'i').test(body));
+      if (mentioned.length >= Math.min(5, travelerFirst.length - 1) && mentioned.length < travelerFirst.length) {
+        for (const name of travelerFirst) {
+          if (!mentioned.some((item) => item.toLowerCase() === name.toLowerCase())) pushError(errors, `${name} is traveling`);
+        }
+      }
     }
     for (const person of facts.notTraveling || []) {
       const named = new RegExp(`\\b${String(person.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      if (named.test(sentence) && /on the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along/i.test(sentence)) {
+      if (named.test(sentence) && /on the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
         pushError(errors, `${person.name} is a ${person.role}, not on the trip`);
       }
     }
@@ -1445,13 +1507,14 @@ export function shipChoice({
   rewriteFactErrors = [],
   holding = '',
 }) {
-  const rewriteOk = Boolean(String(rewrite || '').trim()) && !nearIdenticalRewrite(draft, rewrite);
+  const rewriteText = String(rewrite || '').trim();
   const draftCount = (Array.isArray(draftFactErrors) ? draftFactErrors : []).length;
   const rewriteCount = (Array.isArray(rewriteFactErrors) ? rewriteFactErrors : []).length;
+  const rewriteOk = rewriteReplacesDraft(draft, rewriteText) && rewriteCount === 0;
   const draftRaw = Number(draftScore);
   const rewriteRaw = Number(rewriteScore);
   const scoredLower = !Number.isFinite(rewriteRaw) || !Number.isFinite(draftRaw) || rewriteRaw < draftRaw;
-  if (rewriteOk && rewriteCount === 0 && !scoredLower) {
+  if (rewriteOk && !scoredLower) {
     return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
   }
   let failReason = '';
@@ -1627,9 +1690,16 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
   const projected = projectCustomerRecord(priorTurns, customerTurn);
   const baseThings = Array.isArray(saved?.things) && saved.things.length ? saved.things : projected.things;
   const things = customerTurn ? applyCustomerNotes(baseThings, customerTurn) : baseThings;
+  const seat = session?.metadata?.seat || session?.seat;
+  const collaborator = seat?.role === 'collaborator' || Boolean(seat?.ownerCustomerId);
+  const storedOwner = String(saved?.party?.primary?.name || '').trim();
+  const holder = storedOwner || (collaborator ? '' : String(session?.display_name || session?.displayName || '').trim());
   const party = completeRosterParty({
-    party: saved?.party || {},
-    customerName: session?.display_name || session?.displayName || saved?.party?.primary?.name || '',
+    party: {
+      ...(saved?.party || {}),
+      primary: holder ? { name: holder, role: 'Owner' } : (saved?.party?.primary || null),
+    },
+    customerName: holder,
     turns: [{ role: 'customer', text: saved?.party ? customerTurn : customerCorpus(priorTurns, customerTurn) }],
   });
   const span = saved?.start ? spanFromIso(saved.start, saved.end || saved.start) : projected.span;
@@ -1740,7 +1810,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
-    const interim = await interimFromTierOne({ rules, customerTurn, destination, env });
+    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts });
     if (interim.text && !appTextBanned(interim.text)) {
       reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
       model = {
@@ -1846,8 +1916,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     return { reply: shipped.reply, rules, jev, model: shipped.model, quality: shipped.quality, log: shipped.log, reason: null };
   }
   const interimStarted = Date.now();
-  const interimReply = await interimFromTierOne({ rules, customerTurn, destination, env });
-  interimReply.ms = String(interimReply.text || '').trim() ? Math.max(Number(interimReply.ms) || 0, Date.now() - interimStarted) : null;
+  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts }).then((interim) => {
+    interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
+    return interim;
+  });
   const pending = {
     customerTurn,
     draft: originalDraft,
@@ -1867,7 +1939,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     seatDollars,
     rawModelText: model?.text == null ? null : String(model.text),
     failureReason: qualityFailureReason(quality, draftFlags),
-    interimReply,
+    interimReply: { text: null, model: null, ms: null },
     draftLatencyMs,
     qualityJevMs: draftQualityMs,
     model: {
@@ -1880,7 +1952,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       beats: model?.beats || null,
     },
   };
-  const finished = await finishTierRewrite({ pending, env });
+  const finished = await finishTierRewrite({ pending, env, interimPromise });
+  const interimReply = finished.log?.interimReply || { text: null, model: null, ms: null };
   if (finished.log) finished.log.interimReply = interimReply;
   if (!String(interimReply.text || '').trim()) {
     return {
@@ -1916,9 +1989,17 @@ function interimFacts(customerTurn, destination) {
   ].join(' ');
 }
 
-async function interimFromTierOne({ rules, customerTurn, destination, env }) {
+async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {} }) {
   const started = Date.now();
-  const systemExtra = `This is a one or two sentence holding line. ${interimFacts(customerTurn, destination)} Ignore any instruction to end with BEAT.`;
+  const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
+  const owner = String(facts.ownerName || '').trim();
+  const systemExtra = [
+    'This is a one or two sentence holding line.',
+    interimFacts(customerTurn, destination),
+    owner ? `The account holder is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.',
+    absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
+    'Ignore any instruction to end with BEAT.',
+  ].join(' ');
   const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },
@@ -1993,7 +2074,7 @@ function stampShippedReply({ reply, quality, draftModel, log, draft }) {
   };
 }
 
-export async function finishTierRewrite({ pending, env = process.env } = {}) {
+export async function finishTierRewrite({ pending, env = process.env, interimPromise = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const facts = pending?.tripFacts || customerTripFacts([], pending?.customerTurn || '');
   const draftErrors = draftFactErrors(pending?.draft, facts);
@@ -2018,7 +2099,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars || 0,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder is traveling. Do not leave them off the party. Do not add a pool dip on the arrival day. Do not call Friday midweek. End with one line WHAT_I_CHANGED: and a single sentence.',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep the whole traveling party, including the account holder. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved unless it is already saved. End with one line WHAT_I_CHANGED: and a single sentence that names only a difference between the draft and your reply.',
         failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
@@ -2054,13 +2135,15 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   let failReason = '';
   if (!modelText) failReason = model?.reason || 'rewrite_empty';
   else if (!rewritten) failReason = 'rewrite_rejected';
-  else if (nearIdenticalRewrite(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
+  else if (!rewriteReplacesDraft(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
+  else if (rewriteErrors.length && nearIdenticalRewrite(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
   else if (appTextBanned(rewritten)) failReason = 'rewrite_banned';
   else if (replyLeavesDestination(rewritten, pending?.destination)) failReason = 'rewrite_left_destination';
   const judgedText = rewritten || modelText;
+  const rewriteCanShip = Boolean(rewritten) && !failReason && rewriteErrors.length === 0;
   let rewriteQuality = null;
   const rewriteQualityStarted = Date.now();
-  if (judgedText) {
+  if (rewriteCanShip) {
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
@@ -2079,8 +2162,11 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       failReason = failReason || 'rewrite_not_judged';
     }
   }
-  const holdingText = interimCanShip(pending?.interimReply?.text, pending?.customerTurn, facts)
-    ? String(pending.interimReply.text).trim()
+  const rewriteQualityMs = rewriteCanShip ? Math.max(0, Date.now() - rewriteQualityStarted) : 0;
+  const interimReply = interimPromise ? await interimPromise : (pending?.interimReply || { text: null, model: null, ms: null });
+  if (pending) pending.interimReply = interimReply;
+  const holdingText = interimCanShip(interimReply?.text, pending?.customerTurn, facts)
+    ? String(interimReply.text).trim()
     : '';
   let choice = shipChoice({
     draft: pending.draft,
@@ -2122,13 +2208,13 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       };
     }
   }
+  if (!choice.rewritten && String(rewritten || modelText || '').trim()) choice.held = true;
   const shippedText = choice.text;
   if (!choice.rewritten && !failReason) {
     failReason = choice.failReason === 'rewrite_fact_check_held'
       ? `rewrite_fact_check_held: ${rewriteErrors.join('; ')}`
       : (choice.failReason || 'rewrite_not_shipped');
   }
-  const rewriteQualityMs = Math.max(0, Date.now() - rewriteQualityStarted);
   const draftQualityMs = Number(pending.qualityJevMs) || 0;
   const rewriteModel = String(model?.responseModel || pending.draftModel || '').trim();
   const shownChange = choice.rewritten ? (verifiedRewriteChange(change, pending.draft, shippedText) || null) : null;
@@ -2175,7 +2261,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteJevFixFocus: rewriteQuality?.jevFocus || null,
     draftFactCheck: draftFactLine,
     rewriteFactCheck: rewriteFactLine,
-    rejudgeMs: judgedText ? rewriteQualityMs : null,
+    rejudgeMs: rewriteCanShip ? rewriteQualityMs : null,
     rawModelText: pending.rawModelText == null ? null : String(pending.rawModelText),
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevNote: null,
@@ -2193,8 +2279,8 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       draft: pending.draftLatencyMs,
       rewrite: rewriteMs,
       jevDraft: draftQualityMs,
-      jevRewrite: rewriteQualityMs,
-      total: Number(pending.draftLatencyMs || 0) + rewriteMs + Number(pending.interimReply?.ms || 0) + draftQualityMs + rewriteQualityMs,
+      jevRewrite: rewriteCanShip ? rewriteQualityMs : null,
+      total: Number(pending.draftLatencyMs || 0) + draftQualityMs + Math.max(rewriteMs + rewriteQualityMs, Number(interimReply?.ms || 0)),
     },
     flagged: choice.flagged === true && choice.held !== true,
     held: choice.held === true,
@@ -2264,6 +2350,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       dispatcher: live.dispatcher || null,
       fixedOpener: live.fixedOpener === true,
       invented: live.invented === true,
+      buildSha: String(live.buildSha || '').trim() || null,
       modelId: live.modelId || live.model?.responseModel || live.jev?.responseModel || null,
       genLatencyMs: Number.isFinite(Number(live.genLatencyMs ?? live.model?.genLatencyMs)) ? Number(live.genLatencyMs ?? live.model?.genLatencyMs) : null,
       jevLatencyMs: Number.isFinite(Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs)) ? Number(live.jevLatencyMs ?? live.jev?.jevLatencyMs) : null,
@@ -2305,6 +2392,9 @@ export function liveTranscriptFromRows({ session, rows }) {
     };
   });
   const last = turns[turns.length - 1] || null;
+  const buildShas = turns.map((turn) => String(turn.buildSha || '').trim()).filter(Boolean);
+  const buildSha = buildShas[0] || '';
+  const driveBuildEnd = buildShas.length ? buildShas[buildShas.length - 1] : '';
   return {
     live: true,
     capture: LIVE_TRANSCRIPT_CAPTURE,
@@ -2314,6 +2404,9 @@ export function liveTranscriptFromRows({ session, rows }) {
     tripId: session?.trip_id || session?.tripId || null,
     startedAt: turns[0]?.at || null,
     endedAt: last?.at || null,
+    buildSha: buildSha || null,
+    driveBuildEnd: driveBuildEnd || null,
+    buildMismatch: Boolean(buildSha && driveBuildEnd && buildSha !== driveBuildEnd),
     sessionE2eMs: (() => {
       const values = turns.map((turn) => Number(turn.sessionE2eMs)).filter((value) => value > 0);
       if (values.length) return Math.max(...values);

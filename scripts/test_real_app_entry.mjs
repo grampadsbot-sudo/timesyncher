@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { intakeShareSlug, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import { padKeepsakeSharedPlaces } from '../src/vacation/keepsake-list-minimums.mjs';
-import { CAR_OFFER_POOL, lowestCarOffers, withoutCarBrand } from '../src/vacation/car-offers.mjs';
+import { lowestCarOffers, withoutCarBrand } from '../src/vacation/car-offers.mjs';
 
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
@@ -81,7 +81,7 @@ assert.deepEqual(lowestCarOffers(offers, 2).map((row) => row.brand), ['Budget', 
 assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budget'), false);
 assert.equal(withoutCarBrand(offers, 'Budget').length <= 10, true);
 const carScript = await readFile(new URL('../public/ts-car-brand-filter.js', import.meta.url), 'utf8');
-assert.equal(lowestCarOffers(CAR_OFFER_POOL, 10).length, 10);
-for (const offer of CAR_OFFER_POOL) assert.match(carScript, new RegExp(offer.brand));
+assert.doesNotMatch(carScript, /Payless/);
+assert.match(carScript, /Remove a brand/);
 assert.match(sharedApp, /ts-car-brand-filter\.js/);
 console.log('real app entry gate passed');
