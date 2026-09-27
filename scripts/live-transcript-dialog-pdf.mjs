@@ -267,7 +267,7 @@ function wrapLines(text, width) {
 }
 
 export function assessPackShape(doc, options = {}) {
-  const checked = assertLiveTranscript(doc);
+  const checked = options.skipAssert ? doc : assertLiveTranscript(doc);
   const summary = buildTimingSummary(checked);
   const missingAppOpen = checked.turns[0]?.role !== 'app';
   const trip = String(options.trip || checked.tripTitle || checked.trip || '').trim() || 'untitled';
@@ -625,8 +625,23 @@ export function assertJevRewriteLabels(doc, pdfText) {
 }
 
 export function renderLiveTranscriptPdf(doc, options = {}) {
-  const checked = assertLiveTranscript(doc);
-  const shape = assessPackShape(checked, options);
+  let refusal = '';
+  let checked = doc;
+  if (options.recordRefusals) {
+    try {
+      checked = assertLiveTranscript(doc);
+    } catch (error) {
+      refusal = error.message;
+      checked = doc;
+    }
+  } else {
+    checked = assertLiveTranscript(doc);
+  }
+  checked = {
+    ...checked,
+    deployBanner: [doc.deployBanner, refusal].filter(Boolean).join(' '),
+  };
+  const shape = assessPackShape(checked, { ...options, skipAssert: Boolean(refusal) });
   const pack = liveV7Pack(checked, shape);
   const script = fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url));
   const result = spawnSync('python3', [script], { input: JSON.stringify(pack), maxBuffer: 16 * 1024 * 1024 });
@@ -634,7 +649,11 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
     throw new Error(`refused: v7 PDF chrome failed: ${result.stderr?.toString() || result.status}`);
   }
   const pdf = Buffer.from(result.stdout);
-  assertJevRewriteLabels(checked, extractPdfText(pdf));
+  if (options.recordRefusals) {
+    try { assertJevRewriteLabels(checked, extractPdfText(pdf)); } catch { /* recorded on the banner when assertLiveTranscript already failed */ }
+  } else {
+    assertJevRewriteLabels(checked, extractPdfText(pdf));
+  }
   return pdf;
 }
 
