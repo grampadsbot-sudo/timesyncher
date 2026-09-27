@@ -13,6 +13,7 @@ import { createRequire } from 'node:module';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertLiveMatchesTip, isVoidStaleBuild, prependVoidStamp, voidDocumentStamp } from './void-stale-build.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const featureDir = path.join(root, '.cursor/skills/verify-timesyncher-vacation/features');
@@ -228,15 +229,39 @@ async function main() {
     return;
   }
   await selfCheck();
+  const outDir = path.resolve(argValue('--out') || path.join(root, '.cursor/skills/verify-timesyncher-vacation/output'));
+  const verifyPath = path.resolve(argValue('--verify') || path.join(outDir, 'VERIFY.md'));
+  try {
+    await assertLiveMatchesTip();
+  } catch (error) {
+    if (!isVoidStaleBuild(error)) throw error;
+    await mkdir(outDir, { recursive: true });
+    const stamp = `${voidDocumentStamp(error.live, error.tip)}\n`;
+    await writeFile(path.join(outDir, 'REPORT.md'), stamp);
+    await writeFile(verifyPath, stamp);
+    const manifest = {
+      title: 'Screenshot Journey',
+      subtitle: 'This run is void. Do not grade it.',
+      void: true,
+      deployBanner: stamp.trim(),
+      pages: [],
+      gaps: [],
+    };
+    const manifestPath = path.join(outDir, 'journey-manifest.json');
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    const pdfPath = path.join(outDir, 'screenshot-journey.pdf');
+    const built = spawnSync('python3', [path.join(root, 'scripts/screenshot_journey_pdf.py'), manifestPath, pdfPath], { encoding: 'utf8' });
+    if (built.status !== 0) process.stderr.write(built.stderr || built.stdout || 'void pdf failed\n');
+    process.stderr.write(`${error.message}\n`);
+    process.exit(2);
+  }
   const gate = runGate();
   if (!gate.ok) {
     process.stderr.write(gate.stderr || gate.stdout || 'real-app gate failed\n');
     process.exit(1);
   }
 
-  const outDir = path.resolve(argValue('--out') || path.join(root, '.cursor/skills/verify-timesyncher-vacation/output'));
   const shotDir = path.join(outDir, 'journey-pages');
-  const verifyPath = path.resolve(argValue('--verify') || path.join(outDir, 'VERIFY.md'));
   const sessionUrl = argValue('--session-url');
   const sharedUrl = argValue('--shared-url') || `${staging}/shared/intake-eab1cbb15144/`;
   const referenceUrl = argValue('--reference-url') || `${staging}/shared/las-vegas-vacation-3/`;
@@ -1075,10 +1100,20 @@ async function main() {
     }
   }
 
+  let packVoid = null;
+  try {
+    await assertLiveMatchesTip();
+  } catch (error) {
+    if (!isVoidStaleBuild(error)) throw error;
+    packVoid = error;
+  }
   const manifest = {
     title: 'Screenshot Journey',
-    subtitle: 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
-    deployBanner: process.env.R5_DEPLOY_BANNER || '',
+    subtitle: packVoid
+      ? 'This run is void. Do not grade it.'
+      : 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
+    void: Boolean(packVoid),
+    deployBanner: packVoid ? voidDocumentStamp(packVoid.live, packVoid.tip) : (process.env.R5_DEPLOY_BANNER || ''),
     pages,
     gaps,
   };
@@ -1092,6 +1127,19 @@ async function main() {
   }
   const sha = createHash('sha256').update(await readFile(pdfPath)).digest('hex');
   await writeJourneySection(verifyPath, features.length, captured, gaps, sha);
+  if (packVoid) {
+    const stamped = prependVoidStamp(await readFile(verifyPath, 'utf8'), packVoid.live, packVoid.tip);
+    await writeFile(verifyPath, stamped);
+    let report = '';
+    try {
+      report = await readFile(path.join(outDir, 'REPORT.md'), 'utf8');
+    } catch {
+      report = '';
+    }
+    await writeFile(path.join(outDir, 'REPORT.md'), prependVoidStamp(report, packVoid.live, packVoid.tip));
+    process.stderr.write(`${packVoid.message}\n`);
+    process.exit(2);
+  }
   process.stdout.write(`screenshot-journey.pdf sha256 ${sha}\n`);
   process.stdout.write(`pages ${pages.length} gaps ${gaps.length} features ${captured.size} of ${features.length}\n`);
 }

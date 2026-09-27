@@ -20,6 +20,7 @@ def build(manifest, dest):
     gaps = list(manifest.get("gaps") or [])
     styles = {
         "h1": ParagraphStyle("h1", fontName="Times-Bold", fontSize=16, leading=20, textColor=colors.HexColor("#1a1a1a"), spaceAfter=8),
+        "void": ParagraphStyle("void", fontName="Times-Bold", fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6),
         "h2": ParagraphStyle("h2", fontName="Times-Bold", fontSize=12, leading=15, textColor=colors.HexColor("#1a1a1a"), spaceBefore=8, spaceAfter=4),
         "body": ParagraphStyle("body", fontName="Times-Roman", fontSize=10, leading=13, alignment=TA_LEFT),
         "gap": ParagraphStyle("gap", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#6b2d2d")),
@@ -28,6 +29,8 @@ def build(manifest, dest):
     }
     story = []
     banner = str(manifest.get("deployBanner") or "").strip()
+    if manifest.get("void") or banner.startswith("VOID"):
+        story.append(Paragraph("VOID", styles["void"]))
     if banner:
         story.append(Paragraph(esc(banner), styles["body"]))
         story.append(Spacer(1, 8))

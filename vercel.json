@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "git": {
+    "deploymentEnabled": {
+      "cursor/*": false,
+      "cursor/**": false
+    }
+  },
   "routes": [
     {
       "src": "/api/bind-thing-media",

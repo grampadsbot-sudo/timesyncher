@@ -24,6 +24,7 @@ import {
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
 import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
+import { assertLiveMatchesTip, isVoidStaleBuild, voidDocumentStamp } from './void-stale-build.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
@@ -516,6 +517,7 @@ export function liveV7Pack(doc, shape) {
   return {
     title,
     deploy_banner: String(doc.deployBanner || '').trim(),
+    void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,
@@ -639,6 +641,7 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   }
   checked = {
     ...checked,
+    void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
     deployBanner: [doc.deployBanner, refusal].filter(Boolean).join(' '),
   };
   const shape = assessPackShape(checked, { ...options, skipAssert: Boolean(refusal) });
@@ -747,9 +750,33 @@ function qaInput(doc, shape) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.out) throw new Error('refused: --out PDF path is required');
-  const transcript = assertLiveTranscript(await loadTranscript(args));
-  const shape = assessPackShape(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
-  const pdf = renderLiveTranscriptPdf(transcript, { trip: args.trip, head: args.head, dpl: args.dpl });
+  if (!args.transcript && !args.jsonl && !args.session) await loadTranscript(args);
+  let voidError = null;
+  if (!args.fixture) {
+    try {
+      await assertLiveMatchesTip();
+    } catch (error) {
+      if (!isVoidStaleBuild(error)) throw error;
+      voidError = error;
+    }
+  }
+  const transcript = voidError ? await loadTranscript(args) : assertLiveTranscript(await loadTranscript(args));
+  if (voidError) {
+    transcript.void = true;
+    transcript.deployBanner = voidDocumentStamp(voidError.live, voidError.tip);
+  }
+  const shape = assessPackShape(transcript, {
+    trip: args.trip,
+    head: args.head,
+    dpl: args.dpl,
+    skipAssert: Boolean(voidError),
+  });
+  const pdf = renderLiveTranscriptPdf(transcript, {
+    trip: args.trip,
+    head: args.head,
+    dpl: args.dpl,
+    recordRefusals: Boolean(voidError),
+  });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
@@ -757,6 +784,10 @@ async function main() {
   if (args.jsonlOut) fs.writeFileSync(args.jsonlOut, transcriptToJsonl(transcript));
   if (args.timing) fs.writeFileSync(args.timing, `${JSON.stringify(buildTimingSummary(transcript), null, 2)}\n`);
   if (args.state) fs.writeFileSync(args.state, `${JSON.stringify(qaInput(transcript, shape), null, 2)}\n`);
+  if (voidError) {
+    process.stderr.write(`${voidError.message}\n`);
+    process.exit(2);
+  }
   process.stdout.write(`${JSON.stringify({
     ok: true,
     status: shape.status,

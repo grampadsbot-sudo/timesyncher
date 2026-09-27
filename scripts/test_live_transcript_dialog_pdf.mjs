@@ -490,7 +490,7 @@ fs.writeFileSync(transcriptPath, JSON.stringify(liveDoc()));
 const missing = spawnSync(process.execPath, [script, '--out', outPath], { encoding: 'utf8' });
 assert.notEqual(missing.status, 0);
 assert.match(missing.stderr, /will not invent a transcript/);
-const built = spawnSync(process.execPath, [script, '--transcript', transcriptPath, '--out', outPath], { encoding: 'utf8' });
+const built = spawnSync(process.execPath, [script, '--fixture', '--transcript', transcriptPath, '--out', outPath], { encoding: 'utf8' });
 assert.equal(built.status, 0, built.stderr);
 assert.match(extractPdfText(fs.readFileSync(outPath)), /T2 APP/);
 
