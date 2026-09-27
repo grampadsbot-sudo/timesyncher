@@ -19,7 +19,7 @@ import {
   isTemplateNote,
   isTemplateInterim,
   interimProblems,
-  nearIdenticalRewrite,
+  rewriteReplacesDraft,
   completeRosterParty,
   item34BanHit,
   loadLiveTranscriptByToken,
@@ -214,7 +214,7 @@ export function assertLiveTranscript(doc) {
         if (!attempt || !String(attempt.model || '').trim() || !Number.isFinite(Number(attempt.ms)) || (!String(attempt.text || '').trim() && !String(attempt.error || '').trim())) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite attempt was not logged`);
         }
-        if (turn.quality?.rewritten === true && nearIdenticalRewrite(turn.quality?.draft || '', text)) {
+        if (turn.quality?.rewritten === true && !rewriteReplacesDraft(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
         }
         if (!String(turn.quality?.draft || turn.log?.draftText || '').trim() && turn.quality?.rewritten === true) {
