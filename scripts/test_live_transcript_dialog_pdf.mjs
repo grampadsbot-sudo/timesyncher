@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -178,6 +178,38 @@ assert.equal(correctFalsePriceMiss({ judged: true, score: 5, comment: 'The reply
 assert.equal(correctFalsePriceMiss({ judged: true, score: 4, comment: 'Says no extra fees.', wantsRewrite: false }, 'There are no extra fees.', priceAsk).score <= 3, true);
 assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'The reply skips the dollar amount.', wantsRewrite: true }, 'The price is $27 for unlimited vacations for the whole year.', priceAsk).score <= 3, true);
 assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, true);
+const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
+assert.match(rulesSource, /State this payer line exactly/);
+assert.match(rulesSource, /trip_context/);
+assert.match(rulesSource, /Criterion 1 is weak/);
+assert.match(rulesSource, /criterion 3 or lower/);
+assert.doesNotMatch(rulesSource, /Choose rewrite when the score is adequate/);
+const draftFacts = draftingFacts([
+  { role: 'customer', text: 'We are on the Big Island. Gardens on Sunday April 5 and Thursday April 9. Groceries the arrival day. A town walk Thursday April 9. Dinner Friday April 10.' },
+], 'What about Thursday?');
+assert.match(draftFacts.roster, /Aunt Jean/);
+assert.match(draftFacts.dates, /night 8/);
+assert.equal(draftFacts.itinerary.some((line) => /garden/i.test(line)), true);
+assert.match(qualityFailureReason({ score: 2, jevFocus: 'missing_price' }, { missingPrice: true, invented: [], split: false, missingAccess: false }), /missing per-payer dollar line/);
+const loadedAttempts = liveTranscriptFromRows({
+  session: { token: 'tok', display_name: 'Craig' },
+  rows: [{
+    body: 'Hello',
+    payload: {
+      liveTranscript: {
+        turnIndex: 1,
+        role: 'app',
+        text: 'Hello',
+        rewriteAttempts: [{ text: 'Hello there', model: 'qwen/qwen3-max', score: 4, ms: 10, error: null }],
+        jevNote: null,
+        jevNoteReason: 'jev_no_free_text',
+      },
+    },
+  }],
+});
+assert.equal(loadedAttempts.turns[0].jevNote, null);
+assert.equal(loadedAttempts.turns[0].jevNoteReason, 'jev_no_free_text');
+assert.equal(loadedAttempts.turns[0].rewriteAttempts[0].model, 'qwen/qwen3-max');
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').score <= 3, true);
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').wantsRewrite, true);
 const windyBeach = applyCustomerNotes(goldThings, 'Tyler wants a swim, including one later in the week if the beach is windy.');

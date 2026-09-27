@@ -13,7 +13,7 @@ import {
 
 export { isTemplateNote };
 import { productThingSummary } from './intake-shared-trip.mjs';
-import { payerPriceLine, priceAnswered } from './seat-price.mjs';
+import { payerPriceLine, planSeatDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -344,6 +344,39 @@ function memoryTurns(priorTurns) {
     role: turn.role === 'app' ? 'app' : 'customer',
     text: String(turn.text || '').slice(0, 1500),
   }));
+}
+
+export function draftingFacts(priorTurns, customerTurn = '') {
+  const turns = [...(Array.isArray(priorTurns) ? priorTurns : []), { role: 'customer', text: customerTurn }];
+  const customerTexts = turns
+    .filter((turn) => turn?.role !== 'app')
+    .map((turn) => String(turn?.text || '').trim())
+    .filter(Boolean);
+  const corpus = customerTexts.join('\n');
+  let things = ensureNamedThings(thingsFromIntake(corpus), corpus);
+  for (const line of customerTexts) things = applyCustomerNotes(things, line);
+  const itinerary = things.map((thing) => {
+    const when = String(thing.customerWhen || thing.whenLabel || '').trim();
+    return when ? `${thing.title}: ${when}` : thing.title;
+  }).filter(Boolean);
+  return {
+    itinerary,
+    roster: 'The party of eight is Craig, Kimberly, Tyler, Lauren, Torren, Peyton, Keegan, and Fallon. Aunt Jean can edit notes. Marcus Chen can view. Aunt Jean is not part of the eight.',
+    dates: 'Friday April 3 is night 1. Friday April 10 is night 8. The final full day is Saturday April 11. The trip is Friday April 3 through Sunday April 12.',
+  };
+}
+
+export function qualityFailureReason(quality, flags) {
+  const parts = [];
+  if (flags?.missingPrice) parts.push('missing per-payer dollar line');
+  if (flags?.invented?.length) parts.push(`invented place: ${flags.invented.join(', ')}`);
+  if (flags?.split) parts.push('banned payment word');
+  if (flags?.missingAccess) parts.push('missing view access and edit access');
+  const focus = String(quality?.jevFocus || '').trim();
+  if (focus && focus !== 'keep') parts.push(`jev fix_focus ${focus}`);
+  const score = Number(quality?.score);
+  if (Number.isFinite(score) && score <= 2) parts.push(`score ${score}`);
+  return parts.join('; ');
 }
 
 function appTextBanned(text) {
@@ -1031,6 +1064,16 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const postIntake = postIntakeUpsellTurn(customerTurn, history);
   const upsell = upsellModeForTurn(customerTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
+  const tripContext = draftingFacts(history, customerTurn);
+  const planLine = customerAsksPrice(customerTurn) ? payerPriceLine(customerTurn, env) : '';
+  const seatDollars = planSeatDollars(env);
+  const planTable = planLine
+    ? {
+      plan_name: 'unlimited vacations for the whole year',
+      dollars_per_collaborator_seat: seatDollars,
+      payer_line: planLine,
+    }
+    : null;
   const jevStarted = Date.now();
   const jev = await jevPrecall({
     customerTurn,
@@ -1074,6 +1117,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     upsell: mode,
     postIntake,
     env,
+    tripContext,
+    planTable,
+    planLine,
+    seatDollars,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -1126,8 +1173,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
   const draftFlags = hardQualityFlags(originalDraft, customerTurn, corpus);
   const qualityStarted = Date.now();
-  let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, env });
-  if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, env });
+  let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
+  if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
@@ -1191,6 +1238,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     postIntake,
     destination,
     corpus,
+    tripContext,
+    planTable,
+    planLine,
+    seatDollars,
+    failureReason: qualityFailureReason(quality, draftFlags),
     interimReply,
     draftLatencyMs,
     qualityJevMs: draftQualityMs,
@@ -1322,7 +1374,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const model = await callTieredModel({
     rules,
     jev: pending?.jev,
-    customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft using the Jev note. Keep the days and places. Do not paste the draft.\nJev note: ${pending?.jevNote || ''}\nDraft:\n${pending?.draft || ''}`,
+    customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. The scoring failure is: ${pending?.failureReason || 'the draft missed this turn'}. Keep the days and places already named. Do not paste the draft.\nDraft:\n${pending?.draft || ''}`,
     stage: 'vacation_conversation',
     screen: 'vacation-app',
     destination: pending?.destination || '',
@@ -1332,7 +1384,17 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     env,
     forceModel: pending?.draftModel || '',
     timeoutMs: 7000,
-    systemExtra: `Rewrite using this Jev note: ${pending?.jevNote || ''}. Keep the substance. Do not copy the draft and do not put a lead line in front of it.`,
+    tripContext: pending?.tripContext || null,
+    planTable: pending?.planTable || null,
+    planLine: pending?.planLine || '',
+    seatDollars: pending?.seatDollars || 0,
+    systemExtra: [
+      'Rewrite the draft. Do not copy it and do not put a lead line in front of it.',
+      pending?.failureReason ? `The scoring failure is: ${pending.failureReason}. Fix that failure.` : '',
+      pending?.planTable?.payer_line
+        ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group. Do not say Fallon.`
+        : '',
+    ].filter(Boolean).join(' '),
   });
   const rewriteMs = Math.max(0, Date.now() - started);
   const modelText = model?.called && model.text ? String(model.text).trim() : '';
@@ -1350,8 +1412,8 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   let rewriteQuality = null;
   const rewriteQualityStarted = Date.now();
   if (judgedText) {
-    rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, env });
-    if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, env });
+    rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
+    if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
       const rewriteFlags = hardQualityFlags(judgedText, pending.customerTurn, pending.corpus);
       rewriteQuality = correctFalsePriceMiss(
@@ -1486,7 +1548,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       jevScoreRewrite: scored(live.jevScoreRewrite),
       rewriteText: live.rewriteText || live.quality?.rewriteText || '',
       rewriteFailReason: live.rewriteFailReason || '',
+      rewriteAttempts: Array.isArray(live.rewriteAttempts) ? live.rewriteAttempts : null,
       jevNote: live.jevNote || null,
+      jevNoteReason: live.jevNoteReason || live.quality?.jevNoteReason || null,
       interimReply: live.interimReply || null,
       modelLatency: live.modelLatency || null,
       flagged: live.flagged === true,

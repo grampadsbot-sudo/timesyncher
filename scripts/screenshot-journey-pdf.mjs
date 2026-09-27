@@ -531,8 +531,8 @@ async function main() {
         ['building-itinerary', 'Building the itinerary', 'itinerary', 'The app says it is building the itinerary from the intake.', true],
         ['collab-upsell', 'Collaborator explanation and upsell', 'unlimited vacations', 'First app bubble that contains unlimited vacations.', true],
         ['welcome-kimberly', 'Kimberly welcome', 'Welcome aboard, Kimberly', 'Collaborator welcome in the chat.', false],
-        ['welcome-tyler', 'Tyler welcome', 'Welcome to the trip, Tyler', 'Collaborator welcome in the chat.', false],
-        ['welcome-lauren', 'Lauren welcome', 'welcome to the trip, lauren', 'Collaborator welcome in the chat.', false],
+        ['welcome-tyler', 'Tyler welcome', 'Welcome aboard, Tyler', 'Collaborator welcome in the chat.', false],
+        ['welcome-lauren', 'Lauren welcome', 'Welcome aboard, Lauren', 'Collaborator welcome in the chat.', false],
       ];
       for (const [id, title, needle, note, skipOpener] of bubbles) {
         const clipRect = await page.evaluate((phrase, skipWelcome) => {
