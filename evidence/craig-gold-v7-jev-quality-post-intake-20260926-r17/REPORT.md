@@ -1,6 +1,6 @@
 # r17 Big Island Family v7 — hold certify
 
-Deployed tip `918cf5143f90ecaf805855e556dca36316c712af` on https://vacation-staging.timesyncher.com. Live `/api/version` returns that sha. Both PDFs print it. `assertBothPdfsMatchLive` ran from the journey build and printed `both PDFs match live 918cf5143f90ecaf805855e556dca36316c712af`.
+Deployed tip `9bbb3554fd3ac60dcefa7ac20f20b49ffa49cfc0` on https://vacation-staging.timesyncher.com. Live `/api/version` returns that sha. Both PDFs print it. `assertBothPdfsMatchLive` ran from the journey build and printed `both PDFs match live 9bbb3554fd3ac60dcefa7ac20f20b49ffa49cfc0`.
 
 No second staging deploy. The Vercel `workspace` project was left alone. No merge.
 
@@ -76,7 +76,7 @@ Captured in the journey:
 | Keepsakes config | Admin gear, then Keepsakes |
 | Ratings and reviews | Ulu Ocean Grill happy-hour sentence in the review field |
 | Cars as Things | Cars tab lists the ten lowest-price rentals, Payless through National |
-| Order Keepsakes | Guest page, no owner session. The shareable link is open. Checkout and payment are off |
+| Order Keepsakes | Guest page, no owner session. The shareable buy link is open. No price or payment step |
 | Purchase, email, EULA, welcomes | Purchase confirmed, purchase email, email click, EULA first, Agree, Kimberly, Tyler, Lauren |
 
 GAPs outside the feature-file table:
@@ -98,7 +98,7 @@ Feature-file gaps in VERIFY.md: none. 36 of 36 feature files captured. The custo
 | Already built | Print/PDF Layout 1 and Layout 2 | Captured |
 | Already built | Keepsakes config | Captured |
 | Already built | Ratings and reviews | Captured on Ulu Ocean Grill |
-| Build | Order Keepsakes | Guest URL captured. `TIMESYNCHER_KEEPSAKE_CHECKOUT` is unset, so checkout and payment are off |
+| Build | Order Keepsakes | Guest URL captured. The shareable buy link is the page. Price and payment are later, so this build has no payment step |
 | Car is not a page | Cars as Things | Ten lowest prices captured. Brand removal was not captured |
 
 ## What 54b6de9 changed versus b0f8802
@@ -157,10 +157,10 @@ Shipped model, labeled score of the shipped text, and latency. The opener has nu
 
 | File | sha256 |
 | --- | --- |
-| dialog-gold-v7-jev-quality.pdf | `c9d916a10f55552ceeb22f55818d95e0851357c3be40ae5d82bceab373718ec6` |
-| screenshot-journey.pdf | `3663591af47f95c4e1fd96c6cb4cdd1d3589e188c5b5d5c16be07af4159e271b` |
-| journey-manifest.json | `c5a54aa1d261b97e506d0702bead35ffeb986efad0156d022efdb498ad301810` |
-| live-transcript.jsonl | `2ced95aa82cce3312845f7a7c753a93d58da8e3e13f1d3241f6b7e176ce6e25f` |
-| VERIFY.md | `8cff66b8e743771071adfae9bd639a4b848725e9f1974af883d357d51c48899d` |
+| dialog-gold-v7-jev-quality.pdf | `2154e1fe664a8d3901b5397de84968e8471037d88e99cb6969c6969f47df5f24` |
+| screenshot-journey.pdf | `e0f45fd1dbad44d2c6dfce9c5ab6d62fcb61b92ee21a73a61d8b25d1aa1fb9b5` |
+| journey-manifest.json | `1ce3a6ee82b7685d412c476ba6398acaff3098ad656a26238c6e9aff32e7e5d4` |
+| live-transcript.jsonl | `39482b481019ae80af3fb1674e634c02ed692a70bd694a6d346d77bbb6223880` |
+| VERIFY.md | `77cd9038d04231c39562fe2cc13b1b2a9042f5b2a927d0c1ec26130431dc3adc` |
 
 Hold certify. No merge.
