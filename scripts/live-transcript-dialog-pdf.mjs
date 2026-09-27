@@ -27,7 +27,8 @@ import {
 } from '../src/vacation/live-app-turn.mjs';
 import { priceAnswered } from '../src/vacation/seat-price.mjs';
 import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
-import { assertLiveMatchesTip, isVoidStaleBuild, pdfTextHasSha } from './void-stale-build.mjs';
+import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
+import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
@@ -610,6 +611,7 @@ export function liveV7Pack(doc, shape) {
   return {
     title,
     deploy_banner: String(doc.deployBanner || '').trim(),
+    build_vs_tip: String(doc.buildVsTip || '').trim(),
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
     record_fails: false,
     content_fails: [],
@@ -914,33 +916,25 @@ function qaInput(doc, shape) {
   };
 }
 
+function exitUntrusted(error) {
+  process.stderr.write(`${error?.message || error}\n`);
+  process.exit(2);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.out) throw new Error('refused: --out PDF path is required');
-  if (!args.transcript && !args.jsonl && !args.session) await loadTranscript(args);
-  let liveMatch = null;
+  const transcript = assertLiveTranscript(await loadTranscript(args));
+  let driveSha = '';
   if (!args.fixture) {
     try {
-      liveMatch = await assertLiveMatchesTip();
+      driveSha = driveShaFromTranscript(transcript);
+      transcript.buildVsTip = buildUsedVsTipLine(driveSha, readTipSha());
+      transcript.deployBanner = driveBanner(driveSha);
     } catch (error) {
-      if (!isVoidStaleBuild(error)) throw error;
-      process.stderr.write(`${error.message}\nrefused: dialog stamp does not match the tip\n`);
-      process.exit(2);
+      if (!isUntrustedPack(error)) throw error;
+      exitUntrusted(error);
     }
-    if (!liveMatch?.live || liveMatch.live !== liveMatch.tip) {
-      process.stderr.write('refused: dialog stamp is empty or does not match the tip\n');
-      process.exit(2);
-    }
-  }
-  const transcript = assertLiveTranscript(await loadTranscript(args));
-  const driveSha = String(transcript.buildSha || '').trim();
-  const driveEnd = String(transcript.driveBuildEnd || driveSha).trim();
-  if (liveMatch?.live) {
-    if (!driveSha || transcript.buildMismatch === true || driveSha !== driveEnd || driveSha !== liveMatch.live || liveMatch.live !== liveMatch.tip) {
-      process.stderr.write('refused: drive build, live version, and tested tip are not the same sha\n');
-      process.exit(2);
-    }
-    transcript.deployBanner = `live ${driveSha} https://vacation-staging.timesyncher.com`;
   }
   const shape = assessPackShape(transcript, {
     trip: args.trip,
@@ -953,16 +947,15 @@ async function main() {
     dpl: args.dpl,
   });
   const labelCounts = jevRewriteLabelCounts(transcript, extractPdfText(pdf));
-  if (liveMatch?.live && !extractPdfText(pdf).includes(liveMatch.live)) {
-    process.stderr.write('refused: dialog PDF does not print the live sha\n');
-    process.exit(2);
+  const rendered = extractPdfText(pdf);
+  if (driveSha && (!rendered.includes(driveSha) || !rendered.includes('build used vs tip:'))) {
+    exitUntrusted(new Error('untrusted: dialog PDF does not print the drive build'));
   }
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, pdf);
-  if (liveMatch?.live && !pdfTextHasSha(args.out, liveMatch.live)) {
+  if (driveSha && !pdfTextHasSha(args.out, driveSha)) {
     fs.unlinkSync(args.out);
-    process.stderr.write('refused: dialog PDF on disk does not print the live sha\n');
-    process.exit(2);
+    exitUntrusted(new Error('untrusted: dialog PDF on disk does not print the drive build'));
   }
   const failLines = Array.isArray(transcript.contentFails) ? transcript.contentFails : [];
   const failsPath = args.fails || String(args.out).replace(/\.pdf$/i, '.content-fails.txt');

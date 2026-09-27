@@ -802,4 +802,19 @@ rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? { ...turn, quality: null } : turn)),
 }), /not judged/);
 
+const driveSha = 'e830a5d177fcb5091cf127129ca9ea9481c4b5e2';
+const stamped = liveDoc({
+  buildSha: driveSha,
+  deployBanner: `live ${driveSha} https://vacation-staging.timesyncher.com`,
+  buildVsTip: `build used vs tip: ${driveSha} equals the tip`,
+});
+stamped.turns = stamped.turns.map((turn) => ({ ...turn, buildSha: driveSha }));
+const stampedText = extractPdfText(renderLiveTranscriptPdf(stamped, { trip: 'Big Island Family' }));
+assert.match(stampedText, new RegExp(driveSha));
+assert.match(stampedText, /build used vs tip:/);
+assert.match(stampedText, /equals the tip/);
+assert.match(stampedText, /Dialog Pack — Big Island Family v7 Tier 1–4/);
+const publisherSource = fs.readFileSync(script, 'utf8');
+assert.equal(publisherSource.includes('transcript.buildSha ='), false);
+
 console.log('live transcript dialog pdf passed');
