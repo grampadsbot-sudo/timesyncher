@@ -15,6 +15,7 @@ import {
   inventedVenueNames,
   isLongIntake,
   rewriteCreditLabel,
+  heldRewriteLine,
   isTemplateNote,
   isTemplateInterim,
   interimProblems,
@@ -659,10 +660,10 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange) : '',
+        rewrite_label: shippedRewriteLabel(turn),
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
-        quality: generatedTurn ? formatQualityLine(turn.quality) : '',
+        quality: generatedTurn ? qualityBar(turn) : '',
         timing: generatedTurn ? formatLiveTimingLine({
           gen,
           model,
@@ -715,10 +716,10 @@ function producerLogLine(turn) {
     `rewriteAttempt: ${Array.isArray(turn.rewriteAttempts) && turn.rewriteAttempts[0] ? `${turn.rewriteAttempts[0].model || ''} ${turn.rewriteAttempts[0].ms}ms ${turn.rewriteAttempts[0].error || 'ok'}` : 'none'}`,
     `flagged: ${turn.held === true ? 'held' : turn.flagged === true}`,
     `held: ${turn.held === true}`,
-    `jevScoreRaw: ${Number.isFinite(Number(turn.jevScoreRaw)) ? Number(turn.jevScoreRaw) : (Number.isFinite(Number(turn.quality?.scoreRaw)) ? Number(turn.quality.scoreRaw) : 'none')}`,
+    `jevScoreRaw: ${printedRaw(turn.jevScoreRaw == null ? turn.quality?.scoreRaw : turn.jevScoreRaw)}`,
     `jevDisposition: ${turn.jevDisposition || turn.quality?.disposition || 'none'}`,
     `jevFixFocus: ${turn.jevFixFocus || turn.quality?.jevFocus || 'none'}`,
-    `draftJevScoreRaw: ${Number.isFinite(Number(turn.draftJevScoreRaw)) ? Number(turn.draftJevScoreRaw) : 'none'}`,
+    `draftJevScoreRaw: ${printedRaw(turn.draftJevScoreRaw)}`,
     `draftJevDisposition: ${turn.draftJevDisposition || 'none'}`,
     `draftJevFixFocus: ${turn.draftJevFixFocus || 'none'}`,
     `rewriteJevScoreRaw: ${turn.rewriteJevScoreRaw == null ? 'null' : Number(turn.rewriteJevScoreRaw)}`,
@@ -731,11 +732,44 @@ function producerLogLine(turn) {
   ].join(' | ');
 }
 
+function printedRaw(value) {
+  if (value == null || value === '') return 'null';
+  const number = Number(value);
+  return Number.isFinite(number) ? String(number) : 'none';
+}
+
+function qualityBar(turn) {
+  const score = formatQualityLine(turn.quality);
+  const held = heldRewriteLine(turn);
+  if (score && held) return `${score} · ${held}`;
+  return score || held;
+}
+
+export function shippedRewriteLabel(turn) {
+  if (!turn || turn.held === true || turn.quality?.rewritten !== true) return '';
+  return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
+}
+
+function foldPdfText(value) {
+  return String(value || '')
+    .replace(/\u2019/g, "'")
+    .replace(/\u2018/g, "'")
+    .replace(/\u201c/g, '"')
+    .replace(/\u201d/g, '"')
+    .replace(/\u2014/g, '-')
+    .replace(/\u2013/g, '-')
+    .replace(/\u02bb/g, "'")
+    .replace(/\u02bc/g, "'")
+    .replace(/\u2026/g, '...')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function jevRewriteLabelCounts(doc, pdfText) {
-  const rewritten = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true && String(turn.rewriterChange || turn.quality?.rewriterChange || '').trim());
-  const pdf = String(pdfText || '');
+  const rewritten = (doc?.turns || []).filter((turn) => shippedRewriteLabel(turn));
+  const pdf = foldPdfText(pdfText);
   const rewriteLabels = rewritten.filter((turn) => {
-    const label = rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
+    const label = foldPdfText(shippedRewriteLabel(turn));
     return label && pdf.includes(label);
   }).length;
   return { rewrittenTurns: rewritten.length, rewriteLabels, ok: rewritten.length === rewriteLabels };

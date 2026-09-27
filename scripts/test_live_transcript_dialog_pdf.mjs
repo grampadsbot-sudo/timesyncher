@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -178,6 +178,14 @@ const heldClean = shipChoice({
 assert.equal(heldClean.text, 'Tuesday can be a town walk.');
 assert.equal(heldClean.holding, true);
 assert.equal(heldClean.held, true);
+assert.equal(heldClean.rewritten, false);
+assert.equal(heldRewriteLine({
+  held: true,
+  rewriteText: 'Tuesday stays a swim.',
+  rewriteFailReason: 'rewrite_fact_check_held: a swim on apr 7 was not set by the customer',
+  quality: { rewritten: false, judged: true, score: 4 },
+}), 'rewrite drafted, held: rewrite_fact_check_held: a swim on apr 7 was not set by the customer');
+assert.equal(heldRewriteLine({ held: false, rewriteText: 'Tuesday stays a swim.', quality: { rewritten: true } }), '');
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4');
 assert.equal(formatQualityLine({ judged: true, score: 2.76, comment: 'Thin day.', rewritten: false }), 'quality: 2.76');
 assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1');
@@ -490,6 +498,30 @@ const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
 assert.match(jevRewritePdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Kept the harbor morning and named only the walk/);
+const heldDraft = liveDoc({
+  turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
+    held: true,
+    quality: { judged: true, score: 4.03, rewritten: false, model: 'typesafe/jev-1.13', judgeMs: 400, draft: 'Start with the harbor walk, then keep the afternoon open.' },
+    shippedModel: 'google/gemini-2.5-flash-lite',
+    draftModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+    rewriteText: 'Tuesday stays a swim on the beach.',
+    rewriteFailReason: 'rewrite_near_draft',
+    rewriterChange: 'Removed the beach swim.',
+    jevScoreDraft: 4.03,
+    jevScoreRewrite: 3,
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
+    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'google/gemini-2.5-flash-lite', ms: 900 },
+    rewriteAttempts: [{ text: 'Tuesday stays a swim on the beach.', model: 'qwen/qwen3-235b-a22b-2507', score: 3, ms: 1200, error: 'rewrite_near_draft' }],
+  } : turn)),
+});
+const heldPdf = extractPdfText(renderLiveTranscriptPdf(heldDraft));
+assert.match(heldPdf, /quality: 4\.03 · rewrite drafted, held: rewrite_near_draft/);
+assert.doesNotMatch(heldPdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Removed the beach swim/);
+assert.equal(jevRewriteLabelCounts(heldDraft, heldPdf).rewrittenTurns, 0);
 assert.doesNotMatch(jevRewritePdf, /\(Jev note\)/);
 assert.doesNotMatch(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
 assert.doesNotMatch(jevRewritePdf, /scored and commented on every generated reply/);
@@ -629,6 +661,8 @@ const fixedOpen = liveDoc({
       latencyMs: null,
       sessionE2eMs: null,
       jevScoreDraft: null,
+      jevScoreRaw: null,
+      draftJevScoreRaw: null,
       jev: { jevRan: false, reason: FIXED_OPENER_REASON, modelTier: null, routeType: null },
       replyProducer: LIVE_OPENER_PRODUCER,
       fixedOpener: true,
@@ -645,6 +679,9 @@ assert.match(fixedText, /T1 APP/);
 assert.match(fixedText, /Tell me the trip basics/);
 assert.match(fixedText, /collaborators/);
 assert.doesNotMatch(fixedText, /timing: gen=0ms/);
+assert.match(fixedText, /jevScoreDraft: null/);
+assert.match(fixedText, /jevScoreRaw: null/);
+assert.match(fixedText, /draftJevScoreRaw: null/);
 rejects(liveDoc({
   turns: [
     liveDoc().turns[0],
