@@ -38,6 +38,7 @@ import {
   finishTierRewrite,
   applyAgreedAppSwim,
   applyCustomerNotes,
+  ensureNamedThings,
   intakeFacts,
   thingsFromIntake,
 } from '../src/vacation/live-app-turn.mjs';
@@ -697,11 +698,29 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
-  let next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  let next = ensureNamedThings(current, text);
+  next = applyCustomerNotes(next, text, { collaborator, speakerName });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
-    const prior = current.find((item) => item.id === thing.id);
-    if (!prior) continue;
+    const prior = current.find((item) => item.id && item.id === thing.id);
+    if (!prior) {
+      if (current.some((item) => item.title === thing.title)) continue;
+      await db`
+        insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
+        values (
+          ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
+          'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
+            source: 'customer-turn',
+            who: thing.who || '',
+            whenLabel: thing.whenLabel || '',
+            customerWhen: thing.customerWhen || '',
+            notes: thing.notes || [],
+            collaboratorNotes: thing.collaboratorNotes || [],
+          }}
+        )
+      `;
+      continue;
+    }
     if (JSON.stringify({
       notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who,
     }) === JSON.stringify({

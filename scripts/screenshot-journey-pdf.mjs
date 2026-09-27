@@ -640,11 +640,7 @@ async function main() {
           }),
         });
         await page.evaluate(() => window.scrollTo(0, 0));
-        await shot('autonomy', 'Initial itinerary', 'Autonomy bar', {
-          file: 'autonomous-app-customer-flow.md',
-          note: 'Guest navigation on the real shared app.',
-          clipRect: await clipAround('Day-by-Day', { height: 420, padTop: 80 }),
-        });
+        gap('Autonomy bar', 'autonomous-app-customer-flow.md', 'the shared app has no autonomy bar. A Day-by-Day crop is not that screen.');
         await shot('packing', 'Initial itinerary', 'Packing', {
           file: 'packing.md',
           note: 'The tab row has no Packing tab while share_packing is off.',
@@ -654,11 +650,31 @@ async function main() {
         gap('Standard itinerary layout', 'itinerary-layout.md', 'the shared trip did not show the Day-by-Day tab row');
       }
       if (slider) {
-        await shot('slider-bars', 'Initial itinerary', 'Slider bars', {
-          file: 'slider-bars.md',
-          note: 'Vacation Day View day chips and timeline rail.',
-          clipRect: await clipAround('Vacation Day View', { height: 560, padTop: 8 }),
+        const chipRow = await page.evaluate(() => {
+          const heading = [...document.querySelectorAll('div')].find((node) => (node.innerText || '').trim() === 'Vacation Day View');
+          const title = heading?.parentElement?.parentElement;
+          const chips = title?.nextElementSibling;
+          const top = title?.getBoundingClientRect();
+          const bottom = chips?.getBoundingClientRect();
+          if (!top || top.width < 40) return null;
+          const y = Math.max(0, top.y - 8);
+          const end = bottom && bottom.height > 16 ? bottom.bottom : top.bottom;
+          return {
+            x: 0,
+            y,
+            width: Math.min(1280, window.innerWidth),
+            height: Math.max(96, Math.min(200, end - y + 8)),
+          };
         });
+        if (chipRow) {
+          await shot('slider-bars', 'Initial itinerary', 'Day chip slider', {
+            file: 'slider-bars.md',
+            note: 'The Vacation Day View day-chip row. Not a Day-by-Day crop.',
+            clipRect: chipRow,
+          });
+        } else {
+          gap('Slider bars', 'slider-bars.md', 'the day-chip slider row was not on the intake trip');
+        }
         const mapBox = await page.evaluate(() => {
           const map = document.querySelector('.leaflet-container, .mapboxgl-map');
           if (!map) return null;
@@ -687,19 +703,30 @@ async function main() {
       } else {
         gap('Slider bars', 'slider-bars.md', 'Vacation Day View was not on the intake trip');
       }
-      if (await page.$('[aria-label="Record voice note"]')) {
+      const voiceRow = await page.evaluate(() => {
+        const button = document.querySelector('[aria-label="Record voice note"]');
+        if (!button) return null;
+        const row = button.parentElement || button;
+        const box = row.getBoundingClientRect();
+        const text = (row.innerText || button.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
+        if (box.width < 40 || box.height < 20) return { thin: true, text };
+        return {
+          thin: text.length < 12,
+          text,
+          x: 0,
+          y: Math.max(0, box.y - 12),
+          width: Math.min(1280, window.innerWidth),
+          height: Math.max(88, Math.min(160, box.height + 28)),
+        };
+      });
+      if (voiceRow && !voiceRow.thin && voiceRow.width) {
         await shot('voice-note', 'Initial itinerary', 'Voice note', {
           file: 'voice-note.md',
-          note: sharedUrl,
-          clipRect: await page.evaluate(() => {
-            const button = document.querySelector('[aria-label="Record voice note"]');
-            const box = button?.getBoundingClientRect();
-            if (!box) return null;
-            return { x: 0, y: Math.max(0, box.y - 220), width: Math.min(1280, window.innerWidth), height: 320 };
-          }),
+          note: 'The record-voice control in the shared header.',
+          clipRect: voiceRow,
         });
       } else {
-        gap('Voice note', 'voice-note.md', 'Record voice note is not on the intake trip');
+        gap('Voice note', 'voice-note.md', 'the shared app has no voice-note screen. A Day-by-Day crop is not that control.');
       }
       const logoBox = await page.evaluate(() => {
         const img = [...document.querySelectorAll('img')].find((node) => (node.src || '').includes('/ts-thing-logos/'));
@@ -718,20 +745,28 @@ async function main() {
         await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: sharedUrl, clipRect: logoBox });
       }
       if (!has(text, 'Budget')) gap('Budget on the test itinerary', 'budget.md', 'the Big Island shared trip has no Budget tab');
-      if (await clickText(page, 'Open navigation')) {
+      const navPanel = await page.evaluate(() => {
+        const button = document.querySelector('[data-ts-guest-nav] button[aria-label="Open navigation"]');
+        if (!button) return null;
+        button.click();
+        const panel = [...document.querySelectorAll('div')].find((node) => !node.hidden && (node.innerText || '').includes('Close navigation') && node.getBoundingClientRect().height > 40);
+        if (!panel) return { missing: true };
+        const box = panel.getBoundingClientRect();
+        return {
+          x: Math.max(0, box.x - 8),
+          y: Math.max(0, box.y - 8),
+          width: Math.max(200, Math.min(420, box.width + 16)),
+          height: Math.max(160, Math.min(420, box.height + 16)),
+        };
+      });
+      if (navPanel && !navPanel.missing) {
         await shot('navigation', 'Initial itinerary', 'Navigation chrome', {
           file: 'navigation.md',
-          note: 'Open navigation shows the day and tab list, then Close navigation.',
-          clipRect: await clipAround('Close navigation', { height: 360, padTop: 12 }),
-        });
-        await clickText(page, 'Close navigation');
-      } else if (has(text, 'Open navigation') || has(text, 'Close navigation')) {
-        await shot('navigation', 'Initial itinerary', 'Navigation chrome', {
-          file: 'navigation.md',
-          clipRect: await clipAround('Open navigation', { height: 280, padTop: 80 }),
+          note: 'The guest Open navigation panel, with Close navigation and the day tabs.',
+          clipRect: navPanel,
         });
       } else {
-        gap('Navigation chrome', 'navigation.md', 'Open navigation and Close navigation are not on the guest page');
+        gap('Navigation chrome', 'navigation.md', 'the guest navigation panel did not open. A Day-by-Day crop is not that screen.');
       }
       if (await clickText(page, 'Settings')) {
         const settingsText = await bodyText(page);
@@ -809,13 +844,7 @@ async function main() {
             });
             if (row) await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: 'Restaurant row logos.', clipRect: row });
           }
-          if (has(dining, "Huggo") || has(dining, 'Kailua-Kona') || has(dining, 'Ulu Ocean')) {
-            await shot('tg-intake', 'Initial itinerary', 'Telegram intake fill', {
-              file: 'tg-intake.md',
-              note: 'Website fill the intake reaches: Big Island restaurants. There is no Telegram screen on the shared app.',
-              clipRect: await clipAround(has(dining, "Huggo") ? "Huggo" : 'Ulu Ocean', { height: 480, padTop: 80 }),
-            });
-          }
+          gap('Telegram intake fill', 'tg-intake.md', 'the shared app has no Telegram intake screen. The restaurant list is not that fill.');
         }
         if (label === 'Budget') mark('budget.md');
       }

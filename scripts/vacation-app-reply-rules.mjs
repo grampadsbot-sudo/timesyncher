@@ -573,7 +573,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     : (upsell === 'allow-once'
       ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
       : (priceAsk
-        ? `This turn asks the price. Ship a real dollar price: The price is $27 for ${phrase}. Do not add a second collaborator welcome. Do not say split, splitting, "splitting anything up", or "splitting it up".`
+        ? `This turn asks the price. Name each person and who pays, with the plan dollar amount, in one line such as "Kimberly $27, paid by you; Tyler $27, paid by Tyler". Do not add a second collaborator welcome. Do not use a banned payment word.`
         : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
@@ -584,8 +584,8 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     'Places and activities: use only places, activities, and venues the customer already named. If they ask for two options, both options must stay in their words, such as gardens, swim, beach, house pool, groceries, dinner, a town walk, the house, Kailua-Kona, or the Big Island. Do not invent a cruise, a snorkel trip, a park, a bay, a farm, a lagoon, or a resort pool.',
     'Garden wording: if the customer says gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, a botanical garden, or a weather excuse that moves the garden.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
-    'Do not mention reservations, payments, checkout, or split-payer.',
-    'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", "splitting it up", or "splitting anything up". Never use the words split or splitting at all. If one seat is already covered and another person has their own seat, say that.',
+    'Do not mention reservations, payments, or checkout.',
+    'Item34 ban: never use a banned payment word. If one seat is already covered and another person has their own seat, say that.',
     postIntake
       ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
       : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
@@ -618,19 +618,18 @@ export const JEV_QUALITY_COMMENTS = {
   off_brief: 'The reply misses what the customer asked.',
   strong_welcome: 'The itinerary acknowledgment and collaborator welcome are in place.',
   garden_words: 'Use the customer word gardens. Do not name a garden they did not name.',
-  split_language: 'Remove any split-payment wording.',
+  split_language: 'Remove the banned payment wording.',
   destination_lock: 'Stay on the destination the customer named.',
 };
 
 export function qualityCommentCriteria(customerTurn, draft) {
   const ask = text(String(customerTurn || '').replace(/\s+/g, ' '), 90);
-  const opening = text(String(draft || '').replace(/\s+/g, ' '), 70);
   return {
-    answers_this_ask: `Answers "${ask}" and stays with that wording: "${opening}".`,
-    misses_this_ask: `Misses "${ask}". The draft opens "${opening}" instead of doing what this turn asked.`,
-    adds_unnamed: `Adds a place, activity, or venue the customer did not name while answering "${ask}".`,
-    payment_wording: `Talks about splitting a payment while answering "${ask}". Name each seat without the word split.`,
-    missing_price: `Does not give the price for "${ask}". The household plan is unlimited vacations for the whole year.`,
+    answers_this_ask: `The reply covers this turn: ${ask}`,
+    misses_this_ask: `The reply misses this turn: ${ask}`,
+    adds_unnamed: `The reply adds a place the customer did not name in: ${ask}`,
+    payment_wording: `The reply uses a banned payment word while covering: ${ask}`,
+    missing_price: `The reply skips the dollar amount for who pays in: ${ask}`,
   };
 }
 
@@ -671,7 +670,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, or uses split or splitting payment phrasing. A price question with no real price is criterion 3 or lower.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, or uses a banned payment word. A price question with no real price is criterion 3 or lower.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
@@ -679,7 +678,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
         instructions: 'Should the customer see this draft, or should it be rewritten before they see it? Choose rewrite when the score is adequate or worse, or when a product rule is broken.',
         criteria: {
           keep: 'The draft should stand as the customer-facing reply. It answers this turn and names only the customer\'s own places and activities.',
-          rewrite: 'Replace the draft. It misses this turn, names a place or activity the customer did not name, skips the price, or uses split or splitting payment phrasing.',
+          rewrite: 'Replace the draft. It misses this turn, names a place or activity the customer did not name, skips the price, or uses a banned payment word.',
         },
       },
       comment: {
@@ -693,7 +692,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
         criteria: {
           missing_price: `Name the price while answering "${text(customerTurn, 80)}".`,
           unnamed_place: `Take out the place they did not name and answer "${text(customerTurn, 80)}".`,
-          payment_wording: `Name the seats without split wording while answering "${text(customerTurn, 80)}".`,
+          payment_wording: `Name each seat and who pays while answering "${text(customerTurn, 80)}".`,
           misses_ask: `Answer "${text(customerTurn, 80)}" and keep the days they already named.`,
           keep: `Keep the reply. It answers "${text(customerTurn, 80)}".`,
         },

@@ -1,0 +1,43 @@
+import { checkoutAmounts } from './checkout-pricing.mjs';
+
+export function planSeatDollars(env = process.env) {
+  const dollars = Math.round(Number(checkoutAmounts(env).orderBump) / 100);
+  return Number.isFinite(dollars) && dollars > 0 ? dollars : 27;
+}
+
+export function payerSeats(customerTurn) {
+  const text = String(customerTurn || '');
+  const seats = [];
+  const seen = new Set();
+  const add = (name, payer) => {
+    const who = String(name || '').trim();
+    if (!/^[A-Z][a-z]+$/.test(who) || seen.has(who)) return;
+    seen.add(who);
+    seats.push({ name: who, payer: String(payer || '').trim() });
+  };
+  const paidByCustomer = text.match(/\bI pay for ([^.?!]+)/i);
+  if (paidByCustomer) {
+    for (const name of paidByCustomer[1].match(/[A-Z][a-z]+/g) || []) add(name, 'you');
+  }
+  for (const match of text.matchAll(/\b([A-Z][a-z]+) pays for (himself|herself|themselves)\b/gi)) {
+    add(match[1], match[1]);
+  }
+  for (const match of text.matchAll(/\b([A-Z][a-z]+) pays for ([A-Z][a-z]+)\b/g)) {
+    add(match[2], match[1]);
+  }
+  return seats;
+}
+
+export function payerPriceLine(customerTurn, env = process.env) {
+  const seats = payerSeats(customerTurn);
+  if (!seats.length) return '';
+  const dollars = planSeatDollars(env);
+  return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
+}
+
+export function priceAnswered(reply, customerTurn, env = process.env) {
+  const line = payerPriceLine(customerTurn, env);
+  const body = String(reply || '');
+  if (!line) return /\$\d+/.test(body);
+  return line.split('; ').every((part) => body.includes(part));
+}

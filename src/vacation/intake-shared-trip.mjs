@@ -61,7 +61,8 @@ function assignDates(thing, year, tripDates) {
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
   const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
   if (!unique.length) return tripDates.slice(0, 1);
-  if (unique.length >= 2) {
+  const spansTrip = /big island|house/i.test(String(thing.title || ''));
+  if (spansTrip && unique.length >= 2) {
     const sorted = unique.slice().sort();
     const span = eachDate(sorted[0], sorted[sorted.length - 1]).filter((date) => tripDates.includes(date));
     if (span.length > 2) return span;
@@ -201,14 +202,6 @@ export function sharedTripFromIntake({ trip, things }) {
   };
 }
 
-const RATING_STEPS = ['3.7', '3.8', '3.9', '4.0', '4.1', '4.2', '4.3', '4.5', '4.7', '4.8', '4.9'];
-
-function ratingFor(name, salt) {
-  let hash = 2166136261;
-  for (const char of `${name}:${salt}`) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-  return RATING_STEPS[(hash >>> 0) % RATING_STEPS.length];
-}
-
 const PLACE_COORDS = {
   Groceries: [19.6399, -155.9854, '74-5594 Palani Rd, Kailua-Kona'],
   Gardens: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
@@ -227,12 +220,28 @@ function coordsFor(name) {
   return PLACE_COORDS[name] || null;
 }
 
-function reviewLines(name, summary) {
-  const line = String(summary || name).replace(/\s+/g, ' ').trim();
+function blankRatings() {
   return {
-    review1: `★★★★★ “${line}” — Maya Chen, Kailua-Kona, March 2026`,
-    review2: `★★★★☆ “${name} stayed on our list because the kids could do it without a second stop.” — Jordan Hale`,
-    review3: `★★★★★ “We used ${name} on the April week and the timing matched the rest of that day.” — Priya Nunez`,
+    googleRating: '',
+    yelpRating: '',
+    thirdPartyRating: '',
+    review1: '',
+    review2: '',
+    review3: '',
+  };
+}
+
+function sourcedRatings(name, options) {
+  const rows = options?.sourcedRatings && typeof options.sourcedRatings === 'object' ? options.sourcedRatings : {};
+  const row = rows[name];
+  if (!row || row.source === 'google-places' || !row.source) return blankRatings();
+  return {
+    googleRating: String(row.googleRating || ''),
+    yelpRating: String(row.yelpRating || ''),
+    thirdPartyRating: String(row.thirdPartyRating || ''),
+    review1: String(row.review1 || ''),
+    review2: String(row.review2 || ''),
+    review3: String(row.review3 || ''),
   };
 }
 
@@ -271,11 +280,8 @@ export function applyThingPresentation(shared = {}, options = {}) {
     const coords = coordsFor(name);
     const extra = {
       summary,
-      googleRating: ratingFor(name, 'google'),
-      yelpRating: ratingFor(name, 'yelp'),
-      thirdPartyRating: ratingFor(name, 'other'),
       logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
-      ...reviewLines(name, summary),
+      ...sourcedRatings(name, options),
     };
     if (coords) {
       place.lat = coords[0];
@@ -322,10 +328,7 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lng: place.lng,
       address: place.address,
       logoUrl: captureThingLogo(place, { title: 'SpeediShuttle', category: 'car' }),
-      googleRating: ratingFor('SpeediShuttle', 'google'),
-      yelpRating: ratingFor('SpeediShuttle', 'yelp'),
-      thirdPartyRating: ratingFor('SpeediShuttle', 'other'),
-      ...reviewLines('SpeediShuttle', place.description),
+      ...sourcedRatings('SpeediShuttle', options),
     });
   }
   if (!places.some((place) => /koa arrival/i.test(place.name || ''))) {
@@ -357,10 +360,7 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lng: place.lng,
       address: place.address,
       logoUrl: captureThingLogo(place, { title: 'KOA arrival', category: 'flight' }),
-      googleRating: ratingFor('KOA arrival', 'google'),
-      yelpRating: ratingFor('KOA arrival', 'yelp'),
-      thirdPartyRating: ratingFor('KOA arrival', 'other'),
-      ...reviewLines('KOA arrival', place.description),
+      ...sourcedRatings('KOA arrival', options),
     });
   }
   return { ...shared, places, thingOverrides };

@@ -23,8 +23,9 @@ import {
   loadLiveTranscriptByToken,
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
+import { payerPriceLine } from '../src/vacation/seat-price.mjs';
 import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
-import { assertLiveMatchesTip, isVoidStaleBuild, voidDocumentStamp } from './void-stale-build.mjs';
+import { assertLiveMatchesTip, isVoidStaleBuild, readTipSha, voidDocumentStamp } from './void-stale-build.mjs';
 
 const V6_GPT5_MINI_P50_MS = 28834;
 const V6_GPT5_MINI_P95_MS = 39693;
@@ -130,8 +131,12 @@ export function assertLiveTranscript(doc) {
       const venues = inventedVenueNames(text, customerCorpus);
       if (venues.length) throw new Error(`refused: turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
-      if (priorCustomer && customerAsksPrice(priorCustomer.text) && !(/\$\d+/.test(text) && /unlimited vacations for the whole year/i.test(text))) {
-        throw new Error(`refused: turn ${turn.turnIndex} price question has no dollar price`);
+      if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
+        const line = payerPriceLine(priorCustomer.text);
+        const priced = line ? line.split('; ').every((part) => text.includes(part)) : /\$\d+/.test(text);
+        if (!priced || item34BanHit(text)) {
+          throw new Error(`refused: turn ${turn.turnIndex} price question has no per-payer dollar price`);
+        }
       }
       if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
         throw new Error(`refused: turn ${turn.turnIndex} does not offer view access and edit access`);
@@ -155,16 +160,29 @@ export function assertLiveTranscript(doc) {
       if (!Number.isInteger(Number(turn.jevScoreDraft))) {
         throw new Error(`refused: turn ${turn.turnIndex} is missing jevScoreDraft`);
       }
-      if (turn.quality?.rewritten === true) {
-        const rewriteModel = String(turn.quality.rewriteModel || turn.rewriteModel || '');
+      const rewriteRan = turn.quality?.rewritten === true || turn.flagged === true || Boolean(String(turn.rewriteModel || '').trim());
+      if (turn.jevScoreRewrite === 0) {
+        throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is 0`);
+      }
+      if (rewriteRan) {
+        const rewriteModel = String(turn.quality?.rewriteModel || turn.rewriteModel || '');
         if (!isBakeoffModelId(rewriteModel) || rewriteModel === 'typesafe/jev-1.13') {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite must be the tier model`);
+        }
+        if (!String(turn.rewriteText || '').trim() && !String(turn.rewriteFailReason || '').trim() && turn.quality?.rewritten === true) {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewrite text`);
+        }
+        if (String(turn.rewriteText || '').trim() && !Number.isInteger(Number(turn.jevScoreRewrite))) {
+          throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
         if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
         }
-        if (nearIdenticalRewrite(turn.quality?.draft || '', text)) {
+        if (turn.quality?.rewritten === true && nearIdenticalRewrite(turn.quality?.draft || '', text)) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is the draft plus a lead line`);
+        }
+        if (!String(turn.quality?.draft || turn.log?.draftText || '').trim() && turn.quality?.rewritten === true) {
+          throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the true draft`);
         }
       } else if (String(turn.interimReply?.text || '').trim()) {
         throw new Error(`refused: turn ${turn.turnIndex} non-rewrite turn has an interim reply`);
@@ -349,12 +367,14 @@ function packPages(doc, shape) {
     `tiers used: ${tiersUsed}`,
     `models used: ${modelsUsed}`,
     '',
-    'QUALITY COMPARISON',
-    'vs v6 gpt-5-mini (published mainModel reference, not this session)',
-    'metric | v6 gpt-5-mini | this live session',
-    `gen p50 ms | ${V6_GPT5_MINI_P50_MS} | ${p50 ?? 'n/a'}`,
-    `gen p95 ms | ${V6_GPT5_MINI_P95_MS} | ${p95 ?? 'n/a'}`,
-    `speed vs v6 p50 | 1x | ${speed}x`,
+    'SPEED',
+    'gen-only is model generation time. It is not the time the customer waited.',
+    'real per-turn latency is the stored turn latency, including Jev, the draft, and any rewrite.',
+    'metric | v6 gpt-5-mini gen-only | this session gen-only | this session real per-turn',
+    `p50 ms | ${V6_GPT5_MINI_P50_MS} | ${p50 ?? 'n/a'} | ${percentile(generated.map((turn) => Number(turn.latencyMs)), 50) ?? 'n/a'}`,
+    `p95 ms | ${V6_GPT5_MINI_P95_MS} | ${p95 ?? 'n/a'} | ${percentile(generated.map((turn) => Number(turn.latencyMs)), 95) ?? 'n/a'}`,
+    `gen-only speed vs v6 gen p50 | 1x | ${speed}x | n/a`,
+    `session elapsed ms | n/a | n/a | ${summary.sessionE2eMs ?? 'n/a'}`,
     '',
     'Per-tier models',
     'tier | model',
@@ -513,6 +533,8 @@ export function liveV7Pack(doc, shape) {
   const speed = Number.isFinite(Number(overall.p50)) && Number(overall.p50) > 0
     ? (V6_GPT5_MINI_P50_MS / Number(overall.p50)).toFixed(2)
     : 'n/a';
+  const realTurn = timingStats(generated.map((turn) => Number(turn.latencyMs)));
+  timingRows.push(['v7 real per-turn', 'latencyMs', String(realTurn.count), String(realTurn.p50), String(realTurn.p95), String(realTurn.mean), String(realTurn.max)]);
   const name = String(doc.targetPerson || 'customer').toUpperCase();
   return {
     title,
@@ -521,7 +543,7 @@ export function liveV7Pack(doc, shape) {
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,
-    headline: 'Live app capture. Jev judged every generated reply. Timings are measured gen ms.',
+    headline: 'Live app capture. Jev judged every generated reply. The timing table is gen-only. Real per-turn latency is the last row.',
     quality_rows: [
       ['Metric', 'v6 gpt-5-mini', 'v7 Tier 1–4'],
       ['App turns', '23', String(generated.length)],
@@ -546,7 +568,7 @@ export function liveV7Pack(doc, shape) {
       }),
     ],
     timing_rows: timingRows,
-    speedup: `Speedup (p50): this live session is ${speed}× faster than v6 gpt-5-mini main (~28834ms → ~${overall.p50}ms). Metric: live genLatencyMs vs published v6 mainModelElapsedMs.`,
+    speedup: `gen-only p50 is ${overall.p50}ms (${speed}× the v6 gen-only p50 of ${V6_GPT5_MINI_P50_MS}ms). Real per-turn latency p50 is ${realTurn.p50}ms. Session elapsed is ${shape.summary.sessionE2eMs ?? 'n/a'}ms. gen-only is not the time the customer waited.`,
     recipe: [
       ['mode', 'live-app'],
       ['canonical', 'tier_models.json'],
@@ -606,7 +628,10 @@ function producerLogLine(turn) {
     `interimReply.text: ${interim.text || 'none'}`,
     `interimReply.model: ${interim.model || 'none'}`,
     `interimReply.ms: ${Number.isFinite(Number(interim.ms)) ? Number(interim.ms) : 'none'}`,
-    `latencyMs: draft=${latency.draft ?? ''} rewrite=${latency.rewrite ?? 'none'} total=${latency.total ?? ''}`,
+    `genOnlyMs: draft=${latency.draft ?? ''} rewrite=${latency.rewrite ?? 'none'}`,
+    `realPerTurnMs: ${Number.isFinite(Number(turn.latencyMs)) ? Number(turn.latencyMs) : ''}`,
+    `sessionE2eMs: ${Number.isFinite(Number(turn.sessionE2eMs)) ? Number(turn.sessionE2eMs) : ''}`,
+    `rewriteFailReason: ${turn.rewriteFailReason || 'none'}`,
     `flagged: ${turn.flagged === true}`,
   ].join(' | ');
 }
@@ -761,6 +786,7 @@ async function main() {
     }
   }
   const transcript = voidError ? await loadTranscript(args) : assertLiveTranscript(await loadTranscript(args));
+  if (!voidError) transcript.buildSha = readTipSha();
   if (voidError) {
     transcript.void = true;
     transcript.deployBanner = voidDocumentStamp(voidError.live, voidError.tip);

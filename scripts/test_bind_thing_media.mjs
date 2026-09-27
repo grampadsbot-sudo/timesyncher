@@ -115,7 +115,7 @@ assert.match(itinerary, /pdfQr/);
 assert.match(itinerary, /handlePdfQrSvg/);
 
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
-assert.match(vercel, /vacation-itinerary\?trekPath/);
+assert.match(vercel, /shared&trekPath/);
 assert.match(vercel, /bind-thing-media/);
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
