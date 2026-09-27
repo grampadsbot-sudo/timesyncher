@@ -46,7 +46,7 @@ for (const file of ['index.html', 'order-test.html']) {
   assert.match(html, /(?:No Stripe charge|Waived by coupon)/, `${file} shows no Stripe charge`);
 }
 
-const checkoutApi = readFileSync('api/checkout-coupon.mjs', 'utf8');
+const checkoutApi = readFileSync('routes/checkout-coupon.mjs', 'utf8');
 assert.ok(
   checkoutApi.includes('consumeCoupon') && !checkoutApi.includes('new Stripe'),
   'coupon endpoint redeems without loading Stripe',

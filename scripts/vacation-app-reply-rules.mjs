@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { payerPriceLine } from '../src/vacation/seat-price.mjs';
 
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
@@ -534,10 +535,12 @@ function grokReplyUrl(env) {
   return /^https?:\/\//i.test(host) ? host.replace(/\/+$/, '') + routePath : `http://${host}:${port}${routePath}`;
 }
 
-function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell }) {
+function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext = null, planTable = null }) {
   return {
     destination_lock: text(destination, 160) || null,
     single_upsell: upsell === 'allow-once' ? 'allow-once' : 'forbidden',
+    trip_context: tripContext && typeof tripContext === 'object' ? tripContext : null,
+    plan_table: planTable && typeof planTable === 'object' ? planTable : null,
     recent_turns: Array.isArray(memory) ? memory.slice(-12) : [],
     pipeline: rules?.pipeline || SHARED_REPLY_PIPELINE,
     rules_slug: rules?.slug || REPLY_RULES_SLUG,
@@ -564,17 +567,35 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
-function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '') {
+function seatWelcomeLine(customerTurn) {
+  const turn = String(customerTurn || '');
+  if (/Kimberly[^\n]{0,80}Craig paid for this seat/i.test(turn)) {
+    return 'Kimberly is joining on a seat Craig paid for. The first sentence is "Welcome aboard, Kimberly." Welcome her once.';
+  }
+  if (/Tyler[^\n]{0,80}paid for my own seat/i.test(turn)) {
+    return 'Tyler is joining and paid for his own seat. The first sentence is "Welcome aboard, Tyler." Do not also welcome him to the crew.';
+  }
+  if (/Lauren[^\n]{0,80}paid for my own seat/i.test(turn)) {
+    return 'Lauren is joining and paid for her own seat. The first sentence is "Welcome aboard, Lauren." One joining sentence is enough.';
+  }
+  return 'Do not insert a welcome the customer did not ask for.';
+}
+
+function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
   const lock = text(destination, 160);
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
+  const planLine = String(context.planLine || '').trim();
+  const seatDollars = Number(context.seatDollars) > 0 ? Number(context.seatDollars) : 27;
+  const trip = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
+  const itinerary = Array.isArray(trip?.itinerary) ? trip.itinerary.filter(Boolean).slice(0, 12).join('; ') : '';
   const upsellLine = postIntake
-    ? 'Post-intake: this is the long trip dump. Say you are building the itinerary from that dump. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Do not say unlimited, you\'ve got unlimited, or name a price. The price belongs on a later price question.'
-    : (upsell === 'allow-once'
-      ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now. Include this exact phrase once: ${phrase}. Do not answer with only that phrase.`
-      : (priceAsk
-        ? `This turn asks the price after the one welcome was already given. Answer with this exact phrase once: ${phrase}. Do not add a second collaborator welcome. Do not say split, splitting, "splitting anything up", or "splitting it up".`
-        : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
+      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain collaborator options in these words, once: View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens. Do not assign viewer or editor roles in this reply. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say they are all set for it. Do not say "you also have unlimited vacations". Do not repeat a paragraph.`
+      : (upsell === 'allow-once'
+        ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not say you are setting it up. Do not answer with only that phrase.`
+        : (priceAsk
+          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine || 'each person, the dollar amount, and who pays'}. Make no coverage claims. Do not say whole group. Do not say Fallon. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. Use only the dates the customer already named. Do not add a collaborator welcome. Do not use a banned payment word.`
+          : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
     'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
@@ -584,19 +605,31 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     'Places and activities: use only places, activities, and venues the customer already named. If they ask for two options, both options must stay in their words, such as gardens, swim, beach, house pool, groceries, dinner, a town walk, the house, Kailua-Kona, or the Big Island. Do not invent a cruise, a snorkel trip, a park, a bay, a farm, a lagoon, or a resort pool.',
     'Garden wording: if the customer says gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, a botanical garden, or a weather excuse that moves the garden.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
-    'Do not mention reservations, payments, checkout, or split-payer.',
-    'Item34 ban: never say "splitting payments", "split payment", "split-payer", "splitting payment", "splitting it up", or "splitting anything up". Never use the words split or splitting at all. If one seat is already covered and another person has their own seat, say that.',
+    'Do not mention reservations, payments, or checkout.',
+    'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     postIntake
       ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
       : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
         ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
         : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
+    seatWelcomeLine(customerTurn),
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
+    'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.',
+    'Use the saved trip dates, swims, gardens, and roles. If a swim day or a garden day is not on the saved trip, do not announce it. Do not say a garden or a swim is already set unless that day is saved. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. The arrival day is arrival and groceries only. Do not add a house-pool dip or a second outing on that day. Friday is not midweek.',
+    'The account holder in the Traveling roster is on the trip. Do not leave them off. Do not say just the crew and list only the children.',
+    'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. Lauren\'s rule, when it is saved, is that she does not want two big activities stacked on the same day. Do not call that rule locked in and do not change it to back-to-back heavy days.',
+    'When the customer asks for two options on a day, do not offer a swim or a garden unless that activity is already saved on that day. Offer a town walk or a dinner when those are the named choices. Do not repeat a paragraph.',
+    'Do not invent a picnic or a beachside picnic. Do not invent an activity the customer did not name.',
+    'Write plain sentences. Do not use markdown asterisks.',
+    'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan holds steady for the whole group, or that little Fallon and the others are covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
+    itinerary ? `Itinerary already named: ${itinerary}. Use these days. Do not move a garden, swim, dinner, town walk, or groceries off the day already named.` : '',
+    trip?.roster ? String(trip.roster) : '',
+    trip?.dates ? String(trip.dates) : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
     'End with one final line that starts with BEAT: and a three-to-six word label of what this turn did. Do not put BEAT anywhere else.',
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 function splitBeat(answer) {
@@ -608,7 +641,8 @@ function splitBeat(answer) {
     if (match) beats.push(text(match[1], 80));
     else kept.push(line);
   }
-  return { text: kept.join('\n').trim(), beats: beats.filter(Boolean) };
+  const visible = kept.join('\n').replace(/(?:^|\s)BEAT:\s*[^\n]*/gi, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return { text: visible, beats: beats.filter(Boolean) };
 }
 
 export const JEV_QUALITY_COMMENTS = {
@@ -618,36 +652,118 @@ export const JEV_QUALITY_COMMENTS = {
   off_brief: 'The reply misses what the customer asked.',
   strong_welcome: 'The itinerary acknowledgment and collaborator welcome are in place.',
   garden_words: 'Use the customer word gardens. Do not name a garden they did not name.',
-  split_language: 'Remove any split-payment wording.',
+  split_language: 'Remove the banned payment wording.',
   destination_lock: 'Stay on the destination the customer named.',
 };
 
-export function qualityCommentCriteria(customerTurn, draft) {
-  const ask = text(String(customerTurn || '').replace(/\s+/g, ' '), 90);
-  const opening = text(String(draft || '').replace(/\s+/g, ' '), 70);
-  return {
-    answers_this_ask: `Answers "${ask}" and stays with that wording: "${opening}".`,
-    misses_this_ask: `Misses "${ask}". The draft opens "${opening}" instead of doing what this turn asked.`,
-    adds_unnamed: `Adds a place, activity, or venue the customer did not name while answering "${ask}".`,
-    payment_wording: `Talks about splitting a payment while answering "${ask}". Name each seat without the word split.`,
-    missing_price: `Does not give the price for "${ask}". The household plan is unlimited vacations for the whole year.`,
-  };
+const NOTE_RUBRIC = {
+  holds_named_days: 'The draft holds the named days and does not add a place.',
+  thin_draft: 'The draft is too thin to carry the day.',
+  invented_place: 'The draft names a place that was not already named.',
+  misses_ask: 'The draft misses what was asked.',
+  skips_price: 'The draft skips the plan dollar amount and who pays.',
+  payment_word: 'The draft uses a banned payment word.',
+  garden_word: 'The draft should say gardens and not name a garden.',
+  welcome_present: 'The itinerary acknowledgment and collaborator welcome are in the draft.',
+  access_choice: 'The draft offers view access and edit access.',
+  strong_day: 'The draft is a strong day plan.',
+  price_line: 'The draft names each seat and who pays from the plan table.',
+  off_destination: 'The draft leaves the named destination.',
+};
+
+const TEMPLATE_SHAPE = /the reply (covers|misses) this turn\b|the reply adds a place the customer did not name|banned payment word while covering|skips the dollar amount for who pays|who pays in:|^(?:answers?|name the price|take out the place|name the seats|keep the reply)\b|stays with that wording|in the customer's own words/i;
+
+const CANNED_NOTES = new Set(Object.values(JEV_QUALITY_COMMENTS).concat([
+  'Remove any split-payment wording.',
+]));
+
+export function extractJevFreeNote(body) {
+  const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
+  for (const answer of Object.values(answers)) {
+    if (!answer || typeof answer !== 'object') continue;
+    for (const key of ['text', 'note', 'rationale', 'explanation']) {
+      const value = answer[key];
+      if (typeof value !== 'string') continue;
+      const line = value.replace(/\s+/g, ' ').trim();
+      if (!line || line === String(answer.choice || '').trim()) continue;
+      return line;
+    }
+  }
+  return '';
 }
 
-export function qualityFromDecisions(body, criteria = null) {
+export function noteContradictsDraft(note, draft) {
+  const line = String(note || '');
+  const body = String(draft || '');
+  if (!line.trim() || !body.trim()) return false;
+  if (/who pays is missing/i.test(line) && /paid by/i.test(body)) return true;
+  if (/friday garden/i.test(line) && !(/friday/i.test(body) && /garden/i.test(body))) return true;
+  if (/wednesday/.test(line.toLowerCase()) && /walk/i.test(line) && !(/wednesday/i.test(body) && /walk/i.test(body))) return true;
+  if (/welcome/.test(line.toLowerCase()) && /unclear/i.test(line) && /welcome (?:aboard|to the trip)/i.test(body)) return true;
+  return false;
+}
+
+const FIXED_NOTE_STEMS = Object.values(NOTE_RUBRIC)
+  .concat(Object.values(JEV_QUALITY_COMMENTS))
+  .concat(['draft marker', 'jev score', 'the itinerary acknowledgment and collaborator welcome']);
+
+function hasFixedStem(note) {
+  const low = String(note || '').toLowerCase();
+  return FIXED_NOTE_STEMS.some((stem) => {
+    const words = String(stem || '').toLowerCase().replace(/[.]+$/g, '').trim().split(/\s+/);
+    const prefix = words.slice(0, Math.min(words.length, 6)).join(' ');
+    return prefix.length >= 10 && low.includes(prefix);
+  });
+}
+
+export function noteEchoesCustomer(note, customerTurn) {
+  const value = String(note || '').toLowerCase().replace(/\s+/g, ' ');
+  const ask = String(customerTurn || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!value || !ask) return false;
+  if (ask.length >= 12 && value.includes(ask)) return true;
+  if (ask.length < 16) return false;
+  for (let index = 0; index + 16 <= ask.length; index += 1) {
+    if (value.includes(ask.slice(index, index + 16))) return true;
+  }
+  return false;
+}
+
+export function isTemplateNote(note, customerTurn) {
+  const value = String(note || '').trim();
+  if (!value || CANNED_NOTES.has(value) || TEMPLATE_SHAPE.test(value) || hasFixedStem(value) || noteEchoesCustomer(value, customerTurn)) return true;
+  return false;
+}
+
+export function labeledJevScore(scoreRaw) {
+  const raw = Number(scoreRaw);
+  if (!Number.isFinite(raw)) return null;
+  const labeled = Math.round((raw + 1) * 1000) / 1000;
+  if (labeled < 1) return 1;
+  if (labeled > 5) return 5;
+  return labeled;
+}
+
+export function qualityFromDecisions(body, _criteria = null, customerTurn = '', draft = '') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
   if (!Number.isFinite(scoreRaw)) return { judged: false, reason: 'quality_score_missing', model: JEV_DECISIONS_MODEL };
-  const score = Math.max(1, Math.min(5, Math.round(scoreRaw) + 1));
-  const choice = text(answers.comment?.choice, 80);
-  const comment = (criteria && criteria[choice]) || JEV_QUALITY_COMMENTS[choice] || '';
-  if (!comment) return { judged: false, reason: 'quality_comment_missing', model: JEV_DECISIONS_MODEL };
-  const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite' || score <= 3;
+  const score = labeledJevScore(scoreRaw);
+  const disposition = text(answers.disposition?.choice, 40);
   const jevFocus = text(answers.fix_focus?.choice, 40);
+  const rawNote = extractJevFreeNote(body);
+  const contradicts = Boolean(rawNote) && noteContradictsDraft(rawNote, draft);
+  const template = Boolean(rawNote) && isTemplateNote(rawNote, customerTurn);
+  const wantsRewrite = score <= 2;
   return {
     judged: true,
     score,
-    comment,
+    scoreRaw,
+    disposition,
+    comment: null,
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
+    noteUnusable: contradicts || template,
+    noteUnusableReason: contradicts ? 'note_contradicts_draft' : (template ? 'template_note' : null),
     jevFocus,
     rewrite: '',
     rewritten: false,
@@ -656,46 +772,46 @@ export function qualityFromDecisions(body, criteria = null) {
   };
 }
 
-export async function jevQualityRewrite({ customerTurn, draft, env = process.env } = {}) {
+export async function jevQualityRewrite({ customerTurn, draft, tripContext = null, planLine = '', env = process.env } = {}) {
   const key = appOpenRouterKey(env);
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
   if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
   if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
-  const criteria = qualityCommentCriteria(customerTurn, draft);
+  const requiredLine = text(planLine || payerPriceLine(customerTurn), 400);
+  const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
   const payload = {
     model: JEV_DECISIONS_MODEL,
     state: {
       customer_turn: text(customerTurn, 6000),
       draft: text(draft, 3500),
+      ...(itinerary ? { itinerary } : {}),
+      ...(tripContext?.roster ? { roster: text(tripContext.roster, 400) } : {}),
+      ...(tripContext?.dates ? { dates: text(tripContext.dates, 400) } : {}),
+      ...(requiredLine ? { required_payer_line: requiredLine } : {}),
     },
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, or uses split or splitting payment phrasing. A price question with no real price is criterion 3 or lower.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, moves a swim or garden off the itinerary, or uses a banned payment word. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named. If you can, put a one-line reason in any text, note, rationale, or explanation field.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
         type: 'choice',
-        instructions: 'Should the customer see this draft, or should it be rewritten before they see it? Choose rewrite when the score is adequate or worse, or when a product rule is broken.',
+        instructions: 'Choose keep or rewrite. If you can explain, put one line in a text field.',
         criteria: {
-          keep: 'The draft should stand as the customer-facing reply. It answers this turn and names only the customer\'s own places and activities.',
-          rewrite: 'Replace the draft. It misses this turn, names a place or activity the customer did not name, skips the price, or uses split or splitting payment phrasing.',
+          keep: 'The draft should stand. It answers this turn and names only places and activities already in the conversation.',
+          rewrite: 'Replace the draft. It misses this turn, names a place the customer did not name, skips the price, or uses a banned payment word.',
         },
-      },
-      comment: {
-        type: 'choice',
-        instructions: 'Pick the comment that names what this draft did with this customer sentence. The comment must quote this turn, not a generic label.',
-        criteria,
       },
       fix_focus: {
         type: 'choice',
-        instructions: 'Jev scores only. Pick the one-line fix this exact turn needs. Do not write a replacement reply.',
+        instructions: 'Jev scores only. Pick the one-line fix this draft needs. Do not write a replacement reply and do not quote the customer.',
         criteria: {
-          missing_price: `Name the price while answering "${text(customerTurn, 80)}".`,
-          unnamed_place: `Take out the place they did not name and answer "${text(customerTurn, 80)}".`,
-          payment_wording: `Name the seats without split wording while answering "${text(customerTurn, 80)}".`,
-          misses_ask: `Answer "${text(customerTurn, 80)}" and keep the days they already named.`,
-          keep: `Keep the reply. It answers "${text(customerTurn, 80)}".`,
+          missing_price: 'Name each seat, the plan dollar amount, and who pays.',
+          unnamed_place: 'Take out the place that was not already named.',
+          payment_wording: 'Name each seat and who pays without a banned payment word.',
+          misses_ask: 'Answer the ask and keep the days already named.',
+          keep: 'Keep the draft. It answers without adding a place.',
         },
       },
     },
@@ -717,7 +833,7 @@ export async function jevQualityRewrite({ customerTurn, draft, env = process.env
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
-    return qualityFromDecisions(body, criteria);
+    return qualityFromDecisions(body, null, customerTurn, draft);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }
@@ -776,7 +892,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '' } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0 } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -797,6 +913,10 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     env,
     timeoutMs,
     systemExtra,
+    tripContext,
+    planTable,
+    planLine,
+    seatDollars,
   });
 }
 
@@ -826,7 +946,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '' }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0 }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -838,7 +958,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     };
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
-  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell });
+  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -854,7 +974,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn)}${systemExtra ? `\n\n${systemExtra}` : ''}` },
+          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars })}${systemExtra ? `\n\n${systemExtra}` : ''}` },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),

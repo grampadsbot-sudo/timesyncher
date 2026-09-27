@@ -1,3 +1,6 @@
+import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
+import { captureThingLogo } from './thing-logo-capture.mjs';
+
 const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
@@ -50,11 +53,31 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
+function formatTakeoff(start) {
+  const iso = String(start || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return '';
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()];
+  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getUTCMonth()];
+  return `${weekday} ${month} ${date.getUTCDate()}`;
+}
+
 function assignDates(thing, year, tripDates) {
+  if (thing.title === 'Groceries') {
+    const arrival = namedDates(thing.whenLabel || '', year).filter((date) => tripDates.includes(date));
+    if (arrival.length) return [arrival[0]];
+  }
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
-  const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
+  let unique = [...new Set(named)].filter((date) => tripDates.includes(date));
+  if (thing.title === 'Swim') {
+    const arrival = tripDates[0] || '';
+    unique = unique.filter((date) => date !== arrival);
+    return unique;
+  }
   if (!unique.length) return tripDates.slice(0, 1);
-  if (unique.length >= 2) {
+  const spansTrip = /big island|house/i.test(String(thing.title || ''));
+  if (spansTrip && unique.length >= 2) {
     const sorted = unique.slice().sort();
     const span = eachDate(sorted[0], sorted[sorted.length - 1]).filter((date) => tripDates.includes(date));
     if (span.length > 2) return span;
@@ -69,25 +92,29 @@ function categoryFor(thing) {
   return { category_name: 'Attraction', category_icon: '🏛️', category: 'other' };
 }
 
-function shortNote(value) {
-  const sentence = String(value || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/)[0] || '';
-  if (!sentence) return '';
-  return sentence.length > 160 ? `${sentence.slice(0, 157).trim()}…` : sentence;
-}
-
-/** Product thing copy from who / when / one note. Not a pasted chat turn. */
+/** Product thing copy from the title, who, and when. Not a pasted chat turn. */
 export function productThingSummary(thing = {}) {
+  const title = String(thing.title || thing.name || '').trim();
   const who = String(thing.who || '').trim();
   const when = String(thing.customerWhen || thing.whenLabel || '').trim();
-  const note = [...(thing.notes || []), ...(thing.collaboratorNotes || [])].map(shortNote).filter(Boolean)[0] || '';
-  const parts = [];
-  if (who) parts.push(`Who: ${who}`);
-  if (when) parts.push(`When: ${when}`);
-  if (note) parts.push(note);
-  if (/house/i.test(String(thing.title || ''))) {
-    parts.push('Check-in Friday April 3. Check-out Sunday April 12.');
+  const whoBit = who ? ` for ${who}` : '';
+  const whenBit = when ? ` on ${when}` : '';
+  if (/grocer/i.test(title)) return `Groceries${whenBit}, the arrival day, after the airport shuttle.`.replace(/\s+/g, ' ').trim();
+  if (/garden/i.test(title)) return `Garden time${whoBit}${whenBit}. One garden block, not two big activities.`;
+  if (/\bswim\b/i.test(title)) {
+    const wind = String(thing.windBackup || '').trim();
+    const base = `A swim${whoBit}${whenBit}.`.replace(/\s+/g, ' ').trim();
+    return wind ? `${base} ${wind}` : base;
   }
-  return parts.join(' ').trim() || String(thing.description || '').trim();
+  if (/\bdinner\b/i.test(title)) return `Dinner${whoBit}${whenBit}.`;
+  if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
+  if (/house/i.test(title)) return when ? `The Kailua-Kona house, ${when}.` : 'The Kailua-Kona house.';
+  if (/big island/i.test(title)) return when ? `Big Island, ${when}. People matter more than a packed list.` : 'Big Island. People matter more than a packed list.';
+  if (/speedishuttle/i.test(title)) return 'SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.';
+  if (/koa arrival|kona arrival/i.test(title)) return when ? `Arrival into Kona on ${when}, then the shuttle and groceries the same day.` : 'Arrival into Kona, then the shuttle and groceries the same day.';
+  const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
+  if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
+  return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
 }
 
 export function sharedTripFromIntake({ trip, things }) {
@@ -128,7 +155,7 @@ export function sharedTripFromIntake({ trip, things }) {
       status: 'considering',
       category: kind.category,
       summary,
-      longDetails: [thing.who ? `Who: ${thing.who}` : '', thing.whenLabel, thing.customerWhen].filter(Boolean).join(' · '),
+      longDetails: [thing.who ? `Who: ${thing.who}` : '', ...new Set([thing.whenLabel, thing.customerWhen].map((part) => String(part || '').trim()).filter(Boolean))].join(' · '),
       dayIds,
     };
     for (const date of assignDates(thing, year, tripDates)) {
@@ -188,4 +215,174 @@ export function sharedTripFromIntake({ trip, things }) {
     thingOverrides,
     timesyncherIntake: true,
   };
+}
+
+const PLACE_COORDS = {
+  Groceries: [19.6399, -155.9854, '74-5594 Palani Rd, Kailua-Kona'],
+  Gardens: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
+  Swim: [19.5804, -155.9622, 'Kahaluʻu Beach Park, Keauhou'],
+  Dinner: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
+  'Town walk': [19.6393, -155.9946, 'Kona Inn Shopping Village, Aliʻi Drive'],
+  'Kailua-Kona house': [19.649, -155.994, 'Kailua-Kona'],
+  'Big Island': [19.64, -155.99, 'Hawaiʻi'],
+  SpeediShuttle: [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
+  'KOA arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
+  'Kona arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
+};
+
+function coordsFor(name) {
+  const detail = BIG_ISLAND_FILL_DETAILS[name];
+  if (detail?.lat && detail?.lng) return [detail.lat, detail.lng, detail.address || 'Kailua-Kona, Hawaii'];
+  return PLACE_COORDS[name] || null;
+}
+
+function blankRatings() {
+  return {
+    googleRating: '',
+    yelpRating: '',
+    thirdPartyRating: '',
+    review1: '',
+    review2: '',
+    review3: '',
+  };
+}
+
+function sourcedRatings(name, options) {
+  const rows = options?.sourcedRatings && typeof options.sourcedRatings === 'object' ? options.sourcedRatings : {};
+  const row = rows[name];
+  if (!row || row.source === 'google-places' || !row.source) return blankRatings();
+  return {
+    googleRating: String(row.googleRating || ''),
+    yelpRating: String(row.yelpRating || ''),
+    thirdPartyRating: String(row.thirdPartyRating || ''),
+    review1: String(row.review1 || ''),
+    review2: String(row.review2 || ''),
+    review3: String(row.review3 || ''),
+  };
+}
+
+export function windLookupPointsFromThings(things = []) {
+  const points = [];
+  const seen = new Set();
+  for (const thing of things || []) {
+    const name = String(thing.title || thing.name || '').trim();
+    const coords = coordsFor(name);
+    if (!coords || !/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    points.push({ name, lat: coords[0], lng: coords[1] });
+  }
+  return points;
+}
+
+export function applyThingPresentation(shared = {}, options = {}) {
+  const windBackup = String(options.windBackup || '').trim();
+  const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
+  const thingOverrides = { ...(shared.thingOverrides || {}) };
+  const put = (place, extra) => {
+    const key = `place:${place.id}`;
+    thingOverrides[key] = { ...(thingOverrides[key] || {}), ...extra };
+  };
+  for (const place of places) {
+    const name = String(place.name || '').trim();
+    const summary = productThingSummary({
+      title: name,
+      summary: place.description || place.notes || '',
+      windBackup: /\bswim\b/i.test(name) ? windBackup : '',
+    });
+    place.description = summary;
+    place.notes = summary;
+    const coords = coordsFor(name);
+    const extra = {
+      summary,
+      logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
+      ...sourcedRatings(name, options),
+    };
+    if (coords) {
+      place.lat = coords[0];
+      place.lng = coords[1];
+      place.address = coords[2];
+      extra.lat = coords[0];
+      extra.lng = coords[1];
+      extra.address = coords[2];
+    }
+    if (/ulu ocean/i.test(name)) {
+      extra.restaurantTags = ['Seafood', 'Cocktail Bar / Happy Hour'];
+      extra.happyHour = true;
+      extra.happyHourDetails = 'Ocean bar happy hour at Ulu Ocean Grill. Recheck the Four Seasons Hualalai listing before the trip.';
+    } else if (/huggo/i.test(name) || /fish hopper/i.test(name)) {
+      extra.restaurantTags = ['Seafood'];
+    }
+    put(place, extra);
+  }
+  if (!places.some((place) => /speedishuttle/i.test(place.name || ''))) {
+    const id = intId(`${shared.trip?.id || 'trip'}:speedishuttle`);
+    const place = {
+      id,
+      trip_id: shared.trip?.id,
+      name: 'SpeediShuttle',
+      description: productThingSummary({ title: 'SpeediShuttle' }),
+      category_name: 'Car',
+      category: { name: 'Car', icon: '🚗' },
+      reservation_status: 'considering',
+      notes: productThingSummary({ title: 'SpeediShuttle' }),
+    };
+    const shuttle = coordsFor('SpeediShuttle');
+    if (shuttle) {
+      place.lat = shuttle[0];
+      place.lng = shuttle[1];
+      place.address = shuttle[2];
+    }
+    places.push(place);
+    put(place, {
+      category: 'car',
+      rentalCompany: 'SpeediShuttle',
+      carType: 'Shared shuttle',
+      summary: place.description,
+      lat: place.lat,
+      lng: place.lng,
+      address: place.address,
+      logoUrl: captureThingLogo(place, { title: 'SpeediShuttle', category: 'car' }),
+      ...sourcedRatings('SpeediShuttle', options),
+    });
+  }
+  const flightName = /\bKOA\b/.test(JSON.stringify(shared.trip || {})) ? 'KOA arrival' : 'Kona arrival';
+  if (!places.some((place) => /koa arrival|kona arrival/i.test(place.name || ''))) {
+    const id = intId(`${shared.trip?.id || 'trip'}:kona-arrival`);
+    const place = {
+      id,
+      trip_id: shared.trip?.id,
+      name: flightName,
+      description: productThingSummary({ title: flightName }),
+      category_name: 'Flight',
+      category: { name: 'Flight', icon: '✈️' },
+      reservation_status: 'considering',
+      notes: productThingSummary({ title: flightName }),
+    };
+    const koa = coordsFor(flightName);
+    if (koa) {
+      place.lat = koa[0];
+      place.lng = koa[1];
+      place.address = koa[2];
+    }
+    places.push(place);
+    const flightText = `${place.description || ''} ${place.notes || ''}`;
+    const connections = flightText.match(/\b(nonstop into [A-Z]{3}|[0-9]+ connections?)\b/i);
+    const layover = flightText.match(/\blayover\s+(?:in\s+)?([A-Za-z][^.\n]{0,40})/i);
+    const takeoff = formatTakeoff(shared.trip?.start_date);
+    put(place, {
+      category: 'flight',
+      ...(takeoff ? { takeoffTime: takeoff } : {}),
+      ...(connections ? { connections: connections[1] } : {}),
+      ...(layover ? { layover: layover[1].trim() } : {}),
+      summary: place.description,
+      lat: place.lat,
+      lng: place.lng,
+      address: place.address,
+      logoUrl: captureThingLogo(place, { title: flightName, category: 'flight' }),
+      ...sourcedRatings(flightName, options),
+    });
+  }
+  return { ...shared, places, thingOverrides };
 }

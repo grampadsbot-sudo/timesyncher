@@ -5,11 +5,11 @@ import { couponHint, normalizeCouponCode } from '../src/vacation/coupons.mjs';
 assert.equal(normalizeCouponCode(' ts launch 001 '), 'TSLAUNCH001');
 assert.equal(couponHint('TS-LAUNCH-001'), 'TS-...001');
 
-const checkoutCouponApi = await readFile(new URL('../api/checkout-coupon.mjs', import.meta.url), 'utf8');
+const checkoutCouponApi = await readFile(new URL('../routes/checkout-coupon.mjs', import.meta.url), 'utf8');
 const addOnsCheckoutHtml = await readFile(new URL('../addons-checkout.html', import.meta.url), 'utf8');
 const ownerMediaCheckoutHtml = await readFile(new URL('../owner-media-checkout.html', import.meta.url), 'utf8');
 const orderSuccessHtml = await readFile(new URL('../order-success.html', import.meta.url), 'utf8');
-const createPaymentIntentApi = await readFile(new URL('../api/create-payment-intent.mjs', import.meta.url), 'utf8');
+const createPaymentIntentApi = await readFile(new URL('../routes/create-payment-intent.mjs', import.meta.url), 'utf8');
 assert(!checkoutCouponApi.includes("from 'stripe'"));
 assert(!checkoutCouponApi.includes('new Stripe'));
 assert(!checkoutCouponApi.includes('paymentIntents'));

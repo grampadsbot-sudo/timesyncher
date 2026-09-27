@@ -33,13 +33,16 @@ import {
   LIVE_OPENER_PRODUCER,
   liveTurnRecord,
   onboardingOpenerText,
+  tripIsReturning,
   postIntakeUpsellTurn,
   produceLiveAppReply,
   finishTierRewrite,
   applyAgreedAppSwim,
   applyCustomerNotes,
+  ensureNamedThings,
   intakeFacts,
   thingsFromIntake,
+  completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import {
   openCollaboratorAppSeats,
@@ -201,6 +204,7 @@ function vacationAppTripSummary(row) {
     current: Boolean(row.current),
     publicUrl: url,
     shareToken: metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug || null,
+    intakeShare: metadata.intakeShare === true,
     intakeRule: metadata.intakeRule || '',
     intakeSpan: metadata.intakeSpan || '',
   };
@@ -274,7 +278,7 @@ async function loadVacationAppTurns(db, session, tripId) {
 
 async function ensureOnboardingOpener(db, session, trip) {
   if (seatFromSession(session)) return;
-  const text = onboardingOpenerText(Boolean(trip?.publicUrl));
+  const text = onboardingOpenerText(tripIsReturning(trip));
   const live = liveTurnRecord({
     turnIndex: 1,
     role: 'app',
@@ -366,7 +370,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
   `;
   const priorCount = Number(prior[0]?.n || 0);
   const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
-  const sessionE2eMs = () => Math.max(0, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
+  const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
   const customerTurnIndex = priorCount + 1;
   const receivedAt = new Date().toISOString();
   const customerLive = liveTurnRecord({
@@ -507,6 +511,8 @@ async function queueVacationAppTurn(db, session, trip, body) {
       speakerName,
       collaborator: Boolean(seat),
       tripId,
+      sessionStartedMs,
+      wallStarted: started,
     };
     await db`
       update onboarding_sessions
@@ -659,6 +665,7 @@ async function ensureIntakeItinerary(db, tripId, text) {
             intakeRule: facts.rule || '',
             intakeSpan: span.spanLabel || '',
             intakeBadge: span.badge || '',
+            dialogParty: completeRosterParty({ turns: [{ role: 'customer', text }] }),
           }},
           updated_at = now()
       where id = ${tripId}
@@ -696,11 +703,29 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
-  let next = applyCustomerNotes(current, text, { collaborator, speakerName });
+  let next = ensureNamedThings(current, text);
+  next = applyCustomerNotes(next, text, { collaborator, speakerName });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
-    const prior = current.find((item) => item.id === thing.id);
-    if (!prior) continue;
+    const prior = current.find((item) => item.id && item.id === thing.id);
+    if (!prior) {
+      if (current.some((item) => item.title === thing.title)) continue;
+      await db`
+        insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
+        values (
+          ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
+          'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
+            source: 'customer-turn',
+            who: thing.who || '',
+            whenLabel: thing.whenLabel || '',
+            customerWhen: thing.customerWhen || '',
+            notes: thing.notes || [],
+            collaboratorNotes: thing.collaboratorNotes || [],
+          }}
+        )
+      `;
+      continue;
+    }
     if (JSON.stringify({
       notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who,
     }) === JSON.stringify({
@@ -794,16 +819,19 @@ async function handleVacationApp(req, res, db, url) {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
       const pending = meta.pendingRewrite;
       if (!pending?.draft || !pending?.tripId) return sendJson(res, 409, { ok: false, error: 'No rewrite is waiting.' });
-      const finished = await finishTierRewrite({ pending, env: process.env });
+      const finished = pending.resolved?.reply
+        ? pending.resolved
+        : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
+      const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
       const appLive = liveTurnRecord({
         turnIndex: Number(pending.customerTurnIndex) + 1,
         role: 'app',
         modality: 'text',
         text: finished.reply,
         at: new Date().toISOString(),
-        latencyMs: finished.log?.latencyMs?.total || 0,
-        sessionE2eMs: 0,
+        latencyMs: wallMs,
+        sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
         jev: finished.jev,
         model: finished.model,
         rules: finished.rules,
@@ -817,7 +845,7 @@ async function handleVacationApp(req, res, db, url) {
         values (
           ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
           ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
-          'outbound', now(), ${finished.log?.latencyMs?.total || 0}
+          'outbound', now(), ${wallMs}
         )
       `;
       const itinerary = await recordCustomerThingNotes(

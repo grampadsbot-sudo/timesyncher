@@ -72,7 +72,7 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/Destination lock/.test(replyRules) || !/replyLeavesDestination/.test(liveTurn)) {
     errors.push('shared producer does not lock replies to the customer destination');
   }
-  if (!/never say "splitting payments"/.test(replyRules) || !/splitting anything up/.test(replyRules) || !/stripItem34Ban/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
+  if (!/never say "splitting payments"/.test(replyRules) || !/splitting anything up/.test(replyRules) || !/item34BanHit/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
     errors.push('shared producer does not fail closed on split-payment jargon');
   }
   if (!/rewriteModel/.test(liveTurn) || !/rewriteCreditLabel/.test(liveTurn) || !/dockQuality/.test(liveTurn) || !/shippedModel/.test(liveTurn) || !/draftModel/.test(liveTurn)) {
@@ -267,7 +267,7 @@ function liveDoc(turns) {
 async function readSources() {
   const [vacationApp, api, liveTurn, replyRules, sharedApp] = await Promise.all([
     readFile(path.join(root, 'vacation-app.html'), 'utf8'),
-    readFile(path.join(root, 'api/vacation-itinerary.mjs'), 'utf8'),
+    readFile(path.join(root, 'routes/vacation-itinerary.mjs'), 'utf8'),
     readFile(path.join(root, 'src/vacation/live-app-turn.mjs'), 'utf8'),
     readFile(path.join(root, 'scripts/vacation-app-reply-rules.mjs'), 'utf8'),
     readFile(path.join(root, 'shared-app.html'), 'utf8'),

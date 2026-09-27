@@ -1,5 +1,5 @@
-import { collaboratorTelegramLink } from './collaborators.mjs';
-import { sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
+import { collaboratorEulaAcceptUrl, collaboratorTelegramLink } from './collaborators.mjs';
+import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -43,6 +43,7 @@ export function purchaseEmail({ contact, publicUrl, publicSlug, env = process.en
     <p>Hi ${name},</p>
     <p>Your TimeSyncher Vacation purchase is confirmed. Click the link in this email to open TimeSyncher Vacation.</p>
     <p><a href="${launchUrl}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open TimeSyncher Vacation</a></p>
+    <p><a href="${launchUrl}" style="color:#f5d37b;word-break:break-all">${launchUrl}</a></p>
     <p style="color:#cfc2a9">Questions: <a href="mailto:${supportEmail(env)}" style="color:#f5d37b;text-decoration:underline">${supportEmail(env)}</a></p>
   </div>
 </body></html>`;
@@ -79,7 +80,9 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
     <p>${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.</p>
     <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. You join from this email, accept the terms, and then the vacation opens.</p>
     ${link ? `<p><a href="${link}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the approved email invite</a></p>` : ''}
-    ${site ? `<p>Vacation website: <a href="${site}" style="color:#f5d37b;text-decoration:underline">${site}</a></p>` : ''}
+    ${link ? `<p><a href="${link}" style="color:#f5d37b;word-break:break-all">${link}</a></p>` : ''}
+    ${site ? `<p><a href="${site}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the vacation</a></p>` : ''}
+    ${site ? `<p><a href="${site}" style="color:#f5d37b;word-break:break-all">${site}</a></p>` : ''}
     <p style="color:#cfc2a9">Anyone with the shared vacation link can view it. Editing requires this owner-approved email invite.</p>
     <p style="color:#cfc2a9">Questions: <a href="mailto:${supportEmail(env)}" style="color:#f5d37b;text-decoration:underline">${supportEmail(env)}</a></p>
   </div>
@@ -237,9 +240,23 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
   return { ok: status !== 'failed', status, emailId: rows[0].id, provider, errorSummary };
 }
 
+export function collaboratorInviteTargets({ acceptUrl = '', publicUrl = '', invite = null, trip = null, env = process.env } = {}) {
+  const link = cleanText(acceptUrl, 600) || (invite?.id ? collaboratorEulaAcceptUrl(invite, env) : '');
+  const site = cleanText(publicUrl, 600) || (trip ? publicTripUrl(trip, env) : '');
+  return { acceptUrl: link, publicUrl: site };
+}
+
 export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, contact, acceptUrl = '', publicUrl = '' }, env = process.env) {
   const to = cleanText(contact?.email || invite?.requested_email, 180).toLowerCase();
   if (!to) return { ok: false, status: 'skipped', reason: 'missing email' };
+  let trip = null;
+  if (!cleanText(publicUrl, 600) && invite?.trip_id && db) {
+    const trips = await db`select title, metadata from trips where id = ${invite.trip_id} limit 1`;
+    trip = trips[0] || null;
+  }
+  const targets = collaboratorInviteTargets({ acceptUrl, publicUrl, invite, trip, env });
+  acceptUrl = targets.acceptUrl;
+  publicUrl = targets.publicUrl;
   const normalizedContact = {
     ...contact,
     email: to,

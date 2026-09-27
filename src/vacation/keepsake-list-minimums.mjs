@@ -89,22 +89,8 @@ export const LIVE_TAB_FILL = {
   rest: KEEPSAKE_LIST_FILL['Shows, Tours and the Rest'],
 };
 
-export function padLiveTabRows(kind, existingRows = []) {
-  const names = padKeepsakeListNames(
-    kind === 'restaurant' ? 'Restaurants' : kind === 'store' ? 'Stores' : 'Shows, Tours and the Rest',
-    existingRows,
-  );
-  const baseId = kind === 'restaurant' ? 910000 : kind === 'store' ? 920000 : 930000;
-  return names.map((name, index) => ({
-    id: baseId + index + 1,
-    name,
-    __tsLiveFill: 1,
-    category: kind === 'rest' ? 'event' : kind,
-    lat: 36.1147,
-    lng: -115.1729,
-    address: 'Las Vegas',
-    logoUrl: captureThingLogo({ name }, { title: name, category: kind === 'rest' ? 'event' : kind }),
-  }));
+export function padLiveTabRows(_kind, existingRows = []) {
+  return (Array.isArray(existingRows) ? existingRows : []).filter((row) => row && !row.__tsLiveFill);
 }
 
 /** Thing-stored catalog used when GET-padding Style-two / Style-one end lists. Not PDF-time invent. */

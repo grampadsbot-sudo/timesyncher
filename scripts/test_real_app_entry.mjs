@@ -3,11 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { intakeShareSlug, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import { padKeepsakeSharedPlaces } from '../src/vacation/keepsake-list-minimums.mjs';
+import { lowestCarOffers, withoutCarBrand } from '../src/vacation/car-offers.mjs';
 
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
 const bundle = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
-const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const handler = await readFile(new URL('../src/vacation/shared-trip-handler.mjs', import.meta.url), 'utf8');
 
 assert.doesNotMatch(vacationApp, /data-screen="itinerary"/);
@@ -66,7 +67,16 @@ const email = purchaseEmail({
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.match(email.launchUrl, /\/shared\/intake-eab1cbb15144\/$/);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/</);
 assert.doesNotMatch(email.htmlBody, /vacation-app\.html/);
 assert.match(email.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
 
+const offers = [
+  { brand: 'Alamo', price: 80 },
+  { brand: 'Budget', price: 41 },
+  { brand: 'Hertz', price: 55 },
+  { brand: 'National', price: 42 },
+];
+assert.deepEqual(lowestCarOffers(offers, 2).map((row) => row.brand), ['Budget', 'National']);
+assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budget'), false);
 console.log('real app entry gate passed');

@@ -18,15 +18,25 @@ def esc(value):
 def build(manifest, dest):
     pages = list(manifest.get("pages") or [])
     gaps = list(manifest.get("gaps") or [])
+    banner = str(manifest.get("deployBanner") or "").strip()
+    if not banner:
+        raise SystemExit("refused: journey stamp is empty")
     styles = {
         "h1": ParagraphStyle("h1", fontName="Times-Bold", fontSize=16, leading=20, textColor=colors.HexColor("#1a1a1a"), spaceAfter=8),
+        "void": ParagraphStyle("void", fontName="Times-Bold", fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6),
         "h2": ParagraphStyle("h2", fontName="Times-Bold", fontSize=12, leading=15, textColor=colors.HexColor("#1a1a1a"), spaceBefore=8, spaceAfter=4),
         "body": ParagraphStyle("body", fontName="Times-Roman", fontSize=10, leading=13, alignment=TA_LEFT),
         "gap": ParagraphStyle("gap", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#6b2d2d")),
+        "exempt": ParagraphStyle("exempt", fontName="Times-Roman", fontSize=10, leading=13, textColor=colors.HexColor("#3d4a32")),
         "cap": ParagraphStyle("cap", fontName="Times-Bold", fontSize=11, leading=14, spaceAfter=2),
         "note": ParagraphStyle("note", fontName="Times-Italic", fontSize=9, leading=12, textColor=colors.HexColor("#333333"), spaceAfter=6),
     }
     story = []
+    if manifest.get("void") or banner.startswith("VOID"):
+        story.append(Paragraph("VOID", styles["void"]))
+    if banner:
+        story.append(Paragraph(esc(banner), styles["body"]))
+        story.append(Spacer(1, 8))
     story.append(Paragraph(esc(manifest.get("title") or "Screenshot Journey"), styles["h1"]))
     story.append(Paragraph(esc(manifest.get("subtitle") or "Real app screens. The deleted card shell is not included."), styles["body"]))
     story.append(Spacer(1, 8))
@@ -69,6 +79,12 @@ def build(manifest, dest):
         max_w, max_h = 7.2 * inch, 8.1 * inch
         scale = min(max_w / float(width), max_h / float(height))
         story.append(Image(image_path, width * scale, height * scale))
+    def stamp_page(canvas, doc_):
+        canvas.saveState()
+        canvas.setFont("Times-Roman", 8)
+        canvas.drawString(0.7 * inch, letter[1] - 0.42 * inch, banner.split("\n")[0][:140])
+        canvas.restoreState()
+
     doc = SimpleDocTemplate(
         dest,
         pagesize=letter,
@@ -78,7 +94,7 @@ def build(manifest, dest):
         bottomMargin=0.5 * inch,
         title=str(manifest.get("title") or "Screenshot Journey"),
     )
-    doc.build(story)
+    doc.build(story, onFirstPage=stamp_page, onLaterPages=stamp_page)
 
 
 def main():

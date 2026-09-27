@@ -1,6 +1,7 @@
 import { sql } from './db.mjs';
 import { cleanText, headerValue, sendJson } from './http.mjs';
-import { intakeShareSlug, sharedTripFromIntake } from './intake-shared-trip.mjs';
+import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, windLookupPointsFromThings } from './intake-shared-trip.mjs';
+import { lookupWindBackup } from './wind-backup.mjs';
 import { TREK_SHARED_API_BASE, mergeBindingsIntoShared, stripKeepsakeJunkMedia } from './thing-media-bind.mjs';
 import { listBindings } from './thing-media-store.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
@@ -55,23 +56,32 @@ async function intakeSharedResponse(shareToken) {
     where trip_id = ${trip.id}
     order by created_at asc
   `;
-  return padKeepsakeSharedPlaces(sharedTripFromIntake({
-    trip,
-    things: things.map((row) => {
-      const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-      return {
-        id: row.id,
-        category: row.category,
-        title: row.title,
-        description: row.description || '',
-        who: meta.who || '',
-        whenLabel: meta.whenLabel || '',
-        customerWhen: meta.customerWhen || '',
-        notes: Array.isArray(meta.notes) ? meta.notes : [],
-        collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
-      };
-    }),
-  }));
+  const mappedThings = things.map((row) => {
+    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    return {
+      id: row.id,
+      category: row.category,
+      title: row.title,
+      description: row.description || '',
+      who: meta.who || '',
+      whenLabel: meta.whenLabel || '',
+      customerWhen: meta.customerWhen || '',
+      notes: Array.isArray(meta.notes) ? meta.notes : [],
+      collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
+    };
+  });
+  const shared = padKeepsakeSharedPlaces(sharedTripFromIntake({ trip, things: mappedThings }));
+  let windBackup = '';
+  try {
+    windBackup = await lookupWindBackup(windLookupPointsFromThings(mappedThings), {
+      startDate: trip.start_date,
+      endDate: trip.end_date,
+      timeoutMs: 2000,
+    });
+  } catch {
+    windBackup = '';
+  }
+  return applyCapturedLogos(applyThingPresentation(shared, { windBackup }));
 }
 
 export default async function handler(req, res) {

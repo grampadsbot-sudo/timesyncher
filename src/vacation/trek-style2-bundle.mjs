@@ -1,4 +1,3 @@
-import { LIVE_TAB_FILL, LIVE_TAB_MINIMUMS } from './keepsake-list-minimums.mjs';
 import { PRODUCT_THING_FIELDS } from './keepsake-product-overrides.mjs';
 import { logoLookupRuntimeSource } from './thing-logo-capture.mjs';
 
@@ -168,6 +167,13 @@ function productFieldsLiteral() {
   })));
 }
 
+const FLIGHT_ROW_NEEDLE = '||Re.split(/\\s+/)[0]||"Airline"';
+const FLIGHT_ROW_PATCH = '||Re||"Airline"';
+const FLIGHT_FIELDS_NEEDLE = 'bn(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
+const FLIGHT_FIELDS_PATCH = '(bn(Dt)||/koa arrival|kona arrival/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
+const CAR_FIELDS_NEEDLE = 'Mi(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
+const CAR_FIELDS_PATCH = '(Mi(Dt)||/speedishuttle/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
+
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
 const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 
@@ -223,7 +229,7 @@ const DAILY_CARD_NEEDLE = 'return`<article class="thing daily-thing"><div class=
 const DAILY_CARD_PATCH = 'return`<article class="thing daily-thing" data-two-col-card="1" data-happy-hour="${ha(G).happyHour?"1":"0"}"><div class="thing-head">';
 
 const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side / Morningside","Midtown / Central Park South","Times Square / Hell’s Kitchen","Chelsea / Greenwich Village","Greenwich Village / West Village","Downtown / Harbor","Hudson River / Harbor","Airport / Transit","Citywide / Flexible"]';
-const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Puna / Kalapana","Islandwide / Flexible"]';
+const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Kailua-Kona / Palani","Islandwide / Flexible"]';
 const SI_NYC_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]]]';
 const SI_VEGAS_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]],[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,[36.1097,-115.1739]],[/carbone/i,[36.1073,-115.1766]],[/cosmopolitan|eggslut/i,[36.1097,-115.1739]],[/lotus of siam/i,[36.1436,-115.1415]],[/las vegas strip|las vegas/i,[36.1147,-115.1729]]]';
 
@@ -231,7 +237,7 @@ const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return R
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
-const LIVE_TAB_PATCH = `tsPad=(rows,kind,names,min)=>{const have=new Set(rows.map(G=>String(mr(G)||G.name||"").toLowerCase()).filter(Boolean));const extra=names.filter(n=>n&&![...have].some(h=>h.includes(n.toLowerCase())||n.toLowerCase().includes(h))).slice(0,Math.max(0,min-rows.length)).map((name,i)=>({id:(kind==="restaurant"?910000:kind==="store"?920000:930000)+i+1,name,__tsLiveFill:1,category:kind==="rest"?"event":kind,type:kind==="rest"?"event":kind,icon:kind==="restaurant"?"🍽️":kind==="store"?"🛍️":"🎟️",logoUrl:tsLogo(name),lat:36.1147,lng:-115.1729,address:"Nevada"}));return rows.concat(extra)},tsFill=${JSON.stringify(LIVE_TAB_FILL)},tsMin=${JSON.stringify(LIVE_TAB_MINIMUMS)},tsLogo=${logoLookupRuntimeSource()},tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),"store",tsFill.store,tsMin.store),ci=ot.filter(G=>tsListThings(Oc).some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),"restaurant",tsFill.restaurant,tsMin.restaurant),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))),"rest",tsFill.rest,tsMin.rest)`;
+const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=ot.filter(G=>tsListThings(Oc).some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 
 const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -243,11 +249,11 @@ const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const QN_RENDER_NEEDLE = 'Qn.map(G=>Oe(G))';
-const QN_RENDER_PATCH = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G))';
+const QN_RENDER_PATCH = 'tsPad(Qn).map(G=>Oe(G))';
 const GN_RENDER_NEEDLE = 'Gn.map(G=>Oe(G))';
-const GN_RENDER_PATCH = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G))';
+const GN_RENDER_PATCH = 'tsPad(Gn).map(G=>Oe(G))';
 const KI_RENDER_NEEDLE = 'ki.map(G=>Oe(G))';
-const KI_RENDER_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G))';
+const KI_RENDER_PATCH = 'tsPad(ki).map(G=>Oe(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
@@ -255,12 +261,12 @@ const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
 
-const QN_EMPTY_NEEDLE = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G)),Qn.length===0';
-const QN_EMPTY_PATCH = 'tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).map(G=>Oe(G)),tsPad(Qn,"restaurant",tsFill.restaurant,tsMin.restaurant).length===0';
-const GN_EMPTY_NEEDLE = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G)),Gn.length===0';
-const GN_EMPTY_PATCH = 'tsPad(Gn,"store",tsFill.store,tsMin.store).map(G=>Oe(G)),tsPad(Gn,"store",tsFill.store,tsMin.store).length===0';
-const KI_EMPTY_NEEDLE = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G)),ki.length===0';
-const KI_EMPTY_PATCH = 'tsPad(ki,"rest",tsFill.rest,tsMin.rest).map(G=>Oe(G)),tsPad(ki,"rest",tsFill.rest,tsMin.rest).length===0';
+const QN_EMPTY_NEEDLE = 'tsPad(Qn).map(G=>Oe(G)),Qn.length===0';
+const QN_EMPTY_PATCH = 'tsPad(Qn).map(G=>Oe(G)),tsPad(Qn).length===0';
+const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
+const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
+const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
+const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '') {
@@ -288,7 +294,7 @@ export function patchStyleTwoToConfigRenderer(source = '') {
     ['Greenwich Village / West Village', 'Volcano / Hawaii Volcanoes'],
     ['Downtown / Harbor', 'Captain Cook / Kealakekua'],
     ['Hudson River / Harbor', 'Waipio / Hamakua'],
-    ['Airport / Transit', 'Puna / Kalapana'],
+    ['Airport / Transit', 'Kailua-Kona / Palani'],
     ['Citywide / Flexible', 'Islandwide / Flexible'],
   ];
   for (const [from, to] of areaRenames) patched = patched.replaceAll(from, to);
@@ -357,6 +363,15 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(HA_NEEDLE)) {
     patched = patched.replace(HA_NEEDLE, HA_PATCH);
+  }
+  if (patched.includes(FLIGHT_ROW_NEEDLE)) {
+    patched = patched.replace(FLIGHT_ROW_NEEDLE, FLIGHT_ROW_PATCH);
+  }
+  if (patched.includes(FLIGHT_FIELDS_NEEDLE)) {
+    patched = patched.replace(FLIGHT_FIELDS_NEEDLE, FLIGHT_FIELDS_PATCH);
+  }
+  if (patched.includes(CAR_FIELDS_NEEDLE)) {
+    patched = patched.replace(CAR_FIELDS_NEEDLE, CAR_FIELDS_PATCH);
   }
   if (patched.includes(PE_EFFECT_NEEDLE)) {
     patched = patched.replace(PE_EFFECT_NEEDLE, PE_EFFECT_PATCH);
@@ -508,7 +523,25 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  return patched;
+  return hideUnsourcedRatings(patched);
+}
+
+function hideUnsourcedRatings(source) {
+  let js = String(source || '');
+  const ratingStart = js.indexOf('vo(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:8},children:[');
+  const ratingEndMarker = 'placeholder:"Tripadvisor/OpenTable/Booking",style:De})]})]})';
+  const ratingEnd = ratingStart >= 0 ? js.indexOf(ratingEndMarker, ratingStart) : -1;
+  if (ratingStart >= 0 && ratingEnd > ratingStart) {
+    const ratingPatch = '["googleRating","yelpRating","thirdPartyRating"].some(k=>/\\d/.test(String(No(Dt,k)||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:8},children:[["googleRating","Google rating"],["yelpRating","Yelp rating"],["thirdPartyRating","Other rating"]].filter(([k])=>/\\d/.test(String(No(Dt,k)||""))).map(([k,label])=>n.jsxs("label",{style:Hn,children:[label,n.jsx("input",{value:No(Dt,k),onChange:G=>Xa(Dt,k,G.target.value),style:De})]},k))})';
+    js = js.slice(0, ratingStart) + ratingPatch + js.slice(ratingEnd + ratingEndMarker.length);
+  }
+  const reviewStart = js.indexOf('vo(Dt)&&[1,2,3].map(G=>n.jsxs("label",{style:Hn,children:["5-star review quote "');
+  const reviewEnd = reviewStart >= 0 ? js.indexOf(']},G))]', reviewStart) : -1;
+  if (reviewStart >= 0 && reviewEnd > reviewStart) {
+    const reviewPatch = '[1,2,3].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G,n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]},G))]';
+    js = js.slice(0, reviewStart) + reviewPatch + js.slice(reviewEnd + ']},G))]'.length);
+  }
+  return js.replaceAll('placeholder:"4.6"', 'placeholder:""').replaceAll('placeholder:"4.4"', 'placeholder:""');
 }
 
 export function assertStyleTwoPatchParses(source = AE_LAYOUT_PATCH) {
@@ -574,6 +607,9 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-story-summary="1"') || !js.includes('data-story-body="1"')) {
     throw new Error('Style two story summary-before-story patch did not apply.');
   }
+  if (js.includes('placeholder:"4.6"') || js.includes('placeholder:"4.4"') || js.includes('5-star review quote')) {
+    throw new Error('Thing pages must not render rating or review placeholders.');
+  }
   if (!js.includes(DAILY_THING_PATCH) || !js.includes('data-daily-thing-media="1"')) {
     throw new Error('Style two daily-thing media patch did not apply.');
   }
@@ -610,8 +646,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(MN_CATEGORY_PATCH) || js.includes(MN_CATEGORY_NEEDLE)) {
     throw new Error('Style two live category Mn() restaurant-before-car patch did not apply.');
   }
-  if (!js.includes('tsPad=') || !js.includes('__tsLiveFill:1') || !js.includes('"restaurant":15')) {
-    throw new Error('Style two live tab 15/10/15 pad patch did not apply.');
+  if (!js.includes('tsPad=(rows)=>rows')) {
+    throw new Error('Live tabs must return the trip rows only.');
+  }
+  if (js.includes('__tsLiveFill:1') || js.includes('lat:36.1147') || js.includes('address:"Nevada"') || js.includes('logoUrl:tsLogo(name)')) {
+    throw new Error('Live tabs must not pad Las Vegas names or coordinates.');
   }
   if (!js.includes('tsListThings=') || !js.includes('tsListThings(Fs)') || !js.includes('tsListThings(Oc)')) {
     throw new Error('Live list tag chips must harvest only tags on Things in that list.');
@@ -621,9 +660,6 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
     throw new Error('Rest type chips must be types present on Things in that Rest list.');
-  }
-  if (!js.includes('logoUrl:tsLogo(name)') || !js.includes('tsLogo=')) {
-    throw new Error('Live tab fill extras must bind real logos, not Admit One / category emoji.');
   }
   if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE)) {
     throw new Error('List logo resolver must prefer named brand path (tsLogo/mr) and skip data-URI letter tiles.');
@@ -879,6 +915,15 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('Times Square') || js.includes(AREA_CHIP_NYC)) {
     throw new Error('Area chips must be Big Island places, not Times Square.');
+  }
+  if (js.includes('||"Airline"') && (js.includes(FLIGHT_ROW_NEEDLE) || !js.includes(FLIGHT_ROW_PATCH))) {
+    throw new Error('Flight list rows must show the full thing name, including KOA arrival.');
+  }
+  if (js.includes('children:["Takeoff"') && !js.includes('/koa arrival|kona arrival/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {
+    throw new Error('Open flight detail must render Takeoff, Connections, and Layover for KOA arrival.');
+  }
+  if (js.includes('children:["Rental company"') && !js.includes('/speedishuttle/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {
+    throw new Error('Open car detail must render Rental company and Car type for SpeediShuttle.');
   }
   if (js.includes('Ya=["') && !js.includes('Kailua-Kona / Alii Drive')) {
     throw new Error('Area chips must list Kailua-Kona / Alii Drive.');

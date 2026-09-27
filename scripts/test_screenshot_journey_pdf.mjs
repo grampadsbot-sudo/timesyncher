@@ -15,12 +15,21 @@ const dir = mkdtempSync(path.join(tmpdir(), 'journey-pdf-'));
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const image = path.join(dir, 'pixel.png');
 writeFileSync(image, png);
+const stamp = 'live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com';
 const manifest = {
   title: 'Screenshot Journey',
   subtitle: 'fixture',
+  deployBanner: stamp,
   pages: [{ id: 'purchase', chapter: 'Purchase', title: 'Purchase confirmed', file: 'post-purchase-email-eula.md', note: 'fixture', image }],
   gaps: [{ feature: 'Language', file: 'language.md', reason: 'no language control' }],
 };
+const emptyPath = path.join(dir, 'empty.json');
+writeFileSync(emptyPath, JSON.stringify({ ...manifest, deployBanner: '' }));
+const refused = spawnSync('python3', ['scripts/screenshot_journey_pdf.py', emptyPath, path.join(dir, 'empty.pdf')], { cwd: root, encoding: 'utf8' });
+if (refused.status === 0) {
+  process.stderr.write('empty journey stamp produced a pdf\n');
+  process.exit(1);
+}
 const manifestPath = path.join(dir, 'manifest.json');
 const pdfPath = path.join(dir, 'screenshot-journey.pdf');
 writeFileSync(manifestPath, JSON.stringify(manifest));
@@ -40,7 +49,7 @@ const text = spawnSync('python3', ['-c', `
 import sys
 from pypdf import PdfReader
 text = "\\n".join(page.extract_text() or "" for page in PdfReader(sys.argv[1]).pages)
-need = ["Contents", "GAP. Language", "language.md", "Purchase confirmed"]
+need = ["Contents", "GAP. Language", "language.md", "Purchase confirmed", "0123456789abcdef0123456789abcdef01234567"]
 missing = [item for item in need if item not in text]
 if missing:
     raise SystemExit("missing " + ", ".join(missing))

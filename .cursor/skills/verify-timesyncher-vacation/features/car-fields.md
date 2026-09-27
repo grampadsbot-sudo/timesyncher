@@ -7,6 +7,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 ## Sub-features
 
 - A car Thing has Rental company and Car type.
+- Rental search returns the 10 lowest prices with no brand limit. The customer can eliminate brands afterward. See `features/search-redesign.md`.
 
 ## How to get to it (user POV)
 

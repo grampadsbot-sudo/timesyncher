@@ -1,7 +1,16 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { writeSharedAssets } from './scripts/write-shared-assets.mjs';
 
 export default defineConfig({
+  plugins: [
+    {
+      name: 'timesyncher-shared-assets',
+      async buildStart() {
+        await writeSharedAssets();
+      },
+    },
+  ],
   build: {
     rollupOptions: {
       input: {

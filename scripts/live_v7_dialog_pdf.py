@@ -164,10 +164,18 @@ def build(pack):
     styles.add(ParagraphStyle(name="TurnCust", parent=styles["Normal"], fontSize=8.5, leading=10.5, textColor=colors.HexColor("#1a1a1a"), spaceBefore=5))
     styles.add(ParagraphStyle(name="Qual", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#336633"), leftIndent=10))
     styles.add(ParagraphStyle(name="Tim", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#555555"), leftIndent=10))
+    styles.add(ParagraphStyle(name="JevRun", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#555555"), leftIndent=-6, firstLineIndent=0, spaceBefore=6))
     styles.add(ParagraphStyle(name="Meta", parent=styles["Normal"], fontSize=7.5, textColor=colors.HexColor("#555555")))
     styles.add(ParagraphStyle(name="Headline", parent=styles["Normal"], fontSize=9.5, leading=12, textColor=colors.HexColor("#0b3d91"), spaceBefore=4, spaceAfter=4))
+    styles.add(ParagraphStyle(name="Void", parent=styles["Title"], fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6))
 
     story = []
+    banner = str(pack.get("deploy_banner") or "").strip()
+    if pack.get("void") or banner.startswith("VOID"):
+        story.append(Paragraph("VOID", styles["Void"]))
+    if banner:
+        story.append(Paragraph(latin(banner), styles["Headline"]))
+        story.append(Spacer(1, 8))
     story.append(Paragraph(latin(pack.get("title")), styles["CoverTitle"]))
     story.append(Paragraph(latin(f"pack_id: {pack.get('pack_id')}"), styles["Meta"]))
     story.append(Paragraph(latin(pack.get("turns_line")), styles["Meta"]))
@@ -196,10 +204,13 @@ def build(pack):
     story.append(Paragraph("Mark in-app corrections here. Each APP turn shows model + tier.", styles["Meta"]))
     for turn in pack.get("turns") or []:
         style = styles["TurnApp"] if turn.get("app") else styles["TurnCust"]
-        block = [Paragraph(
+        block = []
+        if turn.get("jev_ran"):
+            block.append(Paragraph(latin(turn.get("jev_ran")), styles["JevRun"]))
+        block.append(Paragraph(
             f"<b>{latin(turn.get('label'))}</b> <font size='6.5' color='#666'>[{latin(turn.get('meta'))}]</font><br/>{latin(turn.get('text'))}",
             style,
-        )]
+        ))
         if turn.get("rewrite_label"):
             block.append(Paragraph(latin(turn.get("rewrite_label")), styles["Qual"]))
         if turn.get("quality"):
@@ -222,6 +233,10 @@ def build(pack):
 
     def paint(canvas, doc_):
         canvas.saveState()
+        if banner:
+            canvas.setFont("Helvetica", 8)
+            canvas.setFillColor(colors.HexColor("#0b3d91"))
+            canvas.drawString(0.7 * inch, letter[1] - 0.42 * inch, banner.split("\n")[0][:140])
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#666666"))
         canvas.drawString(0.7 * inch, 0.4 * inch, footer[:80])

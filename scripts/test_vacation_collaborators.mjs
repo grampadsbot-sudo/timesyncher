@@ -10,7 +10,7 @@ import {
   collaboratorTelegramLink,
   isCollaboratorInviteRequest,
 } from '../src/vacation/collaborators.mjs';
-import { collaboratorInviteEmail as buildCollaboratorInviteEmail } from '../src/vacation/email.mjs';
+import { collaboratorInviteEmail as buildCollaboratorInviteEmail, collaboratorInviteTargets } from '../src/vacation/email.mjs';
 
 assert.equal(collaboratorPlan('single_trip').code, 'telegram_collaborators_single_trip');
 assert.equal(collaboratorPlan('single_trip').amountCents, 1500);
@@ -70,5 +70,22 @@ assert.match(email.textBody, /approved email invite/);
 assert.match(email.textBody, /vacation-web-access\?action=accept/);
 assert.doesNotMatch(email.textBody, /t\.me/);
 assert.doesNotMatch(email.htmlBody, /Telegram/);
+assert.match(email.htmlBody, /Open the approved email invite/);
+assert.match(email.htmlBody, /word-break:break-all/);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/api\/vacation-web-access\?action=accept&token=invite-token</);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-example\/</);
+const filled = collaboratorInviteTargets({
+  invite: { id: 'invite-1' },
+  trip: { metadata: { publicSlug: 'intake-example' } },
+  env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
+});
+assert.match(filled.acceptUrl, /https:\/\/vacation-staging\.timesyncher\.com\/accept\/vacation-collaborator-invite-1$/);
+assert.equal(filled.publicUrl, 'https://vacation-staging.timesyncher.com/shared/intake-example/');
+const kept = collaboratorInviteTargets({
+  acceptUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=invite-token',
+  publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-example/',
+  invite: { id: 'invite-1' },
+});
+assert.match(kept.acceptUrl, /action=accept&token=invite-token$/);
 
 console.log('vacation collaborator policy regression passed');

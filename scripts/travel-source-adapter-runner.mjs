@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs';
+import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_REGISTRY = '/home/timesyncher-agent/timestopper-vacation-worker/travel-source-adapter-registry.json';
+const REPO_REGISTRY = path.join(path.dirname(fileURLToPath(import.meta.url)), 'travel-source-adapter-registry.json');
 const ALLOWED_ENABLED_CLASSES = new Set(['approved_public_search', 'approved_public_read_only', 'unofficial_read_only']);
 const BLOCKED_CLASSES = new Set(['experimental_hidden_api', 'authenticated_customer_account', 'forbidden_booking_payment']);
 const execFileAsync = promisify(execFile);
@@ -55,8 +58,23 @@ async function execJson(command, args, { timeout = 60000, runAsUser = '', env = 
   return JSON.parse(stdout);
 }
 
+function readableRegistry(registryPath = DEFAULT_REGISTRY) {
+  const requested = registryPath || DEFAULT_REGISTRY;
+  if (fs.existsSync(requested)) return requested;
+  if (requested !== DEFAULT_REGISTRY && fs.existsSync(DEFAULT_REGISTRY)) return DEFAULT_REGISTRY;
+  if (fs.existsSync(REPO_REGISTRY)) return REPO_REGISTRY;
+  return requested;
+}
+
 export function loadAdapterRegistry(registryPath = DEFAULT_REGISTRY) {
-  const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+  const resolved = readableRegistry(registryPath);
+  let raw = '';
+  try {
+    raw = fs.readFileSync(resolved, 'utf8');
+  } catch (error) {
+    return { registry: { adapters: [] }, errors: [{ registryUnreadable: text(error?.message || error, 200) }] };
+  }
+  const registry = JSON.parse(raw);
   const errors = [];
   const seen = new Set();
   for (const adapter of registry.adapters || []) {
@@ -180,64 +198,8 @@ async function runHotelGoat(adapter, context = {}) {
   });
 }
 
-async function runWanderlustGoat(adapter, context = {}) {
-  const artifacts = context.artifacts || {};
-  const destination = text(context.destination || artifacts.destination || '', 120);
-  if (!destination) return [];
-  const criteria = text(
-    artifacts.preferences?.activityCriteria ||
-    artifacts.preferences?.criteria ||
-    artifacts.requestText ||
-    context.requestText ||
-    'local food culture viewpoints unusual activities',
-    240,
-  );
-  const now = text(context.retrievedAt || new Date().toISOString(), 40);
-  const expiresAt = addDaysIso(now, 7);
-  const body = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/wanderlust-goat-pp-cli', [
-    'goat',
-    destination,
-    '--criteria', criteria,
-    '--minutes', '15',
-    '--top', '5',
-    '--agent',
-  ], { timeout: Number(adapter.timeoutMs || 120000), runAsUser: adapter.runAsUser || 'ubishere9995', env: envFromSecretFiles(adapter) });
-  return (Array.isArray(body.results) ? body.results : []).map((place, index) => {
-    const url = publicUrl(place.google_maps_uri);
-    const walkingMinutes = Number.isFinite(Number(place.walking_minutes)) ? `${Number(place.walking_minutes).toFixed(1)} min walk` : '';
-    const why = text(place.why || '', 240);
-    const category = /\b(chocolate|restaurant|cafe|coffee|bar|bakery|food)\b/i.test(place.name || '') ? 'restaurant' : 'activity';
-    return {
-      category,
-      title: text(place.name || `Wanderlust GOAT option ${index + 1}`, 160),
-      summary: `${text(place.name || 'Local discovery candidate', 120)} surfaced near ${destination}${walkingMinutes ? ` (${walkingMinutes})` : ''}${why ? `; ${why}` : ''}.`,
-      details: [
-        `Wanderlust GOAT read-only discovery for ${destination}.`,
-        place.address ? `Address: ${text(place.address, 240)}.` : '',
-        walkingMinutes ? `Walking estimate: ${walkingMinutes}.` : '',
-        place.business_status ? `Business status: ${text(place.business_status, 80)}.` : '',
-        why ? `Source signal: ${why}.` : '',
-        'This is a research candidate only; verify hours, reservations/tickets, accessibility, and itinerary fit before relying on it.',
-      ].filter(Boolean).join('\n'),
-      website: url,
-      sources: url ? [{ label: 'Google Places / Maps source URL', url, retrievedAt: now, adapterId: adapter.id }] : [],
-      verificationStatus: place.business_status === 'OPERATIONAL' ? 'source_checked' : 'needs_status_check',
-      caveats: ['Google Places snapshot only; verify hours, closures, ticketing, and whether this fits the trip style before final itinerary placement.'],
-      sourceCaveats: ['Wanderlust GOAT is an unofficial read-only source adapter using Google Places seed data and deterministic local scoring.'],
-      adapterSources: [{ adapterId: adapter.id, sourceId: url || text(place.name, 120), safetyClass: adapter.safetyClass, fetchedAt: now, status: 'live_read_only_google_places_passed' }],
-      sourceQuality: { sourceCount: url ? 1 : 0, adapterCount: 1, safetyClass: adapter.safetyClass, confidence: url ? 'medium' : 'needs_source_url', lastVerifiedAt: now, expiresAt },
-      qualitySignals: {
-        freshness: 'live_google_places_snapshot',
-        specificity: 'destination_walk_radius_and_criteria',
-        caveatCount: 2,
-        score: place.score?.total ?? null,
-        walkingMinutes: place.walking_minutes ?? null,
-      },
-      fitScores: { reservationDifficulty: 'needs_activity_specific_check', distanceRisk: walkingMinutes || 'needs_route_check' },
-      verifiedAt: now,
-      expiresAt,
-    };
-  });
+async function runWanderlustGoat() {
+  return [];
 }
 
 async function runMasterParkQuote(adapter, context = {}) {
@@ -347,7 +309,7 @@ export async function runApprovedSourceAdapters(input = {}) {
       candidates.push(...fixtureRecentTravelerSentiment(adapter, input));
       adaptersRun.push({ adapterId: adapter.id, status: 'fixture_complete', safetyClass: adapter.safetyClass });
     } else if (adapter.id === 'printingpress-wanderlust-goat') {
-      await runAdapter(adapter, () => runWanderlustGoat(adapter, input), 'skipped_missing_destination');
+      adaptersRun.push({ adapterId: adapter.id, status: 'disabled_google_places_seed_removed', safetyClass: adapter.safetyClass, candidateCount: 0 });
     } else if (adapter.id === 'printingpress-hotel-goat') {
       await runAdapter(adapter, () => runHotelGoat(adapter, input), 'skipped_missing_destination_or_dates');
     } else if (adapter.id === 'printingpress-masterpark-quote') {

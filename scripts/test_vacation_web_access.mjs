@@ -83,7 +83,7 @@ assert.match(migration, /create table if not exists vacation_web_access_grants/)
 assert.match(migration, /vacation_web_access_active_email_idx/);
 assert.match(migration, /telegram_collaborator/);
 
-const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /create_owner_website_session/);
 assert.match(api, /telegram_launch/);
@@ -100,7 +100,7 @@ assert.match(checkout, /TimeSyncher Vacation Add-ons/i);
 assert.doesNotMatch(checkout, /collaborator-checkout\.html/);
 assert.match(checkout, /telegram_collaborators_unlimited_trips/);
 
-const paymentApi = await readFile(new URL('../api/create-payment-intent.mjs', import.meta.url), 'utf8');
+const paymentApi = await readFile(new URL('../routes/create-payment-intent.mjs', import.meta.url), 'utf8');
 assert.match(paymentApi, /collaboratorInviteWithSelectedPlan/);
 assert.match(paymentApi, /selectedPlanCode/);
 
