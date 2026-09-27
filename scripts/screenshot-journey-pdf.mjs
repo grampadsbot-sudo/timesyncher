@@ -372,7 +372,7 @@ async function main() {
         await page.screenshot({ path: image });
       }
       const bytes = await readFile(image);
-      const clipText = await page.evaluate((rect) => {
+      const clipText = await page.evaluate((rect, limit) => {
         const bits = [];
         for (const node of document.querySelectorAll('body *')) {
           const box = node.getBoundingClientRect();
