@@ -2,7 +2,7 @@
 %“Œ‹ž ReportLab Generated PDF document (opensource)
 1 0 obj
 <<
-/F1 2 0 R /F2 3 0 R /F3 5 0 R
+/F1 2 0 R /F2 3 0 R /F3 4 0 R
 >>
 endobj
 2 0 obj
@@ -17,17 +17,17 @@ endobj
 endobj
 4 0 obj
 <<
+/BaseFont /Symbol /Name /F3 /Subtype /Type1 /Type /Font
+>>
+endobj
+5 0 obj
+<<
 /Contents 17 0 R /MediaBox [ 0 0 612 792 ] /Parent 16 0 R /Resources <<
 /Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
 >> /Rotate 0 /Trans <<
 
 >> 
   /Type /Page
->>
-endobj
-5 0 obj
-<<
-/BaseFont /Symbol /Name /F3 /Subtype /Type1 /Type /Font
 >>
 endobj
 6 0 obj
@@ -117,18 +117,18 @@ endobj
 endobj
 15 0 obj
 <<
-/Author (\(anonymous\)) /CreationDate (D:20260927003911+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260927003911+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+/Author (\(anonymous\)) /CreationDate (D:20260927004821+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260927004821+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
   /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
 >>
 endobj
 16 0 obj
 <<
-/Count 9 /Kids [ 4 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R 11 0 R 12 0 R 13 0 R ] /Type /Pages
+/Count 9 /Kids [ 5 0 R 6 0 R 7 0 R 8 0 R 9 0 R 10 0 R 11 0 R 12 0 R 13 0 R ] /Type /Pages
 >>
 endobj
 17 0 obj
 <<
-/Length 7383
+/Length 7237
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -139,54 +139,61 @@ BT 1 0 0 1 50.4 28.8 Tm (live-BwQO7hk_NaBluooHGBYW1RdQ) Tj T* ET
 BT 1 0 0 1 540.194 28.8 Tm (page 1) Tj T* ET
 Q
 q
-1 0 0 1 56.4 619.2 cm
+1 0 0 1 56.4 717.2 cm
+q
+.54902 .113725 .113725 rg
+BT 1 0 0 1 0 4 Tm /F2 18 Tf 22 TL 227.595 0 Td (VOID) Tj T* -227.595 0 Td ET
+Q
+Q
+q
+1 0 0 1 56.4 675.2 cm
 q
 .043137 .239216 .568627 rg
-BT 1 0 0 1 0 110.5 Tm /F1 9.5 Tf 12 TL (Deployed build ab66dfe6d9f09b5382081f3ac198322a518cd9b4 on https://vacation-staging.timesyncher.com) Tj T* (\(deployment timesyncher-vacation-staging-r8otbw1t8, created 2026-09-26 22:40 UTC\). r5 code commit) Tj T* (2c511334b1f233de22c22346ab6dba2738d8d26c was not deployed because Vercel returned) Tj T* (api-deployments-free-per-day. Missing from that build: defect notes and scores of 3 or lower do not force a rewrite, and) Tj T* (the Keep-the-reply note can still ship; a price ask may omit a dollar amount; invented places are not forced into a) Tj T* (rewrite; the unlimited upsell is stripped from the post-intake reply; rewrite turns can store a null rewriteModel and null) Tj T* (rewrite text; sessionE2eMs on a rewrite can stay 0; a later customer day does not replace the first date, so groceries) Tj T* (can leave Fri Apr 3; Thing pages can show joined chat, repeated 4.6 and 4.4 ratings, placeholder review text, and Cars) Tj T* (Coming soon; an interim reply is not limited to rewrite turns, and a rewrite is not required to carry a T1 interim. refused:) Tj T* (turn 3 Jev note is a template) Tj T* ET
+BT 1 0 0 1 0 26.5 Tm /F1 9.5 Tf 12 TL (VOID VOID_STALE_BUILD live=ab66dfe6d9f09b5382081f3ac198322a518cd9b4) Tj T* (tip=31c30ff9a9e1affd0eeba1876c31a92f61c8687b This run is void. Do not grade it. refused: turn 3 Jev note is a) Tj T* (template) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 607.2 cm
+1 0 0 1 56.4 663.2 cm
 Q
 q
-1 0 0 1 56.4 585.2 cm
+1 0 0 1 56.4 641.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 6 Tm /F2 16 Tf 22 TL 117.104 0 Td (Dialog Pack - Big Island v7 Tier 1-4) Tj T* -117.104 0 Td ET
 Q
 Q
 q
-1 0 0 1 56.4 565.2 cm
+1 0 0 1 56.4 621.2 cm
 q
 .333333 .333333 .333333 rg
 BT 1 0 0 1 0 4.5 Tm /F1 7.5 Tf 12 TL (pack_id: live-BwQO7hk_NaBluooHGBYW1RdQ) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 553.2 cm
+1 0 0 1 56.4 609.2 cm
 q
 .333333 .333333 .333333 rg
 BT 1 0 0 1 0 4.5 Tm /F1 7.5 Tf 12 TL (turns=49 \(customer 24 / app 25\) \267 response_ready=n/a \267 needs_repair=n/a) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 547.2 cm
+1 0 0 1 56.4 603.2 cm
 Q
 q
-1 0 0 1 56.4 515.2 cm
+1 0 0 1 56.4 571.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 10 Tm /F2 12 Tf 22 TL (QUALITY COMPARISON vs v6 gpt-5-mini) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 497.2 cm
+1 0 0 1 56.4 553.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 12 TL /F2 9.5 Tf .043137 .239216 .568627 rg (Headline:) Tj /F1 9.5 Tf ( Live app capture. Jev judged every generated reply. Timings are measured gen ms.) Tj T* ET
 Q
 Q
 q
-1 0 0 1 64.8 349.2 cm
+1 0 0 1 64.8 405.2 cm
 q
 .909804 .933333 .968627 rg
 n 0 144 482.4 -18 re f*
@@ -238,17 +245,17 @@ Q
 Q
 Q
 q
-1 0 0 1 56.4 343.2 cm
+1 0 0 1 56.4 399.2 cm
 Q
 q
-1 0 0 1 56.4 317.2 cm
+1 0 0 1 56.4 373.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 8 Tm /F2 10 Tf 18 TL (Per-tier mean overall \(v7\)) Tj T* ET
 Q
 Q
 q
-1 0 0 1 118.8 223.2 cm
+1 0 0 1 118.8 279.2 cm
 q
 .909804 .933333 .968627 rg
 n 0 90 374.4 -18 re f*
@@ -288,104 +295,61 @@ Q
 Q
 Q
 q
-1 0 0 1 56.4 191.2 cm
+1 0 0 1 56.4 247.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 10 Tm /F2 12 Tf 22 TL (TIMINGS vs v6 gpt-5-mini) Tj T* ET
 Q
 Q
 q
-1 0 0 1 82.8 77.2 cm
+1 0 0 1 82.8 115.2 cm
 q
 .909804 .933333 .968627 rg
-n 0 108 446.4 -18 re f*
+n 0 126 446.4 -18 re f*
 0 0 0 rg
 BT /F1 7.5 Tf 12 TL ET
-BT 1 0 0 1 4 97.5 Tm (Pack) Tj T* ET
-BT 1 0 0 1 65.2 97.5 Tm (Model\(s\)) Tj T* ET
-BT 1 0 0 1 220 97.5 Tm (n) Tj T* ET
-BT 1 0 0 1 248.8 97.5 Tm (p50 ms) Tj T* ET
-BT 1 0 0 1 299.2 97.5 Tm (p95 ms) Tj T* ET
-BT 1 0 0 1 349.6 97.5 Tm (mean ms) Tj T* ET
-BT 1 0 0 1 400 97.5 Tm (max ms) Tj T* ET
-BT 1 0 0 1 4 79.5 Tm (v6) Tj T* ET
-BT 1 0 0 1 65.2 79.5 Tm (openai/gpt-5-mini) Tj T* ET
-BT 1 0 0 1 220 79.5 Tm (23) Tj T* ET
-BT 1 0 0 1 248.8 79.5 Tm (28834) Tj T* ET
-BT 1 0 0 1 299.2 79.5 Tm (39693) Tj T* ET
-BT 1 0 0 1 349.6 79.5 Tm (27833) Tj T* ET
-BT 1 0 0 1 400 79.5 Tm (44762) Tj T* ET
-BT 1 0 0 1 4 61.5 Tm (v7 overall) Tj T* ET
-BT 1 0 0 1 65.2 61.5 Tm (T1-4 cycle) Tj T* ET
-BT 1 0 0 1 220 61.5 Tm (24) Tj T* ET
-BT 1 0 0 1 248.8 61.5 Tm (3218) Tj T* ET
-BT 1 0 0 1 299.2 61.5 Tm (4867) Tj T* ET
-BT 1 0 0 1 349.6 61.5 Tm (3268) Tj T* ET
-BT 1 0 0 1 400 61.5 Tm (6300) Tj T* ET
-BT 1 0 0 1 4 43.5 Tm (v7 T1) Tj T* ET
-BT 1 0 0 1 65.2 43.5 Tm (google/gemini-2.5-flash-lite) Tj T* ET
-BT 1 0 0 1 220 43.5 Tm (3) Tj T* ET
-BT 1 0 0 1 248.8 43.5 Tm (923) Tj T* ET
-BT 1 0 0 1 299.2 43.5 Tm (1027) Tj T* ET
-BT 1 0 0 1 349.6 43.5 Tm (920) Tj T* ET
-BT 1 0 0 1 400 43.5 Tm (1027) Tj T* ET
-BT 1 0 0 1 4 25.5 Tm (v7 T2) Tj T* ET
-BT 1 0 0 1 65.2 25.5 Tm (qwen/qwen3-235b-a22b-2507) Tj T* ET
-BT 1 0 0 1 220 25.5 Tm (13) Tj T* ET
-BT 1 0 0 1 248.8 25.5 Tm (3218) Tj T* ET
-BT 1 0 0 1 299.2 25.5 Tm (4283) Tj T* ET
-BT 1 0 0 1 349.6 25.5 Tm (3297) Tj T* ET
-BT 1 0 0 1 400 25.5 Tm (4283) Tj T* ET
-BT 1 0 0 1 4 7.5 Tm (v7 T3) Tj T* ET
-BT 1 0 0 1 65.2 7.5 Tm (deepseek/deepseek-v3.2) Tj T* ET
-BT 1 0 0 1 220 7.5 Tm (7) Tj T* ET
-BT 1 0 0 1 248.8 7.5 Tm (3992) Tj T* ET
-BT 1 0 0 1 299.2 7.5 Tm (6300) Tj T* ET
-BT 1 0 0 1 349.6 7.5 Tm (4156) Tj T* ET
-BT 1 0 0 1 400 7.5 Tm (6300) Tj T* ET
-q
-1 J
-1 j
-.501961 .501961 .501961 RG
-.35 w
-n 0 108 m 446.4 108 l S
-n 0 0 m 0 108 l S
-n 446.4 0 m 446.4 108 l S
-n 0 0 m 446.4 0 l S
-n 0 90 m 446.4 90 l S
-n 0 72 m 446.4 72 l S
-n 0 54 m 446.4 54 l S
-n 0 36 m 446.4 36 l S
-n 0 18 m 446.4 18 l S
-n 61.2 0 m 61.2 108 l S
-n 216 0 m 216 108 l S
-n 244.8 0 m 244.8 108 l S
-n 295.2 0 m 295.2 108 l S
-n 345.6 0 m 345.6 108 l S
-n 396 0 m 396 108 l S
-Q
-Q
-Q
- 
-endstream
-endobj
-18 0 obj
-<<
-/Length 4256
->>
-stream
-1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
-q
-BT /F1 7 Tf 8.4 TL ET
-.4 .4 .4 rg
-BT 1 0 0 1 50.4 28.8 Tm (live-BwQO7hk_NaBluooHGBYW1RdQ) Tj T* ET
-BT 1 0 0 1 540.194 28.8 Tm (page 2) Tj T* ET
-Q
-q
-1 0 0 1 82.8 721.2 cm
-q
-0 0 0 rg
-BT /F1 7.5 Tf 12 TL ET
+BT 1 0 0 1 4 115.5 Tm (Pack) Tj T* ET
+BT 1 0 0 1 65.2 115.5 Tm (Model\(s\)) Tj T* ET
+BT 1 0 0 1 220 115.5 Tm (n) Tj T* ET
+BT 1 0 0 1 248.8 115.5 Tm (p50 ms) Tj T* ET
+BT 1 0 0 1 299.2 115.5 Tm (p95 ms) Tj T* ET
+BT 1 0 0 1 349.6 115.5 Tm (mean ms) Tj T* ET
+BT 1 0 0 1 400 115.5 Tm (max ms) Tj T* ET
+BT 1 0 0 1 4 97.5 Tm (v6) Tj T* ET
+BT 1 0 0 1 65.2 97.5 Tm (openai/gpt-5-mini) Tj T* ET
+BT 1 0 0 1 220 97.5 Tm (23) Tj T* ET
+BT 1 0 0 1 248.8 97.5 Tm (28834) Tj T* ET
+BT 1 0 0 1 299.2 97.5 Tm (39693) Tj T* ET
+BT 1 0 0 1 349.6 97.5 Tm (27833) Tj T* ET
+BT 1 0 0 1 400 97.5 Tm (44762) Tj T* ET
+BT 1 0 0 1 4 79.5 Tm (v7 overall) Tj T* ET
+BT 1 0 0 1 65.2 79.5 Tm (T1-4 cycle) Tj T* ET
+BT 1 0 0 1 220 79.5 Tm (24) Tj T* ET
+BT 1 0 0 1 248.8 79.5 Tm (3218) Tj T* ET
+BT 1 0 0 1 299.2 79.5 Tm (4867) Tj T* ET
+BT 1 0 0 1 349.6 79.5 Tm (3268) Tj T* ET
+BT 1 0 0 1 400 79.5 Tm (6300) Tj T* ET
+BT 1 0 0 1 4 61.5 Tm (v7 T1) Tj T* ET
+BT 1 0 0 1 65.2 61.5 Tm (google/gemini-2.5-flash-lite) Tj T* ET
+BT 1 0 0 1 220 61.5 Tm (3) Tj T* ET
+BT 1 0 0 1 248.8 61.5 Tm (923) Tj T* ET
+BT 1 0 0 1 299.2 61.5 Tm (1027) Tj T* ET
+BT 1 0 0 1 349.6 61.5 Tm (920) Tj T* ET
+BT 1 0 0 1 400 61.5 Tm (1027) Tj T* ET
+BT 1 0 0 1 4 43.5 Tm (v7 T2) Tj T* ET
+BT 1 0 0 1 65.2 43.5 Tm (qwen/qwen3-235b-a22b-2507) Tj T* ET
+BT 1 0 0 1 220 43.5 Tm (13) Tj T* ET
+BT 1 0 0 1 248.8 43.5 Tm (3218) Tj T* ET
+BT 1 0 0 1 299.2 43.5 Tm (4283) Tj T* ET
+BT 1 0 0 1 349.6 43.5 Tm (3297) Tj T* ET
+BT 1 0 0 1 400 43.5 Tm (4283) Tj T* ET
+BT 1 0 0 1 4 25.5 Tm (v7 T3) Tj T* ET
+BT 1 0 0 1 65.2 25.5 Tm (deepseek/deepseek-v3.2) Tj T* ET
+BT 1 0 0 1 220 25.5 Tm (7) Tj T* ET
+BT 1 0 0 1 248.8 25.5 Tm (3992) Tj T* ET
+BT 1 0 0 1 299.2 25.5 Tm (6300) Tj T* ET
+BT 1 0 0 1 349.6 25.5 Tm (4156) Tj T* ET
+BT 1 0 0 1 400 25.5 Tm (6300) Tj T* ET
 BT 1 0 0 1 4 7.5 Tm (v7 T4) Tj T* ET
 BT 1 0 0 1 65.2 7.5 Tm (qwen/qwen3-max) Tj T* ET
 BT 1 0 0 1 220 7.5 Tm (1) Tj T* ET
@@ -398,139 +362,160 @@ q
 1 j
 .501961 .501961 .501961 RG
 .35 w
-n 0 0 m 0 18 l S
-n 446.4 0 m 446.4 18 l S
+n 0 126 m 446.4 126 l S
 n 0 0 m 446.4 0 l S
+n 0 0 m 0 126 l S
+n 446.4 0 m 446.4 126 l S
+n 0 108 m 446.4 108 l S
+n 0 90 m 446.4 90 l S
+n 0 72 m 446.4 72 l S
+n 0 54 m 446.4 54 l S
+n 0 36 m 446.4 36 l S
 n 0 18 m 446.4 18 l S
-n 61.2 0 m 61.2 18 l S
-n 216 0 m 216 18 l S
-n 244.8 0 m 244.8 18 l S
-n 295.2 0 m 295.2 18 l S
-n 345.6 0 m 345.6 18 l S
-n 396 0 m 396 18 l S
+n 61.2 0 m 61.2 126 l S
+n 216 0 m 216 126 l S
+n 244.8 0 m 244.8 126 l S
+n 295.2 0 m 295.2 126 l S
+n 345.6 0 m 345.6 126 l S
+n 396 0 m 396 126 l S
 Q
 Q
 Q
 q
-1 0 0 1 56.4 699.2 cm
+1 0 0 1 56.4 93.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 13.5 Tm /F1 8.5 Tf 11 TL (Speedup \(p50\): this live session is 8.96\327 faster than v6 gpt-5-mini main \(~28834ms ) Tj /F3 8.5 Tf 11 TL (\256) Tj /F1 8.5 Tf 11 TL ( ~3218ms\). Metric: live genLatencyMs vs) Tj T* (published v6 mainModelElapsedMs.) Tj T* ET
 Q
 Q
+ 
+endstream
+endobj
+18 0 obj
+<<
+/Length 3337
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
 q
-1 0 0 1 56.4 667.2 cm
+BT /F1 7 Tf 8.4 TL ET
+.4 .4 .4 rg
+BT 1 0 0 1 50.4 28.8 Tm (live-BwQO7hk_NaBluooHGBYW1RdQ) Tj T* ET
+BT 1 0 0 1 540.194 28.8 Tm (page 2) Tj T* ET
+Q
+q
+1 0 0 1 56.4 717.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 10 Tm /F2 12 Tf 22 TL (Hard recipe) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 650.2 cm
+1 0 0 1 56.4 700.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (mode) Tj /F1 8.5 Tf (: live-app) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 639.2 cm
+1 0 0 1 56.4 689.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (canonical) Tj /F1 8.5 Tf (: tier_models.json) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 628.2 cm
+1 0 0 1 56.4 678.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (no_gpt5mini) Tj /F1 8.5 Tf (: True) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 617.2 cm
+1 0 0 1 56.4 667.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (no_freestyle_app) Tj /F1 8.5 Tf (: True) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 606.2 cm
+1 0 0 1 56.4 656.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (no_dialog_app_respond) Tj /F1 8.5 Tf (: True) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 595.2 cm
+1 0 0 1 56.4 645.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (no_dialog_vacation_test_turn) Tj /F1 8.5 Tf (: True) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 584.2 cm
+1 0 0 1 56.4 634.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (source) Tj /F1 8.5 Tf (: live-vacation-app) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 573.2 cm
+1 0 0 1 56.4 623.2 cm
 q
 BT 1 0 0 1 0 2.5 Tm 11 TL /F2 8.5 Tf 0 0 0 rg (tier_models) Tj /F1 8.5 Tf (: dialog-runners/tier_models.json) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 541.2 cm
+1 0 0 1 56.4 591.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 10 Tm /F2 12 Tf 22 TL (Roster) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 524.2 cm
+1 0 0 1 56.4 574.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 2.5 Tm /F1 8.5 Tf 11 TL (Owner: Craig Davidson \(Owner\)) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 513.2 cm
+1 0 0 1 56.4 563.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 2.5 Tm /F1 8.5 Tf 11 TL (Collaborators: Kimberly Davidson \(payer=owner\), Tyler Davidson \(payer=tyler\), Lauren Davidson \(payer=lauren\)) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 502.2 cm
+1 0 0 1 56.4 552.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 2.5 Tm /F1 8.5 Tf 11 TL (Kids \(silent\): Torren 8, Peyton 6, Keegan 4, Fallon 2) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 491.2 cm
+1 0 0 1 56.4 541.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 2.5 Tm /F1 8.5 Tf 11 TL (Viewer: Marcus Chen \267 Editor: Aunt Jean) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 465.2 cm
+1 0 0 1 56.4 515.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 8 Tm /F2 10 Tf 18 TL (Priority beats covered) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 395.2 cm
+1 0 0 1 56.4 445.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 57.5 Tm /F1 8.5 Tf 11 TL -0.070437 Tw (Acknowledged intake and explained access., Arrival day setup confirmed., Garden morning planned and noted, Provided rain backup) Tj T* 0 Tw (for swim, Proposed two big-day options., Held space for no-plan day, Planned Thursday and explained access choices., Confirmed) Tj T* -0.0205 Tw (food rhythm, Preserved photo priorities, Affirmed the trip's purpose., affirmed family pacing, confirmed pricing and access, Welcomed) Tj T* 0 Tw (Kimberly as collaborator., Add garden note., Confirmed garden days and open time, Confirmed garden days, Welcomed Tyler to the) Tj T* (trip., Save swim options Monday., Confirmed late-week swim timing, Confirmed Monday swim plan, Welcomed Lauren to the trip.,) Tj T* (Offered two balanced options for Tuesday, Confirmed Thursday town walk, Held open space in Kona) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 363.2 cm
+1 0 0 1 56.4 413.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 10 Tm /F2 12 Tf 22 TL (Dialog judge rollup) Tj T* ET
 Q
 Q
 q
-1 0 0 1 56.4 346.2 cm
+1 0 0 1 56.4 396.2 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 2.5 Tm /F1 8.5 Tf 11 TL (response_ready=true \267 needs_repair=false. scores: mean 3.958. Jev scored and commented on every generated reply.) Tj T* ET
@@ -1680,7 +1665,7 @@ xref
 0000000112 00000 n 
 0000000219 00000 n 
 0000000331 00000 n 
-0000000526 00000 n 
+0000000408 00000 n 
 0000000603 00000 n 
 0000000798 00000 n 
 0000000993 00000 n 
@@ -1693,18 +1678,18 @@ xref
 0000002237 00000 n 
 0000002518 00000 n 
 0000002630 00000 n 
-0000010065 00000 n 
-0000014373 00000 n 
-0000024676 00000 n 
-0000035363 00000 n 
-0000044797 00000 n 
-0000054177 00000 n 
-0000063688 00000 n 
-0000074595 00000 n 
+0000009919 00000 n 
+0000013308 00000 n 
+0000023611 00000 n 
+0000034298 00000 n 
+0000043732 00000 n 
+0000053112 00000 n 
+0000062623 00000 n 
+0000073530 00000 n 
 trailer
 <<
 /ID 
-[<c427eb5b8d84d5fe0e456269abc9925c><c427eb5b8d84d5fe0e456269abc9925c>]
+[<f3631626d1226fa21a3b8caf0e73caf2><f3631626d1226fa21a3b8caf0e73caf2>]
 % ReportLab generated PDF document -- digest (opensource)
 
 /Info 15 0 R
@@ -1712,5 +1697,5 @@ trailer
 /Size 26
 >>
 startxref
-76728
+75663
 %%EOF

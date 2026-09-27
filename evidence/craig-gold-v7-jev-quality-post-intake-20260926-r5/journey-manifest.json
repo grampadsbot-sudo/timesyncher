@@ -1,7 +1,7 @@
 {
   "title": "Screenshot Journey",
-  "subtitle": "Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.",
-  "deployBanner": "Deployed build ab66dfe6d9f09b5382081f3ac198322a518cd9b4 on https://vacation-staging.timesyncher.com (deployment timesyncher-vacation-staging-r8otbw1t8, created 2026-09-26 22:40 UTC). r5 code commit 2c511334b1f233de22c22346ab6dba2738d8d26c was not deployed because Vercel returned api-deployments-free-per-day. Missing from that build: defect notes and scores of 3 or lower do not force a rewrite, and the Keep-the-reply note can still ship; a price ask may omit a dollar amount; invented places are not forced into a rewrite; the unlimited upsell is stripped from the post-intake reply; rewrite turns can store a null rewriteModel and null rewrite text; sessionE2eMs on a rewrite can stay 0; a later customer day does not replace the first date, so groceries can leave Fri Apr 3; Thing pages can show joined chat, repeated 4.6 and 4.4 ratings, placeholder review text, and Cars Coming soon; an interim reply is not limited to rewrite turns, and a rewrite is not required to carry a T1 interim.",
+  "subtitle": "This run is void. Do not grade it.",
+  "deployBanner": "VOID\nVOID_STALE_BUILD live=ab66dfe6d9f09b5382081f3ac198322a518cd9b4 tip=31c30ff9a9e1affd0eeba1876c31a92f61c8687b\nThis run is void. Do not grade it.",
   "pages": [
     {
       "id": "purchase",
@@ -695,5 +695,6 @@
       "file": "config-options-trip-view.md",
       "reason": "the header Trip View menu did not list Flights, Hotels, and Cars"
     }
-  ]
+  ],
+  "void": true
 }
