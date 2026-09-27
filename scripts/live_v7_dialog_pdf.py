@@ -164,6 +164,7 @@ def build(pack):
     styles.add(ParagraphStyle(name="TurnCust", parent=styles["Normal"], fontSize=8.5, leading=10.5, textColor=colors.HexColor("#1a1a1a"), spaceBefore=5))
     styles.add(ParagraphStyle(name="Qual", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#336633"), leftIndent=10))
     styles.add(ParagraphStyle(name="Tim", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#555555"), leftIndent=10))
+    styles.add(ParagraphStyle(name="JevRun", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#555555"), leftIndent=0, firstLineIndent=0, spaceBefore=6))
     styles.add(ParagraphStyle(name="Meta", parent=styles["Normal"], fontSize=7.5, textColor=colors.HexColor("#555555")))
     styles.add(ParagraphStyle(name="Headline", parent=styles["Normal"], fontSize=9.5, leading=12, textColor=colors.HexColor("#0b3d91"), spaceBefore=4, spaceAfter=4))
     styles.add(ParagraphStyle(name="Void", parent=styles["Title"], fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6))
@@ -205,7 +206,7 @@ def build(pack):
         style = styles["TurnApp"] if turn.get("app") else styles["TurnCust"]
         block = []
         if turn.get("jev_ran"):
-            block.append(Paragraph(latin(turn.get("jev_ran")), styles["Tim"]))
+            block.append(Paragraph(latin(turn.get("jev_ran")), styles["JevRun"]))
         block.append(Paragraph(
             f"<b>{latin(turn.get('label'))}</b> <font size='6.5' color='#666'>[{latin(turn.get('meta'))}]</font><br/>{latin(turn.get('text'))}",
             style,

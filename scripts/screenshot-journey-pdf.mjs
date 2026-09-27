@@ -869,12 +869,24 @@ async function main() {
                 clipRect: await clipAround('Story', { height: 240, padTop: 20 }),
               });
             }
-            if (!captured.has('ratings-reviews.md') && (has(detailText, 'Google') || has(detailText, 'Yelp'))) {
-              await shot(`ratings-${id}`, 'Initial itinerary', 'Ratings and reviews', {
-                file: 'ratings-reviews.md',
-                note: `${name} detail.`,
-                clipRect: await clipAround(has(detailText, 'Google') ? 'Google' : 'Yelp', { height: 220, padTop: 20 }),
+            if (!captured.has('ratings-reviews.md')) {
+              const ratingBox = await page.evaluate(() => {
+                const label = [...document.querySelectorAll('label')].find((node) => /^Google rating\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+                if (!label) return null;
+                const input = label.querySelector('input');
+                const value = String(input?.value || '').trim();
+                if (!/\d/.test(value)) return null;
+                label.scrollIntoView({ block: 'center' });
+                const box = label.parentElement.getBoundingClientRect();
+                return { x: Math.max(0, box.x - 12), y: Math.max(0, box.y - 16), width: Math.min(900, Math.max(280, box.width + 24)), height: Math.min(280, Math.max(140, box.height + 24)) };
               });
+              if (ratingBox) {
+                await shot(`ratings-${id}`, 'Initial itinerary', 'Ratings and reviews', {
+                  file: 'ratings-reviews.md',
+                  note: `${name} detail with a sourced rating.`,
+                  clipRect: ratingBox,
+                });
+              }
             }
             if (!captured.has('hotel-stay-fields.md') && (has(detailText, 'Check-in') || has(detailText, 'Stay'))) {
               await shot(`hotel-${id}`, 'Initial itinerary', 'Hotel stay fields', {
@@ -894,12 +906,25 @@ async function main() {
 
       await clickText(page, 'Day-by-Day');
       if (await clickText(page, 'Flights') && await clickText(page, 'KOA arrival')) {
-        const flightText = await bodyText(page);
-        if (has(flightText, 'Takeoff')) {
+        const flightBox = await page.evaluate(() => {
+          const label = [...document.querySelectorAll('label')].find((node) => /^Takeoff\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+          if (!label) return null;
+          const grid = label.parentElement;
+          const values = [...grid.querySelectorAll('input')].map((input) => String(input.value || '').trim());
+          const blob = `${grid.innerText || ''}\n${values.join('\n')}`;
+          if (!/Connections/.test(blob) || !/Layover/.test(blob)) return null;
+          if (!values.some((value) => /Fri Apr 3/i.test(value))) return null;
+          if (!values.some((value) => /nonstop into KOA/i.test(value))) return null;
+          if (!values.some((value) => /^none$/i.test(value))) return null;
+          grid.scrollIntoView({ block: 'center' });
+          const box = grid.getBoundingClientRect();
+          return { x: Math.max(0, box.x - 16), y: Math.max(0, box.y - 16), width: Math.min(960, Math.max(420, box.width + 32)), height: Math.min(320, Math.max(180, box.height + 32)) };
+        });
+        if (flightBox) {
           await shot('flight-fields', 'Initial itinerary', 'Flight fields', {
             file: 'flight-fields.md',
-            note: 'KOA arrival Takeoff, Connections, and Layover.',
-            clipRect: await clipAround('Takeoff', { height: 280, padTop: 24 }),
+            note: 'KOA arrival Takeoff Fri Apr 3, Connections nonstop into KOA, Layover none.',
+            clipRect: flightBox,
           });
         }
         await page.keyboard.press('Escape').catch(() => {});
@@ -1000,7 +1025,10 @@ async function main() {
     if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'SpeediShuttle shows the shuttle summary and does not render Rental company and Car type. Unblock: those two fields on the open car detail.');
     if (!captured.has('status.md')) gap('Status', 'status.md', 'no Thing detail showed a status');
     if (!captured.has('media-stories.md')) gap('Stories and media', 'media-stories.md', 'no Thing detail showed a Story field');
-    if (!captured.has('ratings-reviews.md')) gap('Ratings and reviews', 'ratings-reviews.md', 'no Thing detail showed Google or Yelp');
+    if (!captured.has('ratings-reviews.md')) {
+      const emptyRating = await page.evaluate(() => [...document.querySelectorAll('label')].some((node) => /^Google rating\b/.test((node.innerText || '').trim()) && !/\d/.test(String(node.querySelector('input')?.value || '')))).catch(() => false);
+      if (emptyRating) gap('Ratings and reviews', 'ratings-reviews.md', 'an empty Google rating box is still on the detail');
+    }
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
     if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control did not open a Print / PDF menu. Unblock: mount that menu on vacation-staging.');
     if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes setup did not open. Unblock: a Keepsakes menu with Style one, Style two, and Admin on this host.');

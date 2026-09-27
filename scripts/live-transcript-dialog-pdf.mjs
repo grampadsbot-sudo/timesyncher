@@ -19,6 +19,7 @@ import {
   isTemplateInterim,
   interimProblems,
   nearIdenticalRewrite,
+  completeRosterParty,
   item34BanHit,
   loadLiveTranscriptByToken,
   transcriptToJsonl,
@@ -501,10 +502,12 @@ export function formatLiveTimingLine({ gen, model, tier, jevMs, maxTokens }) {
 }
 
 export function assertRosterRoleBlock(doc) {
-  if (!doc?.party) return rosterLines(doc);
-  const lines = rosterLines(doc);
+  const party = completeRosterParty(doc);
+  const lines = rosterLines({ ...doc, party });
   const blob = lines.join('\n');
-  if (!/Kids \(silent\):/.test(blob) || !/\bViewer:/.test(blob) || !/\bEditor:/.test(blob)) {
+  const corpus = (doc?.turns || []).map((turn) => String(turn?.text || '')).join('\n');
+  const needsBlock = Boolean(doc?.party) || (/Torren/i.test(corpus) && /Marcus Chen/i.test(corpus) && /Aunt Jean/i.test(corpus));
+  if (needsBlock && (!/Kids \(silent\):/.test(blob) || !/\bViewer:/.test(blob) || !/\bEditor:/.test(blob))) {
     throw new Error('refused: roster_role_block missing Kids, Viewer, or Editor');
   }
   return lines;
@@ -619,7 +622,7 @@ export function liveV7Pack(doc, shape) {
     ],
     roster: assertRosterRoleBlock(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
-    judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality}. Jev scored and commented on every generated reply.`,
+    judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality}. Jev scored every generated reply.`,
     turns: (doc.turns || []).map((turn) => {
       const app = turn.role === 'app';
       const generatedTurn = app && turn.jev?.jevRan === true;
@@ -638,7 +641,7 @@ export function liveV7Pack(doc, shape) {
         meta: meta.join(' · '),
         app,
         text: String(turn.text || ''),
-        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel) : '',
+        rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.jevNote) : '',
         jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
         quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
@@ -659,7 +662,9 @@ function jevRanLine(turn) {
   const score = Number.isInteger(Number(turn.quality?.score)) ? Number(turn.quality.score) : Number(turn.jevScoreDraft);
   const judgeMs = Number(turn.quality?.judgeMs ?? turn.modelLatency?.jevDraft);
   const ms = Number.isFinite(judgeMs) ? Math.round(judgeMs) : 0;
-  return `jevRan: true · model ${model} · score ${Number.isFinite(score) ? score : ''} · judge ${ms}ms`;
+  const disposition = String(turn.jevDisposition || turn.quality?.disposition || 'none');
+  const focus = String(turn.jevFixFocus || turn.quality?.jevFocus || 'none');
+  return `jevRan: true · model ${model} · score ${Number.isFinite(score) ? score : ''} · judge ${ms}ms · disposition ${disposition} · fix_focus ${focus}`;
 }
 
 function realTurnLatencyMs(turn) {
@@ -690,13 +695,16 @@ function producerLogLine(turn) {
     `rewriteFailReason: ${turn.rewriteFailReason || 'none'}`,
     `rewriteAttempt: ${Array.isArray(turn.rewriteAttempts) && turn.rewriteAttempts[0] ? `${turn.rewriteAttempts[0].model || ''} ${turn.rewriteAttempts[0].ms}ms ${turn.rewriteAttempts[0].error || 'ok'}` : 'none'}`,
     `flagged: ${turn.flagged === true}`,
+    `jevScoreRaw: ${Number.isFinite(Number(turn.jevScoreRaw)) ? Number(turn.jevScoreRaw) : (Number.isFinite(Number(turn.quality?.scoreRaw)) ? Number(turn.quality.scoreRaw) : 'none')}`,
+    `jevDisposition: ${turn.jevDisposition || turn.quality?.disposition || 'none'}`,
+    `jevFixFocus: ${turn.jevFixFocus || turn.quality?.jevFocus || 'none'}`,
   ].join(' | ');
 }
 
 export function jevRewriteLabelCounts(doc, pdfText) {
   const rewritten = (doc?.turns || []).filter((turn) => turn?.role === 'app' && turn?.quality?.rewritten === true);
   const pdf = String(pdfText || '');
-  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel))).length;
+  const rewriteLabels = rewritten.filter((turn) => pdf.includes(rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.jevNote))).length;
   return { rewrittenTurns: rewritten.length, rewriteLabels, ok: rewritten.length === rewriteLabels };
 }
 

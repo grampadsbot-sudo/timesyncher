@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, draftAccuracyErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, stripItem34Ban, stripUpsell, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -239,7 +239,9 @@ const kept = qualityFromDecisions({
     disposition: { choice: 'keep' },
   },
 }, null, 'How much is it?', 'Kimberly $27, paid by you');
-assert.equal(kept.score, 4);
+assert.equal(kept.score, 3);
+assert.equal(kept.scoreRaw, 3);
+assert.equal(kept.disposition, 'keep');
 assert.equal(kept.judged, true);
 assert.equal(kept.jevNote, null);
 assert.equal(kept.jevNoteReason, 'jev_no_free_text');
@@ -256,6 +258,26 @@ assert.equal(qualityFromDecisions({
     disposition: { choice: 'keep' },
   },
 }).wantsRewrite, false);
+assert.equal(mustRewriteQuality(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 3 },
+    disposition: { choice: 'rewrite' },
+  },
+})), true);
+assert.deepEqual(draftAccuracyErrors('You are all set for the unlimited vacations plan from April 3-10. Aunt Jean can edit, no extra charge. The swim can shift to Tuesday the 7th.'), [
+  'the unlimited plan is not owned yet',
+  'the trip runs through April 12, not April 10',
+  'no extra charge is not in the plan table',
+  'the swim stays on Monday April 6 and Friday April 10, not Tuesday April 7',
+]);
+assert.deepEqual(draftAccuracyErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.'), []);
+assert.deepEqual(draftAccuracyErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.'), []);
+assert.ok(draftAccuracyErrors('Let us slide that second swim later. How about Thursday, April 9th?').some((line) => /Thursday April 9/.test(line)));
+assert.ok(draftAccuracyErrors('Welcome aboard, Tyler. Your two garden days are locked in.', { customerTurn: 'This is Tyler. I paid for my own seat.' }).some((line) => /Kimberly/.test(line)));
+assert.ok(draftAccuracyErrors('A beachside picnic on Tuesday.').some((line) => /picnic/.test(line)));
+assert.equal(stripChatMarkdown('Marcus will have **view access** and *edit access*.'), 'Marcus will have view access and edit access.');
+assert.doesNotMatch(rulesSource, /criterion 4 or 5/);
+assert.doesNotMatch(rulesSource, /adequate or strong draft is keep/);
 assert.equal(trueMedian([10, 30]), 20);
 assert.equal(trueMedian([10, 20, 40]), 20);
 assert.deepEqual(upsellAudit([
@@ -371,6 +393,8 @@ const jevRewrite = liveDoc({
     rewriteText: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
     rewriteAttempts: [{ text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.', model: 'qwen/qwen3-235b-a22b-2507', score: 5, ms: 1200, error: null }],
     jevScoreRewrite: 5,
+    jevNote: null,
+    jevNoteReason: 'jev_no_free_text',
     interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'google/gemini-2.5-flash-lite', ms: 900 },
     flagged: false,
   } : turn)),
@@ -379,9 +403,11 @@ assertLiveTranscript(jevRewrite);
 const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
-assert.match(jevRewritePdf, /rewritten by qwen\/qwen3-235b-a22b-2507 \(Jev note\)/);
+assert.match(jevRewritePdf, /rewritten by qwen\/qwen3-235b-a22b-2507/);
+assert.doesNotMatch(jevRewritePdf, /rewritten by qwen\/qwen3-235b-a22b-2507 \(Jev note\)/);
 assert.doesNotMatch(jevRewritePdf, /rewritten by Jev \(typesafe\/jev-1\.13\)/);
-assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('rewritten by qwen/qwen3-235b-a22b-2507 (Jev note)', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
+assert.doesNotMatch(jevRewritePdf, /scored and commented on every generated reply/);
+assert.throws(() => assertJevRewriteLabels(jevRewrite, jevRewritePdf.replaceAll('rewritten by qwen/qwen3-235b-a22b-2507', '')), /bar 15 rewritten turns 1 but PDF labels 0/);
 rejects(liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,

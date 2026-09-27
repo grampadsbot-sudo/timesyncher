@@ -445,6 +445,7 @@
     let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
     let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    const chatText = (value) => safe(String(value || '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2'));
     const icon = {
       clip: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21.4 11.6-8.7 8.7a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.6-8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       mic: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -631,7 +632,7 @@
       const turnMarkup = state.turns.length
         ? state.turns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
-          return `<article class="bubble ${user ? 'user' : ''}"><small>${user ? 'You' : 'TimeSyncher'}</small>${safe(turn.body)}</article>`;
+          return `<article class="bubble ${user ? 'user' : ''}"><small>${user ? 'You' : 'TimeSyncher'}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
         }).join('')
         : `<article class="bubble"><small>TimeSyncher</small>${welcome}</article>`;
       const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>
@@ -790,7 +791,7 @@
         if (data.status === 'interim') {
           const typing = document.getElementById('tsTyping');
           if (data.interimReply?.text && typing) {
-            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>TimeSyncher</small>${safe(data.interimReply.text)}</article>`);
+            typing.insertAdjacentHTML('beforebegin', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.interimReply.text)}</article>`);
           }
           const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
             method: 'POST',
@@ -801,7 +802,7 @@
           document.getElementById('tsTyping')?.remove();
           if (!finRes.ok || fin.ok === false || !fin.reply) throw new Error(fin.error || 'The app did not return a reply.');
           if (Array.isArray(fin.itinerary)) state.things = fin.itinerary;
-          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(fin.reply)}</article>`);
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(fin.reply)}</article>`);
         } else {
           document.getElementById('tsTyping')?.remove();
           if (!data.reply) throw new Error(data.error || 'The app did not return a reply.');
@@ -817,7 +818,7 @@
               return;
             }
           }
-          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(data.reply)}</article>`);
+          messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.reply)}</article>`);
         }
       } catch (error) {
         document.getElementById('tsTyping')?.remove();

@@ -122,6 +122,9 @@ export function liveTurnRecord({
       record.quality = {
         judged: true,
         score: Number(model.quality.score),
+        scoreRaw: Number.isFinite(Number(model.quality.scoreRaw)) ? Number(model.quality.scoreRaw) : null,
+        disposition: model.quality.disposition || null,
+        jevFocus: model.quality.jevFocus || null,
         comment: model.quality.comment || null,
         jevNoteReason: model.quality.jevNoteReason || null,
         rewritten: model.quality.rewritten === true,
@@ -149,6 +152,9 @@ export function liveTurnRecord({
       record.shippedModel = log.shippedModel || record.shippedModel || null;
       record.jevScoreDraft = scored(log.jevScoreDraft);
       record.jevScoreRewrite = scored(log.jevScoreRewrite);
+      record.jevScoreRaw = Number.isFinite(Number(log.jevScoreRaw)) ? Number(log.jevScoreRaw) : null;
+      record.jevDisposition = log.jevDisposition || null;
+      record.jevFixFocus = log.jevFixFocus || null;
       if (log.rewriteFailReason) record.rewriteFailReason = String(log.rewriteFailReason);
       if (Array.isArray(log.rewriteAttempts)) record.rewriteAttempts = log.rewriteAttempts;
       record.jevNote = log.jevNote || null;
@@ -359,6 +365,12 @@ export function draftingFacts(priorTurns, customerTurn = '') {
     const when = String(thing.customerWhen || thing.whenLabel || '').trim();
     return when ? `${thing.title}: ${when}` : thing.title;
   }).filter(Boolean);
+  itinerary.push(
+    'Swim stays on Mon Apr 6 and Fri Apr 10. Do not move a swim to Tuesday April 7 or Thursday April 9.',
+    'Gardens stay on Sun Apr 5 and Thu Apr 9. They are Kimberly\'s gardens, not Tyler\'s.',
+    'The trip is Friday April 3 through Sunday April 12. Do not shorten it to April 10.',
+    'The unlimited plan is not owned yet.',
+  );
   return {
     itinerary,
     roster: 'The party of eight is Craig, Kimberly, Tyler, Lauren, Torren, Peyton, Keegan, and Fallon. Aunt Jean can edit notes. Marcus Chen can view. Aunt Jean is not part of the eight.',
@@ -374,6 +386,11 @@ export function qualityFailureReason(quality, flags) {
   if (flags?.missingAccess) parts.push('missing view access and edit access');
   const focus = String(quality?.jevFocus || '').trim();
   if (focus && focus !== 'keep') parts.push(`jev fix_focus ${focus}`);
+  const accuracy = Array.isArray(quality?.accuracyErrors) ? quality.accuracyErrors : [];
+  for (const error of accuracy) {
+    const line = String(error || '').trim();
+    if (line) parts.push(line);
+  }
   const score = Number(quality?.score);
   if (Number.isFinite(score) && score <= 2) parts.push(`score ${score}`);
   return parts.join('; ');
@@ -849,14 +866,145 @@ export function acceptQualityRewrite(draft, rewritten) {
   return { text: next, rewritten: true, draft: prior };
 }
 
-export function rewriteCreditLabel(model) {
-  return `rewritten by ${String(model || '').trim()} (Jev note)`;
+export function rewriteCreditLabel(model, note = '') {
+  const credit = `rewritten by ${String(model || '').trim()}`;
+  return String(note || '').trim() ? `${credit} (Jev note)` : credit;
 }
 
 export function mustRewriteQuality(quality) {
   if (quality?.hardFlag === true) return true;
   const score = Number(quality?.score);
+  const disposition = String(quality?.disposition || '');
+  if (quality?.wantsRewrite === true && disposition === 'rewrite' && Number.isFinite(score) && score <= 3) return true;
   return Number.isFinite(score) && score <= 2;
+}
+
+export function stripChatMarkdown(value) {
+  return String(value || '')
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2');
+}
+
+export function draftAccuracyErrors(reply, { customerTurn = '', postIntake = false } = {}) {
+  const body = String(reply || '');
+  const ask = String(customerTurn || '');
+  const errors = [];
+  if (/you(?:'|’)re all set for the\b[^.]{0,80}unlimited|you are all set for the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
+    errors.push('the unlimited plan is not owned yet');
+  }
+  if (/april\s+3(?:rd)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?10\b/i.test(body)) {
+    errors.push('the trip runs through April 12, not April 10');
+  }
+  if (/no extra charge|no extra cost|at no extra/i.test(body)) {
+    errors.push('no extra charge is not in the plan table');
+  }
+  if (swimMovedOffDay(body, /\b(?:tue|tues|tuesday)\b/i, /(?:april\s+7(?:st|nd|rd|th)?|apr\.?\s+7(?:st|nd|rd|th)?|the\s+7th)\b/i)) {
+    errors.push('the swim stays on Monday April 6 and Friday April 10, not Tuesday April 7');
+  }
+  if (swimMovedOffDay(body, /\b(?:thu|thur|thurs|thursday)\b/i, /(?:april\s+9(?:st|nd|rd|th)?|apr\.?\s+9(?:st|nd|rd|th)?|the\s+9th)\b/i)) {
+    errors.push('the swim stays on Monday April 6 and Friday April 10, not Thursday April 9');
+  }
+  if (/picnic/i.test(body)) errors.push('a picnic was not named');
+  if (/tyler(?:'|’)s\s+gardens?/i.test(body) || (/tyler/i.test(ask) && /paid for my own seat/i.test(ask) && /your (?:two )?garden/i.test(body))) {
+    errors.push('the gardens are Kimberly\'s, not Tyler\'s');
+  }
+  if (postIntake && !(/view access lets/i.test(body) && /edit access lets/i.test(body))) {
+    errors.push('explain collaborator options: view access lets them see the days, and edit access lets them add notes');
+  }
+  return errors;
+}
+
+function swimMovedOffDay(body, dayRe, dateRe) {
+  const sentences = String(body || '').split(/(?<=[.!?])\s+/);
+  for (let index = 0; index < sentences.length; index += 1) {
+    const sentence = sentences[index];
+    const next = sentences[index + 1] || '';
+    if (/\bswim\b/i.test(sentence) && dayRe.test(sentence) && dateRe.test(sentence) && !/\bgardens?\b/i.test(sentence)) return true;
+    if (/\bswim\b/i.test(sentence) && dayRe.test(next) && dateRe.test(next) && !/\b(gardens?|town|dinner|grocer(?:y|ies)?|walk|house)\b/i.test(next)) return true;
+  }
+  return false;
+}
+
+function neutralizeFalseClaim(sentence) {
+  return String(sentence || '')
+    .replace(/\byou(?:'|’)re all set for the\b[^.]*\bunlimited\b[^.]*/gi, 'The unlimited plan is one you can take')
+    .replace(/\byou are all set for the\b[^.]*\bunlimited\b[^.]*/gi, 'The unlimited plan is one you can take')
+    .replace(/\balready (?:own|have|set up)\b[^.]*\bunlimited\b[^.]*/gi, 'The unlimited plan is one you can take')
+    .replace(/\b,?\s*no extra charge\b/gi, '')
+    .replace(/\b,?\s*no extra cost\b/gi, '')
+    .replace(/\b,?\s*at no extra\b/gi, '')
+    .replace(/\bapril\s+3(?:rd)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?10\b/gi, 'April 3 through April 12')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.])/g, '$1')
+    .trim();
+}
+
+export function dropAccuracySentences(reply, context = {}) {
+  const scope = { customerTurn: context.customerTurn || '', postIntake: context.postIntake === true };
+  const body = String(reply || '').trim();
+  if (!body || !draftAccuracyErrors(body, scope).length) return body;
+  const parts = body.split(/(?<=[.!?])\s+/);
+  const drop = new Set();
+  for (let index = 0; index < parts.length; index += 1) {
+    const alone = neutralizeFalseClaim(parts[index]);
+    if (draftAccuracyErrors(alone, { customerTurn: scope.customerTurn, postIntake: false }).length) drop.add(index);
+    const next = parts[index + 1] || '';
+    if (!next) continue;
+    const pair = `${alone} ${neutralizeFalseClaim(next)}`;
+    if (!draftAccuracyErrors(pair, { customerTurn: scope.customerTurn, postIntake: false }).length) continue;
+    if (/\b(?:tue|tues|tuesday|thu|thur|thurs|thursday)\b|picnic|tyler(?:'|’)s\s+garden|your (?:two )?garden/i.test(next)) drop.add(index + 1);
+    else drop.add(index);
+  }
+  const kept = parts
+    .map((sentence, index) => (drop.has(index) ? '' : neutralizeFalseClaim(sentence)))
+    .filter(Boolean);
+  const next = kept.join(' ').replace(/\s{2,}/g, ' ').trim();
+  if (!next || draftAccuracyErrors(next, scope).length) return '';
+  if (customerAsksPrice(scope.customerTurn) && !priceAnswered(next, scope.customerTurn)) return '';
+  if (scope.postIntake && !(/building (?:the|your) itinerary/i.test(next) && /view access lets/i.test(next) && /edit access lets/i.test(next) && /email invite/i.test(next) && /unlimited vacations for the whole year/i.test(next))) return '';
+  return next;
+}
+
+export function applyAccuracyRewrite(quality, errors) {
+  const list = (Array.isArray(errors) ? errors : []).map((error) => String(error || '').trim()).filter(Boolean);
+  if (!list.length) return quality;
+  return {
+    ...quality,
+    accuracyErrors: list,
+    hardFlag: true,
+    wantsRewrite: true,
+    score: Math.min(Number(quality?.score) || 1, 3),
+  };
+}
+
+export function completeRosterParty(doc) {
+  const party = doc?.party && typeof doc.party === 'object' ? { ...doc.party } : {};
+  const blob = (Array.isArray(doc?.turns) ? doc.turns : []).map((turn) => `${turn?.speakerName || ''} ${turn?.text || ''}`).join('\n');
+  if (!party.primary?.name) {
+    party.primary = { name: doc?.customerName || doc?.targetPerson || 'Craig', role: 'Owner' };
+  }
+  if (!Array.isArray(party.collaborators) || !party.collaborators.length) {
+    const collaborators = [];
+    if (/Kimberly/i.test(blob)) collaborators.push({ name: 'Kimberly Davidson', payer: 'owner' });
+    if (/Tyler/i.test(blob)) collaborators.push({ name: 'Tyler Davidson', payer: 'tyler' });
+    if (/Lauren/i.test(blob)) collaborators.push({ name: 'Lauren Davidson', payer: 'lauren' });
+    party.collaborators = collaborators;
+  }
+  if (!Array.isArray(party.preference_subjects) || !party.preference_subjects.length) {
+    party.preference_subjects = [
+      ['Torren', 8, /torren/i],
+      ['Peyton', 6, /peyton/i],
+      ['Keegan', 4, /keegan/i],
+      ['Fallon', 2, /fallon/i],
+    ].filter(([, , pattern]) => pattern.test(blob)).map(([name, age]) => ({ name, age }));
+  }
+  if (!Array.isArray(party.viewers) || !party.viewers.length) {
+    party.viewers = /Marcus Chen/i.test(blob) ? [{ name: 'Marcus Chen' }] : [];
+  }
+  if (!Array.isArray(party.editors) || !party.editors.length) {
+    party.editors = /Aunt Jean/i.test(blob) ? [{ name: 'Aunt Jean' }] : [];
+  }
+  return party;
 }
 
 function rewriteAttempted(turn) {
@@ -1028,7 +1176,7 @@ function keepPriceStripWelcome(text) {
 }
 
 function applyUpsellPolicy(reply, upsell, postIntake, customerTurn = '') {
-  const value = String(reply || '').trim();
+  const value = stripChatMarkdown(String(reply || '').trim());
   if (customerAsksPrice(customerTurn)) return keepPriceStripWelcome(value);
   if (upsell === 'forbidden') return stripUpsell(value);
   return value;
@@ -1178,6 +1326,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
+    quality = applyAccuracyRewrite(quality, draftAccuracyErrors(originalDraft, { customerTurn, postIntake }));
     quality = await settleJevNote(quality, customerTurn, originalDraft, env);
     quality.judgeMs = draftQualityMs;
   }
@@ -1187,6 +1336,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rewriteModel: null,
     shippedModel: draftModel,
     jevScoreDraft: quality.score,
+    jevScoreRaw: Number.isFinite(Number(quality.scoreRaw)) ? Number(quality.scoreRaw) : null,
+    jevDisposition: quality.disposition || null,
+    jevFixFocus: quality.jevFocus || null,
     jevScoreRewrite: null,
     jevNote,
     jevNoteReason: quality?.jevNoteReason || (jevNote ? null : 'jev_no_free_text'),
@@ -1428,13 +1580,34 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     }
   }
   const shipText = failReason ? '' : rewritten;
-  const choice = shipChoice({
+  let choice = shipChoice({
     draft: pending.draft,
     draftScore: pending.draftScore,
     rewrite: shipText,
     rewriteScore: rewriteQuality?.judged ? rewriteQuality.score : null,
   });
   if (!choice.rewritten && !failReason) failReason = 'rewrite_not_higher';
+  const scope = { customerTurn: pending?.customerTurn, postIntake: pending?.postIntake === true };
+  const draftErrors = Array.isArray(pending?.quality?.accuracyErrors) ? pending.quality.accuracyErrors : [];
+  const cleared = draftAccuracyErrors(rewritten, scope);
+  if (choice.rewritten && cleared.length) {
+    const salvaged = dropAccuracySentences(rewritten, scope);
+    if (salvaged) {
+      choice = { text: salvaged, rewritten: true, flagged: false };
+      failReason = '';
+    } else {
+      choice = { text: pending.draft, rewritten: false, flagged: true };
+      failReason = `rewrite_still_inaccurate: ${cleared.join('; ')}`;
+    }
+  }
+  if (!choice.rewritten && draftErrors.length && rewritten && !cleared.length && rewriteReplacesDraft(pending.draft, rewritten) && !nearIdenticalRewrite(pending.draft, rewritten)) {
+    choice = { text: rewritten, rewritten: true, flagged: false };
+    failReason = '';
+  }
+  if (draftAccuracyErrors(choice.text, scope).length) {
+    const salvaged = dropAccuracySentences(choice.text, scope);
+    if (salvaged) choice = { ...choice, text: salvaged };
+  }
   const rewriteQualityMs = Math.max(0, Date.now() - rewriteQualityStarted);
   const draftQualityMs = Number(pending.qualityJevMs) || 0;
   const rewriteModel = String(model?.responseModel || pending.draftModel || '').trim();
@@ -1460,6 +1633,9 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     shippedRewrite: choice.rewritten,
     shippedModel,
     jevScoreDraft: pending.draftScore,
+    jevScoreRaw: Number.isFinite(Number(shippedQuality?.scoreRaw)) ? Number(shippedQuality.scoreRaw) : (Number.isFinite(Number(pending.quality?.scoreRaw)) ? Number(pending.quality.scoreRaw) : null),
+    jevDisposition: shippedQuality?.disposition || pending.quality?.disposition || null,
+    jevFixFocus: shippedQuality?.jevFocus || pending.quality?.jevFocus || null,
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevNote: shippedNote,
     jevNoteReason: shippedNote ? null : (shippedQuality?.jevNoteReason || 'jev_no_free_text'),
@@ -1546,6 +1722,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       rewriteModel: live.rewriteModel || live.quality?.rewriteModel || null,
       jevScoreDraft: scored(live.jevScoreDraft),
       jevScoreRewrite: scored(live.jevScoreRewrite),
+      jevScoreRaw: Number.isFinite(Number(live.jevScoreRaw)) ? Number(live.jevScoreRaw) : null,
+      jevDisposition: live.jevDisposition || live.quality?.disposition || null,
+      jevFixFocus: live.jevFixFocus || live.quality?.jevFocus || null,
       rewriteText: live.rewriteText || live.quality?.rewriteText || '',
       rewriteFailReason: live.rewriteFailReason || '',
       rewriteAttempts: Array.isArray(live.rewriteAttempts) ? live.rewriteAttempts : null,

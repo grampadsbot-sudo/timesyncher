@@ -590,11 +590,11 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
   const trip = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
   const itinerary = Array.isArray(trip?.itinerary) ? trip.itinerary.filter(Boolean).slice(0, 12).join('; ') : '';
   const upsellLine = postIntake
-      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain view access versus edit access, and how people join: an approved email invite, then they accept the terms and the vacation opens. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say "you also have unlimited vacations". Do not repeat the itinerary sentence.`
+      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain collaborator options in these words: View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens. Do not assign Marcus Chen or Aunt Jean a role in this reply. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say they are all set for it. Do not say "you also have unlimited vacations". Do not repeat the itinerary sentence.`
       : (upsell === 'allow-once'
         ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not say you are setting it up. Do not answer with only that phrase.`
         : (priceAsk
-          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine || 'each person, the dollar amount, and who pays'}. Make no coverage claims. Do not say whole group. Do not say Fallon. Do not say they already own it or that you are setting it up. Do not add a collaborator welcome. Do not use a banned payment word.`
+          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine || 'each person, the dollar amount, and who pays'}. Make no coverage claims. Do not say whole group. Do not say Fallon. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. The trip runs through Sunday April 12. Do not say April 3-10. Do not add a collaborator welcome. Do not use a banned payment word.`
           : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
@@ -618,6 +618,10 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     'The party of eight is Craig, Kimberly, Tyler, Lauren, Torren, Peyton, Keegan, and Fallon. Aunt Jean can edit notes and Marcus Chen can view. Neither is part of that eight. Do not count Aunt Jean in the party of eight.',
     'On a Friday April 3 through Sunday April 12 trip, Friday April 3 is night 1 and Friday April 10 is night 8. Do not call the April 10 dinner night seven. The final full day is Saturday April 11. Do not call Thursday April 9, or any earlier day, the final full day.',
     'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.',
+    'Swims stay on Monday April 6 and Friday April 10. Do not move a swim to Tuesday April 7 or Thursday April 9. If Monday rains, the backup is the house pool that same Monday.',
+    'Gardens stay on Sunday April 5 and Thursday April 9. They are Kimberly\'s gardens. Do not call them Tyler\'s, and do not tell Tyler they are his gardens.',
+    'Do not invent a picnic or a beachside picnic. Do not invent an activity the customer did not name.',
+    'Write plain sentences. Do not use markdown asterisks.',
     'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan holds steady for the whole group, or that little Fallon and the others are covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     itinerary ? `Itinerary already named: ${itinerary}. Use these days. Do not move a garden, swim, dinner, town walk, or groceries off the day already named.` : '',
@@ -734,15 +738,18 @@ export function qualityFromDecisions(body, _criteria = null, customerTurn = '', 
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
   if (!Number.isFinite(scoreRaw)) return { judged: false, reason: 'quality_score_missing', model: JEV_DECISIONS_MODEL };
-  const score = Math.max(1, Math.min(5, Math.round(scoreRaw) + 1));
+  const score = Math.max(1, Math.min(5, Math.round(scoreRaw)));
+  const disposition = text(answers.disposition?.choice, 40);
   const jevFocus = text(answers.fix_focus?.choice, 40);
   const rawNote = extractJevFreeNote(body);
   const contradicts = Boolean(rawNote) && noteContradictsDraft(rawNote, draft);
   const template = Boolean(rawNote) && isTemplateNote(rawNote, customerTurn);
-  const wantsRewrite = text(answers.disposition?.choice, 40) === 'rewrite' && score <= 3 || score <= 2;
+  const wantsRewrite = (disposition === 'rewrite' && score <= 3) || score <= 2;
   return {
     judged: true,
     score,
+    scoreRaw,
+    disposition,
     comment: rawNote || null,
     jevNote: rawNote || null,
     jevNoteReason: rawNote ? null : 'jev_no_free_text',
@@ -776,12 +783,12 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. A reply of several sentences that answers this turn in the customer\'s own words is criterion 4 or 5. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, or uses a banned payment word. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, moves a swim or garden off the itinerary, or uses a banned payment word. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named. If you can, put a one-line reason in any text, note, rationale, or explanation field.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
         type: 'choice',
-        instructions: 'Choose keep when the draft answers this turn without an invented place, a missed price, or a banned payment word. An adequate or strong draft is keep. Choose rewrite only for those failures.',
+        instructions: 'Choose keep or rewrite. Choose rewrite when the draft should be replaced, including when it is only adequate. If you can explain, put one line in a text field.',
         criteria: {
           keep: 'The draft should stand. It answers this turn and names only places and activities already in the conversation.',
           rewrite: 'Replace the draft. It misses this turn, names a place the customer did not name, skips the price, or uses a banned payment word.',
