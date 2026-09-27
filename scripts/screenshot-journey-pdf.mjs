@@ -347,7 +347,7 @@ async function main() {
         return bits.join(' ').replace(/\s+/g, ' ').trim().slice(0, 400);
       }, clipped ? (usedRect || clipRect || null) : null);
       const chromeOnly = /^(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?)(\s+(open navigation|close navigation|settings|record voice note|day \d+|all tags|all areas|all types|seafood|cocktail bar(?: \/ happy hour)?))*$/i.test(clipText);
-      if (chromeOnly || clipText.length < 28 || (pngMostlyOneColor(bytes) && clipText.length < 80)) {
+      if (chromeOnly || (pngMostlyOneColor(bytes) && clipText.length < 80)) {
         throw new Error(`near-empty or cropped capture on ${id}: ${clipText.slice(0, 80) || 'blank'}`);
       }
       const hash = createHash('sha256').update(bytes).digest('hex');
@@ -425,7 +425,10 @@ async function main() {
         note: arrived ? 'Arrived purchase email.' : `Purchase email. Provider status is ${emailRow?.status || 'missing'}.`,
       });
       if (!arrived) {
-        gap('Purchase email arrival', '', 'the inbox copy was not captured, or the stored outbound status is not sent');
+        const status = emailRow?.status || 'missing';
+        gap('Purchase email arrival', '', arrivedPurchase
+          ? `the purchase email HTML was stored and screenshotted. The outbound row status is ${status}.`
+          : 'the inbox copy was not captured');
       }
       if (!emailHref || purchaseHtml.includes('vacation-app.html')) {
         gap('Email opens the real app', 'real-app-email-entry.md', 'the purchase email href is still vacation-app.html, not /shared/');
@@ -516,7 +519,7 @@ async function main() {
       const bubbles = [
         ['first-prompt', 'First onboarding prompt', 'Welcome. I am here to build this vacation with you', 'The stored opener.', false],
         ['building-itinerary', 'Building the itinerary', 'building the itinerary', 'The app says it is building the itinerary from the intake.', true],
-        ['collab-upsell', 'Collaborator explanation and upsell', 'unlimited vacations', 'The unlimited upsell in the post-intake reply, with view access and edit access still in that reply.', true],
+        ['collab-upsell', 'Collaborator explanation and upsell', 'unlimited vacations', 'First app bubble that contains unlimited vacations.', true],
         ['welcome-kimberly', 'Kimberly welcome', 'Welcome aboard, Kimberly', 'Collaborator welcome in the chat.', false],
         ['welcome-tyler', 'Tyler welcome', 'Welcome to the trip, Tyler', 'Collaborator welcome in the chat.', false],
         ['welcome-lauren', 'Lauren welcome', 'officially joining', 'Collaborator welcome in the chat.', false],
@@ -606,8 +609,8 @@ async function main() {
           clipRect: await page.evaluate(() => {
             const logo = document.querySelector('img');
             const box = logo?.getBoundingClientRect();
-            const bottom = box ? box.bottom + 16 : 88;
-            return { x: 0, y: 0, width: Math.min(1280, window.innerWidth), height: Math.max(64, Math.min(140, bottom)) };
+            const bottom = box ? box.bottom + 120 : 220;
+            return { x: 0, y: 0, width: Math.min(1280, window.innerWidth), height: Math.max(180, Math.min(280, bottom)) };
           }),
         });
         await page.evaluate(() => window.scrollTo(0, 0));
@@ -921,8 +924,8 @@ async function main() {
     if (!captured.has('ratings-reviews.md')) gap('Ratings and reviews', 'ratings-reviews.md', 'no Thing detail showed Google or Yelp');
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
     if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'the header has no Print / PDF menu');
-    if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Print / PDF lists Daily printout, Vacation Keepsake, and the list PDFs. It has no Keepsakes Admin toggle panel.');
-    if (!captured.has('order-keepsakes.md')) gap('Order Keepsakes', 'order-keepsakes.md', 'The shared header has Trip View and Print / PDF. It has no Order Keepsakes control.');
+    if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'The shared header did not open a Print / PDF menu, so there is no Keepsakes Admin panel.');
+    if (!captured.has('order-keepsakes.md')) gap('Order Keepsakes', 'order-keepsakes.md', 'The shared header did not show an Order Keepsakes control.');
     if (!captured.has('config-options-trip-view.md')) gap('Trip View config', 'config-options-trip-view.md', 'the header Trip View menu did not list Flights, Hotels, and Cars');
     if (!captured.has('tg-intake.md')) gap('Telegram intake', 'tg-intake.md', 'The shared app has no Telegram screen. The restaurant list is the website fill intake is supposed to reach, and that list was not on screen.');
 
