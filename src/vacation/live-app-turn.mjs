@@ -1658,7 +1658,7 @@ export function interimDodges(text, customerTurn) {
   if (!dodgeTone) return false;
   if (/\btwo options\b|\boffer two\b|\bpick after you offer\b/i.test(ask) && !/\bor\b|\boption\b/i.test(value)) return true;
   if (/\bbackup\b|\bif\b[^.]{0,40}\brain|\brainy\b/i.test(ask) && !/\bbackup\b|\bshift|\bsecond friday\b/i.test(value)) return true;
-  if (/\blater\b/i.test(ask) && /\bswim\b/i.test(ask) && !/\bfriday\b|\bapr(?:il)?\.?\s+10\b/i.test(value)) return true;
+  if (!isLongIntake(ask) && /\blater\b/i.test(ask) && /\bswim\b/i.test(ask) && !/\bfriday\b|\bapr(?:il)?\.?\s+10\b/i.test(value)) return true;
   if (/\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value) && !/\b(saved|set for|option|town walk)\b/i.test(value)) return true;
   return false;
 }

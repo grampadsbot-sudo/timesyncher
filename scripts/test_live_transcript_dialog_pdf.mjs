@@ -400,6 +400,9 @@ assert.equal(draftFactErrors('We added a second swim on Fri Apr 10 at Kailua-Kon
 assert.equal(draftFactErrors('Lauren\'s rule about no two big activities stacked is locked in.', { ...setFacts, rule: 'Lauren does not want two big activities stacked on the same day.' }).some((line) => /stacked on the same day/.test(line)), false);
 assert.deepEqual(beatsMatchingReply(['Set arrival and swim days.'], 'Groceries are saved for your arrival. For Tyler\'s swim later in the week, I can slot that in.'), []);
 assert.equal(interimCanShip('It sounds like a wonderful trip is coming together. I can help you plan that out.', 'This is Lauren. Tuesday April seventh should be one big thing. I will pick after you offer two options.', setFacts), false);
+const longDump = `${'Big Island Hawaii garden swim groceries april family coming '.repeat(12)} Tyler wants a swim later in the week.`;
+assert.equal(isLongIntake(longDump), true);
+assert.equal(interimCanShip('I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. It sounds like a wonderful trip.', longDump, {}), true);
 assert.equal(JSON.parse(transcriptToJsonl({ sessionToken: 'secret-token', live: true, turns: [] }).split('\n')[0]).sessionToken, null);
 assert.doesNotMatch(transcriptToJsonl({ sessionToken: 'secret-token', live: true, turns: [] }), /secret-token/);
 assert.equal(verifiedRewriteChange('Added Tyler and Lauren to the list of traveling companions.', 'Welcome aboard.', 'Welcome aboard. The town walk is also on the list.'), '');
