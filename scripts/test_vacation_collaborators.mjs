@@ -70,5 +70,9 @@ assert.match(email.textBody, /approved email invite/);
 assert.match(email.textBody, /vacation-web-access\?action=accept/);
 assert.doesNotMatch(email.textBody, /t\.me/);
 assert.doesNotMatch(email.htmlBody, /Telegram/);
+assert.match(email.htmlBody, /Open the approved email invite/);
+assert.match(email.htmlBody, /word-break:break-all/);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/api\/vacation-web-access\?action=accept&token=invite-token</);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-example\/</);
 
 console.log('vacation collaborator policy regression passed');

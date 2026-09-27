@@ -82,6 +82,7 @@ function scored(value) {
 }
 
 function rawScore(value) {
+  if (value == null || value === '') return null;
   const score = Number(value);
   return Number.isFinite(score) ? score : null;
 }
@@ -164,9 +165,11 @@ export function liveTurnRecord({
       record.draftJevScoreRaw = rawScore(log.draftJevScoreRaw);
       record.draftJevDisposition = log.draftJevDisposition || null;
       record.draftJevFixFocus = log.draftJevFixFocus || null;
-      record.rewriteJevScoreRaw = rawScore(log.rewriteJevScoreRaw);
+      record.rewriteJevScoreRaw = log.rewriteModel || log.rewriteText ? rawScore(log.rewriteJevScoreRaw) : null;
       record.rewriteJevDisposition = log.rewriteJevDisposition || null;
       record.rewriteJevFixFocus = log.rewriteJevFixFocus || null;
+      record.rejudgeMs = Number.isFinite(Number(log.rejudgeMs)) ? Number(log.rejudgeMs) : null;
+      record.rawModelText = log.rawModelText == null ? null : String(log.rawModelText);
       record.draftFactCheck = log.draftFactCheck || null;
       record.rewriteFactCheck = log.rewriteFactCheck || null;
       if (log.rewriteFailReason) record.rewriteFailReason = String(log.rewriteFailReason);
@@ -278,28 +281,6 @@ export function item34BanHit(text) {
   return ITEM34_BAN.test(String(text || ''));
 }
 
-export function stripItem34Ban(text) {
-  const paragraphs = String(text || '').split(/\n{2,}/);
-  const kept = [];
-  for (const paragraph of paragraphs) {
-    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !item34BanHit(sentence));
-    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
-    if (joined && !item34BanHit(joined)) kept.push(joined);
-  }
-  return kept.join('\n\n').trim();
-}
-
-export function stripUpsell(text) {
-  const paragraphs = String(text || '').split(/\n{2,}/);
-  const kept = [];
-  for (const paragraph of paragraphs) {
-    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !sentenceIsUpsell(sentence));
-    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
-    if (joined) kept.push(joined);
-  }
-  return kept.join('\n\n').trim();
-}
-
 const STOCK_REWRITE_LEAD = /^the plan stays on the days and places you named\b/i;
 const FALSE_PRICE = /no extra fees|you'?ve got unlimited|you have unlimited|you also have unlimited/i;
 
@@ -366,26 +347,49 @@ function memoryTurns(priorTurns) {
   }));
 }
 
-export function draftingFacts(priorTurns, customerTurn = '') {
-  const turns = [...(Array.isArray(priorTurns) ? priorTurns : []), { role: 'customer', text: customerTurn }];
-  const customerTexts = turns
-    .filter((turn) => turn?.role !== 'app')
-    .map((turn) => String(turn?.text || '').trim())
-    .filter(Boolean);
-  const corpus = customerTexts.join('\n');
+function projectCustomerRecord(priorTurns, customerTurn = '') {
+  const corpus = customerCorpus(priorTurns, customerTurn);
+  const span = intakeSpan(corpus);
   let things = ensureNamedThings(thingsFromIntake(corpus), corpus);
-  for (const line of customerTexts) things = applyCustomerNotes(things, line);
+  if (corpus) things = applyCustomerNotes(things, corpus);
+  const party = completeRosterParty({ turns: [{ role: 'customer', text: corpus }] });
+  return {
+    start: span?.start || '',
+    end: span?.end || '',
+    span,
+    things,
+    party,
+    planOwned: false,
+    rule: intakeFacts(corpus).rule || '',
+    addressedTo: /this is tyler/i.test(String(customerTurn || '')) ? 'Tyler' : '',
+  };
+}
+
+export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
+  const record = saved && typeof saved === 'object' ? saved : projectCustomerRecord(priorTurns, customerTurn);
+  const things = Array.isArray(record?.things) ? record.things : [];
   const itinerary = things.map((thing) => {
     const when = String(thing.customerWhen || thing.whenLabel || '').trim();
     return when ? `${thing.title}: ${when}` : thing.title;
   }).filter(Boolean);
-  const span = intakeSpan(corpus);
-  const named = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Torren', 'Peyton', 'Keegan', 'Fallon', 'Marcus Chen', 'Aunt Jean']
-    .filter((name) => new RegExp(`\\b${name}\\b`, 'i').test(corpus));
+  const party = record?.party && typeof record.party === 'object' ? record.party : {};
+  const travelers = [
+    ...(Array.isArray(party.collaborators) ? party.collaborators : []),
+    ...(Array.isArray(party.preference_subjects) ? party.preference_subjects : []),
+  ].filter((person) => person?.name);
+  const absent = [
+    ...(Array.isArray(party.viewers) ? party.viewers.map((person) => person?.name && `${person.name} (viewer)`) : []),
+    ...(Array.isArray(party.editors) ? party.editors.map((person) => person?.name && `${person.name} (editor)`) : []),
+  ].filter(Boolean);
+  const roster = [
+    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.` : '',
+    absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
+  ].filter(Boolean).join(' ');
+  const span = record?.span || null;
   return {
     itinerary,
-    roster: named.length ? `People the customer has named: ${named.join(', ')}.` : '',
-    dates: span?.spanLabel ? `Dates the customer named: ${span.spanLabel}.` : '',
+    roster,
+    dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
   };
 }
 
@@ -460,28 +464,6 @@ export function inventedVenueNames(reply, corpus) {
   }
   if (inventedGardenHit(value, known) && !names.length) names.push('a garden they did not name');
   return names;
-}
-
-export function stripInventedVenues(reply, corpus) {
-  const paragraphs = String(reply || '').split(/\n{2,}/);
-  const kept = [];
-  for (const paragraph of paragraphs) {
-    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => inventedVenueNames(sentence, corpus).length === 0 && !inventedGardenHit(sentence, corpus));
-    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
-    if (joined && inventedVenueNames(joined, corpus).length === 0 && !inventedGardenHit(joined, corpus)) kept.push(joined);
-  }
-  return kept.join('\n\n').trim();
-}
-
-export function stripInventedGarden(reply, corpus) {
-  const paragraphs = String(reply || '').split(/\n{2,}/);
-  const kept = [];
-  for (const paragraph of paragraphs) {
-    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !inventedGardenHit(sentence, corpus));
-    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
-    if (joined && !inventedGardenHit(joined, corpus)) kept.push(joined);
-  }
-  return kept.join('\n\n').trim();
 }
 
 const MONTHS = {
@@ -561,8 +543,9 @@ export function intakeSpan(text) {
   const mentions = datedMentions(text);
   if (!mentions.length) return null;
   const year = mentions.find((item) => item.year)?.year || parseYear(text);
-  const start = { ...mentions[0], year: mentions[0].year || year };
-  const end = { ...mentions[mentions.length - 1], year: mentions[mentions.length - 1].year || year };
+  const ordered = [...mentions].sort((left, right) => (left.month - right.month) || (left.day - right.day));
+  const start = { ...ordered[0], year: ordered[0].year || year };
+  const end = { ...ordered[ordered.length - 1], year: ordered[ordered.length - 1].year || year };
   const place = /big island/i.test(text) ? 'Big Island' : '';
   const startIso = start.year ? `${start.year}-${String(start.month).padStart(2, '0')}-${String(start.day).padStart(2, '0')}` : '';
   const endIso = end.year ? `${end.year}-${String(end.month).padStart(2, '0')}-${String(end.day).padStart(2, '0')}` : '';
@@ -677,9 +660,9 @@ function spanDateLabel(date) {
 }
 
 function spanStartLabel(span) {
-  if (!span?.start) return 'Fri Apr 3';
+  if (!span?.start) return '';
   const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
-  if (Number.isNaN(start.getTime())) return 'Fri Apr 3';
+  if (Number.isNaN(start.getTime())) return '';
   return spanDateLabel(start);
 }
 
@@ -812,16 +795,21 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     }
     const spanThing = thing.title === 'Big Island' || thing.title === 'Kailua-Kona house';
     let customerWhen = thing.customerWhen || '';
-    if (thing.title === 'Groceries' && /Fri Apr 3|same day/i.test(String(thing.whenLabel || ''))) {
-      customerWhen = 'Fri Apr 3';
+    if (thing.title === 'Groceries') {
+      const arrival = String(thing.whenLabel || '').trim();
+      if (arrival && !/same day/i.test(arrival)) customerWhen = arrival;
     } else if (thing.title === 'Swim') {
-      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part) && !/^Fri Apr 3\b/i.test(part));
-      for (const hit of hits) mergeSwimLabel(labels, swimPlanLabel(hit));
-      customerWhen = labels.filter((part) => !/^Fri Apr 3\b/i.test(part)).join(' · ');
+      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part));
+      for (const hit of hits) {
+        if (/\?/.test(hit) || /\bif\b/i.test(hit)) continue;
+        mergeSwimLabel(labels, swimPlanLabel(hit));
+      }
+      customerWhen = labels.join(' · ');
     } else if (thing.title === 'Gardens' || thing.title === 'Dinner' || thing.title === 'Town walk') {
       const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
       for (const hit of hits) {
         if (/keep us on the big island|stay on the big island/i.test(hit)) continue;
+        if (/\?/.test(hit) || /\bif\b/i.test(hit)) continue;
         for (const dated of datedMentions(hit)) {
           const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
           if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
@@ -937,45 +925,61 @@ function commitsDay(sentence) {
   return true;
 }
 
-export function customerTripFacts(priorTurns, customerTurn = '') {
-  const corpus = customerCorpus(priorTurns, customerTurn);
-  const span = intakeSpan(corpus);
-  const sentences = splitSentences(corpus);
-  const swimDays = new Set();
-  const gardenDays = new Set();
+function spanFromIso(startIso, endIso) {
+  const start = String(startIso || '').slice(0, 10);
+  const end = String(endIso || start).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) return null;
+  const startDate = new Date(`${start}T00:00:00Z`);
+  const endDate = new Date(`${end}T00:00:00Z`);
+  if (Number.isNaN(startDate.getTime())) return null;
+  const startMention = { month: startDate.getUTCMonth() + 1, day: startDate.getUTCDate(), year: startDate.getUTCFullYear() };
+  const endMention = Number.isNaN(endDate.getTime())
+    ? startMention
+    : { month: endDate.getUTCMonth() + 1, day: endDate.getUTCDate(), year: endDate.getUTCFullYear() };
+  return {
+    start,
+    end: Number.isNaN(endDate.getTime()) ? start : end,
+    startLabel: formatMention(startMention, { withWeekday: true }),
+    endLabel: formatMention(endMention, { withWeekday: true, withYear: true }),
+    spanLabel: `${formatMention(startMention, { withWeekday: true })}–${formatMention(endMention, { withWeekday: true, withYear: true })}`,
+    year: startMention.year,
+  };
+}
+
+function stampsFromWhen(value) {
+  return [...new Set(String(value || '').split('·').map((part) => dayStamp(part)).filter(Boolean))];
+}
+
+export function savedTripFacts(record = {}) {
+  const things = Array.isArray(record.things) ? record.things : [];
+  const swim = things.find((thing) => /\bswim\b/i.test(String(thing?.title || '')));
+  const garden = things.find((thing) => /garden/i.test(String(thing?.title || '')));
+  const span = record.span?.end ? record.span : spanFromIso(record.start, record.end);
+  const party = record.party && typeof record.party === 'object' ? record.party : {};
+  const notTraveling = [
+    ...(Array.isArray(party.viewers) ? party.viewers : []).map((person) => ({ name: person?.name, role: 'viewer' })),
+    ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
+  ].filter((person) => person.name);
   const owners = {};
-  for (const sentence of sentences) {
-    if (/\bswim\b/i.test(sentence)) {
-      if (/tyler/i.test(sentence)) owners.swim = owners.swim || 'Tyler';
-      if (commitsDay(sentence)) {
-        for (const stamp of looseDayStamps(sentence, span)) swimDays.add(stamp);
-      }
-    }
-    if (/garden/i.test(sentence)) {
-      if (/kimberly/i.test(sentence)) owners.gardens = 'Kimberly';
-      if (commitsDay(sentence)) {
-        for (const stamp of looseDayStamps(sentence, span)) gardenDays.add(stamp);
-      }
-    }
-  }
-  const activities = [];
-  if (/\bswim\b/i.test(corpus)) activities.push('swim');
-  if (/garden/i.test(corpus)) activities.push('garden');
-  if (/picnic/i.test(corpus)) activities.push('picnic');
-  if (/town walk/i.test(corpus)) activities.push('town walk');
-  if (/\bdinner\b/i.test(corpus)) activities.push('dinner');
-  if (/grocer/i.test(corpus)) activities.push('groceries');
-  const addressedTo = /this is tyler|tyler[^\n]{0,80}paid for my own seat/i.test(String(customerTurn || '')) ? 'Tyler' : '';
+  if (/kimberly/i.test(String(garden?.who || ''))) owners.gardens = 'Kimberly';
+  if (/tyler/i.test(String(swim?.who || ''))) owners.swim = 'Tyler';
+  const activities = things.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean);
   return {
     span,
-    swimDays: [...swimDays],
-    gardenDays: [...gardenDays],
+    swimDays: [...new Set([...stampsFromWhen(swim?.customerWhen), ...stampsFromWhen(swim?.whenLabel)])],
+    gardenDays: [...new Set([...stampsFromWhen(garden?.customerWhen), ...stampsFromWhen(garden?.whenLabel)])],
     owners,
-    planOwned: /(?:bought|purchased|own) the unlimited plan/i.test(corpus),
+    planOwned: record.planOwned === true,
     activities,
-    corpus,
-    addressedTo,
+    notTraveling,
+    rule: String(record.rule || ''),
+    addressedTo: String(record.addressedTo || ''),
+    corpus: '',
   };
+}
+
+export function customerTripFacts(priorTurns, customerTurn = '') {
+  return savedTripFacts(projectCustomerRecord(priorTurns, customerTurn));
 }
 
 function dayIsSet(stamps, set) {
@@ -985,6 +989,9 @@ function dayIsSet(stamps, set) {
 function pushError(errors, line) {
   if (line && !errors.includes(line)) errors.push(line);
 }
+
+const RANGE_END = /\b(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?apr(?:il)?\s+\d{1,2}(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?(?:apr(?:il)?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
+const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)?\b|\bpacked\b(?!\s+list)|\bhead(?:ing)? out\b|\bafter checkout\b|\bone last time\b/i;
 
 export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
@@ -996,14 +1003,16 @@ export function draftFactErrors(reply, facts = {}) {
     pushError(errors, 'the unlimited plan is not owned yet');
   }
   const endDay = endDayNumber(span);
-  const shortened = body.match(/\bapril\s+\d{1,2}(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:april\s+)?(\d{1,2})(?:st|nd|rd|th)?\b/i);
-  if (shortened && endDay && Number(shortened[1]) < endDay) {
-    pushError(errors, `the trip runs through ${facts.span?.endLabel || span.end}, not April ${shortened[1]}`);
+  const ranges = body.matchAll(RANGE_END);
+  for (const shortened of ranges) {
+    if (endDay && Number(shortened[1]) !== endDay) {
+      pushError(errors, `the trip runs through ${facts.span?.endLabel || span.end}, not day ${shortened[1]}`);
+    }
   }
-  if (/no extra charge|no extra cost|at no extra/i.test(body) && !/no extra charge|no extra cost|at no extra/i.test(facts.corpus || '')) {
+  if (/no extra charge|no extra cost|at no extra/i.test(body)) {
     pushError(errors, 'no extra charge is not in what the customer set');
   }
-  if (/picnic/i.test(body) && !(facts.activities || []).includes('picnic')) {
+  if (/picnic/i.test(body) && !(facts.activities || []).some((item) => /picnic/i.test(item))) {
     pushError(errors, 'a picnic was not named');
   }
   if (/kimberly/i.test(facts.owners?.gardens || '') && /tyler(?:'|’)s\s+gardens?/i.test(body)) {
@@ -1012,8 +1021,17 @@ export function draftFactErrors(reply, facts = {}) {
   if (facts.addressedTo === 'Tyler' && /kimberly/i.test(facts.owners?.gardens || '') && /your (?:two )?garden/i.test(body)) {
     pushError(errors, 'the gardens are Kimberly\'s, not Tyler\'s');
   }
+  if (/two big activities/i.test(facts.rule || '') && /locked in|back-to-back heavy/i.test(body)) {
+    pushError(errors, 'Lauren\'s rule is no two big activities stacked on the same day');
+  }
+  const paragraphs = body.split(/\n{2,}/).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
+  const repeatedSentences = splitSentences(body).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
+  if (new Set(paragraphs).size !== paragraphs.length || new Set(repeatedSentences).size !== repeatedSentences.length) {
+    pushError(errors, 'a paragraph is repeated');
+  }
   const sentences = splitSentences(body);
   const tripEnd = endWeekday(span);
+  const endStamp = span?.end ? dayStamp(`${MONTH_ABBR[Number(String(span.end).slice(5, 7))]} ${endDay}`) : '';
   for (let index = 0; index < sentences.length; index += 1) {
     const sentence = sentences[index];
     const next = sentences[index + 1] || '';
@@ -1023,24 +1041,29 @@ export function draftFactErrors(reply, facts = {}) {
       const stamps = [...looseDayStamps(previous, span), ...looseDayStamps(sentence, span), ...looseDayStamps(next, span)];
       const swimStamps = looseDayStamps(sentence, span);
       const attached = swimStamps.length ? swimStamps : stamps;
-      if (swimDays.length && attached.length && !dayIsSet(attached, swimDays)) {
+      if (attached.length && !dayIsSet(attached, swimDays)) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
     }
     if (/garden/i.test(sentence)) {
       const stamps = looseDayStamps(sentence, span);
-      const already = /already set/i.test(sentence);
-      if (gardenDays.length && stamps.length && !dayIsSet(stamps, gardenDays)) {
+      const already = /already set|locked in/i.test(sentence);
+      if (stamps.length && !dayIsSet(stamps, gardenDays)) {
         pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
       }
     }
-    if (/after checkout|one last time|heading out|last day|last morning/i.test(sentence)) {
+    for (const person of facts.notTraveling || []) {
+      const named = new RegExp(`\\b${String(person.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (named.test(sentence) && /on the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along/i.test(sentence)) {
+        pushError(errors, `${person.name} is a ${person.role}, not on the trip`);
+      }
+    }
+    if (DEPARTURE.test(sentence)) {
       const stamps = [...looseDayStamps(sentence, span), ...looseDayStamps(previous, span)];
       const named = weekdayName(sentence) || weekdayName(previous);
-      const endStamp = span?.end ? dayStamp(`${MONTH_ABBR[Number(String(span.end).slice(5, 7))]} ${endDay}`) : '';
-      const onEnd = (stamps.length && endStamp && stamps.includes(endStamp)) || (named && tripEnd && named === tripEnd);
-      if ((stamps.length || named) && !onEnd) {
-        pushError(errors, `${stamps[0] || named} is not the trip end`);
+      const onEnd = (stamps.length && endStamp && stamps.includes(endStamp)) || (named && tripEnd && named === tripEnd && (!stamps.length || stamps.includes(endStamp)));
+      if (!onEnd) {
+        pushError(errors, `${stamps[0] || named || 'that phrase'} is not the trip end`);
       }
     }
   }
@@ -1080,44 +1103,85 @@ function payerFromCustomer(corpus, name) {
   return '';
 }
 
+function rememberRoster(sources, field, value, source) {
+  sources.push({ field, value, source });
+}
+
 export function completeRosterParty(doc) {
   const stored = doc?.party && typeof doc.party === 'object' ? doc.party : {};
   const corpus = (Array.isArray(doc?.turns) ? doc.turns : [])
     .filter((turn) => turn?.role !== 'app')
     .map((turn) => String(turn?.text || ''))
     .join('\n');
+  const sources = [];
   const party = {
-    primary: stored.primary?.name
-      ? { name: stored.primary.name, role: stored.primary.role || 'Owner' }
-      : { name: doc?.customerName || doc?.targetPerson || 'Craig', role: 'Owner' },
-    collaborators: Array.isArray(stored.collaborators) ? stored.collaborators.map((person) => ({ ...person })) : [],
-    preference_subjects: Array.isArray(stored.preference_subjects)
-      ? stored.preference_subjects.filter((kid) => kid?.name && Number.isFinite(Number(kid.age))).map((kid) => ({ name: kid.name, age: Number(kid.age) }))
-      : [],
-    viewers: Array.isArray(stored.viewers) ? stored.viewers.filter((person) => person?.name).map((person) => ({ name: person.name })) : [],
-    editors: Array.isArray(stored.editors) ? stored.editors.filter((person) => person?.name).map((person) => ({ name: person.name })) : [],
+    primary: null,
+    collaborators: [],
+    preference_subjects: [],
+    viewers: [],
+    editors: [],
+    sources,
   };
-  for (const name of ['Kimberly', 'Tyler', 'Lauren']) {
-    const payer = payerFromCustomer(corpus, name);
-    const existing = party.collaborators.find((person) => new RegExp(name, 'i').test(person?.name || ''));
-    if (existing) {
-      if (payer) existing.payer = payer;
-      continue;
-    }
-    if (payer) party.collaborators.push({ name: `${name} Davidson`, payer });
+  if (stored.primary?.name) {
+    party.primary = { name: stored.primary.name, role: stored.primary.role || 'Owner' };
+    rememberRoster(sources, 'primary', party.primary.name, 'trip.dialogParty');
+  } else if (doc?.customerName || doc?.targetPerson) {
+    party.primary = { name: doc.customerName || doc.targetPerson, role: 'Owner' };
+    rememberRoster(sources, 'primary', party.primary.name, 'session');
   }
-  for (const name of ['Torren', 'Peyton', 'Keegan', 'Fallon']) {
-    if (party.preference_subjects.some((kid) => kid.name === name)) continue;
-    const match = corpus.match(new RegExp(`\\b${name}\\b(?:\\s+who\\s+is|\\s+is)\\s+([a-z0-9-]+)`, 'i'));
-    const age = match ? ageFromWords(match[1]) : null;
-    if (age == null) continue;
+  for (const person of Array.isArray(stored.collaborators) ? stored.collaborators : []) {
+    if (!person?.name) continue;
+    party.collaborators.push({ ...person });
+    rememberRoster(sources, `collaborators.${person.name}`, person.payer || '', 'trip.dialogParty');
+  }
+  for (const kid of Array.isArray(stored.preference_subjects) ? stored.preference_subjects : []) {
+    if (!kid?.name || !Number.isFinite(Number(kid.age))) continue;
+    party.preference_subjects.push({ name: kid.name, age: Number(kid.age) });
+    rememberRoster(sources, `preference_subjects.${kid.name}`, Number(kid.age), 'trip.dialogParty');
+  }
+  for (const person of Array.isArray(stored.viewers) ? stored.viewers : []) {
+    if (!person?.name) continue;
+    party.viewers.push({ name: person.name });
+    rememberRoster(sources, `viewers.${person.name}`, 'viewer', 'trip.dialogParty');
+  }
+  for (const person of Array.isArray(stored.editors) ? stored.editors : []) {
+    if (!person?.name) continue;
+    party.editors.push({ name: person.name });
+    rememberRoster(sources, `editors.${person.name}`, 'editor', 'trip.dialogParty');
+  }
+  for (const match of corpus.matchAll(/\bI pay for ([A-Z][a-z]+(?: [A-Z][a-z]+)?)/g)) {
+    const name = match[1];
+    const existing = party.collaborators.find((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''));
+    if (existing) existing.payer = existing.payer || 'owner';
+    else party.collaborators.push({ name, payer: 'owner' });
+    rememberRoster(sources, `collaborators.${name}.payer`, 'owner', `customer: I pay for ${name}`);
+  }
+  for (const match of corpus.matchAll(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) pays for (?:himself|herself|themself)/g)) {
+    const name = match[1];
+    const payer = name.split(/\s+/)[0].toLowerCase();
+    const existing = party.collaborators.find((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''));
+    if (existing) existing.payer = existing.payer || payer;
+    else party.collaborators.push({ name, payer });
+    rememberRoster(sources, `collaborators.${name}.payer`, payer, `customer: ${name} pays for themself`);
+  }
+  for (const match of corpus.matchAll(/\b([A-Z][a-z]+) who is ([a-z0-9-]+)/g)) {
+    const name = match[1];
+    const age = ageFromWords(match[2]);
+    if (age == null || party.preference_subjects.some((kid) => kid.name === name)) continue;
     party.preference_subjects.push({ name, age });
+    rememberRoster(sources, `preference_subjects.${name}`, age, `customer: ${name} who is ${match[2]}`);
   }
-  if (!party.viewers.length && /Marcus Chen[^\n]{0,60}(?:can view|can look)/i.test(corpus)) {
-    party.viewers.push({ name: 'Marcus Chen' });
+  for (const match of corpus.matchAll(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) can (?:view|look)\b/g)) {
+    const name = match[1];
+    if (party.viewers.some((person) => person.name === name)) continue;
+    party.viewers.push({ name });
+    rememberRoster(sources, `viewers.${name}`, 'viewer', `customer: ${name} can view`);
   }
-  if (!party.editors.length && /Aunt Jean[^\n]{0,60}can edit/i.test(corpus)) {
-    party.editors.push({ name: 'Aunt Jean' });
+  for (const match of corpus.matchAll(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) can edit\b/g)) {
+    const name = match[1];
+    if (party.editors.some((person) => person.name === name)) continue;
+    party.editors.push({ name });
+    rememberRoster(sources, `editors.${name}`, 'editor', `customer: ${name} can edit`);
   }
   return party;
 }
@@ -1195,17 +1259,32 @@ function bigramDice(a, b) {
   return total ? (2 * shared) / total : 0;
 }
 
-export function shipChoice({ draft, rewrite, draftFactErrors = [], rewriteFactErrors = [] }) {
+export function shipChoice({
+  draft,
+  rewrite,
+  draftScore = null,
+  rewriteScore = null,
+  draftFactErrors = [],
+  rewriteFactErrors = [],
+}) {
   const rewriteOk = Boolean(String(rewrite || '').trim()) && !nearIdenticalRewrite(draft, rewrite);
   const draftCount = (Array.isArray(draftFactErrors) ? draftFactErrors : []).length;
   const rewriteCount = (Array.isArray(rewriteFactErrors) ? rewriteFactErrors : []).length;
-  const worse = rewriteCount > draftCount;
-  if (rewriteOk && !worse) return { text: String(rewrite).trim(), rewritten: true, flagged: false, failReason: '' };
+  const draftRaw = Number(draftScore);
+  const rewriteRaw = Number(rewriteScore);
+  const scoredLower = !Number.isFinite(rewriteRaw) || !Number.isFinite(draftRaw) || rewriteRaw < draftRaw;
+  if (rewriteOk && rewriteCount === 0 && !scoredLower) {
+    return { text: String(rewrite).trim(), rewritten: true, flagged: false, failReason: '' };
+  }
+  let failReason = '';
+  if (rewriteCount > 0) failReason = 'rewrite_fact_check_held';
+  else if (scoredLower && rewriteOk) failReason = 'rewrite_scored_lower';
+  else if (!rewriteOk) failReason = 'rewrite_not_shipped';
   return {
     text: draft,
     rewritten: false,
-    flagged: true,
-    failReason: worse ? 'rewrite_fact_check_worse' : '',
+    flagged: draftCount > 0 || rewriteCount > 0,
+    failReason,
   };
 }
 
@@ -1286,22 +1365,8 @@ export function dockQuality(quality, flags) {
   };
 }
 
-function keepPriceStripWelcome(text) {
-  const paragraphs = String(text || '').split(/\n{2,}/);
-  const kept = [];
-  for (const paragraph of paragraphs) {
-    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((sentence) => !isCollabWelcome(sentence));
-    const joined = sentences.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
-    if (joined) kept.push(joined);
-  }
-  return kept.join('\n\n').trim();
-}
-
-function applyUpsellPolicy(reply, upsell, postIntake, customerTurn = '') {
-  const value = stripChatMarkdown(String(reply || '').trim());
-  if (customerAsksPrice(customerTurn)) return keepPriceStripWelcome(value);
-  if (upsell === 'forbidden') return stripUpsell(value);
-  return value;
+function applyUpsellPolicy(reply) {
+  return stripChatMarkdown(String(reply || '').trim());
 }
 
 function rewriteBreaksUpsell(text, upsell, customerTurn) {
@@ -1315,11 +1380,63 @@ function item34Reason(text) {
   return item34BanHit(text) ? 'item34_ban' : '';
 }
 
-function cleanCandidate(text, upsell, postIntake, customerTurn, corpus) {
-  let value = applyUpsellPolicy(text, upsell, postIntake, customerTurn);
-  if (item34BanHit(value)) value = applyUpsellPolicy(stripItem34Ban(value), upsell, postIntake, customerTurn);
-  if (inventedVenueNames(value, corpus).length) value = applyUpsellPolicy(stripInventedVenues(value, corpus), upsell, postIntake, customerTurn);
-  return value;
+function cleanCandidate(text) {
+  return applyUpsellPolicy(text);
+}
+
+async function loadSavedTripRecord(session, env = process.env) {
+  const tripId = session?.trip_id || session?.tripId;
+  if (!tripId || !env?.DATABASE_URL) return null;
+  try {
+    const { sql } = await import('./db.mjs');
+    const db = sql(env);
+    const trips = await db`select start_date, end_date, metadata from trips where id = ${tripId} limit 1`;
+    const row = trips[0];
+    if (!row) return null;
+    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    const thingRows = await db`select title, metadata from trip_things where trip_id = ${tripId} order by created_at asc`;
+    return {
+      start: row.start_date || '',
+      end: row.end_date || '',
+      things: thingRows.map((thing) => {
+        const thingMeta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+        return {
+          title: thing.title,
+          who: thingMeta.who || '',
+          whenLabel: thingMeta.whenLabel || '',
+          customerWhen: thingMeta.customerWhen || '',
+          notes: thingMeta.notes || [],
+        };
+      }),
+      party: meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : null,
+      rule: meta.intakeRule || '',
+      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
+  const projected = projectCustomerRecord(priorTurns, customerTurn);
+  const baseThings = Array.isArray(saved?.things) && saved.things.length ? saved.things : projected.things;
+  const things = customerTurn ? applyCustomerNotes(baseThings, customerTurn) : baseThings;
+  const party = completeRosterParty({
+    party: saved?.party || {},
+    customerName: session?.display_name || session?.displayName || saved?.party?.primary?.name || '',
+    turns: [{ role: 'customer', text: saved?.party ? customerTurn : customerCorpus(priorTurns, customerTurn) }],
+  });
+  const span = saved?.start ? spanFromIso(saved.start, saved.end || saved.start) : projected.span;
+  return {
+    start: span?.start || projected.start || '',
+    end: span?.end || projected.end || '',
+    span,
+    things,
+    party,
+    planOwned: saved?.planOwned === true,
+    rule: saved?.rule || projected.rule,
+    addressedTo: projected.addressedTo,
+  };
 }
 
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env } = {}) {
@@ -1334,8 +1451,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const postIntake = postIntakeUpsellTurn(customerTurn, history);
   const upsell = upsellModeForTurn(customerTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
-  const tripContext = draftingFacts(history, customerTurn);
-  const tripFacts = customerTripFacts(history, customerTurn);
+  const savedTrip = await loadSavedTripRecord(session, env);
+  const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session);
+  const tripContext = draftingFacts(history, customerTurn, mergedTrip);
+  const tripFacts = savedTripFacts(mergedTrip);
   const planLine = customerAsksPrice(customerTurn) ? payerPriceLine(customerTurn, env) : '';
   const seatDollars = planSeatDollars(env);
   const planTable = planLine
@@ -1402,9 +1521,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (reply && replyLeavesDestination(reply, destination)) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
-    if (replyLeavesDestination(reply, destination)) {
-      reply = splitSentences(reply).filter((sentence) => !OTHER_DESTINATION.test(sentence)).join(' ').trim();
-    }
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
     const nudge = customerAsksPrice(customerTurn)
@@ -1472,6 +1588,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rewriteJevFixFocus: null,
     draftFactCheck: draftFactLine,
     rewriteFactCheck: null,
+    rejudgeMs: null,
+    rawModelText: model?.text == null ? null : String(model.text),
     jevScoreRewrite: null,
     jevNote,
     jevNoteReason: quality?.jevNoteReason || (jevNote ? null : 'jev_no_free_text'),
@@ -1528,6 +1646,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planTable,
     planLine,
     seatDollars,
+    rawModelText: model?.text == null ? null : String(model.text),
     failureReason: qualityFailureReason(quality, draftFlags),
     interimReply,
     draftLatencyMs,
@@ -1678,9 +1797,11 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars || 0,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn.',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph.',
         failure ? `The scoring failure is: ${failure}. Fix that failure.` : '',
-        'Do not assign a swim, a garden, checkout, or one last time to a day the customer did not set. Do not say the unlimited plan is already owned.',
+        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
+        'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
+        'Do not say the unlimited plan is already owned.',
         pending?.planTable?.payer_line
           ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group. Do not say Fallon.`
           : '',
@@ -1690,10 +1811,7 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   }
   function acceptText(called) {
     const modelText = called?.called && called.text ? String(called.text).trim() : '';
-    let rewritten = modelText
-      ? cleanCandidate(modelText, pending?.upsell, pending?.postIntake === true, pending?.customerTurn, pending?.corpus)
-      : '';
-    if (item34Reason(rewritten)) rewritten = cleanCandidate(stripItem34Ban(rewritten), pending?.upsell, pending?.postIntake === true, pending?.customerTurn, pending?.corpus);
+    const rewritten = modelText ? cleanCandidate(modelText) : '';
     return { modelText, rewritten, called };
   }
   let attempt = await askRewrite(pending?.failureReason);
@@ -1751,13 +1869,15 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const choice = shipChoice({
     draft: pending.draft,
     rewrite: failReason ? '' : rewritten,
+    draftScore: rawScore(pending.quality?.scoreRaw),
+    rewriteScore: rawScore(rewriteQuality?.scoreRaw),
     draftFactErrors: draftErrors,
-    rewriteFactErrors: rewriteErrors,
+    rewriteFactErrors: failReason ? [] : rewriteErrors,
   });
   if (!choice.rewritten && !failReason) {
-    failReason = choice.failReason === 'rewrite_fact_check_worse'
-      ? `rewrite_fact_check_worse: ${rewriteErrors.join('; ')}`
-      : 'rewrite_not_shipped';
+    failReason = choice.failReason === 'rewrite_fact_check_held'
+      ? `rewrite_fact_check_held: ${rewriteErrors.join('; ')}`
+      : (choice.failReason || 'rewrite_not_shipped');
   }
   const rewriteQualityMs = Math.max(0, Date.now() - rewriteQualityStarted);
   const draftQualityMs = Number(pending.qualityJevMs) || 0;
@@ -1797,6 +1917,8 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteJevFixFocus: rewriteQuality?.jevFocus || null,
     draftFactCheck: draftFactLine,
     rewriteFactCheck: rewriteFactLine,
+    rejudgeMs: judgedText ? rewriteQualityMs : null,
+    rawModelText: pending.rawModelText == null ? null : String(pending.rawModelText),
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevNote: shippedNote,
     jevNoteReason: shippedNote ? null : (shippedQuality?.jevNoteReason || 'jev_no_free_text'),
@@ -1889,9 +2011,11 @@ export function liveTranscriptFromRows({ session, rows }) {
       draftJevScoreRaw: rawScore(live.draftJevScoreRaw),
       draftJevDisposition: live.draftJevDisposition || null,
       draftJevFixFocus: live.draftJevFixFocus || null,
-      rewriteJevScoreRaw: rawScore(live.rewriteJevScoreRaw),
+      rewriteJevScoreRaw: live.rewriteModel || live.rewriteText ? rawScore(live.rewriteJevScoreRaw) : null,
       rewriteJevDisposition: live.rewriteJevDisposition || null,
       rewriteJevFixFocus: live.rewriteJevFixFocus || null,
+      rejudgeMs: Number.isFinite(Number(live.rejudgeMs)) ? Number(live.rejudgeMs) : null,
+      rawModelText: live.rawModelText == null ? null : String(live.rawModelText),
       draftFactCheck: live.draftFactCheck || null,
       rewriteFactCheck: live.rewriteFactCheck || null,
       rewriteText: live.rewriteText || live.quality?.rewriteText || '',

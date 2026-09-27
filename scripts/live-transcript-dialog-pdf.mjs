@@ -717,6 +717,7 @@ function producerLogLine(turn) {
     `rewriteJevFixFocus: ${turn.rewriteJevFixFocus || 'none'}`,
     `draftFactCheck: ${turn.draftFactCheck || 'none'}`,
     `rewriteFactCheck: ${turn.rewriteFactCheck || 'none'}`,
+    `rejudgeMs: ${Number.isFinite(Number(turn.rejudgeMs)) ? Number(turn.rejudgeMs) : 'none'}`,
   ].join(' | ');
 }
 

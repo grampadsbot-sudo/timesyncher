@@ -254,24 +254,7 @@ async function main() {
     await assertLiveMatchesTip();
   } catch (error) {
     if (!isVoidStaleBuild(error)) throw error;
-    await mkdir(outDir, { recursive: true });
-    const stamp = `${voidDocumentStamp(error.live, error.tip)}\n`;
-    await writeFile(path.join(outDir, 'REPORT.md'), stamp);
-    await writeFile(verifyPath, stamp);
-    const manifest = {
-      title: 'Screenshot Journey',
-      subtitle: 'This run is void. Do not grade it.',
-      void: true,
-      deployBanner: stamp.trim(),
-      pages: [],
-      gaps: [],
-    };
-    const manifestPath = path.join(outDir, 'journey-manifest.json');
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-    const pdfPath = path.join(outDir, 'screenshot-journey.pdf');
-    const built = spawnSync('python3', [path.join(root, 'scripts/screenshot_journey_pdf.py'), manifestPath, pdfPath], { encoding: 'utf8' });
-    if (built.status !== 0) process.stderr.write(built.stderr || built.stdout || 'void pdf failed\n');
-    process.stderr.write(`${error.message}\n`);
+    process.stderr.write(`${error.message}\nrefused: journey stamp is empty or does not match the tip\n`);
     process.exit(2);
   }
   const gate = runGate();
@@ -608,6 +591,15 @@ async function main() {
             const lineTop = range.getBoundingClientRect().top;
             const paneTop = scroller.getBoundingClientRect().top;
             scroller.scrollTop += lineTop - paneTop - 36;
+          }
+          const bubbleBox = bubble.getBoundingClientRect();
+          if (needleText.startsWith('welcome aboard')) {
+            return {
+              x: Math.max(0, bubbleBox.x - 16),
+              y: Math.max(0, bubbleBox.y - 16),
+              width: Math.min(1200, Math.max(bubbleBox.width + 32, 860)),
+              height: Math.min(720, Math.max(bubbleBox.height + 32, 360)),
+            };
           }
           const line = range.getBoundingClientRect();
           const pane = (scroller || bubble).getBoundingClientRect();
@@ -946,14 +938,12 @@ async function main() {
           const label = [...document.querySelectorAll('label')].find((node) => /^takeoff\b/i.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
           if (!label) return null;
           const grid = label.parentElement;
-          const values = [...grid.querySelectorAll('input')].map((input) => String(input.value || '').trim());
-          const blob = `${grid.innerText || ''}\n${values.join('\n')}`;
-          if (!/connections/i.test(blob) || !/layover/i.test(blob)) return null;
-          const filled = values.filter((value) => value && !/^fri apr 3$/i.test(value));
+          const input = label.querySelector('input') || [...grid.querySelectorAll('input')].find((node) => String(node.value || '').trim());
+          const takeoff = String(input?.value || '').trim();
           grid.scrollIntoView({ block: 'center' });
           const box = grid.getBoundingClientRect();
           return {
-            filled: filled.length >= 2,
+            filled: Boolean(takeoff),
             x: Math.max(0, box.x - 16),
             y: Math.max(0, box.y - 16),
             width: Math.min(960, Math.max(420, box.width + 32)),
@@ -968,7 +958,7 @@ async function main() {
             clipRect,
           });
         } else {
-          gap('Flight fields', 'flight-fields.md', 'Connections and layover were not stated, so those fields stay empty. Unblock: a real connection or layover on this trip.');
+          gap('Flight fields', 'flight-fields.md', 'The flight detail did not show a takeoff from the saved trip.');
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
@@ -1064,7 +1054,7 @@ async function main() {
     if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'the restaurants list did not render All tags or Seafood chips');
     if (!captured.has('budget.md')) gap('Budget', 'budget.md', 'the shared app did not open a Budget tab');
     if (!captured.has('flight-fields.md') && !gaps.some((item) => item.feature === 'Flight fields')) {
-      gap('Flight fields', 'flight-fields.md', 'Connections and layover were not stated, so those fields stay empty. Unblock: a real connection or layover on this trip.');
+      gap('Flight fields', 'flight-fields.md', 'The flight detail did not show a takeoff from the saved trip.');
     }
     if (!captured.has('happy-hour.md')) gap('Happy hour', 'happy-hour.md', 'Ulu Ocean Grill did not show a Happy hour field');
     if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'SpeediShuttle shows the shuttle summary and does not render Rental company and Car type. Unblock: those two fields on the open car detail.');
@@ -1073,7 +1063,7 @@ async function main() {
     if (!captured.has('ratings-reviews.md')) {
       const emptyRating = await page.evaluate(() => [...document.querySelectorAll('label')].some((node) => /^google rating\b/i.test((node.innerText || '').trim()) && !/\d/.test(String(node.querySelector('input')?.value || '')))).catch(() => false);
       if (emptyRating) gap('Ratings and reviews', 'ratings-reviews.md', 'an empty Google rating box is still on the detail');
-      else mark('ratings-reviews.md');
+      else gap('Ratings and reviews', 'ratings-reviews.md', 'no sourced rating screenshot was captured');
     }
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
     if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control did not open a Print / PDF menu. Unblock: mount that menu on vacation-staging.');
@@ -1098,13 +1088,13 @@ async function main() {
 
     async function captureKeepsake(base, label) {
       const rootUrl = base.endsWith('/') ? base : `${base}/`;
-      await go(`${rootUrl}journey?style=1`);
+      await go(`${rootUrl}journey?style=1&printMode=report&pdfReport=keepsake`);
       await page.waitForFunction(() => {
         const text = document.body.innerText || '';
         return text.length > 400 && !/Preparing PDF/i.test(text);
       }, { timeout: 45000 }).catch(() => {});
       const style1Text = await bodyText(page);
-      const style1 = page.url().includes('vacation-staging') && !page.url().includes('travel.timesyncher.com') && style1Text.length > 400 && !/Preparing PDF/i.test(style1Text);
+      const style1 = page.url().includes('vacation-staging') && !page.url().includes('travel.timesyncher.com') && /style=1|pdfReport=keepsake/.test(page.url()) && style1Text.length > 400 && !/Preparing PDF/i.test(style1Text);
       if (style1 && !await isShell(page) && !captured.has('keepsake-style-one.md')) {
         await shot(`style-one-${label}`, 'Initial itinerary', 'Keepsake Style one', { file: 'keepsake-style-one.md', note: 'Rendered on the intake trip.' });
       }
@@ -1159,6 +1149,11 @@ async function main() {
       if (!html) {
         gap(`${name} collaborator email`, 'collaborators.md', `${name}'s invite was not captured for this trip`);
         continue;
+      }
+      const hasButton = /<a\b[^>]*display:inline-block[^>]*>/i.test(html);
+      const hasVisibleLink = /<a\b[^>]*word-break:break-all[^>]*>\s*https?:\/\//i.test(html);
+      if (!hasButton || !hasVisibleLink) {
+        gap(`${name} collaborator email`, 'collaborators.md', `${name}'s invite is missing the button or the visible link`);
       }
       await page.setContent(html, { waitUntil: 'domcontentloaded' });
       await sleep(200);
@@ -1247,20 +1242,24 @@ async function main() {
     }
   }
 
-  let packVoid = null;
+  let match;
   try {
-    await assertLiveMatchesTip();
+    match = await assertLiveMatchesTip();
   } catch (error) {
     if (!isVoidStaleBuild(error)) throw error;
-    packVoid = error;
+    process.stderr.write(`${error.message}\nrefused: journey stamp does not match the tip\n`);
+    process.exit(2);
+  }
+  const deployBanner = match?.live ? `live ${match.live} https://vacation-staging.timesyncher.com` : '';
+  if (!deployBanner || match.live !== match.tip) {
+    process.stderr.write('refused: journey stamp is empty or does not match the tip\n');
+    process.exit(2);
   }
   const manifest = {
     title: 'Screenshot Journey',
-    subtitle: packVoid
-      ? 'This run is void. Do not grade it.'
-      : 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
-    void: Boolean(packVoid),
-    deployBanner: packVoid ? voidDocumentStamp(packVoid.live, packVoid.tip) : (process.env.R5_DEPLOY_BANNER || ''),
+    subtitle: 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
+    void: false,
+    deployBanner,
     pages,
     gaps,
   };
@@ -1274,19 +1273,6 @@ async function main() {
   }
   const sha = createHash('sha256').update(await readFile(pdfPath)).digest('hex');
   await writeJourneySection(verifyPath, features.length, captured, gaps, sha);
-  if (packVoid) {
-    const stamped = prependVoidStamp(await readFile(verifyPath, 'utf8'), packVoid.live, packVoid.tip);
-    await writeFile(verifyPath, stamped);
-    let report = '';
-    try {
-      report = await readFile(path.join(outDir, 'REPORT.md'), 'utf8');
-    } catch {
-      report = '';
-    }
-    await writeFile(path.join(outDir, 'REPORT.md'), prependVoidStamp(report, packVoid.live, packVoid.tip));
-    process.stderr.write(`${packVoid.message}\n`);
-    process.exit(2);
-  }
   process.stdout.write(`screenshot-journey.pdf sha256 ${sha}\n`);
   process.stdout.write(`pages ${pages.length} gaps ${gaps.length} features ${captured.size} of ${features.length}\n`);
 }

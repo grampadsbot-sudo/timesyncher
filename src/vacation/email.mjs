@@ -80,7 +80,9 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
     <p>${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.</p>
     <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. You join from this email, accept the terms, and then the vacation opens.</p>
     ${link ? `<p><a href="${link}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the approved email invite</a></p>` : ''}
-    ${site ? `<p>Vacation website: <a href="${site}" style="color:#f5d37b;text-decoration:underline">${site}</a></p>` : ''}
+    ${link ? `<p><a href="${link}" style="color:#f5d37b;word-break:break-all">${link}</a></p>` : ''}
+    ${site ? `<p><a href="${site}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the vacation</a></p>` : ''}
+    ${site ? `<p><a href="${site}" style="color:#f5d37b;word-break:break-all">${site}</a></p>` : ''}
     <p style="color:#cfc2a9">Anyone with the shared vacation link can view it. Editing requires this owner-approved email invite.</p>
     <p style="color:#cfc2a9">Questions: <a href="mailto:${supportEmail(env)}" style="color:#f5d37b;text-decoration:underline">${supportEmail(env)}</a></p>
   </div>

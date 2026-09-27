@@ -18,6 +18,9 @@ def esc(value):
 def build(manifest, dest):
     pages = list(manifest.get("pages") or [])
     gaps = list(manifest.get("gaps") or [])
+    banner = str(manifest.get("deployBanner") or "").strip()
+    if not banner:
+        raise SystemExit("refused: journey stamp is empty")
     styles = {
         "h1": ParagraphStyle("h1", fontName="Times-Bold", fontSize=16, leading=20, textColor=colors.HexColor("#1a1a1a"), spaceAfter=8),
         "void": ParagraphStyle("void", fontName="Times-Bold", fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6),
@@ -29,7 +32,6 @@ def build(manifest, dest):
         "note": ParagraphStyle("note", fontName="Times-Italic", fontSize=9, leading=12, textColor=colors.HexColor("#333333"), spaceAfter=6),
     }
     story = []
-    banner = str(manifest.get("deployBanner") or "").strip()
     if manifest.get("void") or banner.startswith("VOID"):
         story.append(Paragraph("VOID", styles["void"]))
     if banner:
@@ -77,6 +79,12 @@ def build(manifest, dest):
         max_w, max_h = 7.2 * inch, 8.1 * inch
         scale = min(max_w / float(width), max_h / float(height))
         story.append(Image(image_path, width * scale, height * scale))
+    def stamp_page(canvas, doc_):
+        canvas.saveState()
+        canvas.setFont("Times-Roman", 8)
+        canvas.drawString(0.7 * inch, letter[1] - 0.42 * inch, banner.split("\n")[0][:140])
+        canvas.restoreState()
+
     doc = SimpleDocTemplate(
         dest,
         pagesize=letter,
@@ -86,7 +94,7 @@ def build(manifest, dest):
         bottomMargin=0.5 * inch,
         title=str(manifest.get("title") or "Screenshot Journey"),
     )
-    doc.build(story)
+    doc.build(story, onFirstPage=stamp_page, onLaterPages=stamp_page)
 
 
 def main():

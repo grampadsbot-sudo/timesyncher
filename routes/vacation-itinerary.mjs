@@ -42,6 +42,7 @@ import {
   ensureNamedThings,
   intakeFacts,
   thingsFromIntake,
+  completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import {
   openCollaboratorAppSeats,
@@ -664,6 +665,7 @@ async function ensureIntakeItinerary(db, tripId, text) {
             intakeRule: facts.rule || '',
             intakeSpan: span.spanLabel || '',
             intakeBadge: span.badge || '',
+            dialogParty: completeRosterParty({ turns: [{ role: 'customer', text }] }),
           }},
           updated_at = now()
       where id = ${tripId}

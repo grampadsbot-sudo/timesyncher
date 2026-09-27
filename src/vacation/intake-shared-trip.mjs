@@ -53,15 +53,19 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
-function laterFridayIso(tripDates) {
-  const arrival = tripDates[0] || '';
-  const fridays = tripDates.filter((date) => new Date(`${date}T00:00:00Z`).getUTCDay() === 5 && date !== arrival);
-  return fridays.length ? fridays[fridays.length - 1] : '';
+function formatTakeoff(start) {
+  const iso = String(start || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return '';
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()];
+  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getUTCMonth()];
+  return `${weekday} ${month} ${date.getUTCDate()}`;
 }
 
 function assignDates(thing, year, tripDates) {
   if (thing.title === 'Groceries') {
-    const arrival = namedDates(thing.whenLabel || 'Fri Apr 3', year).filter((date) => tripDates.includes(date));
+    const arrival = namedDates(thing.whenLabel || '', year).filter((date) => tripDates.includes(date));
     if (arrival.length) return [arrival[0]];
   }
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
@@ -69,11 +73,6 @@ function assignDates(thing, year, tripDates) {
   if (thing.title === 'Swim') {
     const arrival = tripDates[0] || '';
     unique = unique.filter((date) => date !== arrival);
-    const later = /later in the week|later swim/i.test(`${thing.whenLabel || ''} ${thing.customerWhen || ''} ${(thing.notes || []).join(' ')}`);
-    if (later) {
-      const friday = laterFridayIso(tripDates);
-      if (friday && !unique.includes(friday)) unique.push(friday);
-    }
     return unique;
   }
   if (!unique.length) return tripDates.slice(0, 1);
@@ -100,7 +99,7 @@ export function productThingSummary(thing = {}) {
   const when = String(thing.customerWhen || thing.whenLabel || '').trim();
   const whoBit = who ? ` for ${who}` : '';
   const whenBit = when ? ` on ${when}` : '';
-  if (/grocer/i.test(title)) return `Groceries${whenBit || ' on Fri Apr 3'}, the arrival day, after the airport shuttle.`;
+  if (/grocer/i.test(title)) return `Groceries${whenBit}, the arrival day, after the airport shuttle.`.replace(/\s+/g, ' ').trim();
   if (/garden/i.test(title)) return `Garden time${whoBit}${whenBit}. One garden block, not two big activities.`;
   if (/\bswim\b/i.test(title)) {
     const wind = String(thing.windBackup || '').trim();
@@ -109,10 +108,10 @@ export function productThingSummary(thing = {}) {
   }
   if (/\bdinner\b/i.test(title)) return `Dinner${whoBit}${whenBit}.`;
   if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
-  if (/house/i.test(title)) return `The Kailua-Kona house. Check-in Friday April 3. Check-out Sunday April 12.`;
-  if (/big island/i.test(title)) return `Big Island, April 3 through April 12, 2026. People matter more than a packed list.`;
+  if (/house/i.test(title)) return when ? `The Kailua-Kona house, ${when}.` : 'The Kailua-Kona house.';
+  if (/big island/i.test(title)) return when ? `Big Island, ${when}. People matter more than a packed list.` : 'Big Island. People matter more than a packed list.';
   if (/speedishuttle/i.test(title)) return 'SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.';
-  if (/koa arrival/i.test(title)) return 'Arrival into Kona on Friday April 3, then the shuttle and groceries the same day.';
+  if (/koa arrival/i.test(title)) return when ? `Arrival into Kona on ${when}, then the shuttle and groceries the same day.` : 'Arrival into Kona, then the shuttle and groceries the same day.';
   const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
   if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
   return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
@@ -369,9 +368,10 @@ export function applyThingPresentation(shared = {}, options = {}) {
     const flightText = `${place.description || ''} ${place.notes || ''}`;
     const connections = flightText.match(/\b(nonstop into [A-Z]{3}|[0-9]+ connections?)\b/i);
     const layover = flightText.match(/\blayover\s+(?:in\s+)?([A-Za-z][^.\n]{0,40})/i);
+    const takeoff = formatTakeoff(shared.trip?.start_date);
     put(place, {
       category: 'flight',
-      takeoffTime: 'Fri Apr 3',
+      ...(takeoff ? { takeoffTime: takeoff } : {}),
       ...(connections ? { connections: connections[1] } : {}),
       ...(layover ? { layover: layover[1].trim() } : {}),
       summary: place.description,

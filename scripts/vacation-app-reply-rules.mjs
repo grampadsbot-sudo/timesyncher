@@ -590,7 +590,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
   const trip = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
   const itinerary = Array.isArray(trip?.itinerary) ? trip.itinerary.filter(Boolean).slice(0, 12).join('; ') : '';
   const upsellLine = postIntake
-      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain collaborator options in these words: View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens. Do not assign Marcus Chen or Aunt Jean a role in this reply. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say they are all set for it. Do not say "you also have unlimited vacations". Do not repeat the itinerary sentence.`
+      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain collaborator options in these words, once: View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens. Do not assign viewer or editor roles in this reply. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say they are all set for it. Do not say "you also have unlimited vacations". Do not repeat a paragraph.`
       : (upsell === 'allow-once'
         ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not say you are setting it up. Do not answer with only that phrase.`
         : (priceAsk
@@ -606,7 +606,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     'Garden wording: if the customer says gardens, say gardens. Do not invent Kahaluu, Pua Mau, an arboretum, a botanical garden, or a weather excuse that moves the garden.',
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
-    'Item34 ban: never use a banned payment word. If one seat is already covered and another person has their own seat, say that.',
+    'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     postIntake
       ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
       : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
@@ -616,7 +616,9 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     seatWelcomeLine(customerTurn),
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
     'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.',
-    'Use only the days, swims, gardens, and people the customer has already named. If a day is not set, ask. Do not announce a garden or a swim on a weekday the customer has not set. Do not say a garden or a swim is already set unless the customer set that day. Do not call a day the last day, after checkout, or one last time unless the customer said the trip ends that day.',
+    'Use the saved trip dates, swims, gardens, and roles. If a swim day or a garden day is not on the saved trip, do not announce it. Do not say a garden or a swim is already set unless that day is saved. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range.',
+    'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. Lauren\'s rule, when it is saved, is that she does not want two big activities stacked on the same day. Do not call that rule locked in and do not change it to back-to-back heavy days.',
+    'When the customer asks for two options on a day, do not offer a swim or a garden unless that activity is already saved on that day. Do not repeat a paragraph.',
     'Do not invent a picnic or a beachside picnic. Do not invent an activity the customer did not name.',
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan holds steady for the whole group, or that little Fallon and the others are covered.',
