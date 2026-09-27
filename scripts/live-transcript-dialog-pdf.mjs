@@ -178,7 +178,8 @@ export function assertLiveTranscript(doc) {
       if (String(turn.quality?.comment || '').trim() && isTemplateNote(turn.quality.comment, customerText)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
       }
-      if (!Number.isInteger(Number(turn.jevScoreDraft))) {
+      const labeledDraft = Number(turn.jevScoreDraft);
+      if (!Number.isFinite(labeledDraft) || labeledDraft < 1 || labeledDraft > 5) {
         throw new Error(`refused: turn ${turn.turnIndex} is missing jevScoreDraft`);
       }
       const rewriteRan = turn.quality?.rewritten === true || turn.flagged === true || Boolean(String(turn.rewriteModel || '').trim());
@@ -193,7 +194,8 @@ export function assertLiveTranscript(doc) {
         if (!String(turn.rewriteText || '').trim() && !String(turn.rewriteFailReason || '').trim() && turn.quality?.rewritten === true) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewrite text`);
         }
-        if (String(turn.rewriteText || '').trim() && !Number.isInteger(Number(turn.jevScoreRewrite))) {
+        const labeledRewrite = Number(turn.jevScoreRewrite);
+        if (String(turn.rewriteText || '').trim() && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
         if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
@@ -505,8 +507,9 @@ export function assertRosterRoleBlock(doc) {
   const party = completeRosterParty(doc);
   const lines = rosterLines({ ...doc, party });
   const blob = lines.join('\n');
-  const corpus = (doc?.turns || []).map((turn) => String(turn?.text || '')).join('\n');
-  const needsBlock = Boolean(doc?.party) || (/Torren/i.test(corpus) && /Marcus Chen/i.test(corpus) && /Aunt Jean/i.test(corpus));
+  const corpus = (doc?.turns || []).filter((turn) => turn?.role !== 'app').map((turn) => String(turn?.text || '')).join('\n');
+  const needsBlock = (/Torren/i.test(corpus) && /Marcus Chen/i.test(corpus) && /Aunt Jean/i.test(corpus))
+    || ((party.preference_subjects || []).length && ((party.viewers || []).length || (party.editors || []).length));
   if (needsBlock && (!/Kids \(silent\):/.test(blob) || !/\bViewer:/.test(blob) || !/\bEditor:/.test(blob))) {
     throw new Error('refused: roster_role_block missing Kids, Viewer, or Editor');
   }
@@ -537,7 +540,7 @@ export function rosterLines(doc) {
   const lines = [`Owner: ${owner} (${primary.role || 'Owner'})`];
   const collaborators = Array.isArray(party.collaborators) ? party.collaborators : [];
   if (collaborators.length) {
-    lines.push(`Collaborators: ${collaborators.map((person) => `${person.name} (payer=${person.payer || 'owner'})`).join(', ')}`);
+    lines.push(`Collaborators: ${collaborators.map((person) => (person.payer ? `${person.name} (payer=${person.payer})` : person.name)).join(', ')}`);
   }
   const kids = Array.isArray(party.preference_subjects) ? party.preference_subjects : [];
   if (kids.length) lines.push(`Kids (silent): ${kids.map((kid) => `${kid.name} ${kid.age}`).join(', ')}`);
@@ -551,9 +554,19 @@ export function rosterLines(doc) {
 
 export function liveV7Pack(doc, shape) {
   const generated = (doc.turns || []).filter((turn) => turn.role === 'app' && turn.jev?.jevRan === true);
-  const scores = generated.map((turn) => Number(turn.quality?.score)).filter((score) => Number.isInteger(score) && score >= 1 && score <= 5);
+  const labeledOf = (turn) => {
+    const raw = Number(turn.quality?.scoreRaw);
+    if (Number.isFinite(raw)) {
+      const labeled = Math.round((raw + 1) * 1000) / 1000;
+      if (labeled >= 1 && labeled <= 5) return labeled;
+    }
+    const score = Number(turn.quality?.score);
+    return Number.isFinite(score) && score >= 1 && score <= 5 ? score : null;
+  };
+  const scores = generated.map(labeledOf).filter((score) => score != null);
   const meanQuality = scores.length ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(3) : '0';
-  const histogram = [5, 4, 3, 2, 1].map((score) => `${score}×${scores.filter((item) => item === score).length}`).join(', ');
+  const bins = scores.map((score) => Math.max(1, Math.min(5, Math.round(score))));
+  const histogram = [5, 4, 3, 2, 1].map((score) => `${score}×${bins.filter((item) => item === score).length}`).join(', ');
   const needsRepair = scores.filter((score) => score <= 2).length;
   const gens = generated.map((turn) => Number(turn.genLatencyMs ?? turn.model?.genLatencyMs));
   const overall = timingStats(gens);
@@ -584,11 +597,11 @@ export function liveV7Pack(doc, shape) {
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
-    headline: `Live app capture. Jev judged every generated reply. Session wall time is ${wall}ms. The timing table median is gen-only. Real per-turn latency, including both Jev calls on a rewrite, is the last row.`,
+    headline: `Live app capture. Jev judged every generated reply on the labeled scale (raw + 1), the 1-5 criterion legend. The mean is that labeled scale. v6 3.913 is a different scale. Session wall time is ${wall}ms. The timing table median is gen-only. Real per-turn latency, including both Jev calls on a rewrite, is the last row.`,
     quality_rows: [
       ['Metric', 'v6 gpt-5-mini', 'v7 Tier 1–4'],
       ['App turns', '23', String(generated.length)],
-      ['Mean overall_quality', '3.913', meanQuality],
+      ['Mean overall_quality', '3.913 (different scale)', meanQuality],
       ['Histogram (overall)', '5×6, 4×13, 2×4', histogram],
       ['needs_repair', '15', String(needsRepair)],
       ['Dialog rollup overall', '3', meanQuality],
@@ -598,10 +611,7 @@ export function liveV7Pack(doc, shape) {
     tier_rows: [
       ['Tier', 'Model', 'Mean overall'],
       ...[1, 2, 3, 4].map((tier) => {
-        const tierScores = generated
-          .filter((turn) => Number(turn.jev?.modelTier) === tier)
-          .map((turn) => Number(turn.quality?.score))
-          .filter((score) => Number.isInteger(score));
+        const tierScores = generated.filter((turn) => Number(turn.jev?.modelTier) === tier).map(labeledOf).filter((score) => score != null);
         const tierMean = tierScores.length
           ? (tierScores.reduce((sum, score) => sum + score, 0) / tierScores.length).toFixed(3)
           : '0';
@@ -622,7 +632,7 @@ export function liveV7Pack(doc, shape) {
     ],
     roster: assertRosterRoleBlock(doc),
     beats: [...new Set(generated.flatMap((turn) => (Array.isArray(turn.beats) ? turn.beats : [])))].join(', ') || '(none stored)',
-    judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality}. Jev scored every generated reply.`,
+    judge: `response_ready=${Number(meanQuality) >= 3} · needs_repair=${needsRepair > 0}. scores: mean ${meanQuality} on the Jev labeled scale (raw + 1). Jev scored every generated reply.`,
     turns: (doc.turns || []).map((turn) => {
       const app = turn.role === 'app';
       const generatedTurn = app && turn.jev?.jevRan === true;
@@ -659,12 +669,13 @@ export function liveV7Pack(doc, shape) {
 
 function jevRanLine(turn) {
   const model = String(turn.quality?.model || 'typesafe/jev-1.13');
-  const score = Number.isInteger(Number(turn.quality?.score)) ? Number(turn.quality.score) : Number(turn.jevScoreDraft);
+  const score = Number.isFinite(Number(turn.quality?.score)) ? Number(turn.quality.score) : Number(turn.jevScoreDraft);
+  const shown = Number.isFinite(score) ? (Number.isInteger(score) ? String(score) : String(Math.round(score * 1000) / 1000)) : '';
   const judgeMs = Number(turn.quality?.judgeMs ?? turn.modelLatency?.jevDraft);
   const ms = Number.isFinite(judgeMs) ? Math.round(judgeMs) : 0;
   const disposition = String(turn.jevDisposition || turn.quality?.disposition || 'none');
   const focus = String(turn.jevFixFocus || turn.quality?.jevFocus || 'none');
-  return `jevRan: true · model ${model} · score ${Number.isFinite(score) ? score : ''} · judge ${ms}ms · disposition ${disposition} · fix_focus ${focus}`;
+  return `jevRan: true · model ${model} · score ${shown} · judge ${ms}ms · disposition ${disposition} · fix_focus ${focus}`;
 }
 
 function realTurnLatencyMs(turn) {
@@ -698,6 +709,14 @@ function producerLogLine(turn) {
     `jevScoreRaw: ${Number.isFinite(Number(turn.jevScoreRaw)) ? Number(turn.jevScoreRaw) : (Number.isFinite(Number(turn.quality?.scoreRaw)) ? Number(turn.quality.scoreRaw) : 'none')}`,
     `jevDisposition: ${turn.jevDisposition || turn.quality?.disposition || 'none'}`,
     `jevFixFocus: ${turn.jevFixFocus || turn.quality?.jevFocus || 'none'}`,
+    `draftJevScoreRaw: ${Number.isFinite(Number(turn.draftJevScoreRaw)) ? Number(turn.draftJevScoreRaw) : 'none'}`,
+    `draftJevDisposition: ${turn.draftJevDisposition || 'none'}`,
+    `draftJevFixFocus: ${turn.draftJevFixFocus || 'none'}`,
+    `rewriteJevScoreRaw: ${Number.isFinite(Number(turn.rewriteJevScoreRaw)) ? Number(turn.rewriteJevScoreRaw) : 'none'}`,
+    `rewriteJevDisposition: ${turn.rewriteJevDisposition || 'none'}`,
+    `rewriteJevFixFocus: ${turn.rewriteJevFixFocus || 'none'}`,
+    `draftFactCheck: ${turn.draftFactCheck || 'none'}`,
+    `rewriteFactCheck: ${turn.rewriteFactCheck || 'none'}`,
   ].join(' | ');
 }
 

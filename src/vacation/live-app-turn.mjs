@@ -77,7 +77,13 @@ export function jevStamp(jev) {
 function scored(value) {
   if (value == null || value === '') return null;
   const score = Number(value);
-  return Number.isInteger(score) && score >= 1 && score <= 5 ? score : null;
+  if (!Number.isFinite(score) || score < 1 || score > 5) return null;
+  return Math.round(score * 1000) / 1000;
+}
+
+function rawScore(value) {
+  const score = Number(value);
+  return Number.isFinite(score) ? score : null;
 }
 
 export function liveTurnRecord({
@@ -152,9 +158,17 @@ export function liveTurnRecord({
       record.shippedModel = log.shippedModel || record.shippedModel || null;
       record.jevScoreDraft = scored(log.jevScoreDraft);
       record.jevScoreRewrite = scored(log.jevScoreRewrite);
-      record.jevScoreRaw = Number.isFinite(Number(log.jevScoreRaw)) ? Number(log.jevScoreRaw) : null;
+      record.jevScoreRaw = rawScore(log.jevScoreRaw);
       record.jevDisposition = log.jevDisposition || null;
       record.jevFixFocus = log.jevFixFocus || null;
+      record.draftJevScoreRaw = rawScore(log.draftJevScoreRaw);
+      record.draftJevDisposition = log.draftJevDisposition || null;
+      record.draftJevFixFocus = log.draftJevFixFocus || null;
+      record.rewriteJevScoreRaw = rawScore(log.rewriteJevScoreRaw);
+      record.rewriteJevDisposition = log.rewriteJevDisposition || null;
+      record.rewriteJevFixFocus = log.rewriteJevFixFocus || null;
+      record.draftFactCheck = log.draftFactCheck || null;
+      record.rewriteFactCheck = log.rewriteFactCheck || null;
       if (log.rewriteFailReason) record.rewriteFailReason = String(log.rewriteFailReason);
       if (Array.isArray(log.rewriteAttempts)) record.rewriteAttempts = log.rewriteAttempts;
       record.jevNote = log.jevNote || null;
@@ -365,16 +379,13 @@ export function draftingFacts(priorTurns, customerTurn = '') {
     const when = String(thing.customerWhen || thing.whenLabel || '').trim();
     return when ? `${thing.title}: ${when}` : thing.title;
   }).filter(Boolean);
-  itinerary.push(
-    'Swim stays on Mon Apr 6 and Fri Apr 10. Do not move a swim to Tuesday April 7 or Thursday April 9.',
-    'Gardens stay on Sun Apr 5 and Thu Apr 9. They are Kimberly\'s gardens, not Tyler\'s.',
-    'The trip is Friday April 3 through Sunday April 12. Do not shorten it to April 10.',
-    'The unlimited plan is not owned yet.',
-  );
+  const span = intakeSpan(corpus);
+  const named = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Torren', 'Peyton', 'Keegan', 'Fallon', 'Marcus Chen', 'Aunt Jean']
+    .filter((name) => new RegExp(`\\b${name}\\b`, 'i').test(corpus));
   return {
     itinerary,
-    roster: 'The party of eight is Craig, Kimberly, Tyler, Lauren, Torren, Peyton, Keegan, and Fallon. Aunt Jean can edit notes. Marcus Chen can view. Aunt Jean is not part of the eight.',
-    dates: 'Friday April 3 is night 1. Friday April 10 is night 8. The final full day is Saturday April 11. The trip is Friday April 3 through Sunday April 12.',
+    roster: named.length ? `People the customer has named: ${named.join(', ')}.` : '',
+    dates: span?.spanLabel ? `Dates the customer named: ${span.spanLabel}.` : '',
   };
 }
 
@@ -672,19 +683,6 @@ function spanStartLabel(span) {
   return spanDateLabel(start);
 }
 
-function laterFridayLabel(span) {
-  if (!span?.start || !span?.end) return '';
-  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
-  const end = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
-  let found = '';
-  for (let cursor = new Date(start); cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
-    if (cursor.getUTCDay() !== 5 || cursor.getTime() === start.getTime()) continue;
-    found = spanDateLabel(cursor);
-  }
-  return found;
-}
-
 function arrivalSwimLabel(label, arrival) {
   const day = swimDayKey(label);
   return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
@@ -708,11 +706,6 @@ export function applyAgreedAppSwim(things, customerText, appText, span = null) {
       if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
       const resolved = weekdayInsideSpan(weekday[1], span);
       if (resolved && !arrivalSwimLabel(resolved, arrival)) labels.push(resolved);
-    }
-    const namedWeekday = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
-    if (/\blater\b/i.test(String(customerText || '')) && !namedWeekday) {
-      const later = laterFridayLabel(span);
-      if (later) labels.push(later);
     }
   }
   return (Array.isArray(things) ? things : []).map((thing) => {
@@ -828,10 +821,11 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     } else if (thing.title === 'Gardens' || thing.title === 'Dinner' || thing.title === 'Town walk') {
       const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
       for (const hit of hits) {
-        const dated = datedMentions(hit)[0];
-        if (!dated || /keep us on the big island|stay on the big island/i.test(hit)) continue;
-        const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
-        if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
+        if (/keep us on the big island|stay on the big island/i.test(hit)) continue;
+        for (const dated of datedMentions(hit)) {
+          const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
+          if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
+        }
       }
       customerWhen = labels.join(' · ');
     } else if (!spanThing) {
@@ -873,9 +867,10 @@ export function rewriteCreditLabel(model, note = '') {
 
 export function mustRewriteQuality(quality) {
   if (quality?.hardFlag === true) return true;
+  if (quality?.wantsRewrite === true) return true;
   const score = Number(quality?.score);
   const disposition = String(quality?.disposition || '');
-  if (quality?.wantsRewrite === true && disposition === 'rewrite' && Number.isFinite(score) && score <= 3) return true;
+  if (disposition === 'rewrite') return true;
   return Number.isFinite(score) && score <= 2;
 }
 
@@ -885,84 +880,176 @@ export function stripChatMarkdown(value) {
     .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2');
 }
 
-export function draftAccuracyErrors(reply, { customerTurn = '', postIntake = false } = {}) {
+const AGE_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+const WEEKDAY_NAME = { sun: 'sunday', mon: 'monday', tue: 'tuesday', tues: 'tuesday', wed: 'wednesday', thu: 'thursday', thur: 'thursday', thurs: 'thursday', fri: 'friday', sat: 'saturday' };
+
+function customerCorpus(priorTurns, customerTurn = '') {
+  const turns = [...(Array.isArray(priorTurns) ? priorTurns : []), { role: 'customer', text: customerTurn }];
+  return turns
+    .filter((turn) => turn?.role !== 'app')
+    .map((turn) => String(turn?.text || '').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+function dayStamp(label) {
+  const match = String(label || '').toLowerCase().match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\.?\s+(\d{1,2})\b/);
+  return match ? `${match[1].slice(0, 3)} ${Number(match[2])}` : '';
+}
+
+function mentionStamp(mention) {
+  const month = MONTH_ABBR[mention?.month] || '';
+  if (!month || !mention?.day) return '';
+  return `${month.toLowerCase()} ${Number(mention.day)}`;
+}
+
+function looseDayStamps(sentence, span) {
+  const dated = datedMentions(sentence).map(mentionStamp).filter(Boolean);
+  if (dated.length) return dated;
+  const match = String(sentence || '').match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sun|Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat)\b(?:[\s,]+(?:the\s+)?)?(\d{1,2})(?:st|nd|rd|th)?\b/i);
+  if (!match || !span?.start) return [];
+  const month = MONTH_ABBR[Number(String(span.start).slice(5, 7))] || '';
+  return month ? [`${month.toLowerCase()} ${Number(match[2])}`] : [];
+}
+
+function weekdayName(sentence) {
+  const match = String(sentence || '').match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sun|Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat)\b/i);
+  if (!match) return '';
+  const word = match[1].toLowerCase();
+  return WEEKDAY_NAME[word] || word;
+}
+
+function endWeekday(span) {
+  if (!span?.end) return '';
+  const date = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return '';
+  return ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getUTCDay()] || '';
+}
+
+function endDayNumber(span) {
+  if (!span?.end) return 0;
+  return Number(String(span.end).slice(8, 10)) || 0;
+}
+
+function commitsDay(sentence) {
+  if (/\?/.test(sentence)) return false;
+  if (/\bor\b/i.test(sentence)) return false;
+  return true;
+}
+
+export function customerTripFacts(priorTurns, customerTurn = '') {
+  const corpus = customerCorpus(priorTurns, customerTurn);
+  const span = intakeSpan(corpus);
+  const sentences = splitSentences(corpus);
+  const swimDays = new Set();
+  const gardenDays = new Set();
+  const owners = {};
+  for (const sentence of sentences) {
+    if (/\bswim\b/i.test(sentence)) {
+      if (/tyler/i.test(sentence)) owners.swim = owners.swim || 'Tyler';
+      if (commitsDay(sentence)) {
+        for (const stamp of looseDayStamps(sentence, span)) swimDays.add(stamp);
+      }
+    }
+    if (/garden/i.test(sentence)) {
+      if (/kimberly/i.test(sentence)) owners.gardens = 'Kimberly';
+      if (commitsDay(sentence)) {
+        for (const stamp of looseDayStamps(sentence, span)) gardenDays.add(stamp);
+      }
+    }
+  }
+  const activities = [];
+  if (/\bswim\b/i.test(corpus)) activities.push('swim');
+  if (/garden/i.test(corpus)) activities.push('garden');
+  if (/picnic/i.test(corpus)) activities.push('picnic');
+  if (/town walk/i.test(corpus)) activities.push('town walk');
+  if (/\bdinner\b/i.test(corpus)) activities.push('dinner');
+  if (/grocer/i.test(corpus)) activities.push('groceries');
+  const addressedTo = /this is tyler|tyler[^\n]{0,80}paid for my own seat/i.test(String(customerTurn || '')) ? 'Tyler' : '';
+  return {
+    span,
+    swimDays: [...swimDays],
+    gardenDays: [...gardenDays],
+    owners,
+    planOwned: /(?:bought|purchased|own) the unlimited plan/i.test(corpus),
+    activities,
+    corpus,
+    addressedTo,
+  };
+}
+
+function dayIsSet(stamps, set) {
+  return stamps.some((stamp) => set.includes(stamp));
+}
+
+function pushError(errors, line) {
+  if (line && !errors.includes(line)) errors.push(line);
+}
+
+export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
-  const ask = String(customerTurn || '');
   const errors = [];
-  if (/you(?:'|’)re all set for the\b[^.]{0,80}unlimited|you are all set for the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
-    errors.push('the unlimited plan is not owned yet');
+  const swimDays = Array.isArray(facts.swimDays) ? facts.swimDays : [];
+  const gardenDays = Array.isArray(facts.gardenDays) ? facts.gardenDays : [];
+  const span = facts.span || null;
+  if (!facts.planOwned && /you(?:'|’)re all set (?:with|for) the\b[^.]{0,80}unlimited|you are all set (?:with|for) the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
+    pushError(errors, 'the unlimited plan is not owned yet');
   }
-  if (/april\s+3(?:rd)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?10\b/i.test(body)) {
-    errors.push('the trip runs through April 12, not April 10');
+  const endDay = endDayNumber(span);
+  const shortened = body.match(/\bapril\s+\d{1,2}(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:april\s+)?(\d{1,2})(?:st|nd|rd|th)?\b/i);
+  if (shortened && endDay && Number(shortened[1]) < endDay) {
+    pushError(errors, `the trip runs through ${facts.span?.endLabel || span.end}, not April ${shortened[1]}`);
   }
-  if (/no extra charge|no extra cost|at no extra/i.test(body)) {
-    errors.push('no extra charge is not in the plan table');
+  if (/no extra charge|no extra cost|at no extra/i.test(body) && !/no extra charge|no extra cost|at no extra/i.test(facts.corpus || '')) {
+    pushError(errors, 'no extra charge is not in what the customer set');
   }
-  if (swimMovedOffDay(body, /\b(?:tue|tues|tuesday)\b/i, /(?:april\s+7(?:st|nd|rd|th)?|apr\.?\s+7(?:st|nd|rd|th)?|the\s+7th)\b/i)) {
-    errors.push('the swim stays on Monday April 6 and Friday April 10, not Tuesday April 7');
+  if (/picnic/i.test(body) && !(facts.activities || []).includes('picnic')) {
+    pushError(errors, 'a picnic was not named');
   }
-  if (swimMovedOffDay(body, /\b(?:thu|thur|thurs|thursday)\b/i, /(?:april\s+9(?:st|nd|rd|th)?|apr\.?\s+9(?:st|nd|rd|th)?|the\s+9th)\b/i)) {
-    errors.push('the swim stays on Monday April 6 and Friday April 10, not Thursday April 9');
+  if (/kimberly/i.test(facts.owners?.gardens || '') && /tyler(?:'|’)s\s+gardens?/i.test(body)) {
+    pushError(errors, 'the gardens are Kimberly\'s, not Tyler\'s');
   }
-  if (/picnic/i.test(body)) errors.push('a picnic was not named');
-  if (/tyler(?:'|’)s\s+gardens?/i.test(body) || (/tyler/i.test(ask) && /paid for my own seat/i.test(ask) && /your (?:two )?garden/i.test(body))) {
-    errors.push('the gardens are Kimberly\'s, not Tyler\'s');
+  if (facts.addressedTo === 'Tyler' && /kimberly/i.test(facts.owners?.gardens || '') && /your (?:two )?garden/i.test(body)) {
+    pushError(errors, 'the gardens are Kimberly\'s, not Tyler\'s');
   }
-  if (postIntake && !(/view access lets/i.test(body) && /edit access lets/i.test(body))) {
-    errors.push('explain collaborator options: view access lets them see the days, and edit access lets them add notes');
+  const sentences = splitSentences(body);
+  const tripEnd = endWeekday(span);
+  for (let index = 0; index < sentences.length; index += 1) {
+    const sentence = sentences[index];
+    const next = sentences[index + 1] || '';
+    const previous = sentences[index - 1] || '';
+    const swimNegated = /\b(?:do not|don't)\b[^.]*\bswim\b|\bswim\b[^.]*\b(?:do not|don't)\b/i.test(sentence);
+    if (/\bswim\b/i.test(sentence) && !swimNegated) {
+      const stamps = [...looseDayStamps(previous, span), ...looseDayStamps(sentence, span), ...looseDayStamps(next, span)];
+      const swimStamps = looseDayStamps(sentence, span);
+      const attached = swimStamps.length ? swimStamps : stamps;
+      if (swimDays.length && attached.length && !dayIsSet(attached, swimDays)) {
+        pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
+      }
+    }
+    if (/garden/i.test(sentence)) {
+      const stamps = looseDayStamps(sentence, span);
+      const already = /already set/i.test(sentence);
+      if (gardenDays.length && stamps.length && !dayIsSet(stamps, gardenDays)) {
+        pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
+      }
+    }
+    if (/after checkout|one last time|heading out|last day|last morning/i.test(sentence)) {
+      const stamps = [...looseDayStamps(sentence, span), ...looseDayStamps(previous, span)];
+      const named = weekdayName(sentence) || weekdayName(previous);
+      const endStamp = span?.end ? dayStamp(`${MONTH_ABBR[Number(String(span.end).slice(5, 7))]} ${endDay}`) : '';
+      const onEnd = (stamps.length && endStamp && stamps.includes(endStamp)) || (named && tripEnd && named === tripEnd);
+      if ((stamps.length || named) && !onEnd) {
+        pushError(errors, `${stamps[0] || named} is not the trip end`);
+      }
+    }
   }
   return errors;
 }
 
-function swimMovedOffDay(body, dayRe, dateRe) {
-  const sentences = String(body || '').split(/(?<=[.!?])\s+/);
-  for (let index = 0; index < sentences.length; index += 1) {
-    const sentence = sentences[index];
-    const next = sentences[index + 1] || '';
-    if (/\bswim\b/i.test(sentence) && dayRe.test(sentence) && dateRe.test(sentence) && !/\bgardens?\b/i.test(sentence)) return true;
-    if (/\bswim\b/i.test(sentence) && dayRe.test(next) && dateRe.test(next) && !/\b(gardens?|town|dinner|grocer(?:y|ies)?|walk|house)\b/i.test(next)) return true;
-  }
-  return false;
-}
-
-function neutralizeFalseClaim(sentence) {
-  return String(sentence || '')
-    .replace(/\byou(?:'|’)re all set for the\b[^.]*\bunlimited\b[^.]*/gi, 'The unlimited plan is one you can take')
-    .replace(/\byou are all set for the\b[^.]*\bunlimited\b[^.]*/gi, 'The unlimited plan is one you can take')
-    .replace(/\balready (?:own|have|set up)\b[^.]*\bunlimited\b[^.]*/gi, 'The unlimited plan is one you can take')
-    .replace(/\b,?\s*no extra charge\b/gi, '')
-    .replace(/\b,?\s*no extra cost\b/gi, '')
-    .replace(/\b,?\s*at no extra\b/gi, '')
-    .replace(/\bapril\s+3(?:rd)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?10\b/gi, 'April 3 through April 12')
-    .replace(/\s{2,}/g, ' ')
-    .replace(/\s+([,.])/g, '$1')
-    .trim();
-}
-
-export function dropAccuracySentences(reply, context = {}) {
-  const scope = { customerTurn: context.customerTurn || '', postIntake: context.postIntake === true };
-  const body = String(reply || '').trim();
-  if (!body || !draftAccuracyErrors(body, scope).length) return body;
-  const parts = body.split(/(?<=[.!?])\s+/);
-  const drop = new Set();
-  for (let index = 0; index < parts.length; index += 1) {
-    const alone = neutralizeFalseClaim(parts[index]);
-    if (draftAccuracyErrors(alone, { customerTurn: scope.customerTurn, postIntake: false }).length) drop.add(index);
-    const next = parts[index + 1] || '';
-    if (!next) continue;
-    const pair = `${alone} ${neutralizeFalseClaim(next)}`;
-    if (!draftAccuracyErrors(pair, { customerTurn: scope.customerTurn, postIntake: false }).length) continue;
-    if (/\b(?:tue|tues|tuesday|thu|thur|thurs|thursday)\b|picnic|tyler(?:'|’)s\s+garden|your (?:two )?garden/i.test(next)) drop.add(index + 1);
-    else drop.add(index);
-  }
-  const kept = parts
-    .map((sentence, index) => (drop.has(index) ? '' : neutralizeFalseClaim(sentence)))
-    .filter(Boolean);
-  const next = kept.join(' ').replace(/\s{2,}/g, ' ').trim();
-  if (!next || draftAccuracyErrors(next, scope).length) return '';
-  if (customerAsksPrice(scope.customerTurn) && !priceAnswered(next, scope.customerTurn)) return '';
-  if (scope.postIntake && !(/building (?:the|your) itinerary/i.test(next) && /view access lets/i.test(next) && /edit access lets/i.test(next) && /email invite/i.test(next) && /unlimited vacations for the whole year/i.test(next))) return '';
-  return next;
+export function draftAccuracyErrors(reply, context = {}) {
+  const facts = context.facts || customerTripFacts(context.priorTurns || [], context.customerTurn || '');
+  return draftFactErrors(reply, facts);
 }
 
 export function applyAccuracyRewrite(quality, errors) {
@@ -971,38 +1058,66 @@ export function applyAccuracyRewrite(quality, errors) {
   return {
     ...quality,
     accuracyErrors: list,
+    factCheck: list,
     hardFlag: true,
     wantsRewrite: true,
-    score: Math.min(Number(quality?.score) || 1, 3),
   };
 }
 
+function ageFromWords(token) {
+  const digits = String(token || '').match(/\b(\d{1,2})\b/);
+  if (digits) {
+    const age = Number(digits[1]);
+    if (age >= 0 && age <= 18) return age;
+  }
+  const word = String(token || '').toLowerCase().match(/\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/);
+  return word ? AGE_WORDS[word[1]] : null;
+}
+
+function payerFromCustomer(corpus, name) {
+  if (new RegExp(`\\bI pay for ${name}\\b`, 'i').test(corpus)) return 'owner';
+  if (new RegExp(`\\b${name} pays for (?:himself|herself|themself)\\b`, 'i').test(corpus)) return name.toLowerCase();
+  return '';
+}
+
 export function completeRosterParty(doc) {
-  const party = doc?.party && typeof doc.party === 'object' ? { ...doc.party } : {};
-  const blob = (Array.isArray(doc?.turns) ? doc.turns : []).map((turn) => `${turn?.speakerName || ''} ${turn?.text || ''}`).join('\n');
-  if (!party.primary?.name) {
-    party.primary = { name: doc?.customerName || doc?.targetPerson || 'Craig', role: 'Owner' };
+  const stored = doc?.party && typeof doc.party === 'object' ? doc.party : {};
+  const corpus = (Array.isArray(doc?.turns) ? doc.turns : [])
+    .filter((turn) => turn?.role !== 'app')
+    .map((turn) => String(turn?.text || ''))
+    .join('\n');
+  const party = {
+    primary: stored.primary?.name
+      ? { name: stored.primary.name, role: stored.primary.role || 'Owner' }
+      : { name: doc?.customerName || doc?.targetPerson || 'Craig', role: 'Owner' },
+    collaborators: Array.isArray(stored.collaborators) ? stored.collaborators.map((person) => ({ ...person })) : [],
+    preference_subjects: Array.isArray(stored.preference_subjects)
+      ? stored.preference_subjects.filter((kid) => kid?.name && Number.isFinite(Number(kid.age))).map((kid) => ({ name: kid.name, age: Number(kid.age) }))
+      : [],
+    viewers: Array.isArray(stored.viewers) ? stored.viewers.filter((person) => person?.name).map((person) => ({ name: person.name })) : [],
+    editors: Array.isArray(stored.editors) ? stored.editors.filter((person) => person?.name).map((person) => ({ name: person.name })) : [],
+  };
+  for (const name of ['Kimberly', 'Tyler', 'Lauren']) {
+    const payer = payerFromCustomer(corpus, name);
+    const existing = party.collaborators.find((person) => new RegExp(name, 'i').test(person?.name || ''));
+    if (existing) {
+      if (payer) existing.payer = payer;
+      continue;
+    }
+    if (payer) party.collaborators.push({ name: `${name} Davidson`, payer });
   }
-  if (!Array.isArray(party.collaborators) || !party.collaborators.length) {
-    const collaborators = [];
-    if (/Kimberly/i.test(blob)) collaborators.push({ name: 'Kimberly Davidson', payer: 'owner' });
-    if (/Tyler/i.test(blob)) collaborators.push({ name: 'Tyler Davidson', payer: 'tyler' });
-    if (/Lauren/i.test(blob)) collaborators.push({ name: 'Lauren Davidson', payer: 'lauren' });
-    party.collaborators = collaborators;
+  for (const name of ['Torren', 'Peyton', 'Keegan', 'Fallon']) {
+    if (party.preference_subjects.some((kid) => kid.name === name)) continue;
+    const match = corpus.match(new RegExp(`\\b${name}\\b(?:\\s+who\\s+is|\\s+is)\\s+([a-z0-9-]+)`, 'i'));
+    const age = match ? ageFromWords(match[1]) : null;
+    if (age == null) continue;
+    party.preference_subjects.push({ name, age });
   }
-  if (!Array.isArray(party.preference_subjects) || !party.preference_subjects.length) {
-    party.preference_subjects = [
-      ['Torren', 8, /torren/i],
-      ['Peyton', 6, /peyton/i],
-      ['Keegan', 4, /keegan/i],
-      ['Fallon', 2, /fallon/i],
-    ].filter(([, , pattern]) => pattern.test(blob)).map(([name, age]) => ({ name, age }));
+  if (!party.viewers.length && /Marcus Chen[^\n]{0,60}(?:can view|can look)/i.test(corpus)) {
+    party.viewers.push({ name: 'Marcus Chen' });
   }
-  if (!Array.isArray(party.viewers) || !party.viewers.length) {
-    party.viewers = /Marcus Chen/i.test(blob) ? [{ name: 'Marcus Chen' }] : [];
-  }
-  if (!Array.isArray(party.editors) || !party.editors.length) {
-    party.editors = /Aunt Jean/i.test(blob) ? [{ name: 'Aunt Jean' }] : [];
+  if (!party.editors.length && /Aunt Jean[^\n]{0,60}can edit/i.test(corpus)) {
+    party.editors.push({ name: 'Aunt Jean' });
   }
   return party;
 }
@@ -1080,20 +1195,27 @@ function bigramDice(a, b) {
   return total ? (2 * shared) / total : 0;
 }
 
-export function shipChoice({ draft, draftScore, rewrite, rewriteScore }) {
-  const rewriteOk = Boolean(rewrite) && !nearIdenticalRewrite(draft, rewrite);
-  if (rewriteOk && Number(rewriteScore) > Number(draftScore)) {
-    return { text: rewrite, rewritten: true, flagged: false };
-  }
-  return { text: draft, rewritten: false, flagged: true };
+export function shipChoice({ draft, rewrite, draftFactErrors = [], rewriteFactErrors = [] }) {
+  const rewriteOk = Boolean(String(rewrite || '').trim()) && !nearIdenticalRewrite(draft, rewrite);
+  const draftCount = (Array.isArray(draftFactErrors) ? draftFactErrors : []).length;
+  const rewriteCount = (Array.isArray(rewriteFactErrors) ? rewriteFactErrors : []).length;
+  const worse = rewriteCount > draftCount;
+  if (rewriteOk && !worse) return { text: String(rewrite).trim(), rewritten: true, flagged: false, failReason: '' };
+  return {
+    text: draft,
+    rewritten: false,
+    flagged: true,
+    failReason: worse ? 'rewrite_fact_check_worse' : '',
+  };
 }
 
 export function formatQualityLine(quality) {
   if (!quality || quality.judged !== true) return '';
   const score = Number(quality.score);
-  if (!Number.isInteger(score) || score < 1 || score > 5) return '';
+  if (!Number.isFinite(score) || score < 1 || score > 5) return '';
+  const shown = Number.isInteger(score) ? String(score) : String(Math.round(score * 1000) / 1000);
   const comment = String(quality.comment || '').replace(/\s+/g, ' ').trim();
-  return comment ? `quality: ${score} — ${comment}` : `quality: ${score}`;
+  return comment ? `quality: ${shown} — ${comment}` : `quality: ${shown}`;
 }
 
 const REWRITE_STOP = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'of', 'for', 'in', 'on', 'at', 'is', 'are', 'was', 'were', 'be', 'this', 'that', 'it', 'you', 'your', 'we', 'our', 'with', 'from', 'as', 'if', 'so', 'not', 'do', 'does', 'what', 'when', 'where', 'who', 'how']);
@@ -1213,6 +1335,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const upsell = upsellModeForTurn(customerTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const tripContext = draftingFacts(history, customerTurn);
+  const tripFacts = customerTripFacts(history, customerTurn);
   const planLine = customerAsksPrice(customerTurn) ? payerPriceLine(customerTurn, env) : '';
   const seatDollars = planSeatDollars(env);
   const planTable = planLine
@@ -1324,21 +1447,31 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
+  const factErrors = draftFactErrors(originalDraft, tripFacts);
   if (quality?.judged) {
     quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
-    quality = applyAccuracyRewrite(quality, draftAccuracyErrors(originalDraft, { customerTurn, postIntake }));
+    quality = applyAccuracyRewrite(quality, factErrors);
     quality = await settleJevNote(quality, customerTurn, originalDraft, env);
     quality.judgeMs = draftQualityMs;
   }
   const jevNote = quality?.jevNote || null;
+  const draftFactLine = factErrors.length ? factErrors.join('; ') : 'ok';
   const baseLog = {
     draftModel,
     rewriteModel: null,
     shippedModel: draftModel,
     jevScoreDraft: quality.score,
-    jevScoreRaw: Number.isFinite(Number(quality.scoreRaw)) ? Number(quality.scoreRaw) : null,
+    jevScoreRaw: rawScore(quality.scoreRaw),
     jevDisposition: quality.disposition || null,
     jevFixFocus: quality.jevFocus || null,
+    draftJevScoreRaw: rawScore(quality.scoreRaw),
+    draftJevDisposition: quality.disposition || null,
+    draftJevFixFocus: quality.jevFocus || null,
+    rewriteJevScoreRaw: null,
+    rewriteJevDisposition: null,
+    rewriteJevFixFocus: null,
+    draftFactCheck: draftFactLine,
+    rewriteFactCheck: null,
     jevScoreRewrite: null,
     jevNote,
     jevNoteReason: quality?.jevNoteReason || (jevNote ? null : 'jev_no_free_text'),
@@ -1391,6 +1524,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     destination,
     corpus,
     tripContext,
+    tripFacts,
     planTable,
     planLine,
     seatDollars,
@@ -1522,38 +1656,72 @@ function stampShippedReply({ reply, quality, draftModel, log, draft }) {
 
 export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const rules = await loadVacationAppReplyRules(env);
-  const started = Date.now();
-  const model = await callTieredModel({
-    rules,
-    jev: pending?.jev,
-    customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. The scoring failure is: ${pending?.failureReason || 'the draft missed this turn'}. Keep the days and places already named. Do not paste the draft.\nDraft:\n${pending?.draft || ''}`,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    destination: pending?.destination || '',
-    memory: [],
-    upsell: pending?.upsell || 'forbidden',
-    postIntake: pending?.postIntake === true,
-    env,
-    forceModel: pending?.draftModel || '',
-    timeoutMs: 7000,
-    tripContext: pending?.tripContext || null,
-    planTable: pending?.planTable || null,
-    planLine: pending?.planLine || '',
-    seatDollars: pending?.seatDollars || 0,
-    systemExtra: [
-      'Rewrite the draft. Do not copy it and do not put a lead line in front of it.',
-      pending?.failureReason ? `The scoring failure is: ${pending.failureReason}. Fix that failure.` : '',
-      pending?.planTable?.payer_line
-        ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group. Do not say Fallon.`
-        : '',
-    ].filter(Boolean).join(' '),
-  });
-  const rewriteMs = Math.max(0, Date.now() - started);
-  const modelText = model?.called && model.text ? String(model.text).trim() : '';
-  let rewritten = modelText
-    ? cleanCandidate(modelText, pending?.upsell, pending?.postIntake === true, pending?.customerTurn, pending?.corpus)
-    : '';
-  if (item34Reason(rewritten)) rewritten = cleanCandidate(stripItem34Ban(rewritten), pending?.upsell, pending?.postIntake === true, pending?.customerTurn, pending?.corpus);
+  const facts = pending?.tripFacts || customerTripFacts([], pending?.customerTurn || '');
+  const draftErrors = draftFactErrors(pending?.draft, facts);
+  async function askRewrite(failure) {
+    const started = Date.now();
+    const called = await callTieredModel({
+      rules,
+      jev: pending?.jev,
+      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. The scoring failure is: ${failure || 'the draft missed this turn'}. Keep only days and places the customer already named. Do not paste the draft.\nDraft:\n${pending?.draft || ''}`,
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination: pending?.destination || '',
+      memory: [],
+      upsell: pending?.upsell || 'forbidden',
+      postIntake: pending?.postIntake === true,
+      env,
+      forceModel: pending?.draftModel || '',
+      timeoutMs: 20000,
+      tripContext: pending?.tripContext || null,
+      planTable: pending?.planTable || null,
+      planLine: pending?.planLine || '',
+      seatDollars: pending?.seatDollars || 0,
+      systemExtra: [
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn.',
+        failure ? `The scoring failure is: ${failure}. Fix that failure.` : '',
+        'Do not assign a swim, a garden, checkout, or one last time to a day the customer did not set. Do not say the unlimited plan is already owned.',
+        pending?.planTable?.payer_line
+          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group. Do not say Fallon.`
+          : '',
+      ].filter(Boolean).join(' '),
+    });
+    return { called, ms: Math.max(0, Date.now() - started) };
+  }
+  function acceptText(called) {
+    const modelText = called?.called && called.text ? String(called.text).trim() : '';
+    let rewritten = modelText
+      ? cleanCandidate(modelText, pending?.upsell, pending?.postIntake === true, pending?.customerTurn, pending?.corpus)
+      : '';
+    if (item34Reason(rewritten)) rewritten = cleanCandidate(stripItem34Ban(rewritten), pending?.upsell, pending?.postIntake === true, pending?.customerTurn, pending?.corpus);
+    return { modelText, rewritten, called };
+  }
+  let attempt = await askRewrite(pending?.failureReason);
+  let rewriteMs = attempt.ms;
+  let parsed = acceptText(attempt.called);
+  if (!parsed.modelText) {
+    const again = await askRewrite(pending?.failureReason);
+    rewriteMs += again.ms;
+    const second = acceptText(again.called);
+    if (second.modelText) {
+      attempt = again;
+      parsed = second;
+    }
+  }
+  let rewriteErrors = parsed.rewritten ? draftFactErrors(parsed.rewritten, facts) : [];
+  if (parsed.rewritten && rewriteErrors.length) {
+    const again = await askRewrite(`${pending?.failureReason || 'fact check'}; ${rewriteErrors.join('; ')}`);
+    rewriteMs += again.ms;
+    const second = acceptText(again.called);
+    const secondErrors = second.rewritten ? draftFactErrors(second.rewritten, facts) : [];
+    if (second.modelText && secondErrors.length < rewriteErrors.length) {
+      attempt = again;
+      parsed = second;
+      rewriteErrors = secondErrors;
+    }
+  }
+  const model = attempt.called;
+  const { modelText, rewritten } = parsed;
   let failReason = '';
   if (!modelText) failReason = model?.reason || 'rewrite_empty';
   else if (!rewritten) failReason = 'rewrite_rejected';
@@ -1573,40 +1741,23 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
         judgedText,
         pending.customerTurn,
       );
+      rewriteQuality = applyAccuracyRewrite(rewriteQuality, rewriteErrors);
       rewriteQuality = await settleJevNote(rewriteQuality, pending.customerTurn, judgedText, env);
       rewriteQuality.judgeMs = null;
     } else {
       failReason = failReason || 'rewrite_not_judged';
     }
   }
-  const shipText = failReason ? '' : rewritten;
-  let choice = shipChoice({
+  const choice = shipChoice({
     draft: pending.draft,
-    draftScore: pending.draftScore,
-    rewrite: shipText,
-    rewriteScore: rewriteQuality?.judged ? rewriteQuality.score : null,
+    rewrite: failReason ? '' : rewritten,
+    draftFactErrors: draftErrors,
+    rewriteFactErrors: rewriteErrors,
   });
-  if (!choice.rewritten && !failReason) failReason = 'rewrite_not_higher';
-  const scope = { customerTurn: pending?.customerTurn, postIntake: pending?.postIntake === true };
-  const draftErrors = Array.isArray(pending?.quality?.accuracyErrors) ? pending.quality.accuracyErrors : [];
-  const cleared = draftAccuracyErrors(rewritten, scope);
-  if (choice.rewritten && cleared.length) {
-    const salvaged = dropAccuracySentences(rewritten, scope);
-    if (salvaged) {
-      choice = { text: salvaged, rewritten: true, flagged: false };
-      failReason = '';
-    } else {
-      choice = { text: pending.draft, rewritten: false, flagged: true };
-      failReason = `rewrite_still_inaccurate: ${cleared.join('; ')}`;
-    }
-  }
-  if (!choice.rewritten && draftErrors.length && rewritten && !cleared.length && rewriteReplacesDraft(pending.draft, rewritten) && !nearIdenticalRewrite(pending.draft, rewritten)) {
-    choice = { text: rewritten, rewritten: true, flagged: false };
-    failReason = '';
-  }
-  if (draftAccuracyErrors(choice.text, scope).length) {
-    const salvaged = dropAccuracySentences(choice.text, scope);
-    if (salvaged) choice = { ...choice, text: salvaged };
+  if (!choice.rewritten && !failReason) {
+    failReason = choice.failReason === 'rewrite_fact_check_worse'
+      ? `rewrite_fact_check_worse: ${rewriteErrors.join('; ')}`
+      : 'rewrite_not_shipped';
   }
   const rewriteQualityMs = Math.max(0, Date.now() - rewriteQualityStarted);
   const draftQualityMs = Number(pending.qualityJevMs) || 0;
@@ -1616,6 +1767,8 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
   const shippedQuality = choice.rewritten && rewriteQuality?.judged ? rewriteQuality : pending.quality;
   const shippedNote = shippedQuality?.jevNote || null;
   const judgeMs = choice.rewritten ? rewriteQualityMs : (Number(pending.quality?.judgeMs) || draftQualityMs);
+  const draftFactLine = draftErrors.length ? draftErrors.join('; ') : 'ok';
+  const rewriteFactLine = modelText ? (rewriteErrors.length ? rewriteErrors.join('; ') : 'ok') : 'none';
   const rewriteAttempt = {
     text: modelText || null,
     model: rewriteModel || null,
@@ -1633,9 +1786,17 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     shippedRewrite: choice.rewritten,
     shippedModel,
     jevScoreDraft: pending.draftScore,
-    jevScoreRaw: Number.isFinite(Number(shippedQuality?.scoreRaw)) ? Number(shippedQuality.scoreRaw) : (Number.isFinite(Number(pending.quality?.scoreRaw)) ? Number(pending.quality.scoreRaw) : null),
+    jevScoreRaw: rawScore(shippedQuality?.scoreRaw) ?? rawScore(pending.quality?.scoreRaw),
     jevDisposition: shippedQuality?.disposition || pending.quality?.disposition || null,
     jevFixFocus: shippedQuality?.jevFocus || pending.quality?.jevFocus || null,
+    draftJevScoreRaw: rawScore(pending.quality?.scoreRaw),
+    draftJevDisposition: pending.quality?.disposition || null,
+    draftJevFixFocus: pending.quality?.jevFocus || null,
+    rewriteJevScoreRaw: rawScore(rewriteQuality?.scoreRaw),
+    rewriteJevDisposition: rewriteQuality?.disposition || null,
+    rewriteJevFixFocus: rewriteQuality?.jevFocus || null,
+    draftFactCheck: draftFactLine,
+    rewriteFactCheck: rewriteFactLine,
     jevScoreRewrite: rewriteQuality?.judged ? rewriteQuality.score : null,
     jevNote: shippedNote,
     jevNoteReason: shippedNote ? null : (shippedQuality?.jevNoteReason || 'jev_no_free_text'),
@@ -1722,9 +1883,17 @@ export function liveTranscriptFromRows({ session, rows }) {
       rewriteModel: live.rewriteModel || live.quality?.rewriteModel || null,
       jevScoreDraft: scored(live.jevScoreDraft),
       jevScoreRewrite: scored(live.jevScoreRewrite),
-      jevScoreRaw: Number.isFinite(Number(live.jevScoreRaw)) ? Number(live.jevScoreRaw) : null,
+      jevScoreRaw: rawScore(live.jevScoreRaw),
       jevDisposition: live.jevDisposition || live.quality?.disposition || null,
       jevFixFocus: live.jevFixFocus || live.quality?.jevFocus || null,
+      draftJevScoreRaw: rawScore(live.draftJevScoreRaw),
+      draftJevDisposition: live.draftJevDisposition || null,
+      draftJevFixFocus: live.draftJevFixFocus || null,
+      rewriteJevScoreRaw: rawScore(live.rewriteJevScoreRaw),
+      rewriteJevDisposition: live.rewriteJevDisposition || null,
+      rewriteJevFixFocus: live.rewriteJevFixFocus || null,
+      draftFactCheck: live.draftFactCheck || null,
+      rewriteFactCheck: live.rewriteFactCheck || null,
       rewriteText: live.rewriteText || live.quality?.rewriteText || '',
       rewriteFailReason: live.rewriteFailReason || '',
       rewriteAttempts: Array.isArray(live.rewriteAttempts) ? live.rewriteAttempts : null,
@@ -1829,6 +1998,7 @@ export function transcriptToJsonl(doc) {
     endedAt: doc.endedAt || null,
     sessionE2eMs: doc.sessionE2eMs ?? null,
     buildSha: doc.buildSha || null,
+    party: completeRosterParty(doc),
   };
   const lines = [header, ...(doc.turns || []).map((turn) => ({ type: 'turn', ...turn }))];
   return `${lines.map((line) => JSON.stringify(line)).join('\n')}\n`;

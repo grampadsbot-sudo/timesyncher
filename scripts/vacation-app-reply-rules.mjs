@@ -570,13 +570,13 @@ function chatReplyText(content) {
 function seatWelcomeLine(customerTurn) {
   const turn = String(customerTurn || '');
   if (/Kimberly[^\n]{0,80}Craig paid for this seat/i.test(turn)) {
-    return 'Kimberly is joining on a seat Craig paid for. Welcome her aboard by name, once.';
+    return 'Kimberly is joining on a seat Craig paid for. The first sentence is "Welcome aboard, Kimberly." Welcome her once.';
   }
   if (/Tyler[^\n]{0,80}paid for my own seat/i.test(turn)) {
-    return 'Tyler is joining and paid for his own seat. Welcome him to the trip by name. Do not also welcome him to the crew.';
+    return 'Tyler is joining and paid for his own seat. The first sentence is "Welcome aboard, Tyler." Do not also welcome him to the crew.';
   }
   if (/Lauren[^\n]{0,80}paid for my own seat/i.test(turn)) {
-    return 'Lauren is joining and paid for her own seat. Welcome her to the trip by name and say she is officially joining. One joining sentence is enough.';
+    return 'Lauren is joining and paid for her own seat. The first sentence is "Welcome aboard, Lauren." One joining sentence is enough.';
   }
   return 'Do not insert a welcome the customer did not ask for.';
 }
@@ -594,7 +594,7 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
       : (upsell === 'allow-once'
         ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not say you are setting it up. Do not answer with only that phrase.`
         : (priceAsk
-          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine || 'each person, the dollar amount, and who pays'}. Make no coverage claims. Do not say whole group. Do not say Fallon. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. The trip runs through Sunday April 12. Do not say April 3-10. Do not add a collaborator welcome. Do not use a banned payment word.`
+          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine || 'each person, the dollar amount, and who pays'}. Make no coverage claims. Do not say whole group. Do not say Fallon. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. Use only the dates the customer already named. Do not add a collaborator welcome. Do not use a banned payment word.`
           : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
@@ -615,11 +615,8 @@ function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn =
     upsellLine,
     seatWelcomeLine(customerTurn),
     'Day-advice turns name the people already on the trip. They do not add a household welcome.',
-    'The party of eight is Craig, Kimberly, Tyler, Lauren, Torren, Peyton, Keegan, and Fallon. Aunt Jean can edit notes and Marcus Chen can view. Neither is part of that eight. Do not count Aunt Jean in the party of eight.',
-    'On a Friday April 3 through Sunday April 12 trip, Friday April 3 is night 1 and Friday April 10 is night 8. Do not call the April 10 dinner night seven. The final full day is Saturday April 11. Do not call Thursday April 9, or any earlier day, the final full day.',
     'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.',
-    'Swims stay on Monday April 6 and Friday April 10. Do not move a swim to Tuesday April 7 or Thursday April 9. If Monday rains, the backup is the house pool that same Monday.',
-    'Gardens stay on Sunday April 5 and Thursday April 9. They are Kimberly\'s gardens. Do not call them Tyler\'s, and do not tell Tyler they are his gardens.',
+    'Use only the days, swims, gardens, and people the customer has already named. If a day is not set, ask. Do not announce a garden or a swim on a weekday the customer has not set. Do not say a garden or a swim is already set unless the customer set that day. Do not call a day the last day, after checkout, or one last time unless the customer said the trip ends that day.',
     'Do not invent a picnic or a beachside picnic. Do not invent an activity the customer did not name.',
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan holds steady for the whole group, or that little Fallon and the others are covered.',
@@ -734,17 +731,26 @@ export function isTemplateNote(note, customerTurn) {
   return false;
 }
 
+export function labeledJevScore(scoreRaw) {
+  const raw = Number(scoreRaw);
+  if (!Number.isFinite(raw)) return null;
+  const labeled = Math.round((raw + 1) * 1000) / 1000;
+  if (labeled < 1) return 1;
+  if (labeled > 5) return 5;
+  return labeled;
+}
+
 export function qualityFromDecisions(body, _criteria = null, customerTurn = '', draft = '') {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
   if (!Number.isFinite(scoreRaw)) return { judged: false, reason: 'quality_score_missing', model: JEV_DECISIONS_MODEL };
-  const score = Math.max(1, Math.min(5, Math.round(scoreRaw)));
+  const score = labeledJevScore(scoreRaw);
   const disposition = text(answers.disposition?.choice, 40);
   const jevFocus = text(answers.fix_focus?.choice, 40);
   const rawNote = extractJevFreeNote(body);
   const contradicts = Boolean(rawNote) && noteContradictsDraft(rawNote, draft);
   const template = Boolean(rawNote) && isTemplateNote(rawNote, customerTurn);
-  const wantsRewrite = (disposition === 'rewrite' && score <= 3) || score <= 2;
+  const wantsRewrite = disposition === 'rewrite' || score <= 2;
   return {
     judged: true,
     score,
@@ -788,7 +794,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       },
       disposition: {
         type: 'choice',
-        instructions: 'Choose keep or rewrite. Choose rewrite when the draft should be replaced, including when it is only adequate. If you can explain, put one line in a text field.',
+        instructions: 'Choose keep or rewrite. If you can explain, put one line in a text field.',
         criteria: {
           keep: 'The draft should stand. It answers this turn and names only places and activities already in the conversation.',
           rewrite: 'Replace the draft. It misses this turn, names a place the customer did not name, skips the price, or uses a banned payment word.',

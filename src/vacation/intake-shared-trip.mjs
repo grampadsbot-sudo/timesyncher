@@ -366,11 +366,14 @@ export function applyThingPresentation(shared = {}, options = {}) {
       place.address = koa[2];
     }
     places.push(place);
+    const flightText = `${place.description || ''} ${place.notes || ''}`;
+    const connections = flightText.match(/\b(nonstop into [A-Z]{3}|[0-9]+ connections?)\b/i);
+    const layover = flightText.match(/\blayover\s+(?:in\s+)?([A-Za-z][^.\n]{0,40})/i);
     put(place, {
       category: 'flight',
       takeoffTime: 'Fri Apr 3',
-      connections: 'nonstop into KOA',
-      layover: 'none',
+      ...(connections ? { connections: connections[1] } : {}),
+      ...(layover ? { layover: layover[1].trim() } : {}),
       summary: place.description,
       lat: place.lat,
       lng: place.lng,

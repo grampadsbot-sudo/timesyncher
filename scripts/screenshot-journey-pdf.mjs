@@ -172,6 +172,25 @@ function sessionToken(sessionUrl) {
   }
 }
 
+async function collaboratorInviteHtml(tripId, token, name) {
+  if (!process.env.DATABASE_URL) return '';
+  const { sql } = await import('../src/vacation/db.mjs');
+  const db = sql(process.env);
+  const rows = await db`
+    select e.html_body
+    from outbound_emails e
+    join vacation_collaborator_invites i on e.metadata->>'collaboratorInviteId' = i.id::text
+    where i.requested_for ilike ${`${name}%`}
+      and (
+        (${tripId || ''} <> '' and i.trip_id = ${tripId || '00000000-0000-0000-0000-000000000000'})
+        or i.trip_id = (select trip_id from onboarding_sessions where token = ${token || ''} limit 1)
+      )
+    order by e.created_at desc
+    limit 1
+  `;
+  return rows[0]?.html_body || '';
+}
+
 async function purchaseEmailHtml(token) {
   if (!token || !process.env.DATABASE_URL) return null;
   const { sql } = await import('../src/vacation/db.mjs');
@@ -263,7 +282,11 @@ async function main() {
 
   const shotDir = path.join(outDir, 'journey-pages');
   const sessionUrl = argValue('--session-url');
-  const sharedUrl = argValue('--shared-url') || `${staging}/shared/intake-eab1cbb15144/`;
+  const sharedUrl = argValue('--shared-url') || '';
+  if (!sharedUrl) {
+    process.stderr.write('refused: --shared-url is required so the email, invites, and itinerary stay on one trip\n');
+    process.exit(1);
+  }
   const referenceUrl = argValue('--reference-url') || `${staging}/shared/las-vegas-vacation-3/`;
   const eulaUrl = argValue('--eula-url');
   const mailDir = argValue('--mail-dir') || '/tmp/journey-mail';
@@ -281,8 +304,7 @@ async function main() {
   const imageHashes = new Map();
 
   function gap(feature, file, reason, extra = {}) {
-    if (file && gaps.some((item) => item.file === file)) return;
-    if (gaps.some((item) => item.feature === feature)) return;
+    if (gaps.some((item) => item.feature === feature && item.reason === reason)) return;
     gaps.push({ feature, file, reason, exempt: extra.exempt === true });
   }
 
@@ -421,8 +443,15 @@ async function main() {
 
     const emailRow = await purchaseEmailHtml(token);
     const arrivedPurchase = await readMail(mailDir, 'purchase.html');
-    const purchaseHtml = arrivedPurchase || emailRow?.html_body || '';
+    const onThisTrip = (html) => {
+      const href = launchHref(html);
+      if (!html || !href) return '';
+      if (sharedSlug(href) !== intakeSlug) return '';
+      return html;
+    };
+    const purchaseHtml = onThisTrip(emailRow?.html_body) || onThisTrip(arrivedPurchase);
     const emailHref = launchHref(purchaseHtml);
+    const visibleLink = /<a\b[^>]*href="[^"]*\/shared\/[^"]*"[^>]*>\s*https?:\/\//i.test(purchaseHtml);
     if (!purchaseHtml) {
       gap('Purchase email', 'post-purchase-email-eula.md', 'no stored purchase email for this session');
       gap('Email opens the real app', 'real-app-email-entry.md', 'no stored purchase email to open');
@@ -440,8 +469,13 @@ async function main() {
           ? `the purchase email HTML was stored and screenshotted. The outbound row status is ${status}.`
           : 'the inbox copy was not captured');
       }
+      if (!visibleLink) {
+        gap('Purchase email link', 'post-purchase-email-eula.md', 'the purchase email has no visible trip link');
+      }
       if (!emailHref || purchaseHtml.includes('vacation-app.html')) {
         gap('Email opens the real app', 'real-app-email-entry.md', 'the purchase email href is still vacation-app.html, not /shared/');
+      } else if (sharedSlug(emailHref) !== intakeSlug) {
+        gap('Email opens the real app', 'real-app-email-entry.md', 'the purchase email opens a different trip than the itinerary');
       } else {
         mark('real-app-email-entry.md');
       }
@@ -449,6 +483,8 @@ async function main() {
 
     if (!emailHref) {
       gap('Email click', 'post-purchase-email-eula.md', 'the purchase email has no /shared/ href to open');
+    } else if (sharedSlug(emailHref) !== intakeSlug) {
+      gap('Email click', 'post-purchase-email-eula.md', 'the purchase email href is a different trip, so it was not opened');
     } else {
       await go(emailHref, 'Day-by-Day');
       if (await isShell(page)) {
@@ -913,19 +949,26 @@ async function main() {
           const values = [...grid.querySelectorAll('input')].map((input) => String(input.value || '').trim());
           const blob = `${grid.innerText || ''}\n${values.join('\n')}`;
           if (!/connections/i.test(blob) || !/layover/i.test(blob)) return null;
-          if (!values.some((value) => /Fri Apr 3/i.test(value))) return null;
-          if (!values.some((value) => /nonstop into KOA/i.test(value))) return null;
-          if (!values.some((value) => /^none$/i.test(value))) return null;
+          const filled = values.filter((value) => value && !/^fri apr 3$/i.test(value));
           grid.scrollIntoView({ block: 'center' });
           const box = grid.getBoundingClientRect();
-          return { x: Math.max(0, box.x - 16), y: Math.max(0, box.y - 16), width: Math.min(960, Math.max(420, box.width + 32)), height: Math.min(320, Math.max(180, box.height + 32)) };
+          return {
+            filled: filled.length >= 2,
+            x: Math.max(0, box.x - 16),
+            y: Math.max(0, box.y - 16),
+            width: Math.min(960, Math.max(420, box.width + 32)),
+            height: Math.min(320, Math.max(180, box.height + 32)),
+          };
         });
-        if (flightBox) {
+        if (flightBox?.filled) {
+          const { filled, ...clipRect } = flightBox;
           await shot('flight-fields', 'Initial itinerary', 'Flight fields', {
             file: 'flight-fields.md',
-            note: 'KOA arrival Takeoff Fri Apr 3, Connections nonstop into KOA, Layover none.',
-            clipRect: flightBox,
+            note: 'KOA arrival flight fields from the trip, not a hard-coded connection or layover.',
+            clipRect,
           });
+        } else {
+          gap('Flight fields', 'flight-fields.md', 'Connections and layover were not stated, so those fields stay empty. Unblock: a real connection or layover on this trip.');
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
@@ -1020,7 +1063,9 @@ async function main() {
     if (!captured.has('filters.md')) gap('Filters', 'filters.md', 'The Rest list did not render All areas or All types');
     if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'the restaurants list did not render All tags or Seafood chips');
     if (!captured.has('budget.md')) gap('Budget', 'budget.md', 'the shared app did not open a Budget tab');
-    if (!captured.has('flight-fields.md')) gap('Flight fields', 'flight-fields.md', 'KOA arrival does not render Takeoff, Connections, and Layover. Unblock: those fields on the open flight detail.');
+    if (!captured.has('flight-fields.md') && !gaps.some((item) => item.feature === 'Flight fields')) {
+      gap('Flight fields', 'flight-fields.md', 'Connections and layover were not stated, so those fields stay empty. Unblock: a real connection or layover on this trip.');
+    }
     if (!captured.has('happy-hour.md')) gap('Happy hour', 'happy-hour.md', 'Ulu Ocean Grill did not show a Happy hour field');
     if (!captured.has('car-fields.md')) gap('Car fields', 'car-fields.md', 'SpeediShuttle shows the shuttle summary and does not render Rental company and Car type. Unblock: those two fields on the open car detail.');
     if (!captured.has('status.md')) gap('Status', 'status.md', 'no Thing detail showed a status');
@@ -1104,9 +1149,15 @@ async function main() {
     ];
     let collabArrived = 0;
     for (const [id, name] of collabNames) {
-      const html = await readMail(mailDir, `${id}.html`);
+      const storedInvite = await collaboratorInviteHtml(tripId, token, name);
+      const mailed = await readMail(mailDir, `${id}.html`);
+      const foreign = (html) => {
+        const slugs = [...String(html || '').matchAll(/\/shared\/([^/"'?#]+)/gi)].map((match) => match[1]);
+        return slugs.some((slug) => slug !== intakeSlug);
+      };
+      const html = (storedInvite && !foreign(storedInvite) ? storedInvite : '') || (mailed && !foreign(mailed) ? mailed : '');
       if (!html) {
-        gap(`${name} collaborator email`, 'collaborators.md', `${name}'s invite was not captured from an inbox`);
+        gap(`${name} collaborator email`, 'collaborators.md', `${name}'s invite was not captured for this trip`);
         continue;
       }
       await page.setContent(html, { waitUntil: 'domcontentloaded' });
