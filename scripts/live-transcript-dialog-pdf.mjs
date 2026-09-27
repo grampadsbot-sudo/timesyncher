@@ -154,7 +154,11 @@ export function assertLiveTranscript(doc) {
       if (!String(turn.draftModel || '').trim() || !isBakeoffModelId(String(turn.draftModel))) {
         throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
       }
-      if (!String(turn.jevNote || '').trim() || isTemplateNote(turn.jevNote, priorCustomer?.text || turn.jevNote)) {
+      const customerText = priorCustomer?.text || '';
+      if (!String(turn.jevNote || '').trim() || isTemplateNote(turn.jevNote, customerText)) {
+        throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
+      }
+      if (String(turn.quality?.comment || '').trim() && isTemplateNote(turn.quality.comment, customerText)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
       }
       if (!Number.isInteger(Number(turn.jevScoreDraft))) {
@@ -289,7 +293,9 @@ export function assessPackShape(doc, options = {}) {
   const checked = options.skipAssert ? doc : assertLiveTranscript(doc);
   const summary = buildTimingSummary(checked);
   const missingAppOpen = checked.turns[0]?.role !== 'app';
-  const trip = String(options.trip || checked.tripTitle || checked.trip || '').trim() || 'untitled';
+  const corpus = (checked.turns || []).map((turn) => turn.text || '').join('\n');
+  const inferredTrip = /big island/i.test(corpus) ? 'Big Island' : '';
+  const trip = String(options.trip || checked.tripTitle || checked.trip || inferredTrip).trim() || 'untitled';
   const head = String(options.head || checked.head || 'not-recorded');
   const dpl = String(options.dpl || checked.dpl || 'not-recorded');
   const tierCounts = {};
@@ -318,7 +324,7 @@ export function assessPackShape(doc, options = {}) {
       : null,
     pack_id: `live-${checked.sessionToken || 'session'}`,
     trip,
-    trip_title_source: (options.trip || checked.tripTitle || checked.trip) ? 'provided' : 'untitled_not_inferred',
+    trip_title_source: (options.trip || checked.tripTitle || checked.trip || inferredTrip) ? (inferredTrip && !(options.trip || checked.tripTitle || checked.trip) ? 'inferred' : 'provided') : 'untitled_not_inferred',
     source: 'live-app',
     capture: checked.capture,
     sessionToken: checked.sessionToken || null,
@@ -338,6 +344,7 @@ export function assessPackShape(doc, options = {}) {
 function percentile(values, p) {
   const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
   if (!sorted.length) return null;
+  if (p === 50) return trueMedian(sorted);
   const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
   return sorted[index];
 }
@@ -373,8 +380,8 @@ function packPages(doc, shape) {
     'metric | v6 gpt-5-mini gen-only | this session gen-only | this session real per-turn',
     `p50 ms | ${V6_GPT5_MINI_P50_MS} | ${p50 ?? 'n/a'} | ${percentile(generated.map((turn) => Number(turn.latencyMs)), 50) ?? 'n/a'}`,
     `p95 ms | ${V6_GPT5_MINI_P95_MS} | ${p95 ?? 'n/a'} | ${percentile(generated.map((turn) => Number(turn.latencyMs)), 95) ?? 'n/a'}`,
-    `gen-only speed vs v6 gen p50 | 1x | ${speed}x | n/a`,
-    `session elapsed ms | n/a | n/a | ${summary.sessionE2eMs ?? 'n/a'}`,
+    `v6 gen p50 is ${speed}× this gen-only median | 1x | ${speed}x | n/a`,
+    `session wall time ms | n/a | n/a | ${summary.sessionE2eMs ?? 'n/a'}`,
     '',
     'Per-tier models',
     'tier | model',
@@ -482,12 +489,21 @@ export function assertRosterRoleBlock(doc) {
   return lines;
 }
 
+export function trueMedian(values) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2) return sorted[mid];
+  return Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
 function timingStats(values) {
   const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
   if (!sorted.length) return { count: 0, p50: 'n/a', p95: 'n/a', mean: 'n/a', max: 'n/a' };
   const pick = (p) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1))];
   const mean = Math.round(sorted.reduce((sum, value) => sum + value, 0) / sorted.length);
-  return { count: sorted.length, p50: pick(50), p95: pick(95), mean, max: sorted[sorted.length - 1] };
+  const median = trueMedian(sorted);
+  return { count: sorted.length, p50: median ?? 'n/a', p95: pick(95), mean, max: sorted[sorted.length - 1] };
 }
 
 export function rosterLines(doc) {
@@ -533,7 +549,8 @@ export function liveV7Pack(doc, shape) {
   const speed = Number.isFinite(Number(overall.p50)) && Number(overall.p50) > 0
     ? (V6_GPT5_MINI_P50_MS / Number(overall.p50)).toFixed(2)
     : 'n/a';
-  const realTurn = timingStats(generated.map((turn) => Number(turn.latencyMs)));
+  const realTurn = timingStats(generated.map((turn) => realTurnLatencyMs(turn)));
+  const wall = shape.summary.sessionE2eMs ?? 'n/a';
   timingRows.push(['v7 real per-turn', 'latencyMs', String(realTurn.count), String(realTurn.p50), String(realTurn.p95), String(realTurn.mean), String(realTurn.max)]);
   const name = String(doc.targetPerson || 'customer').toUpperCase();
   return {
@@ -542,8 +559,8 @@ export function liveV7Pack(doc, shape) {
     void: doc.void === true || String(doc.deployBanner || '').startsWith('VOID'),
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
-    turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · response_ready=n/a · needs_repair=n/a`,
-    headline: 'Live app capture. Jev judged every generated reply. The timing table is gen-only. Real per-turn latency is the last row.',
+    turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
+    headline: `Live app capture. Jev judged every generated reply. Session wall time is ${wall}ms. The timing table median is gen-only. Real per-turn latency, including both Jev calls on a rewrite, is the last row.`,
     quality_rows: [
       ['Metric', 'v6 gpt-5-mini', 'v7 Tier 1–4'],
       ['App turns', '23', String(generated.length)],
@@ -568,7 +585,7 @@ export function liveV7Pack(doc, shape) {
       }),
     ],
     timing_rows: timingRows,
-    speedup: `gen-only p50 is ${overall.p50}ms (${speed}× the v6 gen-only p50 of ${V6_GPT5_MINI_P50_MS}ms). Real per-turn latency p50 is ${realTurn.p50}ms. Session elapsed is ${shape.summary.sessionE2eMs ?? 'n/a'}ms. gen-only is not the time the customer waited.`,
+    speedup: `gen-only median is ${overall.p50}ms. The v6 gen-only p50 of ${V6_GPT5_MINI_P50_MS}ms is ${speed}× this session's gen-only median. Real per-turn latency median is ${realTurn.p50}ms and counts both Jev calls on a rewrite turn. Session wall time is ${wall}ms. gen-only is not the time the customer waited.`,
     recipe: [
       ['mode', 'live-app'],
       ['canonical', 'tier_models.json'],
@@ -601,6 +618,7 @@ export function liveV7Pack(doc, shape) {
         app,
         text: String(turn.text || ''),
         rewrite_label: generatedTurn && turn.quality?.rewritten === true ? rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel) : '',
+        jev_ran: generatedTurn ? jevRanLine(turn) : '',
         producer_log: app ? producerLogLine(turn) : '',
         quality: generatedTurn || (app && turn.quality?.judged === true) ? formatQualityLine(turn.quality) : '',
         timing: generatedTurn ? formatLiveTimingLine({
@@ -615,10 +633,28 @@ export function liveV7Pack(doc, shape) {
   };
 }
 
+function jevRanLine(turn) {
+  const model = String(turn.quality?.model || 'typesafe/jev-1.13');
+  const score = Number.isInteger(Number(turn.quality?.score)) ? Number(turn.quality.score) : Number(turn.jevScoreDraft);
+  const jevMs = Number(turn.jevLatencyMs ?? turn.jev?.jevLatencyMs);
+  const ms = Number.isFinite(jevMs) ? jevMs : 0;
+  return `jev ran: ${model} score ${Number.isFinite(score) ? score : ''} ${ms}ms`;
+}
+
+function realTurnLatencyMs(turn) {
+  const stored = Number(turn.latencyMs);
+  const latency = turn.modelLatency || {};
+  const bothJev = Number(latency.jevDraft) + Number(latency.jevRewrite);
+  if (Number.isFinite(bothJev) && bothJev > 0 && Number.isFinite(stored)) return stored;
+  return stored;
+}
+
 function producerLogLine(turn) {
   const latency = turn.modelLatency || {};
   const interim = turn.interimReply && typeof turn.interimReply === 'object' ? turn.interimReply : {};
+  const ran = turn.jev?.jevRan === true ? jevRanLine(turn) : '';
   return [
+    ...(ran ? [ran] : []),
     `draftModel: ${turn.draftModel || ''}`,
     `rewriteModel: ${turn.rewriteModel || 'none'}`,
     `shippedModel: ${turn.shippedModel || ''}`,
@@ -787,6 +823,7 @@ async function main() {
   }
   const transcript = voidError ? await loadTranscript(args) : assertLiveTranscript(await loadTranscript(args));
   if (!voidError) transcript.buildSha = readTipSha();
+  if (!voidError && process.env.R5_DEPLOY_BANNER) transcript.deployBanner = process.env.R5_DEPLOY_BANNER;
   if (voidError) {
     transcript.void = true;
     transcript.deployBanner = voidDocumentStamp(voidError.live, voidError.tip);

@@ -507,7 +507,25 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  return patched;
+  return hideUnsourcedRatings(patched);
+}
+
+function hideUnsourcedRatings(source) {
+  let js = String(source || '');
+  const ratingStart = js.indexOf('vo(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:8},children:[');
+  const ratingEndMarker = 'placeholder:"Tripadvisor/OpenTable/Booking",style:De})]})]})';
+  const ratingEnd = ratingStart >= 0 ? js.indexOf(ratingEndMarker, ratingStart) : -1;
+  if (ratingStart >= 0 && ratingEnd > ratingStart) {
+    const ratingPatch = '[String(No(Dt,"googleRating")||"").trim(),String(No(Dt,"yelpRating")||"").trim(),String(No(Dt,"thirdPartyRating")||"").trim()].some(Boolean)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:8},children:[String(No(Dt,"googleRating")||"").trim()&&n.jsxs("label",{style:Hn,children:["Google rating",n.jsx("input",{value:No(Dt,"googleRating"),onChange:G=>Xa(Dt,"googleRating",G.target.value),style:De})]}),String(No(Dt,"yelpRating")||"").trim()&&n.jsxs("label",{style:Hn,children:["Yelp rating",n.jsx("input",{value:No(Dt,"yelpRating"),onChange:G=>Xa(Dt,"yelpRating",G.target.value),style:De})]}),String(No(Dt,"thirdPartyRating")||"").trim()&&n.jsxs("label",{style:Hn,children:["Other rating",n.jsx("input",{value:No(Dt,"thirdPartyRating"),onChange:G=>Xa(Dt,"thirdPartyRating",G.target.value),style:De})]})].filter(Boolean)})';
+    js = js.slice(0, ratingStart) + ratingPatch + js.slice(ratingEnd + ratingEndMarker.length);
+  }
+  const reviewStart = js.indexOf('vo(Dt)&&[1,2,3].map(G=>n.jsxs("label",{style:Hn,children:["5-star review quote "');
+  const reviewEnd = reviewStart >= 0 ? js.indexOf(']},G))]', reviewStart) : -1;
+  if (reviewStart >= 0 && reviewEnd > reviewStart) {
+    const reviewPatch = '[1,2,3].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G,n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]},G))]';
+    js = js.slice(0, reviewStart) + reviewPatch + js.slice(reviewEnd + ']},G))]'.length);
+  }
+  return js.replaceAll('placeholder:"4.6"', 'placeholder:""').replaceAll('placeholder:"4.4"', 'placeholder:""');
 }
 
 export function assertStyleTwoPatchParses(source = AE_LAYOUT_PATCH) {
@@ -572,6 +590,9 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes('data-story-summary="1"') || !js.includes('data-story-body="1"')) {
     throw new Error('Style two story summary-before-story patch did not apply.');
+  }
+  if (js.includes('placeholder:"4.6"') || js.includes('placeholder:"4.4"') || js.includes('5-star review quote')) {
+    throw new Error('Thing pages must not render rating or review placeholders.');
   }
   if (!js.includes(DAILY_THING_PATCH) || !js.includes('data-daily-thing-media="1"')) {
     throw new Error('Style two daily-thing media patch did not apply.');

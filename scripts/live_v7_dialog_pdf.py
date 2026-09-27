@@ -209,6 +209,8 @@ def build(pack):
         )]
         if turn.get("rewrite_label"):
             block.append(Paragraph(latin(turn.get("rewrite_label")), styles["Qual"]))
+        if turn.get("jev_ran"):
+            block.append(Paragraph(latin(turn.get("jev_ran")), styles["Tim"]))
         if turn.get("quality"):
             block.append(Paragraph(latin(turn.get("quality")), styles["Qual"]))
         if turn.get("timing"):

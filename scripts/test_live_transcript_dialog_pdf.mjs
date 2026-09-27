@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, jevReplacementChoices, isTemplateInterim, interimProblems, isTemplateNote, mustRewriteQuality, nearIdenticalRewrite, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, ensurePostIntakeBeats, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, mustRewriteQuality, nearIdenticalRewrite, priceFactsOnly, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripItem34Ban, stripUpsell, thingsFromIntake, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { payerPriceLine } from '../src/vacation/seat-price.mjs';
 import { qualityCommentCriteria, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertJevRewriteLabels,
@@ -15,6 +16,7 @@ import {
   formatLiveTimingLine,
   jevRewriteLabelCounts,
   renderLiveTranscriptPdf,
+  trueMedian,
 } from './live-transcript-dialog-pdf.mjs';
 
 const script = fileURLToPath(new URL('./live-transcript-dialog-pdf.mjs', import.meta.url));
@@ -124,6 +126,8 @@ assert.equal(isTemplateNote('Answer "Thursday is a town walk." and keep the days
 assert.equal(isTemplateNote('Keep the reply. It answers "Thursday is a town walk."', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateNote('Answers "Thursday is a town walk." and stays with that wording: "Thursday stays a town walk."', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateNote('Thursday town walk stays light for Lauren.', 'Thursday is a town walk.'), false);
+assert.equal(isTemplateNote('The reply covers this turn: Thursday is a town walk.', 'Thursday is a town walk.'), true);
+assert.equal(isTemplateNote('The morning walk leaves the afternoon open.', 'Thursday is a town walk.'), false);
 assert.equal(mustRewriteQuality({ score: 3, jevFocus: 'keep', comment: 'Thursday town walk stays light.' }), true);
 assert.equal(mustRewriteQuality({ score: 4, jevFocus: 'missing_price', comment: 'Name the price while answering "How much is it?".' }), false);
 assert.equal(mustRewriteQuality({ score: 5, jevFocus: 'keep', comment: 'Thursday town walk stays light.' }), false);
@@ -132,6 +136,8 @@ const saturdayGroceries = applyCustomerNotes(goldThings, 'Saturday April fourth 
 assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, 'Fri Apr 3');
 const thursdayGarden = applyCustomerNotes(goldThings, 'Thursday April ninth is the second garden morning.');
 assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
+const gardenAndWalk = applyCustomerNotes(thursdayGarden, 'Thursday April ninth is also the town walk.');
+assert.equal(gardenAndWalk.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
 assert.equal(isTemplateInterim('Got it. I saved that.', 'Thursday town walk'), true);
 assert.equal(isTemplateInterim('Sure, the Thursday walk can stay.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thursday is a town walk.'), false);
@@ -152,20 +158,16 @@ assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 2, rewrite: 'A differ
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).flagged, true);
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4 — Clear day shape.');
 assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1 — Misses the price.');
-const priceDraft = 'This trip already holds space for all eight of you. You are covered for Kimberly. Tyler has his own. Lauren has hers.';
-const priceChoices = jevReplacementChoices({ customerTurn: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.', draft: priceDraft, corpus: 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' });
-assert.ok(priceChoices.length >= 1);
-assert.match(priceChoices[0], /Kimberly \$27, paid by you/);
-assert.match(priceChoices[0], /Tyler \$27, paid by Tyler/);
-assert.match(priceChoices[0], /Lauren \$27, paid by Lauren/);
-assert.equal(priceChoices.every((choice) => rewriteReplacesDraft(priceDraft, choice)), true);
-assert.equal(priceChoices.some((choice) => /\b(?:split|splitting)\b/i.test(choice)), false);
-const swimDraft = 'If Monday April sixth rains, the swim still happens later. The beach plan stays, and the house pool is the backup.';
-const swimAsk = 'If Monday April sixth rains, what is the backup for Tyler so the swim still happens later and the beach plan does not just vanish?';
-const swimChoices = jevReplacementChoices({ customerTurn: swimAsk, draft: swimDraft, corpus: swimAsk });
-assert.ok(swimChoices.length >= 1);
-assert.match(swimChoices[0], /house pool/);
-assert.equal(swimChoices.every((choice) => rewriteReplacesDraft(swimDraft, choice)), true);
+const priceAskLine = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.';
+const priceLine = payerPriceLine(priceAskLine);
+assert.match(priceLine, /Kimberly \$27, paid by you/);
+assert.match(priceLine, /Tyler \$27, paid by Tyler/);
+assert.match(priceLine, /Lauren \$27, paid by Lauren/);
+assert.equal(/\b(?:split|splitting)\b/i.test(priceLine), false);
+const pricedOnly = priceFactsOnly(`${priceLine}. The plan covers the whole household, kids included.`);
+assert.match(pricedOnly, /Kimberly \$27, paid by you/);
+assert.doesNotMatch(pricedOnly, /household|kids/i);
+assert.equal(priceFactsOnly('The plan covers the whole household, kids included.'), '');
 assert.deepEqual(inventedVenueNames('A morning snorkel cruise and Hawaiʻi Volcanoes, then Puʻuhonua o Hōnaunau and Captain Cook.', 'Kimberly wants gardens. Tyler wants a swim.'), ['snorkel', 'cruise', 'Volcanoes', 'Puuhonua o Honaunau', 'Captain Cook']);
 assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', 'Tyler wants a swim on the beach or the house pool.'), []);
 const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
@@ -191,31 +193,41 @@ const thursdaySwim = applyAgreedAppSwim(mondaySwim, 'I still want one later swim
 assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Thu Apr 9');
 const comments = qualityCommentCriteria('How much is it?', 'No price here.');
 const otherComments = qualityCommentCriteria('Read Monday April sixth back.', 'Monday is the beach.');
-assert.notEqual(comments.answers_this_ask, otherComments.answers_this_ask);
-assert.match(comments.missing_price, /How much is it/);
+assert.notEqual(comments.skips_price, otherComments.skips_price);
+assert.equal(Object.values(comments).some((note) => /How much is it/.test(note)), false);
+assert.equal(isTemplateNote(comments.skips_price, 'How much is it?'), false);
 assert.equal(formatQualityLine({ judged: false, score: 4, comment: 'no' }), '');
+assert.equal(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 3 },
+    comment: { choice: 'holds_named_days' },
+    disposition: { choice: 'keep' },
+  },
+}, comments, 'How much is it?').score, 4);
+assert.equal(qualityFromDecisions({ answers: { comment: { choice: 'holds_named_days' } } }, comments).judged, false);
+assert.equal(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 2 },
+    comment: { choice: 'garden_word' },
+    disposition: { choice: 'rewrite' },
+  },
+}, comments, 'How much is it?').wantsRewrite, true);
+assert.equal(qualityFromDecisions({
+  answers: {
+    overall_quality: { score: 1 },
+    comment: { choice: 'misses_ask' },
+    disposition: { choice: 'keep' },
+  },
+}, comments, 'How much is it?').wantsRewrite, true);
 assert.equal(qualityFromDecisions({
   answers: {
     overall_quality: { score: 3 },
     comment: { choice: 'clear_day' },
     disposition: { choice: 'keep' },
   },
-}).score, 4);
-assert.equal(qualityFromDecisions({ answers: { comment: { choice: 'clear_day' } } }).judged, false);
-assert.equal(qualityFromDecisions({
-  answers: {
-    overall_quality: { score: 2 },
-    comment: { choice: 'garden_words' },
-    disposition: { choice: 'rewrite' },
-  },
-}).wantsRewrite, true);
-assert.equal(qualityFromDecisions({
-  answers: {
-    overall_quality: { score: 1 },
-    comment: { choice: 'off_brief' },
-    disposition: { choice: 'keep' },
-  },
-}).wantsRewrite, true);
+}).judged, false);
+assert.equal(trueMedian([10, 30]), 20);
+assert.equal(trueMedian([10, 20, 40]), 20);
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'customer', text: longIntake },
   { turnIndex: 2, role: 'app', text: intakeReply },
@@ -272,11 +284,11 @@ function liveDoc(overrides = {}) {
         jevLatencyMs: 400,
         genLatencyMs: 2400,
         jevBeforeModel: true,
-        quality: { judged: true, score: 4, comment: 'Harbor morning plan stays with the walk.', rewritten: false },
+        quality: { judged: true, score: 4, comment: 'The walk leaves the afternoon open. Draft marker walk-leaves. Jev score 3.10.', rewritten: false, model: 'typesafe/jev-1.13' },
         shippedModel: 'qwen/qwen3-235b-a22b-2507',
         draftModel: 'qwen/qwen3-235b-a22b-2507',
         jevScoreDraft: 4,
-        jevNote: 'Harbor morning plan stays with the walk.',
+        jevNote: 'The walk leaves the afternoon open. Draft marker walk-leaves. Jev score 3.10.',
         flagged: false,
         modelLatency: { draft: 2400, rewrite: null, total: 2400 },
       },
@@ -322,7 +334,7 @@ const jevRewrite = liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,
     text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
-    quality: { judged: true, score: 4, comment: 'Answer "Harbor morning plan for Craig" and keep the days they already named.', rewritten: true, model: 'typesafe/jev-1.13', rewriteModel: 'qwen/qwen3-235b-a22b-2507', draft: 'Start with the harbor walk, then keep the afternoon open.' },
+    quality: { judged: true, score: 4, comment: 'The walk leaves the afternoon open. Draft marker walk-leaves. Jev score 3.10.', rewritten: true, model: 'typesafe/jev-1.13', rewriteModel: 'qwen/qwen3-235b-a22b-2507', draft: 'Start with the harbor walk, then keep the afternoon open.' },
     shippedModel: 'qwen/qwen3-235b-a22b-2507',
     draftModel: 'qwen/qwen3-235b-a22b-2507',
     rewriteModel: 'qwen/qwen3-235b-a22b-2507',
@@ -376,12 +388,15 @@ assert.match(text, /Harbor morning plan for Craig/);
 assert.match(text, /T2 APP/);
 assert.match(text, /Start with the harbor walk/);
 assert.match(text, /timing: jev=400ms gen=2400ms model=qwen\/qwen3-235b-a22b-2507 tier=2 max_tokens=900/);
-assert.match(text, /quality: 4 .*Harbor morning plan stays with the walk/);
+assert.match(text, /quality: 4 .*The walk leaves the afternoon open/);
+assert.match(text, /jev ran: typesafe\/jev-1\.13 score 4 400ms/);
+assert.doesNotMatch(text, /× the v6 gen-only p50/);
+assert.match(text, /Session wall time is 3000ms/);
 assert.match(text, /draftModel: qwen\/qwen3-235b-a22b-2507/);
 assert.match(text, /flagged: false/);
 assert.match(jevRewritePdf, /interimReply\.text: The\s+harbor morning/);
 assert.match(jevRewritePdf, /interimReply\.model: google\/gemini-2\.5-flash-lite/);
-assert.match(jevRewritePdf, /interimReply\.ms: 900/);
+assert.match(jevRewritePdf, /interimReply\.ms:\s*900/);
 assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
 assert.match(text, /v7 overall/);
@@ -408,7 +423,7 @@ const seated = liveDoc({
     { ...liveDoc().turns[0], speakerName: 'Craig Davidson' },
     liveDoc().turns[1],
     { ...liveDoc().turns[0], turnIndex: 3, text: 'The garden morning in Kailua-Kona still works.', speakerName: 'Kimberly Davidson' },
-    { ...liveDoc().turns[1], turnIndex: 4, jevNote: 'The garden morning in Kailua-Kona still works on that day.', quality: { ...liveDoc().turns[1].quality, comment: 'The garden morning in Kailua-Kona still works on that day.' } },
+    { ...liveDoc().turns[1], turnIndex: 4, jevNote: 'Sunday garden stays on the named morning. Draft marker sunday. Jev score 3.20.', quality: { ...liveDoc().turns[1].quality, comment: 'Sunday garden stays on the named morning. Draft marker sunday. Jev score 3.20.' } },
   ],
 });
 const seatedText = extractPdfText(renderLiveTranscriptPdf(seated));

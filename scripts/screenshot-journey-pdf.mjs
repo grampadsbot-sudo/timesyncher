@@ -283,6 +283,8 @@ async function main() {
   const imageHashes = new Map();
 
   function gap(feature, file, reason) {
+    if (file && gaps.some((item) => item.file === file)) return;
+    if (gaps.some((item) => item.feature === feature)) return;
     gaps.push({ feature, file, reason });
   }
 
@@ -709,7 +711,7 @@ async function main() {
         const row = button.parentElement || button;
         const box = row.getBoundingClientRect();
         const text = (row.innerText || button.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
-        if (box.width < 40 || box.height < 20) return { thin: true, text };
+        if (box.width < 24 || box.height < 20) return { thin: true, text };
         return {
           thin: text.length < 12,
           text,
@@ -844,7 +846,6 @@ async function main() {
             });
             if (row) await shot('logos', 'Initial itinerary', 'Thing logos', { file: 'logos.md', note: 'Restaurant row logos.', clipRect: row });
           }
-          gap('Telegram intake fill', 'tg-intake.md', 'the shared app has no Telegram intake screen. The restaurant list is not that fill.');
         }
         if (label === 'Budget') mark('budget.md');
       }
@@ -943,20 +944,38 @@ async function main() {
         await page.keyboard.press('Escape').catch(() => {});
       }
       await clickText(page, 'Day-by-Day');
-      if (await clickAria(page, 'Print / PDF')) {
+      if (await clickAria(page, 'PDFs')) {
         const printText = await bodyText(page);
         if (has(printText, 'Print / PDF') || has(printText, 'Daily printout')) {
           await shot('print-pdf', 'Initial itinerary', 'Print and PDF', {
             file: 'print-pdf.md',
             note: 'Print / PDF menu: Daily printout and list PDFs.',
-            clipRect: await clipAround('Daily printout', { height: 320, padTop: 48 }),
+            clipRect: await clipAround('Print / PDF', { height: 360, padTop: 24 }),
           });
+        }
+        if (await clickText(page, 'Keepsakes')) {
+          const keepsakeText = await bodyText(page);
+          if (has(keepsakeText, 'Style one') || has(keepsakeText, 'Admin')) {
+            await shot('keepsakes-config', 'Initial itinerary', 'Keepsakes config', {
+              file: 'keepsakes-config.md',
+              note: 'Keepsakes menu with Style one, Style two, and Admin.',
+              clipRect: await clipAround('Keepsakes', { height: 360, padTop: 24 }),
+            });
+          }
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
-      if (await clickAria(page, 'Trip View')) {
+      if (await clickAria(page, 'Order Keepsakes')) {
+        await shot('order-keepsakes', 'Initial itinerary', 'Order Keepsakes', {
+          file: 'order-keepsakes.md',
+          note: 'Order Keepsakes control in the shared header.',
+          clipRect: await clipAround('Order Keepsakes', { height: 220, padTop: 16 }),
+        });
+        await page.keyboard.press('Escape').catch(() => {});
+      }
+      if (await clickAria(page, 'Config Options')) {
         const configText = await bodyText(page);
-        if (has(configText, 'Flights') && has(configText, 'Hotels') && has(configText, 'Cars')) {
+        if (has(configText, 'Trip View') && has(configText, 'Flights') && has(configText, 'Hotels') && has(configText, 'Cars')) {
           await shot('trip-view', 'Initial itinerary', 'Trip View config', {
             file: 'config-options-trip-view.md',
             note: 'Trip View toggles Flights, Hotels, and Cars.',
