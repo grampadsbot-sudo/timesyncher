@@ -907,12 +907,12 @@ async function main() {
       await clickText(page, 'Day-by-Day');
       if (await clickText(page, 'Flights') && await clickText(page, 'KOA arrival')) {
         const flightBox = await page.evaluate(() => {
-          const label = [...document.querySelectorAll('label')].find((node) => /^Takeoff\b/.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
+          const label = [...document.querySelectorAll('label')].find((node) => /^takeoff\b/i.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
           if (!label) return null;
           const grid = label.parentElement;
           const values = [...grid.querySelectorAll('input')].map((input) => String(input.value || '').trim());
           const blob = `${grid.innerText || ''}\n${values.join('\n')}`;
-          if (!/Connections/.test(blob) || !/Layover/.test(blob)) return null;
+          if (!/connections/i.test(blob) || !/layover/i.test(blob)) return null;
           if (!values.some((value) => /Fri Apr 3/i.test(value))) return null;
           if (!values.some((value) => /nonstop into KOA/i.test(value))) return null;
           if (!values.some((value) => /^none$/i.test(value))) return null;
@@ -1026,8 +1026,9 @@ async function main() {
     if (!captured.has('status.md')) gap('Status', 'status.md', 'no Thing detail showed a status');
     if (!captured.has('media-stories.md')) gap('Stories and media', 'media-stories.md', 'no Thing detail showed a Story field');
     if (!captured.has('ratings-reviews.md')) {
-      const emptyRating = await page.evaluate(() => [...document.querySelectorAll('label')].some((node) => /^Google rating\b/.test((node.innerText || '').trim()) && !/\d/.test(String(node.querySelector('input')?.value || '')))).catch(() => false);
+      const emptyRating = await page.evaluate(() => [...document.querySelectorAll('label')].some((node) => /^google rating\b/i.test((node.innerText || '').trim()) && !/\d/.test(String(node.querySelector('input')?.value || '')))).catch(() => false);
       if (emptyRating) gap('Ratings and reviews', 'ratings-reviews.md', 'an empty Google rating box is still on the detail');
+      else mark('ratings-reviews.md');
     }
     if (!captured.has('hotel-stay-fields.md')) gap('Hotel stay fields', 'hotel-stay-fields.md', 'the house detail did not show Check-in');
     if (!captured.has('print-pdf.md')) gap('Print and PDF', 'print-pdf.md', 'The header PDFs control did not open a Print / PDF menu. Unblock: mount that menu on vacation-staging.');
