@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import handler, { publicApiRequest } from '../api/[...route].mjs';
-import { keepsakeCheckoutEnabled, orderPage } from '../routes/keepsake-order.mjs';
+import { orderPage } from '../routes/keepsake-order.mjs';
 
 const apiFiles = (await readdir(new URL('../api/', import.meta.url))).filter((name) => name.endsWith('.mjs'));
 assert.deepEqual(apiFiles, ['[...route].mjs']);
@@ -127,15 +127,12 @@ assert.equal(firstRoute('/assets/index-CbEHlMj6.css'), null);
 assert.equal(firstRoute('/shared/las-vegas-vacation-3').route.dest, '/shared-app.html');
 assert.equal(firstRoute('/'), null);
 
-assert.equal(keepsakeCheckoutEnabled({}), false);
-assert.equal(keepsakeCheckoutEnabled({ TIMESYNCHER_KEEPSAKE_CHECKOUT: '1' }), true);
-const closed = orderPage('intake-example', 'Big Island Family v7', '', false);
-assert.match(closed, /Anyone with this link can order/);
-assert.match(closed, /not limited to the customer/);
-assert.match(closed, /Checkout and payment are off/);
-assert.doesNotMatch(closed, /Place keepsake order/);
-const open = orderPage('intake-example', 'Big Island Family v7', '', true);
-assert.match(open, /Checkout and payment are on/);
-assert.match(open, /Place keepsake order/);
+const link = orderPage('intake-example', 'Big Island Family v7', '');
+assert.match(link, /Anyone with this link can order/);
+assert.match(link, /not limited to the customer/);
+assert.match(link, /data-keepsake-buy-link="intake-example"/);
+assert.doesNotMatch(link, /Place keepsake order/);
+assert.doesNotMatch(link, /Checkout and payment/);
+assert.doesNotMatch(link, /<form/i);
 
 console.log('api route bundle ok');
