@@ -1070,14 +1070,29 @@ async function main() {
     }
 
     usePreCollab = false;
-    await go(sharedUrl, 'Day-by-Day');
+    page.removeAllListeners('request');
+    await page.setRequestInterception(false).catch(() => {});
+    await go(sharedUrl, 'Kailua-Kona');
+    let finalReady = await page.evaluate(() => (document.body.innerText || '').includes('Kailua-Kona') && (document.body.innerText || '').includes('Vacation Day View'));
+    if (!finalReady) {
+      await page.reload({ waitUntil: 'networkidle0', timeout: 90000 }).catch(() => {});
+      await page.waitForFunction(() => {
+        const text = document.body.innerText || '';
+        return text.includes('Kailua-Kona') && text.includes('Vacation Day View');
+      }, { timeout: 30000 }).catch(() => {});
+      await sleep(1500);
+      finalReady = await page.evaluate(() => (document.body.innerText || '').includes('Kailua-Kona'));
+    }
+    if (!finalReady) {
+      gap('Final itinerary', 'itinerary-layout.md', 'the live shared trip did not render Kailua-Kona after the collaborator notes');
+    } else {
     if (await isShell(page)) {
       gap('Final itinerary', 'itinerary-layout.md', 'refused: the live trip still has the deleted card shell');
     } else {
       await shot('final-itinerary-layout', 'Final itinerary', 'Standard itinerary layout', {
         file: 'itinerary-layout.md',
         note: 'Live trip after collaborator notes. Not the pre-collaborator snapshot.',
-        clipRect: await clipAround('Day-by-Day', { height: 220, padTop: 8 }),
+        clipRect: await clipAround('Vacation Day View', { height: 640, padTop: 40 }),
       });
       for (let day = 1; day <= 10; day += 1) {
         const label = `Day ${day}`;
@@ -1119,6 +1134,7 @@ async function main() {
           await sleep(200);
         }
       }
+    }
     }
   } finally {
     await browser.close();

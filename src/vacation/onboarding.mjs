@@ -6,6 +6,8 @@ import {
   loadSessionPersistent,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
+import { intakeShareSlug } from './intake-shared-trip.mjs';
+import { sharedTripWebsiteUrl } from './web-access.mjs';
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
@@ -195,6 +197,16 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
   const eula = await ensureVacationEulaSession(session, { contact: cleanContact, env });
+  const publicSlug = intakeShareSlug(tripId);
+  const publicUrl = publicSlug ? sharedTripWebsiteUrl(publicSlug, env) : '';
+  if (publicSlug) {
+    await db`
+      update trips
+      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
+        updated_at = now()
+      where id = ${tripId}
+    `;
+  }
 
   return {
     customerId,
@@ -203,6 +215,8 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     orderId,
     session,
     token: session.token,
+    publicSlug,
+    publicUrl,
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
