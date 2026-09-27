@@ -200,7 +200,11 @@ export function assertLiveTranscript(doc) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite is missing the rewrite text`);
         }
         const labeledRewrite = Number(turn.jevScoreRewrite);
-        if (String(turn.rewriteText || '').trim() && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
+        const shippedRewrite = turn.quality?.rewritten === true;
+        if (shippedRewrite && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
+          throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
+        }
+        if (!shippedRewrite && turn.jevScoreRewrite != null && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
         if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {

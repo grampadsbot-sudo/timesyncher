@@ -328,6 +328,9 @@ const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Su
 assert.deepEqual(draftFactErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.', setFacts), []);
 assert.deepEqual(draftFactErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.', setFacts), []);
 const earlyFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Tyler wants a swim. Monday April 6 is the beach swim.');
+assert.equal(draftFactErrors('I have the house from April 3rd to the 12th. Tyler\'s swim is on the list.', earlyFacts).some((error) => /swim on apr 3/.test(error)), false);
+assert.equal(draftFactErrors('The trip runs from April 3 to 12, whether that is groceries or joining the town walk.', { ...setFacts, townWalkDays: [] }).some((error) => /town walk on apr 3/.test(error)), false);
+assert.ok(draftFactErrors('For the swim later in the week, I will save that for Friday, April 10th.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('Tuesday the 7th can hold a morning swim.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.equal(draftFactErrors('The swim isn\'t set for a specific day yet, so we won\'t lock it to Monday, April 6.', earlyFacts).some((line) => /swim on apr 6/.test(line)), false);
 assert.equal(draftFactErrors('The garden on April 12 is not already set.', earlyFacts).some((line) => /garden on apr 12/.test(line)), false);

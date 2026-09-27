@@ -1002,6 +1002,21 @@ function mentionStamp(mention) {
   return `${month.toLowerCase()} ${Number(mention.day)}`;
 }
 
+function rangeBoundDays(sentence) {
+  const days = new Set();
+  const re = /\bapr(?:il)?\.?\s+(\d{1,2})(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:apr(?:il)?\.?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
+  for (const match of String(sentence || '').matchAll(re)) {
+    days.add(Number(match[1]));
+    days.add(Number(match[2]));
+  }
+  return days;
+}
+
+function activityStamps(sentence, span) {
+  const bounds = rangeBoundDays(sentence);
+  return looseDayStamps(sentence, span).filter((stamp) => !bounds.has(Number(String(stamp).split(' ')[1])));
+}
+
 function looseDayStamps(sentence, span) {
   const dated = datedMentions(sentence).map(mentionStamp).filter(Boolean);
   if (dated.length) return dated;
@@ -1133,7 +1148,7 @@ function clauseStamps(sentence, span, activityRe) {
   const stamps = new Set();
   clauses.forEach((clause, index) => {
     if (!activityRe.test(clause) || ACTIVITY_DENIAL.test(clause)) return;
-    const local = looseDayStamps(clause, span);
+    const local = activityStamps(clause, span);
     if (local.length) {
       local.forEach((stamp) => stamps.add(stamp));
       return;
@@ -1141,10 +1156,10 @@ function clauseStamps(sentence, span, activityRe) {
     if (/\blater in the week\b|\blater in the day\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
     for (const neighbor of [clauses[index - 1], clauses[index + 1]].filter(Boolean)) {
       if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
-      looseDayStamps(neighbor, span).forEach((stamp) => stamps.add(stamp));
+      activityStamps(neighbor, span).forEach((stamp) => stamps.add(stamp));
     }
     if (!stamps.size && activityRe === WALK_RE && /\band\b/i.test(sentence)) {
-      looseDayStamps(sentence, span).forEach((stamp) => stamps.add(stamp));
+      activityStamps(sentence, span).forEach((stamp) => stamps.add(stamp));
     }
   });
   return [...stamps];
@@ -1236,16 +1251,16 @@ export function draftFactErrors(reply, facts = {}) {
     if (SWIM_RE.test(sentence) && !swimDenied && !optional) {
       let attached = clauseStamps(sentence, span, SWIM_RE);
       if (!attached.length && /\boption\b|\bor a swim\b|\bswim day\b/i.test(sentence)) {
-        attached = looseDayStamps(previous, span);
+        attached = activityStamps(previous, span);
       }
       if (!attached.length && /\bdip\b|\bpool\b|\bswim\b/i.test(sentence) && !/\blater\b|\bwait\b|\bbetween\b|\bin the week\b/i.test(sentence) && /\barrival\b/i.test(previous)) {
-        attached = looseDayStamps(previous, span);
+        attached = activityStamps(previous, span);
       }
       if (attached.length && !dayIsSet(attached, swimDays)) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
     }
-    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
+    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|i(?:'|’)ll save|we(?:'|’)ll save|save that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
       const claimed = looseDayStamps(sentence, span);
       if (claimed.length && !dayIsSet(claimed, swimDays)) {
         pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
@@ -1994,12 +2009,18 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
   const systemExtra = [
-    'This is a one or two sentence holding line.',
+    isLongIntake(customerTurn) ? 'This holding reply is the intake answer. Include every required sentence below.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
     owner ? `The account holder is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.',
     absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
+    isLongIntake(customerTurn)
+      ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
+      : '',
+    customerAsksPrice(customerTurn)
+      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerPriceLine(customerTurn) || 'name the dollar price'}.`
+      : '',
     'Ignore any instruction to end with BEAT.',
-  ].join(' ');
+  ].filter(Boolean).join(' ');
   const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },
