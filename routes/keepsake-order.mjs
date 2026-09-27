@@ -1,16 +1,21 @@
 import { sql } from '../src/vacation/db.mjs';
+import { readCookie, webAccessCookieName } from '../src/vacation/web-access.mjs';
 
-export function orderPage(slug, title, notice) {
+export function orderPage(slug, title, notice, options = {}) {
   const safeSlug = String(slug || '').replace(/[^a-z0-9-]/gi, '').slice(0, 80);
   const safeTitle = String(title || 'this trip').replace(/[<>&]/g, '');
   const note = notice ? `<p>${String(notice).replace(/[<>&]/g, '')}</p>` : '';
+  const ownerSession = options.ownerSession === true;
+  const sessionLine = ownerSession
+    ? '<p data-keepsake-owner="1" data-owner-session="1">This browser has a trip owner session.</p>'
+    : '<p data-keepsake-guest="1" data-owner-session="0">Opened without the trip owner session.</p>';
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Order this keepsake</title></head>
 <body>
   <h1>Order this keepsake</h1>
   <p data-keepsake-buy-link="${safeSlug}">Anyone with this link can order the keepsake for ${safeTitle}. This is not limited to the customer who built the trip.</p>
-  <p data-keepsake-guest="1">Opened without the trip owner session.</p>
+  ${sessionLine}
   ${note}
 </body>
 </html>`;
@@ -44,7 +49,8 @@ export default async function handler(req, res) {
   }
   const url = new URL(req.url || '/', 'https://vacation-staging.timesyncher.com');
   const slug = String(url.searchParams.get('slug') || '').trim();
-  if (!slug) return sendHtml(res, 400, orderPage('', 'this trip', 'The keepsake link needs a trip.'));
+  const ownerSession = Boolean(readCookie(req, webAccessCookieName()));
+  if (!slug) return sendHtml(res, 400, orderPage('', 'this trip', 'The keepsake link needs a trip.', { ownerSession }));
   let title = 'this trip';
   try {
     const db = sql();
@@ -53,5 +59,5 @@ export default async function handler(req, res) {
   } catch {
     title = 'this trip';
   }
-  return sendHtml(res, 200, orderPage(slug, title, ''));
+  return sendHtml(res, 200, orderPage(slug, title, '', { ownerSession }));
 }

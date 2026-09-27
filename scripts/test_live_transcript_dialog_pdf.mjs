@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
@@ -171,6 +171,21 @@ assert.equal(shipChoice({
 }).rewritten, true);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).rewritten, false);
 assert.equal(shipChoice({ draft: 'Draft one.', draftScore: 4, rewrite: 'A different Thursday town walk stays.', rewriteScore: 3 }).failReason, 'rewrite_scored_lower');
+assert.equal(shipChoice({
+  draft: 'The intake names a swim as saved for Friday.',
+  draftScore: 1.9,
+  rewrite: 'I am building the itinerary from that now and the travelers can join as collaborators.',
+  rewriteScore: 1.77,
+}).rewritten, true);
+assert.equal(shipChoice({
+  draft: 'The Friday swim was saved.',
+  draftScore: 1.57,
+  rewrite: 'The later swim is still open and is not saved.',
+  rewriteScore: 1.2,
+  draftFactErrors: ['a swim on apr 10 was claimed as saved'],
+  holding: 'Craig, I have that later swim saved.',
+  holdingFactErrors: ['addresses Craig while Tyler is speaking'],
+}).rewritten, true);
 const tied = shipChoice({
   draft: 'Tuesday is a swim.',
   rewrite: 'Tuesday stays a swim.',
@@ -360,6 +375,14 @@ assert.ok(draftFactErrors('That leaves a town walk and a dinner for Friday the 1
 assert.ok(draftFactErrors('The later swim can sit between Monday and the Friday dinner on the 10th.', { ...setFacts, customerTurn: 'I still want one later swim in the week.', laterFriday: 'Friday April 10' }).some((line) => /later swim is saved/.test(line)));
 assert.ok(draftFactErrors('So, Craig, you are set with the crew—Torren, Peyton, Keegan, and little Fallon.', { ...earlyFacts, ownerName: 'Craig' }).some((line) => /Craig is traveling/.test(line)));
 assert.equal(verifiedRewriteChange('Removed the whole crew and included Craig.', 'the whole crew of eight', 'Craig and the whole crew of eight'), '');
+assert.equal(verifiedRewriteChange('Removed the implication that both options were already saved.', 'Tuesday is a town walk or a house-pool swim.', 'Tuesday is a town walk or a house-pool swim.'), '');
+assert.equal(verifiedRewriteChange('Added Tyler and Lauren to the list of traveling companions.', 'Welcome aboard.', 'Welcome aboard. The town walk is also on the list.'), '');
+const absentParty = { notTraveling: [{ name: 'Marcus Chen', role: 'viewer' }, { name: 'Aunt Jean', role: 'editor' }] };
+assert.equal(draftFactErrors('For Marcus Chen and Aunt Jean, since they are not traveling with your crew, they can each have view access.', absentParty).some((line) => /not on the trip/.test(line)), false);
+assert.ok(draftFactErrors("Tyler's late swim, now set for the second Friday of the trip.", earlyFacts).some((line) => /claimed as saved/.test(line)));
+assert.ok(draftFactErrors('The town walk is also on the list.', { ...earlyFacts, townWalkDays: [] }).some((line) => /town walk was noted/.test(line)));
+assert.equal(draftFactErrors('If Monday, April 6th rains, Tyler’s swim can shift later. We’ll keep Kimberly’s garden morning on Sunday, April 5th, and not stack the rescheduled swim.', earlyFacts).some((line) => /swim on apr 5/.test(line)), false);
+assert.equal(holdingShipErrors('Craig, I have that later swim saved on the second Friday.', { ...earlyFacts, addressedTo: 'Tyler', strictSaved: true }).some((line) => /while Tyler is speaking|claimed as saved/.test(line)), true);
 assert.ok(draftFactErrors('Tuesday, April 7 is the anchor day. One option is a classic swim day at the house pool.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.ok(draftFactErrors('Tuesday, April 7, is wide open. Here are two options: a town walk, or a swim at the beach.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 const dateSpan = { start: new Date('2026-04-03T00:00:00.000Z'), end: new Date('2026-04-12T00:00:00.000Z') };
@@ -379,7 +402,7 @@ const unnamedKids = completeRosterParty({
   turns: [{ role: 'customer', text: 'Kimberly wants gardens. Kids are Torren, Peyton, Keegan, and Fallon. Marcus Chen can look. Aunt Jean can edit notes.' }],
 });
 assert.equal(unnamedKids.preference_subjects.length, 0);
-assert.equal(unnamedKids.collaborators.length, 0);
+assert.equal(unnamedKids.collaborators.map((person) => person.name).join(', '), 'Kimberly');
 const parsedParty = completeRosterParty({
   customerName: 'Craig Davidson',
   turns: [{ role: 'customer', text: 'Kids are Torren who is eight, Peyton who is six, Keegan who is four, and Fallon who is two. Marcus Chen can look, and Aunt Jean can edit notes. I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' }],
@@ -814,6 +837,8 @@ assert.match(stampedText, new RegExp(driveSha));
 assert.match(stampedText, /build used vs tip:/);
 assert.match(stampedText, /equals the tip/);
 assert.match(stampedText, /Dialog Pack — Big Island Family v7 Tier 1–4/);
+assert.doesNotMatch(stampedText, /session-token/);
+assert.match(stampedText, /T1 google\/gemini-2.5-flash-lite/);
 const publisherSource = fs.readFileSync(script, 'utf8');
 assert.equal(publisherSource.includes('transcript.buildSha ='), false);
 

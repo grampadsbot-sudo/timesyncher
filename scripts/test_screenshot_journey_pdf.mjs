@@ -22,7 +22,9 @@ const manifest = {
   subtitle: 'fixture',
   deployBanner: stamp,
   buildVsTip,
-  pages: [{ id: 'purchase', chapter: 'Purchase', title: 'Purchase confirmed', file: 'post-purchase-email-eula.md', note: 'fixture', image }],
+  pages: [
+  { id: 'purchase', chapter: 'Purchase', title: 'Purchase confirmed', file: 'post-purchase-email-eula.md', note: 'fixture Capture build aaaabbbbccccddddeeeeffffaaaabbbbccccdddd.', image, captureBuild: 'aaaabbbbccccddddeeeeffffaaaabbbbccccdddd' },
+],
   gaps: [{ feature: 'Language', file: 'language.md', reason: 'no language control' }],
 };
 const emptyPath = path.join(dir, 'empty.json');
@@ -51,7 +53,7 @@ const text = spawnSync('python3', ['-c', `
 import sys
 from pypdf import PdfReader
 text = "\\n".join(page.extract_text() or "" for page in PdfReader(sys.argv[1]).pages)
-need = ["Contents", "GAP. Language", "language.md", "Purchase confirmed", "0123456789abcdef0123456789abcdef01234567", "build used vs tip:", "equals the tip"]
+need = ["Contents", "GAP. Language", "language.md", "Purchase confirmed", "0123456789abcdef0123456789abcdef01234567", "aaaabbbbccccddddeeeeffffaaaabbbbccccdddd", "build used vs tip:", "equals the tip"]
 missing = [item for item in need if item not in text]
 if missing:
     raise SystemExit("missing " + ", ".join(missing))

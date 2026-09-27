@@ -405,11 +405,46 @@ async function main() {
       imageHashes.set(id, hash);
       seenShot.add(id);
     }
-    const entry = { id, chapter, title, file, note, image };
+    let captureBuild = driveLive;
+    try {
+      captureBuild = normalizeSha(await readVersionEndpointSha()) || driveLive;
+    } catch {
+      captureBuild = driveLive;
+    }
+    const stampedNote = captureBuild && !String(note || '').includes(captureBuild)
+      ? `${note} Capture build ${captureBuild}.`.trim()
+      : note;
+    const entry = { id, chapter, title, file, note: stampedNote, image, captureBuild };
     pages.push(entry);
     if (chapter === 'After the gold conversation') itineraryPages.push(entry);
     mark(file);
     return true;
+  }
+
+  async function clipOverlay(needles) {
+    return page.evaluate((phrases) => {
+      document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+      const list = Array.isArray(phrases) ? phrases : [phrases];
+      const nodes = [...document.querySelectorAll('body *')].filter((item) => {
+        const text = (item.innerText || '').replace(/\s+/g, ' ').trim();
+        if (!text || text.length > 900) return false;
+        if (!list.some((phrase) => text.toLowerCase().includes(String(phrase).toLowerCase()))) return false;
+        if (/ulu ocean grill/i.test(text) && !/print \/ pdf|layout 1|keepsakes|happy hour|google rating/i.test(text)) return false;
+        const box = item.getBoundingClientRect();
+        return box.width > 80 && box.height > 40;
+      });
+      nodes.sort((left, right) => left.getBoundingClientRect().height - right.getBoundingClientRect().height);
+      const target = nodes[0];
+      if (!target) return null;
+      target.scrollIntoView({ block: 'center' });
+      const box = target.getBoundingClientRect();
+      return {
+        x: Math.max(0, box.x - 8),
+        y: Math.max(0, box.y - 8),
+        width: Math.min(960, Math.max(180, box.width + 16)),
+        height: Math.min(640, Math.max(120, box.height + 16)),
+      };
+    }, needles);
   }
 
   async function clipAround(phrase, { height = 320, padTop = 24 } = {}) {
@@ -633,11 +668,15 @@ async function main() {
             }
             window.__tsClipRestore = null;
           };
-          bubble.scrollIntoView({ block: 'start', inline: 'nearest' });
+          document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+          bubble.scrollIntoView({ block: 'center', inline: 'nearest' });
+          const header = document.querySelector('header');
+          const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
           const bubbleBox = bubble.getBoundingClientRect();
+          const top = Math.max(headerBottom, bubbleBox.y - 8);
           return {
             x: Math.max(0, bubbleBox.x - 8),
-            y: Math.max(0, bubbleBox.y - 12),
+            y: top,
             width: Math.min(window.innerWidth - Math.max(0, bubbleBox.x - 8), bubbleBox.width + 16),
             height: Math.max(48, bubbleBox.height + 24),
           };
@@ -666,28 +705,8 @@ async function main() {
           clipRect: addThese,
         });
       } else {
-        const composer = await page.$('#messageText');
-        if (composer) {
-          await composer.click();
-          await composer.type('Add a farmers market in Kailua-Kona.');
-          await page.click('.send-button');
-          await page.waitForFunction(() => [...document.querySelectorAll('article.bubble')].some((node) => /add these\?/i.test(node.innerText || '')), { timeout: 90000 }).catch(() => {});
-        }
-        const asked = await page.evaluate(() => {
-          const bubble = [...document.querySelectorAll('article.bubble')].find((node) => /add these\?/i.test(node.innerText || ''));
-          if (!bubble) return null;
-          bubble.scrollIntoView({ block: 'center' });
-          const box = bubble.getBoundingClientRect();
-          return { x: 0, y: Math.max(0, box.y - 12), width: Math.min(1280, window.innerWidth), height: Math.min(720, Math.max(280, box.height + 24)) };
-        });
-        if (asked) {
-          await shot('chat-search-add', 'Onboarding', 'Chat search', {
-            note: 'The customer asked to add a place in the chat box. The reply asks add these?',
-            clipRect: asked,
-          });
-        } else {
-          gap('Chat search', '', 'The chat did not ask add these? Autonomy stays the system test in features/autonomous-app-customer-flow.md.');
-        }
+        gap('Chat search', '', 'Search was removed from the feature map. This journey does not rebuild a search screen.');
+        gap('Autonomy', '', 'The autonomy bar was removed from the feature map. N/A.');
       }
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
       if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
@@ -1059,10 +1078,16 @@ async function main() {
           const heading = [...document.querySelectorAll('button, div, h2')].find((node) => (node.innerText || '').trim() === 'Cars');
           const box = (heading || document.body).getBoundingClientRect();
           const rows = [...document.querySelectorAll('button, article, li')];
-          const priced = rows.filter((node) => {
+          const labels = [];
+          for (const node of rows) {
             const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
-            return label.length > 0 && label.length < 80 && /\$\d+/.test(label);
-          }).length;
+            if (!label || label.length >= 80 || label.length < 3) continue;
+            if (/^cars$/i.test(label) || /^car type$/i.test(label)) continue;
+            if (/speedishuttle/i.test(label) && !labels.includes('SpeediShuttle')) labels.push('SpeediShuttle');
+            const price = label.match(/\$\d+/);
+            if (price && !labels.some((item) => item.startsWith(label.slice(0, 24)))) labels.push(label.slice(0, 48));
+          }
+          const priced = labels.filter((label) => /\$\d+/.test(label)).length;
           const placeholder = rows.some((node) => /^car type$/i.test((node.innerText || '').replace(/\s+/g, ' ').trim()));
           return {
             x: 0,
@@ -1071,17 +1096,19 @@ async function main() {
             height: 420,
             priced,
             placeholder,
+            labels,
           };
         });
-        const { priced, placeholder, ...carClip } = carList;
+        const { priced, placeholder, labels, ...carClip } = carList;
         if (placeholder) {
           gap('Car fields', 'car-fields.md', 'A car row is the Car type placeholder.');
         }
+        const shown = (labels || []).join(', ') || 'no named car row';
         await shot('car-fields', 'After the gold conversation', 'Cars', {
           file: 'car-fields.md',
           note: priced >= 10
-            ? 'Car Things under Cars. The ten lowest prices are on the page, with no brand left out of a fixed pool.'
-            : `Car Things under Cars. The page shows ${priced} priced row${priced === 1 ? '' : 's'}. There is no fixed brand pool and no Car type placeholder row.`,
+            ? `Cars tab shows ${shown}. The ten lowest prices are on the page. Live brand removal is the Remove control on those rows.`
+            : `Cars tab shows ${shown}. Priced rows on this image: ${priced}. No fixed brand pool. Live brand removal uses the Remove control on the rows that are on screen.`,
           clipRect: carClip,
         });
         const removedBrand = await page.evaluate(() => {
@@ -1095,7 +1122,7 @@ async function main() {
           await sleep(300);
           await shot('car-brand-removed', 'After the gold conversation', 'Cars brand removed', {
             file: 'car-fields.md',
-            note: `Removed ${removedBrand} on the car page. The next lowest price stays in the ten.`,
+            note: `Removed ${removedBrand} on the Cars tab. The image is the list after that brand is hidden.`,
             clipRect: carList,
           });
         }
@@ -1103,18 +1130,22 @@ async function main() {
       }
       if (await clickText(page, 'Restaurants') && await clickText(page, 'Ulu Ocean')) {
         const hourText = await bodyText(page);
-        if (has(hourText, 'Happy hour')) {
+        if (has(hourText, 'Happy hour') || has(hourText, 'happy hour')) {
           await shot('happy-hour', 'After the gold conversation', 'Happy hour', {
             file: 'happy-hour.md',
-            note: 'Ulu Ocean Grill happy hour.',
-            clipRect: await clipAround('Happy hour', { height: 260, padTop: 24 }),
+            note: 'Ulu Ocean Grill happy hour field.',
+            clipRect: await clipOverlay(['Happy hour', 'happy hour']) || await clipAround('Happy hour', { height: 260, padTop: 24 }),
           });
         }
         await page.keyboard.press('Escape').catch(() => {});
       }
+      await page.keyboard.press('Escape').catch(() => {});
       await clickText(page, 'Day-by-Day');
       await page.keyboard.press('Escape').catch(() => {});
-      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.evaluate(() => {
+        document.querySelectorAll('.leaflet-popup, .mapboxgl-popup, .maplibregl-popup').forEach((node) => node.remove());
+        window.scrollTo(0, 0);
+      });
       const printOpened = await page.evaluate(() => {
         const button = document.querySelector('[data-print-menu-root] button, [aria-label="PDFs"]');
         if (!button) return false;
@@ -1130,11 +1161,13 @@ async function main() {
           await sleep(400);
           printText = await bodyText(page);
         }
-        if (has(printText, 'Print / PDF') || has(printText, 'Daily printout')) {
+        const printClip = await clipOverlay(['Layout 1', 'Layout 2', 'Print / PDF', 'Daily printout']);
+        if ((has(printText, 'Print / PDF') || has(printText, 'Daily printout') || has(printText, 'Layout 1')) && printClip) {
           await shot('print-pdf', 'After the gold conversation', 'Print and PDF', {
             file: 'print-pdf.md',
             note: 'Print / PDF menu: Daily printout and list PDFs. Layout 1 and Layout 2 are Style one and Style two.',
-            clipRect: await clipAround(has(printText, 'Print / PDF') ? 'Print / PDF' : 'Daily printout', { height: 420, padTop: 24 }),
+            clipRect: printClip,
+            expect: has(printText, 'Layout 1') ? 'Layout 1' : 'Print',
           });
         }
         if (await clickText(page, 'Keepsakes') || await clickText(page, 'Keepsakes ▸')) {
@@ -1147,11 +1180,13 @@ async function main() {
           }
           await sleep(300);
           const keepsakeText = await bodyText(page);
-          if (has(keepsakeText, 'TimeSyncher Vacation logo') || has(keepsakeText, 'Initial summary page') || has(keepsakeText, 'Style one')) {
+          const keepsakeClip = await clipOverlay(['TimeSyncher Vacation logo', 'Initial summary page', 'Style one', 'Layout 1']);
+          if ((has(keepsakeText, 'TimeSyncher Vacation logo') || has(keepsakeText, 'Initial summary page') || has(keepsakeText, 'Style one')) && keepsakeClip) {
             await shot('keepsakes-config', 'After the gold conversation', 'Keepsakes config', {
               file: 'keepsakes-config.md',
-              note: 'Admin gear on the front page: logo, summary, and the other keepsake sections.',
-              clipRect: await clipAround(has(keepsakeText, 'TimeSyncher Vacation logo') ? 'TimeSyncher Vacation logo' : 'Keepsakes', { height: 460, padTop: 36 }),
+              note: 'Keepsakes config: logo, summary, and Style sections. Not the restaurant detail behind the menu.',
+              clipRect: keepsakeClip,
+              expect: has(keepsakeText, 'Style one') ? 'Style' : 'Keepsake',
             });
           }
         }
@@ -1232,42 +1267,49 @@ async function main() {
     if (!captured.has('keepsakes-config.md')) gap('Keepsakes config', 'keepsakes-config.md', 'Keepsakes setup did not open. Unblock: a Keepsakes menu with Style one, Style two, and Admin on this host.');
     if (!captured.has('order-keepsakes.md')) {
       const slug = new URL(sharedUrl).pathname.split('/').filter(Boolean).pop();
-      const guest = await browser.newPage();
+      const guestContext = await browser.createBrowserContext();
+      const guest = await guestContext.newPage();
       await guest.setViewport({ width: 1280, height: 900 });
+      const bypassHeader = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || process.env.VERCEL_PROTECTION_BYPASS;
+      if (bypassHeader) {
+        await guest.setExtraHTTPHeaders({ 'x-vercel-protection-bypass': bypassHeader });
+      }
+      const guestCookies = await guest.cookies().catch(() => []);
       await guest.goto(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, { waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => {});
-      const guestText = await guest.evaluate(() => document.body.innerText || '').catch(() => '');
-      const guestHtml = await guest.evaluate(() => document.documentElement.outerHTML || '').catch(() => '');
-      const shareable = /anyone with this link/i.test(guestText) && /without the trip owner session/i.test(guestText);
+      const guestProof = await guest.evaluate(() => {
+        let cookie = '';
+        try { cookie = document.cookie || ''; } catch { cookie = ''; }
+        return {
+          text: document.body?.innerText || '',
+          html: document.documentElement?.outerHTML || '',
+          cookie,
+          ownerSession: document.querySelector('[data-owner-session]')?.getAttribute('data-owner-session') || '',
+        };
+      }).catch(() => ({ text: '', html: '', cookie: '', ownerSession: '' }));
+      const guestText = guestProof.text;
+      const guestHtml = guestProof.html;
+      const noOwnerCookie = !guestProof.cookie && (!guestCookies || guestCookies.length === 0) && guestProof.ownerSession === '0';
+      const shareable = /anyone with this link/i.test(guestText) && /without the trip owner session/i.test(guestText) && noOwnerCookie;
       const orderAction = /place keepsake order/i.test(guestText) || /data-keepsake-order-action/i.test(guestHtml) || /<form[\s>]/i.test(guestHtml);
       if (shareable && !orderAction) {
         const image = path.join(shotDir, 'order-keepsakes-guest.png');
         await guest.screenshot({ path: image });
+        let guestBuild = driveLive;
+        try { guestBuild = normalizeSha(await readVersionEndpointSha()) || driveLive; } catch { guestBuild = driveLive; }
         pages.push({
           id: 'order-keepsakes-guest',
           chapter: 'After the gold conversation',
           title: 'Order Keepsakes',
           file: 'order-keepsakes.md',
-          note: 'Riley Guest opened the shareable keepsake URL. The page says the trip owner session is absent.',
+          note: `Riley Guest opened the shareable keepsake URL in a separate browser context. document.cookie was empty and data-owner-session is 0. Capture build ${guestBuild}.`,
           image,
+          captureBuild: guestBuild,
         });
         mark('order-keepsakes.md');
       }
-      await guest.close();
+      await guestContext.close();
       if (!captured.has('order-keepsakes.md')) {
-      await go(`${staging}/api/keepsake-order?slug=${encodeURIComponent(slug || '')}`, 'Order this keepsake');
-      const orderText = await bodyText(page);
-      const orderHtml = await page.content().catch(() => '');
-      const orderAction = /place keepsake order/i.test(orderText) || /data-keepsake-order-action/i.test(orderHtml) || /<form[\s>]/i.test(orderHtml);
-      if (orderAction) {
-        gap('Order Keepsakes', 'order-keepsakes.md', 'The keepsake URL showed an order form.');
-      } else if (has(orderText, 'Order this keepsake') && has(orderText, 'anyone with this link') && has(orderText, 'without the trip owner session')) {
-        await shot('order-keepsakes-link', 'After the gold conversation', 'Order Keepsakes', {
-          file: 'order-keepsakes.md',
-          note: 'The shareable keepsake URL opened. The page says the trip owner session is absent.',
-        });
-      } else {
-        gap('Order Keepsakes', 'order-keepsakes.md', 'The shareable keepsake URL did not open.');
-      }
+        gap('Order Keepsakes', 'order-keepsakes.md', 'A separate browser context with no owner cookie did not show the guest line.');
       }
     }
 
@@ -1547,8 +1589,8 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
       ? 'jev-quality-line: PASS. The score line is in the Dialog PDF and the JSONL log. The customer app does not show it.'
       : 'jev-quality-line: GAP. The customer app showed a Jev score line.',
     `screenshot-journey.pdf sha256 \`${sha}\`.`,
-    'Autonomy stays a system test: features/autonomous-app-customer-flow.md and bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910. It is not a screen in this journey.',
-    'Trip View is removed from the app bundle. The chat box is the search.',
+    'Search and the autonomy bar were removed from the feature map. This journey records them as N/A and does not rebuild either screen.',
+    'Trip View is removed from the app bundle.',
     '',
     '### Not captured',
     '',

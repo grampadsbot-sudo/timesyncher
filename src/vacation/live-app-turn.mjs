@@ -945,6 +945,13 @@ export function verifiedRewriteChange(change, draft, shipped) {
     const missing = names.filter((name) => !/^(April|Friday|Sunday|Monday|Tuesday|Wednesday|Thursday|Saturday|Big|Island|What|Fixed|Removed)$/.test(name) && !new RegExp(`\\b${name}\\b`).test(shippedText));
     if (missing.length) return '';
   }
+  if (/\b(saved|already saved|now set)\b/i.test(line) && /\b(removed|dropped|clarified|implication)\b/i.test(line)) {
+    const draftSaved = /\b(saved|already[- ]saved|now set)\b/i.test(draftText);
+    const shippedSaved = /\b(saved|already[- ]saved|now set)\b/i.test(shippedText);
+    if (!draftSaved || shippedSaved) return '';
+  }
+  if (/town walk/i.test(shippedText) && !/town walk/i.test(draftText) && !/town walk/i.test(line)) return '';
+  if (/\bon the list\b/i.test(shippedText) && !/\bon the list\b/i.test(draftText) && !/town walk|on the list/i.test(line)) return '';
   if (/\b(removed|dropped|deleted|cut)\b/i.test(line)) {
     for (const phrase of ['the whole crew', 'just the crew', 'party of eight', 'crew of eight', 'full party']) {
       if (line.toLowerCase().includes(phrase) && shippedText.toLowerCase().includes(phrase)) return '';
@@ -1143,6 +1150,14 @@ function otherActivity(clause, activityRe) {
   return ACTIVITY_RES.some((pattern) => pattern !== activityRe && pattern.test(clause) && !activityRe.test(clause));
 }
 
+function activityBefore(clauses, index) {
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    const hit = ACTIVITY_RES.find((pattern) => pattern.test(clauses[cursor]));
+    if (hit) return hit;
+  }
+  return null;
+}
+
 function clauseStamps(sentence, span, activityRe) {
   const clauses = activityClauses(sentence);
   const stamps = new Set();
@@ -1156,7 +1171,12 @@ function clauseStamps(sentence, span, activityRe) {
     if (/\blater in the week\b|\blater in the day\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
     for (const neighbor of [clauses[index - 1], clauses[index + 1]].filter(Boolean)) {
       if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
-      activityStamps(neighbor, span).forEach((stamp) => stamps.add(stamp));
+      const neighborIndex = clauses.indexOf(neighbor);
+      const borrowed = activityStamps(neighbor, span);
+      if (!borrowed.length) continue;
+      const owner = activityBefore(clauses, neighborIndex);
+      if (owner && owner !== activityRe) continue;
+      borrowed.forEach((stamp) => stamps.add(stamp));
     }
     const walkClause = clauses.find((clause) => WALK_RE.test(clause)) || '';
     const undatedOr = activityRe === WALK_RE && /^\s*or\b/i.test(walkClause) && !activityStamps(walkClause, span).length;
@@ -1203,11 +1223,15 @@ export function draftFactErrors(reply, facts = {}) {
   }
   const ownerName = String(facts.ownerName || '').trim();
   const ownerFirst = ownerName.split(/\s+/)[0] || '';
+  const NOT_ROSTER = /^(April|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Big|Island|Kailua|Kona|Hawaii|Hawai|With|Option|Both|Which|Either|Since|That|This|They|Your|The|And|For)$/;
   if (ownerFirst) {
     const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
     const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
     const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b|\byour\b/i.test(crewList[1]);
-    if (crewList && !crewAddressesOwner && /(?:,|\band\b)/i.test(crewList[1]) && /\b[A-Z][a-z]{2,}\b/.test(crewList[1]) && !ownerRe.test(crewList[1])) {
+    const rosterNames = crewList
+      ? [...crewList[1].matchAll(/\b[A-Z][a-z]{2,}\b/g)].map((match) => match[0]).filter((name) => name && !NOT_ROSTER.test(name))
+      : [];
+    if (crewList && !crewAddressesOwner && rosterNames.length >= 2 && !ownerRe.test(crewList[1])) {
       pushError(errors, `${ownerName} is traveling`);
     }
     if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bparty of eight\b|\bcrew of eight\b|\bwhole crew\b/i.test(body)) {
@@ -1262,11 +1286,11 @@ export function draftFactErrors(reply, facts = {}) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
     }
-    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|i(?:'|’)ll save|we(?:'|’)ll save|save that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
+    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|now set|set for|i(?:'|’)ll save|we(?:'|’)ll save|save that|i(?:'|’)ve got that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
       const laterStamp = dayStamp(facts.laterFriday || laterFridayLabel(span));
       let claimed = looseDayStamps(sentence, span);
       if (/\bsecond friday\b/i.test(sentence) && laterStamp && !claimed.includes(laterStamp)) claimed = [...claimed, laterStamp];
-      const askedForLater = wantsLaterSwim && laterStamp && claimed.includes(laterStamp);
+      const askedForLater = !facts.strictSaved && wantsLaterSwim && laterStamp && claimed.includes(laterStamp);
       if (!askedForLater && claimed.length && !dayIsSet(claimed, swimDays)) {
         pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
       } else if (!claimed.length && !swimDays.length) {
@@ -1286,7 +1310,7 @@ export function draftFactErrors(reply, facts = {}) {
       if (stamps.length && !dayIsSet(stamps, facts.townWalkDays)) {
         pushError(errors, `a town walk on ${stamps[0]} was not set by the customer`);
       }
-      if (/\b(noted|saved|scheduled)\b/i.test(sentence) && !stamps.length && !(facts.townWalkDays || []).length) {
+      if (/\b(noted|saved|scheduled|on the list)\b/i.test(sentence) && !stamps.length && !(facts.townWalkDays || []).length) {
         pushError(errors, 'a town walk was noted but not saved');
       }
     }
@@ -1313,7 +1337,8 @@ export function draftFactErrors(reply, facts = {}) {
     }
     for (const person of facts.notTraveling || []) {
       const named = new RegExp(`\\b${String(person.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      if (named.test(sentence) && /on the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
+      const absent = /\bnot (?:on the trip|traveling|with the crew|in the house)\b|\b(?:aren(?:'|’)t|are not) traveling\b|\bviewer\b|\beditor\b|\bview access\b|\bedit access\b/i.test(sentence);
+      if (!absent && named.test(sentence) && /\bon the trip|all together|sharing the|whole group|for your stay|with the crew|all on the trip|in the house|with you|joining you|coming along|along with/i.test(sentence)) {
         pushError(errors, `${person.name} is a ${person.role}, not on the trip`);
       }
     }
@@ -1442,6 +1467,18 @@ export function completeRosterParty(doc) {
     party.editors.push({ name });
     rememberRoster(sources, `editors.${name}`, 'editor', `customer: ${name} can edit`);
   }
+  const notTraveler = new Set(['Kids', 'Four', 'What', 'Big', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'April', 'Marcus', 'Aunt']);
+  for (const match of corpus.matchAll(/\b([A-Z][a-z]+) (?:wants|does not want)\b/g)) {
+    const name = match[1];
+    if (notTraveler.has(name)) continue;
+    if (party.primary?.name && new RegExp(`^${name}\\b`, 'i').test(party.primary.name)) continue;
+    if (party.viewers.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
+    if (party.editors.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
+    if (party.preference_subjects.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
+    if (party.collaborators.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
+    party.collaborators.push({ name, payer: '' });
+    rememberRoster(sources, `collaborators.${name}`, '', `customer: ${name} wants`);
+  }
   return party;
 }
 
@@ -1528,6 +1565,7 @@ export function shipChoice({
   draftFactErrors = [],
   rewriteFactErrors = [],
   holding = '',
+  holdingFactErrors = [],
 }) {
   const rewriteText = String(rewrite || '').trim();
   const draftCount = (Array.isArray(draftFactErrors) ? draftFactErrors : []).length;
@@ -1535,7 +1573,8 @@ export function shipChoice({
   const rewriteOk = rewriteReplacesDraft(draft, rewriteText) && rewriteCount === 0;
   const draftRaw = Number(draftScore);
   const rewriteRaw = Number(rewriteScore);
-  const scoredLower = !Number.isFinite(rewriteRaw) || !Number.isFinite(draftRaw) || rewriteRaw < draftRaw;
+  const SCORE_NOISE = 0.15;
+  const scoredLower = !Number.isFinite(rewriteRaw) || !Number.isFinite(draftRaw) || rewriteRaw < draftRaw - SCORE_NOISE;
   if (rewriteOk && !scoredLower) {
     return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
   }
@@ -1545,8 +1584,12 @@ export function shipChoice({
   else if (!rewriteOk) failReason = 'rewrite_not_shipped';
   if (draftCount > 0) {
     const hold = String(holding || '').trim();
-    if (hold) {
+    const holdErrors = (Array.isArray(holdingFactErrors) ? holdingFactErrors : []).map((error) => String(error || '').trim()).filter(Boolean);
+    if (hold && holdErrors.length === 0) {
       return { text: hold, rewritten: false, flagged: false, held: true, failReason: failReason || 'holding_reply', holding: true };
+    }
+    if (rewriteOk) {
+      return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
     }
     return { text: '', rewritten: false, flagged: true, held: true, failReason: failReason || 'draft_held', holding: false };
   }
@@ -1560,13 +1603,24 @@ export function shipChoice({
   };
 }
 
+export function holdingShipErrors(text, facts = {}) {
+  const errors = draftFactErrors(text, { ...facts, strictSaved: true });
+  const who = String(facts.addressedTo || '').trim().split(/\s+/)[0];
+  const vocative = String(text || '').match(/(?:^|[.!?]\s+)([A-Z][a-z]{2,}),\s/);
+  if (who && vocative && vocative[1].toLowerCase() !== who.toLowerCase()) {
+    pushError(errors, `addresses ${vocative[1]} while ${who} is speaking`);
+  }
+  return errors;
+}
+
 export function interimCanShip(text, customerTurn, facts = {}) {
   const value = String(text || '').trim();
   if (!value || isTemplateInterim(value, customerTurn)) return false;
   const customer = String(customerTurn || '').replace(/\s+/g, ' ').trim().toLowerCase();
   const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
   if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
-  if (draftFactErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error))) return false;
+  if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted/.test(error))) return false;
+  if (isLongIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
   if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
 }
@@ -1633,6 +1687,7 @@ export function hardQualityFlags(reply, customerTurn, corpus) {
     invented: inventedVenueNames(body, corpus),
     missingPrice: customerAsksPrice(customerTurn) && !priceAnswered(body, customerTurn),
     missingAccess: customerAsksAccessChoice(customerTurn) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
+    missingCollaborators: isLongIntake(customerTurn) && !/\bcollaborat/i.test(body),
   };
 }
 
@@ -1646,7 +1701,7 @@ export function correctFalsePriceMiss(quality, reply, customerTurn) {
 }
 
 export function dockQuality(quality, flags) {
-  const rule = Boolean(flags?.invented?.length || flags?.split || flags?.missingPrice || flags?.missingAccess);
+  const rule = Boolean(flags?.invented?.length || flags?.split || flags?.missingPrice || flags?.missingAccess || flags?.missingCollaborators);
   const score = rule ? Math.min(Number(quality?.score) || 1, 3) : Number(quality?.score);
   return {
     ...quality,
@@ -1796,6 +1851,14 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   jev.jevBeforeModel = true;
   const genStarted = Date.now();
+  const speaker = String(tripFacts.addressedTo || '').trim();
+  const draftExtra = [
+    tripContext.roster || '',
+    'When you list who is coming, name every traveler in the saved roster, including Kimberly, Tyler, and Lauren when they are in that roster.',
+    'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
+    isLongIntake(customerTurn) ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
+    speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
+  ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
     jev,
@@ -1811,6 +1874,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planTable,
     planLine,
     seatDollars,
+    systemExtra: draftExtra,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -2015,13 +2079,16 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   const started = Date.now();
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
+  const speaker = String(facts.addressedTo || '').trim();
   const systemExtra = [
     isLongIntake(customerTurn) ? 'This holding reply is the intake answer. Include every required sentence below.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
-    owner ? `The account holder is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.',
+    speaker
+      ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${owner || 'someone else'} as the speaker.`
+      : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
     absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
     isLongIntake(customerTurn)
-      ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
+      ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
       : '',
     customerAsksPrice(customerTurn)
       ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerPriceLine(customerTurn) || 'name the dollar price'}.`
@@ -2117,7 +2184,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     const called = await callTieredModel({
       rules,
       jev: pending?.jev,
-      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep only days and places the customer already named. Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence about what you changed.\nDraft:\n${pending?.draft || ''}`,
+      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep only days and places the customer already named. Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference, including any person you added and any town-walk or saved-swim claim you added or removed.\nDraft:\n${pending?.draft || ''}`,
       stage: 'vacation_conversation',
       screen: 'vacation-app',
       destination: pending?.destination || '',
@@ -2132,7 +2199,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars || 0,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep the whole traveling party, including the account holder. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved unless it is already saved. End with one line WHAT_I_CHANGED: and a single sentence that names only a difference between the draft and your reply.',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep the whole traveling party, including the account holder and Kimberly, Tyler, and Lauren when they are travelers. Address the person who is speaking. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved, now set, or on the list unless it is already saved. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference. If you add or remove a person, a town walk, or a saved claim, that sentence must name it.',
         failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
@@ -2204,11 +2271,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   let choice = shipChoice({
     draft: pending.draft,
     rewrite: failReason ? '' : rewritten,
-    draftScore: rawScore(pending.quality?.scoreRaw),
-    rewriteScore: rawScore(rewriteQuality?.scoreRaw),
+    draftScore: Number(pending.quality?.score),
+    rewriteScore: rewriteQuality?.judged ? Number(rewriteQuality.score) : NaN,
     draftFactErrors: draftErrors,
     rewriteFactErrors: failReason ? [] : rewriteErrors,
     holding: holdingText,
+    holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted/.test(error)) : [],
   });
   if (!choice.text && !draftErrors.length) {
     choice = {
