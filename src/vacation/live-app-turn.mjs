@@ -1158,7 +1158,9 @@ function clauseStamps(sentence, span, activityRe) {
       if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
       activityStamps(neighbor, span).forEach((stamp) => stamps.add(stamp));
     }
-    if (!stamps.size && activityRe === WALK_RE && /\band\b/i.test(sentence)) {
+    const walkClause = clauses.find((clause) => WALK_RE.test(clause)) || '';
+    const undatedOr = activityRe === WALK_RE && /^\s*or\b/i.test(walkClause) && !activityStamps(walkClause, span).length;
+    if (!stamps.size && !undatedOr && activityRe === WALK_RE && /\band\b/i.test(sentence)) {
       activityStamps(sentence, span).forEach((stamp) => stamps.add(stamp));
     }
   });
@@ -1447,11 +1449,13 @@ function rewriteAttempted(turn) {
     || Boolean(String(turn?.rewriteText || '').trim());
 }
 
-const INTERIM_STOCK = /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i;
+const INTERIM_STOCK = /^(got it|sure|okay|ok|the plan stays)\b/i;
+const INTAKE_OPENER_ONLY = /^i am building the itinerary\b/i;
 
 export function isTemplateInterim(text, customerTurn) {
   const value = String(text || '').trim();
   if (!value || INTERIM_STOCK.test(value)) return true;
+  if (INTAKE_OPENER_ONLY.test(value) && !(/\bview access\b/i.test(value) && /\bedit access\b/i.test(value))) return true;
   const words = String(customerTurn || '').toLowerCase().match(/[a-z0-9]{4,}/g) || [];
   const blob = value.toLowerCase();
   return !words.some((word) => blob.includes(word));
@@ -2033,11 +2037,15 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     postIntake: false,
     env,
     forceModel: INTERIM_MODEL,
-    timeoutMs: 8000,
+    timeoutMs: isLongIntake(customerTurn) ? 20000 : 8000,
     systemExtra,
   });
   let model = await call();
   let text = String(model?.text || '').trim();
+  if (isTemplateInterim(text, customerTurn)) {
+    model = await call();
+    text = String(model?.text || '').trim();
+  }
   if (isTemplateInterim(text, customerTurn)) {
     model = await call();
     text = String(model?.text || '').trim();

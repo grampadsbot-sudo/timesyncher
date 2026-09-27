@@ -44,7 +44,9 @@ export function priceClauseSatisfied(part, reply) {
   if (!match) return false;
   const name = match[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const payer = match[3].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`${name}(?:['’]s)? \\$${match[2]}, paid by ${payer}`).test(body);
+  const selfPay = match[1].toLowerCase() === match[3].toLowerCase();
+  const payerPattern = selfPay ? `(?:${payer}|him|her)` : payer;
+  return new RegExp(`${name}(?:['’]s)?(?:\\s+(?!\\$)[\\w'’]+){0,8}\\s+\\$${match[2]}, paid by ${payerPattern}`, 'i').test(body);
 }
 
 export function priceAnswered(reply, customerTurn, env = process.env) {
