@@ -5,6 +5,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+const journeySource = readFileSync(new URL('./screenshot-journey-pdf.mjs', import.meta.url), 'utf8');
+for (const kept of ['Review Terms & Privacy', 'Kimberly welcome', 'Print and PDF', 'Keepsakes config', 'Ratings and reviews', 'First onboarding prompt']) {
+  if (!journeySource.includes(kept)) {
+    process.stderr.write(`journey dropped ${kept}\n`);
+    process.exit(1);
+  }
+}
+for (const added of ['Things list under', 'Cars Things list', 'Budget screen', 'category-detail-${key}', "['Flights', 'flight']", "['Cars', 'car']", "['Stores', 'store']", "['The Rest', 'other']", 'tags-applied']) {
+  if (!journeySource.includes(added)) {
+    process.stderr.write(`journey missing added shot ${added}\n`);
+    process.exit(1);
+  }
+}
 const self = spawnSync(process.execPath, ['scripts/screenshot-journey-pdf.mjs', '--self-check'], { cwd: root, encoding: 'utf8' });
 if (self.status !== 0) {
   process.stderr.write(self.stderr || self.stdout);

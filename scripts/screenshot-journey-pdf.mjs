@@ -944,7 +944,11 @@ async function main() {
           continue;
         }
         const id = `tab-${label.toLowerCase().replace(/\s+/g, '-')}`;
-        await shot(id, 'After the gold conversation', `${label} tab`, { file: 'itinerary-layout.md', note: sharedUrl });
+        const listTitle = label === 'Budget' ? 'Budget screen' : `${label} Things list`;
+        const listNote = label === 'Budget'
+          ? 'Budget screen. This shot is added beside the other journey pages.'
+          : `Things list under ${label}. This shot is added beside the other journey pages.`;
+        await shot(id, 'After the gold conversation', listTitle, { file: label === 'Budget' ? 'budget.md' : 'itinerary-layout.md', note: listNote, expect: label });
         if (label === 'The Rest') {
           const rest = await bodyText(page);
           if (has(rest, 'All areas') || has(rest, 'All types')) {
@@ -1119,18 +1123,22 @@ async function main() {
         if (placeholder) {
           gap('Car fields', 'car-fields.md', 'A car row is the Car type placeholder.');
         }
-        const shown = (labels || []).join(', ') || 'no named car row';
-        if (priced >= 10) {
-          await shot('car-fields', 'After the gold conversation', 'Cars', {
+        const shown = (labels || []).filter(Boolean);
+        if (!shown.length) {
+          gap('Cars Things list', 'car-fields.md', 'The Cars heading did not show a real list of car Things.');
+        } else if (priced >= 10) {
+          await shot('car-fields', 'After the gold conversation', 'Cars Things list', {
             file: 'car-fields.md',
-            note: `Cars tab shows ${shown}. The ten lowest prices are on the page.`,
+            note: `Cars Things list: ${shown.join(', ')}. The ten lowest prices are on the page.`,
             clipRect: carClip,
+            expect: shown[0],
           });
         } else {
-          await shot('car-fields', 'After the gold conversation', 'Cars', {
+          await shot('car-fields', 'After the gold conversation', 'Cars Things list', {
             file: 'car-fields.md',
-            note: `Cars tab shows ${shown}. This image is the live car Thing. It is not ten priced rentals.`,
+            note: `Cars Things list: ${shown.join(', ')}. Ten priced rentals are not on this page.`,
             clipRect: carClip,
+            expect: shown[0],
           });
           gap('Ten lowest car prices', 'car-fields.md', 'GAP: no live rental price source is available within the allowed tools. There is no Kayak or other rental feed, Google Places is not allowed, and lowestCarOffers only lists places that already have a numeric price. The only car Thing here is SpeediShuttle, which has no price. Removing that one unpriced row leaves an empty list, so this journey does not publish an empty list as brand removal.');
         }
@@ -1145,6 +1153,54 @@ async function main() {
             clipRect: await clipAround('Happy hour', { height: 360, padTop: 48 }),
           });
         }
+        if (has(hourText, 'Seafood') || has(hourText, 'Cocktail') || has(hourText, 'Happy Hour')) {
+          await shot('tags-applied', 'After the gold conversation', 'Tag on the restaurant', {
+            file: 'tags-chips.md',
+            note: 'Ulu Ocean Grill detail shows the tag the restaurant Things list also displays.',
+            expect: has(hourText, 'Seafood') ? 'Seafood' : 'Happy',
+          });
+        }
+        await page.keyboard.press('Escape').catch(() => {});
+      }
+      const categoryDetails = [
+        ['Flights', 'flight'],
+        ['Hotels', 'hotel'],
+        ['Cars', 'car'],
+        ['Restaurants', 'restaurant'],
+        ['Stores', 'store'],
+        ['The Rest', 'other'],
+      ];
+      for (const [label, key] of categoryDetails) {
+        if (!await clickText(page, label)) {
+          gap(`${label} detail`, 'thing-pages.md', `the ${label} Things list did not open for a detail shot`);
+          continue;
+        }
+        const thingName = await page.evaluate(() => {
+          const skip = /^(flights|hotels|cars|restaurants|stores|the rest|budget|day-by-day|day \d+|all tags|all areas|all types|pdfs|keepsakes|order keepsakes|settings|close navigation|open navigation|seafood|cocktail bar(?: \/ happy hour)?|car type)$/i;
+          const button = [...document.querySelectorAll('button')].find((node) => {
+            const text = (node.innerText || '').replace(/\s+/g, ' ').trim();
+            if (!text || text.length < 3 || text.length > 60 || skip.test(text)) return false;
+            const box = node.getBoundingClientRect();
+            return box.width > 40 && box.height > 12;
+          });
+          return button ? (button.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+        });
+        if (!thingName || !await clickText(page, thingName, { exact: true })) {
+          gap(`${label} detail`, 'thing-pages.md', `the ${label} Things list had no Thing to open`);
+          continue;
+        }
+        await sleep(400);
+        const detailText = await bodyText(page);
+        if (!(has(detailText, 'Detail page') || has(detailText, 'DETAIL PAGE') || has(detailText, thingName))) {
+          gap(`${label} detail`, 'thing-pages.md', `${thingName} did not open a ${label} detail`);
+          await page.keyboard.press('Escape').catch(() => {});
+          continue;
+        }
+        await shot(`category-detail-${key}`, 'After the gold conversation', `${label} detail`, {
+          file: 'thing-pages.md',
+          note: `One ${label} Thing: ${thingName}. Ratings are in this shot only when the detail shows them.`,
+          expect: thingName.slice(0, 40),
+        });
         await page.keyboard.press('Escape').catch(() => {});
       }
       await page.keyboard.press('Escape').catch(() => {});
@@ -1226,6 +1282,7 @@ async function main() {
     if (!captured.has('logos.md')) gap('Thing logos', 'logos.md', 'no /ts-thing-logos/ image rendered on a list row');
     if (!captured.has('filters.md')) gap('Filters', 'filters.md', 'The Rest list did not render All areas or All types');
     if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'the restaurants list did not render All tags or Seafood chips');
+    if (!seenShot.has('tags-applied')) gap('Tags applied on a Thing', 'tags-chips.md', 'no Thing detail showed a tag that the Things list also displays');
     if (!captured.has('budget.md')) gap('Budget', 'budget.md', 'the shared app did not open a Budget tab');
     if (!captured.has('flight-fields.md') && !gaps.some((item) => item.feature === 'Flight fields')) {
       gap('Flight fields', 'flight-fields.md', 'The flight detail did not show a takeoff from the saved trip.');
