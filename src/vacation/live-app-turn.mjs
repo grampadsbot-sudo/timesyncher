@@ -399,10 +399,14 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     ...(Array.isArray(party.editors) ? party.editors.map((person) => person?.name && `${person.name} (editor)`) : []),
   ].filter(Boolean);
   const corpus = customerCorpus(priorTurns, customerTurn);
-  const unnamedFriends = /four friends are still unnamed/i.test(corpus) ? ' Four friends are still unnamed and count in the party.' : '';
+  const statedParty = corpus.match(/\bparty of (six|seven|eight|nine|ten|\d+)\b/i);
+  const statedLine = statedParty
+    ? `Customer stated party of ${statedParty[1].toLowerCase()}. Use that count. List only people the customer named. Do not add unnamed people.`
+    : 'List only people the customer named in chat. Do not invent people.';
   const holder = owner[0]?.name ? ` The account holder is ${owner[0].name}. A collaborator who just joined is not the account holder.` : '';
   const roster = [
-    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${unnamedFriends}${holder}` : '',
+    `Party rule: ${statedLine} Do not ask Craig a trip-fact question.`,
+    travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${holder}` : '',
     absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
   const span = record?.span || null;
@@ -1348,6 +1352,9 @@ export function draftFactErrors(reply, facts = {}) {
         pushError(errors, 'a town walk was noted but not saved');
       }
     }
+    if (/\bfour friends\b|\bunnamed friends\b/i.test(sentence)) {
+      pushError(errors, 'the reply invented people');
+    }
     const partyCount = sentence.match(/\bparty of (six|seven|eight|nine|ten|\d+)\b/i);
     if (partyCount) {
       const words = { six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
@@ -2280,7 +2287,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars || 0,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep the whole traveling party, including the account holder and Kimberly, Tyler, and Lauren when they are travelers. Address the person who is speaking. Do not give that person someone else\'s gardens or swim. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call Lauren\'s rule locked and do not call it back-to-back heavy days. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person, a town walk, or a saved claim, that sentence must name it. Do not say you removed a saved swim on a day the draft did not claim.',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. Do not say four friends or unnamed friends. If the customer stated a party size, do not list more people than that size. Do not ask Craig a trip-fact question. Address the person who is speaking. Do not give that person someone else\'s gardens or swim. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call Lauren\'s rule locked and do not call it back-to-back heavy days. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person, a town walk, or a saved claim, that sentence must name it. Do not say you removed a saved swim on a day the draft did not claim.',
         failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
