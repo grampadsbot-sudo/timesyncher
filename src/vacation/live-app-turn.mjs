@@ -1266,7 +1266,8 @@ export function draftFactErrors(reply, facts = {}) {
       const laterStamp = dayStamp(facts.laterFriday || laterFridayLabel(span));
       let claimed = looseDayStamps(sentence, span);
       if (/\bsecond friday\b/i.test(sentence) && laterStamp && !claimed.includes(laterStamp)) claimed = [...claimed, laterStamp];
-      if (claimed.length && !dayIsSet(claimed, swimDays)) {
+      const askedForLater = wantsLaterSwim && laterStamp && claimed.includes(laterStamp);
+      if (!askedForLater && claimed.length && !dayIsSet(claimed, swimDays)) {
         pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
       } else if (!claimed.length && !swimDays.length) {
         pushError(errors, 'a swim was claimed as saved when it is not');
@@ -1565,7 +1566,7 @@ export function interimCanShip(text, customerTurn, facts = {}) {
   const customer = String(customerTurn || '').replace(/\s+/g, ' ').trim().toLowerCase();
   const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
   if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
-  if (draftFactErrors(value, facts).length) return false;
+  if (draftFactErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error))) return false;
   if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
 }
@@ -2027,7 +2028,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');
-  const unusable = (value) => isTemplateInterim(value, customerTurn) || draftFactErrors(value, facts).length > 0;
+  const unusable = (value) => isTemplateInterim(value, customerTurn) || draftFactErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
   const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },

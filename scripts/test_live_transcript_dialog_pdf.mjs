@@ -338,6 +338,7 @@ assert.equal(priceAnswered('You will cover Kimberly’s $27, Tyler will pay his 
 assert.ok(draftFactErrors('For the swim later in the week, I will save that for Friday, April 10th.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('That later swim is saved on the second Friday of the trip.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('Since Tyler wanted a swim later in the week anyway, we have already saved that backup for the second Friday.', earlyFacts).some((error) => /claimed as saved/.test(error)));
+assert.equal(draftFactErrors('The later swim is saved on the second Friday.', { ...earlyFacts, customerTurn: 'I still want one later swim in the week at Kailua-Kona.' }).some((error) => /claimed as saved/.test(error)), false);
 assert.equal(draftFactErrors('The crew for this adventure includes Torren, Peyton, Keegan, and Fallon, along with your four unnamed friends.', { ownerName: 'Craig Davidson' }).some((error) => /is traveling/.test(error)), false);
 assert.ok(draftFactErrors('Tuesday the 7th can hold a morning swim.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.equal(draftFactErrors('The swim isn\'t set for a specific day yet, so we won\'t lock it to Monday, April 6.', earlyFacts).some((line) => /swim on apr 6/.test(line)), false);
