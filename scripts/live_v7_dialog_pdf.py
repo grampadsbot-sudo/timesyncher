@@ -186,6 +186,12 @@ def build(pack):
     if banner:
         story.append(Paragraph(latin(banner), styles["Headline"]))
         story.append(Spacer(1, 8))
+    vs_tip = str(pack.get("build_vs_tip") or "").strip()
+    if vs_tip:
+        for line in vs_tip.splitlines():
+            if line.strip():
+                story.append(Paragraph(latin(line), styles["Meta"]))
+        story.append(Spacer(1, 6))
     story.append(Paragraph(cover_title(pack.get("title")), styles["CoverTitle"]))
     story.append(Paragraph(latin(f"pack_id: {pack.get('pack_id')}"), styles["Meta"]))
     story.append(Paragraph(latin(pack.get("turns_line")), styles["Meta"]))

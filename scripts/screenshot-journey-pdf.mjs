@@ -13,7 +13,8 @@ import { createRequire } from 'node:module';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertBothPdfsMatchLive, assertLiveMatchesTip, isVoidStaleBuild, prependVoidStamp, voidDocumentStamp } from './void-stale-build.mjs';
+import { normalizeSha, pdfTextHasSha, readTipSha, readVersionEndpointSha } from './void-stale-build.mjs';
+import { buildUsedVsTipLine, driveBanner, isUntrustedPack } from './build-used-vs-tip.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const featureDir = path.join(root, '.cursor/skills/verify-timesyncher-vacation/features');
@@ -258,11 +259,16 @@ async function main() {
   await selfCheck();
   const outDir = path.resolve(argValue('--out') || path.join(root, '.cursor/skills/verify-timesyncher-vacation/output'));
   const verifyPath = path.resolve(argValue('--verify') || path.join(outDir, 'VERIFY.md'));
+  const driveLive = normalizeSha(await readVersionEndpointSha());
+  if (!driveLive) {
+    process.stderr.write('untrusted: live /api/version sha is missing\n');
+    process.exit(2);
+  }
   try {
-    await assertLiveMatchesTip();
+    buildUsedVsTipLine(driveLive, readTipSha());
   } catch (error) {
-    if (!isVoidStaleBuild(error)) throw error;
-    process.stderr.write(`${error.message}\nrefused: journey stamp is empty or does not match the tip\n`);
+    if (!isUntrustedPack(error)) throw error;
+    process.stderr.write(`${error.message}\n`);
     process.exit(2);
   }
   const gate = runGate();
@@ -1429,24 +1435,26 @@ async function main() {
     }
   }
 
-  let match;
+  const driveEnd = normalizeSha(await readVersionEndpointSha());
+  if (!driveEnd || driveEnd !== driveLive) {
+    process.stderr.write('untrusted: live /api/version at journey end does not match the drive start\n');
+    process.exit(2);
+  }
+  let buildVsTip = '';
   try {
-    match = await assertLiveMatchesTip();
+    buildVsTip = buildUsedVsTipLine(driveLive, readTipSha());
   } catch (error) {
-    if (!isVoidStaleBuild(error)) throw error;
-    process.stderr.write(`${error.message}\nrefused: journey stamp does not match the tip\n`);
+    if (!isUntrustedPack(error)) throw error;
+    process.stderr.write(`${error.message}\n`);
     process.exit(2);
   }
-  const deployBanner = match?.live ? `live ${match.live} https://vacation-staging.timesyncher.com` : '';
-  if (!deployBanner || match.live !== match.tip) {
-    process.stderr.write('refused: journey stamp is empty or does not match the tip\n');
-    process.exit(2);
-  }
+  const deployBanner = driveBanner(driveLive);
   const manifest = {
     title: 'Screenshot Journey',
     subtitle: 'Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.',
     void: false,
     deployBanner,
+    buildVsTip,
     pageCount: pages.length + 2,
     frontMatter: [
       { id: 'cover', title: 'Cover' },
@@ -1464,11 +1472,22 @@ async function main() {
     process.exit(1);
   }
   const sha = createHash('sha256').update(await readFile(pdfPath)).digest('hex');
+  const page1 = spawnSync('pdftotext', ['-f', '1', '-l', '1', pdfPath, '-'], { encoding: 'utf8' });
+  const page1Text = String(page1.stdout || '');
+  if (page1.status !== 0 || !page1Text.includes(driveLive) || !page1Text.includes('build used vs tip:')) {
+    process.stderr.write('untrusted: journey page 1 does not print the drive build\n');
+    process.exit(2);
+  }
   await writeJourneySection(verifyPath, features.length, captured, gaps, sha);
   const dialogPdf = argValue('--dialog');
   if (dialogPdf) {
-    await assertBothPdfsMatchLive(dialogPdf, pdfPath);
-    process.stdout.write(`both PDFs match live ${match.live}\n`);
+    for (const file of [dialogPdf, pdfPath]) {
+      if (!pdfTextHasSha(file, driveLive)) {
+        process.stderr.write(`untrusted: ${file} does not print the drive build\n`);
+        process.exit(2);
+      }
+    }
+    process.stdout.write(`both PDFs print drive ${driveLive}\n`);
   }
   process.stdout.write(`screenshot-journey.pdf sha256 ${sha}\n`);
   process.stdout.write(`pages ${pages.length} gaps ${gaps.length} features ${captured.size} of ${features.length}\n`);

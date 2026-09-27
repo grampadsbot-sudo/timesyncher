@@ -37,6 +37,12 @@ def build(manifest, dest):
     if banner:
         story.append(Paragraph(esc(banner), styles["body"]))
         story.append(Spacer(1, 8))
+    vs_tip = str(manifest.get("buildVsTip") or "").strip()
+    if vs_tip:
+        for line in vs_tip.splitlines():
+            if line.strip():
+                story.append(Paragraph(esc(line), styles["body"]))
+        story.append(Spacer(1, 8))
     story.append(Paragraph(esc(manifest.get("title") or "Screenshot Journey"), styles["h1"]))
     story.append(Paragraph(esc(manifest.get("subtitle") or "Real app screens. The deleted card shell is not included."), styles["body"]))
     story.append(Spacer(1, 8))
