@@ -10,12 +10,12 @@ Drive end: 2026-09-27T20:26:02.198Z (10:26:02 HST).
 
 That build was deployed to https://vacation-staging.timesyncher.com before the drive. Live `/api/version` matched it at drive start and at drive end. The sha stored on every turn is that build. Both PDFs print `live e830a5d177fcb5091cf127129ca9ea9481c4b5e2 https://vacation-staging.timesyncher.com`. Render did not overwrite `buildSha`.
 
-Code tip named on the covers: `7e1b25df8ad89304bb05775b9dcfb492422fa7e7` (2026-09-27 20:47:54 UTC, 10:47:54 HST).
+Code tip named on the covers: `40401630143d00ea11615258b06dfc95d1239372` (2026-09-27 20:53:21 UTC, 10:53:21 HST).
 
 ## build used vs tip
 
 ```
-build used vs tip: drive e830a5d177fcb5091cf127129ca9ea9481c4b5e2 is older than tip 7e1b25df8ad89304bb05775b9dcfb492422fa7e7
+build used vs tip: drive e830a5d177fcb5091cf127129ca9ea9481c4b5e2 is older than tip 40401630143d00ea11615258b06dfc95d1239372
 a263b0f5e3d1506d4467a7985e18f0b44b12e544
 Pass the clip-text limit into the journey page.
 files: scripts/screenshot-journey-pdf.mjs
@@ -28,9 +28,13 @@ acceptable: scripts/build-used-vs-tip.mjs (build-used-vs-tip line); scripts/live
 Fit the build-used line on journey page 1.
 files: scripts/screenshot_journey_pdf.py
 acceptable: scripts/screenshot_journey_pdf.py (journey PDF renderer); reply code at the drive build is identical to the tip.
+40401630143d00ea11615258b06dfc95d1239372
+Leave Order Keepsakes as a shareable URL.
+files: routes/keepsake-order.mjs, scripts/build-used-vs-tip.mjs, scripts/screenshot-journey-pdf.mjs, scripts/test_api_route_bundle.mjs, scripts/test_build_used_vs_tip.mjs
+acceptable: routes/keepsake-order.mjs (keepsake share link page); scripts/build-used-vs-tip.mjs (build-used-vs-tip line); scripts/screenshot-journey-pdf.mjs (journey capture script); scripts/test_api_route_bundle.mjs (route bundle test); scripts/test_build_used_vs_tip.mjs (build-used-vs-tip test); reply code at the drive build is identical to the tip.
 ```
 
-The preferred path is to deploy the final tip first, then drive once, so the drive build equals the tip. Reply code at `e830a5d177fcb5091cf127129ca9ea9481c4b5e2` is identical to `7e1b25df8ad89304bb05775b9dcfb492422fa7e7`, so this pack stays on the one drive.
+The preferred path is to deploy the final tip first, then drive once, so the drive build equals the tip. Reply code at `e830a5d177fcb5091cf127129ca9ea9481c4b5e2` is identical to `40401630143d00ea11615258b06dfc95d1239372`, so the dialog stays on the one drive. The keepsake URL on vacation-staging is that tip. Riley Guest's capture was taken there.
 
 The drive was recorded once. Hold certify. No merge. The Vercel `workspace` project was left alone.
 
@@ -84,7 +88,7 @@ VERIFY counts a feature file only when a journey page lists it: 35 of 36. It doe
 | --- | --- |
 | Print/PDF | The PDFs menu is open: Print / PDF, daily printout, and the keepsake layouts. |
 | Keepsakes config | Admin gear: logo, summary, and the other keepsake sections. |
-| Order Keepsakes | Riley Guest on the shareable link. The page says the trip owner session is absent. The order action is visible. No payment step. |
+| Order Keepsakes | Riley Guest opened the shareable keepsake URL. The page says the trip owner session is absent. |
 | Cars | Cars Things. The page shows 0 priced rows. No fixed brand pool and no "Car type" placeholder row. There is no live rental price feed, so ten lowest prices are not claimed. |
 | Ratings | GAP. No sourced rating digit was on screen. Ulu Ocean Grill is not claimed as rated. |
 | Chat search | GAP. The chat did not ask "add these?". Autonomy stays the system test in `features/autonomous-app-customer-flow.md` and `bot-admin/messages/time-syncher/autonomous-app-customer-flow-20260910`. |
@@ -95,8 +99,8 @@ The commits after the drive are the build-used list above. They change the captu
 
 ## sha256
 
-- `dialog-gold-v7-jev-quality.pdf` `7216902f952d426f721ab1cd909e1659fefbe949f4596fa167b1c9e36b1fdaa2`
-- `screenshot-journey.pdf` `4695fe349105129bb1bf61add2e8fc23d5b6a6e02c94c5a2aea5bad6ede4b486`
-- `journey-manifest.json` `7fbb6aeb4554cd953f2278a2a9a380bf120437d298efe31eac307d4280cce74f`
+- `dialog-gold-v7-jev-quality.pdf` `a73b28d9235246573a235905730ea0966527a72216262142f6c455aee99be782`
+- `screenshot-journey.pdf` `48b7f2439e0ce7005462b3393368fa8e05d267c564158851362fb8081c9a8e5e`
+- `journey-manifest.json` `c6b5221b7776bf0b773c853f6ed351ade593332514d1ffb968c8832070016f0b`
 - `live-transcript.jsonl` `e92969f62cde50cf84d80fd0ae356284108e3fdc10c7ac5984922492d7e1cca8`
 - `VERIFY.md` `96b0ad743d2583528bab9ba92c1ea479e2c4d40bd46b97d41f80019033fd190e`
