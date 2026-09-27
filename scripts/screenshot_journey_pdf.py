@@ -8,7 +8,34 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
-from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import Flowable, Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
+
+
+class CaptureStamp(Flowable):
+    """Draw this page's capture build over the shared header. Render does not choose the sha."""
+
+    def __init__(self, line):
+        super().__init__()
+        self.line = str(line or "")[:140]
+
+    def wrap(self, aw, ah):
+        return (0, 0)
+
+    def draw(self):
+        if not self.line:
+            return
+        canv = self.canv
+        matrix = list(getattr(canv, "_currentMatrix", (1, 0, 0, 1, 0, 0)))
+        origin_x = matrix[4]
+        origin_y = matrix[5]
+        canv.saveState()
+        canv.translate(-origin_x + 0.7 * inch, -origin_y + letter[1] - 0.42 * inch)
+        canv.setFillColor(colors.white)
+        canv.rect(-4, -3, 7.4 * inch, 14, stroke=0, fill=1)
+        canv.setFillColor(colors.black)
+        canv.setFont("Times-Roman", 8)
+        canv.drawString(0, 0, self.line)
+        canv.restoreState()
 
 
 def esc(value):
@@ -71,6 +98,9 @@ def build(manifest, dest):
         story.append(Paragraph(f"{index}. {chapter}: {title}{file_bit}", styles["body"]))
     for page in pages:
         story.append(PageBreak())
+        capture = str(page.get("captureBuild") or "").strip()
+        if capture:
+            story.append(CaptureStamp(f"live {capture} https://vacation-staging.timesyncher.com"))
         chapter = esc(page.get("chapter") or "")
         title = esc(page.get("title") or "")
         filename = esc(page.get("file") or "")

@@ -357,7 +357,7 @@ export function assessPackShape(doc, options = {}) {
     missing_app_open_next: missingAppOpen
       ? 'Next live session must capture an app line the customer already saw before the first customer turn (onboarding opener). Do not invent that line.'
       : null,
-    pack_id: `live-${checked.sessionToken || 'session'}`,
+    pack_id: `live-dialog-${summary.turnCount}`,
     trip,
     trip_title_source: (options.trip || checked.tripTitle || checked.trip || inferredTrip) ? (inferredTrip && !(options.trip || checked.tripTitle || checked.trip) ? 'inferred' : 'provided') : 'untitled_not_inferred',
     source: 'live-app',
@@ -453,7 +453,7 @@ function packPages(doc, shape) {
     `turns: ${summary.turnCount}`,
     `tiers used: ${tiersUsed}`,
     `models used: ${modelsUsed}`,
-    `session: ${doc.sessionToken || ''}`,
+    'session: withheld',
     `HEAD: ${shape.head}`,
     `dpl: ${shape.dpl}`,
     `voice: ${shape.voiceStatus}`,
@@ -618,6 +618,11 @@ export function liveV7Pack(doc, shape) {
     pack_id: shape.pack_id,
     footer_id: shape.pack_id,
     turns_line: `turns=${shape.summary.turnCount} (customer ${shape.summary.customerTurns} / app ${shape.summary.appTurns}) · session wall time ${wall}ms`,
+    cover_fit: [
+      `tiers used: ${(shape.tiersUsed || []).join(', ') || 'none'}`,
+      `models used: ${(shape.modelsUsed || []).join(', ') || 'none'}`,
+      ...[1, 2, 3, 4].map((tier) => `T${tier} ${map[tier]}`),
+    ],
     headline: `Live app capture. Jev judged every generated reply on the labeled scale (raw + 1), the 1-5 criterion legend. The mean is that labeled scale. v6 3.913 is a different scale. Session wall time is ${wall}ms. The timing table median is gen-only. Real per-turn latency, including both Jev calls on a rewrite, is the last row.`,
     quality_rows: [
       ['Metric', 'v6 gpt-5-mini', 'v7 Tier 1–4'],

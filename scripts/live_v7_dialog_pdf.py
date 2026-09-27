@@ -176,6 +176,7 @@ def build(pack):
     styles.add(ParagraphStyle(name="Tim", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#555555"), leftIndent=10))
     styles.add(ParagraphStyle(name="JevRun", parent=styles["Normal"], fontSize=7.2, leading=9, textColor=colors.HexColor("#555555"), leftIndent=-6, firstLineIndent=0, spaceBefore=6))
     styles.add(ParagraphStyle(name="Meta", parent=styles["Normal"], fontSize=7.5, textColor=colors.HexColor("#555555")))
+    styles.add(ParagraphStyle(name="CoverFit", parent=styles["Normal"], fontName="DejaVuSans", fontSize=7, leading=8.5, textColor=colors.HexColor("#1a1a1a"), spaceAfter=1))
     styles.add(ParagraphStyle(name="Headline", parent=styles["Normal"], fontSize=9.5, leading=12, textColor=colors.HexColor("#0b3d91"), spaceBefore=4, spaceAfter=4))
     styles.add(ParagraphStyle(name="Void", parent=styles["Title"], fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6))
 
@@ -184,18 +185,20 @@ def build(pack):
     if pack.get("void") or banner.startswith("VOID"):
         story.append(Paragraph("VOID", styles["Void"]))
     if banner:
-        story.append(Paragraph(latin(banner), styles["Headline"]))
-        story.append(Spacer(1, 8))
+        story.append(Paragraph(latin(banner), styles["CoverFit"]))
+        story.append(Spacer(1, 4))
     vs_tip = str(pack.get("build_vs_tip") or "").strip()
     if vs_tip:
         for line in vs_tip.splitlines():
             if line.strip():
-                story.append(Paragraph(latin(line), styles["Meta"]))
-        story.append(Spacer(1, 6))
+                story.append(Paragraph(latin(line), styles["CoverFit"]))
+        story.append(Spacer(1, 3))
     story.append(Paragraph(cover_title(pack.get("title")), styles["CoverTitle"]))
-    story.append(Paragraph(latin(f"pack_id: {pack.get('pack_id')}"), styles["Meta"]))
-    story.append(Paragraph(latin(pack.get("turns_line")), styles["Meta"]))
-    story.append(Spacer(1, 6))
+    story.append(Paragraph(latin(f"pack_id: {pack.get('pack_id')}"), styles["CoverFit"]))
+    story.append(Paragraph(latin(pack.get("turns_line")), styles["CoverFit"]))
+    for line in pack.get("cover_fit") or []:
+        story.append(Paragraph(latin(line), styles["CoverFit"]))
+    story.append(Spacer(1, 4))
     story.append(Paragraph("QUALITY COMPARISON vs v6 gpt-5-mini", styles["Section"]))
     story.append(Paragraph(f"<b>Headline:</b> {latin(pack.get('headline'))}", styles["Headline"]))
     story.append(Paragraph("Content checks: none.", styles["Body"]))
