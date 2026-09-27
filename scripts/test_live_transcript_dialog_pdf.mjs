@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
 import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, hardQualityFlags, intakeFacts, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
-import { payerPriceLine } from '../src/vacation/seat-price.mjs';
+import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertJevRewriteLabels,
@@ -177,6 +177,7 @@ const heldClean = shipChoice({
 });
 assert.equal(heldClean.text, 'Tuesday can be a town walk.');
 assert.equal(heldClean.holding, true);
+assert.equal(heldClean.flagged, false);
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4');
 assert.equal(formatQualityLine({ judged: true, score: 2.76, comment: 'Thin day.', rewritten: false }), 'quality: 2.76');
 assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1');
@@ -185,6 +186,7 @@ const priceLine = payerPriceLine(priceAskLine);
 assert.match(priceLine, /Kimberly \$27, paid by you/);
 assert.match(priceLine, /Tyler \$27, paid by Tyler/);
 assert.match(priceLine, /Lauren \$27, paid by Lauren/);
+assert.equal(priceAnswered("You'll cover Kimberly's $27, paid by you; Tyler $27, paid by Tyler; Lauren $27, paid by Lauren.", priceAskLine), true);
 assert.equal(/\b(?:split|splitting)\b/i.test(priceLine), false);
 assert.equal(noteContradictsDraft('Who pays is missing for Kimberly', 'Kimberly $27, paid by you'), true);
 assert.equal(noteContradictsDraft('Friday garden time slips', 'Sunday gardens stay quiet'), true);
@@ -314,6 +316,12 @@ assert.equal(draftFactErrors('Let us slide that second swim later. How about Thu
 assert.ok(draftFactErrors('Thursday, April 9th can hold that second swim.', earlyFacts).some((line) => /swim on apr 9/.test(line)));
 assert.ok(draftFactErrors('Friday, April 10th dinner is a solid midweek milestone.', earlyFacts).some((line) => /not midweek/.test(line)));
 assert.ok(draftFactErrors('Friday, April 3rd is arrival. Maybe dip into the house pool.', earlyFacts).some((line) => /swim on apr 3/.test(line)));
+assert.ok(draftFactErrors('Friday, April 3rd is arrival only. A pool dip can wait until later.', earlyFacts).some((line) => /swim on apr 3/.test(line)));
+assert.ok(draftFactErrors('Tuesday, April 7 is the anchor day. One option is a classic swim day at the house pool.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
+assert.ok(draftFactErrors('Tuesday, April 7, is wide open. Here are two options: a town walk, or a swim at the beach.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
+const dateSpan = { start: new Date('2026-04-03T00:00:00.000Z'), end: new Date('2026-04-12T00:00:00.000Z') };
+const datedLater = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'A swim later in the week stays at Kailua-Kona.', dateSpan);
+assert.match(datedLater.find((thing) => thing.title === 'Swim').customerWhen, /Fri Apr 10/);
 const keptGarden = applyCustomerNotes(goldThings, 'If we add a second garden, keep it on Thursday April ninth and leave Wednesday afternoon empty.');
 assert.match(keptGarden.find((thing) => thing.title === 'Gardens').customerWhen, /Thu Apr 9/);
 assert.ok(draftFactErrors('Welcome aboard, Tyler. Your two garden days are locked in.', customerTripFacts([], 'Kimberly wants gardens. This is Tyler. I paid for my own seat.')).some((line) => /Kimberly/.test(line)));

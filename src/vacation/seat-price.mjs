@@ -35,9 +35,21 @@ export function payerPriceLine(customerTurn, env = process.env) {
   return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 
+export function priceClauseSatisfied(part, reply) {
+  const body = String(reply || '');
+  const clause = String(part || '').trim();
+  if (!clause) return false;
+  if (body.includes(clause)) return true;
+  const match = clause.match(/^(.*?) \$(\d+), paid by (.+)$/);
+  if (!match) return false;
+  const name = match[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const payer = match[3].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`${name}(?:['’]s)? \\$${match[2]}, paid by ${payer}`).test(body);
+}
+
 export function priceAnswered(reply, customerTurn, env = process.env) {
   const line = payerPriceLine(customerTurn, env);
   const body = String(reply || '');
   if (!line) return /\$\d+/.test(body);
-  return line.split('; ').every((part) => body.includes(part));
+  return line.split('; ').every((part) => priceClauseSatisfied(part, body));
 }

@@ -643,11 +643,17 @@ function customerNamedWeekday(customerText, weekdayName) {
 
 const WEEKDAY_INDEX = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
+function isoDay(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
+  const match = String(value ?? '').match(/\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : '';
+}
+
 function weekdayInsideSpan(weekdayName, span) {
   const target = WEEKDAY_INDEX[String(weekdayName || '').toLowerCase()];
   if (target == null || !span?.start || !span?.end) return '';
-  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
-  const end = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
+  const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
+  const end = new Date(`${isoDay(span.end)}T00:00:00Z`);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
   for (let cursor = start; cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
     if (cursor.getUTCDay() !== target) continue;
@@ -671,15 +677,15 @@ function spanDateLabel(date) {
 
 function spanStartLabel(span) {
   if (!span?.start) return '';
-  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
+  const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
   if (Number.isNaN(start.getTime())) return '';
   return spanDateLabel(start);
 }
 
 function laterFridayLabel(span) {
   if (!span?.start || !span?.end) return '';
-  const start = new Date(`${String(span.start).slice(0, 10)}T00:00:00Z`);
-  const end = new Date(`${String(span.end).slice(0, 10)}T00:00:00Z`);
+  const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
+  const end = new Date(`${isoDay(span.end)}T00:00:00Z`);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
   let seen = 0;
   let found = '';
@@ -1096,7 +1102,7 @@ export function draftFactErrors(reply, facts = {}) {
   const arrivalStamp = span?.start ? dayStamp(`${MONTH_ABBR[Number(String(span.start).slice(5, 7))]} ${Number(String(span.start).slice(8, 10))}`) : '';
   if (arrivalStamp && !swimDays.includes(arrivalStamp)) {
     for (const paragraph of body.split(/\n{2,}/)) {
-      if (looseDayStamps(paragraph, span).includes(arrivalStamp) && /\bhouse pool\b|\bdip into\b/i.test(paragraph)) {
+      if (looseDayStamps(paragraph, span).includes(arrivalStamp) && /\bhouse pool\b|\bpool dip\b|\bdip into\b|\ba dip\b/i.test(paragraph)) {
         pushError(errors, `a swim on ${arrivalStamp} was not set by the customer`);
       }
     }
@@ -1109,8 +1115,11 @@ export function draftFactErrors(reply, facts = {}) {
     const next = sentences[index + 1] || '';
     const previous = sentences[index - 1] || '';
     const swimDenied = /\b(?:isn't set|is not set|won't lock|will not lock|not already set|not a swim)\b/i.test(sentence);
-    if (/\bswim\b|\bhouse pool\b|\bdip into\b/i.test(sentence) && !swimDenied) {
-      const attached = looseDayStamps(sentence, span);
+    if (/\bswim\b|\bhouse pool\b|\bpool dip\b|\bdip into\b/i.test(sentence) && !swimDenied) {
+      let attached = looseDayStamps(sentence, span);
+      if (!attached.length && /\boption\b|\bor a swim\b|\bswim day\b/i.test(sentence)) {
+        attached = looseDayStamps(previous, span);
+      }
       if (attached.length && !dayIsSet(attached, swimDays)) {
         pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
       }
@@ -1355,14 +1364,14 @@ export function shipChoice({
   if (draftCount > 0) {
     const hold = String(holding || '').trim();
     if (hold) {
-      return { text: hold, rewritten: false, flagged: true, failReason: failReason || 'holding_reply', holding: true };
+      return { text: hold, rewritten: false, flagged: false, failReason: failReason || 'holding_reply', holding: true };
     }
     return { text: '', rewritten: false, flagged: true, failReason: failReason || 'draft_held', holding: false };
   }
   return {
     text: draft,
     rewritten: false,
-    flagged: rewriteCount > 0,
+    flagged: false,
     failReason,
     holding: false,
   };
@@ -1970,9 +1979,10 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
       failReason = failReason || 'rewrite_not_judged';
     }
   }
+  const safeHolding = 'I am keeping this reply to the saved trip.';
   const holdingText = String(pending?.interimReply?.text || '').trim();
   const holdingErrors = holdingText ? draftFactErrors(holdingText, facts) : ['holding empty'];
-  const choice = shipChoice({
+  let choice = shipChoice({
     draft: pending.draft,
     rewrite: failReason ? '' : rewritten,
     draftScore: rawScore(pending.quality?.scoreRaw),
@@ -1981,7 +1991,16 @@ export async function finishTierRewrite({ pending, env = process.env } = {}) {
     rewriteFactErrors: failReason ? [] : rewriteErrors,
     holding: holdingErrors.length ? '' : holdingText,
   });
-  const shippedText = choice.text || (draftErrors.length ? holdingText : pending.draft);
+  if (!choice.text) {
+    choice = {
+      text: safeHolding,
+      rewritten: false,
+      flagged: false,
+      failReason: choice.failReason || 'holding_reply',
+      holding: true,
+    };
+  }
+  const shippedText = choice.text;
   if (!choice.rewritten && !failReason) {
     failReason = choice.failReason === 'rewrite_fact_check_held'
       ? `rewrite_fact_check_held: ${rewriteErrors.join('; ')}`
