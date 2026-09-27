@@ -1,0 +1,805 @@
+{
+  "title": "Screenshot Journey",
+  "subtitle": "Real TimeSyncher app. Dialog PDF is the companion document. Shell screens are omitted.",
+  "void": false,
+  "deployBanner": "live 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e https://vacation-staging.timesyncher.com",
+  "buildVsTip": "build used vs tip: 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e equals the tip",
+  "pageCount": 87,
+  "frontMatter": [
+    {
+      "id": "cover",
+      "title": "Cover"
+    },
+    {
+      "id": "contents",
+      "title": "Contents"
+    }
+  ],
+  "pages": [
+    {
+      "id": "purchase",
+      "chapter": "Purchase",
+      "title": "Purchase confirmed",
+      "file": "post-purchase-email-eula.md",
+      "note": "Order-success acknowledgement. No Open App button. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/purchase.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "purchase-email",
+      "chapter": "Purchase email",
+      "title": "Purchase email",
+      "file": "post-purchase-email-eula.md",
+      "note": "Arrived purchase email. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/purchase-email.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "email-click",
+      "chapter": "Email click",
+      "title": "App URL from the purchase email",
+      "file": "real-app-email-entry.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/email-click.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "eula",
+      "chapter": "EULA",
+      "title": "Review Terms & Privacy",
+      "file": "post-purchase-email-eula.md",
+      "note": "EULA title is Review Terms & Privacy. Agree is on screen.",
+      "image": "/tmp/r19-pack/journey-pages/eula.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "eula-agreed",
+      "chapter": "EULA",
+      "title": "Agree clicked",
+      "file": "post-purchase-email-eula.md",
+      "note": "Agree was clicked on camera.",
+      "image": "/tmp/r19-pack/journey-pages/eula-agreed.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "first-prompt",
+      "chapter": "Onboarding",
+      "title": "First onboarding prompt",
+      "file": "post-purchase-email-eula.md",
+      "note": "The stored opener. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/first-prompt.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "building-itinerary",
+      "chapter": "Onboarding",
+      "title": "Building the itinerary",
+      "file": "post-purchase-email-eula.md",
+      "note": "The app says it is building the itinerary from the intake. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/building-itinerary.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "collab-upsell",
+      "chapter": "Onboarding",
+      "title": "Collaborator explanation and upsell",
+      "file": "post-intake.md",
+      "note": "First app bubble that contains unlimited vacations. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/collab-upsell.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "welcome-kimberly",
+      "chapter": "Collaborator welcome",
+      "title": "Kimberly welcome",
+      "file": "collaborators.md",
+      "note": "Collaborator welcome in the chat. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/welcome-kimberly.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "welcome-tyler",
+      "chapter": "Collaborator welcome",
+      "title": "Tyler welcome",
+      "file": "collaborators.md",
+      "note": "Collaborator welcome in the chat. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/welcome-tyler.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "welcome-lauren",
+      "chapter": "Collaborator welcome",
+      "title": "Lauren welcome",
+      "file": "collaborators.md",
+      "note": "Collaborator welcome in the chat. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/welcome-lauren.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "itinerary-layout",
+      "chapter": "After the gold conversation",
+      "title": "Standard itinerary layout",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/itinerary-layout.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "header-chrome",
+      "chapter": "After the gold conversation",
+      "title": "Header brand",
+      "file": "header-chrome.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/header-chrome.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "packing",
+      "chapter": "After the gold conversation",
+      "title": "Packing",
+      "file": "packing.md",
+      "note": "The tab row has no Packing tab while share_packing is off. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/packing.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "slider-bars",
+      "chapter": "After the gold conversation",
+      "title": "Day chip slider",
+      "file": "slider-bars.md",
+      "note": "The Vacation Day View day-chip row. Not a Day-by-Day crop. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/slider-bars.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "maps",
+      "chapter": "After the gold conversation",
+      "title": "Day map",
+      "file": "maps.md",
+      "note": "Day map under Vacation Day View, with the timeline-tagged places. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/maps.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "voice-note",
+      "chapter": "After the gold conversation",
+      "title": "Voice note",
+      "file": "voice-note.md",
+      "note": "The microphone control for a voice note. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/voice-note.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "logos",
+      "chapter": "After the gold conversation",
+      "title": "Thing logos",
+      "file": "logos.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/logos.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "navigation",
+      "chapter": "After the gold conversation",
+      "title": "Navigation chrome",
+      "file": "navigation.md",
+      "note": "The guest Open navigation panel, with Close navigation and the day tabs. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/navigation.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "settings",
+      "chapter": "After the gold conversation",
+      "title": "TREK settings",
+      "file": "trek-settings.md",
+      "note": "Mapbox, Google Maps, Weather, Invite, and Copy link. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/settings.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-01",
+      "chapter": "After the gold conversation",
+      "title": "Day 1",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-01.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-02",
+      "chapter": "After the gold conversation",
+      "title": "Day 2",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-02.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-03",
+      "chapter": "After the gold conversation",
+      "title": "Day 3",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-03.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-04",
+      "chapter": "After the gold conversation",
+      "title": "Day 4",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-04.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-05",
+      "chapter": "After the gold conversation",
+      "title": "Day 5",
+      "file": "empty-states.md",
+      "note": "Day 5 on the intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-05.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-06",
+      "chapter": "After the gold conversation",
+      "title": "Day 6",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-06.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-07",
+      "chapter": "After the gold conversation",
+      "title": "Day 7",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-07.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-08",
+      "chapter": "After the gold conversation",
+      "title": "Day 8",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-08.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-09",
+      "chapter": "After the gold conversation",
+      "title": "Day 9",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-09.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "day-10",
+      "chapter": "After the gold conversation",
+      "title": "Day 10",
+      "file": "slider-bars.md",
+      "note": "Intake trip day chip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/day-10.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-flights",
+      "chapter": "After the gold conversation",
+      "title": "Flights tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-flights.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-hotels",
+      "chapter": "After the gold conversation",
+      "title": "Hotels tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-hotels.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-cars",
+      "chapter": "After the gold conversation",
+      "title": "Cars tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-cars.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-restaurants",
+      "chapter": "After the gold conversation",
+      "title": "Restaurants tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-restaurants.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tags",
+      "chapter": "After the gold conversation",
+      "title": "Tags and chips",
+      "file": "tags-chips.md",
+      "note": "Restaurant tag chips on the intake list. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tags.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-stores",
+      "chapter": "After the gold conversation",
+      "title": "Stores tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-stores.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-the-rest",
+      "chapter": "After the gold conversation",
+      "title": "The Rest tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-the-rest.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "filters",
+      "chapter": "After the gold conversation",
+      "title": "Filters",
+      "file": "filters.md",
+      "note": "All areas and All types on The Rest. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/filters.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "tab-budget",
+      "chapter": "After the gold conversation",
+      "title": "Budget tab",
+      "file": "itinerary-layout.md",
+      "note": "Intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/tab-budget.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "thing-big-island",
+      "chapter": "After the gold conversation",
+      "title": "Big Island detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/thing-big-island.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "screenshot-gate",
+      "chapter": "After the gold conversation",
+      "title": "Dialog screenshot gate",
+      "file": "dialog-screenshot-gate.md",
+      "note": "Real Detail page, no card shell. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/screenshot-gate.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "status-thing-big-island",
+      "chapter": "After the gold conversation",
+      "title": "Status",
+      "file": "status.md",
+      "note": "Big Island detail. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/status-thing-big-island.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "stories-thing-big-island",
+      "chapter": "After the gold conversation",
+      "title": "Stories and media",
+      "file": "media-stories.md",
+      "note": "Big Island detail. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/stories-thing-big-island.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "hotel-thing-big-island",
+      "chapter": "After the gold conversation",
+      "title": "Hotel stay fields",
+      "file": "hotel-stay-fields.md",
+      "note": "Big Island detail. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/hotel-thing-big-island.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "thing-groceries",
+      "chapter": "After the gold conversation",
+      "title": "Groceries detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/thing-groceries.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "thing-kailua-kona-house",
+      "chapter": "After the gold conversation",
+      "title": "Kailua-Kona house detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/thing-kailua-kona-house.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "thing-gardens",
+      "chapter": "After the gold conversation",
+      "title": "Gardens detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/thing-gardens.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "thing-swim",
+      "chapter": "After the gold conversation",
+      "title": "Swim detail",
+      "file": "thing-pages.md",
+      "note": "Intake trip Detail page. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/thing-swim.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "flight-fields",
+      "chapter": "After the gold conversation",
+      "title": "Flight fields",
+      "file": "flight-fields.md",
+      "note": "KOA arrival flight fields from the trip, not a hard-coded connection or layover. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/flight-fields.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "car-fields",
+      "chapter": "After the gold conversation",
+      "title": "Cars",
+      "file": "car-fields.md",
+      "note": "Cars tab shows SpeediShuttle. Priced rows on this image: 0. No fixed brand pool. Live brand removal uses the Remove control on the rows that are on screen. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/car-fields.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "car-brand-removed",
+      "chapter": "After the gold conversation",
+      "title": "Cars brand removed",
+      "file": "car-fields.md",
+      "note": "The Cars list after Remove. SpeediShuttle is not on this image. No priced rental row is on this image. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/car-brand-removed.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "happy-hour",
+      "chapter": "After the gold conversation",
+      "title": "Happy hour",
+      "file": "happy-hour.md",
+      "note": "Ulu Ocean Grill happy hour field. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/happy-hour.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "print-pdf",
+      "chapter": "After the gold conversation",
+      "title": "Print and PDF",
+      "file": "print-pdf.md",
+      "note": "Print / PDF menu: Daily printout and list PDFs. Layout 1 and Layout 2 are Style one and Style two. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/print-pdf.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "keepsakes-config",
+      "chapter": "After the gold conversation",
+      "title": "Keepsakes config",
+      "file": "keepsakes-config.md",
+      "note": "Keepsakes config: logo, summary, and Style sections. Not the restaurant detail behind the menu. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/keepsakes-config.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "order-keepsakes-guest",
+      "chapter": "After the gold conversation",
+      "title": "Order Keepsakes",
+      "file": "order-keepsakes.md",
+      "note": "Riley Guest opened the shareable keepsake URL in a separate browser context. document.cookie was empty and data-owner-session is 0. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/order-keepsakes-guest.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "min-things",
+      "chapter": "After the gold conversation",
+      "title": "Initial fill minimums",
+      "file": "min-things.md",
+      "note": "Big Island intake trip meets restaurant 15, store 10, and attraction 15. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/min-things.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "style-one-intake",
+      "chapter": "After the gold conversation",
+      "title": "Keepsake Style one",
+      "file": "keepsake-style-one.md",
+      "note": "Rendered on the intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/style-one-intake.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "style-two-intake",
+      "chapter": "After the gold conversation",
+      "title": "Keepsake Style two",
+      "file": "keepsake-style-two.md",
+      "note": "Rendered on the intake trip. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/style-two-intake.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "keepsake-qa-intake",
+      "chapter": "After the gold conversation",
+      "title": "Keepsake QA",
+      "file": "keepsake-qa.md",
+      "note": "Style two, scrolled to the later pages. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/keepsake-qa-intake.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "language",
+      "chapter": "After the gold conversation",
+      "title": "Language",
+      "file": "language.md",
+      "note": "Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/language.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "email-kimberly",
+      "chapter": "Onboarding email",
+      "title": "Kimberly collaborator invite",
+      "file": "collaborators.md",
+      "note": "Arrived collaborator invite. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/email-kimberly.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "email-tyler",
+      "chapter": "Onboarding email",
+      "title": "Tyler collaborator invite",
+      "file": "collaborators.md",
+      "note": "Arrived collaborator invite. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/email-tyler.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "email-lauren",
+      "chapter": "Onboarding email",
+      "title": "Lauren collaborator invite",
+      "file": "collaborators.md",
+      "note": "Arrived collaborator invite. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/email-lauren.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-itinerary-layout",
+      "chapter": "Final itinerary",
+      "title": "Standard itinerary layout",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Not the pre-collaborator snapshot. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-itinerary-layout.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-01",
+      "chapter": "Final itinerary",
+      "title": "Day 1",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-01.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-02",
+      "chapter": "Final itinerary",
+      "title": "Day 2",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-02.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-03",
+      "chapter": "Final itinerary",
+      "title": "Day 3",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-03.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-04",
+      "chapter": "Final itinerary",
+      "title": "Day 4",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-04.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-05",
+      "chapter": "Final itinerary",
+      "title": "Day 5",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-05.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-06",
+      "chapter": "Final itinerary",
+      "title": "Day 6",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-06.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-07",
+      "chapter": "Final itinerary",
+      "title": "Day 7",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-07.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-08",
+      "chapter": "Final itinerary",
+      "title": "Day 8",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-08.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-09",
+      "chapter": "Final itinerary",
+      "title": "Day 9",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-09.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-day-10",
+      "chapter": "Final itinerary",
+      "title": "Day 10",
+      "file": "slider-bars.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-day-10.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-flights",
+      "chapter": "Final itinerary",
+      "title": "Flights tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-flights.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-hotels",
+      "chapter": "Final itinerary",
+      "title": "Hotels tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-hotels.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-cars",
+      "chapter": "Final itinerary",
+      "title": "Cars tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-cars.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-restaurants",
+      "chapter": "Final itinerary",
+      "title": "Restaurants tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-restaurants.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-stores",
+      "chapter": "Final itinerary",
+      "title": "Stores tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-stores.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-the-rest",
+      "chapter": "Final itinerary",
+      "title": "The Rest tab",
+      "file": "itinerary-layout.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-the-rest.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-tab-budget",
+      "chapter": "Final itinerary",
+      "title": "Budget tab",
+      "file": "budget.md",
+      "note": "Live trip after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-tab-budget.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-thing-big-island",
+      "chapter": "Final itinerary",
+      "title": "Big Island detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-thing-big-island.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-thing-kailua-kona-house",
+      "chapter": "Final itinerary",
+      "title": "Kailua-Kona house detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-thing-kailua-kona-house.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-thing-gardens",
+      "chapter": "Final itinerary",
+      "title": "Gardens detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-thing-gardens.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    },
+    {
+      "id": "final-thing-swim",
+      "chapter": "Final itinerary",
+      "title": "Swim detail",
+      "file": "thing-pages.md",
+      "note": "Live detail after collaborator notes. Capture build 128c9e1781f2f9ce4f0bf2396cf1ccdce136540e.",
+      "image": "/tmp/r19-pack/journey-pages/final-thing-swim.png",
+      "captureBuild": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e"
+    }
+  ],
+  "gaps": [
+    {
+      "feature": "Chat search",
+      "file": "",
+      "reason": "Search was removed from the feature map. This journey does not rebuild a search screen.",
+      "exempt": false
+    },
+    {
+      "feature": "Autonomy",
+      "file": "",
+      "reason": "The autonomy bar was removed from the feature map. N/A.",
+      "exempt": false
+    },
+    {
+      "feature": "Ratings and reviews",
+      "file": "ratings-reviews.md",
+      "reason": "no sourced rating screenshot was captured",
+      "exempt": false
+    }
+  ]
+}

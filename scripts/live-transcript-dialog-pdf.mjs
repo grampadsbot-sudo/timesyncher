@@ -15,6 +15,7 @@ import {
   inventedVenueNames,
   isLongIntake,
   rewriteCreditLabel,
+  splitRewriteChange,
   heldRewriteLine,
   isTemplateNote,
   isTemplateInterim,
@@ -764,7 +765,9 @@ function qualityBar(turn) {
 
 export function shippedRewriteLabel(turn) {
   if (!turn || turn.held === true || turn.quality?.rewritten !== true) return '';
-  return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
+  const stored = turn.rewriterChange || turn.quality?.rewriterChange;
+  const fromModel = stored || splitRewriteChange(turn.rewriteText || turn.quality?.rewriteText || '').change;
+  return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, fromModel);
 }
 
 function foldPdfText(value) {
