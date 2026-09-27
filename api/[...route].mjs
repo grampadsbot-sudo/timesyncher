@@ -37,8 +37,9 @@ function routeParts(req) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   let parts = url.pathname.split('/').filter(Boolean);
   if (parts[0] === 'api') parts = parts.slice(1);
+  if (parts.length === 1 && parts[0] === '[...route]') parts = [];
   if (parts.length) return parts;
-  const queryRoute = req.query?.route;
+  const queryRoute = req.query?.route || req.query?.['...route'] || url.searchParams.get('...route') || url.searchParams.get('route');
   if (Array.isArray(queryRoute)) return queryRoute.map((part) => String(part || '')).filter(Boolean);
   if (queryRoute) return String(queryRoute).split('/').filter(Boolean);
   return [];

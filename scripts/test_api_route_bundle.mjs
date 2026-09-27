@@ -33,4 +33,14 @@ const stripe = mockRes();
 await handler({ method: 'GET', url: '/api/stripe-webhook', headers: {}, query: { route: ['stripe-webhook'] } }, stripe);
 assert.equal(stripe.statusCode, 405);
 
+const catchAllQuery = mockRes();
+await handler({
+  method: 'GET',
+  url: '/api/[...route]?...route=version',
+  headers: {},
+  query: { '...route': 'version' },
+}, catchAllQuery);
+assert.equal(catchAllQuery.statusCode, 200);
+assert.match(catchAllQuery.body, /"ok":true/);
+
 console.log('api route bundle ok');
