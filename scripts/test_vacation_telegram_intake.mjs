@@ -11,7 +11,7 @@ import {
   vacationSupportIntentWithModel,
   vacationSupportReply,
   vacationIdentityAck,
-} from '../api/vacation-telegram-turn.mjs';
+} from '../routes/vacation-telegram-turn.mjs';
 
 const screenshotTranscript = [
   'I will call it this our Hawaiian getaway and what would make it unforgettable',

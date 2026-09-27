@@ -34,7 +34,7 @@ assert.match(page, />Agree</);
 assert.match(page, /eula\?action=accept/);
 assert.match(page, /state\.eula\?\.accepted !== true/);
 
-const api = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /handleVacationApp/);
 assert.match(api, /loadVacationAppTrips/);
 assert.match(api, /loadVacationAppTurns/);

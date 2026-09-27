@@ -9,7 +9,7 @@ import {
   intakeTurnSlug,
   persistIntakeTurnToGbrain,
 } from '../src/vacation/tg-intake-gbrain.mjs';
-import { vacationIdentityAck } from '../api/vacation-telegram-turn.mjs';
+import { vacationIdentityAck } from '../routes/vacation-telegram-turn.mjs';
 
 assert.equal(INITIAL_BUILD_CUE, "I'm building your initial itinerary now and it may take 10–15 minutes.");
 assert.match(
@@ -44,7 +44,7 @@ assert.equal(written.ok, true);
 assert.equal(written.slug, slug);
 assert.ok(fs.existsSync(path.join(root, `${slug}.md`)));
 
-const turnSrc = fs.readFileSync(new URL('../api/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
+const turnSrc = fs.readFileSync(new URL('../routes/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
 assert.match(turnSrc, /persistIntakeTurnToGbrain/);
 assert.match(turnSrc, /INITIAL_BUILD_CUE/);
 

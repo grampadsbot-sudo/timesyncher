@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import handler from '../api/eula.mjs';
+import handler from '../routes/eula.mjs';
 
 const adminToken = 'admin-test-token';
 const agentToken = 'agent-test-token';

@@ -267,7 +267,7 @@ function liveDoc(turns) {
 async function readSources() {
   const [vacationApp, api, liveTurn, replyRules, sharedApp] = await Promise.all([
     readFile(path.join(root, 'vacation-app.html'), 'utf8'),
-    readFile(path.join(root, 'api/vacation-itinerary.mjs'), 'utf8'),
+    readFile(path.join(root, 'routes/vacation-itinerary.mjs'), 'utf8'),
     readFile(path.join(root, 'src/vacation/live-app-turn.mjs'), 'utf8'),
     readFile(path.join(root, 'scripts/vacation-app-reply-rules.mjs'), 'utf8'),
     readFile(path.join(root, 'shared-app.html'), 'utf8'),

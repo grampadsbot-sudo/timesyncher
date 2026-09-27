@@ -395,7 +395,7 @@ assert.match(vercel, /"dest": "\/shared-app.html"/);
 assert.doesNotMatch(vercel, /report=journey/);
 assert.match(vercel, /trekBundle/);
 assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
-const itinerarySrc = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const itinerarySrc = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(itinerarySrc, /pdfQr/);
 assert.match(itinerarySrc, /handlePdfQrSvg/);
 

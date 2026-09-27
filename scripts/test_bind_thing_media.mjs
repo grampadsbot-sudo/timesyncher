@@ -108,7 +108,7 @@ assert.match(api, /\/api\/bind-thing-media/);
 assert.match(api, /shareToken/);
 assert.match(api, /sourceUrl/);
 
-const itinerary = await readFile(new URL('../api/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const itinerary = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(itinerary, /mediaBind/);
 assert.match(itinerary, /trekPath/);
 assert.match(itinerary, /pdfQr/);
