@@ -806,6 +806,271 @@ function readNewDateCall(text, index) {
   return { end: args.end, symbol: text.slice(index, args.end).replace(/\s+/g, ' ') };
 }
 
+const MONTH_FULL = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const MONTH_STEMS = [
+  { abbrev: 'sept', full: 'september' },
+  { abbrev: 'jan', full: 'january' },
+  { abbrev: 'feb', full: 'february' },
+  { abbrev: 'mar', full: 'march' },
+  { abbrev: 'apr', full: 'april' },
+  { abbrev: 'may', full: 'may' },
+  { abbrev: 'jun', full: 'june' },
+  { abbrev: 'jul', full: 'july' },
+  { abbrev: 'aug', full: 'august' },
+  { abbrev: 'sep', full: 'september' },
+  { abbrev: 'oct', full: 'october' },
+  { abbrev: 'nov', full: 'november' },
+  { abbrev: 'dec', full: 'december' },
+];
+const MONTH_WORDS = new Set([...MONTH_FULL, ...MONTH_STEMS.map((stem) => stem.abbrev)]);
+
+function regexLikely(text, index) {
+  let cursor = index - 1;
+  while (cursor >= 0 && /\s/.test(text[cursor])) cursor -= 1;
+  if (cursor < 0) return true;
+  const prev = text[cursor];
+  if ('(,=:[!&|?{};~^'.includes(prev)) return true;
+  if (!/[A-Za-z0-9_$]/.test(prev)) return false;
+  let start = cursor;
+  while (start >= 0 && /[A-Za-z0-9_$]/.test(text[start])) start -= 1;
+  return /^(?:return|case|throw|delete|void|typeof|in|of|instanceof|yield|await|else|do)$/.test(text.slice(start + 1, cursor + 1));
+}
+
+function readRegexLiteral(text, index) {
+  if (text[index] !== '/' || text[index + 1] === '/' || text[index + 1] === '*') return null;
+  if (!regexLikely(text, index)) return null;
+  let cursor = index + 1;
+  let inClass = false;
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '\n') return null;
+    if (text[cursor] === '[') inClass = true;
+    else if (text[cursor] === ']') inClass = false;
+    else if (text[cursor] === '/' && !inClass) {
+      let end = cursor + 1;
+      while (/[a-z]/i.test(text[end] || '')) end += 1;
+      return { bodyStart: index + 1, bodyEnd: cursor, end };
+    }
+    cursor += 1;
+  }
+  return null;
+}
+
+function readGroup(text, index) {
+  if (text[index] !== '(') return null;
+  let depth = 0;
+  let inClass = false;
+  for (let cursor = index; cursor < text.length; cursor += 1) {
+    const ch = text[cursor];
+    if (ch === '\\') {
+      cursor += 1;
+      continue;
+    }
+    if (ch === '[') inClass = true;
+    else if (ch === ']') inClass = false;
+    else if (!inClass && ch === '(') depth += 1;
+    else if (!inClass && ch === ')') {
+      depth -= 1;
+      if (depth === 0) return { end: cursor + 1, inner: text.slice(index + 1, cursor) };
+    }
+  }
+  return null;
+}
+
+function readNonCapture(text, index) {
+  if (!text.startsWith('(?:', index)) return null;
+  const group = readGroup(text, index);
+  if (!group || !group.inner.startsWith('?:')) return null;
+  let end = group.end;
+  if (text[end] === '?') end += 1;
+  return { end, inner: group.inner.slice(2) };
+}
+
+function readTemplateSpan(text, index) {
+  if (text[index] !== '`') return null;
+  let cursor = index + 1;
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '`') return { end: cursor + 1, raw: text.slice(index + 1, cursor) };
+    if (text[cursor] === '$' && text[cursor + 1] === '{') {
+      cursor += 2;
+      let depth = 1;
+      while (cursor < text.length && depth > 0) {
+        if (text[cursor] === '\\') {
+          cursor += 2;
+          continue;
+        }
+        if (text[cursor] === "'" || text[cursor] === '"') {
+          const lit = readQuoted(text, cursor);
+          cursor = lit ? lit.end : cursor + 1;
+          continue;
+        }
+        if (text[cursor] === '`') break;
+        if (text[cursor] === '{') depth += 1;
+        else if (text[cursor] === '}') depth -= 1;
+        if (depth > 0) cursor += 1;
+      }
+      continue;
+    }
+    cursor += 1;
+  }
+  return null;
+}
+
+function monthLetters(pattern) {
+  return String(pattern || '').replace(/\\.|[^A-Za-z]/g, '').toLowerCase();
+}
+
+function readMonthAtom(source, index) {
+  const precededByLetter = index > 0 && /[A-Za-z]/.test(source[index - 1]) && source[index - 2] !== '\\';
+  if (precededByLetter) return null;
+  const slice = source.slice(index);
+  if (slice[0] === '(' && slice[1] !== '?') {
+    const group = readGroup(source, index);
+    if (group) {
+      const alts = group.inner.split('|').map((part) => part.trim()).filter(Boolean);
+      if (alts.length > 1 && alts.every((alt) => /^[A-Za-z]+$/.test(alt))) {
+        const letters = /^[A-Za-z]*/.exec(source.slice(group.end))[0];
+        let suffix = '';
+        const fits = (alt, candidate) => {
+          const word = `${alt}${candidate}`.toLowerCase();
+          if (MONTH_WORDS.has(word)) return true;
+          const stem = MONTH_STEMS.find((item) => item.abbrev === alt.toLowerCase() || item.full === alt.toLowerCase());
+          return Boolean(stem) && (candidate === '' || stem.full.endsWith(candidate.toLowerCase()));
+        };
+        for (let len = letters.length; len >= 0; len -= 1) {
+          const candidate = letters.slice(0, len);
+          if (alts.every((alt) => fits(alt, candidate))) {
+            suffix = candidate;
+            break;
+          }
+        }
+        if (alts.every((alt) => fits(alt, suffix))) {
+          const end = group.end + suffix.length;
+          if (/[A-Za-z]/.test(source[end] || '')) return null;
+          return { end, symbol: source.slice(index, end) };
+        }
+      }
+    }
+  }
+  const lower = slice.toLowerCase();
+  const followedByDay = (cursor) => /^\s+(?:0?[1-9]|[12]\d|3[01])(?:st|nd|rd|th)?\b/.test(source.slice(cursor));
+  for (const name of [...MONTH_FULL].sort((left, right) => right.length - left.length)) {
+    if (lower.startsWith(name) && !/[A-Za-z]/.test(slice[name.length] || '')) {
+      if (followedByDay(index + name.length)) return null;
+      return { end: index + name.length, symbol: source.slice(index, index + name.length) };
+    }
+  }
+  for (const stem of [...MONTH_STEMS].sort((left, right) => right.abbrev.length - left.abbrev.length)) {
+    if (!lower.startsWith(stem.abbrev)) continue;
+    const next = slice[stem.abbrev.length] || '';
+    if (/[A-Za-z]/.test(next)) continue;
+    let cursor = index + stem.abbrev.length;
+    let built = stem.abbrev.toLowerCase();
+    while (source.startsWith('(?:', cursor)) {
+      const group = readNonCapture(source, cursor);
+      if (!group) break;
+      const alts = splitMonthAlts(group.inner);
+      if (!alts.length) break;
+      const extended = alts.map((alt) => `${built}${monthLetters(alt)}`);
+      if (!extended.every((combined) => stem.full.startsWith(combined))) break;
+      built = extended.reduce((shortest, combined) => (combined.length < shortest.length ? combined : shortest));
+      cursor = group.end;
+    }
+    if (/[A-Za-z]/.test(source[cursor] || '')) return null;
+    if (followedByDay(cursor)) return null;
+    return { end: cursor, symbol: source.slice(index, cursor) };
+  }
+  return null;
+}
+
+function splitMonthAlts(inner) {
+  const parts = [];
+  let current = '';
+  let depth = 0;
+  let inClass = false;
+  for (let index = 0; index < inner.length; index += 1) {
+    const ch = inner[index];
+    if (ch === '\\') {
+      current += ch + (inner[index + 1] || '');
+      index += 1;
+      continue;
+    }
+    if (ch === '[') inClass = true;
+    else if (ch === ']') inClass = false;
+    else if (!inClass && ch === '(') depth += 1;
+    else if (!inClass && ch === ')') depth = Math.max(0, depth - 1);
+    else if (!inClass && depth === 0 && ch === '|') {
+      parts.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  parts.push(current);
+  return parts.filter((part) => part !== '');
+}
+
+function monthAtoms(body) {
+  const hits = [];
+  let inClass = false;
+  for (let index = 0; index < body.length; index += 1) {
+    if (body[index] === '\\') {
+      index += 1;
+      continue;
+    }
+    if (body[index] === '[') {
+      inClass = true;
+      continue;
+    }
+    if (body[index] === ']') {
+      inClass = false;
+      continue;
+    }
+    if (inClass) continue;
+    const hit = readMonthAtom(body, index);
+    if (!hit) continue;
+    hits.push({ index, symbol: hit.symbol });
+    index = hit.end - 1;
+  }
+  return hits;
+}
+
+function pushMonthBody(file, text, findings, seen, body, base) {
+  for (const hit of monthAtoms(body)) {
+    add(findings, seen, 'DATE-LITERAL', file, text, base + hit.index, hit.symbol);
+  }
+}
+
+function monthRegexFindings(file, text, findings, seen) {
+  for (let index = 0; index < text.length; index += 1) {
+    if (text[index] !== '/') continue;
+    const literal = readRegexLiteral(text, index);
+    if (!literal) continue;
+    pushMonthBody(file, text, findings, seen, text.slice(literal.bodyStart, literal.bodyEnd), literal.bodyStart);
+    index = literal.end - 1;
+  }
+  for (const match of text.matchAll(/\bRegExp\s*\(\s*/g)) {
+    const at = skipWs(text, match.index + match[0].length);
+    if (text[at] === "'" || text[at] === '"') {
+      const quoted = readQuoted(text, at);
+      if (quoted) pushMonthBody(file, text, findings, seen, text.slice(at + 1, quoted.end - 1), at + 1);
+    } else if (text[at] === '`') {
+      const span = readTemplateSpan(text, at);
+      if (span) pushMonthBody(file, text, findings, seen, span.raw, at + 1);
+    } else {
+      const folded = readConcat(text, at) || readArrayJoin(text, at);
+      if (folded) pushMonthBody(file, text, findings, seen, folded.value, at);
+    }
+  }
+}
+
 function dateLiteralFindings(file, text, findings, seen) {
   for (const pattern of [ISO_DATE, MONTH_DATE, ORDINAL_WEEKDAY]) {
     for (const match of collect(pattern, text, (item) => item)) {
@@ -850,6 +1115,7 @@ function dateLiteralFindings(file, text, findings, seen) {
       add(findings, seen, 'DATE-LITERAL', file, text, start.index, symbol);
     }
   }
+  monthRegexFindings(file, text, findings, seen);
 }
 
 function isRemoteAsset(ref) {
@@ -1232,10 +1498,16 @@ export function baselineGrowthAllowed(current, baseRows) {
   return added.every((row) => !baseRules.has(baselineRuleId(row)));
 }
 
+export function baselineRemoteRef(ref) {
+  const name = String(ref || '').trim();
+  if (!name) return '';
+  return name.startsWith('origin/') ? name : `origin/${name}`;
+}
+
 export function baseBaselineCount(cwd = process.cwd()) {
   const ref = process.env.BASE || process.env.GITHUB_BASE_REF || '';
   if (!ref) return { status: 'skip' };
-  const shown = spawnSync('git', ['show', `origin/${ref}:scripts/hardcoded-content-baseline.json`], {
+  const shown = spawnSync('git', ['show', `${baselineRemoteRef(ref)}:scripts/hardcoded-content-baseline.json`], {
     cwd,
     encoding: 'utf8',
   });

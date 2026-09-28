@@ -3106,5 +3106,418 @@
     "symbol_or_pattern": "Oct 9",
     "inventory_id": "DATE-LITERAL",
     "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "august",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "july",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "april",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "december",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "february",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "january",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "june",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "march",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "may",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "november",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "october",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "september",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "apr(?:il)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "aug(?:ust)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "dec(?:ember)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "feb(?:ruary)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jan(?:uary)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jul(?:y)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jun(?:e)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "mar(?:ch)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "may",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "nov(?:ember)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "oct(?:ober)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "sep(?:t|tember)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "apr",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "aug",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "dec",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "feb",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jan",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jul",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jun",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "mar",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "nov",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "oct",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "sep",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "sept",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "april",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "April",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "apr",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "apr(?:il)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/timeline-icons.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "dec",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/timeline-icons.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jan",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/timeline-icons.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "nov",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/timeline-icons.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "oct",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "april",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "august",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "december",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "february",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "january",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "july",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "june",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "march",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "may",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "november",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "october",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "september",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
   }
 ]

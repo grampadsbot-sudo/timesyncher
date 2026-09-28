@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -238,6 +238,33 @@ const missingRefRun = runGuard(missingRef, { BASE: 'missing-ref' });
 assert.equal(missingRefRun.status, 1);
 assert.match(missingRefRun.stderr, /FAIL\tBASELINE-GROWTH/);
 
+assert.equal(baselineRemoteRef('main'), 'origin/main');
+assert.equal(baselineRemoteRef('origin/main'), 'origin/main');
+assert.equal(baselineRemoteRef('cursor/x'), 'origin/cursor/x');
+const prefixed = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-prefix-origin-'));
+const prefixedWork = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-prefix-work-'));
+git(prefixed, ['init', '--bare']);
+git(prefixedWork, ['init', '-b', 'main']);
+git(prefixedWork, ['remote', 'add', 'origin', prefixed]);
+fs.mkdirSync(path.join(prefixedWork, 'scripts'), { recursive: true });
+const prefixRow = entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST');
+fs.writeFileSync(path.join(prefixedWork, 'scripts/hardcoded-content-baseline.json'), '[]\n');
+git(prefixedWork, ['add', '.']);
+git(prefixedWork, ['commit', '-m', 'empty baseline']);
+git(prefixedWork, ['push', '-u', 'origin', 'main']);
+fs.writeFileSync(path.join(prefixedWork, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([prefixRow])}\n`);
+git(prefixedWork, ['add', '.']);
+git(prefixedWork, ['commit', '-m', 'one old-rule row']);
+git(prefixedWork, ['push', 'origin', 'HEAD:cursor/x']);
+for (const base of ['main', 'origin/main']) {
+  const prefixRun = runGuard(prefixedWork, { BASE: base });
+  assert.equal(prefixRun.status, 1, `${base}\n${prefixRun.stdout}\n${prefixRun.stderr}`);
+  assertHit(prefixRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
+}
+const prefixedSame = runGuard(prefixedWork, { BASE: 'cursor/x' });
+assert.equal(prefixedSame.status, 0, prefixedSame.stderr);
+assert.match(prefixedSame.stdout, /hardcoded content check passed \(0 report, 0 fail\)/);
+
 const workflow = fs.readFileSync(path.join(repo, '.github/workflows/evidence-secrets.yml'), 'utf8');
 assert.match(workflow, /check-hardcoded-content\.mjs/);
 assert.match(workflow, /test_check_hardcoded_content\.mjs/);
@@ -448,6 +475,7 @@ assert.deepEqual(classify(renamed, []).fail.map((finding) => [finding.rule, find
   ['CONTENT-MATCH', 'say the swim is saved on the second Friday of the trip'],
   ['CONTENT-MATCH', 'second Friday'],
   ['DATE-LITERAL', 'second Friday'],
+  ['DATE-LITERAL', 'apr(?:il)?'],
 ]);
 
 const named = fails('src/vacation/prompt-names.mjs', 'prompt-names.mjs');
@@ -522,6 +550,30 @@ assert.equal(dateRun.status, 1, dateRun.stdout);
 assertHit(dateRun.stderr, 'FAIL', 'DATE-LITERAL', dateFile, '{start:\'2026-04-03\',end:\'2026-04-10\'}');
 assert.doesNotMatch(dateRun.stderr, /CONTENT-MATCH/);
 assert.doesNotMatch(dateRun.stderr, /RANGE_END/);
+
+const monthFile = 'src/vacation/date-month-regex.mjs';
+const monthText = readFixture('date-month-regex.mjs');
+const monthSymbols = [
+  'April 10',
+  'apr(?:il)?',
+  'april',
+  'sep(?:t(?:ember)?)?',
+  'sep(?:t|tember)?',
+  '(jan|feb)uary',
+];
+const monthHits = scanText(monthFile, monthText).filter((finding) => finding.rule === 'DATE-LITERAL');
+assert.deepEqual(monthHits.map((finding) => finding.symbol_or_pattern), monthSymbols);
+assert.equal(scanText(monthFile, monthText).some((finding) => finding.rule !== 'DATE-LITERAL'), false);
+assert.deepEqual(
+  scanText('src/vacation/month-prose.mjs', "const note = 'april showers';").filter((finding) => finding.rule === 'DATE-LITERAL'),
+  [],
+);
+const monthDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-month-'));
+writeTree(monthDir, { [monthFile]: monthText }, []);
+const monthRun = runGuard(monthDir);
+assert.equal(monthRun.status, 1, monthRun.stdout);
+for (const symbol of monthSymbols) assertHit(monthRun.stderr, 'FAIL', 'DATE-LITERAL', monthFile, symbol);
+assert.doesNotMatch(monthRun.stderr, /maybe|display|marching|april showers|aprilCount/);
 
 const bundleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bundle-'));
 const bundleSymbol = '/assets/index-BKun7ofk.js is not in the repo and the build does not produce it';
