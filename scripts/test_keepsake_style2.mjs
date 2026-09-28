@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, sourceLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
@@ -95,39 +95,21 @@ assert.equal(logos.thingOverrides['place:8872'].logoUrl, '');
 assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
-assert.equal(captureThingLogo({ name: 'High Roller' }, {}), '');
-
-const LETTER_TILE_RE = /<text\b[^>]*>\s*[A-Za-z0-9]{1,3}\s*<\/text>/i;
-const GENERIC_BAG_RE = /M26 24a6 6 0 0 1 12 0|M24 28a8 8 0 0 1 16 0/;
-const qaFailLogoFiles = [
-  'carbone.svg',
-  'shake-shack.svg',
-  'bardot-brasserie.svg',
-  'best-friend-roy-choi.svg',
-  'giada.svg',
-  'javiers-at-aria.svg',
-  'latelier-robuchon.svg',
-  'lotus-of-siam.svg',
-  'mon-ami-gabi.svg',
-  'mott-32.svg',
-  'fashion-show-mall.svg',
-  'harmon-corner.svg',
-  'wynn-esplanade.svg',
-  'jean-georges.svg',
-  'miracle-mile-shops.svg',
-  'sichuan-house.svg',
-  'cosmopolitan-shops.svg',
-  'bellagio-shops.svg',
-];
-for (const file of await readdir(new URL('../public/ts-thing-logos/', import.meta.url))) {
-  if (!file.endsWith('.svg')) continue;
-  const svg = await readFile(new URL(`../public/ts-thing-logos/${file}`, import.meta.url), 'utf8');
-  assert.doesNotMatch(svg, LETTER_TILE_RE, `${file} must be a pictorial mark, not a letter/monogram tile`);
-  if (qaFailLogoFiles.includes(file)) {
-    assert.doesNotMatch(svg, GENERIC_BAG_RE, `${file} must not be a generic shopping-bag pictogram`);
-    assert.match(svg, /<path |<circle |<ellipse |<rect x=/, `${file} must draw a distinctive mark`);
-  }
-}
+assert.equal(captureThingLogo({ name: 'Sample Place' }, {}), '');
+const sampleShared = {
+  trip: { id: 1, title: 'Sample Trip', description: 'A sample trip.' },
+  days: [],
+  places: [{ id: 1, name: 'Sample Place' }],
+  assignments: {},
+};
+const sampleHtml = renderStyle2Html(sampleShared, [], { origin: 'https://example.test', shareToken: 'sample' });
+assert.match(sampleHtml, /data-thing-id="1"[^>]*>\s*<span class="thing-emoji">/);
+assert.doesNotMatch(sampleHtml, /data-thing-id="1"[^>]*>\s*<img/);
+const sourcedHtml = renderStyle2Html({
+  ...sampleShared,
+  places: [{ id: 2, name: 'Sample Place', source: { logo: 'https://cdn.example/mark.svg' } }],
+}, [], { origin: 'https://example.test', shareToken: 'sample' });
+assert.match(sourcedHtml, /https:\/\/cdn\.example\/mark\.svg/);
 
 const paddedLogos = applyCapturedLogos(shared);
 for (const place of paddedLogos.places) {
@@ -206,17 +188,18 @@ assert.doesNotMatch(conservatoryCard, /tiny-logo|thing-emoji/);
 assert.match(conservatoryCard, /conservatory-photo\.jpg/);
 assert.match(html, /data-row-thumb="1"/);
 const videoCover = pickStoryCover([
-  { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
-], '/ts-thing-logos/bellagio.svg');
+  { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'night-video.mp4' },
+], 'https://cdn.example/mark.svg');
 assert.equal(videoCover.kind, 'video');
+assert.equal(pickStoryCover([], '').kind, 'none');
 const mislabeledNightVideo = pickStoryCover([
   {
-    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+    publicUrl: 'https://example.test/api/bind-thing-media?shareToken=sample&id=1&raw=1',
     mimeType: 'application/octet-stream',
     mediaKind: 'photo',
-    originalName: 'bellagio-fountain-night-video.mp4',
+    originalName: 'night-video.mp4',
   },
-], '/ts-thing-logos/bellagio.svg');
+], 'https://cdn.example/mark.svg');
 assert.equal(mislabeledNightVideo.kind, 'video');
 
 const model = buildStyle2Model(shared, bindings, 'https://vacation-staging.timesyncher.com');
@@ -620,8 +603,8 @@ assert.doesNotMatch(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
 assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
-assert.match(patchedAe, /img.tiny-logo,img.thing-logo/);
-assert.match(patchedAe, /data-logo-inlined/);
+assert.match(patchedAe, /return named\|\|""/);
+assert.doesNotMatch(patchedAe, /img\.tiny-logo,img\.thing-logo/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);

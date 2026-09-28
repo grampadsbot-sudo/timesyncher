@@ -255,7 +255,7 @@ async function drive() {
     slider: has(text, 'Vacation Day View') && has(text, 'Day 1') && !has(text, 'No timeline-tagged things yet for this day'),
     maps: has(text, 'Only things tagged for this day'),
     voice: await page.evaluate(() => Boolean(document.querySelector('[aria-label="Record voice note"]'))),
-    logos: await page.evaluate(() => [...document.querySelectorAll('img')].some((img) => img.src.includes('/ts-thing-logos/'))),
+    logos: await page.evaluate(() => [...document.querySelectorAll('img.tiny-logo, img.thing-logo, .thing-emoji')].length > 0),
     navigation: has(text, 'Open navigation') || has(text, 'Close navigation'),
     settings: has(text, 'Mapbox') || has(text, 'Copy link'),
     empty: has(text, 'No timeline-tagged things yet') || has(text, 'match those tags'),
