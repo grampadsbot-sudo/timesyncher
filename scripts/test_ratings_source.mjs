@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { applyThingPresentation, ratingsFromThingRecord, sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
-import { padKeepsakeSharedPlaces } from '../src/vacation/keepsake-list-minimums.mjs';
-import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
+import { ratingsFromThingRecord, sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 
 const RATING_KEYS = ['googleRating', 'yelpRating', 'thirdPartyRating', 'review1', 'review2', 'review3'];
 const trip = {
@@ -13,8 +11,8 @@ const trip = {
   end_date: '2026-04-05',
 };
 
-function presentThing(ratings, title = 'Dinner', metadata = {}) {
-  const thing = thingRecordFromTripRow({
+function fixtureThing(ratings, title = 'Dinner', metadata = {}) {
+  return thingRecordFromTripRow({
     id: title,
     category: 'activity',
     title,
@@ -22,20 +20,19 @@ function presentThing(ratings, title = 'Dinner', metadata = {}) {
     metadata,
     ratings,
   });
-  const shared = padKeepsakeSharedPlaces(sharedTripFromIntake({ trip, things: [thing] }));
-  return applyCapturedLogos(applyThingPresentation(shared, { windBackup: '' }));
 }
 
-function dinnerOf(presented) {
-  const place = presented.places.find((row) => row.name === 'Dinner');
-  assert.ok(place, 'Dinner place');
-  const extra = presented.thingOverrides[`place:${place.id}`];
-  assert.ok(extra, 'Dinner override');
-  const assigned = Object.values(presented.assignments || {})
+function intakeOf(ratings, title = 'Dinner', metadata = {}) {
+  const shared = sharedTripFromIntake({ trip, things: [fixtureThing(ratings, title, metadata)] });
+  assert.equal(shared.places.length, 1);
+  const place = shared.places[0];
+  assert.equal(place.name, title);
+  const assigned = Object.values(shared.assignments || {})
     .flat()
     .map((row) => row.place)
-    .filter((row) => row && row.name === 'Dinner');
-  return { place, extra, assigned };
+    .filter((row) => row && row.name === title);
+  assert.equal(assigned.length > 0, true);
+  return { place, assigned };
 }
 
 function assertNoRatingValues(rows) {
@@ -55,28 +52,18 @@ function test(name, fn) {
 test('D2 google-places rows rejected', () => {
   const quote = 'A Google Places quote that must not ship';
   for (const source of ['google-places', 'Google-Places', 'google_places', 'Google Places']) {
-    const presented = presentThing({
-      source,
-      googleRating: '4.9',
-      yelpRating: '4.1',
-      thirdPartyRating: '4.7',
-      review1: quote,
-      review2: quote,
-      review3: quote,
-    });
-    const { place, extra, assigned } = dinnerOf(presented);
-    assert.equal(extra.ratingsSourceState, 'rejected: google-places');
+    const record = { source, googleRating: '4.9', yelpRating: '4.1', thirdPartyRating: '4.7', review1: quote, review2: quote, review3: quote };
+    const direct = ratingsFromThingRecord({ ratings: record });
+    assert.equal(direct.ratingsSourceState, 'rejected: google-places');
+    assert.equal(direct.ratingsSource, undefined);
+    assertNoRatingValues([direct]);
+    const { place, assigned } = intakeOf(record);
     assert.equal(place.ratings.source, 'google-places');
     assert.equal(place.ratings.ratingsSourceState, 'rejected: google-places');
-    assert.equal(extra.ratingsSource, undefined);
-    assertNoRatingValues([extra, place, ...assigned]);
-    assert.equal(JSON.stringify(presented).includes(quote), false);
-    assert.equal(JSON.stringify(presented).includes('4.9'), false);
+    assertNoRatingValues([place, place.ratings, ...assigned, ...assigned.map((row) => row.ratings)]);
+    assert.equal(JSON.stringify(place).includes(quote), false);
+    assert.equal(JSON.stringify(place).includes('4.9'), false);
   }
-  const direct = ratingsFromThingRecord({ source: 'google-places', googleRating: '4.9', review1: quote });
-  assert.equal(direct.ratingsSourceState, 'rejected: google-places');
-  assert.equal(direct.googleRating, undefined);
-  assert.equal(direct.review1, undefined);
 });
 
 test('D2 missing ratings source is loud', () => {
@@ -90,25 +77,17 @@ test('D2 missing ratings source is loud', () => {
     { googleRating: '4.8', yelpRating: '3.2', review1: unsourced },
   ];
   for (const ratings of cases) {
-    const presented = presentThing(ratings, 'Dinner', { source: 'long-intake' });
-    const { place, extra, assigned } = dinnerOf(presented);
-    assert.equal(extra.ratingsSourceState, 'no ratings source', JSON.stringify(ratings));
+    const direct = ratingsFromThingRecord(ratings && typeof ratings === 'object' ? { ratings } : {});
+    assert.equal(direct.ratingsSourceState, 'no ratings source', JSON.stringify(ratings));
+    assertNoRatingValues([direct]);
+    const { place, assigned } = intakeOf(ratings, 'Dinner', { source: 'long-intake' });
     assert.equal(place.ratings.ratingsSourceState, 'no ratings source');
     assert.equal(place.ratings.source, undefined);
-    assert.equal(extra.googleRating, undefined);
-    assert.notEqual(extra.googleRating, '');
-    assertNoRatingValues([extra, place, ...assigned]);
-    assert.equal(JSON.stringify(presented).includes(unsourced), false);
-    assert.equal(JSON.stringify(presented).includes('4.8'), false);
+    assert.notEqual(place.ratings.googleRating, '');
+    assertNoRatingValues([place, place.ratings, ...assigned]);
+    assert.equal(JSON.stringify(place).includes(unsourced), false);
+    assert.equal(JSON.stringify(place).includes('4.8'), false);
   }
-  const direct = ratingsFromThingRecord({ googleRating: '4.8', review1: unsourced });
-  assert.equal(direct.ratingsSourceState, 'no ratings source');
-  assert.equal(direct.googleRating, undefined);
-  const shuttle = presentThing({ source: 'tavily', review1: 'kept' });
-  const invented = shuttle.places.find((row) => row.name === 'SpeediShuttle');
-  const inventedExtra = shuttle.thingOverrides[`place:${invented.id}`];
-  assert.equal(inventedExtra.ratingsSourceState, 'no ratings source');
-  assertNoRatingValues([inventedExtra, invented]);
 });
 
 test('D2 sourced rows pass through', () => {
@@ -133,49 +112,38 @@ test('D2 sourced rows pass through', () => {
     },
   ];
   for (const row of cases) {
-    const presented = presentThing(row.ratings);
-    const { place, extra, assigned } = dinnerOf(presented);
-    assert.equal(extra.ratingsSource, row.source);
-    assert.equal(extra.ratingsSourceState, undefined);
+    const direct = ratingsFromThingRecord({ ratings: row.ratings });
+    const { place, assigned } = intakeOf(row.ratings);
+    assert.equal(direct.ratingsSource, row.source);
+    assert.equal(direct.ratingsSourceState, undefined);
     assert.equal(place.ratings.source, row.source);
     for (const [key, value] of Object.entries(row.expect)) {
-      assert.equal(extra[key], value, `${row.source} ${key}`);
+      assert.equal(direct[key], value, `${row.source} ${key}`);
       assert.equal(place.ratings[key], value, `${row.source} place ${key}`);
       for (const assignedPlace of assigned) assert.equal(assignedPlace.ratings[key], value);
     }
     for (const key of row.absent) {
-      assert.equal(extra[key], undefined, `${row.source} absent ${key}`);
+      assert.equal(direct[key], undefined, `${row.source} absent ${key}`);
       assert.equal(place.ratings[key], undefined);
     }
-    const direct = ratingsFromThingRecord({ ratings: row.ratings });
-    assert.equal(direct.ratingsSource, row.source);
-    for (const [key, value] of Object.entries(row.expect)) assert.equal(direct[key], value);
   }
-  const bare = dinnerOf(presentThing({ source: 'brave' }));
-  assert.equal(bare.extra.ratingsSource, 'brave');
-  assert.equal(bare.extra.ratingsSourceState, undefined);
-  assertNoRatingValues([bare.extra, bare.place, ...bare.assigned]);
+  const bare = ratingsFromThingRecord({ ratings: { source: 'brave' } });
+  const barePlace = intakeOf({ source: 'brave' });
+  assert.equal(bare.ratingsSource, 'brave');
+  assert.equal(bare.ratingsSourceState, undefined);
+  assert.equal(barePlace.place.ratings.source, 'brave');
+  assertNoRatingValues([bare, barePlace.place, barePlace.place.ratings, ...barePlace.assigned]);
 });
 
 test('D2 side map is not a ratings source', () => {
-  const thing = thingRecordFromTripRow({
-    id: 'Dinner',
-    category: 'activity',
-    title: 'Dinner',
-    description: '',
-    metadata: { source: 'long-intake' },
-    ratings: {},
-  });
-  const shared = sharedTripFromIntake({ trip, things: [thing] });
-  const presented = applyThingPresentation(shared, {
-    sourcedRatings: { Dinner: { source: 'brave', googleRating: '5.0', review1: 'from the side map' } },
-  });
-  const { extra, place } = dinnerOf(presented);
-  assert.equal(extra.ratingsSourceState, 'no ratings source');
-  assert.equal(extra.googleRating, undefined);
+  const { place } = intakeOf({}, 'Dinner', { source: 'long-intake' });
+  assert.equal(place.ratings.ratingsSourceState, 'no ratings source');
   assert.equal(place.ratings.googleRating, undefined);
-  assert.equal(JSON.stringify(presented).includes('from the side map'), false);
-  assert.equal(JSON.stringify(presented).includes('5.0'), false);
+  assert.equal(JSON.stringify(place).includes('from the side map'), false);
+  assert.equal(JSON.stringify(place).includes('5.0'), false);
+  const intake = readFileSync(new URL('../src/vacation/intake-shared-trip.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(intake, /sourcedRatings/);
+  assert.doesNotMatch(intake, /options\.sourcedRatings/);
 });
 
 test('D2 blank ratings cannot return', () => {
@@ -202,6 +170,7 @@ test('D2 blank ratings cannot return', () => {
   assert.equal(mapped.ratings.source, 'brave');
   assert.equal(mapped.ratings.review1, 'Row quote');
   assert.equal(mapped.source, undefined);
+  assert.equal(mapped.description, 'From the row');
 });
 
 process.stdout.write('ratings source tests passed\n');
