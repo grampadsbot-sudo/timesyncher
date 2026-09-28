@@ -3,7 +3,9 @@
   "git": {
     "deploymentEnabled": {
       "cursor/*": false,
-      "cursor/**": false
+      "cursor/**": false,
+      "ci/*": false,
+      "ci/**": false
     }
   },
   "routes": [
