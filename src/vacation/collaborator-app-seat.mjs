@@ -24,12 +24,28 @@ export function transcriptCustomerId(session) {
   return seatFromSession(session)?.ownerCustomerId || session?.customer_id || null;
 }
 
-export function seatJoinCustomerText(seat) {
-  const name = clean(seat?.displayName, 180) || 'Collaborator';
-  const paid = String(seat?.payer || 'owner') === 'owner'
-    ? `${name}: Craig paid for this seat with the coupon.`
-    : `${name} paid for my own seat with the coupon.`;
-  return `${paid} I accepted the EULA terms and clicked join. Keep us on the Big Island.`;
+export function collaboratorSeatJoinEvent(seat) {
+  if (!seat?.ownerCustomerId || !seat?.ownerTripId) {
+    throw Object.assign(new Error('Only a collaborator seat records a join.'), { statusCode: 403 });
+  }
+  return {
+    speaker: 'system',
+    direction: 'system',
+    channel: 'vacation-app',
+    body: '',
+    payload: {
+      source: 'collaborator_seat_join',
+      event: 'collaborator_seat_join',
+      seat: {
+        displayName: clean(seat.displayName, 180) || null,
+        payer: clean(seat.payer, 40) || null,
+        inviteId: clean(seat.inviteId, 80) || null,
+        role: clean(seat.role, 40) || 'collaborator',
+        ownerCustomerId: seat.ownerCustomerId,
+        ownerTripId: seat.ownerTripId,
+      },
+    },
+  };
 }
 
 export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, seats } = {}) {

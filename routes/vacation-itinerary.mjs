@@ -47,7 +47,7 @@ import {
   openCollaboratorAppSeats,
   recordDialogParty,
   seatFromSession,
-  seatJoinCustomerText,
+  collaboratorSeatJoinEvent,
   transcriptCustomerId,
 } from '../src/vacation/collaborator-app-seat.mjs';
 
@@ -1001,14 +1001,22 @@ async function handleVacationApp(req, res, db, url) {
     if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
-      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records pay, EULA, and join.' });
-      const text = seatJoinCustomerText(seat);
+      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
+      const event = collaboratorSeatJoinEvent(seat);
       const prior = await loadVacationAppTurns(db, session, selected.id);
-      if (prior.some((turn) => turn.speaker === 'customer' && String(turn.body || '').includes(text))) {
+      if (prior.some((turn) => turn.speaker === 'system' && turn.payload?.event === 'collaborator_seat_join')) {
         return sendJson(res, 200, { ok: true, status: 'already_joined', reply: null });
       }
-      const queuedJoin = await queueVacationAppTurn(db, session, selected, { text, modality: 'text' });
-      return sendJson(res, queuedJoin.ok ? 201 : 502, { trip: selected, ...queuedJoin });
+      await db`
+        insert into transcript_turns (
+          customer_id, trip_id, speaker, channel, body, payload, direction, sent_at
+        )
+        values (
+          ${transcriptCustomerId(session)}, ${selected.id}, ${event.speaker}, ${event.channel}, ${event.body},
+          ${event.payload}, ${event.direction}, now()
+        )
+      `;
+      return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
     const queued = await queueVacationAppTurn(db, session, selected, body);
     return sendJson(res, queued.ok ? 201 : 502, {

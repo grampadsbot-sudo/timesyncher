@@ -8,6 +8,7 @@ import { getSessionByToken, siteBase, vacationEulaStatus } from '../src/vacation
 import { blockHighAuthorityRequest } from '../src/safety/high-authority-actions.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
 import {
+  COLLABORATOR_PLANS,
   activeCollaboratorForTelegram,
   acceptCollaboratorInvite,
   collaboratorCheckoutCopy,
@@ -30,14 +31,6 @@ const MAX_VIDEO_SECONDS = 120;
 
 function displayName(user = {}) {
   return cleanText([user.firstName || user.first_name, user.lastName || user.last_name].filter(Boolean).join(' ') || user.username || `telegram:${user.id}`, 160);
-}
-
-function escapeHtml(value = '') {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 async function findSessionForTelegram(db, telegramChatId, telegramUserId) {
@@ -590,11 +583,17 @@ function isConcreteItineraryQuestion(value = '') {
     && /\b(vacation|trip|itinerary|hotel|hotels|flight|flights|restaurant|restaurants|activity|activities|things to do|destination)\b/.test(normalized);
 }
 
+function customerAsksForWebsiteLink(normalized) {
+  return /\b(send|share|show|give|need|where|what|open)\b/.test(normalized)
+    && /\b(website|web site|site|link|url)\b/.test(normalized)
+    && /\b(vacation|trip|itinerary)\b/.test(normalized);
+}
+
 export function vacationSupportIntent(text) {
   const normalized = cleanText(text, 2000).toLowerCase();
   if (!normalized || /^\/start\b/i.test(normalized)) return null;
   if (!isQuestionLike(normalized) || isConcreteItineraryQuestion(normalized)) return null;
-  if (/\b(send|share|show|give|need|where|what|open)\b/.test(normalized) && /\b(website|web site|site|link|url)\b/.test(normalized) && /\b(vacation|trip|itinerary)\b/.test(normalized)) {
+  if (customerAsksForWebsiteLink(normalized)) {
     return { intent: 'website_link_question', shouldQueueWorker: false, confidence: 0.95, answerMode: 'account_state' };
   }
   if (/\b(upload|add|send|post|attach)\b/.test(normalized) && /\b(pic|pics|photo|photos|picture|pictures|video|videos|media)\b/.test(normalized)) {
@@ -1343,108 +1342,145 @@ export function ownerMediaCheckoutUrl(session, env = process.env) {
   return token ? `${base}?session=${encodeURIComponent(token)}` : base;
 }
 
-export function vacationSupportReply({ text, intent, access }) {
+function personMatches(personNeedle, values) {
+  return values.filter(Boolean).join(' ').toLowerCase().includes(personNeedle);
+}
+
+export function supportReplyFacts({ text, intent, access, env = process.env } = {}) {
   const normalized = cleanText(text, 2000).toLowerCase();
-  const asksForWebsiteLink = /\b(send|share|show|give|need|where|what|open)\b/.test(normalized)
-    && /\b(website|web site|site|link|url)\b/.test(normalized)
-    && /\b(vacation|trip|itinerary|vegas|las vegas|strip)\b/.test(normalized);
-  if (intent?.intent === 'website_link_question' || (intent?.intent === 'support_question' && asksForWebsiteLink)) {
-    if (!access?.linked) {
-      return [
-        'I do not see a linked TimeSyncher Vacation purchase for this Telegram chat yet.',
-        '',
-        'Use the Telegram link from the checkout email first, then I can send the vacation website link for this account.',
-      ].join('\n');
-    }
-    const label = cleanText(access?.trip?.title || 'this vacation', 180);
-    const url = cleanText(access?.telegramWebAccess?.launchUrl || access?.trip?.publicUrl, 800);
-    if (!url) return `I found the linked account, but I could not find the website link for ${label} yet.`;
-    const role = cleanText(access?.telegramWebAccess?.role, 80);
-    if (role === 'owner' || role === 'telegram_collaborator') {
-      return `Here is the ${escapeHtml(label)} website for this Telegram account: <a href="${escapeHtml(url)}">click this link</a>`;
-    }
-    return `Here is the ${label} website link:\n\n${url}`;
+  const intentName = cleanText(intent?.intent, 80) || null;
+  const linked = Boolean(access?.linked);
+  const tripTitle = cleanText(access?.trip?.title, 180) || null;
+  const facts = {
+    customerText: cleanText(text, 2000),
+    intent: intentName,
+    linked,
+    trip: linked ? {
+      title: tripTitle,
+      publicUrl: cleanText(access?.trip?.publicUrl || access?.telegramWebAccess?.publicUrl, 800) || null,
+      launchUrl: cleanText(access?.telegramWebAccess?.launchUrl, 800) || null,
+      role: cleanText(access?.telegramWebAccess?.role, 80) || null,
+    } : null,
+  };
+  if (intentName === 'website_link_question' || (intentName === 'support_question' && customerAsksForWebsiteLink(normalized))) {
+    facts.ask = 'website_link';
+    return facts;
   }
-  if (intent?.intent === 'media_upload_question') {
-    if (!access?.linked) {
-      return [
-        'I do not see a linked TimeSyncher Vacation purchase for this Telegram chat yet.',
-        '',
-        'Use the Telegram link from the checkout email first, then this chat can check and use photo/video upload access.',
-      ].join('\n');
-    }
+  if (intentName === 'media_upload_question') {
     const asksPhoto = /\b(pic|pics|photo|photos|picture|pictures|media)\b/.test(normalized);
     const asksVideo = /\b(video|videos|media)\b/.test(normalized);
-    const photoOk = !asksPhoto || access.hasPhotoUpload;
-    const videoOk = !asksVideo || access.hasVideoUpload;
-    if (photoOk && videoOk) {
-      return 'Yes. This linked TimeSyncher Vacation chat has the needed photo/video upload access. Send the pics or videos here, and I will attach them to the Vegas vacation.';
-    }
-    return [
-      'Not yet. This chat is linked, but I do not see the needed photo/video upload add-on active for this account.',
-      '',
-      `Use the owner media add-on checkout here: ${ownerMediaCheckoutUrl(access?.session, process.env)}`,
-    ].join('\n');
+    const allowed = (!asksPhoto || Boolean(access?.hasPhotoUpload)) && (!asksVideo || Boolean(access?.hasVideoUpload));
+    facts.ask = 'media_upload';
+    facts.media = {
+      asksPhoto,
+      asksVideo,
+      hasPhotoUpload: Boolean(access?.hasPhotoUpload),
+      hasVideoUpload: Boolean(access?.hasVideoUpload),
+      allowed,
+      checkoutUrl: linked && !allowed ? ownerMediaCheckoutUrl(access?.session, env) : null,
+    };
+    return facts;
   }
-  if (intent?.intent === 'collaborator_access_question') {
+  if (intentName === 'collaborator_access_question') {
+    facts.ask = 'collaborator_access';
     if (collaboratorStatusQuestion(normalized)) {
-      if (!access?.linked) {
-        return [
-          'I do not see a linked TimeSyncher Vacation purchase for this Telegram chat yet.',
-          '',
-          'Use the Telegram link from the checkout email first, then I can check collaborator access for this account.',
-        ].join('\n');
-      }
-      let person = accessPersonName(text);
-      const label = cleanText(access?.trip?.title || 'this vacation', 180);
-      const grants = access.websiteEditorGrants || [];
+      let person = accessPersonName(text, env);
+      const grants = Array.isArray(access?.websiteEditorGrants) ? access.websiteEditorGrants : [];
       if (/^your (wife|husband|spouse|partner)$/i.test(person) && grants.length === 1 && cleanText(grants[0].displayName, 80)) {
         person = cleanText(grants[0].displayName, 80);
       }
       const personNeedle = person.toLowerCase();
-      const telegramCollaborator = (access.activeTelegramCollaborators || []).some((collaborator) => [
+      const telegramCollaborator = (access?.activeTelegramCollaborators || []).some((collaborator) => personMatches(personNeedle, [
         collaborator.displayName,
         collaborator.telegramChatId,
         collaborator.telegramUserId,
-      ].filter(Boolean).join(' ').toLowerCase().includes(personNeedle));
-      const webEditorGrant = grants.find((grant) => [
-        grant.displayName,
-        grant.email,
-      ].filter(Boolean).join(' ').toLowerCase().includes(personNeedle));
-      if (telegramCollaborator) return `Yes, ${person} is a Telegram collaborator on ${label}.`;
-      const webCopy = webEditorGrant
-        ? (webEditorGrant.status === 'accepted'
-          ? ` ${person} has accepted the website editor invite, but website editing and Telegram collaboration are separate.`
-          : ` ${person} has been sent a website editor invite, but website editing and Telegram collaboration are separate.`)
-        : ' Website editing and Telegram collaboration are separate.';
-      return `No, ${person} is not a Telegram collaborator on ${label} yet.${webCopy}`;
+      ]));
+      const webEditorGrant = grants.find((grant) => personMatches(personNeedle, [grant.displayName, grant.email]));
+      facts.collaborator = {
+        statusQuestion: true,
+        person,
+        telegramCollaborator,
+        webEditor: webEditorGrant ? {
+          displayName: cleanText(webEditorGrant.displayName, 80) || null,
+          status: cleanText(webEditorGrant.status, 80) || null,
+          role: cleanText(webEditorGrant.role, 80) || null,
+        } : null,
+        tripTitle,
+      };
+      return facts;
     }
-    return collaboratorCheckoutCopy();
+    facts.collaborator = {
+      statusQuestion: false,
+      plans: Object.values(COLLABORATOR_PLANS).map((plan) => ({
+        code: plan.code,
+        scope: plan.scope,
+        amountCents: plan.amountCents,
+        maxActiveCollaborators: plan.maxActiveCollaborators,
+      })),
+    };
+    return facts;
   }
-  if (intent?.intent === 'account_question') {
-    if (!access?.linked) {
-      return [
-        'I do not see a linked TimeSyncher Vacation purchase for this Telegram chat yet.',
-        '',
-        'Use the Telegram link from the checkout email, then I can check whether the account has single-vacation or unlimited access.',
-      ].join('\n');
-    }
-    if (access.hasUnlimited) {
-      return 'Yes. This Telegram chat is linked to an active unlimited TimeSyncher Vacation plan.';
-    }
-    if (access.activeCount > 0) {
-      return 'This Telegram chat is linked to an active single-vacation TimeSyncher Vacation plan. I do not see unlimited access on this account.';
-    }
-    return [
-      'I see this Telegram chat is linked to a TimeSyncher Vacation customer, but I do not see an active vacation entitlement yet.',
-      '',
-      'Use the checkout link from the purchase flow, or send the order context here and I can check again.',
-    ].join('\n');
+  if (intentName === 'account_question') {
+    facts.ask = 'account';
+    facts.plan = {
+      hasUnlimited: Boolean(access?.hasUnlimited),
+      activeCount: Number(access?.activeCount) || 0,
+      activePlan: cleanText(access?.activePlan, 80) || null,
+    };
+    return facts;
   }
   if (/\b(book|booking|reserve|reservation|purchase|pay for|hold)\b/.test(normalized)) {
-    return 'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.';
+    facts.ask = 'booking';
+    facts.booksForCustomer = false;
+    return facts;
   }
-  return 'I can help with that. Ask the support question here, or tell me clearly if you want me to start or update a vacation itinerary.';
+  facts.ask = intentName || 'support';
+  return facts;
+}
+
+export async function modelSupportReply(facts, { env = process.env, fetchImpl = fetch } = {}) {
+  const apiKey = cleanText(env.TIMESYNCHER_XAI_API_KEY || env.XAI_API_KEY, 500);
+  if (!apiKey) {
+    const error = new Error('Telegram support reply refused: live model key is missing.');
+    error.statusCode = 502;
+    throw error;
+  }
+  const model = cleanText(env.TIMESYNCHER_XAI_ROUTER_MODEL || env.TIMESYNCHER_XAI_SUMMARY_MODEL || env.XAI_MODEL, 120) || 'grok-4';
+  const response = await fetchImpl('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: 'Answer the customer using only the JSON facts. When linked is true, the linked trip name is trip.title. Do not substitute another trip or place. Do not invent people, prices, links, or places. If a fact you need is null, ask for it. Return only the reply.',
+        },
+        { role: 'user', content: JSON.stringify(facts) },
+      ],
+    }),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(json.error?.message || `Telegram support reply model HTTP ${response.status}`);
+    error.statusCode = 502;
+    throw error;
+  }
+  const reply = String(json.choices?.[0]?.message?.content || '').trim();
+  if (!reply) {
+    const error = new Error('Telegram support reply model returned no text.');
+    error.statusCode = 502;
+    throw error;
+  }
+  return reply;
+}
+
+export async function vacationSupportReply({ text, intent, access, env = process.env, fetchImpl = fetch } = {}) {
+  return modelSupportReply(supportReplyFacts({ text, intent, access, env }), { env, fetchImpl });
 }
 
 async function ownerHasUnlimitedVacationPlan(db, session) {
@@ -2036,7 +2072,7 @@ export default async function handler(req, res) {
       reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
     } else if (supportIntent) {
       const access = await vacationAccessSummary(db, session, { telegramChatId, telegramUserId, payload: body.payload || {}, text });
-      reply = vacationSupportReply({ text, intent: supportIntent, access });
+      reply = await vacationSupportReply({ text, intent: supportIntent, access });
       replyPayload = {
         supportRouter: {
           intent: supportIntent.intent,

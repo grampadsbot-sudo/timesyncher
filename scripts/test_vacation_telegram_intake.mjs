@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 
 import {
   ensureJevResponseCoverage,
@@ -16,6 +17,28 @@ import {
 
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
+}
+const modelEnv = { TIMESYNCHER_XAI_API_KEY: 'test-key' };
+
+function supportModel(replyText) {
+  const calls = [];
+  return {
+    calls,
+    fetchImpl: async (_url, options) => {
+      calls.push(JSON.parse(options.body));
+      return {
+        ok: true,
+        async json() {
+          return { choices: [{ message: { content: replyText } }] };
+        },
+      };
+    },
+  };
+}
+
+function factsFrom(call) {
+  const user = call.messages.find((message) => message.role === 'user');
+  return JSON.parse(user.content);
 }
 
 const screenshotTranscript = [
@@ -54,36 +77,61 @@ const unlimitedQuestion = vacationSupportIntent('Do I have unlimited vacations?'
 assert.equal(unlimitedQuestion.intent, 'account_question');
 assert.equal(unlimitedQuestion.shouldQueueWorker, false);
 
+const unlimitedModel = supportModel('model-unlimited');
 assert.equal(
-  vacationSupportReply({
+  await vacationSupportReply({
     text: 'Do I have unlimited vacations?',
     intent: unlimitedQuestion,
     access: { linked: true, hasUnlimited: true, activePlan: 'unlimited', activeCount: 1 },
+    env: modelEnv,
+    fetchImpl: unlimitedModel.fetchImpl,
   }),
-  'Yes. This Telegram chat is linked to an active unlimited TimeSyncher Vacation plan.',
+  'model-unlimited',
 );
+assert.equal(factsFrom(unlimitedModel.calls[0]).plan.hasUnlimited, true);
+assert.equal(factsFrom(unlimitedModel.calls[0]).plan.activePlan, 'unlimited');
+assert.equal(unlimitedModel.calls[0].messages[0].role, 'system');
+assert.doesNotMatch(unlimitedModel.calls[0].messages[0].content, /Vegas|Big Island|Kailua-Kona|Waikiki/i);
 
-assert.match(
-  vacationSupportReply({
+const singlePlanModel = supportModel('model-single');
+assert.equal(
+  await vacationSupportReply({
     text: 'Do I have unlimited vacations?',
     intent: unlimitedQuestion,
-    access: { linked: true, hasUnlimited: false, activePlan: 'single', activeCount: 1 },
+    access: { linked: true, hasUnlimited: false, activePlan: 'single', activeCount: 1, trip: { title: 'Harbor Week' } },
+    env: modelEnv,
+    fetchImpl: singlePlanModel.fetchImpl,
   }),
-  /single-vacation TimeSyncher Vacation plan/i,
+  'model-single',
 );
+assert.equal(factsFrom(singlePlanModel.calls[0]).plan.hasUnlimited, false);
+assert.equal(factsFrom(singlePlanModel.calls[0]).plan.activeCount, 1);
+assert.equal(factsFrom(singlePlanModel.calls[0]).trip.title, 'Harbor Week');
 
 const bookingQuestion = vacationSupportIntent('Can you book flights for me?');
 assert.equal(bookingQuestion.intent, 'support_question');
 assert.equal(bookingQuestion.shouldQueueWorker, false);
-assert.match(
-  vacationSupportReply({ text: 'Can you book flights for me?', intent: bookingQuestion, access: { linked: true } }),
-  /Customers verify details and make any bookings themselves/i,
+const bookingModel = supportModel('model-booking');
+assert.equal(
+  await vacationSupportReply({
+    text: 'Can you book flights for me?',
+    intent: bookingQuestion,
+    access: { linked: true, trip: { title: 'Harbor Week' } },
+    env: modelEnv,
+    fetchImpl: bookingModel.fetchImpl,
+  }),
+  'model-booking',
 );
+assert.equal(factsFrom(bookingModel.calls[0]).ask, 'booking');
+assert.equal(factsFrom(bookingModel.calls[0]).booksForCustomer, false);
+assert.equal(factsFrom(bookingModel.calls[0]).trip.title, 'Harbor Week');
 
 const websiteLinkQuestion = vacationSupportIntent('Can you send me the link to the Vegas vacation?');
 assert.equal(websiteLinkQuestion.intent, 'website_link_question');
 assert.equal(websiteLinkQuestion.shouldQueueWorker, false);
-const websiteLinkReply = vacationSupportReply({
+const websiteModel = supportModel('model-website');
+const launchUrl = 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=owner-token&redirect=https%3A%2F%2Fvacation-staging.timesyncher.com%2Fshared%2Flas-vegas-strip-vacation%2F';
+const websiteLinkReply = await vacationSupportReply({
   text: 'Can you send me the link to the Vegas vacation?',
   intent: websiteLinkQuestion,
   access: {
@@ -94,64 +142,83 @@ const websiteLinkReply = vacationSupportReply({
     },
     telegramWebAccess: {
       role: 'owner',
-      launchUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=owner-token&redirect=https%3A%2F%2Fvacation-staging.timesyncher.com%2Fshared%2Flas-vegas-strip-vacation%2F',
+      launchUrl,
     },
   },
+  env: modelEnv,
+  fetchImpl: websiteModel.fetchImpl,
 });
-assert.match(websiteLinkReply, /<a href="https:\/\/vacation-staging\.timesyncher\.com\/api\/vacation-web-access\?action=telegram_launch[^"]+">click this link<\/a>/i);
-assert.doesNotMatch(websiteLinkReply, /Opening that link from Telegram/i);
+assert.equal(websiteLinkReply, 'model-website');
+const websiteFacts = factsFrom(websiteModel.calls[0]);
+assert.equal(websiteFacts.ask, 'website_link');
+assert.equal(websiteFacts.trip.title, 'Las Vegas Strip Vacation');
+assert.equal(websiteFacts.trip.launchUrl, launchUrl);
+assert.equal(websiteFacts.trip.role, 'owner');
+assert.doesNotMatch(websiteModel.calls[0].messages[0].content, /the Vegas vacation/i);
 
 const mediaQuestion = vacationSupportIntent('Am I able to upload pics and videos to the Vegas vacation?');
 assert.equal(mediaQuestion.intent, 'media_upload_question');
 assert.equal(mediaQuestion.shouldQueueWorker, false);
-assert.match(
-  vacationSupportReply({
+const mediaAllowedModel = supportModel('model-media-yes');
+assert.equal(
+  await vacationSupportReply({
     text: 'Am I able to upload pics and videos to the Vegas vacation?',
     intent: mediaQuestion,
-    access: { linked: true, hasPhotoUpload: true, hasVideoUpload: true },
+    access: { linked: true, hasPhotoUpload: true, hasVideoUpload: true, trip: { title: 'Harbor Week' } },
+    env: modelEnv,
+    fetchImpl: mediaAllowedModel.fetchImpl,
   }),
-  /Yes.*photo\/video upload access/i,
+  'model-media-yes',
 );
-assert.doesNotMatch(
-  vacationSupportReply({
-    text: 'Am I able to upload pics and videos to the Vegas vacation?',
-    intent: mediaQuestion,
-    access: { linked: true, hasPhotoUpload: true, hasVideoUpload: true },
-  }),
-  /first pass|turning the information/i,
-);
-assert.match(
-  vacationSupportReply({
-    text: 'Am I able to upload pics and videos to the Vegas vacation?',
-    intent: mediaQuestion,
-    access: { linked: true, hasPhotoUpload: false, hasVideoUpload: false, session: { token: 'owner-token-123' } },
-  }),
-  /owner-media-checkout\.html\?session=owner-token-123/i,
-);
-assert.match(
-  vacationSupportReply({
-    text: 'Am I able to upload pics and videos to the Vegas vacation?',
-    intent: mediaQuestion,
-    access: { linked: true, hasPhotoUpload: false, hasVideoUpload: false, session: { onboardingToken: 'joined-token-456' } },
-  }),
-  /owner-media-checkout\.html\?session=joined-token-456/i,
-);
+const mediaAllowedFacts = factsFrom(mediaAllowedModel.calls[0]);
+assert.equal(mediaAllowedFacts.ask, 'media_upload');
+assert.equal(mediaAllowedFacts.media.allowed, true);
+assert.equal(mediaAllowedFacts.media.checkoutUrl, null);
+assert.equal(mediaAllowedFacts.trip.title, 'Harbor Week');
+assert.doesNotMatch(JSON.stringify(mediaAllowedModel.calls[0].messages[0]), /the Vegas vacation/i);
+const mediaPhotoModel = supportModel('model-media-no');
+await vacationSupportReply({
+  text: 'Am I able to upload pics and videos to the Vegas vacation?',
+  intent: mediaQuestion,
+  access: { linked: true, hasPhotoUpload: false, hasVideoUpload: false, session: { token: 'owner-token-123' }, trip: { title: 'Harbor Week' } },
+  env: modelEnv,
+  fetchImpl: mediaPhotoModel.fetchImpl,
+});
+assert.match(factsFrom(mediaPhotoModel.calls[0]).media.checkoutUrl, /owner-media-checkout\.html\?session=owner-token-123/);
+const mediaJoinedModel = supportModel('model-media-joined');
+await vacationSupportReply({
+  text: 'Am I able to upload pics and videos to the Vegas vacation?',
+  intent: mediaQuestion,
+  access: { linked: true, hasPhotoUpload: false, hasVideoUpload: false, session: { onboardingToken: 'joined-token-456' }, trip: { title: 'Harbor Week' } },
+  env: modelEnv,
+  fetchImpl: mediaJoinedModel.fetchImpl,
+});
+assert.match(factsFrom(mediaJoinedModel.calls[0]).media.checkoutUrl, /owner-media-checkout\.html\?session=joined-token-456/);
 
-assert.match(
-  vacationSupportReply({
+const collaboratorPlansModel = supportModel('model-collaborator-plans');
+assert.equal(
+  await vacationSupportReply({
     text: 'Can my wife Kim change the Vegas site and upload videos?',
     intent: { intent: 'collaborator_access_question', shouldQueueWorker: false, confidence: 0.93 },
-    access: { linked: true },
+    access: { linked: true, trip: { title: 'Harbor Week' } },
+    env: modelEnv,
+    fetchImpl: collaboratorPlansModel.fetchImpl,
   }),
-  /Telegram editing for another person is a paid TimeSyncher Vacation add-on/i,
+  'model-collaborator-plans',
 );
+const collaboratorPlanFacts = factsFrom(collaboratorPlansModel.calls[0]);
+assert.equal(collaboratorPlanFacts.ask, 'collaborator_access');
+assert.equal(collaboratorPlanFacts.collaborator.statusQuestion, false);
+assert.ok(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.amountCents === 1500));
+assert.equal(collaboratorPlanFacts.trip.title, 'Harbor Week');
 
 const wifeTelegramCollaboratorStatusIntent = vacationSupportIntent('Is my wife already a telegram collaborator?');
 assert.equal(wifeTelegramCollaboratorStatusIntent.intent, 'collaborator_access_question');
 assert.equal(wifeTelegramCollaboratorStatusIntent.shouldQueueWorker, false);
 assert.equal(wifeTelegramCollaboratorStatusIntent.answerMode, 'account_state');
 
-const wifeTelegramCollaboratorStatusReply = vacationSupportReply({
+const wifeModel = supportModel('model-wife-status');
+const wifeTelegramCollaboratorStatusReply = await vacationSupportReply({
   text: 'Is my wife already a telegram collaborator?',
   intent: { intent: 'collaborator_access_question', shouldQueueWorker: false, confidence: 0.95, answerMode: 'account_state' },
   access: {
@@ -160,11 +227,29 @@ const wifeTelegramCollaboratorStatusReply = vacationSupportReply({
     activeTelegramCollaborators: [],
     websiteEditorGrants: [{ displayName: 'Kim', email: 'kdkona@gmail.com', role: 'web_editor', status: 'invited' }],
   },
+  env: modelEnv,
+  fetchImpl: wifeModel.fetchImpl,
 });
-assert.match(wifeTelegramCollaboratorStatusReply, /^No, Kim is not a Telegram collaborator on Las Vegas Strip Vacation yet/i);
-assert.match(wifeTelegramCollaboratorStatusReply, /website editor invite/i);
-assert.match(wifeTelegramCollaboratorStatusReply, /website editing and Telegram collaboration are separate/i);
-assert.doesNotMatch(wifeTelegramCollaboratorStatusReply, /could not verify|matching vacation|Yes\.|up to 3 people|Choose a Telegram add-on option/i);
+assert.equal(wifeTelegramCollaboratorStatusReply, 'model-wife-status');
+const wifeFacts = factsFrom(wifeModel.calls[0]);
+assert.equal(wifeFacts.collaborator.person, 'Kim');
+assert.equal(wifeFacts.collaborator.telegramCollaborator, false);
+assert.equal(wifeFacts.collaborator.webEditor.status, 'invited');
+assert.equal(wifeFacts.collaborator.tripTitle, 'Las Vegas Strip Vacation');
+assert.equal(wifeFacts.trip.title, 'Las Vegas Strip Vacation');
+
+await assert.rejects(
+  () => vacationSupportReply({
+    text: 'Do I have unlimited vacations?',
+    intent: unlimitedQuestion,
+    access: { linked: false },
+    env: {},
+    fetchImpl: async () => {
+      throw new Error('network should not be called');
+    },
+  }),
+  /live model key is missing/,
+);
 
 const mockedGrokFetch = async () => ({
   ok: true,
@@ -445,5 +530,14 @@ const telegramSource = fs.readFileSync(new URL('../routes/vacation-telegram-turn
 assert.equal(telegramSource.includes("[/\\bkona\\b|\\bbig island\\b/i, 'Kona/Big Island']"), false);
 assert.match(telegramSource, /classifyTripIntake/);
 assert.match(telegramSource, /classic Waikiki beach energy/);
+
+const telegramTurnSource = await readFile(new URL('../routes/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(telegramTurnSource, /the Vegas vacation/i);
+assert.doesNotMatch(telegramTurnSource, /seatJoinCustomerText/);
+assert.match(telegramTurnSource, /modelSupportReply/);
+const replyRulesSource = await readFile(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(replyRulesSource, /The first sentence is/);
+assert.doesNotMatch(replyRulesSource, /Welcome aboard, Kimberly/);
+assert.doesNotMatch(replyRulesSource, /Craig paid for this seat/);
 
 console.log('vacation telegram intake regression passed');

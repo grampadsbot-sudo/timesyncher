@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { ONBOARDING_OPENER_CHAT_ONLY } from '../src/vacation/live-app-turn.mjs';
-import { seatJoinCustomerText } from '../src/vacation/collaborator-app-seat.mjs';
+import { collaboratorSeatJoinEvent } from '../src/vacation/collaborator-app-seat.mjs';
 
 const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 assert.match(page, /TimeSyncher Vacation App/);
@@ -59,15 +59,31 @@ assert.ok(page.includes(ONBOARDING_OPENER_CHAT_ONLY.split('\n\n')[0]));
 assert.ok(page.includes('Tell me the trip basics'));
 assert.ok(page.includes('welcome them onto this vacation as collaborators'));
 assert.match(api, /seat-join/);
-assert.match(api, /seatJoinCustomerText/);
-assert.match(seatJoinCustomerText({ displayName: 'Kimberly Davidson', payer: 'owner' }), /paid/);
-assert.match(seatJoinCustomerText({ displayName: 'Kimberly Davidson', payer: 'owner' }), /coupon/);
-assert.match(seatJoinCustomerText({ displayName: 'Tyler Davidson', payer: 'tyler' }), /EULA terms/);
-assert.match(seatJoinCustomerText({ displayName: 'Lauren Davidson', payer: 'lauren' }), /clicked join/);
+assert.match(api, /collaboratorSeatJoinEvent/);
+assert.doesNotMatch(api, /seatJoinCustomerText/);
+assert.doesNotMatch(page, /seatJoinCustomerText/);
+const joined = collaboratorSeatJoinEvent({
+  displayName: 'A Collaborator',
+  payer: 'owner',
+  role: 'collaborator',
+  inviteId: 'invite-1',
+  ownerCustomerId: 'owner-1',
+  ownerTripId: 'trip-1',
+});
+assert.equal(joined.speaker, 'system');
+assert.equal(joined.direction, 'system');
+assert.equal(joined.body, '');
+assert.equal(joined.payload.event, 'collaborator_seat_join');
+assert.equal(joined.payload.source, 'collaborator_seat_join');
+assert.equal(joined.payload.seat.displayName, 'A Collaborator');
+assert.equal(joined.payload.seat.payer, 'owner');
+assert.doesNotMatch(JSON.stringify(joined), /Big Island|Kailua-Kona|Kimberly|Tyler|Lauren|Craig|Vegas|Waikiki|EULA terms|clicked join|coupon/i);
 assert.match(page, /action: 'seat-join'/);
+assert.match(page, /speaker !== 'system'/);
 const acceptEula = page.slice(page.indexOf('async function acceptEula'), page.indexOf('function renderApp'));
-assert.match(acceptEula, /status === 'interim'/);
-assert.match(acceptEula, /action: 'finish-rewrite'/);
+assert.match(acceptEula, /status !== 'joined'/);
+assert.match(acceptEula, /already_joined/);
+assert.doesNotMatch(acceptEula, /finish-rewrite/);
 assert.match(api, /ensureOnboardingOpener/);
 assert.match(api, /onboardingOpenerText/);
 assert.match(api, /FIXED_OPENER_REASON/);
