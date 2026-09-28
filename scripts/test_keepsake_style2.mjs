@@ -38,7 +38,7 @@ const shared = {
   trip: {
     id: 197,
     title: 'Las Vegas Vacation',
-    description: 'Anniversary weekend at the Bellagio with dinner, a show, Conservatory cocktails, Carbone, and Strip wandering.',
+    description: 'Notes from the trip record.',
   },
   days: [
     { id: 1236, day_number: 1 },
@@ -56,7 +56,7 @@ const shared = {
     { id: 8876, name: 'Cosmopolitan shops', category_name: 'Store', category_icon: 'ShoppingBag' },
     { id: 8871, name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction', category_icon: '🏛️' },
     { id: 8869, name: 'Las Vegas lodging research queue', category_name: 'Hotel', category_icon: '🏨' },
-    { id: 8877, name: 'SFO to LAS Thu Oct 9', category_name: 'Transport', category_icon: '🚌', address: 'SFO to LAS' },
+    { id: 8877, name: 'Sample transfer', category_name: 'Transport', category_icon: '🚌', address: 'Sample route' },
   ],
   assignments: {
     1237: [
@@ -104,6 +104,12 @@ const sampleShared = {
 };
 const sampleHtml = renderStyle2Html(sampleShared, [], { origin: 'https://example.test', shareToken: 'sample' });
 assert.match(sampleHtml, /data-thing-id="1"[^>]*>\s*<span class="thing-emoji">/);
+assert.match(sampleHtml, /<p class="muted">sample<\/p>/);
+const datedHtml = renderStyle2Html({
+  ...sampleShared,
+  trip: { ...sampleShared.trip, start_date: '1 Mar', end_date: '4 Mar' },
+}, [], { origin: 'https://example.test', shareToken: 'sample' });
+assert.match(datedHtml, /<p class="muted">1 Mar – 4 Mar · sample<\/p>/);
 assert.doesNotMatch(sampleHtml, /data-thing-id="1"[^>]*>\s*<img/);
 const sourcedHtml = renderStyle2Html({
   ...sampleShared,
@@ -119,7 +125,7 @@ for (const place of paddedLogos.places) {
 
 const summary = realTripSummary(shared);
 assert.equal(BOILERPLATE_RE.test(summary), false);
-assert.match(summary, /Bellagio|Carbone|anniversary/i);
+assert.match(summary, /Notes from the trip record/);
 
 const html = renderStyle2Html(shared, bindings, {
   origin: 'https://vacation-staging.timesyncher.com',
@@ -145,7 +151,7 @@ assert.match(html, /class="daily-grid"/);
 assert.match(html, /class="timeline-rail"/);
 assert.match(html, /data-maps="omitted"/);
 assert.match(html, /data-min-things="8"/);
-assert.match(html, /Anniversary weekend at the Bellagio/);
+assert.match(html, /Notes from the trip record/);
 assert.match(html, /Spicy rigatoni/);
 assert.match(html, /wet petals/);
 assert.doesNotMatch(html, /carbone\.svg|shake-shack\.svg|cosmopolitan-shops\.svg|bellagio-conservatory\.svg/);

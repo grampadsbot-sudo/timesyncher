@@ -31,7 +31,7 @@ const shops = {
   address: 'The Cosmopolitan, Las Vegas',
 };
 const outbound = {
-  name: 'SFO to LAS Thu Oct 9',
+  name: 'Sample transfer',
   category_name: 'Transport',
   category_icon: '🚌',
   address: 'SFO to LAS',

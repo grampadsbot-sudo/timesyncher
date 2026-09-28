@@ -419,10 +419,11 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
 
   const storyCards = model.stories.map((story) => storyCardHtml(story, origin)).join('') || '<p class="muted">No saved stories yet.</p>';
 
+  const tripDateLabel = [model.trip.start_date, model.trip.end_date].filter(Boolean).join(' – ');
   const page1 = `<section class="page keepsake-report" data-page="1" data-style="2">
     <div class="print-brand">TimeSyncher · Journey Book · Style 2</div>
     <h1>${esc(model.trip.title || 'Vacation')}</h1>
-    <p class="muted">${esc([model.trip.start_date, model.trip.end_date].filter(Boolean).join(' – ') || 'Oct 9–12 anniversary weekend')} · ${esc(token || 'shared trip')}</p>
+    <p class="muted">${tripDateLabel ? `${esc(tripDateLabel)} · ` : ''}${esc(token || 'shared trip')}</p>
     <p class="muted">Trip summary</p>
     ${paragraphs(model.summary).map((part) => `<div class="keepsake-summary">${esc(part)}</div>`).join('')}
     <p class="keepsake-summary">You visited ${model.placeCount} places across this vacation.</p>
