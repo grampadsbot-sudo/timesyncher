@@ -5,12 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import {
-  SCT_VACATION3_MEDIA_DIR,
-  SCT_VACATION3_MEDIA_PACK,
-  THINGS_NOT_ON_VACATION3,
   TREK_SHARED_API_BASE,
-  VACATION3_SHARE_TOKEN,
-  mapVacation3SctMediaFile,
   mediaKindFromMime,
   mimeFromName,
   newBindingId,
@@ -241,7 +236,7 @@ async function bindOne({ shareToken, shared, thingName, thingId, filePath, sourc
 }
 
 async function main() {
-  const shareToken = clean(arg('--share-token', arg('--token', VACATION3_SHARE_TOKEN)), 180);
+  const shareToken = clean(arg('--share-token', arg('--token', '')), 180);
   const thingName = clean(arg('--thing', arg('--thing-name')), 200);
   const thingId = clean(arg('--thing-id', arg('--place-id')), 20);
   const fileArg = arg('--file');
@@ -255,31 +250,19 @@ async function main() {
   const makeProof = hasFlag('--proof');
   const sharedBase = arg('--shared-api', process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE);
 
-  const defaultMediaDir = SCT_VACATION3_MEDIA_DIR;
-  const mapOnly = hasFlag('--map-only');
-  if (mapOnly) {
-    console.log(JSON.stringify({
-      ok: true,
-      shareToken,
-      mediaDir: defaultMediaDir,
-      mediaDirExists: fs.existsSync(defaultMediaDir),
-      pack: SCT_VACATION3_MEDIA_PACK.map((row) => mapVacation3SctMediaFile(row.file)),
-    }, null, 2));
-    return;
-  }
-  const files = collectFiles(fileArg, dirArg || (!fileArg && !urlArg && !makeProof && fs.existsSync(defaultMediaDir) ? defaultMediaDir : ''));
+  if (!shareToken) throw new Error('Pass --share-token for this trip.');
+  const files = collectFiles(fileArg, dirArg);
 
   if (makeProof && !files.length && !urlArg) {
-    const proofName = 'carbone-bind-proof.png';
+    const proofName = 'bind-proof.png';
     const proofPath = path.join(process.cwd(), 'public', 'ts-thing-media', shareToken, proofName);
     fs.mkdirSync(path.dirname(proofPath), { recursive: true });
-    fs.writeFileSync(proofPath, proofPngBuffer({ label: 'Carbone bind proof' }));
+    fs.writeFileSync(proofPath, proofPngBuffer({ label: 'bind proof' }));
     files.push(proofPath);
   }
 
   if (!files.length && !urlArg) {
-    const missing = THINGS_NOT_ON_VACATION3.map((item) => item.name).join(', ');
-    throw new Error(`No media files found. Looked at --file/--dir and ${defaultMediaDir}. Pass --thing-id for the Thing this file was attached to. Not on this trip yet (note only): ${missing}.`);
+    throw new Error('No media files found. Pass --file, --dir, or --url, and --thing-id for the Thing this file was attached to.');
   }
 
   const shared = await fetchShared(shareToken, sharedBase);
@@ -303,33 +286,23 @@ async function main() {
   }
 
   for (const filePath of files) {
-    const mapped = mapVacation3SctMediaFile(filePath);
-    if (mapped.action === 'skip' && !thingName && !thingId) {
-      skipped.push({ filePath, reason: mapped.skipReason || `${mapped.skipName} is not on vacation-3 yet` });
+    if (!thingName && !thingId) {
+      skipped.push({ filePath, reason: 'Pass --thing-id for the Thing this file was attached to.' });
       continue;
     }
-    if ((mapped.action === 'unknown' || mapped.action === 'needs-attachment') && !thingName && !thingId) {
-      skipped.push({ filePath, reason: mapped.skipReason });
-      continue;
-    }
-    const targets = (thingName || thingId)
-      ? [{ thingId: Number(thingId || 0) || 0, thingName }]
-      : mapped.targets;
-    for (const target of targets) {
-      outputs.push(await bindOne({
-        shareToken,
-        shared,
-        thingName: target.thingName,
-        thingId: target.thingId || thingId,
-        filePath,
-        sourceUrl: urlArg,
-        caption,
-        writePublic,
-        applyTrekHost,
-        apiBase,
-        apiToken,
-      }));
-    }
+    outputs.push(await bindOne({
+      shareToken,
+      shared,
+      thingName,
+      thingId,
+      filePath,
+      sourceUrl: urlArg,
+      caption,
+      writePublic,
+      applyTrekHost,
+      apiBase,
+      apiToken,
+    }));
   }
 
   console.log(JSON.stringify({

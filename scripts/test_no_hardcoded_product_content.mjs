@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 import { applyThingPresentation } from '../src/vacation/intake-shared-trip.mjs';
 import { applyProductKeepsakeOverrides, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { SCT_VACATION3_MEDIA_PACK, guessThingNameFromFilename, mapVacation3SctMediaFile } from '../src/vacation/thing-media-bind.mjs';
+import { mergeBindingsIntoShared } from '../src/vacation/thing-media-bind.mjs';
 import { STYLE2_USES_ZU, patchStyleTwoToConfigRenderer } from '../src/vacation/trek-style2-bundle.mjs';
 
 const bundleText = fs.readFileSync(new URL('../src/vacation/trek-style2-bundle.mjs', import.meta.url), 'utf8');
@@ -84,17 +84,39 @@ assert.deepEqual(sourcedThing.thingOverrides['place:31'].restaurantTags, ['itali
 assert.equal(sourcedThing.thingOverrides['place:31'].lat, 10);
 assert.equal(sourcedThing.thingOverrides['place:31'].lng, 20);
 
-for (const row of SCT_VACATION3_MEDIA_PACK) {
-  const mapped = mapVacation3SctMediaFile(row.file);
-  assert.notEqual(mapped.action, 'bind');
-  assert.deepEqual(mapped.targets, []);
+const mediaBindSource = fs.readFileSync(new URL('../src/vacation/thing-media-bind.mjs', import.meta.url), 'utf8');
+const mediaBindCli = fs.readFileSync(new URL('../scripts/bind-thing-media.mjs', import.meta.url), 'utf8');
+for (const symbol of ['SCT_VACATION3_MEDIA_PACK', 'THINGS_NOT_ON_VACATION3', 'VACATION3_SHARE_TOKEN', 'SCT_VACATION3_MEDIA_DIR']) {
+  assert.equal(mediaBindSource.includes(symbol), false, symbol);
+  assert.equal(mediaBindCli.includes(symbol), false, symbol);
 }
-for (const file of ['venue-a-photo.jpg', 'venue-b-video.mp4']) {
-  assert.equal(guessThingNameFromFilename(file).thingName, '');
-  const mapped = mapVacation3SctMediaFile(file);
-  assert.notEqual(mapped.action, 'bind');
-  assert.deepEqual(mapped.targets, []);
-}
+const mediaTrip = {
+  places: [
+    { id: 11, name: 'Sample Venue', image_url: null },
+    { id: 12, name: 'Sample Cafe' },
+  ],
+};
+const noMedia = mergeBindingsIntoShared(mediaTrip, []);
+assert.equal(noMedia.places[0].image_url, null);
+assert.equal(noMedia.media.length, 0);
+const unnamed = mergeBindingsIntoShared(mediaTrip, [{
+  id: 'file-only',
+  originalName: 'venue-a-photo.jpg',
+  publicUrl: '/media/venue-a-photo.jpg',
+}]);
+assert.equal(unnamed.places[0].image_url, null);
+assert.equal(unnamed.places[0].bound_media, undefined);
+const sourced = mergeBindingsIntoShared(mediaTrip, [{
+  id: 'from-source',
+  thingId: 11,
+  thingName: 'Sample Venue',
+  publicUrl: 'https://cdn.example/venue-a-photo.jpg',
+  mimeType: 'image/jpeg',
+  originalName: 'venue-a-photo.jpg',
+}]);
+assert.equal(sourced.places[0].image_url, 'https://cdn.example/venue-a-photo.jpg');
+assert.equal(sourced.places[1].image_url, undefined);
+assert.equal(sourced.places[1].bound_media, undefined);
 
 const areaList = constString('AREA_CHIP_NYC').slice('Ya='.length);
 const areaFallback = constString('AREA_FALLBACK_NEEDLE');
