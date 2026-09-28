@@ -74,11 +74,45 @@ function assignDates(thing, year, tripDates) {
   return unique;
 }
 
+function transportKind(record = {}) {
+  const tokens = new Set();
+  for (const part of [record.category, record.category_name, record.category?.name, record.type]) {
+    for (const token of String(part || '').toLowerCase().split(/[^a-z]+/)) {
+      if (token) tokens.add(token);
+    }
+  }
+  if (tokens.has('flight')) return 'flight';
+  if (tokens.has('car')) return 'car';
+  return '';
+}
+
 function categoryFor(thing) {
+  const kind = transportKind(thing);
+  if (kind === 'flight' || kind === 'car') {
+    const category_name = kind === 'flight' ? 'Flight' : 'Car';
+    const category_icon = kind === 'flight' ? '✈️' : '🚗';
+    return { category_name, category_icon, category: kind };
+  }
   if (String(thing.category || '').toLowerCase() === 'hotel') {
     return { category_name: 'Hotel', category_icon: '🏨', category: 'hotel' };
   }
   return { category_name: 'Attraction', category_icon: '🏛️', category: 'other' };
+}
+
+/** Missing car/flight Things. Flight input starts at preferred airline. No wording. */
+export function customerInputState(records = []) {
+  const present = new Set();
+  for (const record of records || []) {
+    const kind = transportKind(record);
+    if (kind) present.add(kind);
+  }
+  const needsCustomerInput = [];
+  if (!present.has('car')) needsCustomerInput.push('car');
+  if (!present.has('flight')) needsCustomerInput.push('flight');
+  if (!needsCustomerInput.length) return {};
+  const state = { needsCustomerInput };
+  if (needsCustomerInput.includes('flight')) state.flightAsk = 'preferredAirline';
+  return state;
 }
 
 /** Product thing copy from the title, who, and when. Not a pasted chat turn. */
@@ -97,8 +131,6 @@ export function productThingSummary(thing = {}) {
   }
   if (/\bdinner\b/i.test(title)) return `Dinner${whoBit}${whenBit}.`;
   if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
-  if (/house/i.test(title)) return when ? `The Kailua-Kona house, ${when}.` : 'The Kailua-Kona house.';
-  if (/big island/i.test(title)) return when ? `Big Island, ${when}. People matter more than a packed list.` : 'Big Island. People matter more than a packed list.';
   const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
   if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
   return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
@@ -201,6 +233,7 @@ export function sharedTripFromIntake({ trip, things }) {
     collab: {},
     thingOverrides,
     timesyncherIntake: true,
+    ...customerInputState(things),
   };
 }
 
@@ -289,5 +322,8 @@ export function applyThingPresentation(shared = {}, options = {}) {
     }
     put(place, extra);
   }
-  return { ...shared, places, thingOverrides };
+  const next = { ...shared, places, thingOverrides };
+  delete next.needsCustomerInput;
+  delete next.flightAsk;
+  return { ...next, ...customerInputState(places) };
 }
