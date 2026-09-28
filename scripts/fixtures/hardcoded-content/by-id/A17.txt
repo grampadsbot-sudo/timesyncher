@@ -1,0 +1,1 @@
+export const FILENAME_THING_HINTS = [[/bellagio/i, 'Bellagio']];

@@ -1,0 +1,1 @@
+export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome.';

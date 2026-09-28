@@ -1,0 +1,1 @@
+<input name="city" placeholder="Las Vegas" />

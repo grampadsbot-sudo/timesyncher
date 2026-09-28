@@ -1,0 +1,1 @@
+if (/\b(vegas|las vegas|strip|jockey club)\b/.test(normalized)) return items.find(Boolean);

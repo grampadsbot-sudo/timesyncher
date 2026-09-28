@@ -1,0 +1,1 @@
+export const NAMED_THING_LOGOS = { Bellagio: '/ts-thing-logos/bellagio.svg' };

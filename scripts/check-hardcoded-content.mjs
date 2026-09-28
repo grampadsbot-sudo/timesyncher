@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
@@ -10,10 +11,17 @@ const TEXT_EXT = new Set(['.mjs', '.js', '.html', '.json', '.jsonl', '.md', '.tx
 const CONTENT_DIRS = ['src/vacation', 'routes'];
 const CONTENT_FILES = [
   'scripts/vacation-app-reply-rules.mjs',
+  'scripts/vacation-public-research-worker.mjs',
+  'scripts/product-gbrain-dispatch.mjs',
+  'scripts/travel-source-adapter-runner.mjs',
   'vacation-app.html',
   'public/ts-timeline-icon-patch.js',
   'index.html',
   'order-test.html',
+];
+const BUNDLE_FILES = [
+  'public/assets/index-TimeSyncherVacationLogin.js',
+  'public/assets/index-0J54vUO3.js',
 ];
 const TOKEN_DIRS = ['evidence', 'artifacts', 'features/proof', 'qa', 'qa-output', 'qa-outputs'];
 
@@ -161,6 +169,16 @@ function dialogFindings(file, text, findings, seen) {
   }
 }
 
+function inventoryFindings(file, text, findings, seen, { bundles = false } = {}) {
+  for (const pattern of INVENTORY_PATTERNS) {
+    if (bundles && !pattern.scanBundles) continue;
+    pattern.re.lastIndex = 0;
+    const index = text.search(pattern.re);
+    if (index < 0) continue;
+    add(findings, seen, pattern.rule, file, text, index, `inventory:${pattern.id}`);
+  }
+}
+
 function tokenFindings(file, text, findings, seen) {
   for (const [pattern, symbol] of TOKEN_PATTERNS) {
     for (const match of collect(pattern, text, (item) => item)) {
@@ -169,16 +187,21 @@ function tokenFindings(file, text, findings, seen) {
   }
 }
 
-export function scanText(file, text, { tokens = false } = {}) {
+export function scanText(file, text, { tokens = false, inventoryOnly = false } = {}) {
   const value = String(text || '');
   const findings = [];
   const seen = new Set();
+  if (inventoryOnly) {
+    inventoryFindings(file, value, findings, seen, { bundles: true });
+    return findings;
+  }
   if (tokens || isTokenPath(file)) tokenFindings(file, value, findings, seen);
   if (!tokens && !isTokenPath(file)) {
     placeListFindings(file, value, findings, seen);
     coordFindings(file, value, findings, seen);
     thingFindings(file, value, findings, seen);
     dialogFindings(file, value, findings, seen);
+    inventoryFindings(file, value, findings, seen);
   }
   return findings;
 }
@@ -235,10 +258,17 @@ function readScanned(abs) {
   return fs.readFileSync(abs, 'utf8');
 }
 
+function bundlePaths(cwd) {
+  return BUNDLE_FILES.filter((file) => fs.existsSync(path.join(cwd, file)));
+}
+
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
   for (const file of contentPaths(cwd)) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
+  }
+  for (const file of bundlePaths(cwd)) {
+    findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8'), { inventoryOnly: true }));
   }
   for (const file of tokenPaths(cwd)) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));

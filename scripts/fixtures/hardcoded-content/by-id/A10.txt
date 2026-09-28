@@ -1,0 +1,1 @@
+const PLACE_COORDS = { Groceries: [19.001, -155.001] };

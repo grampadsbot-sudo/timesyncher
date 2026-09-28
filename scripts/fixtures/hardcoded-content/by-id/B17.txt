@@ -1,0 +1,1 @@
+return `The wind backup is ${calm.name}, and the house pool is the last resort.`;

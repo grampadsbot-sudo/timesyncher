@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BASELINE_NOTE, classify, scanText } from './check-hardcoded-content.mjs';
+import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -228,7 +229,62 @@ assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\tsrc\/vacation\/keepsake-lis
 assert.match(repoRun.stdout, /REPORT\tHC-COORD\tsrc\/vacation\/keepsake-list-minimums\.mjs:275\tfallbackLat:19\.64,fallbackLng:-155\.996/);
 assert.match(repoRun.stdout, /REPORT\tHC-THING\tsrc\/vacation\/intake-shared-trip\.mjs:325\tcategory_name:'Car',name:'SpeediShuttle'/);
 assert.match(repoRun.stdout, /REPORT\tHC-DIALOG\tsrc\/vacation\/live-app-turn\.mjs:40\tCANNED_APP_REPLY/);
-assert.match(repoRun.stdout, /hardcoded content check passed \(161 report, 0 fail\)/);
-assert.equal(baseline.length, 161);
+assert.match(repoRun.stdout, new RegExp(`hardcoded content check passed \\(${baseline.length} report, 0 fail\\)`));
+assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\troutes\/vacation-telegram-turn\.mjs:\d+\tinventory:A20/);
+assert.match(repoRun.stdout, /REPORT\tHC-THING\tpublic\/assets\/index-0J54vUO3\.js:\d+\tinventory:D3/);
+assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\tscripts\/travel-source-adapter-runner\.mjs:\d+\tinventory:E10/);
+assert.doesNotMatch(repoRun.stdout, /inventory:E4/);
+assert.doesNotMatch(repoRun.stderr, /inventory:E4/);
+
+const inventory = JSON.parse(fs.readFileSync(path.join(fixtures, 'inventory.json'), 'utf8'));
+const inventoryIds = inventory.items.map((item) => item.id);
+assert.equal(inventoryIds.length, 79);
+assert.equal(new Set(inventoryIds).size, 79);
+const patternIds = new Set(INVENTORY_PATTERNS.map((pattern) => pattern.id));
+const unmatchedIds = Object.keys(UNMATCHED);
+for (const id of unmatchedIds) {
+  assert.equal(typeof UNMATCHED[id], 'string');
+  assert.equal(UNMATCHED[id].length > 0, true);
+  assert.equal(patternIds.has(id), false);
+  assert.equal(baseline.some((row) => row.inventory_id === id), false);
+}
+let covered = 0;
+const openFiles = {};
+for (const id of inventoryIds) {
+  const baselined = baseline.some((row) => row.inventory_id === id);
+  const fixturePath = path.join(fixtures, 'by-id', `${id}.txt`);
+  const fixtureExists = fs.existsSync(fixturePath);
+  if (unmatchedIds.includes(id)) {
+    assert.equal(baselined, false, id);
+    assert.equal(fixtureExists, false, id);
+    continue;
+  }
+  assert.equal(baselined, true, id);
+  assert.equal(fixtureExists, true, id);
+  assert.equal(patternIds.has(id), true, id);
+  const pattern = INVENTORY_PATTERNS.find((item) => item.id === id);
+  const file = `src/vacation/new-${id}.mjs`;
+  const text = fs.readFileSync(fixturePath, 'utf8');
+  const findings = scanText(file, text);
+  const siblings = findings.filter((finding) => finding.symbol_or_pattern !== `inventory:${id}`);
+  const opened = classify(findings, siblings.map((finding) => entry(file, finding.symbol_or_pattern)));
+  assert.deepEqual(opened.fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [[pattern.rule, `inventory:${id}`]]);
+  assert.equal(opened.report.length, siblings.length);
+  openFiles[file] = text;
+  covered += 1;
+}
+assert.equal(covered, 78);
+assert.equal(covered + unmatchedIds.length, inventoryIds.length);
+assert.deepEqual([...patternIds].sort(), inventoryIds.filter((id) => !unmatchedIds.includes(id)).sort());
+
+const inventoryOpen = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-inventory-'));
+writeTree(inventoryOpen, openFiles, []);
+const inventoryOpenRun = runGuard(inventoryOpen);
+assert.equal(inventoryOpenRun.status, 1, inventoryOpenRun.stdout);
+for (const id of inventoryIds) {
+  if (unmatchedIds.includes(id)) continue;
+  const pattern = INVENTORY_PATTERNS.find((item) => item.id === id);
+  assert.match(inventoryOpenRun.stderr, new RegExp(`FAIL\\t${pattern.rule}\\tsrc/vacation/new-${id}\\.mjs:\\d+\\tinventory:${id}`));
+}
 
 process.stdout.write('hardcoded content check test passed\n');
