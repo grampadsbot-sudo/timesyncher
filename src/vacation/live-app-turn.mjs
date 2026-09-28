@@ -13,7 +13,7 @@ import {
 
 export { isTemplateNote };
 import { customerInputState } from './intake-shared-trip.mjs';
-import { payerPriceLine, priceAnswered } from './seat-price.mjs';
+import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -1769,7 +1769,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
     .filter((row) => row.name && row.payer);
   const planLine = customerAsksPrice(customerTurn) && pricedSeat
-    ? payerPriceLine(tripFacts.payerRows, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(pricedSeat * 100) })
+    ? payerLineFromDollars(customerTurn, pricedSeat, tripFacts.payerRows)
     : '';
   const planTable = planLine
     ? {
@@ -1847,8 +1847,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
-    const nudge = customerAsksPrice(customerTurn)
-      ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
+    const nudge = customerAsksPrice(customerTurn) && planLine
+      ? `${customerTurn}\n\nAnswer with who pays: ${planLine}. Do not add a second collaborator welcome.`
       : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -2071,8 +2071,8 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     intake === true
       ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
       : '',
-    customerAsksPrice(customerTurn)
-      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${Number(facts.seatDollars) > 0 ? payerPriceLine(facts.payerRows, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(Math.round(Number(facts.seatDollars) * 100)) }) : 'the configured price is missing, so do not invent a dollar amount'}.`
+    customerAsksPrice(customerTurn) && Number(facts.seatDollars) > 0
+      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, facts.payerRows)}.`
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');

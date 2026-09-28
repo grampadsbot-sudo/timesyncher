@@ -9,7 +9,9 @@ export const INTAKE_SKILL = 'skills/tg-intake-gbrain-track-and-build/skill';
 export const INITIAL_BUILD_CUE = "I'm building your initial itinerary now and it may take 10–15 minutes.";
 
 export function productGbrainRoot(env = process.env) {
-  return String(env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT || env.TIMESYNCHER_PRIVATE_GBRAIN || '').replace(/\/+$/, '');
+  const root = String(env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT || env.TIMESYNCHER_PRIVATE_GBRAIN || '').trim();
+  if (!root) throw new Error('gbrain path is not configured: set TIMESYNCHER_PRODUCT_GBRAIN_ROOT');
+  return root.replace(/\/+$/, '');
 }
 
 function slugPart(value, max = 40) {

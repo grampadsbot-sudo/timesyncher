@@ -525,7 +525,6 @@ function vacationMatchesLookup(vacation, lookup) {
     .toLowerCase();
   if (!haystack) return false;
   if (haystack.includes(needle)) return true;
-  if (needle.includes('hawaii')) return /\b(hawaii|oahu|waikiki|maui|kona|big island)\b/i.test(haystack);
   return false;
 }
 
@@ -535,11 +534,9 @@ function publicVacationUrl(vacation, fallbackBase) {
   return '';
 }
 
-function accessPersonLabel(value = '', context = '') {
+function accessPersonLabel(value = '') {
   const rawText = text(value, 500);
   const requestText = rawText.toLowerCase();
-  const contextText = text(context, 3000).toLowerCase();
-  if (/\bkim\b/.test(requestText) || (/\b(she|her)\b/.test(requestText) && /\bkim\b/.test(contextText))) return 'Kim';
   if (/\bwife\b/.test(requestText)) return 'your wife';
   if (/\bhusband\b/.test(requestText)) return 'your husband';
   if (/\bspouse|partner\b/.test(requestText)) return 'your spouse';
@@ -552,9 +549,7 @@ function accessPersonLabel(value = '', context = '') {
 function accessPersonCustomerLabel(personLabel = '', requestText = '', contextText = '') {
   const person = text(personLabel, 120);
   const configuredWifeName = text(process.env.TIMESYNCHER_CUSTOMER_WIFE_DISPLAY_NAME || process.env.TIMESYNCHER_PRIMARY_SPOUSE_NAME, 80);
-  const combined = `${text(requestText, 1000)}\n${text(contextText, 3000)}`.toLowerCase();
   if (person === 'your wife' && configuredWifeName) return configuredWifeName;
-  if (person === 'your wife' && /\bkim\b/.test(combined)) return 'Kim';
   return person || 'that person';
 }
 
@@ -665,7 +660,7 @@ function isAccessPricingQuestion(requestText = '') {
   const source = text(requestText, 2000).toLowerCase();
   if (!isQuestionLike(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant|kim)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
@@ -682,18 +677,24 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const checkout = checkoutBaseUrl(manifest);
   const lines = [];
   if (allVacations) {
-    lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
+    if (unlimited?.amountUsd) lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is $${unlimited.amountUsd}.`);
+    else console.error('access price is not configured: unlimited telegram');
     lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
     if (wantsMedia) {
-      lines.push(`Photo upload access across all vacations is ${photo.unlimitedVacationsAmountUsd ? `$${photo.unlimitedVacationsAmountUsd}` : '$9'}.`);
-      lines.push(`Video upload access across all vacations is ${video.unlimitedVacationsAmountUsd ? `$${video.unlimitedVacationsAmountUsd}` : '$27'}.`);
+      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access across all vacations is $${photo.unlimitedVacationsAmountUsd}.`);
+      else console.error('access price is not configured: unlimited photo');
+      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access across all vacations is $${video.unlimitedVacationsAmountUsd}.`);
+      else console.error('access price is not configured: unlimited video');
     }
   } else {
-    lines.push(`For ${person}, Telegram editing access for one vacation is ${singleTrip?.amountUsd ? `$${singleTrip.amountUsd}` : '$15'}.`);
+    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for one vacation is $${singleTrip.amountUsd}.`);
+    else console.error('access price is not configured: single telegram');
     lines.push(`That adds one active Telegram collaborator for that vacation. Add more collaborators one checkout at a time.`);
     if (wantsMedia) {
-      lines.push(`Photo upload access for one vacation is ${photo.singleVacationAmountUsd ? `$${photo.singleVacationAmountUsd}` : '$5'}.`);
-      lines.push(`Video upload access for one vacation is ${video.singleVacationAmountUsd ? `$${video.singleVacationAmountUsd}` : '$17'}.`);
+      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for one vacation is $${photo.singleVacationAmountUsd}.`);
+      else console.error('access price is not configured: single photo');
+      if (video.singleVacationAmountUsd) lines.push(`Video upload access for one vacation is $${video.singleVacationAmountUsd}.`);
+      else console.error('access price is not configured: single video');
     }
   }
   lines.push(`Add-on checkout link: ${checkout}/addons-checkout.html`);

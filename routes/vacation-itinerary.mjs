@@ -22,6 +22,7 @@ import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
@@ -521,6 +522,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       priorTurns,
       tripTitle: trip?.title || '',
       env: process.env,
+      seatDollars: configuredSeatDollars(process.env),
       intake: classification.ok === true && classification.intake === true,
       wantedThings: classification.ok === true ? classification.things : [],
       roster: Array.isArray(classification.roster) ? classification.roster : [],

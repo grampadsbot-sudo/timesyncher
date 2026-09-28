@@ -235,9 +235,11 @@ async function recordMediaUpload(db, req, body) {
   const responseMedia = publicMedia(rows[0], req);
   return {
     media: responseMedia,
-    reply: media.mediaKind === 'video'
-      ? 'Got it — I saved that video to this vacation.'
-      : 'Got it — I saved that photo to this vacation.',
+    reply: await writeOnboardingReply({
+      ask: 'media_saved',
+      saved: true,
+      mediaKind: media.mediaKind,
+    }),
   };
 }
 
@@ -537,7 +539,6 @@ function collaboratorStatusQuestion(text = '') {
 
 function accessPersonName(text = '', env = process.env) {
   const normalized = cleanText(text, 2000);
-  if (/\bkim\b/i.test(normalized)) return 'Kim';
   const wifeName = cleanText(env.TIMESYNCHER_CUSTOMER_WIFE_DISPLAY_NAME || env.TIMESYNCHER_PRIMARY_SPOUSE_NAME, 80);
   if (/\bwife\b/i.test(normalized) && wifeName) return wifeName;
   if (/\bwife\b/i.test(normalized)) return 'your wife';
@@ -1833,7 +1834,7 @@ export default async function handler(req, res) {
           receivedAt,
           onboardingStep: collaboratorSession?.current_step || 'collaborator_start',
         });
-        const reply = collaboratorStart.reply || collaboratorDeniedCopy();
+        const reply = await writeOnboardingReply(collaboratorStart.facts || collaboratorDeniedCopy());
         const respondedAt = new Date();
         const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
         const outboundTranscriptId = await recordTranscript(db, {
@@ -1961,7 +1962,11 @@ export default async function handler(req, res) {
     if (blockedAction.blocked) {
       const respondedAt = new Date();
       const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
-      const reply = blockedAction.message;
+      const reply = await writeOnboardingReply({
+        ask: 'high_authority_blocked',
+        blocked: true,
+        kinds: blockedAction.kinds,
+      });
       const outboundTranscriptId = await recordTranscript(db, {
         session,
         speaker: 'assistant',
@@ -2111,7 +2116,7 @@ export default async function handler(req, res) {
     } else {
       const authz = await canQueueTelegramModification(db, session, { telegramChatId, telegramUserId, kind });
       if (!authz.allowed) {
-        reply = collaboratorDeniedCopy();
+        reply = await writeOnboardingReply(collaboratorDeniedCopy());
         replyPayload = { collaboratorAuthorization: authz };
       } else {
         queued = await queueSetupRequest(db, session, text, {

@@ -229,17 +229,15 @@ function pageFromMarkdown(markdown) {
 }
 
 function loadViaBrainFile(env) {
-  const roots = [env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT, env.TIMESYNCHER_PRIVATE_GBRAIN].filter(Boolean);
-  for (const root of roots) {
-    const file = path.join(root, `${REPLY_RULES_SLUG}.md`);
-    if (!fs.existsSync(file)) continue;
-    try {
-      return contractFromPage(pageFromMarkdown(fs.readFileSync(file, 'utf8')), 'gbrain-file-get_page');
-    } catch (error) {
-      return { ok: false, via: 'gbrain-file-get_page', slug: REPLY_RULES_SLUG, error: text(error?.message || error, 300) };
-    }
+  const root = String(env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT || env.TIMESYNCHER_PRIVATE_GBRAIN || '').trim();
+  if (!root) throw new Error('gbrain path is not configured: set TIMESYNCHER_PRODUCT_GBRAIN_ROOT');
+  const file = path.join(root, `${REPLY_RULES_SLUG}.md`);
+  if (!fs.existsSync(file)) throw new Error(`gbrain reply rules path is missing: ${file}`);
+  try {
+    return contractFromPage(pageFromMarkdown(fs.readFileSync(file, 'utf8')), 'gbrain-file-get_page');
+  } catch (error) {
+    return { ok: false, via: 'gbrain-file-get_page', slug: REPLY_RULES_SLUG, error: text(error?.message || error, 300) };
   }
-  return null;
 }
 
 function loadViaEnvCache(env) {
@@ -270,8 +268,12 @@ export async function loadVacationAppReplyRules(env = process.env) {
   if (http?.ok) return http;
   const cli = loadViaCli();
   if (cli?.ok) return cli;
-  const brainFile = loadViaBrainFile(env);
-  if (brainFile?.ok) return brainFile;
+  const brainRoot = env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT || env.TIMESYNCHER_PRIVATE_GBRAIN;
+  if (brainRoot) {
+    const brainFile = loadViaBrainFile(env);
+    if (brainFile?.ok) return brainFile;
+    if (brainFile && brainFile.ok === false) return brainFile;
+  }
   const cached = loadViaEnvCache(env);
   if (cached) return cached;
   const bundled = loadViaBundledSnapshot();
@@ -313,7 +315,7 @@ export function isAccessPricingTurn(value) {
   const source = text(value, 2000).toLowerCase();
   if (!source.includes('?') && !/\b(how much|cost|price|pricing)\b/.test(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant|kim)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
@@ -588,10 +590,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain collaborator options in these words, once: View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens. Do not assign viewer or editor roles in this reply. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say they are all set for it. Do not say "you also have unlimited vacations". Do not repeat a paragraph.`
       : (upsell === 'allow-once'
         ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not say you are setting it up. Do not answer with only that phrase.`
-        : (priceAsk
-          ? (seatDollars
-            ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine || 'each person, the configured dollar amount, and who pays'}. Make no coverage claims. Do not say whole group. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. Use only dates already named by the customer or the saved trip record. Do not add a collaborator welcome. Do not use a banned payment word.`
-            : `This turn asks the price. The configured seat price is missing. Do not state a dollar amount. Do not invent a price. Make no coverage claims. Do not say they already own the plan.`)
+        : (priceAsk && seatDollars && planLine
+          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine}. Make no coverage claims. Do not say whole group. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. Use only dates already named by the customer or the saved trip record. Do not add a collaborator welcome. Do not use a banned payment word.`
           : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
@@ -608,6 +608,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
         ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
         : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
+    seatDollars && planLine ? `Seat price: $${seatDollars}. State this payer line exactly: ${planLine}.` : '',
     'Do not insert a welcome the customer did not ask for.',
     seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining. The payer is who paid.` : '',
     'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',

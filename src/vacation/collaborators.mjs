@@ -20,11 +20,6 @@ export const COLLABORATOR_PLANS = {
   },
 };
 
-function dollarsLabel(cents) {
-  const dollars = cents / 100;
-  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
-}
-
 function withConfiguredAmount(plan, env) {
   if (plan.scope === 'single_trip') {
     return {
@@ -62,8 +57,8 @@ export function collaboratorPlan(codeOrScope = 'single_trip', env = process.env)
 
 export function isCollaboratorInviteRequest(text = '') {
   return /\b(add|invite|let|allow|give)\b.{0,100}\b(wife|husband|spouse|partner|assistant|friend|family|daughter|son|mom|mother|dad|father|collaborator|someone|user)\b.{0,140}\b(telegram|bot|modify|edit|update|change|interact|ability|access)\b/i.test(text)
-    || /\b(send|get|create|make|share|give)\b.{0,80}\b(link|checkout|setup|set\s+up)\b.{0,100}\b(her|him|them|wife|husband|spouse|partner|kim|collaborator|assistant|friend|family|someone)\b/i.test(text)
-    || /\b(set\s+up|setup)\b.{0,80}\b(her|him|them|wife|husband|spouse|partner|kim|collaborator|assistant|friend|family|someone)\b.{0,100}\b(link|checkout|telegram|bot|access|collaborator)\b/i.test(text)
+    || /\b(send|get|create|make|share|give)\b.{0,80}\b(link|checkout|setup|set\s+up)\b.{0,100}\b(her|him|them|wife|husband|spouse|partner|collaborator|assistant|friend|family|someone)\b/i.test(text)
+    || /\b(set\s+up|setup)\b.{0,80}\b(her|him|them|wife|husband|spouse|partner|collaborator|assistant|friend|family|someone)\b.{0,100}\b(link|checkout|telegram|bot|access|collaborator)\b/i.test(text)
     || /\btelegram collaborator\b/i.test(text);
 }
 
@@ -77,17 +72,17 @@ export function hashToken(token, env = process.env) {
 }
 
 export function collaboratorCheckoutCopy({ singleUrl = '', unlimitedUrl = '', env = process.env } = {}) {
-  const singleCents = optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS);
-  const unlimitedCents = optionalConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS);
-  return [
-    'Telegram editing for another person is a paid TimeSyncher Vacation add-on.',
-    '',
-    'Options:',
-    singleCents ? `One vacation: ${dollarsLabel(singleCents)}${singleUrl ? `\n${singleUrl}` : ''}` : '',
-    unlimitedCents ? `All vacations: ${dollarsLabel(unlimitedCents)}${unlimitedUrl ? `\n${unlimitedUrl}` : ''}` : '',
-    '',
-    'The shared vacation website stays view-only for anyone with only the public URL. Owners and paid Telegram collaborators can edit when they open from Telegram; non-Telegram website invitees use an owner-approved email magic link.',
-  ].filter((line, index, lines) => line !== '' || lines[index - 1] !== '').join('\n');
+  return {
+    ask: 'collaborator_checkout',
+    singleTrip: {
+      cents: optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS),
+      url: singleUrl || null,
+    },
+    unlimitedTrips: {
+      cents: optionalConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS),
+      url: unlimitedUrl || null,
+    },
+  };
 }
 
 function clean(value, max = 500) {
@@ -237,11 +232,7 @@ export async function acceptCollaboratorInvite(db, {
       ok: false,
       status: 'payment_pending',
       invite,
-      reply: [
-        'I found this Telegram collaborator invite, but the add-on payment is not confirmed yet.',
-        '',
-        'If you just checked out, give Stripe a moment and try this Telegram link again.',
-      ].join('\n'),
+      facts: { ask: 'payment_pending', paid: false },
     };
   }
 
@@ -252,14 +243,7 @@ export async function acceptCollaboratorInvite(db, {
       status: 'eula_required',
       invite,
       eula,
-      reply: [
-        'Your TimeSyncher Vacation collaborator add-on is paid.',
-        '',
-        'Before Telegram editing is enabled, please review and accept the TimeSyncher EULA:',
-        eula.acceptUrl,
-        '',
-        'After accepting, return to this Telegram link to finish setup.',
-      ].join('\n'),
+      facts: { ask: 'eula', paid: true, acceptUrl: eula.acceptUrl || null },
     };
   }
 
@@ -339,20 +323,12 @@ export async function acceptCollaboratorInvite(db, {
     invite,
     collaborator,
     eula,
-    reply: [
-      'You are set up as a paid TimeSyncher Vacation Telegram collaborator.',
-      '',
-      'You can now send updates for this vacation here. Opening the vacation website link from Telegram should also enable website editing for this browser.',
-    ].join('\n'),
+    facts: { ask: 'collaborator_accepted', active: true, status: 'accepted' },
   };
 }
 
 export function collaboratorDeniedCopy() {
-  return [
-    'I received this, but this Telegram account is not authorized to modify that vacation yet.',
-    '',
-    'The vacation owner can add you as a paid Telegram collaborator. Non-Telegram website invitees use an owner-approved email magic link.',
-  ].join('\n');
+  return { ask: 'collaborator_denied', authorized: false };
 }
 
 export async function activeCollaboratorForTelegram(db, { ownerCustomerId, tripId, telegramChatId, telegramUserId }) {
