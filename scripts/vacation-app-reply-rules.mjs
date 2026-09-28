@@ -572,7 +572,7 @@ function chatReplyText(content) {
 }
 
 export function sourcedPlaceRule() {
-  return 'Name a place only when this turn passed a live search or database result that carries an id, and cite it as (id:THAT_ID). Do not name a place that has no result id.';
+  return 'Name a place only when this turn has a Thing with sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
 export function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {

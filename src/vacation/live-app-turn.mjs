@@ -446,9 +446,21 @@ export function placeSourceRows(sources) {
   if (!Array.isArray(sources)) return [];
   return sources.flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
-    const id = String(item.id ?? item.poiId ?? item.placeId ?? item.place_id ?? '').trim();
+    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
+    const id = String(ref?.id ?? item.id ?? item.poiId ?? item.placeId ?? item.place_id ?? '').trim();
     const name = String(item.name ?? item.title ?? '').trim();
     return id && name ? [{ id, name }] : [];
+  });
+}
+
+export function savedThingPlaceResults(savedTrip) {
+  const things = Array.isArray(savedTrip?.things) ? savedTrip.things : [];
+  return things.flatMap((thing) => {
+    const sourceRef = thing?.sourceRef && typeof thing.sourceRef === 'object' ? thing.sourceRef : null;
+    const id = String(sourceRef?.id || '').trim();
+    const name = String(thing?.title || thing?.name || '').trim();
+    if (!id || !name) return [];
+    return [{ name, sourceRef: { source: String(sourceRef.source || ''), id } }];
   });
 }
 
@@ -1590,7 +1602,7 @@ export function rewriteKeepsSubstance(draft, rewritten) {
 
 export function rewriteAnswersQuestion(customerTurn, rewritten) {
   const body = String(rewritten || '');
-  if (customerAsksPrice(customerTurn)) return priceAnswered(body, customerTurn);
+  if (customerAsksPrice(customerTurn)) return priceAnswered(body, customerTurn, process.env);
   if (customerAsksAccessChoice(customerTurn)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
   const question = splitSentences(customerTurn).find((sentence) => /\?/.test(sentence));
   if (!question) return true;
@@ -1617,14 +1629,14 @@ export function hardQualityFlags(reply, customerTurn, corpus, sources) {
   return {
     split: item34BanHit(body),
     invented: unsourcedPlaces(body, placeSources),
-    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask),
+    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask, process.env),
     missingAccess: customerAsksAccessChoice(ask) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
     missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
   };
 }
 
 export function correctFalsePriceMiss(quality, reply, customerTurn) {
-  if (!customerAsksPrice(customerTurn) || priceAnswered(reply, customerTurn)) return quality;
+  if (!customerAsksPrice(customerTurn) || priceAnswered(reply, customerTurn, process.env)) return quality;
   return {
     ...quality,
     score: Math.min(Number(quality?.score) || 1, 3),
@@ -1752,6 +1764,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const upsell = upsellModeForTurn(intakeTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
+  const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
   const rosterList = Array.isArray(roster) ? roster : [];
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session, {
     roster: Array.isArray(roster) ? roster : null,
@@ -1819,7 +1832,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
     intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
-    placeResultExtra(placeResults),
+    placeResultExtra(citedPlaces),
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1885,7 +1898,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
-  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, placeResults);
+  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
@@ -1990,7 +2003,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     titleError: titleError || null,
     destination,
     corpus,
-    placeResults,
+    placeResults: citedPlaces,
     tripContext,
     tripFacts,
     planTable,

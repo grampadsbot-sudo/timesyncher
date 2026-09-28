@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
@@ -94,6 +94,12 @@ assert.deepEqual(unsourcedPlaces('Harbor Market (id:osm:way/11) fits Tuesday.', 
 assert.deepEqual(unsourcedPlaces('Glass Lagoon (id:missing) fits Tuesday.', sourcedMarket), ['Glass Lagoon']);
 assert.deepEqual(inventedVenueNames('Harbor Market fits Tuesday.', sourcedMarket), ['Harbor Market']);
 assert.deepEqual(placeSourceRows([{ poiId: 'fsq:1', title: 'North Cafe' }]), [{ id: 'fsq:1', name: 'North Cafe' }]);
+const sourcedThing = [{ title: 'Harbor Market', sourceRef: { source: 'osm', id: 'way/11' } }];
+assert.deepEqual(placeSourceRows(sourcedThing), [{ id: 'way/11', name: 'Harbor Market' }]);
+assert.deepEqual(unsourcedPlaces('Harbor Market (id:way/11) fits Tuesday.', sourcedThing), []);
+assert.deepEqual(savedThingPlaceResults({ things: sourcedThing }), [{ name: 'Harbor Market', sourceRef: { source: 'osm', id: 'way/11' } }]);
+assert.deepEqual(savedThingPlaceResults({ things: [{ title: 'Uncited Cafe' }] }), []);
+assert.match(sourcedPlaceRule(), /sourceRef\.id/);
 const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
 const goldSpan = intakeSpan(goldIntake);
 assert.equal(goldSpan.badge, 'Apr 3–12 2026');
