@@ -282,13 +282,10 @@ const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
 const failRows = identities(repoRun.stderr);
 assert.equal(failRows.length, liveFail);
-assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE').map((row) => `${row.file}:${row.line}:${row.symbol}`), [
-  'scripts/test_keepsake_style2.mjs:897:https://travel.timesyncher.com/assets/index-BKun7ofk.js',
-  'scripts/write-shared-assets.mjs:22:https://travel.timesyncher.com/assets/${CSS_NAME}',
-  'scripts/write-shared-assets.mjs:22:https://travel.timesyncher.com/assets/${JS_NAME}',
-  'src/vacation/trek-style2-bundle.mjs:944:https://travel.timesyncher.com/assets/index-BKun7ofk.js',
-  'vite.config.mjs:10:writeSharedAssets()',
-]);
+// The travel.timesyncher.com download is gone on this base, so the live tree
+// has no NO-CROSS-ORIGIN-BUNDLE hit. BUNDLE-LEAK still fails the unstripped
+// bundles below; those rows are not baselined.
+assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), []);
 for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK', true, row.rule);
 assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
 assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
@@ -863,6 +860,20 @@ for (const bundle of ['public/assets/index-0J54vUO3.js', 'public/assets/index-Ti
   assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Price TBD');
   assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Depart TBD');
   assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Arrive TBD');
+}
+const upstreamBundle = 'public/assets/upstream/index-BKun7ofk.js';
+for (const symbol of [
+  `sha256:${SHARE_TOKEN_SHA256}`,
+  '32-alnum near share',
+  'Craig_Kim_NYC_June_2026',
+  'craig+kim+nyc',
+  'Price TBD',
+  'Depart TBD',
+  'Arrive TBD',
+  '192.168.1.15',
+  '100.66.47.62',
+]) {
+  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', upstreamBundle, symbol);
 }
 
 process.stdout.write('hardcoded content check test passed\n');

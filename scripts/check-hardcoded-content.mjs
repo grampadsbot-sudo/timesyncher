@@ -1948,9 +1948,8 @@ export function crossOriginBundleScan(cwd = process.cwd()) {
 }
 
 // BUNDLE-LEAK reads committed and on-disk bundles under public/assets, bundles, and dist.
-// It does not run vite build. buildStart still downloads from travel.timesyncher.com, so that
-// build is not an offline, deterministic input. Product's vendor PR removes the download and
-// commits the bundle; those files are scanned here. dist/ is included when a build already wrote it.
+// It does not run vite build. The raw committed file under public/assets/upstream is in that
+// tree and is scanned with the other bundles. dist/ is included when a build already wrote it.
 const BUNDLE_LEAK_EXT = new Set(['.js', '.mjs', '.cjs', '.css', '.html', '.json', '.map']);
 const BUNDLE_LEAK_DIRS = ['public/assets', 'public/bundles', 'bundles', 'dist'];
 const TBD_SYMBOL = { 'price tbd': 'Price TBD', 'depart tbd': 'Depart TBD', 'arrive tbd': 'Arrive TBD' };
