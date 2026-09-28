@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, classify, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, classify, contentIdentity, scanRoots, scanText } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -20,8 +20,30 @@ function symbols(file, text) {
   return scanText(file, text).map((finding) => [finding.rule, finding.symbol_or_pattern]);
 }
 
-function entry(file, symbol) {
-  return { file, symbol_or_pattern: symbol, inventory_id: 'A0', note: NOTE };
+function entry(file, symbol, rule) {
+  return { file, rule, symbol_or_pattern: symbol, inventory_id: 'A0', note: NOTE };
+}
+
+function identities(text) {
+  const rows = [];
+  for (const line of String(text || '').split('\n')) {
+    const match = line.match(/^(REPORT|FAIL)\t([^\t]+)\t(.*):(\d+)\t(.*)$/);
+    if (!match) continue;
+    rows.push({
+      kind: match[1],
+      rule: match[2],
+      file: match[3],
+      line: Number(match[4]),
+      symbol: match[5],
+    });
+  }
+  return rows;
+}
+
+function assertHit(text, kind, rule, file, symbol) {
+  const expected = contentIdentity({ rule, file, symbol });
+  const found = identities(text).some((row) => row.kind === kind && contentIdentity(row) === expected);
+  assert.equal(found, true, `${kind}\t${rule}\t${file}\t${symbol}\n${text}`);
 }
 
 const placeFile = 'src/vacation/place-list.mjs';
@@ -29,7 +51,8 @@ const placeText = readFixture('place-list.mjs');
 assert.deepEqual(symbols(placeFile, placeText), [['HC-PLACE-LIST', 'EXTRA_LIST_FILL']]);
 assert.equal(classify(scanText(placeFile, placeText), []).fail.length, 1);
 assert.equal(classify(scanText(placeFile, placeText), []).report.length, 0);
-const placeClosed = classify(scanText(placeFile, placeText), [entry(placeFile, 'EXTRA_LIST_FILL')]);
+const placeClosed = classify(scanText(placeFile, placeText), [entry(placeFile, 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')]);
+assert.equal(classify(scanText(placeFile, placeText), [entry(placeFile, 'EXTRA_LIST_FILL', 'HC-DIALOG')]).fail.length, 1);
 assert.equal(placeClosed.fail.length, 0);
 assert.deepEqual(placeClosed.report.map((finding) => finding.symbol_or_pattern), ['EXTRA_LIST_FILL']);
 
@@ -41,8 +64,8 @@ assert.deepEqual(symbols(coordFile, coordText), [
 ]);
 assert.equal(classify(scanText(coordFile, coordText), []).fail.length, 2);
 const coordClosed = classify(scanText(coordFile, coordText), [
-  entry(coordFile, '{lat:21.111,lng:-157.222}'),
-  entry(coordFile, '[21.111,-157.222]'),
+  entry(coordFile, '{lat:21.111,lng:-157.222}', 'HC-COORD'),
+  entry(coordFile, '[21.111,-157.222]', 'HC-COORD'),
 ]);
 assert.equal(coordClosed.fail.length, 0);
 assert.equal(coordClosed.report.length, 2);
@@ -51,7 +74,7 @@ const thingFile = 'src/vacation/thing.mjs';
 const thingText = readFixture('thing.mjs');
 assert.deepEqual(symbols(thingFile, thingText), [["HC-THING", "category_name:'Car',name:'Aloha Shuttle'"]]);
 assert.equal(classify(scanText(thingFile, thingText), []).fail.length, 1);
-assert.equal(classify(scanText(thingFile, thingText), [entry(thingFile, "category_name:'Car',name:'Aloha Shuttle'")]).fail.length, 0);
+assert.equal(classify(scanText(thingFile, thingText), [entry(thingFile, "category_name:'Car',name:'Aloha Shuttle'", 'HC-THING')]).fail.length, 0);
 
 const dialogFile = 'src/vacation/dialog.mjs';
 const dialogText = readFixture('dialog.mjs');
@@ -63,10 +86,10 @@ assert.deepEqual(symbols(dialogFile, dialogText), [
 ]);
 assert.equal(classify(scanText(dialogFile, dialogText), []).fail.length, 4);
 const dialogClosed = classify(scanText(dialogFile, dialogText), [
-  entry(dialogFile, 'ONBOARDING_OPENER_NEW'),
-  entry(dialogFile, 'Welcome aboard'),
-  entry(dialogFile, 'Include these sentences'),
-  entry(dialogFile, 'must say'),
+  entry(dialogFile, 'ONBOARDING_OPENER_NEW', 'HC-DIALOG'),
+  entry(dialogFile, 'Welcome aboard', 'HC-DIALOG'),
+  entry(dialogFile, 'Include these sentences', 'HC-DIALOG'),
+  entry(dialogFile, 'must say', 'HC-DIALOG'),
 ]);
 assert.equal(dialogClosed.fail.length, 0);
 assert.equal(dialogClosed.report.length, 4);
@@ -89,7 +112,7 @@ const tokenShapes = [
 for (const [fixture, file, symbol] of tokenShapes) {
   const findings = scanText(file, readFixture(fixture));
   assert.deepEqual(findings.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['TOKEN-EVIDENCE', symbol]]);
-  const silenced = classify(findings, [entry(file, symbol)]);
+  const silenced = classify(findings, [entry(file, symbol, 'TOKEN-EVIDENCE')]);
   assert.equal(silenced.report.length, 0);
   assert.equal(silenced.fail.length, 1);
 }
@@ -124,15 +147,15 @@ writeTree(openDir, {
 }, []);
 const openRun = runGuard(openDir);
 assert.equal(openRun.status, 1, openRun.stdout);
-assert.match(openRun.stderr, /FAIL\tHC-PLACE-LIST\tsrc\/vacation\/place-list\.mjs:1\tEXTRA_LIST_FILL/);
-assert.match(openRun.stderr, /FAIL\tHC-COORD\tsrc\/vacation\/coords\.mjs:1\t\{lat:21\.111,lng:-157\.222\}/);
-assert.match(openRun.stderr, /FAIL\tHC-COORD\tsrc\/vacation\/coords\.mjs:2\t\[21\.111,-157\.222\]/);
-assert.match(openRun.stderr, /FAIL\tHC-THING\tsrc\/vacation\/thing\.mjs:1\tcategory_name:'Car',name:'Aloha Shuttle'/);
-assert.match(openRun.stderr, /FAIL\tHC-DIALOG\tsrc\/vacation\/dialog\.mjs:1\tONBOARDING_OPENER_NEW/);
-assert.match(openRun.stderr, /FAIL\tHC-DIALOG\tsrc\/vacation\/dialog\.mjs:1\tWelcome aboard/);
-assert.match(openRun.stderr, /FAIL\tHC-DIALOG\tsrc\/vacation\/dialog\.mjs:2\tInclude these sentences/);
-assert.match(openRun.stderr, /FAIL\tHC-DIALOG\tsrc\/vacation\/dialog\.mjs:3\tmust say/);
-assert.match(openRun.stderr, /FAIL\tTOKEN-EVIDENCE\tevidence\/bearer\.txt:1\tBearer/);
+assertHit(openRun.stderr, 'FAIL', 'HC-PLACE-LIST', placeFile, 'EXTRA_LIST_FILL');
+assertHit(openRun.stderr, 'FAIL', 'HC-COORD', coordFile, '{lat:21.111,lng:-157.222}');
+assertHit(openRun.stderr, 'FAIL', 'HC-COORD', coordFile, '[21.111,-157.222]');
+assertHit(openRun.stderr, 'FAIL', 'HC-THING', thingFile, "category_name:'Car',name:'Aloha Shuttle'");
+assertHit(openRun.stderr, 'FAIL', 'HC-DIALOG', dialogFile, 'ONBOARDING_OPENER_NEW');
+assertHit(openRun.stderr, 'FAIL', 'HC-DIALOG', dialogFile, 'Welcome aboard');
+assertHit(openRun.stderr, 'FAIL', 'HC-DIALOG', dialogFile, 'Include these sentences');
+assertHit(openRun.stderr, 'FAIL', 'HC-DIALOG', dialogFile, 'must say');
+assertHit(openRun.stderr, 'FAIL', 'TOKEN-EVIDENCE', 'evidence/bearer.txt', 'Bearer');
 
 const closedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-closed-'));
 writeTree(closedDir, {
@@ -141,21 +164,21 @@ writeTree(closedDir, {
   'src/vacation/thing.mjs': thingText,
   'src/vacation/dialog.mjs': dialogText,
 }, [
-  entry(placeFile, 'EXTRA_LIST_FILL'),
-  entry(coordFile, '{lat:21.111,lng:-157.222}'),
-  entry(coordFile, '[21.111,-157.222]'),
-  entry(thingFile, "category_name:'Car',name:'Aloha Shuttle'"),
-  entry(dialogFile, 'ONBOARDING_OPENER_NEW'),
-  entry(dialogFile, 'Welcome aboard'),
-  entry(dialogFile, 'Include these sentences'),
-  entry(dialogFile, 'must say'),
+  entry(placeFile, 'EXTRA_LIST_FILL', 'HC-PLACE-LIST'),
+  entry(coordFile, '{lat:21.111,lng:-157.222}', 'HC-COORD'),
+  entry(coordFile, '[21.111,-157.222]', 'HC-COORD'),
+  entry(thingFile, "category_name:'Car',name:'Aloha Shuttle'", 'HC-THING'),
+  entry(dialogFile, 'ONBOARDING_OPENER_NEW', 'HC-DIALOG'),
+  entry(dialogFile, 'Welcome aboard', 'HC-DIALOG'),
+  entry(dialogFile, 'Include these sentences', 'HC-DIALOG'),
+  entry(dialogFile, 'must say', 'HC-DIALOG'),
 ]);
 const closedRun = runGuard(closedDir);
 assert.equal(closedRun.status, 0, closedRun.stderr);
-assert.match(closedRun.stdout, /REPORT\tHC-PLACE-LIST\tsrc\/vacation\/place-list\.mjs:1\tEXTRA_LIST_FILL/);
-assert.match(closedRun.stdout, /REPORT\tHC-COORD\tsrc\/vacation\/coords\.mjs:1\t\{lat:21\.111,lng:-157\.222\}/);
-assert.match(closedRun.stdout, /REPORT\tHC-THING\tsrc\/vacation\/thing\.mjs:1\tcategory_name:'Car',name:'Aloha Shuttle'/);
-assert.match(closedRun.stdout, /REPORT\tHC-DIALOG\tsrc\/vacation\/dialog\.mjs:3\tmust say/);
+assertHit(closedRun.stdout, 'REPORT', 'HC-PLACE-LIST', placeFile, 'EXTRA_LIST_FILL');
+assertHit(closedRun.stdout, 'REPORT', 'HC-COORD', coordFile, '{lat:21.111,lng:-157.222}');
+assertHit(closedRun.stdout, 'REPORT', 'HC-THING', thingFile, "category_name:'Car',name:'Aloha Shuttle'");
+assertHit(closedRun.stdout, 'REPORT', 'HC-DIALOG', dialogFile, 'must say');
 assert.match(closedRun.stdout, /hardcoded content check passed \(8 report, 0 fail\)/);
 assert.equal(closedRun.stderr, '');
 
@@ -193,19 +216,19 @@ function repoWithBase(baseWritten) {
 }
 
 const grown = repoWithBase([]);
-fs.writeFileSync(path.join(grown, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL')])}\n`);
+fs.writeFileSync(path.join(grown, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')])}\n`);
 const grownRun = runGuard(grown, { BASE: 'base' });
 assert.equal(grownRun.status, 1, grownRun.stdout);
-assert.match(grownRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/hardcoded-content-baseline\.json:1\t1>0/);
+assertHit(grownRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
 
-const same = repoWithBase([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL')]);
+const same = repoWithBase([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')]);
 const sameRun = runGuard(same, { BASE: 'base' });
 assert.equal(sameRun.status, 0, sameRun.stderr);
 assert.match(sameRun.stdout, /hardcoded content check passed \(0 report, 0 fail\)/);
 
 const seeded = repoWithBase(null);
 fs.mkdirSync(path.join(seeded, 'scripts'), { recursive: true });
-fs.writeFileSync(path.join(seeded, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL')])}\n`);
+fs.writeFileSync(path.join(seeded, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')])}\n`);
 const seededRun = runGuard(seeded, { BASE: 'base' });
 assert.equal(seededRun.status, 0, seededRun.stderr);
 assert.match(seededRun.stdout, /hardcoded content check passed \(0 report, 0 fail\)/);
@@ -225,14 +248,23 @@ for (const row of baseline) assert.equal(row.note, BASELINE_NOTE);
 
 const repoRun = runGuard(repo);
 assert.equal(repoRun.status, 0, repoRun.stderr);
-assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\tsrc\/vacation\/keepsake-list-minimums\.mjs:12\tKEEPSAKE_LIST_FILL/);
-assert.match(repoRun.stdout, /REPORT\tHC-COORD\tsrc\/vacation\/keepsake-list-minimums\.mjs:275\tfallbackLat:19\.64,fallbackLng:-155\.996/);
-assert.match(repoRun.stdout, /REPORT\tHC-THING\tsrc\/vacation\/intake-shared-trip\.mjs:325\tcategory_name:'Car',name:'SpeediShuttle'/);
-assert.match(repoRun.stdout, /REPORT\tHC-DIALOG\tsrc\/vacation\/live-app-turn\.mjs:40\tCANNED_APP_REPLY/);
-assert.match(repoRun.stdout, new RegExp(`hardcoded content check passed \\(${baseline.length} report, 0 fail\\)`));
-assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\troutes\/vacation-telegram-turn\.mjs:\d+\tinventory:A20/);
-assert.match(repoRun.stdout, /REPORT\tHC-THING\tpublic\/assets\/index-0J54vUO3\.js:\d+\tinventory:D3/);
-assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\tscripts\/travel-source-adapter-runner\.mjs:\d+\tinventory:E10/);
+const liveSummary = repoRun.stdout.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
+assert.ok(liveSummary, repoRun.stdout);
+const liveReport = Number(liveSummary[1]);
+const liveFail = Number(liveSummary[2]);
+assert.equal(liveFail, 0);
+assert.equal(liveReport <= baseline.length, true);
+const judged = classify(scanRoots(repo), baseline);
+assert.equal(judged.fail.length, 0);
+assert.equal(judged.report.length, liveReport);
+const liveRows = identities(repoRun.stdout);
+assert.deepEqual(
+  liveRows.map(contentIdentity).sort(),
+  judged.report.map(contentIdentity).sort(),
+);
+for (const row of liveRows) {
+  assert.equal(baseline.some((entry) => contentIdentity(entry) === contentIdentity(row)), true, contentIdentity(row));
+}
 assert.doesNotMatch(repoRun.stdout, /inventory:E4/);
 assert.doesNotMatch(repoRun.stderr, /inventory:E4/);
 
@@ -267,7 +299,7 @@ for (const id of inventoryIds) {
   const text = fs.readFileSync(fixturePath, 'utf8');
   const findings = scanText(file, text);
   const siblings = findings.filter((finding) => finding.symbol_or_pattern !== `inventory:${id}`);
-  const opened = classify(findings, siblings.map((finding) => entry(file, finding.symbol_or_pattern)));
+  const opened = classify(findings, siblings.map((finding) => entry(file, finding.symbol_or_pattern, finding.rule)));
   assert.deepEqual(opened.fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [[pattern.rule, `inventory:${id}`]]);
   assert.equal(opened.report.length, siblings.length);
   openFiles[file] = text;
@@ -284,7 +316,7 @@ assert.equal(inventoryOpenRun.status, 1, inventoryOpenRun.stdout);
 for (const id of inventoryIds) {
   if (unmatchedIds.includes(id)) continue;
   const pattern = INVENTORY_PATTERNS.find((item) => item.id === id);
-  assert.match(inventoryOpenRun.stderr, new RegExp(`FAIL\\t${pattern.rule}\\tsrc/vacation/new-${id}\\.mjs:\\d+\\tinventory:${id}`));
+  assertHit(inventoryOpenRun.stderr, 'FAIL', pattern.rule, `src/vacation/new-${id}.mjs`, `inventory:${id}`);
 }
 
 const thingSourceFile = 'src/vacation/thing-source.mjs';
@@ -321,7 +353,7 @@ for (let index = 0; index < 13; index += 1) {
 }
 const ruleRun = runGuard(ruleDir);
 assert.equal(ruleRun.status, 1, ruleRun.stdout);
-assert.deepEqual([...ruleRun.stderr.matchAll(/NO-GOOGLE-PLACES\t[^\t]+\t([^\n]+)/g)].map((item) => item[1]).sort(), [
+assert.deepEqual(identities(ruleRun.stderr).filter((row) => row.rule === 'NO-GOOGLE-PLACES').map((row) => row.symbol).sort(), [
   'GOOGLE_PLACES_API_KEY',
   'PLACES_API_KEY',
   'PlacesClient',
@@ -329,24 +361,24 @@ assert.deepEqual([...ruleRun.stderr.matchAll(/NO-GOOGLE-PLACES\t[^\t]+\t([^\n]+)
   'google.maps.places',
   'maps.googleapis.com/place',
 ].sort());
-assert.match(ruleRun.stderr, /FAIL\tTHING-SOURCE\tsrc\/vacation\/thing-source\.mjs:\d+\tthing-without-source:New Pier/);
-assert.match(ruleRun.stderr, /FAIL\tNO-GOOGLE-PLACES\tsrc\/vacation\/google-places\.mjs:\d+\tGOOGLE_PLACES_API_KEY/);
-assert.match(ruleRun.stderr, /FAIL\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\tgpt-4o-mini/);
-assert.match(ruleRun.stderr, /FAIL\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\topenai\/gpt-4\.1/);
-assert.match(ruleRun.stderr, /FAIL\tNO-CANNED-FALLBACK\tsrc\/vacation\/canned-fallback\.mjs:\d+\tKEEPSAKE_LIST_FILL/);
-assert.match(ruleRun.stderr, /FAIL\tBUILD-STAMP\tscripts\/live_v7_dialog_pdf\.py:1\tempty-stamp/);
-assert.match(ruleRun.stderr, /FAIL\tAPI-FN-CAP\tapi:1\t13>12/);
+assertHit(ruleRun.stderr, 'FAIL', 'THING-SOURCE', thingSourceFile, 'thing-without-source:New Pier');
+assertHit(ruleRun.stderr, 'FAIL', 'NO-GOOGLE-PLACES', googleFile, 'GOOGLE_PLACES_API_KEY');
+assertHit(ruleRun.stderr, 'FAIL', 'MODEL-ALLOWLIST', modelFile, 'gpt-4o-mini');
+assertHit(ruleRun.stderr, 'FAIL', 'MODEL-ALLOWLIST', modelFile, 'openai/gpt-4.1');
+assertHit(ruleRun.stderr, 'FAIL', 'NO-CANNED-FALLBACK', cannedFile, 'KEEPSAKE_LIST_FILL');
+assertHit(ruleRun.stderr, 'FAIL', 'BUILD-STAMP', 'scripts/live_v7_dialog_pdf.py', 'empty-stamp');
+assertHit(ruleRun.stderr, 'FAIL', 'API-FN-CAP', 'api', '13>12');
 fs.writeFileSync(path.join(ruleDir, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([
-  entry(googleFile, 'GOOGLE_PLACES_API_KEY'),
-  entry(modelFile, 'gpt-4o-mini'),
-  entry(modelFile, 'openai/gpt-4.1'),
-  entry('api', '13>12'),
+  entry(googleFile, 'GOOGLE_PLACES_API_KEY', 'NO-GOOGLE-PLACES'),
+  entry(modelFile, 'gpt-4o-mini', 'MODEL-ALLOWLIST'),
+  entry(modelFile, 'openai/gpt-4.1', 'MODEL-ALLOWLIST'),
+  entry('api', '13>12', 'API-FN-CAP'),
 ], null, 2)}\n`);
 const stillFail = runGuard(ruleDir);
-assert.match(stillFail.stderr, /FAIL\tNO-GOOGLE-PLACES/);
-assert.match(stillFail.stderr, /FAIL\tAPI-FN-CAP\tapi:1\t13>12/);
-assert.match(stillFail.stdout, /REPORT\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\tgpt-4o-mini/);
-assert.match(stillFail.stdout, /REPORT\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\topenai\/gpt-4\.1/);
+assertHit(stillFail.stderr, 'FAIL', 'NO-GOOGLE-PLACES', googleFile, 'GOOGLE_PLACES_API_KEY');
+assertHit(stillFail.stderr, 'FAIL', 'API-FN-CAP', 'api', '13>12');
+assertHit(stillFail.stdout, 'REPORT', 'MODEL-ALLOWLIST', modelFile, 'gpt-4o-mini');
+assertHit(stillFail.stdout, 'REPORT', 'MODEL-ALLOWLIST', modelFile, 'openai/gpt-4.1');
 assert.doesNotMatch(`${stillFail.stdout}\n${stillFail.stderr}`, /typesafe\/jev-1\.13/);
 
 const underCap = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-api-'));
@@ -363,5 +395,38 @@ const underRun = runGuard(underCap);
 assert.equal(underRun.status, 0, underRun.stderr);
 assert.doesNotMatch(underRun.stdout, /API-FN-CAP/);
 assert.doesNotMatch(underRun.stdout, /BUILD-STAMP/);
+
+const shiftSource = 'src/vacation/wind-backup.mjs';
+const shiftOriginal = fs.readFileSync(path.join(repo, shiftSource), 'utf8');
+const originalHits = scanText(shiftSource, shiftOriginal);
+const shiftBaseline = baseline.filter((row) => row.file === shiftSource);
+assert.equal(shiftBaseline.length >= 2, true);
+const removed = shiftBaseline.find((row) => row.rule === 'HC-DIALOG' && row.symbol_or_pattern === 'windBackupSentence');
+assert.ok(removed);
+const keptHit = originalHits.find((finding) => contentIdentity(finding) !== contentIdentity(removed));
+assert.ok(keptHit);
+const shifted = `${'// line shift\n'.repeat(6)}${shiftOriginal.split(removed.symbol_or_pattern).join('forecastSentence')}`;
+assert.equal(shifted.includes(removed.symbol_or_pattern), false);
+const shiftDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-shift-'));
+writeTree(shiftDir, { [shiftSource]: shifted }, shiftBaseline);
+const shiftRun = runGuard(shiftDir);
+assert.equal(shiftRun.status, 0, shiftRun.stderr);
+const shiftSummary = shiftRun.stdout.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
+assert.ok(shiftSummary, shiftRun.stdout);
+assert.equal(Number(shiftSummary[2]), 0);
+assert.equal(Number(shiftSummary[1]) < shiftBaseline.length, true);
+const shiftRows = identities(shiftRun.stdout);
+assert.equal(shiftRows.some((row) => contentIdentity(row) === contentIdentity(removed)), false);
+const keptRow = shiftRows.find((row) => contentIdentity(row) === contentIdentity(keptHit));
+assert.ok(keptRow, shiftRun.stdout);
+assert.notEqual(keptRow.line, keptHit.line);
+for (const row of shiftRows) {
+  assert.equal(row.kind, 'REPORT');
+  assert.equal(shiftBaseline.some((entry) => contentIdentity(entry) === contentIdentity(row)), true, contentIdentity(row));
+}
+writeTree(shiftDir, { [shiftSource]: `${shifted}\nconst EXTRA_LIST_FILL = ['Added Venue'];\n` }, shiftBaseline);
+const addedRun = runGuard(shiftDir);
+assert.equal(addedRun.status, 1, addedRun.stdout);
+assertHit(addedRun.stderr, 'FAIL', 'HC-PLACE-LIST', shiftSource, 'EXTRA_LIST_FILL');
 
 process.stdout.write('hardcoded content check test passed\n');

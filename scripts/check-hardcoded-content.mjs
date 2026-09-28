@@ -549,12 +549,16 @@ export function scanRoots(cwd = process.cwd()) {
   return findings;
 }
 
+export function contentIdentity(entry) {
+  return `${entry.rule}\0${entry.file}\0${entry.symbol_or_pattern ?? entry.symbol}`;
+}
+
 export function classify(findings, baseline) {
-  const keys = new Set((baseline || []).map((entry) => `${entry.file}\0${entry.symbol_or_pattern}`));
+  const keys = new Set((baseline || []).map(contentIdentity));
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || !keys.has(`${finding.file}\0${finding.symbol_or_pattern}`)) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || !keys.has(contentIdentity(finding))) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };
@@ -564,7 +568,7 @@ export function loadBaselineFile(file) {
   const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
   if (!Array.isArray(parsed)) throw new Error('baseline must be an array');
   for (const entry of parsed) {
-    for (const key of ['file', 'symbol_or_pattern', 'inventory_id', 'note']) {
+    for (const key of ['file', 'rule', 'symbol_or_pattern', 'inventory_id', 'note']) {
       if (!entry || typeof entry[key] !== 'string' || !entry[key]) throw new Error(`baseline entry missing ${key}`);
     }
   }
