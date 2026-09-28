@@ -88,5 +88,9 @@ assert(sanitizeTimelineGlyph('✈️', 'restaurant') === '🍽️', 'sanitize st
 assert(sanitizeTimelineGlyph('✈️', 'flight') === '✈️', 'sanitize keeps airplane on flights');
 assert(isAirplaneGlyph('✈️') === true, 'airplane glyph detected');
 assert(timelineIcon({ name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction' }).isFlight === false, 'research queue is not a flight');
+assert(inferThingTypeFromText('Bellagio') === '', 'brand name does not invent a hotel');
+assert(inferThingTypeFromText('Marriott downtown') === '', 'brand name does not invent a hotel');
+assert(inferThingTypeFromText('Carbone') === '', 'brand name does not invent a restaurant');
+assert(resolveThingType({ name: 'Bellagio', category_name: 'Hotel' }) === 'hotel', 'source category selects the icon');
 
 console.log('timeline icon tests passed');

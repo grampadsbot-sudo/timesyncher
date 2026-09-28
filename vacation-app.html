@@ -490,7 +490,6 @@
       if (!title) return true;
       const key = title.toLowerCase();
       if (PLACEHOLDER_TITLES.has(key)) return true;
-      if (key === 'vegas anniversary' && !hasPlan) return true;
       if (String(trip.status || '').toLowerCase() === 'onboarding' && !String(trip.destination || '').trim() && !realSiteUrl(trip.publicUrl)) return true;
       return false;
     }

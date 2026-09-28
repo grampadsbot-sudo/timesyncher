@@ -103,13 +103,31 @@ function categoryFor(thing) {
     const category_icon = kind === 'flight' ? '✈️' : '🚗';
     return { category_name, category_icon, category: kind };
   }
-  if (String(thing.category || '').toLowerCase() === 'hotel') {
+  const source = thing?.source && typeof thing.source === 'object' ? thing.source : {};
+  const model = thing?.model && typeof thing.model === 'object' ? thing.model : {};
+  const raw = String(
+    source.category || source.category_name || thing?.sourceCategory || ''
+    || model.category || model.category_name || thing?.modelCategory || ''
+    || sourceCategoryName(thing)
+  ).trim();
+  if (!raw) return { category_name: '', category_icon: '', category: '' };
+  const key = raw.toLowerCase();
+  if (key === 'hotel') {
     const named = sourceCategoryName(thing);
     const category_name = named && named.toLowerCase() !== 'hotel' ? named : 'Hotel';
     return { category_name, category_icon: '🏨', category: 'hotel' };
   }
-  const category_name = sourceCategoryName(thing);
-  return { category_name, category_icon: '', category: category_name };
+  const known = {
+    restaurant: ['Restaurant', '🍽️', 'restaurant'],
+    store: ['Store', '🛍️', 'store'],
+    shopping: ['Store', '🛍️', 'shopping'],
+    transport: ['Transport', '🚕', 'transport'],
+    activity: ['Activity', '🎯', 'activity'],
+    attraction: ['Attraction', '🏛️', 'attraction'],
+    bar: ['Bar', '☕', 'bar'],
+  }[key];
+  if (known) return { category_name: known[0], category_icon: known[1], category: known[2] };
+  return { category_name: raw, category_icon: '', category: key };
 }
 
 function finiteCoord(value) {
@@ -288,20 +306,27 @@ export function sharedTripFromIntake({ trip, things }) {
       share_map: true,
       share_bookings: true,
       share_packing: false,
-      share_budget: true,
+      share_budget: (things || []).some((thing) => {
+        const value = thing?.total_price ?? thing?.price;
+        return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+      }),
       share_collab: false,
     },
-    budget: [{
-      id: intId(`${trip.id}:budget`),
-      trip_id: intId(trip.id),
-      category: 'Trip',
-      name: trip.title || 'Vacation',
-      total_price: null,
-      persons: null,
-      days: null,
-      note: '',
-      sort_order: 0,
-    }],
+    budget: (things || []).flatMap((thing, index) => {
+      const value = thing?.total_price ?? thing?.price;
+      if (value === null || value === undefined || value === '') return [];
+      const amount = Number(value);
+      if (!Number.isFinite(amount)) return [];
+      return [{
+        id: intId(`${trip.id}:budget:${thing.id || thing.title || index}`),
+        trip_id: intId(trip.id),
+        category: String(thing?.category || 'Trip'),
+        name: thing?.title || trip.title || 'Vacation',
+        total_price: amount,
+        note: '',
+        sort_order: index,
+      }];
+    }),
     media: [],
     reservations: [],
     accommodations: [],
