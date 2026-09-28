@@ -172,7 +172,14 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
   };
 }
 
-export async function classifyTripIntake({ text, env = process.env, fetchImpl = fetch } = {}) {
+export function tripIntakeConfig(env = process.env) {
+  return {
+    apiKey: openRouterAppKey(env),
+    routerModel: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_QUALITY_MODEL,
+  };
+}
+
+export async function classifyTripIntake({ text, env = process.env, apiKey, routerModel, fetchImpl = fetch } = {}) {
   const message = clean(text, 6000);
   const failed = (error) => ({
     ok: false,
@@ -185,11 +192,13 @@ export async function classifyTripIntake({ text, env = process.env, fetchImpl = 
     error: clean(error, 300) || 'trip intake classification failed',
   });
   if (!message) return { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null };
-  const key = openRouterAppKey(env);
+  const config = tripIntakeConfig(env);
+  const key = apiKey ?? config.apiKey;
+  const model = routerModel || config.routerModel;
   if (!key) return failed('trip intake classifier needs an OpenRouter key');
   try {
     const decision = await postJson(fetchImpl, DEFAULT_JEV_DECISIONS_URL, key, {
-      model: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_QUALITY_MODEL,
+      model,
       state: { channel: 'vacation-app', current_turn: message },
       questions: {
         trip_intake: {
