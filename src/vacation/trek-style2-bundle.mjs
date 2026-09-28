@@ -487,7 +487,9 @@ export function patchStyleTwoToConfigRenderer(source = '') {
 }
 
 function stripMissingPriceLabel(source) {
-  return String(source || '').split(['Price', 'TBD'].join(' ')).join('');
+  return String(source || '')
+    .replace(/(\.match\(\/\\\$\\s\?\\d\[\\d,\]\*\/\)[\s\S]{0,180}?\)\|\|)"[^"]*"/g, '$1""')
+    .replace(/(children:ie\(G\)\|\|)"[^"]*"/g, '$1""');
 }
 
 export function renderServedTrekBundle(raw) {
@@ -892,6 +894,9 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('Price TBD')) {
     throw new Error('A missing price must render blank.');
+  }
+  if (/children:ie\(G\)\|\|"[^"]/.test(js)) {
+    throw new Error('A missing rental price must render blank.');
   }
   if (js.includes('||"Airline"') && (js.includes(FLIGHT_ROW_NEEDLE) || !js.includes(FLIGHT_ROW_PATCH))) {
     throw new Error('Flight list rows must show the full thing name.');

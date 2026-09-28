@@ -39,22 +39,24 @@ const shared = {
 assert.equal(resolveThingFromShared(shared, { thingName: 'Carbone' }).thingId, 8872);
 assert.equal(resolveThingFromShared(shared, { thingId: 8872 }).name, 'Carbone at Aria');
 assert.equal(resolveThingFromShared(shared, { thingName: 'Conservatory' }).thingId, 8871);
-assert.equal(guessThingNameFromFilename('carbone-dinner.jpg').thingName, 'Carbone');
-assert.equal(guessThingNameFromFilename('boarding-passes-photo.jpg').thingName, 'SFO to LAS');
+assert.equal(guessThingNameFromFilename('carbone-dinner.jpg').thingName, '');
+assert.equal(guessThingNameFromFilename('boarding-passes-photo.jpg').thingName, '');
 assert.equal(guessThingNameFromFilename('high-roller.jpg').missing, true);
 assert.equal(guessThingNameFromFilename('sphere-show.jpg').missing, true);
 
 assert.equal(SCT_VACATION3_MEDIA_PACK.length, 15);
-const carboneHands = mapVacation3SctMediaFile('carbone-late-hands-photo.jpg');
-assert.equal(carboneHands.action, 'bind');
-assert.equal(carboneHands.targets[0].thingId, 8872);
-const boarding = mapVacation3SctMediaFile('/workspace/sct-runs/story-draft-20260907/media/boarding-passes-photo.jpg');
-assert.equal(boarding.action, 'bind');
-assert.deepEqual(boarding.targets.map((row) => row.thingId), [8877, 8878]);
-assert.equal(mapVacation3SctMediaFile('conservatory-photo.jpg').action, 'needs-attachment');
-assert.equal(mapVacation3SctMediaFile('conservatory-photo.jpg').targets.length, 0);
-assert.equal(mapVacation3SctMediaFile('shake-shack-fries-photo.jpg').targets[0].thingId, 8873);
-assert.equal(mapVacation3SctMediaFile('eggslut-sandwich-photo.jpg').targets[0].thingId, 8875);
+for (const file of [
+  'carbone-late-hands-photo.jpg',
+  'carbone-plates-photo.jpg',
+  '/workspace/sct-runs/story-draft-20260907/media/boarding-passes-photo.jpg',
+  'shake-shack-fries-photo.jpg',
+  'eggslut-sandwich-photo.jpg',
+  'conservatory-photo.jpg',
+]) {
+  const mapped = mapVacation3SctMediaFile(file);
+  assert.equal(mapped.action, 'needs-attachment', file);
+  assert.deepEqual(mapped.targets, [], file);
+}
 assert.equal(mapVacation3SctMediaFile('bellagio-fountain-late-video.mp4').action, 'needs-attachment');
 assert.equal(mapVacation3SctMediaFile('bellagio-fountain-night-video.mp4').action, 'needs-attachment');
 assert.equal(mapVacation3SctMediaFile('bellagio-fountain-night-video.mp4').targets.length, 0);

@@ -87,34 +87,48 @@ assert.equal(sourcedThing.thingOverrides['place:31'].lng, -115.1766);
 const conservatory = mapVacation3SctMediaFile('conservatory-photo.jpg');
 assert.equal(conservatory.action, 'needs-attachment');
 assert.deepEqual(conservatory.targets, []);
-for (const file of ['bellagio-fountain-late-video.mp4', 'bellagio-fountain-night-video.mp4', 'hotel-lobby.jpg', 'lodging-photo.jpg']) {
+for (const file of [
+  'bellagio-fountain-late-video.mp4',
+  'bellagio-fountain-night-video.mp4',
+  'hotel-lobby.jpg',
+  'lodging-photo.jpg',
+  'carbone-late-hands-photo.jpg',
+  'shake-shack-fries-photo.jpg',
+  'eggslut-sandwich-photo.jpg',
+  'boarding-passes-photo.jpg',
+]) {
   assert.equal(guessThingNameFromFilename(file).thingName, '');
   const mapped = mapVacation3SctMediaFile(file);
   assert.notEqual(mapped.action, 'bind');
-  assert.ok(!mapped.targets.some((target) => target.thingId === 8869));
+  assert.deepEqual(mapped.targets, []);
 }
 
 const areaList = constString('AREA_CHIP_NYC').slice('Ya='.length);
 const areaFallback = constString('AREA_FALLBACK_NEEDLE');
 const coordNeedle = constString('COORD_NAME_MAP_NEEDLE');
-const priceLabel = ['Price', 'TBD'].join(' ');
+const flightSlot = 'Rn=((Xr=(sr=String(bi(G)||"").match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||"unpriced"';
+const rentalSlot = 'children:ie(G)||"unpriced"';
 const fixture = [
   STYLE2_USES_ZU,
   `Ke=${areaList}`,
   areaFallback,
   `ho=G=>{return[1,2];${coordNeedle}}`,
-  `children:ie(G)||"${priceLabel}"`,
+  flightSlot,
+  rentalSlot,
 ].join('\n');
 const patched = patchStyleTwoToConfigRenderer(fixture);
 assert.equal(patched.includes(areaList), false);
 assert.equal(patched.includes(areaFallback), false);
 assert.equal(patched.includes(coordNeedle), false);
-assert.equal(patched.includes(priceLabel), false);
-assert.equal(patched.includes(['Kailua-Kona', 'Alii Drive'].join(' / ')), false);
-assert.equal(patched.includes(['Islandwide', 'Flexible'].join(' / ')), false);
+assert.equal(patched.includes('||"unpriced"'), false);
 assert.match(patched, /src\.neighborhood/);
 assert.match(patched, /return\[1,2\];return null/);
-assert.match(patched, /\|\|""/);
+assert.match(patched, /children:ie\(G\)\|\|""/);
+const flightLine = patched.split('\n').find((line) => line.startsWith('Rn='));
+assert.equal(new Function('bi', 'G', `${flightLine}; return Rn`)(() => '', {}), '');
+assert.equal(new Function('bi', 'G', `${flightLine}; return Rn`)(() => '$18', {}), '$18');
+assert.equal(new Function('ie', 'G', 'return ie(G)||""')(() => '', {}), '');
+assert.equal(new Function('ie', 'G', 'return ie(G)||""')(() => '$40', {}), '$40');
 
 function sliceBetween(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);

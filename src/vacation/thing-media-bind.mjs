@@ -11,16 +11,6 @@ export const PRINT_STUB_MAX_BYTES = 24 * 1024;
 export const TREK_SHARED_API_BASE = 'https://travel.timesyncher.com';
 export const VACATION3_SHARE_TOKEN = 'las-vegas-vacation-3';
 
-export const FILENAME_THING_HINTS = [
-  [/carbone/i, 'Carbone'],
-  [/shake/i, 'Shake Shack'],
-  [/lotus/i, 'Lotus of Siam'],
-  [/eggslut/i, 'Eggslut'],
-  [/cosmo|shop/i, 'Cosmopolitan shops'],
-  [/boarding|sfo.*las|outbound|depart/i, 'SFO to LAS'],
-  [/las.*sfo|return|inbound/i, 'LAS to SFO'],
-];
-
 export const THINGS_NOT_ON_VACATION3 = [
   { pattern: /high.?roller/i, name: 'High Roller' },
   { pattern: /\bsphere\b/i, name: 'Sphere' },
@@ -32,21 +22,15 @@ export const SCT_VACATION3_MEDIA_DIR = '/workspace/sct-runs/story-draft-20260907
 export const SCT_VACATION3_MEDIA_PACK = [
   {
     file: 'boarding-passes-photo.jpg',
-    action: 'bind',
-    targets: [
-      { thingId: 8877, thingName: 'SFO to LAS' },
-      { thingId: 8878, thingName: 'LAS to SFO' },
-    ],
+    action: 'attach',
   },
   {
     file: 'carbone-late-hands-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8872, thingName: 'Carbone' }],
+    action: 'attach',
   },
   {
     file: 'carbone-plates-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8872, thingName: 'Carbone' }],
+    action: 'attach',
   },
   {
     file: 'cirque-program-photo.jpg',
@@ -60,8 +44,7 @@ export const SCT_VACATION3_MEDIA_PACK = [
   },
   {
     file: 'eggslut-sandwich-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8875, thingName: 'Eggslut' }],
+    action: 'attach',
   },
   {
     file: 'high-roller-photo-01.jpg',
@@ -83,8 +66,7 @@ export const SCT_VACATION3_MEDIA_PACK = [
   },
   {
     file: 'shake-shack-fries-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8873, thingName: 'Shake Shack' }],
+    action: 'attach',
   },
   {
     file: 'sphere-late-photo-01.jpg',
@@ -152,16 +134,6 @@ export function mapVacation3SctMediaFile(filename = '') {
       exact: false,
     };
   }
-  if (guessed.thingName) {
-    return {
-      file,
-      action: 'bind',
-      targets: [{ thingId: 0, thingName: guessed.thingName }],
-      skipName: '',
-      skipReason: '',
-      exact: false,
-    };
-  }
   return {
     file,
     action: 'unknown',
@@ -186,9 +158,6 @@ export function guessThingNameFromFilename(filename = '') {
     if (missing.pattern.test(base)) {
       return { thingName: missing.name, missing: true };
     }
-  }
-  for (const [pattern, thingName] of FILENAME_THING_HINTS) {
-    if (pattern.test(base)) return { thingName, missing: false };
   }
   return { thingName: '', missing: false };
 }

@@ -615,7 +615,6 @@ assert.match(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}\$\{lg\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
-assert.doesNotMatch(patchedAe, /\[\/bellagio\|conservatory\/i,/);
 assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.match(patchedAe, /data-style2-centered-day="1"/);
 assert.match(patchedAe, /flex-direction:column/);
@@ -873,8 +872,7 @@ assert.match(sharedApp, /data-ts-pic-popup-tip/);
 assert.match(sharedApp, /leaflet-popup-tip-container/);
 assert.match(sharedApp, /box-sizing: content-box !important/);
 
-const trek = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
-assert.match(trek, /i==="flight"\?"✈️"/);
-assert.doesNotMatch(trek, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
+assert.match(livePatched, /i==="flight"\?"✈️"/);
+assert.doesNotMatch(livePatched, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');

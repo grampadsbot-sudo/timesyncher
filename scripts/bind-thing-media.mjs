@@ -5,7 +5,6 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import {
-  FILENAME_THING_HINTS,
   SCT_VACATION3_MEDIA_DIR,
   SCT_VACATION3_MEDIA_PACK,
   THINGS_NOT_ON_VACATION3,
@@ -280,7 +279,7 @@ async function main() {
 
   if (!files.length && !urlArg) {
     const missing = THINGS_NOT_ON_VACATION3.map((item) => item.name).join(', ');
-    throw new Error(`No media files found. Looked at --file/--dir and ${defaultMediaDir}. Filename hints: ${FILENAME_THING_HINTS.map((row) => row[1]).join(', ')}. Not on this trip yet (note only): ${missing}.`);
+    throw new Error(`No media files found. Looked at --file/--dir and ${defaultMediaDir}. Pass --thing-id for the Thing this file was attached to. Not on this trip yet (note only): ${missing}.`);
   }
 
   const shared = await fetchShared(shareToken, sharedBase);
