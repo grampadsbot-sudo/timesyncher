@@ -91,11 +91,16 @@ export async function runLive(cwd, record) {
     if (response.ok && casePasses(row.expect, body.answers || {})) passedCases += 1;
   }
   const score = passedCases / rows.length;
-  if (score < THRESHOLD) return { passed: false, score, wrote: false };
+  const passed = score >= THRESHOLD;
+  const verdict = passed ? 'pass' : 'fail';
+  process.stdout.write(`RECEIPT\t${record.id}\t${model}\t${verdict}\n`);
+  if (!passed) return { passed: false, score, wrote: false, verdict };
   const receipt = {
+    card: record.id,
+    model,
+    verdict,
     cardHash: record.cardHash,
     labeledSetHash: record.labeledSetHash,
-    model,
     passed: true,
     score,
     threshold: THRESHOLD,
@@ -106,7 +111,7 @@ export async function runLive(cwd, record) {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, `${JSON.stringify(receipt, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
-  return { passed: true, score, wrote: true, receipt };
+  return { passed: true, score, wrote: true, receipt, verdict };
 }
 
 async function main() {

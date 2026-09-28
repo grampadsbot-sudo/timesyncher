@@ -144,8 +144,36 @@ try {
 }
 assert.equal(liveResult.passed, true);
 assert.equal(liveResult.wrote, true);
+assert.equal(liveResult.verdict, 'pass');
 assert.equal(jevCardFindings(passedDir).length, 0);
-assert.match(chunks.join(''), /"passed": true/);
-assert.match(chunks.join(''), /"model": "typesafe\/jev-1\.13"/);
+assert.match(chunks.join(''), /RECEIPT\tsample\ttypesafe\/jev-1\.13\tpass/);
+assert.match(chunks.join(''), /"card": "sample"/);
+assert.match(chunks.join(''), /"verdict": "pass"/);
+
+chunks.length = 0;
+globalThis.fetch = async () => ({ ok: true, json: async () => ({ answers: { ready: { choice: 'no' } } }) });
+process.stdout.write = (chunk, ...rest) => {
+  chunks.push(String(chunk));
+  return originalWrite(chunk, ...rest);
+};
+const failDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jev-fail-'));
+writeCard(failDir, '{ ready: { type: "choice", instructions: "Pick yes.", criteria: { yes: "Yes." } } }');
+let failResult;
+try {
+  process.env.OPENROUTER_API_KEY = 'present';
+  process.env.TIMESYNCHER_JEV_CLASSIFY_URL = 'https://example.invalid/decisions';
+  process.env.JEV_EVAL_MODEL = 'typesafe/jev-1.13';
+  failResult = await runLive(failDir, cardRecords(failDir)[0]);
+} finally {
+  globalThis.fetch = originalFetch;
+  process.stdout.write = originalWrite;
+  delete process.env.OPENROUTER_API_KEY;
+  delete process.env.TIMESYNCHER_JEV_CLASSIFY_URL;
+  delete process.env.JEV_EVAL_MODEL;
+}
+assert.equal(failResult.passed, false);
+assert.equal(failResult.verdict, 'fail');
+assert.equal(fs.existsSync(path.join(failDir, 'evals/jev/sample/receipt.json')), false);
+assert.match(chunks.join(''), /RECEIPT\tsample\ttypesafe\/jev-1\.13\tfail/);
 
 process.stdout.write('jev card eval gate test passed\n');
