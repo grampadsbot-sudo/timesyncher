@@ -180,6 +180,7 @@ assert.equal(dialogPackTitle('Dialog Pack \u2014 Big Island Family v7 Tier 1\u20
 assert.equal(draftFactErrors("Sunday's garden stays with Kimberly.", { owners: { gardens: 'Kimberly' }, gardenDays: ['apr 5'], span: { start: '2026-04-03', end: '2026-04-12' } }).some((error) => /Sunday/.test(error)), false);
 assert.equal(draftFactErrors('The crew includes your four friends.', { ownerName: 'Craig Davidson' }).some((error) => /invented people/.test(error)), false);
 assert.ok(draftFactErrors('The party of 9 is already set.', { travelers: ['Ada', 'Bea', 'Cam'] }).some((error) => /saved party size is 3/.test(error)));
+assert.equal(draftFactErrors('The crew includes your unnamed friends.', { ownerName: 'Ada' }).some((error) => /invented people/.test(error)), false);
 assert.doesNotMatch(source, /WHAT_I_CHANGED/);
 const partyFacts = draftingFacts([], 'The party of eight needs a quiet day. Four friends are still unnamed.');
 assert.doesNotMatch(partyFacts.roster, /party of (six|seven|eight|nine|ten)/i);
