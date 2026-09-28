@@ -1,5 +1,4 @@
 import { lowestCarOffers } from './car-offers.mjs';
-import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
 
 const MONTHS = {
@@ -232,8 +231,6 @@ const PLACE_COORDS = {
 };
 
 function coordsFor(name) {
-  const detail = BIG_ISLAND_FILL_DETAILS[name];
-  if (detail?.lat && detail?.lng) return [detail.lat, detail.lng, detail.address || 'Kailua-Kona, Hawaii'];
   return PLACE_COORDS[name] || null;
 }
 
