@@ -34,16 +34,15 @@ import {
   liveTurnRecord,
   onboardingOpenerText,
   tripIsReturning,
+  intakeSpan,
   postIntakeUpsellTurn,
   produceLiveAppReply,
   finishTierRewrite,
   applyAgreedAppSwim,
   applyCustomerNotes,
-  ensureNamedThings,
-  intakeFacts,
-  thingsFromIntake,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
+import { classifyTripIntake, ensureNamedThings, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   openCollaboratorAppSeats,
   recordDialogParty,
@@ -393,6 +392,33 @@ async function queueVacationAppTurn(db, session, trip, body) {
   const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
   const customerTurnIndex = priorCount + 1;
   const receivedAt = new Date().toISOString();
+  const memoryRows = await db`
+    select speaker, body, payload
+    from transcript_turns
+    where customer_id = ${transcriptOwnerId}
+      and trip_id = ${tripId}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+    order by coalesce(received_at, sent_at, created_at) desc
+    limit 120
+  `;
+  const priorTurns = [...memoryRows].reverse().map((row) => {
+    const stored = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = stored.liveTranscript && typeof stored.liveTranscript === 'object' ? stored.liveTranscript : {};
+    return {
+      role: row.speaker === 'app' ? 'app' : 'customer',
+      text: row.body || '',
+      intake: live.intake === true,
+    };
+  });
+  const classification = await classifyTripIntake({ text: requestText, env: process.env });
+  const firstIntake = postIntakeUpsellTurn({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
+  const jobFields = tripIntakeJobFields({
+    requestText,
+    receivedAt,
+    classification,
+    firstIntake,
+  });
   const customerLive = liveTurnRecord({
     turnIndex: customerTurnIndex,
     role: 'customer',
@@ -403,6 +429,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     sessionE2eMs: sessionE2eMs(),
     jev: { jevRan: false, error: 'classify_pending' },
     speakerName,
+    intake: classification.ok === true && classification.intake === true,
   });
   const payload = {
     source: 'vacation_app',
@@ -412,6 +439,9 @@ async function queueVacationAppTurn(db, session, trip, body) {
     browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
     selectedTripId: tripId,
     liveTranscript: customerLive,
+    intakeEvent: jobFields.intakeEvent,
+    wantedThings: jobFields.wantedThings,
+    intakeError: jobFields.intakeError,
   };
   const turnTag = classifyTurn({
     text: requestText,
@@ -462,24 +492,13 @@ async function queueVacationAppTurn(db, session, trip, body) {
       requestType: 'trip_intake',
       requestText,
       payload,
+      intakeEvent: jobFields.intakeEvent,
+      wantedThings: jobFields.wantedThings,
+      intakeError: jobFields.intakeError,
     }})
     returning id
   `;
 
-  const memoryRows = await db`
-    select speaker, body
-    from transcript_turns
-    where customer_id = ${transcriptOwnerId}
-      and trip_id = ${tripId}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-    order by coalesce(received_at, sent_at, created_at) desc
-    limit 120
-  `;
-  const priorTurns = [...memoryRows].reverse().map((row) => ({
-    role: row.speaker === 'app' ? 'app' : 'customer',
-    text: row.body || '',
-  }));
   let produced;
   try {
     produced = await produceLiveAppReply({
@@ -488,6 +507,8 @@ async function queueVacationAppTurn(db, session, trip, body) {
       priorTurns,
       tripTitle: trip?.title || '',
       env: process.env,
+      intake: classification.ok === true && classification.intake === true,
+      wantedThings: classification.ok === true ? classification.things : [],
     });
   } catch (error) {
     produced = {
@@ -522,6 +543,9 @@ async function queueVacationAppTurn(db, session, trip, body) {
     sessionE2eMs: sessionE2eMs(),
     jev: customerLive.jev,
     reply: null,
+    intakeEvent: jobFields.intakeEvent,
+    wantedThings: jobFields.wantedThings,
+    intakeError: jobFields.intakeError,
   };
   if (produced.status === 'interim' && produced.pending) {
     const pending = {
@@ -591,7 +615,8 @@ async function queueVacationAppTurn(db, session, trip, body) {
       speakerName,
       appReply: produced.reply,
     },
-    postIntakeUpsellTurn(requestText, priorTurns) ? requestText : '',
+    firstIntake ? requestText : '',
+    classification.ok === true ? classification.things : [],
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
   const vacationRows = await db`
@@ -658,13 +683,11 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text) {
-  const facts = intakeFacts(text);
-  const planned = facts.things.length ? facts.things : thingsFromIntake(text);
-  if (!planned.length) return loadTripThings(db, tripId);
+async function ensureIntakeItinerary(db, tripId, text, extracted) {
+  const planned = thingsFromIntake(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
-  const span = facts.span;
+  const span = intakeSpan(text);
   const priorRows = await db`select metadata from trips where id = ${tripId} limit 1`;
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
   const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
@@ -691,7 +714,6 @@ async function ensureIntakeItinerary(db, tripId, text) {
           end_date = coalesce(end_date, ${span.end || null}::date),
           status = case when status = 'onboarding' then 'planning' else status end,
           metadata = coalesce(metadata, '{}'::jsonb) || ${{
-            intakeRule: facts.rule || '',
             intakeSpan: span.spanLabel || '',
             intakeBadge: span.badge || '',
             dialogParty: party,
@@ -706,7 +728,7 @@ async function ensureIntakeItinerary(db, tripId, text) {
       values (
         ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
         'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-          source: 'long-intake',
+          source: 'trip-intake',
           who: thing.who || '',
           whenLabel: thing.whenLabel || '',
           customerWhen: '',
@@ -719,10 +741,12 @@ async function ensureIntakeItinerary(db, tripId, text) {
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '') {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText);
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '', extracted = []) {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted);
   const current = await loadTripThings(db, tripId);
-  if (!current.length || !String(text || '').trim()) return current;
+  const wanted = thingsFromIntake(extracted);
+  if (!current.length && !wanted.length) return current;
+  if (!String(text || '').trim() && !wanted.length) return current;
   const tripRows = await db`
     select start_date, end_date
     from trips
@@ -732,7 +756,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
-  let next = ensureNamedThings(current, text);
+  let next = ensureNamedThings(current, wanted);
   next = applyCustomerNotes(next, text, { collaborator, speakerName });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
@@ -883,6 +907,7 @@ async function handleVacationApp(req, res, db, url) {
         pending.customerTurn,
         { collaborator: pending.collaborator === true, speakerName: pending.speakerName || '', appReply: finished.reply },
         pending.postIntake === true ? pending.customerTurn : '',
+        pending.wantedThings || [],
       );
       if (itinerary.length) await publishIntakeShare(db, pending.tripId);
       await db`

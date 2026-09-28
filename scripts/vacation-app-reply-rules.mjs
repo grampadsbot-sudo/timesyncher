@@ -9,8 +9,8 @@ export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
 const OPENROUTER_HOST = /openrouter\.ai/i;
 const JEV_DECISIONS_PATH = /\/api\/alpha\/decisions\/?$/i;
 const OPENROUTER_CHAT_PATH = /\/api\/v1\/chat\/completions\/?$/i;
-const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
-const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
+export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
+export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 
@@ -106,6 +106,10 @@ function appOpenRouterKey(env) {
       || env.OPENROUTER_API_KEY,
     500,
   );
+}
+
+export function openRouterAppKey(env = process.env) {
+  return appOpenRouterKey(env);
 }
 
 function openRouterChatModelForTier(tier) {
