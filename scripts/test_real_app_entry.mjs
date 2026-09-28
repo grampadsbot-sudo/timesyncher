@@ -23,6 +23,7 @@ assert.match(bundle, /Open thing details/);
 assert.match(bundle, /Day-by-Day/);
 assert.match(api, /publishIntakeShare/);
 assert.match(handler, /intakeSharedResponse/);
+assert.doesNotMatch(handler, /padKeepsakeSharedPlaces/);
 assert.match(handler, /timesyncherIntake|sharedTripFromIntake/);
 assert.match(api, /storePreCollaboratorSnapshot/);
 
