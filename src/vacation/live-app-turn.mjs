@@ -18,8 +18,6 @@ export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
 export const FIXED_OPENER_REASON = 'fixed_onboarding_opener';
 export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
-export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
-export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
 
 export function tripIsReturning(trip) {
   if (!trip || typeof trip !== 'object') return false;
@@ -31,11 +29,61 @@ export function tripIsReturning(trip) {
   return Boolean(url.trim() || slug.trim());
 }
 
-export function onboardingOpenerText(returning) {
-  return returning ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
+export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}) {
+  const title = String(tripTitle || '').trim();
+  return {
+    first_message: true,
+    customer_said: null,
+    returning_trip: Boolean(returning),
+    site_ready: Boolean(returning),
+    trip_title: title || null,
+  };
 }
 
-const CANNED_APP_REPLY = 'Got it. I saved that';
+export async function produceOnboardingOpener({ returning = false, tripTitle = '', session = null, env = process.env } = {}) {
+  const rules = await loadVacationAppReplyRules(env);
+  if (!rules?.ok) {
+    return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
+  }
+  const jevStarted = Date.now();
+  const jev = await jevPrecall({
+    customerTurn: '',
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!jev?.jevRan) {
+    return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
+  }
+  jev.jevBeforeModel = true;
+  const facts = onboardingOpenerFacts({ returning, tripTitle });
+  const model = await callTieredModel({
+    rules,
+    jev,
+    customerTurn: '',
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    destination: '',
+    memory: [],
+    upsell: 'forbidden',
+    postIntake: false,
+    env,
+    systemExtra: `Opener facts: ${JSON.stringify(facts)}`,
+  });
+  const reply = model?.called && model.text ? String(model.text).trim() : '';
+  if (!reply || appTextBanned(reply)) {
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: appTextBanned(reply) || model?.reason || 'onboarding opener model returned no reply',
+    };
+  }
+  return { reply, rules, jev, model, reason: null };
+}
 
 export function customerModality(body) {
   return body?.voiceMode ? 'voice' : 'text';
@@ -257,12 +305,8 @@ export function isFullUpsell(text) {
   return UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value);
 }
 
-export function isFixedOpenerText(text) {
-  const value = String(text || '');
-  return value === ONBOARDING_OPENER_CHAT_ONLY
-    || value === ONBOARDING_OPENER_WITH_SITE
-    || /your website is not built yet/i.test(value)
-    || /i can update this vacation from here/i.test(value);
+function openerTurn(turn) {
+  return turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER;
 }
 
 function sentenceIsUpsell(sentence) {
@@ -291,7 +335,7 @@ export function sessionHasFullUpsell(priorTurns) {
   return (Array.isArray(priorTurns) ? priorTurns : []).some((turn) => {
     if (turn?.role === 'customer') return false;
     const text = String(turn?.text || '');
-    if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) return false;
+    if (openerTurn(turn)) return false;
     return isFullUpsell(text);
   });
 }
@@ -321,7 +365,7 @@ export function upsellAudit(turns) {
       }
       continue;
     }
-    if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) continue;
+    if (openerTurn(turn)) continue;
     const pulled = customerPullsAccess(lastCustomer)
       || firstMarkedIntake(lastCustomerTurn, priorCustomers.slice(0, -1));
     const phrase = UNLIMITED_PATTERN.test(text);
@@ -427,7 +471,6 @@ function appTextBanned(text) {
   const value = String(text || '');
   if (!value.trim()) return 'app reply text is empty';
   if (value.includes(DIALOG_TEST_FINGERPRINT)) return 'app reply carries the dialog test fingerprint';
-  if (value.includes(CANNED_APP_REPLY)) return 'app reply is the canned vacation-app bubble';
   if (/dialog_vacation_test_turn/i.test(value)) return 'app reply came from dialog_vacation_test_turn';
   if (/dialog-pdf-openrouter-selfcall|openrouter-selfcall/i.test(value)) return 'app reply came from an OpenRouter self-call pack';
   return '';
@@ -1626,6 +1669,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planLine,
     seatDollars,
     seat,
+    planOwned: mergedTrip.planOwned === true,
     systemExtra: draftExtra,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));

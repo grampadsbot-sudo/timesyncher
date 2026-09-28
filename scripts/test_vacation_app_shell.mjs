@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
-import { ONBOARDING_OPENER_CHAT_ONLY } from '../src/vacation/live-app-turn.mjs';
 import { collaboratorSeatJoinEvent } from '../src/vacation/collaborator-app-seat.mjs';
 
 const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
@@ -55,9 +54,9 @@ assert.match(api, /jevStamp/);
 assert.match(page, /data\.reply/);
 assert.match(page, /voiceArmed/);
 assert.doesNotMatch(page, /Got it\. I saved that/);
-assert.ok(page.includes(ONBOARDING_OPENER_CHAT_ONLY.split('\n\n')[0]));
-assert.ok(page.includes('Tell me the trip basics'));
-assert.ok(page.includes('welcome them onto this vacation as collaborators'));
+assert.doesNotMatch(page, /Your website is not built yet/);
+assert.doesNotMatch(page, /I can update this vacation from here/);
+assert.doesNotMatch(page, /Tell me the trip basics/);
 assert.match(api, /seat-join/);
 assert.match(api, /collaboratorSeatJoinEvent/);
 assert.doesNotMatch(api, /seatJoinCustomerText/);
@@ -85,8 +84,9 @@ assert.match(acceptEula, /status !== 'joined'/);
 assert.match(acceptEula, /already_joined/);
 assert.doesNotMatch(acceptEula, /finish-rewrite/);
 assert.match(api, /ensureOnboardingOpener/);
-assert.match(api, /onboardingOpenerText/);
-assert.match(api, /FIXED_OPENER_REASON/);
+assert.match(api, /produceOnboardingOpener/);
+assert.doesNotMatch(api, /onboardingOpenerText/);
+assert.doesNotMatch(api, /FIXED_OPENER_REASON/);
 
 const vite = await readFile(new URL('../vite.config.mjs', import.meta.url), 'utf8');
 assert.match(vite, /vacationApp/);

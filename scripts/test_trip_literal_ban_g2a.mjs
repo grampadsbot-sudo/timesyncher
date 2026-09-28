@@ -74,12 +74,13 @@ const priced = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat?
   seatDollars: 19,
   planLine: 'Ada $19, paid by you',
 });
-assert.match(priced, /Each collaborator seat is \$19/);
-assert.match(priced, /State this payer line exactly: Ada \$19, paid by you/);
+assert.match(priced, /"seat_dollars":19/);
+assert.match(priced, /Ada \$19, paid by you/);
 assert.doesNotMatch(priced, /\$27/);
 
 const missing = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat?', {});
 assert.doesNotMatch(missing, /configured seat price is missing|price not configured/);
+assert.match(missing, /"seat_dollars":null/);
 assert.doesNotMatch(missing, /\$\d+/);
 
 console.log('reply trip data tests passed');

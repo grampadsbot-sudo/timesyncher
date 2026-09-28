@@ -29,11 +29,9 @@ import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mj
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import {
   customerModality,
-  FIXED_OPENER_REASON,
   jevStamp,
-  LIVE_OPENER_PRODUCER,
   liveTurnRecord,
-  onboardingOpenerText,
+  produceOnboardingOpener,
   tripIsReturning,
   intakeSpan,
   firstMarkedIntake,
@@ -279,39 +277,41 @@ async function loadVacationAppTurns(db, session, tripId) {
 
 async function ensureOnboardingOpener(db, session, trip) {
   if (seatFromSession(session)) return;
-  const text = onboardingOpenerText(tripIsReturning(trip));
+  const existing = await db`
+    select 1
+    from transcript_turns
+    where customer_id = ${session.customer_id}
+      and trip_id = ${trip.id}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+    limit 1
+  `;
+  if (existing.length) return;
+  const started = Date.now();
+  const produced = await produceOnboardingOpener({
+    returning: tripIsReturning(trip),
+    tripTitle: trip?.title || '',
+    session,
+    env: process.env,
+  });
+  if (!produced?.reply) {
+    const error = new Error(produced?.reason || 'onboarding opener model returned no reply');
+    error.statusCode = 502;
+    throw error;
+  }
+  const text = produced.reply;
+  const elapsed = Math.max(1, Date.now() - started);
   const live = liveTurnRecord({
     turnIndex: 1,
     role: 'app',
     modality: 'text',
     text,
     at: new Date().toISOString(),
-    latencyMs: null,
-    sessionE2eMs: null,
-    jev: { jevRan: false, error: FIXED_OPENER_REASON },
-    replyProducer: LIVE_OPENER_PRODUCER,
-    model: {
-      quality: {
-        judged: true,
-        score: null,
-        comment: null,
-        rewritten: false,
-      },
-      log: {
-        draftModel: null,
-        rewriteModel: null,
-        shippedModel: null,
-        jevScoreDraft: null,
-        jevScoreRaw: null,
-        jevScoreRewrite: null,
-        jevNote: null,
-        jevNoteReason: 'jev_no_free_text',
-        interimReply: { text: null, model: null, ms: null },
-        latencyMs: { draft: null, rewrite: null, total: null },
-        flagged: false,
-        held: false,
-      },
-    },
+    latencyMs: elapsed,
+    sessionE2eMs: elapsed,
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
   });
   const payload = {
     source: 'vacation_app',

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerFacts, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, firstMarkedIntake, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
@@ -43,7 +43,7 @@ assert.equal(upsellModeForTurn('Friday dinner on the Big Island.', []), 'forbidd
 assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', []), 'allow-once');
 const dayWithCloser = 'Thursday is a town walk in Kailua-Kona. Welcome the whole family as collaborators with unlimited vacations for the whole year.';
 assert.equal(isFullUpsell(dayWithCloser), true);
-assert.equal(sessionHasFullUpsell([{ role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY }]), false);
+assert.equal(sessionHasFullUpsell([{ role: 'app', text: 'Where are you headed?' }]), false);
 const splitWelcome = 'With all three of you joining as collaborators, the household plan is unlimited vacations for the whole year. Since you are splitting payments, Kimberly is covered by you and Tyler and Lauren have their own seats. Fallon still gets a quiet afternoon.';
 assert.equal(item34BanHit(splitWelcome), true);
 assert.equal(item34BanHit('Kimberly\'s seat is already covered. Tyler has his own seat.'), false);
@@ -271,7 +271,9 @@ assert.equal(correctFalsePriceMiss({ judged: true, score: 4, comment: 'Says no e
 assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'The reply skips the dollar amount.', wantsRewrite: true }, 'The price is $27 for unlimited vacations for the whole year.', priceAsk).score <= 3, true);
 assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, true);
 const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
-assert.match(rulesSource, /State this payer line exactly/);
+assert.match(rulesSource, /planFactsForReply/);
+assert.match(rulesSource, /payer_line/);
+assert.doesNotMatch(rulesSource, /State this payer line exactly/);
 assert.match(rulesSource, /trip_context/);
 assert.match(rulesSource, /Criterion 1 is weak/);
 assert.match(rulesSource, /criterion 3 or lower/);
@@ -356,8 +358,16 @@ assert.equal(qualityFromDecisions({
 }).comment, null);
 assert.equal(tripIsReturning({ publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-abc/', shareToken: 'intake-abc', intakeShare: true }), false);
 assert.equal(tripIsReturning({ publicUrl: 'https://travel.timesyncher.com/shared/vegas-anniversary/', shareToken: 'vegas-anniversary' }), true);
-assert.equal(onboardingOpenerText(false), ONBOARDING_OPENER_CHAT_ONLY);
-assert.equal(onboardingOpenerText(true), ONBOARDING_OPENER_WITH_SITE);
+assert.deepEqual(onboardingOpenerFacts({ returning: false }), {
+  first_message: true,
+  customer_said: null,
+  returning_trip: false,
+  site_ready: false,
+  trip_title: null,
+});
+assert.equal(onboardingOpenerFacts({ returning: true, tripTitle: 'Anniversary' }).returning_trip, true);
+assert.equal(onboardingOpenerFacts({ returning: true, tripTitle: 'Anniversary' }).site_ready, true);
+assert.equal(onboardingOpenerFacts({ returning: true, tripTitle: 'Anniversary' }).trip_title, 'Anniversary');
 assert.equal(formatQualityLine({ judged: false, score: 4, comment: 'no' }), '');
 const kept = qualityFromDecisions({
   answers: {
@@ -557,7 +567,7 @@ assert.deepEqual(upsellAudit([
   { turnIndex: 2, role: 'app', text: intakeReply },
 ]).unsolicitedFull, []);
 assert.deepEqual(upsellAudit([
-  { turnIndex: 1, role: 'app', text: ONBOARDING_OPENER_CHAT_ONLY, replyProducer: LIVE_OPENER_PRODUCER },
+  { turnIndex: 1, role: 'app', text: 'Where are you headed?', replyProducer: LIVE_OPENER_PRODUCER },
   { turnIndex: 2, role: 'customer', text: 'How much if they join as collaborators?' },
   { turnIndex: 3, role: 'app', text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' },
   { turnIndex: 4, role: 'customer', text: 'Read the week back on the Big Island.' },
@@ -836,7 +846,7 @@ const fixedOpen = liveDoc({
       turnIndex: 1,
       role: 'app',
       modality: 'text',
-      text: ONBOARDING_OPENER_CHAT_ONLY,
+      text: 'Where are you headed?',
       at: '2026-09-25T21:00:00.000Z',
       latencyMs: null,
       sessionE2eMs: null,
@@ -856,8 +866,7 @@ assert.equal(assessPackShape(fixedOpen).missing_app_open, false);
 assert.equal(assessPackShape(fixedOpen).status, 'DONE');
 const fixedText = extractPdfText(renderLiveTranscriptPdf(fixedOpen));
 assert.match(fixedText, /T1 APP/);
-assert.match(fixedText, /Tell me the trip basics/);
-assert.match(fixedText, /collaborators/);
+assert.match(fixedText, /Where are you headed/);
 assert.doesNotMatch(fixedText, /timing: gen=0ms/);
 assert.match(fixedText, /jevScoreDraft: null/);
 assert.match(fixedText, /jevScoreRaw: null/);
