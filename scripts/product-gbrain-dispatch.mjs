@@ -5,7 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
-import { assertRequiredFirstPassMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import { assertRequiredFirstPassMinimums, firstPassMissingMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import { destinationFromChat, lodgingFromChat } from '../src/vacation/place-search.mjs';
 import {
   DIALOG_TEST_FINGERPRINT,
   REPLY_RULES_SLUG,
@@ -215,39 +216,12 @@ function containsAny(source, words) {
   return words.some((word) => lower.includes(word));
 }
 
-function knownDestinationFromText(source) {
-  const lower = source.toLowerCase();
-  const places = [];
-  const add = (label, pattern) => {
-    if (pattern.test(lower) && !places.includes(label)) places.push(label);
-  };
-  add('Caldwell', /\bcaldwell\b/);
-  add('Boise', /\bboise\b/);
-  add('Idaho', /\bidaho\b/);
-  add('Oahu/Waikiki', /\boahu\b|\bhonolulu\b|\bwaikiki\b/);
-  add('Maui/Kihei', /\bmaui\b|\bkihei\b/);
-  add('Kona/Big Island', /\bkona\b|\bbig island\b/);
-  add('Hawaii', /\bhawaii\b/);
-  add('Las Vegas Strip', /\blas vegas strip\b|\bvegas strip\b/);
-  add('Las Vegas', /\blas vegas\b|\bvegas\b/);
-
-  if (places.includes('Las Vegas Strip')) return 'Las Vegas Strip';
-  if (places.includes('Las Vegas')) return 'Las Vegas';
-  if (places.includes('Caldwell') || places.includes('Boise') || places.includes('Idaho')) {
-    if (places.includes('Caldwell')) return 'Caldwell, Idaho';
-    if (places.includes('Boise')) return 'Boise, Idaho';
-    return 'Idaho';
-  }
-  const hawaiiPlaces = places.filter((place) => place !== 'Idaho');
-  return hawaiiPlaces.join(' / ');
-}
-
 function extractDestination(requestText, payload, trip, options = {}) {
   const inheritedTripDestination = options.ignoreTripContext ? '' : (trip.destination || payload.trip?.destination || '');
   return text(
     inheritedTripDestination ||
       payload.destination ||
-      knownDestinationFromText(requestText) ||
+      destinationFromChat(requestText) ||
       firstMatch(requestText, [
         /\b(?:to|in|for)\s+([A-Z][A-Za-z .'-]{2,60}?)(?:\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|on|for|with|between|around|starting|leaving)\b|$)/i,
         /\b(?:visit|visiting|vacation(?:ing)? in|trip to)\s+([A-Z][A-Za-z .'-]{2,60})(?:\s|$)/i,
@@ -469,7 +443,7 @@ function isExplicitNewVacationRequest(value) {
   if (/\b(update|change|edit)\s+(?:the\s+)?(?:trip|vacation|itinerary|website)\s+at\s+https?:\/\//.test(requestText)) return false;
   const explicitPlanningCreate = /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText)
     && /\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)
-    && (knownDestinationFromText(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
+    && (destinationFromChat(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
   return (
     /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText) &&
     /\b(new|brand new|fresh|another|separate|next)\b/.test(requestText) &&
@@ -535,7 +509,7 @@ function isAccessRosterQuestion(value) {
 
 function vacationLookupTerm(value) {
   const requestText = text(value, 4000).toLowerCase();
-  const destination = knownDestinationFromText(requestText);
+  const destination = destinationFromChat(requestText);
   if (destination) return destination;
   if (isPersonAccessQuestion(requestText) && !/\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)) return '';
   const match = requestText.match(/\b(?:is there|are there|do we have|do i have|did we create|did i create|is my|is our)\s+(?:a|an|the|any)?\s*([a-z][a-z0-9 .'-]{2,80}?)(?:\s+(?:vacation|trip|itinerary|staycation|travel plan)\b|[?!.]|$)/i);
@@ -1922,11 +1896,35 @@ async function buildArtifacts(job, manifest) {
   const titleDestination = destination ? titleCase(destination) : 'Vacation';
   const requestedAt = new Date().toISOString();
   const initialItinerary = buildInitialItinerary({ requestText, destination, dates });
-  const publicResearch = await runPublicResearch({ artifacts: { requestText, vacationName, unforgettableGoal, destination, dates, lodgingLane: lane }, targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15, minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10 });
+  const stay = lodgingFromChat(requestText, {
+    lodging: text(payload.lodging || payload.lodgingName || '', 180),
+    lat: asObject(payload.house).lat ?? payload.houseLat,
+    lng: asObject(payload.house).lng ?? payload.houseLng,
+  });
+  const publicResearch = await runPublicResearch({
+    artifacts: {
+      requestText,
+      vacationName,
+      unforgettableGoal,
+      destination,
+      dates,
+      lodgingLane: lane,
+      lodging: stay.text,
+      house: stay.lat !== null ? { lat: stay.lat, lng: stay.lng } : undefined,
+    },
+    targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15,
+    minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10,
+  });
+  const live = publicResearch.status === 'live_place_search';
   const researchedThings = publicResearch.candidates || [];
-  assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
-  if (publicResearch.status !== 'source_backed_research_complete') {
-    throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
+  if (live) {
+    const gate = firstPassMissingMinimums(researchedThings, publicResearch.firstPassMinimums);
+    if (!Object.keys(gate.missing).length) assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
+  } else if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE !== '1') {
+    assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
+    if (publicResearch.status !== 'source_backed_research_complete') {
+      throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
+    }
   }
   const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal, destination, dates, researchedThings, createNewTrip });
   const webItineraryUrl = trekSync.url;
@@ -1938,7 +1936,7 @@ async function buildArtifacts(job, manifest) {
     `Customer action: TimeSyncher Vacation organizes and compares options; customers verify details and make any bookings themselves.`,
   ].join('\n');
 
-  const things = [
+  const things = live ? (publicResearch.things || []) : [
     {
       category: 'note',
       subtype: 'planning_brief',
@@ -1999,7 +1997,9 @@ async function buildArtifacts(job, manifest) {
   const supportNotes = [
     {
       actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-      note: `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
+      note: live
+        ? `Trip intake saved ${(publicResearch.things || []).length} places. Sources: ${JSON.stringify(publicResearch.sourceCounts || {})}`
+        : `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
       metadata: { destination: destination || null, lodgingLane: lane.primary, requestedAt, webItineraryUrl: webItineraryUrl || null },
     },
   ];
@@ -2064,7 +2064,7 @@ function renderCustomerResponse(job, artifacts) {
   if (requestType === 'itinerary_research_update' || url) {
     const count = artifacts.researchedThings?.length || 0;
     const researchStatus = text(artifacts.publicResearch?.status || '', 120);
-    if (researchStatus && researchStatus !== 'source_backed_research_complete') {
+    if (researchStatus && researchStatus !== 'source_backed_research_complete' && researchStatus !== 'live_place_search') {
       return [
         'I started the vacation website, but it still needs more source-backed options before I call the first pass ready.',
         '',

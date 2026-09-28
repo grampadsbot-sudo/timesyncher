@@ -43,6 +43,7 @@ assert.doesNotMatch(worker, /EXISTING_ITINERARY_MIN_THINGS/);
 
 const dispatch = await readFile(new URL('./product-gbrain-dispatch.mjs', import.meta.url), 'utf8');
 assert.match(dispatch, /assertRequiredFirstPassMinimums/);
+assert.doesNotMatch(dispatch, /knownDestinationFromText/);
 assert.doesNotMatch(dispatch, /TIMESYNCHER_ALLOW_INCOMPLETE_RESEARCH_PASS/);
 assert.doesNotMatch(dispatch, /job_type\) === 'itinerary_research_update' && publicResearch/);
 

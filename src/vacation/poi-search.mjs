@@ -1,8 +1,3 @@
-/**
- * House-radius POI search. Foursquare OS Places records and OSM first.
- * Brave runs only when that database is thin. Synthesis may cite result IDs only.
- */
-
 const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
 const GENERIC_NAME = /^(kona|big island|hawaii|car rentals|oahu)$/i;
 const AIRLINES = ['Hawaiian', 'United', 'Alaska', 'Delta', 'American', 'Southwest', 'JetBlue'];

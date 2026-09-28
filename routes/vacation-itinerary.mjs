@@ -1080,7 +1080,7 @@ export default async function handler(req, res) {
 
     const things = await db`
       select id, category, subtype, title, description, starts_at, ends_at, cost_estimate_cents,
-        currency, location, links, ratings, metadata, created_at
+        currency, location, links, ratings, metadata, source, created_at
       from trip_things
       where trip_id = ${session.trip_id}
       order by

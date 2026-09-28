@@ -149,6 +149,7 @@ export function sharedTripFromIntake({ trip, things }) {
       category: { name: kind.category_name, icon: kind.category_icon },
       reservation_status: 'considering',
       notes: summary,
+      source: thing.source || '',
     });
     const dayIds = [];
     thingOverrides[`place:${id}`] = {

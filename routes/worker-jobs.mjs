@@ -1,6 +1,7 @@
 import { requireWorkerAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { insertTripThing } from '../src/vacation/trip-things.mjs';
 import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 
 async function claimJobs(db, { workerId, limit }) {
@@ -132,37 +133,18 @@ async function completeJob(db, body) {
   return { requestId: rows[0].request_id, tripId: rows[0].trip_id };
 }
 
-function artifactList(result, key) {
+function artifactList(result, key, limit = 25) {
   const artifacts = result?.artifacts && typeof result.artifacts === 'object' ? result.artifacts : {};
-  return Array.isArray(artifacts[key]) ? artifacts[key].slice(0, 25) : [];
+  return Array.isArray(artifacts[key]) ? artifacts[key].slice(0, limit) : [];
 }
 
 async function persistArtifacts(db, row, result) {
-  const tripThings = artifactList(result, 'tripThings');
+  const tripThings = artifactList(result, 'tripThings', 160);
   const budgetItems = artifactList(result, 'budgetItems');
   const supportNotes = artifactList(result, 'supportNotes');
 
   for (const thing of tripThings) {
-    const category = cleanText(thing.category || 'note', 80) || 'note';
-    const title = cleanText(thing.title, 240);
-    if (!title) continue;
-    await db`
-      insert into trip_things (
-        trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,
-        cost_estimate_cents, currency, location, links, ratings, metadata
-      )
-      values (
-        ${row.trip_id}, ${row.request_id}, ${category}, ${cleanText(thing.subtype, 120) || null},
-        ${title}, ${cleanText(thing.description, 4000) || null},
-        ${thing.startsAt || thing.starts_at || null}, ${thing.endsAt || thing.ends_at || null},
-        ${Number.isInteger(thing.costEstimateCents) ? thing.costEstimateCents : thing.cost_estimate_cents || null},
-        ${cleanText(thing.currency || 'usd', 12) || 'usd'},
-        ${JSON.stringify(thing.location || {})}::jsonb,
-        ${JSON.stringify(thing.links || [])}::jsonb,
-        ${JSON.stringify(thing.ratings || {})}::jsonb,
-        ${JSON.stringify(thing.metadata || {})}::jsonb
-      )
-    `;
+    await insertTripThing(db, { tripId: row.trip_id, requestId: row.request_id, thing });
   }
 
   for (const item of budgetItems) {

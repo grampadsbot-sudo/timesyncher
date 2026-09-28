@@ -6,6 +6,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { runApprovedSourceAdapters } from './travel-source-adapter-runner.mjs';
 import { jevRelevanceScore, scoreWebPoisInParallel, searchPois, synthesizeFromIds } from '../src/vacation/poi-search.mjs';
+import { fillTripIntake, lodgingFromChat } from '../src/vacation/place-search.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -456,12 +457,61 @@ async function runHousePoiResearch(input, startedAt) {
   return { provider: 'house-radius-poi', rawCandidates, elapsedMs: Date.now() - startedAt, origin };
 }
 
+function livePlaceSearchEnabled(input) {
+  if (input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE) return false;
+  if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE === '1') return false;
+  if (Array.isArray(input.fsqRecords)) return false;
+  return true;
+}
+
+async function runLivePlaceSearch(input) {
+  const artifacts = input.artifacts || {};
+  const origin = houseOrigin(artifacts);
+  const stay = lodgingFromChat(artifacts.requestText || '', {
+    lodging: typeof artifacts.lodging === 'string' ? artifacts.lodging : '',
+    lat: origin?.lat,
+    lng: origin?.lng,
+  });
+  const sourceEnv = input.env || process.env;
+  return fillTripIntake({
+    destination: artifacts.destination || '',
+    lodging: stay.text,
+    lodgingPoint: origin || undefined,
+    requestText: artifacts.requestText || '',
+    env: {
+      brave: sourceEnv.brave || sourceEnv.BRAVE_SEARCH_API_KEY || '',
+      foursquare: sourceEnv.foursquare || sourceEnv.FOURSQUARE_SERVICE_KEY || '',
+      braveName: 'BRAVE_SEARCH_API_KEY',
+      foursquareName: 'FOURSQUARE_SERVICE_KEY',
+      DATABASE_URL: sourceEnv.DATABASE_URL || '',
+      NEON_DATABASE_URL: sourceEnv.NEON_DATABASE_URL || '',
+    },
+    fetchImpl: input.fetchImpl,
+    priorPlaces: input.priorPlaces,
+    loadPriorPlaces: input.loadPriorPlaces,
+  });
+}
+
 export async function runPublicResearch(input = {}) {
   const startedAt = Date.now();
   const artifacts = input.artifacts || {};
   const destination = text(artifacts.destination || '', 160);
   const blocked = blockedPrivateSignals(input);
   if (blocked.length) return { status: 'blocked_private_or_booking_signal', provider: 'capability-gate', elapsedMs: Date.now() - startedAt, sourceBackedCandidateCount: 0, candidates: [], blockedSignals: blocked };
+  if (livePlaceSearchEnabled(input)) {
+    const intake = await runLivePlaceSearch(input);
+    return {
+      status: 'live_place_search',
+      provider: 'place-search',
+      elapsedMs: Date.now() - startedAt,
+      queries: intake.search.queries,
+      firstPassMinimums: firstPassMinimums(input),
+      sourceCounts: intake.search.sourceCounts,
+      candidates: intake.researchedThings,
+      things: intake.things,
+      sourceBackedCandidateCount: intake.things.length,
+    };
+  }
   const queries = buildResearchQueries(artifacts);
   const retrievedAt = new Date().toISOString();
   let provider = null;

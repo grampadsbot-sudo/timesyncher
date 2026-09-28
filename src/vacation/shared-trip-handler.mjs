@@ -51,7 +51,7 @@ async function intakeSharedResponse(shareToken) {
   const trip = rows[0];
   if (!trip || intakeShareSlug(trip.id) !== shareToken) return null;
   const things = await db`
-    select id, category, title, description, metadata
+    select id, category, title, description, metadata, source
     from trip_things
     where trip_id = ${trip.id}
     order by created_at asc
@@ -68,6 +68,7 @@ async function intakeSharedResponse(shareToken) {
       customerWhen: meta.customerWhen || '',
       notes: Array.isArray(meta.notes) ? meta.notes : [],
       collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
+      source: row.source || '',
     };
   });
   const shared = padKeepsakeSharedPlaces(sharedTripFromIntake({ trip, things: mappedThings }));
