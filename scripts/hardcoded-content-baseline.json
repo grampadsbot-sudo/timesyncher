@@ -1,0 +1,968 @@
+[
+  {
+    "file": "index.html",
+    "symbol_or_pattern": "placeholder=\"Las Vegas\"",
+    "inventory_id": "A22",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "symbol_or_pattern": "placeholder=\"Las Vegas\"",
+    "inventory_id": "A22",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "public/ts-timeline-icon-patch.js",
+    "symbol_or_pattern": "las vegas|vegas",
+    "inventory_id": "A21",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "symbol_or_pattern": "intakeFacts",
+    "inventory_id": "C3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "symbol_or_pattern": "seatJoinCustomerText",
+    "inventory_id": "B5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol_or_pattern": "replyRulesSystem",
+    "inventory_id": "B3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol_or_pattern": "seatWelcomeLine",
+    "inventory_id": "B4",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol_or_pattern": "upsellLine",
+    "inventory_id": "B16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol_or_pattern": "Welcome aboard, Kimberly",
+    "inventory_id": "B7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol_or_pattern": "Welcome aboard, Lauren",
+    "inventory_id": "B7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol_or_pattern": "Welcome aboard, Tyler",
+    "inventory_id": "B7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborator-app-seat.mjs",
+    "symbol_or_pattern": "seatJoinCustomerText",
+    "inventory_id": "B5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "[19.5804,-155.9622]",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "[19.6393,-155.9946]",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "[19.6394,-155.9958]",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "[19.6399,-155.9854]",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "[19.649,-155.994]",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "[19.7388,-156.0456]",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "BIG_ISLAND_FILL_DETAILS",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "category_name:'Car',name:'SpeediShuttle'",
+    "inventory_id": "A8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "Fish Hopper",
+    "inventory_id": "A11",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "Huggo's",
+    "inventory_id": "A11",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "KOA arrival",
+    "inventory_id": "A9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "Kona arrival",
+    "inventory_id": "A9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "PLACE_COORDS",
+    "inventory_id": "A10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "productThingSummary",
+    "inventory_id": "B8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "SpeediShuttle",
+    "inventory_id": "A8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "Ulu Ocean Grill",
+    "inventory_id": "A12",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:18.9364,lng:-155.6464}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.1364,lng:-155.5053}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.4194,lng:-155.2885}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.4219,lng:-155.9103}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.4772,lng:-155.9217}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.4917,lng:-155.9217}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.5734,lng:-155.9618}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.5804,lng:-155.9622}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6378,lng:-155.9876}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6391,lng:-155.9942}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6392,lng:-155.9951}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6393,lng:-155.9946}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6394,lng:-155.9958}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6396,lng:-155.9956}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6398,lng:-155.9902}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6399,lng:-155.9854}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6402,lng:-155.9964}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6424,lng:-155.9961}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6488,lng:-156.0002}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6494,lng:-155.9944}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6788,lng:-156.0236}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.6974,lng:-155.0632}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.7062,lng:-155.0658}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.7194,lng:-155.1106}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.7256,lng:-155.0876}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.7272,lng:-155.0668}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.7603,lng:-155.4564}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.8102,lng:-156.0086}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.8322,lng:-155.9884}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.8542,lng:-155.1534}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.9136,lng:-155.8864}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.9138,lng:-155.8806}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.9167,lng:-155.8869}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.9272,lng:-155.8868}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.9484,lng:-155.8586}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:19.9916,lng:-155.8264}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:20.0228,lng:-155.6678}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:20.0231,lng:-155.6705}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:20.1182,lng:-155.5884}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:20.2036,lng:-155.7334}",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.0163,lng:-114.7378}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.082,lng:-115.1728}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.0909,lng:-115.1765}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1023,lng:-115.1764}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1026,lng:-115.1746}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1074,lng:-115.1766}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1075,lng:-115.1768}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1076,lng:-115.1764}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1078,lng:-115.1762}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1079,lng:-115.1724}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1097,lng:-115.1739}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1098,lng:-115.1738}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1109,lng:-115.1752}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1121,lng:-115.1761}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1125,lng:-115.1726}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1125,lng:-115.1768}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1126,lng:-115.1767}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1127,lng:-115.1766}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1128,lng:-115.1765}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1129,lng:-115.1764}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1147,lng:-115.1485}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1167,lng:-115.1743}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1174,lng:-115.1682}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1174,lng:-115.1712}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1178,lng:-115.1756}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1206,lng:-115.1618}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1212,lng:-115.1697}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1213,lng:-115.1698}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1214,lng:-115.1696}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1215,lng:-115.1694}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1264,lng:-115.1789}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1265,lng:-115.1658}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1266,lng:-115.1657}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1296,lng:-115.1729}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1353,lng:-115.427}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1475,lng:-115.156}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1709,lng:-115.1446}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "{lat:36.1769,lng:-115.1356}",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "BIG_ISLAND_FILL_DETAILS",
+    "inventory_id": "A5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "BIG_ISLAND_LIST_FILL",
+    "inventory_id": "A3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "catalogForShared",
+    "inventory_id": "A1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "fallbackLat:19.64,fallbackLng:-155.996",
+    "inventory_id": "A7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "fallbackLat:36.1147,fallbackLng:-115.1729",
+    "inventory_id": "A7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "FILL_BUCKET_META",
+    "inventory_id": "A7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "KEEPSAKE_FILL_DETAILS",
+    "inventory_id": "A6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "KEEPSAKE_LIST_FILL",
+    "inventory_id": "A4",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "LIVE_TAB_FILL",
+    "inventory_id": "A18",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "padKeepsakeListNames",
+    "inventory_id": "A1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "padKeepsakeSharedPlaces",
+    "inventory_id": "A1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "Ulu Ocean Grill",
+    "inventory_id": "A12",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "[36.084,-115.1537]",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "[36.1073,-115.1766]",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "[36.1097,-115.1739]",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "[36.1126,-115.1767]",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "[36.1147,-115.1729]",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "[36.1436,-115.1415]",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "PRODUCT_THING_FIELDS",
+    "inventory_id": "A14",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol_or_pattern": "PRODUCT_VENUE_COORDS",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "CANNED_APP_REPLY",
+    "inventory_id": "B20",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "I can update this vacation from here",
+    "inventory_id": "B15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "Include these sentences",
+    "inventory_id": "B6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "intakeFacts",
+    "inventory_id": "C3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "interimFromTierOne",
+    "inventory_id": "B6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "INVENTED_GARDEN",
+    "inventory_id": "B2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "ONBOARDING_OPENER_CHAT_ONLY",
+    "inventory_id": "B15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "ONBOARDING_OPENER_WITH_SITE",
+    "inventory_id": "B15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "productThingSummary",
+    "inventory_id": "B8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "SpeediShuttle",
+    "inventory_id": "A8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "UNNAMED_VENUE",
+    "inventory_id": "B2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "Your website is not built yet",
+    "inventory_id": "B15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/pre-collaborator-snapshot.mjs",
+    "symbol_or_pattern": "padKeepsakeSharedPlaces",
+    "inventory_id": "A2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/shared-trip-handler.mjs",
+    "symbol_or_pattern": "padKeepsakeSharedPlaces",
+    "inventory_id": "A2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol_or_pattern": "BRAND_LOGOS",
+    "inventory_id": "A19",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol_or_pattern": "NAMED_THING_LOGOS",
+    "inventory_id": "A19",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol_or_pattern": "FILENAME_THING_HINTS",
+    "inventory_id": "A17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol_or_pattern": "SCT_VACATION3_MEDIA_PACK",
+    "inventory_id": "A17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol_or_pattern": "THINGS_NOT_ON_VACATION3",
+    "inventory_id": "A17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol_or_pattern": "VACATION3_SHARE_TOKEN",
+    "inventory_id": "A17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/timeline-icons.mjs",
+    "symbol_or_pattern": "las vegas|vegas",
+    "inventory_id": "A21",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "[36.1073,-115.1766]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "[36.1097,-115.1739]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "[36.1126,-115.1767]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "[36.1147,-115.1729]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "[36.1436,-115.1415]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "[40.7794,-73.9632]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "AREA_CHIP_BIG_ISLAND",
+    "inventory_id": "A15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "AREA_CHIP_NYC",
+    "inventory_id": "A15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "PRODUCT_THING_FIELDS",
+    "inventory_id": "A14",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "SI_NYC_TAIL",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "SI_VEGAS_TAIL",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/wind-backup.mjs",
+    "symbol_or_pattern": "windBackupSentence",
+    "inventory_id": "B17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "symbol_or_pattern": "I can update this vacation from here",
+    "inventory_id": "B15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "symbol_or_pattern": "Your website is not built yet",
+    "inventory_id": "B15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  }
+]
