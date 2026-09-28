@@ -712,6 +712,23 @@ const built = spawnSync(process.execPath, ['scripts/scan-built-bundles.mjs'], { 
 assert.equal(built.status, 0, built.stderr);
 assert.match(built.stdout, /no HTML reference is produced by an offline build/);
 assert.match(workflow, /scan-built-bundles\.mjs/);
+assert.match(workflow, /eval-jev-cards\.mjs --gate/);
+
+const barFile = 'src/vacation/bar-rules.mjs';
+const barText = [
+  'const book = "I will book the hotel for you and take a deposit.";',
+  'const billing = "Pay the product subscription in the Stripe billing portal.";',
+  'const thing = "I saved that Thing for Friday.";',
+  'const id = "productThingSummary";',
+  'function collaboratorInviteEmail() { return `Vacation website: ${site}`; }',
+  'function ownerReceipt() { return `Your vacation website: ${publicUrl}`; }',
+].join('\n');
+const barHits = scanText(barFile, barText).filter((finding) => finding.rule.startsWith('BAR-'));
+assert.equal(barHits.some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), true);
+assert.equal(barHits.some((finding) => finding.rule === 'BAR-THING-CUSTOMER'), true);
+assert.equal(barHits.some((finding) => finding.rule === 'BAR-COLLAB-URL'), true);
+assert.equal(barHits.some((finding) => /stripe billing portal/i.test(finding.symbol_or_pattern)), false);
+assert.equal(classify(barHits, []).fail.length, barHits.length);
 
 const localVite = 'export default { plugins: [{ name: "timesyncher-shared-assets", async buildStart() { await writeSharedAssets(); } }] };\n';
 const localWriter = [

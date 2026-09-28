@@ -1,0 +1,66 @@
+{
+  "version": "1",
+  "canonicalPlan": "unlimited vacations for the whole year",
+  "allow": [
+    {
+      "id": "stripe-product-subscription",
+      "rules": ["BAR-RESERVATION-PAYMENT"],
+      "pattern": "stripe(?:\\W+\\w+){0,8}\\W+(?:subscription|billing|invoice|portal|checkout|payment|charge)|(?:subscription|billing|invoice|portal|checkout|payment|charge)(?:\\W+\\w+){0,8}\\W+stripe",
+      "note": "A customer-facing string that matches this pattern is TimeSyncher product billing through Stripe (subscription, billing portal, invoice, or the product checkout/payment/charge). It is not a trip reservation, a booking the app places, or a deposit for a stay. The whole string is skipped for BAR-RESERVATION-PAYMENT. A string that only mentions Stripe, or only mentions checkout or payment, is not allowlisted."
+    }
+  ],
+  "rules": {
+    "BAR-RESERVATION-PAYMENT": {
+      "item": 2,
+      "flags": "i",
+      "terms": [
+        "\\bbook(?:ing)?(?:\\s+\\w+){0,6}\\s+for\\s+you\\b",
+        "\\b(?:make|making|made)\\s+(?:a\\s+)?reservations?\\b",
+        "\\breservations?\\b",
+        "\\bcheckout\\b",
+        "\\bdeposit\\b",
+        "\\bpayments?\\b",
+        "\\bpays?\\b",
+        "\\bcharg(?:e|es|ed|ing)\\b"
+      ]
+    },
+    "BAR-SPLIT-PAYER": {
+      "item": 34,
+      "flags": "i",
+      "terms": [
+        "split[-\\s]?payer",
+        "split[-\\s]?payments?",
+        "splitting\\s+payments?",
+        "who[-\\s]pays",
+        "cost[-\\s]split",
+        "\\bpayer\\b"
+      ]
+    },
+    "BAR-UNLIMITED-WORDING": {
+      "item": 35,
+      "flags": "i",
+      "terms": [
+        "\\bmultiple\\s+vacations?\\b",
+        "\\b(?:several|many|a\\s+few|a\\s+couple\\s+of)\\s+(?:vacations?|trips?)\\b",
+        "\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+vacations?\\b",
+        "\\ball\\s+vacations\\b"
+      ]
+    },
+    "BAR-THING-CUSTOMER": {
+      "item": "thing",
+      "flags": "",
+      "terms": ["\\bThings?\\b"]
+    }
+  },
+  "collabUrl": {
+    "builderName": "(?:collaborat|viewer|editor|invite).{0,48}(?:reply|email|copy|message)|(?:reply|email).{0,48}(?:collaborat|viewer|editor|seat)|vacationSupportReply",
+    "sitePhrase": "vacation website|website link|here is the|open the vacation",
+    "note": "A collaborator-seat reply builder is a function whose name matches builderName. A hit is a template literal in that function that contains sitePhrase and a ${...} interpolation."
+  },
+  "pack": {
+    "vacationUrl": "https?:\\/\\/[^\\s)>\"']*(?:timesyncher\\.com|\\/v\\/|\\/shared\\/)[^\\s)>\"']*",
+    "askedToSend": "\\b(?:send|share|give)\\b[\\s\\S]{0,80}\\b(?:viewer|editor|view|edit)\\b[\\s\\S]{0,40}\\b(?:url|link|site|website)\\b|\\b(?:url|link|site|website)\\b[\\s\\S]{0,60}\\b(?:viewer|editor|view|edit)\\b",
+    "noteConfirm": "\\b(?:saved (?:that |your |the )?(?:note|it)|i(?:'ll| will) note|noted (?:that|this|it)|added (?:that |your )?note|note is in|put that (?:note )?on)\\b",
+    "day": "\\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Day\\s+\\d+|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}/\\d{1,2}(?:/\\d{2,4})?|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?)\\b"
+  }
+}

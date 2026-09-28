@@ -3519,5 +3519,1328 @@
     "symbol_or_pattern": "september",
     "inventory_id": "DATE-LITERAL",
     "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "attered vacation ideas, reservations, budgets, and family pr",
+    "inventory_id": "34cc42e6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "by day, vibe, location, reservation status, price confidenc",
+    "inventory_id": "ede75f17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "dgeting feature usually pays for itself, often 10X.",
+    "inventory_id": "db8c23c8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "es, scattered research, reservations, budgets, and daily pla",
+    "inventory_id": "550b50ef",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Forward reservations, paste links, add wish-",
+    "inventory_id": "6ec628f1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ls. Step 2 takes secure payment and starts your onboard",
+    "inventory_id": "af64f8f4",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Pay securely",
+    "inventory_id": "be83a9aa",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Payment was not completed.",
+    "inventory_id": "b8b19e94",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Preparing secure payment...",
+    "inventory_id": "cbdbeb79",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Retry secure payment",
+    "inventory_id": "2199328d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Secure checkout. Your purchase starts t",
+    "inventory_id": "128fe49f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Secure payment",
+    "inventory_id": "8091c066",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Step 2: Payment Info",
+    "inventory_id": "b299d0b7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "th maps, timing, costs, reservations, selected photos, and t",
+    "inventory_id": "d9223d90",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "index.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ties, budgets, options, reservations, and the actual daily f",
+    "inventory_id": "0ad12e9e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": ", what they get, why it pays for itself, and the sim",
+    "inventory_id": "66ef216b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "of before enabling real charges.",
+    "inventory_id": "6dfcbe6c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Pay securely",
+    "inventory_id": "e5518d61",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Payment was not completed.",
+    "inventory_id": "6bd8d03b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Preparing secure payment…",
+    "inventory_id": "ee6643d1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "r. This lets us get the checkout flow working before mov",
+    "inventory_id": "8dc86faf",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Retry secure payment",
+    "inventory_id": "9be73aa0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Secure payment",
+    "inventory_id": "ab6c1314",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "order-test.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Step 2: Payment Info",
+    "inventory_id": "f22b09af",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/admin-onboardings.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Payment/order created",
+    "inventory_id": "2c619b16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Invalid checkout amount.",
+    "inventory_id": "5481a50a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Staging card checkout is not enabled for this",
+    "inventory_id": "2803db1a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "This access-plan checkout is already paid.",
+    "inventory_id": "84854b12",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "This checkout link is not tied to a s",
+    "inventory_id": "1634bbde",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "to create collaborator checkout.",
+    "inventory_id": "3abab6b0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "A valid payer email is required.",
+    "inventory_id": "4e22d8bc",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "ion Telegram access for all vacations",
+    "inventory_id": "87d603af",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "video upload access for all vacations",
+    "inventory_id": "20e2acc5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/onboarding-session.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Payment is yet.",
+    "inventory_id": "1333543a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "imeSyncher collaborator checkout completed",
+    "inventory_id": "2a210c7a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "imeSyncher collaborator payment succeeded",
+    "inventory_id": "e939836a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "TimeSyncher access-plan checkout succeeded",
+    "inventory_id": "22dc52ed",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "TimeSyncher owner media payment succeeded",
+    "inventory_id": "6aaa4293",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "TimeSyncher payment succeeded and onboardin",
+    "inventory_id": "680d613d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "llaborator seat records pay, EULA, and join.",
+    "inventory_id": "390da114",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Syncher Vacation Coupon Checkout', 'TimeSyncher Vacation",
+    "inventory_id": "523ffcdc",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "Here is the ${escapeHtml(label)} website for this Telegram account: <a href=\"${e",
+    "inventory_id": "1a636645",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "Here is the ${label} website link:\\n\\n${url}",
+    "inventory_id": "515c8884",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "I found the linked account, but I could not find the website link for ${label} y",
+    "inventory_id": "9e71ac4f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "checkout link creation failed",
+    "inventory_id": "0605bdf6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "dd-on option below. The checkout page also lets you add",
+    "inventory_id": "48f83f10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "e, access, entitlement, checkout, coupon, remaining vaca",
+    "inventory_id": "4fb6c20e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "I could not create the checkout links in this moment. P",
+    "inventory_id": "675a32d1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ility, access, pricing, checkout, coupons, or media uplo",
+    "inventory_id": "e858b475",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Paid plan, entitlement, checkout, coupon, billing, refun",
+    "inventory_id": "0aaab4d7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "plan, access, coupons, checkout, order, entitlement, re",
+    "inventory_id": "96ccaacf",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "s, meals, bars, coffee, reservations, food style, or cuisine",
+    "inventory_id": "ada66236",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "s, must-do experiences, reservations, or preferences here wh",
+    "inventory_id": "2b717b4b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Telegram link from the checkout email first, then I can",
+    "inventory_id": "9a004061",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Telegram link from the checkout email first, then this",
+    "inventory_id": "e59bee0e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Telegram link from the checkout email, then I can check",
+    "inventory_id": "541fde2a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "the owner media add-on checkout here:",
+    "inventory_id": "98633d32",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Use the checkout link from the purchase",
+    "inventory_id": "587aa18b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "telegram-coverage 8ec669109375 fda852a7bf1a",
+    "inventory_id": "5c1a0b6e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "telegram-intent 5aeab28ac27a a9a2aa389d5f",
+    "inventory_id": "b49f1b46",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "telegram-issue-tags c050bfdc390f 5bf7fd25f6d3",
+    "inventory_id": "cfcc3e5c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Add-on checkout link: /addons-checkout",
+    "inventory_id": "7bb4d66a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "checkout link: /addons-checkout.html",
+    "inventory_id": "451310a9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "he official provider or checkout page.",
+    "inventory_id": "b5a3e365",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ith source URLs, hours, reservation needs, and verification",
+    "inventory_id": "3c8ad4a1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ls and make bookings or payments themselves through the",
+    "inventory_id": "f03c45f8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "more collaborators one checkout at a time.",
+    "inventory_id": "e214e598",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ndly priorities, or any reservations/flights you already hav",
+    "inventory_id": "f41a398e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "numbers, CVV codes, or payment details in chat. TimeSy",
+    "inventory_id": "9fa0a422",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "rve, purchase, hold, or charge travel arrangements fro",
+    "inventory_id": "73fc392e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "eo upload access across all vacations is .",
+    "inventory_id": "50a53bfe",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "gram editing access for one vacation is .",
+    "inventory_id": "3552de1a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "Photo upload access for one vacation is .",
+    "inventory_id": "b0a73b07",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "to upload access across all vacations is .",
+    "inventory_id": "46bea320",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "Video upload access for one vacation is .",
+    "inventory_id": "39a06de0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "book, reserve, hold, or pay.",
+    "inventory_id": "46e0c65d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ices without creating a reservation.",
+    "inventory_id": "a94a3a2c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Reservation creation remains blocke",
+    "inventory_id": "a6358e82",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Vacation adapter blocks reservation/auth commands and uses",
+    "inventory_id": "40a0567b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "ent quality metadata to Things. Live production should",
+    "inventory_id": "f2fa4976",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "an. Do not say no extra charge. Use only the dates the",
+    "inventory_id": "941abe73",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Do not mention reservations, payments, or checkout.",
+    "inventory_id": "98487046",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "dollar amount, and who pays.",
+    "inventory_id": "b90ed921",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "erary, or uses a banned payment word. A price question",
+    "inventory_id": "4f9efdb7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "ervations, payments, or checkout.",
+    "inventory_id": "71bbbb3e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "itting payments\", split payment, split-payer, splitting",
+    "inventory_id": "1955c05f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "me. Do not use a banned payment word.",
+    "inventory_id": "8d9bad57",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "n dollar amount and who pays.",
+    "inventory_id": "e2efd37b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "n: never say \"splitting payments\", split payment, split-",
+    "inventory_id": "b7b5d6f5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Name each seat and who pays without a banned paymen",
+    "inventory_id": "1547ce18",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "names each seat and who pays from the plan table.",
+    "inventory_id": "e4233f23",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "o pays without a banned payment word.",
+    "inventory_id": "bdd36fe9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "price, or uses a banned payment word.",
+    "inventory_id": "a04bd671",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Remove any split-payment wording.",
+    "inventory_id": "59ef846a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Remove the banned payment wording.",
+    "inventory_id": "b51bb0d3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Reservations, payments, split-payer,",
+    "inventory_id": "7dc9233b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Reservations, payments, split-payer, or other",
+    "inventory_id": "aef3050b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "split-payer, splitting payment, or splitting anything",
+    "inventory_id": "5b045258",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "t mention reservations, payments, or checkout.",
+    "inventory_id": "ae1ee156",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "The draft uses a banned payment word.",
+    "inventory_id": "57a5f79e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
+    "inventory_id": "84858e8e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "\", split payment, split-payer, splitting payment, or",
+    "inventory_id": "747b07c5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "aft names each seat and who pays from the plan table.",
+    "inventory_id": "ba485952",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "ations, payments, split-payer, or other language the",
+    "inventory_id": "6a71faac",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "Item34 ban: never say \"splitting payments\", split payment, split-",
+    "inventory_id": "7b0cfe69",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "Name each seat and who pays without a banned paymen",
+    "inventory_id": "5176c7ea",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "plan dollar amount and who pays.",
+    "inventory_id": "acc26c1e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "plan dollar amount, and who pays.",
+    "inventory_id": "cc8908db",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "Remove any split-payment wording.",
+    "inventory_id": "753b1a62",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "Reservations, payments, split-payer, or other language the",
+    "inventory_id": "9871ac7c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "seat is $ . State this payer line exactly: . Make n",
+    "inventory_id": "7c34cf72",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "t payment, split-payer, splitting payment, or splitting anything",
+    "inventory_id": "48d2a39b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "y \"splitting payments\", split payment, split-payer, splitting",
+    "inventory_id": "8365a6bd",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "yments\", split payment, split-payer, splitting payment, or",
+    "inventory_id": "6c2ad84f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "is optional. Never say Thing.",
+    "inventory_id": "9c4c5d52",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "t helps ( ). Never say \"Thing\" to the customer.",
+    "inventory_id": "8cdab6a6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "reply-model-tier 57b461033e4b b315270d9a18",
+    "inventory_id": "3503389f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "reply-quality 5a989b32fb90 4a91bfef0c70",
+    "inventory_id": "d329f58a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "reply-rewrite-choice e4434c7a1f61 c57d63024110",
+    "inventory_id": "eea83e28",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "GBrain, shell, booking, payment, holds, purchases, or r",
+    "inventory_id": "0662545d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "nts official menu hours reservations",
+    "inventory_id": "c033a2d1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "t, holds, purchases, or reservations.",
+    "inventory_id": "131952cf",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Access-plan checkout not found.",
+    "inventory_id": "183ed0f8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "lan rows found for this payer.",
+    "inventory_id": "889d1c56",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "This payer has no paid upgrades.",
+    "inventory_id": "ce0518f7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborator-checkout.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "legram collaborator for all vacations",
+    "inventory_id": "45449deb",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborator-checkout.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "legram collaborator for one vacation",
+    "inventory_id": "8379c23d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborators.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "invite, but the add-on payment is not confirmed yet.",
+    "inventory_id": "66fa688f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborators.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "All vacations: $27",
+    "inventory_id": "095ca91c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborators.mjs",
+    "rule": "BAR-UNLIMITED-WORDING",
+    "symbol_or_pattern": "One vacation: $15",
+    "inventory_id": "63bada8a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/coupons.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "TimeSyncher checkout coupon",
+    "inventory_id": "16c20528",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/email.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "<!doctype html> <html><body style=\"margin:0;background:#050505;color:#fffaf0;fon",
+    "inventory_id": "67dff704",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/email.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vac",
+    "inventory_id": "8922e567",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/email.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "Vacation website: ${publicUrl}",
+    "inventory_id": "05daf4fc",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/email.mjs",
+    "rule": "BAR-COLLAB-URL",
+    "symbol_or_pattern": "Vacation website: ${site}",
+    "inventory_id": "1a8bcc18",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Strip Italian-American reservation.",
+    "inventory_id": "403b9988",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": ", stored as a Rest-list Thing with coords for maps.",
+    "inventory_id": "83e3a22f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "stretch, stored on the Thing for print.",
+    "inventory_id": "94baef59",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "Aria special-night reservation: theatrical Italian-Ame",
+    "inventory_id": "4c282319",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "d a special-night Strip reservation.",
+    "inventory_id": "ec39082f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "\\b pays for (?:himself|herself|",
+    "inventory_id": "e35c3d95",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "\\bI pay for \\b",
+    "inventory_id": "f8320d6d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "banned payment word",
+    "inventory_id": "522b8406",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "customer: I pay for",
+    "inventory_id": "cb5a8aa8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "customer: pays for themself",
+    "inventory_id": "3e30e8ba",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "e paperclip for photos, reservations, and notes.",
+    "inventory_id": "18ff7733",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "nnAnswer with who pays: . Do not add a second",
+    "inventory_id": "b8c4c7ab",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "no extra charge is not in what the cust",
+    "inventory_id": "654378ad",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "p. Never say \"splitting payments\" or splitting anything",
+    "inventory_id": "21b1b26c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "peak, or attach photos, reservations, and notes.",
+    "inventory_id": "c9285c60",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
+    "inventory_id": "38c738c0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "collaborators. .payer",
+    "inventory_id": "bf6dd761",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "ks the price. State the payer line exactly and do not",
+    "inventory_id": "2b5d59c1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "missing per-payer dollar line",
+    "inventory_id": "58e2b7ec",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "nnAnswer with who pays: . Do not add a second",
+    "inventory_id": "f38ac642",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "on the trip. Never say \"splitting payments\" or splitting anything",
+    "inventory_id": "dd5b8687",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "orator seat. State this payer line exactly: . Make n",
+    "inventory_id": "e277a309",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/poi-search.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "poi-relevance 2e0405a419be 97894bf8cbe8",
+    "inventory_id": "b10ba9e3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "’]ll| will)?\\s+(?:cover|pay)\\s+ ['’]s\\s+\\$",
+    "inventory_id": "818300af",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "\\s+will\\s+pay\\s+(?:his|her|their)\\s+o",
+    "inventory_id": "9babcbbb",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "own\\s+\\$ | \\s+(?:covers|pays)\\s+(?:his|her|their)\\s+",
+    "inventory_id": "b328fe7f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "Thing",
+    "inventory_id": "552604b2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "No Thing mapping for this filena",
+    "inventory_id": "38faac1c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "No Thing named \" \" on this share",
+    "inventory_id": "7a4442ab",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "No Thing with id on this share",
+    "inventory_id": "42847319",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "e\",\"hotel-sleep\",\"hotel-checkout\"].includes(di.type)).ma",
+    "inventory_id": "9c983fc6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type",
+    "inventory_id": "a303930b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type",
+    "inventory_id": "2b2836ac",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": ")/os()/rp() must prefer Thing printDataUrl JPEGs over",
+    "inventory_id": "015cd2bf",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "ary must list itinerary Things only via de(true)/Gs.",
+    "inventory_id": "f21ce0a8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "aved-story Things print Thing photos.",
+    "inventory_id": "f42fc3e4",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "Ba() must embed bound Thing url before thumbnail pl",
+    "inventory_id": "ca13643f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "Day Things and Saved Stories must",
+    "inventory_id": "bf4a7d0e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "e bytes for saved-story Thing photos.",
+    "inventory_id": "79ab0e5a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "Itinerary Thing summary must skip trave",
+    "inventory_id": "71d94d00",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "must use stored rr() on Thing titles only.",
+    "inventory_id": "2ccea1ed",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "nd_media so saved-story Things print Thing photos.",
+    "inventory_id": "26ddce72",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "ne fs() must embed that Thing’s fo()/Ba() bound media",
+    "inventory_id": "a5e10964",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "om origin and show full Thing pics (contain, not cove",
+    "inventory_id": "4afd9ef1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "op() still paginates 3 Things per page; must be one 2",
+    "inventory_id": "5eb4a762",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "st harvest only tags on Things in that list.",
+    "inventory_id": "2c7673c3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "t content page that has Things.",
+    "inventory_id": "6cdcbfcd",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "Thing pages must not render r",
+    "inventory_id": "0672cc46",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "ummaries must be marked Thing-stored (rr/Co), not PDF",
+    "inventory_id": "7846e9d2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "ust be types present on Things in that Rest list.",
+    "inventory_id": "553b5ec0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "y media nd() must embed Thing bound_media, not TREK p",
+    "inventory_id": "2b3e3899",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "e paperclip for photos, reservations, and notes.",
+    "inventory_id": "ca51ecaa",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "peak, or attach photos, reservations, and notes.",
+    "inventory_id": "8544499d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "syncher vacation coupon checkout",
+    "inventory_id": "035f2a7d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
   }
 ]

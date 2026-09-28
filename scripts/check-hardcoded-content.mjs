@@ -3,7 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { growthFails, pruneBaseline } from './baseline-subset.mjs';
+import { barFindings } from './dialog-bars.mjs';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
+import { jevCardFindings } from './jev-cards.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
 export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
@@ -1277,6 +1279,13 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     coordFindings(file, value, findings, seen);
     thingFindings(file, value, findings, seen);
     dialogFindings(file, value, findings, seen);
+    for (const finding of barFindings(file, value)) {
+      const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push(finding);
+      }
+    }
     inventoryFindings(file, value, findings, seen);
     thingSourceFindings(file, value, findings, seen);
     cannedFallbackFindings(file, value, findings, seen);
@@ -1451,6 +1460,7 @@ export function scanRoots(cwd = process.cwd()) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));
   }
   findings.push(...servedBundleFindings(cwd));
+  findings.push(...jevCardFindings(cwd));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule) || a.symbol_or_pattern.localeCompare(b.symbol_or_pattern));
   return findings;
 }

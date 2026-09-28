@@ -4,9 +4,11 @@ scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_check_code_ratchet.mjs
+scripts/test_check_dialog_pack.mjs
 scripts/test_check_hardcoded_content.mjs
 scripts/test_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
+scripts/test_eval_jev_cards.mjs
 scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
 scripts/test_offline_manifest.mjs

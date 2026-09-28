@@ -1,0 +1,18 @@
+[
+  {
+    "n": 1,
+    "speaker": "alex",
+    "speaker_id": "alex",
+    "channel": "customer",
+    "in_reply_to": null,
+    "text": "What plan do we get?"
+  },
+  {
+    "n": 2,
+    "speaker": "app",
+    "speaker_id": "app",
+    "channel": "app",
+    "in_reply_to": 1,
+    "text": "The plan covers three vacations and several trips."
+  }
+]

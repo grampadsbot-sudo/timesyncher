@@ -144,12 +144,6 @@
     "note": "existing; ratchet only shrinks"
   },
   {
-    "rule": "DEAD-CODE",
-    "file": "scripts/check-hardcoded-content.mjs",
-    "symbol": "export:loadBaselineFile",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
     "rule": "SEARCH-MODULE-ONLY",
     "file": "scripts/check-hardcoded-content.mjs",
     "symbol": "google-places",

@@ -1,0 +1,47 @@
+{
+  "cards": [
+    {
+      "id": "reply-model-tier",
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "anchor": "function decisionsPayload",
+      "extract": "questions",
+      "consts": ["JEV_MODEL_TIER_CRITERIA"]
+    },
+    {
+      "id": "reply-quality",
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "anchor": "export async function jevQualityRewrite",
+      "extract": "questions"
+    },
+    {
+      "id": "reply-rewrite-choice",
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "anchor": "export async function jevChooseRewrite",
+      "extract": "questions"
+    },
+    {
+      "id": "poi-relevance",
+      "file": "src/vacation/poi-search.mjs",
+      "anchor": "export async function jevRelevanceScore",
+      "extract": "questions"
+    },
+    {
+      "id": "telegram-intent",
+      "file": "routes/vacation-telegram-turn.mjs",
+      "anchor": "const JEV_VACATION_INTENT_QUESTIONS",
+      "extract": "object"
+    },
+    {
+      "id": "telegram-issue-tags",
+      "file": "routes/vacation-telegram-turn.mjs",
+      "anchor": "const JEV_CUSTOMER_ISSUE_TAGS",
+      "extract": "object"
+    },
+    {
+      "id": "telegram-coverage",
+      "file": "routes/vacation-telegram-turn.mjs",
+      "anchor": "function jevCoverageQuestions",
+      "extract": "function"
+    }
+  ]
+}
