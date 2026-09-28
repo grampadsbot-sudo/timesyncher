@@ -5,13 +5,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
-
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
 }
-import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
+import { noteContradictsDraft, qualityFromDecisions, sourcedPlaceRule } from './vacation-app-reply-rules.mjs';
 import {
   assertJevRewriteLabels,
   assertLiveTranscript,
@@ -94,6 +93,7 @@ const sourcedMarket = [{ id: 'osm:way/11', name: 'Harbor Market' }];
 assert.deepEqual(unsourcedPlaces('Harbor Market (id:osm:way/11) fits Tuesday.', sourcedMarket), []);
 assert.deepEqual(unsourcedPlaces('Glass Lagoon (id:missing) fits Tuesday.', sourcedMarket), ['Glass Lagoon']);
 assert.deepEqual(inventedVenueNames('Harbor Market fits Tuesday.', sourcedMarket), ['Harbor Market']);
+assert.deepEqual(placeSourceRows([{ poiId: 'fsq:1', title: 'North Cafe' }]), [{ id: 'fsq:1', name: 'North Cafe' }]);
 const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
 const goldSpan = intakeSpan(goldIntake);
 assert.equal(goldSpan.badge, 'Apr 3–12 2026');
@@ -273,11 +273,16 @@ assert.doesNotMatch(rulesSource, /including when it is only adequate/);
 assert.doesNotMatch(rulesSource, /Swims stay on Monday April 6/);
 assert.doesNotMatch(rulesSource, /Gardens stay on Sunday April 5/);
 assert.doesNotMatch(rulesSource, /Four unnamed friends count/);
+assert.doesNotMatch(rulesSource, /use only places, activities, and venues the customer already named|Do not invent a cruise/);
+assert.doesNotMatch(sourcedPlaceRule(), /\b(Big Island|Kailua-Kona|Kimberly|Tyler|Lauren|Craig|Vegas|April|Waikiki)\b/);
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(turnSource, /count in the party/);
 assert.doesNotMatch(turnSource, /function neutralizeFalseClaim|function dropAccuracySentences|function stripItem34Ban|function stripUpsell|function stripInventedVenues|function keepPriceStripWelcome/);
 assert.doesNotMatch(turnSource, /People the customer has named/);
 assert.match(turnSource, /rejudgeMs/);
+assert.doesNotMatch(turnSource, /INVENTED_GARDEN|UNNAMED_VENUE|inventedGardenHit|kahalu|keauhou|pu['ʻ‘’]?uhonua|honaunau|thurston|captain cook|pua mau|botanical garden|lava tube|arboretum/i);
+const placeCheck = turnSource.slice(turnSource.indexOf('export function placeSourceRows'), turnSource.indexOf('\nconst MONTHS'));
+assert.doesNotMatch(placeCheck, /\b(Big Island|Kailua-Kona|Kimberly|Tyler|Lauren|Craig|Vegas|April|Waikiki)\b/);
 const intakeSource = fs.readFileSync(new URL('../src/vacation/intake-shared-trip.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(intakeSource, /nonstop into KOA/);
 assert.doesNotMatch(intakeSource, /layover: 'none'/);
