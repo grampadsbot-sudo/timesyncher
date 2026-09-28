@@ -16,8 +16,28 @@ assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 19
 const adaSeats = [{ name: 'Ada', payer: 'you' }];
 assert.equal(payerPriceLine(adaSeats, unconfigured), '');
 assert.equal(payerPriceLine(adaSeats, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 'Ada $19, paid by you');
-assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, unconfigured), false);
+assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, unconfigured), true);
 assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
+const savedCheckoutEnv = {};
+for (const key of [
+  'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS',
+  'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS',
+  'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS',
+  'TIMESYNCHER_BASE_PRICE_CENTS',
+  'TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS',
+  'TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS',
+  'TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS',
+  'TIMESYNCHER_CHECKOUT_CURRENCY',
+]) {
+  savedCheckoutEnv[key] = process.env[key];
+  delete process.env[key];
+}
+assert.equal(priceAnswered('Ada $19, paid by you', adaSeats), true);
+assert.equal(priceAnswered('No amount is in this reply.', adaSeats), false);
+for (const [key, value] of Object.entries(savedCheckoutEnv)) {
+  if (value == null) delete process.env[key];
+  else process.env[key] = value;
+}
 assert.equal(checkoutOrderSummary({}, {}).amountCents, 3700);
 assert.throws(() => checkoutOrderSummary({ orderBump: true }, {}), missingPrice);
 

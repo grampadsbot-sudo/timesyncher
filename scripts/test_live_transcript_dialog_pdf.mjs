@@ -254,6 +254,7 @@ assert.match(priceLine, /Kimberly \$27, paid by you/);
 assert.match(priceLine, /Tyler \$27, paid by Tyler/);
 assert.match(priceLine, /Lauren \$27, paid by Lauren/);
 assert.equal(priceAnswered("You'll cover Kimberly's $27, paid by you; Tyler $27, paid by Tyler; Lauren $27, paid by Lauren.", priceSeats, priceEnv), true);
+assert.equal(priceAnswered("You'll cover Kimberly's $27, paid by you; Tyler $27, paid by Tyler; Lauren $27, paid by Lauren.", priceSeats), true);
 assert.equal(/\b(?:split|splitting)\b/i.test(priceLine), false);
 assert.equal(noteContradictsDraft('Who pays is missing for Kimberly', 'Kimberly $27, paid by you'), true);
 assert.equal(noteContradictsDraft('Friday garden time slips', 'Sunday gardens stay quiet'), true);
@@ -426,6 +427,8 @@ assert.equal(draftFactErrors('The trip runs from April 3 to 12, whether that is 
 assert.equal(draftFactErrors('Notes can land on Sun Apr 5 gardens, Mon Apr 6 beach swim, Fri Apr 10 dinner, or the town walk.', { ...setFacts, townWalkDays: [] }).some((error) => /town walk on apr 5/.test(error)), false);
 assert.equal(priceAnswered('Your seat covers Kimberly at $27, paid by you. Tyler takes his own seat at $27, paid by him, and Lauren takes hers at $27, paid by her.', priceSeats, priceEnv), true);
 assert.equal(priceAnswered('You will cover Kimberly’s $27, Tyler will pay his own $27, and Lauren will pay her own $27.', priceSeats, priceEnv), true);
+assert.equal(priceAnswered('Your seat covers Kimberly at $27, paid by you. Tyler takes his own seat at $27, paid by him, and Lauren takes hers at $27, paid by her.', priceSeats), true);
+assert.equal(priceAnswered('You will cover Kimberly’s $27, Tyler will pay his own $27, and Lauren will pay her own $27.', priceSeats), true);
 assert.ok(draftFactErrors('For the swim later in the week, I will save that for Friday, April 10th.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('That later swim is saved on the second Friday of the trip.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('Since Tyler wanted a swim later in the week anyway, we have already saved that backup for the second Friday.', earlyFacts).some((error) => /claimed as saved/.test(error)));

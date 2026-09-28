@@ -1602,7 +1602,7 @@ export function rewriteKeepsSubstance(draft, rewritten) {
 
 export function rewriteAnswersQuestion(customerTurn, rewritten) {
   const body = String(rewritten || '');
-  if (customerAsksPrice(customerTurn)) return priceAnswered(body, customerTurn, process.env);
+  if (customerAsksPrice(customerTurn)) return priceAnswered(body, customerTurn);
   if (customerAsksAccessChoice(customerTurn)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
   const question = splitSentences(customerTurn).find((sentence) => /\?/.test(sentence));
   if (!question) return true;
@@ -1629,14 +1629,14 @@ export function hardQualityFlags(reply, customerTurn, corpus, sources) {
   return {
     split: item34BanHit(body),
     invented: unsourcedPlaces(body, placeSources),
-    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask, process.env),
+    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask),
     missingAccess: customerAsksAccessChoice(ask) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
     missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
   };
 }
 
 export function correctFalsePriceMiss(quality, reply, customerTurn) {
-  if (!customerAsksPrice(customerTurn) || priceAnswered(reply, customerTurn, process.env)) return quality;
+  if (!customerAsksPrice(customerTurn) || priceAnswered(reply, customerTurn)) return quality;
   return {
     ...quality,
     score: Math.min(Number(quality?.score) || 1, 3),

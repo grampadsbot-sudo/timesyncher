@@ -74,11 +74,16 @@ export function priceClauseSatisfied(part, reply) {
   return false;
 }
 
-export function priceAnswered(reply, seats, env = process.env) {
-  const list = extractedPayerRows(seats);
-  const line = payerPriceLine(list, env);
+function replyCoversNamedSeats(reply, seats) {
   const body = String(reply || '');
-  if (list.length && !line) return false;
-  if (!line) return /\$\d+/.test(body);
-  return line.split('; ').every((part) => priceClauseSatisfied(part, body));
+  if (!/\$\d+/.test(body)) return false;
+  return seats.every((seat) => new RegExp(`\\b${String(seat?.name || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(body));
+}
+
+export function priceAnswered(reply, seats, env = null) {
+  const list = extractedPayerRows(seats);
+  const body = String(reply || '');
+  const line = env ? payerPriceLine(list, env) : '';
+  if (line) return line.split('; ').every((part) => priceClauseSatisfied(part, body));
+  return replyCoversNamedSeats(body, list);
 }

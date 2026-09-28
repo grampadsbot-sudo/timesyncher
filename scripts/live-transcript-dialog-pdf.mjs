@@ -140,7 +140,7 @@ export function assertLiveTranscript(doc) {
       if (venues.length) contentFails.push(`FAIL. Turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
       if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
-        if (!priceAnswered(text, priorCustomer.text, process.env) || item34BanHit(text)) {
+        if (!priceAnswered(text, priorCustomer.text) || item34BanHit(text)) {
           contentFails.push(`FAIL. Turn ${turn.turnIndex} price question has no per-payer dollar price`);
         }
       }
