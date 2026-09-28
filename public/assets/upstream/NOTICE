@@ -11,12 +11,7 @@ The JavaScript was produced once by the canned-string strip and the Style two
 rewrite. The build does not read a raw bundle.
 
 Original upstream index-BKun7ofk.js: 6693404 bytes, sha256 014eedf20ccfdf2694bdf0c89aec4ddc20db93748872359208695616a9f3c198
-Committed served index-BKun7ofk.js: 6713940 bytes, sha256 f99ebc799576d2a61500c79891652ba94df7ee261cfe643386b2fc678448b390
-
-The served JavaScript has 80 spaces between the Lucide names
-LucideScissorsSquareDashedBottom and LucideScreenShare. Those identifiers are
-not a share token. The spaces keep that 32-character icon name from sitting
-next to the word Share.
+Committed served index-BKun7ofk.js: 6713860 bytes, sha256 931fd01633eb0fbd9bc62b563511fa9fb9e024cdb982af0bf841df0558605f13
 
 index-CbEHlMj6.css is the unmodified pull, committed at the served path:
 156918 bytes, sha256 b50badbf987ebe908b3886f89e13b5ddea416c01b1cad4c111f7fcbe0e3419fd
