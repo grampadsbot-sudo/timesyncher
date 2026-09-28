@@ -110,6 +110,7 @@ export function liveTurnRecord({
   model = null,
   rules = null,
   speakerName = null,
+  intake = false,
   buildSha = runningBuildSha(),
 }) {
   const record = {
@@ -124,6 +125,7 @@ export function liveTurnRecord({
     buildSha: String(buildSha || '').trim() || null,
     jev: jevStamp(jev),
   };
+  if (intake === true) record.intake = true;
   if (role === 'app') {
     record.replyProducer = replyProducer || LIVE_REPLY_PRODUCER;
     record.fixedOpener = record.replyProducer === LIVE_OPENER_PRODUCER;
@@ -233,22 +235,23 @@ const UNLIMITED_PHRASE = 'unlimited vacations for the whole year';
 const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
 const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
 
-export function isLongIntake(text) {
-  const value = String(text || '').trim();
-  const words = value.split(/\s+/).filter(Boolean);
-  if (words.length < 70) return false;
-  const place = /big island|hawai|kailua-kona|voice note|ramble/i.test(value);
-  const shape = /garden|swim|grocer|dinner|family|april|coming/i.test(value);
-  return place && shape;
+export function customerTurnText(turn) {
+  if (turn && typeof turn === 'object') return String(turn.text || '');
+  return String(turn || '');
+}
+
+export function turnMarkedIntake(turn) {
+  return Boolean(turn && typeof turn === 'object' && turn.intake === true);
 }
 
 export function postIntakeUpsellTurn(customerTurn, priorTurns) {
-  if (!isLongIntake(customerTurn)) return false;
+  if (!turnMarkedIntake(customerTurn)) return false;
+  const currentText = customerTurnText(customerTurn);
   const priors = Array.isArray(priorTurns) ? [...priorTurns] : [];
-  while (priors.length && priors.at(-1)?.role === 'customer' && String(priors.at(-1).text || '') === String(customerTurn || '')) {
+  while (priors.length && priors.at(-1)?.role === 'customer' && customerTurnText(priors.at(-1)) === currentText) {
     priors.pop();
   }
-  return !priors.some((turn) => turn?.role === 'customer' && isLongIntake(turn.text));
+  return !priors.some((turn) => turn?.role === 'customer' && turn.intake === true);
 }
 
 export function customerPullsAccess(text) {
@@ -310,7 +313,7 @@ export function sessionHasFullUpsell(priorTurns) {
 
 export function upsellModeForTurn(customerTurn, priorTurns) {
   if (sessionHasFullUpsell(priorTurns)) return 'forbidden';
-  if (customerPullsAccess(customerTurn) || postIntakeUpsellTurn(customerTurn, priorTurns)) return 'allow-once';
+  if (customerPullsAccess(customerTurnText(customerTurn)) || postIntakeUpsellTurn(customerTurn, priorTurns)) return 'allow-once';
   return 'forbidden';
 }
 
@@ -321,19 +324,21 @@ export function upsellAudit(turns) {
   const softEmbeds = [];
   const unsolicitedWelcome = [];
   let lastCustomer = '';
+  let lastCustomerTurn = null;
   const priorCustomers = [];
   for (const turn of list) {
     const text = String(turn?.text || '');
     if (turn?.role !== 'app') {
       if (turn?.role === 'customer') {
         lastCustomer = text;
-        priorCustomers.push(text);
+        lastCustomerTurn = turn;
+        priorCustomers.push(turn);
       }
       continue;
     }
     if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) continue;
     const pulled = customerPullsAccess(lastCustomer)
-      || postIntakeUpsellTurn(lastCustomer, priorCustomers.slice(0, -1).map((prior) => ({ role: 'customer', text: prior })));
+      || postIntakeUpsellTurn(lastCustomerTurn, priorCustomers.slice(0, -1));
     const phrase = UNLIMITED_PATTERN.test(text);
     const welcome = isCollabWelcome(text);
     const fullBlock = isFullUpsell(text);
@@ -365,17 +370,15 @@ function memoryTurns(priorTurns) {
 function projectCustomerRecord(priorTurns, customerTurn = '') {
   const corpus = customerCorpus(priorTurns, customerTurn);
   const span = intakeSpan(corpus);
-  let things = ensureNamedThings(thingsFromIntake(corpus), corpus);
-  if (corpus) things = applyCustomerNotes(things, corpus);
   const party = completeRosterParty({ turns: [{ role: 'customer', text: corpus }] });
   return {
     start: span?.start || '',
     end: span?.end || '',
     span,
-    things,
+    things: [],
     party,
     planOwned: false,
-    rule: intakeFacts(corpus).rule || '',
+    rule: '',
     addressedTo: (String(customerTurn || '').match(/\bthis is ([A-Z][a-z]+)/i) || [])[1] || '',
   };
 }
@@ -758,52 +761,6 @@ export function applyAgreedAppSwim(things, customerText, appText, span = null) {
   });
 }
 
-function whenForThing(title, sentence, span) {
-  if (title === 'Groceries' && /same day/i.test(sentence) && span?.startLabel) return span.startLabel;
-  if (title === 'Swim' && /later in the week/i.test(sentence)) return 'later in the week';
-  if ((title === 'Big Island' || title === 'Kailua-Kona house') && span?.spanLabel) return span.spanLabel;
-  const dated = datedMentions(sentence)[0];
-  return dated ? formatMention({ ...dated, year: dated.year || span?.year }) : '';
-}
-
-export function intakeFacts(text) {
-  const value = String(text || '');
-  const sentences = splitSentences(value);
-  const span = intakeSpan(value);
-  const rule = sentences.find((part) => /two big activities/i.test(part)) || '';
-  const things = [];
-  const add = (title, category, pattern) => {
-    if (!pattern.test(value) || INVENTED_GARDEN.test(title)) return;
-    const matched = sentences.filter((part) => pattern.test(part) && !(INVENTED_GARDEN.test(part) && !INVENTED_GARDEN.test(value)));
-    const notes = matched.length ? matched : [title];
-    if (title === 'Big Island' && rule && !notes.some((note) => note === rule)) notes.push(rule);
-    const description = notes.join(' ');
-    if (INVENTED_GARDEN.test(description) && !INVENTED_GARDEN.test(value)) return;
-    things.push({
-      title,
-      category,
-      description,
-      who: notes.map((note) => whoIn(note)).find(Boolean) || '',
-      whenLabel: whenForThing(title, notes.join(' '), span),
-      customerWhen: '',
-      notes,
-      collaboratorNotes: [],
-    });
-  };
-  if (/big island/i.test(value)) add('Big Island', 'activity', /big island/i);
-  if (/garden/i.test(value)) add('Gardens', 'activity', /garden/i);
-  if (/grocer/i.test(value)) add('Groceries', 'activity', /grocer/i);
-  if (/\bdinner\b/i.test(value)) add('Dinner', 'restaurant', /\bdinner\b/i);
-  if (/\bswim\b/i.test(value)) add('Swim', 'activity', /\bswim\b/i);
-  if (/town walk/i.test(value)) add('Town walk', 'activity', /town walk/i);
-  if (/house/i.test(value) && /kailua-kona/i.test(value)) add('Kailua-Kona house', 'hotel', /house/i);
-  return { span, rule, things };
-}
-
-export function thingsFromIntake(text) {
-  return intakeFacts(text).things;
-}
-
 function activitySentenceCommits(hit) {
   const dated = datedMentions(hit).length > 0;
   if (/\bif\b/i.test(hit) && !dated) return false;
@@ -813,30 +770,6 @@ function activitySentenceCommits(hit) {
 
 function sameNote(left, right) {
   return String(left || '').replace(/\s+/g, ' ').trim().toLowerCase() === String(right || '').replace(/\s+/g, ' ').trim().toLowerCase();
-}
-
-export function ensureNamedThings(things, text) {
-  const next = Array.isArray(things) ? [...things] : [];
-  const have = new Set(next.map((thing) => thing.title));
-  const add = (title, category, pattern) => {
-    if (have.has(title) || !pattern.test(String(text || ''))) return;
-    have.add(title);
-    next.push({
-      title,
-      category,
-      description: '',
-      who: '',
-      whenLabel: '',
-      customerWhen: '',
-      notes: [],
-      collaboratorNotes: [],
-    });
-  };
-  add('Gardens', 'activity', /garden/i);
-  add('Dinner', 'restaurant', /\bdinner\b/i);
-  add('Swim', 'activity', /\bswim\b/i);
-  add('Town walk', 'activity', /town walk/i);
-  return next;
 }
 
 export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '' } = {}) {
@@ -1660,25 +1593,26 @@ export function holdingShipErrors(text, facts = {}) {
 
 export function interimDodges(text, customerTurn) {
   const value = String(text || '');
-  const ask = String(customerTurn || '');
+  const ask = customerTurnText(customerTurn);
   const dodgeTone = /\bit sounds like\b|\bwonderful trip\b|\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value);
   if (!dodgeTone) return false;
   if (/\btwo options\b|\boffer two\b|\bpick after you offer\b/i.test(ask) && !/\bor\b|\boption\b/i.test(value)) return true;
   if (/\bbackup\b|\bif\b[^.]{0,40}\brain|\brainy\b/i.test(ask) && !/\bbackup\b|\bshift|\bsecond friday\b/i.test(value)) return true;
-  if (!isLongIntake(ask) && /\blater\b/i.test(ask) && /\bswim\b/i.test(ask) && !/\bfriday\b|\bapr(?:il)?\.?\s+10\b/i.test(value)) return true;
+  if (!turnMarkedIntake(customerTurn) && /\blater\b/i.test(ask) && /\bswim\b/i.test(ask) && !/\bfriday\b|\bapr(?:il)?\.?\s+10\b/i.test(value)) return true;
   if (/\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value) && !/\b(saved|set for|option|town walk)\b/i.test(value)) return true;
   return false;
 }
 
 export function interimCanShip(text, customerTurn, facts = {}) {
   const value = String(text || '').trim();
-  if (!value || isTemplateInterim(value, customerTurn)) return false;
-  const customer = String(customerTurn || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const ask = customerTurnText(customerTurn);
+  if (!value || isTemplateInterim(value, ask)) return false;
+  const customer = ask.replace(/\s+/g, ' ').trim().toLowerCase();
   const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
   if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
   if (interimDodges(value, customerTurn)) return false;
   if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted|later swim is saved|invented a correction/.test(error))) return false;
-  if (isLongIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
+  if (turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
   if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
 }
@@ -1767,12 +1701,13 @@ export function rewriteReplacesDraft(draft, rewritten) {
 
 export function hardQualityFlags(reply, customerTurn, corpus) {
   const body = String(reply || '');
+  const ask = customerTurnText(customerTurn);
   return {
     split: item34BanHit(body),
     invented: inventedVenueNames(body, corpus),
-    missingPrice: customerAsksPrice(customerTurn) && !priceAnswered(body, customerTurn),
-    missingAccess: customerAsksAccessChoice(customerTurn) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
-    missingCollaborators: isLongIntake(customerTurn) && !/\bcollaborat/i.test(body),
+    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask),
+    missingAccess: customerAsksAccessChoice(ask) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
+    missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
   };
 }
 
@@ -1883,7 +1818,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, intake = false, wantedThings = [] } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1892,8 +1827,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     ...history.map((turn) => turn.text),
     customerTurn,
   ]);
-  const postIntake = postIntakeUpsellTurn(customerTurn, history);
-  const upsell = upsellModeForTurn(customerTurn, history);
+  const intakeTurn = { text: customerTurn, intake: intake === true };
+  const postIntake = postIntakeUpsellTurn(intakeTurn, history);
+  const upsell = upsellModeForTurn(intakeTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session);
@@ -1949,7 +1885,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
     'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
-    isLongIntake(customerTurn) ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
+    intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
@@ -1990,7 +1926,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
-    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat });
+    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true });
     if (interim.text && !appTextBanned(interim.text)) {
       reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
       model = {
@@ -2016,7 +1952,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
-  const draftFlags = hardQualityFlags(originalDraft, customerTurn, corpus);
+  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
@@ -2096,7 +2032,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     return { reply: shipped.reply, rules, jev, model: shipped.model, quality: shipped.quality, log: shipped.log, reason: null };
   }
   const interimStarted = Date.now();
-  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat }).then((interim) => {
+  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true }).then((interim) => {
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
   });
@@ -2110,6 +2046,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     jev,
     upsell,
     postIntake,
+    intake: intake === true,
+    wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
     destination,
     corpus,
     tripContext,
@@ -2181,19 +2119,19 @@ function interimFacts(customerTurn, destination) {
   ].join(' ');
 }
 
-async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null }) {
+async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false }) {
   const started = Date.now();
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
   const speaker = String(facts.addressedTo || '').trim();
   const systemExtra = [
-    isLongIntake(customerTurn) ? 'This holding reply is the intake answer. Include every required sentence below.' : 'This is a one or two sentence holding line.',
+    intake === true ? 'This holding reply is the intake answer. Include every required sentence below.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
     speaker
       ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${owner || 'someone else'} as the speaker.`
       : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
     absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
-    isLongIntake(customerTurn)
+    intake === true
       ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
       : '',
     customerAsksPrice(customerTurn)
@@ -2214,7 +2152,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     postIntake: false,
     env,
     forceModel: INTERIM_MODEL,
-    timeoutMs: isLongIntake(customerTurn) ? 20000 : 8000,
+    timeoutMs: intake === true ? 20000 : 8000,
     seat,
     systemExtra,
   });
@@ -2348,7 +2286,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
-      const rewriteFlags = hardQualityFlags(judgedText, pending.customerTurn, pending.corpus);
+      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus);
       rewriteQuality = correctFalsePriceMiss(
         dockQuality(rewriteQuality, rewriteFlags),
         judgedText,
@@ -2366,7 +2304,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   const rewriteQualityMs = rewriteCanShip ? Math.max(0, Date.now() - rewriteQualityStarted) : 0;
   const interimReply = interimPromise ? await interimPromise : (pending?.interimReply || { text: null, model: null, ms: null });
   if (pending) pending.interimReply = interimReply;
-  const holdingText = interimCanShip(interimReply?.text, pending?.customerTurn, facts)
+  const holdingText = interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts)
     ? String(interimReply.text).trim()
     : '';
   let choice = shipChoice({
@@ -2568,6 +2506,7 @@ export function liveTranscriptFromRows({ session, rows }) {
       modality: live.modality,
       text,
       speakerName: live.speakerName || null,
+      intake: live.intake === true,
       storedText: live.text == null ? text : String(live.text),
       at: iso(live.at || row.received_at || row.sent_at || row.created_at),
       latencyMs: live.latencyMs == null ? null : Number(live.latencyMs ?? row.response_latency_ms),
