@@ -19,7 +19,12 @@ if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
 }
 const BAKEOFF_MODEL = 'google/gemini-2.5-flash-lite';
-const modelEnv = { TIMESYNCHER_XAI_API_KEY: 'test-key', TIMESYNCHER_XAI_ROUTER_MODEL: BAKEOFF_MODEL };
+const modelEnv = {
+  TIMESYNCHER_XAI_API_KEY: 'test-key',
+  TIMESYNCHER_XAI_ROUTER_MODEL: BAKEOFF_MODEL,
+  TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS: '1500',
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900',
+};
 
 function supportModel(replyText) {
   const calls = [];
@@ -62,12 +67,13 @@ const ack = vacationIdentityAck({
   queued: { id: 'request_123' },
   extraction: hawaiiBrief,
 });
-assert.match(ack, /working title/i);
-assert.match(ack, /seven nights/i);
-assert.match(ack, /\bOahu\b/);
-assert.doesNotMatch(ack, /Oahu\/Waikiki|Kona\/Big Island/);
-assert.match(ack, /I'm building your initial itinerary now and it may take 10–15 minutes/i);
-assert.doesNotMatch(ack, /Now send me the destination/i);
+assert.equal(ack.ask, 'identity_ack');
+assert.equal(ack.vacationName, parsed.vacationName);
+assert.match(ack.customerText, /seven nights/i);
+assert.equal(ack.destination, 'Oahu');
+assert.equal(ack.hasDates, true);
+assert.equal(ack.building, true);
+assert.match(ack.buildCue, /10–15 minutes/);
 
 const detailsOnly = parseVacationIdentity('We are staying seven nights in Hawaii and starting in Oahu.');
 assert.equal(detailsOnly.vacationName, '');
@@ -210,7 +216,8 @@ assert.equal(
 const collaboratorPlanFacts = factsFrom(collaboratorPlansModel.calls[0]);
 assert.equal(collaboratorPlanFacts.ask, 'collaborator_access');
 assert.equal(collaboratorPlanFacts.collaborator.statusQuestion, false);
-assert.ok(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.amountCents === 1500));
+assert.ok(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.scope === 'single_trip' && plan.amountCents === 1500));
+assert.ok(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.scope === 'unlimited_trips' && plan.amountCents === 1900));
 assert.equal(collaboratorPlanFacts.trip.title, 'Harbor Week');
 
 const wifeTelegramCollaboratorStatusIntent = vacationSupportIntent('Is my wife already a telegram collaborator?');
@@ -543,7 +550,7 @@ assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null
 const telegramSource = fs.readFileSync(new URL('../routes/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
 assert.equal(telegramSource.includes("[/\\bkona\\b|\\bbig island\\b/i, 'Kona/Big Island']"), false);
 assert.match(telegramSource, /classifyTripIntake/);
-assert.match(telegramSource, /classic Waikiki beach energy/);
+assert.doesNotMatch(telegramSource, /classic Waikiki beach energy/);
 
 const telegramTurnSource = await readFile(new URL('../routes/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(telegramTurnSource, /the Vegas vacation/i);

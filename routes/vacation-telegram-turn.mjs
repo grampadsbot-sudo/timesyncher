@@ -8,11 +8,10 @@ import { getSessionByToken, siteBase, vacationEulaStatus } from '../src/vacation
 import { blockHighAuthorityRequest } from '../src/safety/high-authority-actions.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
 import {
-  COLLABORATOR_PLANS,
   activeCollaboratorForTelegram,
   acceptCollaboratorInvite,
-  collaboratorCheckoutCopy,
   collaboratorDeniedCopy,
+  collaboratorPlanList,
   createCollaboratorInvite,
   isCollaboratorInviteRequest,
 } from '../src/vacation/collaborators.mjs';
@@ -471,87 +470,62 @@ function missingSummaryQuestions(text, extraction = null) {
   return questions;
 }
 
-function compactIntakeSummary(text, extraction = null) {
-  const cleaned = cleanText(text, 1200);
-  const details = [];
-  const nights = cleaned.match(/\b(?:stay(?:ing)?\s*)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+nights?\b/i)?.[0];
-  if (nights) details.push(nights.toLowerCase());
-  const destination = extraction?.ok === true ? cleanText(extraction.destination, 180) : '';
-  if (destination) details.push(destination);
-  if (/\bfabulous time|unforgettable|special|classic|relax|beach|surf|food|sunset\b/i.test(cleaned)) {
-    details.push('the experience/vibe you described');
+export function onboardingReplyFacts(kind, data = {}) {
+  const customerText = cleanText(data.text, 1200) || null;
+  const extraction = data.extraction?.ok === true ? data.extraction : null;
+  if (kind === 'identity_ack') {
+    return {
+      ask: 'identity_ack',
+      vacationName: cleanText(data.vacationName, 160) || null,
+      customerText,
+      queued: Boolean(data.queued),
+      building: Boolean(data.queued),
+      buildCue: data.queued ? INITIAL_BUILD_CUE : null,
+      destination: extraction ? (cleanText(extraction.destination, 180) || null) : null,
+      hasDates: extraction ? extraction.hasDates === true : null,
+    };
   }
-  return details.length ? `I captured the starting brief: ${details.join(', ')}.` : 'I captured the trip brief you sent.';
+  if (kind === 'identity_missing') {
+    return {
+      ask: 'identity_missing',
+      vacationName: cleanText(data.vacationName, 160) || null,
+      missing: Array.isArray(data.missing) ? data.missing : [],
+      customerText,
+      destination: extraction ? (cleanText(extraction.destination, 180) || null) : null,
+      hasDates: extraction ? extraction.hasDates === true : null,
+    };
+  }
+  if (kind === 'first_trip') return { ask: 'first_trip', queued: Boolean(data.queued), customerText };
+  if (kind === 'voice_notes') return { ask: 'voice_notes', customerText };
+  if (kind === 'eula') return { ask: 'eula', acceptUrl: cleanText(data.acceptUrl, 800) || null };
+  if (kind === 'collaborator_checkout') {
+    return {
+      ask: 'collaborator_checkout',
+      plans: data.plans || collaboratorPlanList(data.env || process.env),
+      checkoutLinks: data.checkoutLinks || null,
+    };
+  }
+  if (kind === 'collaborator_checkout_failed') return { ask: 'collaborator_checkout_failed' };
+  if (kind === 'session_missing') return { ask: 'session_missing', linked: false, customerText };
+  if (kind === 'help') return { ask: 'help', customerText };
+  if (kind === 'itinerary_update') return { ask: 'itinerary_update', customerText };
+  return { ask: 'building', building: true, buildCue: INITIAL_BUILD_CUE, customerText };
 }
 
-export function vacationIdentityAck({ vacationName, text, queued, extraction = null }) {
-  return [
-    `Got it — I’ll use “${vacationName}” as the working title.`,
-    compactIntakeSummary(text, extraction),
-    '',
-    queued
-      ? INITIAL_BUILD_CUE
-      : 'Now send me the destination, rough dates, who is traveling, budget range, must-do experiences, and anything you want avoided. Voice notes are fine.',
-  ].join('\n');
+export function vacationIdentityAck(data = {}) {
+  return onboardingReplyFacts('identity_ack', data);
 }
 
-function identityPrompt() {
-  return [
-    'Send me one voice note or text summary for the trip.',
-    '',
-    'Include the vacation name, destination, rough dates or trip length, who is traveling, and what would make it unforgettable.',
-    '',
-    'Example: “Hawaii 2026 — classic Waikiki beach energy, great local food, surf lesson, and a few special sunset experiences.”',
-  ].join('\n');
+function setupFacts({ startLinked, hasSession, text, kind } = {}) {
+  if (startLinked) return onboardingReplyFacts('voice_notes', { text });
+  if (!hasSession) return onboardingReplyFacts('session_missing', { text });
+  if (/^\/help\b/i.test(String(text || ''))) return onboardingReplyFacts('help', { text });
+  if (kind?.requestType === 'itinerary_research_update') return onboardingReplyFacts('itinerary_update', { text });
+  return onboardingReplyFacts('building', { text });
 }
 
-function firstTripDetailsAck({ queued }) {
-  return [
-    queued
-      ? 'I captured your first trip summary and started setting up the vacation workspace.'
-      : 'I captured your first trip summary.',
-    '',
-    'Now send any missing pieces in a voice note or text.',
-    '',
-    'The most useful pieces are the vacation name, destination, rough dates or trip length, who is traveling, budget range, must-do experiences, and anything you want avoided.',
-  ].join('\n');
-}
-
-function voiceNoteIntro() {
-  return [
-    'Welcome. We are so excited to help you create your next unforgettable vacation.',
-    '',
-    'Before we start, I want to make sure you know you can send voice notes here.',
-    '',
-    'Hold the microphone button while you talk. Keep holding it for as long as you want, and tell me what you want to do on your vacation.',
-    '',
-    'One quick thing to try: tap the microphone icon and see how it changes to the video icon, then tap it again so it changes back to the microphone.',
-    '',
-    'If it ever switches to video by accident, that is why the voice-note button seems to disappear.',
-    '',
-    'Send one voice note with the trip summary: where you are going, when or how long, who is going, budget or style, must-do experiences, and what would make it unforgettable.',
-  ].join('\n');
-}
-
-function eulaRequiredReply(eula) {
-  return [
-    'Your TimeSyncher Vacation purchase is linked.',
-    '',
-    'Before we start Telegram onboarding, please review and accept the TimeSyncher EULA:',
-    eula.acceptUrl,
-    '',
-    'After acceptance, TimeSyncher will guide you to the next onboarding step.',
-  ].join('\n');
-}
-
-function collaboratorCheckoutReplyText() {
-  return [
-    'Yes. You can share the vacation website with your wife or family so they can view it.',
-    '',
-    'Website editing is owner-approved and email-verified, so someone with only the shared URL stays view-only. Full access through Telegram, equal to yours, requires the Telegram access add-on. You can give Telegram access to up to 3 people.',
-    '',
-    'Choose a Telegram add-on option below. The checkout page also lets you add photo and video upload access with pricing that matches the selected scope.',
-  ].join('\n');
+async function writeOnboardingReply(facts, env = process.env) {
+  return modelSupportReply(facts, { env });
 }
 
 function collaboratorStatusQuestion(text = '') {
@@ -1422,12 +1396,7 @@ export function supportReplyFacts({ text, intent, access, env = process.env } = 
     }
     facts.collaborator = {
       statusQuestion: false,
-      plans: Object.values(COLLABORATOR_PLANS).map((plan) => ({
-        code: plan.code,
-        scope: plan.scope,
-        amountCents: plan.amountCents,
-        maxActiveCollaborators: plan.maxActiveCollaborators,
-      })),
+      plans: collaboratorPlanList(env),
     };
     return facts;
   }
@@ -1546,7 +1515,7 @@ async function createTokenizedCollaboratorPaymentLink(db, session, { text, teleg
 async function collaboratorCheckoutReply(db, session, { text, telegramChatId, telegramUserId }) {
   if (!session?.customer_id || !session?.trip_id) {
     return {
-      reply: collaboratorCheckoutCopy(),
+      reply: await writeOnboardingReply(onboardingReplyFacts('session_missing', { text })),
       payload: {
         collaboratorEntitlement: {
           required: true,
@@ -1610,7 +1579,10 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
     };
   }
   return {
-    reply: collaboratorCheckoutReplyText(),
+    reply: await writeOnboardingReply(onboardingReplyFacts('collaborator_checkout', {
+      plans: collaboratorPlanList(process.env),
+      checkoutLinks,
+    })),
     payload: {
       collaboratorEntitlement: {
         required: true,
@@ -1762,34 +1734,6 @@ async function canQueueTelegramModification(db, session, { telegramChatId, teleg
   });
   if (collaborator) return { allowed: true, reason: 'paid_collaborator', collaboratorId: collaborator.id };
   return { allowed: false, reason: 'missing_paid_collaborator' };
-}
-
-function setupReply({ startLinked, hasSession, text, kind }) {
-  if (startLinked) {
-    return voiceNoteIntro();
-  }
-  if (!hasSession) {
-    return [
-      'Welcome to TimeSyncher Vacation.',
-      '',
-      'I can start a planning note, but I do not see a linked paid onboarding session yet. Use the bot link from your purchase email if you have one.',
-    ].join('\n');
-  }
-  if (/^\/help\b/i.test(text)) {
-    return 'Send one voice note or text summary with the vacation name, destination, rough dates or trip length, who is traveling, budget range, must-dos, and anything you want avoided. I will use it to draft the trip paragraph, then ask only for missing details.';
-  }
-  if (kind?.requestType === 'itinerary_research_update') {
-    return [
-      'Got it. I am updating the hosted TimeSyncher Vacation itinerary now.',
-      '',
-      'I will send the itinerary link when the next pass is ready. You can keep sending changes or priorities here while I work.',
-    ].join('\n');
-  }
-  return [
-    INITIAL_BUILD_CUE,
-    '',
-    'You can keep sending any updates, must-do experiences, reservations, or preferences here while I work.',
-  ].join('\n');
 }
 
 export default async function handler(req, res) {
@@ -1949,7 +1893,7 @@ export default async function handler(req, res) {
           receivedAt,
           onboardingStep: pendingSession.current_step,
         });
-        const reply = eulaRequiredReply(eula);
+        const reply = await writeOnboardingReply(onboardingReplyFacts('eula', { acceptUrl: eula.acceptUrl }));
         const respondedAt = new Date();
         const latency = Math.max(0, respondedAt.getTime() - new Date(receivedAt).getTime());
         const outboundTranscriptId = await recordTranscript(db, {
@@ -2080,7 +2024,7 @@ export default async function handler(req, res) {
 
     if (startMatch) {
       if (onboarding) session = await markVoiceNotePracticePrompted(db, session);
-      reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+      reply = await writeOnboardingReply(setupFacts({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind }));
     } else if (supportIntent) {
       const access = await vacationAccessSummary(db, session, { telegramChatId, telegramUserId, payload: body.payload || {}, text });
       reply = await vacationSupportReply({ text, intent: supportIntent, access });
@@ -2110,7 +2054,7 @@ export default async function handler(req, res) {
         telegramChatId,
         telegramUserId,
       }, kind);
-      reply = firstTripDetailsAck({ queued });
+      reply = await writeOnboardingReply(onboardingReplyFacts('first_trip', { queued, text }));
     } else if (session?.customer_id && !hasVacationIdentity(session)) {
       const saved = await saveVacationIdentity(db, session, text);
       const extraction = await classifyTripIntake({ text, ...tripIntakeConfig() });
@@ -2138,16 +2082,16 @@ export default async function handler(req, res) {
             intakeError: extractedFields.intakeError,
           }, kind);
         }
-        reply = vacationIdentityAck({ vacationName: saved.vacationName, text, queued, extraction });
+        reply = await writeOnboardingReply(vacationIdentityAck({ vacationName: saved.vacationName, text, queued, extraction }));
       } else {
         replyPayload = { vacationName: saved.vacationName || null, unforgettableGoal: saved.unforgettableGoal || null, ...extractedFields };
         const missing = missingSummaryQuestions(text, extraction);
-        reply = [
-          identityPrompt(),
-          '',
-          saved.vacationName ? `I caught the name as “${saved.vacationName}”; I still need what would make it unforgettable.` : 'Please include both the vacation name and what would make it unforgettable.',
-          missing.length ? `Also include: ${missing.join(', ')}.` : '',
-        ].filter(Boolean).join('\n');
+        reply = await writeOnboardingReply(onboardingReplyFacts('identity_missing', {
+          vacationName: saved.vacationName,
+          missing,
+          text,
+          extraction,
+        }));
       }
     } else if (collaboratorInviteRequested) {
       try {
@@ -2156,16 +2100,7 @@ export default async function handler(req, res) {
         replyPayload = checkout.payload;
       } catch (error) {
         if (error?.name === 'CheckoutConfigError') console.error(error.message);
-        let copy = '';
-        try {
-          copy = collaboratorCheckoutCopy();
-        } catch (copyError) {
-          console.error(copyError?.message || copyError);
-        }
-        reply = [
-          copy,
-          'I could not create the checkout links in this moment. Please try again in a minute.',
-        ].filter(Boolean).join('\n\n');
+        reply = await writeOnboardingReply(onboardingReplyFacts('collaborator_checkout_failed'));
         replyPayload = {
           collaboratorEntitlement: {
             required: true,
@@ -2188,7 +2123,7 @@ export default async function handler(req, res) {
         telegramUserId,
           collaboratorAuthorization: authz,
         }, kind);
-        reply = setupReply({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind });
+        reply = await writeOnboardingReply(setupFacts({ startLinked: Boolean(onboarding), hasSession: Boolean(session?.customer_id), text, kind }));
       }
     }
     const jevIssueTags = mergeIssueTags(
