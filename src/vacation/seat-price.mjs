@@ -1,8 +1,8 @@
-import { checkoutAmounts } from './checkout-pricing.mjs';
-
 export function planSeatDollars(env = process.env) {
-  const dollars = Math.round(Number(checkoutAmounts(env).orderBump) / 100);
-  return Number.isFinite(dollars) && dollars > 0 ? dollars : 27;
+  const cents = Number(String(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS ?? '').trim());
+  if (!Number.isFinite(cents) || cents <= 0) return null;
+  const dollars = Math.round(cents / 100);
+  return dollars > 0 ? dollars : null;
 }
 
 export function payerSeats(customerTurn) {
@@ -32,6 +32,7 @@ export function payerPriceLine(customerTurn, env = process.env) {
   const seats = payerSeats(customerTurn);
   if (!seats.length) return '';
   const dollars = planSeatDollars(env);
+  if (!(Number(dollars) > 0)) return '';
   return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 
@@ -58,8 +59,10 @@ export function priceClauseSatisfied(part, reply) {
 }
 
 export function priceAnswered(reply, customerTurn, env = process.env) {
+  const seats = payerSeats(customerTurn);
   const line = payerPriceLine(customerTurn, env);
   const body = String(reply || '');
+  if (seats.length && !line) return false;
   if (!line) return /\$\d+/.test(body);
   return line.split('; ').every((part) => priceClauseSatisfied(part, body));
 }

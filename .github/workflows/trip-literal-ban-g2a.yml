@@ -1,0 +1,16 @@
+name: trip literal ban g2a
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  trip-literal-ban:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Trip literal ban
+        run: npm run test:trip-literal-ban-g2a
