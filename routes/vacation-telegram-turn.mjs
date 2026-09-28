@@ -1581,7 +1581,7 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
   }
   return {
     reply: await writeOnboardingReply(onboardingReplyFacts('collaborator_checkout', {
-      plans: collaboratorPlanList(process.env),
+      plans: collaboratorPlanList(),
       checkoutLinks,
     })),
     payload: {
