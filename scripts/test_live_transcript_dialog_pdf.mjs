@@ -163,7 +163,7 @@ assert.ok(draftFactErrors('The crew includes your four friends.', { ownerName: '
 assert.doesNotMatch(source, /WHAT_I_CHANGED/);
 const partyFacts = draftingFacts([], 'The party of eight needs a quiet day. Four friends are still unnamed.');
 assert.match(partyFacts.roster, /party of eight/i);
-assert.match(partyFacts.roster, /Do not ask Craig a trip-fact question/);
+assert.match(partyFacts.roster, /Ask the customer for anything they haven't said/);
 assert.doesNotMatch(partyFacts.roster, /four friends/i);
 assert.doesNotMatch(partyFacts.roster, /count in the party/i);
 const fullParty = { travelers: ['Craig Davidson', 'Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson', 'Torren', 'Peyton', 'Keegan', 'Fallon'] };
