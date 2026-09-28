@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedGardenHit, inventedVenueNames, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedGardenHit, inventedVenueNames, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
@@ -70,10 +70,10 @@ assert.equal(item34BanHit('Do not split the payment across seats.'), true);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
 const longIntake = `${'okay voice note dumping. Big Island Hawaii, gardens, swim, groceries, dinner, family, April. '.repeat(8)}Kimberly wants gardens.`;
 const intakeTurn = { text: longIntake, intake: true };
-assert.equal(postIntakeUpsellTurn(longIntake, []), false);
-assert.equal(postIntakeUpsellTurn(intakeTurn, []), true);
-assert.equal(postIntakeUpsellTurn(intakeTurn, [{ role: 'customer', text: longIntake, intake: true }]), true);
-assert.equal(postIntakeUpsellTurn(intakeTurn, [
+assert.equal(firstMarkedIntake(longIntake, []), false);
+assert.equal(firstMarkedIntake(intakeTurn, []), true);
+assert.equal(firstMarkedIntake(intakeTurn, [{ role: 'customer', text: longIntake, intake: true }]), true);
+assert.equal(firstMarkedIntake(intakeTurn, [
   { role: 'customer', text: longIntake, intake: true },
   { role: 'app', text: 'I am building the itinerary from that dump.' },
   { role: 'customer', text: longIntake, intake: true },

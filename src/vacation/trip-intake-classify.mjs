@@ -49,7 +49,7 @@ function parseThingList(raw) {
 }
 
 function cleanThings(list) {
-  const things = [];
+  const cleaned = [];
   const seen = new Set();
   for (const item of list) {
     const name = clean(item?.name || item?.title, 180);
@@ -57,14 +57,14 @@ function cleanThings(list) {
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    things.push({
+    cleaned.push({
       name,
       kind: clean(item?.kind || item?.category, 40).toLowerCase(),
       who: clean(item?.who, 120),
       when: clean(item?.when || item?.whenLabel, 180),
     });
   }
-  return things;
+  return cleaned;
 }
 
 async function postJson(fetchImpl, url, key, body, title) {
@@ -101,7 +101,7 @@ export function thingsFromIntake(extracted) {
   }));
 }
 
-export function ensureNamedThings(things, extracted) {
+export function mergeWantedThings(things, extracted) {
   const next = Array.isArray(things) ? [...things] : [];
   const have = new Set(next.map((thing) => clean(thing?.title, 180).toLowerCase()).filter(Boolean));
   for (const thing of thingsFromIntake(extracted)) {
@@ -113,13 +113,13 @@ export function ensureNamedThings(things, extracted) {
   return next;
 }
 
-export function tripIntakeJobFields({ requestText, receivedAt, classification, firstIntake }) {
+export function tripIntakeJobFields({ requestText, receivedAt, classification, firstIntake, jobKind }) {
   const ok = classification?.ok === true;
   const intake = ok && classification.intake === true;
   const wantedThings = ok ? cleanThings(classification.things) : [];
   return {
     intakeEvent: intake ? {
-      kind: 'trip_intake',
+      kind: jobKind,
       at: receivedAt || null,
       requestText: String(requestText || ''),
       firstIntake: firstIntake === true,
