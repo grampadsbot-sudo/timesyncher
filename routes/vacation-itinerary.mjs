@@ -42,7 +42,7 @@ import {
   applyCustomerNotes,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
-import { classifyTripIntake, mergeWantedThings, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   openCollaboratorAppSeats,
   recordDialogParty,
@@ -525,10 +525,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       wantedThings: classification.ok === true ? classification.things : [],
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
-      extractedTitle: classification.ok === true ? classification.title : '',
-      titleError: classification.ok === true
-        ? (String(classification.title || '').trim() ? null : 'trip title was not in the extraction')
-        : (classification.error || 'trip intake classification failed'),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
     });
   } catch (error) {
     produced = {
@@ -643,10 +643,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
       askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
-      extractedTitle: classification.ok === true ? classification.title : '',
-      titleError: classification.ok === true
-        ? (String(classification.title || '').trim() ? null : 'trip title was not in the extraction')
-        : (classification.error || 'trip intake classification failed'),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
     },
     firstIntake ? requestText : '',
     classification.ok === true ? classification.things : [],
@@ -717,7 +717,7 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedTitle = '', titleError = null } = {}) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}) {
   const planned = thingsFromIntake(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
@@ -736,9 +736,17 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
     } : {}),
   });
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
-  const tripTitle = String(extractedTitle || '').replace(/\s+/g, ' ').trim().slice(0, 180);
-  const missingTitle = tripTitle ? null : (titleError || 'trip title was not in the extraction');
-  const dated = span?.destination || span?.start ? 'yes' : '';
+  const resolved = await resolveIntakePlace({
+    destination: extractedDestination,
+    title: extractedTitle,
+    destinationError,
+    titleError,
+    searchImpl,
+  });
+  const tripTitle = resolved.title;
+  const tripDestination = resolved.destination;
+  const missingTitle = tripTitle ? null : resolved.titleError;
+  const dated = span?.start ? 'yes' : '';
   await db`
     update trips
     set title = case
@@ -746,7 +754,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
           else title
         end,
         destination = case
-          when coalesce(destination, '') = '' and ${span?.destination || ''} <> '' then ${span?.destination || ''}
+          when coalesce(destination, '') = '' and ${tripDestination} <> '' then ${tripDestination}
           else destination
         end,
         start_date = coalesce(start_date, ${span?.start || null}::date),
@@ -755,6 +763,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         metadata = coalesce(metadata, '{}'::jsonb) || ${{
           ...(span?.spanLabel ? { intakeSpan: span.spanLabel, intakeBadge: span.badge || '' } : {}),
           dialogParty: party,
+          ...(tripDestination ? { destinationSource: 'chat_extraction' } : { destinationError: resolved.destinationError }),
           ...(tripTitle ? { titleSource: 'chat_extraction' } : { titleError: missingTitle }),
         }},
         updated_at = now()
@@ -780,8 +789,8 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedTitle = '', titleError = null } = {}, intakeText = '', extracted = []) {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedTitle, titleError });
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}, intakeText = '', extracted = []) {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl });
   const current = await loadTripThings(db, tripId);
   const wanted = thingsFromIntake(extracted);
   if (!current.length && !wanted.length) return current;
@@ -953,7 +962,9 @@ async function handleVacationApp(req, res, db, url) {
           roster: Array.isArray(pending.roster) ? pending.roster : [],
           rosterError: pending.rosterError || null,
           askRoster: Boolean(pending.rosterError),
+          extractedDestination: pending.extractedDestination || '',
           extractedTitle: pending.extractedTitle || '',
+          destinationError: pending.destinationError || null,
           titleError: pending.titleError || null,
         },
         pending.postIntake === true ? pending.customerTurn : '',

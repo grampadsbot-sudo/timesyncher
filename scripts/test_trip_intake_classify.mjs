@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { classifyTripIntake, mergeWantedThings, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
@@ -112,6 +112,7 @@ assert.equal(fields.rosterError, null);
 assert.equal(fields.destination, 'Lisbon');
 assert.equal(fields.hasDates, true);
 assert.equal(fields.title, 'Lisbon week');
+assert.equal(fields.destinationError, null);
 assert.equal(fields.titleError, null);
 assert.equal(fields.intakeError, null);
 
@@ -125,6 +126,7 @@ const notFirst = tripIntakeJobFields({
 assert.equal(notFirst.intakeEvent, null);
 assert.equal(notFirst.wantedThings.length, 1);
 assert.equal(notFirst.title, '');
+assert.equal(notFirst.destinationError, 'trip place was not in the extraction');
 assert.equal(notFirst.titleError, 'trip title was not in the extraction');
 assert.equal(notFirst.intakeError, null);
 
@@ -151,6 +153,7 @@ assert.equal(failedFields.destination, '');
 assert.equal(failedFields.hasDates, false);
 assert.equal(failedFields.title, '');
 assert.match(failedFields.rosterError, /classifier down/);
+assert.match(failedFields.destinationError, /classifier down/);
 assert.match(failedFields.titleError, /classifier down/);
 assert.match(failedFields.intakeError, /classifier down/);
 
@@ -178,5 +181,48 @@ assert.deepEqual(missingKey.things, []);
 const blank = await classifyTripIntake({ text: '   ', env, fetchImpl: () => { throw new Error('fetch should not run'); } });
 assert.deepEqual(blank, { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null });
 assert.doesNotMatch(routeSource, /TimeSyncher Vacation Admin Test|placeTitle/);
+assert.doesNotMatch(turnSource, /function thingPattern|placeTitle/);
+assert.match(routeSource, /resolveIntakePlace/);
+assert.match(classifySource, /runPublicResearch/);
+assert.doesNotMatch(classifySource, /places\.googleapis|maps\.googleapis|google places/i);
+const adminSource = fs.readFileSync(new URL('../routes/admin-onboardings.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(adminSource, /TimeSyncher Vacation Admin Test/);
+
+const confirmed = await resolveIntakePlace({
+  destination: 'Lisbon',
+  title: 'Lisbon week',
+  searchImpl: async () => ({ ok: true, error: null }),
+});
+assert.equal(confirmed.destination, 'Lisbon');
+assert.equal(confirmed.title, 'Lisbon week');
+assert.equal(confirmed.destinationError, null);
+assert.equal(confirmed.titleError, null);
+
+let searches = 0;
+const missed = await resolveIntakePlace({
+  destination: 'Lisbon',
+  title: 'Lisbon week',
+  searchImpl: async () => {
+    searches += 1;
+    return { ok: false, error: 'live search returned no place' };
+  },
+});
+assert.equal(searches, 1);
+assert.equal(missed.destination, '');
+assert.equal(missed.title, '');
+assert.match(missed.destinationError, /no place/);
+assert.match(missed.titleError, /no place/);
+
+const unnamed = await resolveIntakePlace({
+  destination: '',
+  title: '',
+  destinationError: 'classifier down',
+  titleError: 'classifier down',
+  searchImpl: async () => { throw new Error('search should not run'); },
+});
+assert.equal(unnamed.destination, '');
+assert.equal(unnamed.title, '');
+assert.match(unnamed.destinationError, /classifier down/);
+assert.match(unnamed.titleError, /classifier down/);
 
 process.stdout.write('trip intake classify tests passed\n');
