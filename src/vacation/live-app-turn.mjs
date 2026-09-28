@@ -413,11 +413,14 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
   const span = record?.span || null;
-  return {
+  const facts = {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
   };
+  if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
+  if (party.askRoster === true) facts.askRoster = true;
+  return facts;
 }
 
 export function qualityFailureReason(quality, flags) {
@@ -598,14 +601,6 @@ export function intakeSpan(text) {
   };
 }
 
-function whoIn(sentence) {
-  const named = String(sentence || '').match(/\b([A-Z][a-z]{2,})\s+wants\b/);
-  if (named && !WHO_SKIP.has(named[1])) return named[1];
-  const forWhom = String(sentence || '').match(/\bfor\s+([A-Z][a-z]{2,})\b/);
-  if (forWhom && !WHO_SKIP.has(forWhom[1])) return forWhom[1];
-  return '';
-}
-
 function thingPattern(title) {
   const key = String(title || '').toLowerCase();
   if (key === 'big island') return /big island/i;
@@ -621,36 +616,6 @@ function thingPattern(title) {
 function swimDayKey(label) {
   const match = String(label || '').match(/^((?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) [A-Z][a-z]{2,3} \d{1,2})/);
   return match ? match[1] : '';
-}
-
-function swimLabelRank(label) {
-  if (/beach or house pool/i.test(label)) return 3;
-  if (/house pool|\bbeach\b/i.test(label)) return 2;
-  return 1;
-}
-
-function mergeSwimLabel(labels, label) {
-  const day = swimDayKey(label);
-  if (!day) return;
-  const idx = labels.findIndex((item) => swimDayKey(item) === day);
-  if (idx < 0) {
-    labels.push(label);
-    return;
-  }
-  if (swimLabelRank(label) > swimLabelRank(labels[idx])) labels[idx] = label;
-}
-
-function swimPlanLabel(sentence) {
-  if (!/\bswim\b|house pool/i.test(sentence)) return '';
-  const dated = datedMentions(sentence)[0];
-  if (!dated) return '';
-  const day = formatMention({ ...dated, year: dated.year || null }, { withWeekday: true });
-  if (!day) return '';
-  let plan = '';
-  if (/beach/i.test(sentence) && /house pool/i.test(sentence)) plan = 'beach or house pool';
-  else if (/house pool/i.test(sentence)) plan = 'house pool';
-  else if (/\bbeach\b/i.test(sentence)) plan = 'beach';
-  return [day, plan].filter(Boolean).join(' ');
 }
 
 function customerNamedWeekday(customerText, weekdayName) {
@@ -699,25 +664,14 @@ function spanStartLabel(span) {
   return spanDateLabel(start);
 }
 
-function laterFridayLabel(span) {
-  if (!span?.start || !span?.end) return '';
-  const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
-  const end = new Date(`${isoDay(span.end)}T00:00:00Z`);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
-  let seen = 0;
-  let found = '';
-  for (let cursor = start; cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
-    if (cursor.getUTCDay() !== WEEKDAY_INDEX.friday) continue;
-    seen += 1;
-    if (seen === 1) continue;
-    found = formatMention({
-      weekday: 'Friday',
-      month: cursor.getUTCMonth() + 1,
-      day: cursor.getUTCDate(),
-      year: cursor.getUTCFullYear(),
-    }, { withWeekday: true });
-  }
-  return found;
+function customerNamedAnyWeekday(customerText) {
+  return /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
+}
+
+export function swimDayUnset(customerText) {
+  const text = String(customerText || '');
+  if (!/\bswim\b/i.test(text)) return false;
+  return /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(text) && !customerNamedAnyWeekday(text);
 }
 
 function arrivalSwimLabel(label, arrival) {
@@ -726,11 +680,13 @@ function arrivalSwimLabel(label, arrival) {
 }
 
 export function applyAgreedAppSwim(things, customerText, appText, span = null) {
-  if (!/\bswim\b/i.test(String(customerText || ''))) return things;
+  const list = Array.isArray(things) ? things : [];
+  if (!/\bswim\b/i.test(String(customerText || ''))) return list;
   const arrival = spanStartLabel(span);
   const wantsLater = /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(String(customerText || ''));
+  const namedDay = customerNamedAnyWeekday(customerText);
   const labels = [];
-  if (wantsLater) {
+  if (wantsLater && namedDay) {
     for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
       const dated = datedMentions(sentence)[0];
       if (dated) {
@@ -744,20 +700,17 @@ export function applyAgreedAppSwim(things, customerText, appText, span = null) {
       const resolved = weekdayInsideSpan(weekday[1], span);
       if (resolved && !arrivalSwimLabel(resolved, arrival)) labels.push(resolved);
     }
-    const namedDay = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
-    if (!namedDay) {
-      const later = laterFridayLabel(span);
-      if (later && !labels.includes(later)) labels.push(later);
-    }
   }
-  return (Array.isArray(things) ? things : []).map((thing) => {
-    if (thing.title !== 'Swim') return thing;
+  const askWhichDay = wantsLater && !namedDay;
+  return list.map((thing) => {
+    if (!/\bswim\b/i.test(String(thing?.title || ''))) return thing;
     const merged = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => part && !arrivalSwimLabel(part, arrival));
     for (const label of labels) {
       if (merged.some((item) => item === label || item.startsWith(`${label} `))) continue;
       merged.push(label);
     }
-    return { ...thing, customerWhen: merged.join(' · ') };
+    const dayFlag = wantsLater ? askWhichDay : thing.askWhichDay === true;
+    return { ...thing, customerWhen: merged.join(' · '), askWhichDay: dayFlag };
   });
 }
 
@@ -789,35 +742,8 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       if ([...notes, ...collaboratorNotes, ...bucket].some((note) => sameNote(note, line))) continue;
       bucket.push(line);
     }
-    const spanThing = thing.title === 'Big Island' || thing.title === 'Kailua-Kona house';
-    let customerWhen = thing.customerWhen || '';
-    if (thing.title === 'Groceries') {
-      const arrival = String(thing.whenLabel || '').trim();
-      if (arrival && !/same day/i.test(arrival)) customerWhen = arrival;
-    } else if (thing.title === 'Swim') {
-      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => swimDayKey(part));
-      for (const hit of hits) {
-        if (!activitySentenceCommits(hit)) continue;
-        mergeSwimLabel(labels, swimPlanLabel(hit));
-      }
-      customerWhen = labels.join(' · ');
-    } else if (thing.title === 'Gardens' || thing.title === 'Dinner' || thing.title === 'Town walk') {
-      const labels = String(customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
-      for (const hit of hits) {
-        if (/keep us on the big island|stay on the big island/i.test(hit)) continue;
-        if (!activitySentenceCommits(hit)) continue;
-        for (const dated of datedMentions(hit)) {
-          const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
-          if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
-        }
-      }
-      customerWhen = labels.join(' · ');
-    } else if (!spanThing) {
-      const datedHits = hits.filter((hit) => datedMentions(hit)[0] && !/keep us on the big island|stay on the big island/i.test(hit));
-      const dated = datedHits.length ? datedMentions(datedHits[datedHits.length - 1])[0] : null;
-      if (dated) customerWhen = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
-    }
-    const who = thing.who || whoIn(hits.join(' ')) || '';
+    const who = String(thing.who || '').trim();
+    const customerWhen = String(thing.customerWhen || '').trim();
     return {
       ...thing,
       who,
@@ -1048,8 +974,7 @@ export function savedTripFacts(record = {}) {
   const namedOwner = (thing) => {
     const direct = String(thing?.who || '').match(/\b([A-Z][a-z]{2,})\b/);
     if (direct && !WHO_SKIP.has(direct[1])) return direct[1];
-    const notes = [...(Array.isArray(thing?.notes) ? thing.notes : []), ...(Array.isArray(thing?.collaboratorNotes) ? thing.collaboratorNotes : [])];
-    return notes.map((note) => whoIn(note)).find(Boolean) || '';
+    return '';
   };
   const gardenWho = namedOwner(garden);
   const swimWho = namedOwner(swim);
@@ -1130,7 +1055,7 @@ function clauseStamps(sentence, span, activityRe) {
       local.forEach((stamp) => stamps.add(stamp));
       return;
     }
-    if (/\blater in the week\b|\blater in the day\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
+    if (/\blater\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
     for (const neighbor of [clauses[index - 1], clauses[index + 1]].filter(Boolean)) {
       if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
       const neighborIndex = clauses.indexOf(neighbor);
@@ -1258,7 +1183,10 @@ export function draftFactErrors(reply, facts = {}) {
       }
     }
     if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|now set|set for|i(?:'|’)ll save|we(?:'|’)ll save|save that|i(?:'|’)ve got that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
-      const laterStamp = dayStamp(facts.laterFriday || laterFridayLabel(span));
+      const laterStamp = dayStamp(facts.laterFriday || '');
+      if (/\bsecond friday\b/i.test(sentence) && !laterStamp && !/\bfriday\b/i.test(customerTurn)) {
+        pushError(errors, 'a swim on the second Friday was claimed as saved');
+      }
       let claimed = looseDayStamps(withoutNegatedDays(sentence), span);
       if (/\bsecond friday\b/i.test(sentence) && laterStamp && !claimed.includes(laterStamp)) claimed = [...claimed, laterStamp];
       const askedForLater = !facts.strictSaved && wantsLaterSwim && laterStamp && claimed.includes(laterStamp);
@@ -1441,17 +1369,48 @@ export function completeRosterParty(doc) {
     party.editors.push({ name });
     rememberRoster(sources, `editors.${name}`, 'editor', `customer: ${name} can edit`);
   }
-  const notTraveler = new Set(['Kids', 'Four', 'What', 'Big', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'April', 'Marcus', 'Aunt']);
-  for (const match of corpus.matchAll(/\b([A-Z][a-z]+) (?:wants|does not want)\b/g)) {
-    const name = match[1];
-    if (notTraveler.has(name)) continue;
-    if (party.primary?.name && new RegExp(`^${name}\\b`, 'i').test(party.primary.name)) continue;
-    if (party.viewers.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
-    if (party.editors.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
-    if (party.preference_subjects.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
-    if (party.collaborators.some((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''))) continue;
-    party.collaborators.push({ name, payer: '' });
-    rememberRoster(sources, `collaborators.${name}`, '', `customer: ${name} wants`);
+  const samePerson = (left, right) => new RegExp(`^${String(left || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(String(right || ''));
+  let unplaced = false;
+  for (const person of Array.isArray(doc?.roster) ? doc.roster : []) {
+    const name = String(person?.name || '').trim();
+    const role = String(person?.role || '').trim().toLowerCase();
+    if (!name) continue;
+    if (role === 'owner') {
+      if (!party.primary?.name) {
+        party.primary = { name, role: 'Owner' };
+        rememberRoster(sources, 'primary', name, 'chat_extraction');
+      }
+    } else if (role === 'child') {
+      const age = person.age === null || person.age === undefined || person.age === '' ? NaN : Number(person.age);
+      if (!Number.isFinite(age)) {
+        unplaced = true;
+        continue;
+      }
+      if (party.preference_subjects.some((kid) => samePerson(name, kid.name))) continue;
+      party.preference_subjects.push({ name, age });
+      rememberRoster(sources, `preference_subjects.${name}`, age, 'chat_extraction');
+    } else if (role === 'viewer') {
+      if (party.viewers.some((item) => samePerson(name, item.name))) continue;
+      party.viewers.push({ name });
+      rememberRoster(sources, `viewers.${name}`, 'viewer', 'chat_extraction');
+    } else if (role === 'editor') {
+      if (party.editors.some((item) => samePerson(name, item.name))) continue;
+      party.editors.push({ name });
+      rememberRoster(sources, `editors.${name}`, 'editor', 'chat_extraction');
+    } else if (role === 'collaborator') {
+      if (party.primary?.name && samePerson(name, party.primary.name)) continue;
+      if (party.collaborators.some((item) => samePerson(name, item.name))) continue;
+      party.collaborators.push({ name, payer: '' });
+      rememberRoster(sources, `collaborators.${name}`, '', 'chat_extraction');
+    } else {
+      unplaced = true;
+    }
+  }
+  if (doc?.rosterError) {
+    party.rosterError = String(doc.rosterError);
+    party.askRoster = true;
+  } else if (doc?.askRoster === true || unplaced) {
+    party.askRoster = true;
   }
   return party;
 }
@@ -1771,6 +1730,7 @@ async function loadSavedTripRecord(session, env = process.env) {
           who: thingMeta.who || '',
           whenLabel: thingMeta.whenLabel || '',
           customerWhen: thingMeta.customerWhen || '',
+          askWhichDay: thingMeta.askWhichDay === true,
           notes: thingMeta.notes || [],
         };
       }),
@@ -1789,14 +1749,17 @@ function joiningSeatRecord(session) {
   return name ? { name, payer: String(seat?.payer || '').trim() } : null;
 }
 
-function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
+function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {}) {
   const projected = projectCustomerRecord(priorTurns, customerTurn);
+  const span = saved?.start ? spanFromIso(saved.start, saved.end || saved.start) : projected.span;
   const baseThings = Array.isArray(saved?.things) && saved.things.length ? saved.things : projected.things;
-  const things = customerTurn ? applyCustomerNotes(baseThings, customerTurn) : baseThings;
+  const noted = customerTurn ? applyCustomerNotes(baseThings, customerTurn) : baseThings;
+  const things = applyAgreedAppSwim(noted, customerTurn, '', span);
   const seat = session?.metadata?.seat || session?.seat;
   const collaborator = seat?.role === 'collaborator' || Boolean(seat?.ownerCustomerId);
   const storedOwner = String(saved?.party?.primary?.name || '').trim();
   const holder = storedOwner || (collaborator ? '' : String(session?.display_name || session?.displayName || '').trim());
+  const rosterKnown = Array.isArray(extraction.roster) || Boolean(extraction.rosterError);
   const party = completeRosterParty({
     party: {
       ...(saved?.party || {}),
@@ -1804,21 +1767,26 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
     },
     customerName: holder,
     turns: [{ role: 'customer', text: customerCorpus(priorTurns, customerTurn) }],
+    ...(rosterKnown ? {
+      roster: Array.isArray(extraction.roster) ? extraction.roster : [],
+      rosterError: extraction.rosterError || null,
+      askRoster: extraction.askRoster === true,
+    } : {}),
   });
-  const span = saved?.start ? spanFromIso(saved.start, saved.end || saved.start) : projected.span;
   return {
     start: span?.start || projected.start || '',
     end: span?.end || projected.end || '',
     span,
     things,
     party,
+    askWhichDay: things.some((thing) => thing?.askWhichDay === true) || swimDayUnset(customerTurn),
     planOwned: saved?.planOwned === true,
     rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, intake = false, wantedThings = [] } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, intake = false, wantedThings = [], roster = null, rosterError = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1832,13 +1800,18 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const upsell = upsellModeForTurn(intakeTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
-  const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session);
+  const rosterList = Array.isArray(roster) ? roster : [];
+  const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session, {
+    roster: Array.isArray(roster) ? roster : null,
+    rosterError: rosterError || null,
+    askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
+  });
   const tripContext = draftingFacts(history, customerTurn, mergedTrip);
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
-  tripFacts.laterFriday = laterFridayLabel(tripFacts.span);
+  tripFacts.askWhichDay = mergedTrip.askWhichDay === true;
   const planLine = customerAsksPrice(customerTurn) ? payerPriceLine(customerTurn, env) : '';
   const seatDollars = planSeatDollars(env);
   const planTable = planLine
@@ -1974,6 +1947,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     swimDays: tripFacts.swimDays || [],
     gardenDays: tripFacts.gardenDays || [],
     owner: tripFacts.ownerName || '',
+    askWhichDay: tripFacts.askWhichDay === true,
   };
   const baseLog = {
     draftModel,
@@ -2048,6 +2022,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     postIntake,
     intake: intake === true,
     wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
+    roster: rosterList,
+    rosterError: rosterError || null,
     destination,
     corpus,
     tripContext,

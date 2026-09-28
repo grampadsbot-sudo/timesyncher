@@ -9,12 +9,15 @@ import {
 const KINDS = new Set(['activity', 'restaurant', 'hotel', 'flight', 'car', 'store']);
 const INTAKE_THRESHOLD = 0.5;
 
+const ROSTER_ROLES = new Set(['owner', 'collaborator', 'child', 'viewer', 'editor']);
+
 const THING_SYSTEM = [
   'Extract what the customer wants from one vacation chat message.',
-  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}]}.',
+  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}]}.',
   'name is their wording for one wanted item. kind is activity, restaurant, hotel, flight, car, or store.',
   'who is a person they named for that item, or an empty string. when is a time they stated for that item, or an empty string.',
-  'List only items this message asks for. Do not invent items, names, or times.',
+  'roster lists people this message names. role is owner, collaborator, child, viewer, or editor. age is a number only when they stated a child age, otherwise null.',
+  'List only items and people this message asks for. Do not invent items, names, times, or people.',
 ].join(' ');
 
 function clean(value, max) {
@@ -38,14 +41,35 @@ function chatText(body) {
   return '';
 }
 
-function parseThingList(raw) {
+function parseExtraction(raw) {
   const trimmed = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim();
   const start = trimmed.indexOf('{');
   const end = trimmed.lastIndexOf('}');
   if (start < 0 || end <= start) throw new Error('trip intake extraction was not JSON');
   const parsed = JSON.parse(trimmed.slice(start, end + 1));
-  if (!Array.isArray(parsed?.things)) throw new Error('trip intake extraction missing things');
-  return parsed.things;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('trip intake extraction was not JSON');
+  if (!Array.isArray(parsed.things)) throw new Error('trip intake extraction missing things');
+  return {
+    things: parsed.things,
+    roster: Array.isArray(parsed.roster) ? parsed.roster : [],
+  };
+}
+
+function cleanRoster(list) {
+  const people = [];
+  const seen = new Set();
+  for (const item of Array.isArray(list) ? list : []) {
+    const name = clean(item?.name, 120);
+    const role = clean(item?.role, 40).toLowerCase();
+    if (!name || !ROSTER_ROLES.has(role)) continue;
+    const key = `${role}:${name.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const rawAge = item?.age;
+    const age = rawAge === null || rawAge === undefined || rawAge === '' ? null : Number(rawAge);
+    people.push({ name, role, age: Number.isFinite(age) ? age : null });
+  }
+  return people;
 }
 
 const CHAT_EXTRACTION = 'chat_extraction';
@@ -121,6 +145,7 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
   const ok = classification?.ok === true;
   const intake = ok && classification.intake === true;
   const wantedThings = ok ? cleanThings(classification.things) : [];
+  const roster = ok ? cleanRoster(classification.roster) : [];
   return {
     intakeEvent: intake ? {
       kind: jobKind,
@@ -129,14 +154,22 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
       firstIntake: firstIntake === true,
     } : null,
     wantedThings,
+    roster,
+    rosterError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
     intakeError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
   };
 }
 
 export async function classifyTripIntake({ text, env = process.env, fetchImpl = fetch } = {}) {
   const message = clean(text, 6000);
-  const failed = (error) => ({ ok: false, intake: false, things: [], error: clean(error, 300) || 'trip intake classification failed' });
-  if (!message) return { ok: true, intake: false, things: [], error: null };
+  const failed = (error) => ({
+    ok: false,
+    intake: false,
+    things: [],
+    roster: [],
+    error: clean(error, 300) || 'trip intake classification failed',
+  });
+  if (!message) return { ok: true, intake: false, things: [], roster: [], error: null };
   const key = openRouterAppKey(env);
   if (!key) return failed('trip intake classifier needs an OpenRouter key');
   try {
@@ -160,8 +193,10 @@ export async function classifyTripIntake({ text, env = process.env, fetchImpl = 
         { role: 'user', content: message },
       ],
     }, 'TimeSyncher Vacation trip intake');
-    const things = cleanThings(parseThingList(chatText(extracted)));
-    return { ok: true, intake: score >= INTAKE_THRESHOLD, things, error: null };
+    const extractedFields = parseExtraction(chatText(extracted));
+    const things = cleanThings(extractedFields.things);
+    const roster = cleanRoster(extractedFields.roster);
+    return { ok: true, intake: score >= INTAKE_THRESHOLD, things, roster, error: null };
   } catch (error) {
     return failed(error?.message || error);
   }
