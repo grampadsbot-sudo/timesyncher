@@ -287,4 +287,81 @@ for (const id of inventoryIds) {
   assert.match(inventoryOpenRun.stderr, new RegExp(`FAIL\\t${pattern.rule}\\tsrc/vacation/new-${id}\\.mjs:\\d+\\tinventory:${id}`));
 }
 
+const thingSourceFile = 'src/vacation/thing-source.mjs';
+const thingSourceText = readFixture('thing-source.mjs');
+const thingSourceHits = scanText(thingSourceFile, thingSourceText).filter((finding) => finding.rule === 'THING-SOURCE');
+assert.deepEqual(thingSourceHits.map((finding) => finding.symbol_or_pattern), ['thing-without-source:New Pier']);
+assert.equal(classify(scanText(thingSourceFile, thingSourceText), []).fail.some((finding) => finding.rule === 'THING-SOURCE'), true);
+assert.equal(scanText('src/vacation/sourced.mjs', "places.push({ name: 'New Pier', category_name: 'Attraction', source: 'live' });").some((finding) => finding.rule === 'THING-SOURCE'), false);
+
+const googleFile = 'src/vacation/google-places.mjs';
+const googleText = readFixture('google-places.mjs');
+const modelFile = 'src/vacation/model-allowlist.mjs';
+const modelText = readFixture('model-allowlist.mjs');
+
+const cannedFile = 'src/vacation/canned-fallback.mjs';
+const cannedText = readFixture('canned-fallback.mjs');
+const cannedHits = scanText(cannedFile, cannedText).filter((finding) => finding.rule === 'NO-CANNED-FALLBACK');
+assert.deepEqual(cannedHits.map((finding) => finding.symbol_or_pattern).sort(), ['KEEPSAKE_LIST_FILL', 'Welcome aboard']);
+assert.equal(classify(cannedHits, []).fail.length, 2);
+assert.equal(scanText('src/vacation/empty-fallback.mjs', 'try { load(); } catch (error) { throw error; }\nif (!results) return [];').some((finding) => finding.rule === 'NO-CANNED-FALLBACK'), false);
+
+const ruleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-rules-'));
+writeTree(ruleDir, {
+  'src/vacation/thing-source.mjs': thingSourceText,
+  'src/vacation/google-places.mjs': googleText,
+  'src/vacation/model-allowlist.mjs': modelText,
+  'src/vacation/canned-fallback.mjs': cannedText,
+  'scripts/live_v7_dialog_pdf.py': readFixture('dialog-stamp.py'),
+}, []);
+for (let index = 0; index < 13; index += 1) {
+  const abs = path.join(ruleDir, 'api', `fn${index}.mjs`);
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, 'export default function handler() {}\n');
+}
+const ruleRun = runGuard(ruleDir);
+assert.equal(ruleRun.status, 1, ruleRun.stdout);
+assert.deepEqual([...ruleRun.stderr.matchAll(/NO-GOOGLE-PLACES\t[^\t]+\t([^\n]+)/g)].map((item) => item[1]).sort(), [
+  'GOOGLE_PLACES_API_KEY',
+  'PLACES_API_KEY',
+  'PlacesClient',
+  '@googlemaps/places',
+  'google.maps.places',
+  'maps.googleapis.com/place',
+].sort());
+assert.match(ruleRun.stderr, /FAIL\tTHING-SOURCE\tsrc\/vacation\/thing-source\.mjs:\d+\tthing-without-source:New Pier/);
+assert.match(ruleRun.stderr, /FAIL\tNO-GOOGLE-PLACES\tsrc\/vacation\/google-places\.mjs:\d+\tGOOGLE_PLACES_API_KEY/);
+assert.match(ruleRun.stderr, /FAIL\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\tgpt-4o-mini/);
+assert.match(ruleRun.stderr, /FAIL\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\topenai\/gpt-4\.1/);
+assert.match(ruleRun.stderr, /FAIL\tNO-CANNED-FALLBACK\tsrc\/vacation\/canned-fallback\.mjs:\d+\tKEEPSAKE_LIST_FILL/);
+assert.match(ruleRun.stderr, /FAIL\tBUILD-STAMP\tscripts\/live_v7_dialog_pdf\.py:1\tempty-stamp/);
+assert.match(ruleRun.stderr, /FAIL\tAPI-FN-CAP\tapi:1\t13>12/);
+fs.writeFileSync(path.join(ruleDir, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([
+  entry(googleFile, 'GOOGLE_PLACES_API_KEY'),
+  entry(modelFile, 'gpt-4o-mini'),
+  entry(modelFile, 'openai/gpt-4.1'),
+  entry('api', '13>12'),
+], null, 2)}\n`);
+const stillFail = runGuard(ruleDir);
+assert.match(stillFail.stderr, /FAIL\tNO-GOOGLE-PLACES/);
+assert.match(stillFail.stderr, /FAIL\tAPI-FN-CAP\tapi:1\t13>12/);
+assert.match(stillFail.stdout, /REPORT\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\tgpt-4o-mini/);
+assert.match(stillFail.stdout, /REPORT\tMODEL-ALLOWLIST\tsrc\/vacation\/model-allowlist\.mjs:\d+\topenai\/gpt-4\.1/);
+assert.doesNotMatch(`${stillFail.stdout}\n${stillFail.stderr}`, /typesafe\/jev-1\.13/);
+
+const underCap = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-api-'));
+writeTree(underCap, {
+  'scripts/live_v7_dialog_pdf.py': 'def build(pack):\n    banner = str(pack.get("deploy_banner") or "").strip()\n    if not banner:\n        raise SystemExit("refused: dialog stamp is empty")\n',
+  'scripts/screenshot_journey_pdf.py': 'def build(manifest):\n    banner = str(manifest.get("deployBanner") or "").strip()\n    if not banner:\n        raise SystemExit("refused: journey stamp is empty")\n',
+}, []);
+for (let index = 0; index < 12; index += 1) {
+  const abs = path.join(underCap, 'api', `fn${index}.mjs`);
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, 'export default function handler() {}\n');
+}
+const underRun = runGuard(underCap);
+assert.equal(underRun.status, 0, underRun.stderr);
+assert.doesNotMatch(underRun.stdout, /API-FN-CAP/);
+assert.doesNotMatch(underRun.stdout, /BUILD-STAMP/);
+
 process.stdout.write('hardcoded content check test passed\n');

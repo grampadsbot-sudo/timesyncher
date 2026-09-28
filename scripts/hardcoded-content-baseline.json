@@ -1,5 +1,23 @@
 [
   {
+    "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs",
+    "symbol_or_pattern": "google/gemini-2.5-flash",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs",
+    "symbol_or_pattern": "gpt-4.1-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs",
+    "symbol_or_pattern": "openai/gpt-4.1-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
     "file": "index.html",
     "symbol_or_pattern": "inventory:A22",
     "inventory_id": "A22",
@@ -138,6 +156,36 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
+    "file": "routes/worker-jobs.mjs",
+    "symbol_or_pattern": "insert trip_things",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/import_hosted_bundle_to_neon.mjs",
+    "symbol_or_pattern": "insert trip_things",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/live_v7_dialog_pdf.py",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol_or_pattern": "openai/gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
     "file": "scripts/product-gbrain-dispatch.mjs",
     "symbol_or_pattern": "inventory:A20",
     "inventory_id": "A20",
@@ -156,6 +204,42 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol_or_pattern": "google/gemini-2.5-flash",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol_or_pattern": "gpt-4.1-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol_or_pattern": "openai/gpt-4.1-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_poi_search.mjs",
+    "symbol_or_pattern": "gpt-4o-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_vacation_telegram_intake.mjs",
+    "symbol_or_pattern": "typesafe/jev-1.13-test",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
     "file": "scripts/travel-source-adapter-runner.mjs",
     "symbol_or_pattern": "inventory:E10",
     "inventory_id": "E10",
@@ -165,6 +249,36 @@
     "file": "scripts/travel-source-adapter-runner.mjs",
     "symbol_or_pattern": "inventory:E8",
     "inventory_id": "E8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "symbol_or_pattern": "thing-without-source:{ category: 'activity', title: text(attraction.n",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "symbol_or_pattern": "thing-without-source:{ category: 'decision', title: `${destination} r",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "symbol_or_pattern": "thing-without-source:{ category: 'hotel', title: text(hotel.name || `",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "symbol_or_pattern": "thing-without-source:MasterPark SEA parking quote benchmark",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/trek-itinerary-edit.mjs",
+    "symbol_or_pattern": "thing-without-source:{ raw: match[0], title, category: 'hotel', day: ",
+    "inventory_id": "THING-SOURCE",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -267,6 +381,18 @@
     "file": "scripts/vacation-public-research-worker.mjs",
     "symbol_or_pattern": "inventory:E9",
     "inventory_id": "E9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "symbol_or_pattern": "thing-without-source:{ category, subtype: text(raw.subtype || '', 80)",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "symbol_or_pattern": "thing-without-source:{ category, title: poi.name, summary: `${poi.nam",
+    "inventory_id": "THING-SOURCE",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -435,6 +561,30 @@
     "file": "src/vacation/intake-shared-trip.mjs",
     "symbol_or_pattern": "SpeediShuttle",
     "inventory_id": "A8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "thing-without-source:{ id, trip_id: intId(trip.id), name: thing.title",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "thing-without-source:Car",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "thing-without-source:Flight",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "symbol_or_pattern": "thing-without-source:SpeediShuttle",
+    "inventory_id": "THING-SOURCE",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1057,6 +1207,12 @@
   },
   {
     "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol_or_pattern": "thing-without-source:{ id, name, __tsKeepsakeFill: 1, category_id: me",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
     "symbol_or_pattern": "Ulu Ocean Grill",
     "inventory_id": "A12",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -1327,6 +1483,18 @@
   },
   {
     "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "thing-without-source:{ title, category, description, who: notes.map((",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol_or_pattern": "thing-without-source:{ title, category, description: '', who: '', whe",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
     "symbol_or_pattern": "UNNAMED_VENUE",
     "inventory_id": "B2",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -1407,6 +1575,12 @@
     "file": "src/vacation/thing-logo-capture.mjs",
     "symbol_or_pattern": "NAMED_THING_LOGOS",
     "inventory_id": "A19",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol_or_pattern": "thing-without-source:{ name: title, category_name: category, address:",
+    "inventory_id": "THING-SOURCE",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {

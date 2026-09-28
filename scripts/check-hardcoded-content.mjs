@@ -7,7 +7,7 @@ import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
 
-const TEXT_EXT = new Set(['.mjs', '.js', '.html', '.json', '.jsonl', '.md', '.txt', '.css', '.yml', '.yaml', '.svg', '.csv']);
+const TEXT_EXT = new Set(['.mjs', '.js', '.html', '.json', '.jsonl', '.md', '.txt', '.css', '.yml', '.yaml', '.svg', '.csv', '.py']);
 const CONTENT_DIRS = ['src/vacation', 'routes'];
 const CONTENT_FILES = [
   'scripts/vacation-app-reply-rules.mjs',
@@ -179,6 +179,197 @@ function inventoryFindings(file, text, findings, seen, { bundles = false } = {})
   }
 }
 
+const THING_PUSH = /(?:places|things|next|candidates)\s*\.push\s*\(\s*$/;
+const CANNED_TOKEN = /\b([A-Z][A-Z0-9_]*(?:LIST_FILL|FILL_DETAILS)|PLACE_COORDS|CANNED_APP_REPLY|ONBOARDING_OPENER_[A-Z0-9_]+|LIVE_TAB_FILL)\b|Welcome aboard/;
+const ALLOWED_MODELS = new Set([
+  'google/gemini-2.5-flash-lite',
+  'qwen/qwen3-235b-a22b-2507',
+  'deepseek/deepseek-v3.2',
+  'qwen/qwen3-max',
+  'typesafe/jev-1.13',
+]);
+const MODEL_VENDOR = /^(?:google|qwen|deepseek|typesafe|openai|anthropic|meta-llama|mistralai|x-ai|cohere|perplexity|groq)\//i;
+const GPT_MINI = /gpt-[a-z0-9.]+-mini/ig;
+const QUOTED_MODEL = /['"`]([a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:-]*)['"`]/ig;
+const GOOGLE_PLACES_PATTERNS = [
+  [/GOOGLE_PLACES_API_KEY/g, 'GOOGLE_PLACES_API_KEY'],
+  [/\bPLACES_API_KEY\b/g, 'PLACES_API_KEY'],
+  [/maps\.googleapis\.com\/[^'"\s]*place/gi, 'maps.googleapis.com/place'],
+  [/@googlemaps\/places/g, '@googlemaps/places'],
+  [/@googlemaps\/google-maps-services/g, '@googlemaps/google-maps-services'],
+  [/\bPlacesClient\b/g, 'PlacesClient'],
+  [/google\.maps\.places/g, 'google.maps.places'],
+];
+const STAMP_GUARDS = [
+  ['scripts/live_v7_dialog_pdf.py', /deploy_banner/, /if not banner:\n\s+raise SystemExit\("refused: dialog stamp is empty"\)/],
+  ['scripts/screenshot_journey_pdf.py', /deployBanner/, /if not banner:\n\s+raise SystemExit\("refused: journey stamp is empty"\)/],
+];
+const FUNCTION_EXT = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts', '.py', '.go', '.rb']);
+const API_FN_CAP = 12;
+const GUARD_FILES = new Set([
+  'scripts/check-hardcoded-content.mjs',
+  'scripts/test_check_hardcoded_content.mjs',
+  'scripts/hardcoded-inventory-patterns.mjs',
+  'scripts/hardcoded-content-baseline.json',
+]);
+
+function matchingBrace(text, open) {
+  let depth = 0;
+  for (let i = open; i < text.length; i += 1) {
+    if (text[i] === '{') depth += 1;
+    else if (text[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return i + 1;
+    }
+  }
+  return text.length;
+}
+
+function objectAt(text, index) {
+  let depth = 0;
+  let start = -1;
+  for (let i = index; i >= 0; i -= 1) {
+    if (text[i] === '}') depth += 1;
+    else if (text[i] === '{') {
+      if (depth === 0) {
+        start = i;
+        break;
+      }
+      depth -= 1;
+    }
+  }
+  if (start < 0) return null;
+  return { start, end: matchingBrace(text, start), body: '' };
+}
+
+function thingLabel(body) {
+  const named = body.match(/\b(?:name|title)\s*:\s*['"]([^'"]+)['"]/);
+  if (named) return named[1].slice(0, 80);
+  return body.replace(/\s+/g, ' ').trim().slice(0, 48);
+}
+
+function topLevel(body) {
+  let depth = 0;
+  let out = '';
+  for (const ch of body) {
+    if (ch === '{' || ch === '[') depth += 1;
+    if (depth === 1) out += ch;
+    if (ch === '}' || ch === ']') depth -= 1;
+  }
+  return out;
+}
+
+function isBuiltThing(body, prelude) {
+  if (/\bsource\s*:/.test(body) || /\brow\./.test(body)) return false;
+  const top = topLevel(body);
+  const nameKey = /\b(?:name|title)\s*[:,]/.test(top);
+  const categoryNameKey = /\bcategory_name\s*:/.test(top);
+  const categoryKey = /\bcategory\s*[:,]/.test(top);
+  if (categoryNameKey && nameKey) return true;
+  if (THING_PUSH.test(prelude) && nameKey && (categoryKey || categoryNameKey)) return true;
+  if (/return\s+\[?\s*$/.test(prelude) && nameKey && categoryKey && /\b(?:description|summary|metadata)\s*:/.test(top)) return true;
+  return false;
+}
+
+function thingSourceFindings(file, text, findings, seen) {
+  const found = new Set();
+  const mark = (index) => {
+    const obj = objectAt(text, index);
+    if (!obj || found.has(obj.start)) return;
+    found.add(obj.start);
+    const body = text.slice(obj.start, obj.end);
+    const prelude = text.slice(Math.max(0, obj.start - 80), obj.start);
+    if (!isBuiltThing(body, prelude)) return;
+    add(findings, seen, 'THING-SOURCE', file, text, obj.start, `thing-without-source:${thingLabel(body)}`);
+  };
+  const keys = /\bcategory_name\s*:/g;
+  keys.lastIndex = 0;
+  let match = keys.exec(text);
+  while (match) {
+    mark(match.index);
+    match = keys.exec(text);
+  }
+  const pushes = /(?:places|things|next|candidates)\s*\.push\s*\(\s*\{/g;
+  pushes.lastIndex = 0;
+  match = pushes.exec(text);
+  while (match) {
+    mark(match.index + match[0].length - 1);
+    match = pushes.exec(text);
+  }
+  const returns = /return\s+\[?\s*\{/g;
+  returns.lastIndex = 0;
+  match = returns.exec(text);
+  while (match) {
+    mark(match.index + match[0].length - 1);
+    match = returns.exec(text);
+  }
+  const inserts = /insert\s+into\s+trip_things\b/gi;
+  inserts.lastIndex = 0;
+  match = inserts.exec(text);
+  while (match) {
+    const slice = text.slice(match.index, match.index + 1200);
+    if (!/\bsource\s*:/.test(slice)) {
+      add(findings, seen, 'THING-SOURCE', file, text, match.index, 'insert trip_things');
+    }
+    match = inserts.exec(text);
+  }
+}
+
+function cannedFallbackFindings(file, text, findings, seen) {
+  const flag = (index, chunk) => {
+    const token = chunk.match(CANNED_TOKEN);
+    if (!token || !/\breturn\b/.test(chunk)) return;
+    add(findings, seen, 'NO-CANNED-FALLBACK', file, text, index, token[0]);
+  };
+  const catches = /catch\s*\([^)]*\)\s*\{/g;
+  let match = catches.exec(text);
+  while (match) {
+    const open = match.index + match[0].length - 1;
+    flag(match.index, text.slice(open, matchingBrace(text, open)));
+    match = catches.exec(text);
+  }
+  const arrows = /\.catch\s*\(\s*(?:\([^)]*\)\s*)?=>\s*([^;\n]+)/g;
+  match = arrows.exec(text);
+  while (match) {
+    if (CANNED_TOKEN.test(match[1])) {
+      add(findings, seen, 'NO-CANNED-FALLBACK', file, text, match.index, match[1].match(CANNED_TOKEN)[0]);
+    }
+    match = arrows.exec(text);
+  }
+  const missing = /if\s*\(\s*(?:![\w$.]+(?:\.length)?|[\w$.]+\s*===\s*(?:null|undefined)|[\w$.]+\s*==\s*null)\s*\)\s*(?:\{[\s\S]{0,500}?return|return)\s+([^;}]{0,200})/g;
+  match = missing.exec(text);
+  while (match) {
+    const token = match[1].match(CANNED_TOKEN);
+    if (token) add(findings, seen, 'NO-CANNED-FALLBACK', file, text, match.index, token[0]);
+    match = missing.exec(text);
+  }
+}
+
+function modelAllowlistFindings(file, text, findings, seen) {
+  GPT_MINI.lastIndex = 0;
+  let match = GPT_MINI.exec(text);
+  while (match) {
+    add(findings, seen, 'MODEL-ALLOWLIST', file, text, match.index, match[0]);
+    match = GPT_MINI.exec(text);
+  }
+  QUOTED_MODEL.lastIndex = 0;
+  match = QUOTED_MODEL.exec(text);
+  while (match) {
+    if (MODEL_VENDOR.test(match[1]) && !ALLOWED_MODELS.has(match[1])) {
+      add(findings, seen, 'MODEL-ALLOWLIST', file, text, match.index, match[1]);
+    }
+    match = QUOTED_MODEL.exec(text);
+  }
+}
+
+function googlePlacesFindings(file, text, findings, seen) {
+  for (const [pattern, symbol] of GOOGLE_PLACES_PATTERNS) {
+    for (const match of collect(pattern, text, (item) => item)) {
+      add(findings, seen, 'NO-GOOGLE-PLACES', file, text, match.index, symbol);
+    }
+  }
+}
+
 function tokenFindings(file, text, findings, seen) {
   for (const [pattern, symbol] of TOKEN_PATTERNS) {
     for (const match of collect(pattern, text, (item) => item)) {
@@ -202,6 +393,8 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     thingFindings(file, value, findings, seen);
     dialogFindings(file, value, findings, seen);
     inventoryFindings(file, value, findings, seen);
+    thingSourceFindings(file, value, findings, seen);
+    cannedFallbackFindings(file, value, findings, seen);
   }
   return findings;
 }
@@ -262,13 +455,92 @@ function bundlePaths(cwd) {
   return BUNDLE_FILES.filter((file) => fs.existsSync(path.join(cwd, file)));
 }
 
+function guardExempt(file) {
+  const normalized = file.split(path.sep).join('/');
+  if (GUARD_FILES.has(normalized)) return true;
+  return normalized.startsWith('scripts/fixtures/hardcoded-content/');
+}
+
+function repoTextFiles(cwd) {
+  const files = [];
+  walk(cwd, cwd, files, false);
+  return files.filter((file) => !guardExempt(file) && !file.split(path.sep).join('/').startsWith('evidence/') && !file.split(path.sep).join('/').startsWith('public/assets/') && !file.split(path.sep).join('/').startsWith('artifacts/'));
+}
+
+function extraScriptPaths(cwd) {
+  const dir = path.join(cwd, 'scripts');
+  if (!fs.existsSync(dir)) return [];
+  const covered = new Set(contentPaths(cwd));
+  const files = [];
+  for (const name of fs.readdirSync(dir)) {
+    if (!/\.(mjs|js|py)$/.test(name) || /^test[_-]/.test(name)) continue;
+    const rel = `scripts/${name}`;
+    if (covered.has(rel) || guardExempt(rel)) continue;
+    files.push(rel);
+  }
+  return files;
+}
+
+function apiFunctionFiles(cwd) {
+  const root = path.join(cwd, 'api');
+  const files = [];
+  const visit = (abs) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+      const next = path.join(abs, entry.name);
+      if (entry.isDirectory()) {
+        visit(next);
+        continue;
+      }
+      if (entry.name.startsWith('_') || entry.name.endsWith('.d.ts')) continue;
+      if (FUNCTION_EXT.has(path.extname(entry.name))) files.push(path.relative(cwd, next));
+    }
+  };
+  visit(root);
+  return files;
+}
+
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
   for (const file of contentPaths(cwd)) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
   }
+  for (const file of extraScriptPaths(cwd)) {
+    const text = fs.readFileSync(path.join(cwd, file), 'utf8');
+    const seen = new Set();
+    const extra = [];
+    thingSourceFindings(file, text, extra, seen);
+    cannedFallbackFindings(file, text, extra, seen);
+    findings.push(...extra);
+  }
+  for (const file of repoTextFiles(cwd)) {
+    const text = fs.readFileSync(path.join(cwd, file), 'utf8');
+    const seen = new Set();
+    const extra = [];
+    modelAllowlistFindings(file, text, extra, seen);
+    googlePlacesFindings(file, text, extra, seen);
+    findings.push(...extra);
+  }
   for (const file of bundlePaths(cwd)) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8'), { inventoryOnly: true }));
+  }
+  const functions = apiFunctionFiles(cwd);
+  if (functions.length > API_FN_CAP) {
+    findings.push({
+      rule: 'API-FN-CAP',
+      file: 'api',
+      line: 1,
+      symbol_or_pattern: `${functions.length}>${API_FN_CAP}`,
+    });
+  }
+  for (const [file, reads, throws] of STAMP_GUARDS) {
+    const abs = path.join(cwd, file);
+    if (!fs.existsSync(abs)) continue;
+    const text = fs.readFileSync(abs, 'utf8');
+    if (!reads.test(text) || !throws.test(text)) {
+      findings.push({ rule: 'BUILD-STAMP', file, line: 1, symbol_or_pattern: 'empty-stamp' });
+    }
   }
   for (const file of tokenPaths(cwd)) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));
@@ -282,7 +554,7 @@ export function classify(findings, baseline) {
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || !keys.has(`${finding.file}\0${finding.symbol_or_pattern}`)) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || !keys.has(`${finding.file}\0${finding.symbol_or_pattern}`)) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };
