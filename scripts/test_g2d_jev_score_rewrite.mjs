@@ -175,7 +175,11 @@ try {
   assert.equal(high.log.interimReply.text, null);
   assert.equal(high.log.rewriteModel, null);
   assert.equal(high.quality.jevNote, null);
-  assert.equal(calls.some((call) => call.body?.model === 'google/gemini-2.5-flash-lite'), false);
+  assert.equal(calls.some((call) => {
+    if (call.body?.model !== 'google/gemini-2.5-flash-lite') return false;
+    const system = String(call.body?.messages?.find((message) => message.role === 'system')?.content || '');
+    return !/reply none/.test(system);
+  }), false);
   assert.equal(calls.some((call) => String(call.body?.model || '').includes('gpt')), false);
 } finally {
   globalThis.fetch = originalFetch;

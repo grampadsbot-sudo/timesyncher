@@ -808,7 +808,8 @@ function mentionStamp(mention) {
 
 function rangeBoundDays(sentence) {
   const days = new Set();
-  const re = /\bapr(?:il)?\.?\s+(\d{1,2})(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:apr(?:il)?\.?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
+  const months = monthPattern();
+  const re = new RegExp(`\\b(?:${months})\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?\\s*(?:[\\u2013\\-]|to|through)\\s*(?:the\\s+)?(?:(?:${months})\\.?\\s+)?(\\d{1,2})(?:st|nd|rd|th)?`, 'gi');
   for (const match of String(sentence || '').matchAll(re)) {
     days.add(Number(match[1]));
     days.add(Number(match[2]));
@@ -1054,9 +1055,6 @@ export function draftFactErrors(reply, facts = {}) {
   if (/no extra charge|no extra cost|at no extra/i.test(body)) {
     pushError(errors, 'no extra charge is not in what the customer set');
   }
-  if (/picnic/i.test(body) && !(facts.activities || []).some((item) => /picnic/i.test(item))) {
-    pushError(errors, 'a picnic was not named');
-  }
   const gardenOwner = String(facts.owners?.gardens || '');
   const gardenClaim = body.match(/\b([A-Z][a-z]+)(?:'|’)s\s+gardens?\b/);
   const weekdayNameClaim = gardenClaim && /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.test(gardenClaim[1]);
@@ -1083,12 +1081,9 @@ export function draftFactErrors(reply, facts = {}) {
     if (crewList && !crewAddressesOwner && rosterNames.length >= 2 && !ownerRe.test(crewList[1])) {
       pushError(errors, `${ownerName} is traveling`);
     }
-    if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bparty of eight\b|\bcrew of eight\b|\bwhole crew\b/i.test(body)) {
+    if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bwhole crew\b/i.test(body)) {
       pushError(errors, `${ownerName} is traveling`);
     }
-  }
-  if (/\bmidweek\b/i.test(body) && /\bfriday\b/i.test(body)) {
-    pushError(errors, 'Friday is not midweek');
   }
   const paragraphs = body.split(/\n{2,}/).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
   const repeatedSentences = splitSentences(body).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
@@ -1118,12 +1113,7 @@ export function draftFactErrors(reply, facts = {}) {
       }
     }
     if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|now set|set for|i(?:'|’)ll save|we(?:'|’)ll save|save that|i(?:'|’)ve got that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
-      const laterStamp = dayStamp(facts.laterFriday || '');
-      if (/\bsecond friday\b/i.test(sentence) && !laterStamp && !/\bfriday\b/i.test(String(facts.customerTurn || ''))) {
-        pushError(errors, 'a swim on the second Friday was claimed as saved');
-      }
-      let claimed = looseDayStamps(withoutNegatedDays(sentence), span);
-      if (/\bsecond friday\b/i.test(sentence) && laterStamp && !claimed.includes(laterStamp)) claimed = [...claimed, laterStamp];
+      const claimed = looseDayStamps(withoutNegatedDays(sentence), span);
       if (claimed.length && !dayIsSet(claimed, swimDays)) {
         pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
       } else if (!claimed.length && !swimDays.length) {
@@ -1147,17 +1137,16 @@ export function draftFactErrors(reply, facts = {}) {
         pushError(errors, 'a town walk was noted but not saved');
       }
     }
-    if (/\bfour friends\b|\bunnamed friends\b/i.test(sentence)) {
+    if (/\bunnamed friends\b/i.test(sentence)) {
       pushError(errors, 'the reply invented people');
     }
-    const partyCount = sentence.match(/\bparty of (six|seven|eight|nine|ten|\d+)\b/i);
+    const partyCount = sentence.match(/\bparty of (\d+)\b/i);
     if (partyCount) {
-      const words = { six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
-      const claimed = words[partyCount[1].toLowerCase()] || Number(partyCount[1]);
+      const claimed = Number(partyCount[1]);
       const names = new Set(rosterNamesIn(sentence));
-      const friends = /\bfour friends\b/i.test(sentence) ? 4 : 0;
-      const listed = names.size + friends;
-      if (listed && listed !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${listed} people`);
+      if (names.size && names.size !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${names.size} people`);
+      const savedCount = (facts.travelers || []).filter(Boolean).length;
+      if (savedCount && claimed !== savedCount) pushError(errors, `saved party size is ${savedCount}`);
     }
     if (ownerFirst && /\baccount holder\b/i.test(sentence) && facts.addressedTo && facts.addressedTo.toLowerCase() !== ownerFirst.toLowerCase()) {
       pushError(errors, `the account holder is ${ownerName}`);
