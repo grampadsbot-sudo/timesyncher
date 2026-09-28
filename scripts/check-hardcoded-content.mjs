@@ -1215,7 +1215,7 @@ function committedHtmlFiles(cwd) {
   const listed = spawnSync('git', ['ls-files', '-z', '--', '*.html'], { cwd, encoding: 'utf8' });
   const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
   if (inside.status === 0 && inside.stdout.trim() === 'true' && listed.status === 0) {
-    return listed.stdout.split('\0').filter(Boolean);
+    return listed.stdout.split('\0').filter(Boolean).filter((file) => !guardExempt(file));
   }
   const files = [];
   const walkHtml = (abs) => {
@@ -1228,7 +1228,7 @@ function committedHtmlFiles(cwd) {
     }
   };
   walkHtml(cwd);
-  return files;
+  return files.filter((file) => !guardExempt(file));
 }
 
 export function htmlRefsProducedByBuild(cwd = process.cwd()) {
