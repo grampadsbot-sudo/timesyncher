@@ -19,11 +19,24 @@ function symbolOf(entry) {
   return entry.symbol_or_pattern || entry.symbol || '';
 }
 
+function ruleId(entry) {
+  return entry.rule || entry.inventory_id || '';
+}
+
+// A row already on the base stays. A row whose rule id is absent from a non-empty base may be added once.
+// An empty base file cannot grow. A missing base file may seed.
 export function growthFails(baseline, base) {
   if (!base || base.status === 'skip' || base.status === 'missing') return [];
   if (base.status !== 'ok') return [base.error || 'baseline ceiling unavailable'];
-  const known = new Set((base.entries || []).map(rowId));
-  return baseline.filter((entry) => !known.has(rowId(entry))).map(rowText);
+  const baseRows = base.entries || base.rows || [];
+  const known = new Set(baseRows.map(rowId));
+  const baseRules = new Set(baseRows.map(ruleId));
+  const allowNewRules = baseRows.length > 0;
+  return baseline.filter((entry) => {
+    if (known.has(rowId(entry))) return false;
+    if (allowNewRules && !baseRules.has(ruleId(entry))) return false;
+    return true;
+  }).map(rowText);
 }
 
 function sortRows(rows) {

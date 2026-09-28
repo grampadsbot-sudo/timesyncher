@@ -118,8 +118,8 @@ for (const [fixture, file, symbol] of tokenShapes) {
 }
 assert.deepEqual(symbols('evidence/clean.txt', readFixture('tokens/clean.txt')), []);
 
-function runGuard(cwd, env = {}) {
-  return spawnSync(process.execPath, [script], {
+function runGuard(cwd, env = {}, args = []) {
+  return spawnSync(process.execPath, [script, ...args], {
     cwd,
     encoding: 'utf8',
     env: { ...process.env, BASE: '', GITHUB_BASE_REF: '', ...env },
@@ -219,7 +219,14 @@ const grown = repoWithBase([]);
 fs.writeFileSync(path.join(grown, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')])}\n`);
 const grownRun = runGuard(grown, { BASE: 'base' });
 assert.equal(grownRun.status, 1, grownRun.stdout);
-assertHit(grownRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
+assertHit(grownRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/place-list.mjs|HC-PLACE-LIST|EXTRA_LIST_FILL|A0');
+
+const swapped = repoWithBase([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')]);
+fs.writeFileSync(path.join(swapped, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'NEW_FILL', 'HC-PLACE-LIST')])}\n`);
+const swappedRun = runGuard(swapped, { BASE: 'base' });
+assert.equal(swappedRun.status, 1, swappedRun.stdout);
+assertHit(swappedRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/place-list.mjs|HC-PLACE-LIST|NEW_FILL|A0');
+assert.doesNotMatch(swappedRun.stderr, /EXTRA_LIST_FILL/);
 
 const same = repoWithBase([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')]);
 const sameRun = runGuard(same, { BASE: 'base' });
@@ -259,11 +266,25 @@ git(prefixedWork, ['push', 'origin', 'HEAD:cursor/x']);
 for (const base of ['main', 'origin/main']) {
   const prefixRun = runGuard(prefixedWork, { BASE: base });
   assert.equal(prefixRun.status, 1, `${base}\n${prefixRun.stdout}\n${prefixRun.stderr}`);
-  assertHit(prefixRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
+  assertHit(prefixRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/place-list.mjs|HC-PLACE-LIST|EXTRA_LIST_FILL|A0');
 }
 const prefixedSame = runGuard(prefixedWork, { BASE: 'cursor/x' });
 assert.equal(prefixedSame.status, 0, prefixedSame.stderr);
 assert.match(prefixedSame.stdout, /hardcoded content check passed \(0 report, 0 fail\)/);
+
+const pruneDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-prune-'));
+writeTree(pruneDir, {
+  'src/vacation/place-list.mjs': 'const fills = [EXTRA_LIST_FILL, AAA_LIST_FILL, ZZZ_LIST_FILL];\n',
+}, [
+  { file: 'src/vacation/place-list.mjs', rule: 'HC-PLACE-LIST', symbol_or_pattern: 'EXTRA_LIST_FILL', inventory_id: 'B', note: NOTE },
+  { file: 'src/vacation/place-list.mjs', rule: 'HC-PLACE-LIST', symbol_or_pattern: 'GONE', inventory_id: 'C', note: NOTE },
+  { file: 'src/vacation/place-list.mjs', rule: 'HC-PLACE-LIST', symbol_or_pattern: 'AAA_LIST_FILL', inventory_id: 'A', note: NOTE },
+]);
+const pruneRun = runGuard(pruneDir, {}, ['--prune']);
+assert.equal(pruneRun.status, 0, pruneRun.stderr);
+assert.match(pruneRun.stdout, /STALE\tHC-PLACE-LIST\tsrc\/vacation\/place-list\.mjs\tGONE\tC/);
+assert.doesNotMatch(pruneRun.stdout, /ZZZ_LIST_FILL/);
+assert.deepEqual(JSON.parse(fs.readFileSync(path.join(pruneDir, 'scripts/hardcoded-content-baseline.json'), 'utf8')).map((row) => row.symbol_or_pattern), ['AAA_LIST_FILL', 'EXTRA_LIST_FILL']);
 
 const workflow = fs.readFileSync(path.join(repo, '.github/workflows/evidence-secrets.yml'), 'utf8');
 assert.match(workflow, /check-hardcoded-content\.mjs/);
@@ -522,7 +543,7 @@ const oldRuleGrowth = repoWithBase(newRuleBase);
 writeTree(oldRuleGrowth, {}, [...newRuleBase, entry('src/vacation/other.mjs', 'ALSO', 'HC-PLACE-LIST')]);
 const oldRuleRun = runGuard(oldRuleGrowth, { BASE: 'base' });
 assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
-assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/hardcoded-content-baseline\.json:1\t2>1/);
+assertHit(oldRuleRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/other.mjs|HC-PLACE-LIST|ALSO|A0');
 
 const dateFile = 'src/vacation/date-range-rename.mjs';
 const dateText = readFixture('date-range-rename.mjs');

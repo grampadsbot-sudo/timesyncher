@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { growthFails, pruneBaseline } from './baseline-subset.mjs';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
@@ -1480,24 +1481,6 @@ export function loadBaselineFile(file) {
   return parsed;
 }
 
-function baselineRuleId(row) {
-  return row.rule || row.inventory_id;
-}
-
-function baselineRowKey(row) {
-  return `${row.file}\0${row.symbol_or_pattern}\0${row.inventory_id}`;
-}
-
-export function baselineGrowthAllowed(current, baseRows) {
-  if (current.length <= baseRows.length) return true;
-  if (baseRows.length === 0) return false;
-  const baseKeys = new Set(baseRows.map(baselineRowKey));
-  const added = current.filter((row) => !baseKeys.has(baselineRowKey(row)));
-  if (added.length !== current.length - baseRows.length) return false;
-  const baseRules = new Set(baseRows.map(baselineRuleId));
-  return added.every((row) => !baseRules.has(baselineRuleId(row)));
-}
-
 export function baselineRemoteRef(ref) {
   const name = String(ref || '').trim();
   if (!name) return '';
@@ -1527,25 +1510,17 @@ export function evaluate(cwd = process.cwd()) {
   const findings = scanRoots(cwd);
   const { report, fail } = classify(findings, baseline);
   const ceiling = baseBaselineCount(cwd);
-  if (ceiling.status === 'error') {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol_or_pattern: ceiling.error,
-    });
-  } else if (ceiling.status === 'ok' && baseline.length > ceiling.count && !baselineGrowthAllowed(baseline, ceiling.rows)) {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol_or_pattern: `${baseline.length}>${ceiling.count}`,
-    });
+  for (const symbol of growthFails(baseline, ceiling)) {
+    fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol_or_pattern: symbol });
   }
   return { report, fail, baselineCount: baseline.length, ceiling };
 }
 
 function main() {
+  if (process.argv.includes('--prune')) {
+    pruneBaseline(process.cwd(), BASELINE_REL, loadBaselineFile, scanRoots, (entry, findings) => findings.some((finding) => finding.file === entry.file && finding.symbol_or_pattern === entry.symbol_or_pattern));
+    return;
+  }
   const { report, fail } = evaluate(process.cwd());
   for (const finding of report) {
     process.stdout.write(`REPORT\t${finding.rule}\t${finding.file}:${finding.line}\t${finding.symbol_or_pattern}\n`);

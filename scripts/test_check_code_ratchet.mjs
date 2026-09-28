@@ -244,6 +244,23 @@ const sameRun = runGuard(same, { BASE: 'base' });
 assert.equal(sameRun.status, 0, sameRun.stderr);
 assert.match(sameRun.stdout, /code ratchet check passed \(0 report, 0 fail\)/);
 
+const addedRule = repoWithBase([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')]);
+fs.writeFileSync(path.join(addedRule, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([
+  entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch'),
+  entry('NO-WORKAROUND-COMMENTS', 'src/vacation/catch.mjs', 'TODO'),
+])}\n`);
+const addedRuleRun = runGuard(addedRule, { BASE: 'base' });
+assert.equal(addedRuleRun.status, 0, addedRuleRun.stderr);
+
+const oldRule = repoWithBase([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')]);
+fs.writeFileSync(path.join(oldRule, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([
+  entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch'),
+  entry('NO-EMPTY-CATCH', 'src/vacation/other.mjs', 'empty-catch'),
+])}\n`);
+const oldRuleRun = runGuard(oldRule, { BASE: 'base' });
+assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
+assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\tsrc\/vacation\/other\.mjs\|NO-EMPTY-CATCH\|empty-catch\|/);
+
 const seeded = repoWithBase(null);
 fs.mkdirSync(path.join(seeded, 'scripts'), { recursive: true });
 fs.writeFileSync(path.join(seeded, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')])}\n`);
