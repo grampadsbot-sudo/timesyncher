@@ -576,7 +576,6 @@ export function intakeSpan(text) {
   const ordered = [...mentions].sort((left, right) => (left.month - right.month) || (left.day - right.day));
   const start = { ...ordered[0], year: ordered[0].year || year };
   const end = { ...ordered[ordered.length - 1], year: ordered[ordered.length - 1].year || year };
-  const place = /big island/i.test(text) ? 'Big Island' : '';
   const startIso = start.year ? `${start.year}-${String(start.month).padStart(2, '0')}-${String(start.day).padStart(2, '0')}` : '';
   const endIso = end.year ? `${end.year}-${String(end.month).padStart(2, '0')}-${String(end.day).padStart(2, '0')}` : '';
   const sameMonth = start.month === end.month && start.year === end.year;
@@ -589,28 +588,22 @@ export function intakeSpan(text) {
     ? formatMention(start, { withWeekday: true, withYear: true })
     : `${formatMention(start, { withWeekday: true })}–${formatMention(end, { withWeekday: true, withYear: true })}`;
   return {
-    destination: place ? `${place}, Hawaii` : '',
-    placeTitle: place,
+    destination: '',
     start: startIso,
     end: endIso || startIso,
     startLabel: formatMention(start, { withWeekday: true }),
     endLabel: formatMention(end, { withWeekday: true, withYear: true }),
     spanLabel,
-    badge: place ? `${place} ${badgeRange}`.trim() : badgeRange,
+    badge: badgeRange,
     year: year || null,
   };
 }
 
-function thingPattern(title) {
-  const key = String(title || '').toLowerCase();
-  if (key === 'big island') return /big island/i;
-  if (key === 'gardens') return /garden/i;
-  if (key === 'groceries') return /grocer/i;
-  if (key === 'dinner') return /\bdinner\b/i;
-  if (key === 'swim') return /\bswim/i;
-  if (key === 'town walk') return /town walk/i;
-  if (key === 'kailua-kona house') return /\bhouse\b/i;
-  return null;
+function mentionsThing(title, sentence) {
+  const name = String(title || '').trim();
+  if (name.length < 2) return false;
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${escaped}\\b`, 'i').test(String(sentence || ''));
 }
 
 function swimDayKey(label) {
@@ -728,9 +721,7 @@ function sameNote(left, right) {
 export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '' } = {}) {
   const sentences = splitSentences(text);
   return (Array.isArray(things) ? things : []).map((thing) => {
-    const pattern = thingPattern(thing.title);
-    if (!pattern) return thing;
-    const hits = sentences.filter((part) => pattern.test(part));
+    const hits = sentences.filter((part) => mentionsThing(thing.title, part));
     if (!hits.length) return thing;
     const notes = Array.isArray(thing.notes) ? [...thing.notes] : [];
     const collaboratorNotes = Array.isArray(thing.collaboratorNotes) ? [...thing.collaboratorNotes] : [];
@@ -1786,7 +1777,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedTitle = '', titleError = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -2028,7 +2019,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
     roster: rosterList,
     rosterError: rosterError || null,
+    extractedDestination: String(extractedDestination || ''),
     extractedTitle: String(extractedTitle || ''),
+    destinationError: destinationError || null,
     titleError: titleError || null,
     destination,
     corpus,

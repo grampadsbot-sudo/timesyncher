@@ -136,7 +136,7 @@ async function createAdminOnboarding(db, body) {
     insert into trips (customer_id, title, start_date, preferences, status, metadata)
     values (
       ${customerId},
-      ${cleanText(body.tripTitle || body.title, 180) || 'TimeSyncher Vacation Admin Test'},
+      ${cleanText(body.tripTitle || body.title, 180)},
       ${cleanText(body.vacationDate || body.startDate, 40) || null},
       ${{ source: 'admin_no_charge', onboarding: true }},
       'onboarding',

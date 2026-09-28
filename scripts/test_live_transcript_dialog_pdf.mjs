@@ -95,7 +95,8 @@ assert.equal(inventedGardenHit('Visit the Kahaluu garden if it rains.', 'Kimberl
 assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Kimberly wants gardens.'), false);
 const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
 const goldSpan = intakeSpan(goldIntake);
-assert.equal(goldSpan.badge, 'Big Island Apr 3–12 2026');
+assert.equal(goldSpan.badge, 'Apr 3–12 2026');
+assert.equal(goldSpan.destination, '');
 assert.equal(goldSpan.start, '2026-04-03');
 assert.equal(goldSpan.end, '2026-04-12');
 const goldThings = [
@@ -105,7 +106,9 @@ const goldThings = [
   { title: 'Swim', category: 'activity', description: 'Tyler wants a swim, including one later in the week if the beach is windy.', who: 'Tyler', whenLabel: 'later in the week', customerWhen: '', notes: ['Tyler wants a swim, including one later in the week if the beach is windy.'], collaboratorNotes: [] },
   { title: 'Kailua-Kona house', category: 'hotel', description: 'Base is a house in Kailua-Kona.', who: '', whenLabel: 'Fri Apr 3–Sun Apr 12 2026', customerWhen: '', notes: ['Base is a house in Kailua-Kona.'], collaboratorNotes: [] },
 ];
-const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
+const stemOnly = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
+assert.equal(stemOnly.find((thing) => thing.title === 'Gardens').collaboratorNotes.length, 0);
+const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth Gardens morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
 assert.match(noted.find((thing) => thing.title === 'Gardens').collaboratorNotes[0], /Sunday April fifth/);
 assert.equal(noted.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
 assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, '');
