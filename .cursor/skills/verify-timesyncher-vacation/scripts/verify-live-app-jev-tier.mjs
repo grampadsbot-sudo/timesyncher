@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
-import { interimProblems, isTemplateInterim, item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
+import { interimProblems, isTemplateInterim, item34BanHit, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -69,8 +69,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/tier_models\.json/.test(replyRules) || !/tier_outside_bakeoff_map/.test(replyRules)) {
     errors.push('shared producer does not fail closed when tier_models.json drifts');
   }
-  if (!/Destination lock/.test(replyRules) || !/replyLeavesDestination/.test(liveTurn)) {
+  if (!/Destination lock/.test(replyRules) || !/resolveTripDestination/.test(liveTurn)) {
     errors.push('shared producer does not lock replies to the customer destination');
+  }
+  if (/destinationFromTexts|OTHER_DESTINATION|productThingSummary/.test(liveTurn)) {
+    errors.push('shared producer still guesses a destination or writes a thing summary');
   }
   if (!/never say "splitting payments"/.test(replyRules) || !/splitting anything up/.test(replyRules) || !/item34BanHit/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
     errors.push('shared producer does not fail closed on split-payment jargon');
@@ -200,14 +203,15 @@ export function assertSingleUpsell(doc) {
 
 export function assertDestinationStick(doc) {
   const errors = [];
+  const saved = String(doc?.destination || '').trim().toLowerCase();
+  if (!saved) return errors;
   const turns = Array.isArray(doc?.turns) ? doc.turns : [];
-  const blob = turns.map((turn) => String(turn.text || '')).join('\n');
-  if (!/big island|kailua-kona|hawai/i.test(blob)) return errors;
   for (const turn of turns) {
     if (turn.role !== 'app') continue;
-    if (replyLeavesDestination(turn.text, 'Big Island, Hawaii')) {
-      errors.push(`turn ${turn.turnIndex} leaves the Big Island`);
-    }
+    const named = String(turn.extractedDestination || '').trim().toLowerCase();
+    if (!named) continue;
+    if (named === saved || saved.includes(named) || named.includes(saved)) continue;
+    errors.push(`turn ${turn.turnIndex} leaves the saved destination`);
   }
   return errors;
 }
@@ -331,10 +335,13 @@ async function selfCheck() {
     appTurn({ turnIndex: 2, text: 'Thursday is a town walk. Welcome the whole family as collaborators with unlimited vacations for the whole year.' }),
   ])).length);
   assert.deepEqual(assertDestinationStick(pulled), []);
-  assert.ok(assertDestinationStick(liveDoc([
-    sampleTurn({ text: 'Big Island week in Kailua-Kona.' }),
-    appTurn({ text: 'Friday dinner in Tulum.' }),
-  ])).length);
+  assert.ok(assertDestinationStick({
+    ...liveDoc([
+      sampleTurn({ text: 'Week away.' }),
+      appTurn({ text: 'Friday dinner elsewhere.', extractedDestination: 'elsewhere' }),
+    ]),
+    destination: 'the saved place',
+  }).length);
   assert.ok(assertLiveTurns(liveDoc([
     sampleTurn({ text: 'We are splitting payments across the seats.' }),
     appTurn(),

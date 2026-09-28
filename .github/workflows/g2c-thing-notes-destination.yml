@@ -1,0 +1,18 @@
+name: g2c thing notes destination
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  thing-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Thing notes stay notes and destination is not a place list
+        run: node scripts/check-g2c-thing-notes-destination.mjs
+      - name: Destination resolution
+        run: node scripts/test_g2c_thing_notes_destination.mjs

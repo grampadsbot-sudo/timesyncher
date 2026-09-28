@@ -25,6 +25,8 @@
     "test:keepsake-style2": "node scripts/test_keepsake_style2.mjs",
     "test:first-pass-minimums": "node scripts/test_first_pass_minimums.mjs",
     "test:tg-intake-gbrain": "node scripts/test_tg_intake_gbrain.mjs",
+    "test:g2c-thing-notes": "node scripts/test_g2c_thing_notes_destination.mjs",
+    "test:g2c-thing-notes-check": "node scripts/check-g2c-thing-notes-destination.mjs",
     "bind:thing-media": "node scripts/bind-thing-media.mjs",
     "test:openclaw-control": "node scripts/test_openclaw_control.mjs",
     "test:reply-trip-data": "node scripts/test_trip_literal_ban_g2a.mjs",

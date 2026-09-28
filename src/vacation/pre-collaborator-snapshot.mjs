@@ -12,6 +12,7 @@ function thingView(row) {
     customerWhen: meta.customerWhen || '',
     notes: Array.isArray(meta.notes) ? meta.notes : [],
     collaboratorNotes: [],
+    source: meta.source || '',
   };
 }
 

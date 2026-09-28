@@ -44,6 +44,7 @@ import {
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
   openCollaboratorAppSeats,
   recordDialogParty,
@@ -674,13 +675,14 @@ async function queueVacationAppTurn(db, session, trip, body) {
 
 function thingView(row) {
   const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const notes = Array.isArray(meta.notes) ? meta.notes : (row.description ? [row.description] : []);
+  const notes = Array.isArray(meta.notes) ? meta.notes : [];
   const collaboratorNotes = Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [];
   return {
     id: row.id,
     category: row.category,
     title: row.title,
-    description: row.description || notes.join(' '),
+    description: row.description || '',
+    source: meta.source || '',
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
@@ -724,8 +726,16 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
   const span = intakeSpan(text);
-  const priorRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  const priorRows = await db`select destination, metadata from trips where id = ${tripId} limit 1`;
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
+  const priorDestination = String(priorRows[0]?.destination || '').trim();
+  const resolvedDestination = priorDestination
+    ? { destination: priorDestination, ask: false, source: 'saved-trip' }
+    : await resolveTripDestination({
+      saved: '',
+      texts: [text],
+      complete: (corpus) => openRouterDestinationComplete(corpus, process.env),
+    });
   const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
   const party = completeRosterParty({
     party: priorParty,
@@ -739,14 +749,14 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   });
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
   const resolved = await resolveIntakePlace({
-    destination: extractedDestination,
+    destination: extractedDestination || resolvedDestination.destination,
     title: extractedTitle,
     destinationError,
     titleError,
     searchImpl,
   });
   const tripTitle = resolved.title;
-  const tripDestination = resolved.destination;
+  const tripDestination = resolved.destination || resolvedDestination.destination || '';
   const missingTitle = tripTitle ? null : resolved.titleError;
   const dated = span?.start ? 'yes' : '';
   await db`
@@ -765,7 +775,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         metadata = coalesce(metadata, '{}'::jsonb) || ${{
           ...(span?.spanLabel ? { intakeSpan: span.spanLabel, intakeBadge: span.badge || '' } : {}),
           dialogParty: party,
-          ...(tripDestination ? { destinationSource: 'chat_extraction' } : { destinationError: resolved.destinationError }),
+          ...(tripDestination ? { destinationSource: resolved.destination ? 'chat_extraction' : resolvedDestination.source } : { destinationError: resolved.destinationError || (resolvedDestination.ask ? 'missing' : null) }),
           ...(tripTitle ? { titleSource: 'chat_extraction' } : { titleError: missingTitle }),
         }},
         updated_at = now()
@@ -837,7 +847,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     })) continue;
     await db`
       update trip_things
-      set description = ${thing.description || prior.description || ''},
+      set description = '',
           metadata = coalesce(metadata, '{}'::jsonb) || ${{
             who: thing.who || '',
             whenLabel: thing.whenLabel || prior.whenLabel || '',
