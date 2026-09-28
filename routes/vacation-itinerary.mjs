@@ -413,12 +413,13 @@ async function queueVacationAppTurn(db, session, trip, body) {
   });
   const classification = await classifyTripIntake({ text: requestText, env: process.env });
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
+  const queuedJobType = 'trip_intake';
   const jobFields = tripIntakeJobFields({
     requestText,
     receivedAt,
     classification,
     firstIntake,
-    jobKind: 'trip_intake',
+    jobKind: queuedJobType,
   });
   const customerLive = liveTurnRecord({
     turnIndex: customerTurnIndex,
@@ -457,7 +458,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       status, queued_at
     )
     values (
-      ${transcriptOwnerId}, ${tripId}, 'vacation-app', 'trip_intake', ${requestText},
+      ${transcriptOwnerId}, ${tripId}, 'vacation-app', ${queuedJobType}, ${requestText},
       ${{ turnTag }}, ${payload}, 'queued', now()
     )
     returning id, received_at, queued_at
@@ -485,12 +486,12 @@ async function queueVacationAppTurn(db, session, trip, body) {
   `;
   const jobRows = await db`
     insert into worker_jobs (request_id, trip_id, job_type, input)
-    values (${requestId}, ${tripId}, 'trip_intake', ${{
+    values (${requestId}, ${tripId}, ${queuedJobType}, ${{
       customerId: transcriptOwnerId,
       tripId,
       requestId,
       source: 'vacation-app',
-      requestType: 'trip_intake',
+      requestType: queuedJobType,
       requestText,
       payload,
       intakeEvent: jobFields.intakeEvent,
@@ -729,7 +730,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted) {
       values (
         ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
         'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-          source: 'trip-intake',
+          source: thing.source || 'chat_extraction',
           who: thing.who || '',
           whenLabel: thing.whenLabel || '',
           customerWhen: '',
@@ -769,7 +770,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         values (
           ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
           'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-            source: 'customer-turn',
+            source: thing.source || 'customer-turn',
             who: thing.who || '',
             whenLabel: thing.whenLabel || '',
             customerWhen: thing.customerWhen || '',
