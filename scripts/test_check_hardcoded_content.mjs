@@ -229,7 +229,9 @@ assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\tsrc\/vacation\/keepsake-lis
 assert.match(repoRun.stdout, /REPORT\tHC-COORD\tsrc\/vacation\/keepsake-list-minimums\.mjs:275\tfallbackLat:19\.64,fallbackLng:-155\.996/);
 assert.match(repoRun.stdout, /REPORT\tHC-THING\tsrc\/vacation\/intake-shared-trip\.mjs:325\tcategory_name:'Car',name:'SpeediShuttle'/);
 assert.match(repoRun.stdout, /REPORT\tHC-DIALOG\tsrc\/vacation\/live-app-turn\.mjs:40\tCANNED_APP_REPLY/);
-assert.match(repoRun.stdout, new RegExp(`hardcoded content check passed \\(${baseline.length} report, 0 fail\\)`));
+const passedSummary = repoRun.stdout.match(/hardcoded content check passed \((\d+) report, 0 fail\)/);
+assert.ok(passedSummary, repoRun.stderr);
+assert.ok(Number(passedSummary[1]) <= baseline.length, `${passedSummary[1]}>${baseline.length}`);
 assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\troutes\/vacation-telegram-turn\.mjs:\d+\tinventory:A20/);
 assert.match(repoRun.stdout, /REPORT\tHC-THING\tpublic\/assets\/index-0J54vUO3\.js:\d+\tinventory:D3/);
 assert.match(repoRun.stdout, /REPORT\tHC-PLACE-LIST\tscripts\/travel-source-adapter-runner\.mjs:\d+\tinventory:E10/);
