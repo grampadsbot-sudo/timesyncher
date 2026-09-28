@@ -1734,7 +1734,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftExtra = [
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
-    intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(citedPlaces),
     resolvedDestination.ask ? DESTINATION_ASK : '',

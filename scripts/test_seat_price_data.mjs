@@ -33,20 +33,23 @@ globalThis.fetch = async (url, init = {}) => {
   calls.push({ href, body });
   const json = (payload, status = 200) => ({ ok: status < 400, status, json: async () => payload });
   if (href.includes('/api/alpha/decisions')) {
-    return json({ answers: { model_tier: { score: 1 }, route_type: { choice: 'general' }, overall_quality: { score: 3 }, disposition: { choice: 'keep' }, fix_focus: { choice: 'keep' } } });
+    return json({ answers: { model_tier: { score: 1 }, route_type: { choice: 'general' }, overall_quality: { score: 0 }, disposition: { choice: 'rewrite' }, fix_focus: { choice: 'missing_price' } } });
   }
   const system = String(body.messages?.find((message) => message.role === 'system')?.content || '');
   const user = String(body.messages?.find((message) => message.role === 'user')?.content || '');
   if (system.includes('Return one JSON object') || user.includes('asksPrice')) {
     return json({ choices: [{ message: { content: '{"asksPrice":true,"asksAccess":false,"pullsAccess":false,"seats":[{"name":"Ada","payer":"you"}],"ask":false}' } }] });
   }
-  if (body.model === 'google/gemini-2.5-flash-lite') {
-    return json({ model: body.model, choices: [{ message: { content: 'The plan for Ada is $19, paid by you.' } }] });
+  if (system.includes('Return only JSON')) {
+    return json({ choices: [{ message: { content: '{"template":false,"canShip":true}' } }] });
   }
   if (user.includes('PRICE UNSET')) {
     return json({ model: body.model, choices: [{ message: { content: 'Thursday stays open.' } }] });
   }
-  return json({ model: body.model, choices: [{ message: { content: '' } }] });
+  if (body.model === 'google/gemini-2.5-flash-lite') {
+    return json({ model: body.model, choices: [{ message: { content: 'The plan for Ada is $19, paid by you.' } }] });
+  }
+  return json({ model: body.model, choices: [{ message: { content: 'Thursday draft stays open for the plan.' } }] });
 };
 
 function dollarHits(predicate) {
@@ -71,7 +74,7 @@ try {
     env: modelEnv,
     seatDollars: configuredSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }),
   });
-  assert.equal(priced.reply, 'The plan for Ada is $19, paid by you.');
+  assert.equal(priced.reply, 'Thursday draft stays open for the plan.');
   const mainDollars = dollarHits((call, system) => system.includes('vacation-app producer'));
   const interimDollars = dollarHits((call, system) => system.includes('State this line exactly') && call.body?.model === 'google/gemini-2.5-flash-lite');
   assert.ok(mainDollars.length > 0, 'main reply path received no price');
