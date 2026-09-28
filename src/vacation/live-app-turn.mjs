@@ -244,7 +244,7 @@ export function turnMarkedIntake(turn) {
   return Boolean(turn && typeof turn === 'object' && turn.intake === true);
 }
 
-export function postIntakeUpsellTurn(customerTurn, priorTurns) {
+export function firstMarkedIntake(customerTurn, priorTurns) {
   if (!turnMarkedIntake(customerTurn)) return false;
   const currentText = customerTurnText(customerTurn);
   const priors = Array.isArray(priorTurns) ? [...priorTurns] : [];
@@ -313,7 +313,7 @@ export function sessionHasFullUpsell(priorTurns) {
 
 export function upsellModeForTurn(customerTurn, priorTurns) {
   if (sessionHasFullUpsell(priorTurns)) return 'forbidden';
-  if (customerPullsAccess(customerTurnText(customerTurn)) || postIntakeUpsellTurn(customerTurn, priorTurns)) return 'allow-once';
+  if (customerPullsAccess(customerTurnText(customerTurn)) || firstMarkedIntake(customerTurn, priorTurns)) return 'allow-once';
   return 'forbidden';
 }
 
@@ -338,7 +338,7 @@ export function upsellAudit(turns) {
     }
     if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) continue;
     const pulled = customerPullsAccess(lastCustomer)
-      || postIntakeUpsellTurn(lastCustomerTurn, priorCustomers.slice(0, -1));
+      || firstMarkedIntake(lastCustomerTurn, priorCustomers.slice(0, -1));
     const phrase = UNLIMITED_PATTERN.test(text);
     const welcome = isCollabWelcome(text);
     const fullBlock = isFullUpsell(text);
@@ -1828,7 +1828,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     customerTurn,
   ]);
   const intakeTurn = { text: customerTurn, intake: intake === true };
-  const postIntake = postIntakeUpsellTurn(intakeTurn, history);
+  const postIntake = firstMarkedIntake(intakeTurn, history);
   const upsell = upsellModeForTurn(intakeTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
