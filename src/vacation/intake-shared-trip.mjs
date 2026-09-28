@@ -1,6 +1,7 @@
 import { lowestCarOffers } from './car-offers.mjs';
 import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
+import { writeRatings } from './write-ratings.mjs';
 
 const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -139,6 +140,7 @@ export function sharedTripFromIntake({ trip, things }) {
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
     const summary = productThingSummary(thing);
+    const ratings = writeRatings(thing);
     places.push({
       id,
       trip_id: intId(trip.id),
@@ -149,6 +151,7 @@ export function sharedTripFromIntake({ trip, things }) {
       category: { name: kind.category_name, icon: kind.category_icon },
       reservation_status: 'considering',
       notes: summary,
+      ratings,
     });
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
@@ -158,6 +161,7 @@ export function sharedTripFromIntake({ trip, things }) {
       summary,
       longDetails: [thing.who ? `Who: ${thing.who}` : '', ...new Set([thing.whenLabel, thing.customerWhen].map((part) => String(part || '').trim()).filter(Boolean))].join(' · '),
       dayIds,
+      ...ratings,
     };
     for (const date of assignDates(thing, year, tripDates)) {
       const day = dayByDate.get(date);
@@ -237,28 +241,22 @@ function coordsFor(name) {
   return PLACE_COORDS[name] || null;
 }
 
-function blankRatings() {
+export function thingRecordFromTripRow(row = {}) {
+  const meta = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {};
+  const ratings = row.ratings && typeof row.ratings === 'object' && !Array.isArray(row.ratings) ? row.ratings : null;
+  const sourceRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' && !Array.isArray(meta.sourceRecord) ? meta.sourceRecord : null;
   return {
-    googleRating: '',
-    yelpRating: '',
-    thirdPartyRating: '',
-    review1: '',
-    review2: '',
-    review3: '',
-  };
-}
-
-function sourcedRatings(name, options) {
-  const rows = options?.sourcedRatings && typeof options.sourcedRatings === 'object' ? options.sourcedRatings : {};
-  const row = rows[name];
-  if (!row || row.source === 'google-places' || !row.source) return blankRatings();
-  return {
-    googleRating: String(row.googleRating || ''),
-    yelpRating: String(row.yelpRating || ''),
-    thirdPartyRating: String(row.thirdPartyRating || ''),
-    review1: String(row.review1 || ''),
-    review2: String(row.review2 || ''),
-    review3: String(row.review3 || ''),
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    description: row.description || '',
+    who: meta.who || '',
+    whenLabel: meta.whenLabel || '',
+    customerWhen: meta.customerWhen || '',
+    notes: Array.isArray(meta.notes) ? meta.notes : [],
+    collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
+    ratings,
+    sourceRecord,
   };
 }
 
@@ -298,7 +296,6 @@ export function applyThingPresentation(shared = {}, options = {}) {
     const extra = {
       summary,
       logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
-      ...sourcedRatings(name, options),
     };
     if (coords) {
       place.lat = coords[0];
@@ -345,7 +342,6 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lng: place.lng,
       address: place.address,
       logoUrl: captureThingLogo(place, { title: 'SpeediShuttle', category: 'car' }),
-      ...sourcedRatings('SpeediShuttle', options),
     });
   }
   const flightName = /\bKOA\b/.test(JSON.stringify(shared.trip || {})) ? 'KOA arrival' : 'Kona arrival';
@@ -382,7 +378,6 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lng: place.lng,
       address: place.address,
       logoUrl: captureThingLogo(place, { title: flightName, category: 'flight' }),
-      ...sourcedRatings(flightName, options),
     });
   }
   const shownCars = lowestCarOffers(
