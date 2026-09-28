@@ -107,7 +107,8 @@ const goldThings = [
 ];
 const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
 assert.match(noted.find((thing) => thing.title === 'Gardens').collaboratorNotes[0], /Sunday April fifth/);
-assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, 'Sun Apr 5');
+assert.equal(noted.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
+assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, '');
 assert.equal(noted.find((thing) => thing.title === 'Kailua-Kona house').collaboratorNotes.length, 0);
 const locked = applyCustomerNotes(goldThings, 'Say that back in a human way, and keep us on the Big Island.', { collaborator: false });
 assert.equal(locked.find((thing) => thing.title === 'Big Island').who, '');
@@ -132,11 +133,13 @@ assert.equal(mustRewriteQuality({ score: 4, jevFocus: 'missing_price', comment: 
 assert.equal(mustRewriteQuality({ score: 5, jevFocus: 'keep', comment: 'Thursday town walk stays light.' }), false);
 assert.equal(inventedVenueNames('The community center swim is the backup.', 'Tyler wants a swim.').includes('community center'), true);
 const saturdayGroceries = applyCustomerNotes(goldThings, 'Saturday April fourth is groceries only.');
-assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, 'Fri Apr 3');
+assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, '');
+assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').whenLabel, 'Fri Apr 3');
 const thursdayGarden = applyCustomerNotes(goldThings, 'Thursday April ninth is the second garden morning.');
-assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
+assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').customerWhen, '');
+assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
 const gardenAndWalk = applyCustomerNotes(thursdayGarden, 'Thursday April ninth is also the town walk.');
-assert.equal(gardenAndWalk.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
+assert.equal(gardenAndWalk.find((thing) => thing.title === 'Gardens').customerWhen, '');
 assert.equal(isTemplateInterim('Got it. I saved that.', 'Thursday town walk'), true);
 assert.equal(isTemplateInterim('Sure, the Thursday walk can stay.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thursday is a town walk.'), false);
@@ -308,17 +311,21 @@ assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').wantsRewrite, true);
 const windyBeach = applyCustomerNotes(goldThings, 'Tyler wants a swim, including one later in the week if the beach is windy.');
 assert.equal(windyBeach.find((thing) => thing.title === 'Swim').customerWhen, '');
+assert.equal(windyBeach.find((thing) => thing.title === 'Swim').who, 'Tyler');
 const rainSwim = applyCustomerNotes(goldThings, 'If Monday April sixth rains, what is the backup for Tyler so the swim still happens later and the beach plan does not just vanish?');
-assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach');
-const mondaySwim = applyCustomerNotes(rainSwim, 'This is Tyler. Monday April sixth swim is the beach unless it is windy, then the house pool. Save that on Monday.');
+assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, '');
+const mondaySwim = goldThings.map((thing) => (thing.title === 'Swim' ? { ...thing, customerWhen: 'Mon Apr 6 beach or house pool' } : thing));
 assert.equal(mondaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
 const span = { start: '2026-04-03', end: '2026-04-12', year: 2026 };
 const inventedTuesday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Tuesday, April 7th opens gently for that second swim.', span);
-assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Fri Apr 10');
+assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').askWhichDay, true);
 const appOnlyThursday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
-assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Fri Apr 10');
+assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').askWhichDay, true);
 const thursdaySwim = applyAgreedAppSwim(mondaySwim, 'I still want one later swim on Thursday at Kailua-Kona.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
 assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Thu Apr 9');
+assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').askWhichDay, false);
 assert.equal(isTemplateNote('The draft holds the named days and then Thursday stays open.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateNote('Harbor afternoon stays open. Draft marker walk-leaves. Jev score 3.10.', 'Harbor morning plan'), true);
 assert.equal(isTemplateNote('Rates 3 after abcd.', 'How much is it?'), false);
@@ -398,7 +405,7 @@ assert.equal(priceAnswered('You will cover Kimberly’s $27, Tyler will pay his 
 assert.ok(draftFactErrors('For the swim later in the week, I will save that for Friday, April 10th.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('That later swim is saved on the second Friday of the trip.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('Since Tyler wanted a swim later in the week anyway, we have already saved that backup for the second Friday.', earlyFacts).some((error) => /claimed as saved/.test(error)));
-assert.equal(draftFactErrors('The later swim is saved on the second Friday.', { ...earlyFacts, customerTurn: 'I still want one later swim in the week at Kailua-Kona.' }).some((error) => /claimed as saved/.test(error)), false);
+assert.equal(draftFactErrors('The later swim is saved on the second Friday.', { ...earlyFacts, customerTurn: 'I still want one later swim in the week at Kailua-Kona.' }).some((error) => /claimed as saved/.test(error)), true);
 assert.equal(draftFactErrors('The crew for this adventure includes Torren, Peyton, Keegan, and Fallon, along with your four unnamed friends.', { ownerName: 'Craig Davidson' }).some((error) => /is traveling/.test(error)), false);
 assert.ok(draftFactErrors('Tuesday the 7th can hold a morning swim.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.equal(draftFactErrors('The swim isn\'t set for a specific day yet, so we won\'t lock it to Monday, April 6.', earlyFacts).some((line) => /swim on apr 6/.test(line)), false);
@@ -459,9 +466,10 @@ assert.ok(draftFactErrors('Tuesday, April 7 is the anchor day. One option is a c
 assert.ok(draftFactErrors('Tuesday, April 7, is wide open. Here are two options: a town walk, or a swim at the beach.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 const dateSpan = { start: new Date('2026-04-03T00:00:00.000Z'), end: new Date('2026-04-12T00:00:00.000Z') };
 const datedLater = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'A swim later in the week stays at Kailua-Kona.', dateSpan);
-assert.match(datedLater.find((thing) => thing.title === 'Swim').customerWhen, /Fri Apr 10/);
+assert.equal(datedLater.find((thing) => thing.title === 'Swim').askWhichDay, true);
+assert.doesNotMatch(datedLater.find((thing) => thing.title === 'Swim').customerWhen, /Fri Apr 10/);
 const keptGarden = applyCustomerNotes(goldThings, 'If we add a second garden, keep it on Thursday April ninth and leave Wednesday afternoon empty.');
-assert.match(keptGarden.find((thing) => thing.title === 'Gardens').customerWhen, /Thu Apr 9/);
+assert.equal(keptGarden.find((thing) => thing.title === 'Gardens').customerWhen, '');
 assert.ok(draftFactErrors('Welcome aboard, Tyler. Your two garden days are locked in.', {
   span: null, swimDays: [], gardenDays: [], townWalkDays: [], owners: { gardens: 'Kimberly' }, planOwned: false, activities: ['gardens'], notTraveling: [], travelers: ['Kimberly'], ownerName: '', rule: '', addressedTo: 'Tyler', corpus: '',
 }).some((line) => /Kimberly/.test(line)));
@@ -473,10 +481,26 @@ assert.ok(draftFactErrors('You are all set from Fri Apr 3 to Fri Apr 10.', early
 assert.ok(draftFactErrors('The stay is April 3rd to the 6th.', earlyFacts).some((line) => /not day 6/.test(line)));
 const unnamedKids = completeRosterParty({
   customerName: 'Craig',
+  roster: [{ name: 'Kimberly', role: 'collaborator' }],
   turns: [{ role: 'customer', text: 'Kimberly wants gardens. Kids are Torren, Peyton, Keegan, and Fallon. Marcus Chen can look. Aunt Jean can edit notes.' }],
 });
 assert.equal(unnamedKids.preference_subjects.length, 0);
 assert.equal(unnamedKids.collaborators.map((person) => person.name).join(', '), 'Kimberly');
+assert.equal(unnamedKids.sources.some((item) => item.source === 'chat_extraction'), true);
+const wantsNotRoster = completeRosterParty({
+  customerName: 'Craig',
+  turns: [{ role: 'customer', text: 'Kimberly wants gardens.' }],
+});
+assert.deepEqual(wantsNotRoster.collaborators, []);
+const rosterFailed = completeRosterParty({
+  customerName: 'Craig',
+  roster: [],
+  rosterError: 'trip intake extraction failed',
+  turns: [{ role: 'customer', text: 'Kimberly wants gardens.' }],
+});
+assert.deepEqual(rosterFailed.collaborators, []);
+assert.equal(rosterFailed.askRoster, true);
+assert.match(rosterFailed.rosterError, /failed/);
 const parsedParty = completeRosterParty({
   customerName: 'Craig Davidson',
   turns: [{ role: 'customer', text: 'Kids are Torren who is eight, Peyton who is six, Keegan who is four, and Fallon who is two. Marcus Chen can look, and Aunt Jean can edit notes. I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' }],

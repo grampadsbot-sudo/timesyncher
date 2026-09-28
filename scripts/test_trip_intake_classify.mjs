@@ -7,6 +7,9 @@ const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', 
 const classifySource = fs.readFileSync(new URL('../src/vacation/trip-intake-classify.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(turnSource, /function isLongIntake|function intakeFacts|add\('Gardens'|add\('Kailua-Kona house'/);
 assert.doesNotMatch(`${turnSource}\n${routeSource}\n${classifySource}`, /\b(?:isLongIntake|intakeFacts|postIntakeUpsellTurn|ensureNamedThings)\b/);
+assert.doesNotMatch(turnSource, /later in the week|laterFridayLabel|function whoIn|'Marcus', 'Aunt'/);
+assert.match(classifySource, /"roster"/);
+assert.doesNotMatch(classifySource, /'trip_intake'/);
 assert.match(routeSource, /thingsFromIntake/);
 assert.match(routeSource, /wantedThings/);
 assert.match(routeSource, /intakeEvent/);
@@ -32,7 +35,7 @@ function jsonResponse(body, ok = true, status = 200) {
   return { ok, status, json: async () => body };
 }
 
-function mockFetch({ score, things, failOn, chatText }) {
+function mockFetch({ score, things, roster = [], failOn, chatText }) {
   const calls = [];
   const fetchImpl = async (url) => {
     calls.push(String(url));
@@ -43,7 +46,7 @@ function mockFetch({ score, things, failOn, chatText }) {
       return jsonResponse({ answers: { trip_intake: { noul: score } } });
     }
     return jsonResponse({
-      choices: [{ message: { content: chatText || JSON.stringify({ things }) } }],
+      choices: [{ message: { content: chatText || JSON.stringify({ things, roster }) } }],
     });
   };
   fetchImpl.calls = calls;
@@ -58,6 +61,12 @@ const intakeFetch = mockFetch({
     { name: 'museum morning', kind: 'activity', who: 'Ana', when: '' },
     { name: 'long dinner', kind: 'restaurant', who: '', when: 'the last night' },
   ],
+  roster: [
+    { name: 'Ana', role: 'collaborator', age: null },
+    { name: 'Ana', role: 'collaborator', age: null },
+    { name: '', role: 'collaborator' },
+    { name: 'Sam', role: 'guest' },
+  ],
 });
 const intake = await classifyTripIntake({ text: lisbon, env, fetchImpl: intakeFetch });
 assert.equal(intake.ok, true);
@@ -65,6 +74,7 @@ assert.equal(intake.intake, true);
 assert.deepEqual(intake.things.map((thing) => thing.name), ['museum morning', 'long dinner']);
 assert.equal(intake.things[0].who, 'Ana');
 assert.equal(intake.things[1].when, 'the last night');
+assert.deepEqual(intake.roster, [{ name: 'Ana', role: 'collaborator', age: null }]);
 assert.equal(intake.error, null);
 assert.equal(intakeFetch.calls.length, 2);
 
@@ -91,6 +101,8 @@ assert.equal(fields.intakeEvent.kind, 'trip_intake');
 assert.equal(fields.intakeEvent.firstIntake, true);
 assert.equal(fields.intakeEvent.requestText, lisbon);
 assert.deepEqual(fields.wantedThings, intake.things);
+assert.deepEqual(fields.roster, intake.roster);
+assert.equal(fields.rosterError, null);
 assert.equal(fields.intakeError, null);
 
 const notFirst = tripIntakeJobFields({
@@ -122,6 +134,8 @@ const failedFields = tripIntakeJobFields({
 });
 assert.equal(failedFields.intakeEvent, null);
 assert.deepEqual(failedFields.wantedThings, []);
+assert.deepEqual(failedFields.roster, []);
+assert.match(failedFields.rosterError, /classifier down/);
 assert.match(failedFields.intakeError, /classifier down/);
 
 const badJson = await classifyTripIntake({
@@ -131,6 +145,7 @@ const badJson = await classifyTripIntake({
 });
 assert.equal(badJson.ok, false);
 assert.deepEqual(badJson.things, []);
+assert.deepEqual(badJson.roster, []);
 assert.match(badJson.error, /not JSON/);
 
 const missingKey = await classifyTripIntake({
@@ -143,6 +158,6 @@ assert.match(missingKey.error, /OpenRouter key/);
 assert.deepEqual(missingKey.things, []);
 
 const blank = await classifyTripIntake({ text: '   ', env, fetchImpl: () => { throw new Error('fetch should not run'); } });
-assert.deepEqual(blank, { ok: true, intake: false, things: [], error: null });
+assert.deepEqual(blank, { ok: true, intake: false, things: [], roster: [], error: null });
 
 process.stdout.write('trip intake classify tests passed\n');
