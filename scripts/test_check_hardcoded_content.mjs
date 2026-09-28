@@ -275,16 +275,15 @@ assert.equal(baseline.length > 0, true);
 for (const row of baseline) assert.equal(row.note, BASELINE_NOTE);
 
 const repoRun = runGuard(repo);
-assert.equal(repoRun.status, 1, `${repoRun.stdout}\n${repoRun.stderr}`);
-const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check failed \((\d+) report, (\d+) fail\)/);
+assert.equal(repoRun.status, 0, `${repoRun.stdout}\n${repoRun.stderr}`);
+const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
 assert.ok(liveSummary, `${repoRun.stdout}\n${repoRun.stderr}`);
 const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
 const failRows = identities(repoRun.stderr);
 assert.equal(failRows.length, liveFail);
-// The travel download is gone on this base. Remaining fails are unbaselined
-// EVASION padding in the served bundle, or BUNDLE-LEAK if a stripped file
-// still carries one. NO-CROSS-ORIGIN-BUNDLE has no live hit.
+// The travel download is gone and the served bundle is stripped. A live
+// NO-CROSS-ORIGIN-BUNDLE, BUNDLE-LEAK, or EVASION hit still fails the run.
 assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), []);
 for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK' || row.rule === 'EVASION', true, row.rule);
 assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
@@ -886,6 +885,6 @@ assert.equal(padRun.status, 1, padRun.stdout);
 assertHit(padRun.stderr, 'FAIL', 'EVASION', padFile, padHits[0].symbol_or_pattern);
 assert.equal(baseline.some((row) => row.rule === 'EVASION' || row.inventory_id === 'EVASION'), false);
 assert.equal(baseline.some((row) => row.file === 'public/assets/index-0J54vUO3.js' || row.file === 'public/assets/index-TimeSyncherVacationLogin.js'), false);
-assertHit(repoRun.stderr, 'FAIL', 'EVASION', SERVED_BUNDLE, 'spaces:80@2729974');
+assert.equal(failRows.length, 0);
 
 process.stdout.write('hardcoded content check test passed\n');
