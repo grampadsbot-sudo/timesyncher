@@ -23,6 +23,7 @@ const extracted = thingsFromIntake([
 assert.deepEqual(extracted.map((thing) => thing.title), ['museum morning', 'long dinner']);
 assert.equal(extracted[0].who, 'Ana');
 assert.equal(extracted[0].whenLabel, 'Tuesday');
+assert.equal(extracted[0].source, 'chat_extraction');
 assert.equal(extracted[1].category, 'restaurant');
 const merged = mergeWantedThings([{ title: 'museum morning', category: 'activity' }], extracted);
 assert.deepEqual(merged.map((thing) => thing.title), ['museum morning', 'long dinner']);
