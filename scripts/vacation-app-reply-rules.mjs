@@ -571,6 +571,10 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
+export function sourcedPlaceRule() {
+  return 'Name a place only when this turn passed a live search or database result that carries an id, and cite it as (id:THAT_ID). Do not name a place that has no result id.';
+}
+
 export function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
   const lock = text(destination, 160);
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
@@ -599,6 +603,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
+    sourcedPlaceRule(),
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',

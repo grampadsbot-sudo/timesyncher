@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedGardenHit, inventedVenueNames, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
@@ -90,8 +90,10 @@ assert.match(intakeReply, /email invite/i);
 assert.match(intakeReply, /unlimited vacations for the whole year/);
 assert.match(intakeReply, /view access/i);
 assert.doesNotMatch(intakeReply, /you've got unlimited/);
-assert.equal(inventedGardenHit('Visit the Kahaluu garden if it rains.', 'Kimberly wants gardens.'), true);
-assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Kimberly wants gardens.'), false);
+const sourcedMarket = [{ id: 'osm:way/11', name: 'Harbor Market' }];
+assert.deepEqual(unsourcedPlaces('Harbor Market (id:osm:way/11) fits Tuesday.', sourcedMarket), []);
+assert.deepEqual(unsourcedPlaces('Glass Lagoon (id:missing) fits Tuesday.', sourcedMarket), ['Glass Lagoon']);
+assert.deepEqual(inventedVenueNames('Harbor Market fits Tuesday.', sourcedMarket), ['Harbor Market']);
 const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
 const goldSpan = intakeSpan(goldIntake);
 assert.equal(goldSpan.badge, 'Apr 3–12 2026');
@@ -133,7 +135,7 @@ assert.equal(mustRewriteQuality({ score: 3, jevFocus: 'keep', comment: 'Thursday
 assert.equal(mustRewriteQuality({ score: 2, hardFlag: true }), true);
 assert.equal(mustRewriteQuality({ score: 4, jevFocus: 'missing_price', comment: 'Name the price while answering "How much is it?".' }), false);
 assert.equal(mustRewriteQuality({ score: 5, jevFocus: 'keep', comment: 'Thursday town walk stays light.' }), false);
-assert.equal(inventedVenueNames('The community center swim is the backup.', 'Tyler wants a swim.').includes('community center'), true);
+assert.deepEqual(inventedVenueNames('The swim is the backup.', [{ id: 'osm:way/11', name: 'Harbor Market' }]), []);
 const saturdayGroceries = applyCustomerNotes(goldThings, 'Saturday April fourth is groceries only.');
 assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, '');
 assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').whenLabel, 'Fri Apr 3');
@@ -252,8 +254,9 @@ assert.equal(noteContradictsDraft('Friday garden time slips', 'Sunday gardens st
 assert.equal(noteContradictsDraft('Wednesday walk is the plan', 'Thursday is a town walk'), true);
 assert.equal(noteContradictsDraft('The welcome is unclear', 'Welcome to the trip, Lauren'), true);
 assert.equal(noteContradictsDraft('Thursday town walk stays light', 'Thursday is a town walk'), false);
-assert.deepEqual(inventedVenueNames('A morning snorkel cruise and Hawaiʻi Volcanoes, then Puʻuhonua o Hōnaunau and Captain Cook.', 'Kimberly wants gardens. Tyler wants a swim.'), ['snorkel', 'cruise', 'Volcanoes', 'Puuhonua o Honaunau', 'Captain Cook']);
-assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', 'Tyler wants a swim on the beach or the house pool.'), []);
+assert.deepEqual(unsourcedPlaces('Harbor Market (id:osm:way/11) on Tuesday.', sourcedMarket), []);
+assert.deepEqual(unsourcedPlaces('Glass Lagoon (id:missing) on Tuesday.', sourcedMarket), ['Glass Lagoon']);
+assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', []), []);
 const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
 assert.equal(customerAsksPrice(priceAsk), true);
 assert.equal(correctFalsePriceMiss({ judged: true, score: 5, comment: 'The reply covers this turn: How much is it?', wantsRewrite: false }, 'Kimberly $27, paid by you; Tyler $27, paid by Tyler; Lauren $27, paid by Lauren', 'How much is it if Kimberly, Tyler, and Lauren join?').score, 5);
@@ -315,8 +318,10 @@ const loadedAttempts = liveTranscriptFromRows({
 assert.equal(loadedAttempts.turns[0].jevNote, null);
 assert.equal(loadedAttempts.turns[0].jevNoteReason, 'jev_no_free_text');
 assert.equal(loadedAttempts.turns[0].rewriteAttempts[0].model, 'qwen/qwen3-max');
-assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').score <= 3, true);
-assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').wantsRewrite, true);
+const unsourcedDock = dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Glass Lagoon (id:missing) on Tuesday.', 'Offer two options.', 'gardens, swim, town walk', sourcedMarket));
+assert.equal(unsourcedDock.score <= 3, true);
+assert.equal(unsourcedDock.wantsRewrite, true);
+assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Harbor Market (id:osm:way/11) on Tuesday.', 'Offer two options.', 'gardens, swim, town walk', sourcedMarket), 'Offer two options.').wantsRewrite, false);
 const windyBeach = applyCustomerNotes(goldThings, 'Tyler wants a swim, including one later in the week if the beach is windy.');
 assert.equal(windyBeach.find((thing) => thing.title === 'Swim').customerWhen, '');
 assert.equal(windyBeach.find((thing) => thing.title === 'Swim').who, 'Tyler');
