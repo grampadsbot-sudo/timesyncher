@@ -310,7 +310,7 @@ export function padKeepsakeSharedPlaces(shared = {}) {
       const id = meta.baseId + index + 1;
       const lat = Number(detail.lat) || catalog.fallbackLat;
       const lng = Number(detail.lng) || catalog.fallbackLng;
-      const summary = detail.summary || `${name} — ${catalog.fallbackAddress} first-pass catalog.`;
+      const summary = detail.summary || '';
       const address = detail.address || catalog.fallbackAddress;
       const happyHour = /Ulu Ocean Grill/i.test(name);
       next.places.push({

@@ -12,7 +12,7 @@ import {
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
 export { isTemplateNote };
-import { productThingSummary } from './intake-shared-trip.mjs';
+import { customerInputState, productThingSummary } from './intake-shared-trip.mjs';
 import { payerPriceLine, planSeatDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -414,6 +414,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
+    ...customerInputState(things),
   };
 }
 
@@ -504,7 +505,7 @@ const DAY_WORDS = {
   'twenty-ninth': 29, thirtieth: 30, 'thirty-first': 31,
 };
 const WEEKDAY_ABBR = { sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat' };
-const WHO_SKIP = new Set(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Base', 'Big', 'SpeediShuttle', 'Kids', 'Four', 'What', 'Keep', 'This', 'The']);
+const WHO_SKIP = new Set(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Base', 'Big', 'Kids', 'Four', 'What', 'Keep', 'This', 'The']);
 
 function splitSentences(text) {
   return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean);
@@ -1825,7 +1826,7 @@ async function loadSavedTripRecord(session, env = process.env) {
     const row = trips[0];
     if (!row) return null;
     const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-    const thingRows = await db`select title, metadata from trip_things where trip_id = ${tripId} order by created_at asc`;
+    const thingRows = await db`select title, category, metadata from trip_things where trip_id = ${tripId} order by created_at asc`;
     return {
       start: row.start_date || '',
       end: row.end_date || '',
@@ -1833,6 +1834,7 @@ async function loadSavedTripRecord(session, env = process.env) {
         const thingMeta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
         return {
           title: thing.title,
+          category: thing.category || thingMeta.category || '',
           who: thingMeta.who || '',
           whenLabel: thingMeta.whenLabel || '',
           customerWhen: thingMeta.customerWhen || '',
