@@ -163,7 +163,7 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
     receipt_email: contact.email,
     description: plan.scope === 'single_trip'
       ? 'TimeSyncher Vacation Telegram access'
-      : 'unlimited vacations for the whole year',
+      : 'TimeSyncher Vacation Telegram access for all vacations',
     metadata: {
       product: 'timesyncher_vacation_telegram_collaborator',
       invite_id: selected.invite.id,
@@ -272,7 +272,7 @@ async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
     receipt_email: contact.email,
     description: addOns.scope === 'single_trip'
       ? 'TimeSyncher Vacation photo/video upload access'
-      : 'unlimited vacations for the whole year',
+      : 'TimeSyncher Vacation photo/video upload access for all vacations',
     metadata,
   });
   return {
