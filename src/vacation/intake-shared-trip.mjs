@@ -139,6 +139,7 @@ export function sharedTripFromIntake({ trip, things }) {
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
     const summary = productThingSummary(thing);
+    const { ratings } = safeRatings(thing);
     places.push({
       id,
       trip_id: intId(trip.id),
@@ -149,6 +150,7 @@ export function sharedTripFromIntake({ trip, things }) {
       category: { name: kind.category_name, icon: kind.category_icon },
       reservation_status: 'considering',
       notes: summary,
+      ratings,
     });
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
@@ -237,28 +239,85 @@ function coordsFor(name) {
   return PLACE_COORDS[name] || null;
 }
 
-function blankRatings() {
-  return {
-    googleRating: '',
-    yelpRating: '',
-    thirdPartyRating: '',
-    review1: '',
-    review2: '',
-    review3: '',
-  };
+const RATING_KEYS = ['googleRating', 'yelpRating', 'thirdPartyRating', 'review1', 'review2', 'review3'];
+
+function ratingsBlob(record) {
+  const nested = record?.ratings;
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) return nested;
+  if (record && typeof record === 'object' && Object.prototype.hasOwnProperty.call(record, 'source')) return record;
+  return null;
 }
 
-function sourcedRatings(name, options) {
-  const rows = options?.sourcedRatings && typeof options.sourcedRatings === 'object' ? options.sourcedRatings : {};
-  const row = rows[name];
-  if (!row || row.source === 'google-places' || !row.source) return blankRatings();
+function ratingsSourceText(ratings) {
+  if (!ratings || !Object.prototype.hasOwnProperty.call(ratings, 'source')) return '';
+  return String(ratings.source ?? '').trim();
+}
+
+function isGooglePlacesSource(source) {
+  return source.toLowerCase().replace(/[\s_]+/g, '-') === 'google-places';
+}
+
+function copyPresentRatings(ratings) {
+  const copied = {};
+  for (const key of RATING_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(ratings, key)) continue;
+    const value = ratings[key];
+    if (typeof value !== 'string' && typeof value !== 'number') continue;
+    const text = String(value).trim();
+    if (!text) continue;
+    copied[key] = text;
+  }
+  return copied;
+}
+
+// Ratings come from the Thing record's source field. A missing source is an
+// explicit state. google-places rows are rejected. Never blank-fill or invent.
+export function ratingsFromThingRecord(record) {
+  const ratings = ratingsBlob(record);
+  const source = ratingsSourceText(ratings);
+  if (!source) return { ratingsSourceState: 'no ratings source' };
+  if (isGooglePlacesSource(source)) return { ratingsSourceState: 'rejected: google-places' };
+  return { ratingsSource: source, ...copyPresentRatings(ratings) };
+}
+
+function safeRatings(record) {
+  const presented = ratingsFromThingRecord(record);
+  if (presented.ratingsSource) {
+    const ratings = { source: presented.ratingsSource };
+    for (const key of RATING_KEYS) {
+      if (presented[key]) ratings[key] = presented[key];
+    }
+    return { presented, ratings };
+  }
+  if (presented.ratingsSourceState === 'rejected: google-places') {
+    return {
+      presented,
+      ratings: { source: 'google-places', ratingsSourceState: presented.ratingsSourceState },
+    };
+  }
+  return { presented, ratings: { ratingsSourceState: 'no ratings source' } };
+}
+
+function writeRatings(place, extra) {
+  const { presented, ratings } = safeRatings(place);
+  place.ratings = ratings;
+  Object.assign(extra, presented);
+}
+
+export function thingRecordFromTripRow(row = {}) {
+  const meta = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {};
+  const ratings = row.ratings && typeof row.ratings === 'object' && !Array.isArray(row.ratings) ? row.ratings : null;
   return {
-    googleRating: String(row.googleRating || ''),
-    yelpRating: String(row.yelpRating || ''),
-    thirdPartyRating: String(row.thirdPartyRating || ''),
-    review1: String(row.review1 || ''),
-    review2: String(row.review2 || ''),
-    review3: String(row.review3 || ''),
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    description: row.description || '',
+    who: meta.who || '',
+    whenLabel: meta.whenLabel || '',
+    customerWhen: meta.customerWhen || '',
+    notes: Array.isArray(meta.notes) ? meta.notes : [],
+    collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
+    ratings,
   };
 }
 
@@ -298,8 +357,8 @@ export function applyThingPresentation(shared = {}, options = {}) {
     const extra = {
       summary,
       logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
-      ...sourcedRatings(name, options),
     };
+    writeRatings(place, extra);
     if (coords) {
       place.lat = coords[0];
       place.lng = coords[1];
@@ -345,8 +404,8 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lng: place.lng,
       address: place.address,
       logoUrl: captureThingLogo(place, { title: 'SpeediShuttle', category: 'car' }),
-      ...sourcedRatings('SpeediShuttle', options),
     });
+    writeRatings(place, thingOverrides[`place:${place.id}`]);
   }
   const flightName = /\bKOA\b/.test(JSON.stringify(shared.trip || {})) ? 'KOA arrival' : 'Kona arrival';
   if (!places.some((place) => /koa arrival|kona arrival/i.test(place.name || ''))) {
@@ -382,8 +441,8 @@ export function applyThingPresentation(shared = {}, options = {}) {
       lng: place.lng,
       address: place.address,
       logoUrl: captureThingLogo(place, { title: flightName, category: 'flight' }),
-      ...sourcedRatings(flightName, options),
     });
+    writeRatings(place, thingOverrides[`place:${place.id}`]);
   }
   const shownCars = lowestCarOffers(
     places
