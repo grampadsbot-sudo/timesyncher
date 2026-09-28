@@ -3022,5 +3022,89 @@
     "symbol_or_pattern": "Ulu Ocean Grill",
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/onboarding-session.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2030-06-11",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2030-06-13",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "second Friday",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "shared-app.html",
+    "rule": "SERVED-BUNDLE",
+    "symbol_or_pattern": "/assets/index-BKun7ofk.js is not in the repo and the build does not produce it",
+    "inventory_id": "SERVED-BUNDLE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/collaborator-checkout.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2026-09-11",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-style2.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "Oct 9",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "Oct 12",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "Oct 9",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
   }
 ]

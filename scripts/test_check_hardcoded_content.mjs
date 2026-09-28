@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, classify, contentIdentity, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -447,6 +447,7 @@ assert.equal(renamed.some((finding) => finding.symbol_or_pattern === 'RANGE_END'
 assert.deepEqual(classify(renamed, []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [
   ['CONTENT-MATCH', 'say the swim is saved on the second Friday of the trip'],
   ['CONTENT-MATCH', 'second Friday'],
+  ['DATE-LITERAL', 'second Friday'],
 ]);
 
 const named = fails('src/vacation/prompt-names.mjs', 'prompt-names.mjs');
@@ -494,5 +495,73 @@ writeTree(oldRuleGrowth, {}, [...newRuleBase, entry('src/vacation/other.mjs', 'A
 const oldRuleRun = runGuard(oldRuleGrowth, { BASE: 'base' });
 assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
 assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/hardcoded-content-baseline\.json:1\t2>1/);
+
+const dateFile = 'src/vacation/date-range-rename.mjs';
+const dateText = readFixture('date-range-rename.mjs');
+const dateHits = scanText(dateFile, dateText).filter((finding) => finding.rule === 'DATE-LITERAL');
+assert.deepEqual(dateHits.map((finding) => finding.symbol_or_pattern), [
+  '2026-04-03',
+  '2026-04-10',
+  'April 10th',
+  'Apr 10',
+  'last Monday',
+  'new Date(\'2026-04-10\')',
+  'new Date(2026, 3, 10)',
+  'Date.UTC(2026, 3, 10)',
+  '{start:\'2026-04-03\',end:\'2026-04-10\'}',
+]);
+assert.equal(scanText(dateFile, dateText).some((finding) => finding.rule === 'CONTENT-MATCH' || finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
+assert.deepEqual(
+  scanText('src/vacation/ordinal.mjs', 'const when = "second Friday";').filter((finding) => finding.rule === 'DATE-LITERAL').map((finding) => finding.symbol_or_pattern),
+  ['second Friday'],
+);
+const dateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-date-'));
+writeTree(dateDir, { [dateFile]: dateText }, []);
+const dateRun = runGuard(dateDir);
+assert.equal(dateRun.status, 1, dateRun.stdout);
+assertHit(dateRun.stderr, 'FAIL', 'DATE-LITERAL', dateFile, '{start:\'2026-04-03\',end:\'2026-04-10\'}');
+assert.doesNotMatch(dateRun.stderr, /CONTENT-MATCH/);
+assert.doesNotMatch(dateRun.stderr, /RANGE_END/);
+
+const bundleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bundle-'));
+const bundleSymbol = '/assets/index-BKun7ofk.js is not in the repo and the build does not produce it';
+writeTree(bundleDir, {
+  'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
+  'extra.html': '<script src="/assets/other-bundle.js"></script>\n<link rel="modulepreload" href="/assets/preload.js">\n<script type="module">import(\'/assets/imported.js\');</script>\n<script src="https://js.stripe.com/v3/"></script>\n',
+  'src/onboarding/eula-page.mjs': 'export const page = true;\n',
+  'kept.html': '<script type="module" src="/src/onboarding/eula-page.mjs"></script>\n<script src="/assets/kept.js"></script>\n',
+  'public/assets/kept.js': 'console.log("kept");\n',
+}, [{
+  file: 'shared-app.html',
+  rule: 'SERVED-BUNDLE',
+  symbol_or_pattern: bundleSymbol,
+  inventory_id: 'SERVED-BUNDLE',
+  note: NOTE,
+}]);
+const bundleRun = runGuard(bundleDir);
+assert.equal(bundleRun.status, 1, bundleRun.stdout);
+assertHit(bundleRun.stdout, 'REPORT', 'SERVED-BUNDLE', 'shared-app.html', bundleSymbol);
+for (const symbol of [
+  '/assets/other-bundle.js is not in the repo and the build does not produce it',
+  '/assets/preload.js is not in the repo and the build does not produce it',
+  '/assets/imported.js is not in the repo and the build does not produce it',
+]) {
+  assertHit(bundleRun.stderr, 'FAIL', 'SERVED-BUNDLE', 'extra.html', symbol);
+}
+assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /js\.stripe\.com/);
+assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
+assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
+
+const explained = explainSharedBundle(repo);
+assert.equal(explained.offlineBuildProduct, false);
+assert.match(explained.url, /^https:\/\/travel\.timesyncher\.com\/assets\/index-BKun7ofk\.js$/);
+assert.match(explained.message, /write-shared-assets\.mjs/);
+assert.match(explained.message, /buildStart/);
+assert.match(explained.message, /No local source directory/);
+assert.deepEqual(htmlRefsProducedByBuild(repo), []);
+const built = spawnSync(process.execPath, ['scripts/scan-built-bundles.mjs'], { cwd: repo, encoding: 'utf8' });
+assert.equal(built.status, 0, built.stderr);
+assert.match(built.stdout, /no HTML reference is produced by an offline build/);
+assert.match(workflow, /scan-built-bundles\.mjs/);
 
 process.stdout.write('hardcoded content check test passed\n');

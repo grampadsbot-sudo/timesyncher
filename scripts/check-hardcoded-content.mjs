@@ -470,6 +470,12 @@ function deriveContentNeedles(inventory, patterns) {
 const inventoryDoc = JSON.parse(fs.readFileSync(new URL('./fixtures/hardcoded-content/inventory.json', import.meta.url), 'utf8'));
 export const CONTENT_NEEDLES = deriveContentNeedles(inventoryDoc, INVENTORY_PATTERNS);
 
+export function bundleScanFindings(file, text) {
+  const findings = [];
+  contentMatchFindings(file, String(text || ''), findings, new Set(), CONTENT_NEEDLES, 'BUNDLE-SCAN');
+  return findings;
+}
+
 function contentMatchFindings(file, text, findings, seen, needles, rule) {
   for (const needle of needles) {
     const index = text.indexOf(needle);
@@ -717,6 +723,279 @@ function isAssetBundle(file) {
   return /^public\/assets\/[^/]+\.js$/.test(file.split(path.sep).join('/'));
 }
 
+const ISO_DATE = /\b((?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01]))\b/g;
+const MONTH_NAME = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?';
+const MONTH_DATE = new RegExp(`\\b((?:${MONTH_NAME})\\s+(?:0?[1-9]|[12]\\d|3[01])(?:st|nd|rd|th)?)\\b`, 'gi');
+const ORDINAL_WEEKDAY = /\b((?:first|second|third|fourth|fifth|last)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))\b/gi;
+const RANGE_START_KEY = /^(?:start|from|begin)$/i;
+const RANGE_END_KEY = /^(?:end|to|until)$/i;
+
+function isDateText(value) {
+  const text = String(value || '');
+  ISO_DATE.lastIndex = 0;
+  MONTH_DATE.lastIndex = 0;
+  ORDINAL_WEEKDAY.lastIndex = 0;
+  return ISO_DATE.test(text) || MONTH_DATE.test(text) || ORDINAL_WEEKDAY.test(text);
+}
+
+function readNumberLiteral(text, index) {
+  const match = /^[+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?/i.exec(text.slice(index));
+  if (!match) return null;
+  return { end: index + match[0].length, value: match[0] };
+}
+
+function isIdentChar(ch) {
+  return /[A-Za-z0-9_$]/.test(ch || '');
+}
+
+function readLiteralArgs(text, index) {
+  if (text[index] !== '(') return null;
+  let cursor = skipWs(text, index + 1);
+  const args = [];
+  if (text[cursor] === ')') return { end: cursor + 1, args };
+  while (cursor < text.length) {
+    if (text.startsWith('Date.UTC', cursor) && !isIdentChar(text[cursor - 1])) {
+      const nested = readUtcCall(text, cursor);
+      if (!nested) return null;
+      args.push({ kind: 'utc', value: nested.symbol });
+      cursor = skipWs(text, nested.end);
+    } else {
+      const quoted = readQuoted(text, cursor);
+      if (quoted) {
+        args.push({ kind: 'string', value: quoted.value });
+        cursor = skipWs(text, quoted.end);
+      } else {
+        const number = readNumberLiteral(text, cursor);
+        if (!number) return null;
+        args.push({ kind: 'number', value: number.value });
+        cursor = skipWs(text, number.end);
+      }
+    }
+    if (text[cursor] === ',') {
+      cursor = skipWs(text, cursor + 1);
+      continue;
+    }
+    if (text[cursor] === ')') return { end: cursor + 1, args };
+    return null;
+  }
+  return null;
+}
+
+function fixedNumericDate(args) {
+  if (!args.length || args.some((arg) => arg.kind !== 'number')) return false;
+  const year = Number(args[0].value);
+  if (args.length >= 2 && year >= 1900 && year <= 2100) return true;
+  return args.length === 1 && year >= 1e11;
+}
+
+function readUtcCall(text, index) {
+  if (!text.startsWith('Date.UTC', index) || isIdentChar(text[index - 1])) return null;
+  const args = readLiteralArgs(text, skipWs(text, index + 'Date.UTC'.length));
+  if (!args || !fixedNumericDate(args.args)) return null;
+  return { end: args.end, symbol: text.slice(index, args.end).replace(/\s+/g, ' ') };
+}
+
+function readNewDateCall(text, index) {
+  if (!text.startsWith('new Date', index) || isIdentChar(text[index - 1])) return null;
+  const args = readLiteralArgs(text, skipWs(text, index + 'new Date'.length));
+  if (!args || !args.args.length) return null;
+  const fixed = args.args.every((arg) => arg.kind === 'utc')
+    || args.args.some((arg) => arg.kind === 'string' && isDateText(arg.value))
+    || fixedNumericDate(args.args);
+  if (!fixed) return null;
+  return { end: args.end, symbol: text.slice(index, args.end).replace(/\s+/g, ' ') };
+}
+
+function dateLiteralFindings(file, text, findings, seen) {
+  for (const pattern of [ISO_DATE, MONTH_DATE, ORDINAL_WEEKDAY]) {
+    for (const match of collect(pattern, text, (item) => item)) {
+      add(findings, seen, 'DATE-LITERAL', file, text, match.index, match[1]);
+    }
+  }
+  for (let index = 0; index < text.length; index += 1) {
+    const created = text.startsWith('new Date', index) ? readNewDateCall(text, index) : null;
+    const utc = !created && text.startsWith('Date.UTC', index) ? readUtcCall(text, index) : null;
+    const hit = created || utc;
+    if (!hit) continue;
+    add(findings, seen, 'DATE-LITERAL', file, text, index, hit.symbol);
+    index = hit.end - 1;
+  }
+  const pair = /\b(start|from|begin|end|to|until)\b\s*:\s*(?:'[^'\n]*'|"[^"\n]*"|new\s+Date\s*\([^)\n]*\)|Date\.UTC\s*\([^)\n]*\))/gi;
+  const keys = [];
+  let match = pair.exec(text);
+  while (match) {
+    const valueAt = skipWs(text, match.index + match[0].indexOf(':') + 1);
+    const quoted = readQuoted(text, valueAt);
+    const created = quoted ? null : readNewDateCall(text, valueAt);
+    const utc = quoted || created ? null : readUtcCall(text, valueAt);
+    const value = quoted ? quoted.value : created ? created.symbol : utc ? utc.symbol : '';
+    const date = quoted ? isDateText(quoted.value) : Boolean(created || utc);
+    if (date) keys.push({ index: match.index, key: match[1], value, end: match.index + match[0].length });
+    match = pair.exec(text);
+  }
+  const used = new Set();
+  for (let left = 0; left < keys.length; left += 1) {
+    for (let right = left + 1; right < keys.length; right += 1) {
+      const a = keys[left];
+      const b = keys[right];
+      if (b.index - a.index > 240) break;
+      const start = RANGE_START_KEY.test(a.key) ? a : RANGE_START_KEY.test(b.key) ? b : null;
+      const end = RANGE_END_KEY.test(a.key) ? a : RANGE_END_KEY.test(b.key) ? b : null;
+      if (!start || !end || start === end) continue;
+      const between = text.slice(a.end, b.index);
+      if (/\}/.test(between) && /\{/.test(between)) continue;
+      const symbol = `{${start.key}:'${start.value}',${end.key}:'${end.value}'}`;
+      if (used.has(symbol)) continue;
+      used.add(symbol);
+      add(findings, seen, 'DATE-LITERAL', file, text, start.index, symbol);
+    }
+  }
+}
+
+function isRemoteAsset(ref) {
+  const value = String(ref || '').trim();
+  return value === '' || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(value) || /^(?:data|blob|mailto):/i.test(value);
+}
+
+function scriptAssetRefs(text) {
+  const refs = [];
+  const push = (index, raw) => {
+    const value = String(raw || '').trim();
+    if (!value || isRemoteAsset(value)) return;
+    refs.push({ index, ref: value });
+  };
+  for (const match of text.matchAll(/<script\b[^>]*?\bsrc\s*=\s*(['"])(.*?)\1/gi)) push(match.index, match[2]);
+  for (const match of text.matchAll(/<link\b[^>]*>/gi)) {
+    const tag = match[0];
+    if (!/\brel\s*=\s*(['"])modulepreload\1/i.test(tag)) continue;
+    const href = tag.match(/\bhref\s*=\s*(['"])(.*?)\1/i);
+    if (href) push(match.index, href[2]);
+  }
+  for (const match of text.matchAll(/\bimport\s*\(\s*(['"])(.*?)\1\s*\)/g)) push(match.index, match[2]);
+  for (const match of text.matchAll(/\.src\s*=\s*(['"])(.*?)\1/g)) push(match.index, match[2]);
+  return refs;
+}
+
+function localScriptCandidates(htmlFile, ref) {
+  const clean = String(ref || '').split(/[?#]/)[0];
+  const base = clean.split('/').pop() || '';
+  const ext = path.posix.extname(base).toLowerCase();
+  if (!['.js', '.mjs', '.cjs'].includes(ext)) return [];
+  const paths = clean.startsWith('/')
+    ? [clean.replace(/^\/+/, ''), `public/${clean.replace(/^\/+/, '')}`]
+    : [path.posix.normalize(path.posix.join(path.posix.dirname(htmlFile.split(path.sep).join('/')), clean))];
+  return paths.filter((rel) => rel && !rel.startsWith('..') && !rel.includes('/../'));
+}
+
+function gitTracked(cwd, rel) {
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status !== 0 || inside.stdout.trim() !== 'true') return fs.existsSync(path.join(cwd, rel));
+  const listed = spawnSync('git', ['ls-files', '--error-unmatch', '--', rel], { cwd, encoding: 'utf8' });
+  return listed.status === 0;
+}
+
+export function fetchedBundleNames(cwd = process.cwd()) {
+  const writer = path.join(cwd, 'scripts/write-shared-assets.mjs');
+  if (!fs.existsSync(writer)) return [];
+  const text = fs.readFileSync(writer, 'utf8');
+  if (!/\bfetch\s*\(/.test(text) || !/https?:\/\//.test(text)) return [];
+  return [...text.matchAll(/['"`](index-[A-Za-z0-9._-]+\.js)['"`]/g)].map((match) => match[1]);
+}
+
+export function offlineBuildProduces(cwd, repoRelativePath) {
+  const base = path.posix.basename(String(repoRelativePath || '').split(path.sep).join('/'));
+  if (!base || fetchedBundleNames(cwd).includes(base)) return false;
+  const pkgPath = path.join(cwd, 'package.json');
+  if (!fs.existsSync(pkgPath)) return false;
+  let build = '';
+  try {
+    build = JSON.parse(fs.readFileSync(pkgPath, 'utf8')).scripts?.build || '';
+  } catch {
+    return false;
+  }
+  if (!/\bvite\b/.test(build)) return false;
+  // Vite writes hashed files under dist/. It does not create a missing public
+  // asset, under the path the HTML references, from a local source module.
+  return false;
+}
+
+export function explainSharedBundle(cwd = process.cwd()) {
+  const writerText = fs.existsSync(path.join(cwd, 'scripts/write-shared-assets.mjs'))
+    ? fs.readFileSync(path.join(cwd, 'scripts/write-shared-assets.mjs'), 'utf8')
+    : '';
+  const viteText = fs.existsSync(path.join(cwd, 'vite.config.mjs'))
+    ? fs.readFileSync(path.join(cwd, 'vite.config.mjs'), 'utf8')
+    : '';
+  const name = (writerText.match(/const\s+JS_NAME\s*=\s*['"]([^'"]+)['"]/) || ['', 'index-BKun7ofk.js'])[1];
+  const url = writerText.includes('https://travel.timesyncher.com/assets/')
+    ? `https://travel.timesyncher.com/assets/${name}`
+    : '';
+  const hooked = /writeSharedAssets/.test(viteText) && /buildStart/.test(viteText);
+  const message = [
+    `shared-app.html loads /assets/${name} by assigning script.src.`,
+    `public/assets/${name} is gitignored and not committed.`,
+    hooked
+      ? 'vite.config.mjs plugin timesyncher-shared-assets calls scripts/write-shared-assets.mjs at buildStart.'
+      : 'The vite config does not call write-shared-assets.mjs.',
+    url
+      ? `${url} is downloaded there. No local source directory produces this file.`
+      : 'No local source directory produces this file.',
+    'An offline build does not produce it.',
+  ].join(' ');
+  return { message, offlineBuildProduct: false, url };
+}
+
+function committedHtmlFiles(cwd) {
+  const listed = spawnSync('git', ['ls-files', '-z', '--', '*.html'], { cwd, encoding: 'utf8' });
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status === 0 && inside.stdout.trim() === 'true' && listed.status === 0) {
+    return listed.stdout.split('\0').filter(Boolean);
+  }
+  const files = [];
+  const walkHtml = (abs) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist') continue;
+      const next = path.join(abs, entry.name);
+      if (entry.isDirectory()) walkHtml(next);
+      else if (entry.name.endsWith('.html')) files.push(path.relative(cwd, next).split(path.sep).join('/'));
+    }
+  };
+  walkHtml(cwd);
+  return files;
+}
+
+export function htmlRefsProducedByBuild(cwd = process.cwd()) {
+  const produced = [];
+  for (const file of committedHtmlFiles(cwd)) {
+    const text = fs.readFileSync(path.join(cwd, file), 'utf8');
+    for (const ref of scriptAssetRefs(text)) {
+      const candidates = localScriptCandidates(file, ref.ref);
+      if (!candidates.length || candidates.some((repoPath) => gitTracked(cwd, repoPath))) continue;
+      const repoPath = candidates[candidates.length - 1];
+      if (offlineBuildProduces(cwd, repoPath)) produced.push({ file, ref: ref.ref, repoPath });
+    }
+  }
+  return produced;
+}
+
+function servedBundleFindings(cwd) {
+  const findings = [];
+  for (const file of committedHtmlFiles(cwd)) {
+    const abs = path.join(cwd, file);
+    if (!fs.existsSync(abs)) continue;
+    const text = fs.readFileSync(abs, 'utf8');
+    const seen = new Set();
+    for (const ref of scriptAssetRefs(text)) {
+      const candidates = localScriptCandidates(file, ref.ref);
+      if (!candidates.length || candidates.some((repoPath) => gitTracked(cwd, repoPath))) continue;
+      if (candidates.some((repoPath) => offlineBuildProduces(cwd, repoPath))) continue;
+      add(findings, seen, 'SERVED-BUNDLE', file, text, ref.index, `${ref.ref} is not in the repo and the build does not produce it`);
+    }
+  }
+  return findings;
+}
+
 export function scanText(file, text, { tokens = false, inventoryOnly = false } = {}) {
   const value = String(text || '');
   const findings = [];
@@ -738,6 +1017,7 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     else {
       contentMatchFindings(file, value, findings, seen, CONTENT_NEEDLES, 'CONTENT-MATCH');
       evasionFindings(file, value, findings, seen, CONTENT_NEEDLES);
+      dateLiteralFindings(file, value, findings, seen);
       promptNameFindings(file, value, findings, seen);
       priceFindings(file, value, findings, seen);
       addressFindings(file, value, findings, seen);
@@ -903,6 +1183,7 @@ export function scanRoots(cwd = process.cwd()) {
   for (const file of tokenPaths(cwd)) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));
   }
+  findings.push(...servedBundleFindings(cwd));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule) || a.symbol_or_pattern.localeCompare(b.symbol_or_pattern));
   return findings;
 }
