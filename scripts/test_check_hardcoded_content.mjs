@@ -604,15 +604,16 @@ assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /js\.stripe\.com
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
 
-// Dual-state shared-bundle check. (b) applies only once
-// public/assets/upstream/index-BKun7ofk.js exists. Until that committed file
-// is present, this tree still downloads the bundle and explainSharedBundle.url
-// must be the travel.timesyncher.com asset. Once the file exists, there is no
-// remote bundle url, and a travel.timesyncher.com fetch or URL fails the test
-// when it shows up in explainSharedBundle or in the build/runtime files this
-// guard already reads: scripts/write-shared-assets.mjs, vite.config.mjs, and
-// the committed HTML the served-bundle scan reads. The upstream bundle body
-// is not one of those paths.
+// Dual-state shared-bundle check.
+// This tree still downloads the bundle, so explainSharedBundle.url must be the
+// travel.timesyncher.com asset while public/assets/index-BKun7ofk.js is not
+// committed. The other state, used once that served file is committed and
+// public/assets/upstream/index-BKun7ofk.js is absent, requires url === ''.
+// A travel.timesyncher.com fetch or URL then fails the test when it shows up
+// in explainSharedBundle or in the build/runtime files this guard already
+// reads: scripts/write-shared-assets.mjs, vite.config.mjs, and the committed
+// HTML the served-bundle scan reads.
+const SERVED_BUNDLE = 'public/assets/index-BKun7ofk.js';
 const UPSTREAM_BUNDLE = 'public/assets/upstream/index-BKun7ofk.js';
 const TRAVEL_HOST = /travel\.timesyncher\.com/;
 
@@ -643,11 +644,24 @@ function sharedBundleSources(cwd) {
   return [...new Set(files)];
 }
 
-function upstreamBundleCommitted(cwd) {
-  const abs = path.join(cwd, UPSTREAM_BUNDLE);
+function filePresent(cwd, rel) {
+  const abs = path.join(cwd, rel);
   if (!fs.existsSync(abs)) return false;
   const stat = fs.statSync(abs);
   return stat.isFile() && stat.size > 0;
+}
+
+function gitTracks(cwd, rel) {
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status === 0 && inside.stdout.trim() === 'true') {
+    const listed = spawnSync('git', ['ls-files', '--error-unmatch', '--', rel], { cwd, encoding: 'utf8' });
+    return listed.status === 0;
+  }
+  return filePresent(cwd, rel);
+}
+
+function servedBundleCommitted(cwd) {
+  return gitTracks(cwd, SERVED_BUNDLE) && !filePresent(cwd, UPSTREAM_BUNDLE);
 }
 
 function assertSharedBundleSource(cwd) {
@@ -656,11 +670,12 @@ function assertSharedBundleSource(cwd) {
   assert.match(explained.message, /write-shared-assets\.mjs/);
   assert.match(explained.message, /buildStart/);
   assert.match(explained.message, /No local source directory/);
-  if (!upstreamBundleCommitted(cwd)) {
+  if (!servedBundleCommitted(cwd)) {
     assert.match(explained.url, /^https:\/\/travel\.timesyncher\.com\/assets\/index-BKun7ofk\.js$/);
     return explained;
   }
   assert.equal(explained.url, '');
+  assert.equal(filePresent(cwd, UPSTREAM_BUNDLE), false);
   assert.ok(!TRAVEL_HOST.test(explained.url), 'explainSharedBundle url still has a travel.timesyncher.com URL');
   assert.ok(!TRAVEL_HOST.test(explained.message), 'explainSharedBundle message still has a travel.timesyncher.com URL');
   for (const rel of sharedBundleSources(cwd)) {
@@ -680,23 +695,24 @@ assert.match(workflow, /scan-built-bundles\.mjs/);
 const localVite = 'export default { plugins: [{ name: "timesyncher-shared-assets", async buildStart() { await writeSharedAssets(); } }] };\n';
 const localWriter = [
   "const JS_NAME = 'index-BKun7ofk.js';",
-  "const rawDir = join(here, '..', 'public', 'assets', 'upstream');",
-  'await readFile(join(rawDir, JS_NAME), \'utf8\');',
+  "const assetsDir = join(here, '..', 'public', 'assets');",
+  'await readFile(join(assetsDir, JS_NAME));',
   '',
 ].join('\n');
 const localBundle = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-local-bundle-'));
 writeTree(localBundle, {
-  [UPSTREAM_BUNDLE]: '/* local bundle */\n',
+  [SERVED_BUNDLE]: '/* served bundle */\n',
   'scripts/write-shared-assets.mjs': localWriter,
   'vite.config.mjs': localVite,
   'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
 }, []);
 const localExplained = assertSharedBundleSource(localBundle);
 assert.equal(localExplained.url, '');
+assert.equal(filePresent(localBundle, UPSTREAM_BUNDLE), false);
 
 const fetchedBundle = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-fetched-bundle-'));
 writeTree(fetchedBundle, {
-  [UPSTREAM_BUNDLE]: '/* local bundle */\n',
+  [SERVED_BUNDLE]: '/* served bundle */\n',
   'scripts/write-shared-assets.mjs': `${localWriter}await fetch('https://travel.timesyncher.com/assets/' + JS_NAME);\n`,
   'vite.config.mjs': localVite,
   'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
@@ -705,7 +721,7 @@ assert.throws(() => assertSharedBundleSource(fetchedBundle), /travel\.timesynche
 
 const linkedBundle = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-linked-bundle-'));
 writeTree(linkedBundle, {
-  [UPSTREAM_BUNDLE]: '/* local bundle */\n',
+  [SERVED_BUNDLE]: '/* served bundle */\n',
   'scripts/write-shared-assets.mjs': localWriter,
   'vite.config.mjs': `${localVite}await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');\n`,
   'shared-app.html': '<script src="https://travel.timesyncher.com/assets/index-BKun7ofk.js"></script>\n',
