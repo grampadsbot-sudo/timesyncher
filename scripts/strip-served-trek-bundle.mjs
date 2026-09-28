@@ -1,5 +1,7 @@
 export const SERVED_SO = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";if(/^data:|^blob:/i.test(Re))return Re;try{const zt=(typeof location<"u"&&location.origin)||"";if(!zt)return Re;const ua=new URL(Re,zt);if(/\\/ts-thing-media\\/|\\/api\\/bind-thing-media\\b/i.test(ua.pathname+ua.search)||ua.host==="localhost:3010"||ua.host==="127.0.0.1:3010")return`${zt}${ua.pathname}${ua.search}${ua.hash}`;return ua.toString()}catch{return Re}}';
 
+export const SO_ORIGIN_NEEDLE = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
+
 const EMPTY = '""';
 
 export const CANNED_STRIP_RULES = [
@@ -39,8 +41,13 @@ export const CANNED_STRIP_RULES = [
     replacement: '',
   },
   {
+    id: 'shared-pdf-gate',
+    needle: 'dn=typeof window<"u"&&/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)||/timesyncher/i.test(`${la.title||""} ${la.description||""}`)',
+    replacement: 'dn=!0',
+  },
+  {
     id: 'so-origin',
-    needle: 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}',
+    needle: SO_ORIGIN_NEEDLE,
     replacement: SERVED_SO,
   },
   {
@@ -69,9 +76,10 @@ export const FORBIDDEN_SERVED_STRINGS = [
   '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y',
   'Craig_Kim_NYC_June_2026',
   '/craig \\/ kim nyc/i',
+  '/timesyncher/i.test(',
+  'timesyncher.com$/i.test(window.location.hostname)',
   '192.168.1.15:3010',
   '100.66.47.62:3010',
-  'https://travel.timesyncher.com',
   'Price TBD',
   'Depart TBD',
   'Arrive TBD',
