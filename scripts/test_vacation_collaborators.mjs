@@ -15,8 +15,10 @@ import { collaboratorInviteEmail as buildCollaboratorInviteEmail, collaboratorIn
 assert.equal(collaboratorPlan('single_trip').code, 'telegram_collaborators_single_trip');
 assert.equal(collaboratorPlan('single_trip').amountCents, 1500);
 assert.equal(collaboratorPlan('single_trip').maxActiveCollaborators, 1);
-assert.equal(collaboratorPlan('unlimited_trips').amountCents, 2700);
-assert.equal(collaboratorPlan('unlimited_trips').maxActiveCollaborators, 1);
+const priceEnv = { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' };
+assert.throws(() => collaboratorPlan('unlimited_trips', {}), (error) => error?.name === 'CheckoutConfigError');
+assert.equal(collaboratorPlan('unlimited_trips', priceEnv).amountCents, 1900);
+assert.equal(collaboratorPlan('unlimited_trips', priceEnv).maxActiveCollaborators, 1);
 assert.equal(isCollaboratorInviteRequest('Add my wife to the Caldwell vacation so she can update it in Telegram'), true);
 assert.equal(isCollaboratorInviteRequest('I want to give my wife the ability to interact and change the vacation just like I am doing.'), true);
 assert.equal(isCollaboratorInviteRequest('Can you send me the link to set her up?'), true);
@@ -24,11 +26,11 @@ assert.equal(isCollaboratorInviteRequest('Please make a checkout link to set Kim
 assert.equal(isCollaboratorInviteRequest('Please add 3 restaurants to day two'), false);
 assert.equal(isCollaboratorInviteRequest('Can you send me the link to the Vegas vacation?'), false);
 
-const checkoutCopy = collaboratorCheckoutCopy();
-assert.match(checkoutCopy, /\$27/);
+const checkoutCopy = collaboratorCheckoutCopy({ env: priceEnv });
+assert.doesNotMatch(checkoutCopy, /\$27/);
 assert.doesNotMatch(checkoutCopy, /\$37/);
 assert.match(checkoutCopy, /One vacation: \$15/);
-assert.match(checkoutCopy, /All vacations: \$27/);
+assert.match(checkoutCopy, /All vacations: \$19/);
 assert.match(checkoutCopy, /owner-approved email magic link/i);
 
 const deniedCopy = collaboratorDeniedCopy();

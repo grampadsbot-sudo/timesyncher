@@ -7,13 +7,14 @@ assert.throws(() => checkoutAmounts({}), /checkout config missing: TIMESYNCHER_O
 assert.equal(checkoutAmounts({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }).orderBump, 1900);
 
 const unconfigured = {};
-assert.equal(planSeatDollars(unconfigured), null);
-assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '' }), null);
-assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '0' }), null);
-assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700' }), 27);
-assert.equal(payerPriceLine('I pay for Ada.', unconfigured), '');
+const missingPrice = (error) => error?.name === 'CheckoutConfigError' && /TIMESYNCHER_ORDER_BUMP_PRICE_CENTS/.test(error.message);
+assert.throws(() => planSeatDollars(unconfigured), missingPrice);
+assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '' }), missingPrice);
+assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '0' }), missingPrice);
+assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 19);
+assert.throws(() => payerPriceLine('I pay for Ada.', unconfigured), missingPrice);
 assert.equal(payerPriceLine('I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 'Ada $19, paid by you');
-assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', unconfigured), false);
+assert.throws(() => priceAnswered('Ada $19, paid by you', 'I pay for Ada.', unconfigured), missingPrice);
 assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
 
 const prompt = replyRulesSystem({}, 'Rio', 'forbidden', false, 'What day works for Ada?', {

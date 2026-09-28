@@ -1,8 +1,10 @@
+import { CheckoutConfigError, requiredConfigCents } from './checkout-pricing.mjs';
+
 export function planSeatDollars(env = process.env) {
-  const cents = Number(String(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS ?? '').trim());
-  if (!Number.isFinite(cents) || cents <= 0) return null;
+  const cents = requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
   const dollars = Math.round(cents / 100);
-  return dollars > 0 ? dollars : null;
+  if (dollars <= 0) throw new CheckoutConfigError('TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+  return dollars;
 }
 
 export function payerSeats(customerTurn) {
@@ -32,7 +34,6 @@ export function payerPriceLine(customerTurn, env = process.env) {
   const seats = payerSeats(customerTurn);
   if (!seats.length) return '';
   const dollars = planSeatDollars(env);
-  if (!(Number(dollars) > 0)) return '';
   return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 

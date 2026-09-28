@@ -5,6 +5,7 @@ import {
   loadDefaultEulaText,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
+import { requiredConfigCents } from './checkout-pricing.mjs';
 
 export const COLLABORATOR_PLANS = {
   telegram_collaborators_single_trip: {
@@ -16,15 +17,27 @@ export const COLLABORATOR_PLANS = {
   telegram_collaborators_unlimited_trips: {
     code: 'telegram_collaborators_unlimited_trips',
     scope: 'unlimited_trips',
-    amountCents: 2700,
     maxActiveCollaborators: 1,
   },
 };
 
-export function collaboratorPlan(codeOrScope = 'single_trip') {
-  if (COLLABORATOR_PLANS[codeOrScope]) return COLLABORATOR_PLANS[codeOrScope];
+function dollarsLabel(cents) {
+  const dollars = cents / 100;
+  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+}
+
+function withConfiguredAmount(plan, env) {
+  if (plan.scope !== 'unlimited_trips') return plan;
+  return {
+    ...plan,
+    amountCents: requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'),
+  };
+}
+
+export function collaboratorPlan(codeOrScope = 'single_trip', env = process.env) {
+  if (COLLABORATOR_PLANS[codeOrScope]) return withConfiguredAmount(COLLABORATOR_PLANS[codeOrScope], env);
   if (codeOrScope === 'single_trip') return COLLABORATOR_PLANS.telegram_collaborators_single_trip;
-  if (codeOrScope === 'unlimited_trips') return COLLABORATOR_PLANS.telegram_collaborators_unlimited_trips;
+  if (codeOrScope === 'unlimited_trips') return withConfiguredAmount(COLLABORATOR_PLANS.telegram_collaborators_unlimited_trips, env);
   throw new Error(`Unsupported Telegram collaborator plan: ${codeOrScope}`);
 }
 
@@ -44,13 +57,14 @@ export function hashToken(token, env = process.env) {
   return crypto.createHash('sha256').update(`${salt}:${token}`).digest('hex');
 }
 
-export function collaboratorCheckoutCopy({ singleUrl = '', unlimitedUrl = '' } = {}) {
+export function collaboratorCheckoutCopy({ singleUrl = '', unlimitedUrl = '', env = process.env } = {}) {
+  const unlimitedCents = requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
   return [
     'Telegram editing for another person is a paid TimeSyncher Vacation add-on.',
     '',
     'Options:',
     `One vacation: $15${singleUrl ? `\n${singleUrl}` : ''}`,
-    `All vacations: $27${unlimitedUrl ? `\n${unlimitedUrl}` : ''}`,
+    `All vacations: ${dollarsLabel(unlimitedCents)}${unlimitedUrl ? `\n${unlimitedUrl}` : ''}`,
     '',
     'The shared vacation website stays view-only for anyone with only the public URL. Owners and paid Telegram collaborators can edit when they open from Telegram; non-Telegram website invitees use an owner-approved email magic link.',
   ].join('\n');
@@ -351,7 +365,7 @@ export async function countActiveCollaborators(db, ownerCustomerId) {
 }
 
 export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {}, env = process.env }) {
-  const plan = collaboratorPlan(planCode);
+  const plan = collaboratorPlan(planCode, env);
   const token = collaboratorToken();
   const rows = await db`
     insert into vacation_collaborator_invites (

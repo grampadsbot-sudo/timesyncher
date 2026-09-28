@@ -13,7 +13,7 @@ function siteBase(env = process.env) {
 }
 
 export async function createCollaboratorCheckout({ db, stripe, env = process.env, ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {} }) {
-  const plan = collaboratorPlan(clean(planCode || 'single_trip', 80));
+  const plan = collaboratorPlan(clean(planCode || 'single_trip', 80), env);
   const ownerId = clean(ownerCustomerId, 80);
   const normalizedTripId = clean(tripId, 80);
   if (!ownerId) throw Object.assign(new Error('ownerCustomerId is required.'), { statusCode: 400 });

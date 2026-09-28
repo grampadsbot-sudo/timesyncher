@@ -1,17 +1,27 @@
 const DEFAULT_BASE_PRICE_CENTS = 3700;
 const DEFAULT_PHOTO_MEMORIES_PRICE_CENTS = 500;
 
+export class CheckoutConfigError extends Error {
+  constructor(configName) {
+    super(`checkout config missing: ${configName}`);
+    this.name = 'CheckoutConfigError';
+    this.configName = configName;
+  }
+}
+
 function intFromEnv(value, fallback) {
   const parsed = Number.parseInt(String(value || ''), 10);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function requiredOrderBumpCents(value) {
+export function requiredConfigCents(value, configName) {
   const parsed = Number.parseInt(String(value ?? '').trim(), 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error('checkout config missing: TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
-  }
+  if (!Number.isFinite(parsed) || parsed <= 0) throw new CheckoutConfigError(configName);
   return parsed;
+}
+
+function requiredOrderBumpCents(value) {
+  return requiredConfigCents(value, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
 }
 
 export function checkoutCurrency(env = process.env) {
