@@ -21,7 +21,7 @@ import {
   sharedTripWebsiteUrl,
 } from '../src/vacation/web-access.mjs';
 import { INITIAL_BUILD_CUE, persistIntakeTurnToGbrain } from '../src/vacation/tg-intake-gbrain.mjs';
-import { classifyTripIntake } from '../src/vacation/trip-intake-classify.mjs';
+import { classifyTripIntake, tripIntakeConfig } from '../src/vacation/trip-intake-classify.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
 const MAX_VIDEOS_PER_VACATION = 20;
@@ -2066,7 +2066,7 @@ export default async function handler(req, res) {
       reply = firstTripDetailsAck({ queued });
     } else if (session?.customer_id && !hasVacationIdentity(session)) {
       const saved = await saveVacationIdentity(db, session, text);
-      const extraction = await classifyTripIntake({ text, env: process.env });
+      const extraction = await classifyTripIntake({ text, ...tripIntakeConfig() });
       const extractedFields = {
         destination: extraction.ok ? extraction.destination : '',
         hasDates: extraction.ok === true && extraction.hasDates === true,
