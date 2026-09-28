@@ -1720,21 +1720,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
-    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true });
-    if (interim.text && !appTextBanned(interim.text)) {
-      reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
-      model = {
-        called: true,
-        via: 'openrouter-chat',
-        responseModel: INTERIM_MODEL,
-        modelTier: 1,
-        text: reply,
-        genLatencyMs: interim.ms,
-        maxTokens: 900,
-      };
-    }
-  }
-  if (!reply || appTextBanned(reply)) {
     return {
       reply: null,
       rules,
