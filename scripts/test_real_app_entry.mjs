@@ -54,13 +54,13 @@ assert.equal(shared.permissions.share_budget, true);
 assert.equal(shared.budget.length, 1);
 assert.equal(shared.budget[0].total_price, null);
 const padded = padKeepsakeSharedPlaces(shared);
-const count = (name) => padded.places.filter((place) => place.category_name === name).length;
-assert.ok(count('Restaurant') >= 15, `restaurants ${count('Restaurant')}`);
-assert.ok(count('Store') >= 10, `stores ${count('Store')}`);
-assert.ok(count('Attraction') >= 15, `attractions ${count('Attraction')}`);
-assert.equal(padded.places.some((place) => /Mon Ami Gabi|CATCH|Crystals|High Roller|Las Vegas/i.test(`${place.name} ${place.address}`)), false);
-assert.ok(padded.places.some((place) => place.name === "Huggo's"));
-assert.ok(padded.places.filter((place) => place.__tsKeepsakeFill === 1).every((place) => place.lat < 21 && place.lat > 18 && place.lng < -154));
+assert.deepEqual(padded.places.map((place) => place.name), ['Swim', 'Kailua-Kona house']);
+assert.equal(padded.places.some((place) => place.__tsKeepsakeFill), false);
+const otherTrip = padKeepsakeSharedPlaces({
+  timesyncherIntake: false,
+  places: [{ id: 1, name: 'Only real restaurant', category_name: 'Restaurant' }],
+});
+assert.deepEqual(otherTrip.places.map((place) => place.name), ['Only real restaurant']);
 const email = purchaseEmail({
   contact: { firstName: 'Verify' },
   publicSlug: 'intake-eab1cbb15144',
