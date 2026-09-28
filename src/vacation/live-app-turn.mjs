@@ -9,7 +9,6 @@ import {
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
-import { customerInputState } from './intake-shared-trip.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
@@ -442,11 +441,23 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
-    ...customerInputState(things),
+    ...customerInputFields(record),
   };
   if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
+}
+
+function customerInputFields(record) {
+  if (!record || typeof record !== 'object') return {};
+  const fields = {};
+  if (Array.isArray(record.needsCustomerInput)) {
+    const needsCustomerInput = record.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
+    if (needsCustomerInput.length) fields.needsCustomerInput = needsCustomerInput;
+  }
+  const flightAsk = String(record.flightAsk || '').trim();
+  if (flightAsk) fields.flightAsk = flightAsk;
+  return fields;
 }
 
 export function qualityFailureReason(quality, flags) {
@@ -1630,6 +1641,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     planOwned: saved?.planOwned === true,
     rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
+    ...customerInputFields(saved),
   };
 }
 
