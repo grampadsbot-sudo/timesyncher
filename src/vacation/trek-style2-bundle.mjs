@@ -1,7 +1,10 @@
 import { PRODUCT_THING_FIELDS } from './keepsake-product-overrides.mjs';
 import { logoLookupRuntimeSource } from './thing-logo-capture.mjs';
 
-const TRAVEL_BUNDLE = 'https://travel.timesyncher.com/assets/index-BKun7ofk.js';
+import { readFile } from 'node:fs/promises';
+import { assertServedBundleClean, stripCannedBundle, SERVED_SO } from '../../scripts/strip-served-trek-bundle.mjs';
+
+const TRAVEL_BUNDLE = new URL('../../public/assets/upstream/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
@@ -22,7 +25,7 @@ const HC_QR_NEEDLE = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`'
 const HC_QR_PATCH = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}&m=1`';
 
 const SO_NEEDLE = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
-const SO_PATCH = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";if(/^data:|^blob:/i.test(Re))return Re;try{const zt=(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com",ua=new URL(Re,zt);if(/\\/ts-thing-media\\/|\\/api\\/bind-thing-media\\b/i.test(ua.pathname+ua.search))return`${zt}${ua.pathname}${ua.search}${ua.hash}`;return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
+const SO_PATCH = SERVED_SO;
 
 const BA_NEEDLE = '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`';
 const BA_PATCH = '`<figure class="print-media-card" data-print-media="bound"><img src="${an(So(G.printDataUrl||G.print_data_url||G.dataUrl||G.url||G.publicUrl||G.public_url||G.thumbnailUrl))}" alt="${an(Re)}" style="width:100%;max-width:100%;height:auto;max-height:110px;object-fit:contain" /><figcaption>${an(Re)}</figcaption></figure>`';
@@ -148,7 +151,7 @@ const RP_NEEDLE = 'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:
 const RP_PATCH = 'return{id:Pn,kind:ms(G),url:(G&&(G.printDataUrl||G.print_data_url||G.dataUrl))||Rn,thumbnailUrl:(G&&(G.printDataUrl||G.print_data_url||G.dataUrl))||os(G,Rn),printDataUrl:G&&(G.printDataUrl||G.print_data_url||G.dataUrl)||undefined,print_data_url:G&&(G.print_data_url||G.printDataUrl||G.dataUrl)||undefined,caption:Zn';
 
 const DOC_TITLE_TOKEN_NEEDLE = 'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")';
-const DOC_TITLE_TOKEN_PATCH = 'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title=(P&&P.trip&&P.trip.title||"Vacation").replace(/^TimeSyncher Vacation\\s*[—–-]\\s*/i,"").trim()||"Vacation")';
+const DOC_TITLE_TOKEN_PATCH = 'void 0';
 
 
 const THING_BREAK_NEEDLE = '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}';
@@ -524,6 +527,13 @@ export function patchStyleTwoToConfigRenderer(source = '') {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
   return stripTripView(hideUnsourcedRatings(patched));
+}
+
+export function renderServedTrekBundle(raw) {
+  const stripped = stripCannedBundle(raw);
+  const js = patchStyleTwoToConfigRenderer(stripped.source);
+  assertServedBundleClean(js);
+  return js;
 }
 
 function stripTripView(source) {
@@ -941,17 +951,18 @@ export function assertPatchedStyleTwo(source = '') {
 }
 
 export default async function handler(req, res) {
-  const response = await fetch(TRAVEL_BUNDLE, { headers: { accept: 'application/javascript,*/*' } });
-  if (!response.ok) {
-    res.statusCode = 502;
+  let source;
+  try {
+    source = await readFile(TRAVEL_BUNDLE, 'utf8');
+  } catch (error) {
+    res.statusCode = 500;
     res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(`Unable to fetch product TREK bundle (${response.status}).`);
+    res.end(error.message || 'Local TREK bundle is missing.');
     return;
   }
-  const source = await response.text();
   let patched;
   try {
-    patched = patchStyleTwoToConfigRenderer(source);
+    patched = renderServedTrekBundle(source);
     assertPatchedStyleTwo(patched);
   } catch (error) {
     res.statusCode = 500;

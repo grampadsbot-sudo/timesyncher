@@ -29,7 +29,7 @@ import {
   styleOneLocationStaysOnStaging,
 } from '../src/vacation/keepsake-style2-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
-import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
+import { patchStyleTwoToConfigRenderer, renderServedTrekBundle, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
@@ -633,7 +633,7 @@ const aeFixture = [
   '.daily-page{break-after:page;page-break-after:always;min-height:100vh}',
   'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()',
   'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn',
-  'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")',
+  'void 0',
   '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}',
   '.style2-details{display:grid;grid-template-columns:1fr;gap:10px}',
 ].join('\n');
@@ -894,10 +894,10 @@ for (const name of boundPhotos) {
   assert.equal(bytes[0], 0xff);
   assert.equal(bytes[1], 0xd8);
 }
-const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
-assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
-const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
+const localBundle = await readFile(new URL('../public/assets/upstream/index-BKun7ofk.js', import.meta.url), 'utf8');
+const livePatched = renderServedTrekBundle(localBundle);
 assertPatchedStyleTwo(livePatched);
+assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
 assert.equal(livePatched.includes('children:"Trip View"'), false);
 assertStyleTwoPatchParses(livePatched);
 const patchedCheckPath = '/tmp/patched-style2-check.js';

@@ -1,0 +1,17 @@
+TimeSyncher Vacation serves a modified TREK client.
+
+Upstream: liketrek/TREK (formerly mauriceboe/TREK)
+Tag: v3.0.22
+Commit: e27be5c965af0df4b1b81c9176ac4c01d783e3ab
+License: GNU Affero General Public License version 3 (LICENSE in this directory)
+
+index-BKun7ofk.js and index-CbEHlMj6.css are the unmodified bytes pulled once
+for this repository. They already include unpublished TimeSyncher edits on top
+of that TREK commit. The copy that browsers load is not these files. The build
+reads them, strips canned fallback text, applies the Style two rewrite, and
+writes the result to public/assets/index-BKun7ofk.js and index-CbEHlMj6.css.
+
+Pulled file records:
+
+- index-BKun7ofk.js: 6693404 bytes, sha256 014eedf20ccfdf2694bdf0c89aec4ddc20db93748872359208695616a9f3c198
+- index-CbEHlMj6.css: 156918 bytes, sha256 b50badbf987ebe908b3886f89e13b5ddea416c01b1cad4c111f7fcbe0e3419fd
