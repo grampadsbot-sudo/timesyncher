@@ -462,9 +462,8 @@ function customerInputFields(record) {
 
 export function qualityFailureReason(quality, flags) {
   const parts = [];
-  if (flags?.missingPrice) parts.push('missing per-payer dollar line');
+  if (flags?.missingPrice) parts.push('missing dollar line');
   if (flags?.invented?.length) parts.push(`invented place: ${flags.invented.join(', ')}`);
-  if (flags?.split) parts.push('banned payment word');
   if (flags?.missingAccess) parts.push('missing view access and edit access');
   const focus = String(quality?.jevFocus || '').trim();
   if (focus && focus !== 'keep') parts.push(`jev fix_focus ${focus}`);
@@ -1033,7 +1032,7 @@ export function draftFactErrors(reply, facts = {}) {
     }
   }
   if (/no extra charge|no extra cost|at no extra/i.test(body)) {
-    pushError(errors, 'no extra charge is not in what the customer set');
+    pushError(errors, 'no extra is not in what the customer set');
   }
   if (/\b(?:we|i)(?:'|’)ve corrected\b|\b(?:we|i) have corrected\b/i.test(body)) {
     pushError(errors, 'the reply invented a correction');
@@ -1766,7 +1765,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
     const nudge = customerAsksPrice(customerTurn, intent)
-      ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
+      ? `${customerTurn}\n\nAnswer with the dollar amount for each person: ${planLine || 'the configured amount'}. Do not add a second collaborator welcome.`
       : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -2120,12 +2119,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID).',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
-        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
-        'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
+        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
+        'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip.',
         'Do not say the unlimited plan is already owned.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
-          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
+          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
           : '',
       ].filter(Boolean).join(' '),
     });

@@ -623,13 +623,13 @@ const JEV_CUSTOMER_ISSUE_TAGS = {
   lodging: 'Hotels, resorts, rooms, lodging, check-in/check-out, or where to stay.',
   flights: 'Flights, airlines, airports, timing, layovers, or airfare.',
   cars_transport: 'Rental cars, Uber/Lyft, taxis, trains, shuttles, parking, or local transport.',
-  restaurants_food: 'Restaurants, meals, bars, coffee, reservations, food style, or cuisine.',
+  restaurants_food: 'Restaurants, meals, bars, coffee, food style, or cuisine.',
   activities_experiences: 'Activities, tours, shows, museums, beaches, hikes, events, tickets, or experiences.',
   shopping: 'Shopping, stores, markets, boutiques, groceries, or souvenirs.',
   media_upload: 'Photos, videos, media upload, attaching media to a vacation, or media add-ons.',
   collaborator_access: 'Another person viewing, editing, collaborating, uploading, or using Telegram/web access.',
   website_link: 'Shared itinerary link, website access, login link, app/site URL, or opening the vacation page.',
-  account_plan_access: 'Paid plan, entitlement, checkout, coupon, billing, refund, remaining vacations, or account state.',
+  account_plan_access: 'Paid plan, entitlement, coupon, billing, refund, remaining vacations, or account state.',
   product_support: 'How TimeSyncher works, support, bugs, errors, booking boundaries, or product behavior.',
   approval: 'Approval, acceptance, confirmation, yes/go-ahead/looks-good signal.',
   change_request: 'Explicit request to add, remove, swap, replace, revise, rename, regenerate, or otherwise edit.',
@@ -646,7 +646,7 @@ const JEV_VACATION_INTENT_QUESTIONS = {
     instructions: 'Classify the current TimeSyncher Vacation Telegram customer turn. Choose the safest category based on the current turn and bounded context.',
     criteria: {
       itinerary_action: 'The current turn asks to create, update, refine, split, rename, add to, remove from, or otherwise change vacation itinerary content.',
-      account_question: 'The current turn asks about plan, purchase, access, entitlement, checkout, coupon, remaining vacations, or account state.',
+      account_question: 'The current turn asks about plan, purchase, access, entitlement, coupon, remaining vacations, or account state.',
       support_question: 'The current turn asks how TimeSyncher Vacation works, asks for help, reports a problem, asks about booking boundaries, pricing, website links, or product behavior.',
       media_attachment: 'The current turn attaches or describes media that should be associated with a vacation, assuming deterministic code can resolve the target vacation.',
       approval: 'The current turn approves, accepts, confirms, or says the proposed plan looks good.',
@@ -1071,7 +1071,7 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     'Return only one JSON object. Do not include prose.',
     '',
     'Allowed intents:',
-    '- account_question: asks about purchased plan, access, coupons, checkout, order, entitlement, remaining vacation count.',
+    '- account_question: asks about purchased plan, access, coupons, order, entitlement, remaining vacation count.',
     '- support_question: asks how the product works, pricing, booking boundary, login, support, website URL/link.',
     '- media_upload_question: asks whether/how the owner or collaborator can upload/send/add/attach photos, pictures, videos, or media.',
     '- collaborator_access_question: asks whether a wife, spouse, family member, assistant, or another person can view/edit/change/upload through the vacation.',
@@ -1079,7 +1079,7 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     '- itinerary_action: asks to create, update, refine, research, or modify vacation itinerary content.',
     '',
     'Rules:',
-    '- Questions about ability, access, pricing, checkout, coupons, or media upload are no-write support/account turns.',
+    '- Questions about ability, access, pricing, coupons, or media upload are no-write support/account turns.',
     '- Do not classify a question as itinerary_action just because it names a destination or vacation.',
     '- Use itinerary_action only when the current turn clearly asks to create/change itinerary content.',
     '- write_mode must be none for support/account/media/collaborator/ambiguous turns.',
@@ -1349,14 +1349,16 @@ export function supportReplyFacts({ text, intent, access, env = process.env } = 
   const intentName = cleanText(intent?.intent, 80) || null;
   const linked = Boolean(access?.linked);
   const tripTitle = cleanText(access?.trip?.title, 180) || null;
+  const seatRole = cleanText(access?.telegramWebAccess?.role, 80).toLowerCase();
+  const collaboratorSeat = seatRole === 'telegram_collaborator' || seatRole === 'viewer' || seatRole === 'web_editor' || seatRole === 'editor';
   const facts = {
     customerText: cleanText(text, 2000),
     intent: intentName,
     linked,
     trip: linked ? {
       title: tripTitle,
-      publicUrl: cleanText(access?.trip?.publicUrl || access?.telegramWebAccess?.publicUrl, 800) || null,
-      launchUrl: cleanText(access?.telegramWebAccess?.launchUrl, 800) || null,
+      publicUrl: collaboratorSeat ? null : (cleanText(access?.trip?.publicUrl || access?.telegramWebAccess?.publicUrl, 800) || null),
+      launchUrl: collaboratorSeat ? null : (cleanText(access?.telegramWebAccess?.launchUrl, 800) || null),
       role: cleanText(access?.telegramWebAccess?.role, 80) || null,
     } : null,
   };
@@ -1375,7 +1377,7 @@ export function supportReplyFacts({ text, intent, access, env = process.env } = 
       hasPhotoUpload: Boolean(access?.hasPhotoUpload),
       hasVideoUpload: Boolean(access?.hasVideoUpload),
       allowed,
-      checkoutUrl: linked && !allowed ? ownerMediaCheckoutUrl(access?.session, env) : null,
+      checkoutUrl: !collaboratorSeat && linked && !allowed ? ownerMediaCheckoutUrl(access?.session, env) : null,
     };
     return facts;
   }
@@ -2125,7 +2127,7 @@ export default async function handler(req, res) {
         replyPayload = {
           collaboratorEntitlement: {
             required: true,
-            error: 'checkout link creation failed',
+            error: 'link creation failed',
           },
         };
       }

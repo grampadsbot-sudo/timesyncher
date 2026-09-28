@@ -674,30 +674,28 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const unlimited = plans.find((plan) => text(plan?.scope, 80) === 'unlimited_trips');
   const photo = manifest?.mediaAddOnPolicy?.photoMemories || {};
   const video = manifest?.mediaAddOnPolicy?.videoMemoriesRecommendation || {};
-  const checkout = checkoutBaseUrl(manifest);
   const lines = [];
   if (allVacations) {
     if (unlimited?.amountUsd) lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is $${unlimited.amountUsd}.`);
     else console.error('access price is not configured: unlimited telegram');
-    lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
+    lines.push('That adds one active Telegram collaborator. Add more collaborators one at a time.');
     if (wantsMedia) {
-      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access across all vacations is $${photo.unlimitedVacationsAmountUsd}.`);
+      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access for unlimited vacations for the whole year is $${photo.unlimitedVacationsAmountUsd}.`);
       else console.error('access price is not configured: unlimited photo');
-      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access across all vacations is $${video.unlimitedVacationsAmountUsd}.`);
+      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access for unlimited vacations for the whole year is $${video.unlimitedVacationsAmountUsd}.`);
       else console.error('access price is not configured: unlimited video');
     }
   } else {
-    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for one vacation is $${singleTrip.amountUsd}.`);
+    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for this vacation is $${singleTrip.amountUsd}.`);
     else console.error('access price is not configured: single telegram');
-    lines.push(`That adds one active Telegram collaborator for that vacation. Add more collaborators one checkout at a time.`);
+    lines.push('That adds one active Telegram collaborator for that vacation. Add more collaborators one at a time.');
     if (wantsMedia) {
-      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for one vacation is $${photo.singleVacationAmountUsd}.`);
+      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for this vacation is $${photo.singleVacationAmountUsd}.`);
       else console.error('access price is not configured: single photo');
-      if (video.singleVacationAmountUsd) lines.push(`Video upload access for one vacation is $${video.singleVacationAmountUsd}.`);
+      if (video.singleVacationAmountUsd) lines.push(`Video upload access for this vacation is $${video.singleVacationAmountUsd}.`);
       else console.error('access price is not configured: single video');
     }
   }
-  lines.push(`Add-on checkout link: ${checkout}/addons-checkout.html`);
   return lines.join('\n\n');
 }
 

@@ -390,10 +390,10 @@ function decisionsPayload(context) {
         instructions: 'Which vacation-app reply route should the generator follow?',
         criteria: {
           itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
-          notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
+          notes_where: 'Customer wants to save a note. Day is required and place is optional.',
           access_pricing: 'The customer asked about price, access, or joining as collaborators. Not a day plan that only names family.',
           collab_upsell: 'The one collab assessment, only when the customer asked to join and it has not been given. Do not use this for day advice.',
-          product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
+          product_boundary: 'Product boundary.',
           general: 'Other vacation-app help that still follows the shared reply rules.',
         },
       },
@@ -632,9 +632,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
-    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
-    'Do not mention reservations, payments, or checkout.',
-    'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
+    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}).`,
+    'If one seat is already covered and another person has their own seat, say that.',
     postIntake
       ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
       : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
@@ -643,9 +642,9 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     upsellLine,
     seatDollars && planLine ? `Seat price: $${seatDollars}. State this payer line exactly: ${planLine}.` : '',
     'Do not insert a welcome the customer did not ask for.',
-    seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining. The payer is who paid.` : '',
+    seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
     'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
-    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
+    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
     'You know only what the customer said in chat and what is in the saved trip record. Ask the customer for anything they haven\'t said. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
     'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
     'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
@@ -733,7 +732,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, or says the plan is already owned. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
@@ -741,16 +740,16 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
         instructions: 'Choose keep or rewrite. Return the choice only.',
         criteria: {
           keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
-          rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
+          rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, or skips the price.',
         },
       },
       fix_focus: {
         type: 'choice',
         instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
         criteria: {
-          missing_price: 'Name each seat, the plan dollar amount, and who pays.',
+          missing_price: 'Name each seat and the plan dollar amount.',
           unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
-          payment_wording: 'Name each seat and who pays without a banned payment word.',
+          payment_wording: 'Name each seat and the plan dollar amount.',
           misses_ask: 'Answer the ask and keep the days already named.',
           keep: 'Keep the draft. It answers without adding a place.',
         },

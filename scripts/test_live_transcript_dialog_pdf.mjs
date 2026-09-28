@@ -325,7 +325,7 @@ assert.equal(draftFacts.itinerary.some((line) => /garden/i.test(line) && /Thu Ap
 assert.equal(draftFacts.itinerary.some((line) => /Fri Apr 10/.test(line) && /swim/i.test(line)), false);
 const earlyDraft = draftingFacts([], 'Big Island. Kimberly wants gardens. Tyler wants a swim later in the week. We leave Friday April 3 and come home Sunday April 12.');
 assert.equal(earlyDraft.itinerary.some((line) => /Thu Apr 9|Fri Apr 10/.test(line)), false);
-assert.match(qualityFailureReason({ score: 2, jevFocus: 'missing_price' }, { missingPrice: true, invented: [], split: false, missingAccess: false }), /missing per-payer dollar line/);
+assert.match(qualityFailureReason({ score: 2, jevFocus: 'missing_price' }, { missingPrice: true, invented: [], split: false, missingAccess: false }), /missing dollar line/);
 const loadedAttempts = liveTranscriptFromRows({
   session: { token: 'tok', display_name: 'Craig' },
   rows: [{
