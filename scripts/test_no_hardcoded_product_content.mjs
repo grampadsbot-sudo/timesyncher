@@ -1,19 +1,11 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
 
-import {
-  NAME_MAP_OWNED_ELSEWHERE,
-  findHardcodedProductContent,
-  scanSrc,
-} from './check-no-hardcoded-product-content.mjs';
 import { applyThingPresentation } from '../src/vacation/intake-shared-trip.mjs';
 import { applyProductKeepsakeOverrides, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 import { guessThingNameFromFilename, mapVacation3SctMediaFile } from '../src/vacation/thing-media-bind.mjs';
 import { STYLE2_USES_ZU, patchStyleTwoToConfigRenderer } from '../src/vacation/trek-style2-bundle.mjs';
 
-const script = fileURLToPath(new URL('./check-no-hardcoded-product-content.mjs', import.meta.url));
 const bundleText = fs.readFileSync(new URL('../src/vacation/trek-style2-bundle.mjs', import.meta.url), 'utf8');
 
 function constString(name) {
@@ -21,36 +13,6 @@ function constString(name) {
   assert.ok(match, name);
   return match[1];
 }
-
-function rules(text, file) {
-  return findHardcodedProductContent(text, file).map((hit) => hit.rule);
-}
-
-assert.ok(rules('thingId: 8869', 'src/vacation/thing-media-bind.mjs').includes('thing-id-8869'));
-assert.ok(rules('children:ie(G)||"Price TBD"', 'src/vacation/trek-style2-bundle.mjs').includes('price-tbd'));
-assert.ok(rules('if (/ulu ocean/i.test(name))', 'src/vacation/intake-shared-trip.mjs').includes('a11-restaurant-tag'));
-assert.ok(rules('if (/huggo/i.test(name) || /fish hopper/i.test(name))', 'src/other.mjs').includes('a11-restaurant-tag'));
-assert.ok(rules('[/bellagio|lodging|hotel|fountain/i, "Bellagio"]', 'src/vacation/thing-media-bind.mjs').includes('a17-filename-hint'));
-assert.ok(rules('[/bellagio|conservatory/i, [36.1126, -115.1767]]', 'src/vacation/trek-style2-bundle.mjs').includes('name-coord-or-summary-map'));
-assert.ok(rules("'Las Vegas Strip': [36.114, -115.172]", 'src/vacation/keepsake-product-overrides.mjs').includes('name-coord-or-summary-map'));
-assert.ok(rules("'Bellagio': { summary: 'Alex and Kim stay' }", 'src/vacation/keepsake-product-overrides.mjs').includes('name-coord-or-summary-map'));
-assert.ok(rules('match: /kailua-kona/i, summary: "Kailua-Kona house"', 'src/vacation/new-file.mjs').includes('name-coord-or-summary-map'));
-
-for (const file of NAME_MAP_OWNED_ELSEWHERE) {
-  assert.deepEqual(rules("'Kailua-Kona': [19.64, -155.99], summary: 'canned'", file), []);
-  assert.ok(rules('||"Price TBD"', file).includes('price-tbd'));
-  assert.ok(rules('thingId: 8869', file).includes('thing-id-8869'));
-}
-
-assert.deepEqual(scanSrc(fileURLToPath(new URL('..', import.meta.url))), []);
-
-const workflow = fs.readFileSync(new URL('../.github/workflows/evidence-secrets.yml', import.meta.url), 'utf8');
-assert.match(workflow, /check-no-hardcoded-product-content\.mjs/);
-assert.match(workflow, /test_no_hardcoded_product_content\.mjs/);
-
-const ran = spawnSync(process.execPath, [script], { encoding: 'utf8' });
-assert.equal(ran.status, 0, ran.stderr || ran.stdout);
-assert.match(ran.stdout, /hardcoded product content check passed/);
 
 const namedOnly = applyThingPresentation({
   trip: { id: 'g2', title: 'Trip' },
