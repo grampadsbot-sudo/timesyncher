@@ -1,7 +1,5 @@
 import {
-  inferThingTypeFromText,
   isAirplaneGlyph,
-  looksLikeFlightText,
   resolveThingType,
   sanitizeTimelineGlyph,
   thingLogoUrl,
@@ -62,18 +60,13 @@ const withLogo = {
   image_url: 'https://example.com/carbone.png',
 };
 
-assert(!looksLikeFlightText('Carbone at Aria, Las Vegas'), 'Las Vegas restaurant text is not a flight');
-assert(!looksLikeFlightText('Cosmopolitan shops, The Cosmopolitan, Las Vegas'), 'Las Vegas store text is not a flight');
-assert(looksLikeFlightText('SFO to LAS Thu Oct 9'), 'SFO to LAS is a flight');
-assert(looksLikeFlightText('LAS to SFO Sun Oct 12'), 'LAS to SFO is a flight');
-assert(inferThingTypeFromText('Las Vegas Strip Shake Shack') !== 'flight', 'Strip restaurant does not infer flight');
-
 assert(timelineIcon(carbone).icon === '🍽️', 'Carbone uses restaurant icon');
 assert(timelineIcon(carbone).isFlight === false, 'Carbone is not a flight');
 assert(timelineIcon(shake).icon === '🍽️', 'Shake Shack uses restaurant icon');
 assert(timelineIcon(shops).icon === '🛍️', 'Cosmopolitan shops uses store icon');
-assert(timelineIcon(outbound).icon === '✈️', 'Outbound flight keeps airplane');
-assert(timelineIcon(inbound).icon === '✈️', 'Return flight keeps airplane');
+assert(timelineIcon(outbound).icon === '🚕', 'transport category stays transport');
+assert(timelineIcon(inbound).icon === '🚕', 'return transport stays transport');
+assert(timelineIcon({ name: 'Thursday departure', category_name: 'Flight' }).icon === '✈️', 'flight category uses airplane');
 assert(timelineIcon(lodging, { category: 'hotel' }).icon === '🧳', 'Hotel override uses lodging icon');
 assert(timelineIcon(conservatory, { category: 'other' }).icon === '🏛️', 'other override does not beat Attraction');
 assert(timelineIcon(carbone, { category: 'other' }).icon === '🍽️', 'other override does not beat Restaurant');
@@ -88,9 +81,12 @@ assert(sanitizeTimelineGlyph('✈️', 'restaurant') === '🍽️', 'sanitize st
 assert(sanitizeTimelineGlyph('✈️', 'flight') === '✈️', 'sanitize keeps airplane on flights');
 assert(isAirplaneGlyph('✈️') === true, 'airplane glyph detected');
 assert(timelineIcon({ name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction' }).isFlight === false, 'research queue is not a flight');
-assert(inferThingTypeFromText('Bellagio') === '', 'brand name does not invent a hotel');
-assert(inferThingTypeFromText('Marriott downtown') === '', 'brand name does not invent a hotel');
-assert(inferThingTypeFromText('Carbone') === '', 'brand name does not invent a restaurant');
+assert(resolveThingType({ name: 'Bellagio' }) === 'other', 'a name alone has no icon type');
+assert(resolveThingType({ name: 'SFO to LAS Thu Oct 9' }) === 'other', 'airport text alone is not a flight');
+assert(resolveThingType({ name: 'Hertz downtown' }) === 'other', 'a rental name alone is not a car');
+assert(resolveThingType(outbound) === 'transport', 'transport category is not upgraded from the name');
 assert(resolveThingType({ name: 'Bellagio', category_name: 'Hotel' }) === 'hotel', 'source category selects the icon');
+assert(resolveThingType({ name: 'SFO to LAS Thu Oct 9', category_name: 'Flight' }) === 'flight', 'flight category selects the icon');
+assert(resolveThingType({ name: 'Hertz downtown', category_name: 'Car' }) === 'car', 'car category selects the icon');
 
 console.log('timeline icon tests passed');

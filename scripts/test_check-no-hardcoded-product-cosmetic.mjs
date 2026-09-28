@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { captureThingLogo, sourceLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
-import { inferThingTypeFromText, resolveThingType } from '../src/vacation/timeline-icons.mjs';
+import { resolveThingType } from '../src/vacation/timeline-icons.mjs';
 import { sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 
 assert.equal(captureThingLogo({ name: 'Sample Place' }, { title: 'Sample Place' }), '');
@@ -10,9 +10,12 @@ assert.equal(sourceLogoUrl({ source: { favicon: 'https://cdn.example/favicon.ico
 assert.equal(sourceLogoUrl({ website: 'https://cafe.example/menu' }), 'https://cafe.example/favicon.ico');
 assert.equal(sourceLogoUrl({ website: 'https://maps.google.com/maps?q=place' }), '');
 
-assert.equal(inferThingTypeFromText('Bellagio'), '');
-assert.equal(inferThingTypeFromText('Marriott'), '');
+assert.equal(resolveThingType({ name: 'Bellagio' }), 'other');
+assert.equal(resolveThingType({ name: 'SFO to LAS Thu Oct 9' }), 'other');
+assert.equal(resolveThingType({ name: 'Hertz downtown' }), 'other');
 assert.equal(resolveThingType({ name: 'Bellagio', category_name: 'Hotel' }), 'hotel');
+assert.equal(resolveThingType({ name: 'SFO to LAS Thu Oct 9', category_name: 'Flight' }), 'flight');
+assert.equal(resolveThingType({ name: 'Hertz downtown', category_name: 'Car' }), 'car');
 
 const tripId = 'eab1cbb1-5144-4be4-b856-92f0a3769db3';
 const unlabeled = sharedTripFromIntake({
@@ -40,6 +43,10 @@ const order = fs.readFileSync(new URL('../order-test.html', import.meta.url), 'u
 const app = fs.readFileSync(new URL('../vacation-app.html', import.meta.url), 'utf8');
 assert.match(index, /placeholder="City"/);
 assert.match(order, /placeholder="City"/);
+assert.match(index, /name="state"[^>]*placeholder="State"/);
+assert.match(order, /name="state"[^>]*placeholder="State"/);
+assert.match(index, /name="zip"[^>]*placeholder="ZIP"/);
+assert.match(order, /name="zip"[^>]*placeholder="ZIP"/);
 assert.doesNotMatch(app, /vegas anniversary/i);
 
 console.log('product cosmetic behavior tests passed');

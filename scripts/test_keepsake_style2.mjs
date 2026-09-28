@@ -95,8 +95,7 @@ assert.equal(logos.thingOverrides['place:8872'].logoUrl, '');
 assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
-assert.doesNotMatch(captureThingLogo({ name: 'High Roller' }, {}), /data:image\/svg/);
-assert.doesNotMatch(captureThingLogo({ name: 'High Roller' }, {}), /thing-logos/);
+assert.equal(captureThingLogo({ name: 'High Roller' }, {}), '');
 
 const LETTER_TILE_RE = /<text\b[^>]*>\s*[A-Za-z0-9]{1,3}\s*<\/text>/i;
 const GENERIC_BAG_RE = /M26 24a6 6 0 0 1 12 0|M24 28a8 8 0 0 1 16 0/;
@@ -134,7 +133,6 @@ const paddedLogos = applyCapturedLogos(shared);
 for (const place of paddedLogos.places) {
   const logo = paddedLogos.thingOverrides[`place:${place.id}`]?.logoUrl || '';
   assert.equal(logo, '', `padded ${place.name} has no name-mapped logo`);
-  assert.doesNotMatch(String(logo), /data:image\/svg\+xml|thing-logos/, `padded ${place.name} is not a canned logo`);
 }
 
 const summary = realTripSummary(shared);
@@ -172,7 +170,8 @@ assert.doesNotMatch(html, /carbone\.svg|shake-shack\.svg|cosmopolitan-shops\.svg
 assert.doesNotMatch(html, /brought together your day-by-day plan/);
 assert.match(html, /data-icon-type="restaurant"/);
 assert.match(html, /data-icon-type="store"/);
-assert.match(html, /data-icon-type="flight"/);
+assert.match(html, /data-thing-id="8877" data-icon-type="transport"/);
+assert.doesNotMatch(html, /data-icon-type="flight"/);
 
 const page1 = html.match(/data-page="1"[\s\S]*?<\/section>/)[0];
 assert.match(page1, /data-trip-directory="1"/);
@@ -501,7 +500,7 @@ assert.equal(liveOverride.thingOverrides['place:8872'].category, 'restaurant');
 assert.equal(liveOverride.thingOverrides['place:8876'].category, 'store');
 assert.equal(liveOverride.thingOverrides['place:8873'].category, 'restaurant');
 assert.equal(liveOverride.thingOverrides['place:8869'].category, 'hotel');
-assert.equal(liveOverride.thingOverrides['place:8877'].category, 'flight');
+assert.equal(liveOverride.thingOverrides['place:8877'].category, 'transport');
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'restaurant');
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'store');
 assert.ok(liveOverride.thingOverrides['place:8872'].lat);

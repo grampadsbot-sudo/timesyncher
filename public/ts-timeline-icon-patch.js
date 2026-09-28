@@ -14,15 +14,6 @@
     return String(value || '').trim();
   }
 
-  function looksLikeFlight(place, override) {
-    const category = text(place?.category_name || override?.category || place?.category?.name).toLowerCase();
-    if (category) return category.includes('flight');
-    const source = `${place?.name || ''} ${override?.title || ''} ${place?.address || ''}`;
-    return /\bflight\b|airport|jetblue|southwest|american airlines|\bdelta\b/i.test(source)
-      || /\b(sfo|jfk|lga|ewr|lax|ord|dfw)\b/i.test(source)
-      || /\b[A-Z]{3}\s+to\s+[A-Z]{3}\b/.test(source);
-  }
-
   function categoryIcon(type) {
     if (type === 'flight') return '✈️';
     if (type === 'hotel') return '🧳';
@@ -48,7 +39,6 @@
     else if (name.includes('attract') || name.includes('activit')) type = 'attraction';
     else if (name.includes('transport')) type = 'transport';
     else if (name.includes('bar') || name.includes('cocktail')) type = 'bar';
-    else if (looksLikeFlight(place, override)) type = 'flight';
     if (!type) type = 'other';
     const icon = categoryIcon(type);
     return { type, icon, logoUrl, isFlight: type === 'flight' };

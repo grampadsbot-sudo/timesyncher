@@ -1,7 +1,5 @@
 import { timelineIcon, timelineCategoryIcon } from './timeline-icons.mjs';
 
-const CANNED_LOGO_DIR = `/ts-${'thing-logos'}/`;
-
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;
 const PLACEHOLDER_LOGO_RE = /admit\s*one|pDe|family-event-placeholder|data:image\/svg\+xml/i;
 
@@ -12,8 +10,7 @@ export function isBoundStoryMediaUrl(value = '') {
 export function isPlaceholderLogoUrl(value = '') {
   const src = String(value || '').trim();
   if (!src) return true;
-  if (src.includes(CANNED_LOGO_DIR)) return false;
-  if (PLACEHOLDER_LOGO_RE.test(src) && !src.includes(CANNED_LOGO_DIR)) return true;
+  if (PLACEHOLDER_LOGO_RE.test(src)) return true;
   if (src.startsWith('data:image/svg+xml')) return true;
   return false;
 }
@@ -45,7 +42,7 @@ function httpUrl(value) {
 
 function usableLogo(value) {
   const src = text(value);
-  if (!src || isBoundStoryMediaUrl(src) || isPlaceholderLogoUrl(src) || src.includes(CANNED_LOGO_DIR)) return '';
+  if (!src || isBoundStoryMediaUrl(src) || isPlaceholderLogoUrl(src)) return '';
   const parsed = httpUrl(src);
   if (parsed) return parsed.href;
   if (src.startsWith('/')) return src;
