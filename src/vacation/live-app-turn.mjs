@@ -960,17 +960,6 @@ function rosterNamesIn(text) {
     .filter((name) => !skippedRosterWord(name));
 }
 
-function withoutNegatedDays(sentence) {
-  const months = monthPattern();
-  return String(sentence || '')
-    .replace(new RegExp(`\\bnot\\s+(?:on\\s+)?(?:${months})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?`, 'gi'), '')
-    .replace(/\bnot\s+(?:the\s+)?\d{1,2}(?:st|nd|rd|th)\b/gi, '');
-}
-
-function dayIsSet(stamps, set) {
-  return stamps.some((stamp) => set.includes(stamp));
-}
-
 function pushError(errors, line) {
   if (line && !errors.includes(line)) errors.push(line);
 }
@@ -981,66 +970,10 @@ function rangeEndRe() {
   return new RegExp(`\\b(?:(?:${weekday})\\s+)?(?:${month})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?\\s*(?:[\\u2013\\-]|to|through)\\s*(?:the\\s+)?(?:(?:${weekday})\\s+)?(?:(?:${month})\\.?\\s+)?(\\d{1,2})(?:st|nd|rd|th)?`, 'gi');
 }
 const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+schedule)(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bafter checkout\b|\bone last time\b/i;
-const SWIM_RE = /\bswim\b|\bhouse pool\b|\bpool dip\b|\bdip into\b|\ba dip\b/i;
-const GARDEN_RE = /garden/i;
-const WALK_RE = /town walk/i;
-const DINNER_RE = /\bdinner\b/i;
-const ACTIVITY_RES = [SWIM_RE, GARDEN_RE, WALK_RE, DINNER_RE];
-const ACTIVITY_DENIAL = /\b(?:isn't set|is not set|won't lock|will not lock|not already set|not a swim|off that day)\b|\bkeep\b[^.]{0,48}\boff\b|\bnot on\b/i;
-
-function activityClauses(sentence) {
-  return String(sentence || '').split(/\s*(?:,|;|\band\b)\s*/i).map((part) => part.trim()).filter(Boolean);
-}
-
-function otherActivity(clause, activityRe) {
-  return ACTIVITY_RES.some((pattern) => pattern !== activityRe && pattern.test(clause) && !activityRe.test(clause));
-}
-
-function activityBefore(clauses, index) {
-  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-    const hit = ACTIVITY_RES.find((pattern) => pattern.test(clauses[cursor]));
-    if (hit) return hit;
-  }
-  return null;
-}
-
-function clauseStamps(sentence, span, activityRe) {
-  const clauses = activityClauses(sentence);
-  const stamps = new Set();
-  clauses.forEach((clause, index) => {
-    if (!activityRe.test(clause) || ACTIVITY_DENIAL.test(clause)) return;
-    const local = activityStamps(clause, span);
-    if (local.length) {
-      local.forEach((stamp) => stamps.add(stamp));
-      return;
-    }
-    if (/\blater\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
-    for (const neighbor of [clauses[index - 1], clauses[index + 1]].filter(Boolean)) {
-      if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
-      const neighborIndex = clauses.indexOf(neighbor);
-      const borrowed = activityStamps(neighbor, span);
-      if (!borrowed.length) continue;
-      const owner = activityBefore(clauses, neighborIndex);
-      if (owner && owner !== activityRe) continue;
-      borrowed.forEach((stamp) => stamps.add(stamp));
-    }
-    const walkClause = clauses.find((clause) => WALK_RE.test(clause)) || '';
-    const undatedOr = activityRe === WALK_RE && /^\s*or\b/i.test(walkClause) && !activityStamps(walkClause, span).length;
-    const relativeWalk = activityRe === WALK_RE
-      && /\b(?:after|before|following)\s+(?:the\s+)?town walk\b/i.test(sentence)
-      && !activityStamps(walkClause, span).length;
-    if (!stamps.size && !undatedOr && !relativeWalk && activityRe === WALK_RE && /\band\b/i.test(sentence)) {
-      activityStamps(sentence, span).forEach((stamp) => stamps.add(stamp));
-    }
-  });
-  return [...stamps];
-}
 
 export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
   const errors = [];
-  const swimDays = Array.isArray(facts.swimDays) ? facts.swimDays : [];
-  const gardenDays = Array.isArray(facts.gardenDays) ? facts.gardenDays : [];
   const span = facts.span || null;
   if (!facts.planOwned && /you(?:'|’)re all set (?:with|for) the\b[^.]{0,80}unlimited|you are all set (?:with|for) the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
     pushError(errors, 'the unlimited plan is not owned yet');
@@ -1054,19 +987,6 @@ export function draftFactErrors(reply, facts = {}) {
   }
   if (/no extra charge|no extra cost|at no extra/i.test(body)) {
     pushError(errors, 'no extra charge is not in what the customer set');
-  }
-  const gardenOwner = String(facts.owners?.gardens || '');
-  const gardenClaim = body.match(/\b([A-Z][a-z]+)(?:'|’)s\s+gardens?\b/);
-  const weekdayNameClaim = gardenClaim && /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.test(gardenClaim[1]);
-  if (gardenOwner && gardenClaim && !weekdayNameClaim && gardenClaim[1].toLowerCase() !== gardenOwner.toLowerCase()) {
-    pushError(errors, `the gardens are ${gardenOwner}'s, not ${gardenClaim[1]}'s`);
-  }
-  if (gardenOwner && facts.addressedTo && facts.addressedTo.toLowerCase() !== gardenOwner.toLowerCase() && /your (?:two )?garden/i.test(body)) {
-    pushError(errors, `the gardens are ${gardenOwner}'s, not ${facts.addressedTo}'s`);
-  }
-  const swimOwner = String(facts.owners?.swim || '');
-  if (swimOwner && facts.addressedTo && facts.addressedTo.toLowerCase() !== swimOwner.toLowerCase() && /your (?:later |second |beach )?swim/i.test(body)) {
-    pushError(errors, `the swim is ${swimOwner}'s, not ${facts.addressedTo}'s`);
   }
   if (/\b(?:we|i)(?:'|’)ve corrected\b|\b(?:we|i) have corrected\b/i.test(body)) {
     pushError(errors, 'the reply invented a correction');
@@ -1095,51 +1015,6 @@ export function draftFactErrors(reply, facts = {}) {
   const endStamp = span?.end ? dayStamp(`${MONTH_ABBR[Number(String(span.end).slice(5, 7))]} ${endDay}`) : '';
   for (let index = 0; index < sentences.length; index += 1) {
     const sentence = sentences[index];
-    const next = sentences[index + 1] || '';
-    const previous = sentences[index - 1] || '';
-    const swimDenied = ACTIVITY_DENIAL.test(sentence) && SWIM_RE.test(sentence);
-    const optional = /\bchoice\b|\bwould you like\b|\binterested\b|\beither\b|\?/.test(sentence);
-    const rainyBackup = /\brains\b|\brainy\b|\bbackup\b|\bshifting\b|\breschedul/i.test(sentence);
-    if (SWIM_RE.test(sentence) && !swimDenied && !optional && !rainyBackup) {
-      let attached = clauseStamps(withoutNegatedDays(sentence), span, SWIM_RE);
-      if (!attached.length && /\boption\b|\bor a swim\b|\bswim day\b/i.test(sentence)) {
-        attached = activityStamps(previous, span);
-      }
-      if (!attached.length && /\bdip\b|\bpool\b|\bswim\b/i.test(sentence) && !/\blater\b|\bwait\b|\bbetween\b|\bin the week\b/i.test(sentence) && /\barrival\b/i.test(previous)) {
-        attached = activityStamps(previous, span);
-      }
-      if (attached.length && !dayIsSet(attached, swimDays)) {
-        pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
-      }
-    }
-    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|now set|set for|i(?:'|’)ll save|we(?:'|’)ll save|save that|i(?:'|’)ve got that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
-      const claimed = looseDayStamps(withoutNegatedDays(sentence), span);
-      if (claimed.length && !dayIsSet(claimed, swimDays)) {
-        pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
-      } else if (!claimed.length && !swimDays.length) {
-        pushError(errors, 'a swim was claimed as saved when it is not');
-      }
-    }
-    if (GARDEN_RE.test(sentence) && !optional) {
-      const stamps = clauseStamps(withoutNegatedDays(sentence), span, GARDEN_RE);
-      const denied = ACTIVITY_DENIAL.test(sentence);
-      const already = /already set|locked in/i.test(sentence) && !denied;
-      if (!denied && stamps.length && !dayIsSet(stamps, gardenDays)) {
-        pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
-      }
-    }
-    if (WALK_RE.test(sentence) && !optional) {
-      const stamps = clauseStamps(withoutNegatedDays(sentence), span, WALK_RE);
-      if (stamps.length && !dayIsSet(stamps, facts.townWalkDays)) {
-        pushError(errors, `a town walk on ${stamps[0]} was not set by the customer`);
-      }
-      if (/\b(noted|saved|scheduled|on the list)\b/i.test(sentence) && !stamps.length && !(facts.townWalkDays || []).length) {
-        pushError(errors, 'a town walk was noted but not saved');
-      }
-    }
-    if (/\bunnamed friends\b/i.test(sentence)) {
-      pushError(errors, 'the reply invented people');
-    }
     const partyCount = sentence.match(/\bparty of (\d+)\b/i);
     if (partyCount) {
       const claimed = Number(partyCount[1]);

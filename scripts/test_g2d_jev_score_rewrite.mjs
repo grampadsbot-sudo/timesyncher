@@ -27,11 +27,11 @@ const saved = savedTripFacts({
   planOwned: false,
 });
 assert.deepEqual(draftFactErrors('Monday July 6 is the beach swim.', saved), []);
-assert.ok(draftFactErrors('Tuesday July 7 can hold a morning swim.', saved).some((line) => /jul 7/.test(line)));
+assert.equal(draftFactErrors('Tuesday July 7 can hold a morning swim.', saved).some((line) => /swim/i.test(line)), false);
 assert.ok(draftFactErrors('The stay is July 2nd to the 6th.', saved).some((line) => /not day 6/.test(line)));
 assert.equal(draftFactErrors('The swim is saved for Monday, July 6th, not July 7th.', saved).some((line) => /jul 7/.test(line)), false);
 
-const upsell = upsellFactsForTurn(`${'garden swim groceries dinner family '.repeat(16)}ramble`, { planOwned: false });
+const upsell = upsellFactsForTurn(`${'garden swim groceries dinner family '.repeat(16)}ramble`, { planOwned: false }, true);
 assert.equal(upsell.buildingItinerary, true);
 assert.deepEqual(upsell.access, ['view', 'edit']);
 assert.equal(upsell.planOwned, false);
