@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
+export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
 
 const TEXT_EXT = new Set(['.mjs', '.js', '.html', '.json', '.jsonl', '.md', '.txt', '.css', '.yml', '.yaml', '.svg', '.csv', '.py']);
@@ -345,6 +346,9 @@ function cannedFallbackFindings(file, text, findings, seen) {
   }
 }
 
+const BARE_MODEL = /['"`]((?:grok|gpt|claude|gemini|qwen|deepseek|mistral|mixtral|llama)\d*-(?:mini|flash|pro|sonnet|opus|haiku|turbo|max|large|small|nano|preview|v\d|\d)[a-z0-9._-]*)['"`]/gi;
+const ALLOWED_BARE = new Set([...ALLOWED_MODELS].map((id) => id.split('/').slice(1).join('/').toLowerCase()));
+
 function modelAllowlistFindings(file, text, findings, seen) {
   GPT_MINI.lastIndex = 0;
   let match = GPT_MINI.exec(text);
@@ -359,6 +363,15 @@ function modelAllowlistFindings(file, text, findings, seen) {
       add(findings, seen, 'MODEL-ALLOWLIST', file, text, match.index, match[1]);
     }
     match = QUOTED_MODEL.exec(text);
+  }
+  BARE_MODEL.lastIndex = 0;
+  match = BARE_MODEL.exec(text);
+  while (match) {
+    const id = match[1].toLowerCase();
+    if (!ALLOWED_BARE.has(id) && !/^gpt-[a-z0-9.]+-mini$/.test(id)) {
+      add(findings, seen, 'MODEL-BARE', file, text, match.index, match[1]);
+    }
+    match = BARE_MODEL.exec(text);
   }
 }
 
@@ -378,6 +391,332 @@ function tokenFindings(file, text, findings, seen) {
   }
 }
 
+function scanStringLiterals(text) {
+  const out = [];
+  for (let index = 0; index < text.length; index += 1) {
+    const quote = text[index];
+    if (quote !== "'" && quote !== '"') continue;
+    let cursor = index + 1;
+    let value = '';
+    let closed = false;
+    while (cursor < text.length) {
+      if (text[cursor] === '\\' && cursor + 1 < text.length) {
+        value += text[cursor + 1];
+        cursor += 2;
+        continue;
+      }
+      if (text[cursor] === quote) {
+        closed = true;
+        break;
+      }
+      value += text[cursor];
+      cursor += 1;
+    }
+    if (closed) {
+      out.push(value);
+      index = cursor;
+    }
+  }
+  return out;
+}
+
+function plainRegexBodies(text) {
+  const out = [];
+  const re = /\/([^/\n]{3,80})\/[a-z]*/g;
+  let match = re.exec(text);
+  while (match) {
+    for (const part of match[1].split('|')) {
+      const body = part.replace(/\\b/g, '').replace(/\\/g, '').trim();
+      if (/^[A-Za-z][A-Za-z .'-]*[A-Za-z.]$/.test(body) && /\s/.test(body)) out.push(body);
+    }
+    match = re.exec(text);
+  }
+  return out;
+}
+
+function keepContent(value) {
+  const text = String(value || '').trim().replace(/\s+/g, ' ');
+  if (text.length < 8 || text.length > 160) return false;
+  if (!/^[A-Za-z0-9]/.test(text)) return false;
+  if (/[{}()=;`\\]|\/\w+\.mjs|\.\.\./.test(text)) return false;
+  if (!/[A-Za-z]{3}/.test(text)) return false;
+  if (/^[A-Za-z_][\w$]*$/.test(text)) return false;
+  if (!/\s/.test(text)) return false;
+  if (/\b(?:return|const|function|export|category_name|share_budget|lodgingLane|insert|thingId|thingName|fallbackAddress)\b/.test(text)) return false;
+  if (/^[a-z][\w$]*(?:,\s*[a-z][\w$]*)+$/.test(text)) return false;
+  return true;
+}
+
+function deriveContentNeedles(inventory, patterns) {
+  const needles = new Set();
+  const blobs = [];
+  for (const item of inventory.items || []) blobs.push(item.quote || '');
+  for (const pattern of patterns) blobs.push(pattern.fixture || '', pattern.re.source);
+  for (const blob of blobs) {
+    for (const piece of scanStringLiterals(blob)) if (keepContent(piece)) needles.add(piece.trim().replace(/\s+/g, ' '));
+    for (const piece of plainRegexBodies(blob)) {
+      if (!keepContent(piece)) continue;
+      if (!/[A-Z]/.test(piece) && !/\b(?:vegas|island|kona|kailua|ulu|hopper|shack|club|waikiki|kahalu|bellagio|tulum|cartagena|puna|kalapana)\b/i.test(piece)) continue;
+      needles.add(piece);
+    }
+  }
+  const raw = JSON.stringify(inventory);
+  for (const match of raw.matchAll(/\/ts-thing-logos\/[a-z0-9.-]+/g)) needles.add(match[0]);
+  for (const match of raw.matchAll(/\b(?:second Friday|apr 10)\b/g)) needles.add(match[0]);
+  if (raw.includes('Price TBD')) needles.add('Price TBD');
+  return [...needles].sort((a, b) => a.localeCompare(b));
+}
+
+const inventoryDoc = JSON.parse(fs.readFileSync(new URL('./fixtures/hardcoded-content/inventory.json', import.meta.url), 'utf8'));
+export const CONTENT_NEEDLES = deriveContentNeedles(inventoryDoc, INVENTORY_PATTERNS);
+
+function contentMatchFindings(file, text, findings, seen, needles, rule) {
+  for (const needle of needles) {
+    const index = text.indexOf(needle);
+    if (index >= 0) add(findings, seen, rule, file, text, index, needle);
+  }
+}
+
+function skipWs(text, index) {
+  let cursor = index;
+  while (cursor < text.length && /\s/.test(text[cursor])) cursor += 1;
+  return cursor;
+}
+
+function readQuoted(text, index) {
+  const quote = text[index];
+  if (quote !== "'" && quote !== '"') return null;
+  let cursor = index + 1;
+  let value = '';
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      if (cursor + 1 >= text.length) return null;
+      const next = text[cursor + 1];
+      value += next === 'n' ? '\n' : next === 'r' ? '\r' : next === 't' ? '\t' : next;
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === quote) return { end: cursor + 1, value };
+    value += text[cursor];
+    cursor += 1;
+  }
+  return null;
+}
+
+function readArrayJoin(text, index) {
+  if (text[index] !== '[') return null;
+  let cursor = skipWs(text, index + 1);
+  const parts = [];
+  while (cursor < text.length) {
+    const lit = readQuoted(text, cursor);
+    if (!lit) return null;
+    parts.push(lit.value);
+    cursor = skipWs(text, lit.end);
+    if (text[cursor] === ',') {
+      cursor = skipWs(text, cursor + 1);
+      continue;
+    }
+    break;
+  }
+  if (!parts.length || text[cursor] !== ']') return null;
+  cursor = skipWs(text, cursor + 1);
+  if (!text.startsWith('.join', cursor)) return null;
+  cursor = skipWs(text, cursor + 5);
+  if (text[cursor] !== '(') return null;
+  cursor = skipWs(text, cursor + 1);
+  const sep = readQuoted(text, cursor);
+  if (!sep) return null;
+  cursor = skipWs(text, sep.end);
+  if (text[cursor] !== ')') return null;
+  return { end: cursor + 1, value: parts.join(sep.value) };
+}
+
+function readSplitJoin(text, index) {
+  const lit = readQuoted(text, index);
+  if (!lit) return null;
+  let cursor = skipWs(text, lit.end);
+  if (!text.startsWith('.split', cursor)) return null;
+  cursor = skipWs(text, cursor + 6);
+  if (text[cursor] !== '(') return null;
+  cursor = skipWs(text, cursor + 1);
+  const sep = readQuoted(text, cursor);
+  if (!sep) return null;
+  cursor = skipWs(text, sep.end);
+  if (text[cursor] !== ')') return null;
+  cursor = skipWs(text, cursor + 1);
+  if (!text.startsWith('.join', cursor)) return null;
+  cursor = skipWs(text, cursor + 5);
+  if (text[cursor] !== '(') return null;
+  cursor = skipWs(text, cursor + 1);
+  const joiner = readQuoted(text, cursor);
+  if (!joiner) return null;
+  cursor = skipWs(text, joiner.end);
+  if (text[cursor] !== ')') return null;
+  return { end: cursor + 1, value: lit.value.split(sep.value).join(joiner.value) };
+}
+
+function readConcat(text, index) {
+  const first = readQuoted(text, index);
+  if (!first) return null;
+  let cursor = skipWs(text, first.end);
+  if (text[cursor] !== '+') return null;
+  let value = first.value;
+  let count = 1;
+  while (text[cursor] === '+') {
+    cursor = skipWs(text, cursor + 1);
+    const next = readQuoted(text, cursor);
+    if (!next) break;
+    value += next.value;
+    count += 1;
+    cursor = skipWs(text, next.end);
+  }
+  if (count < 2) return null;
+  return { end: cursor, value };
+}
+
+function readTemplate(text, index) {
+  if (text[index] !== '`') return null;
+  let cursor = index + 1;
+  let value = '';
+  let interpolated = false;
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      const next = text[cursor + 1];
+      value += next === 'n' ? '\n' : next === 'r' ? '\r' : next === 't' ? '\t' : (next ?? '');
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '`') {
+      if (!interpolated) return null;
+      return { end: cursor + 1, value };
+    }
+    if (text[cursor] === '$' && text[cursor + 1] === '{') {
+      const innerAt = skipWs(text, cursor + 2);
+      const inner = readQuoted(text, innerAt);
+      if (!inner) return null;
+      const after = skipWs(text, inner.end);
+      if (text[after] !== '}') return null;
+      value += inner.value;
+      interpolated = true;
+      cursor = after + 1;
+      continue;
+    }
+    value += text[cursor];
+    cursor += 1;
+  }
+  return null;
+}
+
+function foldedStrings(text) {
+  const folds = [];
+  for (let index = 0; index < text.length; index += 1) {
+    const ch = text[index];
+    let fold = null;
+    if (ch === '[') fold = readArrayJoin(text, index);
+    else if (ch === "'" || ch === '"') fold = readSplitJoin(text, index) || readConcat(text, index);
+    else if (ch === '`') fold = readTemplate(text, index);
+    if (!fold || fold.value.length < 4) continue;
+    folds.push({ index, value: fold.value });
+    index = fold.end - 1;
+  }
+  return folds;
+}
+
+function evasionFindings(file, text, findings, seen, needles) {
+  for (const fold of foldedStrings(text)) {
+    if (text.includes(fold.value)) continue;
+    const matched = needles.some((needle) => fold.value.includes(needle) || (needle.includes(fold.value) && fold.value.length >= 12 && /[/\-]/.test(fold.value)));
+    if (!matched) continue;
+    add(findings, seen, 'EVASION', file, text, fold.index, fold.value.slice(0, 120));
+  }
+}
+
+function isPromptPath(file) {
+  const normalized = file.split(path.sep).join('/');
+  if (normalized.includes('/fixtures/') || normalized.includes('/fixture/')) return false;
+  if (/(?:^|\/)test[_-]/.test(normalized) || /\.test\./.test(normalized)) return false;
+  return true;
+}
+
+function promptNameFindings(file, text, findings, seen) {
+  if (!isPromptPath(file)) return;
+  for (const name of PROMPT_NAMES) {
+    const pattern = new RegExp(`\\b${name}\\b`);
+    const index = text.search(pattern);
+    if (index >= 0) add(findings, seen, 'PROMPT-NAMES', file, text, index, name);
+  }
+}
+
+function isPricePath(file) {
+  return /(checkout|payment-intent|seat-price|media-checkout|access-plan|pricing)/i.test(file.split(path.sep).join('/'));
+}
+
+function priceFindings(file, text, findings, seen) {
+  if (!isPricePath(file)) return;
+  const lines = text.split('\n');
+  let offset = 0;
+  for (const line of lines) {
+    const direct = line.match(/\b([A-Z][A-Z0-9_]*PRICE_CENTS)\b\s*=\s*(\d+)/);
+    if (direct) add(findings, seen, 'HARDCODED-PRICE', file, text, offset + direct.index, `${direct[1]}=${direct[2]}`);
+    else if (/PRICE_CENTS/.test(line)) {
+      const names = [...line.matchAll(/\b([A-Z][A-Z0-9_]*PRICE_CENTS)\b/g)].map((item) => item[1]);
+      const name = names[names.length - 1];
+      if (name) {
+        for (const hit of line.matchAll(/['"](\d{2,})['"]/g)) {
+          add(findings, seen, 'HARDCODED-PRICE', file, text, offset + hit.index, `${name}=${hit[1]}`);
+        }
+      }
+    }
+    const dollars = line.match(/:\s*27\s*;/);
+    if (dollars) add(findings, seen, 'HARDCODED-PRICE', file, text, offset + dollars.index, ':27');
+    offset += line.length + 1;
+  }
+}
+
+const GENERIC_ADDRESS = new Set(['street address', 'city', 'state', 'zip', 'postal code', 'address', 'zip code']);
+
+function tagAttr(tag, name) {
+  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(['"])(.*?)\\1`, 'i'));
+  return match ? match[2] : '';
+}
+
+function addressField(name, tag) {
+  const blob = `${name} ${tagAttr(tag, 'autocomplete')}`.toLowerCase();
+  if (/zip|postal/.test(blob)) return 'zip';
+  if (/state|address-level1/.test(blob)) return 'state';
+  if (/city|address-level2/.test(blob)) return 'city';
+  if (/street|address/.test(blob)) return 'street';
+  return '';
+}
+
+function isFormPath(file) {
+  const normalized = file.split(path.sep).join('/');
+  return normalized.endsWith('.html') || /(order|checkout|form)/i.test(normalized);
+}
+
+function addressFindings(file, text, findings, seen) {
+  if (!isFormPath(file)) return;
+  const tags = /<input\b[^>]*>/gi;
+  let match = tags.exec(text);
+  while (match) {
+    const tag = match[0];
+    const field = addressField(tagAttr(tag, 'name') || tagAttr(tag, 'id'), tag);
+    for (const raw of [tagAttr(tag, 'placeholder'), tagAttr(tag, 'value')]) {
+      const value = raw.trim();
+      if (!field || !value || GENERIC_ADDRESS.has(value.toLowerCase())) continue;
+      if (field === 'state' && /^[A-Z]{2}$/.test(value)) add(findings, seen, 'FIXED-ADDRESS', file, text, match.index, `state=${value}`);
+      else if (field === 'zip' && /^\d{5}(?:-\d{4})?$/.test(value)) add(findings, seen, 'FIXED-ADDRESS', file, text, match.index, `zip=${value}`);
+      else if (field === 'city') add(findings, seen, 'FIXED-ADDRESS', file, text, match.index, `city=${value}`);
+      else if (field === 'street' && /\d/.test(value)) add(findings, seen, 'FIXED-ADDRESS', file, text, match.index, `street=${value}`);
+    }
+    match = tags.exec(text);
+  }
+}
+
+function isAssetBundle(file) {
+  return /^public\/assets\/[^/]+\.js$/.test(file.split(path.sep).join('/'));
+}
+
 export function scanText(file, text, { tokens = false, inventoryOnly = false } = {}) {
   const value = String(text || '');
   const findings = [];
@@ -395,6 +734,14 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     inventoryFindings(file, value, findings, seen);
     thingSourceFindings(file, value, findings, seen);
     cannedFallbackFindings(file, value, findings, seen);
+    if (isAssetBundle(file)) contentMatchFindings(file, value, findings, seen, CONTENT_NEEDLES, 'BUNDLE-SCAN');
+    else {
+      contentMatchFindings(file, value, findings, seen, CONTENT_NEEDLES, 'CONTENT-MATCH');
+      evasionFindings(file, value, findings, seen, CONTENT_NEEDLES);
+      promptNameFindings(file, value, findings, seen);
+      priceFindings(file, value, findings, seen);
+      addressFindings(file, value, findings, seen);
+    }
   }
   return findings;
 }
@@ -453,6 +800,12 @@ function readScanned(abs) {
 
 function bundlePaths(cwd) {
   return BUNDLE_FILES.filter((file) => fs.existsSync(path.join(cwd, file)));
+}
+
+function assetBundlePaths(cwd) {
+  const dir = path.join(cwd, 'public/assets');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((name) => name.endsWith('.js')).map((name) => `public/assets/${name}`).sort();
 }
 
 function guardExempt(file) {
@@ -525,6 +878,11 @@ export function scanRoots(cwd = process.cwd()) {
   for (const file of bundlePaths(cwd)) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8'), { inventoryOnly: true }));
   }
+  for (const file of assetBundlePaths(cwd)) {
+    const extra = [];
+    contentMatchFindings(file, fs.readFileSync(path.join(cwd, file), 'utf8'), extra, new Set(), CONTENT_NEEDLES, 'BUNDLE-SCAN');
+    findings.push(...extra);
+  }
   const functions = apiFunctionFiles(cwd);
   if (functions.length > API_FN_CAP) {
     findings.push({
@@ -575,6 +933,24 @@ export function loadBaselineFile(file) {
   return parsed;
 }
 
+function baselineRuleId(row) {
+  return row.rule || row.inventory_id;
+}
+
+function baselineRowKey(row) {
+  return `${row.file}\0${row.symbol_or_pattern}\0${row.inventory_id}`;
+}
+
+export function baselineGrowthAllowed(current, baseRows) {
+  if (current.length <= baseRows.length) return true;
+  if (baseRows.length === 0) return false;
+  const baseKeys = new Set(baseRows.map(baselineRowKey));
+  const added = current.filter((row) => !baseKeys.has(baselineRowKey(row)));
+  if (added.length !== current.length - baseRows.length) return false;
+  const baseRules = new Set(baseRows.map(baselineRuleId));
+  return added.every((row) => !baseRules.has(baselineRuleId(row)));
+}
+
 export function baseBaselineCount(cwd = process.cwd()) {
   const ref = process.env.BASE || process.env.GITHUB_BASE_REF || '';
   if (!ref) return { status: 'skip' };
@@ -589,7 +965,7 @@ export function baseBaselineCount(cwd = process.cwd()) {
   }
   const parsed = JSON.parse(shown.stdout);
   if (!Array.isArray(parsed)) return { status: 'error', error: 'base baseline is not an array' };
-  return { status: 'ok', count: parsed.length };
+  return { status: 'ok', count: parsed.length, rows: parsed };
 }
 
 export function evaluate(cwd = process.cwd()) {
@@ -605,7 +981,7 @@ export function evaluate(cwd = process.cwd()) {
       line: 1,
       symbol_or_pattern: ceiling.error,
     });
-  } else if (ceiling.status === 'ok' && baseline.length > ceiling.count) {
+  } else if (ceiling.status === 'ok' && baseline.length > ceiling.count && !baselineGrowthAllowed(baseline, ceiling.rows)) {
     fail.push({
       rule: 'BASELINE-GROWTH',
       file: BASELINE_REL,

@@ -429,4 +429,70 @@ const addedRun = runGuard(shiftDir);
 assert.equal(addedRun.status, 1, addedRun.stdout);
 assertHit(addedRun.stderr, 'FAIL', 'HC-PLACE-LIST', shiftSource, 'EXTRA_LIST_FILL');
 
+function fails(file, fixture) {
+  return classify(scanText(file, readFixture(fixture)), []).fail;
+}
+
+const joinFail = fails('src/vacation/evasion-join.mjs', 'evasion-join.mjs');
+assert.deepEqual(joinFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
+const splitFail = fails('src/vacation/evasion-split.mjs', 'evasion-split.mjs');
+assert.deepEqual(splitFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
+const concatFail = fails('src/vacation/evasion-concat.mjs', 'evasion-concat.mjs');
+assert.deepEqual(concatFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
+const logoFail = fails('src/vacation/evasion-logo.mjs', 'evasion-logo.mjs');
+assert.deepEqual(logoFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', '/ts-thing-logos/']]);
+
+const renamed = scanText('src/vacation/content-rename.mjs', readFixture('content-rename.mjs'));
+assert.equal(renamed.some((finding) => finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
+assert.deepEqual(classify(renamed, []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [
+  ['CONTENT-MATCH', 'say the swim is saved on the second Friday of the trip'],
+  ['CONTENT-MATCH', 'second Friday'],
+]);
+
+const named = fails('src/vacation/prompt-names.mjs', 'prompt-names.mjs');
+assert.deepEqual(named.map((finding) => finding.symbol_or_pattern), ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus']);
+assert.equal(named.every((finding) => finding.rule === 'PROMPT-NAMES'), true);
+
+const priced = fails('src/vacation/checkout-pricing.mjs', 'hardcoded-price.mjs');
+assert.deepEqual(priced.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['HARDCODED-PRICE', 'DEFAULT_ORDER_BUMP_PRICE_CENTS=2700']]);
+
+const addressed = fails('index.html', 'fixed-address.html').filter((finding) => finding.rule === 'FIXED-ADDRESS');
+assert.deepEqual(addressed.map((finding) => finding.symbol_or_pattern), ['state=NV', 'zip=89101', 'city=Las Vegas']);
+
+const bundled = fails('public/assets/bundle-scan.js', 'bundle-scan.js').filter((finding) => finding.rule === 'BUNDLE-SCAN');
+assert.deepEqual(bundled.map((finding) => finding.symbol_or_pattern), ['Price TBD']);
+
+const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bare-'));
+writeTree(bareDir, { 'src/vacation/model-bare.mjs': readFixture('model-bare.mjs') }, []);
+const bareRun = runGuard(bareDir);
+assert.equal(bareRun.status, 1, bareRun.stdout);
+for (const id of ['grok-4', 'grok-3-mini', 'gpt-4o', 'claude-3-5-sonnet', 'gemini-2.0-flash']) {
+  assert.match(bareRun.stderr, new RegExp(`FAIL\\tMODEL-BARE\\tsrc/vacation/model-bare\\.mjs:\\d+\\t${id}`));
+}
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /gemini-2\.5-flash-lite/);
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /qwen3-235b-a22b-2507/);
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /deepseek-v3\.2/);
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /qwen3-max/);
+
+const newRuleBase = [entry('src/vacation/kept.mjs', 'KEEP', 'HC-PLACE-LIST')];
+const allowedGrowth = repoWithBase(newRuleBase);
+writeTree(allowedGrowth, {
+  'src/vacation/names.mjs': readFixture('prompt-names.mjs'),
+}, [
+  ...newRuleBase,
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Craig', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Kimberly', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Tyler', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Lauren', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Marcus', inventory_id: 'PROMPT-NAMES', note: NOTE },
+]);
+const allowedRun = runGuard(allowedGrowth, { BASE: 'base' });
+assert.equal(allowedRun.status, 0, allowedRun.stderr);
+
+const oldRuleGrowth = repoWithBase(newRuleBase);
+writeTree(oldRuleGrowth, {}, [...newRuleBase, entry('src/vacation/other.mjs', 'ALSO', 'HC-PLACE-LIST')]);
+const oldRuleRun = runGuard(oldRuleGrowth, { BASE: 'base' });
+assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
+assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/hardcoded-content-baseline\.json:1\t2>1/);
+
 process.stdout.write('hardcoded content check test passed\n');
