@@ -18,6 +18,16 @@ assert.ok(findSecretHits('"sessionToken": "Aa1bbCcdEe2ffGgHh3iJjK4L"').includes(
 assert.ok(findSecretHits('sk_live_51HabcDEF123456').includes('secret-key'));
 assert.ok(findSecretHits('Authorization: Bearer abcdefghijk').includes('bearer'));
 assert.ok(findSecretHits('postgres://user:secret@host/db').includes('postgres-url'));
+assert.ok(findSecretHits('sk-abcdefghijklmnopqrst').includes('openai-key'));
+assert.ok(findSecretHits('pk_live_51HabcDEF123456').includes('publishable-key'));
+assert.ok(findSecretHits('pk_test_51HabcDEF123456').includes('publishable-key'));
+assert.ok(findSecretHits('ghp_abcdefghijklmnopqrstuvwxyz123456').includes('github-token'));
+assert.ok(findSecretHits('gho_abcdefghijklmnopqrstuvwxyz123456').includes('github-token'));
+assert.ok(findSecretHits('github_pat_abcdefghijklmnopqrstuvwxyz123456').includes('github-token'));
+assert.ok(findSecretHits('xoxb-1234567890-abcdefghij').includes('slack-token'));
+assert.ok(findSecretHits('eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.signature').includes('jwt'));
+assert.ok(findSecretHits('api_key: "0123456789abcdef0123456789abcdef"').includes('named-hex'));
+assert.ok(findSecretHits('secret: "abcdEFGHijklMNOPqrstUVWXyz0123456789+/AB"').includes('named-base64'));
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'evidence-secrets-'));
 const evidence = path.join(dir, 'evidence');
