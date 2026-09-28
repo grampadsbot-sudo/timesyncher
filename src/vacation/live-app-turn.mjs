@@ -1848,6 +1848,12 @@ async function loadSavedTripRecord(session, env = process.env) {
   }
 }
 
+function joiningSeatRecord(session) {
+  const seat = session?.metadata?.seat || session?.seat;
+  const name = String(seat?.displayName || seat?.name || '').trim();
+  return name ? { name, payer: String(seat?.payer || '').trim() } : null;
+}
+
 function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
   const projected = projectCustomerRecord(priorTurns, customerTurn);
   const baseThings = Array.isArray(saved?.things) && saved.things.length ? saved.things : projected.things;
@@ -1892,6 +1898,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const savedTrip = await loadSavedTripRecord(session, env);
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session);
   const tripContext = draftingFacts(history, customerTurn, mergedTrip);
+  if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
+  const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
   tripFacts.laterFriday = laterFridayLabel(tripFacts.span);
@@ -1939,7 +1947,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const speaker = String(tripFacts.addressedTo || '').trim();
   const draftExtra = [
     tripContext.roster || '',
-    'When you list who is coming, name every traveler in the saved roster, including Kimberly, Tyler, and Lauren when they are in that roster.',
+    'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
     'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
     isLongIntake(customerTurn) ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
@@ -1959,6 +1967,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planTable,
     planLine,
     seatDollars,
+    seat,
     systemExtra: draftExtra,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
@@ -1973,7 +1982,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
     const nudge = customerAsksPrice(customerTurn)
-      ? `${customerTurn}\n\nAnswer with who pays: ${payerPriceLine(customerTurn) || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
+      ? `${customerTurn}\n\nAnswer with who pays: ${payerPriceLine(customerTurn, env) || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
       : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -1981,7 +1990,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
-    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts });
+    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat });
     if (interim.text && !appTextBanned(interim.text)) {
       reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
       model = {
@@ -2087,7 +2096,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     return { reply: shipped.reply, rules, jev, model: shipped.model, quality: shipped.quality, log: shipped.log, reason: null };
   }
   const interimStarted = Date.now();
-  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts }).then((interim) => {
+  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat }).then((interim) => {
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
   });
@@ -2108,6 +2117,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planTable,
     planLine,
     seatDollars,
+    seat,
     rawModelText: model?.text == null ? null : String(model.text),
     failureReason: qualityFailureReason(quality, draftFlags),
     interimReply: { text: null, model: null, ms: null },
@@ -2171,7 +2181,7 @@ function interimFacts(customerTurn, destination) {
   ].join(' ');
 }
 
-async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {} }) {
+async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null }) {
   const started = Date.now();
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
@@ -2187,7 +2197,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
       : '',
     customerAsksPrice(customerTurn)
-      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerPriceLine(customerTurn) || 'name the dollar price'}.`
+      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerPriceLine(customerTurn, env) || 'the configured price is missing, so do not invent a dollar amount'}.`
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');
@@ -2205,6 +2215,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     env,
     forceModel: INTERIM_MODEL,
     timeoutMs: isLongIntake(customerTurn) ? 20000 : 8000,
+    seat,
     systemExtra,
   });
   const model = await call();
@@ -2286,14 +2297,16 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       planTable: pending?.planTable || null,
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars || 0,
+      seat: pending?.seat || null,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. Do not say four friends or unnamed friends. If the customer stated a party size, do not list more people than that size. Do not ask Craig a trip-fact question. Address the person who is speaking. Do not give that person someone else\'s gardens or swim. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call Lauren\'s rule locked and do not call it back-to-back heavy days. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person, a town walk, or a saved claim, that sentence must name it. Do not say you removed a saved swim on a day the draft did not claim.',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. Do not say four friends or unnamed friends. If the customer stated a party size, do not list more people than that size. Do not ask the account holder a trip-fact question. Address the person who is speaking. Do not give that person an activity the saved roster assigns to someone else. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person, a town walk, or a saved claim, that sentence must name it. Do not say you removed a saved swim on a day the draft did not claim.',
+        [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
         failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
-        pending?.planTable?.payer_line
-          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group. Do not say Fallon.`
+        pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
+          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
           : '',
       ].filter(Boolean).join(' '),
     });
