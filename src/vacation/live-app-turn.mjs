@@ -220,12 +220,6 @@ export function liveTurnRecord({
 
 const OTHER_DESTINATION = /\b(tulum|cartagena|cancun|cancún|maui|kauai|puerto vallarta|\bcabo\b)\b/i;
 
-export function destinationFromTexts(texts) {
-  const blob = (Array.isArray(texts) ? texts : [texts]).join('\n');
-  if (/big island/i.test(blob) || /hawai/i.test(blob) || /kailua-kona/i.test(blob)) return 'Big Island, Hawaii';
-  return '';
-}
-
 export function replyLeavesDestination(reply, destination) {
   if (!/big island/i.test(String(destination || ''))) return false;
   return OTHER_DESTINATION.test(String(reply || ''));
@@ -401,11 +395,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     ...(Array.isArray(party.viewers) ? party.viewers.map((person) => person?.name && `${person.name} (viewer)`) : []),
     ...(Array.isArray(party.editors) ? party.editors.map((person) => person?.name && `${person.name} (editor)`) : []),
   ].filter(Boolean);
-  const corpus = customerCorpus(priorTurns, customerTurn);
-  const statedParty = corpus.match(/\bparty of (six|seven|eight|nine|ten|\d+)\b/i);
-  const statedLine = statedParty
-    ? `Customer stated party of ${statedParty[1].toLowerCase()}. Use that count. List only people the customer named. Do not add unnamed people.`
-    : 'List only people the customer named in chat. Do not invent people.';
+  const statedLine = 'List only people the customer named in chat. Do not invent people.';
   const holder = owner[0]?.name ? ` The account holder is ${owner[0].name}. A collaborator who just joined is not the account holder.` : '';
   const roster = [
     `Party rule: ${statedLine} Ask the customer for anything they haven't said.`,
@@ -1781,11 +1771,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
-  const destination = destinationFromTexts([
-    tripTitle,
-    ...history.map((turn) => turn.text),
-    customerTurn,
-  ]);
+  const destination = String(extractedDestination || '').trim();
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
   const upsell = upsellModeForTurn(intakeTurn, history);
