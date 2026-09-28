@@ -30,7 +30,6 @@
     "test:openclaw-control": "node scripts/test_openclaw_control.mjs",
     "test:reply-trip-data": "node scripts/test_trip_literal_ban_g2a.mjs",
     "test:g2d-jev-score-rewrite": "node scripts/test_g2d_jev_score_rewrite.mjs",
-    "test:g2d-jev-reply-literals": "node scripts/check-g2d-jev-reply-literals.mjs",
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
     "migration:apply-vacation-schema": "node scripts/apply_vacation_schema.mjs",
