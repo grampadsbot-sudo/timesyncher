@@ -254,7 +254,12 @@ const [jsSource, css] = await Promise.all([
 const js = patchStyleTwoToConfigRenderer(jsSource);
 assert.match(js, /\/shared\/:token\/journey/);
 assert.match(js, /G==="keepsake-style-2"\?Ae\(!0\)/);
-assert.match(js, /data-keepsake-admin-root/);
+assert.equal([...js.matchAll(/\{"data-keepsake-admin-root":!0/g)].length, 1);
+assert.equal(js.includes('children:"Trip View"'), false);
+const gearOpensAdmin = '"aria-label":"Config Options","aria-expanded":Qe,onClick:()=>{Mt("config"),Ye(!1),Jt(!1),ht(!0),it(!0),Pt(!0)}';
+const adminToggle = '{"data-keepsake-admin-root":!0,style:{position:"relative"},children:[n.jsx("button",{type:"button",onClick:()=>Pt(G=>!G)';
+assert.equal(js.includes(gearOpensAdmin), true);
+assert.equal(js.includes(adminToggle), true);
 
 const app = await startServer({ html, js, css, token, mapsOffToken, trip, mapsOffTrip });
 const puppeteer = loadPuppeteer();
@@ -373,12 +378,29 @@ try {
       && /style two/i.test(text)
       && /timesyncher vacation logo/i.test(text);
   }, { timeout: 10000 });
+  const adminFromMenu = await front.$eval('[data-keepsake-admin-root]', (node) => (node.innerText || '').replace(/\s+/g, ' ').trim());
+  assert.equal(await front.$$eval('[data-keepsake-admin-root]', (nodes) => nodes.length), 1);
   const gearLabels = await front.$$eval('button', (nodes) => nodes.map((node) => node.getAttribute('aria-label')).filter(Boolean));
   assert.ok(gearLabels.includes('PDFs'), 'front page Print/PDF control is present');
-  assert.equal(gearLabels.includes('Config Options'), false);
+  assert.ok(gearLabels.includes('Config Options'), 'front page gear is present');
 
   await mkdir(artifactDir, { recursive: true });
   await front.screenshot({ path: path.join(artifactDir, 'keepsake-config-admin.png') });
+  await front.evaluate(() => {
+    document.documentElement.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+  });
+  await front.waitForFunction(() => !document.querySelector('[data-keepsake-admin-root]'), { timeout: 10000 });
+  await front.click('[aria-label="Config Options"]');
+  await front.waitForFunction(() => {
+    const root = document.querySelector('[data-keepsake-admin-root]');
+    const text = root?.innerText || '';
+    return /initial summary page/i.test(text) && /daily maps/i.test(text) && /day 1 map/i.test(text);
+  }, { timeout: 10000 });
+  const adminFromGear = await front.$eval('[data-keepsake-admin-root]', (node) => (node.innerText || '').replace(/\s+/g, ' ').trim());
+  assert.equal(await front.$$eval('[data-keepsake-admin-root]', (nodes) => nodes.length), 1);
+  assert.equal(adminFromGear, adminFromMenu);
+  assert.equal(/trip view/i.test(adminFromGear), false);
+  await front.screenshot({ path: path.join(artifactDir, 'keepsake-gear-admin.png') });
   await front.close();
   await openPrintLayout(
     page,
@@ -393,6 +415,7 @@ try {
   console.log(`artifacts ${artifactDir}/keepsake-layout-1.png`);
   console.log(`artifacts ${artifactDir}/keepsake-layout-2.png`);
   console.log(`artifacts ${artifactDir}/keepsake-config-admin.png`);
+  console.log(`artifacts ${artifactDir}/keepsake-gear-admin.png`);
 } finally {
   await browser.close();
   await app.close();

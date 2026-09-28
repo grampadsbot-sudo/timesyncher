@@ -545,13 +545,46 @@ export function renderServedTrekBundle(raw) {
   return js;
 }
 
+function endOfCall(text, callStart) {
+  const open = text.indexOf('(', callStart);
+  if (open < 0) return -1;
+  let depth = 0;
+  let quote = '';
+  for (let i = open; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === '\\') {
+        i += 1;
+        continue;
+      }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '(') depth += 1;
+    else if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return i + 1;
+    }
+  }
+  return -1;
+}
+
 function stripTripView(source) {
   const js = String(source || '');
   const start = js.indexOf('n.jsxs("div",{"data-trip-view-root":!0');
   if (start < 0) return js;
-  const print = js.indexOf('n.jsxs("div",{"data-print-menu-root":!0', start);
-  if (print < 0 || js[print - 1] !== ',') return js;
-  return js.slice(0, start) + js.slice(print);
+  const gearNeedle = '"aria-label":"Config Options","aria-expanded":Xe,onClick:()=>{Mt("config"),Ye(G=>!G),ht(!1)}';
+  const gearAt = js.indexOf(gearNeedle, start);
+  const menuAt = js.indexOf(',Xe&&n.jsxs("div"', gearAt);
+  if (gearAt < 0 || menuAt < 0) return js;
+  const menuEnd = endOfCall(js, menuAt);
+  if (menuEnd < 0) return js;
+  const gearPatch = '"aria-label":"Config Options","aria-expanded":Qe,onClick:()=>{Mt("config"),Ye(!1),Jt(!1),ht(!0),it(!0),Pt(!0)}';
+  return js.slice(0, gearAt) + gearPatch + js.slice(gearAt + gearNeedle.length, menuAt) + js.slice(menuEnd);
 }
 
 function hideUnsourcedRatings(source) {
