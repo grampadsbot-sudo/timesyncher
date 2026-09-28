@@ -29,7 +29,7 @@ import {
   styleOneLocationStaysOnStaging,
 } from '../src/vacation/keepsake-style2-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
-import { patchStyleTwoToConfigRenderer, renderServedTrekBundle, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
+import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
@@ -894,8 +894,7 @@ for (const name of boundPhotos) {
   assert.equal(bytes[0], 0xff);
   assert.equal(bytes[1], 0xd8);
 }
-const localBundle = await readFile(new URL('../public/assets/upstream/index-BKun7ofk.js', import.meta.url), 'utf8');
-const livePatched = renderServedTrekBundle(localBundle);
+const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
 assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
 assert.equal(livePatched.includes('children:"Trip View"'), false);
@@ -949,8 +948,8 @@ assert.match(sharedApp, /data-ts-pic-popup-tip/);
 assert.match(sharedApp, /leaflet-popup-tip-container/);
 assert.match(sharedApp, /box-sizing: content-box !important/);
 
-const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
-assert.match(trek, /_t==="flight"\?"✈️"/);
+const trek = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+assert.match(trek, /i==="flight"\?"✈️"/);
 assert.doesNotMatch(trek, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');

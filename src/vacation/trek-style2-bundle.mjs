@@ -2,7 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, stripCannedBundle, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 
-const TRAVEL_BUNDLE = new URL('../../public/assets/upstream/index-BKun7ofk.js', import.meta.url);
+const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
@@ -941,26 +941,17 @@ export function assertPatchedStyleTwo(source = '') {
 export default async function handler(req, res) {
   let source;
   try {
-    source = await readFile(TRAVEL_BUNDLE, 'utf8');
+    source = await readFile(SERVED_BUNDLE, 'utf8');
+    assertPatchedStyleTwo(source);
   } catch (error) {
     res.statusCode = 500;
     res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(error.message || 'Local TREK bundle is missing.');
-    return;
-  }
-  let patched;
-  try {
-    patched = renderServedTrekBundle(source);
-    assertPatchedStyleTwo(patched);
-  } catch (error) {
-    res.statusCode = 500;
-    res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(error.message || 'Style two bundle patch failed.');
+    res.end(error.message || 'Served TREK bundle is missing.');
     return;
   }
   res.statusCode = 200;
   res.setHeader('content-type', 'application/javascript; charset=utf-8');
   res.setHeader('cache-control', 'no-store');
   res.setHeader('access-control-allow-origin', '*');
-  res.end(patched);
+  res.end(source);
 }

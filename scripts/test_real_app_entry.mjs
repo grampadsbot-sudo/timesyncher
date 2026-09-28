@@ -7,7 +7,7 @@ import { lowestCarOffers, withoutCarBrand } from '../src/vacation/car-offers.mjs
 
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
-const bundle = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
+const bundle = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const handler = await readFile(new URL('../src/vacation/shared-trip-handler.mjs', import.meta.url), 'utf8');
 
