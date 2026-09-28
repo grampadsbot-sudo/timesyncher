@@ -15,7 +15,6 @@ import {
   THIN_POI_COUNT,
 } from '../src/vacation/poi-search.mjs';
 import { clearWindCache, lookupWindBackup, windBackupSentence } from '../src/vacation/wind-backup.mjs';
-import { productThingSummary } from '../src/vacation/intake-shared-trip.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
 
 const house = { lat: 19.649, lng: -155.994 };
@@ -205,9 +204,6 @@ assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /Kahaluu/);
 assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /12 mph/);
 assert.doesNotMatch(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /house pool/);
 assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 22 }, { name: 'House', windMph: 18 }]), /House at 18 mph/);
-assert.match(productThingSummary({ title: 'Swim', who: 'Tyler', customerWhen: 'Mon Apr 6' }), /^A swim for Tyler on Mon Apr 6\.$/);
-assert.doesNotMatch(productThingSummary({ title: 'Swim' }), /house pool/);
-assert.match(productThingSummary({ title: 'Swim', windBackup: 'The wind backup is Kahaluu, where the forecast wind is 12 mph.' }), /Kahaluu/);
 
 clearWindCache();
 const nwsUrls = [];

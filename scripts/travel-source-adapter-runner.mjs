@@ -49,6 +49,20 @@ function envFromSecretFiles(adapter = {}) {
   return env;
 }
 
+function adapterCommand(adapter = {}) {
+  const envName = `TIMESYNCHER_ADAPTER_BIN_${String(adapter.id || '').toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+  const fromEnv = String(process.env[envName] || '').trim();
+  const command = fromEnv || String(adapter.binaryPath || '').trim();
+  if (!command || command.startsWith('/home/') || command.startsWith('~')) {
+    throw new Error(`Missing CLI for ${adapter.id || 'adapter'}. Set ${envName} or binaryPath to a command on PATH.`);
+  }
+  return command;
+}
+
+function adapterUser(adapter = {}) {
+  return String(adapter.runAsUser || process.env.TIMESYNCHER_ADAPTER_RUN_AS || '').trim();
+}
+
 async function execJson(command, args, { timeout = 60000, runAsUser = '', env = {} } = {}) {
   const finalCommand = runAsUser ? 'sudo' : command;
   const envPairs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
@@ -198,7 +212,7 @@ async function runHotelGoat(adapter, context = {}) {
   if (!destination || !checkin || !checkout) return [];
   const now = text(context.retrievedAt || new Date().toISOString(), 40);
   const expiresAt = addDaysIso(now, 3);
-  const body = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/hotel-goat-pp-cli', [
+  const body = await execJson(adapterCommand(adapter), [
     'hotels',
     destination,
     checkin,
@@ -206,7 +220,7 @@ async function runHotelGoat(adapter, context = {}) {
     '--limit', '3',
     '--agent',
     '--select', 'results.name,results.rating,results.price_per_night,results.booking_urls.primary',
-  ], { timeout: Number(adapter.timeoutMs || 120000), runAsUser: adapter.runAsUser || 'ubishere9995' });
+  ], { timeout: Number(adapter.timeoutMs || 120000), runAsUser: adapterUser(adapter) });
   return (Array.isArray(body.results) ? body.results : []).map((hotel, index) => {
     const url = publicUrl(hotel.booking_urls?.primary);
     const price = hotel.price_per_night ? `$${hotel.price_per_night}/night benchmark` : '';
@@ -239,61 +253,20 @@ async function runWanderlustGoat() {
   return [];
 }
 
-async function runMasterParkQuote(adapter, context = {}) {
-  const artifacts = context.artifacts || {};
-  const requestText = text(artifacts.requestText || context.requestText || '', 2000);
-  if (!/\b(masterpark|seatac|sea\b|seattle airport|airport parking)\b/i.test(requestText)) return [];
-  const now = text(context.retrievedAt || new Date().toISOString(), 40);
-  const expiresAt = addDaysIso(now, 3);
-  const quote = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/masterpark-pp-cli', [
-    'quote',
-    '--lot', 'B',
-    '--dropoff', '2030-06-11 07:00',
-    '--pickup', '2030-06-13 18:30',
-    '--json',
-  ], { timeout: Number(adapter.timeoutMs || 60000), runAsUser: adapter.runAsUser || 'ubishere9995' });
-  const first = Array.isArray(quote) ? quote[0] : quote;
-  if (!first) return [];
-  const total = first.grand_total || first.balance_due || first.due_at_lot || '';
-  return [{
-    category: 'transport',
-    title: 'MasterPark SEA parking quote benchmark',
-    summary: `Read-only MasterPark quote benchmark for SEA parking${total ? `: about $${total}` : ''}; useful when a trip includes Seattle airport parking logistics.`,
-    details: [
-      'MasterPark read-only quote smoke used Lot B with future benchmark dates to prove the source adapter can return prices without creating a reservation.',
-      first.location_information?.name ? `Location: ${first.location_information.name}.` : '',
-      first.location_information?.address ? `Address: ${String(first.location_information.address).replace(/<\/?br[^>]*>/gi, ' ')}.` : '',
-      total ? `Grand total benchmark: $${total}.` : '',
-      'Reservation creation remains blocked; this adapter may quote only.',
-    ].filter(Boolean).join('\n'),
-    website: 'https://masterparking.com/',
-    sources: [{ label: 'MasterPark', url: 'https://masterparking.com/', retrievedAt: now, adapterId: adapter.id }],
-    verificationStatus: 'needs_price_check',
-    caveats: ['Benchmark quote only; verify actual trip dates, vehicle type, fees, availability, and lot rules before relying on it.'],
-    sourceCaveats: ['MasterPark CLI has a reserve command, but the Vacation adapter blocks reservation/auth commands and uses quote only.'],
-    adapterSources: [{ adapterId: adapter.id, sourceId: 'masterpark-lot-b-quote', safetyClass: adapter.safetyClass, fetchedAt: now, status: 'live_read_only_quote_passed' }],
-    sourceQuality: { sourceCount: 1, adapterCount: 1, safetyClass: adapter.safetyClass, confidence: 'medium', lastVerifiedAt: now, expiresAt },
-    qualitySignals: { freshness: 'live_quote_snapshot', specificity: 'sea_airport_parking', caveatCount: 2 },
-    fitScores: { distanceRisk: 'airport_specific', reservationDifficulty: 'quote_only_no_reservation' },
-    verifiedAt: now,
-    expiresAt,
-  }];
-}
-
 async function runRoadsideAmerica(adapter, context = {}) {
   const artifacts = context.artifacts || {};
   const destination = text(context.destination || artifacts.destination || '', 120);
   if (!destination) return [];
   const now = text(context.retrievedAt || new Date().toISOString(), 40);
   const expiresAt = addDaysIso(now, 14);
-  const body = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/roadside-america-pp-cli', [
+  const body = await execJson(adapterCommand(adapter), [
     'near',
     destination,
     '--radius', '25',
     '--limit', '5',
     '--agent',
     '--select', 'name,city,distance,source_url',
-  ], { timeout: Number(adapter.timeoutMs || 75000), runAsUser: adapter.runAsUser || 'ubishere9995' });
+  ], { timeout: Number(adapter.timeoutMs || 75000), runAsUser: adapterUser(adapter) });
   return (Array.isArray(body.attractions) ? body.attractions : []).map((attraction, index) => {
     const url = publicUrl(attraction.source_url);
     const city = text(attraction.city || body.query?.place || destination, 160);
@@ -356,8 +329,6 @@ export async function runApprovedSourceAdapters(input = {}) {
       adaptersRun.push({ adapterId: adapter.id, status: found.length ? 'live_read_only_complete' : 'empty', safetyClass: adapter.safetyClass, candidateCount: found.length });
     } else if (adapter.id === 'printingpress-hotel-goat') {
       await runAdapter(adapter, () => runHotelGoat(adapter, input), 'skipped_missing_destination_or_dates');
-    } else if (adapter.id === 'printingpress-masterpark-quote') {
-      await runAdapter(adapter, () => runMasterParkQuote(adapter, input), 'skipped_not_relevant');
     } else if (adapter.id === 'printingpress-roadside-america') {
       await runAdapter(adapter, () => runRoadsideAmerica(adapter, input), 'skipped_missing_destination');
     } else {

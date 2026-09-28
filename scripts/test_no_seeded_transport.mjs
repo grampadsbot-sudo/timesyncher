@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   applyThingPresentation,
-  productThingSummary,
   sharedTripFromIntake,
   windLookupPointsFromThings,
 } from '../src/vacation/intake-shared-trip.mjs';
@@ -77,8 +76,6 @@ const blank = present([{
 }]);
 assert.equal(blank.places[0].category_name, '');
 assert.equal(blank.places[0].category.icon, '');
-assert.equal(productThingSummary({ title: 'Kailua-Kona house', customerWhen: 'Fri Apr 3' }), 'Kailua-Kona house on Fri Apr 3');
-assert.doesNotMatch(productThingSummary({ title: 'Big Island', customerWhen: 'Fri Apr 3' }), /People matter more/);
 
 const withCar = present([
   { id: 'car', category: 'car', title: 'Saved rental', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },

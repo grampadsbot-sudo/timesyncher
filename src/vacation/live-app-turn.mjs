@@ -12,7 +12,7 @@ import {
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
 export { isTemplateNote };
-import { customerInputState, productThingSummary } from './intake-shared-trip.mjs';
+import { customerInputState } from './intake-shared-trip.mjs';
 import { payerPriceLine, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -501,7 +501,6 @@ const DAY_WORDS = {
   'twenty-ninth': 29, thirtieth: 30, 'thirty-first': 31,
 };
 const WEEKDAY_ABBR = { sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat' };
-const WHO_SKIP = new Set(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Base', 'Big', 'Kids', 'Four', 'What', 'Keep', 'This', 'The']);
 
 function splitSentences(text) {
   return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean);
@@ -732,13 +731,7 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       notes,
       collaboratorNotes,
       customerWhen,
-      description: productThingSummary({
-        ...thing,
-        who,
-        customerWhen,
-        notes,
-        collaboratorNotes,
-      }),
+      description: String(thing.description || '').trim(),
     };
   });
 }
@@ -953,11 +946,7 @@ export function savedTripFacts(record = {}) {
     ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
   ].filter((person) => person.name);
   const owners = {};
-  const namedOwner = (thing) => {
-    const direct = String(thing?.who || '').match(/\b([A-Z][a-z]{2,})\b/);
-    if (direct && !WHO_SKIP.has(direct[1])) return direct[1];
-    return '';
-  };
+  const namedOwner = (thing) => String(thing?.who || '').trim();
   const gardenWho = namedOwner(garden);
   const swimWho = namedOwner(swim);
   if (gardenWho) owners.gardens = gardenWho;
@@ -1265,12 +1254,6 @@ function ageFromWords(token) {
   return word ? AGE_WORDS[word[1]] : null;
 }
 
-function payerFromCustomer(corpus, name) {
-  if (new RegExp(`\\bI pay for ${name}\\b`, 'i').test(corpus)) return 'owner';
-  if (new RegExp(`\\b${name} pays for (?:himself|herself|themself)\\b`, 'i').test(corpus)) return name.toLowerCase();
-  return '';
-}
-
 function rememberRoster(sources, field, value, source) {
   sources.push({ field, value, source });
 }
@@ -1316,21 +1299,6 @@ export function completeRosterParty(doc) {
     if (!person?.name) continue;
     party.editors.push({ name: person.name });
     rememberRoster(sources, `editors.${person.name}`, 'editor', 'trip.dialogParty');
-  }
-  for (const match of corpus.matchAll(/\bI pay for ([A-Z][a-z]+(?: [A-Z][a-z]+)?)/g)) {
-    const name = match[1];
-    const existing = party.collaborators.find((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''));
-    if (existing) existing.payer = existing.payer || 'owner';
-    else party.collaborators.push({ name, payer: 'owner' });
-    rememberRoster(sources, `collaborators.${name}.payer`, 'owner', `customer: I pay for ${name}`);
-  }
-  for (const match of corpus.matchAll(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) pays for (?:himself|herself|themself)/g)) {
-    const name = match[1];
-    const payer = name.split(/\s+/)[0].toLowerCase();
-    const existing = party.collaborators.find((person) => new RegExp(`^${name}\\b`, 'i').test(person.name || ''));
-    if (existing) existing.payer = existing.payer || payer;
-    else party.collaborators.push({ name, payer });
-    rememberRoster(sources, `collaborators.${name}.payer`, payer, `customer: ${name} pays for themself`);
   }
   for (const match of corpus.matchAll(/\b([A-Z][a-z]+) who is ([a-z0-9-]+)/g)) {
     const name = match[1];
@@ -1382,8 +1350,9 @@ export function completeRosterParty(doc) {
     } else if (role === 'collaborator') {
       if (party.primary?.name && samePerson(name, party.primary.name)) continue;
       if (party.collaborators.some((item) => samePerson(name, item.name))) continue;
-      party.collaborators.push({ name, payer: '' });
-      rememberRoster(sources, `collaborators.${name}`, '', 'chat_extraction');
+      const payer = String(person?.payer || '').trim();
+      party.collaborators.push({ name, payer });
+      rememberRoster(sources, `collaborators.${name}`, payer, 'chat_extraction');
     } else {
       unplaced = true;
     }
@@ -1796,8 +1765,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const seatDollars = Number(suppliedSeatDollars);
   const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
   tripFacts.seatDollars = pricedSeat;
+  tripFacts.payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
+    .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
+    .filter((row) => row.name && row.payer);
   const planLine = customerAsksPrice(customerTurn) && pricedSeat
-    ? payerPriceLine(customerTurn, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(pricedSeat * 100) })
+    ? payerPriceLine(tripFacts.payerRows, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(pricedSeat * 100) })
     : '';
   const planTable = planLine
     ? {
@@ -2100,7 +2072,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
       : '',
     customerAsksPrice(customerTurn)
-      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${Number(facts.seatDollars) > 0 ? payerPriceLine(customerTurn, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(Math.round(Number(facts.seatDollars) * 100)) }) : 'the configured price is missing, so do not invent a dollar amount'}.`
+      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${Number(facts.seatDollars) > 0 ? payerPriceLine(facts.payerRows, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(Math.round(Number(facts.seatDollars) * 100)) }) : 'the configured price is missing, so do not invent a dollar amount'}.`
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');

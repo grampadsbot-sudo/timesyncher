@@ -15,7 +15,6 @@ assert.doesNotMatch(workerText, /house-radius-poi/);
 assert.doesNotMatch(workerText, /live-grok-web-search/);
 assert.doesNotMatch(workerText, /runGrokResearch/);
 assert.doesNotMatch(workerText, /TIMESYNCHER_GROK_BIN/);
-assert.doesNotMatch(workerText, /ubishere9995/);
 assert.doesNotMatch(workerText, /\.local\/bin\/grok/);
 assert.doesNotMatch(workerText, /Caldwell/);
 assert.doesNotMatch(workerText, /[Pp]erplexity/);

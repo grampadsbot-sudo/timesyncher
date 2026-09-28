@@ -54,24 +54,9 @@ function namedDates(label, year) {
 }
 
 function assignDates(thing, year, tripDates) {
-  if (thing.title === 'Groceries') {
-    const arrival = namedDates(thing.whenLabel || '', year).filter((date) => tripDates.includes(date));
-    if (arrival.length) return [arrival[0]];
-  }
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
-  let unique = [...new Set(named)].filter((date) => tripDates.includes(date));
-  if (thing.title === 'Swim') {
-    const arrival = tripDates[0] || '';
-    unique = unique.filter((date) => date !== arrival);
-    return unique;
-  }
+  const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
   if (!unique.length) return tripDates.slice(0, 1);
-  const spansTrip = /big island|house/i.test(String(thing.title || ''));
-  if (spansTrip && unique.length >= 2) {
-    const sorted = unique.slice().sort();
-    const span = eachDate(sorted[0], sorted[sorted.length - 1]).filter((date) => tripDates.includes(date));
-    if (span.length > 2) return span;
-  }
   return unique;
 }
 
@@ -174,25 +159,10 @@ export function customerInputState(records = []) {
   return state;
 }
 
-/** Product thing copy from the title, who, and when. Not a pasted chat turn. */
-export function productThingSummary(thing = {}) {
-  const title = String(thing.title || thing.name || '').trim();
-  const who = String(thing.who || '').trim();
-  const when = String(thing.customerWhen || thing.whenLabel || '').trim();
-  const whoBit = who ? ` for ${who}` : '';
-  const whenBit = when ? ` on ${when}` : '';
-  if (/grocer/i.test(title)) return `Groceries${whenBit}, the arrival day, after the airport shuttle.`.replace(/\s+/g, ' ').trim();
-  if (/garden/i.test(title)) return `Garden time${whoBit}${whenBit}. One garden block, not two big activities.`;
-  if (/\bswim\b/i.test(title)) {
-    const wind = String(thing.windBackup || '').trim();
-    const base = `A swim${whoBit}${whenBit}.`.replace(/\s+/g, ' ').trim();
-    return wind ? `${base} ${wind}` : base;
-  }
-  if (/\bdinner\b/i.test(title)) return `Dinner${whoBit}${whenBit}.`;
-  if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
-  const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
-  if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
-  return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
+function recordSummary(thing = {}) {
+  const written = String(thing.description || thing.summary || '').replace(/\s+/g, ' ').trim();
+  if (written) return written;
+  return String(thing.title || thing.name || '').replace(/\s+/g, ' ').trim();
 }
 
 export function thingRecordFromTripRow(row = {}) {
@@ -243,7 +213,7 @@ export function sharedTripFromIntake({ trip, things }) {
   for (const thing of things || []) {
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
-    const summary = productThingSummary(thing);
+    const summary = recordSummary(thing);
     const point = locationOf(thing);
     const ratings = writeRatings(thing);
     const sourceRef = sourceRefOf(thing);
@@ -340,8 +310,7 @@ export function windLookupPointsFromThings(things = []) {
     const name = String(thing.title || thing.name || '').trim();
     const point = locationOf(thing);
     if (!name || !point) continue;
-    if (!/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
-    const key = name.toLowerCase();
+    const key = `${point.lat},${point.lng}`;
     if (seen.has(key)) continue;
     seen.add(key);
     points.push({ name, lat: point.lat, lng: point.lng });
@@ -359,10 +328,9 @@ export function applyThingPresentation(shared = {}, options = {}) {
   };
   for (const place of places) {
     const name = String(place.name || '').trim();
-    const summary = productThingSummary({
+    const summary = recordSummary({
       title: name,
-      summary: place.description || place.notes || '',
-      windBackup: /\bswim\b/i.test(name) ? windBackup : '',
+      description: place.description || place.notes || '',
     });
     place.description = summary;
     place.notes = summary;
@@ -383,6 +351,7 @@ export function applyThingPresentation(shared = {}, options = {}) {
     put(place, extra);
   }
   const next = { ...shared, places, thingOverrides };
+  if (windBackup) next.windBackup = windBackup;
   delete next.needsCustomerInput;
   delete next.flightAsk;
   return { ...next, ...customerInputState(places) };

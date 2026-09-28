@@ -90,6 +90,7 @@ const research = await runPublicResearch({
     BRAVE_SEARCH_API_KEY: 'brave-test-key',
     FOURSQUARE_SERVICE_KEY: 'fsq-test-key',
     TAVILY_API_KEY: 'tavily-test-key',
+    OPENROUTER_API_KEY: 'test-openrouter-key',
   },
   priorPlaces: [],
   fetchImpl: async (url, options) => {
@@ -138,6 +139,9 @@ const research = await runPublicResearch({
       });
     }
     if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    if (value.includes('openrouter.ai')) {
+      return jsonResponse({ answers: { relevance: { choice: 5 } } });
+    }
     if (value.includes('api.tavily.com/search')) {
       const body = JSON.parse(options.body);
       assert.equal(body.query, 'morning flight');

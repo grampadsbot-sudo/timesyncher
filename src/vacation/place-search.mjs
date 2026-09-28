@@ -1,4 +1,4 @@
-import { firstPassSearchLimit, SEARCH_RADIUS_METERS } from './keepsake-list-minimums.mjs';
+import { firstPassSearchLimit, jevRelevanceMinimum, SEARCH_RADIUS_METERS } from './keepsake-list-minimums.mjs';
 import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
 import { writeRatings } from './write-ratings.mjs';
 const DEDUPE_METERS = 250;
@@ -294,8 +294,19 @@ function sourceRecordFor(place) {
   };
 }
 
+function openRouterKey(env) {
+  return String(env?.OPENROUTER_API_KEY || env?.JEV_API_KEY || '').trim();
+}
+
+function requireOpenRouterKey(env) {
+  const apiKey = openRouterKey(env);
+  if (!apiKey) fail('Place search refused to run. Missing OPENROUTER_API_KEY.', 'missing_key');
+  return apiKey;
+}
+
 async function attachRelevance(rows, fetchImpl, env) {
-  const apiKey = String(env?.OPENROUTER_API_KEY || env?.JEV_API_KEY || '').trim();
+  const apiKey = requireOpenRouterKey(env);
+  const minimum = jevRelevanceMinimum(env);
   const scored = [];
   for (const row of rows) {
     const jevScore = await jevRelevanceScore({
@@ -304,6 +315,7 @@ async function attachRelevance(rows, fetchImpl, env) {
       url: row.url || '',
       category: row.category,
     }, { fetchImpl, apiKey });
+    if (!(Number(jevScore) >= minimum)) continue;
     scored.push({ ...row, jevScore });
   }
   return scored;
@@ -616,6 +628,7 @@ export async function searchPlaces({
       sourceCounts: countSources([]),
     };
   }
+  requireOpenRouterKey(env);
   if (placeQueries.length) {
     const missing = missingSearchKeys(env);
     if (missing.length) fail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');

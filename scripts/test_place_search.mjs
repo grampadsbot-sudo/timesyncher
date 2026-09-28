@@ -26,6 +26,7 @@ function placeEnv(env = ENV) {
     foursquare: env.FOURSQUARE_SERVICE_KEY || env.foursquare || '',
     braveName: 'BRAVE_SEARCH_API_KEY',
     foursquareName: 'FOURSQUARE_SERVICE_KEY',
+    OPENROUTER_API_KEY: env.OPENROUTER_API_KEY || 'test-openrouter-key',
   };
 }
 const CENTER = { lat: 38.7223, lng: -9.1393 };
@@ -139,10 +140,19 @@ function lisbonRoutes(url) {
   throw new Error(`unexpected place search request ${value}`);
 }
 
+function jevOk(choice = 5) {
+  return jsonResponse({ answers: { relevance: { choice } } });
+}
+
+function isOpenRouter(url) {
+  return String(url).includes('openrouter.ai');
+}
+
 function recordingFetch(routes, events) {
   const calls = [];
   const fetchImpl = async (url, options) => {
     calls.push({ url: String(url), options });
+    if (isOpenRouter(url)) return jevOk(5);
     events?.push(callKind(url));
     return routes(url, options);
   };
@@ -422,6 +432,7 @@ const lodgingSearch = await searchPlaces({
   priorPlaces: [],
   fetchImpl: async (url) => {
     const value = String(url);
+    if (isOpenRouter(value)) return jevOk(5);
     lodgingEvents.push(callKind(value));
     if (value.includes('nominatim') && value.includes('Jockey')) {
       return jsonResponse([{ lat: '36.1100', lon: '-115.1700', display_name: 'Jockey Club' }]);
@@ -466,6 +477,7 @@ const braveAfterMany = await searchPlaces({
   priorPlaces: [],
   fetchImpl: async (url) => {
     const value = String(url);
+    if (isOpenRouter(value)) return jevOk(5);
     manyFsq.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || new URL(value).searchParams.get('query') || ''}`);
     if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
@@ -498,6 +510,7 @@ const lodgingMiss = await searchPlaces({
   priorPlaces: [],
   fetchImpl: async (url) => {
     const value = String(url);
+    if (isOpenRouter(value)) return jevOk(5);
     if (value.includes('nominatim')) {
       fallbackEvents.push(decodeURIComponent(value));
       if (value.includes('Missing')) return jsonResponse([]);
@@ -526,7 +539,7 @@ assert.equal(lodgingMiss.center.geocoded, 'destination');
 assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
 assert.equal(lodgingMiss.places[0].externalId, 'fsq-lisbon');
 assert.equal(lodgingMiss.places[0].categoryName, 'Café');
-assert.equal(lodgingMiss.places[0].jevScore, 0);
+assert.equal(lodgingMiss.places[0].jevScore, 5);
 const savedCafe = placeToTripThing({
   ...lodgingMiss.places[0],
   rating: 4.4,
@@ -537,7 +550,7 @@ assert.equal(savedCafe.ratings.source, 'foursquare_os');
 assert.equal(savedCafe.ratings.rating, '4.4');
 assert.equal(savedCafe.ratings.count, 12);
 assert.equal(savedCafe.ratings.googleRating, undefined);
-assert.equal(savedCafe.metadata.jevScore, 0);
+assert.equal(savedCafe.metadata.jevScore, 5);
 assert.equal(savedCafe.metadata.categoryName, 'Café');
 assert.equal(savedCafe.metadata.sourceRecord.categoryName, 'Café');
 
@@ -607,6 +620,7 @@ const flightSearch = await searchPlaces({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
   env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
   fetchImpl: async (url, options) => {
+    if (isOpenRouter(url)) return jevOk(5);
     tavilyCalls.push(String(url));
     assert.equal(String(url), 'https://api.tavily.com/search');
     const body = JSON.parse(options.body);
@@ -629,14 +643,17 @@ assert.equal(flightSearch.notes[0].title, 'Morning departure');
 const flightFill = await fillTripIntake({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
   env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
-  fetchImpl: async () => jsonResponse({
-    results: [{
-      title: 'Morning departure',
-      url: 'https://example.test/flight',
-      content: 'A published schedule.',
-      score: 0.8,
-    }],
-  }),
+  fetchImpl: async (url) => {
+    if (isOpenRouter(url)) return jevOk(5);
+    return jsonResponse({
+      results: [{
+        title: 'Morning departure',
+        url: 'https://example.test/flight',
+        content: 'A published schedule.',
+        score: 0.8,
+      }],
+    });
+  },
 });
 assert.equal(flightFill.things[0].source, 'tavily');
 assert.equal(flightFill.things[0].metadata.source, 'tavily');

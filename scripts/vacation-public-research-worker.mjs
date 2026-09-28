@@ -374,6 +374,8 @@ export async function runPublicResearch(input = {}) {
       brave: sourceEnv.brave || sourceEnv.BRAVE_SEARCH_API_KEY || '',
       foursquare: sourceEnv.foursquare || sourceEnv.FOURSQUARE_SERVICE_KEY || '',
       tavily: sourceEnv.tavily || sourceEnv.TAVILY_API_KEY || '',
+      OPENROUTER_API_KEY: sourceEnv.OPENROUTER_API_KEY || '',
+      JEV_RELEVANCE_MINIMUM: sourceEnv.JEV_RELEVANCE_MINIMUM,
       braveName: 'BRAVE_SEARCH_API_KEY',
       foursquareName: 'FOURSQUARE_SERVICE_KEY',
       tavilyName: 'TAVILY_API_KEY',

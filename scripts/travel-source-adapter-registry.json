@@ -84,8 +84,7 @@
       "allowsBookingOrPayment": false,
       "allowedCategories": ["activity", "tour", "event", "restaurant", "store", "decision"],
       "timeoutMs": 120000,
-      "binaryPath": "/home/ubishere9995/.local/bin/wanderlust-goat-pp-cli",
-      "runAsUser": "ubishere9995",
+      "binaryPath": "wanderlust-goat-pp-cli",
       "secretFiles": {},
       "inputPolicy": {
         "customerPii": "minimal_trip_context_only",
@@ -106,8 +105,7 @@
       "allowsBookingOrPayment": false,
       "allowedCategories": ["activity", "tour", "event", "decision"],
       "timeoutMs": 75000,
-      "binaryPath": "/home/ubishere9995/.local/bin/roadside-america-pp-cli",
-      "runAsUser": "ubishere9995",
+      "binaryPath": "roadside-america-pp-cli",
       "inputPolicy": {
         "customerPii": "minimal_trip_context_only",
         "privateSources": "blocked",
@@ -129,8 +127,7 @@
       "blockedCommands": ["create", "import", "sync", "tail"],
       "allowedCategories": ["activity", "tour", "decision"],
       "timeoutMs": 75000,
-      "binaryPath": "/home/ubishere9995/.local/bin/alltrails-pp-cli",
-      "runAsUser": "ubishere9995",
+      "binaryPath": "alltrails-pp-cli",
       "inputPolicy": {
         "customerPii": "minimal_trip_context_only",
         "privateSources": "blocked",
@@ -172,8 +169,7 @@
       "allowsBookingOrPayment": false,
       "allowedCategories": ["hotel", "decision"],
       "timeoutMs": 120000,
-      "binaryPath": "/home/ubishere9995/.local/bin/hotel-goat-pp-cli",
-      "runAsUser": "ubishere9995",
+      "binaryPath": "hotel-goat-pp-cli",
       "inputPolicy": {
         "customerPii": "minimal_trip_context_only",
         "privateSources": "blocked",
@@ -184,29 +180,6 @@
         "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
       },
       "smokeStatus": "passed_read_only_live_hotels_2026-06-15"
-    },
-    {
-      "id": "printingpress-masterpark-quote",
-      "kind": "printing_press_cli",
-      "label": "Printing Press MasterPark quote",
-      "safetyClass": "unofficial_read_only",
-      "enabled": true,
-      "allowsBookingOrPayment": false,
-      "blockedCommands": ["reserve", "reservations", "auth"],
-      "allowedCategories": ["car", "transport", "decision"],
-      "timeoutMs": 60000,
-      "binaryPath": "/home/ubishere9995/.local/bin/masterpark-pp-cli",
-      "runAsUser": "ubishere9995",
-      "inputPolicy": {
-        "customerPii": "minimal_trip_context_only",
-        "privateSources": "blocked",
-        "shellAccess": "bounded_cli"
-      },
-      "outputSchema": {
-        "required": ["category", "title", "summary", "details", "sources"],
-        "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
-      },
-      "smokeStatus": "passed_read_only_locations_and_quote_2026-06-15"
     },
     {
       "id": "printingpress-flight-goat",

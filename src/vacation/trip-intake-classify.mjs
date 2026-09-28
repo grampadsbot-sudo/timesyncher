@@ -71,7 +71,8 @@ function cleanRoster(list) {
     seen.add(key);
     const rawAge = item?.age;
     const age = rawAge === null || rawAge === undefined || rawAge === '' ? null : Number(rawAge);
-    people.push({ name, role, age: Number.isFinite(age) ? age : null });
+    const payer = clean(item?.payer, 80);
+    people.push({ name, role, age: Number.isFinite(age) ? age : null, ...(payer ? { payer } : {}) });
   }
   return people;
 }
