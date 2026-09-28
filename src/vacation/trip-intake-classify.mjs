@@ -48,8 +48,10 @@ function parseThingList(raw) {
   return parsed.things;
 }
 
+const CHAT_EXTRACTION = 'chat_extraction';
+
 function cleanThings(list) {
-  const cleaned = [];
+  const things = [];
   const seen = new Set();
   for (const item of list) {
     const name = clean(item?.name || item?.title, 180);
@@ -57,14 +59,15 @@ function cleanThings(list) {
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    cleaned.push({
+    things.push({
       name,
       kind: clean(item?.kind || item?.category, 40).toLowerCase(),
       who: clean(item?.who, 120),
       when: clean(item?.when || item?.whenLabel, 180),
+      source: CHAT_EXTRACTION,
     });
   }
-  return cleaned;
+  return things;
 }
 
 async function postJson(fetchImpl, url, key, body, title) {
@@ -98,6 +101,7 @@ export function thingsFromIntake(extracted) {
     customerWhen: '',
     notes: [],
     collaboratorNotes: [],
+    source: thing.source || CHAT_EXTRACTION,
   }));
 }
 
