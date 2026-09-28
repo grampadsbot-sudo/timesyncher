@@ -309,7 +309,7 @@ async function main() {
       skipped.push({ filePath, reason: mapped.skipReason || `${mapped.skipName} is not on vacation-3 yet` });
       continue;
     }
-    if (mapped.action === 'unknown' && !thingName && !thingId) {
+    if ((mapped.action === 'unknown' || mapped.action === 'needs-attachment') && !thingName && !thingId) {
       skipped.push({ filePath, reason: mapped.skipReason });
       continue;
     }

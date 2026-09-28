@@ -337,6 +337,25 @@ export function sharedTripFromIntake({ trip, things }) {
   };
 }
 
+function sourceObject(place = {}) {
+  const row = place.source;
+  return row && typeof row === 'object' && !Array.isArray(row) ? row : null;
+}
+
+/** Tags and happy hour come from the Thing's source record. Missing fields stay blank. */
+function sourcedRestaurantFields(place = {}) {
+  const source = sourceObject(place);
+  const tags = Array.isArray(place.restaurantTags)
+    ? place.restaurantTags
+    : (Array.isArray(source?.restaurantTags) ? source.restaurantTags : []);
+  const happyHourFlag = place.happyHour ?? source?.happyHour;
+  return {
+    restaurantTags: tags.map((tag) => String(tag || '').trim()).filter(Boolean),
+    happyHour: typeof happyHourFlag === 'boolean' ? happyHourFlag : null,
+    happyHourDetails: String(place.happyHourDetails || source?.happyHourDetails || '').trim(),
+  };
+}
+
 export function windLookupPointsFromThings(things = []) {
   const points = [];
   const seen = new Set();
@@ -376,6 +395,10 @@ export function applyThingPresentation(shared = {}, options = {}) {
       extra.lng = lng;
       if (place.address) extra.address = place.address;
     }
+    const sourcedMenu = sourcedRestaurantFields(place);
+    if (sourcedMenu.restaurantTags.length) extra.restaurantTags = sourcedMenu.restaurantTags;
+    if (sourcedMenu.happyHour != null) extra.happyHour = sourcedMenu.happyHour;
+    if (sourcedMenu.happyHourDetails) extra.happyHourDetails = sourcedMenu.happyHourDetails;
     put(place, extra);
   }
   const next = { ...shared, places, thingOverrides };

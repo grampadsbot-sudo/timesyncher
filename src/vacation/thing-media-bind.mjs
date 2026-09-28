@@ -17,8 +17,6 @@ export const FILENAME_THING_HINTS = [
   [/lotus/i, 'Lotus of Siam'],
   [/eggslut/i, 'Eggslut'],
   [/cosmo|shop/i, 'Cosmopolitan shops'],
-  [/conservatory|bellagio.*cocktail|anniversary cocktail/i, 'Bellagio Conservatory'],
-  [/bellagio|lodging|hotel|fountain/i, 'Bellagio'],
   [/boarding|sfo.*las|outbound|depart/i, 'SFO to LAS'],
   [/las.*sfo|return|inbound/i, 'LAS to SFO'],
 ];
@@ -58,8 +56,7 @@ export const SCT_VACATION3_MEDIA_PACK = [
   },
   {
     file: 'conservatory-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8871, thingName: 'Bellagio Conservatory' }],
+    action: 'attach',
   },
   {
     file: 'eggslut-sandwich-photo.jpg',
@@ -103,13 +100,11 @@ export const SCT_VACATION3_MEDIA_PACK = [
   },
   {
     file: 'bellagio-fountain-late-video.mp4',
-    action: 'bind',
-    targets: [{ thingId: 8869, thingName: 'Bellagio' }],
+    action: 'attach',
   },
   {
     file: 'bellagio-fountain-night-video.mp4',
-    action: 'bind',
-    targets: [{ thingId: 8869, thingName: 'Bellagio' }],
+    action: 'attach',
   },
   {
     file: 'sphere-led-video.mp4',
@@ -127,6 +122,16 @@ export function mapVacation3SctMediaFile(filename = '') {
   const file = basenameLower(filename);
   const exact = SCT_VACATION3_MEDIA_PACK.find((row) => row.file === file);
   if (exact) {
+    if (exact.action === 'attach') {
+      return {
+        file,
+        action: 'needs-attachment',
+        targets: [],
+        skipName: '',
+        skipReason: 'Bind this file to the Thing id it was attached to.',
+        exact: true,
+      };
+    }
     return {
       file,
       action: exact.action,
