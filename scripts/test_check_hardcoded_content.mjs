@@ -601,7 +601,7 @@ const bundleSymbol = '/assets/index-BKun7ofk.js is not in the repo and the build
 writeTree(bundleDir, {
   'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
   'extra.html': '<script src="/assets/other-bundle.js"></script>\n<link rel="modulepreload" href="/assets/preload.js">\n<script type="module">import(\'/assets/imported.js\');</script>\n<script src="https://js.stripe.com/v3/"></script>\n',
-  'src/onboarding/eula-page.mjs': 'export const page = true;\n',
+  'src/onboarding/eula-page.mjs': 'const page = true;\n',
   'kept.html': '<script type="module" src="/src/onboarding/eula-page.mjs"></script>\n<script src="/assets/kept.js"></script>\n',
   'public/assets/kept.js': 'console.log("kept");\n',
 }, [{

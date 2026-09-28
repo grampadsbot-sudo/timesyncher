@@ -1161,7 +1161,7 @@ function gitTracked(cwd, rel) {
   return listed.status === 0;
 }
 
-export function fetchedBundleNames(cwd = process.cwd()) {
+function fetchedBundleNames(cwd = process.cwd()) {
   const writer = path.join(cwd, 'scripts/write-shared-assets.mjs');
   if (!fs.existsSync(writer)) return [];
   const text = fs.readFileSync(writer, 'utf8');
@@ -1169,7 +1169,7 @@ export function fetchedBundleNames(cwd = process.cwd()) {
   return [...text.matchAll(/['"`](index-[A-Za-z0-9._-]+\.js)['"`]/g)].map((match) => match[1]);
 }
 
-export function offlineBuildProduces(cwd, repoRelativePath) {
+function offlineBuildProduces(cwd, repoRelativePath) {
   const base = path.posix.basename(String(repoRelativePath || '').split(path.sep).join('/'));
   if (!base || fetchedBundleNames(cwd).includes(base)) return false;
   const pkgPath = path.join(cwd, 'package.json');

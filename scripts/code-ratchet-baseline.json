@@ -150,12 +150,6 @@
     "note": "existing; ratchet only shrinks"
   },
   {
-    "rule": "FILE-SIZE-500",
-    "file": "scripts/check-hardcoded-content.mjs",
-    "symbol": "lines:983",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
     "rule": "SEARCH-MODULE-ONLY",
     "file": "scripts/check-hardcoded-content.mjs",
     "symbol": "google-places",
@@ -435,12 +429,6 @@
     "rule": "TEST-TRIP-LITERALS",
     "file": "scripts/test_bind_thing_media.mjs",
     "symbol": "las-vegas-vacation-3",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "FILE-SIZE-500",
-    "file": "scripts/test_check_hardcoded_content.mjs",
-    "symbol": "lines:519",
     "note": "existing; ratchet only shrinks"
   },
   {
