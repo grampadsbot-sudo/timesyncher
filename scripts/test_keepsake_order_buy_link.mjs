@@ -56,12 +56,17 @@ function frameOptionsFor(headers, pathname) {
   return value;
 }
 
+// Vercel writes vercel.json headers onto the response, then the function's
+// setHeader replaces the same key. A keepsake-order header wins; other routes do not set one.
+function deliveredFrame(platform, responseHeader) {
+  return responseHeader || platform;
+}
+
 async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
   const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
   const defaultFrame = 'DENY';
-  assert.equal(frameOptionsFor(vercel.headers, '/'), defaultFrame);
-  assert.equal(frameOptionsFor(vercel.headers, '/api/keepsake-order'), 'SAMEORIGIN');
-  assert.equal(frameOptionsFor(vercel.headers, '/api/keepsake-order?slug=creek-road-week'), 'SAMEORIGIN');
+  assert.deepEqual(vercel.headers.map((rule) => [rule.source, rule.headers.find((header) => header.key === 'X-Frame-Options')?.value]), [['/(.*)', defaultFrame]]);
+  assert.equal(JSON.stringify(vercel).includes('SAMEORIGIN'), false);
 
   const order = mockRes();
   await handleKeepsakeOrder(get('creek-road-week'), order, { lookup: async () => trip });
@@ -69,8 +74,14 @@ async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
   const missing = mockRes();
   await handleKeepsakeOrder(get(''), missing, { lookup: async () => trip });
   assert.equal(missing.headers['x-frame-options'], 'SAMEORIGIN');
+  const denied = mockRes();
+  await handleKeepsakeOrder({ method: 'POST', url: '/api/keepsake-order?slug=creek-road-week', headers: {} }, denied, { lookup: async () => trip });
+  assert.equal(denied.statusCode, 405);
+  assert.equal(denied.headers['x-frame-options'], 'SAMEORIGIN');
 
   const otherPaths = [
+    '/',
+    '/api/keepsake-order',
     '/api/bind-thing-media',
     '/api/pdf/qr.svg',
     '/api/pdf/shared/token/report/keepsake.pdf',
@@ -92,16 +103,13 @@ async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
   for (const pathname of otherPaths) {
     assert.equal(frameOptionsFor(vercel.headers, pathname), defaultFrame, pathname);
   }
-  for (const rule of vercel.headers) {
-    if (rule.source === '/api/keepsake-order') continue;
-    const frame = rule.headers.find((header) => header.key === 'X-Frame-Options');
-    assert.equal(frame.value, defaultFrame, rule.source);
-  }
+  assert.equal(deliveredFrame(frameOptionsFor(vercel.headers, '/api/keepsake-order'), order.headers['x-frame-options']), 'SAMEORIGIN');
 
   const version = mockRes();
   await handler({ method: 'GET', url: '/api/version', headers: {}, query: { route: ['version'] } }, version);
   assert.equal(version.statusCode, 200);
   assert.equal(version.headers['x-frame-options'], undefined);
+  assert.equal(deliveredFrame(frameOptionsFor(vercel.headers, '/api/version'), version.headers['x-frame-options']), defaultFrame);
 
   const routeDir = new URL('../routes/', import.meta.url);
   for (const name of await readdir(routeDir)) {
