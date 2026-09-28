@@ -1,0 +1,1394 @@
+[
+  {
+    "rule": "DEAD-CODE",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "export:grokVacationSupportIntent",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "export:ownerMediaCheckoutUrl",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "export:ubuntuGrokVacationSupportIntent",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/build-used-vs-tip.mjs",
+    "symbol": "export:listCommitsBetween",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/check-evidence-secrets.mjs",
+    "symbol": "export:findSecretLocations",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/check-evidence-secrets.mjs",
+    "symbol": "export:scanFile",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/check-hardcoded-content.mjs",
+    "symbol": "export:baseBaselineCount",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/check-hardcoded-content.mjs",
+    "symbol": "export:evaluate",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/check-hardcoded-content.mjs",
+    "symbol": "export:loadBaselineFile",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/check-hardcoded-content.mjs",
+    "symbol": "export:scanRoots",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:BIG_ISLAND_FILL_DETAILS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:BIG_ISLAND_LIST_FILL",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:DEFAULT_FIRST_PASS_MINIMUMS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:FILENAME_THING_HINTS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:KEEPSAKE_FILL_DETAILS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:KEEPSAKE_LIST_FILL",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:LIVE_TAB_FILL",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:NAMED_THING_LOGOS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:ONBOARDING_OPENER_CHAT_ONLY",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:PRODUCT_THING_FIELDS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:PRODUCT_VENUE_COORDS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "export:stripChatMarkdown",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "export:assertRosterRoleBlock",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "export:buildTimingSummary",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "export:liveV7Pack",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "export:rosterLines",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "symbol": "export:approvedAdapters",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:assertBakeoffMap",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:assertSharedReplyTargetAllowed",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:extractJevFreeNote",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:JEV_QUALITY_COMMENTS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:jevChooseRewrite",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:labeledJevScore",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:noteEchoesCustomer",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "export:SHARED_REPLY_PIPELINE",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "symbol": "export:normalizeCandidate",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:assertBothPdfsMatchLive",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:assertLiveMatchesTip",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:isVoidStaleBuild",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:prependVoidStamp",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:readDeploymentMetaSha",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:readInspectDeploymentId",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:readLiveBuildSha",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "export:STAGING_ORIGIN",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/current-eula-text.mjs",
+    "symbol": "export:CURRENT_EULA_VERSION",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-acceptance-core.mjs",
+    "symbol": "export:browserSha256Hex",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-acceptance-core.mjs",
+    "symbol": "export:sha256Hex",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-acceptance-core.mjs",
+    "symbol": "export:stableJson",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:buildAcceptanceReceipt",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:capabilitySnapshotFromSession",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:copyPath",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:renderAcceptanceCopyHtml",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:sessionPath",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:sha256Hex",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:stableJson",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:validateSessionShape",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-backend-core.mjs",
+    "symbol": "export:writeJson",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:acceptanceCopyKey",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:buildAcceptanceReceipt",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:capabilitySnapshotFromSession",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:renderAcceptanceCopyHtml",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:sessionKey",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:sha256Hex",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:stableJson",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:validateReceiptForActivation",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/onboarding/eula-persistent-core.mjs",
+    "symbol": "export:validateSessionShape",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/safety/high-authority-actions.mjs",
+    "symbol": "export:HIGH_AUTHORITY_ACTION_KINDS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/safety/high-authority-actions.mjs",
+    "symbol": "export:highAuthorityActionsAllowed",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/access-plan.mjs",
+    "symbol": "export:ensureAccessPlanSchema",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/bind-thing-media-handler.mjs",
+    "symbol": "export:mergeBindingsIntoShared",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/bind-thing-media-handler.mjs",
+    "symbol": "export:opsHelp",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/checkout-coupons.mjs",
+    "symbol": "export:couponContactFromBody",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/checkout-coupons.mjs",
+    "symbol": "export:createCheckoutCoupon",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/checkout-coupons.mjs",
+    "symbol": "export:generateCouponCode",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/checkout-coupons.mjs",
+    "symbol": "export:listCheckoutCoupons",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/checkout-coupons.mjs",
+    "symbol": "export:redeemCheckoutCoupon",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/checkout-pricing.mjs",
+    "symbol": "export:checkoutCurrency",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/collaborators.mjs",
+    "symbol": "export:COLLABORATOR_PLANS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/collaborators.mjs",
+    "symbol": "export:collaboratorToken",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/collaborators.mjs",
+    "symbol": "export:ensureCollaboratorEulaSession",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/collaborators.mjs",
+    "symbol": "export:hashToken",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/collaborators.mjs",
+    "symbol": "export:loadCollaboratorInviteForEmail",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/coupons.mjs",
+    "symbol": "export:couponHash",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/coupons.mjs",
+    "symbol": "export:generateCouponCode",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/email.mjs",
+    "symbol": "export:purchaseLaunchUrl",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/itinerary-minimums.mjs",
+    "symbol": "export:assignedPlaceIds",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol": "export:BIG_ISLAND_LIST_FILL",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol": "export:KEEPSAKE_FILL_DETAILS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol": "export:LIVE_TAB_MINIMUMS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "symbol": "export:namesAlreadyListed",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol": "export:PRODUCT_VENUE_COORDS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "symbol": "export:productThingCategory",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-style2-handler.mjs",
+    "symbol": "export:isDailyReport",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-style2.mjs",
+    "symbol": "export:isPhotoBinding",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/keepsake-style2.mjs",
+    "symbol": "export:listStories",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:applyAccuracyRewrite",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:datedMentions",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:draftAccuracyErrors",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:intakeSpan",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:interimDodges",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:isCollabWelcome",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:isFixedOpenerText",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:ITEM34_BAN",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:LIVE_DISPATCHER",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:rewriteAnswersQuestion",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:rewriteKeepsSubstance",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:runningBuildSha",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:savedTripFacts",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:splitRewriteChange",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "export:targetPersonFromSession",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/media-checkout.mjs",
+    "symbol": "export:ownerMediaScope",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/onboarding.mjs",
+    "symbol": "export:botUsername",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/onboarding.mjs",
+    "symbol": "export:eulaAcceptLink",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/onboarding.mjs",
+    "symbol": "export:eulaClientKeyForOnboarding",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/onboarding.mjs",
+    "symbol": "export:eulaSessionIdForOnboarding",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/pdf-qr-svg-handler.mjs",
+    "symbol": "export:qrPayloadFromUrl",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/poi-search.mjs",
+    "symbol": "export:distanceMeters",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/poi-search.mjs",
+    "symbol": "export:geohash",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/poi-search.mjs",
+    "symbol": "export:oneOptionPerAirline",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/qr-svg.mjs",
+    "symbol": "export:qrDataUri",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/seat-price.mjs",
+    "symbol": "export:payerSeats",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/seat-price.mjs",
+    "symbol": "export:priceClauseSatisfied",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/shared-trip-handler.mjs",
+    "symbol": "export:cleanText",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/stripe-env.mjs",
+    "symbol": "export:stripeMode",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/stripe-env.mjs",
+    "symbol": "export:validateStripeKey",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/tg-intake-gbrain.mjs",
+    "symbol": "export:INTAKE_SKILL",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/tg-intake-gbrain.mjs",
+    "symbol": "export:INTAKE_SOT",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/tg-intake-gbrain.mjs",
+    "symbol": "export:productGbrainRoot",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol": "export:BRAND_LOGOS",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol": "export:generatedLogoDataUri",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol": "export:namedLogoPath",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol": "export:listSharedThings",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol": "export:publicBindingPath",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol": "export:publicMediaDiskPath",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol": "export:thingDisplayName",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/thing-media-store.mjs",
+    "symbol": "export:loadPublicBindings",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/timeline-icons.mjs",
+    "symbol": "export:AIRPLANE_GLYPH_RE",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/timeline-icons.mjs",
+    "symbol": "export:isAirplaneAllowed",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/web-access.mjs",
+    "symbol": "export:ensureVacationWebAccessSchema",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/web-access.mjs",
+    "symbol": "export:findOwnerTripByShareToken",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "src/vacation/web-access.mjs",
+    "symbol": "export:loadWebAccessGrantByInviteToken",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "index.html",
+    "symbol": "lines:938",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "order-test.html",
+    "symbol": "lines:584",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "routes/create-payment-intent.mjs",
+    "symbol": "lines:689",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "routes/vacation-itinerary.mjs",
+    "symbol": "lines:1095",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "lines:2195",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/check-code-ratchet.mjs",
+    "symbol": "lines:715",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/check-hardcoded-content.mjs",
+    "symbol": "lines:628",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "lines:996",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "symbol": "lines:2338",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/screenshot-journey-pdf.mjs",
+    "symbol": "lines:1677",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/telegram-vacation-intake-bot.mjs",
+    "symbol": "lines:1871",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/test_keepsake_style2.mjs",
+    "symbol": "lines:956",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol": "lines:885",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/test-product-capabilities.mjs",
+    "symbol": "lines:764",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "lines:1012",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "symbol": "lines:550",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "src/vacation/access-plan.mjs",
+    "symbol": "lines:574",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "lines:2710",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol": "lines:538",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol": "lines:967",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "vacation-app.html",
+    "symbol": "lines:869",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "api.x.ai",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "openrouter.ai",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "scripts/telegram-vacation-intake-bot.mjs",
+    "symbol": "api.openai.com",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "scripts/telegram-vacation-intake-bot.mjs",
+    "symbol": "openrouter.ai",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "scripts/test_vacation_telegram_intake.mjs",
+    "symbol": "openrouter.ai",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "symbol": "api.perplexity.ai",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "MODEL-CLIENT-ONLY",
+    "file": "src/vacation/poi-search.mjs",
+    "symbol": "openrouter.ai",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "order-success.html",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "owner-media-checkout.html",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "routes/vacation-telegram-turn.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "scripts/screenshot-journey-pdf.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "scripts/test-customer-question-blackbox.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "scripts/test-product-capabilities.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "scripts/trek-agent-edit.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "shared-app.html",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "src/vacation/tg-intake-gbrain.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "src/vacation/thing-media-store.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-EMPTY-CATCH",
+    "file": "src/vacation/web-access.mjs",
+    "symbol": "empty-catch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "openclaw-admin.html",
+    "symbol": "refresh",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "order-test.html",
+    "symbol": ".then",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "owner-media-checkout.html",
+    "symbol": "loadOwnerContact",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "scripts/smoke_eula_accept_page.mjs",
+    "symbol": ".then",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "scripts/void-stale-build.mjs",
+    "symbol": "main",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "scripts/write-shared-assets.mjs",
+    "symbol": "writeOnce",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "shared-app.html",
+    "symbol": ".then",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "NO-FLOATING-PROMISE",
+    "file": "shared-app.html",
+    "symbol": "submit",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "SEARCH-MODULE-ONLY",
+    "file": "scripts/check-hardcoded-content.mjs",
+    "symbol": "google-places",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "SEARCH-MODULE-ONLY",
+    "file": "scripts/test_check_hardcoded_content.mjs",
+    "symbol": "google-places",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "SEARCH-MODULE-ONLY",
+    "file": "scripts/trek-agent-edit.mjs",
+    "symbol": "nominatim",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "SEARCH-MODULE-ONLY",
+    "file": "scripts/trek-itinerary-edit.mjs",
+    "symbol": "nominatim",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/hardcoded-inventory-patterns.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/screenshot-journey-pdf.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/screenshot-journey-pdf.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/screenshot-journey-pdf.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/screenshot-journey-pdf.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_api_route_bundle.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_bind_thing_media.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_keepsake_style2.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "symbol": "vegas-anniversary",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_poi_search.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_screenshot_journey_pdf.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_vacation_app_shell.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_vacation_app_shell.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_vacation_app_shell.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_vacation_telegram_intake.mjs",
+    "symbol": "las-vegas-strip-vacation",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_vacation_web_access.mjs",
+    "symbol": "las-vegas-strip-vacation",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test_vacation_web_access.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test-product-capabilities.mjs",
+    "symbol": "las-vegas-strip-vacation",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test-product-capabilities.mjs",
+    "symbol": "the-davidson-family-trip",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/test-product-capabilities.mjs",
+    "symbol": "vegas-strip-staycation",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/trek-agent-edit.mjs",
+    "symbol": "the-davidson-family-trip",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/trek-itinerary-edit.mjs",
+    "symbol": "the-davidson-family-trip",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "src/vacation/bind-thing-media-handler.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "Kimberly",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "Lauren",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "src/vacation/live-app-turn.mjs",
+    "symbol": "Tyler",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "TEST-TRIP-LITERALS",
+    "file": "src/vacation/thing-media-bind.mjs",
+    "symbol": "las-vegas-vacation-3",
+    "note": "existing; ratchet only shrinks"
+  }
+]
