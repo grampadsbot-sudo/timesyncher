@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, crossOriginBundleFindings, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -274,16 +274,28 @@ assert.equal(baseline.length > 0, true);
 for (const row of baseline) assert.equal(row.note, BASELINE_NOTE);
 
 const repoRun = runGuard(repo);
-assert.equal(repoRun.status, 0, repoRun.stderr);
-const liveSummary = repoRun.stdout.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
-assert.ok(liveSummary, repoRun.stdout);
+assert.equal(repoRun.status, 1, `${repoRun.stdout}\n${repoRun.stderr}`);
+const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check failed \((\d+) report, (\d+) fail\)/);
+assert.ok(liveSummary, `${repoRun.stdout}\n${repoRun.stderr}`);
 const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
-assert.equal(liveFail, 0);
+const failRows = identities(repoRun.stderr);
+assert.equal(failRows.length, liveFail);
+assert.deepEqual(failRows.map((row) => `${row.file}:${row.line}:${row.symbol}`), [
+  'scripts/test_keepsake_style2.mjs:897:https://travel.timesyncher.com/assets/index-BKun7ofk.js',
+  'scripts/write-shared-assets.mjs:22:https://travel.timesyncher.com/assets/${CSS_NAME}',
+  'scripts/write-shared-assets.mjs:22:https://travel.timesyncher.com/assets/${JS_NAME}',
+  'src/vacation/trek-style2-bundle.mjs:944:https://travel.timesyncher.com/assets/index-BKun7ofk.js',
+  'vite.config.mjs:10:writeSharedAssets()',
+]);
+for (const row of failRows) assert.equal(row.rule, 'NO-CROSS-ORIGIN-BUNDLE');
+assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
+assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
 assert.equal(liveReport <= baseline.length, true);
 const judged = classify(scanRoots(repo), baseline);
-assert.equal(judged.fail.length, 0);
+assert.equal(judged.fail.length, liveFail);
 assert.equal(judged.report.length, liveReport);
+assert.ok(judged.fail.every((finding) => finding.rule === 'NO-CROSS-ORIGIN-BUNDLE'));
 const liveRows = identities(repoRun.stdout);
 assert.deepEqual(
   liveRows.map(contentIdentity).sort(),
@@ -727,5 +739,63 @@ writeTree(linkedBundle, {
   'shared-app.html': '<script src="https://travel.timesyncher.com/assets/index-BKun7ofk.js"></script>\n',
 }, []);
 assert.throws(() => assertSharedBundleSource(linkedBundle), /travel\.timesyncher\.com/);
+
+const crossFile = 'scripts/cross-origin-bundle.mjs';
+const crossText = readFixture('cross-origin-bundle.mjs');
+const crossHits = crossOriginBundleFindings(crossFile, crossText, { downloads: true, scripts: true });
+assert.deepEqual(crossHits.map((finding) => finding.symbol_or_pattern).sort(), [
+  "https://${'travel.timesyncher.com'}/assets/templated.js",
+  'https://travel.timesyncher.com/assets/axios.js',
+  'https://travel.timesyncher.com/assets/copied.js',
+  'https://travel.timesyncher.com/assets/curled.js',
+  'https://travel.timesyncher.com/assets/https-get.js',
+  'https://travel.timesyncher.com/assets/joined.js',
+  'https://travel.timesyncher.com/assets/static.js',
+]);
+const crossSilenced = classify(crossHits, [entry(crossFile, 'https://travel.timesyncher.com/assets/copied.js', 'NO-CROSS-ORIGIN-BUNDLE')]);
+assert.equal(crossSilenced.report.length, 0);
+assert.equal(crossSilenced.fail.length, crossHits.length);
+assert.deepEqual(
+  crossOriginBundleFindings('cross-origin-bundle.html', readFixture('cross-origin-bundle.html'), { scripts: true }).map((finding) => finding.symbol_or_pattern).sort(),
+  [
+    'https://cdn.timesyncher.com/assets/pre.js',
+    'https://static.timesyncher.com/assets/dynamic.js',
+    'https://travel.timesyncher.com/assets/assigned.js',
+    'https://travel.timesyncher.com/assets/page.js',
+    'https://www.timesyncher.com/widget.js',
+  ],
+);
+assert.deepEqual(crossOriginBundleFindings('same-origin-bundle.html', readFixture('same-origin-bundle.html'), { downloads: true, scripts: true }), []);
+
+const originDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-origin-bundle-'));
+writeTree(originDir, {
+  'scripts/cross-origin-bundle.mjs': crossText,
+  'cross-origin-bundle.html': readFixture('cross-origin-bundle.html'),
+  'public/assets/index-BKun7ofk.js': 'console.log(1)\n',
+  'relative.js': 'export {}\n',
+  'package.json': `${JSON.stringify({ scripts: { prebuild: 'curl -fsSL https://travel.timesyncher.com/assets/pkg.js -o pkg.js' } })}\n`,
+  'vercel.json': `${JSON.stringify({ installCommand: 'wget -q https://travel.timesyncher.com/assets/install.js' })}\n`,
+  'vite.config.mjs': "import { writeSharedAssets } from './scripts/write-shared-assets.mjs';\nexport default { plugins: [{ async buildStart() { await writeSharedAssets(); } }] };\n",
+  'scripts/write-shared-assets.mjs': "const JS_URL = `https://travel.timesyncher.com/assets/${'index-new.js'}`;\nexport async function writeSharedAssets() { return fetch(JS_URL); }\n",
+}, [entry(crossFile, 'https://travel.timesyncher.com/assets/copied.js', 'NO-CROSS-ORIGIN-BUNDLE')]);
+const originRun = runGuard(originDir);
+assert.equal(originRun.status, 1, originRun.stdout);
+assert.equal(identities(originRun.stderr).every((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), true, originRun.stderr);
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', crossFile, 'https://travel.timesyncher.com/assets/copied.js');
+assert.doesNotMatch(originRun.stdout, /NO-CROSS-ORIGIN-BUNDLE/);
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', 'package.json', 'https://travel.timesyncher.com/assets/pkg.js');
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', 'vercel.json', 'https://travel.timesyncher.com/assets/install.js');
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', 'vite.config.mjs', 'writeSharedAssets()');
+assert.doesNotMatch(`${originRun.stdout}\n${originRun.stderr}`, /index-BKun7ofk\.js is not in the repo/);
+
+const relativeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-relative-bundle-'));
+writeTree(relativeDir, {
+  'same-origin-bundle.html': readFixture('same-origin-bundle.html'),
+  'public/assets/kept.js': 'console.log(1)\n',
+  'kept.js': 'console.log(1)\n',
+}, []);
+const relativeRun = runGuard(relativeDir);
+assert.equal(relativeRun.status, 0, `${relativeRun.stdout}\n${relativeRun.stderr}`);
+assert.doesNotMatch(`${relativeRun.stdout}\n${relativeRun.stderr}`, /NO-CROSS-ORIGIN-BUNDLE/);
 
 process.stdout.write('hardcoded content check test passed\n');

@@ -1406,6 +1406,545 @@ function apiFunctionFiles(cwd) {
   return files;
 }
 
+const CROSS_ORIGIN_RULE = 'NO-CROSS-ORIGIN-BUNDLE';
+const SCRIPT_LOAD_EXT = /\.(?:mjs|cjs|js|jsx|tsx|ts|mts|cts)(?:[?#]|$)/i;
+const CROSS_ORIGIN_EXT = new Set(['.html', '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.mts', '.cts']);
+
+function skipRegex(text, index) {
+  if (text[index] !== '/' || !regexLikely(text, index)) return null;
+  let cursor = index + 1;
+  let inClass = false;
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '\n') return null;
+    if (text[cursor] === '[') inClass = true;
+    else if (text[cursor] === ']') inClass = false;
+    else if (text[cursor] === '/' && !inClass) {
+      cursor += 1;
+      while (/[a-z]/i.test(text[cursor] || '')) cursor += 1;
+      return cursor;
+    }
+    cursor += 1;
+  }
+  return null;
+}
+
+function codeMask(text) {
+  const mask = new Uint8Array(text.length);
+  let cursor = 0;
+  while (cursor < text.length) {
+    const ch = text[cursor];
+    if (ch === "'" || ch === '"') {
+      const lit = readQuoted(text, cursor);
+      cursor = lit ? lit.end : cursor + 1;
+      continue;
+    }
+    if (ch === '`') {
+      cursor += 1;
+      while (cursor < text.length) {
+        if (text[cursor] === '\\') {
+          cursor += 2;
+          continue;
+        }
+        if (text[cursor] === '`') {
+          cursor += 1;
+          break;
+        }
+        if (text[cursor] === '$' && text[cursor + 1] === '{') {
+          cursor += 2;
+          let depth = 1;
+          while (cursor < text.length && depth > 0) {
+            if (text[cursor] === '\\') {
+              cursor += 2;
+              continue;
+            }
+            if (text[cursor] === "'" || text[cursor] === '"') {
+              const lit = readQuoted(text, cursor);
+              cursor = lit ? lit.end : cursor + 1;
+              continue;
+            }
+            if (text[cursor] === '`') break;
+            if (text[cursor] === '{') depth += 1;
+            else if (text[cursor] === '}') depth -= 1;
+            if (depth > 0) cursor += 1;
+          }
+          continue;
+        }
+        cursor += 1;
+      }
+      continue;
+    }
+    if (ch === '/' && text[cursor + 1] === '/') {
+      cursor += 2;
+      while (cursor < text.length && text[cursor] !== '\n') cursor += 1;
+      continue;
+    }
+    if (ch === '/') {
+      const regexEnd = skipRegex(text, cursor);
+      if (regexEnd) {
+        cursor = regexEnd;
+        continue;
+      }
+    }
+    if (ch === '/' && text[cursor + 1] === '*') {
+      cursor += 2;
+      while (cursor < text.length && !(text[cursor] === '*' && text[cursor + 1] === '/')) cursor += 1;
+      cursor = Math.min(text.length, cursor + 2);
+      continue;
+    }
+    mask[cursor] = 1;
+    cursor += 1;
+  }
+  return mask;
+}
+
+function readIdent(text, index) {
+  if (!/[A-Za-z_$]/.test(text[index] || '')) return null;
+  let cursor = index + 1;
+  while (cursor < text.length && /[A-Za-z0-9_$]/.test(text[cursor])) cursor += 1;
+  return { end: cursor, value: text.slice(index, cursor) };
+}
+
+function readUrlTemplate(text, index) {
+  if (text[index] !== '`') return null;
+  const folded = readTemplate(text, index);
+  if (folded) return folded;
+  let cursor = index + 1;
+  let value = '';
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      value += text[cursor + 1] ?? '';
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '`') return value.includes('://') ? { end: cursor + 1, value } : null;
+    if (text[cursor] === '$' && text[cursor + 1] === '{') {
+      let depth = 1;
+      cursor += 2;
+      while (cursor < text.length && depth > 0) {
+        if (text[cursor] === '\\') {
+          cursor += 2;
+          continue;
+        }
+        if (text[cursor] === "'" || text[cursor] === '"') {
+          const lit = readQuoted(text, cursor);
+          if (!lit) return null;
+          cursor = lit.end;
+          continue;
+        }
+        if (text[cursor] === '{') depth += 1;
+        else if (text[cursor] === '}') depth -= 1;
+        if (depth > 0) cursor += 1;
+      }
+      continue;
+    }
+    value += text[cursor];
+    cursor += 1;
+  }
+  return null;
+}
+
+function readUrlExpr(text, index) {
+  const start = skipWs(text, index);
+  const ch = text[start];
+  let fold = null;
+  if (ch === '[') fold = readArrayJoin(text, start);
+  else if (ch === "'" || ch === '"') fold = readSplitJoin(text, start) || readConcat(text, start) || readQuoted(text, start);
+  else if (ch === '`') fold = readUrlTemplate(text, start);
+  if (!fold) {
+    const ident = readIdent(text, start);
+    if (!ident) return null;
+    return { end: ident.end, value: null, name: ident.value, symbol: ident.value };
+  }
+  const raw = text.slice(start, fold.end);
+  const symbol = (raw.startsWith('`') ? raw.slice(1, -1) : fold.value).replace(/\s+/g, ' ').slice(0, 180);
+  return { end: fold.end, value: fold.value, symbol };
+}
+
+function timesyncherUrl(value) {
+  const match = /^(https?:)\/\/([^/?#\s:]+)(?::\d+)?([/?#][\s\S]*)?$/i.exec(String(value || ''));
+  if (!match) return null;
+  const host = match[2].toLowerCase();
+  if (host !== 'timesyncher.com' && !host.endsWith('.timesyncher.com')) return null;
+  const tail = match[3] || '';
+  return {
+    host,
+    script: SCRIPT_LOAD_EXT.test(tail) || SCRIPT_LOAD_EXT.test(String(value)),
+    travel: host === 'travel.timesyncher.com',
+  };
+}
+
+function resolveUrl(text, index, bindings) {
+  const expr = readUrlExpr(text, index);
+  if (!expr) return null;
+  if (expr.value == null) {
+    const bound = bindings.get(expr.name);
+    if (!bound) return null;
+    return { end: expr.end, ...bound };
+  }
+  const hit = timesyncherUrl(expr.value);
+  if (!hit) return null;
+  return { end: expr.end, symbol: expr.symbol, ...hit };
+}
+
+function urlBindings(text, mask) {
+  const bindings = new Map();
+  const declared = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*/g;
+  let match = declared.exec(text);
+  while (match) {
+    if (mask[match.index] === 1) {
+      const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+      if (resolved) {
+        bindings.set(match[1], {
+          symbol: resolved.symbol,
+          host: resolved.host,
+          script: resolved.script,
+          travel: resolved.travel,
+        });
+      }
+    }
+    match = declared.exec(text);
+  }
+  return bindings;
+}
+
+function forwarders(text, mask) {
+  const names = new Map();
+  const declared = /\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(\s*([A-Za-z_$][\w$]*)/g;
+  let match = declared.exec(text);
+  while (match) {
+    if (mask[match.index] === 1) {
+      const bodyAt = text.indexOf('{', match.index);
+      if (bodyAt >= 0) {
+        const bodyEnd = matchingBrace(text, bodyAt);
+        if (bodyEnd - bodyAt <= 4000) {
+          const body = text.slice(bodyAt, bodyEnd);
+          const param = match[2];
+          const call = new RegExp(`\\b(?:fetch|got|axios(?:\\.request|\\.get)?|https\\.get|http\\.get)\\s*\\(\\s*${param}\\b`);
+          if (call.test(body)) names.set(match[1], param);
+        }
+      }
+    }
+    match = declared.exec(text);
+  }
+  return names;
+}
+
+function pushCrossOrigin(findings, seen, file, text, index, symbol) {
+  const clean = String(symbol || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  if (!clean) return;
+  add(findings, seen, CROSS_ORIGIN_RULE, file, text, index, clean);
+}
+
+function scanCallArgs(text, openParen, bindings, onArg) {
+  let depth = 0;
+  for (let index = openParen; index < text.length; index += 1) {
+    const ch = text[index];
+    if (ch === "'" || ch === '"') {
+      const lit = readQuoted(text, index);
+      if (depth === 1) {
+        const resolved = resolveUrl(text, index, bindings);
+        if (resolved) onArg(index, resolved);
+      }
+      if (lit) index = lit.end - 1;
+      continue;
+    }
+    if (ch === '`') {
+      if (depth === 1) {
+        const resolved = resolveUrl(text, index, bindings);
+        if (resolved) onArg(index, resolved);
+      }
+      const template = readUrlTemplate(text, index);
+      if (template) index = template.end - 1;
+      continue;
+    }
+    if (ch === '[') {
+      const resolved = depth === 1 ? resolveUrl(text, index, bindings) : null;
+      if (resolved) {
+        onArg(index, resolved);
+        index = resolved.end - 1;
+      }
+      continue;
+    }
+    if (ch === '(') {
+      depth += 1;
+      continue;
+    }
+    if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return;
+      continue;
+    }
+    if (depth === 1 && /[A-Za-z_$]/.test(ch) && !isIdentChar(text[index - 1])) {
+      const resolved = resolveUrl(text, index, bindings);
+      if (resolved) {
+        onArg(index, resolved);
+        index = Math.max(index, resolved.end - 1);
+      }
+    }
+  }
+}
+
+function clientPattern(extraNames) {
+  const names = ['axios.request', 'axios.get', 'https.get', 'http.get', 'axios', 'fetch', 'got', ...extraNames];
+  names.sort((left, right) => right.length - left.length);
+  return new RegExp(`\\b(?:${names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*\\(`, 'g');
+}
+
+function downloadFindings(file, text, findings, seen, mask, bindings) {
+  const names = [...forwarders(text, mask).keys()];
+  const calls = clientPattern(names);
+  let match = calls.exec(text);
+  while (match) {
+    if (mask[match.index] === 1) {
+      const open = match.index + match[0].lastIndexOf('(');
+      scanCallArgs(text, open, bindings, (index, resolved) => {
+        if (resolved.travel) pushCrossOrigin(findings, seen, file, text, index, resolved.symbol);
+      });
+    }
+    match = calls.exec(text);
+  }
+  const spawned = /\bspawnSync\s*\(\s*(['"])(?:\/usr\/bin\/)?(?:curl|wget)\1/g;
+  let spawn = spawned.exec(text);
+  while (spawn) {
+    if (mask[spawn.index] === 1) {
+      const open = text.indexOf('(', spawn.index);
+      scanCallArgs(text, open, bindings, (index, resolved) => {
+        if (resolved.travel) pushCrossOrigin(findings, seen, file, text, index, resolved.symbol);
+      });
+    }
+    spawn = spawned.exec(text);
+  }
+  const shell = /\b(?:curl|wget)\b[^\n]*?(https?:\/\/travel\.timesyncher\.com[^\s'"`]*)/gi;
+  let line = shell.exec(text);
+  while (line) {
+    const urlAt = line.index + line[0].indexOf(line[1]);
+    if (mask[line.index] === 1 && mask[urlAt] === 1) pushCrossOrigin(findings, seen, file, text, urlAt, line[1]);
+    line = shell.exec(text);
+  }
+}
+
+function scriptishSrc(text, index, resolved) {
+  if (resolved.script) return true;
+  const lhs = text.slice(Math.max(0, index - 40), index);
+  if (/(?:^|[^\w$])script\s*$/.test(lhs)) return true;
+  return /createElement\(\s*['"]script['"]/.test(text.slice(Math.max(0, index - 800), index));
+}
+
+function scriptLoadFindings(file, text, findings, seen, mask, bindings) {
+  const attr = (tag, name) => {
+    const quoted = tag.match(new RegExp(`\\b${name}\\s*=\\s*(['"])(.*?)\\1`, 'i'));
+    return quoted ? quoted[2] : '';
+  };
+  for (const match of text.matchAll(/<script\b[^>]*?\bsrc\s*=\s*/gi)) {
+    if (mask[match.index] !== 1) continue;
+    const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+    if (resolved) pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+  }
+  for (const match of text.matchAll(/<link\b[^>]*>/gi)) {
+    if (mask[match.index] !== 1) continue;
+    const tag = match[0];
+    const rel = attr(tag, 'rel');
+    const kind = attr(tag, 'as');
+    if (!/\bmodulepreload\b/i.test(rel) && !(/\bpreload\b/i.test(rel) && /\bscript\b/i.test(kind))) continue;
+    const href = attr(tag, 'href');
+    if (timesyncherUrl(href)) pushCrossOrigin(findings, seen, file, text, match.index, href);
+  }
+  for (const match of text.matchAll(/\bimport\s*\(\s*/g)) {
+    if (mask[match.index] !== 1) continue;
+    const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+    if (resolved) pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+  }
+  for (const match of text.matchAll(/\bimport\s+(?:[^'"`;\n]*?\s+from\s+)?(['"`])/g)) {
+    if (mask[match.index] !== 1) continue;
+    const quoteAt = match.index + match[0].lastIndexOf(match[1]);
+    const resolved = resolveUrl(text, quoteAt, bindings);
+    if (resolved) pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+  }
+  for (const match of text.matchAll(/\.src\s*=\s*/g)) {
+    if (mask[match.index] !== 1) continue;
+    const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+    if (resolved && scriptishSrc(text, match.index, resolved)) {
+      pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+    }
+  }
+  const calls = clientPattern([]);
+  let call = calls.exec(text);
+  while (call) {
+    if (mask[call.index] === 1) {
+      const open = call.index + call[0].lastIndexOf('(');
+      scanCallArgs(text, open, bindings, (index, resolved) => {
+        if (resolved.script) pushCrossOrigin(findings, seen, file, text, index, resolved.symbol);
+      });
+    }
+    call = calls.exec(text);
+  }
+}
+
+function isBuildScript(file) {
+  const rel = file.split(path.sep).join('/');
+  return rel.startsWith('scripts/') || /^vite\.config\./.test(path.posix.basename(rel));
+}
+
+function crossOriginFiles(cwd) {
+  const files = [];
+  const skipDir = new Set(['node_modules', 'dist', '.git', 'artifacts', 'evidence', 'coverage']);
+  const walkFiles = (abs) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (skipDir.has(entry.name)) continue;
+      const next = path.join(abs, entry.name);
+      const rel = path.relative(cwd, next).split(path.sep).join('/');
+      if (rel === 'public/assets' || rel.startsWith('public/assets/')) continue;
+      if (entry.isDirectory()) {
+        walkFiles(next);
+        continue;
+      }
+      if (!CROSS_ORIGIN_EXT.has(path.extname(entry.name).toLowerCase())) continue;
+      if (guardExempt(rel)) continue;
+      files.push(rel);
+    }
+  };
+  walkFiles(cwd);
+  return files;
+}
+
+function resolveSpecifier(file, spec) {
+  const dir = path.posix.dirname(file.split(path.sep).join('/'));
+  return path.posix.normalize(path.posix.join(dir, spec)).replace(/^\.\//, '');
+}
+
+function viteBuildStartFindings(file, text, downloading) {
+  const findings = [];
+  const seen = new Set();
+  const locals = [];
+  for (const match of text.matchAll(/\bimport\s+(\{[^}]+\}|\w+)\s+from\s+(['"])([^'"]+)\2/g)) {
+    if (!match[3].startsWith('.')) continue;
+    if (!downloading.has(resolveSpecifier(file, match[3]))) continue;
+    const clause = match[1].trim();
+    if (clause.startsWith('{')) {
+      for (const part of clause.slice(1, -1).split(',')) {
+        const bits = part.trim().split(/\s+as\s+/i);
+        const local = (bits[1] || bits[0] || '').trim();
+        if (local) locals.push(local);
+      }
+    } else if (clause) locals.push(clause);
+  }
+  if (!locals.length) return findings;
+  for (const hook of text.matchAll(/\bbuildStart\b/g)) {
+    const brace = text.indexOf('{', hook.index);
+    if (brace < 0) continue;
+    const end = matchingBrace(text, brace);
+    const body = text.slice(brace, end);
+    for (const name of locals) {
+      const at = body.search(new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\(`));
+      if (at >= 0) pushCrossOrigin(findings, seen, file, text, brace + at, `${name}()`);
+    }
+  }
+  return findings;
+}
+
+function commandFindings(file, text, command, keyAt) {
+  const mask = new Uint8Array(command.length);
+  mask.fill(1);
+  const bindings = urlBindings(command, mask);
+  const extra = [];
+  const seen = new Set();
+  downloadFindings(file, command, extra, seen, mask, bindings);
+  scriptLoadFindings(file, command, extra, seen, mask, bindings);
+  return extra.map((hit) => ({ ...hit, file, line: lineNumber(text, keyAt) }));
+}
+
+function packageScriptFindings(cwd) {
+  const rel = 'package.json';
+  const abs = path.join(cwd, rel);
+  if (!fs.existsSync(abs)) return [];
+  const text = fs.readFileSync(abs, 'utf8');
+  let pkg;
+  try {
+    pkg = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const findings = [];
+  for (const [name, command] of Object.entries(pkg.scripts || {})) {
+    if (typeof command !== 'string' || !command) continue;
+    const keyAt = text.indexOf(`"${name}"`);
+    findings.push(...commandFindings(rel, text, command, keyAt < 0 ? 0 : keyAt));
+  }
+  return findings;
+}
+
+function vercelCommandFindings(cwd) {
+  const rel = 'vercel.json';
+  const abs = path.join(cwd, rel);
+  if (!fs.existsSync(abs)) return [];
+  const text = fs.readFileSync(abs, 'utf8');
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const commands = [];
+  if (typeof json.buildCommand === 'string') commands.push(['buildCommand', json.buildCommand]);
+  if (typeof json.installCommand === 'string') commands.push(['installCommand', json.installCommand]);
+  if (Array.isArray(json.builds)) {
+    for (const build of json.builds) {
+      if (typeof build?.config?.buildCommand === 'string') commands.push(['buildCommand', build.config.buildCommand]);
+      if (typeof build?.config?.installCommand === 'string') commands.push(['installCommand', build.config.installCommand]);
+    }
+  }
+  const findings = [];
+  for (const [key, command] of commands) {
+    const keyAt = text.indexOf(`"${key}"`);
+    findings.push(...commandFindings(rel, text, command, keyAt < 0 ? 0 : keyAt));
+  }
+  return findings;
+}
+
+export function crossOriginBundleFindings(file, text, { downloads = false, scripts = true } = {}) {
+  const value = String(text || '');
+  const findings = [];
+  const seen = new Set();
+  const mask = codeMask(value);
+  const bindings = urlBindings(value, mask);
+  if (scripts) scriptLoadFindings(file, value, findings, seen, mask, bindings);
+  if (downloads) downloadFindings(file, value, findings, seen, mask, bindings);
+  return findings;
+}
+
+export function crossOriginBundleScan(cwd = process.cwd()) {
+  const findings = [];
+  const downloading = new Set();
+  const texts = new Map();
+  for (const file of crossOriginFiles(cwd)) {
+    const text = fs.readFileSync(path.join(cwd, file), 'utf8');
+    texts.set(file, text);
+    const build = isBuildScript(file);
+    const scriptHits = crossOriginBundleFindings(file, text, { downloads: false, scripts: true });
+    const downloadHits = build ? crossOriginBundleFindings(file, text, { downloads: true, scripts: false }) : [];
+    if (downloadHits.length) downloading.add(file);
+    const seen = new Set();
+    for (const hit of [...scriptHits, ...downloadHits]) {
+      const key = `${hit.symbol_or_pattern}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      findings.push(hit);
+    }
+  }
+  for (const [file, text] of texts) {
+    if (!/^vite\.config\./.test(path.posix.basename(file))) continue;
+    findings.push(...viteBuildStartFindings(file, text, downloading));
+  }
+  findings.push(...packageScriptFindings(cwd));
+  findings.push(...vercelCommandFindings(cwd));
+  return findings;
+}
+
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
   for (const file of contentPaths(cwd)) {
@@ -1456,6 +1995,7 @@ export function scanRoots(cwd = process.cwd()) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));
   }
   findings.push(...servedBundleFindings(cwd));
+  findings.push(...crossOriginBundleScan(cwd));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule) || a.symbol_or_pattern.localeCompare(b.symbol_or_pattern));
   return findings;
 }
@@ -1469,7 +2009,7 @@ export function classify(findings, baseline) {
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || !keys.has(contentIdentity(finding))) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || !keys.has(contentIdentity(finding))) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };
