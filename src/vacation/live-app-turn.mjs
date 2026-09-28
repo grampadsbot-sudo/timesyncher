@@ -405,7 +405,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     : 'List only people the customer named in chat. Do not invent people.';
   const holder = owner[0]?.name ? ` The account holder is ${owner[0].name}. A collaborator who just joined is not the account holder.` : '';
   const roster = [
-    `Party rule: ${statedLine} Do not ask Craig a trip-fact question.`,
+    `Party rule: ${statedLine} Ask the customer for anything they haven't said.`,
     travelers.length ? `Traveling: ${travelers.map((person) => person.payer ? `${person.name} (payer ${person.payer})` : person.name).join(', ')}.${holder}` : '',
     absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
@@ -2283,7 +2283,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     const called = await callTieredModel({
       rules,
       jev: pending?.jev,
-      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep only days and places the customer already named. Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference, including any person you added and any town-walk or saved-swim claim you added or removed.\nDraft:\n${pending?.draft || ''}`,
+      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep the days already on the saved trip. Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference, including any person you added and any saved claim you added or removed.\nDraft:\n${pending?.draft || ''}`,
       stage: 'vacation_conversation',
       screen: 'vacation-app',
       destination: pending?.destination || '',
@@ -2299,11 +2299,11 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       seatDollars: pending?.seatDollars || 0,
       seat: pending?.seat || null,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. Do not say four friends or unnamed friends. If the customer stated a party size, do not list more people than that size. Do not ask the account holder a trip-fact question. Address the person who is speaking. Do not give that person an activity the saved roster assigns to someone else. Do not add a pool dip on the arrival day. Do not call Friday midweek. Do not say a swim or a town walk is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person, a town walk, or a saved claim, that sentence must name it. Do not say you removed a saved swim on a day the draft did not claim.',
+        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person or a saved claim, that sentence must name it. Do not say you removed a saved activity on a day the draft did not claim.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
         failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
-        'Do not offer a swim or a garden on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
+        'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
           ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
