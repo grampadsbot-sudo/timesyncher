@@ -30,9 +30,6 @@ for (const forbidden of FORBIDDEN_SERVED_STRINGS) {
 }
 assertPatchedStyleTwo(served);
 assert.equal(served.includes('https://travel.timesyncher.com'), false);
-assert.equal(served.includes('dn=!0'), true);
-assert.equal(served.includes('/timesyncher/i.test('), false);
-assert.equal(served.includes('timesyncher.com$/i.test(window.location.hostname)'), false);
 for (const inserted of [
   '/ts-thing-logos/bellagio.svg',
   'Bellagio — Alex & Kim Anniversary Stay',

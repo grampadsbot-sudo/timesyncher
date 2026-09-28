@@ -41,11 +41,6 @@ export const CANNED_STRIP_RULES = [
     replacement: '',
   },
   {
-    id: 'shared-pdf-gate',
-    needle: 'dn=typeof window<"u"&&/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)||/timesyncher/i.test(`${la.title||""} ${la.description||""}`)',
-    replacement: 'dn=!0',
-  },
-  {
     id: 'so-origin',
     needle: SO_ORIGIN_NEEDLE,
     replacement: SERVED_SO,
@@ -76,8 +71,6 @@ export const FORBIDDEN_SERVED_STRINGS = [
   '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y',
   'Craig_Kim_NYC_June_2026',
   '/craig \\/ kim nyc/i',
-  '/timesyncher/i.test(',
-  'timesyncher.com$/i.test(window.location.hostname)',
   '192.168.1.15:3010',
   '100.66.47.62:3010',
   'Price TBD',
