@@ -35,14 +35,14 @@ import {
   onboardingOpenerText,
   tripIsReturning,
   intakeSpan,
-  postIntakeUpsellTurn,
+  firstMarkedIntake,
   produceLiveAppReply,
   finishTierRewrite,
   applyAgreedAppSwim,
   applyCustomerNotes,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
-import { classifyTripIntake, ensureNamedThings, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { classifyTripIntake, mergeWantedThings, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   openCollaboratorAppSeats,
   recordDialogParty,
@@ -412,12 +412,13 @@ async function queueVacationAppTurn(db, session, trip, body) {
     };
   });
   const classification = await classifyTripIntake({ text: requestText, env: process.env });
-  const firstIntake = postIntakeUpsellTurn({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
+  const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const jobFields = tripIntakeJobFields({
     requestText,
     receivedAt,
     classification,
     firstIntake,
+    jobKind: 'trip_intake',
   });
   const customerLive = liveTurnRecord({
     turnIndex: customerTurnIndex,
@@ -756,7 +757,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
-  let next = ensureNamedThings(current, wanted);
+  let next = mergeWantedThings(current, wanted);
   next = applyCustomerNotes(next, text, { collaborator, speakerName });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
