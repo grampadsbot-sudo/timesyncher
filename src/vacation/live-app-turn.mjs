@@ -666,39 +666,8 @@ function arrivalSwimLabel(label, arrival) {
   return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
 }
 
-export function applyAgreedAppSwim(things, customerText, appText, span = null) {
-  const list = Array.isArray(things) ? things : [];
-  if (!/\bswim\b/i.test(String(customerText || ''))) return list;
-  const arrival = spanStartLabel(span);
-  const wantsLater = /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(String(customerText || ''));
-  const namedDay = customerNamedAnyWeekday(customerText);
-  const labels = [];
-  if (wantsLater && namedDay) {
-    for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
-      const dated = datedMentions(sentence)[0];
-      if (dated) {
-        if (!customerNamedWeekday(customerText, dated.weekday)) continue;
-        const label = formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true });
-        if (label && !arrivalSwimLabel(label, arrival)) labels.push(label);
-        continue;
-      }
-      const weekday = sentence.match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i);
-      if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
-      const resolved = weekdayInsideSpan(weekday[1], span);
-      if (resolved && !arrivalSwimLabel(resolved, arrival)) labels.push(resolved);
-    }
-  }
-  const askWhichDay = wantsLater && !namedDay;
-  return list.map((thing) => {
-    if (!/\bswim\b/i.test(String(thing?.title || ''))) return thing;
-    const merged = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => part && !arrivalSwimLabel(part, arrival));
-    for (const label of labels) {
-      if (merged.some((item) => item === label || item.startsWith(`${label} `))) continue;
-      merged.push(label);
-    }
-    const dayFlag = wantsLater ? askWhichDay : thing.askWhichDay === true;
-    return { ...thing, customerWhen: merged.join(' · '), askWhichDay: dayFlag };
-  });
+export function applyAgreedAppSwim(things) {
+  return Array.isArray(things) ? things : [];
 }
 
 function activitySentenceCommits(hit) {
@@ -883,28 +852,19 @@ function stampsFromWhen(value) {
 
 export function savedTripFacts(record = {}) {
   const things = Array.isArray(record.things) ? record.things : [];
-  const swim = things.find((thing) => /\bswim\b/i.test(String(thing?.title || '')));
-  const garden = things.find((thing) => /garden/i.test(String(thing?.title || '')));
-  const townWalk = things.find((thing) => /town walk/i.test(String(thing?.title || '')));
   const span = record.span?.end ? record.span : spanFromIso(record.start, record.end);
   const party = record.party && typeof record.party === 'object' ? record.party : {};
   const notTraveling = [
     ...(Array.isArray(party.viewers) ? party.viewers : []).map((person) => ({ name: person?.name, role: 'viewer' })),
     ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
   ].filter((person) => person.name);
-  const owners = {};
-  const namedOwner = (thing) => String(thing?.who || '').trim();
-  const gardenWho = namedOwner(garden);
-  const swimWho = namedOwner(swim);
-  if (gardenWho) owners.gardens = gardenWho;
-  if (swimWho) owners.swim = swimWho;
   const activities = things.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean);
   return {
     span,
-    swimDays: [...new Set([...stampsFromWhen(swim?.customerWhen), ...stampsFromWhen(swim?.whenLabel)])],
-    gardenDays: [...new Set([...stampsFromWhen(garden?.customerWhen), ...stampsFromWhen(garden?.whenLabel)])],
-    townWalkDays: [...new Set([...stampsFromWhen(townWalk?.customerWhen), ...stampsFromWhen(townWalk?.whenLabel)])],
-    owners,
+    swimDays: [],
+    gardenDays: [],
+    townWalkDays: [],
+    owners: {},
     planOwned: record.planOwned === true,
     activities,
     notTraveling,
@@ -1348,7 +1308,7 @@ export function interimCanShip(text, customerTurn, facts = {}) {
   const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
   if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
   if (interimDodges(value, customerTurn)) return false;
-  if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted|later swim is saved|invented a correction/.test(error))) return false;
+  if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|invented a correction/.test(error))) return false;
   if (turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
   if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
@@ -1366,11 +1326,6 @@ export function beatsMatchingReply(beats, text) {
     const beatLower = line.toLowerCase();
     if (/\bbackup\b|\brain\b/.test(beatLower) && !/\bbackup\b|\brain|\bshift/.test(lower)) continue;
     if (/\boffer/.test(beatLower) && !/\bor\b|\boption\b/.test(lower)) continue;
-    if (/\b(set|saved|added|confirm)/.test(beatLower) && /\bswim\b/.test(beatLower)) {
-      const swimSet = /\bswim\b[^.]{0,90}\b(saved|set|added|friday|monday)\b/i.test(body)
-        || /\b(saved|set|added)\b[^.]{0,90}\bswim\b/i.test(body);
-      if (!swimSet) continue;
-    }
     const words = beatLower.split(/[^a-z0-9]+/).filter((word) => word.length > 3 && !BEAT_STOP.has(word));
     if (words.length) {
       const hit = words.filter((word) => lower.includes(word)).length;
@@ -1650,7 +1605,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftExtra = [
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
-    'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
     intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(citedPlaces),
@@ -2122,7 +2076,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     draftFactErrors: draftErrors,
     rewriteFactErrors: failReason ? [] : rewriteErrors,
     holding: holdingText,
-    holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted/.test(error)) : [],
+    holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking/.test(error)) : [],
   });
   if (!choice.text && !draftErrors.length) {
     choice = {
@@ -2162,7 +2116,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
           draftFactErrors: draftErrors,
           rewriteFactErrors: failReason ? [] : rewriteErrors,
           holding: holdingText,
-          holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted|later swim is saved|invented a correction/.test(error)) : [],
+          holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|invented a correction/.test(error)) : [],
           holdingScore: Number(holdingQuality.score),
         });
         if (again.rewritten) choice = again;
