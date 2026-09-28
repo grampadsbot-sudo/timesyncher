@@ -13,11 +13,12 @@ const ROSTER_ROLES = new Set(['owner', 'collaborator', 'child', 'viewer', 'edito
 
 const THING_SYSTEM = [
   'Extract what the customer wants from one vacation chat message.',
-  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}]}.',
+  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.',
   'name is their wording for one wanted item. kind is activity, restaurant, hotel, flight, car, or store.',
   'who is a person they named for that item, or an empty string. when is a time they stated for that item, or an empty string.',
   'roster lists people this message names. role is owner, collaborator, child, viewer, or editor. age is a number only when they stated a child age, otherwise null.',
-  'List only items and people this message asks for. Do not invent items, names, times, or people.',
+  'Also return "destination" as a place they named or an empty string, "hasDates" as true only when they stated a date, range, or trip length, and "title" as a trip name they stated or an empty string.',
+  'List only items and people this message asks for. Do not invent items, names, times, people, places, dates, or a title.',
 ].join(' ');
 
 function clean(value, max) {
@@ -52,6 +53,9 @@ function parseExtraction(raw) {
   return {
     things: parsed.things,
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
+    destination: parsed.destination,
+    hasDates: parsed.hasDates === true,
+    title: parsed.title,
   };
 }
 
@@ -146,6 +150,9 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
   const intake = ok && classification.intake === true;
   const wantedThings = ok ? cleanThings(classification.things) : [];
   const roster = ok ? cleanRoster(classification.roster) : [];
+  const destination = ok ? clean(classification.destination, 180) : '';
+  const title = ok ? clean(classification.title, 180) : '';
+  const hasDates = ok && classification.hasDates === true;
   return {
     intakeEvent: intake ? {
       kind: jobKind,
@@ -156,6 +163,10 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
     wantedThings,
     roster,
     rosterError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
+    destination,
+    hasDates,
+    title,
+    titleError: ok ? (title ? null : 'trip title was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
     intakeError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
   };
 }
@@ -167,9 +178,12 @@ export async function classifyTripIntake({ text, env = process.env, fetchImpl = 
     intake: false,
     things: [],
     roster: [],
+    destination: '',
+    hasDates: false,
+    title: '',
     error: clean(error, 300) || 'trip intake classification failed',
   });
-  if (!message) return { ok: true, intake: false, things: [], roster: [], error: null };
+  if (!message) return { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null };
   const key = openRouterAppKey(env);
   if (!key) return failed('trip intake classifier needs an OpenRouter key');
   try {
@@ -196,7 +210,16 @@ export async function classifyTripIntake({ text, env = process.env, fetchImpl = 
     const extractedFields = parseExtraction(chatText(extracted));
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);
-    return { ok: true, intake: score >= INTAKE_THRESHOLD, things, roster, error: null };
+    return {
+      ok: true,
+      intake: score >= INTAKE_THRESHOLD,
+      things,
+      roster,
+      destination: clean(extractedFields.destination, 180),
+      hasDates: extractedFields.hasDates === true,
+      title: clean(extractedFields.title, 180),
+      error: null,
+    };
   } catch (error) {
     return failed(error?.message || error);
   }

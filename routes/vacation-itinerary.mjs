@@ -445,6 +445,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
     wantedThings: jobFields.wantedThings,
     roster: jobFields.roster,
     rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
   const turnTag = classifyTurn({
@@ -500,6 +504,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       wantedThings: jobFields.wantedThings,
       roster: jobFields.roster,
       rosterError: jobFields.rosterError,
+      destination: jobFields.destination,
+      hasDates: jobFields.hasDates,
+      title: jobFields.title,
+      titleError: jobFields.titleError,
       intakeError: jobFields.intakeError,
     }})
     returning id
@@ -517,6 +525,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       wantedThings: classification.ok === true ? classification.things : [],
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+      extractedTitle: classification.ok === true ? classification.title : '',
+      titleError: classification.ok === true
+        ? (String(classification.title || '').trim() ? null : 'trip title was not in the extraction')
+        : (classification.error || 'trip intake classification failed'),
     });
   } catch (error) {
     produced = {
@@ -555,6 +567,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
     wantedThings: jobFields.wantedThings,
     roster: jobFields.roster,
     rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
   if (produced.status === 'interim' && produced.pending) {
@@ -627,6 +643,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
       askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
+      extractedTitle: classification.ok === true ? classification.title : '',
+      titleError: classification.ok === true
+        ? (String(classification.title || '').trim() ? null : 'trip title was not in the extraction')
+        : (classification.error || 'trip intake classification failed'),
     },
     firstIntake ? requestText : '',
     classification.ok === true ? classification.things : [],
@@ -697,7 +717,7 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false } = {}) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedTitle = '', titleError = null } = {}) {
   const planned = thingsFromIntake(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
@@ -716,31 +736,30 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
     } : {}),
   });
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
-  if (span?.destination || span?.start) {
-    await db`
-      update trips
-      set title = case
-            when ${span.placeTitle || ''} <> '' and title in (
-              'Vacation', 'TimeSyncher Vacation Coupon Checkout', 'TimeSyncher Vacation Setup', 'TimeSyncher Vacation Admin Test'
-            ) then ${span.placeTitle || 'Vacation'}
-            else title
-          end,
-          destination = case
-            when coalesce(destination, '') = '' then ${span.destination || ''}
-            else destination
-          end,
-          start_date = coalesce(start_date, ${span.start || null}::date),
-          end_date = coalesce(end_date, ${span.end || null}::date),
-          status = case when status = 'onboarding' then 'planning' else status end,
-          metadata = coalesce(metadata, '{}'::jsonb) || ${{
-            intakeSpan: span.spanLabel || '',
-            intakeBadge: span.badge || '',
-            dialogParty: party,
-          }},
-          updated_at = now()
-      where id = ${tripId}
-    `;
-  }
+  const tripTitle = String(extractedTitle || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  const missingTitle = tripTitle ? null : (titleError || 'trip title was not in the extraction');
+  const dated = span?.destination || span?.start ? 'yes' : '';
+  await db`
+    update trips
+    set title = case
+          when ${tripTitle} <> '' then ${tripTitle}
+          else title
+        end,
+        destination = case
+          when coalesce(destination, '') = '' and ${span?.destination || ''} <> '' then ${span?.destination || ''}
+          else destination
+        end,
+        start_date = coalesce(start_date, ${span?.start || null}::date),
+        end_date = coalesce(end_date, ${span?.end || null}::date),
+        status = case when status = 'onboarding' and ${dated} = 'yes' then 'planning' else status end,
+        metadata = coalesce(metadata, '{}'::jsonb) || ${{
+          ...(span?.spanLabel ? { intakeSpan: span.spanLabel, intakeBadge: span.badge || '' } : {}),
+          dialogParty: party,
+          ...(tripTitle ? { titleSource: 'chat_extraction' } : { titleError: missingTitle }),
+        }},
+        updated_at = now()
+    where id = ${tripId}
+  `;
   for (const thing of planned) {
     await db`
       insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
@@ -761,8 +780,8 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false } = {}, intakeText = '', extracted = []) {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster });
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedTitle = '', titleError = null } = {}, intakeText = '', extracted = []) {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedTitle, titleError });
   const current = await loadTripThings(db, tripId);
   const wanted = thingsFromIntake(extracted);
   if (!current.length && !wanted.length) return current;
@@ -934,6 +953,8 @@ async function handleVacationApp(req, res, db, url) {
           roster: Array.isArray(pending.roster) ? pending.roster : [],
           rosterError: pending.rosterError || null,
           askRoster: Boolean(pending.rosterError),
+          extractedTitle: pending.extractedTitle || '',
+          titleError: pending.titleError || null,
         },
         pending.postIntake === true ? pending.customerTurn : '',
         pending.wantedThings || [],

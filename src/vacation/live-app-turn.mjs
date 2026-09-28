@@ -1786,7 +1786,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedTitle = '', titleError = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -2028,6 +2028,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
     roster: rosterList,
     rosterError: rosterError || null,
+    extractedTitle: String(extractedTitle || ''),
+    titleError: titleError || null,
     destination,
     corpus,
     tripContext,
