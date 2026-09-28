@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
+import handler from '../api/[...route].mjs';
 import { handleKeepsakeOrder, keepsakeFromShared, orderPage, orderErrorPage } from '../routes/keepsake-order.mjs';
 
 const banned = /Las Vegas|Bellagio|Big Island|Price TBD|Carbone|Ulu Ocean|anniversary weekend/i;
@@ -41,9 +42,78 @@ async function nonOwnerWithKeepsakeUrlCanReachOrderPage() {
   assert.match(res.body, /data-keepsake-layout="1"[^>]*src="\/shared\/creek-road-week\/journey\?style=1&amp;printMode=report&amp;pdfReport=keepsake"/);
   assert.match(res.body, /data-keepsake-layout="2"[^>]*src="\/shared\/creek-road-week\/journey\?style=2&amp;printMode=report&amp;pdfReport=keepsake-style-2"/);
   assert.doesNotMatch(res.body, /data-keepsake-error/);
+  assert.equal(res.headers['x-frame-options'], 'SAMEORIGIN');
+}
+
+function frameOptionsFor(headers, pathname) {
+  const path = String(pathname || '').split('?')[0];
+  let value = null;
+  for (const rule of headers) {
+    if (!new RegExp(`^${rule.source}$`).test(path)) continue;
+    const frame = rule.headers.find((header) => header.key.toLowerCase() === 'x-frame-options');
+    if (frame) value = frame.value;
+  }
+  return value;
+}
+
+async function keepsakeOrderSendsSameOriginAndOtherPathsStayDeny() {
   const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
-  const frame = vercel.headers.flatMap((rule) => rule.headers).find((header) => header.key === 'X-Frame-Options');
-  assert.equal(frame.value, 'SAMEORIGIN');
+  const defaultFrame = 'DENY';
+  assert.equal(frameOptionsFor(vercel.headers, '/'), defaultFrame);
+  assert.equal(frameOptionsFor(vercel.headers, '/api/keepsake-order'), 'SAMEORIGIN');
+  assert.equal(frameOptionsFor(vercel.headers, '/api/keepsake-order?slug=creek-road-week'), 'SAMEORIGIN');
+
+  const order = mockRes();
+  await handleKeepsakeOrder(get('creek-road-week'), order, { lookup: async () => trip });
+  assert.equal(order.headers['x-frame-options'], 'SAMEORIGIN');
+  const missing = mockRes();
+  await handleKeepsakeOrder(get(''), missing, { lookup: async () => trip });
+  assert.equal(missing.headers['x-frame-options'], 'SAMEORIGIN');
+
+  const otherPaths = [
+    '/api/bind-thing-media',
+    '/api/pdf/qr.svg',
+    '/api/pdf/shared/token/report/keepsake.pdf',
+    '/api/shared/token',
+    '/shared/token/journey',
+    '/shared/token/report/daily',
+    '/shared/token/report/keepsake',
+    '/shared/token',
+    '/api/vacation-web-access',
+    '/icons/token',
+    '/manifest.webmanifest',
+    '/accept/token',
+    '/api/version',
+    '/api/checkout-config',
+    '/order-test.html',
+    '/vacation-app.html',
+    '/shared-app.html',
+  ];
+  for (const pathname of otherPaths) {
+    assert.equal(frameOptionsFor(vercel.headers, pathname), defaultFrame, pathname);
+  }
+  for (const rule of vercel.headers) {
+    if (rule.source === '/api/keepsake-order') continue;
+    const frame = rule.headers.find((header) => header.key === 'X-Frame-Options');
+    assert.equal(frame.value, defaultFrame, rule.source);
+  }
+
+  const version = mockRes();
+  await handler({ method: 'GET', url: '/api/version', headers: {}, query: { route: ['version'] } }, version);
+  assert.equal(version.statusCode, 200);
+  assert.equal(version.headers['x-frame-options'], undefined);
+
+  const routeDir = new URL('../routes/', import.meta.url);
+  for (const name of await readdir(routeDir)) {
+    if (!name.endsWith('.mjs')) continue;
+    const text = await readFile(new URL(name, routeDir), 'utf8');
+    if (name === 'keepsake-order.mjs') {
+      assert.match(text, /x-frame-options',\s*'SAMEORIGIN'/);
+    } else {
+      assert.doesNotMatch(text, /x-frame-options/i);
+      assert.doesNotMatch(text, /SAMEORIGIN/);
+    }
+  }
 }
 
 async function invalidTokenGivesErrorState() {
@@ -119,9 +189,11 @@ await nonOwnerWithKeepsakeUrlCanReachOrderPage();
 await invalidTokenGivesErrorState();
 await noPriceOrPaymentStepRequired();
 await noHardCodedContent();
+await keepsakeOrderSendsSameOriginAndOtherPathsStayDeny();
 
 console.log('keepsake order buy link ok');
 console.log('non-owner with the keepsake URL can reach the order page');
 console.log('invalid token gives the error state');
 console.log('no price or payment step is required');
 console.log('no hard-coded place, thing, dialog, or price copy');
+console.log('keepsakeOrderSendsSameOriginAndOtherPathsStayDeny');

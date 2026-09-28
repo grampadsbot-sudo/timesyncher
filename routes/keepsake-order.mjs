@@ -129,6 +129,7 @@ export async function lookupKeepsake(slug) {
 }
 
 export async function handleKeepsakeOrder(req, res, deps = {}) {
+  res.setHeader('x-frame-options', 'SAMEORIGIN');
   if (req.method !== 'GET') {
     res.statusCode = 405;
     res.end('method not allowed');

@@ -62,7 +62,24 @@
   },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/keepsake-order$).*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    },
+    {
+      "source": "/api/keepsake-order",
       "headers": [
         {
           "key": "Cache-Control",
