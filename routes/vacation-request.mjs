@@ -1,7 +1,7 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 
 function customerFields(body) {
   const customer = body.customer || {};
@@ -119,7 +119,7 @@ export default async function handler(req, res) {
     `;
     const requestId = requestRows[0].id;
 
-    const turnTag = classifyTurn({
+    const turnTag = await classifyTurnWithModel({
       text: request.requestText,
       speaker: 'customer',
       direction: 'inbound',

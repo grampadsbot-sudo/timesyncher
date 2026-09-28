@@ -450,8 +450,8 @@ const jevAssistRouter = await vacationSupportIntentWithJevShadow('What does this
   }),
 });
 assert.equal(jevAssistRouter.selectedDecision.intent, 'support_question');
-assert.equal(jevAssistRouter.selectedDecision.source, 'deterministic_fallback');
-assert.equal(jevAssistRouter.comparison.jevInfluencedBehavior, false);
+assert.equal(jevAssistRouter.selectedDecision.source, 'openrouter_jev_assist');
+assert.equal(jevAssistRouter.comparison.jevInfluencedBehavior, true);
 
 const jevAssistDowngrade = await vacationSupportIntentWithJevShadow('Can this thing do calendar stuff?', {
   env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'assist' },

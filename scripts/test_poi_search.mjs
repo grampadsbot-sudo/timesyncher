@@ -14,7 +14,7 @@ import {
   POI_RADIUS_METERS,
   THIN_POI_COUNT,
 } from '../src/vacation/poi-search.mjs';
-import { clearWindCache, lookupWindBackup, windBackupSentence } from '../src/vacation/wind-backup.mjs';
+import { clearWindCache, forecastReadings, lookupWindBackup } from '../src/vacation/wind-backup.mjs';
 import { applyThingPresentation, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
 
@@ -200,11 +200,13 @@ assert.equal(lowestRentalPrices(offers, { eliminatedBrands: ['Budget'] }).some((
 assert.equal(lowestRentalPrices(offers, { eliminatedBrands: ['Budget'] })[0].price, 42);
 assert.equal(lowestRentalPrices(Array.from({ length: 12 }, (_, index) => ({ brand: 'Budget', price: index + 1 }))).length, 10);
 
-assert.equal(windBackupSentence([]), '');
-assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /Kahaluu/);
-assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /12 mph/);
-assert.doesNotMatch(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /house pool/);
-assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 22 }, { name: 'House', windMph: 18 }]), /House at 18 mph/);
+assert.deepEqual(forecastReadings([]), []);
+assert.deepEqual(forecastReadings([{ name: 'Kahaluu', windMph: 12 }]), [{ name: 'Kahaluu', windMph: 12 }]);
+assert.deepEqual(forecastReadings([{ name: 'Kahaluu', windMph: 22 }, { name: 'House', windMph: 18 }]), [
+  { name: 'House', windMph: 18 },
+  { name: 'Kahaluu', windMph: 22 },
+]);
+assert.equal(JSON.stringify(forecastReadings([{ name: 'Kahaluu', windMph: 22 }])).includes('house pool'), false);
 const presented = applyThingPresentation(sharedTripFromIntake({
   trip: { id: 'trip-notes', title: 'Vacation', destination: '', start_date: '2026-04-03', end_date: '2026-04-06' },
   things: [{ id: 'swim', title: 'Swim', notes: ['the beach'], source: 'customer' }],
@@ -232,7 +234,7 @@ const nws = await lookupWindBackup([{ name: 'Kahaluu Beach', lat: 19.58, lng: -1
     throw new Error(`open-meteo should wait ${url}`);
   },
 });
-assert.match(nws, /Kahaluu Beach/);
+assert.deepEqual(nws, [{ name: 'Kahaluu Beach', windMph: 12 }]);
 assert.equal(nwsUrls.some((url) => url.includes('open-meteo')), false);
 
 clearWindCache();
@@ -244,19 +246,19 @@ const meteo = await lookupWindBackup([{ name: 'House', lat: 19.649, lng: -155.99
     return { ok: true, json: async () => ({ hourly: { time: ['2026-04-03T00:00'], wind_speed_10m: [16.09] } }) };
   },
 });
-assert.match(meteo, /10 mph/);
+assert.deepEqual(meteo, [{ name: 'House', windMph: 10 }]);
 
 clearWindCache();
 const missing = await lookupWindBackup([{ name: 'House', lat: 19.649, lng: -155.994 }], {
   startDate: '2026-04-03',
   fetchImpl: async () => ({ ok: false, json: async () => ({}) }),
 });
-assert.equal(missing, '');
+assert.deepEqual(missing, []);
 const hung = await lookupWindBackup([{ name: 'House', lat: 19.649, lng: -155.994 }], {
   timeoutMs: 30,
   fetchImpl: () => new Promise(() => {}),
 });
-assert.equal(hung, '');
+assert.deepEqual(hung, []);
 
 const workerText = fs.readFileSync(new URL('./vacation-public-research-worker.mjs', import.meta.url), 'utf8');
 const poiText = fs.readFileSync(new URL('../src/vacation/poi-search.mjs', import.meta.url), 'utf8');

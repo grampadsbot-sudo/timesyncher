@@ -62,6 +62,7 @@ assert.equal(scored.score, 2);
 const env = {
   OPENROUTER_API_KEY: 'test-key',
   TIMESYNCHER_JEV_CLASSIFY_URL: 'https://openrouter.ai/api/alpha/decisions',
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900',
 };
 const calls = [];
 const originalFetch = globalThis.fetch;
@@ -94,6 +95,13 @@ globalThis.fetch = async (url, init = {}) => {
     const user = body.messages?.find((message) => message.role === 'user')?.content || '';
     const model = body.model;
     if (model === 'google/gemini-2.5-flash-lite') {
+      const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+      if (/"template"/.test(system) && /canShip/.test(system)) {
+        return json({
+          model,
+          choices: [{ message: { content: '{"template":false,"canShip":true}' } }],
+        });
+      }
       return json({
         model,
         choices: [{ message: { content: 'Thursday town walk can wait a moment.\nBEAT: holding the walk' } }],
@@ -178,7 +186,7 @@ try {
   assert.equal(calls.some((call) => {
     if (call.body?.model !== 'google/gemini-2.5-flash-lite') return false;
     const system = String(call.body?.messages?.find((message) => message.role === 'system')?.content || '');
-    return !/reply none/.test(system);
+    return !/reply none/.test(system) && !/Do not write a customer reply/.test(system);
   }), false);
   assert.equal(calls.some((call) => String(call.body?.model || '').includes('gpt')), false);
 } finally {

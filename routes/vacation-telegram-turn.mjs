@@ -3,7 +3,7 @@ import { Readable } from 'node:stream';
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import { getSessionByToken, siteBase, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { blockHighAuthorityRequest } from '../src/safety/high-authority-actions.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
@@ -362,7 +362,7 @@ async function ensureTelegramSession(db, { onboarding, telegramChatId, telegramU
 }
 
 async function recordTranscript(db, { session, speaker, direction, body, channel = 'telegram_vacation_bot', telegramMessageId, payload, receivedAt, sentAt, responseLatencyMs, onboardingStep }) {
-  const tag = classifyTurn({ text: body, speaker, direction, channel, payload });
+  const tag = await classifyTurnWithModel({ text: body, speaker, direction, channel, payload });
   const rows = await db`
     insert into transcript_turns (
       customer_id, trip_id, telegram_session_id, speaker, channel, body, payload, direction,
@@ -578,13 +578,13 @@ export function vacationSupportIntent(text) {
   if (collaboratorStatusQuestion(normalized)) {
     return { intent: 'collaborator_access_question', shouldQueueWorker: false, confidence: 0.94, answerMode: 'account_state' };
   }
-  if (/\b(unlimited|how many|access|included|include|plan|paid|payment|checkout|order|subscription|coupon|code|account)\b/.test(normalized)) {
+  if (/\b(unlimited|how many|included|include|plan|paid|payment|checkout|order|subscription|coupon|code|account)\b/.test(normalized)) {
     return { intent: 'account_question', shouldQueueWorker: false, confidence: 0.88 };
   }
   if (/\b(book|booking|reserve|reservation|purchase|pay for|hold)\b/.test(normalized)) {
     return { intent: 'support_question', shouldQueueWorker: false, confidence: 0.9 };
   }
-  if (/\b(price|cost|refund|login|sign in|support|help|website link|url)\b/.test(normalized)) {
+  if (/\b(refund|login|sign in|support|help|website link|url)\b/.test(normalized)) {
     return { intent: 'support_question', shouldQueueWorker: false, confidence: 0.78 };
   }
   return null;
@@ -1154,24 +1154,33 @@ export async function vacationSupportIntentWithModel(text, { env = process.env, 
   return fallback ? { ...fallback, source: 'deterministic_fallback' } : null;
 }
 
-function linkedVacationMatchFromPayload(payload = {}, text = '') {
-  const normalized = cleanText(text, 2000).toLowerCase();
+function tripTitleOf(item) {
+  return cleanText(item?.title || item?.name || '', 180);
+}
+
+export function matchLinkedVacation(payload = {}, text = '') {
+  const seen = new Set();
   const items = [
     ...(Array.isArray(payload.linkedVacations) ? payload.linkedVacations : []),
     ...(Array.isArray(payload.customerVacations) ? payload.customerVacations : []),
-  ].filter((item) => item && typeof item === 'object');
-  if (!items.length) return null;
-  if (/\b(vegas|las vegas|strip|jockey club)\b/.test(normalized)) {
-    return items.find((item) => /\b(vegas|las vegas|strip|jockey club)\b/i.test([
-      item.title,
-      item.name,
-      item.destination,
-      item.url,
-      item.shareToken,
-      item.token,
-    ].filter(Boolean).join(' '))) || items[0];
-  }
-  return items[0];
+  ].filter((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const title = tripTitleOf(item).toLowerCase();
+    const key = title || cleanText(item.shareToken || item.token || item.url, 180).toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const titles = items.map(tripTitleOf).filter(Boolean);
+  if (!items.length) return { vacation: null, ask: false, titles };
+  const normalized = cleanText(text, 2000).toLowerCase();
+  const hits = items.filter((item) => {
+    const title = tripTitleOf(item).toLowerCase();
+    return title.length > 2 && normalized.includes(title);
+  });
+  if (hits.length === 1) return { vacation: hits[0], ask: false, titles };
+  if (items.length === 1) return { vacation: items[0], ask: false, titles };
+  return { vacation: null, ask: true, titles };
 }
 
 async function vacationAccessSummary(db, session, { telegramChatId = '', telegramUserId = '', payload = {}, text = '' } = {}) {
@@ -1220,7 +1229,8 @@ async function vacationAccessSummary(db, session, { telegramChatId = '', telegra
     limit 1
   ` : [];
   const trip = tripRows[0] || null;
-  const linkedVacation = linkedVacationMatchFromPayload(payload, text);
+  const linkedMatch = matchLinkedVacation(payload, text);
+  const linkedVacation = linkedMatch.vacation;
   const linkedShareToken = cleanText(
     linkedVacation?.shareToken || linkedVacation?.share_token || linkedVacation?.token || linkedVacation?.sharedToken || linkedVacation?.shared_token,
     240,
@@ -1300,6 +1310,8 @@ async function vacationAccessSummary(db, session, { telegramChatId = '', telegra
       launchUrl: telegramWebAccess.launchUrl,
       publicUrl: linkedPublicUrl || telegramWebAccess.grant.public_url,
     } : null,
+    askTrip: linkedMatch.ask,
+    tripTitles: linkedMatch.titles,
     hasUnlimited: plans.includes('unlimited'),
     hasPhotoUpload,
     hasVideoUpload,
@@ -1460,7 +1472,11 @@ export async function modelSupportReply(facts, { env = process.env, fetchImpl = 
   return reply;
 }
 
-export async function vacationSupportReply({ text, intent, access, env = process.env, fetchImpl = fetch } = {}) {
+export function vacationSupportReply({ text, intent, access, env = process.env, fetchImpl = fetch } = {}) {
+  if (access?.askTrip) {
+    const titles = (access.tripTitles || []).filter(Boolean);
+    return titles.length ? `Which trip: ${titles.join('; ')}?` : 'Which trip should I use?';
+  }
   return modelSupportReply(supportReplyFacts({ text, intent, access, env }), { env, fetchImpl });
 }
 

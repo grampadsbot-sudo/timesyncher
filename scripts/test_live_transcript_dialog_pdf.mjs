@@ -37,10 +37,13 @@ assert.doesNotMatch(source, /jev first:/);
 assert.match(source, /QUALITY COMPARISON vs v6 gpt-5-mini|liveV7Pack/);
 assert.match(source, /missing_app_open/);
 
+const priceIntent = { asksPrice: true, asksAccess: true, pullsAccess: true };
 assert.equal(customerPullsAccess('Walk me through Thursday with Kimberly.'), false);
-assert.equal(customerPullsAccess('How much if they join as collaborators?'), true);
+assert.equal(customerPullsAccess('How much if they join as collaborators?'), false);
+assert.equal(customerPullsAccess('How much if they join as collaborators?', priceIntent), true);
 assert.equal(upsellModeForTurn('Friday dinner on the Big Island.', []), 'forbidden');
-assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', []), 'allow-once');
+assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', []), 'forbidden');
+assert.equal(upsellModeForTurn('How much if Kimberly joins as a collaborator?', [], priceIntent), 'allow-once');
 const dayWithCloser = 'Thursday is a town walk in Kailua-Kona. Welcome the whole family as collaborators with unlimited vacations for the whole year.';
 assert.equal(isFullUpsell(dayWithCloser), true);
 assert.equal(sessionHasFullUpsell([{ role: 'app', text: 'Where are you headed?' }]), false);
@@ -55,11 +58,13 @@ assert.equal(item34BanHit('Stop splitting payment talk.'), true);
 assert.equal(item34BanHit('There is no extra cost for how you\u2019re splitting it up.'), true);
 assert.equal(item34BanHit('without requiring you to split up'), true);
 assert.equal(item34BanHit('You are not splitting anything.'), true);
-assert.equal(customerAsksAccessChoice('Can Marcus Chen and Aunt Jean each choose view access or edit access?'), true);
+assert.equal(customerAsksAccessChoice('Can Marcus Chen and Aunt Jean each choose view access or edit access?'), false);
+assert.equal(customerAsksAccessChoice('Can Marcus Chen and Aunt Jean each choose view access or edit access?', priceIntent), true);
 const accessAsk = 'Can each collaborator choose view access or edit access?';
-assert.equal(hardQualityFlags('Thursday is a garden or a town walk.', accessAsk, 'gardens').missingAccess, true);
-assert.equal(hardQualityFlags('You can choose view access or edit access.', accessAsk, 'gardens').missingAccess, false);
-assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Thursday is a garden.', accessAsk, 'gardens'), accessAsk).wantsRewrite, true);
+assert.equal(hardQualityFlags('Thursday is a garden or a town walk.', accessAsk, 'gardens').missingAccess, false);
+assert.equal(hardQualityFlags('Thursday is a garden or a town walk.', accessAsk, 'gardens', priceIntent).missingAccess, true);
+assert.equal(hardQualityFlags('You can choose view access or edit access.', accessAsk, 'gardens', priceIntent).missingAccess, false);
+assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('Thursday is a garden.', accessAsk, 'gardens', priceIntent), accessAsk).wantsRewrite, true);
 assert.equal(item34BanHit('without stacking costs or splitting anything up'), true);
 assert.equal(item34BanHit('Do not split the payment across seats.'), true);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
@@ -174,6 +179,7 @@ assert.equal(dialogPackTitle('Big Island Family'), 'Dialog Pack \u2014 Big Islan
 assert.equal(dialogPackTitle('Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
 assert.equal(draftFactErrors("Sunday's garden stays with Kimberly.", { owners: { gardens: 'Kimberly' }, gardenDays: ['apr 5'], span: { start: '2026-04-03', end: '2026-04-12' } }).some((error) => /Sunday/.test(error)), false);
 assert.equal(draftFactErrors('The crew includes your four friends.', { ownerName: 'Craig Davidson' }).some((error) => /invented people/.test(error)), false);
+assert.ok(draftFactErrors('The party of 9 is already set.', { travelers: ['Ada', 'Bea', 'Cam'] }).some((error) => /saved party size is 3/.test(error)));
 assert.doesNotMatch(source, /WHAT_I_CHANGED/);
 const partyFacts = draftingFacts([], 'The party of eight needs a quiet day. Four friends are still unnamed.');
 assert.doesNotMatch(partyFacts.roster, /party of (six|seven|eight|nine|ten)/i);
@@ -244,13 +250,15 @@ assert.equal(heldRewriteLine({ held: false, rewriteText: 'Tuesday stays a swim.'
 assert.equal(formatQualityLine({ judged: true, score: 4, comment: 'Clear day shape.', rewritten: true }), 'quality: 4');
 assert.equal(formatQualityLine({ judged: true, score: 2.76, comment: 'Thin day.', rewritten: false }), 'quality: 2.76');
 assert.equal(formatQualityLine({ judged: true, score: 1, comment: 'Misses the price.', rewritten: true, rewriteModel: 'typesafe/jev-1.13', model: 'typesafe/jev-1.13' }), 'quality: 1');
+const priceAskLine = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.';
 const priceSeats = [
   { name: 'Kimberly', payer: 'you' },
   { name: 'Tyler', payer: 'Tyler' },
   { name: 'Lauren', payer: 'Lauren' },
 ];
 const priceEnv = { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700' };
-const priceLine = payerPriceLine(priceSeats, priceEnv);
+assert.equal(payerPriceLine(priceAskLine), '');
+const priceLine = payerPriceLine(priceAskLine, priceEnv, priceSeats);
 assert.match(priceLine, /Kimberly \$27, paid by you/);
 assert.match(priceLine, /Tyler \$27, paid by Tyler/);
 assert.match(priceLine, /Lauren \$27, paid by Lauren/);
@@ -267,11 +275,13 @@ assert.deepEqual(unsourcedPlaces('Harbor Market (id:osm:way/11) on Tuesday.', so
 assert.deepEqual(unsourcedPlaces('Glass Lagoon (id:missing) on Tuesday.', sourcedMarket), ['Glass Lagoon']);
 assert.deepEqual(inventedVenueNames('Monday swim is the beach or the house pool.', []), []);
 const priceAsk = 'How much is it if Kimberly, Tyler, and Lauren join as collaborators?';
-assert.equal(customerAsksPrice(priceAsk), true);
-assert.equal(correctFalsePriceMiss({ judged: true, score: 5, comment: 'The reply covers this turn: How much is it?', wantsRewrite: false }, 'Kimberly $27, paid by you; Tyler $27, paid by Tyler; Lauren $27, paid by Lauren', 'How much is it if Kimberly, Tyler, and Lauren join?').score, 5);
-assert.equal(correctFalsePriceMiss({ judged: true, score: 4, comment: 'Says no extra fees.', wantsRewrite: false }, 'There are no extra fees.', priceAsk).score <= 3, true);
+assert.equal(customerAsksPrice(priceAsk), false);
+assert.equal(customerAsksPrice(priceAsk, priceIntent), true);
+assert.equal(correctFalsePriceMiss({ judged: true, score: 5, comment: 'The reply covers this turn: How much is it?', wantsRewrite: false }, 'Kimberly $27, paid by you; Tyler $27, paid by Tyler; Lauren $27, paid by Lauren', 'How much is it if Kimberly, Tyler, and Lauren join? I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.').score, 5);
+assert.equal(correctFalsePriceMiss({ judged: true, score: 4, comment: 'Says no extra fees.', wantsRewrite: false }, 'There are no extra fees.', priceAsk, priceIntent).score <= 3, true);
 assert.equal(correctFalsePriceMiss({ judged: true, score: 1, comment: 'The reply skips the dollar amount.', wantsRewrite: true }, 'The price is $27 for unlimited vacations for the whole year.', priceAsk).score <= 3, true);
-assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, true);
+assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim').missingPrice, false);
+assert.equal(hardQualityFlags('Everyone is included without splitting anything up.', priceAsk, 'gardens and a swim', priceIntent).missingPrice, true);
 const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
 assert.match(rulesSource, /planFactsForReply/);
 assert.match(rulesSource, /payer_line/);
@@ -629,7 +639,7 @@ assert.deepEqual(upsellAudit([
 ]).unsolicitedFull, []);
 assert.deepEqual(upsellAudit([
   { turnIndex: 1, role: 'app', text: 'Where are you headed?', replyProducer: LIVE_OPENER_PRODUCER },
-  { turnIndex: 2, role: 'customer', text: 'How much if they join as collaborators?' },
+  { turnIndex: 2, role: 'customer', text: 'How much if they join as collaborators?', intent: priceIntent },
   { turnIndex: 3, role: 'app', text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' },
   { turnIndex: 4, role: 'customer', text: 'Read the week back on the Big Island.' },
   { turnIndex: 5, role: 'app', text: 'Monday starts in Kailua-Kona.' },

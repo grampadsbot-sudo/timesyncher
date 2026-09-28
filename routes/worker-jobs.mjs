@@ -2,7 +2,7 @@ import { requireWorkerAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
-import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 
 async function claimJobs(db, { workerId, limit }) {
   const rows = await db`
@@ -106,7 +106,7 @@ async function completeJob(db, body) {
   `;
 
   if (body.customerResponse) {
-    const turnTag = classifyTurn({
+    const turnTag = await classifyTurnWithModel({
       text: body.customerResponse,
       speaker: 'assistant',
       direction: 'outbound',

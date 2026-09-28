@@ -396,14 +396,14 @@ assert.equal(underRun.status, 0, underRun.stderr);
 assert.doesNotMatch(underRun.stdout, /API-FN-CAP/);
 assert.doesNotMatch(underRun.stdout, /BUILD-STAMP/);
 
-const shiftSource = 'src/vacation/wind-backup.mjs';
+const shiftSource = 'src/vacation/thing-logo-capture.mjs';
 const shiftOriginal = fs.readFileSync(path.join(repo, shiftSource), 'utf8');
 const originalHits = scanText(shiftSource, shiftOriginal);
 const shiftBaseline = baseline.filter((row) => row.file === shiftSource);
 assert.equal(shiftBaseline.length >= 2, true);
-const removed = shiftBaseline.find((row) => row.rule === 'HC-DIALOG' && row.symbol_or_pattern === 'windBackupSentence');
+const removed = shiftBaseline.find((row) => row.rule === 'HC-PLACE-LIST' && row.symbol_or_pattern === 'BRAND_LOGOS');
 assert.ok(removed);
-const keptHit = originalHits.find((finding) => contentIdentity(finding) !== contentIdentity(removed));
+const keptHit = originalHits.find((finding) => contentIdentity(finding) !== contentIdentity(removed) && shiftOriginal.includes(finding.symbol_or_pattern));
 assert.ok(keptHit);
 const shifted = `${'// line shift\n'.repeat(6)}${shiftOriginal.split(removed.symbol_or_pattern).join('forecastSentence')}`;
 assert.equal(shifted.includes(removed.symbol_or_pattern), false);
