@@ -13,6 +13,10 @@ import {
   vacationIdentityAck,
 } from '../routes/vacation-telegram-turn.mjs';
 
+if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
+  process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
+}
+
 const screenshotTranscript = [
   'I will call it this our Hawaiian getaway and what would make it unforgettable',
   "we're gonna stay seven nights in Hawaii is just having a fabulous time.",
