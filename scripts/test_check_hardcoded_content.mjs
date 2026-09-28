@@ -802,6 +802,47 @@ const said = scanText('scripts/vacation-app-reply-rules.mjs', 'const line = "Nev
 assert.equal(said.length, 1);
 assert.equal(classify(said, []).fail.length, 1);
 
+const barTerms = JSON.parse(fs.readFileSync(path.join(repo, 'scripts/dialog-bar-terms.json'), 'utf8'));
+function sourceLiteral(raw) {
+  if (!raw.includes("'") && !raw.includes('\n') && !raw.includes('\r')) return `'${raw}'`;
+  if (!raw.includes('"') && !raw.includes('\n') && !raw.includes('\r')) return `"${raw}"`;
+  throw new Error('exact allow string has no safe quote');
+}
+const exactText = barTerms.exactAllow.strings.map((raw) => `const line = ${sourceLiteral(raw)};`).join('\n');
+for (const file of barTerms.exactAllow.files) {
+  assert.equal(scanText(file, exactText).some((finding) => finding.rule.startsWith('BAR-')), false, file);
+}
+const paraphrase = exactText.replace('Do not mention reservations, payments, or checkout.', 'Do not mention reservations, payments, or billing.');
+for (const file of barTerms.exactAllow.files) {
+  const hits = scanText(file, paraphrase).filter((finding) => finding.rule.startsWith('BAR-'));
+  assert.equal(hits.length > 0, true, file);
+  assert.equal(classify(hits, []).fail.length, hits.length, file);
+}
+for (const file of ['routes/stripe-webhook.mjs', 'src/vacation/customer-intent.mjs']) {
+  const hits = scanText(file, exactText).filter((finding) => finding.rule.startsWith('BAR-'));
+  assert.equal(hits.length > 0, true, file);
+  assert.equal(classify(hits, []).fail.length, hits.length, file);
+}
+const barDoc = fs.readFileSync(path.join(repo, 'scripts/dialog-bars.md'), 'utf8');
+assert.match(barDoc, /scripts\/vacation-app-reply-rules\.mjs/);
+assert.match(barDoc, /src\/vacation\/live-app-turn\.mjs/);
+
+const allVacations = 'const description = "TimeSyncher Vacation Telegram access for all vacations";';
+const uploadVacations = 'const description = "TimeSyncher Vacation photo/video upload access for all vacations";';
+const payerEmail = 'throw new Error("A valid payer email is required.");';
+for (const file of ['routes/checkout-config.mjs', 'routes/create-payment-intent.mjs', 'routes/checkout-coupon.mjs']) {
+  assert.equal(scanText(file, allVacations).some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), false, file);
+  assert.equal(scanText(file, uploadVacations).some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), false, file);
+  assert.equal(scanText(file, payerEmail).some((finding) => finding.rule === 'BAR-SPLIT-PAYER'), false, file);
+}
+for (const file of ['src/vacation/live-app-turn.mjs', 'scripts/vacation-app-reply-rules.mjs', 'routes/stripe-webhook.mjs']) {
+  for (const sample of [allVacations, payerEmail]) {
+    const hits = scanText(file, sample).filter((finding) => finding.rule === 'BAR-UNLIMITED-WORDING' || finding.rule === 'BAR-SPLIT-PAYER');
+    assert.equal(hits.length > 0, true, file);
+    assert.equal(classify(hits, []).fail.length, hits.length, file);
+  }
+}
+
 const priceRule = (file, text) => scanText(file, text).filter((finding) => finding.rule === RULE);
 const dot = priceRule('src/vacation/live-app-turn.mjs', 'const cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\n');
 assert.equal(dot.length, 1);

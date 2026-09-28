@@ -4,7 +4,9 @@
   "allow": [
     {
       "id": "stripe-product-subscription",
-      "rules": ["BAR-RESERVATION-PAYMENT"],
+      "rules": [
+        "BAR-RESERVATION-PAYMENT"
+      ],
       "pattern": "stripe(?:\\W+\\w+){0,8}\\W+(?:subscription|billing|invoice|portal|checkout|payment|charge)|(?:subscription|billing|invoice|portal|checkout|payment|charge)(?:\\W+\\w+){0,8}\\W+stripe",
       "note": "A customer-facing string that matches this pattern is TimeSyncher product billing through Stripe (subscription, billing portal, invoice, or the product checkout/payment/charge). It is not a trip reservation, a booking the app places, or a deposit for a stay. The whole string is skipped for BAR-RESERVATION-PAYMENT. A string that only mentions Stripe, or only mentions checkout or payment, is not allowlisted."
     }
@@ -49,7 +51,9 @@
     "BAR-THING-CUSTOMER": {
       "item": "thing",
       "flags": "",
-      "terms": ["\\bThings?\\b"]
+      "terms": [
+        "\\bThings?\\b"
+      ]
     }
   },
   "collabUrl": {
@@ -85,9 +89,27 @@
         "src/vacation/onboarding.mjs"
       ]
     },
+    "BAR-UNLIMITED-WORDING": {
+      "note": "Checkout modules only. Chat, replies, and prompts stay in scope.",
+      "paths": [
+        "routes/checkout-config.mjs",
+        "routes/create-payment-intent.mjs",
+        "routes/checkout-coupon.mjs"
+      ]
+    },
+    "BAR-SPLIT-PAYER": {
+      "note": "Checkout modules only. Chat, replies, and prompts stay in scope.",
+      "paths": [
+        "routes/checkout-config.mjs",
+        "routes/create-payment-intent.mjs",
+        "routes/checkout-coupon.mjs"
+      ]
+    },
     "BAR-COLLAB-URL": {
       "note": "Collaborator invite email builders. A chat reply to a collaborator seat stays in scope.",
-      "paths": ["src/vacation/email.mjs"]
+      "paths": [
+        "src/vacation/email.mjs"
+      ]
     },
     "BAR-THING-CUSTOMER": {
       "note": "On these keepsake and trek files, comments, new Error strings, skipReason strings, and a bare Thing identifier are internal. A || Thing display fallback and any other prose stay, because that text can be shown. Prompts and chat stay in scope.",
@@ -109,5 +131,24 @@
     "askedToSend": "\\b(?:send|share|give)\\b[\\s\\S]{0,80}\\b(?:viewer|editor|view|edit)\\b[\\s\\S]{0,40}\\b(?:url|link|site|website)\\b|\\b(?:url|link|site|website)\\b[\\s\\S]{0,60}\\b(?:viewer|editor|view|edit)\\b",
     "noteConfirm": "\\b(?:saved (?:that |your |the )?(?:note|it)|i(?:'ll| will) note|noted (?:that|this|it)|added (?:that |your )?note|note is in|put that (?:note )?on)\\b",
     "day": "\\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Day\\s+\\d+|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}/\\d{1,2}(?:/\\d{2,4})?|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?)\\b"
+  },
+  "exactAllow": {
+    "note": "Literal equality of the source text inside the quotes, only in these two files. Not a regex. A paraphrase fails. The same text in any other file fails. Dialog pack turns are chat and do not use this list.",
+    "files": [
+      "scripts/vacation-app-reply-rules.mjs",
+      "src/vacation/live-app-turn.mjs"
+    ],
+    "strings": [
+      "Reservations, payments, split-payer, or other language the reply rules ban.",
+      "Do not mention reservations, payments, or checkout.",
+      "Item34 ban: never say \"splitting payments\", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.",
+      "Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.",
+      "Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.",
+      "Name each seat, the plan dollar amount, and who pays.",
+      "Name each seat and who pays without a banned payment word.",
+      "banned payment word",
+      "${customerTurn}\\n\\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.",
+      "Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say \"splitting payments\" or splitting anything up."
+    ]
   }
 }

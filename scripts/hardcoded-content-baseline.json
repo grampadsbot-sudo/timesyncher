@@ -253,27 +253,6 @@
   },
   {
     "file": "routes/create-payment-intent.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "A valid payer email is required.",
-    "inventory_id": "4e22d8bc",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/create-payment-intent.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "ion Telegram access for all vacations",
-    "inventory_id": "87d603af",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/create-payment-intent.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "video upload access for all vacations",
-    "inventory_id": "20e2acc5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/create-payment-intent.mjs",
     "rule": "DATE-LITERAL",
     "symbol_or_pattern": "2025-11-17",
     "inventory_id": "DATE-LITERAL",
@@ -740,6 +719,104 @@
     "inventory_id": "MODEL-BARE",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "MODEL-BARE"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "acceptCollaboratorInvite(process.env)#d112685f",
+    "inventory_id": "04306339",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "blockHighAuthorityRequest(process.env)#2fdce9a7",
+    "inventory_id": "503f9b76",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "collaboratorPaymentUrl(process.env)#871dbc85",
+    "inventory_id": "a48ee1a0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "collaboratorStripe(process.env)#e2394796",
+    "inventory_id": "27d99c54",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "createCollaboratorInvite(process.env)#81f72ef5",
+    "inventory_id": "18e308e4",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "createTelegramWebAccessSession(process.env)#e3bdaefc",
+    "inventory_id": "3749f902",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "env:process.env#61005747",
+    "inventory_id": "1d747a2f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "hasMediaEntitlement(process.env)#759855e8",
+    "inventory_id": "c3c52b0d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "ownerMediaCheckoutUrl(process.env)#b04de816",
+    "inventory_id": "4279c9d2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "publicTripUrl(process.env)#d0b532e6",
+    "inventory_id": "38043ba0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "requireIntakeAuth(process.env)#56517b9e",
+    "inventory_id": "f2365baf",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "sharedTripWebsiteUrl(process.env)#5236a3ff",
+    "inventory_id": "0e53ddc2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "sql(process.env)#253eba36",
+    "inventory_id": "7fcff90e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "vacationEulaStatus(process.env)#7a985f92",
+    "inventory_id": "ee06990c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "routes/worker-jobs.mjs",
@@ -1276,20 +1353,6 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Do not mention reservations, payments, or checkout.",
-    "inventory_id": "98487046",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Name each seat and who pays without a banned paymen",
-    "inventory_id": "1547ce18",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "Remove any split-payment wording.",
     "inventory_id": "59ef846a",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -1299,20 +1362,6 @@
     "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "Remove the banned payment wording.",
     "inventory_id": "b51bb0d3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Reservations, payments, split-payer,",
-    "inventory_id": "7dc9233b",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Reservations, payments, split-payer, or other",
-    "inventory_id": "aef3050b",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1332,29 +1381,8 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "dollar amount, and who pays.",
-    "inventory_id": "b90ed921",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "erary, or uses a banned payment word. A price question",
     "inventory_id": "4f9efdb7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "ervations, payments, or checkout.",
-    "inventory_id": "71bbbb3e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "itting payments\", split payment, split-payer, splitting",
-    "inventory_id": "1955c05f",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1374,22 +1402,8 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "n: never say \"splitting payments\", split payment, split-",
-    "inventory_id": "b7b5d6f5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "names each seat and who pays from the plan table.",
     "inventory_id": "e4233f23",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "o pays without a banned payment word.",
-    "inventory_id": "bdd36fe9",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1402,43 +1416,8 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "split-payer, splitting payment, or splitting anything",
-    "inventory_id": "5b045258",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "t mention reservations, payments, or checkout.",
-    "inventory_id": "ae1ee156",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
     "inventory_id": "84858e8e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "\", split payment, split-payer, splitting payment, or",
-    "inventory_id": "747b07c5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "Item34 ban: never say \"splitting payments\", split payment, split-",
-    "inventory_id": "7b0cfe69",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "Name each seat and who pays without a banned paymen",
-    "inventory_id": "5176c7ea",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1451,22 +1430,8 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "Reservations, payments, split-payer, or other language the",
-    "inventory_id": "9871ac7c",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
     "symbol_or_pattern": "aft names each seat and who pays from the plan table.",
     "inventory_id": "ba485952",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "ations, payments, split-payer, or other language the",
-    "inventory_id": "6a71faac",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1479,36 +1444,8 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "plan dollar amount, and who pays.",
-    "inventory_id": "cc8908db",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
     "symbol_or_pattern": "seat is $ . State this payer line exactly: . Make n",
     "inventory_id": "7c34cf72",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "t payment, split-payer, splitting payment, or splitting anything",
-    "inventory_id": "48d2a39b",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "y \"splitting payments\", split payment, split-payer, splitting",
-    "inventory_id": "8365a6bd",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "yments\", split payment, split-payer, splitting payment, or",
-    "inventory_id": "6c2ad84f",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3229,13 +3166,6 @@
   {
     "file": "src/vacation/live-app-turn.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "banned payment word",
-    "inventory_id": "522b8406",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "customer: I pay for",
     "inventory_id": "cb5a8aa8",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -4400,104 +4330,6 @@
     "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:C13",
     "inventory_id": "C13",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "hasMediaEntitlement(process.env)#759855e8",
-    "inventory_id": "c3c52b0d",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "sharedTripWebsiteUrl(process.env)#5236a3ff",
-    "inventory_id": "0e53ddc2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "createTelegramWebAccessSession(process.env)#e3bdaefc",
-    "inventory_id": "3749f902",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "publicTripUrl(process.env)#d0b532e6",
-    "inventory_id": "38043ba0",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "ownerMediaCheckoutUrl(process.env)#b04de816",
-    "inventory_id": "4279c9d2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "createCollaboratorInvite(process.env)#81f72ef5",
-    "inventory_id": "18e308e4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "collaboratorPaymentUrl(process.env)#871dbc85",
-    "inventory_id": "a48ee1a0",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "collaboratorStripe(process.env)#e2394796",
-    "inventory_id": "27d99c54",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "env:process.env#61005747",
-    "inventory_id": "1d747a2f",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "sql(process.env)#253eba36",
-    "inventory_id": "7fcff90e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "requireIntakeAuth(process.env)#56517b9e",
-    "inventory_id": "f2365baf",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "acceptCollaboratorInvite(process.env)#d112685f",
-    "inventory_id": "04306339",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "vacationEulaStatus(process.env)#7a985f92",
-    "inventory_id": "ee06990c",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "blockHighAuthorityRequest(process.env)#2fdce9a7",
-    "inventory_id": "503f9b76",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   }
 ]

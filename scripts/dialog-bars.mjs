@@ -345,15 +345,20 @@ export function barFindings(file, text, terms = loadBarTerms()) {
       for (const hit of termHits(prose, terms, ruleId)) push(ruleId, base + hit.index, hit.match);
     }
   };
+  const exact = terms.exactAllow || {};
+  const exactFiles = exact.files || [];
+  const exactStrings = new Set(exact.strings || []);
+  const take = (src, item, base) => {
+    const raw = src.slice(item.start + 1, item.end - 1);
+    if (exactFiles.includes(normFile(file)) && exactStrings.has(raw)) return;
+    scanProse(item.value, base + item.fileStart);
+  };
   if (file.endsWith('.html')) {
     for (const chunk of htmlChunks(value)) {
-      if (chunk.kind === 'script') {
-        walkStrings(chunk.text, (item) => scanProse(item.value, chunk.index + item.fileStart));
-      } else scanProse(chunk.text, chunk.index);
+      if (chunk.kind === 'script') walkStrings(chunk.text, (item) => take(chunk.text, item, chunk.index));
+      else scanProse(chunk.text, chunk.index);
     }
-  } else {
-    walkStrings(value, (item) => scanProse(item.value, item.fileStart));
-  }
+  } else walkStrings(value, (item) => take(value, item, 0));
   for (const hit of collabUrlFindings(file, value, terms)) {
     const key = `${hit.rule}\0${hit.symbol_or_pattern}`;
     if (seen.has(key)) continue;
