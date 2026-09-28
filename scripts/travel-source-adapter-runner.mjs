@@ -99,6 +99,97 @@ export function approvedAdapters(registry) {
   });
 }
 
+function googlePlaceHost(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === 'places.googleapis.com' || host === 'maps.googleapis.com';
+  } catch {
+    return false;
+  }
+}
+
+function webHit({ category, title, summary, url, source, retrievedAt }) {
+  const website = publicUrl(url);
+  const name = text(title, 160);
+  if (!website || !name || googlePlaceHost(website)) return null;
+  const blurb = text(summary || name, 500);
+  return {
+    category: text(category || 'decision', 40) || 'decision',
+    title: name,
+    summary: blurb,
+    details: blurb,
+    website,
+    source: source,
+    sources: [{ label: source, url: website, retrievedAt }],
+    verificationStatus: 'source_checked',
+    sourceBacked: true,
+  };
+}
+
+function braveHits(payload, category, retrievedAt) {
+  const results = Array.isArray(payload?.web?.results) ? payload.web.results : [];
+  return results.map((result) => webHit({
+    category,
+    title: result?.title,
+    summary: result?.description,
+    url: result?.url,
+    source: 'brave',
+    retrievedAt,
+  })).filter(Boolean);
+}
+
+function tavilyHits(payload, category, retrievedAt) {
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  return results.map((result) => webHit({
+    category,
+    title: result?.title,
+    summary: result?.content,
+    url: result?.url,
+    source: 'tavily',
+    retrievedAt,
+  })).filter(Boolean);
+}
+
+export async function searchBraveAndTavily(query, options = {}) {
+  const q = text(query, 500);
+  if (!q) return [];
+  const braveKey = text(options.braveKey, 500);
+  const tavilyKey = text(options.tavilyKey, 500);
+  const missing = [];
+  if (!braveKey) missing.push(text(options.braveName, 80) || 'brave');
+  if (!tavilyKey) missing.push(text(options.tavilyName, 80) || 'tavily');
+  if (missing.length) {
+    const error = new Error(`Search refused to run. Missing ${missing.join(', ')}.`);
+    error.code = 'missing_key';
+    console.error(error.message);
+    throw error;
+  }
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const category = text(options.category || 'decision', 40) || 'decision';
+  const retrievedAt = text(options.retrievedAt || new Date().toISOString(), 40);
+  const braveResponse = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(q)}`, {
+    headers: { Accept: 'application/json', 'X-Subscription-Token': braveKey },
+  });
+  if (!braveResponse?.ok) throw new Error(`Brave search failed: HTTP ${braveResponse?.status || 0}`);
+  const tavilyResponse = await fetchImpl('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${tavilyKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: q,
+      search_depth: 'basic',
+      topic: 'general',
+      max_results: 5,
+      include_answer: false,
+      include_raw_content: false,
+    }),
+  });
+  if (!tavilyResponse?.ok) throw new Error(`Tavily search failed: HTTP ${tavilyResponse?.status || 0}`);
+  return [
+    ...braveHits(await braveResponse.json(), category, retrievedAt),
+    ...tavilyHits(await tavilyResponse.json(), category, retrievedAt),
+  ];
+}
+
 async function runHotelGoat(adapter, context = {}) {
   const artifacts = context.artifacts || {};
   const destination = text(context.destination || artifacts.destination || '', 120);
@@ -250,8 +341,19 @@ export async function runApprovedSourceAdapters(input = {}) {
     }
   }
   for (const adapter of adapters) {
-    if (adapter.id === 'printingpress-wanderlust-goat') {
-      adaptersRun.push({ adapterId: adapter.id, status: 'disabled_google_places_seed_removed', safetyClass: adapter.safetyClass, candidateCount: 0 });
+    if (adapter.id === 'brave-tavily-web') {
+      const query = [text(input.destination, 160), text(input.artifacts?.requestText || input.requestText, 400)].filter(Boolean).join(' ');
+      const found = await searchBraveAndTavily(query, {
+        fetchImpl: input.fetchImpl,
+        braveKey: input.braveKey,
+        tavilyKey: input.tavilyKey,
+        braveName: input.braveName,
+        tavilyName: input.tavilyName,
+        category: 'decision',
+        retrievedAt: input.retrievedAt,
+      });
+      candidates.push(...found);
+      adaptersRun.push({ adapterId: adapter.id, status: found.length ? 'live_read_only_complete' : 'empty', safetyClass: adapter.safetyClass, candidateCount: found.length });
     } else if (adapter.id === 'printingpress-hotel-goat') {
       await runAdapter(adapter, () => runHotelGoat(adapter, input), 'skipped_missing_destination_or_dates');
     } else if (adapter.id === 'printingpress-masterpark-quote') {

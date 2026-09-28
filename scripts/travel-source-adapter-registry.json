@@ -18,6 +18,25 @@
   },
   "adapters": [
     {
+      "id": "brave-tavily-web",
+      "kind": "web_search",
+      "label": "Brave and Tavily public web search",
+      "safetyClass": "approved_public_search",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["hotel", "flight", "car", "restaurant", "store", "activity", "tour", "event", "transport", "decision"],
+      "timeoutMs": 30000,
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "blocked"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources", "source"],
+        "metadataFields": ["source"]
+      }
+    },
+    {
       "id": "grok-public-web-search",
       "kind": "provider",
       "label": "Paid Ubuntu Grok web_search",
@@ -76,8 +95,7 @@
       "outputSchema": {
         "required": ["category", "title", "summary", "details", "sources"],
         "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
-      },
-      "smokeStatus": "disabled_google_places_seed_removed"
+      }
     },
     {
       "id": "printingpress-roadside-america",

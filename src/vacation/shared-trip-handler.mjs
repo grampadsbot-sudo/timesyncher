@@ -68,6 +68,7 @@ async function intakeSharedResponse(shareToken) {
       notes: Array.isArray(meta.notes) ? meta.notes : [],
       collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
       source: row.source || '',
+      location: row.location && typeof row.location === 'object' ? row.location : {},
     };
   });
   const shared = sharedTripFromIntake({ trip, things: mappedThings });

@@ -10,6 +10,7 @@ const bundle = await readFile(new URL('../public/assets/index-0J54vUO3.js', impo
 const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const handler = await readFile(new URL('../src/vacation/shared-trip-handler.mjs', import.meta.url), 'utf8');
 const keepsake = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');
+const intake = await readFile(new URL('../src/vacation/intake-shared-trip.mjs', import.meta.url), 'utf8');
 const snapshot = await readFile(new URL('../src/vacation/pre-collaborator-snapshot.mjs', import.meta.url), 'utf8');
 
 assert.doesNotMatch(vacationApp, /data-screen="itinerary"/);
@@ -26,7 +27,7 @@ assert.match(api, /publishIntakeShare/);
 assert.match(handler, /intakeSharedResponse/);
 assert.match(handler, /timesyncherIntake|sharedTripFromIntake/);
 assert.match(api, /storePreCollaboratorSnapshot/);
-assert.doesNotMatch(`${handler}\n${keepsake}\n${snapshot}`, /padKeepsakeSharedPlaces/);
+assert.doesNotMatch(`${handler}\n${keepsake}\n${snapshot}\n${intake}`, /padKeepsakeSharedPlaces|BIG_ISLAND_FILL_DETAILS|KEEPSAKE_LIST_FILL|LIVE_TAB_FILL|catalogForShared/);
 
 const tripId = 'eab1cbb1-5144-4be4-b856-92f0a3769db3';
 assert.equal(intakeShareSlug(tripId), 'intake-eab1cbb15144');
@@ -56,6 +57,15 @@ assert.equal(shared.permissions.share_budget, true);
 assert.equal(shared.budget.length, 1);
 assert.equal(shared.budget[0].total_price, null);
 assert.equal(shared.places.length, 2);
+const located = sharedTripFromIntake({
+  trip: { id: tripId, title: 'Week', destination: 'Lisbon', start_date: '2026-04-03', end_date: '2026-04-05' },
+  things: [{ id: 'cafe', category: 'restaurant', title: 'Harbor Cafe', source: 'brave', lat: 38.72, lng: -9.14, address: '1 Dock' }],
+});
+const cafe = located.places.find((place) => place.name === 'Harbor Cafe');
+assert.equal(cafe.lat, 38.72);
+assert.equal(cafe.lng, -9.14);
+assert.equal(cafe.address, '1 Dock');
+assert.equal(cafe.source, 'brave');
 const email = purchaseEmail({
   contact: { firstName: 'Verify' },
   publicSlug: 'intake-eab1cbb15144',

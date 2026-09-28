@@ -1,5 +1,4 @@
 import { lowestCarOffers } from './car-offers.mjs';
-import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
 
 const MONTHS = {
@@ -139,6 +138,7 @@ export function sharedTripFromIntake({ trip, things }) {
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
     const summary = productThingSummary(thing);
+    const point = locationOf(thing);
     places.push({
       id,
       trip_id: intId(trip.id),
@@ -150,6 +150,7 @@ export function sharedTripFromIntake({ trip, things }) {
       reservation_status: 'considering',
       notes: summary,
       source: thing.source || '',
+      ...(point ? { lat: point.lat, lng: point.lng, address: point.address } : {}),
     });
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
@@ -232,9 +233,20 @@ const PLACE_COORDS = {
   'Kona arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
 };
 
+function finiteCoord(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function locationOf(thing = {}) {
+  const stored = thing.location && typeof thing.location === 'object' ? thing.location : {};
+  const lat = finiteCoord(thing.lat ?? stored.lat);
+  const lng = finiteCoord(thing.lng ?? stored.lng);
+  if (lat == null || lng == null) return null;
+  return { lat, lng, address: String(thing.address || stored.address || '') };
+}
+
 function coordsFor(name) {
-  const detail = BIG_ISLAND_FILL_DETAILS[name];
-  if (detail?.lat && detail?.lng) return [detail.lat, detail.lng, detail.address || 'Kailua-Kona, Hawaii'];
   return PLACE_COORDS[name] || null;
 }
 
@@ -268,12 +280,12 @@ export function windLookupPointsFromThings(things = []) {
   const seen = new Set();
   for (const thing of things || []) {
     const name = String(thing.title || thing.name || '').trim();
-    const coords = coordsFor(name);
+    const coords = locationOf(thing);
     if (!coords || !/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    points.push({ name, lat: coords[0], lng: coords[1] });
+    points.push({ name, lat: coords.lat, lng: coords.lng });
   }
   return points;
 }
@@ -295,19 +307,17 @@ export function applyThingPresentation(shared = {}, options = {}) {
     });
     place.description = summary;
     place.notes = summary;
-    const coords = coordsFor(name);
+    const lat = finiteCoord(place.lat);
+    const lng = finiteCoord(place.lng);
     const extra = {
       summary,
       logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
       ...sourcedRatings(name, options),
     };
-    if (coords) {
-      place.lat = coords[0];
-      place.lng = coords[1];
-      place.address = coords[2];
-      extra.lat = coords[0];
-      extra.lng = coords[1];
-      extra.address = coords[2];
+    if (lat != null && lng != null) {
+      extra.lat = lat;
+      extra.lng = lng;
+      if (place.address) extra.address = place.address;
     }
     if (/ulu ocean/i.test(name)) {
       extra.restaurantTags = ['Seafood', 'Cocktail Bar / Happy Hour'];

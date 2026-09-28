@@ -24,7 +24,10 @@ assert.doesNotMatch(workerText, /TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE/);
 assert.doesNotMatch(workerText, /runApprovedSourceAdapters/);
 assert.doesNotMatch(runnerText, /TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE/);
 assert.doesNotMatch(runnerText, /function fixtureRecentTravelerSentiment/);
+assert.doesNotMatch(runnerText, /disabled_google_places_seed_removed/);
+assert.doesNotMatch(runnerText, /TIMESYNCHER_GROK_BIN/);
 assert.match(runnerText, /adapter\.fixtureOnly/);
+assert.match(runnerText, /export async function searchBraveAndTavily/);
 
 const artifacts = { destination: 'Tokyo', dates: { dateText: 'October' }, requestText: 'Plan Tokyo hotels ramen museums shopping flights and transport.' };
 assert.ok(buildResearchQueries(artifacts).some((item) => item.category === 'flight'));
@@ -40,7 +43,7 @@ const adapterRun = await runApprovedSourceAdapters({
   mode: 'fixture',
   fixturePath: path.join(here, 'missing-public-research-fixture.json'),
   registryPath,
-  artifacts: { requestText: 'hello' },
+  artifacts: {},
   retrievedAt: new Date().toISOString(),
 });
 assert.equal(adapterRun.candidates.some((candidate) => candidate.adapterSources?.[0]?.adapterId === 'fixture-recent-traveler-sentiment'), false);

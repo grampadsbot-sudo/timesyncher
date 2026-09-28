@@ -31,7 +31,7 @@ import {
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
+import { KEEPSAKE_LIST_MINIMUMS } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
@@ -93,21 +93,7 @@ assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
 
-const catalogNames = [
-  ...Object.keys(NAMED_THING_LOGOS),
-  ...LIVE_TAB_FILL.restaurant,
-  ...LIVE_TAB_FILL.store,
-  ...LIVE_TAB_FILL.rest,
-  ...KEEPSAKE_LIST_FILL.Restaurants,
-  ...KEEPSAKE_LIST_FILL.Stores,
-  ...KEEPSAKE_LIST_FILL['Shows, Tours and the Rest'],
-  'Bellagio Fountains',
-  'High Roller',
-  'The Sphere',
-  'Fremont Street Experience',
-  'Neon Museum',
-  'Atomic Museum',
-];
+const catalogNames = Object.keys(NAMED_THING_LOGOS);
 for (const name of new Set(catalogNames)) {
   const path = brandLogoPath({ name }, { title: name });
   assert.equal(isPlaceholderLogoUrl(path), false, `real logo for ${name}`);
@@ -713,27 +699,8 @@ assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
   Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
   'Shows, Tours and the Rest': DEFAULT_FIRST_PASS_MINIMUMS.rest,
 });
-assert.equal(padKeepsakeListNames('Restaurants', [
-  { name: 'Carbone at Aria' },
-  { name: 'Shake Shack near Cosmo/Aria' },
-  { name: 'Lotus of Siam' },
-  { name: 'Eggslut' },
-]).length, 11);
-assert.equal(padKeepsakeListNames('Stores', [{ name: 'Cosmopolitan shops' }]).length, 9);
-assert.equal(padKeepsakeListNames('Shows, Tours and the Rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
-const liveRestaurants = [
-  { name: 'Carbone at Aria' },
-  { name: 'Shake Shack near Cosmo/Aria' },
-  { name: 'Lotus of Siam' },
-  { name: 'Eggslut' },
-];
-assert.deepEqual(padLiveTabRows('restaurant', liveRestaurants).map((row) => row.name), liveRestaurants.map((row) => row.name));
-assert.deepEqual(padLiveTabRows('store', [{ name: 'Cosmopolitan shops' }]).map((row) => row.name), ['Cosmopolitan shops']);
-assert.deepEqual(padLiveTabRows('rest', [
-  { name: 'Bellagio Conservatory — Anniversary Cocktails' },
-  { name: 'Mon Ami Gabi', __tsLiveFill: 1, lat: 36.1147, lng: -115.1729, address: 'Las Vegas' },
-]).map((row) => row.name), ['Bellagio Conservatory — Anniversary Cocktails']);
-assert.equal(JSON.stringify(padLiveTabRows('restaurant', liveRestaurants)).includes('36.1147'), false);
+const minimumsSource = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(minimumsSource, /\b(?:KEEPSAKE_LIST_FILL|BIG_ISLAND_LIST_FILL|KEEPSAKE_FILL_DETAILS|BIG_ISLAND_FILL_DETAILS|LIVE_TAB_FILL|FILL_BUCKET_META|catalogForShared|padKeepsakeListNames|padLiveTabRows)\b/);
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("car"\)/);
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
