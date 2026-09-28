@@ -81,12 +81,12 @@ assert(sanitizeTimelineGlyph('✈️', 'restaurant') === '🍽️', 'sanitize st
 assert(sanitizeTimelineGlyph('✈️', 'flight') === '✈️', 'sanitize keeps airplane on flights');
 assert(isAirplaneGlyph('✈️') === true, 'airplane glyph detected');
 assert(timelineIcon({ name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction' }).isFlight === false, 'research queue is not a flight');
-assert(resolveThingType({ name: 'Bellagio' }) === 'other', 'a name alone has no icon type');
-assert(resolveThingType({ name: 'SFO to LAS Thu Oct 9' }) === 'other', 'airport text alone is not a flight');
-assert(resolveThingType({ name: 'Hertz downtown' }) === 'other', 'a rental name alone is not a car');
+assert(resolveThingType({ name: 'Sample Hotel' }) === 'other', 'a name alone has no icon type');
+assert(resolveThingType({ name: 'City A to City B' }) === 'other', 'a route name alone is not a flight');
+assert(resolveThingType({ name: 'Sample Rental' }) === 'other', 'a rental name alone is not a car');
 assert(resolveThingType(outbound) === 'transport', 'transport category is not upgraded from the name');
-assert(resolveThingType({ name: 'Bellagio', category_name: 'Hotel' }) === 'hotel', 'source category selects the icon');
-assert(resolveThingType({ name: 'SFO to LAS Thu Oct 9', category_name: 'Flight' }) === 'flight', 'flight category selects the icon');
-assert(resolveThingType({ name: 'Hertz downtown', category_name: 'Car' }) === 'car', 'car category selects the icon');
+assert(resolveThingType({ name: 'Sample Hotel', category_name: 'Hotel' }) === 'hotel', 'source category selects the icon');
+assert(resolveThingType({ name: 'City A to City B', category_name: 'Flight' }) === 'flight', 'flight category selects the icon');
+assert(resolveThingType({ name: 'Sample Rental', category_name: 'Car' }) === 'car', 'car category selects the icon');
 
 console.log('timeline icon tests passed');

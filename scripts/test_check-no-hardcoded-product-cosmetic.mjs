@@ -10,12 +10,12 @@ assert.equal(sourceLogoUrl({ source: { favicon: 'https://cdn.example/favicon.ico
 assert.equal(sourceLogoUrl({ website: 'https://cafe.example/menu' }), 'https://cafe.example/favicon.ico');
 assert.equal(sourceLogoUrl({ website: 'https://maps.google.com/maps?q=place' }), '');
 
-assert.equal(resolveThingType({ name: 'Bellagio' }), 'other');
-assert.equal(resolveThingType({ name: 'SFO to LAS Thu Oct 9' }), 'other');
-assert.equal(resolveThingType({ name: 'Hertz downtown' }), 'other');
-assert.equal(resolveThingType({ name: 'Bellagio', category_name: 'Hotel' }), 'hotel');
-assert.equal(resolveThingType({ name: 'SFO to LAS Thu Oct 9', category_name: 'Flight' }), 'flight');
-assert.equal(resolveThingType({ name: 'Hertz downtown', category_name: 'Car' }), 'car');
+assert.equal(resolveThingType({ name: 'Sample Hotel' }), 'other');
+assert.equal(resolveThingType({ name: 'City A to City B' }), 'other');
+assert.equal(resolveThingType({ name: 'Sample Rental' }), 'other');
+assert.equal(resolveThingType({ name: 'Sample Hotel', category_name: 'Hotel' }), 'hotel');
+assert.equal(resolveThingType({ name: 'City A to City B', category_name: 'Flight' }), 'flight');
+assert.equal(resolveThingType({ name: 'Sample Rental', category_name: 'Car' }), 'car');
 
 const tripId = 'eab1cbb1-5144-4be4-b856-92f0a3769db3';
 const unlabeled = sharedTripFromIntake({
@@ -47,6 +47,8 @@ assert.match(index, /name="state"[^>]*placeholder="State"/);
 assert.match(order, /name="state"[^>]*placeholder="State"/);
 assert.match(index, /name="zip"[^>]*placeholder="ZIP"/);
 assert.match(order, /name="zip"[^>]*placeholder="ZIP"/);
-assert.doesNotMatch(app, /vegas anniversary/i);
+const placeholderTrip = app.slice(app.indexOf('function isPlaceholderTrip'), app.indexOf('function dateParts'));
+assert.match(placeholderTrip, /function isPlaceholderTrip/);
+assert.doesNotMatch(placeholderTrip, /key ===/);
 
 console.log('product cosmetic behavior tests passed');
