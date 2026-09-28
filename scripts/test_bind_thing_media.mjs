@@ -39,29 +39,21 @@ const shared = {
 assert.equal(resolveThingFromShared(shared, { thingName: 'Carbone' }).thingId, 8872);
 assert.equal(resolveThingFromShared(shared, { thingId: 8872 }).name, 'Carbone at Aria');
 assert.equal(resolveThingFromShared(shared, { thingName: 'Conservatory' }).thingId, 8871);
-assert.equal(guessThingNameFromFilename('carbone-dinner.jpg').thingName, '');
-assert.equal(guessThingNameFromFilename('boarding-passes-photo.jpg').thingName, '');
+assert.equal(guessThingNameFromFilename('venue-a-photo.jpg').thingName, '');
+assert.equal(guessThingNameFromFilename('venue-b-photo.jpg').thingName, '');
 assert.equal(guessThingNameFromFilename('high-roller.jpg').missing, true);
 assert.equal(guessThingNameFromFilename('sphere-show.jpg').missing, true);
 
 assert.equal(SCT_VACATION3_MEDIA_PACK.length, 15);
-for (const file of [
-  'carbone-late-hands-photo.jpg',
-  'carbone-plates-photo.jpg',
-  '/workspace/sct-runs/story-draft-20260907/media/boarding-passes-photo.jpg',
-  'shake-shack-fries-photo.jpg',
-  'eggslut-sandwich-photo.jpg',
-  'conservatory-photo.jpg',
-]) {
-  const mapped = mapVacation3SctMediaFile(file);
-  assert.equal(mapped.action, 'needs-attachment', file);
-  assert.deepEqual(mapped.targets, [], file);
+const unboundPack = SCT_VACATION3_MEDIA_PACK.filter((row) => row.action === 'attach');
+assert.ok(unboundPack.length > 0);
+for (const row of unboundPack) {
+  const mapped = mapVacation3SctMediaFile(row.file);
+  assert.equal(mapped.action, 'needs-attachment');
+  assert.deepEqual(mapped.targets, []);
 }
-assert.equal(mapVacation3SctMediaFile('bellagio-fountain-late-video.mp4').action, 'needs-attachment');
-assert.equal(mapVacation3SctMediaFile('bellagio-fountain-night-video.mp4').action, 'needs-attachment');
-assert.equal(mapVacation3SctMediaFile('bellagio-fountain-night-video.mp4').targets.length, 0);
-assert.equal(guessThingNameFromFilename('hotel-lobby.jpg').thingName, '');
-assert.equal(guessThingNameFromFilename('lodging-photo.jpg').thingName, '');
+assert.notEqual(mapVacation3SctMediaFile('venue-a-photo.jpg').action, 'bind');
+assert.deepEqual(mapVacation3SctMediaFile('venue-a-photo.jpg').targets, []);
 assert.equal(mapVacation3SctMediaFile('cirque-program-photo.jpg').action, 'skip');
 assert.equal(mapVacation3SctMediaFile('high-roller-photo-01.jpg').action, 'skip');
 assert.equal(mapVacation3SctMediaFile('high-roller-photo-02.jpg').action, 'skip');

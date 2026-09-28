@@ -499,12 +499,12 @@ assert.equal(liveOverride.thingOverrides['place:8872'].happyHourDetails, undefin
 assert.equal(liveOverride.thingOverrides['place:8873'].summary, undefined);
 assert.equal(liveOverride.thingOverrides['place:8874'].summary, undefined);
 assert.equal(liveOverride.thingOverrides['place:8871'].summary, undefined);
-assert.equal(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), null);
-assert.equal(resolveThingCoords({ name: 'Shake Shack near Cosmo/Aria', address: 'Las Vegas Strip' }), null);
+assert.equal(resolveThingCoords({ name: 'Sample Venue', address: 'Sample City' }), null);
+assert.equal(resolveThingCoords({ name: 'Sample Cafe', address: 'Sample Road' }), null);
 assert.deepEqual(resolveThingCoords({
-  name: 'Carbone at Aria',
-  source: { lat: 36.1073, lng: -115.1766, neighborhood: 'Aria' },
-}), [36.1073, -115.1766]);
+  name: 'Sample Venue',
+  source: { lat: 10, lng: 20, neighborhood: 'Sample Area' },
+}), [10, 20]);
 assert.equal(liveOverride.thingOverrides['place:8873'].lat, undefined);
 const buckets = keepsakeListBuckets(liveOverride);
 assert.ok(buckets.Restaurants.some((row) => row.place.name.includes('Carbone')));

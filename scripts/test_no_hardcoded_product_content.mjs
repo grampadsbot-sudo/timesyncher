@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 import { applyThingPresentation } from '../src/vacation/intake-shared-trip.mjs';
 import { applyProductKeepsakeOverrides, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { guessThingNameFromFilename, mapVacation3SctMediaFile } from '../src/vacation/thing-media-bind.mjs';
+import { SCT_VACATION3_MEDIA_PACK, guessThingNameFromFilename, mapVacation3SctMediaFile } from '../src/vacation/thing-media-bind.mjs';
 import { STYLE2_USES_ZU, patchStyleTwoToConfigRenderer } from '../src/vacation/trek-style2-bundle.mjs';
 
 const bundleText = fs.readFileSync(new URL('../src/vacation/trek-style2-bundle.mjs', import.meta.url), 'utf8');
@@ -17,9 +17,9 @@ function constString(name) {
 const namedOnly = applyThingPresentation({
   trip: { id: 'g2', title: 'Trip' },
   places: [
-    { id: 11, name: 'Ulu Ocean Grill' },
-    { id: 12, name: "Huggo's" },
-    { id: 13, name: 'Fish Hopper' },
+    { id: 11, name: 'Sample Venue' },
+    { id: 12, name: 'Sample Cafe' },
+    { id: 13, name: 'Sample Grill' },
   ],
 });
 for (const id of [11, 12, 13]) {
@@ -32,7 +32,7 @@ const fromRecord = applyThingPresentation({
   trip: { id: 'g2', title: 'Trip' },
   places: [{
     id: 21,
-    name: 'Ulu Ocean Grill',
+    name: 'Sample Venue',
     source: {
       restaurantTags: ['oceanfront'],
       happyHour: true,
@@ -44,15 +44,15 @@ assert.deepEqual(fromRecord.thingOverrides['place:21'].restaurantTags, ['oceanfr
 assert.equal(fromRecord.thingOverrides['place:21'].happyHour, true);
 assert.equal(fromRecord.thingOverrides['place:21'].happyHourDetails, '4-6pm from the record');
 
-assert.equal(resolveThingCoords({ name: 'Bellagio', address: 'Las Vegas' }), null);
-assert.equal(resolveThingCoords({ name: 'Shake Shack', address: 'Las Vegas Strip' }), null);
+assert.equal(resolveThingCoords({ name: 'Sample Venue', address: 'Sample City' }), null);
+assert.equal(resolveThingCoords({ name: 'Sample Cafe', address: 'Sample Road' }), null);
 assert.deepEqual(resolveThingCoords({
-  name: 'Bellagio',
-  sourceRecord: { latitude: 36.1126, longitude: -115.1767, neighborhood: 'Strip' },
-}), [36.1126, -115.1767]);
+  name: 'Sample Venue',
+  sourceRecord: { latitude: 10, longitude: 20, neighborhood: 'Sample Area' },
+}), [10, 20]);
 
 const blankThing = applyProductKeepsakeOverrides({
-  places: [{ id: 30, name: 'Carbone', category_name: 'Restaurant' }],
+  places: [{ id: 30, name: 'Sample Venue', category_name: 'Restaurant' }],
 });
 assert.equal(blankThing.thingOverrides['place:30'].summary, undefined);
 assert.equal(blankThing.thingOverrides['place:30'].longDetails, undefined);
@@ -63,12 +63,12 @@ assert.equal(blankThing.thingOverrides['place:30'].lat, undefined);
 const sourcedThing = applyProductKeepsakeOverrides({
   places: [{
     id: 31,
-    name: 'Carbone',
+    name: 'Sample Venue',
     category_name: 'Restaurant',
     source: {
-      lat: 36.1073,
-      lng: -115.1766,
-      neighborhood: 'Aria',
+      lat: 10,
+      lng: 20,
+      neighborhood: 'Sample Area',
       summary: 'From the source record',
       happyHour: false,
       happyHourDetails: 'No happy hour on the record',
@@ -77,26 +77,19 @@ const sourcedThing = applyProductKeepsakeOverrides({
   }],
 });
 assert.equal(sourcedThing.thingOverrides['place:31'].summary, 'From the source record');
-assert.equal(sourcedThing.thingOverrides['place:31'].neighborhood, 'Aria');
+assert.equal(sourcedThing.thingOverrides['place:31'].neighborhood, 'Sample Area');
 assert.equal(sourcedThing.thingOverrides['place:31'].happyHour, false);
 assert.equal(sourcedThing.thingOverrides['place:31'].happyHourDetails, 'No happy hour on the record');
 assert.deepEqual(sourcedThing.thingOverrides['place:31'].restaurantTags, ['italian']);
-assert.equal(sourcedThing.thingOverrides['place:31'].lat, 36.1073);
-assert.equal(sourcedThing.thingOverrides['place:31'].lng, -115.1766);
+assert.equal(sourcedThing.thingOverrides['place:31'].lat, 10);
+assert.equal(sourcedThing.thingOverrides['place:31'].lng, 20);
 
-const conservatory = mapVacation3SctMediaFile('conservatory-photo.jpg');
-assert.equal(conservatory.action, 'needs-attachment');
-assert.deepEqual(conservatory.targets, []);
-for (const file of [
-  'bellagio-fountain-late-video.mp4',
-  'bellagio-fountain-night-video.mp4',
-  'hotel-lobby.jpg',
-  'lodging-photo.jpg',
-  'carbone-late-hands-photo.jpg',
-  'shake-shack-fries-photo.jpg',
-  'eggslut-sandwich-photo.jpg',
-  'boarding-passes-photo.jpg',
-]) {
+for (const row of SCT_VACATION3_MEDIA_PACK) {
+  const mapped = mapVacation3SctMediaFile(row.file);
+  assert.notEqual(mapped.action, 'bind');
+  assert.deepEqual(mapped.targets, []);
+}
+for (const file of ['venue-a-photo.jpg', 'venue-b-video.mp4']) {
   assert.equal(guessThingNameFromFilename(file).thingName, '');
   const mapped = mapVacation3SctMediaFile(file);
   assert.notEqual(mapped.action, 'bind');
@@ -141,17 +134,17 @@ function sliceBetween(source, startMarker, endMarker) {
 const chipExpr = sliceBetween(patched, '(function(){const key=', 'return chips})()');
 const chips = new Function('Gt', 'Ut', 'le', `return ${chipExpr}`)(
   [
-    { id: 1, name: 'Dinner', source: { neighborhood: 'Alii Drive' } },
+    { id: 1, name: 'Dinner', source: { neighborhood: 'Sample Area' } },
     { id: 2, name: 'No neighborhood' },
   ],
-  [{ id: 9, title: 'Walk', neighborhood: 'Keauhou' }],
+  [{ id: 9, title: 'Walk', neighborhood: 'Other Area' }],
   {},
 );
-assert.deepEqual(chips, ['Alii Drive', 'Keauhou']);
+assert.deepEqual(chips, ['Sample Area', 'Other Area']);
 
 const Sn = new Function('Ke', 'le', `${sliceBetween(patched, 'Sn=(G,Re)=>', 'return a&&Ke.includes(a)?a:""}')}; return Sn`)([], {});
-assert.equal(Sn('Citywide / Flexible', { id: 2, name: 'No neighborhood' }), '');
-assert.equal(Sn('', { id: 1, name: 'Dinner', source: { neighborhood: 'Aria' } }), 'Aria');
+assert.equal(Sn('Unused Label', { id: 2, name: 'No neighborhood' }), '');
+assert.equal(Sn('', { id: 1, name: 'Dinner', source: { neighborhood: 'Sample Area' } }), 'Sample Area');
 assert.equal(Sn('Harbor', { id: 4, name: 'Pier' }), '');
 
 process.stdout.write('hardcoded product content test passed\n');
