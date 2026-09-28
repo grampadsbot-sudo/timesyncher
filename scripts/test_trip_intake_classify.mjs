@@ -35,7 +35,7 @@ function jsonResponse(body, ok = true, status = 200) {
   return { ok, status, json: async () => body };
 }
 
-function mockFetch({ score, things, roster = [], failOn, chatText }) {
+function mockFetch({ score, things, roster = [], destination = '', hasDates = false, title = '', failOn, chatText }) {
   const calls = [];
   const fetchImpl = async (url) => {
     calls.push(String(url));
@@ -46,7 +46,7 @@ function mockFetch({ score, things, roster = [], failOn, chatText }) {
       return jsonResponse({ answers: { trip_intake: { noul: score } } });
     }
     return jsonResponse({
-      choices: [{ message: { content: chatText || JSON.stringify({ things, roster }) } }],
+      choices: [{ message: { content: chatText || JSON.stringify({ things, roster, destination, hasDates, title }) } }],
     });
   };
   fetchImpl.calls = calls;
@@ -67,6 +67,9 @@ const intakeFetch = mockFetch({
     { name: '', role: 'collaborator' },
     { name: 'Sam', role: 'guest' },
   ],
+  destination: 'Lisbon',
+  hasDates: true,
+  title: 'Lisbon week',
 });
 const intake = await classifyTripIntake({ text: lisbon, env, fetchImpl: intakeFetch });
 assert.equal(intake.ok, true);
@@ -75,6 +78,9 @@ assert.deepEqual(intake.things.map((thing) => thing.name), ['museum morning', 'l
 assert.equal(intake.things[0].who, 'Ana');
 assert.equal(intake.things[1].when, 'the last night');
 assert.deepEqual(intake.roster, [{ name: 'Ana', role: 'collaborator', age: null }]);
+assert.equal(intake.destination, 'Lisbon');
+assert.equal(intake.hasDates, true);
+assert.equal(intake.title, 'Lisbon week');
 assert.equal(intake.error, null);
 assert.equal(intakeFetch.calls.length, 2);
 
@@ -103,6 +109,10 @@ assert.equal(fields.intakeEvent.requestText, lisbon);
 assert.deepEqual(fields.wantedThings, intake.things);
 assert.deepEqual(fields.roster, intake.roster);
 assert.equal(fields.rosterError, null);
+assert.equal(fields.destination, 'Lisbon');
+assert.equal(fields.hasDates, true);
+assert.equal(fields.title, 'Lisbon week');
+assert.equal(fields.titleError, null);
 assert.equal(fields.intakeError, null);
 
 const notFirst = tripIntakeJobFields({
@@ -114,6 +124,8 @@ const notFirst = tripIntakeJobFields({
 });
 assert.equal(notFirst.intakeEvent, null);
 assert.equal(notFirst.wantedThings.length, 1);
+assert.equal(notFirst.title, '');
+assert.equal(notFirst.titleError, 'trip title was not in the extraction');
 assert.equal(notFirst.intakeError, null);
 
 const failed = await classifyTripIntake({
@@ -135,7 +147,11 @@ const failedFields = tripIntakeJobFields({
 assert.equal(failedFields.intakeEvent, null);
 assert.deepEqual(failedFields.wantedThings, []);
 assert.deepEqual(failedFields.roster, []);
+assert.equal(failedFields.destination, '');
+assert.equal(failedFields.hasDates, false);
+assert.equal(failedFields.title, '');
 assert.match(failedFields.rosterError, /classifier down/);
+assert.match(failedFields.titleError, /classifier down/);
 assert.match(failedFields.intakeError, /classifier down/);
 
 const badJson = await classifyTripIntake({
@@ -146,6 +162,8 @@ const badJson = await classifyTripIntake({
 assert.equal(badJson.ok, false);
 assert.deepEqual(badJson.things, []);
 assert.deepEqual(badJson.roster, []);
+assert.equal(badJson.destination, '');
+assert.equal(badJson.title, '');
 assert.match(badJson.error, /not JSON/);
 
 const missingKey = await classifyTripIntake({
@@ -158,6 +176,7 @@ assert.match(missingKey.error, /OpenRouter key/);
 assert.deepEqual(missingKey.things, []);
 
 const blank = await classifyTripIntake({ text: '   ', env, fetchImpl: () => { throw new Error('fetch should not run'); } });
-assert.deepEqual(blank, { ok: true, intake: false, things: [], roster: [], error: null });
+assert.deepEqual(blank, { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null });
+assert.doesNotMatch(routeSource, /TimeSyncher Vacation Admin Test|placeTitle/);
 
 process.stdout.write('trip intake classify tests passed\n');

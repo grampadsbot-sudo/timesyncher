@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 import {
   ensureJevResponseCoverage,
@@ -22,22 +23,28 @@ const screenshotTranscript = [
 const parsed = parseVacationIdentity(screenshotTranscript);
 assert.equal(parsed.vacationName, 'our Hawaiian getaway');
 assert.match(parsed.unforgettableGoal, /seven nights in Hawaii/i);
-assert.equal(hasTripPlanningDetails(screenshotTranscript), true);
+const hawaiiBrief = { ok: true, destination: 'Oahu', hasDates: true, title: '' };
+assert.equal(hasTripPlanningDetails(screenshotTranscript, hawaiiBrief), true);
+assert.equal(hasTripPlanningDetails(screenshotTranscript), false);
+assert.equal(hasTripPlanningDetails(screenshotTranscript, { ok: false, error: 'classifier down', destination: 'Oahu', hasDates: true }), false);
 
 const ack = vacationIdentityAck({
   vacationName: parsed.vacationName,
   text: screenshotTranscript,
   queued: { id: 'request_123' },
+  extraction: hawaiiBrief,
 });
 assert.match(ack, /working title/i);
 assert.match(ack, /seven nights/i);
-assert.match(ack, /Oahu\/Waikiki/i);
+assert.match(ack, /\bOahu\b/);
+assert.doesNotMatch(ack, /Oahu\/Waikiki|Kona\/Big Island/);
 assert.match(ack, /I'm building your initial itinerary now and it may take 10–15 minutes/i);
 assert.doesNotMatch(ack, /Now send me the destination/i);
 
 const detailsOnly = parseVacationIdentity('We are staying seven nights in Hawaii and starting in Oahu.');
 assert.equal(detailsOnly.vacationName, '');
-assert.equal(hasTripPlanningDetails('We are staying seven nights in Hawaii and starting in Oahu.'), true);
+assert.equal(hasTripPlanningDetails('We are staying seven nights in Hawaii and starting in Oahu.'), false);
+assert.equal(hasTripPlanningDetails('We are staying seven nights in Hawaii and starting in Oahu.', { ok: true, destination: '', hasDates: true }), true);
 
 const unlimitedQuestion = vacationSupportIntent('Do I have unlimited vacations?');
 assert.equal(unlimitedQuestion.intent, 'account_question');
@@ -430,5 +437,9 @@ assert.equal(repairedCoverage.coverage.ok, true);
 assert.equal(repairedCoverage.attempts.length, 2);
 
 assert.equal(vacationSupportIntent('Can you find flight prices to Miami?'), null);
+const telegramSource = fs.readFileSync(new URL('../routes/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
+assert.equal(telegramSource.includes("[/\\bkona\\b|\\bbig island\\b/i, 'Kona/Big Island']"), false);
+assert.match(telegramSource, /classifyTripIntake/);
+assert.match(telegramSource, /classic Waikiki beach energy/);
 
 console.log('vacation telegram intake regression passed');
