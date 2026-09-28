@@ -190,7 +190,79 @@ function blockEnd(text, open) {
   return text.length - 1;
 }
 
+function normFile(file) {
+  return String(file || '').replaceAll('\\', '/').replace(/^\.\//, '');
+}
+
+function exemptSpec(terms, ruleId) {
+  return (terms.exempt && terms.exempt[ruleId]) || {};
+}
+
+function pathExempt(terms, ruleId, file) {
+  return (exemptSpec(terms, ruleId).paths || []).includes(normFile(file));
+}
+
+function commentSpans(text) {
+  const spans = [];
+  let i = 0;
+  let quote = '';
+  while (i < text.length) {
+    const c = text[i];
+    if (quote) {
+      if (c === '\\') {
+        i += 2;
+        continue;
+      }
+      if (quote === '`' && c === '$' && text[i + 1] === '{') {
+        i += 2;
+        let depth = 1;
+        while (i < text.length && depth) {
+          if (text[i] === '{') depth += 1;
+          else if (text[i] === '}') depth -= 1;
+          i += 1;
+        }
+        continue;
+      }
+      if (c === quote) quote = '';
+      i += 1;
+      continue;
+    }
+    if (c === '/' && text[i + 1] === '/') {
+      const start = i;
+      while (i < text.length && text[i] !== '\n') i += 1;
+      spans.push([start, i]);
+      continue;
+    }
+    if (c === '/' && text[i + 1] === '*') {
+      const start = i;
+      i += 2;
+      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i += 1;
+      spans.push([start, Math.min(text.length, i + 2)]);
+      i += 2;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') quote = c;
+    i += 1;
+  }
+  return spans;
+}
+
+function inSpan(spans, index) {
+  return spans.some(([start, end]) => index >= start && index < end);
+}
+
+function thingInternal(terms, file, text, index, prose, comments) {
+  const paths = exemptSpec(terms, 'BAR-THING-CUSTOMER').internalPaths || [];
+  if (!paths.includes(normFile(file))) return false;
+  if (inSpan(comments, index)) return true;
+  const before = text.slice(Math.max(0, index - 80), index);
+  if (/new Error\s*\(\s*['"`]?\s*$/.test(before) || /skipReason\s*:\s*['"`]?\s*$/.test(before)) return true;
+  if (/^Things?$/.test(String(prose || '').trim()) && !/\|\|\s*['"`]?\s*$/.test(before)) return true;
+  return false;
+}
+
 function collabUrlFindings(file, text, terms) {
+  if (pathExempt(terms, 'BAR-COLLAB-URL', file)) return [];
   const spec = terms.collabUrl || {};
   const nameRe = new RegExp(spec.builderName, 'i');
   const siteRe = new RegExp(spec.sitePhrase, 'i');
@@ -258,6 +330,7 @@ export function barFindings(file, text, terms = loadBarTerms()) {
   const findings = [];
   const seen = new Set();
   const thingRe = compile(terms.rules['BAR-THING-CUSTOMER'].terms[0], terms.rules['BAR-THING-CUSTOMER'].flags || '');
+  const comments = commentSpans(value);
   const push = (rule, index, symbol) => {
     const key = `${rule}\0${symbol}`;
     if (seen.has(key)) return;
@@ -267,6 +340,8 @@ export function barFindings(file, text, terms = loadBarTerms()) {
   const scanProse = (prose, base) => {
     if (!customerText(prose, thingRe)) return;
     for (const ruleId of Object.keys(terms.rules)) {
+      if (pathExempt(terms, ruleId, file)) continue;
+      if (ruleId === 'BAR-THING-CUSTOMER' && thingInternal(terms, file, value, base, prose, comments)) continue;
       for (const hit of termHits(prose, terms, ruleId)) push(ruleId, base + hit.index, hit.match);
     }
   };

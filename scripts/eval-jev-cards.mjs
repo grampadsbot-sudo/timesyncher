@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { classify, loadBaselineFile } from './check-hardcoded-content.mjs';
 import { cardRecords, jevCardFindings, questionsFrom, receiptMatches } from './jev-cards.mjs';
 
@@ -43,6 +44,14 @@ function questionMap(record) {
   }
 }
 
+export function liveGaps(cwd, record) {
+  const gaps = [];
+  if (!questionMap(record)) gaps.push('no usable questions');
+  if (!labeledRows(cwd, record).length) gaps.push('no labeled rows');
+  if (!(process.env.JEV_EVAL_MODEL || record.modelHint)) gaps.push('no model');
+  return gaps;
+}
+
 function casePasses(expect, answers) {
   for (const [question, wanted] of Object.entries(expect || {})) {
     const answer = answers && answers[question] ? answers[question] : {};
@@ -58,13 +67,14 @@ function casePasses(expect, answers) {
   return true;
 }
 
-async function runLive(cwd, record) {
+export async function runLive(cwd, record) {
   const url = process.env.TIMESYNCHER_JEV_CLASSIFY_URL || '';
   const token = apiKey();
   const questions = questionMap(record);
   const rows = labeledRows(cwd, record);
   const model = process.env.JEV_EVAL_MODEL || record.modelHint || '';
-  if (!url || !token || !questions || !rows.length || !model) return null;
+  const gaps = liveGaps(cwd, record);
+  if (!url || !token || gaps.length) return { passed: false, wrote: false, gaps };
   let passedCases = 0;
   for (const row of rows) {
     const response = await fetch(url, {
@@ -95,18 +105,30 @@ async function runLive(cwd, record) {
   const dest = path.join(cwd, 'evals/jev', record.id, 'receipt.json');
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, `${JSON.stringify(receipt, null, 2)}\n`);
-  return { passed: true, score, wrote: true };
+  process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
+  return { passed: true, score, wrote: true, receipt };
 }
 
 async function main() {
   const cwd = process.cwd();
-  const live = Boolean(apiKey() && process.env.TIMESYNCHER_JEV_CLASSIFY_URL);
-  if (live) {
-    for (const record of cardRecords(cwd)) {
-      if (receiptMatches(record)) continue;
-      await runLive(cwd, record);
+  const key = apiKey();
+  const liveGapsFound = [];
+  if (key) {
+    if (!process.env.TIMESYNCHER_JEV_CLASSIFY_URL) {
+      liveGapsFound.push('live\tno classify URL');
+    } else {
+      for (const record of cardRecords(cwd)) {
+        if (receiptMatches(record)) continue;
+        const gaps = liveGaps(cwd, record);
+        if (gaps.length) {
+          liveGapsFound.push(`${record.id}\t${gaps.join(', ')}`);
+          continue;
+        }
+        await runLive(cwd, record);
+      }
     }
   }
+  for (const gap of liveGapsFound) process.stderr.write(`FAIL\tJEV-CARD-EVAL\t${gap}\n`);
   const findings = jevCardFindings(cwd);
   const baselinePath = path.join(cwd, 'scripts/hardcoded-content-baseline.json');
   const baseline = fs.existsSync(baselinePath) ? loadBaselineFile(baselinePath) : [];
@@ -117,13 +139,16 @@ async function main() {
   for (const finding of judged.fail) {
     process.stderr.write(`FAIL\t${finding.rule}\t${finding.file}:${finding.line}\t${finding.symbol_or_pattern}\n`);
   }
-  const summary = `jev card eval gate ${judged.fail.length ? 'failed' : 'passed'} (${judged.report.length} report, ${judged.fail.length} fail)\n`;
-  (judged.fail.length ? process.stderr : process.stdout).write(summary);
-  if (!live) process.stdout.write('jev live eval skipped (no Jev API secret or classify URL); receipt check is the gate\n');
-  if (judged.fail.length) process.exit(1);
+  const failed = judged.fail.length + liveGapsFound.length;
+  const summary = `jev card eval gate ${failed ? 'failed' : 'passed'} (${judged.report.length} report, ${failed} fail)\n`;
+  (failed ? process.stderr : process.stdout).write(summary);
+  if (!key) process.stdout.write('jev live eval skipped (no Jev API secret or classify URL); receipt check is the gate\n');
+  if (failed) process.exit(1);
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error.message}\n`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exit(1);
+  });
+}

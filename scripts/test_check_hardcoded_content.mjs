@@ -713,6 +713,12 @@ assert.equal(built.status, 0, built.stderr);
 assert.match(built.stdout, /no HTML reference is produced by an offline build/);
 assert.match(workflow, /scan-built-bundles\.mjs/);
 assert.match(workflow, /eval-jev-cards\.mjs --gate/);
+assert.match(workflow, /JEV_EVAL_MODEL:\s*typesafe\/jev-1\.13/);
+assert.match(workflow, /OPENROUTER_API_KEY: \$\{\{ secrets\.OPENROUTER_API_KEY \}\}/);
+assert.doesNotMatch(workflow, /secrets\.JEV_OPENROUTER_API_KEY/);
+assert.doesNotMatch(workflow, /secrets\.TIMESYNCHER_JEV_CLASSIFY_TOKEN/);
+assert.doesNotMatch(workflow, /secrets\.TIMESYNCHER_OPENROUTER_API_KEY/);
+assert.doesNotMatch(workflow, /secrets\.TIMESYNCHER_JEV_OPENROUTER_API_KEY/);
 
 const barFile = 'src/vacation/bar-rules.mjs';
 const barText = [
@@ -765,5 +771,34 @@ writeTree(linkedBundle, {
   'shared-app.html': '<script src="https://travel.timesyncher.com/assets/index-BKun7ofk.js"></script>\n',
 }, []);
 assert.throws(() => assertSharedBundleSource(linkedBundle), /travel\.timesyncher\.com/);
+
+const purchase = 'const line = "I will book the hotel for you and take a deposit.";';
+for (const exempt of ['index.html', 'order-test.html', 'routes/stripe-webhook.mjs', 'routes/create-payment-intent.mjs', 'routes/checkout-coupon.mjs', 'src/vacation/coupons.mjs']) {
+  assert.equal(scanText(exempt, purchase).some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), false, exempt);
+}
+const tripPay = scanText('src/vacation/live-app-turn.mjs', purchase).filter((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT');
+assert.equal(tripPay.length > 0, true);
+assert.equal(classify(tripPay, []).fail.length, tripPay.length);
+
+const invite = 'function collaboratorInviteEmail() { return `Vacation website: ${site}`; }';
+assert.equal(scanText('src/vacation/email.mjs', invite).some((finding) => finding.rule === 'BAR-COLLAB-URL'), false);
+const seatReply = 'function vacationSupportReply() { return `Here is the vacation website: ${url}`; }';
+const seatHits = scanText('routes/vacation-telegram-turn.mjs', seatReply).filter((finding) => finding.rule === 'BAR-COLLAB-URL');
+assert.equal(seatHits.length, 1);
+assert.equal(classify(seatHits, []).fail.length, 1);
+
+const internalThing = [
+  '// developer note "saved that Thing for the print record"',
+  'const marker = "Thing";',
+  'throw new Error("Thing pages must not render rating.");',
+  'const row = { skipReason: "No Thing mapping for this filename" };',
+].join('\n');
+assert.equal(scanText('src/vacation/trek-style2-bundle.mjs', internalThing).some((finding) => finding.rule === 'BAR-THING-CUSTOMER'), false);
+const keepsake = scanText('src/vacation/keepsake-list-minimums.mjs', 'const summary = "Printed keepsake names the Thing for Friday.";').filter((finding) => finding.rule === 'BAR-THING-CUSTOMER');
+assert.equal(keepsake.length, 1);
+assert.equal(classify(keepsake, []).fail.length, 1);
+const said = scanText('scripts/vacation-app-reply-rules.mjs', 'const line = "Never say Thing to the customer on Friday.";').filter((finding) => finding.rule === 'BAR-THING-CUSTOMER');
+assert.equal(said.length, 1);
+assert.equal(classify(said, []).fail.length, 1);
 
 process.stdout.write('hardcoded content check test passed\n');

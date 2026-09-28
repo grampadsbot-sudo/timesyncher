@@ -57,6 +57,53 @@
     "sitePhrase": "vacation website|website link|here is the|open the vacation",
     "note": "A collaborator-seat reply builder is a function whose name matches builderName. A hit is a template literal in that function that contains sitePhrase and a ${...} interpolation."
   },
+  "exempt": {
+    "note": "Path exemptions apply to source scans only. Dialog pack turns are chat, so the pack checker does not use these paths.",
+    "BAR-RESERVATION-PAYMENT": {
+      "note": "TimeSyncher product purchase only. Chat, replies, and prompts that talk about booking or paying for trip things stay in scope.",
+      "paths": [
+        "index.html",
+        "order-test.html",
+        "order-success.html",
+        "access-checkout.html",
+        "owner-media-checkout.html",
+        "addons-checkout.html",
+        "routes/stripe-webhook.mjs",
+        "routes/create-payment-intent.mjs",
+        "routes/checkout-config.mjs",
+        "routes/checkout-coupon.mjs",
+        "routes/keepsake-order.mjs",
+        "routes/admin-onboardings.mjs",
+        "routes/onboarding-session.mjs",
+        "src/vacation/stripe-env.mjs",
+        "src/vacation/checkout-pricing.mjs",
+        "src/vacation/checkout-coupons.mjs",
+        "src/vacation/coupons.mjs",
+        "src/vacation/access-plan.mjs",
+        "src/vacation/collaborator-checkout.mjs",
+        "src/vacation/media-checkout.mjs",
+        "src/vacation/onboarding.mjs"
+      ]
+    },
+    "BAR-COLLAB-URL": {
+      "note": "Collaborator invite email builders. A chat reply to a collaborator seat stays in scope.",
+      "paths": ["src/vacation/email.mjs"]
+    },
+    "BAR-THING-CUSTOMER": {
+      "note": "On these keepsake and trek files, comments, new Error strings, skipReason strings, and a bare Thing identifier are internal. A || Thing display fallback and any other prose stay, because that text can be shown. Prompts and chat stay in scope.",
+      "internalPaths": [
+        "src/vacation/bind-thing-media-handler.mjs",
+        "src/vacation/keepsake-list-minimums.mjs",
+        "src/vacation/keepsake-product-overrides.mjs",
+        "src/vacation/keepsake-style2-handler.mjs",
+        "src/vacation/keepsake-style2.mjs",
+        "src/vacation/thing-logo-capture.mjs",
+        "src/vacation/thing-media-bind.mjs",
+        "src/vacation/thing-media-store.mjs",
+        "src/vacation/trek-style2-bundle.mjs"
+      ]
+    }
+  },
   "pack": {
     "vacationUrl": "https?:\\/\\/[^\\s)>\"']*(?:timesyncher\\.com|\\/v\\/|\\/shared\\/)[^\\s)>\"']*",
     "askedToSend": "\\b(?:send|share|give)\\b[\\s\\S]{0,80}\\b(?:viewer|editor|view|edit)\\b[\\s\\S]{0,40}\\b(?:url|link|site|website)\\b|\\b(?:url|link|site|website)\\b[\\s\\S]{0,60}\\b(?:viewer|editor|view|edit)\\b",
