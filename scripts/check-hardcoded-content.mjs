@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -5,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
+export const SHARE_TOKEN_SHA256 = '613987cf2ce687adbe97f074d9979ec3717c65d4b4807467ffb696e809e055d8';
 export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
 
@@ -1945,6 +1947,150 @@ export function crossOriginBundleScan(cwd = process.cwd()) {
   return findings;
 }
 
+// BUNDLE-LEAK reads committed and on-disk bundles under public/assets, bundles, and dist.
+// It does not run vite build. buildStart still downloads from travel.timesyncher.com, so that
+// build is not an offline, deterministic input. Product's vendor PR removes the download and
+// commits the bundle; those files are scanned here. dist/ is included when a build already wrote it.
+const BUNDLE_LEAK_EXT = new Set(['.js', '.mjs', '.cjs', '.css', '.html', '.json', '.map']);
+const BUNDLE_LEAK_DIRS = ['public/assets', 'public/bundles', 'bundles', 'dist'];
+const TBD_SYMBOL = { 'price tbd': 'Price TBD', 'depart tbd': 'Depart TBD', 'arrive tbd': 'Arrive TBD' };
+const IP_RE = /(?<!\d)(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?!\d)/g;
+const TOKEN_RE = /(?<![A-Za-z0-9])[A-Za-z0-9]{32}(?![A-Za-z0-9])/g;
+
+function privateIp(ip) {
+  const parts = ip.split('.').map(Number);
+  if (parts.length !== 4 || parts.some((part) => part > 255)) return false;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  return false;
+}
+
+function nameFlags(value) {
+  const lower = String(value || '').toLowerCase();
+  return { craig: lower.includes('craig'), kim: lower.includes('kim'), nyc: lower.includes('nyc') };
+}
+
+function readCheckedValue(text, index) {
+  return readConcat(text, index) || readArrayJoin(text, index) || readSplitJoin(text, index) || readTemplate(text, index) || readQuoted(text, index);
+}
+
+function leakTokenFindings(file, original, findings, seen, hashes, text, origin) {
+  TOKEN_RE.lastIndex = 0;
+  for (const match of text.matchAll(TOKEN_RE)) {
+    const token = match[0];
+    const digest = createHash('sha256').update(token).digest('hex');
+    const at = origin + match.index;
+    if (hashes.has(digest)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, `sha256:${digest}`);
+    if (!/[A-Z]/.test(token) || !/[a-z]/.test(token)) continue;
+    const window = original.slice(Math.max(0, at - 80), at + token.length + 80);
+    if (/share/i.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near share');
+    if (/token/i.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near token');
+    if (/\/s\//.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near /s/');
+  }
+}
+
+function leakLiteralFindings(file, original, findings, seen, text, origin) {
+  for (const match of text.matchAll(/craig_kim_nyc_june_2026/ig)) {
+    add(findings, seen, 'BUNDLE-LEAK', file, original, origin + match.index, 'Craig_Kim_NYC_June_2026');
+  }
+  for (const match of text.matchAll(/price tbd|depart tbd|arrive tbd/ig)) {
+    add(findings, seen, 'BUNDLE-LEAK', file, original, origin + match.index, TBD_SYMBOL[match[0].toLowerCase()]);
+  }
+  IP_RE.lastIndex = 0;
+  for (const match of text.matchAll(IP_RE)) {
+    if (!privateIp(match[0])) continue;
+    add(findings, seen, 'BUNDLE-LEAK', file, original, origin + match.index, match[0]);
+  }
+}
+
+function leakCheckFindings(file, original, findings, seen) {
+  const sites = [];
+  const opRe = /(?:\.includes|\.indexOf|\.startsWith)\(\s*|(?:===|!==|==|!=)(?!=)/g;
+  let match = opRe.exec(original);
+  while (match) {
+    const at = skipWs(original, match.index + match[0].length);
+    const value = readCheckedValue(original, at);
+    if (value && value.end > at) opRe.lastIndex = value.end;
+    if (value) {
+      const flags = nameFlags(value.value);
+      if (flags.craig || flags.kim || flags.nyc) sites.push({ index: match.index, ...flags });
+    }
+    match = opRe.exec(original);
+  }
+  sites.sort((left, right) => left.index - right.index);
+  for (let left = 0; left < sites.length; left += 1) {
+    let craig = false;
+    let kim = false;
+    let nyc = false;
+    for (let right = left; right < sites.length && sites[right].index - sites[left].index <= 400; right += 1) {
+      craig = craig || sites[right].craig;
+      kim = kim || sites[right].kim;
+      nyc = nyc || sites[right].nyc;
+      if (craig && kim && nyc) {
+        add(findings, seen, 'BUNDLE-LEAK', file, original, sites[left].index, 'craig+kim+nyc');
+        return;
+      }
+    }
+  }
+}
+
+export function bundleLeakFindings(file, text, { hashes = [SHARE_TOKEN_SHA256] } = {}) {
+  const original = String(text || '');
+  const findings = [];
+  const seen = new Set();
+  const hashSet = new Set(hashes);
+  leakTokenFindings(file, original, findings, seen, hashSet, original, 0);
+  leakLiteralFindings(file, original, findings, seen, original, 0);
+  leakCheckFindings(file, original, findings, seen);
+  for (const fold of foldedStrings(original)) {
+    leakTokenFindings(file, original, findings, seen, hashSet, fold.value, fold.index);
+    leakLiteralFindings(file, original, findings, seen, fold.value, fold.index);
+  }
+  return findings;
+}
+
+function bundleLeakFiles(cwd) {
+  const files = new Set();
+  const addFile = (rel) => {
+    const normalized = String(rel || '').split(path.sep).join('/');
+    if (!normalized || normalized.includes('node_modules/') || guardExempt(normalized)) return;
+    if (!BUNDLE_LEAK_EXT.has(path.extname(normalized).toLowerCase())) return;
+    if (!fs.existsSync(path.join(cwd, normalized))) return;
+    files.add(normalized);
+  };
+  const walk = (abs, rel) => {
+    if (!fs.existsSync(abs)) return;
+    const stat = fs.statSync(abs);
+    if (stat.isFile()) {
+      addFile(rel);
+      return;
+    }
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      walk(path.join(abs, entry.name), rel ? `${rel}/${entry.name}` : entry.name);
+    }
+  };
+  for (const dir of BUNDLE_LEAK_DIRS) walk(path.join(cwd, dir), dir);
+  const listed = spawnSync('git', ['ls-files', '-z'], { cwd, encoding: 'utf8' });
+  if (listed.status === 0) {
+    for (const rel of listed.stdout.split('\0').filter(Boolean)) {
+      if (/(^|\/)(?:assets|bundles|dist)\//.test(rel)) addFile(rel);
+    }
+  }
+  return [...files].sort();
+}
+
+function bundleLeakScan(cwd) {
+  const findings = [];
+  for (const file of bundleLeakFiles(cwd)) {
+    findings.push(...bundleLeakFindings(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
+  }
+  return findings;
+}
+
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
   for (const file of contentPaths(cwd)) {
@@ -1996,6 +2142,7 @@ export function scanRoots(cwd = process.cwd()) {
   }
   findings.push(...servedBundleFindings(cwd));
   findings.push(...crossOriginBundleScan(cwd));
+  findings.push(...bundleLeakScan(cwd));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule) || a.symbol_or_pattern.localeCompare(b.symbol_or_pattern));
   return findings;
 }
@@ -2009,7 +2156,7 @@ export function classify(findings, baseline) {
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || !keys.has(contentIdentity(finding))) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || !keys.has(contentIdentity(finding))) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };
