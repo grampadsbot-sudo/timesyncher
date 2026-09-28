@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import fs from 'node:fs';
 import { execFile } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { promisify } from 'node:util';
@@ -465,11 +464,7 @@ export async function runPublicResearch(input = {}) {
   const queries = buildResearchQueries(artifacts);
   const retrievedAt = new Date().toISOString();
   let provider = null;
-  if (input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE) {
-    const fixturePath = input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE;
-    const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-    provider = { provider: fixture.provider || 'fixture-public-sources', rawCandidates: fixture.candidates || [] };
-  } else {
+  {
     let providerError = null;
     try {
       provider = await runHousePoiResearch(input, startedAt);
@@ -495,14 +490,12 @@ export async function runPublicResearch(input = {}) {
     }
   }
   if (!provider) {
-    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after the house-radius POI database, Brave when that database is thin, explicit Perplexity fallback, and paid Ubuntu Grok web_search fallback. Pass a house or lodging lat/lng, set BRAVE_SEARCH_API_KEY or BRAVE_API_KEY for thin asks, set PERPLEXITY_API_KEY when needed, or pass a fixture for smoke tests.' };
+    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after the house-radius POI database, Brave when that database is thin, explicit Perplexity fallback, and paid Ubuntu Grok web_search fallback. Pass a house or lodging lat/lng, set BRAVE_SEARCH_API_KEY or BRAVE_API_KEY for thin asks, or set PERPLEXITY_API_KEY when needed.' };
   }
   const candidates = provider.rawCandidates
     .map((candidate) => normalizeCandidate(candidate, { provider: provider.provider, retrievedAt, destination }))
     .filter((candidate) => candidate.sourceBacked && candidate.title && candidate.summary);
   const adapterRun = await runApprovedSourceAdapters({
-    mode: input.mode,
-    fixtureMode: input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE,
     artifacts,
     destination,
     retrievedAt,
