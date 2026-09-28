@@ -173,6 +173,7 @@ export function mergePlaces(groups = []) {
         address: String(place.address || ''),
         url: String(place.url || ''),
         externalId: String(place.externalId || ''),
+        ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
       };
       if (kept.some((item) => samePlace(item, next))) continue;
       kept.push(next);
@@ -289,6 +290,7 @@ function sourceRecordFor(place) {
     url: place.url || '',
     ...(place.rating != null ? { rating: place.rating } : {}),
     ...(place.ratingCount != null ? { count: place.ratingCount } : {}),
+    ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
   };
 }
 
@@ -315,7 +317,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
       ll: `${center.lat},${center.lng}`,
       radius: String(SEARCH_RADIUS_METERS),
       limit: String(item.limit || searchLimit(item.category)),
-      fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed,rating,stats',
+      fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed,rating,stats,categories',
     });
     const payload = await readJson(
       fetchImpl,
@@ -345,6 +347,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
         url: String(result.link || ''),
         externalId: String(result.fsq_place_id || ''),
         ...ratingFromRecord(result),
+        ...categoryNameField(foursquareCategoryName(result)),
       });
     }
   }
@@ -363,10 +366,27 @@ function overpassQuery(center) {
     + `);out center 40;`;
 }
 
+function categoryNameField(name) {
+  const categoryName = String(name || '').trim();
+  return categoryName ? { categoryName } : {};
+}
+
+function foursquareCategoryName(result) {
+  const categories = Array.isArray(result?.categories) ? result.categories : [];
+  return categories.map((item) => String(item?.name || '').trim()).find(Boolean) || '';
+}
+
 function osmCategory(tags = {}) {
   if (/restaurant|cafe|fast_food/.test(String(tags.amenity || ''))) return 'restaurant';
   if (tags.shop) return 'store';
   if (tags.tourism) return 'activity';
+  return '';
+}
+
+function osmCategoryName(tags = {}) {
+  if (/restaurant|cafe|fast_food/.test(String(tags.amenity || ''))) return String(tags.amenity || '').trim();
+  if (tags.shop) return String(tags.shop).trim();
+  if (tags.tourism) return String(tags.tourism).trim();
   return '';
 }
 
@@ -397,6 +417,7 @@ async function queryOsm(fetchImpl, center) {
       url: element.type && element.id ? `https://www.openstreetmap.org/${element.type}/${element.id}` : '',
       externalId: element.type && element.id ? `${element.type}/${element.id}` : '',
       ...ratingFromRecord(tags),
+      ...categoryNameField(osmCategoryName(tags)),
     });
   }
   return places;
@@ -417,6 +438,17 @@ function braveAddress(result) {
   if (typeof result?.address === 'string' && result.address.trim()) return result.address.trim();
   const postal = result?.postal_address || {};
   return [postal.streetAddress, postal.addressLocality, postal.addressRegion, postal.postalCode].filter(Boolean).join(', ');
+}
+
+function braveCategoryName(result) {
+  const direct = result?.category;
+  if (typeof direct === 'string' && direct.trim()) return direct.trim();
+  if (direct && typeof direct === 'object') {
+    const name = String(direct.name || direct.label || '').trim();
+    if (name) return name;
+  }
+  const categories = Array.isArray(result?.categories) ? result.categories : [];
+  return categories.map((item) => String(item?.name || item || '').trim()).find(Boolean) || '';
 }
 
 function braveTitle(value) {
@@ -458,6 +490,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
         url: String(result?.url || ''),
         externalId: String(result?.id || result?.url || ''),
         ...ratingFromRecord(result),
+        ...categoryNameField(braveCategoryName(result)),
       });
     }
   }
@@ -648,6 +681,7 @@ export function placeToTripThing(place) {
       sourceRef,
       sourceRecord,
       jevScore: place.jevScore ?? 0,
+      ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
     },
   };
 }

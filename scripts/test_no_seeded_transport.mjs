@@ -46,11 +46,37 @@ assert.equal(named.places.some((place) => /car|flight/i.test(String(place.catego
 assert.deepEqual(named.needsCustomerInput, ['car', 'flight']);
 assert.equal(named.flightAsk, 'preferredAirline');
 const house = named.places.find((place) => place.name === 'Kailua-Kona house');
+const swim = named.places.find((place) => place.name === 'Swim');
+assert.equal(swim.category_name, 'activity');
+assert.equal(swim.category_icon, '');
+assert.equal(house.category_name, 'Hotel');
 assert.equal(house.description, 'Kailua-Kona house');
 assert.doesNotMatch(house.description, /The Kailua-Kona house/);
 const island = present([{ id: 'island', category: 'activity', title: 'Big Island', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] }]);
 assert.equal(island.places[0].description, 'Big Island');
 assert.doesNotMatch(island.places[0].description, /People matter more/);
+const cafe = present([{
+  id: 'cafe',
+  category: 'restaurant',
+  categoryName: 'Coffee Shop',
+  title: 'Harbor Cafe',
+  whenLabel: '',
+  customerWhen: '',
+  notes: [],
+  collaboratorNotes: [],
+}]);
+assert.equal(cafe.places[0].category_name, 'Coffee Shop');
+assert.equal(cafe.places[0].category_icon, '');
+const blank = present([{
+  id: 'blank',
+  title: 'Uncategorized stop',
+  whenLabel: '',
+  customerWhen: '',
+  notes: [],
+  collaboratorNotes: [],
+}]);
+assert.equal(blank.places[0].category_name, '');
+assert.equal(blank.places[0].category.icon, '');
 assert.equal(productThingSummary({ title: 'Kailua-Kona house', customerWhen: 'Fri Apr 3' }), 'Kailua-Kona house on Fri Apr 3');
 assert.doesNotMatch(productThingSummary({ title: 'Big Island', customerWhen: 'Fri Apr 3' }), /People matter more/);
 
@@ -129,6 +155,7 @@ assert.deepEqual(windLookupPointsFromThings([
 
 const intake = await readFile(new URL('../src/vacation/intake-shared-trip.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(intake, /PLACE_COORDS|carOfferPool|formatTakeoff|SpeediShuttle|KOA arrival|Kona arrival/);
+assert.doesNotMatch(intake, /category_name: 'Attraction'/);
 assert.doesNotMatch(intake, /The Kailua-Kona house/);
 assert.doesNotMatch(intake, /People matter more/);
 const keepsake = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');

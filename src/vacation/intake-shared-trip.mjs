@@ -87,6 +87,30 @@ function transportKind(record = {}) {
   return '';
 }
 
+function labelText(value) {
+  if (typeof value === 'string') return value.trim();
+  if (value && typeof value === 'object' && !Array.isArray(value)) return String(value.name || '').trim();
+  return '';
+}
+
+function sourceCategoryName(thing = {}) {
+  const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const record = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : {};
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {};
+  for (const value of [
+    thing.categoryName,
+    meta.categoryName,
+    record.categoryName,
+    metaRecord.categoryName,
+    record.category_name,
+    metaRecord.category_name,
+  ]) {
+    const text = labelText(value);
+    if (text) return text;
+  }
+  return labelText(thing.category);
+}
+
 function categoryFor(thing) {
   const kind = transportKind(thing);
   if (kind === 'flight' || kind === 'car') {
@@ -95,9 +119,12 @@ function categoryFor(thing) {
     return { category_name, category_icon, category: kind };
   }
   if (String(thing.category || '').toLowerCase() === 'hotel') {
-    return { category_name: 'Hotel', category_icon: '🏨', category: 'hotel' };
+    const named = sourceCategoryName(thing);
+    const category_name = named && named.toLowerCase() !== 'hotel' ? named : 'Hotel';
+    return { category_name, category_icon: '🏨', category: 'hotel' };
   }
-  return { category_name: 'Attraction', category_icon: '🏛️', category: 'other' };
+  const category_name = sourceCategoryName(thing);
+  return { category_name, category_icon: '', category: category_name };
 }
 
 function finiteCoord(value) {
@@ -187,6 +214,7 @@ export function thingRecordFromTripRow(row = {}) {
     ratings,
     sourceRecord,
     source: row.source || '',
+    categoryName: String(meta.categoryName || '').trim(),
     location,
     lat: location.lat,
     lng: location.lng,

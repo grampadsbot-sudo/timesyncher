@@ -89,6 +89,7 @@ function lisbonRoutes(url) {
           latitude: 38.73,
           longitude: -9.14,
           location: { address: '2 Tile Street' },
+          categories: [{ name: 'Pizza Place' }],
         },
       ],
     });
@@ -214,6 +215,10 @@ assert.equal(found.sourceCounts.osm, 1);
 assert.equal(found.sourceCounts.brave, 1);
 const river = found.places.find((place) => place.title === 'River Walk');
 assert.equal(river.address, 'River Road, Lisbon');
+const tile = found.places.find((place) => place.title === 'Tile Oven');
+assert.equal(tile.categoryName, 'Pizza Place');
+const museum = found.places.find((place) => place.title === 'City Museum');
+assert.equal(museum.categoryName, 'museum');
 
 const blockedFetch = async () => {
   throw new Error('fetch should not run');
@@ -501,7 +506,13 @@ const lodgingMiss = await searchPlaces({
     if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
       assert.match(decodeURIComponent(value), /ll=38\.7223,-9\.1393/);
       return jsonResponse({
-        results: [{ fsq_place_id: 'fsq-lisbon', name: 'Lisbon Cafe', latitude: 38.7225, longitude: -9.1395 }],
+        results: [{
+          fsq_place_id: 'fsq-lisbon',
+          name: 'Lisbon Cafe',
+          latitude: 38.7225,
+          longitude: -9.1395,
+          categories: [{ name: 'Café' }],
+        }],
       });
     }
     if (value.includes('places-api.foursquare.com') || value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
@@ -514,6 +525,7 @@ assert.match(fallbackEvents[1], /Lisbon/);
 assert.equal(lodgingMiss.center.geocoded, 'destination');
 assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
 assert.equal(lodgingMiss.places[0].externalId, 'fsq-lisbon');
+assert.equal(lodgingMiss.places[0].categoryName, 'Café');
 assert.equal(lodgingMiss.places[0].jevScore, 0);
 const savedCafe = placeToTripThing({
   ...lodgingMiss.places[0],
@@ -526,6 +538,8 @@ assert.equal(savedCafe.ratings.rating, '4.4');
 assert.equal(savedCafe.ratings.count, 12);
 assert.equal(savedCafe.ratings.googleRating, undefined);
 assert.equal(savedCafe.metadata.jevScore, 0);
+assert.equal(savedCafe.metadata.categoryName, 'Café');
+assert.equal(savedCafe.metadata.sourceRecord.categoryName, 'Café');
 
 const workerEvents = [];
 const workerFetch = recordingFetch(lisbonRoutes, workerEvents);
