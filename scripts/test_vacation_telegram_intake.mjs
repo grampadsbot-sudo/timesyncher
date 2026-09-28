@@ -18,7 +18,8 @@ import {
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
 }
-const modelEnv = { TIMESYNCHER_XAI_API_KEY: 'test-key' };
+const BAKEOFF_MODEL = 'google/gemini-2.5-flash-lite';
+const modelEnv = { TIMESYNCHER_XAI_API_KEY: 'test-key', TIMESYNCHER_XAI_ROUTER_MODEL: BAKEOFF_MODEL };
 
 function supportModel(replyText) {
   const calls = [];
@@ -251,6 +252,19 @@ await assert.rejects(
   /live model key is missing/,
 );
 
+await assert.rejects(
+  () => vacationSupportReply({
+    text: 'Do I have unlimited vacations?',
+    intent: unlimitedQuestion,
+    access: { linked: false },
+    env: { TIMESYNCHER_XAI_API_KEY: 'test-key' },
+    fetchImpl: async () => {
+      throw new Error('network should not be called');
+    },
+  }),
+  /model unavailable/,
+);
+
 const mockedGrokFetch = async () => ({
   ok: true,
   async json() {
@@ -271,7 +285,7 @@ const mockedGrokFetch = async () => ({
   },
 });
 const grokMediaQuestion = await vacationSupportIntentWithModel('Am I able to upload pics and videos to the Vegas vacation?', {
-  env: { TIMESYNCHER_XAI_API_KEY: 'test-key', TIMESYNCHER_XAI_ROUTER_MODEL: 'grok-test' },
+  env: { TIMESYNCHER_XAI_API_KEY: 'test-key', TIMESYNCHER_XAI_ROUTER_MODEL: BAKEOFF_MODEL },
   fetchImpl: mockedGrokFetch,
 });
 assert.equal(grokMediaQuestion.intent, 'media_upload_question');

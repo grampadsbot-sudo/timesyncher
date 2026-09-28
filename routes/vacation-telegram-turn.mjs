@@ -23,6 +23,7 @@ import {
 } from '../src/vacation/web-access.mjs';
 import { INITIAL_BUILD_CUE, persistIntakeTurnToGbrain } from '../src/vacation/tg-intake-gbrain.mjs';
 import { classifyTripIntake, tripIntakeConfig } from '../src/vacation/trip-intake-classify.mjs';
+import { isBakeoffModelId } from '../scripts/vacation-app-reply-rules.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
 const MAX_VIDEOS_PER_VACATION = 20;
@@ -1076,10 +1077,20 @@ function extractJsonObject(value = '') {
   }
 }
 
+function configuredBakeoffModel(env) {
+  const model = cleanText(env.TIMESYNCHER_XAI_ROUTER_MODEL || env.TIMESYNCHER_XAI_SUMMARY_MODEL || env.XAI_MODEL, 120);
+  if (!isBakeoffModelId(model)) {
+    const error = new Error('model unavailable: a configured bake-off model id is required');
+    error.statusCode = 502;
+    throw error;
+  }
+  return model;
+}
+
 export async function grokVacationSupportIntent(text, { env = process.env, fetchImpl = fetch, signal } = {}) {
   const apiKey = env.TIMESYNCHER_XAI_API_KEY || env.XAI_API_KEY || '';
   if (!apiKey) return null;
-  const model = env.TIMESYNCHER_XAI_ROUTER_MODEL || env.TIMESYNCHER_XAI_SUMMARY_MODEL || env.XAI_MODEL || 'grok-4';
+  const model = configuredBakeoffModel(env);
   const prompt = [
     'Classify the current TimeSyncher Vacation Telegram customer turn.',
     'Return only one JSON object. Do not include prose.',
@@ -1445,7 +1456,7 @@ export async function modelSupportReply(facts, { env = process.env, fetchImpl = 
     error.statusCode = 502;
     throw error;
   }
-  const model = cleanText(env.TIMESYNCHER_XAI_ROUTER_MODEL || env.TIMESYNCHER_XAI_SUMMARY_MODEL || env.XAI_MODEL, 120) || 'grok-4';
+  const model = configuredBakeoffModel(env);
   const response = await fetchImpl('https://api.x.ai/v1/chat/completions', {
     method: 'POST',
     headers: {
