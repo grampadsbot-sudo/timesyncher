@@ -755,14 +755,15 @@ function printedRaw(value) {
 }
 
 function qualityBar(turn) {
-  const score = formatQualityLine(turn.quality);
-  const held = heldRewriteLine(turn);
+  const score = turn?.qualityLine != null ? String(turn.qualityLine) : formatQualityLine(turn.quality);
+  const held = turn?.heldRewriteLine != null ? String(turn.heldRewriteLine) : heldRewriteLine(turn);
   if (score && held) return `${score} · ${held}`;
   return score || held;
 }
 
 export function shippedRewriteLabel(turn) {
   if (!turn || turn.held === true || turn.quality?.rewritten !== true) return '';
+  if (turn.rewriteCredit != null) return String(turn.rewriteCredit);
   return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
 }
 

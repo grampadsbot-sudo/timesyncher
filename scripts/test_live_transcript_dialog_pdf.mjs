@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, judgeInterimReply, customerVisibleReply, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerFacts, qualityFailureReason, rewriteCreditLabel, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, firstMarkedIntake, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, judgeInterimReply, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, liveTranscriptFromRows, liveTurnRecord, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerFacts, qualityFailureReason, rewriteCreditLabel, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, firstMarkedIntake, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
@@ -562,7 +562,32 @@ assert.equal(liveTranscriptFromRows({
   rows: [{ body: 'Hello', payload: { liveTranscript: { turnIndex: 1, role: 'app', text: 'Hello', rewriteJevScoreRaw: 0 } } }],
 }).turns[0].rewriteJevScoreRaw, null);
 assert.equal(stripChatMarkdown('Marcus will have **view access** and *edit access*.'), 'Marcus will have view access and edit access.');
-assert.equal(customerVisibleReply('Thursday stays a town walk.\nquality: 4 · rewrite drafted, held: rewrite_near_draft\nRewriter (qwen/qwen3-235b-a22b-2507): Kept the walk.'), 'Thursday stays a town walk.');
+const modelReply = 'Thursday stays a town walk.\nquality: 4';
+const audited = liveTurnRecord({
+  turnIndex: 2,
+  role: 'app',
+  modality: 'text',
+  text: modelReply,
+  at: '2026-09-25T21:00:03.000Z',
+  latencyMs: 10,
+  sessionE2eMs: 10,
+  jev: { jevRan: true, modelTier: 2 },
+  model: {
+    responseModel: 'qwen/qwen3-235b-a22b-2507',
+    quality: { judged: true, score: 4, rewritten: false },
+    log: {
+      held: true,
+      rewriteText: 'Tuesday stays a swim.',
+      rewriteFailReason: 'rewrite_near_draft',
+      rewriteModel: 'qwen/qwen3-235b-a22b-2507',
+      rewriterChange: 'Kept the walk.',
+    },
+  },
+});
+assert.equal(audited.text, modelReply);
+assert.equal(audited.qualityLine, 'quality: 4');
+assert.equal(audited.heldRewriteLine, 'rewrite drafted, held: rewrite_near_draft');
+assert.equal(audited.rewriteCredit, 'Rewriter (qwen/qwen3-235b-a22b-2507): Kept the walk.');
 assert.equal(formatQualityLine({ judged: true, score: 4, rewritten: false }), 'quality: 4');
 assert.equal(rewriteCreditLabel('qwen/qwen3-235b-a22b-2507', 'Kept the walk.'), 'Rewriter (qwen/qwen3-235b-a22b-2507): Kept the walk.');
 assert.doesNotMatch(fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8'), /INTERIM_STOCK|INTAKE_OPENER_ONLY/);
@@ -724,6 +749,19 @@ const jevRewritePdf = extractPdfText(renderLiveTranscriptPdf(jevRewrite));
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewrittenTurns, 1);
 assert.equal(jevRewriteLabelCounts(jevRewrite, jevRewritePdf).rewriteLabels, 1);
 assert.match(jevRewritePdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Kept the harbor morning and named only the walk/);
+const storedAudit = liveDoc({
+  turns: jevRewrite.turns.map((turn) => (turn.role === 'app' ? {
+    ...turn,
+    qualityLine: 'quality: 3.5',
+    heldRewriteLine: '',
+    rewriteCredit: 'Rewriter (qwen/qwen3-235b-a22b-2507): Stored audit credit.',
+  } : turn)),
+});
+const storedAuditPdf = extractPdfText(renderLiveTranscriptPdf(storedAudit));
+assert.match(storedAuditPdf, /quality: 3\.5/);
+assert.match(storedAuditPdf, /Rewriter \(qwen\/qwen3-235b-a22b-2507\): Stored audit credit/);
+assert.doesNotMatch(storedAuditPdf, /Kept the harbor morning and named only the walk/);
+assert.match(storedAuditPdf, /The harbor walk still opens the morning, and the afternoon stays open for Craig/);
 const heldDraft = liveDoc({
   turns: liveDoc().turns.map((turn) => (turn.role === 'app' ? {
     ...turn,

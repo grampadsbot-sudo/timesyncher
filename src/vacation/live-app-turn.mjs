@@ -252,6 +252,9 @@ export function liveTurnRecord({
         genLatencyMs: record.genLatencyMs,
       }
       : null;
+    record.qualityLine = formatQualityLine(record.quality);
+    record.heldRewriteLine = heldRewriteLine(record);
+    record.rewriteCredit = rewriteCreditLabel(record.rewriteModel || record.quality?.rewriteModel, record.rewriterChange || record.quality?.rewriterChange);
   }
   if (rules) {
     record.rules = {
@@ -793,12 +796,6 @@ export function stripChatMarkdown(value) {
   return String(value || '')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2');
-}
-
-const AUDIT_METADATA_LINE = /^(?:quality:\s*\d+(?:\.\d+)?(?:\s*·\s*rewrite drafted, held:\s*.+)?|rewrite drafted, held:\s*.+|Rewriter \([^)\n]{1,120}\):\s*.+)$/i;
-
-export function customerVisibleReply(value) {
-  return stripChatMarkdown(String(value || '').trim()).split('\n').filter((line) => !AUDIT_METADATA_LINE.test(line.trim())).join('\n').trim();
 }
 
 const AGE_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
@@ -1503,7 +1500,7 @@ export function dockQuality(quality, flags) {
 }
 
 function applyUpsellPolicy(reply) {
-  return customerVisibleReply(reply);
+  return stripChatMarkdown(String(reply || '').trim());
 }
 
 function rewriteBreaksUpsell(text, upsell, customerTurn) {
@@ -1989,7 +1986,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
     systemExtra,
   });
   const model = await call();
-  let text = customerVisibleReply(model?.text || '');
+  let text = String(model?.text || '').trim();
   const judge = text && model?.responseModel === INTERIM_MODEL
     ? await judgeInterimReply({ text, customerTurn, facts, env })
     : null;
@@ -2325,7 +2322,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   const matchedBeats = beatsMatchingReply(beatSource, shippedText);
   stamped.model.beats = matchedBeats.length ? matchedBeats : null;
   stamped.model.maxTokens = pending.model?.maxTokens ?? 900;
-  return { reply: customerVisibleReply(stamped.reply), rules, jev: pending.jev, model: stamped.model, quality: stamped.quality, log, reason: null };
+  return { reply: stamped.reply, rules, jev: pending.jev, model: stamped.model, quality: stamped.quality, log, reason: null };
 }
 
 function payloadObject(payload) {
@@ -2403,6 +2400,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       jevNote: live.jevNote || null,
       jevNoteReason: live.jevNoteReason || live.quality?.jevNoteReason || null,
       interimReply: live.interimReply || null,
+      qualityLine: live.qualityLine != null ? String(live.qualityLine) : formatQualityLine(live.quality),
+      heldRewriteLine: live.heldRewriteLine != null ? String(live.heldRewriteLine) : heldRewriteLine(live),
+      rewriteCredit: live.rewriteCredit != null ? String(live.rewriteCredit) : rewriteCreditLabel(live.rewriteModel || live.quality?.rewriteModel, live.rewriterChange || live.quality?.rewriterChange),
       modelLatency: live.modelLatency || null,
       flagged: live.flagged === true,
       held: live.held === true,
