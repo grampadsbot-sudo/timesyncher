@@ -6,6 +6,7 @@ import { growthFails, pruneBaseline } from './baseline-subset.mjs';
 import { barFindings } from './dialog-bars.mjs';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
 import { jevCardFindings } from './jev-cards.mjs';
+import { turnPriceFindings } from './no-turn-price-env.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
 export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
@@ -1280,6 +1281,13 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     thingFindings(file, value, findings, seen);
     dialogFindings(file, value, findings, seen);
     for (const finding of barFindings(file, value)) {
+      const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push(finding);
+      }
+    }
+    for (const finding of turnPriceFindings(file, value)) {
       const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
       if (!seen.has(key)) {
         seen.add(key);

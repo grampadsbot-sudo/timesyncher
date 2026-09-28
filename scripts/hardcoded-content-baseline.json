@@ -4401,5 +4401,103 @@
     "symbol_or_pattern": "inventory:C13",
     "inventory_id": "C13",
     "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "hasMediaEntitlement(process.env)#759855e8",
+    "inventory_id": "c3c52b0d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "sharedTripWebsiteUrl(process.env)#5236a3ff",
+    "inventory_id": "0e53ddc2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "createTelegramWebAccessSession(process.env)#e3bdaefc",
+    "inventory_id": "3749f902",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "publicTripUrl(process.env)#d0b532e6",
+    "inventory_id": "38043ba0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "ownerMediaCheckoutUrl(process.env)#b04de816",
+    "inventory_id": "4279c9d2",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "createCollaboratorInvite(process.env)#81f72ef5",
+    "inventory_id": "18e308e4",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "collaboratorPaymentUrl(process.env)#871dbc85",
+    "inventory_id": "a48ee1a0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "collaboratorStripe(process.env)#e2394796",
+    "inventory_id": "27d99c54",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "env:process.env#61005747",
+    "inventory_id": "1d747a2f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "sql(process.env)#253eba36",
+    "inventory_id": "7fcff90e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "requireIntakeAuth(process.env)#56517b9e",
+    "inventory_id": "f2365baf",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "acceptCollaboratorInvite(process.env)#d112685f",
+    "inventory_id": "04306339",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "vacationEulaStatus(process.env)#7a985f92",
+    "inventory_id": "ee06990c",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-telegram-turn.mjs",
+    "rule": "NO-TURN-PRICE-ENV",
+    "symbol_or_pattern": "blockHighAuthorityRequest(process.env)#2fdce9a7",
+    "inventory_id": "503f9b76",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
   }
 ]

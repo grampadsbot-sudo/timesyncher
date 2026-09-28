@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { inTurnPriceScope, RULE } from './no-turn-price-env.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -800,5 +801,55 @@ assert.equal(classify(keepsake, []).fail.length, 1);
 const said = scanText('scripts/vacation-app-reply-rules.mjs', 'const line = "Never say Thing to the customer on Friday.";').filter((finding) => finding.rule === 'BAR-THING-CUSTOMER');
 assert.equal(said.length, 1);
 assert.equal(classify(said, []).fail.length, 1);
+
+const priceRule = (file, text) => scanText(file, text).filter((finding) => finding.rule === RULE);
+const dot = priceRule('src/vacation/live-app-turn.mjs', 'const cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\n');
+assert.equal(dot.length, 1);
+assert.match(dot[0].symbol_or_pattern, /process\.env\.TIMESYNCHER_BASE_PRICE_CENTS/);
+assert.equal(classify(dot, []).fail.length, 1);
+const orderName = priceRule('routes/sample-turn.mjs', 'const id = process.env.TIMESYNCHER_ORDER_ID;\n');
+assert.equal(orderName.length, 1);
+const bracket = priceRule('routes/vacation-telegram-turn.mjs', 'const cents = process.env["TIMESYNCHER_ORDER_BUMP_PRICE_CENTS"];\n');
+assert.equal(bracket.length, 1);
+assert.match(bracket[0].symbol_or_pattern, /process\.env\["TIMESYNCHER_ORDER_BUMP_PRICE_CENTS"\]/);
+assert.equal(classify(bracket, []).fail.length, 1);
+const quoted = priceRule('routes/sample-turn.mjs', "const cents = process.env['TIMESYNCHER_BASE_PRICE_CENTS'];\n");
+assert.equal(quoted.length, 1);
+const destructure = priceRule('routes/sample-turn.mjs', 'const { TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS, TIMESYNCHER_ORDER_ID: orderId } = process.env;\n');
+assert.equal(destructure.length, 2);
+assert.equal(classify(destructure, []).fail.length, 2);
+const answered = priceRule('routes/sample-turn.mjs', 'priceAnswered(x, process.env);\n');
+assert.equal(answered.length, 1);
+assert.match(answered[0].symbol_or_pattern, /priceAnswered\(process\.env\)/);
+assert.equal(classify(answered, []).fail.length, 1);
+const handler = priceRule('routes/sample-turn.mjs', 'import { handler } from "./checkout-config.mjs";\n');
+assert.equal(handler.length, 1);
+assert.match(handler[0].symbol_or_pattern, /^fn:handler#/);
+const required = priceRule('routes/vacation-foo-turn.mjs', 'const mod = require("./create-payment-intent.mjs");\n');
+assert.equal(required.length, 1);
+assert.match(required[0].symbol_or_pattern, /module:\.\/create-payment-intent\.mjs/);
+const dynamicImport = priceRule('src/vacation/live-app-turn.mjs', 'const mod = await import("./checkout-coupon.mjs");\n');
+assert.equal(dynamicImport.length, 1);
+assert.match(dynamicImport[0].symbol_or_pattern, /module:\.\/checkout-coupon\.mjs/);
+const couponFns = priceRule('routes/sample-turn.mjs', 'import { couponCodeHash } from "./checkout-coupons.mjs";\n');
+assert.equal(couponFns.length, 1);
+assert.match(couponFns[0].symbol_or_pattern, /module:\.\/checkout-coupons\.mjs/);
+for (const exempt of ['routes/checkout-config.mjs', 'routes/create-payment-intent.mjs', 'routes/checkout-coupon.mjs', 'src/vacation/checkout-coupons.mjs', 'routes/checkout-config-turn.mjs', 'scripts/test_checkout_coupons.mjs', 'scripts/test_create-payment-intent.mjs']) {
+  const sample = 'priceAnswered(x, process.env);\nconst cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\nimport { handler } from "./checkout-config.mjs";\n';
+  assert.equal(priceRule(exempt, sample).length, 0, exempt);
+}
+assert.equal(priceRule('src/vacation/test_price-turn.mjs', 'process.env.TIMESYNCHER_BASE_PRICE_CENTS = "3700";\nprocess.env["TIMESYNCHER_ORDER_ID"] = "x";\n').length, 0);
+assert.equal(priceRule('src/vacation/test_price-turn.mjs', 'priceAnswered(x, process.env);\n').length, 1);
+assert.equal(priceRule('routes/sample-turn.mjs', 'process.env.TIMESYNCHER_BASE_PRICE_CENTS = "1";\n').length, 1);
+assert.equal(priceRule('src/vacation/live-app-turn.mjs', 'function priceAnswered(reply, customerTurn, env = process.env) {}\n').length, 0);
+assert.equal(priceRule('src/vacation/seat-price.mjs', 'const cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\n').length, 0);
+assert.equal(priceRule('routes/sample-turn.mjs', 'const note = "process.env.TIMESYNCHER_BASE_PRICE_CENTS";\n// priceAnswered(x, process.env)\nconst token = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN;\n').length, 0);
+assert.equal(priceRule('scripts/vacation-app-reply-rules.mjs', 'priceAnswered(x, process.env);\n').length, 1);
+assert.equal(inTurnPriceScope('src/vacation/turn-tags.mjs'), false);
+assert.equal(inTurnPriceScope('scripts/vacation-app-reply-rules-snapshot.json'), false);
+const priceDoc = fs.readFileSync(path.join(repo, 'scripts/no-turn-price-env.md'), 'utf8');
+for (const scanned of ['src/vacation/live-app-turn.mjs', 'routes/vacation-telegram-turn.mjs', 'scripts/vacation-app-reply-rules.mjs']) {
+  assert.match(priceDoc, new RegExp(scanned.replaceAll('.', '\\.')));
+}
 
 process.stdout.write('hardcoded content check test passed\n');
