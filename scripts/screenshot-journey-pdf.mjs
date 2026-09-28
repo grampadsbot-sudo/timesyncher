@@ -1063,7 +1063,14 @@ async function main() {
       }
 
       await clickText(page, 'Day-by-Day');
-      if (await clickText(page, 'Flights') && (await clickText(page, 'Kona arrival') || await clickText(page, 'KOA arrival'))) {
+      const flightLabel = await clickText(page, 'Flights') ? await page.evaluate(() => {
+        const button = [...document.querySelectorAll('button')].find((node) => {
+          const text = (node.innerText || '').replace(/\s+/g, ' ').trim();
+          return text && !/^flights$/i.test(text) && /\bflight\b/i.test(text) && text.length < 80;
+        });
+        return button ? (button.innerText || '').replace(/\s+/g, ' ').trim() : '';
+      }) : '';
+      if (flightLabel && await clickText(page, flightLabel, { exact: true })) {
         const flightBox = await page.evaluate(() => {
           const label = [...document.querySelectorAll('label')].find((node) => /^takeoff\b/i.test((node.innerText || '').trim()) && node.getBoundingClientRect().width > 40);
           if (!label) return null;
@@ -1084,7 +1091,7 @@ async function main() {
           const { filled, ...clipRect } = flightBox;
           await shot('flight-fields', 'After the gold conversation', 'Flight fields', {
             file: 'flight-fields.md',
-            note: 'KOA arrival flight fields from the trip, not a hard-coded connection or layover.',
+            note: 'Flight fields from the saved trip.',
             clipRect,
           });
         } else {
@@ -1103,7 +1110,6 @@ async function main() {
             const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
             if (!label || label.length >= 80 || label.length < 3) continue;
             if (/^cars$/i.test(label) || /^car type$/i.test(label)) continue;
-            if (/speedishuttle/i.test(label) && !labels.includes('SpeediShuttle')) labels.push('SpeediShuttle');
             const price = label.match(/\$\d+/);
             if (price && !labels.some((item) => item.startsWith(label.slice(0, 24)))) labels.push(label.slice(0, 48));
           }
@@ -1140,7 +1146,7 @@ async function main() {
             clipRect: carClip,
             expect: shown[0],
           });
-          gap('Ten lowest car prices', 'car-fields.md', 'GAP: no live rental price source is available within the allowed tools. There is no Kayak or other rental feed, Google Places is not allowed, and lowestCarOffers only lists places that already have a numeric price. The only car Thing here is SpeediShuttle, which has no price. Removing that one unpriced row leaves an empty list, so this journey does not publish an empty list as brand removal.');
+          gap('Ten lowest car prices', 'car-fields.md', 'GAP: no live rental price source is available within the allowed tools. There is no Kayak or other rental feed. An empty car list stays empty.');
         }
         await page.keyboard.press('Escape').catch(() => {});
       }

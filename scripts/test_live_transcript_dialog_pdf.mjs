@@ -92,7 +92,7 @@ assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Ki
 const intakeThings = thingsFromIntake('Big Island Hawaii. Kimberly wants gardens. Groceries the same day. Friday is the dinner. Tyler wants a swim. A house in Kailua-Kona.');
 assert.deepEqual(intakeThings.map((thing) => thing.title), ['Big Island', 'Gardens', 'Groceries', 'Dinner', 'Swim', 'Kailua-Kona house']);
 assert.equal(intakeThings.some((thing) => /kahalu|arboretum/i.test(thing.title)), false);
-const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
+const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. A shuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
 const goldFacts = intakeFacts(goldIntake);
 assert.equal(goldFacts.span.badge, 'Big Island Apr 3–12 2026');
 assert.equal(goldFacts.span.start, '2026-04-03');
@@ -103,7 +103,7 @@ assert.equal(goldThings.find((thing) => thing.title === 'Groceries').whenLabel, 
 assert.equal(goldThings.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
 assert.equal(goldThings.find((thing) => thing.title === 'Swim').whenLabel, 'later in the week');
 assert.equal(goldThings.find((thing) => thing.title === 'Swim').who, 'Tyler');
-assert.match(goldThings.find((thing) => thing.title === 'Groceries').notes[0], /SpeediShuttle/);
+assert.match(goldThings.find((thing) => thing.title === 'Groceries').notes[0], /shuttle from the airport/);
 assert.equal(goldThings.some((thing) => /kahalu|arboretum|botanical/i.test(JSON.stringify(thing))), false);
 const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
 assert.match(noted.find((thing) => thing.title === 'Gardens').collaboratorNotes[0], /Sunday April fifth/);

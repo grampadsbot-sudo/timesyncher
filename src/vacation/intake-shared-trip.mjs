@@ -1,5 +1,3 @@
-import { lowestCarOffers } from './car-offers.mjs';
-import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
 
 const MONTHS = {
@@ -54,16 +52,6 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
-function formatTakeoff(start) {
-  const iso = String(start || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
-  const date = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return '';
-  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()];
-  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getUTCMonth()];
-  return `${weekday} ${month} ${date.getUTCDate()}`;
-}
-
 function assignDates(thing, year, tripDates) {
   if (thing.title === 'Groceries') {
     const arrival = namedDates(thing.whenLabel || '', year).filter((date) => tripDates.includes(date));
@@ -111,8 +99,6 @@ export function productThingSummary(thing = {}) {
   if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
   if (/house/i.test(title)) return when ? `The Kailua-Kona house, ${when}.` : 'The Kailua-Kona house.';
   if (/big island/i.test(title)) return when ? `Big Island, ${when}. People matter more than a packed list.` : 'Big Island. People matter more than a packed list.';
-  if (/speedishuttle/i.test(title)) return 'SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.';
-  if (/koa arrival|kona arrival/i.test(title)) return when ? `Arrival into Kona on ${when}, then the shuttle and groceries the same day.` : 'Arrival into Kona, then the shuttle and groceries the same day.';
   const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
   if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
   return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
@@ -218,23 +204,9 @@ export function sharedTripFromIntake({ trip, things }) {
   };
 }
 
-const PLACE_COORDS = {
-  Groceries: [19.6399, -155.9854, '74-5594 Palani Rd, Kailua-Kona'],
-  Gardens: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
-  Swim: [19.5804, -155.9622, 'Kahaluʻu Beach Park, Keauhou'],
-  Dinner: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
-  'Town walk': [19.6393, -155.9946, 'Kona Inn Shopping Village, Aliʻi Drive'],
-  'Kailua-Kona house': [19.649, -155.994, 'Kailua-Kona'],
-  'Big Island': [19.64, -155.99, 'Hawaiʻi'],
-  SpeediShuttle: [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
-  'KOA arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
-  'Kona arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
-};
-
-function coordsFor(name) {
-  const detail = BIG_ISLAND_FILL_DETAILS[name];
-  if (detail?.lat && detail?.lng) return [detail.lat, detail.lng, detail.address || 'Kailua-Kona, Hawaii'];
-  return PLACE_COORDS[name] || null;
+function finiteCoord(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function blankRatings() {
@@ -267,12 +239,14 @@ export function windLookupPointsFromThings(things = []) {
   const seen = new Set();
   for (const thing of things || []) {
     const name = String(thing.title || thing.name || '').trim();
-    const coords = coordsFor(name);
-    if (!coords || !/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
+    const lat = finiteCoord(thing.lat);
+    const lng = finiteCoord(thing.lng);
+    if (!name || lat == null || lng == null) continue;
+    if (!/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    points.push({ name, lat: coords[0], lng: coords[1] });
+    points.push({ name, lat, lng });
   }
   return points;
 }
@@ -294,19 +268,17 @@ export function applyThingPresentation(shared = {}, options = {}) {
     });
     place.description = summary;
     place.notes = summary;
-    const coords = coordsFor(name);
+    const lat = finiteCoord(place.lat);
+    const lng = finiteCoord(place.lng);
     const extra = {
       summary,
       logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
       ...sourcedRatings(name, options),
     };
-    if (coords) {
-      place.lat = coords[0];
-      place.lng = coords[1];
-      place.address = coords[2];
-      extra.lat = coords[0];
-      extra.lng = coords[1];
-      extra.address = coords[2];
+    if (lat != null && lng != null) {
+      extra.lat = lat;
+      extra.lng = lng;
+      if (place.address) extra.address = place.address;
     }
     if (/ulu ocean/i.test(name)) {
       extra.restaurantTags = ['Seafood', 'Cocktail Bar / Happy Hour'];
@@ -317,102 +289,5 @@ export function applyThingPresentation(shared = {}, options = {}) {
     }
     put(place, extra);
   }
-  if (!places.some((place) => /speedishuttle/i.test(place.name || ''))) {
-    const id = intId(`${shared.trip?.id || 'trip'}:speedishuttle`);
-    const place = {
-      id,
-      trip_id: shared.trip?.id,
-      name: 'SpeediShuttle',
-      description: productThingSummary({ title: 'SpeediShuttle' }),
-      category_name: 'Car',
-      category: { name: 'Car', icon: '🚗' },
-      reservation_status: 'considering',
-      notes: productThingSummary({ title: 'SpeediShuttle' }),
-    };
-    const shuttle = coordsFor('SpeediShuttle');
-    if (shuttle) {
-      place.lat = shuttle[0];
-      place.lng = shuttle[1];
-      place.address = shuttle[2];
-    }
-    places.push(place);
-    put(place, {
-      category: 'car',
-      rentalCompany: 'SpeediShuttle',
-      carType: 'Shared shuttle',
-      summary: place.description,
-      lat: place.lat,
-      lng: place.lng,
-      address: place.address,
-      logoUrl: captureThingLogo(place, { title: 'SpeediShuttle', category: 'car' }),
-      ...sourcedRatings('SpeediShuttle', options),
-    });
-  }
-  const flightName = /\bKOA\b/.test(JSON.stringify(shared.trip || {})) ? 'KOA arrival' : 'Kona arrival';
-  if (!places.some((place) => /koa arrival|kona arrival/i.test(place.name || ''))) {
-    const id = intId(`${shared.trip?.id || 'trip'}:kona-arrival`);
-    const place = {
-      id,
-      trip_id: shared.trip?.id,
-      name: flightName,
-      description: productThingSummary({ title: flightName }),
-      category_name: 'Flight',
-      category: { name: 'Flight', icon: '✈️' },
-      reservation_status: 'considering',
-      notes: productThingSummary({ title: flightName }),
-    };
-    const koa = coordsFor(flightName);
-    if (koa) {
-      place.lat = koa[0];
-      place.lng = koa[1];
-      place.address = koa[2];
-    }
-    places.push(place);
-    const flightText = `${place.description || ''} ${place.notes || ''}`;
-    const connections = flightText.match(/\b(nonstop into [A-Z]{3}|[0-9]+ connections?)\b/i);
-    const layover = flightText.match(/\blayover\s+(?:in\s+)?([A-Za-z][^.\n]{0,40})/i);
-    const takeoff = formatTakeoff(shared.trip?.start_date);
-    put(place, {
-      category: 'flight',
-      ...(takeoff ? { takeoffTime: takeoff } : {}),
-      ...(connections ? { connections: connections[1] } : {}),
-      ...(layover ? { layover: layover[1].trim() } : {}),
-      summary: place.description,
-      lat: place.lat,
-      lng: place.lng,
-      address: place.address,
-      logoUrl: captureThingLogo(place, { title: flightName, category: 'flight' }),
-      ...sourcedRatings(flightName, options),
-    });
-  }
-  const shownCars = lowestCarOffers(
-    places
-      .filter((place) => /car/i.test(String(place.category_name || '')) && Number.isFinite(Number(place.price)) && String(place.name || '').trim())
-      .map((place) => ({ brand: place.name, price: Number(place.price) })),
-    10,
-  );
-  for (const offer of shownCars) {
-    if (places.some((place) => String(place.name || '').toLowerCase() === offer.brand.toLowerCase())) continue;
-    const id = intId(`${shared.trip?.id || 'trip'}:car:${offer.brand}`);
-    const place = {
-      id,
-      trip_id: shared.trip?.id,
-      name: offer.brand,
-      description: `$${offer.price} a day`,
-      category_name: 'Car',
-      category: { name: 'Car', icon: '🚗' },
-      reservation_status: 'considering',
-      notes: `$${offer.price} a day`,
-      price: offer.price,
-    };
-    places.push(place);
-    put(place, {
-      category: 'car',
-      rentalCompany: offer.brand,
-      summary: place.description,
-      price: offer.price,
-      logoUrl: captureThingLogo(place, { title: offer.brand, category: 'car' }),
-    });
-  }
-  return { ...shared, places, thingOverrides, carOfferPool: shownCars };
+  return { ...shared, places, thingOverrides };
 }
