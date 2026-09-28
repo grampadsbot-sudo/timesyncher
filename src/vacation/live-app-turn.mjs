@@ -13,7 +13,7 @@ import {
 
 export { isTemplateNote };
 import { productThingSummary } from './intake-shared-trip.mjs';
-import { payerPriceLine, planSeatDollars, priceAnswered } from './seat-price.mjs';
+import { payerPriceLine, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -1883,7 +1883,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session) {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, seatDollars: suppliedSeatDollars = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1903,12 +1903,16 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const tripFacts = savedTripFacts(mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
   tripFacts.laterFriday = laterFridayLabel(tripFacts.span);
-  const planLine = customerAsksPrice(customerTurn) ? payerPriceLine(customerTurn, env) : '';
-  const seatDollars = planSeatDollars(env);
+  const seatDollars = Number(suppliedSeatDollars);
+  const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
+  tripFacts.seatDollars = pricedSeat;
+  const planLine = customerAsksPrice(customerTurn) && pricedSeat
+    ? payerPriceLine(customerTurn, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(pricedSeat * 100) })
+    : '';
   const planTable = planLine
     ? {
       plan_name: 'unlimited vacations for the whole year',
-      dollars_per_collaborator_seat: seatDollars,
+      dollars_per_collaborator_seat: pricedSeat,
       payer_line: planLine,
     }
     : null;
@@ -1982,7 +1986,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
     const nudge = customerAsksPrice(customerTurn)
-      ? `${customerTurn}\n\nAnswer with who pays: ${payerPriceLine(customerTurn, env) || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
+      ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
       : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -2197,7 +2201,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
       : '',
     customerAsksPrice(customerTurn)
-      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerPriceLine(customerTurn, env) || 'the configured price is missing, so do not invent a dollar amount'}.`
+      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${Number(facts.seatDollars) > 0 ? payerPriceLine(customerTurn, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: String(Math.round(Number(facts.seatDollars) * 100)) }) : 'the configured price is missing, so do not invent a dollar amount'}.`
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');

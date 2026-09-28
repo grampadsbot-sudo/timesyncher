@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
-import { checkoutAmounts } from '../src/vacation/checkout-pricing.mjs';
+import { checkoutAmounts, checkoutOrderSummary } from '../src/vacation/checkout-pricing.mjs';
+import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, planSeatDollars, priceAnswered } from '../src/vacation/seat-price.mjs';
 
 assert.throws(() => checkoutAmounts({}), /checkout config missing: TIMESYNCHER_ORDER_BUMP_PRICE_CENTS/);
@@ -12,10 +13,21 @@ assert.throws(() => planSeatDollars(unconfigured), missingPrice);
 assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '' }), missingPrice);
 assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '0' }), missingPrice);
 assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 19);
-assert.throws(() => payerPriceLine('I pay for Ada.', unconfigured), missingPrice);
+assert.equal(payerPriceLine('I pay for Ada.', unconfigured), '');
 assert.equal(payerPriceLine('I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 'Ada $19, paid by you');
-assert.throws(() => priceAnswered('Ada $19, paid by you', 'I pay for Ada.', unconfigured), missingPrice);
+assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', unconfigured), false);
 assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
+assert.equal(checkoutOrderSummary({}, {}).amountCents, 3700);
+assert.throws(() => checkoutOrderSummary({ orderBump: true }, {}), missingPrice);
+
+const chatTurn = await produceLiveAppReply({
+  customerTurn: 'How much is a seat? I pay for Ada.',
+  session: {},
+  priorTurns: [],
+  env: { TIMESYNCHER_JEV_CLASSIFY_URL: 'https://openrouter.ai/api/v1/chat/completions' },
+});
+assert.equal(String(chatTurn?.reason || '').includes('checkout config'), false);
+assert.equal(chatTurn?.error || null, null);
 
 const prompt = replyRulesSystem({}, 'Rio', 'forbidden', false, 'What day works for Ada?', {
   tripContext: {

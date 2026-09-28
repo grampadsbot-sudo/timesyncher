@@ -2104,15 +2104,21 @@ export default async function handler(req, res) {
         reply = checkout.reply;
         replyPayload = checkout.payload;
       } catch (error) {
+        if (error?.name === 'CheckoutConfigError') console.error(error.message);
+        let copy = '';
+        try {
+          copy = collaboratorCheckoutCopy();
+        } catch (copyError) {
+          console.error(copyError?.message || copyError);
+        }
         reply = [
-          collaboratorCheckoutCopy(),
-          '',
+          copy,
           'I could not create the checkout links in this moment. Please try again in a minute.',
-        ].join('\n');
+        ].filter(Boolean).join('\n\n');
         replyPayload = {
           collaboratorEntitlement: {
             required: true,
-            error: error.message || 'checkout link creation failed',
+            error: 'checkout link creation failed',
           },
         };
       }

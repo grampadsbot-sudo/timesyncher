@@ -33,7 +33,13 @@ export function payerSeats(customerTurn) {
 export function payerPriceLine(customerTurn, env = process.env) {
   const seats = payerSeats(customerTurn);
   if (!seats.length) return '';
-  const dollars = planSeatDollars(env);
+  let dollars = null;
+  try {
+    dollars = planSeatDollars(env);
+  } catch (error) {
+    if (error?.name !== 'CheckoutConfigError') throw error;
+  }
+  if (!dollars) return '';
   return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 
@@ -59,9 +65,9 @@ export function priceClauseSatisfied(part, reply) {
   return false;
 }
 
-export function priceAnswered(reply, customerTurn, env = process.env) {
+export function priceAnswered(reply, customerTurn, env = null) {
   const seats = payerSeats(customerTurn);
-  const line = payerPriceLine(customerTurn, env);
+  const line = env ? payerPriceLine(customerTurn, env) : '';
   const body = String(reply || '');
   if (seats.length && !line) return false;
   if (!line) return /\$\d+/.test(body);

@@ -12,10 +12,14 @@ import {
 } from '../src/vacation/collaborators.mjs';
 import { collaboratorInviteEmail as buildCollaboratorInviteEmail, collaboratorInviteTargets } from '../src/vacation/email.mjs';
 
-assert.equal(collaboratorPlan('single_trip').code, 'telegram_collaborators_single_trip');
-assert.equal(collaboratorPlan('single_trip').amountCents, 1500);
-assert.equal(collaboratorPlan('single_trip').maxActiveCollaborators, 1);
-const priceEnv = { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' };
+const priceEnv = {
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900',
+  TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS: '1500',
+};
+assert.equal(collaboratorPlan('single_trip', priceEnv).code, 'telegram_collaborators_single_trip');
+assert.equal(collaboratorPlan('single_trip', priceEnv).amountCents, 1500);
+assert.equal(collaboratorPlan('single_trip', priceEnv).maxActiveCollaborators, 1);
+assert.throws(() => collaboratorPlan('single_trip', {}), (error) => error?.name === 'CheckoutConfigError');
 assert.throws(() => collaboratorPlan('unlimited_trips', {}), (error) => error?.name === 'CheckoutConfigError');
 assert.equal(collaboratorPlan('unlimited_trips', priceEnv).amountCents, 1900);
 assert.equal(collaboratorPlan('unlimited_trips', priceEnv).maxActiveCollaborators, 1);

@@ -2,8 +2,6 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { payerPriceLine } from '../src/vacation/seat-price.mjs';
-
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
@@ -775,7 +773,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
   const url = text(env.TIMESYNCHER_JEV_CLASSIFY_URL, 500) || DEFAULT_JEV_DECISIONS_URL;
   if (!JEV_DECISIONS_PATH.test(url)) return { judged: false, reason: 'quality_decisions_url_required', model: JEV_DECISIONS_MODEL };
   if (!key) return { judged: false, reason: 'quality_credentials_missing', model: JEV_DECISIONS_MODEL };
-  const requiredLine = text(planLine || payerPriceLine(customerTurn, env), 400);
+  const requiredLine = text(planLine, 400);
   const itinerary = Array.isArray(tripContext?.itinerary) ? text(tripContext.itinerary.filter(Boolean).join('; '), 1500) : '';
   const payload = {
     model: JEV_DECISIONS_MODEL,
