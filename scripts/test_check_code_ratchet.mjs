@@ -145,8 +145,8 @@ assert.deepEqual(deadFindings.map((finding) => [finding.file, finding.symbol]), 
 assert.equal(classify(deadFindings, []).fail.length, 3);
 assert.equal(classify(deadFindings, deadFindings.map((finding) => entry(finding.rule, finding.file, finding.symbol))).fail.length, 0);
 
-function runGuard(cwd, env = {}) {
-  return spawnSync(process.execPath, [script], {
+function runGuard(cwd, env = {}, args = []) {
+  return spawnSync(process.execPath, [script, ...args], {
     cwd,
     encoding: 'utf8',
     env: { ...process.env, BASE: '', GITHUB_BASE_REF: '', ...env },
@@ -222,7 +222,22 @@ const grownBase = repoWithBase([]);
 fs.writeFileSync(path.join(grownBase, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')])}\n`);
 const grownRun = runGuard(grownBase, { BASE: 'base' });
 assert.equal(grownRun.status, 1, grownRun.stdout);
-assert.match(grownRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\t1>0/);
+assert.match(grownRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\tsrc\/vacation\/catch\.mjs\|NO-EMPTY-CATCH\|empty-catch\|/);
+
+const swapped = repoWithBase([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')]);
+fs.writeFileSync(path.join(swapped, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'other')])}\n`);
+const swappedRun = runGuard(swapped, { BASE: 'base' });
+assert.equal(swappedRun.status, 1, swappedRun.stdout);
+assert.match(swappedRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\tsrc\/vacation\/catch\.mjs\|NO-EMPTY-CATCH\|other\|/);
+assert.doesNotMatch(swappedRun.stderr, /\|empty-catch\|/);
+
+const shrunk = repoWithBase([
+  entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch'),
+  entry('NO-EMPTY-CATCH', 'src/vacation/other.mjs', 'empty-catch'),
+]);
+fs.writeFileSync(path.join(shrunk, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')])}\n`);
+const shrunkRun = runGuard(shrunk, { BASE: 'base' });
+assert.equal(shrunkRun.status, 0, shrunkRun.stderr);
 
 const same = repoWithBase([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')]);
 const sameRun = runGuard(same, { BASE: 'base' });
@@ -234,6 +249,37 @@ fs.mkdirSync(path.join(seeded, 'scripts'), { recursive: true });
 fs.writeFileSync(path.join(seeded, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')])}\n`);
 const seededRun = runGuard(seeded, { BASE: 'base' });
 assert.equal(seededRun.status, 0, seededRun.stderr);
+
+const missingRef = repoWithBase([]);
+const missingRefRun = runGuard(missingRef, { BASE: 'missing-ref' });
+assert.equal(missingRefRun.status, 1);
+assert.match(missingRefRun.stderr, /FAIL\tBASELINE-GROWTH/);
+
+const pruneDir = fs.mkdtempSync(path.join(os.tmpdir(), 'code-ratchet-prune-'));
+const big = `${Array.from({ length: 501 }, (_, i) => `export const n${i} = ${i};`).join('\n')}\n`;
+writeTree(pruneDir, {
+  'scripts/b-keep.mjs': 'try { return 1; } catch {}\n',
+  'scripts/a-keep.mjs': 'try { return 1; } catch {}\n// TODO leave\n',
+  'scripts/big.mjs': big,
+  'scripts/small.mjs': 'export const ok = 1;\n',
+}, [
+  entry('NO-EMPTY-CATCH', 'scripts/b-keep.mjs', 'empty-catch'),
+  entry('NO-EMPTY-CATCH', 'scripts/a-keep.mjs', 'GONE'),
+  entry('FILE-SIZE-500', 'scripts/big.mjs', 'lines:600'),
+  entry('FILE-SIZE-500', 'scripts/small.mjs', 'lines:900'),
+  entry('NO-EMPTY-CATCH', 'scripts/a-keep.mjs', 'empty-catch'),
+]);
+const pruneRun = runGuard(pruneDir, {}, ['--prune']);
+assert.equal(pruneRun.status, 0, pruneRun.stderr);
+assert.match(pruneRun.stdout, /STALE\tNO-EMPTY-CATCH\tscripts\/a-keep\.mjs\tGONE\t/);
+assert.match(pruneRun.stdout, /STALE\tFILE-SIZE-500\tscripts\/small\.mjs\tlines:900\t/);
+assert.doesNotMatch(pruneRun.stdout, /TODO/);
+const pruned = JSON.parse(fs.readFileSync(path.join(pruneDir, 'scripts/code-ratchet-baseline.json'), 'utf8'));
+assert.deepEqual(pruned.map((row) => [row.file, row.rule, row.symbol]), [
+  ['scripts/a-keep.mjs', 'NO-EMPTY-CATCH', 'empty-catch'],
+  ['scripts/b-keep.mjs', 'NO-EMPTY-CATCH', 'empty-catch'],
+  ['scripts/big.mjs', 'FILE-SIZE-500', 'lines:600'],
+]);
 
 const workflow = fs.readFileSync(path.join(repo, '.github/workflows/evidence-secrets.yml'), 'utf8');
 assert.match(workflow, /check-code-ratchet\.mjs/);

@@ -2,17 +2,15 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { growthFails, pruneBaseline } from './baseline-subset.mjs';
 
 // Baselined hits report. A hit that is not in the baseline fails.
-// The baseline file may shrink against the PR base branch and may not grow.
+// Every baseline row must already exist on the PR base (file, rule, symbol, inventory id). A missing base file may seed; a missing ref fails closed.
 // MODEL_CLIENT is the only module allowed to call an LLM HTTP API.
 // SEARCH_MODULES are the only modules allowed to call a search or place HTTP API.
-// Floating promise heuristic, one line at a time: a call to a same-file async
-// function or fetch, or a .then( chain, is floating unless that line has await,
-// return, or void. .then is handled on that line when it has .catch or a second
-// argument. Empty catch is a catch body or .catch( callback whose body is only
-// whitespace or comments. import() and export * mark every export of that
-// module used. A static import { name } marks only that name.
+// Floating promise, one line: a same-file async call or fetch, or .then(, fails unless that line has await, return, or void. .then is handled when it has .catch or a second argument.
+// Empty catch is a catch body or .catch( callback whose body is only whitespace or comments.
+// import() and export * mark every export of that module used. A static import { name } marks only that name.
 
 export const MODEL_CLIENT = 'scripts/vacation-app-reply-rules.mjs';
 export const SEARCH_MODULES = ['src/vacation/poi-search.mjs'];
@@ -663,7 +661,7 @@ export function readBaseBaseline(cwd = process.cwd()) {
   }
   const parsed = JSON.parse(shown.stdout);
   if (!Array.isArray(parsed)) return { status: 'error', error: 'base baseline is not an array' };
-  return { status: 'ok', count: parsed.length, entries: parsed };
+  return { status: 'ok', entries: parsed };
 }
 
 export function evaluate(cwd = process.cwd()) {
@@ -672,15 +670,8 @@ export function evaluate(cwd = process.cwd()) {
   const findings = scanRoots(cwd);
   const base = readBaseBaseline(cwd);
   const { report, fail } = classify(findings, baseline, base.status === 'ok' ? base.entries : null);
-  if (base.status === 'error') {
-    fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol: base.error });
-  } else if (base.status === 'ok' && baseline.length > base.count) {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol: `${baseline.length}>${base.count}`,
-    });
+  for (const symbol of growthFails(baseline, base)) {
+    fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol });
   }
   return { report, fail, baselineCount: baseline.length, base };
 }
@@ -696,6 +687,10 @@ function counts(findings) {
 }
 
 function main() {
+  if (process.argv.includes('--prune')) {
+    pruneBaseline(process.cwd(), BASELINE_REL, loadBaselineFile, scanRoots, (entry, findings) => findings.some((finding) => finding.file === entry.file && finding.rule === entry.rule && (entry.rule === 'FILE-SIZE-500' || finding.symbol === entry.symbol)));
+    return;
+  }
   const { report, fail } = evaluate(process.cwd());
   const reportCounts = counts(report);
   const failCounts = counts(fail);
