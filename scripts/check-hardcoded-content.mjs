@@ -1976,6 +1976,20 @@ function readCheckedValue(text, index) {
   return readConcat(text, index) || readArrayJoin(text, index) || readSplitJoin(text, index) || readTemplate(text, index) || readQuoted(text, index);
 }
 
+function dictionaryWordRun(token) {
+  return /^([A-Z][a-z]+)+$/.test(token) || /^[a-z]+(?:[A-Z][a-z]+)+$/.test(token);
+}
+
+function iconPrefixed(token) {
+  return /^(?:Lucide|Icon)/.test(token);
+}
+
+function genericShareToken(token) {
+  if (!/[A-Z]/.test(token) || !/[a-z]/.test(token) || !/[0-9]/.test(token)) return false;
+  if (dictionaryWordRun(token) || iconPrefixed(token)) return false;
+  return true;
+}
+
 function leakTokenFindings(file, original, findings, seen, hashes, text, origin) {
   TOKEN_RE.lastIndex = 0;
   for (const match of text.matchAll(TOKEN_RE)) {
@@ -1983,7 +1997,7 @@ function leakTokenFindings(file, original, findings, seen, hashes, text, origin)
     const digest = createHash('sha256').update(token).digest('hex');
     const at = origin + match.index;
     if (hashes.has(digest)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, `sha256:${digest}`);
-    if (!/[A-Z]/.test(token) || !/[a-z]/.test(token)) continue;
+    if (!genericShareToken(token)) continue;
     const window = original.slice(Math.max(0, at - 80), at + token.length + 80);
     if (/share/i.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near share');
     if (/token/i.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near token');
@@ -2090,6 +2104,68 @@ function bundleLeakScan(cwd) {
   return findings;
 }
 
+// EVASION also flags padding inside committed JS bundles. A run is 20 or more
+// consecutive spaces or tabs. Newlines do not count and end a run. The symbol
+// is spaces:N@offset, tabs:N@offset, or whitespace:N@offset. Template literals
+// are not exempt. The rule id is always-fail, so a baseline row cannot hide it.
+const WHITESPACE_PAD = /[ \t]{20,}/g;
+const PAD_DIRS = ['public/assets', 'bundles', 'dist'];
+const PAD_EXT = new Set(['.js', '.mjs', '.cjs']);
+
+function whitespacePadSymbol(run, offset) {
+  const kind = /^ +$/.test(run) ? 'spaces' : /^\t+$/.test(run) ? 'tabs' : 'whitespace';
+  return `${kind}:${run.length}@${offset}`;
+}
+
+export function whitespacePadFindings(file, text) {
+  const findings = [];
+  const seen = new Set();
+  const value = String(text || '');
+  WHITESPACE_PAD.lastIndex = 0;
+  for (const match of value.matchAll(WHITESPACE_PAD)) {
+    add(findings, seen, 'EVASION', file, value, match.index, whitespacePadSymbol(match[0], match.index));
+  }
+  return findings;
+}
+
+function whitespacePadFiles(cwd) {
+  const wanted = (rel) => {
+    const normalized = String(rel || '').split(path.sep).join('/');
+    if (!PAD_EXT.has(path.posix.extname(normalized).toLowerCase())) return false;
+    return PAD_DIRS.some((dir) => normalized === dir || normalized.startsWith(`${dir}/`));
+  };
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status === 0 && inside.stdout.trim() === 'true') {
+    const listed = spawnSync('git', ['ls-files', '-z'], { cwd, encoding: 'utf8' });
+    if (listed.status === 0) {
+      return listed.stdout.split('\0').filter((file) => file && wanted(file) && fs.existsSync(path.join(cwd, file))).sort();
+    }
+  }
+  const files = [];
+  const walk = (abs) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      const next = path.join(abs, entry.name);
+      if (entry.isDirectory()) walk(next);
+      else {
+        const rel = path.relative(cwd, next).split(path.sep).join('/');
+        if (wanted(rel)) files.push(rel);
+      }
+    }
+  };
+  for (const dir of PAD_DIRS) walk(path.join(cwd, dir));
+  return files.sort();
+}
+
+function whitespacePadScan(cwd) {
+  const findings = [];
+  for (const file of whitespacePadFiles(cwd)) {
+    findings.push(...whitespacePadFindings(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
+  }
+  return findings;
+}
+
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
   for (const file of contentPaths(cwd)) {
@@ -2142,6 +2218,7 @@ export function scanRoots(cwd = process.cwd()) {
   findings.push(...servedBundleFindings(cwd));
   findings.push(...crossOriginBundleScan(cwd));
   findings.push(...bundleLeakScan(cwd));
+  findings.push(...whitespacePadScan(cwd));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule) || a.symbol_or_pattern.localeCompare(b.symbol_or_pattern));
   return findings;
 }
@@ -2155,7 +2232,7 @@ export function classify(findings, baseline) {
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || !keys.has(contentIdentity(finding))) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION' || !keys.has(contentIdentity(finding))) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };

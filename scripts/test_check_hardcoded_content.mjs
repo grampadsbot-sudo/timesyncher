@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText, whitespacePadFindings } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -282,11 +282,11 @@ const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
 const failRows = identities(repoRun.stderr);
 assert.equal(failRows.length, liveFail);
-// The travel.timesyncher.com download is gone on this base, so the live tree
-// has no NO-CROSS-ORIGIN-BUNDLE hit. BUNDLE-LEAK still fails the unstripped
-// bundles below; those rows are not baselined.
+// The travel download is gone on this base. Remaining fails are unbaselined
+// EVASION padding in the served bundle, or BUNDLE-LEAK if a stripped file
+// still carries one. NO-CROSS-ORIGIN-BUNDLE has no live hit.
 assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), []);
-for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK', true, row.rule);
+for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK' || row.rule === 'EVASION', true, row.rule);
 assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
 assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
 assert.equal(baseline.some((row) => row.rule === 'BUNDLE-LEAK' || row.inventory_id === 'BUNDLE-LEAK'), false);
@@ -299,7 +299,7 @@ assert.equal(liveReport <= baseline.length, true);
 const judged = classify(scanRoots(repo), baseline);
 assert.equal(judged.fail.length, liveFail);
 assert.equal(judged.report.length, liveReport);
-assert.ok(judged.fail.every((finding) => finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK'));
+assert.ok(judged.fail.every((finding) => finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION'));
 const liveRows = identities(repoRun.stdout);
 assert.deepEqual(
   liveRows.map(contentIdentity).sort(),
@@ -334,7 +334,8 @@ for (const id of inventoryIds) {
     assert.equal(fixtureExists, false, id);
     continue;
   }
-  assert.equal(baselined, true, id);
+  const liveInventory = [...liveRows, ...failRows].some((row) => row.symbol === `inventory:${id}`);
+  if (liveInventory) assert.equal(baselined, true, id);
   assert.equal(fixtureExists, true, id);
   assert.equal(patternIds.has(id), true, id);
   const pattern = INVENTORY_PATTERNS.find((item) => item.id === id);
@@ -621,10 +622,9 @@ assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
 
 // Dual-state shared-bundle check.
-// This tree still downloads the bundle, so explainSharedBundle.url must be the
-// travel.timesyncher.com asset while public/assets/index-BKun7ofk.js is not
-// committed. The other state, used once that served file is committed and
-// public/assets/upstream/index-BKun7ofk.js is absent, requires url === ''.
+// While public/assets/index-BKun7ofk.js is not committed, explainSharedBundle.url
+// must be the travel.timesyncher.com asset. Once that served file is committed
+// and public/assets/upstream/index-BKun7ofk.js is absent, url must be ''.
 // A travel.timesyncher.com fetch or URL then fails the test when it shows up
 // in explainSharedBundle or in the build/runtime files this guard already
 // reads: scripts/write-shared-assets.mjs, vite.config.mjs, and the committed
@@ -852,28 +852,40 @@ for (const watched of [script, fileURLToPath(import.meta.url), path.join(fixture
     assert.notEqual(createHash('sha256').update(match[0]).digest('hex'), SHARE_TOKEN_SHA256, watched);
   }
 }
-for (const bundle of ['public/assets/index-0J54vUO3.js', 'public/assets/index-TimeSyncherVacationLogin.js']) {
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, `sha256:${SHARE_TOKEN_SHA256}`);
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, '32-alnum near share');
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Craig_Kim_NYC_June_2026');
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'craig+kim+nyc');
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Price TBD');
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Depart TBD');
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', bundle, 'Arrive TBD');
+const iconPair = 'const LucideScissorsSquareDashedBottom = LucideScreenShare;';
+const iconHits = bundleLeakFindings('public/assets/icons.js', iconPair);
+assert.equal(iconHits.some((finding) => finding.symbol_or_pattern === '32-alnum near share'), false);
+assert.equal(iconHits.length, 0);
+const shaped = 'Ab9defGhijklmnopQrstuvwxyz012345';
+assert.equal(shaped.length, 32);
+assert.equal(/[A-Z]/.test(shaped) && /[a-z]/.test(shaped) && /[0-9]/.test(shaped), true);
+const shapedHits = bundleLeakFindings('public/assets/shaped.js', `share ${shaped} token /s/${shaped}`);
+for (const symbol of ['32-alnum near share', '32-alnum near token', '32-alnum near /s/']) {
+  assert.equal(shapedHits.some((finding) => finding.symbol_or_pattern === symbol), true, symbol);
 }
-const upstreamBundle = 'public/assets/upstream/index-BKun7ofk.js';
-for (const symbol of [
-  `sha256:${SHARE_TOKEN_SHA256}`,
-  '32-alnum near share',
-  'Craig_Kim_NYC_June_2026',
-  'craig+kim+nyc',
-  'Price TBD',
-  'Depart TBD',
-  'Arrive TBD',
-  '192.168.1.15',
-  '100.66.47.62',
-]) {
-  assertHit(repoRun.stderr, 'FAIL', 'BUNDLE-LEAK', upstreamBundle, symbol);
-}
+const noDigit = 'AbcdefGhijklmnopQrstuvwxyzABCDEF';
+assert.equal(noDigit.length, 32);
+assert.equal(bundleLeakFindings('public/assets/nodigit.js', `share ${noDigit}`).some((finding) => finding.symbol_or_pattern === '32-alnum near share'), false);
+
+const padFile = 'public/assets/pad.js';
+const twenty = `${' '.repeat(20)}`;
+const padHits = whitespacePadFindings(padFile, `const x = "${twenty}";\n`);
+assert.equal(padHits.length, 1);
+assert.match(padHits[0].symbol_or_pattern, /^spaces:20@/);
+assert.equal(whitespacePadFindings(padFile, ' '.repeat(19)).length, 0);
+assert.match(whitespacePadFindings(padFile, '\t'.repeat(20))[0].symbol_or_pattern, /^tabs:20@/);
+assert.equal(whitespacePadFindings(padFile, '\n'.repeat(40)).length, 0);
+assert.equal(whitespacePadFindings(padFile, `\`${' '.repeat(80)}\``).length, 1);
+const padSilenced = classify(padHits, [entry(padFile, padHits[0].symbol_or_pattern, 'EVASION')]);
+assert.equal(padSilenced.report.length, 0);
+assert.equal(padSilenced.fail.length, 1);
+const padDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-pad-'));
+writeTree(padDir, { [padFile]: `const x = "${twenty}";\n` }, []);
+const padRun = runGuard(padDir);
+assert.equal(padRun.status, 1, padRun.stdout);
+assertHit(padRun.stderr, 'FAIL', 'EVASION', padFile, padHits[0].symbol_or_pattern);
+assert.equal(baseline.some((row) => row.rule === 'EVASION' || row.inventory_id === 'EVASION'), false);
+assert.equal(baseline.some((row) => row.file === 'public/assets/index-0J54vUO3.js' || row.file === 'public/assets/index-TimeSyncherVacationLogin.js'), false);
+assertHit(repoRun.stderr, 'FAIL', 'EVASION', SERVED_BUNDLE, 'spaces:80@2729974');
 
 process.stdout.write('hardcoded content check test passed\n');

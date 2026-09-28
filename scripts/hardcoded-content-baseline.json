@@ -49,20 +49,6 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "public/assets/index-0J54vUO3.js",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D3",
-    "inventory_id": "D3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "public/assets/index-TimeSyncherVacationLogin.js",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D3",
-    "inventory_id": "D3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "public/ts-timeline-icon-patch.js",
     "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "inventory:A21",
@@ -2119,20 +2105,6 @@
     "inventory_id": "FIXED-ADDRESS",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "FIXED-ADDRESS"
-  },
-  {
-    "file": "public/assets/index-0J54vUO3.js",
-    "symbol_or_pattern": "Price TBD",
-    "inventory_id": "BUNDLE-SCAN",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "BUNDLE-SCAN"
-  },
-  {
-    "file": "public/assets/index-TimeSyncherVacationLogin.js",
-    "symbol_or_pattern": "Price TBD",
-    "inventory_id": "BUNDLE-SCAN",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "BUNDLE-SCAN"
   },
   {
     "file": "public/ts-timeline-icon-patch.js",
