@@ -1,4 +1,3 @@
 #!/bin/sh
 cd "$(git rev-parse --show-toplevel)" || exit 1
 node scripts/check-evidence-secrets.mjs
-node scripts/check-g2b-reply-literals.mjs

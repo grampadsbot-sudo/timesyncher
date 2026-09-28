@@ -28,7 +28,6 @@
     "bind:thing-media": "node scripts/bind-thing-media.mjs",
     "test:openclaw-control": "node scripts/test_openclaw_control.mjs",
     "test:reply-trip-data": "node scripts/test_trip_literal_ban_g2a.mjs",
-    "check:g2b-reply-literals": "node scripts/check-g2b-reply-literals.mjs",
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
     "migration:apply-vacation-schema": "node scripts/apply_vacation_schema.mjs",
