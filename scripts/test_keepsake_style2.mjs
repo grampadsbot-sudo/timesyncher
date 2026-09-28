@@ -31,7 +31,7 @@ import {
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
+import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
@@ -154,7 +154,7 @@ for (const file of await readdir(new URL('../public/ts-thing-logos/', import.met
   }
 }
 
-const paddedLogos = applyCapturedLogos(padKeepsakeSharedPlaces(shared));
+const paddedLogos = applyCapturedLogos(shared);
 for (const place of paddedLogos.places) {
   const logo = paddedLogos.thingOverrides[`place:${place.id}`]?.logoUrl || place.logoUrl;
   assert.equal(isPlaceholderLogoUrl(logo), false, `padded ${place.name} has a real logo`);
@@ -721,14 +721,6 @@ assert.equal(padKeepsakeListNames('Restaurants', [
 ]).length, 11);
 assert.equal(padKeepsakeListNames('Stores', [{ name: 'Cosmopolitan shops' }]).length, 9);
 assert.equal(padKeepsakeListNames('Shows, Tours and the Rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
-const paddedShared = padKeepsakeSharedPlaces(liveOverride);
-const paddedBuckets = keepsakeListBuckets(paddedShared);
-assert.ok(paddedBuckets.Restaurants.length >= KEEPSAKE_LIST_MINIMUMS.Restaurants);
-assert.ok(paddedBuckets.Stores.length >= KEEPSAKE_LIST_MINIMUMS.Stores);
-assert.ok(paddedBuckets['Shows, Tours and the Rest'].length >= KEEPSAKE_LIST_MINIMUMS['Shows, Tours and the Rest']);
-assert.match(paddedShared.thingOverrides['place:941001'].summary, /Mon Ami Gabi|steak-frites|Vegas/i);
-assert.equal(paddedShared.thingOverrides['place:941001'].timeline, false);
-assert.ok(paddedShared.places.some((place) => place.__tsKeepsakeFill === 1 && place.lat));
 const liveRestaurants = [
   { name: 'Carbone at Aria' },
   { name: 'Shake Shack near Cosmo/Aria' },

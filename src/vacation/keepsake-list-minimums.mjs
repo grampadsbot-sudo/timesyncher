@@ -1,5 +1,4 @@
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../../scripts/vacation-public-research-worker.mjs';
-import { captureThingLogo } from './thing-logo-capture.mjs';
 
 /** Print end-lists only. Do not invent other mins. */
 export const KEEPSAKE_LIST_MINIMUMS = {
@@ -285,64 +284,3 @@ function catalogForShared(shared = {}) {
   };
 }
 
-export function padKeepsakeSharedPlaces(shared = {}) {
-  const catalog = catalogForShared(shared);
-  const next = {
-    ...shared,
-    places: Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [],
-    thingOverrides: shared.thingOverrides && typeof shared.thingOverrides === 'object'
-      ? { ...shared.thingOverrides }
-      : {},
-  };
-  const existingByBucket = {
-    Restaurants: [],
-    Stores: [],
-    'Shows, Tours and the Rest': [],
-  };
-  for (const place of next.places) {
-    const bucket = listBucketForPlace(place);
-    if (existingByBucket[bucket]) existingByBucket[bucket].push(place);
-  }
-  for (const [bucket, meta] of Object.entries(FILL_BUCKET_META)) {
-    const extras = padKeepsakeListNames(bucket, existingByBucket[bucket] || [], catalog.fill);
-    extras.forEach((name, index) => {
-      const detail = catalog.details[name] || {};
-      const id = meta.baseId + index + 1;
-      const lat = Number(detail.lat) || catalog.fallbackLat;
-      const lng = Number(detail.lng) || catalog.fallbackLng;
-      const summary = detail.summary || `${name} — ${catalog.fallbackAddress} first-pass catalog.`;
-      const address = detail.address || catalog.fallbackAddress;
-      const happyHour = /Ulu Ocean Grill/i.test(name);
-      next.places.push({
-        id,
-        name,
-        __tsKeepsakeFill: 1,
-        category_id: meta.category_id,
-        category_name: meta.category_name,
-        category: { id: meta.category_id, name: meta.category_name, icon: meta.icon },
-        category_icon: meta.icon,
-        lat,
-        lng,
-        address,
-        notes: summary,
-        description: summary,
-        logoUrl: captureThingLogo({ name }, { title: name, category: meta.kind }),
-      });
-      next.thingOverrides[`place:${id}`] = {
-        ...(next.thingOverrides[`place:${id}`] || {}),
-        title: name,
-        category: meta.kind,
-        summary,
-        longDetails: summary,
-        lat,
-        lng,
-        address,
-        timeline: false,
-        happyHour: happyHour ? true : undefined,
-        happyHourDetails: happyHour ? 'Ocean bar happy hour at Ulu Ocean Grill, Four Seasons Hualalai.' : undefined,
-        logoUrl: captureThingLogo({ name }, { title: name, category: meta.kind }),
-      };
-    });
-  }
-  return next;
-}

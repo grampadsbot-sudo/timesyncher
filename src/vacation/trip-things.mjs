@@ -1,4 +1,4 @@
-const PLACE_SOURCES = new Set(['prior_db', 'foursquare_os', 'osm', 'brave']);
+const PLACE_SOURCES = new Set(['prior_db', 'foursquare_os', 'osm', 'brave', 'tavily']);
 
 export function tripThingSource(thing) {
   const source = String(thing?.source || '').trim();

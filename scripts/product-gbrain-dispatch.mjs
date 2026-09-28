@@ -1901,14 +1901,20 @@ async function buildArtifacts(job, manifest) {
     lat: asObject(payload.house).lat ?? payload.houseLat,
     lng: asObject(payload.house).lng ?? payload.houseLng,
   });
+  const jobInput = asObject(job.input);
+  const wantedThings = Array.isArray(jobInput.wantedThings)
+    ? jobInput.wantedThings
+    : (Array.isArray(payload.wantedThings) ? payload.wantedThings : []);
+  const intakeEvent = jobInput.intakeEvent ?? payload.intakeEvent ?? null;
   const publicResearch = await runPublicResearch({
+    wantedThings,
+    intakeEvent,
     artifacts: {
       requestText,
       vacationName,
       unforgettableGoal,
       destination,
       dates,
-      lodgingLane: lane,
       lodging: stay.text,
       house: stay.lat !== null ? { lat: stay.lat, lng: stay.lng } : undefined,
     },
@@ -1920,11 +1926,8 @@ async function buildArtifacts(job, manifest) {
   if (live) {
     const gate = firstPassMissingMinimums(researchedThings, publicResearch.firstPassMinimums);
     if (!Object.keys(gate.missing).length) assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
-  } else if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE !== '1') {
-    assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
-    if (publicResearch.status !== 'source_backed_research_complete') {
-      throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
-    }
+  } else if (publicResearch.status !== 'no_wanted_things') {
+    throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
   }
   const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal, destination, dates, researchedThings, createNewTrip });
   const webItineraryUrl = trekSync.url;
@@ -2000,7 +2003,7 @@ async function buildArtifacts(job, manifest) {
       note: live
         ? `Trip intake saved ${(publicResearch.things || []).length} places. Sources: ${JSON.stringify(publicResearch.sourceCounts || {})}`
         : `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
-      metadata: { destination: destination || null, lodgingLane: lane.primary, requestedAt, webItineraryUrl: webItineraryUrl || null },
+      metadata: { destination: destination || null, requestedAt, webItineraryUrl: webItineraryUrl || null },
     },
   ];
 

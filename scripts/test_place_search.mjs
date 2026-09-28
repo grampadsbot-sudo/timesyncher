@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
-import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { DEFAULT_FIRST_PASS_MINIMUMS, runPublicResearch } from './vacation-public-research-worker.mjs';
 import {
   PlaceSearchError,
-  SEARCH_TARGETS,
   destinationFromChat,
   fillTripIntake,
   lodgingFromChat,
   mergePlaces,
+  queriesFromWantedThings,
   readPriorPlaces,
   searchPlaces,
   selectPriorPlaces,
-  wantedSearchQueries,
 } from '../src/vacation/place-search.mjs';
 
 const ENV = {
@@ -28,6 +28,16 @@ function placeEnv(env = ENV) {
   };
 }
 const CENTER = { lat: 38.7223, lng: -9.1393 };
+const PLACE_WANTED = [
+  { name: 'restaurant', kind: 'restaurant' },
+  { name: 'store', kind: 'store' },
+  { name: 'attraction', kind: 'activity' },
+];
+const POKE_WANTED = [
+  { name: 'poke', kind: 'activity' },
+  { name: 'grocery store', kind: 'store' },
+  { name: 'restaurant', kind: 'restaurant' },
+];
 
 function jsonResponse(body, status = 200) {
   return {
@@ -44,6 +54,7 @@ function callKind(url) {
   if (value.includes('places-api.foursquare.com')) return 'foursquare_os';
   if (value.includes('overpass-api.de')) return 'osm';
   if (value.includes('api.search.brave.com/res/v1/local/place_search')) return 'brave';
+  if (value.includes('api.tavily.com')) return 'tavily';
   if (value.includes('googleapis.com') || value.includes('places.google')) return 'google';
   return value;
 }
@@ -162,6 +173,7 @@ const prior = [{
 const recorded = recordingFetch(lisbonRoutes, events);
 const found = await searchPlaces({
   destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
   env: placeEnv(),
   fetchImpl: recorded.fetchImpl,
   loadPriorPlaces: async () => {
@@ -208,6 +220,7 @@ const blockedFetch = async () => {
 await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
     env: placeEnv({ FOURSQUARE_SERVICE_KEY: 'fsq-test-key' }),
     fetchImpl: blockedFetch,
   }),
@@ -221,6 +234,7 @@ await assert.rejects(
 await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
     env: placeEnv({ BRAVE_SEARCH_API_KEY: 'brave-test-key' }),
     fetchImpl: blockedFetch,
   }),
@@ -239,6 +253,7 @@ const emptyLive = recordingFetch((url) => {
 await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
     env: placeEnv(),
     fetchImpl: emptyLive.fetchImpl,
     priorPlaces: prior,
@@ -252,6 +267,7 @@ await assert.rejects(
 await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
     env: placeEnv(),
     fetchImpl: emptyLive.fetchImpl,
     priorPlaces: [],
@@ -266,6 +282,7 @@ const failedCalls = [];
 await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
     env: placeEnv(),
     priorPlaces: prior,
     fetchImpl: async (url, options) => {
@@ -287,6 +304,7 @@ const geocodeCalls = [];
 await assert.rejects(
   () => searchPlaces({
     destination: 'Nowhereville',
+    wantedThings: PLACE_WANTED,
     env: placeEnv(),
     priorPlaces: [],
     fetchImpl: async (url) => {
@@ -304,6 +322,7 @@ assert.deepEqual(geocodeCalls, ['nominatim']);
 
 const fill = await fillTripIntake({
   destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
   env: placeEnv(),
   fetchImpl: recordingFetch(lisbonRoutes).fetchImpl,
   loadPriorPlaces: async () => prior,
@@ -371,23 +390,28 @@ assert.deepEqual(lodgingFromChat('staying at the Jockey Club in Lisbon'), {
 });
 assert.equal(lodgingFromChat('', { lat: 36.11, lng: -115.17 }).lat, 36.11);
 
-const intentQueries = wantedSearchQueries('we want poke and a grocery store in Lisbon');
+const intentQueries = queriesFromWantedThings(POKE_WANTED);
 assert.deepEqual(intentQueries.map((query) => [query.category, query.q, query.limit]), [
-  ['activity', 'poke', SEARCH_TARGETS.activity],
-  ['store', 'grocery store', SEARCH_TARGETS.store],
-  ['restaurant', 'restaurant', SEARCH_TARGETS.restaurant],
+  ['activity', 'poke', DEFAULT_FIRST_PASS_MINIMUMS.rest],
+  ['store', 'grocery store', DEFAULT_FIRST_PASS_MINIMUMS.store],
+  ['restaurant', 'restaurant', DEFAULT_FIRST_PASS_MINIMUMS.restaurant],
 ]);
-assert.deepEqual(SEARCH_TARGETS, { restaurant: 15, store: 10, activity: 15 });
+assert.deepEqual(DEFAULT_FIRST_PASS_MINIMUMS, { restaurant: 15, store: 10, rest: 15 });
 assert.equal(intentQueries.some((query) => /huggo|bellagio|kona brewing|catch las vegas|speedishuttle/i.test(query.q)), false);
-const bareQueries = wantedSearchQueries('');
-assert.deepEqual(bareQueries.map((query) => query.q), ['restaurant', 'store', 'attraction']);
-assert.equal(bareQueries.find((query) => query.category === 'store').limit, 10);
+assert.deepEqual(queriesFromWantedThings([]), []);
+assert.deepEqual(queriesFromWantedThings([{ name: '', kind: 'restaurant' }]), []);
+const placeSource = fs.readFileSync(new URL('../src/vacation/place-search.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(placeSource, /SEARCH_TARGETS|DEFAULT_QUERIES|wantedSearchQueries/);
+assert.doesNotMatch(placeSource, /DEFAULT_FIRST_PASS_MINIMUMS/);
+assert.match(placeSource, /firstPassSearchLimit/);
+assert.match(placeSource, /queriesFromWantedThings/);
+assert.match(placeSource, /searchTavily/);
 
 const lodgingEvents = [];
 const lodgingSearch = await searchPlaces({
   destination: 'Lisbon',
   lodging: 'Jockey Club',
-  requestText: 'we want poke and a grocery store',
+  wantedThings: POKE_WANTED,
   env: placeEnv(),
   priorPlaces: [],
   fetchImpl: async (url) => {
@@ -425,12 +449,13 @@ assert.equal(lodgingEvents.includes('brave'), true);
 assert.equal(lodgingSearch.center.geocoded, 'lodging');
 assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['poke', 'grocery store', 'restaurant']);
 assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave poke' && place.source === 'brave'), true);
-assert.equal(lodgingSearch.places.length < SEARCH_TARGETS.restaurant, true);
+assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
 assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
 
 const manyFsq = [];
 const braveAfterMany = await searchPlaces({
   destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
   env: placeEnv(),
   priorPlaces: [],
   fetchImpl: async (url) => {
@@ -462,6 +487,7 @@ const fallbackEvents = [];
 const lodgingMiss = await searchPlaces({
   destination: 'Lisbon',
   lodging: 'Missing House',
+  wantedThings: PLACE_WANTED,
   env: placeEnv(),
   priorPlaces: [],
   fetchImpl: async (url) => {
@@ -490,6 +516,7 @@ assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
 const workerEvents = [];
 const workerFetch = recordingFetch(lisbonRoutes, workerEvents);
 const research = await runPublicResearch({
+  wantedThings: PLACE_WANTED,
   artifacts: { destination: 'Lisbon', requestText: 'vacation in Lisbon' },
   env: placeEnv(),
   priorPlaces: [],
@@ -517,6 +544,7 @@ assert.doesNotMatch(braveQuery, /near /);
 
 await assert.rejects(
   () => runPublicResearch({
+    wantedThings: PLACE_WANTED,
     artifacts: { destination: 'Lisbon', requestText: 'restaurants in Lisbon' },
     env: {},
     priorPlaces: [],
@@ -525,6 +553,79 @@ await assert.rejects(
     },
   }),
   (error) => error instanceof PlaceSearchError && error.code === 'missing_key',
+);
+
+const quiet = await searchPlaces({
+  destination: 'Lisbon',
+  env: {},
+  fetchImpl: async () => {
+    throw new Error('empty wanted things must not fetch');
+  },
+});
+assert.deepEqual(quiet.places, []);
+assert.deepEqual(quiet.notes, []);
+const quietResearch = await runPublicResearch({
+  artifacts: { destination: 'Lisbon' },
+  env: {},
+  fetchImpl: async () => {
+    throw new Error('no wanted things must not fetch');
+  },
+});
+assert.equal(quietResearch.status, 'no_wanted_things');
+assert.deepEqual(quietResearch.things, []);
+
+const tavilyCalls = [];
+const flightSearch = await searchPlaces({
+  wantedThings: [{ name: 'morning flight', kind: 'flight' }],
+  env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
+  fetchImpl: async (url, options) => {
+    tavilyCalls.push(String(url));
+    assert.equal(String(url), 'https://api.tavily.com/search');
+    const body = JSON.parse(options.body);
+    assert.equal(body.query, 'morning flight');
+    assert.equal(options.headers.authorization, 'Bearer tavily-test-key');
+    return jsonResponse({
+      results: [{
+        title: 'Morning departure',
+        url: 'https://example.test/flight',
+        content: 'A published schedule.',
+        score: 0.8,
+      }],
+    });
+  },
+});
+assert.deepEqual(tavilyCalls, ['https://api.tavily.com/search']);
+assert.deepEqual(flightSearch.places, []);
+assert.equal(flightSearch.notes[0].source, 'tavily');
+assert.equal(flightSearch.notes[0].title, 'Morning departure');
+const flightFill = await fillTripIntake({
+  wantedThings: [{ name: 'morning flight', kind: 'flight' }],
+  env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
+  fetchImpl: async () => jsonResponse({
+    results: [{
+      title: 'Morning departure',
+      url: 'https://example.test/flight',
+      content: 'A published schedule.',
+      score: 0.8,
+    }],
+  }),
+});
+assert.equal(flightFill.things[0].source, 'tavily');
+assert.equal(flightFill.things[0].metadata.source, 'tavily');
+await assert.rejects(
+  () => searchPlaces({
+    wantedThings: [{ name: 'rental car', kind: 'car' }],
+    env: placeEnv(),
+    fetchImpl: async () => {
+      throw new Error('missing tavily key must not fetch');
+    },
+  }),
+  (error) => {
+    assert.equal(error instanceof PlaceSearchError, true);
+    assert.equal(error.code, 'missing_key');
+    assert.match(error.message, /TAVILY_API_KEY/);
+    return true;
+  },
 );
 
 console.log(JSON.stringify({

@@ -1,18 +1,12 @@
+import { firstPassSearchLimit } from '../../scripts/vacation-public-research-worker.mjs';
+import { searchTavily } from './poi-search.mjs';
+
 const RADIUS_METERS = 20000;
 const DEDUPE_METERS = 250;
 const USER_AGENT = 'TimeSyncherVacation/1.0';
 const PLACE_SOURCES = ['prior_db', 'foursquare_os', 'osm', 'brave'];
 const SOURCE_IDS = new Set(PLACE_SOURCES);
-export const SEARCH_TARGETS = {
-  restaurant: 15,
-  store: 10,
-  activity: 15,
-};
-const DEFAULT_QUERIES = [
-  { category: 'restaurant', q: 'restaurant' },
-  { category: 'store', q: 'store' },
-  { category: 'activity', q: 'attraction' },
-];
+const PLACE_KINDS = new Set(['restaurant', 'store', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
 const NOT_A_PLACE = /^(?:the|a|an|this|that|our|my|your|new|next|last|current|week|weeks|night|nights|day|days|morning|afternoon|evening|weekend|month|year|time|trip|trips|vacation|vacations|staycation|holiday|bot|staging|one|it|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)$/i;
 const PRIOR_CATEGORIES = new Map([
@@ -26,6 +20,7 @@ const PRIOR_CATEGORIES = new Map([
   ['attraction', 'activity'],
   ['tourism', 'activity'],
   ['event', 'activity'],
+  ['hotel', 'hotel'],
 ]);
 
 export class PlaceSearchError extends Error {
@@ -106,47 +101,36 @@ export function lodgingFromChat(requestText, hints = {}) {
   return { text: match ? cleanPlace(match[1]) : '', lat: null, lng: null };
 }
 
-function categoryForPhrase(phrase) {
-  if (/\b(restaurants?|cafes?|coffee|dining|dinner|lunch|breakfast|brunch|food|eater(?:y|ies)|eat)\b/i.test(phrase)) return 'restaurant';
-  if (/\b(stores?|shops?|shopping|grocer(?:y|ies)|markets?|boutiques?)\b/i.test(phrase)) return 'store';
-  if (/\b(activities|attractions?|museums?|beaches?|hikes?|tours?|sightseeing|things to do)\b/i.test(phrase)) return 'activity';
-  return '';
+function searchLimit(category) {
+  return firstPassSearchLimit(category);
 }
 
-function pushQuery(found, seen, category, q) {
-  const query = cleanPlace(q);
-  const key = `${category}:${normalizeName(query)}`;
-  if (!query || query.length < 2 || seen.has(key) || NOT_A_PLACE.test(query)) return;
-  seen.add(key);
-  found.push({ category, q: query, limit: SEARCH_TARGETS[category] });
-}
-
-export function wantedSearchQueries(requestText = '') {
-  const source = String(requestText || '').replace(/\s+/g, ' ').trim();
+export function queriesFromWantedThings(wantedThings = []) {
   const found = [];
   const seen = new Set();
-  const wantRe = /\b(?:want|wants|wanted|looking for|need|needs|find(?: me)?)\s+([^,.!?]{2,80}?)(?=\s+(?:in|near|around|at|for|with|please)\b|[,.!?]|$)/gi;
-  let match = wantRe.exec(source);
-  while (match) {
-    for (const part of match[1].split(/\s+(?:and|or|plus)\s+/i)) {
-      const phrase = cleanPlace(part);
-      if (!phrase || NOT_A_PLACE.test(phrase)) continue;
-      pushQuery(found, seen, categoryForPhrase(phrase) || 'activity', phrase);
-    }
-    if (match.index === wantRe.lastIndex) wantRe.lastIndex += 1;
-    match = wantRe.exec(source);
-  }
-  const mentionRe = /\b(restaurants?|cafes?|coffee shops?|grocery(?: stores?)?|groceries|shopping|stores?|shops?|markets?|museums?|beaches?|hikes?|tours?|attractions?|things to do)\b/gi;
-  match = mentionRe.exec(source);
-  while (match) {
-    const category = categoryForPhrase(match[1]);
-    if (category) pushQuery(found, seen, category, match[1]);
-    match = mentionRe.exec(source);
-  }
-  for (const item of DEFAULT_QUERIES) {
-    if (!found.some((query) => query.category === item.category)) pushQuery(found, seen, item.category, item.q);
+  for (const thing of wantedThings) {
+    const name = cleanPlace(thing?.name || thing?.title || '');
+    if (!name || name.length < 2 || NOT_A_PLACE.test(name)) continue;
+    const kind = String(thing?.kind || thing?.category || '').trim().toLowerCase();
+    const place = PLACE_KINDS.has(kind);
+    const category = place ? kind : (kind || 'decision');
+    const key = `${category}:${normalizeName(name)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    found.push({
+      category,
+      q: name,
+      limit: place ? searchLimit(category) : 5,
+      place,
+    });
   }
   return found;
+}
+
+function isPlaceQuery(item) {
+  if (item?.place === false) return false;
+  if (item?.place === true) return true;
+  return PLACE_KINDS.has(String(item?.category || '').toLowerCase());
 }
 
 export function distanceMeters(origin, point) {
@@ -283,7 +267,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
       query: item.q,
       ll: `${center.lat},${center.lng}`,
       radius: String(RADIUS_METERS),
-      limit: String(item.limit || SEARCH_TARGETS[item.category] || 15),
+      limit: String(item.limit || searchLimit(item.category)),
       fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed',
     });
     const payload = await readJson(
@@ -400,7 +384,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
       latitude: String(center.lat),
       longitude: String(center.lng),
       radius: String(RADIUS_METERS),
-      count: String(item.limit || SEARCH_TARGETS[item.category] || 15),
+      count: String(item.limit || searchLimit(item.category)),
     });
     const payload = await readJson(
       fetchImpl,
@@ -494,11 +478,35 @@ function priorRowsFromInput(priorPlaces) {
   });
 }
 
+function tavilyKeyFrom(env = {}) {
+  return String(env.tavily || env.TAVILY_API_KEY || '').trim();
+}
+
+async function queryTavily(fetchImpl, env, queries) {
+  const notes = [];
+  const key = tavilyKeyFrom(env);
+  for (const item of queries) {
+    const found = await searchTavily(item.q, { apiKey: key, env, fetchImpl });
+    for (const result of found.results) {
+      const title = String(result.title || '').trim();
+      if (!title) continue;
+      notes.push({
+        source: 'tavily',
+        title,
+        category: item.category,
+        url: result.url,
+        description: result.content || '',
+      });
+    }
+  }
+  return notes;
+}
+
 export async function searchPlaces({
   destination,
   lodging = '',
   lodgingPoint,
-  requestText = '',
+  wantedThings = [],
   queries,
   env = process.env,
   fetchImpl = globalThis.fetch,
@@ -506,37 +514,60 @@ export async function searchPlaces({
   loadPriorPlaces,
 } = {}) {
   const started = Date.now();
-  const missing = missingSearchKeys(env);
-  if (missing.length) {
-    fail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');
-  }
   const dest = String(destination || '').trim();
-  const searchQueries = Array.isArray(queries) && queries.length ? queries : wantedSearchQueries(requestText);
-  const center = await resolveCenter(fetchImpl, { lodging, lodgingPoint, destination: dest });
-  let prior = [];
-  if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), center);
-  else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
-  else prior = await readPriorPlaces(center, { env });
-  prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
-  const foursquare = await queryFoursquare(fetchImpl, env, center, searchQueries);
-  const osm = await queryOsm(fetchImpl, center);
-  const brave = await queryBrave(fetchImpl, env, center, searchQueries);
-  const places = mergePlaces([prior, foursquare, osm, brave]);
-  const liveCount = places.filter((place) => place.source !== 'prior_db').length;
-  if (!liveCount) {
-    fail(
-      places.length
-        ? 'Prior Things are not a sole source. Foursquare OS Places, OpenStreetMap, and Brave Place Search returned no places.'
-        : `Place search returned no places for ${dest || lodging || center.label}.`,
-      places.length ? 'prior_db_sole_source' : 'empty',
-    );
+  const searchQueries = Array.isArray(queries) && queries.length ? queries : queriesFromWantedThings(wantedThings);
+  const placeQueries = searchQueries.filter(isPlaceQuery);
+  const infoQueries = searchQueries.filter((item) => !isPlaceQuery(item));
+  if (!searchQueries.length) {
+    return {
+      destination: dest,
+      center: null,
+      places: [],
+      notes: [],
+      queries: [],
+      queried: [],
+      elapsedMs: Date.now() - started,
+      sourceCounts: countSources([]),
+    };
   }
+  if (placeQueries.length) {
+    const missing = missingSearchKeys(env);
+    if (missing.length) fail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');
+  }
+  if (infoQueries.length && !tavilyKeyFrom(env)) {
+    fail(`Search refused to run. Missing ${String(env.tavilyName || 'TAVILY_API_KEY')}.`, 'missing_key');
+  }
+  let center = null;
+  let places = [];
+  if (placeQueries.length) {
+    center = await resolveCenter(fetchImpl, { lodging, lodgingPoint, destination: dest });
+    let prior = [];
+    if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), center);
+    else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
+    else prior = await readPriorPlaces(center, { env });
+    prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
+    const foursquare = await queryFoursquare(fetchImpl, env, center, placeQueries);
+    const osm = await queryOsm(fetchImpl, center);
+    const brave = await queryBrave(fetchImpl, env, center, placeQueries);
+    places = mergePlaces([prior, foursquare, osm, brave]);
+    const liveCount = places.filter((place) => place.source !== 'prior_db').length;
+    if (!liveCount) {
+      fail(
+        places.length
+          ? 'Prior Things are not a sole source. Foursquare OS Places, OpenStreetMap, and Brave Place Search returned no places.'
+          : `Place search returned no places for ${dest || lodging || center.label}.`,
+        places.length ? 'prior_db_sole_source' : 'empty',
+      );
+    }
+  }
+  const notes = infoQueries.length ? await queryTavily(fetchImpl, env, infoQueries) : [];
   return {
-    destination: dest || center.label,
+    destination: dest || center?.label || '',
     center,
     places,
+    notes,
     queries: searchQueries,
-    queried: PLACE_SOURCES,
+    queried: infoQueries.length ? [...PLACE_SOURCES, 'tavily'] : PLACE_SOURCES,
     elapsedMs: Date.now() - started,
     sourceCounts: countSources(places),
   };
@@ -584,11 +615,49 @@ export function placeToResearchCandidate(place, destination = '') {
   };
 }
 
+export function noteToTripThing(note) {
+  return {
+    category: note.category,
+    subtype: 'tavily',
+    title: note.title,
+    description: note.description || '',
+    source: 'tavily',
+    location: {},
+    links: note.url ? [{ label: 'tavily', url: note.url }] : [],
+    ratings: {},
+    metadata: {
+      source: 'tavily',
+    },
+  };
+}
+
+export function noteToResearchCandidate(note, destination = '') {
+  return {
+    category: note.category,
+    source: 'tavily',
+    title: note.title,
+    summary: note.description || note.title,
+    details: note.description || '',
+    website: note.url || '',
+    address: '',
+    area: destination,
+    sourceBacked: Boolean(note.url),
+    sources: note.url ? [{ label: 'tavily', url: note.url }] : [],
+    metadata: {
+      source: 'tavily',
+    },
+  };
+}
+
 export async function fillTripIntake(options) {
   const search = await searchPlaces(options);
+  const notes = Array.isArray(search.notes) ? search.notes : [];
   return {
     search,
-    things: search.places.map(placeToTripThing),
-    researchedThings: search.places.map((place) => placeToResearchCandidate(place, search.destination)),
+    things: [...search.places.map(placeToTripThing), ...notes.map(noteToTripThing)],
+    researchedThings: [
+      ...search.places.map((place) => placeToResearchCandidate(place, search.destination)),
+      ...notes.map((note) => noteToResearchCandidate(note, search.destination)),
+    ],
   };
 }

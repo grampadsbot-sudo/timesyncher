@@ -87,70 +87,16 @@ export function loadAdapterRegistry(registryPath = DEFAULT_REGISTRY) {
   return { registry, errors };
 }
 
-export function approvedAdapters(registry, { includeFixtureOnly = false } = {}) {
+export function approvedAdapters(registry) {
   return (registry.adapters || []).filter((adapter) => {
     if (!adapter.enabled) return false;
     if (BLOCKED_CLASSES.has(adapter.safetyClass)) return false;
     if (!ALLOWED_ENABLED_CLASSES.has(adapter.safetyClass)) return false;
     if (adapter.allowsBookingOrPayment) return false;
-    if (adapter.fixtureOnly && !includeFixtureOnly) return false;
+    if (adapter.fixtureOnly) return false;
     if (adapter.kind === 'provider') return false;
     return true;
   });
-}
-
-function fixtureRecentTravelerSentiment(adapter, context = {}) {
-  const now = text(context.retrievedAt || new Date().toISOString(), 40);
-  const destination = text(context.destination || context.artifacts?.destination || 'the destination', 120);
-  const expiresAt = addDaysIso(now, 14);
-  return [{
-    category: 'decision',
-    title: `${destination} recent traveler sentiment check`,
-    summary: `Recent-traveler sentiment should be checked before final ranking so the itinerary avoids stale, overhyped, or logistically risky picks.`,
-    details: `Adapter fixture proving TimeSyncher can attach recent-sentiment quality metadata to Things. Live production should replace this with a registered read-only source such as last30days-style public chatter research, review-source trends, or destination-specific traveler reports.`,
-    website: 'https://github.com/mvanhorn/last30days-skill',
-    sources: [{
-      label: 'last30days skill pattern',
-      url: 'https://github.com/mvanhorn/last30days-skill',
-      retrievedAt: now,
-      adapterId: adapter.id,
-    }],
-    verificationStatus: 'source_checked',
-    sourceBacked: true,
-    caveats: ['Fixture sentiment adapter only; live traveler-sentiment source must be enabled separately after source-policy approval.'],
-    sourceCaveats: ['Fixture-only adapter proves schema and persistence; not a destination-specific recommendation.'],
-    adapterSources: [{
-      adapterId: adapter.id,
-      sourceId: 'last30days-pattern',
-      safetyClass: adapter.safetyClass,
-      fetchedAt: now,
-      status: 'fixture_source_checked',
-    }],
-    sourceQuality: {
-      sourceCount: 1,
-      adapterCount: 1,
-      safetyClass: adapter.safetyClass,
-      confidence: 'fixture',
-      lastVerifiedAt: now,
-      expiresAt,
-    },
-    qualitySignals: {
-      freshness: 'fixture_recent_sentiment_lane',
-      specificity: 'schema_proof',
-      caveatCount: 1,
-      recentSentiment: 'required_before_final_ranking',
-    },
-    fitScores: {
-      family: null,
-      couple: null,
-      solo: null,
-      weatherSensitive: null,
-      reservationDifficulty: null,
-      distanceRisk: null,
-    },
-    verifiedAt: now,
-    expiresAt,
-  }];
 }
 
 async function runHotelGoat(adapter, context = {}) {
@@ -287,10 +233,9 @@ async function runRoadsideAmerica(adapter, context = {}) {
 }
 
 export async function runApprovedSourceAdapters(input = {}) {
-  const includeFixtureOnly = Boolean(input.fixtureMode || input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE);
   const { registry, errors } = loadAdapterRegistry(input.registryPath || process.env.TIMESYNCHER_TRAVEL_SOURCE_ADAPTER_REGISTRY || DEFAULT_REGISTRY);
   if (errors.length) return { status: 'registry_invalid', adaptersRun: [], candidates: [], errors };
-  const adapters = approvedAdapters(registry, { includeFixtureOnly });
+  const adapters = approvedAdapters(registry);
   const candidates = [];
   const adaptersRun = [];
   const adapterErrors = [];
@@ -305,10 +250,7 @@ export async function runApprovedSourceAdapters(input = {}) {
     }
   }
   for (const adapter of adapters) {
-    if (adapter.id === 'fixture-recent-traveler-sentiment') {
-      candidates.push(...fixtureRecentTravelerSentiment(adapter, input));
-      adaptersRun.push({ adapterId: adapter.id, status: 'fixture_complete', safetyClass: adapter.safetyClass });
-    } else if (adapter.id === 'printingpress-wanderlust-goat') {
+    if (adapter.id === 'printingpress-wanderlust-goat') {
       adaptersRun.push({ adapterId: adapter.id, status: 'disabled_google_places_seed_removed', safetyClass: adapter.safetyClass, candidateCount: 0 });
     } else if (adapter.id === 'printingpress-hotel-goat') {
       await runAdapter(adapter, () => runHotelGoat(adapter, input), 'skipped_missing_destination_or_dates');
