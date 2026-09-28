@@ -1,0 +1,21 @@
+# Offline unit tests. One scripts/test_*.mjs path per line.
+scripts/test_access_plan_checkout.mjs
+scripts/test_api_route_bundle.mjs
+scripts/test_bind_thing_media.mjs
+scripts/test_build_used_vs_tip.mjs
+scripts/test_check_hardcoded_content.mjs
+scripts/test_checkout_coupons.mjs
+scripts/test_evidence_secrets.mjs
+scripts/test_first_pass_minimums.mjs
+scripts/test_live_transcript_dialog_pdf.mjs
+scripts/test_offline_manifest.mjs
+scripts/test_poi_search.mjs
+scripts/test_real_app_entry.mjs
+scripts/test_screenshot_journey_pdf.mjs
+scripts/test_tg_intake_gbrain.mjs
+scripts/test_timeline_icons.mjs
+scripts/test_vacation_app_shell.mjs
+scripts/test_vacation_collaborators.mjs
+scripts/test_vacation_telegram_intake.mjs
+scripts/test_vacation_web_access.mjs
+scripts/test_void_stale_build.mjs
