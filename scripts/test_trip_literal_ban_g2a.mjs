@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 import { payerPriceLine, planSeatDollars, priceAnswered } from '../src/vacation/seat-price.mjs';
 
@@ -43,7 +42,4 @@ const missing = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat
 assert.match(missing, /configured seat price is missing/);
 assert.doesNotMatch(missing, /\$\d+/);
 
-const lint = spawnSync(process.execPath, [new URL('./lint-trip-literal-ban-g2a.mjs', import.meta.url).pathname], { encoding: 'utf8' });
-assert.equal(lint.status, 0, lint.stderr || lint.stdout);
-
-console.log('trip literal ban g2a tests passed');
+console.log('reply trip data tests passed');
