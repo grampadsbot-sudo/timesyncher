@@ -9,12 +9,16 @@ import {
 const KINDS = new Set(['activity', 'restaurant', 'hotel', 'flight', 'car', 'store']);
 const INTAKE_THRESHOLD = 0.5;
 
+const ROSTER_ROLES = new Set(['owner', 'collaborator', 'child', 'viewer', 'editor']);
+
 const THING_SYSTEM = [
   'Extract what the customer wants from one vacation chat message.',
-  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}]}.',
+  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.',
   'name is their wording for one wanted item. kind is activity, restaurant, hotel, flight, car, or store.',
   'who is a person they named for that item, or an empty string. when is a time they stated for that item, or an empty string.',
-  'List only items this message asks for. Do not invent items, names, or times.',
+  'roster lists people this message names. role is owner, collaborator, child, viewer, or editor. age is a number only when they stated a child age, otherwise null.',
+  'Also return "destination" as a place they named or an empty string, "hasDates" as true only when they stated a date, range, or trip length, and "title" as a trip name they stated or an empty string.',
+  'List only items and people this message asks for. Do not invent items, names, times, people, places, dates, or a title.',
 ].join(' ');
 
 function clean(value, max) {
@@ -38,14 +42,38 @@ function chatText(body) {
   return '';
 }
 
-function parseThingList(raw) {
+function parseExtraction(raw) {
   const trimmed = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim();
   const start = trimmed.indexOf('{');
   const end = trimmed.lastIndexOf('}');
   if (start < 0 || end <= start) throw new Error('trip intake extraction was not JSON');
   const parsed = JSON.parse(trimmed.slice(start, end + 1));
-  if (!Array.isArray(parsed?.things)) throw new Error('trip intake extraction missing things');
-  return parsed.things;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('trip intake extraction was not JSON');
+  if (!Array.isArray(parsed.things)) throw new Error('trip intake extraction missing things');
+  return {
+    things: parsed.things,
+    roster: Array.isArray(parsed.roster) ? parsed.roster : [],
+    destination: parsed.destination,
+    hasDates: parsed.hasDates === true,
+    title: parsed.title,
+  };
+}
+
+function cleanRoster(list) {
+  const people = [];
+  const seen = new Set();
+  for (const item of Array.isArray(list) ? list : []) {
+    const name = clean(item?.name, 120);
+    const role = clean(item?.role, 40).toLowerCase();
+    if (!name || !ROSTER_ROLES.has(role)) continue;
+    const key = `${role}:${name.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const rawAge = item?.age;
+    const age = rawAge === null || rawAge === undefined || rawAge === '' ? null : Number(rawAge);
+    people.push({ name, role, age: Number.isFinite(age) ? age : null });
+  }
+  return people;
 }
 
 const CHAT_EXTRACTION = 'chat_extraction';
@@ -121,6 +149,10 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
   const ok = classification?.ok === true;
   const intake = ok && classification.intake === true;
   const wantedThings = ok ? cleanThings(classification.things) : [];
+  const roster = ok ? cleanRoster(classification.roster) : [];
+  const destination = ok ? clean(classification.destination, 180) : '';
+  const title = ok ? clean(classification.title, 180) : '';
+  const hasDates = ok && classification.hasDates === true;
   return {
     intakeEvent: intake ? {
       kind: jobKind,
@@ -129,14 +161,30 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
       firstIntake: firstIntake === true,
     } : null,
     wantedThings,
+    roster,
+    rosterError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
+    destination,
+    hasDates,
+    title,
+    destinationError: ok ? (destination ? null : 'trip place was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
+    titleError: ok ? (title ? null : 'trip title was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
     intakeError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
   };
 }
 
 export async function classifyTripIntake({ text, env = process.env, fetchImpl = fetch } = {}) {
   const message = clean(text, 6000);
-  const failed = (error) => ({ ok: false, intake: false, things: [], error: clean(error, 300) || 'trip intake classification failed' });
-  if (!message) return { ok: true, intake: false, things: [], error: null };
+  const failed = (error) => ({
+    ok: false,
+    intake: false,
+    things: [],
+    roster: [],
+    destination: '',
+    hasDates: false,
+    title: '',
+    error: clean(error, 300) || 'trip intake classification failed',
+  });
+  if (!message) return { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null };
   const key = openRouterAppKey(env);
   if (!key) return failed('trip intake classifier needs an OpenRouter key');
   try {
@@ -160,9 +208,73 @@ export async function classifyTripIntake({ text, env = process.env, fetchImpl = 
         { role: 'user', content: message },
       ],
     }, 'TimeSyncher Vacation trip intake');
-    const things = cleanThings(parseThingList(chatText(extracted)));
-    return { ok: true, intake: score >= INTAKE_THRESHOLD, things, error: null };
+    const extractedFields = parseExtraction(chatText(extracted));
+    const things = cleanThings(extractedFields.things);
+    const roster = cleanRoster(extractedFields.roster);
+    return {
+      ok: true,
+      intake: score >= INTAKE_THRESHOLD,
+      things,
+      roster,
+      destination: clean(extractedFields.destination, 180),
+      hasDates: extractedFields.hasDates === true,
+      title: clean(extractedFields.title, 180),
+      error: null,
+    };
   } catch (error) {
     return failed(error?.message || error);
   }
+}
+
+export async function searchIntakePlace({ destination = '', title = '', query = '' } = {}) {
+  const placeQuery = clean(query || destination || title, 180);
+  if (!placeQuery) return { ok: false, error: 'trip place was not in the extraction' };
+  try {
+    const { runPublicResearch } = await import('../../scripts/vacation-public-research-worker.mjs');
+    const result = await runPublicResearch({
+      artifacts: { destination: placeQuery, requestText: placeQuery },
+    });
+    if (!Number(result?.sourceBackedCandidateCount)) {
+      return { ok: false, error: clean(result?.note || result?.status || 'live search returned no place', 300) };
+    }
+    return { ok: true, error: null };
+  } catch (error) {
+    return { ok: false, error: clean(error?.message || error, 300) || 'live search failed' };
+  }
+}
+
+export async function resolveIntakePlace({
+  destination = '',
+  title = '',
+  destinationError = null,
+  titleError = null,
+  searchImpl = searchIntakePlace,
+} = {}) {
+  const namedDestination = clean(destination, 180);
+  const namedTitle = clean(title, 180);
+  const query = namedDestination || namedTitle;
+  if (!query) {
+    return {
+      destination: '',
+      title: '',
+      destinationError: destinationError || 'trip place was not in the extraction',
+      titleError: titleError || 'trip title was not in the extraction',
+    };
+  }
+  let found;
+  try {
+    found = await searchImpl({ destination: namedDestination, title: namedTitle, query });
+  } catch (error) {
+    found = { ok: false, error: error?.message || error };
+  }
+  if (!found || found.ok !== true) {
+    const error = clean(found?.error || 'live search returned no place', 300);
+    return { destination: '', title: '', destinationError: error, titleError: error };
+  }
+  return {
+    destination: namedDestination,
+    title: namedTitle,
+    destinationError: namedDestination ? null : (destinationError || 'trip place was not in the extraction'),
+    titleError: namedTitle ? null : (titleError || 'trip title was not in the extraction'),
+  };
 }

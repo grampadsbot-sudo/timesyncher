@@ -42,7 +42,7 @@ import {
   applyCustomerNotes,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
-import { classifyTripIntake, mergeWantedThings, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   openCollaboratorAppSeats,
   recordDialogParty,
@@ -443,6 +443,12 @@ async function queueVacationAppTurn(db, session, trip, body) {
     liveTranscript: customerLive,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
+    roster: jobFields.roster,
+    rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
   const turnTag = classifyTurn({
@@ -496,6 +502,12 @@ async function queueVacationAppTurn(db, session, trip, body) {
       payload,
       intakeEvent: jobFields.intakeEvent,
       wantedThings: jobFields.wantedThings,
+      roster: jobFields.roster,
+      rosterError: jobFields.rosterError,
+      destination: jobFields.destination,
+      hasDates: jobFields.hasDates,
+      title: jobFields.title,
+      titleError: jobFields.titleError,
       intakeError: jobFields.intakeError,
     }})
     returning id
@@ -511,6 +523,12 @@ async function queueVacationAppTurn(db, session, trip, body) {
       env: process.env,
       intake: classification.ok === true && classification.intake === true,
       wantedThings: classification.ok === true ? classification.things : [],
+      roster: Array.isArray(classification.roster) ? classification.roster : [],
+      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
     });
   } catch (error) {
     produced = {
@@ -547,6 +565,12 @@ async function queueVacationAppTurn(db, session, trip, body) {
     reply: null,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
+    roster: jobFields.roster,
+    rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
   if (produced.status === 'interim' && produced.pending) {
@@ -616,6 +640,13 @@ async function queueVacationAppTurn(db, session, trip, body) {
       collaborator: Boolean(seat),
       speakerName,
       appReply: produced.reply,
+      roster: Array.isArray(classification.roster) ? classification.roster : [],
+      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+      askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
     },
     firstIntake ? requestText : '',
     classification.ok === true ? classification.things : [],
@@ -651,6 +682,7 @@ function thingView(row) {
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
+    askWhichDay: meta.askWhichDay === true,
     notes,
     collaboratorNotes,
   };
@@ -685,7 +717,7 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}) {
   const planned = thingsFromIntake(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
@@ -697,33 +729,46 @@ async function ensureIntakeItinerary(db, tripId, text, extracted) {
     party: priorParty,
     customerName: priorParty.primary?.name || '',
     turns: [{ role: 'customer', text }],
+    ...(Array.isArray(roster) || rosterError ? {
+      roster: Array.isArray(roster) ? roster : [],
+      rosterError,
+      askRoster: askRoster === true,
+    } : {}),
   });
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
-  if (span?.destination || span?.start) {
-    await db`
-      update trips
-      set title = case
-            when ${span.placeTitle || ''} <> '' and title in (
-              'Vacation', 'TimeSyncher Vacation Coupon Checkout', 'TimeSyncher Vacation Setup', 'TimeSyncher Vacation Admin Test'
-            ) then ${span.placeTitle || 'Vacation'}
-            else title
-          end,
-          destination = case
-            when coalesce(destination, '') = '' then ${span.destination || ''}
-            else destination
-          end,
-          start_date = coalesce(start_date, ${span.start || null}::date),
-          end_date = coalesce(end_date, ${span.end || null}::date),
-          status = case when status = 'onboarding' then 'planning' else status end,
-          metadata = coalesce(metadata, '{}'::jsonb) || ${{
-            intakeSpan: span.spanLabel || '',
-            intakeBadge: span.badge || '',
-            dialogParty: party,
-          }},
-          updated_at = now()
-      where id = ${tripId}
-    `;
-  }
+  const resolved = await resolveIntakePlace({
+    destination: extractedDestination,
+    title: extractedTitle,
+    destinationError,
+    titleError,
+    searchImpl,
+  });
+  const tripTitle = resolved.title;
+  const tripDestination = resolved.destination;
+  const missingTitle = tripTitle ? null : resolved.titleError;
+  const dated = span?.start ? 'yes' : '';
+  await db`
+    update trips
+    set title = case
+          when ${tripTitle} <> '' then ${tripTitle}
+          else title
+        end,
+        destination = case
+          when coalesce(destination, '') = '' and ${tripDestination} <> '' then ${tripDestination}
+          else destination
+        end,
+        start_date = coalesce(start_date, ${span?.start || null}::date),
+        end_date = coalesce(end_date, ${span?.end || null}::date),
+        status = case when status = 'onboarding' and ${dated} = 'yes' then 'planning' else status end,
+        metadata = coalesce(metadata, '{}'::jsonb) || ${{
+          ...(span?.spanLabel ? { intakeSpan: span.spanLabel, intakeBadge: span.badge || '' } : {}),
+          dialogParty: party,
+          ...(tripDestination ? { destinationSource: 'chat_extraction' } : { destinationError: resolved.destinationError }),
+          ...(tripTitle ? { titleSource: 'chat_extraction' } : { titleError: missingTitle }),
+        }},
+        updated_at = now()
+    where id = ${tripId}
+  `;
   for (const thing of planned) {
     await db`
       insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
@@ -734,6 +779,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted) {
           who: thing.who || '',
           whenLabel: thing.whenLabel || '',
           customerWhen: '',
+          askWhichDay: thing.askWhichDay === true,
           notes: thing.notes || [],
           collaboratorNotes: [],
         }}
@@ -743,8 +789,8 @@ async function ensureIntakeItinerary(db, tripId, text, extracted) {
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '', extracted = []) {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted);
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}, intakeText = '', extracted = []) {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl });
   const current = await loadTripThings(db, tripId);
   const wanted = thingsFromIntake(extracted);
   if (!current.length && !wanted.length) return current;
@@ -774,6 +820,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
             who: thing.who || '',
             whenLabel: thing.whenLabel || '',
             customerWhen: thing.customerWhen || '',
+            askWhichDay: thing.askWhichDay === true,
             notes: thing.notes || [],
             collaboratorNotes: thing.collaboratorNotes || [],
           }}
@@ -782,9 +829,9 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       continue;
     }
     if (JSON.stringify({
-      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who,
+      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who, askWhichDay: prior.askWhichDay === true,
     }) === JSON.stringify({
-      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who,
+      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who, askWhichDay: thing.askWhichDay === true,
     })) continue;
     await db`
       update trip_things
@@ -793,6 +840,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
             who: thing.who || '',
             whenLabel: thing.whenLabel || prior.whenLabel || '',
             customerWhen: thing.customerWhen || '',
+            askWhichDay: thing.askWhichDay === true,
             notes: thing.notes || [],
             collaboratorNotes: thing.collaboratorNotes || [],
           }},
@@ -907,7 +955,18 @@ async function handleVacationApp(req, res, db, url) {
         db,
         pending.tripId,
         pending.customerTurn,
-        { collaborator: pending.collaborator === true, speakerName: pending.speakerName || '', appReply: finished.reply },
+        {
+          collaborator: pending.collaborator === true,
+          speakerName: pending.speakerName || '',
+          appReply: finished.reply,
+          roster: Array.isArray(pending.roster) ? pending.roster : [],
+          rosterError: pending.rosterError || null,
+          askRoster: Boolean(pending.rosterError),
+          extractedDestination: pending.extractedDestination || '',
+          extractedTitle: pending.extractedTitle || '',
+          destinationError: pending.destinationError || null,
+          titleError: pending.titleError || null,
+        },
         pending.postIntake === true ? pending.customerTurn : '',
         pending.wantedThings || [],
       );
