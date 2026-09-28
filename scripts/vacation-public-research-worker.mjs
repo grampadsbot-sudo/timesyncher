@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs';
-import { execFile } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { promisify } from 'node:util';
-import { runApprovedSourceAdapters } from './travel-source-adapter-runner.mjs';
+import { runApprovedSourceAdapters, searchBraveAndTavily } from './travel-source-adapter-runner.mjs';
 import { jevRelevanceScore, scoreWebPoisInParallel, searchPois, synthesizeFromIds } from '../src/vacation/poi-search.mjs';
-
-const execFileAsync = promisify(execFile);
 
 const VALID_CATEGORIES = new Set(['hotel', 'flight', 'car', 'restaurant', 'store', 'activity', 'tour', 'event', 'transport', 'decision']);
 /** Per-category initial website fill. Not a total-of-8. Do not invent replacements. */
@@ -237,7 +233,7 @@ export function normalizeCandidate(raw = {}, context = {}) {
   const sourceQuality = {
     sourceCount: Number(raw.sourceQuality?.sourceCount || sources.length),
     adapterCount: Number(raw.sourceQuality?.adapterCount || Math.max(adapterCount, context.provider ? 1 : 0)),
-    safetyClass: text(raw.sourceQuality?.safetyClass || raw.safetyClass || (context.provider === 'live-grok-web-search' ? 'approved_public_search' : ''), 80),
+    safetyClass: text(raw.sourceQuality?.safetyClass || raw.safetyClass || (context.provider === 'brave-tavily' ? 'approved_public_search' : ''), 80),
     confidence: text(raw.sourceQuality?.confidence || (sources.length > 1 ? 'medium' : sourceBacked ? 'basic' : 'unverified'), 80),
     lastVerifiedAt: verifiedAt,
     expiresAt,
@@ -250,6 +246,7 @@ export function normalizeCandidate(raw = {}, context = {}) {
     ...(raw.qualitySignals && typeof raw.qualitySignals === 'object' ? raw.qualitySignals : {}),
   };
   return {
+    source: text(raw.source || '', 80),
     category,
     subtype: text(raw.subtype || '', 80),
     title: text(raw.title || raw.name || `${category} option`, 160),
@@ -319,35 +316,35 @@ function parseProviderCandidates(content) {
   return Array.isArray(parsed) ? parsed : Array.isArray(parsed.candidates) ? parsed.candidates : [];
 }
 
-async function runGrokResearch(input, queries, startedAt) {
-  if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE === '1') return null;
-  if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_PROVIDER && process.env.TIMESYNCHER_PUBLIC_RESEARCH_PROVIDER !== 'grok') return null;
-  const targetMinutes = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_TARGET_MINUTES || input.targetMinutes || 15);
-  const minMinutes = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_MINUTES || input.minMinutes || 10);
-  const prompt = [
-    'You are the paid Grok web_search provider for TimeSyncher Vacation public research.',
-    'Use only web_search. Return ONLY JSON with a top-level candidates array.',
-    'Every candidate must have category, title, summary, details, website, sources[{label,url}], verificationStatus, caveats, address, lat, lng.',
-    'First-pass minimums are mandatory unless the customer explicitly excludes a category: at least 15 restaurant candidates, 10 store candidates, and 15 The Rest candidates. The Rest means activities, wineries, sightseeing, tours, events, parks, kid-friendly stops, transport/logistics notes, and open decisions; do not count restaurants or stores as The Rest.',
-    'For every restaurant, store, activity, tour, event, winery, sightseeing stop, and park, include review1, review2, review3 with real sourced positive quote-style snippets or snippets from public review/search sources. Do not fabricate reviewer names or quotes.',
-    'For every restaurant, include happyHourDetails and happyHourSources. If no current/recent happy hour is found, set happyHour false and write: "No current happy-hour offer found in recent official/public sources as of YYYY-MM-DD; recheck before using for planning."',
-    'Use lat/lng coordinates centered on the actual place so the map can fit Caldwell/Boise instead of falling back.',
-    'Use public web sources only. Do not use Gmail, Google Calendar, Google Drive, private GBrain, shell, booking, payment, holds, purchases, or reservations.',
-    'Do not invent source URLs. If a detail needs checking, say so in caveats or verificationStatus.',
-    `Destination/context: ${JSON.stringify(input.artifacts || {})}`,
-    `Queries: ${JSON.stringify(queries)}`,
-    `Research duration target: ${minMinutes}-${targetMinutes} minutes. If provider runtime is shorter, still return only actually sourced candidates.`,
-  ].join('\n');
-  const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
-  const grokModel = process.env.TIMESYNCHER_GROK_MODEL || 'grok-composer-2.5-fast';
-  const command = 'cd /tmp && exec "$2" -p "$1" --tools web_search --disallowed-tools run_terminal_cmd --output-format plain --no-alt-screen --permission-mode dontAsk --model "$3" --max-turns 20';
-  const { stdout } = await execFileAsync('sudo', ['-n', '-u', 'ubishere9995', 'bash', '-lc', command, 'grok-vacation-worker', prompt, grokBin, grokModel], {
-    timeout: Number(process.env.TIMESYNCHER_GROK_TIMEOUT_MS || 900000),
-    maxBuffer: 4 * 1024 * 1024,
-  });
-  const elapsed = Date.now() - startedAt;
-  if (elapsed < minMinutes * 60_000 && process.env.TIMESYNCHER_PUBLIC_RESEARCH_ENFORCE_MINUTES === '1') await sleep(minMinutes * 60_000 - elapsed);
-  return { provider: 'live-grok-web-search', rawCandidates: parseProviderCandidates(stdout) };
+function researchEnv(input = {}) {
+  return input.env || process.env;
+}
+
+function liveResearchDisabled(input = {}) {
+  return researchEnv(input).TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE === '1';
+}
+
+function searchCredentials(input = {}) {
+  const env = researchEnv(input);
+  return {
+    fetchImpl: input.fetchImpl,
+    braveKey: env.BRAVE_SEARCH_API_KEY || env.BRAVE_API_KEY || '',
+    tavilyKey: env.TAVILY_API_KEY || '',
+    braveName: 'BRAVE_SEARCH_API_KEY',
+    tavilyName: 'TAVILY_API_KEY',
+  };
+}
+
+async function runBraveTavilyResearch(input, queries, startedAt) {
+  if (liveResearchDisabled(input)) return null;
+  const credentials = searchCredentials(input);
+  const rawCandidates = [];
+  for (const item of queries) {
+    const found = await searchBraveAndTavily(item.query, { ...credentials, category: item.category });
+    rawCandidates.push(...found);
+  }
+  if (!rawCandidates.length) throw new Error('Brave and Tavily returned no public results.');
+  return { provider: 'brave-tavily', rawCandidates, elapsedMs: Date.now() - startedAt };
 }
 
 async function runPerplexityResearch(input, queries, startedAt) {
@@ -397,6 +394,7 @@ function poiCandidate(poi, { destination, retrievedAt }) {
   const url = publicUrl(poi.url);
   const restaurant = category === 'restaurant';
   return {
+    source: text(poi.source || '', 80),
     category,
     title: poi.name,
     summary: `${poi.name} is listed in the house-radius ${poi.category || category} results.`,
@@ -483,29 +481,23 @@ export async function runPublicResearch(input = {}) {
         providerError = providerError || error;
       }
     }
-    if (!provider) {
-      try {
-        provider = await runGrokResearch(input, queries, startedAt);
-      } catch (error) {
-        providerError = providerError || error;
-      }
-    }
+    if (!provider) provider = await runBraveTavilyResearch(input, queries, startedAt);
     if (providerError && !provider) {
       return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: `Approved public research provider failed or is unavailable: ${text(providerError.message, 500)}` };
     }
   }
   if (!provider) {
-    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after the house-radius POI database, Brave when that database is thin, explicit Perplexity fallback, and paid Ubuntu Grok web_search fallback. Pass a house or lodging lat/lng, set BRAVE_SEARCH_API_KEY or BRAVE_API_KEY for thin asks, set PERPLEXITY_API_KEY when needed, or pass a fixture for smoke tests.' };
+    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after the house-radius POI database, Brave when that database is thin, and explicit Perplexity fallback. The last resort is Brave and Tavily. Set BRAVE_SEARCH_API_KEY and TAVILY_API_KEY or the search refuses to run.' };
   }
   const candidates = provider.rawCandidates
     .map((candidate) => normalizeCandidate(candidate, { provider: provider.provider, retrievedAt, destination }))
     .filter((candidate) => candidate.sourceBacked && candidate.title && candidate.summary);
   const adapterRun = await runApprovedSourceAdapters({
-    mode: input.mode,
-    fixtureMode: input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE,
     artifacts,
     destination,
     retrievedAt,
+    allowWebSearch: !liveResearchDisabled(input),
+    ...searchCredentials(input),
   });
   const adapterCandidates = (adapterRun.candidates || [])
     .map((candidate) => normalizeCandidate(candidate, { provider: 'travel-source-adapter-runner', retrievedAt, destination }))

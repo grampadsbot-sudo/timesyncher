@@ -4,8 +4,6 @@
  */
 
 const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-const GENERIC_NAME = /^(kona|big island|hawaii|car rentals|oahu)$/i;
-const AIRLINES = ['Hawaiian', 'United', 'Alaska', 'Delta', 'American', 'Southwest', 'JetBlue'];
 
 export const POI_RADIUS_METERS = {
   grocery: 8000,
@@ -101,7 +99,7 @@ export function searchFsqRecords(records = [], { origin, radiusMeters, category 
     category,
     source: 'fsq-os-places',
     url: record.website || `https://opensource.foursquare.com/os-places/${encodeURIComponent(record.id || record.fsq_id)}`,
-  })).filter((poi) => poi.id !== 'fsq:' && poi.name && !GENERIC_NAME.test(poi.name));
+  })).filter((poi) => poi.id !== 'fsq:' && poi.name);
 }
 
 export function overpassQuery({ lat, lng, radiusMeters, category }) {
@@ -129,7 +127,7 @@ export function parseOverpass(payload, category) {
       source: 'osm',
       url: element.type && element.id ? `https://www.openstreetmap.org/${element.type}/${element.id}` : '',
     };
-  }).filter((poi) => poi.name && Number.isFinite(poi.lat) && Number.isFinite(poi.lng) && !GENERIC_NAME.test(poi.name));
+  }).filter((poi) => poi.name && Number.isFinite(poi.lat) && Number.isFinite(poi.lng));
 }
 
 function bravePois(payload, category) {
@@ -142,7 +140,7 @@ function bravePois(payload, category) {
     category,
     source: 'brave',
     url: String(result.url || ''),
-  })).filter((poi) => poi.url && poi.name && !GENERIC_NAME.test(poi.name));
+  })).filter((poi) => poi.url && poi.name);
 }
 
 async function fetchBrave(fetchImpl, braveKey, origin, category) {
@@ -234,59 +232,29 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '' } 
 }
 
 export async function scoreWebPoisInParallel(pois, scoreOne, { concurrency = 20 } = {}) {
-  const structured = pois.filter((poi) => poi.source !== 'brave');
-  const web = pois.filter((poi) => poi.source === 'brave');
   let cursor = 0;
   const kept = [];
   async function worker() {
-    while (cursor < web.length) {
+    while (cursor < pois.length) {
       const index = cursor;
       cursor += 1;
-      const score = await scoreOne(web[index]);
-      if (Number(score) >= 3) kept.push({ ...web[index], jevScore: Number(score) });
+      const poi = pois[index];
+      const score = Number(await scoreOne(poi));
+      if (score === 0) {
+        kept.push(poi);
+        continue;
+      }
+      if (score >= 3) kept.push({ ...poi, jevScore: score });
     }
   }
-  const workers = Math.min(concurrency, web.length);
+  const workers = Math.min(concurrency, pois.length);
   if (workers > 0) await Promise.all(Array.from({ length: workers }, () => worker()));
-  return [...structured, ...kept];
+  return kept;
 }
 
 export function synthesizeFromIds(ids = [], pois = []) {
   const byId = new Map(pois.map((poi) => [poi.id, poi]));
-  return ids.map((id) => byId.get(id)).filter((poi) => poi && !GENERIC_NAME.test(poi.name));
-}
-
-export function oneOptionPerAirline(options = []) {
-  const seen = new Set();
-  const out = [];
-  for (const option of options) {
-    const airline = String(option.airline || '').trim();
-    const key = airline.toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(option);
-  }
-  return out;
-}
-
-export function flightPlan(customerText, options = []) {
-  const text = String(customerText || '');
-  const named = AIRLINES.find((airline) => new RegExp(`\\b${airline}\\b`, 'i').test(text));
-  const declined = /\b(no preference|any airline|whichever airline|you pick the airline)\b/i.test(text);
-  if (named) {
-    return {
-      ask: false,
-      preferredAirline: named,
-      options: options.filter((option) => new RegExp(`\\b${named}\\b`, 'i').test(option.airline || '')),
-    };
-  }
-  if (declined) return { ask: false, preferredAirline: '', options: oneOptionPerAirline(options) };
-  return {
-    ask: true,
-    preferredAirline: '',
-    options: [],
-    prompt: 'Which airline do you prefer? If you have no preference, say so and I will show one option per airline.',
-  };
+  return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
 export function lowestRentalPrices(offers = [], { limit = 10, eliminatedBrands = [] } = {}) {

@@ -12,7 +12,10 @@ const workerText = fs.readFileSync(path.join(here, 'vacation-public-research-wor
 assert.doesNotMatch(workerText, /places\.googleapis\.com/);
 assert.doesNotMatch(workerText, /live-google-places-new/);
 assert.match(workerText, /house-radius-poi/);
-assert.match(workerText, /live-grok-web-search/);
+assert.match(workerText, /brave-tavily/);
+assert.match(workerText, /searchBraveAndTavily/);
+assert.doesNotMatch(workerText, /TIMESYNCHER_GROK_BIN/);
+assert.doesNotMatch(workerText, /\/home\/ubishere9995\/\.local\/bin\/grok/);
 assert.match(workerText, /runApprovedSourceAdapters/);
 
 const artifacts = { destination: 'Tokyo', dates: { dateText: 'October' }, requestText: 'Plan Tokyo hotels ramen museums shopping flights and transport.' };
@@ -25,15 +28,34 @@ assert.deepEqual(registry.errors, []);
 const goat = registry.registry.adapters.find((adapter) => adapter.id === 'printingpress-wanderlust-goat');
 assert.equal(goat.enabled, false);
 assert.equal(JSON.stringify(goat.secretFiles || {}).includes('GOOGLE_PLACES'), false);
+const seenHosts = [];
 const adapterRun = await runApprovedSourceAdapters({
-  mode: 'fixture',
   registryPath,
   artifacts,
   destination: 'Tokyo',
   retrievedAt: new Date().toISOString(),
+  braveKey: 'brave-test',
+  tavilyKey: 'tavily-test',
+  braveName: 'BRAVE_SEARCH_API_KEY',
+  tavilyName: 'TAVILY_API_KEY',
+  fetchImpl: async (url) => {
+    const href = String(url);
+    seenHosts.push(new URL(href).hostname);
+    if (href.includes('api.search.brave.com')) {
+      return { ok: true, status: 200, json: async () => ({ web: { results: [{ title: 'Brave cafe', url: 'https://example.com/brave-cafe', description: 'A cafe.' }] } }) };
+    }
+    if (href.includes('api.tavily.com')) {
+      return { ok: true, status: 200, json: async () => ({ results: [{ title: 'Tavily market', url: 'https://example.com/tavily-market', content: 'A market.' }] }) };
+    }
+    throw new Error(`unexpected adapter fetch ${href}`);
+  },
 });
 assert.equal(adapterRun.status, 'adapters_complete');
-assert.ok(adapterRun.candidates.some((candidate) => candidate.adapterSources?.[0]?.adapterId === 'fixture-recent-traveler-sentiment'));
+assert.deepEqual(seenHosts, ['api.search.brave.com', 'api.tavily.com']);
+assert.ok(adapterRun.candidates.some((candidate) => candidate.source === 'brave' && candidate.title === 'Brave cafe'));
+assert.ok(adapterRun.candidates.some((candidate) => candidate.source === 'tavily' && candidate.title === 'Tavily market'));
+assert.equal(adapterRun.candidates.some((candidate) => candidate.adapterSources?.[0]?.adapterId === 'fixture-recent-traveler-sentiment'), false);
+assert.equal(adapterRun.adaptersRun.some((row) => row.status === 'disabled_google_places_seed_removed'), false);
 assert.equal(adapterRun.adaptersRun.some((row) => row.adapterId === 'printingpress-wanderlust-goat'), false);
 
 const fixturePath = path.join(os.tmpdir(), 'tsv-public-research-fixture.json');
@@ -57,7 +79,22 @@ fs.writeFileSync(fixturePath, JSON.stringify({
     { category: 'store', title: 'No source market', summary: 'Missing a public URL.' },
   ],
 }));
-const fixture = await runPublicResearch({ mode: 'fixture', fixturePath, artifacts });
+const fixture = await runPublicResearch({
+  mode: 'fixture',
+  fixturePath,
+  artifacts,
+  env: { BRAVE_SEARCH_API_KEY: 'brave-test', TAVILY_API_KEY: 'tavily-test' },
+  fetchImpl: async (url) => {
+    const href = String(url);
+    if (href.includes('api.search.brave.com')) {
+      return { ok: true, status: 200, json: async () => ({ web: { results: [{ title: 'Brave cafe', url: 'https://example.com/brave-cafe', description: 'A cafe.' }] } }) };
+    }
+    if (href.includes('api.tavily.com')) {
+      return { ok: true, status: 200, json: async () => ({ results: [{ title: 'Tavily market', url: 'https://example.com/tavily-market', content: 'A market.' }] }) };
+    }
+    throw new Error(`unexpected research fetch ${href}`);
+  },
+});
 assert.equal(fixture.status, 'first_pass_quality_gate_failed');
 assert.equal(fixture.sourceBackedCandidateCount, 1);
 assert.deepEqual(Object.keys(fixture.missingMinimums).sort(), ['rest', 'restaurant', 'store']);

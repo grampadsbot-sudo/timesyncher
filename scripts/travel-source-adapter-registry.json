@@ -41,7 +41,7 @@
       "kind": "fixture",
       "label": "Fixture recent traveler sentiment adapter",
       "safetyClass": "approved_public_read_only",
-      "enabled": true,
+      "enabled": false,
       "fixtureOnly": true,
       "allowsBookingOrPayment": false,
       "allowedCategories": ["activity", "restaurant", "store", "event", "decision"],
@@ -209,6 +209,25 @@
         "metadataFields": ["sourceQuality", "adapterSources", "qualitySignals", "fitScores", "sourceCaveats", "verifiedAt", "expiresAt"]
       },
       "approvalBlocker": "Needs installed CLI path, terms review, read-only fare-card smoke, and no-booking proof before production enablement."
+    },
+    {
+      "id": "brave-tavily-web",
+      "kind": "web_search",
+      "label": "Brave and Tavily public web search",
+      "safetyClass": "approved_public_search",
+      "enabled": true,
+      "allowsBookingOrPayment": false,
+      "allowedCategories": ["hotel", "flight", "car", "restaurant", "store", "activity", "tour", "event", "transport", "decision"],
+      "timeoutMs": 30000,
+      "inputPolicy": {
+        "customerPii": "minimal_trip_context_only",
+        "privateSources": "blocked",
+        "shellAccess": "blocked"
+      },
+      "outputSchema": {
+        "required": ["category", "title", "summary", "details", "sources", "source"],
+        "metadataFields": ["source"]
+      }
     },
     {
       "id": "forbidden-booking-payment",

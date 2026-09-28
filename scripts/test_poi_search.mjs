@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
   clearPoiCache,
-  flightPlan,
   lowestRentalPrices,
   overpassQuery,
   parseOverpass,
@@ -35,7 +34,7 @@ const near = searchFsqRecords([
   record('b', 'Kona', 19.64, -155.99, 'grocery'),
   record('far', 'Far Market', 21.3, -157.8, 'grocery'),
 ], { origin: house, radiusMeters: 8000, category: 'grocery' });
-assert.deepEqual(near.map((poi) => poi.id), ['fsq:a']);
+assert.deepEqual(near.map((poi) => poi.id), ['fsq:a', 'fsq:b']);
 assert.match(near[0].url, /^https:\/\//);
 
 const osm = parseOverpass({
@@ -45,7 +44,7 @@ const osm = parseOverpass({
     { type: 'way', id: 11, center: { lat: 19.66, lon: -156.0 }, tags: { name: 'Kahaluu Beach' } },
   ],
 }, 'restaurant');
-assert.deepEqual(osm.map((poi) => poi.id), ['osm:node/9', 'osm:way/11']);
+assert.deepEqual(osm.map((poi) => poi.id), ['osm:node/9', 'osm:node/10', 'osm:way/11']);
 assert.equal(osm[0].url, 'https://www.openstreetmap.org/node/9');
 assert.match(overpassQuery({ lat: house.lat, lng: house.lng, radiusMeters: 8000, category: 'grocery' }), /around:8000,19.649,-155.994/);
 
@@ -161,34 +160,31 @@ const scored = await scoreWebPoisInParallel(mixed, async (poi) => {
   return poi.id.endsWith('0') ? 2 : 4;
 });
 assert.ok(maxActive >= 2);
-assert.ok(scored.some((poi) => poi.id === 'fsq:kept' && poi.jevScore === undefined));
+assert.equal(scored.find((poi) => poi.id === 'fsq:kept').jevScore, 4);
 assert.equal(scored.some((poi) => poi.id === 'brave:0'), false);
 assert.equal(scored.filter((poi) => poi.source === 'brave').length, 4);
+const unscored = await scoreWebPoisInParallel(
+  [{ id: 'fsq:kona', name: 'Kona', source: 'fsq-os-places' }],
+  async () => 1,
+);
+assert.equal(unscored.length, 0);
+const unjudged = await scoreWebPoisInParallel(
+  [{ id: 'fsq:market', name: 'Island Market', source: 'fsq-os-places' }],
+  async () => 0,
+);
+assert.equal(unjudged.length, 1);
+assert.equal(unjudged[0].jevScore, undefined);
 
 const cited = synthesizeFromIds(['fsq:kept', 'fsq:missing', 'osm:node/1'], [
   { id: 'fsq:kept', name: 'Island Market' },
   { id: 'osm:node/1', name: 'Kona' },
   { id: 'fsq:other', name: 'Huggo\'s' },
 ]);
-assert.deepEqual(cited.map((poi) => poi.id), ['fsq:kept']);
-
-assert.equal(flightPlan('').ask, true);
-assert.deepEqual(flightPlan('When do we fly?').options, []);
-const united = flightPlan('We want United', [
-  { airline: 'United', price: 400 },
-  { airline: 'United', price: 450 },
-  { airline: 'Delta', price: 300 },
-]);
-assert.equal(united.ask, false);
-assert.deepEqual(united.options.map((option) => option.price), [400, 450]);
-const open = flightPlan('no preference', [
-  { airline: 'United', price: 400 },
-  { airline: 'United', price: 450 },
-  { airline: 'Delta', price: 300 },
-  { airline: 'Alaska', price: 320 },
-]);
-assert.equal(open.ask, false);
-assert.deepEqual(open.options.map((option) => option.airline), ['United', 'Delta', 'Alaska']);
+assert.deepEqual(cited.map((poi) => poi.id), ['fsq:kept', 'osm:node/1']);
+const poiSearchText = fs.readFileSync(new URL('../src/vacation/poi-search.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(poiSearchText, /\bAIRLINES\b/);
+assert.doesNotMatch(poiSearchText, /function flightPlan/);
+assert.doesNotMatch(poiSearchText, /\bGENERIC_NAME\b/);
 
 const offers = [
   { brand: 'Alamo', price: 90 },
@@ -279,15 +275,26 @@ const researched = await runPublicResearch({
   fsqRecords: [record('grill', 'Ulu Ocean Grill', 19.65, -155.99, 'restaurant')],
   citedPoiIds: ['fsq:grill', 'fsq:invented'],
   braveKey: '',
+  env: { BRAVE_SEARCH_API_KEY: 'brave-test', TAVILY_API_KEY: 'tavily-test' },
   fetchImpl: async (url) => {
-    if (String(url).includes('places.googleapis.com')) throw new Error('google places returned');
-    if (String(url).includes('overpass')) return { ok: true, json: async () => ({ elements: [] }) };
+    const href = String(url);
+    if (href.includes('places.googleapis.com')) throw new Error('google places returned');
+    if (href.includes('overpass')) return { ok: true, json: async () => ({ elements: [] }) };
+    if (href.includes('api.search.brave.com')) {
+      return { ok: true, status: 200, json: async () => ({ web: { results: [{ title: 'Brave cafe', url: 'https://example.com/brave-cafe', description: 'A cafe.' }] } }) };
+    }
+    if (href.includes('api.tavily.com')) {
+      return { ok: true, status: 200, json: async () => ({ results: [{ title: 'Tavily market', url: 'https://example.com/tavily-market', content: 'A market.' }] }) };
+    }
     throw new Error(`unexpected research fetch ${url}`);
   },
   scorePoi: async () => 5,
 });
 assert.equal(researched.provider, 'house-radius-poi');
 assert.deepEqual(researched.candidates.map((candidate) => candidate.poiId), ['fsq:grill']);
+assert.equal(researched.candidates[0].source, 'fsq-os-places');
 assert.equal(researched.candidates.some((candidate) => /invented|Kona|Big Island/.test(candidate.title)), false);
+assert.ok(researched.adapterRun.candidates.some((candidate) => candidate.source === 'brave'));
+assert.ok(researched.adapterRun.candidates.some((candidate) => candidate.source === 'tavily'));
 
 console.log('poi search ok');
