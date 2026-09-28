@@ -1,7 +1,6 @@
-import { firstPassSearchLimit } from '../../scripts/vacation-public-research-worker.mjs';
-import { searchTavily } from './poi-search.mjs';
-
-const RADIUS_METERS = 20000;
+import { firstPassSearchLimit, SEARCH_RADIUS_METERS } from './keepsake-list-minimums.mjs';
+import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
+import { writeRatings } from './write-ratings.mjs';
 const DEDUPE_METERS = 250;
 const USER_AGENT = 'TimeSyncherVacation/1.0';
 const PLACE_SOURCES = ['prior_db', 'foursquare_os', 'osm', 'brave'];
@@ -260,15 +259,63 @@ async function resolveCenter(fetchImpl, { lodging, lodgingPoint, destination }) 
   return { ...found, geocoded: 'destination' };
 }
 
+function presentNumber(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value.trim()))) return Number(value.trim());
+  return null;
+}
+
+function ratingFromRecord(record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return {};
+  const nested = record.rating && typeof record.rating === 'object' ? record.rating : null;
+  const rating = presentNumber(nested ? (nested.ratingValue ?? nested.value) : record.rating);
+  const count = presentNumber(nested?.ratingCount ?? nested?.count ?? record.stats?.total_ratings ?? record.total_ratings ?? record.ratingCount);
+  const fields = {};
+  if (rating != null) fields.rating = rating;
+  if (count != null) fields.ratingCount = count;
+  return fields;
+}
+
+function sourceRefFor(place) {
+  const source = String(place?.source || '').trim();
+  const id = String(place?.externalId || place?.url || '').trim();
+  if (!source || !id) return null;
+  return { source, id };
+}
+
+function sourceRecordFor(place) {
+  return {
+    source: place.source,
+    url: place.url || '',
+    ...(place.rating != null ? { rating: place.rating } : {}),
+    ...(place.ratingCount != null ? { count: place.ratingCount } : {}),
+  };
+}
+
+async function attachRelevance(rows, fetchImpl, env) {
+  const apiKey = String(env?.OPENROUTER_API_KEY || env?.JEV_API_KEY || '').trim();
+  const scored = [];
+  for (const row of rows) {
+    const jevScore = await jevRelevanceScore({
+      id: row.externalId || row.url || row.title,
+      name: row.title,
+      url: row.url || '',
+      category: row.category,
+    }, { fetchImpl, apiKey });
+    scored.push({ ...row, jevScore });
+  }
+  return scored;
+}
+
 async function queryFoursquare(fetchImpl, env, center, queries) {
   const places = [];
   for (const item of queries) {
     const params = new URLSearchParams({
       query: item.q,
       ll: `${center.lat},${center.lng}`,
-      radius: String(RADIUS_METERS),
+      radius: String(SEARCH_RADIUS_METERS),
       limit: String(item.limit || searchLimit(item.category)),
-      fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed',
+      fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed,rating,stats',
     });
     const payload = await readJson(
       fetchImpl,
@@ -297,6 +344,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
         address: String(result.location?.formatted_address || result.location?.address || ''),
         url: String(result.link || ''),
         externalId: String(result.fsq_place_id || ''),
+        ...ratingFromRecord(result),
       });
     }
   }
@@ -304,7 +352,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
 }
 
 function overpassQuery(center) {
-  const around = `(around:${RADIUS_METERS},${center.lat},${center.lng})`;
+  const around = `(around:${SEARCH_RADIUS_METERS},${center.lat},${center.lng})`;
   return `[out:json][timeout:25];(`
     + `node["amenity"~"restaurant|cafe|fast_food"]${around};`
     + `way["amenity"~"restaurant|cafe|fast_food"]${around};`
@@ -348,6 +396,7 @@ async function queryOsm(fetchImpl, center) {
       address: String(tags['addr:full'] || [tags['addr:street'], tags['addr:city']].filter(Boolean).join(', ')),
       url: element.type && element.id ? `https://www.openstreetmap.org/${element.type}/${element.id}` : '',
       externalId: element.type && element.id ? `${element.type}/${element.id}` : '',
+      ...ratingFromRecord(tags),
     });
   }
   return places;
@@ -383,7 +432,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
       q: item.q,
       latitude: String(center.lat),
       longitude: String(center.lng),
-      radius: String(RADIUS_METERS),
+      radius: String(SEARCH_RADIUS_METERS),
       count: String(item.limit || searchLimit(item.category)),
     });
     const payload = await readJson(
@@ -408,13 +457,14 @@ async function queryBrave(fetchImpl, env, center, queries) {
         address: braveAddress(result),
         url: String(result?.url || ''),
         externalId: String(result?.id || result?.url || ''),
+        ...ratingFromRecord(result),
       });
     }
   }
   return places;
 }
 
-export function selectPriorPlaces(rows = [], center, { radiusMeters = RADIUS_METERS } = {}) {
+export function selectPriorPlaces(rows = [], center, { radiusMeters = SEARCH_RADIUS_METERS } = {}) {
   const places = [];
   for (const row of rows) {
     const location = row?.location && typeof row.location === 'object' ? row.location : {};
@@ -433,7 +483,8 @@ export function selectPriorPlaces(rows = [], center, { radiusMeters = RADIUS_MET
       lng,
       address: String(location.address || row?.address || ''),
       url: '',
-      externalId: String(row?.id || title),
+      externalId: String(row?.id || ''),
+      ...ratingFromRecord(row?.ratings || row),
       meters,
     });
   }
@@ -496,6 +547,8 @@ async function queryTavily(fetchImpl, env, queries) {
         category: item.category,
         url: result.url,
         description: result.content || '',
+        externalId: result.url,
+        ...ratingFromRecord(result),
       });
     }
   }
@@ -549,7 +602,7 @@ export async function searchPlaces({
     const foursquare = await queryFoursquare(fetchImpl, env, center, placeQueries);
     const osm = await queryOsm(fetchImpl, center);
     const brave = await queryBrave(fetchImpl, env, center, placeQueries);
-    places = mergePlaces([prior, foursquare, osm, brave]);
+    places = await attachRelevance(mergePlaces([prior, foursquare, osm, brave]), fetchImpl, env);
     const liveCount = places.filter((place) => place.source !== 'prior_db').length;
     if (!liveCount) {
       fail(
@@ -560,7 +613,7 @@ export async function searchPlaces({
       );
     }
   }
-  const notes = infoQueries.length ? await queryTavily(fetchImpl, env, infoQueries) : [];
+  const notes = infoQueries.length ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env) : [];
   return {
     destination: dest || center?.label || '',
     center,
@@ -574,6 +627,8 @@ export async function searchPlaces({
 }
 
 export function placeToTripThing(place) {
+  const sourceRecord = sourceRecordFor(place);
+  const sourceRef = sourceRefFor(place);
   return {
     category: place.category,
     subtype: place.source,
@@ -586,10 +641,13 @@ export function placeToTripThing(place) {
       address: place.address || '',
     },
     links: place.url ? [{ label: place.source, url: place.url }] : [],
-    ratings: {},
+    ratings: writeRatings({ sourceRecord }),
     metadata: {
       source: place.source,
       externalId: place.externalId || '',
+      sourceRef,
+      sourceRecord,
+      jevScore: place.jevScore ?? 0,
     },
   };
 }
@@ -611,11 +669,15 @@ export function placeToResearchCandidate(place, destination = '') {
     metadata: {
       source: place.source,
       externalId: place.externalId || '',
+      sourceRef: sourceRefFor(place),
+      jevScore: place.jevScore ?? 0,
     },
   };
 }
 
 export function noteToTripThing(note) {
+  const sourceRecord = sourceRecordFor({ ...note, source: 'tavily' });
+  const sourceRef = sourceRefFor({ ...note, source: 'tavily' });
   return {
     category: note.category,
     subtype: 'tavily',
@@ -624,9 +686,13 @@ export function noteToTripThing(note) {
     source: 'tavily',
     location: {},
     links: note.url ? [{ label: 'tavily', url: note.url }] : [],
-    ratings: {},
+    ratings: writeRatings({ sourceRecord }),
     metadata: {
       source: 'tavily',
+      externalId: note.externalId || note.url || '',
+      sourceRef,
+      sourceRecord,
+      jevScore: note.jevScore ?? 0,
     },
   };
 }

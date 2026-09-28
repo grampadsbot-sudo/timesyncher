@@ -1,14 +1,8 @@
+import { POI_RADIUS_METERS, THIN_POI_COUNT } from './keepsake-list-minimums.mjs';
+
+export { POI_RADIUS_METERS, THIN_POI_COUNT };
+
 const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-
-export const POI_RADIUS_METERS = {
-  grocery: 8000,
-  restaurant: 10000,
-  store: 10000,
-  garden: 40000,
-  activity: 40000,
-};
-
-export const THIN_POI_COUNT = 3;
 const POI_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
 const BRAVE_CACHE_MS = 8 * 60 * 60 * 1000;
 const cache = new Map();
@@ -356,11 +350,7 @@ export async function scoreWebPoisInParallel(pois, scoreOne, { concurrency = 20 
       cursor += 1;
       const poi = pois[index];
       const score = Number(await scoreOne(poi));
-      if (score === 0) {
-        kept.push(poi);
-        continue;
-      }
-      if (score >= 3) kept.push({ ...poi, jevScore: score });
+      kept.push({ ...poi, jevScore: Number.isFinite(score) ? score : 0 });
     }
   }
   const workers = Math.min(concurrency, pois.length);

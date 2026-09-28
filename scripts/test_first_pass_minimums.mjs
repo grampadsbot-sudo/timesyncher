@@ -36,9 +36,13 @@ const filled = [
 assert.equal(assertRequiredFirstPassMinimums(filled).ok, true);
 
 const worker = await readFile(new URL('./vacation-public-research-worker.mjs', import.meta.url), 'utf8');
-assert.match(worker, /restaurant: 15/);
-assert.match(worker, /store: 10/);
-assert.match(worker, /rest: 15/);
+const config = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');
+assert.match(config, /restaurant: 15/);
+assert.match(config, /store: 10/);
+assert.match(config, /rest: 15/);
+assert.doesNotMatch(worker, /restaurant: 15/);
+assert.doesNotMatch(worker, /store: 10/);
+assert.doesNotMatch(worker, /rest: 15/);
 assert.doesNotMatch(worker, /EXISTING_ITINERARY_MIN_THINGS/);
 
 const dispatch = await readFile(new URL('./product-gbrain-dispatch.mjs', import.meta.url), 'utf8');

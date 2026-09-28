@@ -1,6 +1,6 @@
 import { sql } from './db.mjs';
 import { cleanText, headerValue, sendJson } from './http.mjs';
-import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, windLookupPointsFromThings } from './intake-shared-trip.mjs';
+import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { TREK_SHARED_API_BASE, mergeBindingsIntoShared, stripKeepsakeJunkMedia } from './thing-media-bind.mjs';
 import { listBindings } from './thing-media-store.mjs';
@@ -50,27 +50,12 @@ async function intakeSharedResponse(shareToken) {
   const trip = rows[0];
   if (!trip || intakeShareSlug(trip.id) !== shareToken) return null;
   const things = await db`
-    select id, category, title, description, metadata, source
+    select id, category, title, description, metadata, ratings, location, source
     from trip_things
     where trip_id = ${trip.id}
     order by created_at asc
   `;
-  const mappedThings = things.map((row) => {
-    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-    return {
-      id: row.id,
-      category: row.category,
-      title: row.title,
-      description: row.description || '',
-      who: meta.who || '',
-      whenLabel: meta.whenLabel || '',
-      customerWhen: meta.customerWhen || '',
-      notes: Array.isArray(meta.notes) ? meta.notes : [],
-      collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
-      source: row.source || '',
-      location: row.location && typeof row.location === 'object' ? row.location : {},
-    };
-  });
+  const mappedThings = things.map((row) => thingRecordFromTripRow(row));
   const shared = sharedTripFromIntake({ trip, things: mappedThings });
   let windBackup = '';
   try {

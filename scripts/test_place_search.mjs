@@ -7,6 +7,7 @@ import {
   destinationFromChat,
   fillTripIntake,
   lodgingFromChat,
+  placeToTripThing,
   mergePlaces,
   queriesFromWantedThings,
   readPriorPlaces,
@@ -512,6 +513,19 @@ assert.match(fallbackEvents[0], /Missing House/);
 assert.match(fallbackEvents[1], /Lisbon/);
 assert.equal(lodgingMiss.center.geocoded, 'destination');
 assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
+assert.equal(lodgingMiss.places[0].externalId, 'fsq-lisbon');
+assert.equal(lodgingMiss.places[0].jevScore, 0);
+const savedCafe = placeToTripThing({
+  ...lodgingMiss.places[0],
+  rating: 4.4,
+  ratingCount: 12,
+});
+assert.deepEqual(savedCafe.metadata.sourceRef, { source: 'foursquare_os', id: 'fsq-lisbon' });
+assert.equal(savedCafe.ratings.source, 'foursquare_os');
+assert.equal(savedCafe.ratings.rating, '4.4');
+assert.equal(savedCafe.ratings.count, 12);
+assert.equal(savedCafe.ratings.googleRating, undefined);
+assert.equal(savedCafe.metadata.jevScore, 0);
 
 const workerEvents = [];
 const workerFetch = recordingFetch(lisbonRoutes, workerEvents);

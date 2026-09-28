@@ -1,20 +1,11 @@
 #!/usr/bin/env node
 
 import { fillTripIntake, lodgingFromChat } from '../src/vacation/place-search.mjs';
+import { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit } from '../src/vacation/keepsake-list-minimums.mjs';
+
+export { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit };
 
 const VALID_CATEGORIES = new Set(['hotel', 'flight', 'car', 'restaurant', 'store', 'activity', 'tour', 'event', 'transport', 'decision']);
-/** Per-category initial website fill. Not a total-of-8. Do not invent replacements. */
-export const DEFAULT_FIRST_PASS_MINIMUMS = {
-  restaurant: 15,
-  store: 10,
-  rest: 15,
-};
-
-export function firstPassSearchLimit(category) {
-  if (category === 'restaurant') return DEFAULT_FIRST_PASS_MINIMUMS.restaurant;
-  if (category === 'store') return DEFAULT_FIRST_PASS_MINIMUMS.store;
-  return DEFAULT_FIRST_PASS_MINIMUMS.rest;
-}
 
 function floorCategoryMin(value, floor) {
   const parsed = Number(value);
@@ -110,7 +101,7 @@ export function assertRequiredFirstPassMinimums(candidates = [], minimums = DEFA
   if (Object.keys(missing).length) {
     throw new Error(
       `initial website fill requires per-category mins restaurant>=${required.restaurant} store>=${required.store} rest>=${required.rest} `
-      + `(DEFAULT_FIRST_PASS_MINIMUMS in scripts/vacation-public-research-worker.mjs:13-16). `
+      + `(DEFAULT_FIRST_PASS_MINIMUMS in src/vacation/keepsake-list-minimums.mjs). `
       + `Got ${JSON.stringify(counts)}; missing ${JSON.stringify(missing)}. Under-min is fail-closed and cannot be skipped.`,
     );
   }

@@ -163,14 +163,14 @@ const scored = await scoreWebPoisInParallel(mixed, async (poi) => {
 });
 assert.ok(maxActive >= 2);
 assert.ok(scored.some((poi) => poi.id === 'fsq:kept' && poi.jevScore === 4));
-assert.equal(scored.some((poi) => poi.id === 'brave:0'), false);
-assert.equal(scored.filter((poi) => poi.source === 'brave').length, 4);
+assert.equal(scored.find((poi) => poi.id === 'brave:0').jevScore, 2);
+assert.equal(scored.filter((poi) => poi.source === 'brave').length, 5);
 const unscored = await scoreWebPoisInParallel([
   { id: 'fsq:open', name: 'Open Market', source: 'fsq-os-places' },
 ], async () => 0);
 assert.equal(unscored.length, 1);
 assert.equal(unscored[0].id, 'fsq:open');
-assert.equal(unscored[0].jevScore, undefined);
+assert.equal(unscored[0].jevScore, 0);
 
 const cited = synthesizeFromIds(['fsq:kept', 'fsq:missing', 'osm:node/1'], [
   { id: 'fsq:kept', name: 'Island Market' },

@@ -327,7 +327,7 @@ function isWebsiteLinkRequestText(value) {
   const requestText = text(value, 2000).toLowerCase();
   return (
     /\b(send|share|show|give|need|where|what|open|current|broken|old)\b/.test(requestText) || /\?/.test(requestText)
-  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary|caldwell|davidson|vegas|las vegas|strip)\b/.test(requestText);
+  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary)\b/.test(requestText);
 }
 
 function isLinkCapabilityQuestion(value) {
@@ -337,7 +337,7 @@ function isLinkCapabilityQuestion(value) {
     && /\b(someone|anyone|person|people|family|friend|stranger|finds?|has|with)\b/.test(requestText)
     && /\b(link|url|website|web site|web page|site|shared link)\b/.test(requestText)
     && /\b(edit|change|modify|collaborate|comment|view|see|open|only view)\b/.test(requestText)
-    && /\b(vacation|trip|itinerary|vegas|las vegas|strip|jockey club)\b/.test(requestText);
+    && /\b(vacation|trip|itinerary)\b/.test(requestText);
 }
 
 function linkCapabilityAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
@@ -427,7 +427,7 @@ function isConcreteItineraryEditRequest(value) {
   if (isWebsiteLinkRequestText(requestText)) return false;
   if (isDeleteVacationRequest(requestText)) return false;
   if (isPersonAccessQuestion(requestText)) return false;
-  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|caldwell|davidson|shared website|travel plan)\b/.test(requestText);
+  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|shared website|travel plan)\b/.test(requestText);
   const mentionsEdit = /\b(add|remove|delete|keep|change|update|move|create|fill in|timeline|day\s*\d|\d+\s*days?|days?\s+\d|\d+\s*nights?|nights?\s+\d|right dates?|dates?|length of (the )?trip|hotel|lodging|rename|title|description|access|share|member|family|wife|husband|spouse|collaborator|permission|edit rights?|view rights?)\b/.test(requestText);
   const timelineAdd = /\b(add|create|put|include|schedule)\b/.test(requestText)
     && /\b(day\s*\d|days?\s+\d|timeline|family event)\b/.test(requestText);
@@ -494,7 +494,7 @@ function isPersonAccessQuestion(value) {
   const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|use\s+telegram|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
   const explicitNamedPerson = /\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/.test(rawText);
   const mentionsPerson = /\b(kim|wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
-  const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
 
@@ -503,7 +503,7 @@ function isAccessRosterQuestion(value) {
   if (!requestText || !isQuestionLike(requestText)) return false;
   const asksWho = /\b(who|which people|what people|who all)\b/.test(requestText);
   const mentionsAccess = /\b(access|permission|permissions|edit|editor|member|collaborator|collaborate|share|shared|view|see|telegram|upload|media)\b/.test(requestText);
-  const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
   return asksWho && mentionsAccess && mentionsVacationContext;
 }
 
@@ -525,7 +525,6 @@ function vacationMatchesLookup(vacation, lookup) {
     .toLowerCase();
   if (!haystack) return false;
   if (haystack.includes(needle)) return true;
-  if (needle.includes('vegas')) return /\b(vegas|las vegas|strip|jockey club)\b/i.test(haystack);
   if (needle.includes('hawaii')) return /\b(hawaii|oahu|waikiki|maui|kona|big island)\b/i.test(haystack);
   return false;
 }
@@ -1387,62 +1386,6 @@ function planningQuestions(destination, dates) {
   return questions.slice(0, 4);
 }
 
-function extractTripSegments(requestText) {
-  const lower = requestText.toLowerCase();
-  const segments = [];
-  if (containsAny(lower, ['honolulu', 'waikiki', 'oahu', 'banzai pipeline', 'moana', 'surfrider'])) {
-    segments.push({
-      island: 'Oahu',
-      base: containsAny(lower, ['waikiki']) ? 'Waikiki / Honolulu' : 'Honolulu',
-      nights: /\bthree nights?\b/i.test(requestText) ? 3 : /\btwo nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['moana', 'surfrider']) ? 'Beachfront Waikiki lodging requested; compare source-backed nearby hotels.' : 'Waikiki hotel options.',
-      ideas: [
-        'Waikiki arrival/check-in and beach time',
-        'Local restaurants, juice/breakfast spots, and dinner options',
-        'North Shore surf/coast day or half-day',
-        'Waikiki surf lesson',
-        'Waikiki shopping shortlist',
-      ],
-    });
-  }
-  if (containsAny(lower, ['maui', 'kihei', 'kapalua'])) {
-    segments.push({
-      island: 'Maui',
-      base: containsAny(lower, ['kihei']) ? 'Kihei' : 'Maui',
-      nights: /\bthree nights?\b/i.test(requestText) && !/\btwo nights?\b/i.test(requestText) ? 3 : 2,
-      lodging: 'Kihei-area lodging first; include Kapalua-area dining options.',
-      ideas: [
-        'Kihei beach / resort-area downtime',
-        'Highly rated Kihei restaurants',
-        'Kapalua-area dinner options',
-        'Sunset dinner sailboat cruise',
-        'Whale watching only if seasonally available; otherwise swap in snorkeling/sunset sail',
-      ],
-    });
-  }
-  if (containsAny(lower, ['kona', 'big island', 'manta'])) {
-    segments.push({
-      island: 'Big Island',
-      base: 'Kona',
-      nights: /\blast two nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['hilton']) ? 'Hilton option preferred; verify exact Kona-area property fit.' : 'Kona hotel options.',
-      ideas: [
-        'Kona arrival/check-in',
-        'Night manta ray snorkel tour',
-        'Hotel-based or waterfront restaurant options',
-        'Flexible Kona beach / coffee / scenic time depending on flight schedule',
-      ],
-    });
-  }
-  return segments.length ? segments : [{
-    island: 'Trip segment',
-    base: 'Needs confirmation',
-    nights: null,
-    lodging: 'Lodging preferences need confirmation.',
-    ideas: ['Build the day-by-day plan after destination/dates are confirmed.'],
-  }];
-}
-
 function buildInitialItinerary(artifacts) {
   const start = artifacts.dates.dateText || artifacts.dates.startDate || 'travel date to confirm';
   const destination = artifacts.destination || 'destination needs confirmation';
@@ -1462,145 +1405,6 @@ function buildInitialItinerary(artifacts) {
     '- open questions and customer decisions before anything is treated as final',
   ];
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').slice(0, 3900);
-}
-
-function link(label, url) {
-  return { label, url };
-}
-
-function researchedThing({ category, subtype, title, description, links = [], island, status = 'research_candidate' }) {
-  return {
-    category,
-    subtype,
-    title,
-    description,
-    links,
-    metadata: {
-      source: 'product-gbrain-dispatch',
-      status,
-      sourceBacked: true,
-      island,
-      researchedAt: new Date().toISOString(),
-      caveat: 'Verify current availability, prices, hours, and seasonal fit before relying on this option. TimeSyncher Vacation does not book travel.',
-    },
-  };
-}
-
-function hawaiiResearchThings(requestText) {
-  if (!/\bhawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island\b/i.test(requestText)) return [];
-  return [
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Waikiki hotel candidate',
-      title: 'Source-backed Waikiki beachfront lodging candidate',
-      island: 'Oahu',
-      description: 'Primary Waikiki hotel candidate because the customer specifically asked for the Surfrider/Moana. Research pass should compare room availability, cancellation terms, resort fees, beach access, and nearby alternatives.',
-      links: [link('Hotel site', 'https://www.marriott.com/en-us/hotels/hnlwi-moana-surfrider-a-westin-resort-and-spa-waikiki-beach/overview/')],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Surf lesson',
-      title: 'Waikiki surf lesson shortlist',
-      island: 'Oahu',
-      description: 'Customer wants to learn to surf in Waikiki. Research pass should compare 2-3 beginner-friendly lesson providers by meeting point, group/private format, duration, reviews, and cancellation policy.',
-      links: [
-        link('Hans Hedemann Surf School', 'https://hhsurf.com/'),
-        link('Faith Surf School', 'https://faithsurfschool.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'North Shore day option',
-      title: 'North Shore surf/coast day',
-      island: 'Oahu',
-      description: 'Customer asked for a North Shore surf/coast stop. Research pass should set expectations about surf seasonality and pair it with nearby source-backed food or shopping stops if surf is quiet.',
-      links: [link('Go Hawaii North Shore overview', 'https://www.gohawaii.com/islands/oahu/regions/north-shore')],
-    }),
-    researchedThing({
-      category: 'restaurant',
-      subtype: 'Waikiki restaurants',
-      title: 'Waikiki local/interesting restaurant research set',
-      island: 'Oahu',
-      description: 'Starter shortlist should be generated from current public sources for casual noodles, beachfront classics, malasadas, plate-lunch, and poke options near Waikiki.',
-      links: [
-        link('Waikiki casual noodle source', 'https://www.gohawaii.com/islands/oahu/regions/honolulu/waikiki'),
-        link('Duke’s Waikiki', 'https://www.dukeswaikiki.com/'),
-        link('Leonard’s Bakery', 'https://www.leonardshawaii.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'shopping',
-      subtype: 'Waikiki shopping',
-      title: 'Waikiki shopping shortlist',
-      island: 'Oahu',
-      description: 'Starter shortlist to verify: Royal Hawaiian Center and International Market Place for Waikiki walkable shopping; Ala Moana Center for a larger shopping block if transportation/time fits.',
-      links: [
-        link('Royal Hawaiian Center', 'https://www.royalhawaiiancenter.com/'),
-        link('International Market Place', 'https://shopinternationalmarketplace.com/'),
-        link('Ala Moana Center', 'https://www.alamoanacenter.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Kihei lodging candidate',
-      title: 'Kihei-area lodging research',
-      island: 'Maui',
-      description: 'Customer wants Kihei. Research pass should compare Kihei/Wailea lodging by beach access, parking, resort fees, cancellation terms, and drive time to Kapalua-area restaurants.',
-      links: [link('Go Hawaii Kihei overview', 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei')],
-    }),
-    researchedThing({
-      category: 'restaurant',
-      subtype: 'Maui restaurants',
-      title: 'Kihei and Kapalua restaurant research set',
-      island: 'Maui',
-      description: 'Starter shortlist should be generated from current public sources for Kihei/South Maui casual food, sushi, sunset dining, and elevated dinner options.',
-      links: [
-        link('Nalu’s South Shore Grill', 'https://www.naluskihei.com/'),
-        link('Maui sunset dining source', 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei'),
-      ],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Maui sunset sail',
-      title: 'Maui sunset dinner sail / whale-watching check',
-      island: 'Maui',
-      description: 'Customer wants a sunset dinner sail and whale watching ideally. Research pass should confirm whale season before promising whale watching, then compare sunset sail operators and dinner-included options.',
-      links: [
-        link('Trilogy Maui dinner sail options', 'https://sailtrilogy.com/'),
-        link('Pacific Whale Foundation', 'https://www.pacificwhale.org/'),
-      ],
-    }),
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Kona-area hotel candidate',
-      title: 'Kona-area lodging fit check',
-      island: 'Big Island',
-      description: 'Customer mentioned a Hilton-style Hawaii lodging preference. Research pass should confirm island intent and compare source-backed Kona-area lodging against true Kona-town hotels.',
-      links: [link('Kona-area lodging source', 'https://www.gohawaii.com/islands/hawaii-island/regions/kona')],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Manta ray night snorkel',
-      title: 'Kona night manta ray snorkel',
-      island: 'Big Island',
-      description: 'Customer wants manta rays at night. Research pass should compare operators by departure harbor, duration, snorkel vs dive, minimum age/swim requirements, cancellation policy, and moon/weather caveats.',
-      links: [
-        link('Kona manta ray tour source', 'https://www.gohawaii.com/islands/hawaii-island/things-to-do/water-activities'),
-        link('Big Island Divers', 'https://bigislanddivers.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'transport',
-      subtype: 'Inter-island and car rental',
-      title: 'Inter-island flights and rental cars',
-      island: 'Hawaii',
-      description: 'Plan needs LAS -> HNL, HNL -> OGG, OGG -> KOA, and KOA -> LAS or return routing, plus rental car strategy. Oahu can be mixed car/no-car; Maui and Big Island generally need cars.',
-      links: [
-        link('Hawaiian Airlines', 'https://www.hawaiianairlines.com/'),
-        link('Southwest Hawaii', 'https://www.southwest.com/destinations/hawaii'),
-      ],
-    }),
-  ];
 }
 
 function siteBase() {
