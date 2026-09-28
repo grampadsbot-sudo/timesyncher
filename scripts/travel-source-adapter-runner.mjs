@@ -232,7 +232,6 @@ async function runHotelGoat(adapter, context = {}) {
         `Hotel GOAT live read-only search for ${destination} ${checkin} to ${checkout}.`,
         hotel.rating ? `Visible rating: ${hotel.rating}.` : '',
         price ? `Visible nightly benchmark: ${price}.` : '',
-        'This is a research candidate only. TimeSyncher does not book, reserve, hold, or pay.',
       ].filter(Boolean).join('\n'),
       website: url,
       sources: url ? [{ label: 'Hotel GOAT source URL', url, retrievedAt: now, adapterId: adapter.id }] : [],

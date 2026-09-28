@@ -58,8 +58,8 @@ export function productThingCategory(place = {}, override = {}) {
 export const PRODUCT_THING_FIELDS = [
   {
     match: /carbone/i,
-    summary: 'Mario Carbone’s theatrical Italian-American at Aria — spicy rigatoni, tableside Caesar, and a special-night Strip reservation.',
-    longDetails: 'Aria special-night reservation: theatrical Italian-American, spicy rigatoni and tableside Caesar. Opens 5pm daily. No published Carbone happy-hour menu on ARIA official pages as of 2026-09-11 (nearby: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm). Recheck https://aria.mgmresorts.com/en/restaurants/carbone.html and https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html before planning.',
+    summary: 'Mario Carbone’s theatrical Italian-American at Aria — spicy rigatoni, tableside Caesar, and a special-night Strip table.',
+    longDetails: 'Aria special night: theatrical Italian-American, spicy rigatoni and tableside Caesar. Opens 5pm daily. No published Carbone happy-hour menu on ARIA official pages as of 2026-09-11 (nearby: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm). Recheck https://aria.mgmresorts.com/en/restaurants/carbone.html and https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html before planning.',
     happyHour: true,
     happyHourDetails: 'Happy-hour field on: Carbone itself has no published happy-hour menu on ARIA official pages as of 2026-09-11 (opens 5pm daily; not listed among ARIA HH venues). Nearby ARIA happy hour: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm. Recheck https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html and https://aria.mgmresorts.com/en/restaurants/carbone.html before planning.',
     happyHourSources: [

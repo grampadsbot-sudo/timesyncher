@@ -1083,7 +1083,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
       answer = 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.';
       answerMode = 'refuse_internal';
     } else if (isPaymentCredentialRequest(ownRequestText)) {
-      answer = 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.';
+      answer = 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.';
       answerMode = 'payment_refusal';
     } else if (isAccessPricingQuestion(ownRequestText)) {
       answer = accessPricingAnswer({ requestText: ownRequestText, manifest });
@@ -1197,7 +1197,7 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.96,
-      answer: 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.',
+      answer: 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.',
       answerMode: 'payment_refusal',
       reasons: ['payment_credential_request', 'external_action_boundary', 'current_turn_no_write'],
     });
@@ -1400,7 +1400,7 @@ function buildInitialItinerary(artifacts) {
     '- multiple lodging/hotel options with source URLs, fees, cancellation terms, and location tradeoffs',
     '- flight options when relevant, including airline, airport, timing, fare caveats, and baggage notes',
     '- cars and ground transport options with pickup logistics and total-price caveats',
-    '- restaurants, shopping, and activities with source URLs, hours, reservation needs, and verification status',
+    '- restaurants, shopping, and activities with source URLs, hours, and verification status',
     '- open questions and customer decisions before anything is treated as final',
   ];
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').slice(0, 3900);
@@ -1895,7 +1895,7 @@ function renderCustomerResponse(job, artifacts) {
   const lines = [
     'Great, I’ve got the starting shape of your trip.',
     '',
-    'Before I build the first version of your vacation website, send me one more note with anything else you want me to know: favorite restaurants or foods, lodging preferences, budget range, must-do activities, things to avoid, mobility needs, kid-friendly priorities, or any reservations/flights you already have.',
+    'Before I build the first version of your vacation website, send me one more note with anything else you want me to know: favorite restaurants or foods, lodging preferences, budget range, must-do activities, things to avoid, mobility needs, kid-friendly priorities, or any flights you already have.',
     '',
     'After your next message, I’ll spend about 10-15 minutes researching and organizing the first pass, then I’ll come back with your dedicated TimeSyncher Vacation website.',
   ].filter(Boolean);

@@ -12,7 +12,7 @@ const INTAKE_THRESHOLD = 0.5;
 const ROSTER_ROLES = new Set(['owner', 'collaborator', 'child', 'viewer', 'editor']);
 
 const THING_SYSTEM = [
-  'Extract what the customer wants from one vacation chat message.',
+  'Extract what the customer wants from one chat message.',
   'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.',
   'name is their wording for one wanted item. kind is activity, restaurant, hotel, flight, car, or store.',
   'who is a person they named for that item, or an empty string. when is a time they stated for that item, or an empty string.',
