@@ -9,6 +9,7 @@ scripts/test_keepsake_style2.mjs
 scripts/test_real_app_entry.mjs
 scripts/test_check_hardcoded_content.mjs
 scripts/test_check-no-hardcoded-product-cosmetic.mjs
+scripts/test_no_hardcoded_product_content.mjs
 scripts/test_deploy_required_env.mjs
 scripts/test_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
