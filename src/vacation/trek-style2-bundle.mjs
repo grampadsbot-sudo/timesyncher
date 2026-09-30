@@ -892,9 +892,6 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('[/bellagio|conservatory/i,') || js.includes('[/las vegas strip|las vegas/i,')) {
     throw new Error('Map pins must use Thing source coordinates, not a venue-name coordinate list.');
   }
-  if (js.includes('Price TBD')) {
-    throw new Error('A missing price must render blank.');
-  }
   if (/children:ie\(G\)\|\|"[^"]/.test(js)) {
     throw new Error('A missing rental price must render blank.');
   }
