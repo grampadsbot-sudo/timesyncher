@@ -633,7 +633,7 @@ const aeFixture = [
   '.daily-page{break-after:page;page-break-after:always;min-height:100vh}',
   'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()',
   'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn',
-  'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")',
+  'void 0',
   '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}',
   '.style2-details{display:grid;grid-template-columns:1fr;gap:10px}',
 ].join('\n');
@@ -644,7 +644,7 @@ assert.doesNotMatch(patchedAe, /logoUrl:tsLogo\(name\)/);
 assert.doesNotMatch(patchedAe, /lat:36\.1147/);
 assert.doesNotMatch(patchedAe, /address:"Nevada"/);
 assert.match(patchedAe, /Os\.filter\(G=>tsListThings\(Cc\)/);
-assert.match(patchedAe, /const named=\(/);
+assert.doesNotMatch(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
 assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
@@ -663,7 +663,7 @@ assert.match(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}\$\{lg\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
-assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
+assert.doesNotMatch(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
 assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.match(patchedAe, /data-style2-centered-day="1"/);
 assert.match(patchedAe, /flex-direction:column/);
@@ -894,10 +894,9 @@ for (const name of boundPhotos) {
   assert.equal(bytes[0], 0xff);
   assert.equal(bytes[1], 0xd8);
 }
-const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
-assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
-const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
+const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
+assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
 assert.equal(livePatched.includes('children:"Trip View"'), false);
 assertStyleTwoPatchParses(livePatched);
 const patchedCheckPath = '/tmp/patched-style2-check.js';
@@ -949,8 +948,8 @@ assert.match(sharedApp, /data-ts-pic-popup-tip/);
 assert.match(sharedApp, /leaflet-popup-tip-container/);
 assert.match(sharedApp, /box-sizing: content-box !important/);
 
-const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
-assert.match(trek, /_t==="flight"\?"✈️"/);
+const trek = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+assert.match(trek, /i==="flight"\?"✈️"/);
 assert.doesNotMatch(trek, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');

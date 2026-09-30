@@ -1348,6 +1348,10 @@ function bundlePaths(cwd) {
   return BUNDLE_FILES.filter((file) => fs.existsSync(path.join(cwd, file)));
 }
 
+// Direct children of public/assets only. The one raw pulled input,
+// public/assets/upstream/index-BKun7ofk.js, still contains the canned strings
+// and is not a direct child, so this scan skips it. The stripped file the build
+// writes, public/assets/index-BKun7ofk.js, is a direct child and is scanned when present.
 function assetBundlePaths(cwd) {
   const dir = path.join(cwd, 'public/assets');
   if (!fs.existsSync(dir)) return [];
@@ -1363,6 +1367,8 @@ function guardExempt(file) {
 function repoTextFiles(cwd) {
   const files = [];
   walk(cwd, cwd, files, false);
+  // public/assets/ stays out of the repo-text walk. That existing skip is what
+  // leaves the one raw pulled file, public/assets/upstream/index-BKun7ofk.js, unscanned.
   return files.filter((file) => !guardExempt(file) && !file.split(path.sep).join('/').startsWith('evidence/') && !file.split(path.sep).join('/').startsWith('public/assets/') && !file.split(path.sep).join('/').startsWith('artifacts/'));
 }
 
