@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText, whitespacePadFindings } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -274,16 +275,30 @@ assert.equal(baseline.length > 0, true);
 for (const row of baseline) assert.equal(row.note, BASELINE_NOTE);
 
 const repoRun = runGuard(repo);
-assert.equal(repoRun.status, 0, repoRun.stderr);
-const liveSummary = repoRun.stdout.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
-assert.ok(liveSummary, repoRun.stdout);
+assert.equal(repoRun.status, 0, `${repoRun.stdout}\n${repoRun.stderr}`);
+const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
+assert.ok(liveSummary, `${repoRun.stdout}\n${repoRun.stderr}`);
 const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
-assert.equal(liveFail, 0);
+const failRows = identities(repoRun.stderr);
+assert.equal(failRows.length, liveFail);
+// The travel download is gone and the served bundle is stripped. A live
+// NO-CROSS-ORIGIN-BUNDLE, BUNDLE-LEAK, or EVASION hit still fails the run.
+assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), []);
+for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK' || row.rule === 'EVASION', true, row.rule);
+assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
+assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
+assert.equal(baseline.some((row) => row.rule === 'BUNDLE-LEAK' || row.inventory_id === 'BUNDLE-LEAK'), false);
+for (const row of failRows) {
+  for (const match of row.symbol.matchAll(/(?<![A-Za-z0-9])[A-Za-z0-9]{32}(?![A-Za-z0-9])/g)) {
+    assert.notEqual(createHash('sha256').update(match[0]).digest('hex'), SHARE_TOKEN_SHA256);
+  }
+}
 assert.equal(liveReport <= baseline.length, true);
 const judged = classify(scanRoots(repo), baseline);
-assert.equal(judged.fail.length, 0);
+assert.equal(judged.fail.length, liveFail);
 assert.equal(judged.report.length, liveReport);
+assert.ok(judged.fail.every((finding) => finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION'));
 const liveRows = identities(repoRun.stdout);
 assert.deepEqual(
   liveRows.map(contentIdentity).sort(),
@@ -318,7 +333,8 @@ for (const id of inventoryIds) {
     assert.equal(fixtureExists, false, id);
     continue;
   }
-  assert.equal(baselined, true, id);
+  const liveInventory = [...liveRows, ...failRows].some((row) => row.symbol === `inventory:${id}`);
+  if (liveInventory) assert.equal(baselined, true, id);
   assert.equal(fixtureExists, true, id);
   assert.equal(patternIds.has(id), true, id);
   const pattern = INVENTORY_PATTERNS.find((item) => item.id === id);
@@ -605,10 +621,9 @@ assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
 
 // Dual-state shared-bundle check.
-// This tree still downloads the bundle, so explainSharedBundle.url must be the
-// travel.timesyncher.com asset while public/assets/index-BKun7ofk.js is not
-// committed. The other state, used once that served file is committed and
-// public/assets/upstream/index-BKun7ofk.js is absent, requires url === ''.
+// While public/assets/index-BKun7ofk.js is not committed, explainSharedBundle.url
+// must be the travel.timesyncher.com asset. Once that served file is committed
+// and public/assets/upstream/index-BKun7ofk.js is absent, url must be ''.
 // A travel.timesyncher.com fetch or URL then fails the test when it shows up
 // in explainSharedBundle or in the build/runtime files this guard already
 // reads: scripts/write-shared-assets.mjs, vite.config.mjs, and the committed
@@ -727,5 +742,149 @@ writeTree(linkedBundle, {
   'shared-app.html': '<script src="https://travel.timesyncher.com/assets/index-BKun7ofk.js"></script>\n',
 }, []);
 assert.throws(() => assertSharedBundleSource(linkedBundle), /travel\.timesyncher\.com/);
+
+const crossFile = 'scripts/cross-origin-bundle.mjs';
+const crossText = readFixture('cross-origin-bundle.mjs');
+const crossHits = crossOriginBundleFindings(crossFile, crossText, { downloads: true, scripts: true });
+assert.deepEqual(crossHits.map((finding) => finding.symbol_or_pattern).sort(), [
+  "https://${'travel.timesyncher.com'}/assets/templated.js",
+  'https://travel.timesyncher.com/assets/axios.js',
+  'https://travel.timesyncher.com/assets/copied.js',
+  'https://travel.timesyncher.com/assets/curled.js',
+  'https://travel.timesyncher.com/assets/https-get.js',
+  'https://travel.timesyncher.com/assets/joined.js',
+  'https://travel.timesyncher.com/assets/static.js',
+]);
+const crossSilenced = classify(crossHits, [entry(crossFile, 'https://travel.timesyncher.com/assets/copied.js', 'NO-CROSS-ORIGIN-BUNDLE')]);
+assert.equal(crossSilenced.report.length, 0);
+assert.equal(crossSilenced.fail.length, crossHits.length);
+assert.deepEqual(
+  crossOriginBundleFindings('cross-origin-bundle.html', readFixture('cross-origin-bundle.html'), { scripts: true }).map((finding) => finding.symbol_or_pattern).sort(),
+  [
+    'https://cdn.timesyncher.com/assets/pre.js',
+    'https://static.timesyncher.com/assets/dynamic.js',
+    'https://travel.timesyncher.com/assets/assigned.js',
+    'https://travel.timesyncher.com/assets/page.js',
+    'https://www.timesyncher.com/widget.js',
+  ],
+);
+assert.deepEqual(crossOriginBundleFindings('same-origin-bundle.html', readFixture('same-origin-bundle.html'), { downloads: true, scripts: true }), []);
+
+const originDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-origin-bundle-'));
+writeTree(originDir, {
+  'scripts/cross-origin-bundle.mjs': crossText,
+  'cross-origin-bundle.html': readFixture('cross-origin-bundle.html'),
+  'public/assets/index-BKun7ofk.js': 'console.log(1)\n',
+  'relative.js': 'export {}\n',
+  'package.json': `${JSON.stringify({ scripts: { prebuild: 'curl -fsSL https://travel.timesyncher.com/assets/pkg.js -o pkg.js' } })}\n`,
+  'vercel.json': `${JSON.stringify({ installCommand: 'wget -q https://travel.timesyncher.com/assets/install.js' })}\n`,
+  'vite.config.mjs': "import { writeSharedAssets } from './scripts/write-shared-assets.mjs';\nexport default { plugins: [{ async buildStart() { await writeSharedAssets(); } }] };\n",
+  'scripts/write-shared-assets.mjs': "const JS_URL = `https://travel.timesyncher.com/assets/${'index-new.js'}`;\nexport async function writeSharedAssets() { return fetch(JS_URL); }\n",
+}, [entry(crossFile, 'https://travel.timesyncher.com/assets/copied.js', 'NO-CROSS-ORIGIN-BUNDLE')]);
+const originRun = runGuard(originDir);
+assert.equal(originRun.status, 1, originRun.stdout);
+assert.equal(identities(originRun.stderr).every((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), true, originRun.stderr);
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', crossFile, 'https://travel.timesyncher.com/assets/copied.js');
+assert.doesNotMatch(originRun.stdout, /NO-CROSS-ORIGIN-BUNDLE/);
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', 'package.json', 'https://travel.timesyncher.com/assets/pkg.js');
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', 'vercel.json', 'https://travel.timesyncher.com/assets/install.js');
+assertHit(originRun.stderr, 'FAIL', 'NO-CROSS-ORIGIN-BUNDLE', 'vite.config.mjs', 'writeSharedAssets()');
+assert.doesNotMatch(`${originRun.stdout}\n${originRun.stderr}`, /index-BKun7ofk\.js is not in the repo/);
+
+const relativeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-relative-bundle-'));
+writeTree(relativeDir, {
+  'same-origin-bundle.html': readFixture('same-origin-bundle.html'),
+  'public/assets/kept.js': 'console.log(1)\n',
+  'kept.js': 'console.log(1)\n',
+}, []);
+const relativeRun = runGuard(relativeDir);
+assert.equal(relativeRun.status, 0, `${relativeRun.stdout}\n${relativeRun.stderr}`);
+assert.doesNotMatch(`${relativeRun.stdout}\n${relativeRun.stderr}`, /NO-CROSS-ORIGIN-BUNDLE/);
+
+const leakText = readFixture('bundle-leak.js');
+const leakSymbols = bundleLeakFindings('public/assets/bundle-leak.js', leakText).map((finding) => finding.symbol_or_pattern);
+assert.deepEqual([...new Set(leakSymbols)].sort(), [
+  '100.127.255.254',
+  '100.64.0.1',
+  '100.66.47.62',
+  '10.1.2.3',
+  '172.16.0.5',
+  '172.31.9.9',
+  '192.168.1.15',
+  '192.168.50.2',
+  '32-alnum near /s/',
+  '32-alnum near share',
+  '32-alnum near token',
+  'Arrive TBD',
+  'Craig_Kim_NYC_June_2026',
+  'Depart TBD',
+  'Price TBD',
+  'craig+kim+nyc',
+].sort());
+for (const absent of ['8.8.8.8', '172.15.0.1', '100.63.0.1', '100.128.0.1', '11.1.1.1', 'abcdefghijklmnopqrstuvwxyz012345']) {
+  assert.equal(leakSymbols.includes(absent), false, absent);
+}
+const invented = `HashFixtureAa${'0'.repeat(19)}`;
+assert.equal(invented.length, 32);
+const inventedHash = createHash('sha256').update(invented).digest('hex');
+assert.notEqual(inventedHash, SHARE_TOKEN_SHA256);
+const hashed = bundleLeakFindings('public/assets/hash-fixture.js', `'${invented.slice(0, 8)}' + '${invented.slice(8)}'`, { hashes: [inventedHash] });
+assert.equal(hashed.some((finding) => finding.symbol_or_pattern === `sha256:${inventedHash}`), true);
+assert.equal(hashed.some((finding) => finding.symbol_or_pattern.includes(invented)), false);
+const plain = bundleLeakFindings('public/assets/hash-fixture.js', `'${invented.slice(0, 8)}' + '${invented.slice(8)}'`);
+assert.equal(plain.some((finding) => finding.symbol_or_pattern.startsWith('sha256:')), false);
+const leakFile = 'public/assets/bundle-leak.js';
+const silenced = classify(bundleLeakFindings(leakFile, leakText), [entry(leakFile, 'Price TBD', 'BUNDLE-LEAK')]);
+assert.equal(silenced.report.length, 0);
+assert.equal(silenced.fail.length > 0, true);
+assert.equal(silenced.fail.every((finding) => finding.rule === 'BUNDLE-LEAK'), true);
+const leakDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bundle-leak-'));
+writeTree(leakDir, { [leakFile]: leakText }, [entry(leakFile, 'Price TBD', 'BUNDLE-LEAK')]);
+const leakRun = runGuard(leakDir);
+assert.equal(leakRun.status, 1, leakRun.stdout);
+assertHit(leakRun.stderr, 'FAIL', 'BUNDLE-LEAK', leakFile, 'Price TBD');
+assertHit(leakRun.stderr, 'FAIL', 'BUNDLE-LEAK', leakFile, 'Craig_Kim_NYC_June_2026');
+assert.doesNotMatch(leakRun.stderr, /AbcdefGhijklmnopQrstuvwxyz012345/);
+for (const watched of [script, fileURLToPath(import.meta.url), path.join(fixtures, 'bundle-leak.js')]) {
+  const watchedText = fs.readFileSync(watched, 'utf8');
+  for (const match of watchedText.matchAll(/(?<![A-Za-z0-9])[A-Za-z0-9]{32}(?![A-Za-z0-9])/g)) {
+    assert.notEqual(createHash('sha256').update(match[0]).digest('hex'), SHARE_TOKEN_SHA256, watched);
+  }
+}
+const iconPair = 'const LucideScissorsSquareDashedBottom = LucideScreenShare;';
+const iconHits = bundleLeakFindings('public/assets/icons.js', iconPair);
+assert.equal(iconHits.some((finding) => finding.symbol_or_pattern === '32-alnum near share'), false);
+assert.equal(iconHits.length, 0);
+const shaped = 'Ab9defGhijklmnopQrstuvwxyz012345';
+assert.equal(shaped.length, 32);
+assert.equal(/[A-Z]/.test(shaped) && /[a-z]/.test(shaped) && /[0-9]/.test(shaped), true);
+const shapedHits = bundleLeakFindings('public/assets/shaped.js', `share ${shaped} token /s/${shaped}`);
+for (const symbol of ['32-alnum near share', '32-alnum near token', '32-alnum near /s/']) {
+  assert.equal(shapedHits.some((finding) => finding.symbol_or_pattern === symbol), true, symbol);
+}
+const noDigit = 'AbcdefGhijklmnopQrstuvwxyzABCDEF';
+assert.equal(noDigit.length, 32);
+assert.equal(bundleLeakFindings('public/assets/nodigit.js', `share ${noDigit}`).some((finding) => finding.symbol_or_pattern === '32-alnum near share'), false);
+
+const padFile = 'public/assets/pad.js';
+const twenty = `${' '.repeat(20)}`;
+const padHits = whitespacePadFindings(padFile, `const x = "${twenty}";\n`);
+assert.equal(padHits.length, 1);
+assert.match(padHits[0].symbol_or_pattern, /^spaces:20@/);
+assert.equal(whitespacePadFindings(padFile, ' '.repeat(19)).length, 0);
+assert.match(whitespacePadFindings(padFile, '\t'.repeat(20))[0].symbol_or_pattern, /^tabs:20@/);
+assert.equal(whitespacePadFindings(padFile, '\n'.repeat(40)).length, 0);
+assert.equal(whitespacePadFindings(padFile, `\`${' '.repeat(80)}\``).length, 1);
+const padSilenced = classify(padHits, [entry(padFile, padHits[0].symbol_or_pattern, 'EVASION')]);
+assert.equal(padSilenced.report.length, 0);
+assert.equal(padSilenced.fail.length, 1);
+const padDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-pad-'));
+writeTree(padDir, { [padFile]: `const x = "${twenty}";\n` }, []);
+const padRun = runGuard(padDir);
+assert.equal(padRun.status, 1, padRun.stdout);
+assertHit(padRun.stderr, 'FAIL', 'EVASION', padFile, padHits[0].symbol_or_pattern);
+assert.equal(baseline.some((row) => row.rule === 'EVASION' || row.inventory_id === 'EVASION'), false);
+assert.equal(baseline.some((row) => row.file === 'public/assets/index-0J54vUO3.js' || row.file === 'public/assets/index-TimeSyncherVacationLogin.js'), false);
+assert.equal(failRows.length, 0);
 
 process.stdout.write('hardcoded content check test passed\n');
