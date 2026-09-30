@@ -162,6 +162,29 @@ assert.equal(websiteFacts.trip.title, 'Las Vegas Strip Vacation');
 assert.equal(websiteFacts.trip.launchUrl, launchUrl);
 assert.equal(websiteFacts.trip.role, 'owner');
 assert.doesNotMatch(websiteModel.calls[0].messages[0].content, /the Vegas vacation/i);
+const collabSiteModel = supportModel('model-collab-site');
+await vacationSupportReply({
+  text: 'Can you send me the link to the Vegas vacation?',
+  intent: websiteLinkQuestion,
+  access: {
+    linked: true,
+    trip: {
+      title: 'Las Vegas Strip Vacation',
+      publicUrl: 'https://vacation-staging.timesyncher.com/shared/las-vegas-strip-vacation/',
+    },
+    telegramWebAccess: {
+      role: 'telegram_collaborator',
+      launchUrl,
+      publicUrl: 'https://vacation-staging.timesyncher.com/shared/las-vegas-strip-vacation/',
+    },
+  },
+  env: modelEnv,
+  fetchImpl: collabSiteModel.fetchImpl,
+});
+const collabSiteFacts = factsFrom(collabSiteModel.calls[0]);
+assert.equal(collabSiteFacts.trip.publicUrl, null);
+assert.equal(collabSiteFacts.trip.launchUrl, null);
+assert.equal(collabSiteFacts.trip.role, 'telegram_collaborator');
 
 const mediaQuestion = vacationSupportIntent('Am I able to upload pics and videos to the Vegas vacation?');
 assert.equal(mediaQuestion.intent, 'media_upload_question');
@@ -450,8 +473,8 @@ const jevAssistRouter = await vacationSupportIntentWithJevShadow('What does this
   }),
 });
 assert.equal(jevAssistRouter.selectedDecision.intent, 'support_question');
-assert.equal(jevAssistRouter.selectedDecision.source, 'deterministic_fallback');
-assert.equal(jevAssistRouter.comparison.jevInfluencedBehavior, false);
+assert.equal(jevAssistRouter.selectedDecision.source, 'openrouter_jev_assist');
+assert.equal(jevAssistRouter.comparison.jevInfluencedBehavior, true);
 
 const jevAssistDowngrade = await vacationSupportIntentWithJevShadow('Can this thing do calendar stuff?', {
   env: { OPENROUTER_API_KEY: 'test-openrouter-key', JEV_ROUTER_MODE: 'assist' },

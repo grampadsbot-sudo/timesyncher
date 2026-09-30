@@ -15,9 +15,14 @@ assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '0' })
 assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 19);
 const adaSeats = [{ name: 'Ada', payer: 'you' }];
 assert.equal(payerPriceLine(adaSeats, unconfigured), '');
+assert.equal(payerPriceLine('I pay for Ada.', unconfigured), '');
+assert.equal(payerPriceLine('I pay for Ada.', unconfigured, adaSeats), '');
 assert.equal(payerPriceLine(adaSeats, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 'Ada $19, paid by you');
+assert.equal(payerPriceLine('I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }, adaSeats), 'Ada $19, paid by you');
 assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, unconfigured), true);
 assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
+assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', unconfigured), true);
+assert.equal(priceAnswered('Ada $19, paid by you', { seats: adaSeats }, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
 const savedCheckoutEnv = {};
 for (const key of [
   'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS',
@@ -33,7 +38,10 @@ for (const key of [
   delete process.env[key];
 }
 assert.equal(priceAnswered('Ada $19, paid by you', adaSeats), true);
+assert.equal(priceAnswered('Ada $19, paid by you', { seats: adaSeats }), true);
+assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.'), true);
 assert.equal(priceAnswered('No amount is in this reply.', adaSeats), false);
+assert.equal(priceAnswered('No amount is in this reply.', 'I pay for Ada.'), false);
 for (const [key, value] of Object.entries(savedCheckoutEnv)) {
   if (value == null) delete process.env[key];
   else process.env[key] = value;
@@ -74,12 +82,13 @@ const priced = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat?
   seatDollars: 19,
   planLine: 'Ada $19, paid by you',
 });
-assert.match(priced, /Each collaborator seat is \$19/);
-assert.match(priced, /State this payer line exactly: Ada \$19, paid by you/);
+assert.match(priced, /"seat_dollars":19/);
+assert.match(priced, /Ada \$19, paid by you/);
 assert.doesNotMatch(priced, /\$27/);
 
 const missing = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat?', {});
 assert.doesNotMatch(missing, /configured seat price is missing|price not configured/);
+assert.match(missing, /"seat_dollars":null/);
 assert.doesNotMatch(missing, /\$\d+/);
 
 console.log('reply trip data tests passed');

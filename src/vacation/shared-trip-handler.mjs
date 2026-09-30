@@ -57,17 +57,17 @@ async function intakeSharedResponse(shareToken) {
   `;
   const mappedThings = things.map((row) => thingRecordFromTripRow(row));
   const shared = sharedTripFromIntake({ trip, things: mappedThings });
-  let windBackup = '';
+  let forecast = [];
   try {
-    windBackup = await lookupWindBackup(windLookupPointsFromThings(mappedThings), {
+    forecast = await lookupWindBackup(windLookupPointsFromThings(mappedThings), {
       startDate: trip.start_date,
       endDate: trip.end_date,
       timeoutMs: 2000,
     });
   } catch {
-    windBackup = '';
+    forecast = [];
   }
-  return applyCapturedLogos(applyThingPresentation(shared, { windBackup }));
+  return applyCapturedLogos(applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] }));
 }
 
 export default async function handler(req, res) {

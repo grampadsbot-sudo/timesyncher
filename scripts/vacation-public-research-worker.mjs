@@ -182,7 +182,7 @@ export function buildResearchQueries(artifacts = {}) {
   if (needsFlights && !suppressFlights) queries.push({ category: 'flight', query: `${base} flights airlines airports baggage fare official` });
   if (!suppressHotels) queries.push({ category: 'hotel', query: `${base} hotels official site cancellation fees location` });
   queries.push(
-    { category: 'restaurant', query: `${base} restaurants official menu hours reservations` },
+    { category: 'restaurant', query: `${base} restaurants official menu hours` },
     { category: 'store', query: `${base} shopping grocery market official visitor information` },
     { category: 'activity', query: `${base} activities wineries kid friendly sightseeing official tickets hours` },
   );
@@ -373,12 +373,12 @@ export async function runPublicResearch(input = {}) {
     env: {
       brave: sourceEnv.brave || sourceEnv.BRAVE_SEARCH_API_KEY || '',
       foursquare: sourceEnv.foursquare || sourceEnv.FOURSQUARE_SERVICE_KEY || '',
-      tavily: sourceEnv.tavily || sourceEnv.TAVILY_API_KEY || '',
+      tavily: sourceEnv.tavily || sourceEnv.TAVILI_API_KEY || '',
       OPENROUTER_API_KEY: sourceEnv.OPENROUTER_API_KEY || '',
       JEV_RELEVANCE_MINIMUM: sourceEnv.JEV_RELEVANCE_MINIMUM,
       braveName: 'BRAVE_SEARCH_API_KEY',
       foursquareName: 'FOURSQUARE_SERVICE_KEY',
-      tavilyName: 'TAVILY_API_KEY',
+      tavilyName: 'TAVILI_API_KEY',
       DATABASE_URL: sourceEnv.DATABASE_URL || '',
       NEON_DATABASE_URL: sourceEnv.NEON_DATABASE_URL || '',
     },

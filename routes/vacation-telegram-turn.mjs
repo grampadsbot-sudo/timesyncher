@@ -3,7 +3,7 @@ import { Readable } from 'node:stream';
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import { getSessionByToken, siteBase, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { blockHighAuthorityRequest } from '../src/safety/high-authority-actions.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
@@ -362,7 +362,7 @@ async function ensureTelegramSession(db, { onboarding, telegramChatId, telegramU
 }
 
 async function recordTranscript(db, { session, speaker, direction, body, channel = 'telegram_vacation_bot', telegramMessageId, payload, receivedAt, sentAt, responseLatencyMs, onboardingStep }) {
-  const tag = classifyTurn({ text: body, speaker, direction, channel, payload });
+  const tag = await classifyTurnWithModel({ text: body, speaker, direction, channel, payload });
   const rows = await db`
     insert into transcript_turns (
       customer_id, trip_id, telegram_session_id, speaker, channel, body, payload, direction,
@@ -578,13 +578,13 @@ export function vacationSupportIntent(text) {
   if (collaboratorStatusQuestion(normalized)) {
     return { intent: 'collaborator_access_question', shouldQueueWorker: false, confidence: 0.94, answerMode: 'account_state' };
   }
-  if (/\b(unlimited|how many|access|included|include|plan|paid|payment|checkout|order|subscription|coupon|code|account)\b/.test(normalized)) {
+  if (/\b(unlimited|how many|included|include|plan|paid|payment|checkout|order|subscription|coupon|code|account)\b/.test(normalized)) {
     return { intent: 'account_question', shouldQueueWorker: false, confidence: 0.88 };
   }
   if (/\b(book|booking|reserve|reservation|purchase|pay for|hold)\b/.test(normalized)) {
     return { intent: 'support_question', shouldQueueWorker: false, confidence: 0.9 };
   }
-  if (/\b(price|cost|refund|login|sign in|support|help|website link|url)\b/.test(normalized)) {
+  if (/\b(refund|login|sign in|support|help|website link|url)\b/.test(normalized)) {
     return { intent: 'support_question', shouldQueueWorker: false, confidence: 0.78 };
   }
   return null;
@@ -623,13 +623,13 @@ const JEV_CUSTOMER_ISSUE_TAGS = {
   lodging: 'Hotels, resorts, rooms, lodging, check-in/check-out, or where to stay.',
   flights: 'Flights, airlines, airports, timing, layovers, or airfare.',
   cars_transport: 'Rental cars, Uber/Lyft, taxis, trains, shuttles, parking, or local transport.',
-  restaurants_food: 'Restaurants, meals, bars, coffee, reservations, food style, or cuisine.',
+  restaurants_food: 'Restaurants, meals, bars, coffee, food style, or cuisine.',
   activities_experiences: 'Activities, tours, shows, museums, beaches, hikes, events, tickets, or experiences.',
   shopping: 'Shopping, stores, markets, boutiques, groceries, or souvenirs.',
   media_upload: 'Photos, videos, media upload, attaching media to a vacation, or media add-ons.',
   collaborator_access: 'Another person viewing, editing, collaborating, uploading, or using Telegram/web access.',
   website_link: 'Shared itinerary link, website access, login link, app/site URL, or opening the vacation page.',
-  account_plan_access: 'Paid plan, entitlement, checkout, coupon, billing, refund, remaining vacations, or account state.',
+  account_plan_access: 'Paid plan, entitlement, coupon, billing, refund, remaining vacations, or account state.',
   product_support: 'How TimeSyncher works, support, bugs, errors, booking boundaries, or product behavior.',
   approval: 'Approval, acceptance, confirmation, yes/go-ahead/looks-good signal.',
   change_request: 'Explicit request to add, remove, swap, replace, revise, rename, regenerate, or otherwise edit.',
@@ -646,7 +646,7 @@ const JEV_VACATION_INTENT_QUESTIONS = {
     instructions: 'Classify the current TimeSyncher Vacation Telegram customer turn. Choose the safest category based on the current turn and bounded context.',
     criteria: {
       itinerary_action: 'The current turn asks to create, update, refine, split, rename, add to, remove from, or otherwise change vacation itinerary content.',
-      account_question: 'The current turn asks about plan, purchase, access, entitlement, checkout, coupon, remaining vacations, or account state.',
+      account_question: 'The current turn asks about plan, purchase, access, entitlement, coupon, remaining vacations, or account state.',
       support_question: 'The current turn asks how TimeSyncher Vacation works, asks for help, reports a problem, asks about booking boundaries, pricing, website links, or product behavior.',
       media_attachment: 'The current turn attaches or describes media that should be associated with a vacation, assuming deterministic code can resolve the target vacation.',
       approval: 'The current turn approves, accepts, confirms, or says the proposed plan looks good.',
@@ -1071,7 +1071,7 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     'Return only one JSON object. Do not include prose.',
     '',
     'Allowed intents:',
-    '- account_question: asks about purchased plan, access, coupons, checkout, order, entitlement, remaining vacation count.',
+    '- account_question: asks about purchased plan, access, coupons, order, entitlement, remaining vacation count.',
     '- support_question: asks how the product works, pricing, booking boundary, login, support, website URL/link.',
     '- media_upload_question: asks whether/how the owner or collaborator can upload/send/add/attach photos, pictures, videos, or media.',
     '- collaborator_access_question: asks whether a wife, spouse, family member, assistant, or another person can view/edit/change/upload through the vacation.',
@@ -1079,7 +1079,7 @@ export async function grokVacationSupportIntent(text, { env = process.env, fetch
     '- itinerary_action: asks to create, update, refine, research, or modify vacation itinerary content.',
     '',
     'Rules:',
-    '- Questions about ability, access, pricing, checkout, coupons, or media upload are no-write support/account turns.',
+    '- Questions about ability, access, pricing, coupons, or media upload are no-write support/account turns.',
     '- Do not classify a question as itinerary_action just because it names a destination or vacation.',
     '- Use itinerary_action only when the current turn clearly asks to create/change itinerary content.',
     '- write_mode must be none for support/account/media/collaborator/ambiguous turns.',
@@ -1154,24 +1154,33 @@ export async function vacationSupportIntentWithModel(text, { env = process.env, 
   return fallback ? { ...fallback, source: 'deterministic_fallback' } : null;
 }
 
-function linkedVacationMatchFromPayload(payload = {}, text = '') {
-  const normalized = cleanText(text, 2000).toLowerCase();
+function tripTitleOf(item) {
+  return cleanText(item?.title || item?.name || '', 180);
+}
+
+export function matchLinkedVacation(payload = {}, text = '') {
+  const seen = new Set();
   const items = [
     ...(Array.isArray(payload.linkedVacations) ? payload.linkedVacations : []),
     ...(Array.isArray(payload.customerVacations) ? payload.customerVacations : []),
-  ].filter((item) => item && typeof item === 'object');
-  if (!items.length) return null;
-  if (/\b(vegas|las vegas|strip|jockey club)\b/.test(normalized)) {
-    return items.find((item) => /\b(vegas|las vegas|strip|jockey club)\b/i.test([
-      item.title,
-      item.name,
-      item.destination,
-      item.url,
-      item.shareToken,
-      item.token,
-    ].filter(Boolean).join(' '))) || items[0];
-  }
-  return items[0];
+  ].filter((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const title = tripTitleOf(item).toLowerCase();
+    const key = title || cleanText(item.shareToken || item.token || item.url, 180).toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const titles = items.map(tripTitleOf).filter(Boolean);
+  if (!items.length) return { vacation: null, ask: false, titles };
+  const normalized = cleanText(text, 2000).toLowerCase();
+  const hits = items.filter((item) => {
+    const title = tripTitleOf(item).toLowerCase();
+    return title.length > 2 && normalized.includes(title);
+  });
+  if (hits.length === 1) return { vacation: hits[0], ask: false, titles };
+  if (items.length === 1) return { vacation: items[0], ask: false, titles };
+  return { vacation: null, ask: true, titles };
 }
 
 async function vacationAccessSummary(db, session, { telegramChatId = '', telegramUserId = '', payload = {}, text = '' } = {}) {
@@ -1220,7 +1229,8 @@ async function vacationAccessSummary(db, session, { telegramChatId = '', telegra
     limit 1
   ` : [];
   const trip = tripRows[0] || null;
-  const linkedVacation = linkedVacationMatchFromPayload(payload, text);
+  const linkedMatch = matchLinkedVacation(payload, text);
+  const linkedVacation = linkedMatch.vacation;
   const linkedShareToken = cleanText(
     linkedVacation?.shareToken || linkedVacation?.share_token || linkedVacation?.token || linkedVacation?.sharedToken || linkedVacation?.shared_token,
     240,
@@ -1300,6 +1310,8 @@ async function vacationAccessSummary(db, session, { telegramChatId = '', telegra
       launchUrl: telegramWebAccess.launchUrl,
       publicUrl: linkedPublicUrl || telegramWebAccess.grant.public_url,
     } : null,
+    askTrip: linkedMatch.ask,
+    tripTitles: linkedMatch.titles,
     hasUnlimited: plans.includes('unlimited'),
     hasPhotoUpload,
     hasVideoUpload,
@@ -1337,14 +1349,16 @@ export function supportReplyFacts({ text, intent, access, env = process.env } = 
   const intentName = cleanText(intent?.intent, 80) || null;
   const linked = Boolean(access?.linked);
   const tripTitle = cleanText(access?.trip?.title, 180) || null;
+  const seatRole = cleanText(access?.telegramWebAccess?.role, 80).toLowerCase();
+  const collaboratorSeat = seatRole === 'telegram_collaborator' || seatRole === 'viewer' || seatRole === 'web_editor' || seatRole === 'editor';
   const facts = {
     customerText: cleanText(text, 2000),
     intent: intentName,
     linked,
     trip: linked ? {
       title: tripTitle,
-      publicUrl: cleanText(access?.trip?.publicUrl || access?.telegramWebAccess?.publicUrl, 800) || null,
-      launchUrl: cleanText(access?.telegramWebAccess?.launchUrl, 800) || null,
+      publicUrl: collaboratorSeat ? null : (cleanText(access?.trip?.publicUrl || access?.telegramWebAccess?.publicUrl, 800) || null),
+      launchUrl: collaboratorSeat ? null : (cleanText(access?.telegramWebAccess?.launchUrl, 800) || null),
       role: cleanText(access?.telegramWebAccess?.role, 80) || null,
     } : null,
   };
@@ -1363,7 +1377,7 @@ export function supportReplyFacts({ text, intent, access, env = process.env } = 
       hasPhotoUpload: Boolean(access?.hasPhotoUpload),
       hasVideoUpload: Boolean(access?.hasVideoUpload),
       allowed,
-      checkoutUrl: linked && !allowed ? ownerMediaCheckoutUrl(access?.session, env) : null,
+      checkoutUrl: !collaboratorSeat && linked && !allowed ? ownerMediaCheckoutUrl(access?.session, env) : null,
     };
     return facts;
   }
@@ -1460,7 +1474,11 @@ export async function modelSupportReply(facts, { env = process.env, fetchImpl = 
   return reply;
 }
 
-export async function vacationSupportReply({ text, intent, access, env = process.env, fetchImpl = fetch } = {}) {
+export function vacationSupportReply({ text, intent, access, env = process.env, fetchImpl = fetch } = {}) {
+  if (access?.askTrip) {
+    const titles = (access.tripTitles || []).filter(Boolean);
+    return titles.length ? `Which trip: ${titles.join('; ')}?` : 'Which trip should I use?';
+  }
   return modelSupportReply(supportReplyFacts({ text, intent, access, env }), { env, fetchImpl });
 }
 
@@ -2109,7 +2127,7 @@ export default async function handler(req, res) {
         replyPayload = {
           collaboratorEntitlement: {
             required: true,
-            error: 'checkout link creation failed',
+            error: 'link creation failed',
           },
         };
       }

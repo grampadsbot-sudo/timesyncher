@@ -25,8 +25,14 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/produceLiveAppReply/.test(api) || !/jevStamp/.test(api)) {
     errors.push('vacation-app API does not store the shared-producer reply and Jev stamp');
   }
-  if (!/ensureOnboardingOpener/.test(api) || !/onboardingOpenerText/.test(api)) {
-    errors.push('vacation-app API does not store the customer-visible onboarding opener');
+  if (!/ensureOnboardingOpener/.test(api) || !/produceOnboardingOpener/.test(api)) {
+    errors.push('vacation-app API does not ask the model for the onboarding opener');
+  }
+  if (/onboardingOpenerText/.test(`${api}\n${liveTurn}`) || /ONBOARDING_OPENER_WITH_SITE|ONBOARDING_OPENER_CHAT_ONLY|const CANNED_APP_REPLY/.test(liveTurn)) {
+    errors.push('vacation-app still ships a fixed onboarding opener or a canned reply');
+  }
+  if (/Your website is not built yet|I can update this vacation from here/.test(vacationApp)) {
+    errors.push('vacation app still renders a fixed welcome');
   }
   const jevAt = liveTurn.indexOf('await jevPrecall');
   const modelAt = liveTurn.indexOf('await callTieredModel');
@@ -47,8 +53,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
     errors.push('live reply path does not record Jev classify ms before the model call');
   }
   if (!/modelId/.test(liveTurn)) errors.push('live app turns do not store the bake-off model id');
-  if (!/real banter/.test(replyRules) || !/Single upsell/.test(replyRules) || !/at most one full collab/.test(replyRules)) {
-    errors.push('shared producer does not keep a single customer-pulled collab upsell');
+  if (!/real banter/.test(replyRules) || !/planFactsForReply/.test(replyRules) || !/Plan facts:/.test(replyRules)) {
+    errors.push('shared producer does not pass plan facts as data');
+  }
+  if (/View access lets them see the days/.test(replyRules) || /Say you are building the itinerary/.test(replyRules) || /State this payer line exactly/.test(replyRules)) {
+    errors.push('shared producer still dictates upsell sentences');
   }
   if (!/unlimited vacations for the whole year/.test(replyRules)) {
     errors.push('shared producer drops the exact unlimited-vacations phrase');
@@ -90,8 +99,8 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/isTemplateInterim/.test(liveTurn) || !/interimProblems/.test(liveTurn) || !/no template fallback|text = ''/.test(liveTurn)) {
     errors.push('interim replies can fall back to a template');
   }
-  if (!/building the itinerary/.test(liveTurn) || !/Post-intake:/.test(replyRules)) {
-    errors.push('shared producer does not acknowledge the itinerary and give the collab welcome right after long intake');
+  if (!/building the itinerary/.test(liveTurn) || !/Plan facts:/.test(replyRules)) {
+    errors.push('shared producer does not pass plan facts after long intake');
   }
   if (!/data-screen="onboarding"/.test(vacationApp) || /data-screen="itinerary"/.test(vacationApp) || /data-screen="thing"/.test(vacationApp) || /aria-label="Vacation path"/.test(vacationApp)) {
     errors.push('vacation app still serves the shell itinerary cards instead of the shared app');

@@ -9,8 +9,9 @@ import {
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
-import { customerInputState } from './intake-shared-trip.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
+import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
+import { customerInputState } from './intake-shared-trip.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -18,8 +19,6 @@ export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
 export const FIXED_OPENER_REASON = 'fixed_onboarding_opener';
 export const LIVE_DISPATCHER = 'product-gbrain-dispatch';
-export const ONBOARDING_OPENER_WITH_SITE = 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.';
-export const ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
 
 export function tripIsReturning(trip) {
   if (!trip || typeof trip !== 'object') return false;
@@ -31,11 +30,61 @@ export function tripIsReturning(trip) {
   return Boolean(url.trim() || slug.trim());
 }
 
-export function onboardingOpenerText(returning) {
-  return returning ? ONBOARDING_OPENER_WITH_SITE : ONBOARDING_OPENER_CHAT_ONLY;
+export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}) {
+  const title = String(tripTitle || '').trim();
+  return {
+    first_message: true,
+    customer_said: null,
+    returning_trip: Boolean(returning),
+    site_ready: Boolean(returning),
+    trip_title: title || null,
+  };
 }
 
-const CANNED_APP_REPLY = 'Got it. I saved that';
+export async function produceOnboardingOpener({ returning = false, tripTitle = '', session = null, env = process.env } = {}) {
+  const rules = await loadVacationAppReplyRules(env);
+  if (!rules?.ok) {
+    return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
+  }
+  const jevStarted = Date.now();
+  const jev = await jevPrecall({
+    customerTurn: '',
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!jev?.jevRan) {
+    return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
+  }
+  jev.jevBeforeModel = true;
+  const facts = onboardingOpenerFacts({ returning, tripTitle });
+  const model = await callTieredModel({
+    rules,
+    jev,
+    customerTurn: '',
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    destination: '',
+    memory: [],
+    upsell: 'forbidden',
+    postIntake: false,
+    env,
+    systemExtra: `Opener facts: ${JSON.stringify(facts)}`,
+  });
+  const reply = model?.called && model.text ? String(model.text).trim() : '';
+  if (!reply || appTextBanned(reply)) {
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: appTextBanned(reply) || model?.reason || 'onboarding opener model returned no reply',
+    };
+  }
+  return { reply, rules, jev, model, reason: null };
+}
 
 export function customerModality(body) {
   return body?.voiceMode ? 'voice' : 'text';
@@ -204,6 +253,9 @@ export function liveTurnRecord({
         genLatencyMs: record.genLatencyMs,
       }
       : null;
+    record.qualityLine = formatQualityLine(record.quality);
+    record.heldRewriteLine = heldRewriteLine(record);
+    record.rewriteCredit = rewriteCreditLabel(record.rewriteModel || record.quality?.rewriteModel, record.rewriterChange || record.quality?.rewriterChange);
   }
   if (rules) {
     record.rules = {
@@ -239,13 +291,8 @@ export function firstMarkedIntake(customerTurn, priorTurns) {
   return !priors.some((turn) => turn?.role === 'customer' && turn.intake === true);
 }
 
-export function customerPullsAccess(text) {
-  const value = String(text || '');
-  if (/\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(value)) return true;
-  if (/\bcollaborat/i.test(value)) return true;
-  if (/\b(family|household|editing|full) access\b/i.test(value)) return true;
-  if (/\bjoin (?:this|the) (?:same )?(?:trip|vacation)\b/i.test(value) && /\b(family|friend|them|everyone|household)\b/i.test(value)) return true;
-  return false;
+export function customerPullsAccess(text, intent) {
+  return intent?.pullsAccess === true;
 }
 
 export function isCollabWelcome(text) {
@@ -257,12 +304,8 @@ export function isFullUpsell(text) {
   return UNLIMITED_PATTERN.test(value) && /collaborat/i.test(value);
 }
 
-export function isFixedOpenerText(text) {
-  const value = String(text || '');
-  return value === ONBOARDING_OPENER_CHAT_ONLY
-    || value === ONBOARDING_OPENER_WITH_SITE
-    || /your website is not built yet/i.test(value)
-    || /i can update this vacation from here/i.test(value);
+function openerTurn(turn) {
+  return turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER;
 }
 
 function sentenceIsUpsell(sentence) {
@@ -271,13 +314,12 @@ function sentenceIsUpsell(sentence) {
 
 export const ITEM34_BAN = /\b(?:split|splitting)\b/i;
 
-export function customerAsksAccessChoice(text) {
-  const value = String(text || '');
-  return /\?/.test(value) && /\bview access\b/i.test(value) && /\bedit access\b/i.test(value);
+export function customerAsksAccessChoice(text, intent) {
+  return intent?.asksAccess === true;
 }
 
-export function customerAsksPrice(text) {
-  return /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(text || ''));
+export function customerAsksPrice(text, intent) {
+  return intent?.asksPrice === true;
 }
 
 export function item34BanHit(text) {
@@ -291,14 +333,14 @@ export function sessionHasFullUpsell(priorTurns) {
   return (Array.isArray(priorTurns) ? priorTurns : []).some((turn) => {
     if (turn?.role === 'customer') return false;
     const text = String(turn?.text || '');
-    if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) return false;
+    if (openerTurn(turn)) return false;
     return isFullUpsell(text);
   });
 }
 
-export function upsellModeForTurn(customerTurn, priorTurns) {
+export function upsellModeForTurn(customerTurn, priorTurns, intent) {
   if (sessionHasFullUpsell(priorTurns)) return 'forbidden';
-  if (customerPullsAccess(customerTurnText(customerTurn)) || firstMarkedIntake(customerTurn, priorTurns)) return 'allow-once';
+  if (customerPullsAccess(customerTurn, intent) || firstMarkedIntake(customerTurn, priorTurns)) return 'allow-once';
   return 'forbidden';
 }
 
@@ -310,6 +352,7 @@ export function upsellAudit(turns) {
   const unsolicitedWelcome = [];
   let lastCustomer = '';
   let lastCustomerTurn = null;
+  let lastIntent = null;
   const priorCustomers = [];
   for (const turn of list) {
     const text = String(turn?.text || '');
@@ -317,12 +360,13 @@ export function upsellAudit(turns) {
       if (turn?.role === 'customer') {
         lastCustomer = text;
         lastCustomerTurn = turn;
+        lastIntent = turn.intent || null;
         priorCustomers.push(turn);
       }
       continue;
     }
-    if (isFixedOpenerText(text) || turn?.fixedOpener === true || turn?.replyProducer === LIVE_OPENER_PRODUCER) continue;
-    const pulled = customerPullsAccess(lastCustomer)
+    if (openerTurn(turn)) continue;
+    const pulled = customerPullsAccess(lastCustomer, lastIntent)
       || firstMarkedIntake(lastCustomerTurn, priorCustomers.slice(0, -1));
     const phrase = UNLIMITED_PATTERN.test(text);
     const welcome = isCollabWelcome(text);
@@ -399,17 +443,30 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
     ...customerInputState(things),
+    ...customerInputFields(record),
   };
   if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
 }
 
+function customerInputFields(record) {
+  if (!record || typeof record !== 'object') return {};
+  const fields = {};
+  if (Array.isArray(record.needsCustomerInput)) {
+    const needsCustomerInput = record.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
+    if (needsCustomerInput.length) fields.needsCustomerInput = needsCustomerInput;
+  }
+  const flightAsk = String(record.flightAsk || '').trim();
+  if (flightAsk) fields.flightAsk = flightAsk;
+  return fields;
+}
+
 export function qualityFailureReason(quality, flags) {
   const parts = [];
-  if (flags?.missingPrice) parts.push('missing per-payer dollar line');
-  if (flags?.invented?.length) parts.push(`invented place: ${flags.invented.join(', ')}`);
+  if (flags?.missingPrice) parts.push('missing dollar line');
   if (flags?.split) parts.push('banned payment word');
+  if (flags?.invented?.length) parts.push(`invented place: ${flags.invented.join(', ')}`);
   if (flags?.missingAccess) parts.push('missing view access and edit access');
   const focus = String(quality?.jevFocus || '').trim();
   if (focus && focus !== 'keep') parts.push(`jev fix_focus ${focus}`);
@@ -427,7 +484,6 @@ function appTextBanned(text) {
   const value = String(text || '');
   if (!value.trim()) return 'app reply text is empty';
   if (value.includes(DIALOG_TEST_FINGERPRINT)) return 'app reply carries the dialog test fingerprint';
-  if (value.includes(CANNED_APP_REPLY)) return 'app reply is the canned vacation-app bubble';
   if (/dialog_vacation_test_turn/i.test(value)) return 'app reply came from dialog_vacation_test_turn';
   if (/dialog-pdf-openrouter-selfcall|openrouter-selfcall/i.test(value)) return 'app reply came from an OpenRouter self-call pack';
   return '';
@@ -670,18 +726,22 @@ export function applyAgreedAppSwim(things) {
   return Array.isArray(things) ? things : [];
 }
 
-function activitySentenceCommits(hit) {
-  const dated = datedMentions(hit).length > 0;
-  if (/\bif\b/i.test(hit) && !dated) return false;
-  if (/\?/.test(hit) && !dated) return false;
-  return true;
+function activitySentenceCommits(_hit, decision) {
+  if (decision?.ask === true) return false;
+  return decision?.commits === true;
+}
+
+export async function activityCommitDecisions(text, options) {
+  const sentences = splitSentences(text);
+  if (!sentences.length) return {};
+  return activityCommits(sentences, options);
 }
 
 function sameNote(left, right) {
   return String(left || '').replace(/\s+/g, ' ').trim().toLowerCase() === String(right || '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
-export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '' } = {}) {
+export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '', commits = null } = {}) {
   const sentences = splitSentences(text);
   return (Array.isArray(things) ? things : []).map((thing) => {
     const hits = sentences.filter((part) => mentionsThing(thing.title, part));
@@ -689,6 +749,7 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     const notes = Array.isArray(thing.notes) ? [...thing.notes] : [];
     const collaboratorNotes = Array.isArray(thing.collaboratorNotes) ? [...thing.collaboratorNotes] : [];
     const bucket = collaborator ? collaboratorNotes : notes;
+    const decisionFor = (hit) => (commits?.__ask ? { ask: true, commits: false } : commits?.[hit]);
     for (const hit of hits) {
       const line = collaborator && speakerName && !hit.includes(String(speakerName).split(/\s+/)[0])
         ? `${speakerName}: ${hit}`
@@ -697,7 +758,15 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       bucket.push(line);
     }
     const who = String(thing.who || '').trim();
-    const customerWhen = String(thing.customerWhen || '').trim();
+    const labels = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
+    for (const hit of hits) {
+      if (!activitySentenceCommits(hit, decisionFor(hit))) continue;
+      for (const dated of datedMentions(hit)) {
+        const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
+        if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
+      }
+    }
+    const customerWhen = labels.join(' · ');
     return {
       ...thing,
       who,
@@ -798,6 +867,26 @@ function looseDayStamps(sentence, span) {
   if (!match || !span?.start) return [];
   const month = MONTH_ABBR[Number(String(span.start).slice(5, 7))] || '';
   return month ? [`${month.toLowerCase()} ${Number(match[2])}`] : [];
+}
+
+function ordinalWeekdayStamp(sentence, span) {
+  const match = String(sentence || '').match(/\b(first|second|third|fourth|fifth|last)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
+  if (!match || !span?.start || !span?.end) return '';
+  const target = WEEKDAY_INDEX[match[2].toLowerCase()];
+  if (target == null) return '';
+  const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
+  const end = new Date(`${isoDay(span.end)}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
+  const hits = [];
+  for (let cursor = start; cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
+    if (cursor.getUTCDay() !== target) continue;
+    const month = MONTH_ABBR[cursor.getUTCMonth() + 1] || '';
+    if (month) hits.push(`${month.toLowerCase()} ${cursor.getUTCDate()}`);
+  }
+  if (!hits.length) return '';
+  if (match[1].toLowerCase() === 'last') return hits[hits.length - 1];
+  const index = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5 }[match[1].toLowerCase()];
+  return index ? (hits[index - 1] || '') : '';
 }
 
 function weekdayName(sentence) {
@@ -946,7 +1035,7 @@ export function draftFactErrors(reply, facts = {}) {
     }
   }
   if (/no extra charge|no extra cost|at no extra/i.test(body)) {
-    pushError(errors, 'no extra charge is not in what the customer set');
+    pushError(errors, 'no extra is not in what the customer set');
   }
   if (/\b(?:we|i)(?:'|’)ve corrected\b|\b(?:we|i) have corrected\b/i.test(body)) {
     pushError(errors, 'the reply invented a correction');
@@ -1160,16 +1249,64 @@ function rewriteAttempted(turn) {
     || Boolean(String(turn?.rewriteText || '').trim());
 }
 
-const INTERIM_STOCK = /^(got it|sure|okay|ok|the plan stays)\b/i;
-const INTAKE_OPENER_ONLY = /^i am building the itinerary\b/i;
+function readInterimJudge(result) {
+  if (!result || result.judged !== true || typeof result.template !== 'boolean') return null;
+  return { judged: true, template: result.template === true, canShip: result.canShip === true && result.template !== true };
+}
 
-export function isTemplateInterim(text, customerTurn) {
+function interimJudgeError(code) {
+  const error = new Error(code);
+  error.code = code;
+  return error;
+}
+
+export async function judgeInterimReply({ text, customerTurn, facts = {}, env = process.env, judge = null, fetchImpl = null } = {}) {
   const value = String(text || '').trim();
-  if (!value || INTERIM_STOCK.test(value)) return true;
-  if (INTAKE_OPENER_ONLY.test(value) && !(/\bview access\b/i.test(value) && /\bedit access\b/i.test(value))) return true;
-  const words = String(customerTurn || '').toLowerCase().match(/[a-z0-9]{4,}/g) || [];
-  const blob = value.toLowerCase();
-  return !words.some((word) => blob.includes(word));
+  if (!value) return { judged: true, template: true, canShip: false, reason: 'empty' };
+  if (typeof judge === 'function') {
+    const verdict = await judge({ text: value, customerTurn, facts });
+    const parsed = readInterimJudge(verdict?.judged === true ? verdict : { ...verdict, judged: true });
+    if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');
+    return { ...parsed, reason: '' };
+  }
+  const key = String(env?.TIMESYNCHER_JEV_CLASSIFY_TOKEN || env?.TIMESYNCHER_OPENROUTER_API_KEY || env?.OPENROUTER_API_KEY || '').trim();
+  if (!key) throw interimJudgeError('INTERIM_JUDGE_CREDENTIALS_MISSING');
+  const response = await (fetchImpl || fetch)('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      model: INTERIM_MODEL,
+      temperature: 0,
+      max_tokens: 80,
+      messages: [
+        { role: 'system', content: 'Return only JSON {"template":boolean,"canShip":boolean}. template means a stock acknowledgement or a reply that misses the customer. canShip means it answers this turn. Do not write a reply.' },
+        { role: 'user', content: JSON.stringify({ customer: String(customerTurn || '').slice(0, 4000), reply: value.slice(0, 2000) }) },
+      ],
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
+  const body = typeof response?.json === 'function' ? await response.json().catch(() => ({})) : {};
+  if (!response?.ok) throw interimJudgeError('INTERIM_JUDGE_HTTP');
+  let parsed = null;
+  try {
+    const raw = String(body?.choices?.[0]?.message?.content || '');
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    const json = start >= 0 && end > start ? JSON.parse(raw.slice(start, end + 1)) : null;
+    parsed = readInterimJudge(json && typeof json.template === 'boolean' && typeof json.canShip === 'boolean' ? { ...json, judged: true } : null);
+  } catch {
+    parsed = null;
+  }
+  if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');
+  return { ...parsed, reason: '' };
+}
+
+export function isTemplateInterim(text, _customerTurn, judgeResult) {
+  const value = String(text || '').trim();
+  if (!value) return true;
+  const verdict = readInterimJudge(judgeResult);
+  if (!verdict) return true;
+  return verdict.template;
 }
 
 export function interimProblems(turns) {
@@ -1182,9 +1319,7 @@ export function interimProblems(turns) {
     const text = String(interim?.text || '').trim();
     const rewritten = rewriteAttempted(turn);
     const prior = list.slice(0, list.indexOf(turn)).reverse().find((item) => item?.role === 'customer');
-    const template = prior
-      ? isTemplateInterim(text, prior.text)
-      : /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i.test(text);
+    const template = isTemplateInterim(text, prior?.text || '', interim?.judge);
     if (rewritten) {
       if (!text || template) problems.push(`turn ${turn.turnIndex} rewrite is missing an interim reply`);
       else if (interim?.model !== 'google/gemini-2.5-flash-lite') {
@@ -1288,29 +1423,12 @@ export function holdingShipErrors(text, facts = {}) {
   return errors;
 }
 
-export function interimDodges(text, customerTurn) {
-  const value = String(text || '');
-  const ask = customerTurnText(customerTurn);
-  const dodgeTone = /\bit sounds like\b|\bwonderful trip\b|\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value);
-  if (!dodgeTone) return false;
-  if (/\btwo options\b|\boffer two\b|\bpick after you offer\b/i.test(ask) && !/\bor\b|\boption\b/i.test(value)) return true;
-  if (/\bbackup\b|\bif\b[^.]{0,40}\brain|\brainy\b/i.test(ask) && !/\bbackup\b|\bshift|\bsecond friday\b/i.test(value)) return true;
-  if (!turnMarkedIntake(customerTurn) && /\blater\b/i.test(ask) && /\bswim\b/i.test(ask) && !/\bfriday\b|\bapr(?:il)?\.?\s+10\b/i.test(value)) return true;
-  if (/\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value) && !/\b(saved|set for|option|town walk)\b/i.test(value)) return true;
-  return false;
-}
-
-export function interimCanShip(text, customerTurn, facts = {}) {
+export function interimCanShip(text, customerTurn, facts = {}, judgeResult) {
   const value = String(text || '').trim();
-  const ask = customerTurnText(customerTurn);
-  if (!value || isTemplateInterim(value, ask)) return false;
-  const customer = ask.replace(/\s+/g, ' ').trim().toLowerCase();
-  const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
-  if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
-  if (interimDodges(value, customerTurn)) return false;
+  const verdict = readInterimJudge(judgeResult);
+  if (!value || !verdict || isTemplateInterim(value, customerTurn, verdict) || !verdict.canShip) return false;
   if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|invented a correction/.test(error))) return false;
   if (turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
-  if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
 }
 
@@ -1369,10 +1487,10 @@ export function rewriteKeepsSubstance(draft, rewritten) {
   return days.every((day) => new RegExp(`\\b${day}\\b`, 'i').test(String(rewritten || '')));
 }
 
-export function rewriteAnswersQuestion(customerTurn, rewritten) {
+export function rewriteAnswersQuestion(customerTurn, rewritten, intent) {
   const body = String(rewritten || '');
-  if (customerAsksPrice(customerTurn)) return priceAnswered(body, customerTurn);
-  if (customerAsksAccessChoice(customerTurn)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
+  if (customerAsksPrice(customerTurn, intent)) return priceAnswered(body, { text: customerTurn, seats: intent?.seats });
+  if (customerAsksAccessChoice(customerTurn, intent)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
   const question = splitSentences(customerTurn).find((sentence) => /\?/.test(sentence));
   if (!question) return true;
   const words = rewriteTokens(question);
@@ -1391,21 +1509,24 @@ export function rewriteReplacesDraft(draft, rewritten) {
   return true;
 }
 
-export function hardQualityFlags(reply, customerTurn, corpus, sources) {
+export function hardQualityFlags(reply, customerTurn, corpus, sources, intent) {
   const body = String(reply || '');
   const ask = customerTurnText(customerTurn);
+  const intentArg = (intent && typeof intent === 'object')
+    ? intent
+    : (sources && !Array.isArray(sources) && typeof sources === 'object' ? sources : null);
   const placeSources = Array.isArray(sources) ? sources : (Array.isArray(corpus) ? corpus : []);
   return {
     split: item34BanHit(body),
     invented: unsourcedPlaces(body, placeSources),
-    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask),
-    missingAccess: customerAsksAccessChoice(ask) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
+    missingPrice: customerAsksPrice(ask, intentArg) && !priceAnswered(body, { text: ask, seats: intentArg?.seats }),
+    missingAccess: customerAsksAccessChoice(ask, intentArg) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
     missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
   };
 }
 
-export function correctFalsePriceMiss(quality, reply, customerTurn) {
-  if (!customerAsksPrice(customerTurn) || priceAnswered(reply, customerTurn)) return quality;
+export function correctFalsePriceMiss(quality, reply, customerTurn, intent) {
+  if (!customerAsksPrice(customerTurn, intent) || priceAnswered(reply, { text: customerTurn, seats: intent?.seats })) return quality;
   return {
     ...quality,
     score: Math.min(Number(quality?.score) || 1, 3),
@@ -1428,10 +1549,10 @@ function applyUpsellPolicy(reply) {
   return stripChatMarkdown(String(reply || '').trim());
 }
 
-function rewriteBreaksUpsell(text, upsell, customerTurn) {
+function rewriteBreaksUpsell(text, upsell, customerTurn, intent) {
   if (upsell !== 'forbidden') return false;
   if (isCollabWelcome(text)) return true;
-  if (customerAsksPrice(customerTurn)) return false;
+  if (customerAsksPrice(customerTurn, intent)) return false;
   return isFullUpsell(text) || UNLIMITED_PATTERN.test(text);
 }
 
@@ -1522,6 +1643,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     planOwned: saved?.planOwned === true,
     rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
+    ...customerInputFields(saved),
   };
 }
 
@@ -1531,7 +1653,13 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  const upsell = upsellModeForTurn(intakeTurn, history);
+  let intent = emptyIntent();
+  try {
+    intent = await customerIntent(customerTurn, { env });
+  } catch (error) {
+    intent = { ...emptyIntent(), error: String(error?.message || error) };
+  }
+  const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
@@ -1553,8 +1681,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   tripFacts.payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
     .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
     .filter((row) => row.name && row.payer);
-  const planLine = customerAsksPrice(customerTurn) && pricedSeat
-    ? payerLineFromDollars(customerTurn, pricedSeat, tripFacts.payerRows)
+  const extractedSeats = Array.isArray(intent?.seats) && intent.seats.some((seat) => seat?.name && seat?.payer)
+    ? intent.seats
+    : tripFacts.payerRows;
+  const planLine = customerAsksPrice(customerTurn, intent) && pricedSeat
+    ? payerLineFromDollars(customerTurn, pricedSeat, extractedSeats)
     : '';
   const planTable = planLine
     ? {
@@ -1605,7 +1736,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftExtra = [
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
-    intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(citedPlaces),
     resolvedDestination.ask ? DESTINATION_ASK : '',
@@ -1626,6 +1756,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planLine,
     seatDollars,
     seat,
+    planOwned: mergedTrip.planOwned === true,
     systemExtra: draftExtra,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
@@ -1634,9 +1765,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
-  if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
-    const nudge = customerAsksPrice(customerTurn) && planLine
-      ? `${customerTurn}\n\nAnswer with who pays: ${planLine}. Do not add a second collaborator welcome.`
+  if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
+    const nudge = customerAsksPrice(customerTurn, intent)
+      ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
       : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -1644,21 +1775,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
-    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true });
-    if (interim.text && !appTextBanned(interim.text)) {
-      reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
-      model = {
-        called: true,
-        via: 'openrouter-chat',
-        responseModel: INTERIM_MODEL,
-        modelTier: 1,
-        text: reply,
-        genLatencyMs: interim.ms,
-        maxTokens: 900,
-      };
-    }
-  }
-  if (!reply || appTextBanned(reply)) {
     return {
       reply: null,
       rules,
@@ -1670,14 +1786,14 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
-  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces);
+  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces, intent);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
   const factErrors = draftFactErrors(originalDraft, tripFacts);
   if (quality?.judged) {
-    quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
+    quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn, intent);
     quality = applyAccuracyRewrite(quality, factErrors);
     quality.jevNote = null;
     quality.comment = null;
@@ -1751,7 +1867,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     return { reply: shipped.reply, rules, jev, model: shipped.model, quality: shipped.quality, log: shipped.log, reason: null };
   }
   const interimStarted = Date.now();
-  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true }).then((interim) => {
+  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true, intent }).then((interim) => {
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
   });
@@ -1780,6 +1896,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     tripFacts,
     planTable,
     planLine,
+    intent,
     seatDollars,
     seat,
     rawModelText: model?.text == null ? null : String(model.text),
@@ -1857,10 +1974,10 @@ function interimFacts(customerTurn, destination) {
   ].join(' ');
 }
 
-export function upsellFactsForTurn(customerTurn, facts = {}, intake = false) {
+export function upsellFactsForTurn(customerTurn, facts = {}, intake = false, intent = null) {
   const marked = intake === true || turnMarkedIntake(customerTurn);
   const ask = customerTurnText(customerTurn);
-  const price = customerAsksPrice(ask);
+  const price = customerAsksPrice(ask, intent);
   if (!marked && !price) return null;
   return {
     buildingItinerary: marked,
@@ -1869,16 +1986,16 @@ export function upsellFactsForTurn(customerTurn, facts = {}, intake = false) {
     emailInvite: marked,
     planPhrase: 'unlimited vacations for the whole year',
     planOwned: facts.planOwned === true,
-    payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, facts.payerRows) : '',
+    payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, intent?.seats || facts.payerRows) : '',
   };
 }
 
-async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false }) {
+async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false, intent = null }) {
   const started = Date.now();
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
   const speaker = String(facts.addressedTo || '').trim();
-  const upsell = upsellFactsForTurn(customerTurn, facts, intake);
+  const upsell = upsellFactsForTurn(customerTurn, facts, intake, intent);
   const systemExtra = [
     intake === true ? 'This holding reply covers the intake. Use the upsell facts. Do not recite a script.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
@@ -1888,12 +2005,11 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
     absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
     upsell ? `Upsell facts: ${JSON.stringify(upsell)}` : '',
-    customerAsksPrice(customerTurn) && Number(facts.seatDollars) > 0
-      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, facts.payerRows)}.`
+    customerAsksPrice(customerTurn, intent) && Number(facts.seatDollars) > 0
+      ? `This turn asks the price. State this line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, intent?.seats || facts.payerRows)}.`
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');
-  const unusable = (value) => isTemplateInterim(value, customerTurn) || draftFactErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
   const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },
@@ -1912,9 +2028,13 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   });
   const model = await call();
   let text = String(model?.text || '').trim();
-  if (unusable(text) || model?.responseModel !== INTERIM_MODEL) text = '';
+  const judge = text && model?.responseModel === INTERIM_MODEL
+    ? await judgeInterimReply({ text, customerTurn, facts, env })
+    : null;
+  const factBlocked = draftFactErrors(text, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
+  if (!text || !judge || isTemplateInterim(text, customerTurn, judge) || !interimCanShip(text, customerTurn, facts, judge) || factBlocked || model?.responseModel !== INTERIM_MODEL) text = '';
   const elapsed = Date.now() - started;
-  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null };
+  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null, judge: text ? judge : null };
 }
 
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
@@ -2001,12 +2121,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID).',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
-        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
+        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
-          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
+          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
           : '',
       ].filter(Boolean).join(' '),
     });
@@ -2047,11 +2167,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
-      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults);
+      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults, pending.intent);
       rewriteQuality = correctFalsePriceMiss(
         dockQuality(rewriteQuality, rewriteFlags),
         judgedText,
         pending.customerTurn,
+        pending.intent,
       );
       rewriteQuality = applyAccuracyRewrite(rewriteQuality, rewriteErrors);
       rewriteQuality.jevNote = null;
@@ -2065,7 +2186,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   const rewriteQualityMs = rewriteCanShip ? Math.max(0, Date.now() - rewriteQualityStarted) : 0;
   const interimReply = interimPromise ? await interimPromise : (pending?.interimReply || { text: null, model: null, ms: null });
   if (pending) pending.interimReply = interimReply;
-  const holdingText = interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts)
+  const holdingText = interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts, interimReply?.judge)
     ? String(interimReply.text).trim()
     : '';
   let choice = shipChoice({
@@ -2321,6 +2442,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       jevNote: live.jevNote || null,
       jevNoteReason: live.jevNoteReason || live.quality?.jevNoteReason || null,
       interimReply: live.interimReply || null,
+      qualityLine: live.qualityLine != null ? String(live.qualityLine) : formatQualityLine(live.quality),
+      heldRewriteLine: live.heldRewriteLine != null ? String(live.heldRewriteLine) : heldRewriteLine(live),
+      rewriteCredit: live.rewriteCredit != null ? String(live.rewriteCredit) : rewriteCreditLabel(live.rewriteModel || live.quality?.rewriteModel, live.rewriterChange || live.quality?.rewriterChange),
       modelLatency: live.modelLatency || null,
       flagged: live.flagged === true,
       held: live.held === true,

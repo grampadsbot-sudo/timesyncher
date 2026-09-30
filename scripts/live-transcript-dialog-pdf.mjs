@@ -142,12 +142,12 @@ export function assertLiveTranscript(doc) {
       const venues = inventedVenueNames(text, placeResults);
       if (venues.length) contentFails.push(`FAIL. Turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
-      if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
-        if (!priceAnswered(text, priorCustomer.text) || item34BanHit(text)) {
+      if (priorCustomer && customerAsksPrice(priorCustomer.text, priorCustomer.intent)) {
+        if (!priceAnswered(text, { text: priorCustomer.text, seats: priorCustomer.intent?.seats }) || item34BanHit(text)) {
           contentFails.push(`FAIL. Turn ${turn.turnIndex} price question has no per-payer dollar price`);
         }
       }
-      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
+      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text, priorCustomer.intent) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
         contentFails.push(`FAIL. Turn ${turn.turnIndex} does not offer view access and edit access`);
       }
       const shippedModel = String(turn.shippedModel || '').trim();
@@ -207,7 +207,7 @@ export function assertLiveTranscript(doc) {
         if (!shippedRewrite && turn.jevScoreRewrite != null && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
-        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
+        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '', turn.interimReply.judge) || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
         }
         const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;
@@ -755,14 +755,15 @@ function printedRaw(value) {
 }
 
 function qualityBar(turn) {
-  const score = formatQualityLine(turn.quality);
-  const held = heldRewriteLine(turn);
+  const score = turn?.qualityLine != null ? String(turn.qualityLine) : formatQualityLine(turn.quality);
+  const held = turn?.heldRewriteLine != null ? String(turn.heldRewriteLine) : heldRewriteLine(turn);
   if (score && held) return `${score} · ${held}`;
   return score || held;
 }
 
 export function shippedRewriteLabel(turn) {
   if (!turn || turn.held === true || turn.quality?.rewritten !== true) return '';
+  if (turn.rewriteCredit != null) return String(turn.rewriteCredit);
   return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
 }
 

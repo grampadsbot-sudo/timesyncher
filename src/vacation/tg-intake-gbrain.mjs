@@ -5,7 +5,6 @@ import path from 'node:path';
 export const INTAKE_SOT = 'bot-admin/messages/time-syncher/tg-intake-gbrain-track-and-build-cue-20260910';
 export const INTAKE_SKILL = 'skills/tg-intake-gbrain-track-and-build/skill';
 
-/** Craig product cue after enough intake. Do not invent a different wait window. */
 export const INITIAL_BUILD_CUE = "I'm building your initial itinerary now and it may take 10–15 minutes.";
 
 export function productGbrainRoot(env = process.env) {
