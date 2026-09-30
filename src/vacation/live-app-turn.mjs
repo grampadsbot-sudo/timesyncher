@@ -11,6 +11,7 @@ import {
 
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
+import { customerInputState } from './intake-shared-trip.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -441,6 +442,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
+    ...customerInputState(things),
     ...customerInputFields(record),
   };
   if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
