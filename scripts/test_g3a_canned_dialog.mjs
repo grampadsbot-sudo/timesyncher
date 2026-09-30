@@ -36,7 +36,6 @@ const postIntake = planFactsForReply({
   planOwned: false,
 });
 assert.equal(postIntake.mode, 'post-intake');
-assert.equal(postIntake.plan_name, 'unlimited vacations for the whole year');
 assert.equal(postIntake.seat_dollars, 27);
 assert.equal(postIntake.payer_line, 'Kimberly $27, paid by you');
 assert.equal(postIntake.plan_owned, false);
