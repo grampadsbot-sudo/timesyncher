@@ -31,9 +31,11 @@ Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving i
 - [Post-purchase email, then in-app EULA](./post-purchase-email-eula.md)
 - [Live composer Jev tier](./live-app-jev-tier.md)
 - [Standard itinerary layout](./itinerary-layout.md)
+- [Standard layout, no view options](./config-options-trip-view.md). The itinerary uses the standard TimeSyncher layout, with no view options.
 - [Slider bars](./slider-bars.md)
 - [Thing pages](./thing-pages.md)
 - [Post-intake welcome](./post-intake-welcome.md)
+- [Welcome after intake](./welcome-after-intake.md)
 - [Jev quality line](./jev-quality-line.md)
 - [Keepsake Style one](./keepsake-style-one.md)
 - [Keepsake Style two](./keepsake-style-two.md)
@@ -41,7 +43,7 @@ Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving i
 - [Dialog screenshot gate](./dialog-screenshot-gate.md)
 - [Email opens the real app](./real-app-email-entry.md)
 - [Search redesign](./search-redesign.md)
-- Header, language, voice note, maps, filters, empty states, tags, logos, status, happy hour, hotel, flight, car, ratings, stories, collaborators, budget, packing, print, order keepsakes, trip view, navigation, settings, min things, autonomy, keepsake QA, Telegram intake, the Cursor contract, and the search redesign each have a sibling file with the same drive shape.
+- Header, language, voice note, maps, filters, empty states, tags, logos, status, happy hour, hotel, flight, car, ratings, stories, collaborators, budget, packing, print, order keepsakes, navigation, settings, min things, autonomy, keepsake QA, Telegram intake, and the Cursor contract each have a sibling file with the same drive shape.
 
 ## Retired
 

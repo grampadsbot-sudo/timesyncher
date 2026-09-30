@@ -6,11 +6,11 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## Sub-features
 
-- Change language / Select language lives on the login or landing page, not the shared-trip header.
+- Change language / Select language lives on the login or landing page, not the shared-trip header. `login.html` labels that control Language.
 
 ## How to get to it (user POV)
 
-- Open /login.html and the site root. Look for Change language or Select language.
+- Open /login.html and the site root. Look for Language, Change language, or Select language.
 
 ## Driving it
 

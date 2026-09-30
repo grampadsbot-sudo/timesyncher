@@ -6,11 +6,11 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## Sub-features
 
-- The menu includes Order Keepsakes.
+- The shared-trip header includes Order Keepsakes. It is not an item in the PDFs menu.
 
 ## How to get to it (user POV)
 
-- Open the PDFs menu and look for Order Keepsakes.
+- Click the header button Order Keepsakes.
 
 ## Driving it
 

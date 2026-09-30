@@ -17,7 +17,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-empty-states.png`.
-- Pass when the live page shows the control named above.
+- Pass when the served app bundle still contains the three empty-state sentences and the filled reference day does not show the empty timeline line.
 - If the app no longer shows it, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas

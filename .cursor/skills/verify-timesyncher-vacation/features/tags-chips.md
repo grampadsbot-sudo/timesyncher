@@ -10,7 +10,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## How to get to it (user POV)
 
-- Open Restaurants. Look for tag chips on a row.
+- Open a restaurant Thing. Look for Restaurant tags / chips.
 
 ## Driving it
 
