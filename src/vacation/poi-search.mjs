@@ -1,4 +1,4 @@
-import { POI_RADIUS_METERS, THIN_POI_COUNT } from './keepsake-list-minimums.mjs';
+import { categoryRadiusMeters, POI_RADIUS_METERS, THIN_POI_COUNT } from './keepsake-list-minimums.mjs';
 
 export { POI_RADIUS_METERS, THIN_POI_COUNT };
 
@@ -283,7 +283,7 @@ export async function searchPois({
   if (!Number.isFinite(Number(origin?.lat)) || !Number.isFinite(Number(origin?.lng))) {
     return { pois: [], cache: 'miss', brave: false };
   }
-  const radiusMeters = POI_RADIUS_METERS[category] || POI_RADIUS_METERS.activity;
+  const radiusMeters = categoryRadiusMeters(category);
   const key = cacheKey(origin, category, radiusMeters, dateBucket);
   const hit = cache.get(key);
   if (hit && hit.expiresAt > now) {
