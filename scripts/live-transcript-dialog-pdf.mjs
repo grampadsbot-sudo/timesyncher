@@ -142,12 +142,12 @@ export function assertLiveTranscript(doc) {
       const venues = inventedVenueNames(text, placeResults);
       if (venues.length) contentFails.push(`FAIL. Turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
-      if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
-        if (!priceAnswered(text, priorCustomer.text) || item34BanHit(text)) {
+      if (priorCustomer && customerAsksPrice(priorCustomer.text, priorCustomer.intent)) {
+        if (!priceAnswered(text, { text: priorCustomer.text, seats: priorCustomer.intent?.seats }) || item34BanHit(text)) {
           contentFails.push(`FAIL. Turn ${turn.turnIndex} price question has no per-payer dollar price`);
         }
       }
-      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
+      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text, priorCustomer.intent) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
         contentFails.push(`FAIL. Turn ${turn.turnIndex} does not offer view access and edit access`);
       }
       const shippedModel = String(turn.shippedModel || '').trim();

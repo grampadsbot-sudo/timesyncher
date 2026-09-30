@@ -11,6 +11,7 @@ import {
 
 import { customerInputState } from './intake-shared-trip.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
+import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -290,13 +291,8 @@ export function firstMarkedIntake(customerTurn, priorTurns) {
   return !priors.some((turn) => turn?.role === 'customer' && turn.intake === true);
 }
 
-export function customerPullsAccess(text) {
-  const value = String(text || '');
-  if (/\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(value)) return true;
-  if (/\bcollaborat/i.test(value)) return true;
-  if (/\b(family|household|editing|full) access\b/i.test(value)) return true;
-  if (/\bjoin (?:this|the) (?:same )?(?:trip|vacation)\b/i.test(value) && /\b(family|friend|them|everyone|household)\b/i.test(value)) return true;
-  return false;
+export function customerPullsAccess(text, intent) {
+  return intent?.pullsAccess === true;
 }
 
 export function isCollabWelcome(text) {
@@ -318,13 +314,12 @@ function sentenceIsUpsell(sentence) {
 
 export const ITEM34_BAN = /\b(?:split|splitting)\b/i;
 
-export function customerAsksAccessChoice(text) {
-  const value = String(text || '');
-  return /\?/.test(value) && /\bview access\b/i.test(value) && /\bedit access\b/i.test(value);
+export function customerAsksAccessChoice(text, intent) {
+  return intent?.asksAccess === true;
 }
 
-export function customerAsksPrice(text) {
-  return /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(text || ''));
+export function customerAsksPrice(text, intent) {
+  return intent?.asksPrice === true;
 }
 
 export function item34BanHit(text) {
@@ -343,9 +338,9 @@ export function sessionHasFullUpsell(priorTurns) {
   });
 }
 
-export function upsellModeForTurn(customerTurn, priorTurns) {
+export function upsellModeForTurn(customerTurn, priorTurns, intent) {
   if (sessionHasFullUpsell(priorTurns)) return 'forbidden';
-  if (customerPullsAccess(customerTurnText(customerTurn)) || firstMarkedIntake(customerTurn, priorTurns)) return 'allow-once';
+  if (customerPullsAccess(customerTurn, intent) || firstMarkedIntake(customerTurn, priorTurns)) return 'allow-once';
   return 'forbidden';
 }
 
@@ -357,6 +352,7 @@ export function upsellAudit(turns) {
   const unsolicitedWelcome = [];
   let lastCustomer = '';
   let lastCustomerTurn = null;
+  let lastIntent = null;
   const priorCustomers = [];
   for (const turn of list) {
     const text = String(turn?.text || '');
@@ -364,12 +360,13 @@ export function upsellAudit(turns) {
       if (turn?.role === 'customer') {
         lastCustomer = text;
         lastCustomerTurn = turn;
+        lastIntent = turn.intent || null;
         priorCustomers.push(turn);
       }
       continue;
     }
     if (openerTurn(turn)) continue;
-    const pulled = customerPullsAccess(lastCustomer)
+    const pulled = customerPullsAccess(lastCustomer, lastIntent)
       || firstMarkedIntake(lastCustomerTurn, priorCustomers.slice(0, -1));
     const phrase = UNLIMITED_PATTERN.test(text);
     const welcome = isCollabWelcome(text);
@@ -716,18 +713,22 @@ export function applyAgreedAppSwim(things) {
   return Array.isArray(things) ? things : [];
 }
 
-function activitySentenceCommits(hit) {
-  const dated = datedMentions(hit).length > 0;
-  if (/\bif\b/i.test(hit) && !dated) return false;
-  if (/\?/.test(hit) && !dated) return false;
-  return true;
+function activitySentenceCommits(_hit, decision) {
+  if (decision?.ask === true) return false;
+  return decision?.commits === true;
+}
+
+export async function activityCommitDecisions(text, options) {
+  const sentences = splitSentences(text);
+  if (!sentences.length) return {};
+  return activityCommits(sentences, options);
 }
 
 function sameNote(left, right) {
   return String(left || '').replace(/\s+/g, ' ').trim().toLowerCase() === String(right || '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
-export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '' } = {}) {
+export function applyCustomerNotes(things, text, { collaborator = false, speakerName = '', commits = null } = {}) {
   const sentences = splitSentences(text);
   return (Array.isArray(things) ? things : []).map((thing) => {
     const hits = sentences.filter((part) => mentionsThing(thing.title, part));
@@ -735,6 +736,7 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
     const notes = Array.isArray(thing.notes) ? [...thing.notes] : [];
     const collaboratorNotes = Array.isArray(thing.collaboratorNotes) ? [...thing.collaboratorNotes] : [];
     const bucket = collaborator ? collaboratorNotes : notes;
+    const decisionFor = (hit) => (commits?.__ask ? { ask: true, commits: false } : commits?.[hit]);
     for (const hit of hits) {
       const line = collaborator && speakerName && !hit.includes(String(speakerName).split(/\s+/)[0])
         ? `${speakerName}: ${hit}`
@@ -743,7 +745,15 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       bucket.push(line);
     }
     const who = String(thing.who || '').trim();
-    const customerWhen = String(thing.customerWhen || '').trim();
+    const labels = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter(Boolean);
+    for (const hit of hits) {
+      if (!activitySentenceCommits(hit, decisionFor(hit))) continue;
+      for (const dated of datedMentions(hit)) {
+        const label = formatMention(dated, { withWeekday: true, withYear: Boolean(dated.year) });
+        if (label && !labels.some((item) => item === label || item.startsWith(`${label} `))) labels.push(label);
+      }
+    }
+    const customerWhen = labels.join(' · ');
     return {
       ...thing,
       who,
@@ -844,6 +854,26 @@ function looseDayStamps(sentence, span) {
   if (!match || !span?.start) return [];
   const month = MONTH_ABBR[Number(String(span.start).slice(5, 7))] || '';
   return month ? [`${month.toLowerCase()} ${Number(match[2])}`] : [];
+}
+
+function ordinalWeekdayStamp(sentence, span) {
+  const match = String(sentence || '').match(/\b(first|second|third|fourth|fifth|last)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
+  if (!match || !span?.start || !span?.end) return '';
+  const target = WEEKDAY_INDEX[match[2].toLowerCase()];
+  if (target == null) return '';
+  const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
+  const end = new Date(`${isoDay(span.end)}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
+  const hits = [];
+  for (let cursor = start; cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
+    if (cursor.getUTCDay() !== target) continue;
+    const month = MONTH_ABBR[cursor.getUTCMonth() + 1] || '';
+    if (month) hits.push(`${month.toLowerCase()} ${cursor.getUTCDate()}`);
+  }
+  if (!hits.length) return '';
+  if (match[1].toLowerCase() === 'last') return hits[hits.length - 1];
+  const index = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5 }[match[1].toLowerCase()];
+  return index ? (hits[index - 1] || '') : '';
 }
 
 function weekdayName(sentence) {
@@ -1444,10 +1474,10 @@ export function rewriteKeepsSubstance(draft, rewritten) {
   return days.every((day) => new RegExp(`\\b${day}\\b`, 'i').test(String(rewritten || '')));
 }
 
-export function rewriteAnswersQuestion(customerTurn, rewritten) {
+export function rewriteAnswersQuestion(customerTurn, rewritten, intent) {
   const body = String(rewritten || '');
-  if (customerAsksPrice(customerTurn)) return priceAnswered(body, customerTurn);
-  if (customerAsksAccessChoice(customerTurn)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
+  if (customerAsksPrice(customerTurn, intent)) return priceAnswered(body, { text: customerTurn, seats: intent?.seats });
+  if (customerAsksAccessChoice(customerTurn, intent)) return /\bview access\b/i.test(body) && /\bedit access\b/i.test(body);
   const question = splitSentences(customerTurn).find((sentence) => /\?/.test(sentence));
   if (!question) return true;
   const words = rewriteTokens(question);
@@ -1466,21 +1496,24 @@ export function rewriteReplacesDraft(draft, rewritten) {
   return true;
 }
 
-export function hardQualityFlags(reply, customerTurn, corpus, sources) {
+export function hardQualityFlags(reply, customerTurn, corpus, sources, intent) {
   const body = String(reply || '');
   const ask = customerTurnText(customerTurn);
+  const intentArg = (intent && typeof intent === 'object')
+    ? intent
+    : (sources && !Array.isArray(sources) && typeof sources === 'object' ? sources : null);
   const placeSources = Array.isArray(sources) ? sources : (Array.isArray(corpus) ? corpus : []);
   return {
     split: item34BanHit(body),
     invented: unsourcedPlaces(body, placeSources),
-    missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask),
-    missingAccess: customerAsksAccessChoice(ask) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
+    missingPrice: customerAsksPrice(ask, intentArg) && !priceAnswered(body, { text: ask, seats: intentArg?.seats }),
+    missingAccess: customerAsksAccessChoice(ask, intentArg) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
     missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
   };
 }
 
-export function correctFalsePriceMiss(quality, reply, customerTurn) {
-  if (!customerAsksPrice(customerTurn) || priceAnswered(reply, customerTurn)) return quality;
+export function correctFalsePriceMiss(quality, reply, customerTurn, intent) {
+  if (!customerAsksPrice(customerTurn, intent) || priceAnswered(reply, { text: customerTurn, seats: intent?.seats })) return quality;
   return {
     ...quality,
     score: Math.min(Number(quality?.score) || 1, 3),
@@ -1503,10 +1536,10 @@ function applyUpsellPolicy(reply) {
   return stripChatMarkdown(String(reply || '').trim());
 }
 
-function rewriteBreaksUpsell(text, upsell, customerTurn) {
+function rewriteBreaksUpsell(text, upsell, customerTurn, intent) {
   if (upsell !== 'forbidden') return false;
   if (isCollabWelcome(text)) return true;
-  if (customerAsksPrice(customerTurn)) return false;
+  if (customerAsksPrice(customerTurn, intent)) return false;
   return isFullUpsell(text) || UNLIMITED_PATTERN.test(text);
 }
 
@@ -1606,7 +1639,13 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  const upsell = upsellModeForTurn(intakeTurn, history);
+  let intent = emptyIntent();
+  try {
+    intent = await customerIntent(customerTurn, { env });
+  } catch (error) {
+    intent = { ...emptyIntent(), error: String(error?.message || error) };
+  }
+  const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
@@ -1628,8 +1667,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   tripFacts.payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
     .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
     .filter((row) => row.name && row.payer);
-  const planLine = customerAsksPrice(customerTurn) && pricedSeat
-    ? payerLineFromDollars(customerTurn, pricedSeat, tripFacts.payerRows)
+  const extractedSeats = Array.isArray(intent?.seats) && intent.seats.some((seat) => seat?.name && seat?.payer)
+    ? intent.seats
+    : tripFacts.payerRows;
+  const planLine = customerAsksPrice(customerTurn, intent) && pricedSeat
+    ? payerLineFromDollars(customerTurn, pricedSeat, extractedSeats)
     : '';
   const planTable = planLine
     ? {
@@ -1710,9 +1752,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
-  if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
-    const nudge = customerAsksPrice(customerTurn) && planLine
-      ? `${customerTurn}\n\nAnswer with who pays: ${planLine}. Do not add a second collaborator welcome.`
+  if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
+    const nudge = customerAsksPrice(customerTurn, intent)
+      ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
       : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -1731,14 +1773,14 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
-  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces);
+  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces, intent);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
   const factErrors = draftFactErrors(originalDraft, tripFacts);
   if (quality?.judged) {
-    quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn);
+    quality = correctFalsePriceMiss(dockQuality(quality, draftFlags), originalDraft, customerTurn, intent);
     quality = applyAccuracyRewrite(quality, factErrors);
     quality.jevNote = null;
     quality.comment = null;
@@ -1812,7 +1854,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     return { reply: shipped.reply, rules, jev, model: shipped.model, quality: shipped.quality, log: shipped.log, reason: null };
   }
   const interimStarted = Date.now();
-  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true }).then((interim) => {
+  const interimPromise = interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true, intent }).then((interim) => {
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
   });
@@ -1841,6 +1883,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     tripFacts,
     planTable,
     planLine,
+    intent,
     seatDollars,
     seat,
     rawModelText: model?.text == null ? null : String(model.text),
@@ -1918,10 +1961,10 @@ function interimFacts(customerTurn, destination) {
   ].join(' ');
 }
 
-export function upsellFactsForTurn(customerTurn, facts = {}, intake = false) {
+export function upsellFactsForTurn(customerTurn, facts = {}, intake = false, intent = null) {
   const marked = intake === true || turnMarkedIntake(customerTurn);
   const ask = customerTurnText(customerTurn);
-  const price = customerAsksPrice(ask);
+  const price = customerAsksPrice(ask, intent);
   if (!marked && !price) return null;
   return {
     buildingItinerary: marked,
@@ -1930,16 +1973,16 @@ export function upsellFactsForTurn(customerTurn, facts = {}, intake = false) {
     emailInvite: marked,
     planPhrase: 'unlimited vacations for the whole year',
     planOwned: facts.planOwned === true,
-    payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, facts.payerRows) : '',
+    payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, intent?.seats || facts.payerRows) : '',
   };
 }
 
-async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false }) {
+async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false, intent = null }) {
   const started = Date.now();
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
   const speaker = String(facts.addressedTo || '').trim();
-  const upsell = upsellFactsForTurn(customerTurn, facts, intake);
+  const upsell = upsellFactsForTurn(customerTurn, facts, intake, intent);
   const systemExtra = [
     intake === true ? 'This holding reply covers the intake. Use the upsell facts. Do not recite a script.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
@@ -1949,8 +1992,8 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
     absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
     upsell ? `Upsell facts: ${JSON.stringify(upsell)}` : '',
-    customerAsksPrice(customerTurn) && Number(facts.seatDollars) > 0
-      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, facts.payerRows)}.`
+    customerAsksPrice(customerTurn, intent) && Number(facts.seatDollars) > 0
+      ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, intent?.seats || facts.payerRows)}.`
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');
@@ -2111,11 +2154,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
-      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults);
+      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults, pending.intent);
       rewriteQuality = correctFalsePriceMiss(
         dockQuality(rewriteQuality, rewriteFlags),
         judgedText,
         pending.customerTurn,
+        pending.intent,
       );
       rewriteQuality = applyAccuracyRewrite(rewriteQuality, rewriteErrors);
       rewriteQuality.jevNote = null;

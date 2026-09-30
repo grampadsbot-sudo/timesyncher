@@ -68,7 +68,7 @@ const missedReply = await produceLiveAppReply({
   customerTurn: 'Where should we eat?',
   session: {},
   priorTurns: [],
-  env: {},
+  env: { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' },
 });
 assert.equal(missedReply.reply, null);
 assert.ok(missedReply.reason);

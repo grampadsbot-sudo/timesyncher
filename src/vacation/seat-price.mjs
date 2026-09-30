@@ -31,16 +31,23 @@ function extractedPayerRows(seats) {
   return rows;
 }
 
-export function payerLineFromDollars(_customerTurn, dollars, extracted = null) {
+export function payerSeats(customerTurn, extracted = null) {
+  if (Array.isArray(extracted)) return extractedPayerRows(extracted);
+  if (Array.isArray(customerTurn?.seats)) return extractedPayerRows(customerTurn.seats);
+  if (Array.isArray(customerTurn)) return extractedPayerRows(customerTurn);
+  return [];
+}
+
+export function payerLineFromDollars(customerTurn, dollars, extracted = null) {
   const amount = Number(dollars);
   if (!Number.isFinite(amount) || amount <= 0) return '';
-  const seats = extractedPayerRows(extracted);
+  const seats = payerSeats(customerTurn, extracted);
   if (!seats.length) return '';
   return seats.map((seat) => `${seat.name} $${amount}, paid by ${seat.payer}`).join('; ');
 }
 
-export function payerPriceLine(seats, env = process.env) {
-  const list = extractedPayerRows(seats);
+export function payerPriceLine(seatsOrTurn, env = process.env, extracted = null) {
+  const list = payerSeats(seatsOrTurn, extracted);
   if (!list.length) return '';
   let dollars = null;
   try {
@@ -81,7 +88,7 @@ function replyCoversNamedSeats(reply, seats) {
 }
 
 export function priceAnswered(reply, seats, env = null) {
-  const list = extractedPayerRows(seats);
+  const list = payerSeats(seats);
   const body = String(reply || '');
   const line = env ? payerPriceLine(list, env) : '';
   if (line) return line.split('; ').every((part) => priceClauseSatisfied(part, body));
