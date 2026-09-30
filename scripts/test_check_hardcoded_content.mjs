@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, classify, contentIdentity, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -238,6 +238,33 @@ const missingRefRun = runGuard(missingRef, { BASE: 'missing-ref' });
 assert.equal(missingRefRun.status, 1);
 assert.match(missingRefRun.stderr, /FAIL\tBASELINE-GROWTH/);
 
+assert.equal(baselineRemoteRef('main'), 'origin/main');
+assert.equal(baselineRemoteRef('origin/main'), 'origin/main');
+assert.equal(baselineRemoteRef('cursor/x'), 'origin/cursor/x');
+const prefixed = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-prefix-origin-'));
+const prefixedWork = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-prefix-work-'));
+git(prefixed, ['init', '--bare']);
+git(prefixedWork, ['init', '-b', 'main']);
+git(prefixedWork, ['remote', 'add', 'origin', prefixed]);
+fs.mkdirSync(path.join(prefixedWork, 'scripts'), { recursive: true });
+const prefixRow = entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST');
+fs.writeFileSync(path.join(prefixedWork, 'scripts/hardcoded-content-baseline.json'), '[]\n');
+git(prefixedWork, ['add', '.']);
+git(prefixedWork, ['commit', '-m', 'empty baseline']);
+git(prefixedWork, ['push', '-u', 'origin', 'main']);
+fs.writeFileSync(path.join(prefixedWork, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([prefixRow])}\n`);
+git(prefixedWork, ['add', '.']);
+git(prefixedWork, ['commit', '-m', 'one old-rule row']);
+git(prefixedWork, ['push', 'origin', 'HEAD:cursor/x']);
+for (const base of ['main', 'origin/main']) {
+  const prefixRun = runGuard(prefixedWork, { BASE: base });
+  assert.equal(prefixRun.status, 1, `${base}\n${prefixRun.stdout}\n${prefixRun.stderr}`);
+  assertHit(prefixRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
+}
+const prefixedSame = runGuard(prefixedWork, { BASE: 'cursor/x' });
+assert.equal(prefixedSame.status, 0, prefixedSame.stderr);
+assert.match(prefixedSame.stdout, /hardcoded content check passed \(0 report, 0 fail\)/);
+
 const workflow = fs.readFileSync(path.join(repo, '.github/workflows/evidence-secrets.yml'), 'utf8');
 assert.match(workflow, /check-hardcoded-content\.mjs/);
 assert.match(workflow, /test_check_hardcoded_content\.mjs/);
@@ -428,5 +455,277 @@ writeTree(shiftDir, { [shiftSource]: `${shifted}\nconst EXTRA_LIST_FILL = ['Adde
 const addedRun = runGuard(shiftDir);
 assert.equal(addedRun.status, 1, addedRun.stdout);
 assertHit(addedRun.stderr, 'FAIL', 'HC-PLACE-LIST', shiftSource, 'EXTRA_LIST_FILL');
+
+function fails(file, fixture) {
+  return classify(scanText(file, readFixture(fixture)), []).fail;
+}
+
+const joinFail = fails('src/vacation/evasion-join.mjs', 'evasion-join.mjs');
+assert.deepEqual(joinFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
+const splitFail = fails('src/vacation/evasion-split.mjs', 'evasion-split.mjs');
+assert.deepEqual(splitFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
+const concatFail = fails('src/vacation/evasion-concat.mjs', 'evasion-concat.mjs');
+assert.deepEqual(concatFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
+const logoFail = fails('src/vacation/evasion-logo.mjs', 'evasion-logo.mjs');
+assert.deepEqual(logoFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', '/ts-thing-logos/']]);
+
+const renamed = scanText('src/vacation/content-rename.mjs', readFixture('content-rename.mjs'));
+assert.equal(renamed.some((finding) => finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
+assert.deepEqual(classify(renamed, []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [
+  ['CONTENT-MATCH', 'say the swim is saved on the second Friday of the trip'],
+  ['CONTENT-MATCH', 'second Friday'],
+  ['DATE-LITERAL', 'second Friday'],
+  ['DATE-LITERAL', 'apr(?:il)?'],
+]);
+
+const named = fails('src/vacation/prompt-names.mjs', 'prompt-names.mjs');
+assert.deepEqual(named.map((finding) => finding.symbol_or_pattern), ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus']);
+assert.equal(named.every((finding) => finding.rule === 'PROMPT-NAMES'), true);
+
+const priced = fails('src/vacation/checkout-pricing.mjs', 'hardcoded-price.mjs');
+assert.deepEqual(priced.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['HARDCODED-PRICE', 'DEFAULT_ORDER_BUMP_PRICE_CENTS=2700']]);
+
+const addressed = fails('index.html', 'fixed-address.html').filter((finding) => finding.rule === 'FIXED-ADDRESS');
+assert.deepEqual(addressed.map((finding) => finding.symbol_or_pattern), ['state=NV', 'zip=89101', 'city=Las Vegas']);
+
+const bundled = fails('public/assets/bundle-scan.js', 'bundle-scan.js').filter((finding) => finding.rule === 'BUNDLE-SCAN');
+assert.deepEqual(bundled.map((finding) => finding.symbol_or_pattern), ['Price TBD']);
+
+const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bare-'));
+writeTree(bareDir, { 'src/vacation/model-bare.mjs': readFixture('model-bare.mjs') }, []);
+const bareRun = runGuard(bareDir);
+assert.equal(bareRun.status, 1, bareRun.stdout);
+for (const id of ['grok-4', 'grok-3-mini', 'gpt-4o', 'claude-3-5-sonnet', 'gemini-2.0-flash']) {
+  assert.match(bareRun.stderr, new RegExp(`FAIL\\tMODEL-BARE\\tsrc/vacation/model-bare\\.mjs:\\d+\\t${id}`));
+}
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /gemini-2\.5-flash-lite/);
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /qwen3-235b-a22b-2507/);
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /deepseek-v3\.2/);
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /qwen3-max/);
+
+const newRuleBase = [entry('src/vacation/kept.mjs', 'KEEP', 'HC-PLACE-LIST')];
+const allowedGrowth = repoWithBase(newRuleBase);
+writeTree(allowedGrowth, {
+  'src/vacation/names.mjs': readFixture('prompt-names.mjs'),
+}, [
+  ...newRuleBase,
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Craig', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Kimberly', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Tyler', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Lauren', inventory_id: 'PROMPT-NAMES', note: NOTE },
+  { file: 'src/vacation/names.mjs', rule: 'PROMPT-NAMES', symbol_or_pattern: 'Marcus', inventory_id: 'PROMPT-NAMES', note: NOTE },
+]);
+const allowedRun = runGuard(allowedGrowth, { BASE: 'base' });
+assert.equal(allowedRun.status, 0, allowedRun.stderr);
+
+const oldRuleGrowth = repoWithBase(newRuleBase);
+writeTree(oldRuleGrowth, {}, [...newRuleBase, entry('src/vacation/other.mjs', 'ALSO', 'HC-PLACE-LIST')]);
+const oldRuleRun = runGuard(oldRuleGrowth, { BASE: 'base' });
+assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
+assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/hardcoded-content-baseline\.json:1\t2>1/);
+
+const dateFile = 'src/vacation/date-range-rename.mjs';
+const dateText = readFixture('date-range-rename.mjs');
+const dateHits = scanText(dateFile, dateText).filter((finding) => finding.rule === 'DATE-LITERAL');
+assert.deepEqual(dateHits.map((finding) => finding.symbol_or_pattern), [
+  '2026-04-03',
+  '2026-04-10',
+  'April 10th',
+  'Apr 10',
+  'last Monday',
+  'new Date(\'2026-04-10\')',
+  'new Date(2026, 3, 10)',
+  'Date.UTC(2026, 3, 10)',
+  '{start:\'2026-04-03\',end:\'2026-04-10\'}',
+]);
+assert.equal(scanText(dateFile, dateText).some((finding) => finding.rule === 'CONTENT-MATCH' || finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
+assert.deepEqual(
+  scanText('src/vacation/ordinal.mjs', 'const when = "second Friday";').filter((finding) => finding.rule === 'DATE-LITERAL').map((finding) => finding.symbol_or_pattern),
+  ['second Friday'],
+);
+const dateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-date-'));
+writeTree(dateDir, { [dateFile]: dateText }, []);
+const dateRun = runGuard(dateDir);
+assert.equal(dateRun.status, 1, dateRun.stdout);
+assertHit(dateRun.stderr, 'FAIL', 'DATE-LITERAL', dateFile, '{start:\'2026-04-03\',end:\'2026-04-10\'}');
+assert.doesNotMatch(dateRun.stderr, /CONTENT-MATCH/);
+assert.doesNotMatch(dateRun.stderr, /RANGE_END/);
+
+const monthFile = 'src/vacation/date-month-regex.mjs';
+const monthText = readFixture('date-month-regex.mjs');
+const monthSymbols = [
+  'April 10',
+  'apr(?:il)?',
+  'april',
+  'sep(?:t(?:ember)?)?',
+  'sep(?:t|tember)?',
+  '(jan|feb)uary',
+];
+const monthHits = scanText(monthFile, monthText).filter((finding) => finding.rule === 'DATE-LITERAL');
+assert.deepEqual(monthHits.map((finding) => finding.symbol_or_pattern), monthSymbols);
+assert.equal(scanText(monthFile, monthText).some((finding) => finding.rule !== 'DATE-LITERAL'), false);
+assert.deepEqual(
+  scanText('src/vacation/month-prose.mjs', "const note = 'april showers';").filter((finding) => finding.rule === 'DATE-LITERAL'),
+  [],
+);
+const monthDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-month-'));
+writeTree(monthDir, { [monthFile]: monthText }, []);
+const monthRun = runGuard(monthDir);
+assert.equal(monthRun.status, 1, monthRun.stdout);
+for (const symbol of monthSymbols) assertHit(monthRun.stderr, 'FAIL', 'DATE-LITERAL', monthFile, symbol);
+assert.doesNotMatch(monthRun.stderr, /maybe|display|marching|april showers|aprilCount/);
+
+const bundleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bundle-'));
+const bundleSymbol = '/assets/index-BKun7ofk.js is not in the repo and the build does not produce it';
+writeTree(bundleDir, {
+  'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
+  'extra.html': '<script src="/assets/other-bundle.js"></script>\n<link rel="modulepreload" href="/assets/preload.js">\n<script type="module">import(\'/assets/imported.js\');</script>\n<script src="https://js.stripe.com/v3/"></script>\n',
+  'src/onboarding/eula-page.mjs': 'export const page = true;\n',
+  'kept.html': '<script type="module" src="/src/onboarding/eula-page.mjs"></script>\n<script src="/assets/kept.js"></script>\n',
+  'public/assets/kept.js': 'console.log("kept");\n',
+}, [{
+  file: 'shared-app.html',
+  rule: 'SERVED-BUNDLE',
+  symbol_or_pattern: bundleSymbol,
+  inventory_id: 'SERVED-BUNDLE',
+  note: NOTE,
+}]);
+const bundleRun = runGuard(bundleDir);
+assert.equal(bundleRun.status, 1, bundleRun.stdout);
+assertHit(bundleRun.stdout, 'REPORT', 'SERVED-BUNDLE', 'shared-app.html', bundleSymbol);
+for (const symbol of [
+  '/assets/other-bundle.js is not in the repo and the build does not produce it',
+  '/assets/preload.js is not in the repo and the build does not produce it',
+  '/assets/imported.js is not in the repo and the build does not produce it',
+]) {
+  assertHit(bundleRun.stderr, 'FAIL', 'SERVED-BUNDLE', 'extra.html', symbol);
+}
+assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /js\.stripe\.com/);
+assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
+assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
+
+// Dual-state shared-bundle check.
+// This tree still downloads the bundle, so explainSharedBundle.url must be the
+// travel.timesyncher.com asset while public/assets/index-BKun7ofk.js is not
+// committed. The other state, used once that served file is committed and
+// public/assets/upstream/index-BKun7ofk.js is absent, requires url === ''.
+// A travel.timesyncher.com fetch or URL then fails the test when it shows up
+// in explainSharedBundle or in the build/runtime files this guard already
+// reads: scripts/write-shared-assets.mjs, vite.config.mjs, and the committed
+// HTML the served-bundle scan reads.
+const SERVED_BUNDLE = 'public/assets/index-BKun7ofk.js';
+const UPSTREAM_BUNDLE = 'public/assets/upstream/index-BKun7ofk.js';
+const TRAVEL_HOST = /travel\.timesyncher\.com/;
+
+function sharedBundleSources(cwd) {
+  const files = ['scripts/write-shared-assets.mjs', 'vite.config.mjs'].filter((rel) => fs.existsSync(path.join(cwd, rel)));
+  const html = [];
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status === 0 && inside.stdout.trim() === 'true') {
+    const listed = spawnSync('git', ['ls-files', '-z', '--', '*.html'], { cwd, encoding: 'utf8' });
+    if (listed.status === 0) html.push(...listed.stdout.split('\0').filter(Boolean));
+  } else {
+    const walk = (abs) => {
+      if (!fs.existsSync(abs)) return;
+      for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist') continue;
+        const next = path.join(abs, entry.name);
+        if (entry.isDirectory()) walk(next);
+        else if (entry.name.endsWith('.html')) html.push(path.relative(cwd, next).split(path.sep).join('/'));
+      }
+    };
+    walk(cwd);
+  }
+  for (const file of html) {
+    const normalized = file.split(path.sep).join('/');
+    if (normalized.startsWith('scripts/fixtures/hardcoded-content/')) continue;
+    files.push(normalized);
+  }
+  return [...new Set(files)];
+}
+
+function filePresent(cwd, rel) {
+  const abs = path.join(cwd, rel);
+  if (!fs.existsSync(abs)) return false;
+  const stat = fs.statSync(abs);
+  return stat.isFile() && stat.size > 0;
+}
+
+function gitTracks(cwd, rel) {
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status === 0 && inside.stdout.trim() === 'true') {
+    const listed = spawnSync('git', ['ls-files', '--error-unmatch', '--', rel], { cwd, encoding: 'utf8' });
+    return listed.status === 0;
+  }
+  return filePresent(cwd, rel);
+}
+
+function servedBundleCommitted(cwd) {
+  return gitTracks(cwd, SERVED_BUNDLE) && !filePresent(cwd, UPSTREAM_BUNDLE);
+}
+
+function assertSharedBundleSource(cwd) {
+  const explained = explainSharedBundle(cwd);
+  assert.equal(explained.offlineBuildProduct, false);
+  assert.match(explained.message, /write-shared-assets\.mjs/);
+  assert.match(explained.message, /buildStart/);
+  assert.match(explained.message, /No local source directory/);
+  if (!servedBundleCommitted(cwd)) {
+    assert.match(explained.url, /^https:\/\/travel\.timesyncher\.com\/assets\/index-BKun7ofk\.js$/);
+    return explained;
+  }
+  assert.equal(explained.url, '');
+  assert.equal(filePresent(cwd, UPSTREAM_BUNDLE), false);
+  assert.ok(!TRAVEL_HOST.test(explained.url), 'explainSharedBundle url still has a travel.timesyncher.com URL');
+  assert.ok(!TRAVEL_HOST.test(explained.message), 'explainSharedBundle message still has a travel.timesyncher.com URL');
+  for (const rel of sharedBundleSources(cwd)) {
+    const text = fs.readFileSync(path.join(cwd, rel), 'utf8');
+    assert.ok(!TRAVEL_HOST.test(text), `${rel} still has a travel.timesyncher.com fetch or URL`);
+  }
+  return explained;
+}
+
+assertSharedBundleSource(repo);
+assert.deepEqual(htmlRefsProducedByBuild(repo), []);
+const built = spawnSync(process.execPath, ['scripts/scan-built-bundles.mjs'], { cwd: repo, encoding: 'utf8' });
+assert.equal(built.status, 0, built.stderr);
+assert.match(built.stdout, /no HTML reference is produced by an offline build/);
+assert.match(workflow, /scan-built-bundles\.mjs/);
+
+const localVite = 'export default { plugins: [{ name: "timesyncher-shared-assets", async buildStart() { await writeSharedAssets(); } }] };\n';
+const localWriter = [
+  "const JS_NAME = 'index-BKun7ofk.js';",
+  "const assetsDir = join(here, '..', 'public', 'assets');",
+  'await readFile(join(assetsDir, JS_NAME));',
+  '',
+].join('\n');
+const localBundle = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-local-bundle-'));
+writeTree(localBundle, {
+  [SERVED_BUNDLE]: '/* served bundle */\n',
+  'scripts/write-shared-assets.mjs': localWriter,
+  'vite.config.mjs': localVite,
+  'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
+}, []);
+const localExplained = assertSharedBundleSource(localBundle);
+assert.equal(localExplained.url, '');
+assert.equal(filePresent(localBundle, UPSTREAM_BUNDLE), false);
+
+const fetchedBundle = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-fetched-bundle-'));
+writeTree(fetchedBundle, {
+  [SERVED_BUNDLE]: '/* served bundle */\n',
+  'scripts/write-shared-assets.mjs': `${localWriter}await fetch('https://travel.timesyncher.com/assets/' + JS_NAME);\n`,
+  'vite.config.mjs': localVite,
+  'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
+}, []);
+assert.throws(() => assertSharedBundleSource(fetchedBundle), /travel\.timesyncher\.com/);
+
+const linkedBundle = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-linked-bundle-'));
+writeTree(linkedBundle, {
+  [SERVED_BUNDLE]: '/* served bundle */\n',
+  'scripts/write-shared-assets.mjs': localWriter,
+  'vite.config.mjs': `${localVite}await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');\n`,
+  'shared-app.html': '<script src="https://travel.timesyncher.com/assets/index-BKun7ofk.js"></script>\n',
+}, []);
+assert.throws(() => assertSharedBundleSource(linkedBundle), /travel\.timesyncher\.com/);
 
 process.stdout.write('hardcoded content check test passed\n');
