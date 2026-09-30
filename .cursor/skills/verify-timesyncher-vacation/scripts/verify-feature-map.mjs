@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Re-runnable Feature Map drive. Overwrites <out>/VERIFY.md.
- * Does not redeem coupons or write staging rows.
+ * Does not redeem coupons. The welcome-after-intake check writes a real
+ * create-vacation intake when DATABASE_URL is set, and fails when it is not.
  * The real-app gate is required: a failing gate refuses a clean table.
  */
 import { spawnSync } from 'node:child_process';
@@ -10,7 +11,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { purchaseEmail } from '../../../../src/vacation/email.mjs';
-import { onboardingOpenerFacts, upsellFactsForTurn } from '../../../../src/vacation/live-app-turn.mjs';
+import { runWelcomeAfterIntake, selfTestMissingWelcomeDatabase, WELCOME_DATABASE_MISSING, WELCOME_MISSING } from './verify-welcome-after-intake.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const staging = 'https://vacation-staging.timesyncher.com';
@@ -28,15 +29,6 @@ const shotDir = path.join(outDir, 'verify');
 
 function has(text, needle) {
   return String(text || '').toLowerCase().includes(String(needle).toLowerCase());
-}
-
-function welcomeAfterIntakeReady() {
-  const opener = onboardingOpenerFacts();
-  const facts = upsellFactsForTurn({ intake: true, text: '' }, {}, true);
-  return opener.first_message === true
-    && opener.customer_said == null
-    && facts?.collaborators === true
-    && facts?.buildingItinerary === true;
 }
 
 const checks = [
@@ -103,6 +95,7 @@ async function selfCheck() {
     console.error(`feature map drift missing=${missing.join(',') || '-'} extra=${extra.join(',') || '-'}`);
     process.exit(1);
   }
+  selfTestMissingWelcomeDatabase();
   console.log(`feature map self-check ok (${files.length} features)`);
 }
 
@@ -390,16 +383,6 @@ async function drive() {
   await shot('verify-style-two.png');
   await shot('verify-keepsake-qa.png');
 
-  async function welcomeBeforeFirstMessage() {
-    return page.evaluate(() => {
-      const root = document.querySelector('#messages[data-screen="onboarding"]');
-      if (!root) return false;
-      const bubbles = [...root.querySelectorAll('article.bubble')];
-      const firstUser = bubbles.findIndex((node) => node.classList.contains('user'));
-      const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
-      return prior.some((node) => !node.classList.contains('user') && (node.textContent || '').replace(/\s+/g, ' ').trim().length > 0);
-    });
-  }
   function languageControl() {
     return page.evaluate(() => [...document.querySelectorAll('button, a, select, label, [role="button"]')].some((node) => {
       const text = (node.innerText || '').trim();
@@ -429,8 +412,6 @@ async function drive() {
     await shot('verify-min-things.png');
   }
   await shot('verify-post-intake.png');
-  obs.welcomeAfterIntake = welcomeAfterIntakeReady() && await welcomeBeforeFirstMessage();
-  await shot('verify-welcome-after-intake.png');
   await shot('verify-jev-quality.png');
 
   await go(`${staging}/order-success.html`);
@@ -450,10 +431,8 @@ async function drive() {
     obs.liveEula = Boolean(await page.$('#eulaScreen'));
     obs.liveOnboarding = has(text, 'no vacations yet') && !await page.evaluate(() => Boolean(document.querySelector('[aria-label="Vacation path"]')));
     obs.qualityOnScreen = obs.qualityOnScreen || has(text, 'quality:');
-    if (welcomeAfterIntakeReady() && await welcomeBeforeFirstMessage()) obs.welcomeAfterIntake = true;
     await shot('verify-eula.png');
     await shot('verify-onboarding.png');
-    await shot('verify-welcome-after-intake.png');
   }
 
   await browser.close();
@@ -490,6 +469,20 @@ async function main() {
     return;
   }
   await selfCheck();
+  let welcome;
+  try {
+    welcome = await runWelcomeAfterIntake({ shotDir });
+  } catch (error) {
+    if (error.message === WELCOME_DATABASE_MISSING || String(error.message || '').startsWith('FAIL welcome-after-intake:')) {
+      process.stderr.write(`${error.message}\n`);
+      process.exit(1);
+    }
+    throw error;
+  }
+  if (!welcome.ok) {
+    process.stderr.write(`${WELCOME_MISSING}\n`);
+    process.exit(1);
+  }
   const gate = runGate();
   if (!gate.ok) {
     const markdown = `# Verification table\n\nGate \`npm run test:real-app-entry\`: FAIL.\n\n${gate.stderr || gate.stdout}\n`;
@@ -527,6 +520,7 @@ async function main() {
     eulaBundle: appHtml.includes('id="eulaScreen"'),
     shellBundle: /data-screen="itinerary"|aria-label="Vacation path"/.test(appHtml),
     contract: contract.every(Boolean),
+    welcomeAfterIntake: welcome.ok === true,
     postIntake: Boolean(observed.intakeLayout && jev.postIntakeDb),
     budget: observed.budget && counts.budgetFlag,
   };

@@ -16,9 +16,11 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 ## Driving it
 
 - Staging alias `https://vacation-staging.timesyncher.com`.
-- Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
+- Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --check`.
+- That command creates a real database-backed create-vacation intake through the vacation request handler, accepts the terms, and opens the vacation app session. It is not a stub or a fixture transcript.
+- `DATABASE_URL` is required. When it is missing the process exits non-zero and prints `FAIL welcome-after-intake: DATABASE_URL missing`. That result is not a pass and not a gap.
 - Screenshot `verify-welcome-after-intake.png`.
-- Pass when that bubble is on the live page and the structural marker is present.
+- Pass when the app session shows the welcome bubble in `#messages[data-screen="onboarding"]` before the first customer message, and the existing opener and collaborator markers are present.
 - Fail when the welcome is missing. Do not invent welcome copy in the app.
 
 ## Gotchas
@@ -26,3 +28,4 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 - A screenshot of the deleted card shell is a fail, not a pass.
 - Reference trip for the TREK UI is `las-vegas-vacation-3`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.
 - The intake itinerary page is not the onboarding chat. A page with no `#messages` welcome fails this check.
+- Missing `DATABASE_URL` fails the check. Do not skip it.
