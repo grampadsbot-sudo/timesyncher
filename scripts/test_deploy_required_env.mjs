@@ -21,6 +21,9 @@ function requiredBeforeFetch() {
   const paths = [...walk('src'), ...walk('routes'), ...walk('scripts').filter((rel) => /worker.*\.mjs$/.test(rel))];
   for (const rel of paths) {
     const text = fs.readFileSync(rel, 'utf8');
+    const config = text.match(/CHECKOUT_PRICE_CONFIG\s*=\s*\[([\s\S]*?)\]/);
+    if (config) for (const match of config[1].matchAll(/['"]([A-Z0-9_]*COLLABORATOR[A-Z0-9_]*)['"]/g)) names.add(match[1]);
+    for (const match of text.matchAll(new RegExp(String.raw`requiredConfigCents\(\s*(?:env\??|process\.env)\.([A-Z0-9_]*COLLABORATOR[A-Z0-9_]*)\s*,\s*['"]\1['"]`, 'g'))) names.add(match[1]);
     const search = /(?:^|\/)(?:place-search|poi-search|db)\.mjs$/.test(rel)
       || rel.endsWith('vacation-public-research-worker.mjs')
       || /fillTripIntake|searchPlaces|searchTavily|places-api\.foursquare|api\.tavily\.com|api\.search\.brave\.com/.test(text);
