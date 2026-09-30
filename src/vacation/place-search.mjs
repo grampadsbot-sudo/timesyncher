@@ -653,7 +653,7 @@ export async function searchPlaces({
     if (!liveCount) {
       fail(
         places.length
-          ? 'Prior Things are not a sole source. Foursquare OS Places, OpenStreetMap, and Brave Place Search returned no places.'
+          ? 'Saved places are not a sole source. Foursquare OS Places, OpenStreetMap, and Brave Place Search returned no places.'
           : `Place search returned no places for ${dest || lodging || center.label}.`,
         places.length ? 'prior_db_sole_source' : 'empty',
       );

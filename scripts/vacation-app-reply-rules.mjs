@@ -390,7 +390,7 @@ function decisionsPayload(context) {
         instructions: 'Which vacation-app reply route should the generator follow?',
         criteria: {
           itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
-          notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
+          notes_where: 'Customer wants to save a note. Day is required and place is optional.',
           access_pricing: 'The customer asked about price, access, or joining as collaborators. Not a day plan that only names family.',
           collab_upsell: 'The one collab assessment, only when the customer asked to join and it has not been given. Do not use this for day advice.',
           product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
@@ -572,7 +572,7 @@ function chatReplyText(content) {
 }
 
 export function sourcedPlaceRule() {
-  return 'Name a place only when this turn has a Thing with sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
+  return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
 export function planFactsForReply({ rules, upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
@@ -632,7 +632,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
-    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
+    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}).`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     postIntake
@@ -641,11 +641,11 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
         ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
         : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
-    seatDollars && planLine ? `Seat price: $${seatDollars}. State this payer line exactly: ${planLine}.` : '',
+    seatDollars && planLine ? `Seat price: $${seatDollars}. State this line exactly: ${planLine}.` : '',
     'Do not insert a welcome the customer did not ask for.',
-    seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining. The payer is who paid.` : '',
+    seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
     'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
-    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
+    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
     'You know only what the customer said in chat and what is in the saved trip record. Ask the customer for anything they haven\'t said. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
     'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
     'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',

@@ -182,7 +182,7 @@ export function buildResearchQueries(artifacts = {}) {
   if (needsFlights && !suppressFlights) queries.push({ category: 'flight', query: `${base} flights airlines airports baggage fare official` });
   if (!suppressHotels) queries.push({ category: 'hotel', query: `${base} hotels official site cancellation fees location` });
   queries.push(
-    { category: 'restaurant', query: `${base} restaurants official menu hours reservations` },
+    { category: 'restaurant', query: `${base} restaurants official menu hours` },
     { category: 'store', query: `${base} shopping grocery market official visitor information` },
     { category: 'activity', query: `${base} activities wineries kid friendly sightseeing official tickets hours` },
   );
