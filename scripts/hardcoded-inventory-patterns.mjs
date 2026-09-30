@@ -21,7 +21,7 @@ export const INVENTORY_PATTERNS = [
   { id: 'A16', rule: 'HC-PLACE-LIST', re: /\bSI_VEGAS_TAIL\b/, fixture: 'const SI_VEGAS_TAIL = ",[/bellagio|conservatory/i,[36.1126,-115.1767]]";' },
   { id: 'A17', rule: 'HC-PLACE-LIST', re: /\bFILENAME_THING_HINTS\b/, fixture: 'export const FILENAME_THING_HINTS = [[/bellagio/i, \'Bellagio\']];' },
   { id: 'A18', rule: 'HC-PLACE-LIST', re: /\bLIVE_TAB_FILL\b/, fixture: 'export const LIVE_TAB_FILL = { restaurant: [] };' },
-  { id: 'A19', rule: 'HC-PLACE-LIST', re: /\bNAMED_THING_LOGOS\b/, fixture: 'export const NAMED_THING_LOGOS = { Sample: "" };' },
+  { id: 'A19', rule: 'HC-PLACE-LIST', re: /\bNAMED_THING_LOGOS\b/, fixture: 'export const NAMED_THING_LOGOS = { Bellagio: \'/ts-thing-logos/bellagio.svg\' };' },
   { id: 'A20', rule: 'HC-PLACE-LIST', re: /jockey club/, fixture: 'if (/\\b(vegas|las vegas|strip|jockey club)\\b/.test(normalized)) return items.find(Boolean);' },
   { id: 'A21', rule: 'HC-PLACE-LIST', re: /las vegas\|vegas/, fixture: 'if (/\\b(las vegas|vegas)\\b/i.test(source)) return false;' },
   { id: 'A22', rule: 'HC-PLACE-LIST', re: /placeholder\s*=\s*(['"])Las Vegas\1/, fixture: '<input name="city" placeholder="Las Vegas" />' },

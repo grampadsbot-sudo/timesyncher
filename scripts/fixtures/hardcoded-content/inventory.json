@@ -259,7 +259,7 @@
     {
       "category": "A",
       "location": "src/vacation/thing-logo-capture.mjs:3-110",
-      "quote": "name-to-logo map",
+      "quote": "'Bellagio — Alex & Kim Anniversary Stay': '/ts-thing-logos/bellagio.svg' ... [/bellagio/i, ...]",
       "customer_effect": "Hand-made name-to-logo map for Vegas venues (and a Big Island set). Logos are picked by name regex, not from a source.",
       "severity": "cosmetic",
       "replacement": "Logo/favicon from the source record URL, or none",

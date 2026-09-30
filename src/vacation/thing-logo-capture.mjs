@@ -1,5 +1,7 @@
 import { timelineIcon, timelineCategoryIcon } from './timeline-icons.mjs';
 
+export const NAMED_THING_LOGOS = {};
+
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;
 const PLACEHOLDER_LOGO_RE = /admit\s*one|pDe|family-event-placeholder|data:image\/svg\+xml/i;
 

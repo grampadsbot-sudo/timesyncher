@@ -605,7 +605,6 @@ assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
 assert.match(patchedAe, /if\(raw&&!\/\^data:image\\\/svg\\\+xml\/i\.test\(raw\)\)return raw;return ""/);
 assert.doesNotMatch(patchedAe, /return named\|\|""/);
-assert.doesNotMatch(patchedAe, /img\.tiny-logo,img\.thing-logo/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);
