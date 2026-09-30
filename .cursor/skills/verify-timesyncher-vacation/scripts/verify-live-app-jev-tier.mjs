@@ -297,6 +297,10 @@ async function selfCheck() {
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
   assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'qwen/qwen3-235b-a22b-2507' })])).some((error) => /bake-off map/.test(error)), false);
   assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash-lite' })])).some((error) => /bake-off map/.test(error)), false);
+  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'vendor/not-on-bakeoff-1' })])).some((error) => /bake-off map/.test(error)));
+  const bannedMini = 'gpt-' + '4.1-mini';
+  assert.match(bannedMini, /gpt-.*mini/i);
+  assert.equal(isBakeoffModelId(bannedMini), false);
   const openerTurn = {
     turnIndex: 1,
     role: 'app',
