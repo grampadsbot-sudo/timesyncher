@@ -15,6 +15,7 @@ scripts/test_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
 scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
+scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
 scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
@@ -34,6 +35,7 @@ scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs
 scripts/test_place_search.mjs
+scripts/test_place_category_radius.mjs
 scripts/test_ratings_source.mjs
 scripts/test_seat_price_data.mjs
 scripts/test_trip_intake_classify.mjs
