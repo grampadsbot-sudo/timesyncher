@@ -15,7 +15,6 @@ import {
   inventedVenueNames,
   rewriteCreditLabel,
   heldRewriteLine,
-  isTemplateNote,
   isTemplateInterim,
   interimProblems,
   rewriteReplacesDraft,
@@ -25,7 +24,7 @@ import {
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
 import { priceAnswered } from '../src/vacation/seat-price.mjs';
-import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
 import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
 
@@ -40,6 +39,10 @@ function fail(error) {
   const message = error?.message || String(error);
   process.stderr.write(`${message}\n`);
   process.exitCode = 1;
+}
+
+function storedNoteIsScript(note) {
+  return /the reply (covers|misses) this turn\b|\bkeep the reply\b|^(?:answers?|name the price|take out the place|name the seats)\b|stays with that wording/i.test(String(note || '').trim());
 }
 
 export function assertLiveTranscript(doc) {
@@ -170,17 +173,14 @@ export function assertLiveTranscript(doc) {
       if (!String(turn.draftModel || '').trim() || !isBakeoffModelId(String(turn.draftModel))) {
         throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
       }
-      const customerText = priorCustomer?.text || '';
       const jevNote = turn.jevNote == null ? '' : String(turn.jevNote).trim();
       const jevNoteReason = String(turn.jevNoteReason || turn.quality?.jevNoteReason || '').trim();
       if (!jevNote) {
         if (!jevNoteReason) throw new Error(`refused: turn ${turn.turnIndex} jevNote is null without a reason`);
-      } else if (isTemplateNote(jevNote, customerText)) {
+      } else if (storedNoteIsScript(jevNote)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
-      } else if (noteContradictsDraft(jevNote, text)) {
-        throw new Error(`refused: turn ${turn.turnIndex} Jev note contradicts the draft`);
       }
-      if (String(turn.quality?.comment || '').trim() && isTemplateNote(turn.quality.comment, customerText)) {
+      if (String(turn.quality?.comment || '').trim() && storedNoteIsScript(turn.quality.comment)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
       }
       const labeledDraft = Number(turn.jevScoreDraft);

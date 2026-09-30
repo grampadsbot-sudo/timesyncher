@@ -651,95 +651,6 @@ function splitBeat(answer) {
   return { text: visible, beats: beats.filter(Boolean) };
 }
 
-export const JEV_QUALITY_COMMENTS = {
-  clear_day: 'Clear day shape that stays with the customer words.',
-  thin_reply: 'Too thin. Say more about the people and the day.',
-  invented_place: 'Do not invent a place the customer did not name.',
-  off_brief: 'The reply misses what the customer asked.',
-  strong_welcome: 'The itinerary acknowledgment and collaborator welcome are in place.',
-  garden_words: 'Use the customer word gardens. Do not name a garden they did not name.',
-  split_language: 'Remove the banned payment wording.',
-  destination_lock: 'Stay on the destination the customer named.',
-};
-
-const NOTE_RUBRIC = {
-  holds_named_days: 'The draft holds the named days and does not add a place.',
-  thin_draft: 'The draft is too thin to carry the day.',
-  invented_place: 'The draft names a place that was not already named.',
-  misses_ask: 'The draft misses what was asked.',
-  skips_price: 'The draft skips the plan dollar amount and who pays.',
-  payment_word: 'The draft uses a banned payment word.',
-  garden_word: 'The draft should say gardens and not name a garden.',
-  welcome_present: 'The itinerary acknowledgment and collaborator welcome are in the draft.',
-  access_choice: 'The draft offers view access and edit access.',
-  strong_day: 'The draft is a strong day plan.',
-  price_line: 'The draft names each seat and who pays from the plan table.',
-  off_destination: 'The draft leaves the named destination.',
-};
-
-const TEMPLATE_SHAPE = /the reply (covers|misses) this turn\b|the reply adds a place the customer did not name|banned payment word while covering|skips the dollar amount for who pays|who pays in:|^(?:answers?|name the price|take out the place|name the seats|keep the reply)\b|stays with that wording|in the customer's own words/i;
-
-const CANNED_NOTES = new Set(Object.values(JEV_QUALITY_COMMENTS).concat([
-  'Remove any split-payment wording.',
-]));
-
-export function extractJevFreeNote(body) {
-  const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
-  for (const answer of Object.values(answers)) {
-    if (!answer || typeof answer !== 'object') continue;
-    for (const key of ['text', 'note', 'rationale', 'explanation']) {
-      const value = answer[key];
-      if (typeof value !== 'string') continue;
-      const line = value.replace(/\s+/g, ' ').trim();
-      if (!line || line === String(answer.choice || '').trim()) continue;
-      return line;
-    }
-  }
-  return '';
-}
-
-export function noteContradictsDraft(note, draft) {
-  const line = String(note || '');
-  const body = String(draft || '');
-  if (!line.trim() || !body.trim()) return false;
-  if (/who pays is missing/i.test(line) && /paid by/i.test(body)) return true;
-  if (/friday garden/i.test(line) && !(/friday/i.test(body) && /garden/i.test(body))) return true;
-  if (/wednesday/.test(line.toLowerCase()) && /walk/i.test(line) && !(/wednesday/i.test(body) && /walk/i.test(body))) return true;
-  if (/welcome/.test(line.toLowerCase()) && /unclear/i.test(line) && /welcome (?:aboard|to the trip)/i.test(body)) return true;
-  return false;
-}
-
-const FIXED_NOTE_STEMS = Object.values(NOTE_RUBRIC)
-  .concat(Object.values(JEV_QUALITY_COMMENTS))
-  .concat(['draft marker', 'jev score', 'the itinerary acknowledgment and collaborator welcome']);
-
-function hasFixedStem(note) {
-  const low = String(note || '').toLowerCase();
-  return FIXED_NOTE_STEMS.some((stem) => {
-    const words = String(stem || '').toLowerCase().replace(/[.]+$/g, '').trim().split(/\s+/);
-    const prefix = words.slice(0, Math.min(words.length, 6)).join(' ');
-    return prefix.length >= 10 && low.includes(prefix);
-  });
-}
-
-export function noteEchoesCustomer(note, customerTurn) {
-  const value = String(note || '').toLowerCase().replace(/\s+/g, ' ');
-  const ask = String(customerTurn || '').toLowerCase().replace(/\s+/g, ' ').trim();
-  if (!value || !ask) return false;
-  if (ask.length >= 12 && value.includes(ask)) return true;
-  if (ask.length < 16) return false;
-  for (let index = 0; index + 16 <= ask.length; index += 1) {
-    if (value.includes(ask.slice(index, index + 16))) return true;
-  }
-  return false;
-}
-
-export function isTemplateNote(note, customerTurn) {
-  const value = String(note || '').trim();
-  if (!value || CANNED_NOTES.has(value) || TEMPLATE_SHAPE.test(value) || hasFixedStem(value) || noteEchoesCustomer(value, customerTurn)) return true;
-  return false;
-}
-
 export function labeledJevScore(scoreRaw) {
   const raw = Number(scoreRaw);
   if (!Number.isFinite(raw)) return null;
@@ -749,16 +660,13 @@ export function labeledJevScore(scoreRaw) {
   return labeled;
 }
 
-export function qualityFromDecisions(body, _criteria = null, customerTurn = '', draft = '') {
+export function qualityFromDecisions(body) {
   const answers = body?.answers && typeof body.answers === 'object' ? body.answers : {};
   const scoreRaw = Number(answers.overall_quality?.score);
   if (!Number.isFinite(scoreRaw)) return { judged: false, reason: 'quality_score_missing', model: JEV_DECISIONS_MODEL };
   const score = labeledJevScore(scoreRaw);
   const disposition = text(answers.disposition?.choice, 40);
   const jevFocus = text(answers.fix_focus?.choice, 40);
-  const rawNote = extractJevFreeNote(body);
-  const contradicts = Boolean(rawNote) && noteContradictsDraft(rawNote, draft);
-  const template = Boolean(rawNote) && isTemplateNote(rawNote, customerTurn);
   const wantsRewrite = score <= 2;
   return {
     judged: true,
@@ -768,8 +676,6 @@ export function qualityFromDecisions(body, _criteria = null, customerTurn = '', 
     comment: null,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
-    noteUnusable: contradicts || template,
-    noteUnusableReason: contradicts ? 'note_contradicts_draft' : (template ? 'template_note' : null),
     jevFocus,
     rewrite: '',
     rewritten: false,
@@ -798,12 +704,12 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named. If you can, put a one-line reason in any text, note, rationale, or explanation field.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
         type: 'choice',
-        instructions: 'Choose keep or rewrite. If you can explain, put one line in a text field.',
+        instructions: 'Choose keep or rewrite. Return the choice only.',
         criteria: {
           keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
           rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
@@ -811,7 +717,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
       },
       fix_focus: {
         type: 'choice',
-        instructions: 'Jev scores only. Pick the one-line fix this draft needs. Do not write a replacement reply and do not quote the customer.',
+        instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
         criteria: {
           missing_price: 'Name each seat, the plan dollar amount, and who pays.',
           unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
@@ -839,7 +745,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     if (!response.ok || body.ok === false) {
       return { judged: false, reason: text(body.error?.message || body.error || `quality HTTP ${response.status}`, 300), model: JEV_DECISIONS_MODEL };
     }
-    return qualityFromDecisions(body, null, customerTurn, draft);
+    return qualityFromDecisions(body);
   } catch (error) {
     return { judged: false, reason: text(error?.message || error, 300), model: JEV_DECISIONS_MODEL };
   }

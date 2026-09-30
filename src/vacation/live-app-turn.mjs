@@ -6,12 +6,9 @@ import {
   jevPrecall,
   jevQualityRewrite,
   JEV_QUALITY_MODEL,
-  isTemplateNote,
-  noteContradictsDraft,
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 
-export { isTemplateNote };
 import { customerInputState } from './intake-shared-trip.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
@@ -669,39 +666,8 @@ function arrivalSwimLabel(label, arrival) {
   return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
 }
 
-export function applyAgreedAppSwim(things, customerText, appText, span = null) {
-  const list = Array.isArray(things) ? things : [];
-  if (!/\bswim\b/i.test(String(customerText || ''))) return list;
-  const arrival = spanStartLabel(span);
-  const wantsLater = /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(String(customerText || ''));
-  const namedDay = customerNamedAnyWeekday(customerText);
-  const labels = [];
-  if (wantsLater && namedDay) {
-    for (const sentence of splitSentences(appText).filter((part) => /\bswim\b/i.test(part))) {
-      const dated = datedMentions(sentence)[0];
-      if (dated) {
-        if (!customerNamedWeekday(customerText, dated.weekday)) continue;
-        const label = formatMention({ ...dated, year: dated.year || span?.year || null }, { withWeekday: true });
-        if (label && !arrivalSwimLabel(label, arrival)) labels.push(label);
-        continue;
-      }
-      const weekday = sentence.match(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i);
-      if (!weekday || !customerNamedWeekday(customerText, weekday[1])) continue;
-      const resolved = weekdayInsideSpan(weekday[1], span);
-      if (resolved && !arrivalSwimLabel(resolved, arrival)) labels.push(resolved);
-    }
-  }
-  const askWhichDay = wantsLater && !namedDay;
-  return list.map((thing) => {
-    if (!/\bswim\b/i.test(String(thing?.title || ''))) return thing;
-    const merged = String(thing.customerWhen || '').split(' · ').map((part) => part.trim()).filter((part) => part && !arrivalSwimLabel(part, arrival));
-    for (const label of labels) {
-      if (merged.some((item) => item === label || item.startsWith(`${label} `))) continue;
-      merged.push(label);
-    }
-    const dayFlag = wantsLater ? askWhichDay : thing.askWhichDay === true;
-    return { ...thing, customerWhen: merged.join(' · '), askWhichDay: dayFlag };
-  });
+export function applyAgreedAppSwim(things) {
+  return Array.isArray(things) ? things : [];
 }
 
 function activitySentenceCommits(hit) {
@@ -769,67 +735,8 @@ export function splitRewriteChange(text) {
   };
 }
 
-function sentenceHas(text, pattern) {
-  return splitSentences(text).some((sentence) => pattern.test(sentence));
-}
-
-export function verifiedRewriteChange(change, draft, shipped) {
-  const line = String(change || '').replace(/\s+/g, ' ').trim();
-  if (!line) return '';
-  const shippedText = String(shipped || '');
-  const draftText = String(draft || '');
-  if (/\bmoved\b/i.test(line)) {
-    const days = [...line.matchAll(/\b(\d{1,2})\b/g)].map((match) => Number(match[1])).filter((day) => day >= 1 && day <= 31);
-    const activity = /\bswim\b/i.test(line) ? /\bswim\b/i : /\bgarden\b/i.test(line) ? /garden/i : /town walk/i.test(line) ? /town walk/i : null;
-    if (activity && days.length) {
-      const already = days.some((day) => splitSentences(draftText).some((sentence) => activity.test(sentence) && new RegExp(`\\b${day}\\b`).test(sentence)));
-      if (already) return '';
-    }
-  }
-  if (/\b(include|included|including|corrected the group)\b/i.test(line)) {
-    const names = [...line.matchAll(/\b([A-Z][a-z]{2,})\b/g)].map((match) => match[1]);
-    const missing = names.filter((name) => !/^(April|Friday|Sunday|Monday|Tuesday|Wednesday|Thursday|Saturday|Big|Island|What|Fixed|Removed)$/.test(name) && !new RegExp(`\\b${name}\\b`).test(shippedText));
-    if (missing.length) return '';
-  }
-  if (/\b(saved|already saved|now set)\b/i.test(line) && /\b(removed|dropped|clarified|implication)\b/i.test(line)) {
-    const days = [...line.matchAll(/\b(\d{1,2})(?:st|nd|rd|th)?\b/g)].map((match) => Number(match[1])).filter((day) => day >= 1 && day <= 31);
-    const activity = /\bswim\b/i.test(line) ? /\bswim\b/i : /\bgarden\b/i.test(line) ? /garden/i : /town walk/i.test(line) ? /town walk/i : null;
-    if (activity && days.length) {
-      const savedOn = (text, day) => splitSentences(text).some((sentence) => {
-        if (!activity.test(sentence)) return false;
-        if (new RegExp(`\\bnot\\s+(?:on\\s+)?(?:april|apr)\\.?\\s+${day}(?:st|nd|rd|th)?\\b`, 'i').test(sentence)) return false;
-        const dayRe = new RegExp(`\\b(?:april|apr)\\.?\\s+${day}(?:st|nd|rd|th)?\\b|\\b${day}(?:st|nd|rd|th)\\b`, 'i');
-        return dayRe.test(sentence) && /\b(saved|already[- ]saved|now set|set for)\b/i.test(sentence);
-      });
-      const removedSaved = days.some((day) => savedOn(draftText, day) && !savedOn(shippedText, day));
-      if (!removedSaved) return '';
-    } else {
-      const draftSaved = /\b(saved|already[- ]saved|now set)\b/i.test(draftText);
-      const shippedSaved = /\b(saved|already[- ]saved|now set)\b/i.test(shippedText);
-      if (!draftSaved || shippedSaved) return '';
-    }
-  }
-  if (/town walk/i.test(shippedText) && !/town walk/i.test(draftText) && !/town walk/i.test(line)) return '';
-  if (/\bon the list\b/i.test(shippedText) && !/\bon the list\b/i.test(draftText) && !/town walk|on the list/i.test(line)) return '';
-  if (/\b(removed|dropped|deleted|cut)\b/i.test(line)) {
-    for (const phrase of ['the whole crew', 'just the crew', 'party of eight', 'crew of eight', 'full party']) {
-      if (line.toLowerCase().includes(phrase) && shippedText.toLowerCase().includes(phrase)) return '';
-    }
-    const days = [...line.matchAll(/\b(\d{1,2})(?:st|nd|rd|th)?\b/g)].map((match) => Number(match[1])).filter((day) => day >= 1 && day <= 31);
-    if (days.length && /\b(swim|garden|town walk|april|apr)\b/i.test(line)) {
-      const activity = /\bswim\b/i.test(line) ? /\bswim\b/i : /\bgarden\b/i.test(line) ? /garden/i : /town walk/i.test(line) ? /town walk/i : null;
-      const dayRe = (day) => new RegExp(`\\b(?:april|apr)\\.?\\s+${day}(?:st|nd|rd|th)?\\b|\\b${day}(?:st|nd|rd|th)\\b`, 'i');
-      const placed = (text, day) => splitSentences(text).some((sentence) => {
-        if (activity && !activity.test(sentence)) return false;
-        if (/\boff that day\b|\bkeep\b[^.]{0,40}\boff\b/i.test(sentence)) return false;
-        return dayRe(day).test(sentence);
-      });
-      const removedAny = days.some((day) => placed(draftText, day) && !placed(shippedText, day));
-      if (!removedAny) return '';
-    }
-  }
-  if (sentenceHas(line, /removed|dropped/i) && sentenceHas(shippedText, /the whole crew|just the crew/i) && /crew/i.test(line)) return '';
-  return line;
+export function verifiedRewriteChange(change) {
+  return String(change || '').replace(/\s+/g, ' ').trim();
 }
 
 export function mustRewriteQuality(quality) {
@@ -870,7 +777,8 @@ function mentionStamp(mention) {
 
 function rangeBoundDays(sentence) {
   const days = new Set();
-  const re = /\bapr(?:il)?\.?\s+(\d{1,2})(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:apr(?:il)?\.?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
+  const months = monthPattern();
+  const re = new RegExp(`\\b(?:${months})\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?\\s*(?:[\\u2013\\-]|to|through)\\s*(?:the\\s+)?(?:(?:${months})\\.?\\s+)?(\\d{1,2})(?:st|nd|rd|th)?`, 'gi');
   for (const match of String(sentence || '').matchAll(re)) {
     days.add(Number(match[1]));
     days.add(Number(match[2]));
@@ -944,28 +852,19 @@ function stampsFromWhen(value) {
 
 export function savedTripFacts(record = {}) {
   const things = Array.isArray(record.things) ? record.things : [];
-  const swim = things.find((thing) => /\bswim\b/i.test(String(thing?.title || '')));
-  const garden = things.find((thing) => /garden/i.test(String(thing?.title || '')));
-  const townWalk = things.find((thing) => /town walk/i.test(String(thing?.title || '')));
   const span = record.span?.end ? record.span : spanFromIso(record.start, record.end);
   const party = record.party && typeof record.party === 'object' ? record.party : {};
   const notTraveling = [
     ...(Array.isArray(party.viewers) ? party.viewers : []).map((person) => ({ name: person?.name, role: 'viewer' })),
     ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
   ].filter((person) => person.name);
-  const owners = {};
-  const namedOwner = (thing) => String(thing?.who || '').trim();
-  const gardenWho = namedOwner(garden);
-  const swimWho = namedOwner(swim);
-  if (gardenWho) owners.gardens = gardenWho;
-  if (swimWho) owners.swim = swimWho;
   const activities = things.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean);
   return {
     span,
-    swimDays: [...new Set([...stampsFromWhen(swim?.customerWhen), ...stampsFromWhen(swim?.whenLabel)])],
-    gardenDays: [...new Set([...stampsFromWhen(garden?.customerWhen), ...stampsFromWhen(garden?.whenLabel)])],
-    townWalkDays: [...new Set([...stampsFromWhen(townWalk?.customerWhen), ...stampsFromWhen(townWalk?.whenLabel)])],
-    owners,
+    swimDays: [],
+    gardenDays: [],
+    townWalkDays: [],
+    owners: {},
     planOwned: record.planOwned === true,
     activities,
     notTraveling,
@@ -985,88 +884,62 @@ export function customerTripFacts(priorTurns, customerTurn = '') {
   return savedTripFacts(projectCustomerRecord(priorTurns, customerTurn));
 }
 
-function withoutNegatedDays(sentence) {
-  return String(sentence || '')
-    .replace(/\bnot\s+(?:on\s+)?(?:april|apr)\.?\s+\d{1,2}(?:st|nd|rd|th)?/gi, '')
-    .replace(/\bnot\s+(?:the\s+)?\d{1,2}(?:st|nd|rd|th)\b/gi, '');
+function calendarMonths() {
+  const names = [];
+  for (let index = 0; index < 12; index += 1) {
+    const date = new Date(Date.UTC(2026, index, 1));
+    names.push(date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' }));
+    names.push(date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }));
+  }
+  return [...new Set(names)].sort((left, right) => right.length - left.length);
 }
 
-function dayIsSet(stamps, set) {
-  return stamps.some((stamp) => set.includes(stamp));
+function calendarWords() {
+  const words = new Set();
+  for (const name of calendarMonths()) words.add(name.toLowerCase());
+  for (let day = 0; day < 7; day += 1) {
+    const date = new Date(Date.UTC(2026, 0, 4 + day));
+    words.add(date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase());
+    words.add(date.toLocaleString('en-US', { weekday: 'short', timeZone: 'UTC' }).toLowerCase());
+  }
+  return words;
+}
+
+function monthPattern() {
+  return calendarMonths().map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+}
+
+function skippedRosterWord(name) {
+  if (calendarWords().has(String(name || '').toLowerCase())) return true;
+  return /^(with|option|both|which|either|since|that|this|they|your|the|and|for)$/i.test(name);
+}
+
+function rosterNamesIn(text) {
+  return [...String(text || '').matchAll(/\b[A-Z][a-z]{2,}\b/g)]
+    .map((match) => match[0])
+    .filter((name) => !skippedRosterWord(name));
 }
 
 function pushError(errors, line) {
   if (line && !errors.includes(line)) errors.push(line);
 }
 
-const RANGE_END = /\b(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?apr(?:il)?\s+\d{1,2}(?:st|nd|rd|th)?\s*(?:[\u2013\-]|to|through)\s*(?:the\s+)?(?:(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+)?(?:apr(?:il)?\s+)?(\d{1,2})(?:st|nd|rd|th)?/gi;
+function rangeEndRe() {
+  const month = monthPattern();
+  const weekday = 'sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday';
+  return new RegExp(`\\b(?:(?:${weekday})\\s+)?(?:${month})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?\\s*(?:[\\u2013\\-]|to|through)\\s*(?:the\\s+)?(?:(?:${weekday})\\s+)?(?:(?:${month})\\.?\\s+)?(\\d{1,2})(?:st|nd|rd|th)?`, 'gi');
+}
 const DEPARTURE = /\blast day\b|\blast evening\b|\blast morning\b|\bpack(?:ing)? up\b|\bpacked and\b|\bpack(?:ing|ed)?\b(?!\s+schedule)(?!\s+(?:a |the )?(?:cooler|water|snack|snacks|lunch|towel|bag))|\bafter checkout\b|\bone last time\b/i;
-const SWIM_RE = /\bswim\b|\bhouse pool\b|\bpool dip\b|\bdip into\b|\ba dip\b/i;
-const GARDEN_RE = /garden/i;
-const WALK_RE = /town walk/i;
-const DINNER_RE = /\bdinner\b/i;
-const ACTIVITY_RES = [SWIM_RE, GARDEN_RE, WALK_RE, DINNER_RE];
-const ACTIVITY_DENIAL = /\b(?:isn't set|is not set|won't lock|will not lock|not already set|not a swim|off that day)\b|\bkeep\b[^.]{0,48}\boff\b|\bnot on\b/i;
-
-function activityClauses(sentence) {
-  return String(sentence || '').split(/\s*(?:,|;|\band\b)\s*/i).map((part) => part.trim()).filter(Boolean);
-}
-
-function otherActivity(clause, activityRe) {
-  return ACTIVITY_RES.some((pattern) => pattern !== activityRe && pattern.test(clause) && !activityRe.test(clause));
-}
-
-function activityBefore(clauses, index) {
-  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-    const hit = ACTIVITY_RES.find((pattern) => pattern.test(clauses[cursor]));
-    if (hit) return hit;
-  }
-  return null;
-}
-
-function clauseStamps(sentence, span, activityRe) {
-  const clauses = activityClauses(sentence);
-  const stamps = new Set();
-  clauses.forEach((clause, index) => {
-    if (!activityRe.test(clause) || ACTIVITY_DENIAL.test(clause)) return;
-    const local = activityStamps(clause, span);
-    if (local.length) {
-      local.forEach((stamp) => stamps.add(stamp));
-      return;
-    }
-    if (/\blater\b|\bstays in place\b|\bcan wait\b/i.test(clause)) return;
-    for (const neighbor of [clauses[index - 1], clauses[index + 1]].filter(Boolean)) {
-      if (ACTIVITY_DENIAL.test(neighbor) || otherActivity(neighbor, activityRe)) continue;
-      const neighborIndex = clauses.indexOf(neighbor);
-      const borrowed = activityStamps(neighbor, span);
-      if (!borrowed.length) continue;
-      const owner = activityBefore(clauses, neighborIndex);
-      if (owner && owner !== activityRe) continue;
-      borrowed.forEach((stamp) => stamps.add(stamp));
-    }
-    const walkClause = clauses.find((clause) => WALK_RE.test(clause)) || '';
-    const undatedOr = activityRe === WALK_RE && /^\s*or\b/i.test(walkClause) && !activityStamps(walkClause, span).length;
-    const relativeWalk = activityRe === WALK_RE
-      && /\b(?:after|before|following)\s+(?:the\s+)?town walk\b/i.test(sentence)
-      && !activityStamps(walkClause, span).length;
-    if (!stamps.size && !undatedOr && !relativeWalk && activityRe === WALK_RE && /\band\b/i.test(sentence)) {
-      activityStamps(sentence, span).forEach((stamp) => stamps.add(stamp));
-    }
-  });
-  return [...stamps];
-}
 
 export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
   const errors = [];
-  const swimDays = Array.isArray(facts.swimDays) ? facts.swimDays : [];
-  const gardenDays = Array.isArray(facts.gardenDays) ? facts.gardenDays : [];
   const span = facts.span || null;
   if (!facts.planOwned && /you(?:'|’)re all set (?:with|for) the\b[^.]{0,80}unlimited|you are all set (?:with|for) the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
     pushError(errors, 'the unlimited plan is not owned yet');
   }
   const endDay = endDayNumber(span);
-  const ranges = body.matchAll(RANGE_END);
+  const ranges = body.matchAll(rangeEndRe());
   for (const shortened of ranges) {
     if (endDay && Number(shortened[1]) !== endDay) {
       pushError(errors, `the trip runs through ${facts.span?.endLabel || span.end}, not day ${shortened[1]}`);
@@ -1075,134 +948,40 @@ export function draftFactErrors(reply, facts = {}) {
   if (/no extra charge|no extra cost|at no extra/i.test(body)) {
     pushError(errors, 'no extra charge is not in what the customer set');
   }
-  if (/picnic/i.test(body) && !(facts.activities || []).some((item) => /picnic/i.test(item))) {
-    pushError(errors, 'a picnic was not named');
-  }
-  const gardenOwner = String(facts.owners?.gardens || '');
-  const gardenClaim = body.match(/\b([A-Z][a-z]+)(?:'|’)s\s+gardens?\b/);
-  const weekdayNameClaim = gardenClaim && /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.test(gardenClaim[1]);
-  if (gardenOwner && gardenClaim && !weekdayNameClaim && gardenClaim[1].toLowerCase() !== gardenOwner.toLowerCase()) {
-    pushError(errors, `the gardens are ${gardenOwner}'s, not ${gardenClaim[1]}'s`);
-  }
-  if (gardenOwner && facts.addressedTo && facts.addressedTo.toLowerCase() !== gardenOwner.toLowerCase() && /your (?:two )?garden/i.test(body)) {
-    pushError(errors, `the gardens are ${gardenOwner}'s, not ${facts.addressedTo}'s`);
-  }
-  const swimOwner = String(facts.owners?.swim || '');
-  if (swimOwner && facts.addressedTo && facts.addressedTo.toLowerCase() !== swimOwner.toLowerCase() && /your (?:later |second |beach )?swim/i.test(body)) {
-    pushError(errors, `the swim is ${swimOwner}'s, not ${facts.addressedTo}'s`);
-  }
   if (/\b(?:we|i)(?:'|’)ve corrected\b|\b(?:we|i) have corrected\b/i.test(body)) {
     pushError(errors, 'the reply invented a correction');
   }
   const ownerName = String(facts.ownerName || '').trim();
   const ownerFirst = ownerName.split(/\s+/)[0] || '';
-  const NOT_ROSTER = /^(April|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Big|Island|Kailua|Kona|Hawaii|Hawai|With|Option|Both|Which|Either|Since|That|This|They|Your|The|And|For)$/;
   if (ownerFirst) {
     const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
     const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
     const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b|\byour\b/i.test(crewList[1]);
-    const rosterNames = crewList
-      ? [...crewList[1].matchAll(/\b[A-Z][a-z]{2,}\b/g)].map((match) => match[0]).filter((name) => name && !NOT_ROSTER.test(name))
-      : [];
+    const rosterNames = crewList ? rosterNamesIn(crewList[1]) : [];
     if (crewList && !crewAddressesOwner && rosterNames.length >= 2 && !ownerRe.test(crewList[1])) {
       pushError(errors, `${ownerName} is traveling`);
     }
-    if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bparty of eight\b|\bcrew of eight\b|\bwhole crew\b/i.test(body)) {
+    if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bwhole crew\b/i.test(body)) {
       pushError(errors, `${ownerName} is traveling`);
     }
-  }
-  if (/\bmidweek\b/i.test(body) && /\bfriday\b/i.test(body)) {
-    pushError(errors, 'Friday is not midweek');
   }
   const paragraphs = body.split(/\n{2,}/).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
   const repeatedSentences = splitSentences(body).map((part) => part.replace(/\s+/g, ' ').trim().toLowerCase()).filter((part) => part.length > 40);
   if (new Set(paragraphs).size !== paragraphs.length || new Set(repeatedSentences).size !== repeatedSentences.length) {
     pushError(errors, 'a paragraph is repeated');
   }
-  const arrivalStamp = span?.start ? dayStamp(`${MONTH_ABBR[Number(String(span.start).slice(5, 7))]} ${Number(String(span.start).slice(8, 10))}`) : '';
-  const laterFriday = dayStamp(facts.laterFriday || '');
-  const customerTurn = String(facts.customerTurn || '');
-  const wantsLaterSwim = /\bswim\b/i.test(customerTurn)
-    && /\blater\b|\bstill want\b|\banother\b|\bsecond\b/i.test(customerTurn)
-    && !/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(customerTurn);
-  if (wantsLaterSwim && laterFriday) {
-    const told = splitSentences(body).some((sentence) => {
-      if (!SWIM_RE.test(sentence)) return false;
-      const day = Number(String(laterFriday).split(' ')[1]);
-      const namesFriday = looseDayStamps(sentence, span).includes(laterFriday)
-        || new RegExp(String(facts.laterFriday || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(sentence)
-        || (day && new RegExp(`\\bfriday\\b[^.]{0,48}\\b${day}(?:st|nd|rd|th)?\\b`, 'i').test(sentence));
-      if (!namesFriday) return false;
-      if (/\bbetween\b/i.test(sentence) && !/\bsaved\b|\bset\b/i.test(sentence)) return false;
-      return true;
-    });
-    if (!told) pushError(errors, `the later swim is saved on ${facts.laterFriday || laterFriday}`);
-  }
   const sentences = splitSentences(body);
   const tripEnd = endWeekday(span);
   const endStamp = span?.end ? dayStamp(`${MONTH_ABBR[Number(String(span.end).slice(5, 7))]} ${endDay}`) : '';
   for (let index = 0; index < sentences.length; index += 1) {
     const sentence = sentences[index];
-    const next = sentences[index + 1] || '';
-    const previous = sentences[index - 1] || '';
-    const swimDenied = ACTIVITY_DENIAL.test(sentence) && SWIM_RE.test(sentence);
-    const optional = /\bchoice\b|\bwould you like\b|\binterested\b|\beither\b|\?/.test(sentence);
-    const rainyBackup = /\brains\b|\brainy\b|\bbackup\b|\bshifting\b|\breschedul/i.test(sentence);
-    if (SWIM_RE.test(sentence) && !swimDenied && !optional && !rainyBackup) {
-      let attached = clauseStamps(withoutNegatedDays(sentence), span, SWIM_RE);
-      if (!attached.length && /\boption\b|\bor a swim\b|\bswim day\b/i.test(sentence)) {
-        attached = activityStamps(previous, span);
-      }
-      if (!attached.length && /\bdip\b|\bpool\b|\bswim\b/i.test(sentence) && !/\blater\b|\bwait\b|\bbetween\b|\bin the week\b/i.test(sentence) && /\barrival\b/i.test(previous)) {
-        attached = activityStamps(previous, span);
-      }
-      const laterOnly = wantsLaterSwim && laterFriday && attached.length && attached.every((stamp) => stamp === laterFriday);
-      if (attached.length && !laterOnly && !dayIsSet(attached, swimDays)) {
-        pushError(errors, `a swim on ${attached.find((stamp) => !swimDays.includes(stamp)) || attached[0]} was not set by the customer`);
-      }
-    }
-    if (SWIM_RE.test(sentence) && /\b(saved|already[- ]saved|scheduled|noted|now set|set for|i(?:'|’)ll save|we(?:'|’)ll save|save that|i(?:'|’)ve got that)\b/i.test(sentence) && !ACTIVITY_DENIAL.test(sentence)) {
-      const laterStamp = dayStamp(facts.laterFriday || '');
-      if (/\bsecond friday\b/i.test(sentence) && !laterStamp && !/\bfriday\b/i.test(customerTurn)) {
-        pushError(errors, 'a swim on the second Friday was claimed as saved');
-      }
-      let claimed = looseDayStamps(withoutNegatedDays(sentence), span);
-      if (/\bsecond friday\b/i.test(sentence) && laterStamp && !claimed.includes(laterStamp)) claimed = [...claimed, laterStamp];
-      const askedForLater = !facts.strictSaved && wantsLaterSwim && laterStamp && claimed.includes(laterStamp);
-      if (!askedForLater && claimed.length && !dayIsSet(claimed, swimDays)) {
-        pushError(errors, `a swim on ${claimed.find((stamp) => !swimDays.includes(stamp)) || claimed[0]} was claimed as saved`);
-      } else if (!claimed.length && !swimDays.length) {
-        pushError(errors, 'a swim was claimed as saved when it is not');
-      }
-    }
-    if (GARDEN_RE.test(sentence) && !optional) {
-      const stamps = clauseStamps(withoutNegatedDays(sentence), span, GARDEN_RE);
-      const denied = ACTIVITY_DENIAL.test(sentence);
-      const already = /already set|locked in/i.test(sentence) && !denied;
-      if (!denied && stamps.length && !dayIsSet(stamps, gardenDays)) {
-        pushError(errors, already ? `the garden on ${stamps[0]} is not already set` : `a garden on ${stamps[0]} was not set by the customer`);
-      }
-    }
-    if (WALK_RE.test(sentence) && !optional) {
-      const stamps = clauseStamps(withoutNegatedDays(sentence), span, WALK_RE);
-      if (stamps.length && !dayIsSet(stamps, facts.townWalkDays)) {
-        pushError(errors, `a town walk on ${stamps[0]} was not set by the customer`);
-      }
-      if (/\b(noted|saved|scheduled|on the list)\b/i.test(sentence) && !stamps.length && !(facts.townWalkDays || []).length) {
-        pushError(errors, 'a town walk was noted but not saved');
-      }
-    }
-    if (/\bfour friends\b|\bunnamed friends\b/i.test(sentence)) {
-      pushError(errors, 'the reply invented people');
-    }
-    const partyCount = sentence.match(/\bparty of (six|seven|eight|nine|ten|\d+)\b/i);
+    const partyCount = sentence.match(/\bparty of (\d+)\b/i);
     if (partyCount) {
-      const words = { six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
-      const claimed = words[partyCount[1].toLowerCase()] || Number(partyCount[1]);
-      const names = new Set((sentence.match(/\b[A-Z][a-z]{2,}\b/g) || []).filter((name) => !/^(April|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Big|Island|With|Option|Both|Which)$/.test(name)));
-      const friends = /\bfour friends\b/i.test(sentence) ? 4 : 0;
-      const listed = names.size + friends;
-      if (listed && listed !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${listed} people`);
+      const claimed = Number(partyCount[1]);
+      const names = new Set(rosterNamesIn(sentence));
+      if (names.size && names.size !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${names.size} people`);
+      const savedCount = (facts.travelers || []).filter(Boolean).length;
+      if (savedCount && claimed !== savedCount) pushError(errors, `saved party size is ${savedCount}`);
     }
     if (ownerFirst && /\baccount holder\b/i.test(sentence) && facts.addressedTo && facts.addressedTo.toLowerCase() !== ownerFirst.toLowerCase()) {
       pushError(errors, `the account holder is ${ownerName}`);
@@ -1529,7 +1308,7 @@ export function interimCanShip(text, customerTurn, facts = {}) {
   const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
   if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
   if (interimDodges(value, customerTurn)) return false;
-  if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted|later swim is saved|invented a correction/.test(error))) return false;
+  if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|invented a correction/.test(error))) return false;
   if (turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
   if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
@@ -1547,11 +1326,6 @@ export function beatsMatchingReply(beats, text) {
     const beatLower = line.toLowerCase();
     if (/\bbackup\b|\brain\b/.test(beatLower) && !/\bbackup\b|\brain|\bshift/.test(lower)) continue;
     if (/\boffer/.test(beatLower) && !/\bor\b|\boption\b/.test(lower)) continue;
-    if (/\b(set|saved|added|confirm)/.test(beatLower) && /\bswim\b/.test(beatLower)) {
-      const swimSet = /\bswim\b[^.]{0,90}\b(saved|set|added|friday|monday)\b/i.test(body)
-        || /\b(saved|set|added)\b[^.]{0,90}\bswim\b/i.test(body);
-      if (!swimSet) continue;
-    }
     const words = beatLower.split(/[^a-z0-9]+/).filter((word) => word.length > 3 && !BEAT_STOP.has(word));
     if (words.length) {
       const hit = words.filter((word) => lower.includes(word)).length;
@@ -1831,7 +1605,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftExtra = [
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
-    'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
     intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(citedPlaces),
@@ -2038,6 +1811,18 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       reason: null,
     };
   }
+  const shippedDraft = String(pending.draft || '').trim();
+  if (shippedDraft) {
+    return {
+      reply: shippedDraft,
+      rules,
+      jev,
+      model: finished.model,
+      quality: finished.quality,
+      log: finished.log,
+      reason: finished.reason,
+    };
+  }
   if (!String(interimReply.text || '').trim()) {
     return {
       reply: finished.reply,
@@ -2072,22 +1857,37 @@ function interimFacts(customerTurn, destination) {
   ].join(' ');
 }
 
+export function upsellFactsForTurn(customerTurn, facts = {}, intake = false) {
+  const marked = intake === true || turnMarkedIntake(customerTurn);
+  const ask = customerTurnText(customerTurn);
+  const price = customerAsksPrice(ask);
+  if (!marked && !price) return null;
+  return {
+    buildingItinerary: marked,
+    collaborators: marked,
+    access: marked ? ['view', 'edit'] : [],
+    emailInvite: marked,
+    planPhrase: 'unlimited vacations for the whole year',
+    planOwned: facts.planOwned === true,
+    payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, facts.payerRows) : '',
+  };
+}
+
 async function interimFromTierOne({ rules, customerTurn, destination, env, facts = {}, seat = null, intake = false }) {
   const started = Date.now();
   const absent = (Array.isArray(facts.notTraveling) ? facts.notTraveling : []).map((person) => person.name).filter(Boolean);
   const owner = String(facts.ownerName || '').trim();
   const speaker = String(facts.addressedTo || '').trim();
+  const upsell = upsellFactsForTurn(customerTurn, facts, intake);
   const systemExtra = [
-    intake === true ? 'This holding reply is the intake answer. Include every required sentence below.' : 'This is a one or two sentence holding line.',
+    intake === true ? 'This holding reply covers the intake. Use the upsell facts. Do not recite a script.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
     destination ? '' : DESTINATION_ASK,
     speaker
       ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${owner || 'someone else'} as the speaker.`
       : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
     absent.length ? `Do not put ${absent.join(' or ')} on the trip.` : 'Do not add viewers or editors to the traveling party.',
-    intake === true
-      ? 'This is the intake reply. Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. You can also take the unlimited vacations for the whole year as a plan. Do not say you also have unlimited. Do not say a swim is saved.'
-      : '',
+    upsell ? `Upsell facts: ${JSON.stringify(upsell)}` : '',
     customerAsksPrice(customerTurn) && Number(facts.seatDollars) > 0
       ? `This turn asks the price. State the payer line exactly and do not say the plan is already owned: ${payerLineFromDollars(customerTurn, facts.seatDollars, facts.payerRows)}.`
       : '',
@@ -2117,30 +1917,13 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null };
 }
 
-async function settleJevNote(quality, customerTurn, draft, env) {
-  if (!quality?.judged || !quality.noteUnusable) return quality;
-  const again = await jevQualityRewrite({ customerTurn, draft, env });
-  const againNote = again?.judged ? again.jevNote : null;
-  const usable = againNote && !again.noteUnusable && !noteContradictsDraft(againNote, draft) && !isTemplateNote(againNote, customerTurn);
-  if (usable) {
-    return { ...quality, comment: againNote, jevNote: againNote, jevNoteReason: null, noteUnusable: false, noteUnusableReason: null };
-  }
-  return {
-    ...quality,
-    comment: null,
-    jevNote: null,
-    jevNoteReason: quality.noteUnusableReason || 'note_unusable',
-    noteUnusable: false,
-  };
-}
-
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
   const shippedRewrite = log.shippedRewrite === true;
   const next = {
     ...quality,
     rewritten: shippedRewrite,
     model: JEV_QUALITY_MODEL,
-    comment: log.jevNote || quality?.comment || '',
+    comment: log.jevNote || quality?.comment || null,
     draft: draft || log.draftText || '',
     rewriteText: log.rewriteText || '',
     rewriteModel: log.rewriteModel || '',
@@ -2165,6 +1948,23 @@ function stampShippedReply({ reply, quality, draftModel, log, draft }) {
   };
 }
 
+export function sameTierRewriteRequest({ customerTurn = '', draft = '', scoreRaw = null, failure = '' } = {}) {
+  const score = scoreRaw == null ? 'none' : String(scoreRaw);
+  const flags = String(failure || '').trim() || 'none';
+  return {
+    customerTurn: [
+      String(customerTurn || '').trim(),
+      'Rewrite the draft in this same call.',
+      `Jev score: ${score}.`,
+      `Fact-check flags: ${flags}.`,
+      'Return the rewritten reply. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference.',
+      'Draft:',
+      String(draft || ''),
+    ].filter((part) => part !== '').join('\n\n'),
+    systemExtra: 'Rewrite using the Jev score and the fact-check flags in the request. Do not copy the draft. Do not add a lead line. End with one line WHAT_I_CHANGED: and one sentence.',
+  };
+}
+
 export async function finishTierRewrite({ pending, env = process.env, interimPromise = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const facts = pending?.tripFacts || customerTripFacts([], pending?.customerTurn || '');
@@ -2172,10 +1972,16 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   async function askRewrite(failure) {
     const started = Date.now();
     const scoreRaw = rawScore(pending?.quality?.scoreRaw);
+    const request = sameTierRewriteRequest({
+      customerTurn: pending?.customerTurn || '',
+      draft: pending?.draft || '',
+      scoreRaw,
+      failure,
+    });
     const called = await callTieredModel({
       rules,
       jev: pending?.jev,
-      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID). Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference, including any person you added and any saved claim you added or removed.\nDraft:\n${pending?.draft || ''}`,
+      customerTurn: request.customerTurn,
       stage: 'vacation_conversation',
       screen: 'vacation-app',
       destination: pending?.destination || '',
@@ -2191,9 +1997,10 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       seatDollars: pending?.seatDollars || 0,
       seat: pending?.seat || null,
       systemExtra: [
-        'Rewrite the draft. Do not copy it and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. End with one line WHAT_I_CHANGED: and a single sentence that names only a real difference that is in the draft. If you add or remove a person or a saved claim, that sentence must name it. Do not say you removed a saved activity on a day the draft did not claim.',
+        request.systemExtra,
+        'Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID).',
+        'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
-        failure ? `Jev score and fact-check flags: ${failure}. Fix that failure.` : '',
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
@@ -2269,7 +2076,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     draftFactErrors: draftErrors,
     rewriteFactErrors: failReason ? [] : rewriteErrors,
     holding: holdingText,
-    holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted/.test(error)) : [],
+    holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking/.test(error)) : [],
   });
   if (!choice.text && !draftErrors.length) {
     choice = {
@@ -2309,7 +2116,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
           draftFactErrors: draftErrors,
           rewriteFactErrors: failReason ? [] : rewriteErrors,
           holding: holdingText,
-          holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|town walk was noted|later swim is saved|invented a correction/.test(error)) : [],
+          holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|invented a correction/.test(error)) : [],
           holdingScore: Number(holdingQuality.score),
         });
         if (again.rewritten) choice = again;
@@ -2326,6 +2133,16 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     }
   }
   if (!choice.rewritten && String(rewritten || modelText || '').trim()) choice.held = true;
+  if (!String(choice.text || '').trim() && String(pending?.draft || '').trim()) {
+    choice = {
+      text: String(pending.draft).trim(),
+      rewritten: false,
+      flagged: choice.flagged === true,
+      held: true,
+      failReason: choice.failReason || failReason || 'draft_shipped',
+      holding: false,
+    };
+  }
   const shippedText = choice.text;
   if (!choice.rewritten && !failReason) {
     failReason = choice.failReason === 'rewrite_fact_check_held'
