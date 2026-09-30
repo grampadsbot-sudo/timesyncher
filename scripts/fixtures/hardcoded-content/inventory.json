@@ -748,7 +748,7 @@
       "quote": "git grep -i tavily 128c9e1 → 0 hits (code, config, docs)",
       "customer_effect": "Tavily is not referenced anywhere. No client, no key name, no config.",
       "severity": "blocks live search",
-      "replacement": "Add a Tavily client next to fetchBrave in poi-search.mjs plus a TAVILY_API_KEY env var",
+      "replacement": "Add a Tavily client next to fetchBrave in poi-search.mjs plus a TAVILI_API_KEY env var",
       "id": "E4"
     },
     {

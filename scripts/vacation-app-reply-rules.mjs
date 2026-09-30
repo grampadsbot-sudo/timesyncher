@@ -603,12 +603,16 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const roster = String(tripRaw?.roster || '').trim();
   const rule = String(tripRaw?.rule || '').trim();
   const customerInput = {};
-  if (Array.isArray(tripRaw?.needsCustomerInput)) {
-    const needsCustomerInput = tripRaw.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
-    if (needsCustomerInput.length) customerInput.needsCustomerInput = needsCustomerInput;
+  const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
+  for (const [key, value] of Object.entries(tripRaw || {})) {
+    if (statedTripFields.has(key)) continue;
+    if (Array.isArray(value)) {
+      const items = value.map((item) => String(item || '').trim()).filter(Boolean);
+      if (items.length) customerInput[key] = items;
+    } else if (typeof value === 'string' && value.trim()) {
+      customerInput[key] = value.trim();
+    }
   }
-  const flightAsk = String(tripRaw?.flightAsk || '').trim();
-  if (flightAsk) customerInput.flightAsk = flightAsk;
   const hasCustomerInput = Object.keys(customerInput).length > 0;
   const trip = itinerary.length || dates || roster || rule || hasCustomerInput
     ? { itinerary, dates, roster, rule, ...customerInput }

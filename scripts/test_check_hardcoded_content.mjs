@@ -591,6 +591,53 @@ assert.equal(monthRun.status, 1, monthRun.stdout);
 for (const symbol of monthSymbols) assertHit(monthRun.stderr, 'FAIL', 'DATE-LITERAL', monthFile, symbol);
 assert.doesNotMatch(monthRun.stderr, /maybe|display|marching|april showers|aprilCount/);
 
+const placesVersion = fs.readFileSync(path.join(repo, 'src/vacation/place-search.mjs'), 'utf8');
+assert.equal(scanText('src/vacation/place-search.mjs', placesVersion).some((finding) => finding.symbol_or_pattern === '2025-06-17'), false);
+const apiVersionFile = 'src/vacation/api-version-header.mjs';
+const apiVersionText = [
+  "const headers = { 'X-Places-Api-Version': '2025-06-17' };",
+  "headers.set(\"x-places-api-version\", '2025-06-17');",
+  "const pairs = [['X-Places-Api-Version', '2025-06-17']];",
+].join('\n');
+assert.deepEqual(scanText(apiVersionFile, apiVersionText).filter((finding) => finding.rule === 'DATE-LITERAL'), []);
+const apiVersionDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-api-version-'));
+writeTree(apiVersionDir, { [apiVersionFile]: `${apiVersionText}\n` }, []);
+const apiVersionRun = runGuard(apiVersionDir);
+assert.equal(apiVersionRun.status, 0, apiVersionRun.stderr);
+
+const tripDateFile = 'src/vacation/trip-date.mjs';
+assert.deepEqual(
+  scanText(tripDateFile, "const trip = { startDate: '2025-06-17' };\n").filter((finding) => finding.rule === 'DATE-LITERAL').map((finding) => finding.symbol_or_pattern),
+  ['2025-06-17'],
+);
+const tripProseFile = 'src/vacation/trip-prose.mjs';
+assert.deepEqual(
+  scanText(tripProseFile, "const note = 'leave on 2025-06-17';\n").filter((finding) => finding.rule === 'DATE-LITERAL').map((finding) => finding.symbol_or_pattern),
+  ['2025-06-17'],
+);
+const nearFile = 'src/vacation/api-version-neighbor.mjs';
+const nearText = [
+  'const headers = {',
+  "  'X-Places-Api-Version': '2025-06-17',",
+  "  startDate: '2025-06-17',",
+  '};',
+  '',
+].join('\n');
+const nearHits = scanText(nearFile, nearText).filter((finding) => finding.rule === 'DATE-LITERAL');
+assert.deepEqual(nearHits.map((finding) => finding.symbol_or_pattern), ['2025-06-17']);
+assert.equal(nearHits[0].line, 3);
+const dateFailDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-api-version-fail-'));
+writeTree(dateFailDir, {
+  [tripDateFile]: "const trip = { startDate: '2025-06-17' };\n",
+  [tripProseFile]: "const note = 'leave on 2025-06-17';\n",
+  [nearFile]: nearText,
+}, []);
+const dateFailRun = runGuard(dateFailDir);
+assert.equal(dateFailRun.status, 1, dateFailRun.stdout);
+assertHit(dateFailRun.stderr, 'FAIL', 'DATE-LITERAL', tripDateFile, '2025-06-17');
+assertHit(dateFailRun.stderr, 'FAIL', 'DATE-LITERAL', tripProseFile, '2025-06-17');
+assertHit(dateFailRun.stderr, 'FAIL', 'DATE-LITERAL', nearFile, '2025-06-17');
+
 const bundleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-bundle-'));
 const bundleSymbol = '/assets/index-BKun7ofk.js is not in the repo and the build does not produce it';
 writeTree(bundleDir, {
