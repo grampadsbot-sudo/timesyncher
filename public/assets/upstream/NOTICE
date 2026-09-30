@@ -8,11 +8,11 @@ License: GNU Affero General Public License version 3 (LICENSE in this directory)
 The raw pull is not stored in this repository. Browsers load the committed
 files public/assets/index-BKun7ofk.js and public/assets/index-CbEHlMj6.css.
 The JavaScript was produced by the canned-string strip and the Style two
-rewrite. Flight and car detail fields keep the original kind checks. The
-build does not read a raw bundle.
+rewrite. Flight and car detail fields show when the thing category is
+flight or car. The build does not read a raw bundle.
 
 Original upstream index-BKun7ofk.js: 6693404 bytes, sha256 014eedf20ccfdf2694bdf0c89aec4ddc20db93748872359208695616a9f3c198
-Committed served index-BKun7ofk.js: 6713721 bytes, sha256 a095d88428cbe5ee9432cd51c48c4609aa76651f8c11103521293d99b9a3637d
+Committed served index-BKun7ofk.js: 6713823 bytes, sha256 6f306e03d7fda3a89aaa4f8aaedba5124be232f5811f1990c9da1ec68efb8edf
 
 index-CbEHlMj6.css is the unmodified pull, committed at the served path:
 156918 bytes, sha256 b50badbf987ebe908b3886f89e13b5ddea416c01b1cad4c111f7fcbe0e3419fd
