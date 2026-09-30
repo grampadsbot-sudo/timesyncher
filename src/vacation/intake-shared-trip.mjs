@@ -122,7 +122,6 @@ function categoryFor(thing) {
     store: ['Store', '🛍️', 'store'],
     shopping: ['Store', '🛍️', 'shopping'],
     transport: ['Transport', '🚕', 'transport'],
-    activity: ['Activity', '🎯', 'activity'],
     attraction: ['Attraction', '🏛️', 'attraction'],
     bar: ['Bar', '☕', 'bar'],
   }[key];
