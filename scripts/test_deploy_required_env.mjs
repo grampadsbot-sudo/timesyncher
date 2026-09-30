@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { compareEnvNames, loadRequiredEnv } from './deploy-env-preflight.mjs';
+import { compareEnvNames, loadOptionalEnv, loadRequiredEnv, runPreflight } from './deploy-env-preflight.mjs';
 
 const ENV = '[A-Z][A-Z0-9]*_[A-Z0-9_]+';
 const THROW = new RegExp(String.raw`\bMissing\s+(${ENV})\b|\b(${ENV})\s+is not set\b|\b(${ENV})\s+missing\b|\b(${ENV})\s+or\s+(${ENV})\s+is required\b|\|\|\s*['"](${ENV})['"]|(?:brave|foursquare|tavily)Name:\s*['"](${ENV})['"]`, 'g');
@@ -42,13 +42,22 @@ function requiredBeforeFetch() {
 }
 
 const required = loadRequiredEnv();
+const optional = loadOptionalEnv();
 const found = requiredBeforeFetch();
-for (const name of required) assert.equal(found.has(name), true, name);
-assert.deepEqual([...found].filter((name) => !required.includes(name)), []);
-assert.deepEqual(compareEnvNames(required, required), { missing: [], near: [] });
-assert.deepEqual(compareEnvNames(required, required.filter((name) => name !== 'FOURSQUARE_SERVICE_KEY')).missing, ['FOURSQUARE_SERVICE_KEY']);
+const listed = new Set([...required, ...optional]);
+for (const name of [...required, ...optional]) assert.equal(found.has(name), true, name);
+assert.deepEqual([...found].filter((name) => !listed.has(name)), []);
+assert.equal(required.includes('FOURSQUARE_SERVICE_KEY'), false);
+assert.deepEqual(optional, ['FOURSQUARE_SERVICE_KEY']);
+assert.equal(compareEnvNames(required, required, optional).missing.length, 0);
+assert.deepEqual(compareEnvNames(required, required, optional).optionalMissing, ['FOURSQUARE_SERVICE_KEY']);
+assert.deepEqual(compareEnvNames(required, required.filter((name) => name !== 'BRAVE_SEARCH_API_KEY')).missing, ['BRAVE_SEARCH_API_KEY']);
 const typo = required.map((name) => (name === 'TAVILY_API_KEY' ? 'TAVILI_API_KEY' : name));
-assert.deepEqual(compareEnvNames(required, typo), { missing: ['TAVILY_API_KEY'], near: [{ name: 'TAVILI_API_KEY', want: 'TAVILY_API_KEY' }] });
+assert.deepEqual(compareEnvNames(required, typo), { missing: ['TAVILY_API_KEY'], near: [{ name: 'TAVILI_API_KEY', want: 'TAVILY_API_KEY' }], optionalMissing: [] });
+const info = await runPreflight({ present: required });
+assert.equal(info.ok, true);
+assert.match(info.text, /optional-missing: FOURSQUARE_SERVICE_KEY/);
+assert.doesNotMatch(info.text, /^missing: FOURSQUARE_SERVICE_KEY/m);
 const deploy = fs.readFileSync(new URL('./deploy-staging.mjs', import.meta.url), 'utf8');
 assert.ok(deploy.indexOf('runPreflight') < deploy.indexOf("spawnSync('vercel'"));
 assert.match(deploy, /if \(!result\.ok\) process\.exit\(1\)/);

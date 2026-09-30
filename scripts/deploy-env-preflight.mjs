@@ -2,8 +2,16 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const PROJECT = 'timesyncher-vacation-staging';
+function loadDeployEnv() {
+  const doc = JSON.parse(readFileSync(new URL('./deploy-required-env.json', import.meta.url), 'utf8'));
+  const names = (rows) => (rows || []).map((row) => row.name);
+  return { required: names(doc.required), optional: names(doc.optional) };
+}
 export function loadRequiredEnv() {
-  return JSON.parse(readFileSync(new URL('./deploy-required-env.json', import.meta.url), 'utf8')).map((row) => row.name);
+  return loadDeployEnv().required;
+}
+export function loadOptionalEnv() {
+  return loadDeployEnv().optional;
 }
 export function editDistance(a, b) {
   if (Math.abs(a.length - b.length) > 2) return 3;
@@ -16,12 +24,13 @@ export function editDistance(a, b) {
   }
   return prev[b.length];
 }
-export function compareEnvNames(required, present) {
+export function compareEnvNames(required, present, optional = []) {
   const have = new Set(present);
   const missing = required.filter((name) => !have.has(name));
+  const optionalMissing = optional.filter((name) => !have.has(name));
   const near = [];
   for (const name of present) for (const want of required) if (name !== want && editDistance(name, want) <= 2) near.push({ name, want });
-  return { missing, near };
+  return { missing, near, optionalMissing };
 }
 function teamId() {
   const fromEnv = process.env.VERCEL_ORG_ID || process.env.VERCEL_TEAM_ID;
@@ -58,13 +67,16 @@ export async function listEnvNames({ project, target, token, team = teamId(), fe
 }
 export async function runPreflight({ project = PROJECT, target = 'production', token = process.env.VERCEL_TOKEN || '', present, fetchImpl } = {}) {
   const required = loadRequiredEnv();
-  if (!present && !token) return { ok: false, text: 'VERCEL_TOKEN is not set\n', missing: required, near: [] };
-  const compared = compareEnvNames(required, present || await listEnvNames({ project, target, token, fetchImpl }));
+  const optional = loadOptionalEnv();
+  if (!present && !token) return { ok: false, text: 'VERCEL_TOKEN is not set\n', missing: required, near: [], optionalMissing: [] };
+  const compared = compareEnvNames(required, present || await listEnvNames({ project, target, token, fetchImpl }), optional);
   const lines = [
     ...compared.missing.map((name) => `missing: ${name}`),
     ...compared.near.map((hit) => `near-miss: ${hit.name} for ${hit.want}`),
+    ...compared.optionalMissing.map((name) => `optional-missing: ${name}`),
   ];
-  return { ok: lines.length === 0, text: lines.length ? `${lines.join('\n')}\n` : `required env present for ${project} ${target}\n`, ...compared };
+  const ok = compared.missing.length === 0 && compared.near.length === 0;
+  return { ok, text: lines.length ? `${lines.join('\n')}\n` : `required env present for ${project} ${target}\n`, ...compared };
 }
 async function main() {
   const [project = PROJECT, target = 'production'] = process.argv.slice(2);
