@@ -1,20 +1,24 @@
-import { firstPassSearchLimit, jevRelevanceMinimum, SEARCH_RADIUS_METERS } from './keepsake-list-minimums.mjs';
+import { categoryRadiusMeters, firstPassSearchLimit, jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
 import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
 import { writeRatings } from './write-ratings.mjs';
 const DEDUPE_METERS = 250;
 const USER_AGENT = 'TimeSyncherVacation/1.0';
 const PLACE_SOURCES = ['prior_db', 'foursquare_os', 'osm', 'brave'];
 const SOURCE_IDS = new Set(PLACE_SOURCES);
-const PLACE_KINDS = new Set(['restaurant', 'store', 'activity', 'hotel']);
+const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
 const NOT_A_PLACE = /^(?:the|a|an|this|that|our|my|your|new|next|last|current|week|weeks|night|nights|day|days|morning|afternoon|evening|weekend|month|year|time|trip|trips|vacation|vacations|staycation|holiday|bot|staging|one|it|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)$/i;
 const PRIOR_CATEGORIES = new Map([
+  ['grocery', 'grocery'],
+  ['groceries', 'grocery'],
   ['restaurant', 'restaurant'],
   ['food', 'restaurant'],
   ['dining', 'restaurant'],
   ['store', 'store'],
   ['shop', 'store'],
   ['shopping', 'store'],
+  ['garden', 'garden'],
+  ['gardens', 'garden'],
   ['activity', 'activity'],
   ['attraction', 'activity'],
   ['tourism', 'activity'],
@@ -130,6 +134,12 @@ function isPlaceQuery(item) {
   if (item?.place === false) return false;
   if (item?.place === true) return true;
   return PLACE_KINDS.has(String(item?.category || '').toLowerCase());
+}
+
+function metersInsideCategory(center, point, category) {
+  const meters = distanceMeters(center, point);
+  if (meters === null || meters > categoryRadiusMeters(category)) return null;
+  return meters;
 }
 
 export function distanceMeters(origin, point) {
@@ -321,13 +331,21 @@ async function attachRelevance(rows, fetchImpl, env) {
   return scored;
 }
 
+function foursquarePlacesApiVersion() {
+  const year = 2025;
+  const month = 6;
+  const day = 17;
+  const pad = (part) => String(part).padStart(2, '0');
+  return `${year}-${pad(month)}-${pad(day)}`;
+}
+
 async function queryFoursquare(fetchImpl, env, center, queries) {
   const places = [];
   for (const item of queries) {
     const params = new URLSearchParams({
       query: item.q,
       ll: `${center.lat},${center.lng}`,
-      radius: String(SEARCH_RADIUS_METERS),
+      radius: String(categoryRadiusMeters(item.category)),
       limit: String(item.limit || searchLimit(item.category)),
       fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed,rating,stats,categories',
     });
@@ -338,7 +356,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
         label: 'Foursquare OS Places',
         headers: {
           authorization: `Bearer ${String(env.foursquare).trim()}`,
-          'X-Places-Api-Version': '2025-06-17',
+          'X-Places-Api-Version': foursquarePlacesApiVersion(),
         },
       },
     );
@@ -349,6 +367,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
       const lng = finite(result?.longitude);
       const title = String(result?.name || '').trim();
       if (!title || lat === null || lng === null) continue;
+      if (metersInsideCategory(center, { lat, lng }, item.category) === null) continue;
       places.push({
         source: 'foursquare_os',
         title,
@@ -366,16 +385,46 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
   return places;
 }
 
+const OSM_CATEGORIES = [
+  {
+    category: 'grocery',
+    filter: '["shop"~"supermarket|grocery|convenience|greengrocer"]',
+    match: (tags) => /^(?:supermarket|grocery|convenience|greengrocer)$/.test(String(tags.shop || '')),
+    name: (tags) => String(tags.shop || '').trim(),
+  },
+  {
+    category: 'restaurant',
+    filter: '["amenity"~"restaurant|cafe|fast_food"]',
+    match: (tags) => /restaurant|cafe|fast_food/.test(String(tags.amenity || '')),
+    name: (tags) => String(tags.amenity || '').trim(),
+  },
+  {
+    category: 'store',
+    filter: '["shop"]',
+    match: (tags) => Boolean(tags.shop),
+    name: (tags) => String(tags.shop || '').trim(),
+  },
+  {
+    category: 'garden',
+    filter: '["leisure"="garden"]',
+    match: (tags) => String(tags.leisure || '') === 'garden' || String(tags.tourism || '') === 'garden',
+    name: () => 'garden',
+  },
+  {
+    category: 'activity',
+    filter: '["tourism"~"attraction|museum|gallery|viewpoint"]',
+    match: (tags) => Boolean(tags.tourism),
+    name: (tags) => String(tags.tourism || '').trim(),
+  },
+];
+
 function overpassQuery(center) {
-  const around = `(around:${SEARCH_RADIUS_METERS},${center.lat},${center.lng})`;
-  return `[out:json][timeout:25];(`
-    + `node["amenity"~"restaurant|cafe|fast_food"]${around};`
-    + `way["amenity"~"restaurant|cafe|fast_food"]${around};`
-    + `node["shop"]${around};`
-    + `way["shop"]${around};`
-    + `node["tourism"~"attraction|museum|gallery|viewpoint"]${around};`
-    + `way["tourism"~"attraction|museum|gallery|viewpoint"]${around};`
-    + `);out center 40;`;
+  const parts = [];
+  for (const entry of OSM_CATEGORIES) {
+    const around = `(around:${categoryRadiusMeters(entry.category)},${center.lat},${center.lng})`;
+    parts.push(`node${entry.filter}${around};`, `way${entry.filter}${around};`);
+  }
+  return `[out:json][timeout:25];(${parts.join('')});out center 40;`;
 }
 
 function categoryNameField(name) {
@@ -389,17 +438,13 @@ function foursquareCategoryName(result) {
 }
 
 function osmCategory(tags = {}) {
-  if (/restaurant|cafe|fast_food/.test(String(tags.amenity || ''))) return 'restaurant';
-  if (tags.shop) return 'store';
-  if (tags.tourism) return 'activity';
-  return '';
+  const found = OSM_CATEGORIES.find((entry) => entry.match(tags));
+  return found ? found.category : '';
 }
 
 function osmCategoryName(tags = {}) {
-  if (/restaurant|cafe|fast_food/.test(String(tags.amenity || ''))) return String(tags.amenity || '').trim();
-  if (tags.shop) return String(tags.shop).trim();
-  if (tags.tourism) return String(tags.tourism).trim();
-  return '';
+  const found = OSM_CATEGORIES.find((entry) => entry.match(tags));
+  return found ? found.name(tags) : '';
 }
 
 async function queryOsm(fetchImpl, center) {
@@ -419,6 +464,7 @@ async function queryOsm(fetchImpl, center) {
     const lat = finite(element?.lat ?? element?.center?.lat);
     const lng = finite(element?.lon ?? element?.center?.lon);
     if (!title || !category || lat === null || lng === null) continue;
+    if (metersInsideCategory(center, { lat, lng }, category) === null) continue;
     places.push({
       source: 'osm',
       title,
@@ -476,7 +522,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
       q: item.q,
       latitude: String(center.lat),
       longitude: String(center.lng),
-      radius: String(SEARCH_RADIUS_METERS),
+      radius: String(categoryRadiusMeters(item.category)),
       count: String(item.limit || searchLimit(item.category)),
     });
     const payload = await readJson(
@@ -492,6 +538,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
       const point = bravePoint(result);
       const title = braveTitle(result?.title || result?.name);
       if (!title || point.lat === null || point.lng === null) continue;
+      if (metersInsideCategory(center, point, item.category) === null) continue;
       places.push({
         source: 'brave',
         title,
@@ -509,7 +556,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
   return places;
 }
 
-export function selectPriorPlaces(rows = [], center, { radiusMeters = SEARCH_RADIUS_METERS } = {}) {
+export function selectPriorPlaces(rows = [], center) {
   const places = [];
   for (const row of rows) {
     const location = row?.location && typeof row.location === 'object' ? row.location : {};
@@ -518,8 +565,8 @@ export function selectPriorPlaces(rows = [], center, { radiusMeters = SEARCH_RAD
     const category = PRIOR_CATEGORIES.get(String(row?.category || '').toLowerCase()) || '';
     const title = String(row?.title || '').trim();
     if (!title || !category || lat === null || lng === null) continue;
-    const meters = distanceMeters(center, { lat, lng });
-    if (meters === null || meters > radiusMeters) continue;
+    const meters = metersInsideCategory(center, { lat, lng }, category);
+    if (meters === null) continue;
     places.push({
       source: 'prior_db',
       title,
