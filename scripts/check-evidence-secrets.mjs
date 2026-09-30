@@ -9,6 +9,13 @@ const ROOTS = ['evidence', 'features/proof'];
 const SESSION_TOKEN = /(?<![A-Za-z0-9_-])(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Z])(?=[A-Za-z0-9_-]*[a-z])[A-Za-z0-9_-]{24}(?![A-Za-z0-9_-])/g;
 const SESSION_FIELD = /"sessionToken"\s*:\s*"(?!\[redacted\]")[^"]*"/g;
 const SECRET_KEY = /sk_(?:live|test|proj)_[A-Za-z0-9]{8,}|sk_[A-Za-z0-9]{24,}/g;
+const OPENAI_KEY = /sk-[A-Za-z0-9]{20,}/g;
+const PUBLISHABLE_KEY = /pk_(?:live|test)_[A-Za-z0-9]{8,}/g;
+const GITHUB_TOKEN = /ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/g;
+const SLACK_TOKEN = /xox[abpr]-[A-Za-z0-9-]{10,}/g;
+const JWT = /eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g;
+const NAMED_HEX = /\b(?:api[_-]?key|secret|token|sessionToken|password)\b\s*[:=]\s*['"][A-Fa-f0-9]{32,}['"]/gi;
+const NAMED_B64 = /\b(?:api[_-]?key|secret|token|sessionToken|password)\b\s*[:=]\s*['"][A-Za-z0-9+/_-]{40,}={0,2}['"]/gi;
 const BEARER = /Bearer\s+[A-Za-z0-9._-]{8,}/gi;
 const POSTGRES = /postgres(?:ql)?:\/\/\S+/gi;
 
@@ -16,6 +23,13 @@ const RULES = [
   ['session-token', SESSION_TOKEN],
   ['session-token-field', SESSION_FIELD],
   ['secret-key', SECRET_KEY],
+  ['openai-key', OPENAI_KEY],
+  ['publishable-key', PUBLISHABLE_KEY],
+  ['github-token', GITHUB_TOKEN],
+  ['slack-token', SLACK_TOKEN],
+  ['jwt', JWT],
+  ['named-hex', NAMED_HEX],
+  ['named-base64', NAMED_B64],
   ['bearer', BEARER],
   ['postgres-url', POSTGRES],
 ];

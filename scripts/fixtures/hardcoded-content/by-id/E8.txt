@@ -1,0 +1,1 @@
+if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE) return fixture.candidates;

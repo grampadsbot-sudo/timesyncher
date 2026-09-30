@@ -1,0 +1,1 @@
+const INVENTED_GARDEN = /kahalu/i;

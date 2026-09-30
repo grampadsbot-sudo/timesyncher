@@ -488,6 +488,7 @@ function liveDoc(overrides = {}) {
   return {
     live: true,
     capture: 'live-vacation-app',
+    deployBanner: 'live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com',
     sessionToken: 'session-token',
     targetPerson: 'Craig',
     turns: [
@@ -805,6 +806,7 @@ const timingLine = formatLiveTimingLine({
 assert.equal(timingLine, 'timing: jev=222ms gen=750ms model=google/gemini-2.5-flash-lite tier=1 max_tokens=900');
 assert.equal(timingLine.includes('zev'), false);
 const poison = {
+  deploy_banner: 'live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com',
   title: 't',
   pack_id: 't',
   turns_line: 't',

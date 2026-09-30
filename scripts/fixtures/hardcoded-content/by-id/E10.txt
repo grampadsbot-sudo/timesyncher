@@ -1,0 +1,1 @@
+adaptersRun.push({ status: 'disabled_google_places_seed_removed' });

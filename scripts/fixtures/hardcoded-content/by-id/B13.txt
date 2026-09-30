@@ -1,0 +1,1 @@
+return 'Send the pics or videos here, and I will attach them to the Vegas vacation.';

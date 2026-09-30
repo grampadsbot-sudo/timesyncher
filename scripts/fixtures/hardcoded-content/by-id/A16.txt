@@ -1,0 +1,1 @@
+const SI_VEGAS_TAIL = ",[/bellagio|conservatory/i,[36.1126,-115.1767]]";

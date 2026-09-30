@@ -159,6 +159,9 @@ def tbl(rows, col_widths):
 
 
 def build(pack):
+    banner = str(pack.get("deploy_banner") or "").strip()
+    if not banner:
+        raise SystemExit("refused: dialog stamp is empty")
     pdfmetrics.registerFont(TTFont("DejaVuSans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
     pending = [str(line).strip() for line in (pack.get("content_fails") or []) if str(line).strip()]
     if pending:
@@ -181,7 +184,6 @@ def build(pack):
     styles.add(ParagraphStyle(name="Void", parent=styles["Title"], fontSize=18, leading=22, textColor=colors.HexColor("#8c1d1d"), spaceAfter=6))
 
     story = []
-    banner = str(pack.get("deploy_banner") or "").strip()
     if pack.get("void") or banner.startswith("VOID"):
         story.append(Paragraph("VOID", styles["Void"]))
     if banner:

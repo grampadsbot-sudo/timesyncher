@@ -1,0 +1,866 @@
+{
+  "meta": {
+    "title": "TimeSyncher Vacation: hard-coded content inventory (removal checklist)",
+    "generated": "2026-09-27 13:10 HST",
+    "rule": "Craig 13:01 HST: eliminate ALL hard-coded dialog and content. Live search = Brave + Tavily. DB of prior Things allowed, not as the only source. No Google Places.",
+    "verdict": "NOT compliant with Craig's rule. The product still ships seeded Big Island and Las Vegas place lists, invented Things (SpeediShuttle, Kona arrival), trip-specific reply rules and keyword-driven intake. Live search is not wired into the app, Brave is fallback-only and unreachable from the worker path, and Tavily does not exist in the code. This is an inventory, not a certification.",
+    "scope": {
+      "inventoried_commit": "128c9e1781f2f9ce4f0bf2396cf1ccdce136540e (PR #39 head; draft, open, unmerged)",
+      "deployed_now": "vacation-staging /api/version at 13:05 HST 2026-09-27 reports 81d853c (= 128c9e1 + 2 commits: c448cde 12:23 HST, 81d853c 12:29 HST). Not on PR #39's head. See drift note.",
+      "default_branch": "main = 07edcdf (2026-08-13). An old staging snapshot. It lacks live-app-turn, intake-shared-trip, keepsake-list-minimums, poi-search, car-offers, routes/. No Tavily or Brave. Its hard-codes are in api/vacation-telegram-turn.mjs (Vegas/Hawaii keyword lists), index.html/order-test.html 'Las Vegas' placeholder and the old public bundles.",
+      "paths": [
+        "src/",
+        "api/",
+        "routes/",
+        "public/ (+ root *.html served by Vite)",
+        "served bundle /assets/index-BKun7ofk.js (fetched from vacation-staging, sha256 bf10a0e6…; upstream travel.timesyncher.com copy sha256 014eedf2…)",
+        "scripts/vacation-app-reply-rules.mjs and scripts/vacation-public-research-worker.mjs (imported by product code, so they are treated as product)",
+        "scripts/product-gbrain-dispatch.mjs + travel-source-adapter-runner.mjs (off-box worker source copies, E only)"
+      ],
+      "lib": "No lib/ directory exists at 128c9e1.",
+      "source_access": "Read with git show/grep from an existing blob-less clone at /tmp/r17repo (created earlier in this workstream, outside /workspace). No checkout was made. /workspace/tsv-repo does not contain 128c9e1. Blob SHAs for all 163 in-scope src/routes/api/public files were compared with cursor-github get_git_tree at 128c9e1: 0 mismatches. main diff queries lazily fetched blobs into that clone's object store (no working-tree change)."
+    },
+    "drift_81d853c": [
+      "src/vacation/live-app-turn.mjs +137/-40 and scripts/vacation-app-reply-rules.mjs +4/-2. Line numbers in live-app-turn.mjs after ~l.779 shift in 81d853c.",
+      "Adds MORE trip literals: reply-rules lines 'Do not tell Lauren that Kimberly's gardens or Tyler's swim are hers'; the rewrite prompt adds 'Do not call Lauren's rule locked'; draftFactErrors adds a swim-owner check; interimDodges uses swim/Friday/'apr 10' regexes; beatsMatchingReply is a new keyword filter on BEAT labels.",
+      "verifiedRewriteChange saved/removed rule rewritten with April-day regexes (still keyword logic).",
+      "Removes the two interim retries. transcriptToJsonl now always writes sessionToken: null.",
+      "No change to the seeded lists, SpeediShuttle/Kona arrival injection, poi-search wiring, Brave or Tavily."
+    ],
+    "search_wiring": {
+      "poi_search_callers": "src/vacation/poi-search.mjs is imported only by scripts/vacation-public-research-worker.mjs:8 (and scripts/test_poi_search.mjs). No src/, routes/ or api/ code calls it.",
+      "worker": "Every customer turn inserts a worker_jobs 'trip_intake' row (routes/vacation-itinerary.mjs:456; also vacation-request.mjs:146, vacation-telegram-turn.mjs:1681). The off-box worker (manifest runtime /home/timesyncher-agent/timestopper-vacation-worker/…) runs scripts/product-gbrain-dispatch.mjs → runPublicResearch. Results go back through routes/worker-jobs.mjs persistArtifacts into trip_things.",
+      "research_chain": "runPublicResearch: fixture (if env set) → house-radius POI (FSQ records passed in as an array, default [] → OSM Overpass → Brave only if fewer than 3 results) → Perplexity (PERPLEXITY_API_KEY and TIMESYNCHER_PUBLIC_RESEARCH_LIVE=1) → Grok CLI at /home/ubishere9995/.local/bin/grok → travel-source adapters (Google Places adapter disabled; one fixture sentiment adapter).",
+      "blocker": "product-gbrain-dispatch.mjs:1925 passes artifacts with no house/lodging coordinates, so runHousePoiResearch returns null (worker:424-427). FSQ/OSM/Brave never run on the dispatcher path.",
+      "brave": "Code present: fetchBrave → api.search.brave.com/res/v1/web/search with X-Subscription-Token (poi-search.mjs:148-161), 8-hour cache, query '<category> near lat,lng'. Key read from BRAVE_SEARCH_API_KEY or BRAVE_API_KEY (worker:428). No .env/vercel config in the repo defines it; whether the off-box worker has the key is unknown (not visible from here).",
+      "tavily": "0 references anywhere at 128c9e1 (code, config, docs, tests) and 0 on main.",
+      "google_places": "Removed: the adapter reports disabled_google_places_seed_removed; sourcedRatings drops google-places rows. No live Google Places calls found in product code.",
+      "plug_in": "Put Brave + Tavily calls in the worker's trip_intake job: geocode the lodging or destination, query per wanted Thing and category, merge with the DB of prior Things, write to trip_things. Then delete padKeepsakeSharedPlaces, BIG_ISLAND_*, KEEPSAKE_* and the SpeediShuttle/Kona-arrival injection so the app reads only trip_things."
+    },
+    "not_covered": [
+      "Off-box worker runtime (/home/timesyncher-agent/timestopper-vacation-worker/…): not readable. The repo copy may differ from what runs.",
+      "Vercel and worker environment variables (Brave key presence, fixture env var) are not visible.",
+      "TREK upstream server source (travel.timesyncher.com): only its served JS bundle was string-searched. The bundle is minified, so only literal strings were checked, not every code path.",
+      "Binary assets not read: public/keepsake-handoff-bed0620/style_two_journey.pdf, public/ts-thing-media/*.mp4, images.",
+      "routes/vacation-telegram-turn.mjs (2,195 lines): about 59 fixed reply sentences counted. Only the trip-specific ones are itemized.",
+      "Static product copy (email.mjs templates, EULA/terms text, checkout pages) is not itemized as trip content. If Craig's rule covers all product copy, it is additional scope.",
+      "The fallback line 'I am keeping this reply to the saved trip' was NOT found at 128c9e1 or 81d853c (it appears only in r16 evidence). It was listed as not present rather than as an item.",
+      "No runtime test was done. Customer effects are read from code paths, plus earlier r19 evidence where noted."
+    ],
+    "counts": {
+      "A": {
+        "total": 22,
+        "blocks live search": 4,
+        "customer sees fake content": 13,
+        "cosmetic": 5
+      },
+      "B": {
+        "total": 23,
+        "blocks live search": 2,
+        "customer sees fake content": 12,
+        "cosmetic": 9
+      },
+      "C": {
+        "total": 13,
+        "blocks live search": 4,
+        "customer sees fake content": 4,
+        "cosmetic": 5
+      },
+      "D": {
+        "total": 11,
+        "blocks live search": 2,
+        "customer sees fake content": 4,
+        "cosmetic": 5
+      },
+      "E": {
+        "total": 10,
+        "blocks live search": 7,
+        "customer sees fake content": 1,
+        "cosmetic": 2
+      }
+    },
+    "total": 79,
+    "top10": [
+      "A1",
+      "E1",
+      "E2",
+      "E4",
+      "C1",
+      "C3",
+      "A9",
+      "A8",
+      "B1",
+      "B5"
+    ]
+  },
+  "items": [
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:269-284 (catalogForShared) + :288 (padKeepsakeSharedPlaces)",
+      "quote": "if (shared.timesyncherIntake === true) { fill: BIG_ISLAND_LIST_FILL ... } return { fill: KEEPSAKE_LIST_FILL ... fallbackAddress: 'Las Vegas' }",
+      "customer_effect": "Every intake trip gets the Big Island list and every other shared trip gets the Las Vegas list, whatever the real destination. Pads Restaurants/Stores/The Rest up to 15/10/15.",
+      "severity": "blocks live search",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things; if results are short, show fewer rows and say so",
+      "id": "A1"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/shared-trip-handler.mjs:73 and :133",
+      "quote": "padKeepsakeSharedPlaces(sharedTripFromIntake(...)) / applyProductKeepsakeOverrides(padKeepsakeSharedPlaces(...))",
+      "customer_effect": "Both shared-trip paths (intake trips and upstream TREK trips) run the seeded padding on every GET, so the lists in the app and the keepsake are seeded.",
+      "severity": "blocks live search",
+      "replacement": "Remove the pad call. Read researched Things from trip_things (worker output) only",
+      "id": "A2"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:140 (BIG_ISLAND_LIST_FILL)",
+      "quote": "export const BIG_ISLAND_LIST_FILL = { Restaurants: [ ... 'Kona Brewing Company' ...",
+      "customer_effect": "40 fixed Big Island names (15 restaurants, 10 stores, 15 rest) shown as if researched for the trip.",
+      "severity": "blocks live search",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things",
+      "id": "A3"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:12 (KEEPSAKE_LIST_FILL, Las Vegas)",
+      "quote": "/** First-pass Vegas catalog used only to pad Style-two end lists. */ ... 'CATCH Las Vegas' ...",
+      "customer_effect": "40 fixed Las Vegas names padded into any non-intake shared trip.",
+      "severity": "blocks live search",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things",
+      "id": "A4"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:189 (BIG_ISLAND_FILL_DETAILS)",
+      "quote": "\"Huggo's\": { lat: 19.6394, lng: -155.9958, address: '75-5828 Kahakai Rd' , summary: ... }",
+      "customer_effect": "40 fixed coordinates, addresses and summaries written in code, shown as Thing details and map pins.",
+      "severity": "customer sees fake content",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things (coords/address from the source record, summary model-written from sources)",
+      "id": "A5"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:97 (KEEPSAKE_FILL_DETAILS)",
+      "quote": "'Mon Ami Gabi': { lat: 36.1125, lng: -115.1726, summary: 'Paris Las Vegas sidewalk steak-frites...' }",
+      "customer_effect": "39 fixed Vegas coordinates and summaries shown as Thing details.",
+      "severity": "customer sees fake content",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things",
+      "id": "A6"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:232-254 (FILL_BUCKET_META) + :311-313",
+      "quote": "baseId: 941000 / 951000 / 961000 ... const lat = Number(detail.lat) || catalog.fallbackLat",
+      "customer_effect": "Padded rows get fixed ids 941001+/951001+/961001+ and fall back to fixed city-center coordinates (19.64,-155.996 or 36.1147,-115.1729).",
+      "severity": "customer sees fake content",
+      "replacement": "Use real Thing ids from trip_things; no fallback coordinates",
+      "id": "A7"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/intake-shared-trip.mjs:322-349",
+      "quote": "if (!places.some(... /speedishuttle/ ...)) { name: 'SpeediShuttle', category_name: 'Car', carType: 'Shared shuttle' }",
+      "customer_effect": "Every intake trip gets a SpeediShuttle car Thing that nobody searched for or asked for.",
+      "severity": "customer sees fake content",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things (car/transfer search), or ask the customer",
+      "id": "A8"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/intake-shared-trip.mjs:351-385",
+      "quote": "const flightName = /\\bKOA\\b/.test(...) ? 'KOA arrival' : 'Kona arrival'; ... category_name: 'Flight'",
+      "customer_effect": "Every intake trip gets a 'Kona arrival' flight Thing, even when the trip is not to Kona.",
+      "severity": "customer sees fake content",
+      "replacement": "Ask the customer for flights, then live search",
+      "id": "A9"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/intake-shared-trip.mjs:221-232 (PLACE_COORDS)",
+      "quote": "Groceries: [19.6399, -155.9854, '74-5594 Palani Rd, Kailua-Kona'], Swim: [... 'Kahaluʻu Beach Park' ...]",
+      "customer_effect": "Generic activities (Groceries, Gardens, Swim, Dinner, Town walk) are pinned to fixed Kailua-Kona addresses the customer never chose.",
+      "severity": "customer sees fake content",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things near the customer's lodging, or leave unpinned",
+      "id": "A10"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/intake-shared-trip.mjs:310-317",
+      "quote": "if (/ulu ocean/i.test(name)) { extra.happyHourDetails = 'Ocean bar happy hour at Ulu Ocean Grill...' } else if (/huggo/ ... /fish hopper/) restaurantTags = ['Seafood']",
+      "customer_effect": "Fixed happy-hour text and tags for three named restaurants.",
+      "severity": "customer sees fake content",
+      "replacement": "From the source record (live search) or blank",
+      "id": "A11"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:315 and :341-342",
+      "quote": "const happyHour = /Ulu Ocean Grill/i.test(name); ... happyHourDetails: 'Ocean bar happy hour at Ulu Ocean Grill, Four Seasons Hualalai.'",
+      "customer_effect": "Fixed happy-hour claim for one padded restaurant.",
+      "severity": "customer sees fake content",
+      "replacement": "From the source record or blank",
+      "id": "A12"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-product-overrides.mjs:4-14 (PRODUCT_VENUE_COORDS)",
+      "quote": "[/bellagio|lodging/i, [36.1126, -115.1767]], [/las vegas strip|las vegas/i, [36.1147, -115.1729]]",
+      "customer_effect": "On every upstream shared trip, any Thing whose name matches 'lodging' gets Bellagio coordinates.",
+      "severity": "customer sees fake content",
+      "replacement": "Coordinates from the Thing's own source record",
+      "id": "A13"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-product-overrides.mjs:58-112 (PRODUCT_THING_FIELDS), applied at :134",
+      "quote": "match: /conservatory/i, summary: 'A sparkling first-night stop in the Bellagio Conservatory for Alex & Kim...'",
+      "customer_effect": "Fixed Vegas summaries and happy-hour text (Carbone, Lotus of Siam, Shake Shack, Eggslut, Cosmopolitan, Conservatory, SFO/LAS flights) get applied by name match on any upstream trip, including names from another trip ('Alex & Kim', 'anniversary').",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat plus sourced details from live search",
+      "id": "A14"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/trek-style2-bundle.mjs:232 + :284-300",
+      "quote": "AREA_CHIP_BIG_ISLAND = 'Ya=[\"Kailua-Kona / Alii Drive\",\"Keauhou / Kahaluu\",...]' ; areaRenames Times Square -> Kailua-Kona",
+      "customer_effect": "The served app bundle's area filter chips are rewritten to ten fixed Big Island areas for every trip (served bundle line 11932).",
+      "severity": "customer sees fake content",
+      "replacement": "Derive area chips from the trip's own Things (neighborhood from the source record)",
+      "id": "A15"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/trek-style2-bundle.mjs:234 + :281-283 (SI_VEGAS_TAIL)",
+      "quote": "[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,...],[/las vegas strip|las vegas/i,...]",
+      "customer_effect": "Patches fixed Vegas name-to-coordinate regexes into the served bundle's map pin lookup (served line 11932).",
+      "severity": "customer sees fake content",
+      "replacement": "Coordinates from each Thing's source record",
+      "id": "A16"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/thing-media-bind.mjs:20-21, 62, 105-112",
+      "quote": "targets: [{ thingId: 8869, thingName: 'Bellagio' }] ... [/bellagio|lodging|hotel|fountain/i, 'Bellagio']",
+      "customer_effect": "Media binding is keyed to fixed Thing ids and names from the Las Vegas reference trip; any 'hotel' or 'lodging' matches Bellagio.",
+      "severity": "customer sees fake content",
+      "replacement": "Bind media by the real Thing id the customer or worker attached it to",
+      "id": "A17"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/keepsake-list-minimums.mjs:86-95 (LIVE_TAB_FILL / padLiveTabRows)",
+      "quote": "export const LIVE_TAB_FILL = { restaurant: KEEPSAKE_LIST_FILL.Restaurants, ...",
+      "customer_effect": "Vegas-list remnant for the live tabs. padLiveTabRows now only filters, but the list is still exported.",
+      "severity": "cosmetic",
+      "replacement": "Delete",
+      "id": "A18"
+    },
+    {
+      "category": "A",
+      "location": "src/vacation/thing-logo-capture.mjs:3-110",
+      "quote": "'Bellagio — Alex & Kim Anniversary Stay': '/ts-thing-logos/bellagio.svg' ... [/bellagio/i, ...]",
+      "customer_effect": "Hand-made name-to-logo map for Vegas venues (and a Big Island set). Logos are picked by name regex, not from a source.",
+      "severity": "cosmetic",
+      "replacement": "Logo/favicon from the source record URL, or none",
+      "id": "A19"
+    },
+    {
+      "category": "A",
+      "location": "routes/vacation-telegram-turn.mjs:1185-1186",
+      "quote": "if (/\\b(vegas|las vegas|strip|jockey club)\\b/.test(normalized)) return items.find(...)",
+      "customer_effect": "Telegram channel picks a trip by Vegas keywords.",
+      "severity": "cosmetic",
+      "replacement": "Ask the customer which trip, or match on the customer's own trip titles",
+      "id": "A20"
+    },
+    {
+      "category": "A",
+      "location": "public/ts-timeline-icon-patch.js:19 and src/vacation/timeline-icons.mjs:110,125",
+      "quote": "if (/\\b(las vegas|vegas)\\b/i.test(source) && !/\\b(flight|airport|sfo|jfk|lga|ewr|lax...)",
+      "customer_effect": "Timeline icons chosen by Vegas and brand keyword rules (bellagio, marriott...).",
+      "severity": "cosmetic",
+      "replacement": "Use the Thing's category from the source record",
+      "id": "A21"
+    },
+    {
+      "category": "A",
+      "location": "index.html:346, order-test.html:170",
+      "quote": "placeholder=\"Las Vegas\"",
+      "customer_effect": "Checkout city field placeholder shows 'Las Vegas'.",
+      "severity": "cosmetic",
+      "replacement": "Neutral placeholder ('City')",
+      "id": "A22"
+    },
+    {
+      "category": "B",
+      "location": "scripts/vacation-app-reply-rules.mjs:605",
+      "quote": "'Places and activities: use only places, activities, and venues the customer already named... Do not invent a cruise, a snorkel trip, a park...'",
+      "customer_effect": "The reply model is told never to suggest a place the customer did not name, so it can't bring in live-search results.",
+      "severity": "blocks live search",
+      "replacement": "Allow places that come from live search/DB results with ids (cite-by-id), ban only unsourced places",
+      "id": "B1"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:444-487 (INVENTED_GARDEN / UNNAMED_VENUE)",
+      "quote": "const INVENTED_GARDEN = /kahalu|pu'?a mau|arboretum|botanical garden/i; UNNAMED_VENUE = [[/snorkel/i...],[/keauhou/i...]]",
+      "customer_effect": "Big Island venue blacklist marks replies as 'invented' when they mention real nearby places, which blocks sourced suggestions.",
+      "severity": "blocks live search",
+      "replacement": "Check that places in a reply have a search/DB id",
+      "id": "B2"
+    },
+    {
+      "category": "B",
+      "location": "scripts/vacation-app-reply-rules.mjs:584-637 (replyRulesSystem; imported by src/vacation/live-app-turn.mjs:12, so it ships)",
+      "quote": "'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.' / 'say the swim is saved on the second Friday of the trip'",
+      "customer_effect": "The system prompt for every customer reply hard-codes one trip's facts (Kailua-Kona house, second-Friday swim, Lauren's rule, gardens, town walk). Other trips get these rules too.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat with the saved trip record as context (no trip literals in the prompt)",
+      "id": "B3"
+    },
+    {
+      "category": "B",
+      "location": "scripts/vacation-app-reply-rules.mjs:570-582 (seatWelcomeLine)",
+      "quote": "if (/Kimberly[^\\n]{0,80}Craig paid for this seat/i.test(turn)) return '... The first sentence is \"Welcome aboard, Kimberly.\"'",
+      "customer_effect": "Scripted first sentence for three named test collaborators (Kimberly, Tyler, Lauren) and the name Craig.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat from the seat record (name, payer)",
+      "id": "B4"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/collaborator-app-seat.mjs:27-33 (seatJoinCustomerText) used at routes/vacation-itinerary.mjs:919",
+      "quote": "`${name}: Craig paid for this seat with the coupon.` ... `I accepted the EULA terms and clicked join. Keep us on the Big Island.`",
+      "customer_effect": "When a collaborator joins, the app posts a customer turn in their name that the customer never wrote, naming Craig and 'the Big Island' on every trip.",
+      "severity": "customer sees fake content",
+      "replacement": "Record the join as a system event, not a fake customer message",
+      "id": "B5"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:2084-2093 (interimFromTierOne)",
+      "quote": "'Include these sentences: I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days...'",
+      "customer_effect": "The holding reply on the long intake is dictated sentence-by-sentence, including the upsell.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat; upsell facts passed as data, not verbatim sentences",
+      "id": "B6"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:1857 and :2202",
+      "quote": "'...including Kimberly, Tyler, and Lauren when they are in that roster.' / 'Keep the whole traveling party, including the account holder and Kimberly, Tyler, and Lauren'",
+      "customer_effect": "Test-trip names written into the draft and rewrite prompts for every customer.",
+      "severity": "customer sees fake content",
+      "replacement": "Pass the saved roster as data",
+      "id": "B7"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/intake-shared-trip.mjs:97-119 (productThingSummary)",
+      "quote": "'Big Island. People matter more than a packed list.' / `Groceries${whenBit}, the arrival day, after the airport shuttle.` / `Garden time... One garden block, not two big activities.`",
+      "customer_effect": "Thing summaries the customer reads are code templates keyed on title words, with trip-specific claims (airport shuttle, Kailua-Kona house, Kona arrival).",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat from the Thing's notes and sources",
+      "id": "B8"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:838-899 (applyCustomerNotes)",
+      "quote": "description: productThingSummary({...thing, who, customerWhen, notes})",
+      "customer_effect": "Every customer turn rewrites Thing descriptions through the templates above.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat",
+      "id": "B9"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:219, 221-230 (OTHER_DESTINATION / destinationFromTexts / replyLeavesDestination)",
+      "quote": "if (/big island/i.test(blob) || /hawai/i.test(blob) || /kailua-kona/i.test(blob)) return 'Big Island, Hawaii';",
+      "customer_effect": "The destination lock only knows Big Island. Every other trip has no destination lock, and 'leaves destination' only checks a fixed list (Tulum, Cancun, Maui...).",
+      "severity": "customer sees fake content",
+      "replacement": "Destination from the saved trip record",
+      "id": "B10"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:930-974 (verifiedRewriteChange)",
+      "quote": "if (/\\b(saved|already saved|now set)\\b/i.test(line) && /\\b(removed|dropped|clarified|implication)\\b/i.test(line)) {...}",
+      "customer_effect": "The 'what I changed' credit line shown with a rewrite is kept or blanked by regex rules about swim/garden/town walk/April days and crew phrases.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat (a judge compares draft and rewrite), or drop the line",
+      "id": "B11"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:1190-1356 (draftFactErrors)",
+      "quote": "pushError(errors, 'Lauren\\'s rule is no two big activities stacked on the same day'); RANGE_END = /...apr(?:il)?.../",
+      "customer_effect": "The fact-checker that decides which reply ships is written for one trip: April-only date regexes, swim/garden/town walk/dinner, 'second Friday', Lauren's rule, Big Island name lists.",
+      "severity": "customer sees fake content",
+      "replacement": "Check facts against the saved trip record, with no trip literals",
+      "id": "B12"
+    },
+    {
+      "category": "B",
+      "location": "routes/vacation-telegram-turn.mjs:1387 (+ ~59 fixed sentences in this file)",
+      "quote": "'...Send the pics or videos here, and I will attach them to the Vegas vacation.'",
+      "customer_effect": "Telegram channel fixed replies. One names 'the Vegas vacation' for every customer.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat with the linked trip's name",
+      "id": "B13"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:569, 582 (intakeSpan)",
+      "quote": "const place = /big island/i.test(text) ? 'Big Island' : ''; destination: place ? `${place}, Hawaii` : ''",
+      "customer_effect": "Trip title, destination and badge get set only when the text says Big Island. Other destinations are left blank.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat extraction of destination and dates from the chat",
+      "id": "B14"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:23-24, 36-38 and vacation-app.html:629-631",
+      "quote": "ONBOARDING_OPENER_CHAT_ONLY = 'Welcome. I am here to build this vacation with you. Your website is not built yet...'",
+      "customer_effect": "Fixed welcome/opener text (two variants), duplicated in the browser page.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat (or keep as product copy if Craig allows one fixed welcome)",
+      "id": "B15"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:1859 and scripts/vacation-app-reply-rules.mjs:592-600 (upsellLine)",
+      "quote": "'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year.'",
+      "customer_effect": "Required upsell phrases forced into the intake reply.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat with plan facts as data",
+      "id": "B16"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/wind-backup.mjs:18-19",
+      "quote": "`The forecast is windy. The wind backup is ${calm.name} at ${speed} mph, and the house pool is the last resort.`",
+      "customer_effect": "Code-composed swim note that assumes a house pool exists.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat from the forecast data",
+      "id": "B17"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:910-914 (rewriteCreditLabel), 1628-1643 (formatQualityLine, heldRewriteLine)",
+      "quote": "`Rewriter (${model}): ${line}` / `rewrite drafted, held: ${reason}` / `quality: ${shown}`",
+      "customer_effect": "Code-composed labels in the transcript and PDF.",
+      "severity": "cosmetic",
+      "replacement": "Keep as audit metadata; don't show to the customer",
+      "id": "B18"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:1492-1503 (INTERIM_STOCK / isTemplateInterim) + :1616-1626 (interimCanShip)",
+      "quote": "const INTERIM_STOCK = /^(got it|sure|okay|ok|the plan stays)\\b/i; ... if (/\\blater in the day\\b/i.test(value) && /\\bswim\\b/i.test(value)) return false;",
+      "customer_effect": "Regex gate on which holding reply can ship, with swim-specific rules.",
+      "severity": "cosmetic",
+      "replacement": "Judge-model gate",
+      "id": "B19"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:40 + :438",
+      "quote": "const CANNED_APP_REPLY = 'Got it. I saved that'",
+      "customer_effect": "Detector for an old canned bubble (the guard stays after the canned reply was removed).",
+      "severity": "cosmetic",
+      "replacement": "Delete once no canned reply exists",
+      "id": "B20"
+    },
+    {
+      "category": "B",
+      "location": "src/vacation/live-app-turn.mjs:983-987 (stripChatMarkdown) and vacation-app.html:448",
+      "quote": ".replace(/\\*\\*([^*\\n]+)\\*\\*/g, '$1')",
+      "customer_effect": "Regex rewriting of model output (markdown strip). Harmless formatting.",
+      "severity": "cosmetic",
+      "replacement": "Keep (formatting only) or ask the model for plain text",
+      "id": "B21"
+    },
+    {
+      "category": "B",
+      "location": "scripts/vacation-app-reply-rules.mjs:652-677 (JEV_QUALITY_COMMENTS / NOTE_RUBRIC) + :678-738",
+      "quote": "garden_words: 'Use the customer word gardens. Do not name a garden they did not name.'",
+      "customer_effect": "Fixed quality notes and a template-note filter, with garden wording from the test trip.",
+      "severity": "cosmetic",
+      "replacement": "Judge's own free-text note, or none",
+      "id": "B22"
+    },
+    {
+      "category": "B",
+      "location": "routes/vacation-telegram-turn.mjs:516",
+      "quote": "'Example: \"Hawaii 2026 — classic Waikiki beach energy, great local food, surf lesson...\"'",
+      "customer_effect": "Fixed example trip text in the Telegram intake prompt.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat",
+      "id": "B23"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:236-243 (isLongIntake)",
+      "quote": "if (words.length < 70) return false; const place = /big island|hawai|kailua-kona|voice note|ramble/i; const shape = /garden|swim|grocer|dinner|family|april|coming/i",
+      "customer_effect": "The first itinerary fill and the post-intake upsell only happen for a 70+ word message that mentions Big Island/Hawaii and one of these words. Any other destination never gets an initial fill.",
+      "severity": "blocks live search",
+      "replacement": "Model-generated from the chat classifier ('is this a trip intake?')",
+      "id": "C1"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:245-252 (postIntakeUpsellTurn) → routes/vacation-itinerary.mjs:585-596, 880-887",
+      "quote": "postIntakeUpsellTurn(requestText, priorTurns) ? requestText : ''",
+      "customer_effect": "Gates ensureIntakeItinerary (routes/vacation-itinerary.mjs:661-720) on the keyword test above.",
+      "severity": "blocks live search",
+      "replacement": "Trigger the first fill from the intake event and queue live search",
+      "id": "C2"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:765-797 (intakeFacts)",
+      "quote": "if (/big island/i.test(value)) add('Big Island'...); if (/garden/i...) add('Gardens'...); ... if (/house/i.test(value) && /kailua-kona/i.test(value)) add('Kailua-Kona house', 'hotel'...)",
+      "customer_effect": "The first Things are exactly seven keyword buckets (Big Island, Gardens, Groceries, Dinner, Swim, Town walk, Kailua-Kona house). Anything else the customer says is dropped.",
+      "severity": "blocks live search",
+      "replacement": "Model-generated from the chat extraction of wanted Things, then live search for each",
+      "id": "C3"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:799-801, 814-836 (thingsFromIntake / ensureNamedThings)",
+      "quote": "add('Gardens', 'activity', /garden/i); add('Dinner', ...); add('Swim', ...); add('Town walk', ...)",
+      "customer_effect": "Each later turn adds the same four keyword Things whenever the word appears.",
+      "severity": "blocks live search",
+      "replacement": "Model-generated from the chat",
+      "id": "C4"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:594-600 (whoIn), 602-612 (thingPattern), 757-763 (whenForThing)",
+      "quote": "/\\b([A-Z][a-z]{2,})\\s+wants\\b/ ... if (title === 'Swim' && /later in the week/i.test(sentence)) return 'later in the week';",
+      "customer_effect": "Who/when for each Thing come from 'X wants' / 'for X' regexes and swim/grocery rules.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat",
+      "id": "C5"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:695-755 (laterFridayLabel / applyAgreedAppSwim)",
+      "quote": "if (!namedDay) { const later = laterFridayLabel(span); ... labels.push(later) }",
+      "customer_effect": "A 'later swim' is silently put on the trip's second Friday.",
+      "severity": "customer sees fake content",
+      "replacement": "Ask the customer which day",
+      "id": "C6"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:1470 (completeRosterParty)",
+      "quote": "const notTraveler = new Set(['Kids', 'Four', 'What', 'Big', ... 'April', 'Marcus', 'Aunt']);",
+      "customer_effect": "Roster built from 'X wants' matches, with a hand-written skip list that names Marcus from the test trip.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat roster extraction, or ask the customer",
+      "id": "C7"
+    },
+    {
+      "category": "C",
+      "location": "routes/vacation-telegram-turn.mjs:432-466, 487-488, 596, 603",
+      "quote": "/\\b(hawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island|night|...)\\b/i ; [/\\bkona\\b|\\bbig island\\b/i, 'Kona/Big Island']",
+      "customer_effect": "Telegram intake decides destination and 'has dates' from fixed Hawaii/month word lists.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat extraction",
+      "id": "C8"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:803-808 (activitySentenceCommits, the 'if' rule)",
+      "quote": "if (/\\bif\\b/i.test(hit) && !dated) return false;",
+      "customer_effect": "Any sentence containing 'if' with no date is treated as not a commitment.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat intent reading",
+      "id": "C9"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/live-app-turn.mjs:254-297 (customerPullsAccess, customerAsksPrice, COLLAB_WELCOME, ITEM34_BAN)",
+      "quote": "/\\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\\b/i",
+      "customer_effect": "Upsell and price mode decided by keywords.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat intent",
+      "id": "C10"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/seat-price.mjs:8-30 (payerSeats)",
+      "quote": "text.match(/\\bI pay for ([^.?!]+)/i) ... /([A-Z][a-z]+) pays for (himself|herself|themselves)/",
+      "customer_effect": "Who pays for which seat comes from phrase regexes.",
+      "severity": "cosmetic",
+      "replacement": "Ask the customer (seat form) or model extraction",
+      "id": "C11"
+    },
+    {
+      "category": "C",
+      "location": "src/vacation/turn-tags.mjs:27",
+      "quote": "pushIf(tags, /\\b(date|dates|when|month|...|april|...)\\b/.test(body), 'dates');",
+      "customer_effect": "Turn tags by keyword. Internal only.",
+      "severity": "cosmetic",
+      "replacement": "OK internally, or model tags",
+      "id": "C12"
+    },
+    {
+      "category": "C",
+      "location": "vacation-app.html:493",
+      "quote": "if (key === 'vegas anniversary' && !hasPlan) return true;",
+      "customer_effect": "Browser treats a trip titled 'vegas anniversary' as a placeholder.",
+      "severity": "cosmetic",
+      "replacement": "Delete",
+      "id": "C13"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/intake-shared-trip.mjs:386-417 (lowestCarOffers loop / carOfferPool)",
+      "quote": "description: `$${offer.price} a day` ... return { ...shared, places, thingOverrides, carOfferPool: shownCars };",
+      "customer_effect": "CAR_OFFER_POOL remnant. The offers come from places already on the trip, and the loop skips any that already exist, so no car is ever added. The result is exposed as carOfferPool. No live car search exists.",
+      "severity": "blocks live search",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things for rental-car offers",
+      "id": "D1"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/intake-shared-trip.mjs:240-262 (blankRatings / sourcedRatings) + shared-trip-handler.mjs:84",
+      "quote": "if (!row || row.source === 'google-places' || !row.source) return blankRatings();  // handler passes only { windBackup }",
+      "customer_effect": "Ratings/reviews are always blank on intake trips: no ratings source is wired, and Google-sourced ratings are dropped.",
+      "severity": "blocks live search",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things (ratings/reviews from Brave/Tavily results)",
+      "id": "D2"
+    },
+    {
+      "category": "D",
+      "location": "served bundle /assets/index-BKun7ofk.js line 11932 (upstream TREK code; sha256 bf10a0e6… on vacation-staging)",
+      "quote": "...replace(/\\s+/g,\"\"))||\"Price TBD\" ... children:ie(G)||\"Price TBD\"",
+      "customer_effect": "Things with no price show 'Price TBD' in the served app.",
+      "severity": "customer sees fake content",
+      "replacement": "Show nothing, or the real price from live search",
+      "id": "D3"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/intake-shared-trip.mjs:57-65 (formatTakeoff) + :371-374",
+      "quote": "const takeoff = formatTakeoff(shared.trip?.start_date); ... connections = flightText.match(/\\b(nonstop into [A-Z]{3}|[0-9]+ connections?)\\b/i)",
+      "customer_effect": "The made-up Kona flight gets a takeoff time from the trip start date, and connections/layover regexed from its own template text.",
+      "severity": "customer sees fake content",
+      "replacement": "Ask the customer for flight details or live search",
+      "id": "D4"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/seat-price.mjs:3-6 and scripts/vacation-app-reply-rules.mjs:589",
+      "quote": "return Number.isFinite(dollars) && dollars > 0 ? dollars : 27;",
+      "customer_effect": "If checkout pricing is missing, the seat price quoted to the customer falls back to a literal $27.",
+      "severity": "customer sees fake content",
+      "replacement": "Fail closed. Quote only the configured price",
+      "id": "D5"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/intake-shared-trip.mjs:113-114 + keepsake-list-minimums.mjs:313",
+      "quote": "'SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.' / `${name} — ${catalog.fallbackAddress} first-pass catalog.`",
+      "customer_effect": "Summaries that state a transfer booking and a house location nobody confirmed. Fallback summary text for padded rows.",
+      "severity": "customer sees fake content",
+      "replacement": "Model-generated from the chat from sources",
+      "id": "D6"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/poi-search.mjs:8, 272-290 (AIRLINES / flightPlan)",
+      "quote": "const AIRLINES = ['Hawaiian', 'United', 'Alaska', 'Delta', 'American', 'Southwest', 'JetBlue'];",
+      "customer_effect": "Fixed airline list (Hawaii-oriented). Not called by the app today.",
+      "severity": "cosmetic",
+      "replacement": "Live search via Brave/Tavily plus the DB of prior Things for flight options",
+      "id": "D7"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/poi-search.mjs:7 (GENERIC_NAME)",
+      "quote": "const GENERIC_NAME = /^(kona|big island|hawaii|car rentals|oahu)$/i;",
+      "customer_effect": "Generic-name filter only knows Hawaii words.",
+      "severity": "cosmetic",
+      "replacement": "Judge relevance (jevRelevanceScore already exists)",
+      "id": "D8"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/intake-shared-trip.mjs:89-94 (categoryFor)",
+      "quote": "return { category_name: 'Attraction', category_icon: '🏛️', category: 'other' };",
+      "customer_effect": "Every non-hotel Thing (Groceries, Dinner, Swim) is labeled 'Attraction'.",
+      "severity": "cosmetic",
+      "replacement": "Category from the source record or the model",
+      "id": "D9"
+    },
+    {
+      "category": "D",
+      "location": "src/vacation/intake-shared-trip.mjs:192-210 (budget/permissions stub)",
+      "quote": "budget: [{ ... total_price: null, persons: null ... }], share_budget: true",
+      "customer_effect": "Placeholder budget row with nulls on every intake trip.",
+      "severity": "cosmetic",
+      "replacement": "Omit until real prices exist",
+      "id": "D10"
+    },
+    {
+      "category": "D",
+      "location": "routes/vacation-itinerary.mjs:680-683",
+      "quote": "title in ('Vacation', 'TimeSyncher Vacation Coupon Checkout', 'TimeSyncher Vacation Setup', 'TimeSyncher Vacation Admin Test')",
+      "customer_effect": "Placeholder trip titles known by literal. Replaced only when intakeSpan found 'Big Island'.",
+      "severity": "cosmetic",
+      "replacement": "Model-generated from the chat trip title from the chat",
+      "id": "D11"
+    },
+    {
+      "category": "E",
+      "location": "src/vacation/poi-search.mjs (whole file) — call sites",
+      "quote": "imported only by scripts/vacation-public-research-worker.mjs:8 (+ scripts/test_poi_search.mjs)",
+      "customer_effect": "No app route calls live search. Customer turns never search. Lists come from the seeded catalogs.",
+      "severity": "blocks live search",
+      "replacement": "Call search from the research job for every wanted Thing; write results to trip_things",
+      "id": "E1"
+    },
+    {
+      "category": "E",
+      "location": "scripts/product-gbrain-dispatch.mjs:1925",
+      "quote": "runPublicResearch({ artifacts: { requestText, vacationName, unforgettableGoal, destination, dates, lodgingLane: lane } ...})",
+      "customer_effect": "The worker passes no house/lodging coordinates, and runHousePoiResearch (worker:424-427) returns null without an origin. So FSQ/OSM/Brave never run on this path; it falls to Perplexity, then the Grok CLI.",
+      "severity": "blocks live search",
+      "replacement": "Geocode the lodging/destination first, then run Brave/Tavily search",
+      "id": "E2"
+    },
+    {
+      "category": "E",
+      "location": "scripts/vacation-public-research-worker.mjs:428 + src/vacation/poi-search.mjs:18, 148-161",
+      "quote": "const braveKey = input.braveKey ?? (process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || ''); ... if (database.length >= thinAt || !braveKey ...) return [];",
+      "customer_effect": "Brave is a fallback only: it runs when FSQ+OSM return fewer than 3 places and a key is set. The query is just '<category> near lat,lng'.",
+      "severity": "blocks live search",
+      "replacement": "Make Brave (and Tavily) a primary source with customer-intent queries; DB of prior Things as a supplement",
+      "id": "E3"
+    },
+    {
+      "category": "E",
+      "location": "(repo-wide) Tavily",
+      "quote": "git grep -i tavily 128c9e1 → 0 hits (code, config, docs)",
+      "customer_effect": "Tavily is not referenced anywhere. No client, no key name, no config.",
+      "severity": "blocks live search",
+      "replacement": "Add a Tavily client next to fetchBrave in poi-search.mjs plus a TAVILY_API_KEY env var",
+      "id": "E4"
+    },
+    {
+      "category": "E",
+      "location": "scripts/vacation-public-research-worker.mjs:14-18 (DEFAULT_FIRST_PASS_MINIMUMS) → keepsake-list-minimums.mjs:1-9",
+      "quote": "restaurant 15 / store 10 / rest 15",
+      "customer_effect": "Minimum counts drive the padding. The worker fails closed if it doesn't reach them, but the app pads with seeded names instead.",
+      "severity": "blocks live search",
+      "replacement": "Keep minimums as a search target; never pad with fixed names",
+      "id": "E5"
+    },
+    {
+      "category": "E",
+      "location": "scripts/product-gbrain-dispatch.mjs:218-240 (knownDestinationFromText)",
+      "quote": "add('Kona/Big Island', /\\bkona\\b|\\bbig island\\b/); add('Las Vegas', /\\blas vegas\\b|\\bvegas\\b/); ...",
+      "customer_effect": "The worker's destination detection is a fixed list (Idaho, Oahu, Maui, Kona, Hawaii, Las Vegas).",
+      "severity": "blocks live search",
+      "replacement": "Model-generated from the chat destination extraction",
+      "id": "E6"
+    },
+    {
+      "category": "E",
+      "location": "routes/worker-jobs.mjs:126, 140-200 (persistArtifacts) + routes/vacation-itinerary.mjs:456",
+      "quote": "insert into worker_jobs (...) values (..., 'trip_intake', ...) / insert into trip_things (...)",
+      "customer_effect": "The plug-in point: every turn queues a trip_intake job, and the off-box worker's results land in trip_things. The worker runtime at /home/timesyncher-agent/... is not in the repo.",
+      "severity": "blocks live search",
+      "replacement": "Put Brave/Tavily search in this worker job; the app reads trip_things only",
+      "id": "E7"
+    },
+    {
+      "category": "E",
+      "location": "scripts/vacation-public-research-worker.mjs:468-471 (fixture mode)",
+      "quote": "if (input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE) { ... fixture.candidates }",
+      "customer_effect": "One env var switches production research to a fixture file (scripts/public-research-fixture.json).",
+      "severity": "customer sees fake content",
+      "replacement": "Remove fixture mode from the production path (tests only)",
+      "id": "E8"
+    },
+    {
+      "category": "E",
+      "location": "scripts/vacation-public-research-worker.mjs:341-342",
+      "quote": "const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';",
+      "customer_effect": "The last-resort research provider is a CLI at a hard-coded personal home path.",
+      "severity": "cosmetic",
+      "replacement": "Replace with the Brave/Tavily API path",
+      "id": "E9"
+    },
+    {
+      "category": "E",
+      "location": "scripts/travel-source-adapter-runner.mjs:~102-140, 308-312",
+      "quote": "fixtureRecentTravelerSentiment ... status: 'disabled_google_places_seed_removed'",
+      "customer_effect": "Google Places adapter is disabled (good). The only other adapter is a fixture sentiment lane.",
+      "severity": "cosmetic",
+      "replacement": "Replace with a Brave/Tavily adapter",
+      "id": "E10"
+    }
+  ],
+  "scripts_tooling": [
+    {
+      "location": "scripts/screenshot-journey-pdf.mjs:287",
+      "quote": "`${staging}/shared/las-vegas-vacation-3/`",
+      "effect": "Default reference trip for captures is the Vegas trip."
+    },
+    {
+      "location": "scripts/screenshot-journey-pdf.mjs:618-622",
+      "quote": "['welcome-kimberly', 'Kimberly welcome', 'Welcome aboard, Kimberly', ...]",
+      "effect": "Journey pages look for scripted welcome strings for Kimberly/Tyler/Lauren."
+    },
+    {
+      "location": "scripts/screenshot-journey-pdf.mjs:488-947 (captions)",
+      "quote": "note: 'Day 5 on the intake trip.' / gap('Budget...', 'the Big Island shared trip has no Budget tab')",
+      "effect": "Hard-coded page notes/captions and gap reasons written before capture."
+    },
+    {
+      "location": "scripts/screenshot-journey-pdf.mjs:708-709",
+      "quote": "gap('Chat search', '', 'Search was removed from the feature map...')",
+      "effect": "Search is recorded as removed, which conflicts with Craig's Brave/Tavily requirement."
+    },
+    {
+      "location": "scripts/screenshot-journey-pdf.mjs:971",
+      "quote": "const things = ['Big Island', 'Gardens', 'Groceries', 'Swim', 'Kailua-Kona house'];",
+      "effect": "Evidence expects the seven keyword Things."
+    },
+    {
+      "location": "scripts/live-transcript-dialog-pdf.mjs:35",
+      "quote": "const ROSTER_NAMES = ['Kimberly', 'Tyler', 'Lauren'];",
+      "effect": "Test roster names hard-coded in the dialog PDF."
+    },
+    {
+      "location": "scripts/live-transcript-dialog-pdf.mjs:332-333",
+      "quote": "const inferredTrip = /big island/i.test(corpus) ? 'Big Island' : '';",
+      "effect": "Cover title inferred from a keyword."
+    },
+    {
+      "location": "scripts/live-transcript-dialog-pdf.mjs:360, 566-569 (dialogPackTitle)",
+      "quote": "pack_id: `live-dialog-${summary.turnCount}`",
+      "effect": "Cover-title and pack-id literals."
+    },
+    {
+      "location": "scripts/customer-question-fixtures.json (7,050 lines, 616 trip-name hits)",
+      "quote": "Kimberly / Big Island / Vegas fixtures",
+      "effect": "Test fixtures. Not imported by src/routes/api (checked)."
+    },
+    {
+      "location": "scripts/public-research-fixture.json",
+      "quote": "fixture candidates",
+      "effect": "Reachable from production research via TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE (see E)."
+    },
+    {
+      "location": "scripts/test_live_transcript_dialog_pdf.mjs (81d853c: +30 lines)",
+      "quote": "'Big Island Hawaii garden swim groceries april family coming '.repeat(12)",
+      "effect": "Tests lock in the keyword intake gate."
+    }
+  ]
+}

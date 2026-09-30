@@ -1,0 +1,1 @@
+return Number.isFinite(dollars) && dollars > 0 ? dollars : 27;
