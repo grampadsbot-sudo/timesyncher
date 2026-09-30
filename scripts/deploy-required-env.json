@@ -6,6 +6,6 @@
     {"name":"DATABASE_URL","reads":["src/vacation/place-search.mjs:541","src/vacation/db.mjs:6","src/vacation/db.mjs:16","scripts/vacation-public-research-worker.mjs:382"],"why":"Prior-place lookup calls the database, and sql() throws when this is empty."}
   ],
   "optional": [
-    {"name":"FOURSQUARE_SERVICE_KEY","reads":["src/vacation/place-search.mjs:188","src/vacation/place-search.mjs:634","scripts/vacation-public-research-worker.mjs:375"],"why":"not approved, place search falls back to OSM+Brave (Craig 2026-09-30)"}
+    {"name":"FOURSQUARE_SERVICE_KEY","reads":["src/vacation/place-search.mjs:768","src/vacation/place-search.mjs:776","scripts/vacation-public-research-worker.mjs:375"],"why":"not approved, place search falls back to OSM+Brave (Craig 2026-09-30)"}
   ]
 }
