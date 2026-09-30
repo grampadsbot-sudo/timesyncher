@@ -60,7 +60,7 @@ const checks = [
   ['keepsake-style-two.md', 'Keepsake Style two', 'verify-style-two.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['keepsakes-config.md', 'Keepsakes config defaults', 'verify-keepsakes-config.png', (o) => (o.configDefaults ? 'PASS' : 'GAP')],
   ['order-keepsakes.md', 'Order Keepsakes', 'verify-order-keepsakes.png', (o) => (o.order ? 'PASS' : 'GAP')],
-  ['config-options-trip-view.md', 'Standard layout, no view options', 'verify-itinerary-layout.png', (o) => (o.layout && !o.shell ? 'PASS' : 'FAIL')],
+  ['config-options-trip-view.md', 'Standard layout, no view options', 'verify-itinerary-layout.png', (o) => (o.layout && !o.shell && o.noTripViewControl !== false ? 'PASS' : 'FAIL')],
   ['navigation.md', 'Navigation chrome', 'verify-navigation.png', (o) => (o.navigation ? 'PASS' : 'GAP')],
   ['trek-settings.md', 'TREK settings', 'verify-settings.png', (o) => (o.settings ? 'PASS' : 'GAP')],
   ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.intakeMin ? 'PASS' : 'GAP')],
@@ -72,7 +72,7 @@ const checks = [
   ['keepsake-qa.md', 'Keepsake QA', 'verify-keepsake-qa.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', (o) => (o.telegramFill ? 'PASS' : 'GAP')],
   ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', (o) => (o.contract ? 'PASS' : 'GAP')],
-  ['search-redesign.md', 'Search redesign', 'verify-search-redesign.png', () => 'GAP'],
+  ['search-redesign.md', 'Search redesign', 'verify-search-redesign.png', (o) => (o.searchRules ? 'PASS' : 'GAP')],
   ['real-app-email-entry.md', 'Email opens the real app', 'verify-eula.png', (o) => (o.emailIsShared ? 'PASS' : 'GAP')],
 ];
 
@@ -279,6 +279,7 @@ async function drive() {
         'No stores match those tags',
         'No timeline-tagged things yet for this day',
       ].every((sentence) => bundle.includes(sentence));
+      obs.noTripViewControl = !bundle.includes('Trip View') && !bundle.includes('Config Options');
     }
   }
   if (await clickIncludes('Open navigation')) {
@@ -307,9 +308,13 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.filters = has(text, 'All areas') || has(text, 'All types');
-  obs.tagChips = has(text, 'Restaurant tags') || has(text, 'Store tags') || has(text, 'All tags');
   await shot('verify-filters.png');
   await shot('verify-empty-states.png');
+  await clickIncludes('Restaurants');
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  text = await bodyText();
+  obs.tagChips = has(text, 'All tags');
+  await shot('verify-tags-chips.png');
 
   await clickIncludes('Day-by-Day');
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -341,10 +346,6 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.happy = has(text, 'Happy hour');
-  if (!obs.tagChips) {
-    obs.tagChips = has(text, 'Restaurant tags') || has(text, 'Store tags') || has(text, 'All tags');
-  }
-  await shot('verify-tags-chips.png');
   await shot('verify-happy-hour.png');
 
   await page.keyboard.press('Escape').catch(() => {});
@@ -502,9 +503,13 @@ async function main() {
   const email = purchaseEmail({ contact: { firstName: 'Verify' }, token: 'session-token', env: { TIMESYNCHER_SITE_BASE_URL: staging } });
   const appHtml = await readFile(path.join(root, 'vacation-app.html'), 'utf8');
   const contract = await Promise.all([
-    readFile(path.join(root, 'AGENTS.md'), 'utf8').then(() => true).catch(() => false),
-    readFile(path.join(root, '.cursor/rules/style-two-keepsake-contract.mdc'), 'utf8').then(() => true).catch(() => false),
+    readFile(path.join(root, 'AGENTS.md'), 'utf8').then((text) => text.includes('FIVE HARD RULES (verbatim)')).catch(() => false),
+    readFile(path.join(root, '.cursor/rules/style-two-keepsake-contract.mdc'), 'utf8').then((text) => text.includes('FIVE HARD RULES (verbatim)')).catch(() => false),
   ]);
+  const placeSearch = await readFile(path.join(root, 'src/vacation/place-search.mjs'), 'utf8').catch(() => '');
+  const searchRules = placeSearch.includes('skipping foursquare')
+    && placeSearch.includes("source: 'osm'")
+    && placeSearch.includes("source: 'brave'");
   const counts = await sharedCounts();
   const intake = await intakeSignals();
   const jev = await jevSignals();
@@ -521,6 +526,7 @@ async function main() {
     shellBundle: /data-screen="itinerary"|aria-label="Vacation path"/.test(appHtml),
     contract: contract.every(Boolean),
     welcomeAfterIntake: welcome.ok === true,
+    searchRules,
     postIntake: Boolean(observed.intakeLayout && jev.postIntakeDb),
     budget: observed.budget && counts.budgetFlag,
   };

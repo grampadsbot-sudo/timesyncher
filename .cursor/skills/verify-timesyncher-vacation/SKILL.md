@@ -55,7 +55,7 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-ema
 The harness exits non-zero when:
 
 - the evidence directory has no purchase email HTML or text (the run skipped email);
-- the email launch link is order-success or `/accept` instead of `vacation-app.html?session=`;
+- the email launch link is not `/shared/` (it is order-success, `/accept`, or `vacation-app.html`);
 - EULA acceptance is only on order-success (`#acceptEula` or an `/accept/` customer link) and the app URL did not show `#eulaScreen` first;
 - onboarding chat proof is missing after that EULA screen.
 

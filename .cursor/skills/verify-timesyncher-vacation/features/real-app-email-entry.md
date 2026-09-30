@@ -21,4 +21,4 @@ The purchase email, EULA continue, onboarding, itinerary, and Thing links open t
 
 ## Gotchas
 
-- `features/post-purchase-email-eula.md` still describes EULA on `vacation-app.html`. Both files stay. This one records the later rule.
+- The email href is `/shared/`. The pending EULA capture is still `vacation-app.html?session=`. Those are different URLs.

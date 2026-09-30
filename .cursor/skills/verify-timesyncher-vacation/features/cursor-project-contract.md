@@ -17,7 +17,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-cursor-contract.png`.
-- Pass when `AGENTS.md` and `.cursor/rules/style-two-keepsake-contract.mdc` are on disk. There is no guest control to click.
+- Pass when `AGENTS.md` and `.cursor/rules/style-two-keepsake-contract.mdc` are on disk and both contain the five hard rules. There is no guest control to click.
 - If those files are missing, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas
