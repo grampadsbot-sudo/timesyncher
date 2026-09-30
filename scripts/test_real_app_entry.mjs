@@ -53,7 +53,7 @@ assert.equal(shared.thingOverrides[`place:${swim.id}`].timeline, true);
 assert.deepEqual(shared.thingOverrides[`place:${swim.id}`].dayIds, [monday.id]);
 assert.ok((shared.assignments[String(monday.id)] || []).some((row) => row.place_id === swim.id));
 assert.equal(shared.places.some((place) => /Las Vegas/i.test(place.name)), false);
-assert.equal(swim.category_name, 'Activity');
+assert.equal(swim.category_name, 'activity');
 assert.notEqual(swim.category_name, 'Attraction');
 const house = shared.places.find((place) => place.name === 'Kailua-Kona house');
 assert.equal(house.category_name, 'Hotel');
