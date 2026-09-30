@@ -9,7 +9,7 @@ await assert.rejects(
     braveKey: '',
     tavilyKey: '',
     braveName: 'BRAVE_SEARCH_API_KEY',
-    tavilyName: 'TAVILY_API_KEY',
+    tavilyName: 'TAVILI_API_KEY',
     fetchImpl: async () => {
       fetched = true;
       throw new Error('missing keys must not fetch');
@@ -18,7 +18,7 @@ await assert.rejects(
   (error) => {
     assert.equal(error.code, 'missing_key');
     assert.match(error.message, /BRAVE_SEARCH_API_KEY/);
-    assert.match(error.message, /TAVILY_API_KEY/);
+    assert.match(error.message, /TAVILI_API_KEY/);
     return true;
   },
 );
@@ -73,7 +73,7 @@ const run = await runApprovedSourceAdapters({
   braveKey: 'brave-test-key',
   tavilyKey: 'tavily-test-key',
   braveName: 'BRAVE_SEARCH_API_KEY',
-  tavilyName: 'TAVILY_API_KEY',
+  tavilyName: 'TAVILI_API_KEY',
   fetchImpl: async (url) => {
     if (String(url).includes('api.search.brave.com')) {
       return { ok: true, json: async () => ({ web: { results: [{ title: 'Harbor Cafe', url: 'https://example.test/harbor', description: 'A cafe.' }] } }) };

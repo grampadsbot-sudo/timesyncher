@@ -41,6 +41,7 @@ assert.equal(editor.canEditSite, true);
 assert.equal(editor.canTextOrVoice, false);
 assert.equal(priceAccessPlanRow(editor).amountCents, 0);
 
+process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = '1500';
 const collaboratorPrice = priceAccessPlanRow(collaborator);
 assert.equal(collaborator.role, 'telegram_collaborator');
 assert.equal(collaborator.canTextOrVoice, true);
