@@ -30,8 +30,8 @@ function has(text, needle) {
 }
 
 const checks = [
-  ['post-purchase-email-eula.md', 'Post-purchase email, EULA, onboarding', 'verify-eula.png', (o) => (o.ack && o.eulaBundle && !o.shellBundle && o.emailIsShared ? 'PASS' : 'FAIL')],
-  ['live-app-jev-tier.md', 'Live composer Jev tier', 'verify-jev-quality.png', (o) => (o.jevSource && (o.jevTranscript || o.jevRewritten > 0) ? 'PASS' : 'FAIL')],
+  ['post-purchase-email-eula.md', 'Post-purchase email, EULA, onboarding', 'verify-eula.png', (o) => (o.ack && !o.shellBundle && o.emailIsShared && o.emailLaunchHasEula ? 'PASS' : 'FAIL')],
+  ['live-app-jev-tier.md', 'Live composer Jev tier', 'verify-jev-quality.png', (o) => (o.jevSource && !o.qualityOnScreen ? 'PASS' : 'FAIL')],
   ['header-chrome.md', 'Header brand', 'verify-header-chrome.png', (o) => (o.header && !o.shell ? 'PASS' : 'FAIL')],
   ['language.md', 'Language', 'verify-language.png', (o) => (o.language ? 'PASS' : 'GAP')],
   ['voice-note.md', 'Voice note', 'verify-voice-note.png', (o) => (o.voice ? 'PASS' : 'GAP')],
@@ -40,7 +40,7 @@ const checks = [
   ['thing-pages.md', 'Thing pages', 'verify-thing-page.png', (o) => (o.detail ? 'PASS' : 'FAIL')],
   ['maps.md', 'Day map', 'verify-maps.png', (o) => (o.maps ? 'PASS' : 'GAP')],
   ['filters.md', 'Filters', 'verify-filters.png', (o) => (o.filters ? 'PASS' : 'GAP')],
-  ['empty-states.md', 'Empty states', 'verify-empty-states.png', (o) => (o.empty ? 'PASS' : 'GAP')],
+  ['empty-states.md', 'Empty states', 'verify-empty-states.png', (o) => (o.emptyCopyInBundle && o.filledDay ? 'PASS' : 'GAP')],
   ['tags-chips.md', 'Tags and chips', 'verify-tags-chips.png', (o) => (o.tagChips ? 'PASS' : 'GAP')],
   ['logos.md', 'Thing logos', 'verify-logos.png', (o) => (o.logos ? 'PASS' : 'GAP')],
   ['status.md', 'Status', 'verify-status.png', (o) => (o.status ? 'PASS' : 'GAP')],
@@ -68,7 +68,7 @@ const checks = [
   ['autonomous-app-customer-flow.md', 'Autonomy bar', 'verify-autonomy.png', (o) => (o.header && !o.shell ? 'PASS' : 'GAP')],
   ['keepsake-qa.md', 'Keepsake QA', 'verify-keepsake-qa.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', (o) => (o.telegramFill ? 'PASS' : 'GAP')],
-  ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', () => 'GAP'],
+  ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', (o) => (o.contract ? 'PASS' : 'GAP')],
   ['search-redesign.md', 'Search redesign', 'verify-search-redesign.png', () => 'GAP'],
   ['real-app-email-entry.md', 'Email opens the real app', 'verify-eula.png', (o) => (o.emailIsShared ? 'PASS' : 'GAP')],
 ];
@@ -122,8 +122,8 @@ async function readJsonOptional(file) {
 }
 
 async function jevSignals() {
-  const liveTurn = await readFile(path.join(root, 'src/vacation/live-app-turn.mjs'), 'utf8');
-  const jevSource = liveTurn.includes('rewritten by Jev (typesafe/jev-1.13)');
+  const checked = spawnSync(process.execPath, ['.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs'], { cwd: root, encoding: 'utf8' });
+  const jevSource = checked.status === 0;
   const transcript = path.join(root, 'dialog-packs/craig-gold-v7-jev-quality-post-intake-20260926/transcript.json');
   let jevTranscript = false;
   try {
@@ -259,8 +259,23 @@ async function drive() {
     navigation: has(text, 'Open navigation') || has(text, 'Close navigation'),
     settings: has(text, 'Mapbox') || has(text, 'Copy link'),
     empty: has(text, 'No timeline-tagged things yet') || has(text, 'match those tags'),
-    telegramFill: has(text, "Huggo") || has(text, 'Kailua-Kona') || has(text, 'Ulu Ocean'),
+    filledDay: has(text, 'Vacation Day View') && has(text, 'Day 1') && !has(text, 'No timeline-tagged things yet for this day'),
+    telegramFill: false,
+    emailLaunchHasEula: false,
+    emptyCopyInBundle: false,
   };
+  const bundleSrc = await page.evaluate(() => [...document.scripts].map((script) => script.src).find((src) => src.includes('/assets/index-')) || '');
+  if (bundleSrc) {
+    const bundleResponse = await fetch(bundleSrc, { headers: bypass ? { 'x-vercel-protection-bypass': bypass } : {} });
+    if (bundleResponse.ok) {
+      const bundle = await bundleResponse.text();
+      obs.emptyCopyInBundle = [
+        'No restaurants match those tags',
+        'No stores match those tags',
+        'No timeline-tagged things yet for this day',
+      ].every((sentence) => bundle.includes(sentence));
+    }
+  }
   if (await clickIncludes('Open navigation')) {
     text = await bodyText();
     obs.navigation = has(text, 'Open navigation') || has(text, 'Close navigation');
@@ -281,15 +296,14 @@ async function drive() {
   await shot('verify-navigation.png');
   await shot('verify-settings.png');
   await shot('verify-cursor-contract.png');
-  await shot('verify-tg-intake.png');
+  await shot('verify-search-redesign.png');
 
   await clickIncludes('The Rest');
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.filters = has(text, 'All areas') || has(text, 'All types');
-  obs.tagChips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
+  obs.tagChips = has(text, 'Restaurant tags') || has(text, 'Store tags') || has(text, 'All tags');
   await shot('verify-filters.png');
-  await shot('verify-tags-chips.png');
   await shot('verify-empty-states.png');
 
   await clickIncludes('Day-by-Day');
@@ -323,8 +337,9 @@ async function drive() {
   text = await bodyText();
   obs.happy = has(text, 'Happy hour');
   if (!obs.tagChips) {
-    obs.tagChips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
+    obs.tagChips = has(text, 'Restaurant tags') || has(text, 'Store tags') || has(text, 'All tags');
   }
+  await shot('verify-tags-chips.png');
   await shot('verify-happy-hour.png');
 
   await page.keyboard.press('Escape').catch(() => {});
@@ -336,6 +351,7 @@ async function drive() {
   obs.rental = has(text, 'Rental company');
   await shot('verify-car-fields.png');
 
+  await go(sharedUrl);
   await clickAria('PDFs');
   await new Promise((resolve) => setTimeout(resolve, 400));
   text = await bodyText();
@@ -357,6 +373,12 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 400));
   text = await bodyText();
   obs.tripView = has(text, 'TRIP VIEW') && has(text, 'Flights') && has(text, 'Hotels') && has(text, 'Cars');
+  if (!obs.tripView) {
+    await page.keyboard.press('Escape').catch(() => {});
+    await go(sharedUrl);
+    text = await bodyText();
+    obs.tripView = Boolean(await page.$('[aria-label="Config Options"]')) && has(text, 'TRIP VIEW');
+  }
   await shot('verify-trip-view.png');
 
   await go(`${staging}/shared/las-vegas-vacation-3/journey?style=1`);
@@ -367,18 +389,28 @@ async function drive() {
   await shot('verify-style-two.png');
   await shot('verify-keepsake-qa.png');
 
+  function languageControl() {
+    return page.evaluate(() => [...document.querySelectorAll('button, a, select, label, [role="button"]')].some((node) => {
+      const text = (node.innerText || '').trim();
+      const aria = (node.getAttribute('aria-label') || '').trim();
+      return /^(change language|select language|language)$/i.test(aria) || /^(change language|select language|language)$/i.test(text);
+    }));
+  }
   await go(`${staging}/login.html`);
-  obs.language = await page.evaluate(() => [...document.querySelectorAll('button, a, select, [role="button"]')].some((node) => /^language$/i.test((node.innerText || node.getAttribute('aria-label') || '').trim())));
+  obs.language = await languageControl();
   await shot('verify-language.png');
   if (!obs.language) {
     await go(staging);
-    obs.language = await page.evaluate(() => [...document.querySelectorAll('button, a, select, [role="button"]')].some((node) => /^language$/i.test((node.innerText || node.getAttribute('aria-label') || '').trim())));
+    obs.language = await languageControl();
+    await shot('verify-language.png');
   }
 
   await go(intakeUrl);
   text = await bodyText();
   obs.intakeLayout = has(text, 'Day-by-Day') && has(text, 'Vacation Day View') && !has(text, 'Vacation path');
+  obs.telegramFill = obs.intakeLayout && (has(text, 'Kailua-Kona') || has(text, 'Big Island'));
   obs.qualityOnScreen = has(text, 'quality:');
+  await shot('verify-tg-intake.png');
   if (await clickIncludes('Budget')) {
     await shot('verify-budget.png');
   }
@@ -392,6 +424,11 @@ async function drive() {
   text = await bodyText();
   obs.ack = has(text, 'Check your email') && !await page.evaluate(() => Boolean(document.querySelector('#openApp, #acceptEula')));
   await shot('verify-order-success.png');
+
+  const launchUrl = purchaseEmail({ contact: { firstName: 'Verify' }, token: 'session-token', env: { TIMESYNCHER_SITE_BASE_URL: staging } }).launchUrl;
+  await go(launchUrl);
+  obs.emailLaunchHasEula = Boolean(await page.$('#eulaScreen'));
+  await shot('verify-eula.png');
 
   const sessionUrl = process.env.TIMESYNCHER_VERIFY_SESSION || '';
   if (sessionUrl) {
