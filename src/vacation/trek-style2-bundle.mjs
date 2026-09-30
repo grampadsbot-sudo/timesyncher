@@ -166,7 +166,9 @@ function productFieldsLiteral() {
 const FLIGHT_ROW_NEEDLE = '||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_ROW_PATCH = '||Re||"Airline"';
 const FLIGHT_FIELDS_NEEDLE = 'bn(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
+const FLIGHT_FIELDS_PATCH = '(bn(Dt)||ha(Dt).category==="flight"||Dt.category==="flight")&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
 const CAR_FIELDS_NEEDLE = 'Mi(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
+const CAR_FIELDS_PATCH = '(Mi(Dt)||ha(Dt).category==="car"||Dt.category==="car")&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
 const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
@@ -355,6 +357,12 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(FLIGHT_ROW_NEEDLE)) {
     patched = patched.replace(FLIGHT_ROW_NEEDLE, FLIGHT_ROW_PATCH);
+  }
+  if (patched.includes(FLIGHT_FIELDS_NEEDLE)) {
+    patched = patched.replace(FLIGHT_FIELDS_NEEDLE, FLIGHT_FIELDS_PATCH);
+  }
+  if (patched.includes(CAR_FIELDS_NEEDLE)) {
+    patched = patched.replace(CAR_FIELDS_NEEDLE, CAR_FIELDS_PATCH);
   }
   if (patched.includes(PE_EFFECT_NEEDLE)) {
     patched = patched.replace(PE_EFFECT_NEEDLE, PE_EFFECT_PATCH);
@@ -918,10 +926,10 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('||"Airline"') && (js.includes(FLIGHT_ROW_NEEDLE) || !js.includes(FLIGHT_ROW_PATCH))) {
     throw new Error('Flight list rows must show the full thing name.');
   }
-  if (js.includes('children:["Takeoff"') && !js.includes(FLIGHT_FIELDS_NEEDLE)) {
+  if (js.includes('children:["Takeoff"') && !js.includes(FLIGHT_FIELDS_PATCH)) {
     throw new Error('Open flight detail must render Takeoff, Connections, and Layover for a flight thing.');
   }
-  if (js.includes('children:["Rental company"') && !js.includes(CAR_FIELDS_NEEDLE)) {
+  if (js.includes('children:["Rental company"') && !js.includes(CAR_FIELDS_PATCH)) {
     throw new Error('Open car detail must render Rental company and Car type for a car thing.');
   }
   if (js.includes('Ya=["') && !js.includes('Kailua-Kona / Alii Drive')) {

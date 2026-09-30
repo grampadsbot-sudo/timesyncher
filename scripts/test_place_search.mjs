@@ -247,19 +247,49 @@ await assert.rejects(
     return true;
   },
 );
-await assert.rejects(
-  () => searchPlaces({
+const skipWarnings = [];
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  skipWarnings.push(args.map((part) => String(part)).join(' '));
+};
+try {
+  const skipCalls = [];
+  const skipEnv = placeEnv({ BRAVE_SEARCH_API_KEY: 'brave-test-key' });
+  assert.equal(skipEnv.foursquare, '');
+  const skipFetch = async (url) => {
+    const value = String(url);
+    skipCalls.push(value);
+    if (isOpenRouter(value)) return jevOk(5);
+    return lisbonRoutes(value);
+  };
+  const skipSearch = () => searchPlaces({
     destination: 'Lisbon',
     wantedThings: PLACE_WANTED,
-    env: placeEnv({ BRAVE_SEARCH_API_KEY: 'brave-test-key' }),
-    fetchImpl: blockedFetch,
-  }),
-  (error) => {
-    assert.equal(error.code, 'missing_key');
-    assert.match(error.message, /FOURSQUARE_SERVICE_KEY/);
-    return true;
-  },
-);
+    env: skipEnv,
+    fetchImpl: skipFetch,
+    loadPriorPlaces: async () => prior,
+  });
+  const firstSkip = await skipSearch();
+  const secondSkip = await skipSearch();
+  assert.equal(skipCalls.some((url) => {
+    try {
+      return /foursquare/i.test(new URL(url).hostname);
+    } catch {
+      return /foursquare/i.test(url);
+    }
+  }), false);
+  assert.deepEqual(skipWarnings, ['place-search: FOURSQUARE_SERVICE_KEY unset, skipping foursquare']);
+  for (const result of [firstSkip, secondSkip]) {
+    const sources = [...new Set(result.places.map((place) => place.source))];
+    assert.deepEqual(sources.filter((source) => !['prior_db', 'osm', 'brave'].includes(source)), []);
+    assert.equal(sources.includes('prior_db'), true);
+    assert.equal(sources.includes('osm'), true);
+    assert.equal(sources.includes('brave'), true);
+    assert.equal(sources.includes('foursquare_os'), false);
+  }
+} finally {
+  console.warn = originalWarn;
+}
 
 const emptyLive = recordingFetch((url) => {
   if (String(url).includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393' }]);
@@ -618,7 +648,7 @@ assert.deepEqual(quietResearch.things, []);
 const tavilyCalls = [];
 const flightSearch = await searchPlaces({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
-  env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
+  env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
   fetchImpl: async (url, options) => {
     if (isOpenRouter(url)) return jevOk(5);
     tavilyCalls.push(String(url));
@@ -642,7 +672,7 @@ assert.equal(flightSearch.notes[0].source, 'tavily');
 assert.equal(flightSearch.notes[0].title, 'Morning departure');
 const flightFill = await fillTripIntake({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
-  env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
+  env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
   fetchImpl: async (url) => {
     if (isOpenRouter(url)) return jevOk(5);
     return jsonResponse({
@@ -668,7 +698,7 @@ await assert.rejects(
   (error) => {
     assert.equal(error instanceof PlaceSearchError, true);
     assert.equal(error.code, 'missing_key');
-    assert.match(error.message, /TAVILY_API_KEY/);
+    assert.match(error.message, /TAVILI_API_KEY/);
     return true;
   },
 );
