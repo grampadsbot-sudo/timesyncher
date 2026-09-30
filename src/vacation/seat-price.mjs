@@ -7,6 +7,16 @@ export function planSeatDollars(env = process.env) {
   return dollars;
 }
 
+export function configuredSeatDollars(env) {
+  try {
+    return planSeatDollars(env);
+  } catch (error) {
+    if (error?.name !== 'CheckoutConfigError') throw error;
+    console.error(`seat price is not configured: ${error.message}`);
+    return null;
+  }
+}
+
 function extractedPayerRows(seats) {
   if (!Array.isArray(seats)) return [];
   const rows = [];
@@ -19,6 +29,14 @@ function extractedPayerRows(seats) {
     rows.push({ name, payer });
   }
   return rows;
+}
+
+export function payerLineFromDollars(_customerTurn, dollars, extracted = null) {
+  const amount = Number(dollars);
+  if (!Number.isFinite(amount) || amount <= 0) return '';
+  const seats = extractedPayerRows(extracted);
+  if (!seats.length) return '';
+  return seats.map((seat) => `${seat.name} $${amount}, paid by ${seat.payer}`).join('; ');
 }
 
 export function payerPriceLine(seats, env = process.env) {

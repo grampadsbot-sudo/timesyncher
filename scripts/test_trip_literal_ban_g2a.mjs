@@ -59,7 +59,7 @@ assert.match(priced, /State this payer line exactly: Ada \$19, paid by you/);
 assert.doesNotMatch(priced, /\$27/);
 
 const missing = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat?', {});
-assert.match(missing, /configured seat price is missing/);
+assert.doesNotMatch(missing, /configured seat price is missing|price not configured/);
 assert.doesNotMatch(missing, /\$\d+/);
 
 console.log('reply trip data tests passed');

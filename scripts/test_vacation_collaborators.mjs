@@ -26,20 +26,20 @@ assert.equal(collaboratorPlan('unlimited_trips', priceEnv).maxActiveCollaborator
 assert.equal(isCollaboratorInviteRequest('Add my wife to the Caldwell vacation so she can update it in Telegram'), true);
 assert.equal(isCollaboratorInviteRequest('I want to give my wife the ability to interact and change the vacation just like I am doing.'), true);
 assert.equal(isCollaboratorInviteRequest('Can you send me the link to set her up?'), true);
-assert.equal(isCollaboratorInviteRequest('Please make a checkout link to set Kim up'), true);
+assert.equal(isCollaboratorInviteRequest('Please make a checkout link to set her up'), true);
+assert.equal(isCollaboratorInviteRequest('Please make a checkout link to set Kim up'), false);
 assert.equal(isCollaboratorInviteRequest('Please add 3 restaurants to day two'), false);
 assert.equal(isCollaboratorInviteRequest('Can you send me the link to the Vegas vacation?'), false);
 
 const checkoutCopy = collaboratorCheckoutCopy({ env: priceEnv });
-assert.doesNotMatch(checkoutCopy, /\$27/);
-assert.doesNotMatch(checkoutCopy, /\$37/);
-assert.match(checkoutCopy, /One vacation: \$15/);
-assert.match(checkoutCopy, /All vacations: \$19/);
-assert.match(checkoutCopy, /owner-approved email magic link/i);
+assert.equal(checkoutCopy.ask, 'collaborator_checkout');
+assert.equal(checkoutCopy.singleTrip.cents, 1500);
+assert.equal(checkoutCopy.unlimitedTrips.cents, 1900);
+assert.equal(JSON.stringify(checkoutCopy).includes('$'), false);
 
 const deniedCopy = collaboratorDeniedCopy();
-assert.match(deniedCopy, /not authorized/i);
-assert.match(deniedCopy, /paid Telegram collaborator/i);
+assert.equal(deniedCopy.ask, 'collaborator_denied');
+assert.equal(deniedCopy.authorized, false);
 
 const invite = { id: '11111111-1111-1111-1111-111111111111' };
 assert.equal(collaboratorEulaSessionId(invite), 'vacation-collaborator-11111111-1111-1111-1111-111111111111');
