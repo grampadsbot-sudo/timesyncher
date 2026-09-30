@@ -143,12 +143,21 @@ function sourceRefOf(thing = {}) {
   return null;
 }
 
+function categoryKey(record = {}) {
+  const raw = record?.category;
+  const fromCategory = typeof raw === 'string'
+    ? raw
+    : (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw.name : '');
+  const text = String(fromCategory || record?.category_name || '').trim().toLowerCase();
+  return text === 'flight' || text === 'car' ? text : '';
+}
+
 /** Missing car/flight Things. Flight input starts at preferred airline. No wording. */
 export function customerInputState(records = []) {
   const present = new Set();
   for (const record of records || []) {
-    const kind = transportKind(record);
-    if (kind) present.add(kind);
+    const category = categoryKey(record);
+    if (category) present.add(category);
   }
   const needsCustomerInput = [];
   if (!present.has('car')) needsCustomerInput.push('car');

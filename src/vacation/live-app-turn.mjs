@@ -11,6 +11,7 @@ import {
 
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
+import { customerInputState } from './intake-shared-trip.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -437,15 +438,12 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     absent.length ? `Not on the trip: ${absent.join(', ')}. Viewers and editors are not coming, not in the house, and not in the day's group.` : '',
   ].filter(Boolean).join(' ');
   const span = record?.span || null;
-  const statedInput = customerInputFields(record);
   const facts = {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
-    ...statedInput,
-    ...(saved && typeof saved === 'object' && !statedInput.needsCustomerInput && !statedInput.flightAsk
-      ? customerInputFromSavedThings(things)
-      : {}),
+    ...customerInputState(things),
+    ...customerInputFields(record),
   };
   if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
   if (party.askRoster === true) facts.askRoster = true;
@@ -461,36 +459,6 @@ function customerInputFields(record) {
   }
   const flightAsk = String(record.flightAsk || '').trim();
   if (flightAsk) fields.flightAsk = flightAsk;
-  return fields;
-}
-
-function savedThingCategory(thing) {
-  if (!thing || typeof thing !== 'object') return null;
-  if (!Object.hasOwn(thing, 'category') && !Object.hasOwn(thing, 'category_name')) return null;
-  const raw = thing.category;
-  const fromCategory = typeof raw === 'string'
-    ? raw
-    : (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw.name : '');
-  return String(fromCategory || thing.category_name || '').trim().toLowerCase();
-}
-
-function customerInputFromSavedThings(things) {
-  const list = Array.isArray(things) ? things : [];
-  const present = new Set();
-  let sawCategory = false;
-  for (const thing of list) {
-    const category = savedThingCategory(thing);
-    if (category === null) continue;
-    sawCategory = true;
-    if (category === 'car' || category === 'flight') present.add(category);
-  }
-  if (!sawCategory && list.length) return {};
-  const needsCustomerInput = [];
-  if (!present.has('car')) needsCustomerInput.push('car');
-  if (!present.has('flight')) needsCustomerInput.push('flight');
-  if (!needsCustomerInput.length) return {};
-  const fields = { needsCustomerInput };
-  if (needsCustomerInput.includes('flight')) fields.flightAsk = 'preferredAirline';
   return fields;
 }
 
