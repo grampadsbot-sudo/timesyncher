@@ -215,6 +215,29 @@ const AREA_FALLBACK_NEEDLE = 'Sn=(G,Re)=>Ke.includes(String(G||""))?String(G):aa
 const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();return a&&Ke.includes(a)?a:""}';
 const COORD_NAME_MAP_NEEDLE = 'const Zn=is(G);return Zn||null';
 const COORD_SOURCE_PATCH = 'return null';
+const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Kailua-Kona / Palani","Islandwide / Flexible"]';
+const AREA_RENAMES = [
+  ['Upper West Side / Lincoln Center', 'Keauhou / Kahaluu'],
+  ['Upper West Side / Morningside', 'Waikoloa / Kohala Coast'],
+  ['Midtown / Central Park South', 'Waimea / Kamuela'],
+  ['Times Square / Hell’s Kitchen', 'Kailua-Kona / Alii Drive'],
+  ["Times Square / Hell's Kitchen", 'Kailua-Kona / Alii Drive'],
+  ['Chelsea / Greenwich Village', 'Hilo / Bayfront'],
+  ['Greenwich Village / West Village', 'Volcano / Hawaii Volcanoes'],
+  ['Downtown / Harbor', 'Captain Cook / Kealakekua'],
+  ['Hudson River / Harbor', 'Waipio / Hamakua'],
+  ['Airport / Transit', 'Kailua-Kona / Palani'],
+  ['Citywide / Flexible', 'Islandwide / Flexible'],
+];
+
+const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
+const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
+const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
+const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
+const HH_DETAILS_PATCH = 'value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
+const CO_NEEDLE = 'Co=G=>ha(G).longDetails??Fl(G)';
+const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String(G.name||G.title||"")))||{}).longDetails||Fl(G)';
 
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
@@ -252,7 +275,8 @@ const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
 const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
-export function patchStyleTwoToConfigRenderer(source = '') {
+export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
+  const served = options.served === true;
   const js = String(source || '');
   if (!js.includes(ZU_STYLE2)) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
@@ -261,14 +285,21 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
-  if (patched.includes(NYC_AREA_LIST)) {
-    patched = patched.replace(NYC_AREA_LIST, AREA_CHIPS_FROM_SOURCE);
-  }
-  if (patched.includes(AREA_FALLBACK_NEEDLE)) {
-    patched = patched.replace(AREA_FALLBACK_NEEDLE, AREA_FALLBACK_PATCH);
-  }
-  if (patched.includes(COORD_NAME_MAP_NEEDLE)) {
-    patched = patched.replace(COORD_NAME_MAP_NEEDLE, COORD_SOURCE_PATCH);
+  if (served) {
+    if (patched.includes(AREA_CHIP_NYC)) {
+      patched = patched.replace(AREA_CHIP_NYC, AREA_CHIP_BIG_ISLAND);
+    }
+    for (const [from, to] of AREA_RENAMES) patched = patched.replaceAll(from, to);
+  } else {
+    if (patched.includes(NYC_AREA_LIST)) {
+      patched = patched.replace(NYC_AREA_LIST, AREA_CHIPS_FROM_SOURCE);
+    }
+    if (patched.includes(AREA_FALLBACK_NEEDLE)) {
+      patched = patched.replace(AREA_FALLBACK_NEEDLE, AREA_FALLBACK_PATCH);
+    }
+    if (patched.includes(COORD_NAME_MAP_NEEDLE)) {
+      patched = patched.replace(COORD_NAME_MAP_NEEDLE, COORD_SOURCE_PATCH);
+    }
   }
   if (patched.includes(HC_QR_NEEDLE)) {
     patched = patched.replace(HC_QR_NEEDLE, HC_QR_PATCH);
@@ -344,6 +375,20 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   }
   if (patched.includes(PE_EFFECT_NEEDLE)) {
     patched = patched.replace(PE_EFFECT_NEEDLE, PE_EFFECT_PATCH);
+  }
+  if (served) {
+    if (patched.includes(HA_NEEDLE)) {
+      patched = patched.replace(HA_NEEDLE, HA_PATCH);
+    }
+    while (patched.includes(HH_CHECK_NEEDLE)) {
+      patched = patched.replace(HH_CHECK_NEEDLE, HH_CHECK_PATCH);
+    }
+    while (patched.includes(HH_DETAILS_NEEDLE)) {
+      patched = patched.replace(HH_DETAILS_NEEDLE, HH_DETAILS_PATCH);
+    }
+    if (patched.includes(CO_NEEDLE)) {
+      patched = patched.replace(CO_NEEDLE, CO_PATCH);
+    }
   }
   while (patched.includes(PRINT_HH_NEEDLE)) {
     patched = patched.replace(PRINT_HH_NEEDLE, PRINT_HH_PATCH);
@@ -483,7 +528,8 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  return stripMissingPriceLabel(stripTripView(hideUnsourcedRatings(patched)));
+  const finished = stripTripView(hideUnsourcedRatings(patched));
+  return served ? finished : stripMissingPriceLabel(finished);
 }
 
 function stripMissingPriceLabel(source) {
@@ -494,7 +540,7 @@ function stripMissingPriceLabel(source) {
 
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const js = patchStyleTwoToConfigRenderer(stripped.source);
+  const js = patchStyleTwoToConfigRenderer(stripped.source, { served: true });
   assertServedBundleClean(js);
   return js;
 }
