@@ -13,6 +13,7 @@ import {
 
 export { isTemplateNote };
 import { customerInputState } from './intake-shared-trip.mjs';
+import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -216,13 +217,6 @@ export function liveTurnRecord({
     };
   }
   return record;
-}
-
-const OTHER_DESTINATION = /\b(tulum|cartagena|cancun|cancún|maui|kauai|puerto vallarta|\bcabo\b)\b/i;
-
-export function replyLeavesDestination(reply, destination) {
-  if (!/big island/i.test(String(destination || ''))) return false;
-  return OTHER_DESTINATION.test(String(reply || ''));
 }
 
 const UNLIMITED_PHRASE = 'unlimited vacations for the whole year';
@@ -744,7 +738,8 @@ export function applyCustomerNotes(things, text, { collaborator = false, speaker
       notes,
       collaboratorNotes,
       customerWhen,
-      description: String(thing.description || '').trim(),
+      description: '',
+      source: thing.source || (collaborator ? 'collaborator' : 'customer'),
     };
   });
 }
@@ -1680,7 +1675,7 @@ async function loadSavedTripRecord(session, env = process.env) {
   try {
     const { sql } = await import('./db.mjs');
     const db = sql(env);
-    const trips = await db`select start_date, end_date, metadata from trips where id = ${tripId} limit 1`;
+    const trips = await db`select destination, start_date, end_date, metadata from trips where id = ${tripId} limit 1`;
     const row = trips[0];
     if (!row) return null;
     const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
@@ -1688,6 +1683,7 @@ async function loadSavedTripRecord(session, env = process.env) {
     return {
       start: row.start_date || '',
       end: row.end_date || '',
+      destination: String(row.destination || '').trim(),
       things: thingRows.map((thing) => {
         const thingMeta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
         const sourceRef = thingMeta.sourceRef && typeof thingMeta.sourceRef === 'object' ? thingMeta.sourceRef : null;
@@ -1742,6 +1738,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     } : {}),
   });
   return {
+    destination: String(saved?.destination || '').trim(),
     start: span?.start || projected.start || '',
     end: span?.end || projected.end || '',
     span,
@@ -1758,7 +1755,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
-  const destination = String(extractedDestination || '').trim();
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
   const upsell = upsellModeForTurn(intakeTurn, history);
@@ -1824,6 +1820,12 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     };
   }
   jev.jevBeforeModel = true;
+  const resolvedDestination = await resolveTripDestination({
+    saved: savedTrip?.destination || '',
+    texts: [String(extractedDestination || '').trim()],
+    complete: async () => String(extractedDestination || '').trim() || 'none',
+  });
+  const destination = resolvedDestination.destination;
   const genStarted = Date.now();
   const speaker = String(tripFacts.addressedTo || '').trim();
   const draftExtra = [
@@ -1833,6 +1835,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(citedPlaces),
+    resolvedDestination.ask ? DESTINATION_ASK : '',
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1856,10 +1859,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   for (let attempt = 0; attempt < 2 && !String(reply || '').trim(); attempt += 1) {
     model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
-  }
-  if (reply && replyLeavesDestination(reply, destination)) {
-    model = await callTieredModel(modelArgs(`${customerTurn}\n\nStay on ${destination}. Do not name another city or island.`, upsell));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn)) {
@@ -2081,6 +2080,7 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   const systemExtra = [
     intake === true ? 'This holding reply is the intake answer. Include every required sentence below.' : 'This is a one or two sentence holding line.',
     interimFacts(customerTurn, destination),
+    destination ? '' : DESTINATION_ASK,
     speaker
       ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${owner || 'someone else'} as the speaker.`
       : (owner ? `The customer is ${owner}. Do not call anyone else the account holder.` : 'Do not name an account holder.'),
@@ -2232,7 +2232,6 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   else if (!rewriteReplacesDraft(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
   else if (rewriteErrors.length && nearIdenticalRewrite(pending?.draft, rewritten)) failReason = 'rewrite_near_draft';
   else if (appTextBanned(rewritten)) failReason = 'rewrite_banned';
-  else if (replyLeavesDestination(rewritten, pending?.destination)) failReason = 'rewrite_left_destination';
   const judgedText = rewritten || modelText;
   const rewriteCanShip = Boolean(rewritten) && !failReason && rewriteErrors.length === 0;
   let rewriteQuality = null;

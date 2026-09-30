@@ -49,11 +49,10 @@ const swim = named.places.find((place) => place.name === 'Swim');
 assert.equal(swim.category_name, 'activity');
 assert.equal(swim.category_icon, '');
 assert.equal(house.category_name, 'Hotel');
-assert.equal(house.description, 'Kailua-Kona house');
-assert.doesNotMatch(house.description, /The Kailua-Kona house/);
+assert.equal(house.description, '');
+assert.equal(swim.description, '');
 const island = present([{ id: 'island', category: 'activity', title: 'Big Island', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] }]);
-assert.equal(island.places[0].description, 'Big Island');
-assert.doesNotMatch(island.places[0].description, /People matter more/);
+assert.equal(island.places[0].description, '');
 const cafe = present([{
   id: 'cafe',
   category: 'restaurant',

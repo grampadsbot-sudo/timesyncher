@@ -159,10 +159,11 @@ export function customerInputState(records = []) {
   return state;
 }
 
-function recordSummary(thing = {}) {
-  const written = String(thing.description || thing.summary || '').replace(/\s+/g, ' ').trim();
-  if (written) return written;
-  return String(thing.title || thing.name || '').replace(/\s+/g, ' ').trim();
+function noteText(thing) {
+  return [
+    ...(Array.isArray(thing?.notes) ? thing.notes : []),
+    ...(Array.isArray(thing?.collaboratorNotes) ? thing.collaboratorNotes : []),
+  ].map((note) => String(note || '').trim()).filter(Boolean).join('\n');
 }
 
 export function thingRecordFromTripRow(row = {}) {
@@ -213,21 +214,22 @@ export function sharedTripFromIntake({ trip, things }) {
   for (const thing of things || []) {
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
-    const summary = recordSummary(thing);
+    const notes = noteText(thing);
     const point = locationOf(thing);
     const ratings = writeRatings(thing);
     const sourceRef = sourceRefOf(thing);
+    const source = String(thing.source || ratings.source || 'customer');
     places.push({
       id,
       trip_id: intId(trip.id),
       name: thing.title,
-      description: summary,
+      description: '',
       category_name: kind.category_name,
       category_icon: kind.category_icon,
       category: { name: kind.category_name, icon: kind.category_icon },
       reservation_status: 'considering',
-      notes: summary,
-      source: thing.source || ratings.source || '',
+      notes,
+      source,
       ratings,
       ...(sourceRef ? { sourceRef } : {}),
       ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
@@ -237,8 +239,7 @@ export function sharedTripFromIntake({ trip, things }) {
       timeline: true,
       status: 'considering',
       category: kind.category,
-      summary,
-      longDetails: [thing.who ? `Who: ${thing.who}` : '', ...new Set([thing.whenLabel, thing.customerWhen].map((part) => String(part || '').trim()).filter(Boolean))].join(' · '),
+      source,
       dayIds,
       ...ratings,
       ...(sourceRef ? { sourceRef } : {}),
@@ -253,7 +254,7 @@ export function sharedTripFromIntake({ trip, things }) {
         id: intId(`${thing.id}:${date}`),
         day_id: day.id,
         order_index: rows.length,
-        notes: summary,
+        notes,
         place_id: id,
         place: places[places.length - 1],
       });
@@ -319,7 +320,6 @@ export function windLookupPointsFromThings(things = []) {
 }
 
 export function applyThingPresentation(shared = {}, options = {}) {
-  const windBackup = String(options.windBackup || '').trim();
   const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
   const thingOverrides = { ...(shared.thingOverrides || {}) };
   const put = (place, extra) => {
@@ -328,17 +328,12 @@ export function applyThingPresentation(shared = {}, options = {}) {
   };
   for (const place of places) {
     const name = String(place.name || '').trim();
-    const summary = recordSummary({
-      title: name,
-      description: place.description || place.notes || '',
-    });
-    place.description = summary;
-    place.notes = summary;
+    place.description = '';
     const lat = finiteCoord(place.lat);
     const lng = finiteCoord(place.lng);
     const ratings = place.ratings && typeof place.ratings === 'object' && !Array.isArray(place.ratings) ? place.ratings : {};
     const extra = {
-      summary,
+      source: String(place.source || 'customer'),
       logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
       ...ratings,
     };
@@ -351,8 +346,7 @@ export function applyThingPresentation(shared = {}, options = {}) {
     put(place, extra);
   }
   const next = { ...shared, places, thingOverrides };
-  if (windBackup) next.windBackup = windBackup;
   delete next.needsCustomerInput;
   delete next.flightAsk;
   return { ...next, ...customerInputState(places) };
-};
+}

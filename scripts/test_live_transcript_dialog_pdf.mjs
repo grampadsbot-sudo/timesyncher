@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedVenueNames, placeSourceRows, savedThingPlaceResults, unsourcedPlaces, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
 if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
   process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
@@ -37,9 +37,6 @@ assert.doesNotMatch(source, /jev first:/);
 assert.match(source, /QUALITY COMPARISON vs v6 gpt-5-mini|liveV7Pack/);
 assert.match(source, /missing_app_open/);
 
-assert.equal(replyLeavesDestination('Friday dinner in Tulum', 'Big Island, Hawaii'), true);
-assert.equal(replyLeavesDestination('Friday dinner on the Big Island', 'Big Island, Hawaii'), false);
-assert.equal(replyLeavesDestination('Cartagena breakfast', 'Big Island, Hawaii'), true);
 assert.equal(customerPullsAccess('Walk me through Thursday with Kimberly.'), false);
 assert.equal(customerPullsAccess('How much if they join as collaborators?'), true);
 assert.equal(upsellModeForTurn('Friday dinner on the Big Island.', []), 'forbidden');

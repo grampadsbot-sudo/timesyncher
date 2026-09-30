@@ -15,6 +15,7 @@ import {
   THIN_POI_COUNT,
 } from '../src/vacation/poi-search.mjs';
 import { clearWindCache, lookupWindBackup, windBackupSentence } from '../src/vacation/wind-backup.mjs';
+import { applyThingPresentation, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
 
 const house = { lat: 19.649, lng: -155.994 };
@@ -204,6 +205,16 @@ assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /Kahaluu/);
 assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /12 mph/);
 assert.doesNotMatch(windBackupSentence([{ name: 'Kahaluu', windMph: 12 }]), /house pool/);
 assert.match(windBackupSentence([{ name: 'Kahaluu', windMph: 22 }, { name: 'House', windMph: 18 }]), /House at 18 mph/);
+const presented = applyThingPresentation(sharedTripFromIntake({
+  trip: { id: 'trip-notes', title: 'Vacation', destination: '', start_date: '2026-04-03', end_date: '2026-04-06' },
+  things: [{ id: 'swim', title: 'Swim', notes: ['the beach'], source: 'customer' }],
+}), { windBackup: 'forecast wind' });
+const presentedSwim = presented.places.find((place) => place.name === 'Swim');
+assert.equal(presentedSwim.description, '');
+assert.match(presentedSwim.notes, /the beach/);
+assert.equal(presentedSwim.source, 'customer');
+assert.doesNotMatch(JSON.stringify(presentedSwim), /forecast wind/);
+assert.doesNotMatch(JSON.stringify(presented), /A swim for/);
 
 clearWindCache();
 const nwsUrls = [];
