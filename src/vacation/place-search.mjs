@@ -185,7 +185,7 @@ export function mergePlaces(groups = []) {
 export function missingSearchKeys(env = {}) {
   const missing = [];
   if (!String(env.brave || '').trim()) missing.push(String(env.braveName || 'brave'));
-  if (!String(env.foursquare || '').trim()) missing.push(String(env.foursquareName || 'foursquare'));
+  // Foursquare is optional. An empty key skips that source instead of refusing the search.
   return missing;
 }
 
@@ -645,7 +645,7 @@ export async function searchPlaces({
     else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
     else prior = await readPriorPlaces(center, { env });
     prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
-    const foursquare = await queryFoursquare(fetchImpl, env, center, placeQueries);
+    const foursquare = await placesFromFoursquare(fetchImpl, env, center, placeQueries);
     const osm = await queryOsm(fetchImpl, center);
     const brave = await queryBrave(fetchImpl, env, center, placeQueries);
     places = await attachRelevance(mergePlaces([prior, foursquare, osm, brave]), fetchImpl, env);
@@ -760,6 +760,22 @@ export function noteToResearchCandidate(note, destination = '') {
       source: 'tavily',
     },
   };
+}
+
+let loggedFoursquareSkip = false;
+
+function foursquareServiceKey(env = {}) {
+  return String(env.foursquare || env.FOURSQUARE_SERVICE_KEY || '').trim();
+}
+
+async function placesFromFoursquare(fetchImpl, env, center, queries) {
+  const key = foursquareServiceKey(env);
+  if (key) return queryFoursquare(fetchImpl, { ...env, foursquare: key }, center, queries);
+  if (!loggedFoursquareSkip) {
+    loggedFoursquareSkip = true;
+    console.warn('place-search: FOURSQUARE_SERVICE_KEY unset, skipping foursquare');
+  }
+  return [];
 }
 
 export async function fillTripIntake(options) {

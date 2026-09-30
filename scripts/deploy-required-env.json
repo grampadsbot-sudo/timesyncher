@@ -1,0 +1,11 @@
+{
+  "required": [
+    {"name":"BRAVE_SEARCH_API_KEY","reads":["src/vacation/place-search.mjs:187","src/vacation/place-search.mjs:634","scripts/vacation-public-research-worker.mjs:374"],"why":"Place search refuses to fetch Brave when this key is empty."},
+    {"name":"TAVILY_API_KEY","reads":["src/vacation/place-search.mjs:578","src/vacation/place-search.mjs:637","src/vacation/poi-search.mjs:156"],"why":"Non-place search throws before the Tavily fetch when this key is empty."},
+    {"name":"OPENROUTER_API_KEY","reads":["src/vacation/place-search.mjs:298","src/vacation/place-search.mjs:303"],"why":"Place search refuses to run, before any fetch, when this key is empty."},
+    {"name":"DATABASE_URL","reads":["src/vacation/place-search.mjs:541","src/vacation/db.mjs:6","src/vacation/db.mjs:16","scripts/vacation-public-research-worker.mjs:382"],"why":"Prior-place lookup calls the database, and sql() throws when this is empty."}
+  ],
+  "optional": [
+    {"name":"FOURSQUARE_SERVICE_KEY","reads":["src/vacation/place-search.mjs:768","src/vacation/place-search.mjs:776","scripts/vacation-public-research-worker.mjs:375"],"why":"not approved, place search falls back to OSM+Brave (Craig 2026-09-30)"}
+  ]
+}
