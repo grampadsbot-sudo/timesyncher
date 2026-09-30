@@ -1073,9 +1073,51 @@ function monthRegexFindings(file, text, findings, seen) {
   }
 }
 
+const API_VERSION_HEADER = /-api-version$/i;
+
+function skipWsBack(text, index) {
+  let cursor = index;
+  while (cursor >= 0 && /\s/.test(text[cursor])) cursor -= 1;
+  return cursor;
+}
+
+function quotedEndingAt(text, end) {
+  const quote = text[end];
+  if (quote !== "'" && quote !== '"') return null;
+  const limit = Math.max(0, end - 240);
+  for (let start = end - 1; start >= limit; start -= 1) {
+    if (text[start] !== quote) continue;
+    let slashes = 0;
+    for (let look = start - 1; look >= 0 && text[look] === '\\'; look -= 1) slashes += 1;
+    if (slashes % 2 === 1) continue;
+    const parsed = readQuoted(text, start);
+    if (parsed && parsed.end === end + 1) return { start, value: parsed.value };
+  }
+  return null;
+}
+
+// An ISO date is exempt only as the entire value of an HTTP header whose name
+// ends in -Api-Version (case-insensitive). Object-literal form is
+// 'X-Places-Api-Version': '2025-06-17'. Headers form is a name/value pair:
+// ['X-Places-Api-Version', '2025-06-17'] or .set('X-Places-Api-Version', '2025-06-17').
+function apiVersionHeaderDate(text, index, date) {
+  const quote = text[index - 1];
+  if ((quote !== "'" && quote !== '"') || text[index + date.length] !== quote) return false;
+  const separator = skipWsBack(text, index - 2);
+  if (separator < 0) return false;
+  const sep = text[separator];
+  if (sep !== ':' && sep !== ',') return false;
+  const key = quotedEndingAt(text, skipWsBack(text, separator - 1));
+  if (!key || !API_VERSION_HEADER.test(key.value)) return false;
+  if (sep === ':') return true;
+  const beforeKey = skipWsBack(text, key.start - 1);
+  return beforeKey >= 0 && (text[beforeKey] === '(' || text[beforeKey] === '[');
+}
+
 function dateLiteralFindings(file, text, findings, seen) {
   for (const pattern of [ISO_DATE, MONTH_DATE, ORDINAL_WEEKDAY]) {
     for (const match of collect(pattern, text, (item) => item)) {
+      if (pattern === ISO_DATE && apiVersionHeaderDate(text, match.index, match[1])) continue;
       add(findings, seen, 'DATE-LITERAL', file, text, match.index, match[1]);
     }
   }
