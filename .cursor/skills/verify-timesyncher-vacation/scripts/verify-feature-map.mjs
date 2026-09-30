@@ -58,7 +58,7 @@ const checks = [
   ['keepsake-style-two.md', 'Keepsake Style two', 'verify-style-two.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['keepsakes-config.md', 'Keepsakes config defaults', 'verify-keepsakes-config.png', (o) => (o.configDefaults ? 'PASS' : 'GAP')],
   ['order-keepsakes.md', 'Order Keepsakes', 'verify-order-keepsakes.png', (o) => (o.order ? 'PASS' : 'GAP')],
-  ['config-options-trip-view.md', 'Trip View config', 'verify-trip-view.png', (o) => (o.tripView ? 'PASS' : 'GAP')],
+  ['config-options-trip-view.md', 'Standard layout, no view options', 'verify-itinerary-layout.png', (o) => (o.layout && !o.shell ? 'PASS' : 'FAIL')],
   ['navigation.md', 'Navigation chrome', 'verify-navigation.png', (o) => (o.navigation ? 'PASS' : 'GAP')],
   ['trek-settings.md', 'TREK settings', 'verify-settings.png', (o) => (o.settings ? 'PASS' : 'GAP')],
   ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.intakeMin ? 'PASS' : 'GAP')],
@@ -369,17 +369,6 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 400));
   obs.order = has(await bodyText(), 'Order Keepsakes');
   await shot('verify-order-keepsakes.png');
-  await clickAria('Config Options');
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  text = await bodyText();
-  obs.tripView = has(text, 'TRIP VIEW') && has(text, 'Flights') && has(text, 'Hotels') && has(text, 'Cars');
-  if (!obs.tripView) {
-    await page.keyboard.press('Escape').catch(() => {});
-    await go(sharedUrl);
-    text = await bodyText();
-    obs.tripView = Boolean(await page.$('[aria-label="Config Options"]')) && has(text, 'TRIP VIEW');
-  }
-  await shot('verify-trip-view.png');
 
   await go(`${staging}/shared/las-vegas-vacation-3/journey?style=1`);
   obs.style1 = page.url().includes('vacation-staging') && page.url().includes('style=1') && !page.url().includes('travel.timesyncher.com');
