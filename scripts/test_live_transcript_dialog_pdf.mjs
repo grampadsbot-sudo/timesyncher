@@ -286,7 +286,7 @@ assert.equal(hardQualityFlags('Everyone is included without splitting anything u
 const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
 assert.match(rulesSource, /planFactsForReply/);
 assert.match(rulesSource, /payer_line/);
-assert.doesNotMatch(rulesSource, /State this payer line exactly/);
+assert.match(rulesSource, /State this payer line exactly/);
 assert.match(rulesSource, /trip_context/);
 assert.match(rulesSource, /Criterion 1 is weak/);
 assert.match(rulesSource, /criterion 3 or lower/);
