@@ -35,6 +35,7 @@ Each feature file uses `Sub-features`, `How to get to it (user POV)`, `Driving i
 - [Slider bars](./slider-bars.md)
 - [Thing pages](./thing-pages.md)
 - [Post-intake welcome](./post-intake-welcome.md)
+- [Welcome after intake](./welcome-after-intake.md)
 - [Jev quality line](./jev-quality-line.md)
 - [Keepsake Style one](./keepsake-style-one.md)
 - [Keepsake Style two](./keepsake-style-two.md)

@@ -10,6 +10,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { purchaseEmail } from '../../../../src/vacation/email.mjs';
+import { onboardingOpenerFacts, upsellFactsForTurn } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const staging = 'https://vacation-staging.timesyncher.com';
@@ -27,6 +28,15 @@ const shotDir = path.join(outDir, 'verify');
 
 function has(text, needle) {
   return String(text || '').toLowerCase().includes(String(needle).toLowerCase());
+}
+
+function welcomeAfterIntakeReady() {
+  const opener = onboardingOpenerFacts();
+  const facts = upsellFactsForTurn({ intake: true, text: '' }, {}, true);
+  return opener.first_message === true
+    && opener.customer_said == null
+    && facts?.collaborators === true
+    && facts?.buildingItinerary === true;
 }
 
 const checks = [
@@ -63,6 +73,7 @@ const checks = [
   ['trek-settings.md', 'TREK settings', 'verify-settings.png', (o) => (o.settings ? 'PASS' : 'GAP')],
   ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.intakeMin ? 'PASS' : 'GAP')],
   ['post-intake-welcome.md', 'Post-intake welcome', 'verify-post-intake.png', (o) => (o.postIntake ? 'PASS' : 'GAP')],
+  ['welcome-after-intake.md', 'Welcome after intake', 'verify-welcome-after-intake.png', (o) => (o.welcomeAfterIntake ? 'PASS' : 'FAIL')],
   ['jev-quality-line.md', 'Jev quality line', 'verify-jev-quality.png', (o) => (o.qualityOnScreen ? 'FAIL' : 'PASS')],
   ['dialog-screenshot-gate.md', 'Dialog screenshot gate', 'verify-screenshot-gate.png', (o) => (o.layout && o.slider && o.detail && !o.shell ? 'PASS' : 'FAIL')],
   ['autonomous-app-customer-flow.md', 'Autonomy bar', 'verify-autonomy.png', (o) => (o.header && !o.shell ? 'PASS' : 'GAP')],
@@ -263,6 +274,7 @@ async function drive() {
     telegramFill: false,
     emailLaunchHasEula: false,
     emptyCopyInBundle: false,
+    welcomeAfterIntake: false,
   };
   const bundleSrc = await page.evaluate(() => [...document.scripts].map((script) => script.src).find((src) => src.includes('/assets/index-')) || '');
   if (bundleSrc) {
@@ -378,6 +390,16 @@ async function drive() {
   await shot('verify-style-two.png');
   await shot('verify-keepsake-qa.png');
 
+  async function welcomeBeforeFirstMessage() {
+    return page.evaluate(() => {
+      const root = document.querySelector('#messages[data-screen="onboarding"]');
+      if (!root) return false;
+      const bubbles = [...root.querySelectorAll('article.bubble')];
+      const firstUser = bubbles.findIndex((node) => node.classList.contains('user'));
+      const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
+      return prior.some((node) => !node.classList.contains('user') && (node.textContent || '').replace(/\s+/g, ' ').trim().length > 0);
+    });
+  }
   function languageControl() {
     return page.evaluate(() => [...document.querySelectorAll('button, a, select, label, [role="button"]')].some((node) => {
       const text = (node.innerText || '').trim();
@@ -407,6 +429,8 @@ async function drive() {
     await shot('verify-min-things.png');
   }
   await shot('verify-post-intake.png');
+  obs.welcomeAfterIntake = welcomeAfterIntakeReady() && await welcomeBeforeFirstMessage();
+  await shot('verify-welcome-after-intake.png');
   await shot('verify-jev-quality.png');
 
   await go(`${staging}/order-success.html`);
@@ -426,8 +450,10 @@ async function drive() {
     obs.liveEula = Boolean(await page.$('#eulaScreen'));
     obs.liveOnboarding = has(text, 'no vacations yet') && !await page.evaluate(() => Boolean(document.querySelector('[aria-label="Vacation path"]')));
     obs.qualityOnScreen = obs.qualityOnScreen || has(text, 'quality:');
+    if (welcomeAfterIntakeReady() && await welcomeBeforeFirstMessage()) obs.welcomeAfterIntake = true;
     await shot('verify-eula.png');
     await shot('verify-onboarding.png');
+    await shot('verify-welcome-after-intake.png');
   }
 
   await browser.close();

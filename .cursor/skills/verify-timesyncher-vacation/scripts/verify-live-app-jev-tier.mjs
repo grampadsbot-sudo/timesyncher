@@ -99,7 +99,7 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/isTemplateInterim/.test(liveTurn) || !/interimProblems/.test(liveTurn) || !/no template fallback|text = ''/.test(liveTurn)) {
     errors.push('interim replies can fall back to a template');
   }
-  if (!/building the itinerary/.test(liveTurn) || !/Plan facts:/.test(replyRules)) {
+  if (!/buildingItinerary: marked/.test(liveTurn) || !/Plan facts:/.test(replyRules)) {
     errors.push('shared producer does not pass plan facts after long intake');
   }
   if (!/data-screen="onboarding"/.test(vacationApp) || /data-screen="itinerary"/.test(vacationApp) || /data-screen="thing"/.test(vacationApp) || /aria-label="Vacation path"/.test(vacationApp)) {
@@ -337,7 +337,7 @@ async function selfCheck() {
   const opener = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace.';
   const pulled = liveDoc([
     { ...openerTurn, text: opener },
-    sampleTurn({ turnIndex: 2, text: 'How much if they join as collaborators? Name unlimited vacations for the whole year.' }),
+    sampleTurn({ turnIndex: 2, text: 'How much if they join as collaborators? Name unlimited vacations for the whole year.', intent: { pullsAccess: true } }),
     appTurn({ turnIndex: 3, text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' }),
     sampleTurn({ turnIndex: 4, text: 'Friday dinner on the Big Island. Name the day and the place.' }),
     appTurn({ turnIndex: 5, text: 'Friday dinner stays in Kailua-Kona with Kimberly.' }),
