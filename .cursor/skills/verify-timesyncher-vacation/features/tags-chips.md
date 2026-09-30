@@ -10,7 +10,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## How to get to it (user POV)
 
-- Open a restaurant Thing. Look for Restaurant tags / chips.
+- Open Restaurants. The list chip row includes All tags and the tags on those Things. The Thing detail field Restaurant tags / chips is not a substitute for that row.
 
 ## Driving it
 
