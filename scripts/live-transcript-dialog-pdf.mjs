@@ -13,7 +13,6 @@ import {
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
-  isLongIntake,
   rewriteCreditLabel,
   heldRewriteLine,
   isTemplateNote,
@@ -227,7 +226,7 @@ export function assertLiveTranscript(doc) {
     }
     }
   }
-  const intakeCustomer = turns.find((turn) => turn.role === 'customer' && isLongIntake(turn.text));
+  const intakeCustomer = turns.find((turn) => turn.role === 'customer' && turn.intake === true);
   if (intakeCustomer) {
     const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
     const intakeText = String(intakeReply?.text || '');

@@ -21,6 +21,7 @@ import {
   sharedTripWebsiteUrl,
 } from '../src/vacation/web-access.mjs';
 import { INITIAL_BUILD_CUE, persistIntakeTurnToGbrain } from '../src/vacation/tg-intake-gbrain.mjs';
+import { classifyTripIntake, tripIntakeConfig } from '../src/vacation/trip-intake-classify.mjs';
 
 const MAX_PHOTOS_PER_VACATION = 100;
 const MAX_VIDEOS_PER_VACATION = 20;
@@ -429,7 +430,7 @@ export function parseVacationIdentity(text) {
     vacationName = cleanVacationName(lines[0].replace(/^name\s*[:\-]\s*/i, ''));
     unforgettableGoal = cleanText(lines.slice(1).join(' ').replace(/^(goal|unforgettable)\s*[:\-]\s*/i, ''), 1000);
   }
-  if (!vacationName && /^.{3,80}$/.test(cleaned) && !/\b(fly|hotel|restaurant|budget|date|july|august|maui|oahu|kona|waikiki|honolulu)\b/i.test(cleaned)) {
+  if (!vacationName && /^.{3,80}$/.test(cleaned) && !/\b(fly|hotel|restaurant|budget|date|stay|staying|nights?|starting)\b/i.test(cleaned)) {
     vacationName = cleanVacationName(cleaned);
   }
   if (!unforgettableGoal && vacationName && cleaned.length > vacationName.length + 5) {
@@ -452,18 +453,19 @@ function cleanVacationName(value) {
   return title;
 }
 
-export function hasTripPlanningDetails(text) {
-  const cleaned = cleanText(text, 2000);
-  return /\b(hawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island|night|nights|days|dates?|january|february|march|april|may|june|july|august|september|october|november|december|hotel|stay|restaurant|food|surf|beach|budget|flight|traveling|travellers|travelers|family|wife|husband|kids|avoid|summary|paragraph|unforgettable|special|relax|adventure|anniversary|birthday)\b/i.test(cleaned);
+export function hasTripPlanningDetails(_text, extraction = null) {
+  if (!extraction || extraction.ok === false) return false;
+  return Boolean(cleanText(extraction.destination, 180) || extraction.hasDates === true);
 }
 
-function missingSummaryQuestions(text) {
+function missingSummaryQuestions(text, extraction = null) {
   const cleaned = cleanText(text, 3000);
   const questions = [];
-  if (!/\b(destination|hawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island|visit|going to|trip to|vacation in)\b/i.test(cleaned)) {
+  const known = extraction?.ok === true ? extraction : null;
+  if (!cleanText(known?.destination, 180)) {
     questions.push('where you want to go');
   }
-  if (!/\b(date|dates|when|night|nights|day|days|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2})\b/i.test(cleaned)) {
+  if (known?.hasDates !== true) {
     questions.push('rough dates or trip length');
   }
   if (!/\b(adult|adults|kid|kids|child|children|family|wife|husband|spouse|couple|people|travelers|travellers|guests)\b/i.test(cleaned)) {
@@ -475,31 +477,23 @@ function missingSummaryQuestions(text) {
   return questions;
 }
 
-function compactIntakeSummary(text) {
+function compactIntakeSummary(text, extraction = null) {
   const cleaned = cleanText(text, 1200);
   const details = [];
   const nights = cleaned.match(/\b(?:stay(?:ing)?\s*)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+nights?\b/i)?.[0];
   if (nights) details.push(nights.toLowerCase());
-  const places = [];
-  for (const [pattern, label] of [
-    [/\boahu\b|\bhonolulu\b|\bwaikiki\b/i, 'Oahu/Waikiki'],
-    [/\bmaui\b|\bkihei\b/i, 'Maui/Kihei'],
-    [/\bkona\b|\bbig island\b/i, 'Kona/Big Island'],
-    [/\bhawaii\b/i, 'Hawaii'],
-  ]) {
-    if (pattern.test(cleaned) && !places.includes(label)) places.push(label);
-  }
-  if (places.length) details.push(places.join(' -> '));
+  const destination = extraction?.ok === true ? cleanText(extraction.destination, 180) : '';
+  if (destination) details.push(destination);
   if (/\bfabulous time|unforgettable|special|classic|relax|beach|surf|food|sunset\b/i.test(cleaned)) {
     details.push('the experience/vibe you described');
   }
   return details.length ? `I captured the starting brief: ${details.join(', ')}.` : 'I captured the trip brief you sent.';
 }
 
-export function vacationIdentityAck({ vacationName, text, queued }) {
+export function vacationIdentityAck({ vacationName, text, queued, extraction = null }) {
   return [
     `Got it — I’ll use “${vacationName}” as the working title.`,
-    compactIntakeSummary(text),
+    compactIntakeSummary(text, extraction),
     '',
     queued
       ? INITIAL_BUILD_CUE
@@ -593,14 +587,14 @@ function isQuestionLike(value = '') {
 function isConcreteItineraryQuestion(value = '') {
   const normalized = cleanText(value, 2000).toLowerCase();
   return /\b(find|compare|plan|build|create|make|draft|research|suggest|recommend|add|change|update|remove|swap|move|refine)\b/.test(normalized)
-    && /\b(vacation|trip|itinerary|hotel|hotels|flight|flights|restaurant|restaurants|activity|activities|things to do|destination|miami|hawaii|oahu|maui|honolulu|waikiki)\b/.test(normalized);
+    && /\b(vacation|trip|itinerary|hotel|hotels|flight|flights|restaurant|restaurants|activity|activities|things to do|destination)\b/.test(normalized);
 }
 
 export function vacationSupportIntent(text) {
   const normalized = cleanText(text, 2000).toLowerCase();
   if (!normalized || /^\/start\b/i.test(normalized)) return null;
   if (!isQuestionLike(normalized) || isConcreteItineraryQuestion(normalized)) return null;
-  if (/\b(send|share|show|give|need|where|what|open)\b/.test(normalized) && /\b(website|web site|site|link|url)\b/.test(normalized) && /\b(vacation|trip|itinerary|vegas|las vegas|strip)\b/.test(normalized)) {
+  if (/\b(send|share|show|give|need|where|what|open)\b/.test(normalized) && /\b(website|web site|site|link|url)\b/.test(normalized) && /\b(vacation|trip|itinerary)\b/.test(normalized)) {
     return { intent: 'website_link_question', shouldQueueWorker: false, confidence: 0.95, answerMode: 'account_state' };
   }
   if (/\b(upload|add|send|post|attach)\b/.test(normalized) && /\b(pic|pics|photo|photos|picture|pictures|video|videos|media)\b/.test(normalized)) {
@@ -2072,10 +2066,17 @@ export default async function handler(req, res) {
       reply = firstTripDetailsAck({ queued });
     } else if (session?.customer_id && !hasVacationIdentity(session)) {
       const saved = await saveVacationIdentity(db, session, text);
+      const extraction = await classifyTripIntake({ text, ...tripIntakeConfig() });
+      const extractedFields = {
+        destination: extraction.ok ? extraction.destination : '',
+        hasDates: extraction.ok === true && extraction.hasDates === true,
+        title: extraction.ok ? extraction.title : '',
+        intakeError: extraction.ok ? null : extraction.error,
+      };
       if (saved.complete) {
         session = saved.session;
-        replyPayload = { vacationName: saved.vacationName, unforgettableGoal: saved.unforgettableGoal };
-        if (hasTripPlanningDetails(text)) {
+        replyPayload = { vacationName: saved.vacationName, unforgettableGoal: saved.unforgettableGoal, ...extractedFields };
+        if (hasTripPlanningDetails(text, extraction)) {
           kind = requestKind(text);
           queued = await queueSetupRequest(db, session, text, {
             ...(body.payload || {}),
@@ -2085,12 +2086,15 @@ export default async function handler(req, res) {
             telegramChatId,
             telegramUserId,
             identityMessageAlsoQueued: true,
+            destination: extractedFields.destination,
+            hasDates: extractedFields.hasDates,
+            intakeError: extractedFields.intakeError,
           }, kind);
         }
-        reply = vacationIdentityAck({ vacationName: saved.vacationName, text, queued });
+        reply = vacationIdentityAck({ vacationName: saved.vacationName, text, queued, extraction });
       } else {
-        replyPayload = { vacationName: saved.vacationName || null, unforgettableGoal: saved.unforgettableGoal || null };
-        const missing = missingSummaryQuestions(text);
+        replyPayload = { vacationName: saved.vacationName || null, unforgettableGoal: saved.unforgettableGoal || null, ...extractedFields };
+        const missing = missingSummaryQuestions(text, extraction);
         reply = [
           identityPrompt(),
           '',
@@ -2104,15 +2108,21 @@ export default async function handler(req, res) {
         reply = checkout.reply;
         replyPayload = checkout.payload;
       } catch (error) {
+        if (error?.name === 'CheckoutConfigError') console.error(error.message);
+        let copy = '';
+        try {
+          copy = collaboratorCheckoutCopy();
+        } catch (copyError) {
+          console.error(copyError?.message || copyError);
+        }
         reply = [
-          collaboratorCheckoutCopy(),
-          '',
+          copy,
           'I could not create the checkout links in this moment. Please try again in a minute.',
-        ].join('\n');
+        ].filter(Boolean).join('\n\n');
         replyPayload = {
           collaboratorEntitlement: {
             required: true,
-            error: error.message || 'checkout link creation failed',
+            error: 'checkout link creation failed',
           },
         };
       }

@@ -1,8 +1,10 @@
-import { checkoutAmounts } from './checkout-pricing.mjs';
+import { CheckoutConfigError, requiredConfigCents } from './checkout-pricing.mjs';
 
 export function planSeatDollars(env = process.env) {
-  const dollars = Math.round(Number(checkoutAmounts(env).orderBump) / 100);
-  return Number.isFinite(dollars) && dollars > 0 ? dollars : 27;
+  const cents = requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+  const dollars = Math.round(cents / 100);
+  if (dollars <= 0) throw new CheckoutConfigError('TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+  return dollars;
 }
 
 export function payerSeats(customerTurn) {
@@ -31,7 +33,13 @@ export function payerSeats(customerTurn) {
 export function payerPriceLine(customerTurn, env = process.env) {
   const seats = payerSeats(customerTurn);
   if (!seats.length) return '';
-  const dollars = planSeatDollars(env);
+  let dollars = null;
+  try {
+    dollars = planSeatDollars(env);
+  } catch (error) {
+    if (error?.name !== 'CheckoutConfigError') throw error;
+  }
+  if (!dollars) return '';
   return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 
@@ -57,9 +65,11 @@ export function priceClauseSatisfied(part, reply) {
   return false;
 }
 
-export function priceAnswered(reply, customerTurn, env = process.env) {
-  const line = payerPriceLine(customerTurn, env);
+export function priceAnswered(reply, customerTurn, env = null) {
+  const seats = payerSeats(customerTurn);
+  const line = env ? payerPriceLine(customerTurn, env) : '';
   const body = String(reply || '');
+  if (seats.length && !line) return false;
   if (!line) return /\$\d+/.test(body);
   return line.split('; ').every((part) => priceClauseSatisfied(part, body));
 }

@@ -5,8 +5,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVacationAppReplyRules } from './vacation-app-reply-rules.mjs';
-import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, customerTripFacts, destinationFromTexts, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeFacts, interimCanShip, inventedGardenHit, inventedVenueNames, isFullUpsell, isLongIntake, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, postIntakeUpsellTurn, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, thingsFromIntake, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
+import { acceptQualityRewrite, applyAgreedAppSwim, applyCustomerNotes, beatsMatchingReply, completeRosterParty, correctFalsePriceMiss, customerAsksAccessChoice, customerAsksPrice, customerPullsAccess, dockQuality, draftFactErrors, draftingFacts, FIXED_OPENER_REASON, formatQualityLine, heldRewriteLine, hardQualityFlags, holdingShipErrors, intakeSpan, interimCanShip, inventedGardenHit, inventedVenueNames, isFullUpsell, item34BanHit, isTemplateInterim, interimProblems, isTemplateNote, liveTranscriptFromRows, mustRewriteQuality, nearIdenticalRewrite, onboardingOpenerText, qualityFailureReason, shipChoice, transcriptToJsonl, verifiedRewriteChange, jevStamp, LIVE_OPENER_PRODUCER, ONBOARDING_OPENER_CHAT_ONLY, ONBOARDING_OPENER_WITH_SITE, firstMarkedIntake, replyLeavesDestination, rewriteReplacesDraft, sessionHasFullUpsell, stripChatMarkdown, tripIsReturning, upsellAudit, upsellModeForTurn } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, priceAnswered } from '../src/vacation/seat-price.mjs';
+
+if (!String(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '').trim()) {
+  process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS = '2700';
+}
 import { noteContradictsDraft, qualityFromDecisions } from './vacation-app-reply-rules.mjs';
 import {
   assertJevRewriteLabels,
@@ -34,7 +38,6 @@ assert.doesNotMatch(source, /jev first:/);
 assert.match(source, /QUALITY COMPARISON vs v6 gpt-5-mini|liveV7Pack/);
 assert.match(source, /missing_app_open/);
 
-assert.equal(destinationFromTexts(['We are going to the Big Island.']), 'Big Island, Hawaii');
 assert.equal(replyLeavesDestination('Friday dinner in Tulum', 'Big Island, Hawaii'), true);
 assert.equal(replyLeavesDestination('Friday dinner on the Big Island', 'Big Island, Hawaii'), false);
 assert.equal(replyLeavesDestination('Cartagena breakfast', 'Big Island, Hawaii'), true);
@@ -65,16 +68,16 @@ assert.equal(item34BanHit('without stacking costs or splitting anything up'), tr
 assert.equal(item34BanHit('Do not split the payment across seats.'), true);
 assert.equal(upsellModeForTurn('What is the price for collaborators?', [{ role: 'app', text: 'Welcome them as collaborators. The plan is unlimited vacations for the whole year.' }]), 'forbidden');
 const longIntake = `${'okay voice note dumping. Big Island Hawaii, gardens, swim, groceries, dinner, family, April. '.repeat(8)}Kimberly wants gardens.`;
-assert.equal(isLongIntake(longIntake), true);
-assert.equal(isLongIntake('Walk me through Thursday with Kimberly.'), false);
-assert.equal(postIntakeUpsellTurn(longIntake, []), true);
-assert.equal(postIntakeUpsellTurn(longIntake, [{ role: 'customer', text: longIntake }]), true);
-assert.equal(postIntakeUpsellTurn(longIntake, [
-  { role: 'customer', text: longIntake },
+const intakeTurn = { text: longIntake, intake: true };
+assert.equal(firstMarkedIntake(longIntake, []), false);
+assert.equal(firstMarkedIntake(intakeTurn, []), true);
+assert.equal(firstMarkedIntake(intakeTurn, [{ role: 'customer', text: longIntake, intake: true }]), true);
+assert.equal(firstMarkedIntake(intakeTurn, [
+  { role: 'customer', text: longIntake, intake: true },
   { role: 'app', text: 'I am building the itinerary from that dump.' },
-  { role: 'customer', text: longIntake },
+  { role: 'customer', text: longIntake, intake: true },
 ]), false);
-assert.equal(upsellModeForTurn(longIntake, []), 'allow-once');
+assert.equal(upsellModeForTurn(intakeTurn, []), 'allow-once');
 assert.equal(upsellModeForTurn('How much if they join as collaborators?', [
   { role: 'customer', text: longIntake },
   { role: 'app', text: 'I am building the itinerary from that dump. Welcome them as collaborators. The household plan is unlimited vacations for the whole year.' },
@@ -89,25 +92,25 @@ assert.match(intakeReply, /view access/i);
 assert.doesNotMatch(intakeReply, /you've got unlimited/);
 assert.equal(inventedGardenHit('Visit the Kahaluu garden if it rains.', 'Kimberly wants gardens.'), true);
 assert.equal(inventedGardenHit('Sunday is a garden morning in Kailua-Kona.', 'Kimberly wants gardens.'), false);
-const intakeThings = thingsFromIntake('Big Island Hawaii. Kimberly wants gardens. Groceries the same day. Friday is the dinner. Tyler wants a swim. A house in Kailua-Kona.');
-assert.deepEqual(intakeThings.map((thing) => thing.title), ['Big Island', 'Gardens', 'Groceries', 'Dinner', 'Swim', 'Kailua-Kona house']);
-assert.equal(intakeThings.some((thing) => /kahalu|arboretum/i.test(thing.title)), false);
 const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
-const goldFacts = intakeFacts(goldIntake);
-assert.equal(goldFacts.span.badge, 'Big Island Apr 3–12 2026');
-assert.equal(goldFacts.span.start, '2026-04-03');
-assert.equal(goldFacts.span.end, '2026-04-12');
-assert.match(goldFacts.rule, /two big activities/);
-const goldThings = goldFacts.things;
-assert.equal(goldThings.find((thing) => thing.title === 'Groceries').whenLabel, 'Fri Apr 3');
-assert.equal(goldThings.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
-assert.equal(goldThings.find((thing) => thing.title === 'Swim').whenLabel, 'later in the week');
-assert.equal(goldThings.find((thing) => thing.title === 'Swim').who, 'Tyler');
-assert.match(goldThings.find((thing) => thing.title === 'Groceries').notes[0], /SpeediShuttle/);
-assert.equal(goldThings.some((thing) => /kahalu|arboretum|botanical/i.test(JSON.stringify(thing))), false);
-const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
+const goldSpan = intakeSpan(goldIntake);
+assert.equal(goldSpan.badge, 'Apr 3–12 2026');
+assert.equal(goldSpan.destination, '');
+assert.equal(goldSpan.start, '2026-04-03');
+assert.equal(goldSpan.end, '2026-04-12');
+const goldThings = [
+  { title: 'Big Island', category: 'activity', description: 'Big Island Hawaiʻi, not Oahu.', who: '', whenLabel: 'Fri Apr 3–Sun Apr 12 2026', customerWhen: '', notes: ['Big Island Hawaiʻi, not Oahu.'], collaboratorNotes: [] },
+  { title: 'Gardens', category: 'activity', description: 'Kimberly wants gardens.', who: 'Kimberly', whenLabel: '', customerWhen: '', notes: ['Kimberly wants gardens.'], collaboratorNotes: [] },
+  { title: 'Groceries', category: 'activity', description: 'SpeediShuttle from the airport, then groceries the same day.', who: '', whenLabel: 'Fri Apr 3', customerWhen: '', notes: ['SpeediShuttle from the airport, then groceries the same day.'], collaboratorNotes: [] },
+  { title: 'Swim', category: 'activity', description: 'Tyler wants a swim, including one later in the week if the beach is windy.', who: 'Tyler', whenLabel: 'later in the week', customerWhen: '', notes: ['Tyler wants a swim, including one later in the week if the beach is windy.'], collaboratorNotes: [] },
+  { title: 'Kailua-Kona house', category: 'hotel', description: 'Base is a house in Kailua-Kona.', who: '', whenLabel: 'Fri Apr 3–Sun Apr 12 2026', customerWhen: '', notes: ['Base is a house in Kailua-Kona.'], collaboratorNotes: [] },
+];
+const stemOnly = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth garden morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
+assert.equal(stemOnly.find((thing) => thing.title === 'Gardens').collaboratorNotes.length, 0);
+const noted = applyCustomerNotes(goldThings, 'This is Kimberly. Sunday April fifth Gardens morning in Kailua-Kona still works.', { collaborator: true, speakerName: 'Kimberly Davidson' });
 assert.match(noted.find((thing) => thing.title === 'Gardens').collaboratorNotes[0], /Sunday April fifth/);
-assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, 'Sun Apr 5');
+assert.equal(noted.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
+assert.equal(noted.find((thing) => thing.title === 'Gardens').customerWhen, '');
 assert.equal(noted.find((thing) => thing.title === 'Kailua-Kona house').collaboratorNotes.length, 0);
 const locked = applyCustomerNotes(goldThings, 'Say that back in a human way, and keep us on the Big Island.', { collaborator: false });
 assert.equal(locked.find((thing) => thing.title === 'Big Island').who, '');
@@ -132,11 +135,13 @@ assert.equal(mustRewriteQuality({ score: 4, jevFocus: 'missing_price', comment: 
 assert.equal(mustRewriteQuality({ score: 5, jevFocus: 'keep', comment: 'Thursday town walk stays light.' }), false);
 assert.equal(inventedVenueNames('The community center swim is the backup.', 'Tyler wants a swim.').includes('community center'), true);
 const saturdayGroceries = applyCustomerNotes(goldThings, 'Saturday April fourth is groceries only.');
-assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, 'Fri Apr 3');
+assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').customerWhen, '');
+assert.equal(saturdayGroceries.find((thing) => thing.title === 'Groceries').whenLabel, 'Fri Apr 3');
 const thursdayGarden = applyCustomerNotes(goldThings, 'Thursday April ninth is the second garden morning.');
-assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
+assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').customerWhen, '');
+assert.equal(thursdayGarden.find((thing) => thing.title === 'Gardens').who, 'Kimberly');
 const gardenAndWalk = applyCustomerNotes(thursdayGarden, 'Thursday April ninth is also the town walk.');
-assert.equal(gardenAndWalk.find((thing) => thing.title === 'Gardens').customerWhen, 'Thu Apr 9');
+assert.equal(gardenAndWalk.find((thing) => thing.title === 'Gardens').customerWhen, '');
 assert.equal(isTemplateInterim('Got it. I saved that.', 'Thursday town walk'), true);
 assert.equal(isTemplateInterim('Sure, the Thursday walk can stay.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thursday is a town walk.'), false);
@@ -162,8 +167,9 @@ assert.ok(draftFactErrors('With Craig, Torren, Peyton, Keegan, Fallon, and the f
 assert.ok(draftFactErrors('The crew includes your four friends.', { ownerName: 'Craig Davidson' }).some((error) => /invented people/.test(error)));
 assert.doesNotMatch(source, /WHAT_I_CHANGED/);
 const partyFacts = draftingFacts([], 'The party of eight needs a quiet day. Four friends are still unnamed.');
-assert.match(partyFacts.roster, /party of eight/i);
-assert.match(partyFacts.roster, /Do not ask Craig a trip-fact question/);
+assert.doesNotMatch(partyFacts.roster, /party of (six|seven|eight|nine|ten)/i);
+assert.match(partyFacts.roster, /List only people the customer named/);
+assert.match(partyFacts.roster, /Ask the customer for anything they haven't said/);
 assert.doesNotMatch(partyFacts.roster, /four friends/i);
 assert.doesNotMatch(partyFacts.roster, /count in the party/i);
 const fullParty = { travelers: ['Craig Davidson', 'Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson', 'Torren', 'Peyton', 'Keegan', 'Fallon'] };
@@ -270,7 +276,14 @@ assert.doesNotMatch(intakeSource, /layover: 'none'/);
 assert.doesNotMatch(intakeSource, /takeoffTime: 'Fri Apr 3'/);
 const draftFacts = draftingFacts([
   { role: 'customer', text: 'We are on the Big Island. Gardens on Sunday April 5 and Thursday April 9. Groceries the arrival day. A town walk Thursday April 9. Dinner Friday April 10.' },
-], 'What about Thursday?');
+], 'What about Thursday?', {
+  things: [
+    { title: 'Gardens', whenLabel: 'Sun Apr 5 · Thu Apr 9' },
+    { title: 'Dinner', whenLabel: 'Fri Apr 10' },
+  ],
+  span: { spanLabel: 'Sun Apr 5' },
+  party: {},
+});
 assert.doesNotMatch(draftFacts.roster, /Aunt Jean/);
 assert.doesNotMatch(draftFacts.dates, /night 8/);
 assert.equal(draftFacts.itinerary.some((line) => /garden/i.test(line) && /Thu Apr 9/.test(line)), true);
@@ -301,17 +314,21 @@ assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite
 assert.equal(dockQuality({ judged: true, score: 5, comment: 'kept', wantsRewrite: false }, hardQualityFlags('A snorkel cruise on Tuesday.', 'Offer two options.', 'gardens, swim, town walk'), 'Offer two options.').wantsRewrite, true);
 const windyBeach = applyCustomerNotes(goldThings, 'Tyler wants a swim, including one later in the week if the beach is windy.');
 assert.equal(windyBeach.find((thing) => thing.title === 'Swim').customerWhen, '');
+assert.equal(windyBeach.find((thing) => thing.title === 'Swim').who, 'Tyler');
 const rainSwim = applyCustomerNotes(goldThings, 'If Monday April sixth rains, what is the backup for Tyler so the swim still happens later and the beach plan does not just vanish?');
-assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach');
-const mondaySwim = applyCustomerNotes(rainSwim, 'This is Tyler. Monday April sixth swim is the beach unless it is windy, then the house pool. Save that on Monday.');
+assert.equal(rainSwim.find((thing) => thing.title === 'Swim').customerWhen, '');
+const mondaySwim = goldThings.map((thing) => (thing.title === 'Swim' ? { ...thing, customerWhen: 'Mon Apr 6 beach or house pool' } : thing));
 assert.equal(mondaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
 const span = { start: '2026-04-03', end: '2026-04-12', year: 2026 };
 const inventedTuesday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Tuesday, April 7th opens gently for that second swim.', span);
-assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Fri Apr 10');
+assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+assert.equal(inventedTuesday.find((thing) => thing.title === 'Swim').askWhichDay, true);
 const appOnlyThursday = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
-assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Fri Apr 10');
+assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool');
+assert.equal(appOnlyThursday.find((thing) => thing.title === 'Swim').askWhichDay, true);
 const thursdaySwim = applyAgreedAppSwim(mondaySwim, 'I still want one later swim on Thursday at Kailua-Kona.', 'Your second swim is Thursday afternoon in Kailua-Kona.', span);
 assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').customerWhen, 'Mon Apr 6 beach or house pool · Thu Apr 9');
+assert.equal(thursdaySwim.find((thing) => thing.title === 'Swim').askWhichDay, false);
 assert.equal(isTemplateNote('The draft holds the named days and then Thursday stays open.', 'Thursday is a town walk.'), true);
 assert.equal(isTemplateNote('Harbor afternoon stays open. Draft marker walk-leaves. Jev score 3.10.', 'Harbor morning plan'), true);
 assert.equal(isTemplateNote('Rates 3 after abcd.', 'How much is it?'), false);
@@ -351,10 +368,38 @@ assert.equal(mustRewriteQuality(qualityFromDecisions({
     disposition: { choice: 'rewrite' },
   },
 })), false);
-const setFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is Kimberly\'s second garden. Tyler wants a swim. Monday April 6 is the beach swim. Friday April 10 is the later swim. Thursday April 9 is a town walk.');
+const setFacts = {
+  span: { destination: '', placeTitle: '', start: '2026-04-03', end: '2026-04-12', startLabel: 'Fri Apr 3', endLabel: 'Sun Apr 12 2026', spanLabel: 'Fri Apr 3–Sun Apr 12 2026', badge: 'Apr 3–12 2026', year: 2026 },
+  swimDays: ['apr 6', 'apr 10'],
+  gardenDays: ['apr 5', 'apr 9'],
+  townWalkDays: ['apr 9'],
+  owners: { gardens: 'Kimberly', swim: 'Tyler' },
+  planOwned: false,
+  activities: ['gardens', 'swim', 'town walk'],
+  notTraveling: [],
+  travelers: ['Kimberly', 'Tyler'],
+  ownerName: '',
+  rule: '',
+  addressedTo: '',
+  corpus: '',
+};
 assert.deepEqual(draftFactErrors('Monday April 6 is the beach swim. Sunday April 5 is Kimberly\'s garden. Thursday April 9 is the town walk.', setFacts), []);
 assert.deepEqual(draftFactErrors('The swim stays Monday April 6. Kimberly\'s gardens are Thursday April 9.', setFacts), []);
-const earlyFacts = customerTripFacts([], 'We leave Friday April 3 and come home Sunday April 12, 2026. Kimberly wants gardens. Sunday April 5 is Kimberly\'s garden. Tyler wants a swim. Monday April 6 is the beach swim.');
+const earlyFacts = {
+  span: { destination: '', placeTitle: '', start: '2026-04-03', end: '2026-04-12', startLabel: 'Fri Apr 3', endLabel: 'Sun Apr 12 2026', spanLabel: 'Fri Apr 3–Sun Apr 12 2026', badge: 'Apr 3–12 2026', year: 2026 },
+  swimDays: ['apr 6'],
+  gardenDays: ['apr 5'],
+  townWalkDays: [],
+  owners: { gardens: 'Kimberly', swim: 'Tyler' },
+  planOwned: false,
+  activities: ['gardens', 'swim'],
+  notTraveling: [],
+  travelers: ['Kimberly', 'Tyler'],
+  ownerName: '',
+  rule: '',
+  addressedTo: '',
+  corpus: '',
+};
 assert.equal(draftFactErrors('I have the house from April 3rd to the 12th. Tyler\'s swim is on the list.', earlyFacts).some((error) => /swim on apr 3/.test(error)), false);
 assert.equal(draftFactErrors('The trip runs from April 3 to 12, whether that is groceries or joining the town walk.', { ...setFacts, townWalkDays: [] }).some((error) => /town walk on apr 3/.test(error)), false);
 assert.equal(draftFactErrors('Notes can land on Sun Apr 5 gardens, Mon Apr 6 beach swim, Fri Apr 10 dinner, or the town walk.', { ...setFacts, townWalkDays: [] }).some((error) => /town walk on apr 5/.test(error)), false);
@@ -363,7 +408,7 @@ assert.equal(priceAnswered('You will cover Kimberly’s $27, Tyler will pay his 
 assert.ok(draftFactErrors('For the swim later in the week, I will save that for Friday, April 10th.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('That later swim is saved on the second Friday of the trip.', earlyFacts).some((error) => /claimed as saved/.test(error)));
 assert.ok(draftFactErrors('Since Tyler wanted a swim later in the week anyway, we have already saved that backup for the second Friday.', earlyFacts).some((error) => /claimed as saved/.test(error)));
-assert.equal(draftFactErrors('The later swim is saved on the second Friday.', { ...earlyFacts, customerTurn: 'I still want one later swim in the week at Kailua-Kona.' }).some((error) => /claimed as saved/.test(error)), false);
+assert.equal(draftFactErrors('The later swim is saved on the second Friday.', { ...earlyFacts, customerTurn: 'I still want one later swim in the week at Kailua-Kona.' }).some((error) => /claimed as saved/.test(error)), true);
 assert.equal(draftFactErrors('The crew for this adventure includes Torren, Peyton, Keegan, and Fallon, along with your four unnamed friends.', { ownerName: 'Craig Davidson' }).some((error) => /is traveling/.test(error)), false);
 assert.ok(draftFactErrors('Tuesday the 7th can hold a morning swim.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 assert.equal(draftFactErrors('The swim isn\'t set for a specific day yet, so we won\'t lock it to Monday, April 6.', earlyFacts).some((line) => /swim on apr 6/.test(line)), false);
@@ -410,8 +455,7 @@ assert.equal(draftFactErrors('Lauren\'s rule about no two big activities stacked
 assert.deepEqual(beatsMatchingReply(['Set arrival and swim days.'], 'Groceries are saved for your arrival. For Tyler\'s swim later in the week, I can slot that in.'), []);
 assert.equal(interimCanShip('It sounds like a wonderful trip is coming together. I can help you plan that out.', 'This is Lauren. Tuesday April seventh should be one big thing. I will pick after you offer two options.', setFacts), false);
 const longDump = `${'Big Island Hawaii garden swim groceries april family coming '.repeat(12)} Tyler wants a swim later in the week.`;
-assert.equal(isLongIntake(longDump), true);
-assert.equal(interimCanShip('I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. It sounds like a wonderful trip.', longDump, {}), true);
+assert.equal(interimCanShip('I am building the itinerary from that now. Family and friends can join as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. It sounds like a wonderful trip.', { text: longDump, intake: true }, {}), true);
 assert.equal(JSON.parse(transcriptToJsonl({ sessionToken: 'secret-token', live: true, turns: [] }).split('\n')[0]).sessionToken, null);
 assert.doesNotMatch(transcriptToJsonl({ sessionToken: 'secret-token', live: true, turns: [] }), /secret-token/);
 assert.equal(verifiedRewriteChange('Added Tyler and Lauren to the list of traveling companions.', 'Welcome aboard.', 'Welcome aboard. The town walk is also on the list.'), '');
@@ -425,10 +469,13 @@ assert.ok(draftFactErrors('Tuesday, April 7 is the anchor day. One option is a c
 assert.ok(draftFactErrors('Tuesday, April 7, is wide open. Here are two options: a town walk, or a swim at the beach.', earlyFacts).some((line) => /swim on apr 7/.test(line)));
 const dateSpan = { start: new Date('2026-04-03T00:00:00.000Z'), end: new Date('2026-04-12T00:00:00.000Z') };
 const datedLater = applyAgreedAppSwim(mondaySwim, 'I still want one later swim in the week at Kailua-Kona. Do not stack it on Lauren’s big day.', 'A swim later in the week stays at Kailua-Kona.', dateSpan);
-assert.match(datedLater.find((thing) => thing.title === 'Swim').customerWhen, /Fri Apr 10/);
+assert.equal(datedLater.find((thing) => thing.title === 'Swim').askWhichDay, true);
+assert.doesNotMatch(datedLater.find((thing) => thing.title === 'Swim').customerWhen, /Fri Apr 10/);
 const keptGarden = applyCustomerNotes(goldThings, 'If we add a second garden, keep it on Thursday April ninth and leave Wednesday afternoon empty.');
-assert.match(keptGarden.find((thing) => thing.title === 'Gardens').customerWhen, /Thu Apr 9/);
-assert.ok(draftFactErrors('Welcome aboard, Tyler. Your two garden days are locked in.', customerTripFacts([], 'Kimberly wants gardens. This is Tyler. I paid for my own seat.')).some((line) => /Kimberly/.test(line)));
+assert.equal(keptGarden.find((thing) => thing.title === 'Gardens').customerWhen, '');
+assert.ok(draftFactErrors('Welcome aboard, Tyler. Your two garden days are locked in.', {
+  span: null, swimDays: [], gardenDays: [], townWalkDays: [], owners: { gardens: 'Kimberly' }, planOwned: false, activities: ['gardens'], notTraveling: [], travelers: ['Kimberly'], ownerName: '', rule: '', addressedTo: 'Tyler', corpus: '',
+}).some((line) => /Kimberly/.test(line)));
 assert.ok(draftFactErrors('A beachside picnic on Tuesday.', earlyFacts).some((line) => /picnic/.test(line)));
 assert.ok(draftFactErrors('Wednesday April 8th is open, or simply pack with no rush.', earlyFacts).some((line) => /not the trip end/.test(line)));
 assert.ok(draftFactErrors('We will keep the dinner for your last evening as a group.', earlyFacts).some((line) => /not the trip end/.test(line)));
@@ -437,10 +484,26 @@ assert.ok(draftFactErrors('You are all set from Fri Apr 3 to Fri Apr 10.', early
 assert.ok(draftFactErrors('The stay is April 3rd to the 6th.', earlyFacts).some((line) => /not day 6/.test(line)));
 const unnamedKids = completeRosterParty({
   customerName: 'Craig',
+  roster: [{ name: 'Kimberly', role: 'collaborator' }],
   turns: [{ role: 'customer', text: 'Kimberly wants gardens. Kids are Torren, Peyton, Keegan, and Fallon. Marcus Chen can look. Aunt Jean can edit notes.' }],
 });
 assert.equal(unnamedKids.preference_subjects.length, 0);
 assert.equal(unnamedKids.collaborators.map((person) => person.name).join(', '), 'Kimberly');
+assert.equal(unnamedKids.sources.some((item) => item.source === 'chat_extraction'), true);
+const wantsNotRoster = completeRosterParty({
+  customerName: 'Craig',
+  turns: [{ role: 'customer', text: 'Kimberly wants gardens.' }],
+});
+assert.deepEqual(wantsNotRoster.collaborators, []);
+const rosterFailed = completeRosterParty({
+  customerName: 'Craig',
+  roster: [],
+  rosterError: 'trip intake extraction failed',
+  turns: [{ role: 'customer', text: 'Kimberly wants gardens.' }],
+});
+assert.deepEqual(rosterFailed.collaborators, []);
+assert.equal(rosterFailed.askRoster, true);
+assert.match(rosterFailed.rosterError, /failed/);
 const parsedParty = completeRosterParty({
   customerName: 'Craig Davidson',
   turns: [{ role: 'customer', text: 'Kids are Torren who is eight, Peyton who is six, Keegan who is four, and Fallon who is two. Marcus Chen can look, and Aunt Jean can edit notes. I pay for Kimberly. Tyler pays for himself. Lauren pays for herself.' }],
@@ -462,7 +525,7 @@ assert.doesNotMatch(rulesSource, /adequate or strong draft is keep/);
 assert.equal(trueMedian([10, 30]), 20);
 assert.equal(trueMedian([10, 20, 40]), 20);
 assert.deepEqual(upsellAudit([
-  { turnIndex: 1, role: 'customer', text: longIntake },
+  { turnIndex: 1, role: 'customer', text: longIntake, intake: true },
   { turnIndex: 2, role: 'app', text: intakeReply },
 ]).unsolicitedFull, []);
 assert.deepEqual(upsellAudit([

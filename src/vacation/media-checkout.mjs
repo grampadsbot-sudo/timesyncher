@@ -1,22 +1,26 @@
 import { cleanText, upsertCustomer } from './onboarding.mjs';
+import { requiredConfigCents } from './checkout-pricing.mjs';
 
 const PHOTO_SINGLE_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_PHOTO_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || '500', 10);
 const PHOTO_UNLIMITED_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_PHOTO_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || '900', 10);
 const VIDEO_SINGLE_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-const VIDEO_UNLIMITED_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_VIDEO_UNLIMITED_PRICE_CENTS || '2700', 10);
+
+function ownerVideoUnlimitedCents(env = process.env) {
+  return requiredConfigCents(env.TIMESYNCHER_OWNER_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_OWNER_VIDEO_UNLIMITED_PRICE_CENTS');
+}
 
 export function ownerMediaScope(value = 'single_trip') {
   return value === 'unlimited_trips' || value === 'unlimited' ? 'unlimited_trips' : 'single_trip';
 }
 
-export function ownerMediaAddOns(body = {}) {
+export function ownerMediaAddOns(body = {}, env = process.env) {
   const selected = body.mediaAddOns && typeof body.mediaAddOns === 'object' ? body.mediaAddOns : body;
   const scope = ownerMediaScope(body.mediaScope || body.scope || body.planScope || selected.mediaScope || selected.scope);
   const unlimited = scope === 'unlimited_trips';
   const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
   const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
   const photoAmountCents = photoUpload ? (unlimited ? PHOTO_UNLIMITED_CENTS : PHOTO_SINGLE_CENTS) : 0;
-  const videoAmountCents = videoUpload ? (unlimited ? VIDEO_UNLIMITED_CENTS : VIDEO_SINGLE_CENTS) : 0;
+  const videoAmountCents = videoUpload ? (unlimited ? ownerVideoUnlimitedCents(env) : VIDEO_SINGLE_CENTS) : 0;
   return {
     scope,
     plan: unlimited ? 'owner_media_unlimited_vacations' : 'owner_media_single_vacation',

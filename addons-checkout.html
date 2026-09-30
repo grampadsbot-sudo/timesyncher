@@ -136,6 +136,7 @@
       single_trip: 'telegram_collaborators_single_trip',
       unlimited_trips: 'telegram_collaborators_unlimited_trips',
     };
+    let planPrices = { single: null, unlimited: null, videoUnlimited: null };
     let planScope = initialPlan === PLAN_CODES.unlimited_trips ? 'unlimited_trips' : 'single_trip';
     let plan = PLAN_CODES[planScope];
     const ownerSuccessUrl = '/order-success.html?collaboratorCheckout=complete';
@@ -186,13 +187,14 @@
     }
 
     function baseAmountCents() {
-      return isUnlimited() ? 2700 : 1500;
+      const cents = isUnlimited() ? planPrices.unlimited : planPrices.single;
+      return Number(cents) || 0;
     }
 
     function addOnPrices() {
       return {
         photo: isUnlimited() ? 900 : 500,
-        video: isUnlimited() ? 2700 : 1700,
+        video: isUnlimited() ? (Number(planPrices.videoUnlimited) || 0) : 1700,
       };
     }
 
@@ -345,6 +347,19 @@
       });
       if (result.error) throw new Error(result.error.message || 'Card payment failed.');
     }
+
+    fetch('/api/checkout-config')
+      .then((response) => response.json())
+      .then((data) => {
+        const collaborator = data?.products?.collaborator || {};
+        planPrices = {
+          single: collaborator.single,
+          unlimited: collaborator.unlimited,
+          videoUnlimited: collaborator.videoUnlimited,
+        };
+        updateScope();
+      })
+      .catch(() => {});
 
     if (!collaboratorInvite) {
       setStatus('This Telegram access checkout link is missing its invite token.', 'error');

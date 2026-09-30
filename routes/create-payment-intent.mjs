@@ -12,6 +12,7 @@ import {
 } from '../src/vacation/collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from '../src/vacation/email.mjs';
 import checkoutCouponHandler from './checkout-coupon.mjs';
+import { customerCheckoutFailure, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
 import {
   activateAccessPlanCheckout,
   activateFreeAccessPlanRows,
@@ -24,7 +25,6 @@ import {
 } from '../src/vacation/access-plan.mjs';
 
 const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
-const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
 const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 const SINGLE_PRICE_ID = process.env.TIMESYNCHER_SINGLE_PRICE_ID || '';
 const UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_UNLIMITED_PRICE_ID || '';
@@ -35,7 +35,6 @@ const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYN
 const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
 const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
 const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-const COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS || '2700', 10);
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -108,7 +107,11 @@ function collaboratorAccessAddOns(body = {}, plan = {}) {
   const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
   const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
   const photoAmountCents = photoUpload ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-  const videoAmountCents = videoUpload ? (unlimited ? COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
+  const videoAmountCents = videoUpload
+    ? (unlimited
+      ? requiredConfigCents(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS')
+      : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS)
+    : 0;
   return {
     photoUpload,
     videoUpload,
@@ -503,7 +506,8 @@ export default async function handler(req, res) {
         });
         return send(res, 200, checkout);
       } catch (error) {
-        return send(res, error.statusCode || 503, { ok: false, error: error.message || 'Unable to create collaborator checkout.' });
+        const safe = customerCheckoutFailure(error);
+        return send(res, safe.statusCode || 503, { ok: false, error: safe.message || 'Unable to create collaborator checkout.' });
       }
     }
 
@@ -618,7 +622,10 @@ export default async function handler(req, res) {
     const photoMemoriesPriceId = orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_ID : PHOTO_MEMORIES_SINGLE_PRICE_ID;
     const photoMemoriesAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
     if (photoMemories && !photoMemoriesPriceId) throw new Error('Photo Memories subscription price ID is not configured yet.');
-    const amount = BASE_PRICE_CENTS + (orderBump ? ORDER_BUMP_PRICE_CENTS : 0) + photoMemoriesAmount;
+    const orderBumpCents = orderBump
+      ? requiredConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS')
+      : 0;
+    const amount = BASE_PRICE_CENTS + orderBumpCents + photoMemoriesAmount;
     if (!Number.isFinite(amount) || amount < 50) throw new Error('Invalid checkout amount.');
 
     const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
@@ -684,6 +691,7 @@ export default async function handler(req, res) {
       plan: orderBump ? 'unlimited' : 'single',
     });
   } catch (error) {
-    return send(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to create subscription.' });
+    const safe = customerCheckoutFailure(error);
+    return send(res, safe.statusCode || 400, { ok: false, error: safe.message || 'Unable to create subscription.' });
   }
 }
