@@ -21,7 +21,7 @@ assert.doesNotMatch(live, /must include the word collaborators/);
 assert.doesNotMatch(page, /Your website is not built yet|I can update this vacation from here|Tell me the trip basics/);
 assert.doesNotMatch(rules, /View access lets them see the days/);
 assert.doesNotMatch(rules, /Say you are building the itinerary/);
-assert.match(rules, /State this payer line exactly/);
+assert.doesNotMatch(rules, /State this payer line exactly/);
 assert.doesNotMatch(rules, /Single upsell:/);
 assert.doesNotMatch(telegram, /classic Waikiki beach energy/);
 assert.match(api, /produceOnboardingOpener/);
@@ -50,8 +50,7 @@ const system = replyRulesSystem({}, '', 'allow-once', true, 'the long trip dump'
   planOwned: true,
 });
 assert.match(system, /Plan facts: /);
-assert.doesNotMatch(system, /View access lets them see the days|Say you are building the itinerary/);
-assert.match(system, /State this payer line exactly/);
+assert.doesNotMatch(system, /View access lets them see the days|State this payer line exactly|Say you are building the itinerary/);
 const parsed = JSON.parse(system.slice(system.indexOf('Plan facts: ') + 'Plan facts: '.length).split('\n')[0]);
 assert.equal(parsed.mode, 'post-intake');
 assert.equal(parsed.payer_line, 'Kimberly $27, paid by you');
