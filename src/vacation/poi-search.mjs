@@ -153,14 +153,14 @@ export class TavilySearchError extends Error {
 }
 
 export function tavilyApiKey(env = process.env) {
-  return String(env?.TAVILY_API_KEY || '').trim();
+  return String(env?.TAVILI_API_KEY || '').trim();
 }
 
 function requireTavilyApiKey(apiKey) {
   if (apiKey) return;
   const error = new TavilySearchError(
-    'TAVILY_API_KEY is not set. Non-place search cannot run until that key is configured.',
-    { code: 'TAVILY_API_KEY_MISSING' },
+    'TAVILI_API_KEY is not set. Non-place search cannot run until that key is configured.',
+    { code: 'TAVILI_API_KEY_MISSING' },
   );
   console.error(error.message);
   throw error;

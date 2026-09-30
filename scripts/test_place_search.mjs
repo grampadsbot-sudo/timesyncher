@@ -648,7 +648,7 @@ assert.deepEqual(quietResearch.things, []);
 const tavilyCalls = [];
 const flightSearch = await searchPlaces({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
-  env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
+  env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
   fetchImpl: async (url, options) => {
     if (isOpenRouter(url)) return jevOk(5);
     tavilyCalls.push(String(url));
@@ -672,7 +672,7 @@ assert.equal(flightSearch.notes[0].source, 'tavily');
 assert.equal(flightSearch.notes[0].title, 'Morning departure');
 const flightFill = await fillTripIntake({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
-  env: { ...placeEnv(), tavily: 'tavily-test-key', tavilyName: 'TAVILY_API_KEY' },
+  env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
   fetchImpl: async (url) => {
     if (isOpenRouter(url)) return jevOk(5);
     return jsonResponse({
@@ -698,7 +698,7 @@ await assert.rejects(
   (error) => {
     assert.equal(error instanceof PlaceSearchError, true);
     assert.equal(error.code, 'missing_key');
-    assert.match(error.message, /TAVILY_API_KEY/);
+    assert.match(error.message, /TAVILI_API_KEY/);
     return true;
   },
 );

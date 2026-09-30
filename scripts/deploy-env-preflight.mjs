@@ -24,12 +24,25 @@ export function editDistance(a, b) {
   }
   return prev[b.length];
 }
+function retiredSearchKeySpelling(name, want) {
+  if (want !== 'TAVILI_API_KEY' || name.length !== want.length) return false;
+  const suffix = '_API_KEY';
+  if (!name.endsWith(suffix)) return false;
+  const stem = want.slice(0, -suffix.length);
+  const got = name.slice(0, -suffix.length);
+  return stem.slice(0, -1) === got.slice(0, -1) && stem.endsWith('I') && got.endsWith('Y');
+}
 export function compareEnvNames(required, present, optional = []) {
   const have = new Set(present);
   const missing = required.filter((name) => !have.has(name));
   const optionalMissing = optional.filter((name) => !have.has(name));
   const near = [];
-  for (const name of present) for (const want of required) if (name !== want && editDistance(name, want) <= 2) near.push({ name, want });
+  for (const name of present) {
+    for (const want of required) {
+      if (name === want || editDistance(name, want) > 2 || retiredSearchKeySpelling(name, want)) continue;
+      near.push({ name, want });
+    }
+  }
   return { missing, near, optionalMissing };
 }
 function teamId() {
