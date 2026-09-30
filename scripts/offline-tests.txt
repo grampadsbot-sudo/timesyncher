@@ -13,6 +13,7 @@ scripts/test_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
 scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
+scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
 scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
