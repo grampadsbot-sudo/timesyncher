@@ -7,32 +7,23 @@ export function planSeatDollars(env = process.env) {
   return dollars;
 }
 
-export function payerSeats(customerTurn) {
-  const text = String(customerTurn || '');
-  const seats = [];
+function extractedPayerRows(seats) {
+  if (!Array.isArray(seats)) return [];
+  const rows = [];
   const seen = new Set();
-  const add = (name, payer) => {
-    const who = String(name || '').trim();
-    if (!/^[A-Z][a-z]+$/.test(who) || seen.has(who)) return;
-    seen.add(who);
-    seats.push({ name: who, payer: String(payer || '').trim() });
-  };
-  const paidByCustomer = text.match(/\bI pay for ([^.?!]+)/i);
-  if (paidByCustomer) {
-    for (const name of paidByCustomer[1].match(/[A-Z][a-z]+/g) || []) add(name, 'you');
+  for (const item of seats) {
+    const name = String(item?.name || '').trim();
+    const payer = String(item?.payer || '').trim();
+    if (!name || !payer || seen.has(name)) continue;
+    seen.add(name);
+    rows.push({ name, payer });
   }
-  for (const match of text.matchAll(/\b([A-Z][a-z]+) pays for (himself|herself|themselves)\b/gi)) {
-    add(match[1], match[1]);
-  }
-  for (const match of text.matchAll(/\b([A-Z][a-z]+) pays for ([A-Z][a-z]+)\b/g)) {
-    add(match[2], match[1]);
-  }
-  return seats;
+  return rows;
 }
 
-export function payerPriceLine(customerTurn, env = process.env) {
-  const seats = payerSeats(customerTurn);
-  if (!seats.length) return '';
+export function payerPriceLine(seats, env = process.env) {
+  const list = extractedPayerRows(seats);
+  if (!list.length) return '';
   let dollars = null;
   try {
     dollars = planSeatDollars(env);
@@ -40,7 +31,7 @@ export function payerPriceLine(customerTurn, env = process.env) {
     if (error?.name !== 'CheckoutConfigError') throw error;
   }
   if (!dollars) return '';
-  return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
+  return list.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 
 export function priceClauseSatisfied(part, reply) {
@@ -65,11 +56,11 @@ export function priceClauseSatisfied(part, reply) {
   return false;
 }
 
-export function priceAnswered(reply, customerTurn, env = null) {
-  const seats = payerSeats(customerTurn);
-  const line = env ? payerPriceLine(customerTurn, env) : '';
+export function priceAnswered(reply, seats, env = process.env) {
+  const list = extractedPayerRows(seats);
+  const line = payerPriceLine(list, env);
   const body = String(reply || '');
-  if (seats.length && !line) return false;
+  if (list.length && !line) return false;
   if (!line) return /\$\d+/.test(body);
   return line.split('; ').every((part) => priceClauseSatisfied(part, body));
 }

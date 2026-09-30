@@ -13,10 +13,11 @@ assert.throws(() => planSeatDollars(unconfigured), missingPrice);
 assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '' }), missingPrice);
 assert.throws(() => planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '0' }), missingPrice);
 assert.equal(planSeatDollars({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 19);
-assert.equal(payerPriceLine('I pay for Ada.', unconfigured), '');
-assert.equal(payerPriceLine('I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 'Ada $19, paid by you');
-assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', unconfigured), false);
-assert.equal(priceAnswered('Ada $19, paid by you', 'I pay for Ada.', { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
+const adaSeats = [{ name: 'Ada', payer: 'you' }];
+assert.equal(payerPriceLine(adaSeats, unconfigured), '');
+assert.equal(payerPriceLine(adaSeats, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), 'Ada $19, paid by you');
+assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, unconfigured), false);
+assert.equal(priceAnswered('Ada $19, paid by you', adaSeats, { TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }), true);
 assert.equal(checkoutOrderSummary({}, {}).amountCents, 3700);
 assert.throws(() => checkoutOrderSummary({ orderBump: true }, {}), missingPrice);
 

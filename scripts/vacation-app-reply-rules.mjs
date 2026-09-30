@@ -229,7 +229,7 @@ function pageFromMarkdown(markdown) {
 }
 
 function loadViaBrainFile(env) {
-  const roots = [env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT, env.TIMESYNCHER_PRIVATE_GBRAIN, '/home/ubishere9995/gbrain'].filter(Boolean);
+  const roots = [env.TIMESYNCHER_PRODUCT_GBRAIN_ROOT, env.TIMESYNCHER_PRIVATE_GBRAIN].filter(Boolean);
   for (const root of roots) {
     const file = path.join(root, `${REPLY_RULES_SLUG}.md`);
     if (!fs.existsSync(file)) continue;

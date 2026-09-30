@@ -33,7 +33,7 @@ const TREK_RUNTIME_DIR = process.env.TIMESYNCHER_TREK_RUNTIME_DIR || '/home/time
 const TREK_DB_PATH = process.env.TIMESYNCHER_TREK_DB_PATH || path.join(TREK_RUNTIME_DIR, 'data', 'travel.db');
 const TREK_PUBLIC_BASE_URL = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
 const TREK_CONTAINER = process.env.TIMESYNCHER_TREK_CONTAINER || 'trek';
-const TREK_DB_OWNER = process.env.TIMESYNCHER_TREK_DB_OWNER || 'ubishere9995';
+const TREK_DB_OWNER = process.env.TIMESYNCHER_TREK_DB_OWNER || '';
 const PRODUCT_MANIFEST_PATH = process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST || path.join(process.cwd(), 'product-gbrain-manifest.json');
 
 function requireEnv() {
@@ -1201,7 +1201,7 @@ function parseMediaAttachmentTargetWithModel(caption = '') {
   const text = cleanText(caption, 1000);
   if (!mediaCaptionLooksLikeAttachmentCommand(text)) return null;
   if (process.env.TIMESYNCHER_MEDIA_INTENT_DISABLE_MODEL === '1') return null;
-  const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
+  const grokBin = process.env.TIMESYNCHER_GROK_BIN || 'grok';
   const grokModel = process.env.TIMESYNCHER_MEDIA_INTENT_MODEL || process.env.TIMESYNCHER_GROK_MODEL || 'grok-4.5';
   const prompt = [
     'Classify this Telegram media caption into one known TimeSyncher Vacation command.',
@@ -1211,7 +1211,9 @@ function parseMediaAttachmentTargetWithModel(caption = '') {
     `Caption: ${JSON.stringify(text)}`,
   ].join('\n');
   const timeoutSeconds = Math.max(8, Number.parseInt(process.env.TIMESYNCHER_MEDIA_INTENT_TIMEOUT_SECONDS || '35', 10));
-  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${timeoutSeconds}s`, 'sudo', '-n', '-u', 'ubishere9995', grokBin, '-p', prompt, '--output-format', 'json', '--json-schema', mediaAttachmentIntentSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '1'], {
+  const grokUser = String(process.env.TIMESYNCHER_GROK_USER || TREK_DB_OWNER || '').trim();
+  const grokPrefix = grokUser ? ['sudo', '-n', '-u', grokUser] : [];
+  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${timeoutSeconds}s`, ...grokPrefix, grokBin, '-p', prompt, '--output-format', 'json', '--json-schema', mediaAttachmentIntentSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '1'], {
     encoding: 'utf8',
     timeout: (timeoutSeconds + 8) * 1000,
     maxBuffer: 1024 * 1024,

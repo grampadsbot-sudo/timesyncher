@@ -30,7 +30,7 @@
     "search_wiring": {
       "poi_search_callers": "src/vacation/poi-search.mjs is imported only by scripts/vacation-public-research-worker.mjs:8 (and scripts/test_poi_search.mjs). No src/, routes/ or api/ code calls it.",
       "worker": "Every customer turn inserts a worker_jobs 'trip_intake' row (routes/vacation-itinerary.mjs:456; also vacation-request.mjs:146, vacation-telegram-turn.mjs:1681). The off-box worker (manifest runtime /home/timesyncher-agent/timestopper-vacation-worker/…) runs scripts/product-gbrain-dispatch.mjs → runPublicResearch. Results go back through routes/worker-jobs.mjs persistArtifacts into trip_things.",
-      "research_chain": "runPublicResearch: fixture (if env set) → house-radius POI (FSQ records passed in as an array, default [] → OSM Overpass → Brave only if fewer than 3 results) → Perplexity (PERPLEXITY_API_KEY and TIMESYNCHER_PUBLIC_RESEARCH_LIVE=1) → Grok CLI at /home/ubishere9995/.local/bin/grok → travel-source adapters (Google Places adapter disabled; one fixture sentiment adapter).",
+      "research_chain": "runPublicResearch: fixture (if env set) → house-radius POI (FSQ records passed in as an array, default [] → OSM Overpass → Brave only if fewer than 3 results) → Perplexity (PERPLEXITY_API_KEY and TIMESYNCHER_PUBLIC_RESEARCH_LIVE=1) → Grok CLI from PATH or TIMESYNCHER_GROK_BIN → travel-source adapters (Google Places adapter disabled; one fixture sentiment adapter).",
       "blocker": "product-gbrain-dispatch.mjs:1925 passes artifacts with no house/lodging coordinates, so runHousePoiResearch returns null (worker:424-427). FSQ/OSM/Brave never run on the dispatcher path.",
       "brave": "Code present: fetchBrave → api.search.brave.com/res/v1/web/search with X-Subscription-Token (poi-search.mjs:148-161), 8-hour cache, query '<category> near lat,lng'. Key read from BRAVE_SEARCH_API_KEY or BRAVE_API_KEY (worker:428). No .env/vercel config in the repo defines it; whether the off-box worker has the key is unknown (not visible from here).",
       "tavily": "0 references anywhere at 128c9e1 (code, config, docs, tests) and 0 on main.",
@@ -592,8 +592,8 @@
     {
       "category": "C",
       "location": "src/vacation/seat-price.mjs:8-30 (payerSeats)",
-      "quote": "text.match(/\\bI pay for ([^.?!]+)/i) ... /([A-Z][a-z]+) pays for (himself|herself|themselves)/",
-      "customer_effect": "Who pays for which seat comes from phrase regexes.",
+      "quote": "payer rows come from the extracted roster",
+      "customer_effect": "Who covers which seat comes from the extracted roster.",
       "severity": "cosmetic",
       "replacement": "Ask the customer (seat form) or model extraction",
       "id": "C11"
@@ -790,7 +790,7 @@
     {
       "category": "E",
       "location": "scripts/vacation-public-research-worker.mjs:341-342",
-      "quote": "const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';",
+      "quote": "const grokBin = process.env.TIMESYNCHER_GROK_BIN || 'grok';",
       "customer_effect": "The last-resort research provider is a CLI at a hard-coded personal home path.",
       "severity": "cosmetic",
       "replacement": "Replace with the Brave/Tavily API path",

@@ -79,6 +79,6 @@ export const INVENTORY_PATTERNS = [
   { id: 'E6', rule: 'HC-PLACE-LIST', re: /\bknownDestinationFromText\b/, fixture: 'function knownDestinationFromText(source) { return source; }' },
   { id: 'E7', rule: 'HC-PLACE-LIST', re: /'trip_intake'/, fixture: "values (${requestId}, ${tripId}, 'trip_intake', ${payload});" },
   { id: 'E8', rule: 'HC-PLACE-LIST', re: /TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE/, fixture: "if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE) return fixture.candidates;" },
-  { id: 'E9', rule: 'HC-PLACE-LIST', re: /TIMESYNCHER_GROK_BIN/, fixture: "const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';" },
+  { id: 'E9', rule: 'HC-PLACE-LIST', re: /TIMESYNCHER_GROK_BIN/, fixture: "const grokBin = process.env.TIMESYNCHER_GROK_BIN || 'grok';" },
   { id: 'E10', rule: 'HC-PLACE-LIST', re: /disabled_google_places_seed_removed/, fixture: "adaptersRun.push({ status: 'disabled_google_places_seed_removed' });" },
 ];
