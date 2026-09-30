@@ -71,10 +71,10 @@ const email = purchaseEmail({
   publicSlug: 'intake-eab1cbb15144',
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
-assert.match(email.launchUrl, /\/shared\/intake-eab1cbb15144\/$/);
-assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/</);
+assert.match(email.launchUrl, /\/shared\/intake-eab1cbb15144\/\?purchase=1$/);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/\?purchase=1</);
 assert.doesNotMatch(email.htmlBody, /vacation-app\.html/);
-assert.match(email.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
+assert.match(email.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/\?purchase=1"/);
 
 const offers = [
   { brand: 'Alamo', price: 80 },
