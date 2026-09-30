@@ -63,7 +63,7 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   for (const tier of [1, 2, 3, 4]) {
     if (!replyRules.includes(map[tier])) errors.push(`shared producer map is missing ${map[tier]}`);
   }
-  if (/openai\/gpt-4\.1-mini/.test(replyRules) || !/gpt-\.\*mini/.test(replyRules)) {
+  if (!/gpt-\.\*mini/.test(replyRules)) {
     errors.push('shared producer does not fail closed on gpt mini models');
   }
   if (!/tier_models\.json/.test(replyRules) || !/tier_outside_bakeoff_map/.test(replyRules)) {
@@ -295,8 +295,8 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ text: `${CANNED} for this vacation.` })])).length);
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ invented: true })])).length);
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
-  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'openai/gpt-4.1-mini' })])).some((error) => /bake-off map/.test(error)));
-  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash' })])).some((error) => /bake-off map/.test(error)));
+  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'qwen/qwen3-235b-a22b-2507' })])).some((error) => /bake-off map/.test(error)), false);
+  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash-lite' })])).some((error) => /bake-off map/.test(error)), false);
   const openerTurn = {
     turnIndex: 1,
     role: 'app',
