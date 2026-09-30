@@ -575,7 +575,7 @@ function priorRowsFromInput(priorPlaces) {
 }
 
 function tavilyKeyFrom(env = {}) {
-  return String(env.tavily || env.TAVILY_API_KEY || '').trim();
+  return String(env.tavily || env.TAVILI_API_KEY || '').trim();
 }
 
 async function queryTavily(fetchImpl, env, queries) {
@@ -634,7 +634,7 @@ export async function searchPlaces({
     if (missing.length) fail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');
   }
   if (infoQueries.length && !tavilyKeyFrom(env)) {
-    fail(`Search refused to run. Missing ${String(env.tavilyName || 'TAVILY_API_KEY')}.`, 'missing_key');
+    fail(`Search refused to run. Missing ${String(env.tavilyName || 'TAVILI_API_KEY')}.`, 'missing_key');
   }
   let center = null;
   let places = [];

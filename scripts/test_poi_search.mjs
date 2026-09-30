@@ -287,7 +287,7 @@ await assert.rejects(
       throw new Error('missing tavily key must not fetch');
     },
   }),
-  (error) => error instanceof TavilySearchError && error.code === 'TAVILY_API_KEY_MISSING',
+  (error) => error instanceof TavilySearchError && error.code === 'TAVILI_API_KEY_MISSING',
 );
 assert.equal(tavilyFetched, false);
 
