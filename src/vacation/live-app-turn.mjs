@@ -442,49 +442,62 @@ function appTextBanned(text) {
   return '';
 }
 
-const INVENTED_GARDEN = /kahalu|pu'?a mau|arboretum|botanical garden/i;
-
-export function inventedGardenHit(reply, corpus) {
-  const text = String(reply || '');
-  const known = String(corpus || '');
-  if (/kahalu/i.test(text) && !/kahalu/i.test(known)) return true;
-  if (/pu'?a mau/i.test(text) && !/pu'?a mau/i.test(known)) return true;
-  if (/arboretum|botanical garden/i.test(text) && !/arboretum|botanical garden/i.test(known)) return true;
-  if (/garden/i.test(known) && /garden[\s\S]{0,80}(?:if it rains|because of (?:the )?weather)|(?:if it rains|because of (?:the )?weather)[\s\S]{0,80}garden/i.test(text)
-    && !/(?:if it rains|because of (?:the )?weather)[\s\S]{0,40}garden/i.test(known)) return true;
-  return false;
+export function placeSourceRows(sources) {
+  if (!Array.isArray(sources)) return [];
+  return sources.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
+    const id = String(ref?.id ?? item.id ?? item.poiId ?? item.placeId ?? item.place_id ?? '').trim();
+    const name = String(item.name ?? item.title ?? '').trim();
+    return id && name ? [{ id, name }] : [];
+  });
 }
 
-const UNNAMED_VENUE = [
-  [/snorkel/i, 'snorkel'],
-  [/\bcruise\b/i, 'cruise'],
-  [/keauhou/i, 'Keauhou'],
-  [/volcano/i, 'Volcanoes'],
-  [/lava tube/i, 'lava tube'],
-  [/thurston/i, 'Thurston'],
-  [/pu['ʻ‘’]?uhonua|h[oō]naunau/i, 'Puuhonua o Honaunau'],
-  [/captain cook/i, 'Captain Cook'],
-  [/coffee farm/i, 'coffee farm'],
-  [/kahalu/i, 'Kahaluu'],
-  [/pu'?a mau/i, 'Pua Mau'],
-  [/arboretum/i, 'arboretum'],
-  [/botanical garden/i, 'botanical garden'],
-  [/community center/i, 'community center'],
-  [/national park/i, 'national park'],
-  [/resort pool/i, 'resort pool'],
-  [/\blagoon\b/i, 'lagoon'],
-  [/\bdock\b/i, 'dock'],
-];
+export function savedThingPlaceResults(savedTrip) {
+  const things = Array.isArray(savedTrip?.things) ? savedTrip.things : [];
+  return things.flatMap((thing) => {
+    const sourceRef = thing?.sourceRef && typeof thing.sourceRef === 'object' ? thing.sourceRef : null;
+    const id = String(sourceRef?.id || '').trim();
+    const name = String(thing?.title || thing?.name || '').trim();
+    if (!id || !name) return [];
+    return [{ name, sourceRef: { source: String(sourceRef.source || ''), id } }];
+  });
+}
 
-export function inventedVenueNames(reply, corpus) {
-  const value = String(reply || '');
-  const known = String(corpus || '');
-  const names = [];
-  for (const [pattern, label] of UNNAMED_VENUE) {
-    if (pattern.test(value) && !pattern.test(known)) names.push(label);
+function spokenPlace(text, index) {
+  const before = String(text || '').slice(Math.max(0, index - 80), index);
+  return (before.match(/([\p{Lu}][\p{L}\p{M}'’.-]*(?:\s+[\p{Lu}][\p{L}\p{M}'’.-]*)*)\s*$/u) || [])[1] || '';
+}
+
+export function unsourcedPlaces(reply, sources) {
+  const text = String(reply || '');
+  const rows = placeSourceRows(sources);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const flagged = [];
+  const cited = new Set();
+  for (const match of text.matchAll(/\(id:([^)\s]+)\)/g)) {
+    const id = match[1];
+    cited.add(id);
+    const row = byId.get(id);
+    const spoken = spokenPlace(text, match.index);
+    if (!row) flagged.push(spoken || id);
+    else if (spoken && spoken.toLowerCase() !== row.name.toLowerCase()) flagged.push(spoken);
   }
-  if (inventedGardenHit(value, known) && !names.length) names.push('a garden they did not name');
-  return names;
+  for (const row of rows) {
+    const named = new RegExp(`(^|[^\\p{L}\\p{N}])${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
+    if (named && !cited.has(row.id)) flagged.push(row.name);
+  }
+  return [...new Set(flagged)];
+}
+
+export function inventedVenueNames(reply, sources) {
+  return unsourcedPlaces(reply, sources);
+}
+
+export function placeResultExtra(sources) {
+  const rows = placeSourceRows(sources);
+  if (!rows.length) return '';
+  return `Results: ${rows.map((row) => `${row.name} (id:${row.id})`).join('; ')}.`;
 }
 
 const MONTHS = {
@@ -1609,12 +1622,13 @@ export function rewriteReplacesDraft(draft, rewritten) {
   return true;
 }
 
-export function hardQualityFlags(reply, customerTurn, corpus) {
+export function hardQualityFlags(reply, customerTurn, corpus, sources) {
   const body = String(reply || '');
   const ask = customerTurnText(customerTurn);
+  const placeSources = Array.isArray(sources) ? sources : (Array.isArray(corpus) ? corpus : []);
   return {
     split: item34BanHit(body),
-    invented: inventedVenueNames(body, corpus),
+    invented: unsourcedPlaces(body, placeSources),
     missingPrice: customerAsksPrice(ask) && !priceAnswered(body, ask),
     missingAccess: customerAsksAccessChoice(ask) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
     missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
@@ -1740,7 +1754,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1750,6 +1764,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const upsell = upsellModeForTurn(intakeTurn, history);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await loadSavedTripRecord(session, env);
+  const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
   const rosterList = Array.isArray(roster) ? roster : [];
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session, {
     roster: Array.isArray(roster) ? roster : null,
@@ -1817,6 +1832,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     'Do not say a swim or a town walk is saved, now set, set for, or on the list unless that activity is already on the saved trip.',
     intake === true ? 'This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year. Do not say a swim was saved.' : '',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
+    placeResultExtra(citedPlaces),
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1882,7 +1898,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
-  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus);
+  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
@@ -1987,6 +2003,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     titleError: titleError || null,
     destination,
     corpus,
+    placeResults: citedPlaces,
     tripContext,
     tripFacts,
     planTable,
@@ -2158,7 +2175,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     const called = await callTieredModel({
       rules,
       jev: pending?.jev,
-      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep the days already on the saved trip. Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference, including any person you added and any saved claim you added or removed.\nDraft:\n${pending?.draft || ''}`,
+      customerTurn: `${pending?.customerTurn || ''}\n\nRewrite the draft. Jev score raw ${scoreRaw == null ? 'none' : scoreRaw}. Fact-check flags: ${failure || 'none'}. Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID). Do not paste the draft. End with one line WHAT_I_CHANGED: and a single sentence that names the real difference, including any person you added and any saved claim you added or removed.\nDraft:\n${pending?.draft || ''}`,
       stage: 'vacation_conversation',
       screen: 'vacation-app',
       destination: pending?.destination || '',
@@ -2180,6 +2197,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
+        placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
           ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this payer line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
           : '',
@@ -2223,7 +2241,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
-      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus);
+      const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults);
       rewriteQuality = correctFalsePriceMiss(
         dockQuality(rewriteQuality, rewriteFlags),
         judgedText,

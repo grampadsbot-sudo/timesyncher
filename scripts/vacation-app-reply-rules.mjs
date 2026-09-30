@@ -571,6 +571,10 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
+export function sourcedPlaceRule() {
+  return 'Name a place only when this turn has a Thing with sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
+}
+
 export function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
   const lock = text(destination, 160);
   const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
@@ -599,6 +603,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
+    sourcedPlaceRule(),
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
@@ -793,15 +798,15 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place or activity the customer did not name, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, moves a swim or garden off the itinerary, or uses a banned payment word. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named. If you can, put a one-line reason in any text, note, rationale, or explanation field.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named. If you can, put a one-line reason in any text, note, rationale, or explanation field.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
         type: 'choice',
         instructions: 'Choose keep or rewrite. If you can explain, put one line in a text field.',
         criteria: {
-          keep: 'The draft should stand. It answers this turn and names only places and activities already in the conversation.',
-          rewrite: 'Replace the draft. It misses this turn, names a place the customer did not name, skips the price, or uses a banned payment word.',
+          keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
+          rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
         },
       },
       fix_focus: {
@@ -809,7 +814,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
         instructions: 'Jev scores only. Pick the one-line fix this draft needs. Do not write a replacement reply and do not quote the customer.',
         criteria: {
           missing_price: 'Name each seat, the plan dollar amount, and who pays.',
-          unnamed_place: 'Take out the place that was not already named.',
+          unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
           payment_wording: 'Name each seat and who pays without a banned payment word.',
           misses_ask: 'Answer the ask and keep the days already named.',
           keep: 'Keep the draft. It answers without adding a place.',

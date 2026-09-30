@@ -58,7 +58,6 @@ export function assertLiveTranscript(doc) {
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
   const contentFails = [];
-  const customerCorpus = turns.filter((turn) => turn.role === 'customer').map((turn) => turn.text).join('\n');
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -136,7 +135,8 @@ export function assertLiveTranscript(doc) {
       if (!qualityLine || /not judged/i.test(qualityLine) || turn.quality?.judged !== true) {
         throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} quality is not judged`);
       }
-      const venues = inventedVenueNames(text, customerCorpus);
+      const placeResults = Array.isArray(turn.placeResults) ? turn.placeResults : (Array.isArray(doc.placeResults) ? doc.placeResults : []);
+      const venues = inventedVenueNames(text, placeResults);
       if (venues.length) contentFails.push(`FAIL. Turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
       if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
