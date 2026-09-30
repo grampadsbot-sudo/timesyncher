@@ -24,17 +24,20 @@ import {
   saveAccessPlan,
 } from '../src/vacation/access-plan.mjs';
 
-const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
 const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 const SINGLE_PRICE_ID = process.env.TIMESYNCHER_SINGLE_PRICE_ID || '';
 const UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_UNLIMITED_PRICE_ID || '';
 const PHOTO_MEMORIES_SINGLE_PRICE_ID = process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_ID || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_ID || '';
 const PHOTO_MEMORIES_UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_ID || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_ID || '';
-const PHOTO_MEMORIES_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
-const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
+
+function configuredCents(name, alias) {
+  const names = alias ? [name, alias] : [name];
+  const chosen = names.find((key) => {
+    const parsed = Number.parseInt(String(process.env[key] ?? '').trim(), 10);
+    return Number.isFinite(parsed) && parsed > 0;
+  }) || name;
+  return requiredConfigCents(process.env[chosen], chosen);
+}
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -106,11 +109,15 @@ function collaboratorAccessAddOns(body = {}, plan = {}) {
   const unlimited = plan.scope === 'unlimited_trips';
   const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
   const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
-  const photoAmountCents = photoUpload ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
+  const photoAmountCents = photoUpload
+    ? (unlimited
+      ? configuredCents('TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS')
+      : configuredCents('TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS'))
+    : 0;
   const videoAmountCents = videoUpload
     ? (unlimited
       ? requiredConfigCents(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS')
-      : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS)
+      : configuredCents('TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS'))
     : 0;
   return {
     photoUpload,
@@ -620,12 +627,16 @@ export default async function handler(req, res) {
     const orderBump = Boolean(body.orderBump);
     const photoMemories = Boolean(body.photoMemories);
     const photoMemoriesPriceId = orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_ID : PHOTO_MEMORIES_SINGLE_PRICE_ID;
-    const photoMemoriesAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
+    const photoMemoriesAmount = photoMemories
+      ? (orderBump
+        ? configuredCents('TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS', 'TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS')
+        : configuredCents('TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS', 'TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS'))
+      : 0;
     if (photoMemories && !photoMemoriesPriceId) throw new Error('Photo Memories subscription price ID is not configured yet.');
     const orderBumpCents = orderBump
       ? requiredConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS')
       : 0;
-    const amount = BASE_PRICE_CENTS + orderBumpCents + photoMemoriesAmount;
+    const amount = configuredCents('TIMESYNCHER_BASE_PRICE_CENTS') + orderBumpCents + photoMemoriesAmount;
     if (!Number.isFinite(amount) || amount < 50) throw new Error('Invalid checkout amount.');
 
     const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
