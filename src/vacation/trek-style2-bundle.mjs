@@ -1,7 +1,8 @@
-import { PRODUCT_THING_FIELDS } from './keepsake-product-overrides.mjs';
-import { logoLookupRuntimeSource } from './thing-logo-capture.mjs';
 
-const TRAVEL_BUNDLE = 'https://travel.timesyncher.com/assets/index-BKun7ofk.js';
+import { readFile } from 'node:fs/promises';
+import { assertServedBundleClean, stripCannedBundle, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
+
+const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
@@ -21,8 +22,8 @@ const AE_LAYOUT_PATCH = "const Km=Oo=>!/bind[- ]?proof|neon file bind proof/i.te
 const HC_QR_NEEDLE = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`';
 const HC_QR_PATCH = 'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}&m=1`';
 
-const SO_NEEDLE = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
-const SO_PATCH = 'So=G=>{const Re=String(G||"").trim();if(!Re)return"";if(/^data:|^blob:/i.test(Re))return Re;try{const zt=(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com",ua=new URL(Re,zt);if(/\\/ts-thing-media\\/|\\/api\\/bind-thing-media\\b/i.test(ua.pathname+ua.search))return`${zt}${ua.pathname}${ua.search}${ua.hash}`;return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}';
+const SO_NEEDLE = SO_ORIGIN_NEEDLE;
+const SO_PATCH = SERVED_SO;
 
 const BA_NEEDLE = '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`';
 const BA_PATCH = '`<figure class="print-media-card" data-print-media="bound"><img src="${an(So(G.printDataUrl||G.print_data_url||G.dataUrl||G.url||G.publicUrl||G.public_url||G.thumbnailUrl))}" alt="${an(Re)}" style="width:100%;max-width:100%;height:auto;max-height:110px;object-fit:contain" /><figcaption>${an(Re)}</figcaption></figure>`';
@@ -148,7 +149,7 @@ const RP_NEEDLE = 'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:
 const RP_PATCH = 'return{id:Pn,kind:ms(G),url:(G&&(G.printDataUrl||G.print_data_url||G.dataUrl))||Rn,thumbnailUrl:(G&&(G.printDataUrl||G.print_data_url||G.dataUrl))||os(G,Rn),printDataUrl:G&&(G.printDataUrl||G.print_data_url||G.dataUrl)||undefined,print_data_url:G&&(G.print_data_url||G.printDataUrl||G.dataUrl)||undefined,caption:Zn';
 
 const DOC_TITLE_TOKEN_NEEDLE = 'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")';
-const DOC_TITLE_TOKEN_PATCH = 'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title=(P&&P.trip&&P.trip.title||"Vacation").replace(/^TimeSyncher Vacation\\s*[—–-]\\s*/i,"").trim()||"Vacation")';
+const DOC_TITLE_TOKEN_PATCH = 'void 0';
 
 
 const THING_BREAK_NEEDLE = '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}';
@@ -158,21 +159,16 @@ const STYLE2_DETAILS_NEEDLE = '.style2-details{display:grid;grid-template-column
 const STYLE2_DETAILS_PATCH = '.style2-details{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px 12px;align-items:start}.style2-details>.thing,.style2-details>.style2-thing{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important}';
 
 function productFieldsLiteral() {
-  return JSON.stringify(PRODUCT_THING_FIELDS.map((row) => ({
-    match: row.match.source,
-    summary: row.summary || '',
-    happyHour: Object.prototype.hasOwnProperty.call(row, 'happyHour') ? row.happyHour : null,
-    happyHourDetails: row.happyHourDetails || '',
-    longDetails: row.longDetails || '',
-  })));
+  // Trip overrides supply summary and happy-hour text. Do not embed a venue catalog.
+  return '[]';
 }
 
 const FLIGHT_ROW_NEEDLE = '||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_ROW_PATCH = '||Re||"Airline"';
 const FLIGHT_FIELDS_NEEDLE = 'bn(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
-const FLIGHT_FIELDS_PATCH = '(bn(Dt)||/koa arrival|kona arrival/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
+const FLIGHT_FIELDS_PATCH = '(bn(Dt)||ha(Dt).category==="flight"||Dt.category==="flight")&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Takeoff"';
 const CAR_FIELDS_NEEDLE = 'Mi(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
-const CAR_FIELDS_PATCH = '(Mi(Dt)||/speedishuttle/i.test(String((Dt&&(Dt.name||Dt.title))||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
+const CAR_FIELDS_PATCH = '(Mi(Dt)||ha(Dt).category==="car"||Dt.category==="car")&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
 const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
@@ -230,9 +226,6 @@ const DAILY_CARD_PATCH = 'return`<article class="thing daily-thing" data-two-col
 
 const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side / Morningside","Midtown / Central Park South","Times Square / Hell’s Kitchen","Chelsea / Greenwich Village","Greenwich Village / West Village","Downtown / Harbor","Hudson River / Harbor","Airport / Transit","Citywide / Flexible"]';
 const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Kailua-Kona / Palani","Islandwide / Flexible"]';
-const SI_NYC_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]]]';
-const SI_VEGAS_TAIL = ',[/guided walking|audio history/i,[40.7794,-73.9632]],[/bellagio|conservatory/i,[36.1126,-115.1767]],[/shake shack/i,[36.1097,-115.1739]],[/carbone/i,[36.1073,-115.1766]],[/cosmopolitan|eggslut/i,[36.1097,-115.1739]],[/lotus of siam/i,[36.1436,-115.1415]],[/las vegas strip|las vegas/i,[36.1147,-115.1729]]]';
-
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
@@ -243,7 +236,7 @@ const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
-const LIST_LOGO_PATCH = `_l=G=>{const named=(${logoLookupRuntimeSource()})(mr(G));if(named)return named;const Re=ha(G),raw=Re.logoUrl||Re.iconUrl||G.logoUrl||"";if(raw&&!/^data:image\\/svg\\+xml/i.test(String(raw)))return raw;return named||""}`;
+const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
@@ -278,9 +271,7 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
-  if (patched.includes(SI_NYC_TAIL) && !patched.includes('[/bellagio|conservatory/i,[36.1126,-115.1767]]')) {
-    patched = patched.replace(SI_NYC_TAIL, SI_VEGAS_TAIL);
-  }
+  // Day-map coordinates stay on the trip thing. Do not append a venue-name geocode table.
   if (patched.includes(AREA_CHIP_NYC)) {
     patched = patched.replace(AREA_CHIP_NYC, AREA_CHIP_BIG_ISLAND);
   }
@@ -526,6 +517,13 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   return stripTripView(hideUnsourcedRatings(patched));
 }
 
+export function renderServedTrekBundle(raw) {
+  const stripped = stripCannedBundle(raw);
+  const js = patchStyleTwoToConfigRenderer(stripped.source);
+  assertServedBundleClean(js);
+  return js;
+}
+
 function stripTripView(source) {
   const js = String(source || '');
   const start = js.indexOf('n.jsxs("div",{"data-trip-view-root":!0');
@@ -586,8 +584,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(HC_QR_PATCH)) {
     throw new Error('Style two video QR src patch did not apply.');
   }
-  if (!js.includes('[/bellagio|conservatory/i,[36.1126,-115.1767]]')) {
-    throw new Error('Style two day-map geocode patch did not apply.');
+  if (js.includes('[/bellagio|conservatory/i,[36.1126,-115.1767]]')) {
+    throw new Error('Style two must not insert a hardcoded venue geocode table.');
   }
   if (!js.includes('${Mc(nr)}') || !js.includes('data-style2-centered-day="1"') || !js.includes('data-print-ready="style2"') || !js.includes('data-stories-two-col="1"')) {
     throw new Error('Style two Ae() days must use product Mc() centered itinerary; stories must be two-column.');
@@ -670,11 +668,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
     throw new Error('Rest type chips must be types present on Things in that Rest list.');
   }
-  if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE)) {
-    throw new Error('List logo resolver must prefer named brand path (tsLogo/mr) and skip data-URI letter tiles.');
+  if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE) || js.includes('named=(')) {
+    throw new Error('List logos must use the trip logo URL or render nothing.');
   }
-  if (!js.includes('data-logo-src=') || !js.includes('named=(') || !js.includes('data:image\\/svg\\+xml')) {
-    throw new Error('Print end-list _l() must bind named /ts-thing-logos paths and mark data-logo-src.');
+  if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
+    throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');
   }
   if (!js.includes(IT_CATEGORY_PATCH) || js.includes(IT_CATEGORY_NEEDLE)) {
     throw new Error('Style two live It() category-object patch did not apply.');
@@ -751,8 +749,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-happy-hour="${ha(G).happyHour?"1":"0"}"')) {
     throw new Error('Style two op() happy-hour card marker did not apply.');
   }
-  if (!js.includes('carbone') || !js.includes('longDetails')) {
-    throw new Error('Style two client product fields are missing Carbone longDetails.');
+  if (!js.includes('longDetails') || !js.includes('tsPf=[]')) {
+    throw new Error('Style two ha() must keep trip longDetails and must not embed a venue catalog.');
   }
   if (!js.includes('data-end-continuous="1"') || !js.includes('padding-top:18mm') || !js.includes('tsMapsOn=Qa.some(so)')) {
     throw new Error('Ae() must print continuous all-things lists, top margin, and Config-gated maps.');
@@ -772,7 +770,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('?"keepsake":null)')) {
     throw new Error('Style one journey?style=1 must set pdfReport=keepsake.');
   }
-  if (!js.includes(SO_PATCH) || js.includes(SO_NEEDLE) || js.includes('const zt="https://travel.timesyncher.com",ua=new URL(Re,zt)')) {
+  if (!js.includes(SO_PATCH) || js.includes(SO_NEEDLE)) {
     throw new Error('So() must resolve /ts-thing-media against the print origin, not travel placeholders.');
   }
   if (!js.includes('/^data:|^blob:/') && !js.includes('/^data:|^blob:/i.test(Re)')) {
@@ -926,13 +924,13 @@ export function assertPatchedStyleTwo(source = '') {
     throw new Error('Area chips must be Big Island places, not Times Square.');
   }
   if (js.includes('||"Airline"') && (js.includes(FLIGHT_ROW_NEEDLE) || !js.includes(FLIGHT_ROW_PATCH))) {
-    throw new Error('Flight list rows must show the full thing name, including KOA arrival.');
+    throw new Error('Flight list rows must show the full thing name.');
   }
-  if (js.includes('children:["Takeoff"') && !js.includes('/koa arrival|kona arrival/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {
-    throw new Error('Open flight detail must render Takeoff, Connections, and Layover for KOA arrival.');
+  if (js.includes('children:["Takeoff"') && !js.includes(FLIGHT_FIELDS_PATCH)) {
+    throw new Error('Open flight detail must render Takeoff, Connections, and Layover for a flight thing.');
   }
-  if (js.includes('children:["Rental company"') && !js.includes('/speedishuttle/i.test(String((Dt&&(Dt.name||Dt.title))||""))')) {
-    throw new Error('Open car detail must render Rental company and Car type for SpeediShuttle.');
+  if (js.includes('children:["Rental company"') && !js.includes(CAR_FIELDS_PATCH)) {
+    throw new Error('Open car detail must render Rental company and Car type for a car thing.');
   }
   if (js.includes('Ya=["') && !js.includes('Kailua-Kona / Alii Drive')) {
     throw new Error('Area chips must list Kailua-Kona / Alii Drive.');
@@ -941,27 +939,19 @@ export function assertPatchedStyleTwo(source = '') {
 }
 
 export default async function handler(req, res) {
-  const response = await fetch(TRAVEL_BUNDLE, { headers: { accept: 'application/javascript,*/*' } });
-  if (!response.ok) {
-    res.statusCode = 502;
-    res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(`Unable to fetch product TREK bundle (${response.status}).`);
-    return;
-  }
-  const source = await response.text();
-  let patched;
+  let source;
   try {
-    patched = patchStyleTwoToConfigRenderer(source);
-    assertPatchedStyleTwo(patched);
+    source = await readFile(SERVED_BUNDLE, 'utf8');
+    assertPatchedStyleTwo(source);
   } catch (error) {
     res.statusCode = 500;
     res.setHeader('content-type', 'text/plain; charset=utf-8');
-    res.end(error.message || 'Style two bundle patch failed.');
+    res.end(error.message || 'Served TREK bundle is missing.');
     return;
   }
   res.statusCode = 200;
   res.setHeader('content-type', 'application/javascript; charset=utf-8');
   res.setHeader('cache-control', 'no-store');
   res.setHeader('access-control-allow-origin', '*');
-  res.end(patched);
+  res.end(source);
 }

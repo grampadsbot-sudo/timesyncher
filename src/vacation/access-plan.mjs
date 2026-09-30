@@ -1,3 +1,4 @@
+import { requiredConfigCents } from './checkout-pricing.mjs';
 import { createCollaboratorInvite, collaboratorPlan, markCollaboratorInvitePaid } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendWebEditorInviteEmail } from './email.mjs';
 import { ownerMediaAddOns, recordOwnerMediaPurchase } from './media-checkout.mjs';
@@ -7,7 +8,10 @@ const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
 const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
 const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-const COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS || '2700', 10);
+
+function collaboratorVideoUnlimitedCents(env = process.env) {
+  return requiredConfigCents(env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS');
+}
 
 function clean(value, max = 500) {
   return String(value || '').trim().slice(0, max);
@@ -122,10 +126,10 @@ export function normalizeAccessPlanRow(row = {}, fallback = {}) {
 export function priceAccessPlanRow(row = {}, env = process.env) {
   const normalized = normalizeAccessPlanRow(row);
   if (normalized.role === 'telegram_collaborator') {
-    const plan = collaboratorPlan(normalized.planCode);
+    const plan = collaboratorPlan(normalized.planCode, env);
     const unlimited = plan.scope === 'unlimited_trips';
     const photoAmountCents = normalized.canUploadPhotos ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-    const videoAmountCents = normalized.canUploadVideos ? (unlimited ? COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
+    const videoAmountCents = normalized.canUploadVideos ? (unlimited ? collaboratorVideoUnlimitedCents(env) : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
     return {
       role: normalized.role,
       amountCents: plan.amountCents + photoAmountCents + videoAmountCents,
@@ -466,7 +470,7 @@ export async function activateFreeAccessPlanRows({ db, ownerCustomerId, tripId, 
 async function activatePaidRow({ db, row, checkout, paymentIntentId = '', env }) {
   if (row.invite_status === 'sent' || row.invite_status === 'accepted') return { row: publicRow(row), action: 'already_activated' };
   if (row.role === 'telegram_collaborator') {
-    const plan = collaboratorPlan(row.metadata?.planCode || 'single_trip');
+    const plan = collaboratorPlan(row.metadata?.planCode || 'single_trip', env);
     const created = await createCollaboratorInvite(db, {
       ownerCustomerId: row.owner_customer_id,
       tripId: row.trip_id,

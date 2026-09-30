@@ -5,7 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
-import { assertRequiredFirstPassMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import { assertRequiredFirstPassMinimums, firstPassMissingMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import { destinationFromChat, lodgingFromChat } from '../src/vacation/place-search.mjs';
 import {
   DIALOG_TEST_FINGERPRINT,
   REPLY_RULES_SLUG,
@@ -215,39 +216,12 @@ function containsAny(source, words) {
   return words.some((word) => lower.includes(word));
 }
 
-function knownDestinationFromText(source) {
-  const lower = source.toLowerCase();
-  const places = [];
-  const add = (label, pattern) => {
-    if (pattern.test(lower) && !places.includes(label)) places.push(label);
-  };
-  add('Caldwell', /\bcaldwell\b/);
-  add('Boise', /\bboise\b/);
-  add('Idaho', /\bidaho\b/);
-  add('Oahu/Waikiki', /\boahu\b|\bhonolulu\b|\bwaikiki\b/);
-  add('Maui/Kihei', /\bmaui\b|\bkihei\b/);
-  add('Kona/Big Island', /\bkona\b|\bbig island\b/);
-  add('Hawaii', /\bhawaii\b/);
-  add('Las Vegas Strip', /\blas vegas strip\b|\bvegas strip\b/);
-  add('Las Vegas', /\blas vegas\b|\bvegas\b/);
-
-  if (places.includes('Las Vegas Strip')) return 'Las Vegas Strip';
-  if (places.includes('Las Vegas')) return 'Las Vegas';
-  if (places.includes('Caldwell') || places.includes('Boise') || places.includes('Idaho')) {
-    if (places.includes('Caldwell')) return 'Caldwell, Idaho';
-    if (places.includes('Boise')) return 'Boise, Idaho';
-    return 'Idaho';
-  }
-  const hawaiiPlaces = places.filter((place) => place !== 'Idaho');
-  return hawaiiPlaces.join(' / ');
-}
-
 function extractDestination(requestText, payload, trip, options = {}) {
   const inheritedTripDestination = options.ignoreTripContext ? '' : (trip.destination || payload.trip?.destination || '');
   return text(
     inheritedTripDestination ||
       payload.destination ||
-      knownDestinationFromText(requestText) ||
+      destinationFromChat(requestText) ||
       firstMatch(requestText, [
         /\b(?:to|in|for)\s+([A-Z][A-Za-z .'-]{2,60}?)(?:\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|on|for|with|between|around|starting|leaving)\b|$)/i,
         /\b(?:visit|visiting|vacation(?:ing)? in|trip to)\s+([A-Z][A-Za-z .'-]{2,60})(?:\s|$)/i,
@@ -353,7 +327,7 @@ function isWebsiteLinkRequestText(value) {
   const requestText = text(value, 2000).toLowerCase();
   return (
     /\b(send|share|show|give|need|where|what|open|current|broken|old)\b/.test(requestText) || /\?/.test(requestText)
-  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary|caldwell|davidson|vegas|las vegas|strip)\b/.test(requestText);
+  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary)\b/.test(requestText);
 }
 
 function isLinkCapabilityQuestion(value) {
@@ -363,7 +337,7 @@ function isLinkCapabilityQuestion(value) {
     && /\b(someone|anyone|person|people|family|friend|stranger|finds?|has|with)\b/.test(requestText)
     && /\b(link|url|website|web site|web page|site|shared link)\b/.test(requestText)
     && /\b(edit|change|modify|collaborate|comment|view|see|open|only view)\b/.test(requestText)
-    && /\b(vacation|trip|itinerary|vegas|las vegas|strip|jockey club)\b/.test(requestText);
+    && /\b(vacation|trip|itinerary)\b/.test(requestText);
 }
 
 function linkCapabilityAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
@@ -453,7 +427,7 @@ function isConcreteItineraryEditRequest(value) {
   if (isWebsiteLinkRequestText(requestText)) return false;
   if (isDeleteVacationRequest(requestText)) return false;
   if (isPersonAccessQuestion(requestText)) return false;
-  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|caldwell|davidson|shared website|travel plan)\b/.test(requestText);
+  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|shared website|travel plan)\b/.test(requestText);
   const mentionsEdit = /\b(add|remove|delete|keep|change|update|move|create|fill in|timeline|day\s*\d|\d+\s*days?|days?\s+\d|\d+\s*nights?|nights?\s+\d|right dates?|dates?|length of (the )?trip|hotel|lodging|rename|title|description|access|share|member|family|wife|husband|spouse|collaborator|permission|edit rights?|view rights?)\b/.test(requestText);
   const timelineAdd = /\b(add|create|put|include|schedule)\b/.test(requestText)
     && /\b(day\s*\d|days?\s+\d|timeline|family event)\b/.test(requestText);
@@ -469,7 +443,7 @@ function isExplicitNewVacationRequest(value) {
   if (/\b(update|change|edit)\s+(?:the\s+)?(?:trip|vacation|itinerary|website)\s+at\s+https?:\/\//.test(requestText)) return false;
   const explicitPlanningCreate = /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText)
     && /\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)
-    && (knownDestinationFromText(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
+    && (destinationFromChat(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
   return (
     /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText) &&
     /\b(new|brand new|fresh|another|separate|next)\b/.test(requestText) &&
@@ -520,7 +494,7 @@ function isPersonAccessQuestion(value) {
   const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|use\s+telegram|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
   const explicitNamedPerson = /\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/.test(rawText);
   const mentionsPerson = /\b(kim|wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
-  const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
 
@@ -529,13 +503,13 @@ function isAccessRosterQuestion(value) {
   if (!requestText || !isQuestionLike(requestText)) return false;
   const asksWho = /\b(who|which people|what people|who all)\b/.test(requestText);
   const mentionsAccess = /\b(access|permission|permissions|edit|editor|member|collaborator|collaborate|share|shared|view|see|telegram|upload|media)\b/.test(requestText);
-  const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
   return asksWho && mentionsAccess && mentionsVacationContext;
 }
 
 function vacationLookupTerm(value) {
   const requestText = text(value, 4000).toLowerCase();
-  const destination = knownDestinationFromText(requestText);
+  const destination = destinationFromChat(requestText);
   if (destination) return destination;
   if (isPersonAccessQuestion(requestText) && !/\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)) return '';
   const match = requestText.match(/\b(?:is there|are there|do we have|do i have|did we create|did i create|is my|is our)\s+(?:a|an|the|any)?\s*([a-z][a-z0-9 .'-]{2,80}?)(?:\s+(?:vacation|trip|itinerary|staycation|travel plan)\b|[?!.]|$)/i);
@@ -551,8 +525,6 @@ function vacationMatchesLookup(vacation, lookup) {
     .toLowerCase();
   if (!haystack) return false;
   if (haystack.includes(needle)) return true;
-  if (needle.includes('vegas')) return /\b(vegas|las vegas|strip|jockey club)\b/i.test(haystack);
-  if (needle.includes('hawaii')) return /\b(hawaii|oahu|waikiki|maui|kona|big island)\b/i.test(haystack);
   return false;
 }
 
@@ -562,11 +534,9 @@ function publicVacationUrl(vacation, fallbackBase) {
   return '';
 }
 
-function accessPersonLabel(value = '', context = '') {
+function accessPersonLabel(value = '') {
   const rawText = text(value, 500);
   const requestText = rawText.toLowerCase();
-  const contextText = text(context, 3000).toLowerCase();
-  if (/\bkim\b/.test(requestText) || (/\b(she|her)\b/.test(requestText) && /\bkim\b/.test(contextText))) return 'Kim';
   if (/\bwife\b/.test(requestText)) return 'your wife';
   if (/\bhusband\b/.test(requestText)) return 'your husband';
   if (/\bspouse|partner\b/.test(requestText)) return 'your spouse';
@@ -579,9 +549,7 @@ function accessPersonLabel(value = '', context = '') {
 function accessPersonCustomerLabel(personLabel = '', requestText = '', contextText = '') {
   const person = text(personLabel, 120);
   const configuredWifeName = text(process.env.TIMESYNCHER_CUSTOMER_WIFE_DISPLAY_NAME || process.env.TIMESYNCHER_PRIMARY_SPOUSE_NAME, 80);
-  const combined = `${text(requestText, 1000)}\n${text(contextText, 3000)}`.toLowerCase();
   if (person === 'your wife' && configuredWifeName) return configuredWifeName;
-  if (person === 'your wife' && /\bkim\b/.test(combined)) return 'Kim';
   return person || 'that person';
 }
 
@@ -692,7 +660,7 @@ function isAccessPricingQuestion(requestText = '') {
   const source = text(requestText, 2000).toLowerCase();
   if (!isQuestionLike(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant|kim)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
@@ -706,24 +674,28 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const unlimited = plans.find((plan) => text(plan?.scope, 80) === 'unlimited_trips');
   const photo = manifest?.mediaAddOnPolicy?.photoMemories || {};
   const video = manifest?.mediaAddOnPolicy?.videoMemoriesRecommendation || {};
-  const checkout = checkoutBaseUrl(manifest);
   const lines = [];
   if (allVacations) {
-    lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
-    lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
+    if (unlimited?.amountUsd) lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is $${unlimited.amountUsd}.`);
+    else console.error('access price is not configured: unlimited telegram');
+    lines.push('That adds one active Telegram collaborator. Add more collaborators one at a time.');
     if (wantsMedia) {
-      lines.push(`Photo upload access across all vacations is ${photo.unlimitedVacationsAmountUsd ? `$${photo.unlimitedVacationsAmountUsd}` : '$9'}.`);
-      lines.push(`Video upload access across all vacations is ${video.unlimitedVacationsAmountUsd ? `$${video.unlimitedVacationsAmountUsd}` : '$27'}.`);
+      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access for unlimited vacations for the whole year is $${photo.unlimitedVacationsAmountUsd}.`);
+      else console.error('access price is not configured: unlimited photo');
+      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access for unlimited vacations for the whole year is $${video.unlimitedVacationsAmountUsd}.`);
+      else console.error('access price is not configured: unlimited video');
     }
   } else {
-    lines.push(`For ${person}, Telegram editing access for one vacation is ${singleTrip?.amountUsd ? `$${singleTrip.amountUsd}` : '$15'}.`);
-    lines.push(`That adds one active Telegram collaborator for that vacation. Add more collaborators one checkout at a time.`);
+    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for this vacation is $${singleTrip.amountUsd}.`);
+    else console.error('access price is not configured: single telegram');
+    lines.push('That adds one active Telegram collaborator for that vacation. Add more collaborators one at a time.');
     if (wantsMedia) {
-      lines.push(`Photo upload access for one vacation is ${photo.singleVacationAmountUsd ? `$${photo.singleVacationAmountUsd}` : '$5'}.`);
-      lines.push(`Video upload access for one vacation is ${video.singleVacationAmountUsd ? `$${video.singleVacationAmountUsd}` : '$17'}.`);
+      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for this vacation is $${photo.singleVacationAmountUsd}.`);
+      else console.error('access price is not configured: single photo');
+      if (video.singleVacationAmountUsd) lines.push(`Video upload access for this vacation is $${video.singleVacationAmountUsd}.`);
+      else console.error('access price is not configured: single video');
     }
   }
-  lines.push(`Add-on checkout link: ${checkout}/addons-checkout.html`);
   return lines.join('\n\n');
 }
 
@@ -1111,7 +1083,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
       answer = 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.';
       answerMode = 'refuse_internal';
     } else if (isPaymentCredentialRequest(ownRequestText)) {
-      answer = 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.';
+      answer = 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.';
       answerMode = 'payment_refusal';
     } else if (isAccessPricingQuestion(ownRequestText)) {
       answer = accessPricingAnswer({ requestText: ownRequestText, manifest });
@@ -1225,7 +1197,7 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.96,
-      answer: 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.',
+      answer: 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.',
       answerMode: 'payment_refusal',
       reasons: ['payment_credential_request', 'external_action_boundary', 'current_turn_no_write'],
     });
@@ -1413,62 +1385,6 @@ function planningQuestions(destination, dates) {
   return questions.slice(0, 4);
 }
 
-function extractTripSegments(requestText) {
-  const lower = requestText.toLowerCase();
-  const segments = [];
-  if (containsAny(lower, ['honolulu', 'waikiki', 'oahu', 'banzai pipeline', 'moana', 'surfrider'])) {
-    segments.push({
-      island: 'Oahu',
-      base: containsAny(lower, ['waikiki']) ? 'Waikiki / Honolulu' : 'Honolulu',
-      nights: /\bthree nights?\b/i.test(requestText) ? 3 : /\btwo nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['moana', 'surfrider']) ? 'Beachfront Waikiki lodging requested; compare source-backed nearby hotels.' : 'Waikiki hotel options.',
-      ideas: [
-        'Waikiki arrival/check-in and beach time',
-        'Local restaurants, juice/breakfast spots, and dinner options',
-        'North Shore surf/coast day or half-day',
-        'Waikiki surf lesson',
-        'Waikiki shopping shortlist',
-      ],
-    });
-  }
-  if (containsAny(lower, ['maui', 'kihei', 'kapalua'])) {
-    segments.push({
-      island: 'Maui',
-      base: containsAny(lower, ['kihei']) ? 'Kihei' : 'Maui',
-      nights: /\bthree nights?\b/i.test(requestText) && !/\btwo nights?\b/i.test(requestText) ? 3 : 2,
-      lodging: 'Kihei-area lodging first; include Kapalua-area dining options.',
-      ideas: [
-        'Kihei beach / resort-area downtime',
-        'Highly rated Kihei restaurants',
-        'Kapalua-area dinner options',
-        'Sunset dinner sailboat cruise',
-        'Whale watching only if seasonally available; otherwise swap in snorkeling/sunset sail',
-      ],
-    });
-  }
-  if (containsAny(lower, ['kona', 'big island', 'manta'])) {
-    segments.push({
-      island: 'Big Island',
-      base: 'Kona',
-      nights: /\blast two nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['hilton']) ? 'Hilton option preferred; verify exact Kona-area property fit.' : 'Kona hotel options.',
-      ideas: [
-        'Kona arrival/check-in',
-        'Night manta ray snorkel tour',
-        'Hotel-based or waterfront restaurant options',
-        'Flexible Kona beach / coffee / scenic time depending on flight schedule',
-      ],
-    });
-  }
-  return segments.length ? segments : [{
-    island: 'Trip segment',
-    base: 'Needs confirmation',
-    nights: null,
-    lodging: 'Lodging preferences need confirmation.',
-    ideas: ['Build the day-by-day plan after destination/dates are confirmed.'],
-  }];
-}
-
 function buildInitialItinerary(artifacts) {
   const start = artifacts.dates.dateText || artifacts.dates.startDate || 'travel date to confirm';
   const destination = artifacts.destination || 'destination needs confirmation';
@@ -1484,149 +1400,10 @@ function buildInitialItinerary(artifacts) {
     '- multiple lodging/hotel options with source URLs, fees, cancellation terms, and location tradeoffs',
     '- flight options when relevant, including airline, airport, timing, fare caveats, and baggage notes',
     '- cars and ground transport options with pickup logistics and total-price caveats',
-    '- restaurants, shopping, and activities with source URLs, hours, reservation needs, and verification status',
+    '- restaurants, shopping, and activities with source URLs, hours, and verification status',
     '- open questions and customer decisions before anything is treated as final',
   ];
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').slice(0, 3900);
-}
-
-function link(label, url) {
-  return { label, url };
-}
-
-function researchedThing({ category, subtype, title, description, links = [], island, status = 'research_candidate' }) {
-  return {
-    category,
-    subtype,
-    title,
-    description,
-    links,
-    metadata: {
-      source: 'product-gbrain-dispatch',
-      status,
-      sourceBacked: true,
-      island,
-      researchedAt: new Date().toISOString(),
-      caveat: 'Verify current availability, prices, hours, and seasonal fit before relying on this option. TimeSyncher Vacation does not book travel.',
-    },
-  };
-}
-
-function hawaiiResearchThings(requestText) {
-  if (!/\bhawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island\b/i.test(requestText)) return [];
-  return [
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Waikiki hotel candidate',
-      title: 'Source-backed Waikiki beachfront lodging candidate',
-      island: 'Oahu',
-      description: 'Primary Waikiki hotel candidate because the customer specifically asked for the Surfrider/Moana. Research pass should compare room availability, cancellation terms, resort fees, beach access, and nearby alternatives.',
-      links: [link('Hotel site', 'https://www.marriott.com/en-us/hotels/hnlwi-moana-surfrider-a-westin-resort-and-spa-waikiki-beach/overview/')],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Surf lesson',
-      title: 'Waikiki surf lesson shortlist',
-      island: 'Oahu',
-      description: 'Customer wants to learn to surf in Waikiki. Research pass should compare 2-3 beginner-friendly lesson providers by meeting point, group/private format, duration, reviews, and cancellation policy.',
-      links: [
-        link('Hans Hedemann Surf School', 'https://hhsurf.com/'),
-        link('Faith Surf School', 'https://faithsurfschool.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'North Shore day option',
-      title: 'North Shore surf/coast day',
-      island: 'Oahu',
-      description: 'Customer asked for a North Shore surf/coast stop. Research pass should set expectations about surf seasonality and pair it with nearby source-backed food or shopping stops if surf is quiet.',
-      links: [link('Go Hawaii North Shore overview', 'https://www.gohawaii.com/islands/oahu/regions/north-shore')],
-    }),
-    researchedThing({
-      category: 'restaurant',
-      subtype: 'Waikiki restaurants',
-      title: 'Waikiki local/interesting restaurant research set',
-      island: 'Oahu',
-      description: 'Starter shortlist should be generated from current public sources for casual noodles, beachfront classics, malasadas, plate-lunch, and poke options near Waikiki.',
-      links: [
-        link('Waikiki casual noodle source', 'https://www.gohawaii.com/islands/oahu/regions/honolulu/waikiki'),
-        link('Duke’s Waikiki', 'https://www.dukeswaikiki.com/'),
-        link('Leonard’s Bakery', 'https://www.leonardshawaii.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'shopping',
-      subtype: 'Waikiki shopping',
-      title: 'Waikiki shopping shortlist',
-      island: 'Oahu',
-      description: 'Starter shortlist to verify: Royal Hawaiian Center and International Market Place for Waikiki walkable shopping; Ala Moana Center for a larger shopping block if transportation/time fits.',
-      links: [
-        link('Royal Hawaiian Center', 'https://www.royalhawaiiancenter.com/'),
-        link('International Market Place', 'https://shopinternationalmarketplace.com/'),
-        link('Ala Moana Center', 'https://www.alamoanacenter.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Kihei lodging candidate',
-      title: 'Kihei-area lodging research',
-      island: 'Maui',
-      description: 'Customer wants Kihei. Research pass should compare Kihei/Wailea lodging by beach access, parking, resort fees, cancellation terms, and drive time to Kapalua-area restaurants.',
-      links: [link('Go Hawaii Kihei overview', 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei')],
-    }),
-    researchedThing({
-      category: 'restaurant',
-      subtype: 'Maui restaurants',
-      title: 'Kihei and Kapalua restaurant research set',
-      island: 'Maui',
-      description: 'Starter shortlist should be generated from current public sources for Kihei/South Maui casual food, sushi, sunset dining, and elevated dinner options.',
-      links: [
-        link('Nalu’s South Shore Grill', 'https://www.naluskihei.com/'),
-        link('Maui sunset dining source', 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei'),
-      ],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Maui sunset sail',
-      title: 'Maui sunset dinner sail / whale-watching check',
-      island: 'Maui',
-      description: 'Customer wants a sunset dinner sail and whale watching ideally. Research pass should confirm whale season before promising whale watching, then compare sunset sail operators and dinner-included options.',
-      links: [
-        link('Trilogy Maui dinner sail options', 'https://sailtrilogy.com/'),
-        link('Pacific Whale Foundation', 'https://www.pacificwhale.org/'),
-      ],
-    }),
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Kona-area hotel candidate',
-      title: 'Kona-area lodging fit check',
-      island: 'Big Island',
-      description: 'Customer mentioned a Hilton-style Hawaii lodging preference. Research pass should confirm island intent and compare source-backed Kona-area lodging against true Kona-town hotels.',
-      links: [link('Kona-area lodging source', 'https://www.gohawaii.com/islands/hawaii-island/regions/kona')],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Manta ray night snorkel',
-      title: 'Kona night manta ray snorkel',
-      island: 'Big Island',
-      description: 'Customer wants manta rays at night. Research pass should compare operators by departure harbor, duration, snorkel vs dive, minimum age/swim requirements, cancellation policy, and moon/weather caveats.',
-      links: [
-        link('Kona manta ray tour source', 'https://www.gohawaii.com/islands/hawaii-island/things-to-do/water-activities'),
-        link('Big Island Divers', 'https://bigislanddivers.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'transport',
-      subtype: 'Inter-island and car rental',
-      title: 'Inter-island flights and rental cars',
-      island: 'Hawaii',
-      description: 'Plan needs LAS -> HNL, HNL -> OGG, OGG -> KOA, and KOA -> LAS or return routing, plus rental car strategy. Oahu can be mixed car/no-car; Maui and Big Island generally need cars.',
-      links: [
-        link('Hawaiian Airlines', 'https://www.hawaiianairlines.com/'),
-        link('Southwest Hawaii', 'https://www.southwest.com/destinations/hawaii'),
-      ],
-    }),
-  ];
 }
 
 function siteBase() {
@@ -1922,10 +1699,37 @@ async function buildArtifacts(job, manifest) {
   const titleDestination = destination ? titleCase(destination) : 'Vacation';
   const requestedAt = new Date().toISOString();
   const initialItinerary = buildInitialItinerary({ requestText, destination, dates });
-  const publicResearch = await runPublicResearch({ artifacts: { requestText, vacationName, unforgettableGoal, destination, dates, lodgingLane: lane }, targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15, minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10 });
+  const stay = lodgingFromChat(requestText, {
+    lodging: text(payload.lodging || payload.lodgingName || '', 180),
+    lat: asObject(payload.house).lat ?? payload.houseLat,
+    lng: asObject(payload.house).lng ?? payload.houseLng,
+  });
+  const jobInput = asObject(job.input);
+  const wantedThings = Array.isArray(jobInput.wantedThings)
+    ? jobInput.wantedThings
+    : (Array.isArray(payload.wantedThings) ? payload.wantedThings : []);
+  const intakeEvent = jobInput.intakeEvent ?? payload.intakeEvent ?? null;
+  const publicResearch = await runPublicResearch({
+    wantedThings,
+    intakeEvent,
+    artifacts: {
+      requestText,
+      vacationName,
+      unforgettableGoal,
+      destination,
+      dates,
+      lodging: stay.text,
+      house: stay.lat !== null ? { lat: stay.lat, lng: stay.lng } : undefined,
+    },
+    targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15,
+    minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10,
+  });
+  const live = publicResearch.status === 'live_place_search';
   const researchedThings = publicResearch.candidates || [];
-  assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
-  if (publicResearch.status !== 'source_backed_research_complete') {
+  if (live) {
+    const gate = firstPassMissingMinimums(researchedThings, publicResearch.firstPassMinimums);
+    if (!Object.keys(gate.missing).length) assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
+  } else if (publicResearch.status !== 'no_wanted_things') {
     throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
   }
   const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal, destination, dates, researchedThings, createNewTrip });
@@ -1938,7 +1742,7 @@ async function buildArtifacts(job, manifest) {
     `Customer action: TimeSyncher Vacation organizes and compares options; customers verify details and make any bookings themselves.`,
   ].join('\n');
 
-  const things = [
+  const things = live ? (publicResearch.things || []) : [
     {
       category: 'note',
       subtype: 'planning_brief',
@@ -1999,8 +1803,10 @@ async function buildArtifacts(job, manifest) {
   const supportNotes = [
     {
       actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-      note: `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
-      metadata: { destination: destination || null, lodgingLane: lane.primary, requestedAt, webItineraryUrl: webItineraryUrl || null },
+      note: live
+        ? `Trip intake saved ${(publicResearch.things || []).length} places. Sources: ${JSON.stringify(publicResearch.sourceCounts || {})}`
+        : `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
+      metadata: { destination: destination || null, requestedAt, webItineraryUrl: webItineraryUrl || null },
     },
   ];
 
@@ -2064,7 +1870,7 @@ function renderCustomerResponse(job, artifacts) {
   if (requestType === 'itinerary_research_update' || url) {
     const count = artifacts.researchedThings?.length || 0;
     const researchStatus = text(artifacts.publicResearch?.status || '', 120);
-    if (researchStatus && researchStatus !== 'source_backed_research_complete') {
+    if (researchStatus && researchStatus !== 'source_backed_research_complete' && researchStatus !== 'live_place_search') {
       return [
         'I started the vacation website, but it still needs more source-backed options before I call the first pass ready.',
         '',
@@ -2089,7 +1895,7 @@ function renderCustomerResponse(job, artifacts) {
   const lines = [
     'Great, I’ve got the starting shape of your trip.',
     '',
-    'Before I build the first version of your vacation website, send me one more note with anything else you want me to know: favorite restaurants or foods, lodging preferences, budget range, must-do activities, things to avoid, mobility needs, kid-friendly priorities, or any reservations/flights you already have.',
+    'Before I build the first version of your vacation website, send me one more note with anything else you want me to know: favorite restaurants or foods, lodging preferences, budget range, must-do activities, things to avoid, mobility needs, kid-friendly priorities, or any flights you already have.',
     '',
     'After your next message, I’ll spend about 10-15 minutes researching and organizing the first pass, then I’ll come back with your dedicated TimeSyncher Vacation website.',
   ].filter(Boolean);

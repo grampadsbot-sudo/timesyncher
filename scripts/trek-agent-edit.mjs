@@ -196,11 +196,13 @@ function operationSchema() {
 
 function planWithGrok({ requestText, before }) {
   if (process.env.TIMESYNCHER_TREK_AGENT_EDIT_DISABLE_GROK === '1') return inferFallbackPlan(requestText);
-  const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
+  const grokBin = process.env.TIMESYNCHER_GROK_BIN || 'grok';
   const grokModel = process.env.TIMESYNCHER_GROK_MODEL || 'grok-4.5';
   const prompt = buildPlanPrompt({ requestText, before });
   const planTimeoutSeconds = Math.max(10, Math.ceil(Number(process.env.TIMESYNCHER_TREK_AGENT_PLAN_TIMEOUT_MS || 90000) / 1000));
-  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${planTimeoutSeconds}s`, 'sudo', '-n', '-u', 'ubishere9995', grokBin, '-p', prompt, '--output-format', 'json', '--json-schema', operationSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '2'], {
+  const grokUser = String(process.env.TIMESYNCHER_GROK_USER || process.env.TIMESYNCHER_TREK_DB_OWNER || '').trim();
+  const grokPrefix = grokUser ? ['sudo', '-n', '-u', grokUser] : [];
+  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${planTimeoutSeconds}s`, ...grokPrefix, grokBin, '-p', prompt, '--output-format', 'json', '--json-schema', operationSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '2'], {
     encoding: 'utf8',
     timeout: (planTimeoutSeconds + 10) * 1000,
     maxBuffer: 2 * 1024 * 1024,

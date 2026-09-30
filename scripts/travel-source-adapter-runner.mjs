@@ -49,6 +49,20 @@ function envFromSecretFiles(adapter = {}) {
   return env;
 }
 
+function adapterCommand(adapter = {}) {
+  const envName = `TIMESYNCHER_ADAPTER_BIN_${String(adapter.id || '').toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+  const fromEnv = String(process.env[envName] || '').trim();
+  const command = fromEnv || String(adapter.binaryPath || '').trim();
+  if (!command || command.startsWith('/home/') || command.startsWith('~')) {
+    throw new Error(`Missing CLI for ${adapter.id || 'adapter'}. Set ${envName} or binaryPath to a command on PATH.`);
+  }
+  return command;
+}
+
+function adapterUser(adapter = {}) {
+  return String(adapter.runAsUser || process.env.TIMESYNCHER_ADAPTER_RUN_AS || '').trim();
+}
+
 async function execJson(command, args, { timeout = 60000, runAsUser = '', env = {} } = {}) {
   const finalCommand = runAsUser ? 'sudo' : command;
   const envPairs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
@@ -87,70 +101,107 @@ export function loadAdapterRegistry(registryPath = DEFAULT_REGISTRY) {
   return { registry, errors };
 }
 
-export function approvedAdapters(registry, { includeFixtureOnly = false } = {}) {
+export function approvedAdapters(registry) {
   return (registry.adapters || []).filter((adapter) => {
     if (!adapter.enabled) return false;
     if (BLOCKED_CLASSES.has(adapter.safetyClass)) return false;
     if (!ALLOWED_ENABLED_CLASSES.has(adapter.safetyClass)) return false;
     if (adapter.allowsBookingOrPayment) return false;
-    if (adapter.fixtureOnly && !includeFixtureOnly) return false;
+    if (adapter.fixtureOnly) return false;
     if (adapter.kind === 'provider') return false;
     return true;
   });
 }
 
-function fixtureRecentTravelerSentiment(adapter, context = {}) {
-  const now = text(context.retrievedAt || new Date().toISOString(), 40);
-  const destination = text(context.destination || context.artifacts?.destination || 'the destination', 120);
-  const expiresAt = addDaysIso(now, 14);
-  return [{
-    category: 'decision',
-    title: `${destination} recent traveler sentiment check`,
-    summary: `Recent-traveler sentiment should be checked before final ranking so the itinerary avoids stale, overhyped, or logistically risky picks.`,
-    details: `Adapter fixture proving TimeSyncher can attach recent-sentiment quality metadata to Things. Live production should replace this with a registered read-only source such as last30days-style public chatter research, review-source trends, or destination-specific traveler reports.`,
-    website: 'https://github.com/mvanhorn/last30days-skill',
-    sources: [{
-      label: 'last30days skill pattern',
-      url: 'https://github.com/mvanhorn/last30days-skill',
-      retrievedAt: now,
-      adapterId: adapter.id,
-    }],
+function googlePlaceHost(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === 'places.googleapis.com' || host === 'maps.googleapis.com';
+  } catch {
+    return false;
+  }
+}
+
+function webHit({ category, title, summary, url, source, retrievedAt }) {
+  const website = publicUrl(url);
+  const name = text(title, 160);
+  if (!website || !name || googlePlaceHost(website)) return null;
+  const blurb = text(summary || name, 500);
+  return {
+    category: text(category || 'decision', 40) || 'decision',
+    title: name,
+    summary: blurb,
+    details: blurb,
+    website,
+    source: source,
+    sources: [{ label: source, url: website, retrievedAt }],
     verificationStatus: 'source_checked',
     sourceBacked: true,
-    caveats: ['Fixture sentiment adapter only; live traveler-sentiment source must be enabled separately after source-policy approval.'],
-    sourceCaveats: ['Fixture-only adapter proves schema and persistence; not a destination-specific recommendation.'],
-    adapterSources: [{
-      adapterId: adapter.id,
-      sourceId: 'last30days-pattern',
-      safetyClass: adapter.safetyClass,
-      fetchedAt: now,
-      status: 'fixture_source_checked',
-    }],
-    sourceQuality: {
-      sourceCount: 1,
-      adapterCount: 1,
-      safetyClass: adapter.safetyClass,
-      confidence: 'fixture',
-      lastVerifiedAt: now,
-      expiresAt,
-    },
-    qualitySignals: {
-      freshness: 'fixture_recent_sentiment_lane',
-      specificity: 'schema_proof',
-      caveatCount: 1,
-      recentSentiment: 'required_before_final_ranking',
-    },
-    fitScores: {
-      family: null,
-      couple: null,
-      solo: null,
-      weatherSensitive: null,
-      reservationDifficulty: null,
-      distanceRisk: null,
-    },
-    verifiedAt: now,
-    expiresAt,
-  }];
+  };
+}
+
+function braveHits(payload, category, retrievedAt) {
+  const results = Array.isArray(payload?.web?.results) ? payload.web.results : [];
+  return results.map((result) => webHit({
+    category,
+    title: result?.title,
+    summary: result?.description,
+    url: result?.url,
+    source: 'brave',
+    retrievedAt,
+  })).filter(Boolean);
+}
+
+function tavilyHits(payload, category, retrievedAt) {
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  return results.map((result) => webHit({
+    category,
+    title: result?.title,
+    summary: result?.content,
+    url: result?.url,
+    source: 'tavily',
+    retrievedAt,
+  })).filter(Boolean);
+}
+
+export async function searchBraveAndTavily(query, options = {}) {
+  const q = text(query, 500);
+  if (!q) return [];
+  const braveKey = text(options.braveKey, 500);
+  const tavilyKey = text(options.tavilyKey, 500);
+  const missing = [];
+  if (!braveKey) missing.push(text(options.braveName, 80) || 'brave');
+  if (!tavilyKey) missing.push(text(options.tavilyName, 80) || 'tavily');
+  if (missing.length) {
+    const error = new Error(`Search refused to run. Missing ${missing.join(', ')}.`);
+    error.code = 'missing_key';
+    console.error(error.message);
+    throw error;
+  }
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const category = text(options.category || 'decision', 40) || 'decision';
+  const retrievedAt = text(options.retrievedAt || new Date().toISOString(), 40);
+  const braveResponse = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(q)}`, {
+    headers: { Accept: 'application/json', 'X-Subscription-Token': braveKey },
+  });
+  if (!braveResponse?.ok) throw new Error(`Brave search failed: HTTP ${braveResponse?.status || 0}`);
+  const tavilyResponse = await fetchImpl('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${tavilyKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: q,
+      search_depth: 'basic',
+      topic: 'general',
+      max_results: 5,
+      include_answer: false,
+      include_raw_content: false,
+    }),
+  });
+  if (!tavilyResponse?.ok) throw new Error(`Tavily search failed: HTTP ${tavilyResponse?.status || 0}`);
+  return [
+    ...braveHits(await braveResponse.json(), category, retrievedAt),
+    ...tavilyHits(await tavilyResponse.json(), category, retrievedAt),
+  ];
 }
 
 async function runHotelGoat(adapter, context = {}) {
@@ -161,7 +212,7 @@ async function runHotelGoat(adapter, context = {}) {
   if (!destination || !checkin || !checkout) return [];
   const now = text(context.retrievedAt || new Date().toISOString(), 40);
   const expiresAt = addDaysIso(now, 3);
-  const body = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/hotel-goat-pp-cli', [
+  const body = await execJson(adapterCommand(adapter), [
     'hotels',
     destination,
     checkin,
@@ -169,7 +220,7 @@ async function runHotelGoat(adapter, context = {}) {
     '--limit', '3',
     '--agent',
     '--select', 'results.name,results.rating,results.price_per_night,results.booking_urls.primary',
-  ], { timeout: Number(adapter.timeoutMs || 120000), runAsUser: adapter.runAsUser || 'ubishere9995' });
+  ], { timeout: Number(adapter.timeoutMs || 120000), runAsUser: adapterUser(adapter) });
   return (Array.isArray(body.results) ? body.results : []).map((hotel, index) => {
     const url = publicUrl(hotel.booking_urls?.primary);
     const price = hotel.price_per_night ? `$${hotel.price_per_night}/night benchmark` : '';
@@ -181,7 +232,6 @@ async function runHotelGoat(adapter, context = {}) {
         `Hotel GOAT live read-only search for ${destination} ${checkin} to ${checkout}.`,
         hotel.rating ? `Visible rating: ${hotel.rating}.` : '',
         price ? `Visible nightly benchmark: ${price}.` : '',
-        'This is a research candidate only. TimeSyncher does not book, reserve, hold, or pay.',
       ].filter(Boolean).join('\n'),
       website: url,
       sources: url ? [{ label: 'Hotel GOAT source URL', url, retrievedAt: now, adapterId: adapter.id }] : [],
@@ -202,61 +252,20 @@ async function runWanderlustGoat() {
   return [];
 }
 
-async function runMasterParkQuote(adapter, context = {}) {
-  const artifacts = context.artifacts || {};
-  const requestText = text(artifacts.requestText || context.requestText || '', 2000);
-  if (!/\b(masterpark|seatac|sea\b|seattle airport|airport parking)\b/i.test(requestText)) return [];
-  const now = text(context.retrievedAt || new Date().toISOString(), 40);
-  const expiresAt = addDaysIso(now, 3);
-  const quote = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/masterpark-pp-cli', [
-    'quote',
-    '--lot', 'B',
-    '--dropoff', '2030-06-11 07:00',
-    '--pickup', '2030-06-13 18:30',
-    '--json',
-  ], { timeout: Number(adapter.timeoutMs || 60000), runAsUser: adapter.runAsUser || 'ubishere9995' });
-  const first = Array.isArray(quote) ? quote[0] : quote;
-  if (!first) return [];
-  const total = first.grand_total || first.balance_due || first.due_at_lot || '';
-  return [{
-    category: 'transport',
-    title: 'MasterPark SEA parking quote benchmark',
-    summary: `Read-only MasterPark quote benchmark for SEA parking${total ? `: about $${total}` : ''}; useful when a trip includes Seattle airport parking logistics.`,
-    details: [
-      'MasterPark read-only quote smoke used Lot B with future benchmark dates to prove the source adapter can return prices without creating a reservation.',
-      first.location_information?.name ? `Location: ${first.location_information.name}.` : '',
-      first.location_information?.address ? `Address: ${String(first.location_information.address).replace(/<\/?br[^>]*>/gi, ' ')}.` : '',
-      total ? `Grand total benchmark: $${total}.` : '',
-      'Reservation creation remains blocked; this adapter may quote only.',
-    ].filter(Boolean).join('\n'),
-    website: 'https://masterparking.com/',
-    sources: [{ label: 'MasterPark', url: 'https://masterparking.com/', retrievedAt: now, adapterId: adapter.id }],
-    verificationStatus: 'needs_price_check',
-    caveats: ['Benchmark quote only; verify actual trip dates, vehicle type, fees, availability, and lot rules before relying on it.'],
-    sourceCaveats: ['MasterPark CLI has a reserve command, but the Vacation adapter blocks reservation/auth commands and uses quote only.'],
-    adapterSources: [{ adapterId: adapter.id, sourceId: 'masterpark-lot-b-quote', safetyClass: adapter.safetyClass, fetchedAt: now, status: 'live_read_only_quote_passed' }],
-    sourceQuality: { sourceCount: 1, adapterCount: 1, safetyClass: adapter.safetyClass, confidence: 'medium', lastVerifiedAt: now, expiresAt },
-    qualitySignals: { freshness: 'live_quote_snapshot', specificity: 'sea_airport_parking', caveatCount: 2 },
-    fitScores: { distanceRisk: 'airport_specific', reservationDifficulty: 'quote_only_no_reservation' },
-    verifiedAt: now,
-    expiresAt,
-  }];
-}
-
 async function runRoadsideAmerica(adapter, context = {}) {
   const artifacts = context.artifacts || {};
   const destination = text(context.destination || artifacts.destination || '', 120);
   if (!destination) return [];
   const now = text(context.retrievedAt || new Date().toISOString(), 40);
   const expiresAt = addDaysIso(now, 14);
-  const body = await execJson(adapter.binaryPath || '/home/ubishere9995/.local/bin/roadside-america-pp-cli', [
+  const body = await execJson(adapterCommand(adapter), [
     'near',
     destination,
     '--radius', '25',
     '--limit', '5',
     '--agent',
     '--select', 'name,city,distance,source_url',
-  ], { timeout: Number(adapter.timeoutMs || 75000), runAsUser: adapter.runAsUser || 'ubishere9995' });
+  ], { timeout: Number(adapter.timeoutMs || 75000), runAsUser: adapterUser(adapter) });
   return (Array.isArray(body.attractions) ? body.attractions : []).map((attraction, index) => {
     const url = publicUrl(attraction.source_url);
     const city = text(attraction.city || body.query?.place || destination, 160);
@@ -287,10 +296,9 @@ async function runRoadsideAmerica(adapter, context = {}) {
 }
 
 export async function runApprovedSourceAdapters(input = {}) {
-  const includeFixtureOnly = Boolean(input.fixtureMode || input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE);
   const { registry, errors } = loadAdapterRegistry(input.registryPath || process.env.TIMESYNCHER_TRAVEL_SOURCE_ADAPTER_REGISTRY || DEFAULT_REGISTRY);
   if (errors.length) return { status: 'registry_invalid', adaptersRun: [], candidates: [], errors };
-  const adapters = approvedAdapters(registry, { includeFixtureOnly });
+  const adapters = approvedAdapters(registry);
   const candidates = [];
   const adaptersRun = [];
   const adapterErrors = [];
@@ -305,15 +313,21 @@ export async function runApprovedSourceAdapters(input = {}) {
     }
   }
   for (const adapter of adapters) {
-    if (adapter.id === 'fixture-recent-traveler-sentiment') {
-      candidates.push(...fixtureRecentTravelerSentiment(adapter, input));
-      adaptersRun.push({ adapterId: adapter.id, status: 'fixture_complete', safetyClass: adapter.safetyClass });
-    } else if (adapter.id === 'printingpress-wanderlust-goat') {
-      adaptersRun.push({ adapterId: adapter.id, status: 'disabled_google_places_seed_removed', safetyClass: adapter.safetyClass, candidateCount: 0 });
+    if (adapter.id === 'brave-tavily-web') {
+      const query = [text(input.destination, 160), text(input.artifacts?.requestText || input.requestText, 400)].filter(Boolean).join(' ');
+      const found = await searchBraveAndTavily(query, {
+        fetchImpl: input.fetchImpl,
+        braveKey: input.braveKey,
+        tavilyKey: input.tavilyKey,
+        braveName: input.braveName,
+        tavilyName: input.tavilyName,
+        category: 'decision',
+        retrievedAt: input.retrievedAt,
+      });
+      candidates.push(...found);
+      adaptersRun.push({ adapterId: adapter.id, status: found.length ? 'live_read_only_complete' : 'empty', safetyClass: adapter.safetyClass, candidateCount: found.length });
     } else if (adapter.id === 'printingpress-hotel-goat') {
       await runAdapter(adapter, () => runHotelGoat(adapter, input), 'skipped_missing_destination_or_dates');
-    } else if (adapter.id === 'printingpress-masterpark-quote') {
-      await runAdapter(adapter, () => runMasterParkQuote(adapter, input), 'skipped_not_relevant');
     } else if (adapter.id === 'printingpress-roadside-america') {
       await runAdapter(adapter, () => runRoadsideAmerica(adapter, input), 'skipped_missing_destination');
     } else {

@@ -1,0 +1,14 @@
+<script src="/assets/kept.js"></script>
+<link rel="modulepreload" href="/assets/kept.js">
+<link rel="preload" as="script" href="./kept.js">
+<link rel="stylesheet" href="https://travel.timesyncher.com/assets/index.css">
+<script type="module">
+  import '/assets/kept.js';
+  import('./kept.js');
+  const trek = document.createElement('script');
+  trek.src = '/assets/kept.js';
+  const base = new URL('/', 'https://timesyncher.com');
+  const referer = { 'HTTP-Referer': 'https://timesyncher.com' };
+  fetch('https://vacation-staging.timesyncher.com/api/shared/example');
+</script>
+<script src="https://js.stripe.com/v3/"></script>

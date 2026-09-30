@@ -1,3 +1,4 @@
+import { logCheckoutConfig, optionalConfigCents } from '../src/vacation/checkout-pricing.mjs';
 import { stripePublishableKey } from '../src/vacation/stripe-env.mjs';
 
 function send(res, status, body) {
@@ -15,8 +16,10 @@ export default async function handler(req, res) {
   } catch (error) {
     return send(res, 503, { ok: false, error: error.message || 'Stripe publishable key is not configured yet.' });
   }
+  const checkout = logCheckoutConfig(process.env);
   return send(res, 200, {
     ok: true,
+    checkout,
     mode: stripeConfig.mode,
     publishableKey: stripeConfig.key,
     products: {
@@ -28,7 +31,7 @@ export default async function handler(req, res) {
       unlimited: {
         name: process.env.TIMESYNCHER_UNLIMITED_NAME || 'TimeSyncher Vacation - Unlimited',
         description: process.env.TIMESYNCHER_UNLIMITED_DESCRIPTION || '',
-        amount: Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10),
+        amount: optionalConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS),
       },
       photoMemories: {
         single: {
@@ -43,6 +46,11 @@ export default async function handler(req, res) {
           amount: Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10),
           photoLimit: Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_LIMIT || process.env.TIMESYNCHER_PHOTO_MEMORIES_LIMIT || '100', 10),
         },
+      },
+      collaborator: {
+        single: optionalConfigCents(process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS),
+        unlimited: optionalConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS),
+        videoUnlimited: optionalConfigCents(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS),
       },
     },
   });

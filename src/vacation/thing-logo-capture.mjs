@@ -167,7 +167,7 @@ export function logoLookupRuntimeSource() {
 }
 
 export function generatedLogoDataUri(thing = {}, override = {}, type = 'other') {
-  const name = text(override.title || thing.name || thing.title || 'Thing');
+  const name = text(override.title || thing.name || thing.title || '');
   const letter = (name.replace(/[^A-Za-z0-9]/g, '')[0] || '?').toUpperCase();
   const colors = {
     flight: ['#0f766e', '#ccfbf1'],

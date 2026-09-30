@@ -11,15 +11,14 @@ import {
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
+import { customerCheckoutFailure, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
 
 const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
-const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
 const PHOTO_MEMORIES_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
 const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
 const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
 const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
 const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-const COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS || '2700', 10);
 const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 
 function requireContact(body) {
@@ -42,7 +41,10 @@ function orderDetails(body) {
   const orderBump = Boolean(body.orderBump);
   const photoMemories = Boolean(body.photoMemories);
   const photoAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
-  const amount = BASE_PRICE_CENTS + (orderBump ? ORDER_BUMP_PRICE_CENTS : 0) + photoAmount;
+  const orderBumpCents = orderBump
+    ? requiredConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS')
+    : 0;
+  const amount = BASE_PRICE_CENTS + orderBumpCents + photoAmount;
   return {
     orderBump,
     photoMemories,
@@ -57,7 +59,11 @@ function collaboratorAccessAddOns(body = {}, plan = {}) {
   const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
   const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
   const photoAmountCents = photoUpload ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-  const videoAmountCents = videoUpload ? (unlimited ? COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
+  const videoAmountCents = videoUpload
+    ? (unlimited
+      ? requiredConfigCents(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS')
+      : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS)
+    : 0;
   return {
     photoUpload,
     videoUpload,
@@ -282,6 +288,7 @@ export default async function handler(req, res) {
       email,
     });
   } catch (error) {
-    return sendJson(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to redeem coupon.' });
+    const safe = customerCheckoutFailure(error);
+    return sendJson(res, safe.statusCode || 400, { ok: false, error: safe.message || 'Unable to redeem coupon.' });
   }
 }

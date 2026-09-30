@@ -119,34 +119,6 @@
     "rule": "PROMPT-NAMES"
   },
   {
-    "file": "public/assets/index-0J54vUO3.js",
-    "symbol_or_pattern": "Price TBD",
-    "inventory_id": "BUNDLE-SCAN",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "BUNDLE-SCAN"
-  },
-  {
-    "file": "public/assets/index-0J54vUO3.js",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D3",
-    "inventory_id": "D3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "public/assets/index-TimeSyncherVacationLogin.js",
-    "symbol_or_pattern": "Price TBD",
-    "inventory_id": "BUNDLE-SCAN",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "BUNDLE-SCAN"
-  },
-  {
-    "file": "public/assets/index-TimeSyncherVacationLogin.js",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D3",
-    "inventory_id": "D3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "public/ts-timeline-icon-patch.js",
     "symbol_or_pattern": "las vegas",
     "inventory_id": "CONTENT-MATCH",
@@ -168,29 +140,8 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "routes/admin-onboardings.mjs",
-    "symbol_or_pattern": "TimeSyncher Vacation Admin Test",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/admin-onboardings.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:D11",
-    "inventory_id": "D11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "routes/checkout-config.mjs",
     "symbol_or_pattern": "TIMESYNCHER_BASE_PRICE_CENTS=3700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "routes/checkout-config.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_ORDER_BUMP_PRICE_CENTS=2700",
     "inventory_id": "HARDCODED-PRICE",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "HARDCODED-PRICE"
@@ -226,20 +177,6 @@
   {
     "file": "routes/checkout-coupon.mjs",
     "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS=1700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "routes/checkout-coupon.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS=2700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "routes/checkout-coupon.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_ORDER_BUMP_PRICE_CENTS=2700",
     "inventory_id": "HARDCODED-PRICE",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "HARDCODED-PRICE"
@@ -282,20 +219,6 @@
   {
     "file": "routes/create-payment-intent.mjs",
     "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS=1700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "routes/create-payment-intent.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS=2700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "routes/create-payment-intent.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_ORDER_BUMP_PRICE_CENTS=2700",
     "inventory_id": "HARDCODED-PRICE",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "HARDCODED-PRICE"
@@ -323,48 +246,6 @@
   },
   {
     "file": "routes/vacation-itinerary.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Syncher Vacation Coupon Checkout', 'TimeSyncher Vacation",
-    "inventory_id": "523ffcdc",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "llaborator seat records pay, EULA, and join.",
-    "inventory_id": "390da114",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "symbol_or_pattern": "TimeSyncher Vacation Admin Test",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "symbol_or_pattern": "TimeSyncher Vacation Coupon Checkout",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "symbol_or_pattern": "TimeSyncher Vacation Setup",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "intakeFacts",
-    "inventory_id": "C3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
     "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:B14",
     "inventory_id": "B14",
@@ -375,41 +256,6 @@
     "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:B9",
     "inventory_id": "B9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C2",
-    "inventory_id": "C2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C3",
-    "inventory_id": "C3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C4",
-    "inventory_id": "C4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:D11",
-    "inventory_id": "D11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-itinerary.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "seatJoinCustomerText",
-    "inventory_id": "B5",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -428,272 +274,6 @@
   },
   {
     "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-COLLAB-URL",
-    "symbol_or_pattern": "Here is the ${escapeHtml(label)} website for this Telegram account: <a href=\"${e",
-    "inventory_id": "1a636645",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-COLLAB-URL",
-    "symbol_or_pattern": "Here is the ${label} website link:\\n\\n${url}",
-    "inventory_id": "515c8884",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-COLLAB-URL",
-    "symbol_or_pattern": "I found the linked account, but I could not find the website link for ${label} y",
-    "inventory_id": "9e71ac4f",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "I could not create the checkout links in this moment. P",
-    "inventory_id": "675a32d1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Paid plan, entitlement, checkout, coupon, billing, refun",
-    "inventory_id": "0aaab4d7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Telegram link from the checkout email first, then I can",
-    "inventory_id": "9a004061",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Telegram link from the checkout email first, then this",
-    "inventory_id": "e59bee0e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Telegram link from the checkout email, then I can check",
-    "inventory_id": "541fde2a",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Use the checkout link from the purchase",
-    "inventory_id": "587aa18b",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "checkout link creation failed",
-    "inventory_id": "0605bdf6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "dd-on option below. The checkout page also lets you add",
-    "inventory_id": "48f83f10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "e, access, entitlement, checkout, coupon, remaining vaca",
-    "inventory_id": "4fb6c20e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "ility, access, pricing, checkout, coupons, or media uplo",
-    "inventory_id": "e858b475",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "plan, access, coupons, checkout, order, entitlement, re",
-    "inventory_id": "96ccaacf",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "s, meals, bars, coffee, reservations, food style, or cuisine",
-    "inventory_id": "ada66236",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "s, must-do experiences, reservations, or preferences here wh",
-    "inventory_id": "2b717b4b",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "the owner media add-on checkout here:",
-    "inventory_id": "98633d32",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "symbol_or_pattern": "Kona/Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "symbol_or_pattern": "Send the pics or videos here, and I will attach them to the Vegas vacation.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "symbol_or_pattern": "big island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "symbol_or_pattern": "las vegas",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "april",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "august",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "december",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "february",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "january",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "july",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "june",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "march",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "may",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "november",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "october",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "september",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B13",
-    "inventory_id": "B13",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B23",
-    "inventory_id": "B23",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C8",
-    "inventory_id": "C8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A20",
-    "inventory_id": "A20",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
     "rule": "JEV-CARD-EVAL",
     "symbol_or_pattern": "telegram-coverage 8ec669109375 fda852a7bf1a",
     "inventory_id": "5c1a0b6e",
@@ -702,23 +282,16 @@
   {
     "file": "routes/vacation-telegram-turn.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "telegram-intent 5aeab28ac27a a9a2aa389d5f",
+    "symbol_or_pattern": "telegram-intent f71d2ae9e5ff a9a2aa389d5f",
     "inventory_id": "b49f1b46",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "routes/vacation-telegram-turn.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "telegram-issue-tags c050bfdc390f 5bf7fd25f6d3",
+    "symbol_or_pattern": "telegram-issue-tags eb988f4ac7ec 5bf7fd25f6d3",
     "inventory_id": "cfcc3e5c",
     "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "symbol_or_pattern": "grok-4",
-    "inventory_id": "MODEL-BARE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "MODEL-BARE"
   },
   {
     "file": "routes/vacation-telegram-turn.mjs",
@@ -779,13 +352,6 @@
   {
     "file": "routes/vacation-telegram-turn.mjs",
     "rule": "NO-TURN-PRICE-ENV",
-    "symbol_or_pattern": "ownerMediaCheckoutUrl(process.env)#b04de816",
-    "inventory_id": "4279c9d2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "routes/vacation-telegram-turn.mjs",
-    "rule": "NO-TURN-PRICE-ENV",
     "symbol_or_pattern": "publicTripUrl(process.env)#d0b532e6",
     "inventory_id": "38043ba0",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -819,13 +385,6 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "routes/worker-jobs.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "insert trip_things",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "scripts/import_hosted_bundle_to_neon.mjs",
     "rule": "THING-SOURCE",
     "symbol_or_pattern": "insert trip_things",
@@ -852,153 +411,6 @@
     "symbol_or_pattern": "gpt-5-mini",
     "inventory_id": "MODEL-ALLOWLIST",
     "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Add-on checkout link: /addons-checkout",
-    "inventory_id": "7bb4d66a",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "checkout link: /addons-checkout.html",
-    "inventory_id": "451310a9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "he official provider or checkout page.",
-    "inventory_id": "b5a3e365",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "ith source URLs, hours, reservation needs, and verification",
-    "inventory_id": "3c8ad4a1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "ls and make bookings or payments themselves through the",
-    "inventory_id": "f03c45f8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "more collaborators one checkout at a time.",
-    "inventory_id": "e214e598",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "ndly priorities, or any reservations/flights you already hav",
-    "inventory_id": "f41a398e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "numbers, CVV codes, or payment details in chat. TimeSy",
-    "inventory_id": "9fa0a422",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "rve, purchase, hold, or charge travel arrangements fro",
-    "inventory_id": "73fc392e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "Photo upload access for one vacation is .",
-    "inventory_id": "b0a73b07",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "Video upload access for one vacation is .",
-    "inventory_id": "39a06de0",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "eo upload access across all vacations is .",
-    "inventory_id": "50a53bfe",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "gram editing access for one vacation is .",
-    "inventory_id": "3552de1a",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "to upload access across all vacations is .",
-    "inventory_id": "46bea320",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "Kona arrival",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "Kona/Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "Las Vegas",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "big island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "las vegas",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "symbol_or_pattern": "las vegas strip",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
   },
   {
     "file": "scripts/product-gbrain-dispatch.mjs",
@@ -1169,27 +581,6 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A20",
-    "inventory_id": "A20",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E2",
-    "inventory_id": "E2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/product-gbrain-dispatch.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E6",
-    "inventory_id": "E6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "scripts/product-gbrain-manifest.json",
     "symbol_or_pattern": "grok-4.5",
     "inventory_id": "MODEL-BARE",
@@ -1247,85 +638,8 @@
   },
   {
     "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Reservation creation remains blocke",
-    "inventory_id": "a6358e82",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Vacation adapter blocks reservation/auth commands and uses",
-    "inventory_id": "40a0567b",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "book, reserve, hold, or pay.",
-    "inventory_id": "46e0c65d",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "ices without creating a reservation.",
-    "inventory_id": "a94a3a2c",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": "ent quality metadata to Things. Live production should",
-    "inventory_id": "f2fa4976",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "2030-06-11",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "2030-06-13",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E10",
-    "inventory_id": "E10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E8",
-    "inventory_id": "E8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:MasterPark SEA parking quote benchmark",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
     "rule": "THING-SOURCE",
     "symbol_or_pattern": "thing-without-source:{ category: 'activity', title: text(attraction.n",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/travel-source-adapter-runner.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:{ category: 'decision', title: `${destination} r",
     "inventory_id": "THING-SOURCE",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -1352,247 +666,9 @@
   },
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Remove any split-payment wording.",
-    "inventory_id": "59ef846a",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Remove the banned payment wording.",
-    "inventory_id": "b51bb0d3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "The draft uses a banned payment word.",
-    "inventory_id": "57a5f79e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "an. Do not say no extra charge. Use only the dates the",
-    "inventory_id": "941abe73",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "erary, or uses a banned payment word. A price question",
-    "inventory_id": "4f9efdb7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "me. Do not use a banned payment word.",
-    "inventory_id": "8d9bad57",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "n dollar amount and who pays.",
-    "inventory_id": "e2efd37b",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "names each seat and who pays from the plan table.",
-    "inventory_id": "e4233f23",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "price, or uses a banned payment word.",
-    "inventory_id": "a04bd671",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
-    "inventory_id": "84858e8e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "Remove any split-payment wording.",
-    "inventory_id": "753b1a62",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "aft names each seat and who pays from the plan table.",
-    "inventory_id": "ba485952",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "plan dollar amount and who pays.",
-    "inventory_id": "acc26c1e",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "seat is $ . State this payer line exactly: . Make n",
-    "inventory_id": "7c34cf72",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": "is optional. Never say Thing.",
-    "inventory_id": "9c4c5d52",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": "t helps ( ). Never say \"Thing\" to the customer.",
-    "inventory_id": "8cdab6a6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Kailua-Kona house",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Use the customer word gardens. Do not name a garden they did not name.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "later in the week",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "say the swim is saved on the second Friday of the trip",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "second Friday",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "use only places, activities, and venues the customer already named",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "second Friday",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "Welcome aboard, Kimberly",
-    "inventory_id": "B7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "Welcome aboard, Lauren",
-    "inventory_id": "B7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "Welcome aboard, Tyler",
-    "inventory_id": "B7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B1",
-    "inventory_id": "B1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B22",
-    "inventory_id": "B22",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B3",
-    "inventory_id": "B3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B4",
-    "inventory_id": "B4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C5",
-    "inventory_id": "C5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "HC-DIALOG",
     "symbol_or_pattern": "replyRulesSystem",
     "inventory_id": "B3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "seatWelcomeLine",
-    "inventory_id": "B4",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1604,22 +680,15 @@
   },
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D5",
-    "inventory_id": "D5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "reply-model-tier 57b461033e4b b315270d9a18",
+    "symbol_or_pattern": "reply-model-tier c69cbc8b2f4c b315270d9a18",
     "inventory_id": "3503389f",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "reply-quality 5a989b32fb90 4a91bfef0c70",
+    "symbol_or_pattern": "reply-quality 1fbacc9ddb4e 4a91bfef0c70",
     "inventory_id": "d329f58a",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -1628,62 +697,6 @@
     "rule": "JEV-CARD-EVAL",
     "symbol_or_pattern": "reply-rewrite-choice e4434c7a1f61 c57d63024110",
     "inventory_id": "eea83e28",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Craig",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Kimberly",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Lauren",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "symbol_or_pattern": "Tyler",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "GBrain, shell, booking, payment, holds, purchases, or r",
-    "inventory_id": "0662545d",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "nts official menu hours reservations",
-    "inventory_id": "c033a2d1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "t, holds, purchases, or reservations.",
-    "inventory_id": "131952cf",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E1",
-    "inventory_id": "E1",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1702,37 +715,9 @@
   },
   {
     "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E8",
-    "inventory_id": "E8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:E9",
-    "inventory_id": "E9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
     "rule": "THING-SOURCE",
     "symbol_or_pattern": "thing-without-source:{ category, subtype: text(raw.subtype || '', 80)",
     "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-public-research-worker.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:{ category, title: poi.name, summary: `${poi.nam",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "shared-app.html",
-    "rule": "SERVED-BUNDLE",
-    "symbol_or_pattern": "/assets/index-BKun7ofk.js is not in the repo and the build does not produce it",
-    "inventory_id": "SERVED-BUNDLE",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1771,13 +756,6 @@
     "rule": "HARDCODED-PRICE"
   },
   {
-    "file": "src/vacation/access-plan.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS=2700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
     "file": "src/vacation/checkout-coupons.mjs",
     "symbol_or_pattern": "TimeSyncher Vacation Coupon Checkout",
     "inventory_id": "CONTENT-MATCH",
@@ -1793,59 +771,10 @@
   },
   {
     "file": "src/vacation/checkout-pricing.mjs",
-    "symbol_or_pattern": "DEFAULT_ORDER_BUMP_PRICE_CENTS=2700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "src/vacation/checkout-pricing.mjs",
     "symbol_or_pattern": "DEFAULT_PHOTO_MEMORIES_PRICE_CENTS=500",
     "inventory_id": "HARDCODED-PRICE",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "src/vacation/collaborator-app-seat.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/collaborator-app-seat.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B5",
-    "inventory_id": "B5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/collaborator-app-seat.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "seatJoinCustomerText",
-    "inventory_id": "B5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/collaborator-app-seat.mjs",
-    "symbol_or_pattern": "Craig",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/collaborator-checkout.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "legram collaborator for all vacations",
-    "inventory_id": "45449deb",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/collaborator-checkout.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "legram collaborator for one vacation",
-    "inventory_id": "8379c23d",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "src/vacation/collaborator-checkout.mjs",
@@ -1855,290 +784,31 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "src/vacation/collaborators.mjs",
+    "file": "src/vacation/customer-intent.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "invite, but the add-on payment is not confirmed yet.",
-    "inventory_id": "66fa688f",
+    "symbol_or_pattern": "when the turn says who pays. Otherwise false or [].",
+    "inventory_id": "f5bd9c24",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "src/vacation/collaborators.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "All vacations: $27",
-    "inventory_id": "095ca91c",
+    "file": "src/vacation/customer-intent.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "only when the turn says who pays. Otherwise false or [].",
+    "inventory_id": "bb7fa854",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "src/vacation/collaborators.mjs",
-    "rule": "BAR-UNLIMITED-WORDING",
-    "symbol_or_pattern": "One vacation: $15",
-    "inventory_id": "63bada8a",
+    "file": "src/vacation/customer-intent.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "s that. seats is {name, payer} only when the turn say",
+    "inventory_id": "9774f4e7",
     "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "74-5594 Palani Rd, Kailua-Kona",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Big Island. People matter more than a packed list.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "CONTENT-MATCH",
-    "symbol_or_pattern": "KOA arrival",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Kahaluʻu Beach Park",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Kailua-Kona house",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "CONTENT-MATCH",
-    "symbol_or_pattern": "Kona arrival",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Ocean bar happy hour at Ulu Ocean Grill.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Shared shuttle",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "Town walk",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "CONTENT-MATCH",
-    "symbol_or_pattern": "Ulu Ocean Grill",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "big island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "fish hopper",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "symbol_or_pattern": "ulu ocean",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
   },
   {
     "file": "src/vacation/intake-shared-trip.mjs",
     "rule": "DATE-LITERAL",
     "symbol_or_pattern": "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
     "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[19.5804,-155.9622]",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[19.6393,-155.9946]",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[19.6394,-155.9958]",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[19.6399,-155.9854]",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[19.649,-155.994]",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[19.7388,-156.0456]",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "BIG_ISLAND_FILL_DETAILS",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "Fish Hopper",
-    "inventory_id": "A11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "Huggo's",
-    "inventory_id": "A11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "PLACE_COORDS",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "Ulu Ocean Grill",
-    "inventory_id": "A12",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A10",
-    "inventory_id": "A10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A11",
-    "inventory_id": "A11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A5",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "KOA arrival",
-    "inventory_id": "A9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "Kona arrival",
-    "inventory_id": "A9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "SpeediShuttle",
-    "inventory_id": "A8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "category_name:'Car',name:'SpeediShuttle'",
-    "inventory_id": "A8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:A8",
-    "inventory_id": "A8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:A9",
-    "inventory_id": "A9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:B8",
-    "inventory_id": "B8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D1",
-    "inventory_id": "D1",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -2150,55 +820,6 @@
   },
   {
     "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D2",
-    "inventory_id": "D2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D4",
-    "inventory_id": "D4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D9",
-    "inventory_id": "D9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "productThingSummary",
-    "inventory_id": "B8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:Car",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:Flight",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:SpeediShuttle",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/intake-shared-trip.mjs",
     "rule": "THING-SOURCE",
     "symbol_or_pattern": "thing-without-source:{ id, trip_id: intId(trip.id), name: thing.title",
     "inventory_id": "THING-SOURCE",
@@ -2206,842 +827,9 @@
   },
   {
     "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Strip Italian-American reservation.",
-    "inventory_id": "403b9988",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": ", stored as a Rest-list Thing with coords for maps.",
-    "inventory_id": "83e3a22f",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": "stretch, stored on the Thing for print.",
-    "inventory_id": "94baef59",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "74-5594 Palani Rd, Kailua-Kona",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "75-5828 Kahakai Rd",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "CATCH Las Vegas",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Kahaluʻu Beach Park",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Kona Brewing Company",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Las Vegas",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Mon Ami Gabi",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Ocean bar happy hour at Ulu Ocean Grill, Four Seasons Hualalai.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "CONTENT-MATCH",
-    "symbol_or_pattern": "Ulu Ocean Grill",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "symbol_or_pattern": "Ulu Ocean Grill, Four Seasons Hualalai",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "fallbackLat:19.64,fallbackLng:-155.996",
-    "inventory_id": "A7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "fallbackLat:36.1147,fallbackLng:-115.1729",
-    "inventory_id": "A7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:18.9364,lng:-155.6464}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.1364,lng:-155.5053}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.4194,lng:-155.2885}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.4219,lng:-155.9103}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.4772,lng:-155.9217}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.4917,lng:-155.9217}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.5734,lng:-155.9618}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.5804,lng:-155.9622}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6378,lng:-155.9876}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6391,lng:-155.9942}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6392,lng:-155.9951}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6393,lng:-155.9946}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6394,lng:-155.9958}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6396,lng:-155.9956}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6398,lng:-155.9902}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6399,lng:-155.9854}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6402,lng:-155.9964}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6424,lng:-155.9961}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6488,lng:-156.0002}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6494,lng:-155.9944}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6788,lng:-156.0236}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.6974,lng:-155.0632}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.7062,lng:-155.0658}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.7194,lng:-155.1106}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.7256,lng:-155.0876}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.7272,lng:-155.0668}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.7603,lng:-155.4564}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.8102,lng:-156.0086}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.8322,lng:-155.9884}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.8542,lng:-155.1534}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.9136,lng:-155.8864}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.9138,lng:-155.8806}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.9167,lng:-155.8869}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.9272,lng:-155.8868}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.9484,lng:-155.8586}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:19.9916,lng:-155.8264}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:20.0228,lng:-155.6678}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:20.0231,lng:-155.6705}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:20.1182,lng:-155.5884}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:20.2036,lng:-155.7334}",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.0163,lng:-114.7378}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.082,lng:-115.1728}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.0909,lng:-115.1765}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1023,lng:-115.1764}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1026,lng:-115.1746}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1074,lng:-115.1766}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1075,lng:-115.1768}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1076,lng:-115.1764}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1078,lng:-115.1762}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1079,lng:-115.1724}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1097,lng:-115.1739}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1098,lng:-115.1738}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1109,lng:-115.1752}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1121,lng:-115.1761}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1125,lng:-115.1726}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1125,lng:-115.1768}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1126,lng:-115.1767}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1127,lng:-115.1766}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1128,lng:-115.1765}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1129,lng:-115.1764}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1147,lng:-115.1485}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1167,lng:-115.1743}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1174,lng:-115.1682}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1174,lng:-115.1712}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1178,lng:-115.1756}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1206,lng:-115.1618}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1212,lng:-115.1697}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1213,lng:-115.1698}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1214,lng:-115.1696}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1215,lng:-115.1694}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1264,lng:-115.1789}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1265,lng:-115.1658}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1266,lng:-115.1657}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1296,lng:-115.1729}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1353,lng:-115.427}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1475,lng:-115.156}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1709,lng:-115.1446}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "{lat:36.1769,lng:-115.1356}",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "BIG_ISLAND_FILL_DETAILS",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "BIG_ISLAND_LIST_FILL",
-    "inventory_id": "A3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "FILL_BUCKET_META",
-    "inventory_id": "A7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "KEEPSAKE_FILL_DETAILS",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "KEEPSAKE_LIST_FILL",
-    "inventory_id": "A4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "LIVE_TAB_FILL",
-    "inventory_id": "A18",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "Ulu Ocean Grill",
-    "inventory_id": "A12",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "catalogForShared",
-    "inventory_id": "A1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A1",
-    "inventory_id": "A1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A11",
-    "inventory_id": "A11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A12",
-    "inventory_id": "A12",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A18",
-    "inventory_id": "A18",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A2",
-    "inventory_id": "A2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A3",
-    "inventory_id": "A3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A4",
-    "inventory_id": "A4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A5",
-    "inventory_id": "A5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A6",
-    "inventory_id": "A6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A7",
-    "inventory_id": "A7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
     "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "inventory:E5",
     "inventory_id": "E5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "padKeepsakeListNames",
-    "inventory_id": "A1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "padKeepsakeSharedPlaces",
-    "inventory_id": "A1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D6",
-    "inventory_id": "D6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D9",
-    "inventory_id": "D9",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-list-minimums.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:{ id, name, __tsKeepsakeFill: 1, category_id: me",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-product-overrides.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "Aria special-night reservation: theatrical Italian-Ame",
-    "inventory_id": "4c282319",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-product-overrides.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "d a special-night Strip reservation.",
-    "inventory_id": "ec39082f",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3151,188 +939,6 @@
   },
   {
     "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "\\b pays for (?:himself|herself|",
-    "inventory_id": "e35c3d95",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "\\bI pay for \\b",
-    "inventory_id": "f8320d6d",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "customer: I pay for",
-    "inventory_id": "cb5a8aa8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "customer: pays for themself",
-    "inventory_id": "3e30e8ba",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "e paperclip for photos, reservations, and notes.",
-    "inventory_id": "18ff7733",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "nnAnswer with who pays: . Do not add a second",
-    "inventory_id": "b8c4c7ab",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "no extra charge is not in what the cust",
-    "inventory_id": "654378ad",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "p. Never say \"splitting payments\" or splitting anything",
-    "inventory_id": "21b1b26c",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "peak, or attach photos, reservations, and notes.",
-    "inventory_id": "c9285c60",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
-    "inventory_id": "38c738c0",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "collaborators. .payer",
-    "inventory_id": "bf6dd761",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "ks the price. State the payer line exactly and do not",
-    "inventory_id": "2b5d59c1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "missing per-payer dollar line",
-    "inventory_id": "58e2b7ec",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "nnAnswer with who pays: . Do not add a second",
-    "inventory_id": "f38ac642",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "on the trip. Never say \"splitting payments\" or splitting anything",
-    "inventory_id": "dd5b8687",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "orator seat. State this payer line exactly: . Make n",
-    "inventory_id": "e277a309",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Big Island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Big Island, Hawaii",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Got it. I saved that",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Include these sentences: I am building the itinerary from that now.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Kailua-Kona house",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "This intake reply must include the word collaborators, plus view access, edit access, and unlimited vacations for the whole year.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Town walk",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "big island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "including Kimberly, Tyler, and Lauren when they are in that roster.",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "later in the week",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
     "rule": "DATE-LITERAL",
     "symbol_or_pattern": "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)",
     "inventory_id": "DATE-LITERAL",
@@ -3347,107 +953,9 @@
   },
   {
     "file": "src/vacation/live-app-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "April",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "apr",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "apr(?:il)?",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "april",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "CANNED_APP_REPLY",
-    "inventory_id": "B20",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "I can update this vacation from here",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "INVENTED_GARDEN",
-    "inventory_id": "B2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "Include these sentences",
-    "inventory_id": "B6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "ONBOARDING_OPENER_CHAT_ONLY",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "ONBOARDING_OPENER_WITH_SITE",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "UNNAMED_VENUE",
-    "inventory_id": "B2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "Your website is not built yet",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "intakeFacts",
-    "inventory_id": "C3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
     "rule": "HC-DIALOG",
     "symbol_or_pattern": "interimFromTierOne",
     "inventory_id": "B6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B10",
-    "inventory_id": "B10",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3460,29 +968,8 @@
   {
     "file": "src/vacation/live-app-turn.mjs",
     "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B12",
-    "inventory_id": "B12",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:B14",
     "inventory_id": "B14",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B15",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B16",
-    "inventory_id": "B16",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3495,43 +982,8 @@
   {
     "file": "src/vacation/live-app-turn.mjs",
     "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B19",
-    "inventory_id": "B19",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B2",
-    "inventory_id": "B2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B20",
-    "inventory_id": "B20",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:B21",
     "inventory_id": "B21",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B6",
-    "inventory_id": "B6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B7",
-    "inventory_id": "B7",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3544,57 +996,8 @@
   {
     "file": "src/vacation/live-app-turn.mjs",
     "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C1",
-    "inventory_id": "C1",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:C10",
     "inventory_id": "C10",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C2",
-    "inventory_id": "C2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C3",
-    "inventory_id": "C3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C4",
-    "inventory_id": "C4",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C5",
-    "inventory_id": "C5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C6",
-    "inventory_id": "C6",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C7",
-    "inventory_id": "C7",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3605,85 +1008,8 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "SpeediShuttle",
-    "inventory_id": "A8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:B8",
-    "inventory_id": "B8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "productThingSummary",
-    "inventory_id": "B8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Craig",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Kimberly",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Lauren",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Marcus",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "symbol_or_pattern": "Tyler",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:{ title, category, description, who: notes.map((",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/live-app-turn.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:{ title, category, description: '', who: '', whe",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "src/vacation/media-checkout.mjs",
     "symbol_or_pattern": "TIMESYNCHER_OWNER_VIDEO_SINGLE_PRICE_CENTS=1700",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "src/vacation/media-checkout.mjs",
-    "symbol_or_pattern": "TIMESYNCHER_OWNER_VIDEO_UNLIMITED_PRICE_CENTS=2700",
     "inventory_id": "HARDCODED-PRICE",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "HARDCODED-PRICE"
@@ -3711,13 +1037,6 @@
   },
   {
     "file": "src/vacation/poi-search.mjs",
-    "symbol_or_pattern": "big island",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/poi-search.mjs",
     "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "inventory:E1",
     "inventory_id": "E1",
@@ -3725,37 +1044,9 @@
   },
   {
     "file": "src/vacation/poi-search.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D7",
-    "inventory_id": "D7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/poi-search.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D8",
-    "inventory_id": "D8",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/poi-search.mjs",
     "rule": "JEV-CARD-EVAL",
     "symbol_or_pattern": "poi-relevance 2e0405a419be 97894bf8cbe8",
     "inventory_id": "b10ba9e3",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/pre-collaborator-snapshot.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A2",
-    "inventory_id": "A2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/pre-collaborator-snapshot.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "padKeepsakeSharedPlaces",
-    "inventory_id": "A2",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -3781,51 +1072,9 @@
   },
   {
     "file": "src/vacation/seat-price.mjs",
-    "symbol_or_pattern": ":27",
-    "inventory_id": "HARDCODED-PRICE",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "HARDCODED-PRICE"
-  },
-  {
-    "file": "src/vacation/seat-price.mjs",
     "rule": "HC-DIALOG",
     "symbol_or_pattern": "inventory:C11",
     "inventory_id": "C11",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/seat-price.mjs",
-    "rule": "HC-THING",
-    "symbol_or_pattern": "inventory:D5",
-    "inventory_id": "D5",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/shared-trip-handler.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A2",
-    "inventory_id": "A2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/shared-trip-handler.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "padKeepsakeSharedPlaces",
-    "inventory_id": "A2",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/tg-intake-gbrain.mjs",
-    "symbol_or_pattern": "Craig",
-    "inventory_id": "PROMPT-NAMES",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "PROMPT-NAMES"
-  },
-  {
-    "file": "src/vacation/thing-logo-capture.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": "Thing",
-    "inventory_id": "552604b2",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -4033,13 +1282,6 @@
   },
   {
     "file": "src/vacation/trek-style2-bundle.mjs",
-    "symbol_or_pattern": "KOA arrival",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
     "symbol_or_pattern": "Las Vegas",
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR",
@@ -4047,64 +1289,8 @@
   },
   {
     "file": "src/vacation/trek-style2-bundle.mjs",
-    "symbol_or_pattern": "las vegas",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "symbol_or_pattern": "las vegas strip",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "symbol_or_pattern": "shake shack",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[36.1073,-115.1766]",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[36.1097,-115.1739]",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
     "rule": "HC-COORD",
     "symbol_or_pattern": "[36.1126,-115.1767]",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[36.1147,-115.1729]",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[36.1436,-115.1415]",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-COORD",
-    "symbol_or_pattern": "[40.7794,-73.9632]",
     "inventory_id": "A16",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -4125,134 +1311,8 @@
   {
     "file": "src/vacation/trek-style2-bundle.mjs",
     "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "PRODUCT_THING_FIELDS",
-    "inventory_id": "A14",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "SI_NYC_TAIL",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "SI_VEGAS_TAIL",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A14",
-    "inventory_id": "A14",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "inventory:A15",
     "inventory_id": "A15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A16",
-    "inventory_id": "A16",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "april",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "august",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "december",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "february",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "january",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "july",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "june",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "march",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "may",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "november",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "october",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "september",
-    "inventory_id": "DATE-LITERAL",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/turn-tags.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:C12",
-    "inventory_id": "C12",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -4260,34 +1320,6 @@
     "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "inventory:E7",
     "inventory_id": "E7",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/wind-backup.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "inventory:B17",
-    "inventory_id": "B17",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/wind-backup.mjs",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "windBackupSentence",
-    "inventory_id": "B17",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "vacation-app.html",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "e paperclip for photos, reservations, and notes.",
-    "inventory_id": "ca51ecaa",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "vacation-app.html",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "peak, or attach photos, reservations, and notes.",
-    "inventory_id": "8544499d",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -4303,20 +1335,6 @@
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "vacation-app.html",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "I can update this vacation from here",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "vacation-app.html",
-    "rule": "HC-DIALOG",
-    "symbol_or_pattern": "Your website is not built yet",
-    "inventory_id": "B15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "vacation-app.html",

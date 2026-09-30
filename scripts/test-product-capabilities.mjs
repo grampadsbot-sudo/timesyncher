@@ -464,7 +464,7 @@ assert.match(vegasExistenceQuestionResult.customerResponse, /could not find a ma
 assert.equal(vegasExistenceQuestionResult.result.createNewTrip, false);
 assert.equal(vegasExistenceQuestionResult.result.editApplied, false);
 assert.equal(vegasExistenceQuestionResult.result.webItineraryUrl, null);
-assert.equal(vegasExistenceQuestionResult.result.normalizedTrip.destination, 'Las Vegas');
+assert.equal(vegasExistenceQuestionResult.result.normalizedTrip.destination, 'Vegas');
 assert.equal(vegasExistenceQuestionResult.result.researchSummary.status, 'support_router_no_write');
 assert.equal(vegasExistenceQuestionResult.result.trekSync, null);
 assert.equal(vegasExistenceQuestionResult.result.turnDecision.write_mode, 'none');

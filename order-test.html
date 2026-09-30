@@ -310,9 +310,11 @@
       singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
       singlePrice.textContent = money(single.amount || 3700);
       unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
-      unlimitedPrice.textContent = '+' + money(unlimited.amount || 2700);
+      unlimitedPrice.textContent = unlimited.amount ? '+' + money(unlimited.amount) : '';
       bumpRow.hidden = !bump.checked;
-      bumpTitle.textContent = `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount || 2700)}`;
+      bumpTitle.textContent = unlimited.amount
+        ? `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount)}`
+        : `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')}`;
       bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
       syncPhotoCopy();
     }
@@ -381,7 +383,8 @@
       bumpRow.hidden = !bumped;
       photoRow.hidden = !photos;
       syncPhotoCopy();
-      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? (photoProduct.amount || 500) : 0);
+      const bumpAmount = Number(productConfig.products?.unlimited?.amount);
+      const cents = Number(productConfig.products?.single?.amount || 3700) + (bumped && Number.isFinite(bumpAmount) ? bumpAmount : 0) + (photos ? (photoProduct.amount || 500) : 0);
       total.textContent = hasCoupon() ? '$0 with coupon' : money(cents);
       tax.textContent = hasCoupon() ? 'No Stripe charge' : 'Calculated by Stripe';
     }

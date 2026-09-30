@@ -1,0 +1,710 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { insertTripThing } from '../src/vacation/trip-things.mjs';
+import { DEFAULT_FIRST_PASS_MINIMUMS, runPublicResearch } from './vacation-public-research-worker.mjs';
+import {
+  PlaceSearchError,
+  destinationFromChat,
+  fillTripIntake,
+  lodgingFromChat,
+  placeToTripThing,
+  mergePlaces,
+  queriesFromWantedThings,
+  readPriorPlaces,
+  searchPlaces,
+  selectPriorPlaces,
+} from '../src/vacation/place-search.mjs';
+
+const ENV = {
+  BRAVE_SEARCH_API_KEY: 'brave-test-key',
+  FOURSQUARE_SERVICE_KEY: 'fsq-test-key',
+};
+
+function placeEnv(env = ENV) {
+  return {
+    brave: env.BRAVE_SEARCH_API_KEY || env.brave || '',
+    foursquare: env.FOURSQUARE_SERVICE_KEY || env.foursquare || '',
+    braveName: 'BRAVE_SEARCH_API_KEY',
+    foursquareName: 'FOURSQUARE_SERVICE_KEY',
+    OPENROUTER_API_KEY: env.OPENROUTER_API_KEY || 'test-openrouter-key',
+  };
+}
+const CENTER = { lat: 38.7223, lng: -9.1393 };
+const PLACE_WANTED = [
+  { name: 'restaurant', kind: 'restaurant' },
+  { name: 'store', kind: 'store' },
+  { name: 'attraction', kind: 'activity' },
+];
+const POKE_WANTED = [
+  { name: 'poke', kind: 'activity' },
+  { name: 'grocery store', kind: 'store' },
+  { name: 'restaurant', kind: 'restaurant' },
+];
+
+function jsonResponse(body, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+    text: async () => (typeof body === 'string' ? body : JSON.stringify(body)),
+  };
+}
+
+function callKind(url) {
+  const value = String(url);
+  if (value.includes('nominatim.openstreetmap.org')) return 'nominatim';
+  if (value.includes('places-api.foursquare.com')) return 'foursquare_os';
+  if (value.includes('overpass-api.de')) return 'osm';
+  if (value.includes('api.search.brave.com/res/v1/local/place_search')) return 'brave';
+  if (value.includes('api.tavily.com')) return 'tavily';
+  if (value.includes('googleapis.com') || value.includes('places.google')) return 'google';
+  return value;
+}
+
+function lisbonRoutes(url) {
+  const value = String(url);
+  if (value.includes('nominatim.openstreetmap.org')) {
+    return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon, Portugal' }]);
+  }
+  if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
+    return jsonResponse({
+      results: [
+        {
+          fsq_place_id: 'fsq-harbor',
+          name: 'Harbor Cafe',
+          latitude: 38.7225,
+          longitude: -9.1395,
+          location: { formatted_address: '1 Dock' },
+          link: 'https://example.test/harbor',
+        },
+        {
+          fsq_place_id: 'fsq-closed',
+          name: 'Closed Grill',
+          latitude: 38.73,
+          longitude: -9.14,
+          date_closed: '2020-01-01',
+        },
+        {
+          fsq_place_id: 'fsq-tile',
+          name: 'Tile Oven',
+          latitude: 38.73,
+          longitude: -9.14,
+          location: { address: '2 Tile Street' },
+          categories: [{ name: 'Pizza Place' }],
+        },
+      ],
+    });
+  }
+  if (value.includes('places-api.foursquare.com') && value.includes('query=store')) {
+    return jsonResponse({
+      results: [{
+        fsq_place_id: 'fsq-paper',
+        name: 'Paper Shop',
+        latitude: 38.71,
+        longitude: -9.15,
+        location: { formatted_address: '3 Paper Street' },
+      }],
+    });
+  }
+  if (value.includes('places-api.foursquare.com') && value.includes('query=attraction')) {
+    return jsonResponse({ results: [] });
+  }
+  if (value.includes('overpass-api.de')) {
+    return jsonResponse({
+      elements: [
+        { type: 'node', id: 11, lat: 38.7225, lon: -9.1395, tags: { name: 'Harbor Cafe', amenity: 'restaurant' } },
+        { type: 'node', id: 22, lat: 38.74, lon: -9.15, tags: { name: 'City Museum', tourism: 'museum', 'addr:street': 'Museum Road' } },
+      ],
+    });
+  }
+  if (value.includes('api.search.brave.com') && value.includes('q=restaurant')) return jsonResponse({ results: [] });
+  if (value.includes('api.search.brave.com') && value.includes('q=store')) {
+    return jsonResponse({
+      results: [{
+        title: 'Paper Shop',
+        url: 'https://example.test/paper',
+        coordinates: [38.71, -9.15],
+      }],
+    });
+  }
+  if (value.includes('api.search.brave.com') && value.includes('q=attraction')) {
+    return jsonResponse({
+      results: [{
+        title: 'River Walk | Listing',
+        url: 'https://example.test/walk',
+        coordinates: [38.75, -9.16],
+        postal_address: { streetAddress: 'River Road', addressLocality: 'Lisbon' },
+      }],
+    });
+  }
+  throw new Error(`unexpected place search request ${value}`);
+}
+
+function jevOk(choice = 5) {
+  return jsonResponse({ answers: { relevance: { choice } } });
+}
+
+function isOpenRouter(url) {
+  return String(url).includes('openrouter.ai');
+}
+
+function recordingFetch(routes, events) {
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    calls.push({ url: String(url), options });
+    if (isOpenRouter(url)) return jevOk(5);
+    events?.push(callKind(url));
+    return routes(url, options);
+  };
+  return { fetchImpl, calls };
+}
+
+const merged = mergePlaces([
+  [{ title: 'Harbor Cafe', source: 'prior_db', category: 'restaurant', lat: 38.7223, lng: -9.1393 }],
+  [{ title: 'Harbor Cafe', source: 'foursquare_os', category: 'restaurant', lat: 38.7224, lng: -9.1394, url: 'https://example.test/harbor' }],
+  [{ title: 'City Museum', source: 'osm', category: 'activity', lat: 38.74, lng: -9.15 }],
+  [{ title: 'North Market', source: 'brave', category: 'store', lat: 10, lng: 10 }],
+  [{ title: 'North Market', source: 'osm', category: 'store', lat: 11, lng: 11 }],
+]);
+assert.deepEqual(merged.map((place) => [place.title, place.source]), [
+  ['Harbor Cafe', 'prior_db'],
+  ['City Museum', 'osm'],
+  ['North Market', 'brave'],
+  ['North Market', 'osm'],
+]);
+
+const events = [];
+const prior = [{
+  title: 'Harbor Cafe',
+  source: 'brave',
+  category: 'restaurant',
+  lat: 38.7224,
+  lng: -9.1394,
+  address: '1 Dock',
+}];
+const recorded = recordingFetch(lisbonRoutes, events);
+const found = await searchPlaces({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  fetchImpl: recorded.fetchImpl,
+  loadPriorPlaces: async () => {
+    events.push('prior_db');
+    return prior;
+  },
+});
+assert.deepEqual(events, [
+  'nominatim',
+  'prior_db',
+  'foursquare_os',
+  'foursquare_os',
+  'foursquare_os',
+  'osm',
+  'brave',
+  'brave',
+  'brave',
+]);
+assert.deepEqual(found.places.map((place) => [place.title, place.source]), [
+  ['Harbor Cafe', 'prior_db'],
+  ['Tile Oven', 'foursquare_os'],
+  ['Paper Shop', 'foursquare_os'],
+  ['City Museum', 'osm'],
+  ['River Walk', 'brave'],
+]);
+assert.equal(found.places.some((place) => place.title === 'Closed Grill'), false);
+assert.equal(found.places.some((place) => /google/i.test(place.source)), false);
+assert.equal(recorded.calls.some((call) => callKind(call.url) === 'google'), false);
+const braveCall = recorded.calls.find((call) => callKind(call.url) === 'brave');
+assert.equal(braveCall.options.headers['X-Subscription-Token'], 'brave-test-key');
+assert.equal(braveCall.url.includes('brave-test-key'), false);
+const fsqCall = recorded.calls.find((call) => callKind(call.url) === 'foursquare_os');
+assert.equal(fsqCall.options.headers.authorization, 'Bearer fsq-test-key');
+assert.equal(found.sourceCounts.prior_db, 1);
+assert.equal(found.sourceCounts.foursquare_os, 2);
+assert.equal(found.sourceCounts.osm, 1);
+assert.equal(found.sourceCounts.brave, 1);
+const river = found.places.find((place) => place.title === 'River Walk');
+assert.equal(river.address, 'River Road, Lisbon');
+const tile = found.places.find((place) => place.title === 'Tile Oven');
+assert.equal(tile.categoryName, 'Pizza Place');
+const museum = found.places.find((place) => place.title === 'City Museum');
+assert.equal(museum.categoryName, 'museum');
+
+const blockedFetch = async () => {
+  throw new Error('fetch should not run');
+};
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv({ FOURSQUARE_SERVICE_KEY: 'fsq-test-key' }),
+    fetchImpl: blockedFetch,
+  }),
+  (error) => {
+    assert.equal(error instanceof PlaceSearchError, true);
+    assert.equal(error.code, 'missing_key');
+    assert.match(error.message, /BRAVE_SEARCH_API_KEY/);
+    return true;
+  },
+);
+const skipWarnings = [];
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  skipWarnings.push(args.map((part) => String(part)).join(' '));
+};
+try {
+  const skipCalls = [];
+  const skipEnv = placeEnv({ BRAVE_SEARCH_API_KEY: 'brave-test-key' });
+  assert.equal(skipEnv.foursquare, '');
+  const skipFetch = async (url) => {
+    const value = String(url);
+    skipCalls.push(value);
+    if (isOpenRouter(value)) return jevOk(5);
+    return lisbonRoutes(value);
+  };
+  const skipSearch = () => searchPlaces({
+    destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
+    env: skipEnv,
+    fetchImpl: skipFetch,
+    loadPriorPlaces: async () => prior,
+  });
+  const firstSkip = await skipSearch();
+  const secondSkip = await skipSearch();
+  assert.equal(skipCalls.some((url) => {
+    try {
+      return /foursquare/i.test(new URL(url).hostname);
+    } catch {
+      return /foursquare/i.test(url);
+    }
+  }), false);
+  assert.deepEqual(skipWarnings, ['place-search: FOURSQUARE_SERVICE_KEY unset, skipping foursquare']);
+  for (const result of [firstSkip, secondSkip]) {
+    const sources = [...new Set(result.places.map((place) => place.source))];
+    assert.deepEqual(sources.filter((source) => !['prior_db', 'osm', 'brave'].includes(source)), []);
+    assert.equal(sources.includes('prior_db'), true);
+    assert.equal(sources.includes('osm'), true);
+    assert.equal(sources.includes('brave'), true);
+    assert.equal(sources.includes('foursquare_os'), false);
+  }
+} finally {
+  console.warn = originalWarn;
+}
+
+const emptyLive = recordingFetch((url) => {
+  if (String(url).includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393' }]);
+  if (String(url).includes('overpass')) return jsonResponse({ elements: [] });
+  return jsonResponse({ results: [] });
+});
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv(),
+    fetchImpl: emptyLive.fetchImpl,
+    priorPlaces: prior,
+  }),
+  (error) => {
+    assert.equal(error.code, 'prior_db_sole_source');
+    assert.match(error.message, /not a sole source/);
+    return true;
+  },
+);
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv(),
+    fetchImpl: emptyLive.fetchImpl,
+    priorPlaces: [],
+  }),
+  (error) => {
+    assert.equal(error.code, 'empty');
+    return true;
+  },
+);
+
+const failedCalls = [];
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv(),
+    priorPlaces: prior,
+    fetchImpl: async (url, options) => {
+      failedCalls.push(callKind(url));
+      if (String(url).includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393' }]);
+      if (String(url).includes('places-api.foursquare.com')) return jsonResponse('unauthorized', 401);
+      throw new Error(`continued after Foursquare failure: ${url}`);
+    },
+  }),
+  (error) => {
+    assert.equal(error.code, 'source_failed');
+    assert.match(error.message, /Foursquare OS Places failed: HTTP 401/);
+    return true;
+  },
+);
+assert.deepEqual(failedCalls, ['nominatim', 'foursquare_os']);
+
+const geocodeCalls = [];
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Nowhereville',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv(),
+    priorPlaces: [],
+    fetchImpl: async (url) => {
+      geocodeCalls.push(callKind(url));
+      return jsonResponse([]);
+    },
+  }),
+  (error) => {
+    assert.equal(error.code, 'geocode_failed');
+    assert.match(error.message, /Nowhereville/);
+    return true;
+  },
+);
+assert.deepEqual(geocodeCalls, ['nominatim']);
+
+const fill = await fillTripIntake({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  fetchImpl: recordingFetch(lisbonRoutes).fetchImpl,
+  loadPriorPlaces: async () => prior,
+});
+assert.deepEqual(fill.things.map((thing) => thing.source), [
+  'prior_db',
+  'foursquare_os',
+  'foursquare_os',
+  'osm',
+  'brave',
+]);
+assert.equal(fill.things[0].metadata.source, 'prior_db');
+assert.equal(fill.researchedThings[3].source, 'osm');
+assert.equal(fill.researchedThings[3].lat, 38.74);
+assert.equal(fill.researchedThings[3].title, 'City Museum');
+
+const keptPrior = selectPriorPlaces([
+  { id: 'near', title: 'Harbor Cafe', category: 'restaurant', source: 'brave', location: { lat: 38.7224, lng: -9.1394, address: '1 Dock' } },
+  { id: 'far', title: 'Far Market', category: 'store', location: { lat: 41.15, lng: -8.61 } },
+  { id: 'note', title: 'Planning brief', category: 'note', location: { lat: 38.7223, lng: -9.1393 } },
+], CENTER);
+assert.deepEqual(keptPrior.map((place) => [place.title, place.source]), [['Harbor Cafe', 'prior_db']]);
+
+const noDb = await readPriorPlaces(CENTER, { env: {} });
+assert.deepEqual(noDb, []);
+const fromQuery = await readPriorPlaces(CENTER, {
+  query: async () => [
+    { id: 'near', title: 'Harbor Cafe', category: 'restaurant', location: { lat: 38.7224, lng: -9.1394 } },
+    { id: 'far', title: 'Far Market', category: 'store', location: { lat: 41.15, lng: -8.61 } },
+  ],
+});
+assert.deepEqual(fromQuery.map((place) => place.title), ['Harbor Cafe']);
+
+const inserts = [];
+const db = async (strings, ...values) => {
+  inserts.push({ sql: strings.join(' '), values });
+};
+const written = await insertTripThing(db, {
+  tripId: 'trip-1',
+  requestId: 'request-1',
+  thing: fill.things[3],
+});
+assert.equal(written.source, 'osm');
+assert.match(inserts[0].sql, /insert into trip_things/);
+assert.match(inserts[0].sql, /\bsource\b/);
+assert.equal(inserts[0].values.at(-1), 'osm');
+assert.equal(inserts[0].values.includes('City Museum'), true);
+const note = await insertTripThing(db, {
+  tripId: 'trip-1',
+  requestId: 'request-1',
+  thing: { title: 'Planning brief', category: 'note', metadata: { source: 'product-gbrain-dispatch' } },
+});
+assert.equal(note.source, null);
+assert.equal(inserts[1].values.at(-1), null);
+
+assert.equal(destinationFromChat('Plan a trip to Lisbon next April'), 'Lisbon');
+assert.equal(destinationFromChat('Create a new 4-night staycation on the Las Vegas Strip ending Monday morning'), 'Las Vegas Strip');
+assert.equal(destinationFromChat('Is there a Vegas vacation?'), 'Vegas');
+assert.equal(destinationFromChat('What should I do now?'), '');
+assert.equal(destinationFromChat('vacation in maui for three nights'), 'maui');
+assert.deepEqual(lodgingFromChat('staying at the Jockey Club in Lisbon'), {
+  text: 'Jockey Club in Lisbon',
+  lat: null,
+  lng: null,
+});
+assert.equal(lodgingFromChat('', { lat: 36.11, lng: -115.17 }).lat, 36.11);
+
+const intentQueries = queriesFromWantedThings(POKE_WANTED);
+assert.deepEqual(intentQueries.map((query) => [query.category, query.q, query.limit]), [
+  ['activity', 'poke', DEFAULT_FIRST_PASS_MINIMUMS.rest],
+  ['store', 'grocery store', DEFAULT_FIRST_PASS_MINIMUMS.store],
+  ['restaurant', 'restaurant', DEFAULT_FIRST_PASS_MINIMUMS.restaurant],
+]);
+assert.deepEqual(DEFAULT_FIRST_PASS_MINIMUMS, { restaurant: 15, store: 10, rest: 15 });
+assert.equal(intentQueries.some((query) => /huggo|bellagio|kona brewing|catch las vegas|speedishuttle/i.test(query.q)), false);
+assert.deepEqual(queriesFromWantedThings([]), []);
+assert.deepEqual(queriesFromWantedThings([{ name: '', kind: 'restaurant' }]), []);
+const placeSource = fs.readFileSync(new URL('../src/vacation/place-search.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(placeSource, /SEARCH_TARGETS|DEFAULT_QUERIES|wantedSearchQueries/);
+assert.doesNotMatch(placeSource, /DEFAULT_FIRST_PASS_MINIMUMS/);
+assert.match(placeSource, /firstPassSearchLimit/);
+assert.match(placeSource, /queriesFromWantedThings/);
+assert.match(placeSource, /searchTavily/);
+
+const lodgingEvents = [];
+const lodgingSearch = await searchPlaces({
+  destination: 'Lisbon',
+  lodging: 'Jockey Club',
+  wantedThings: POKE_WANTED,
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: async (url) => {
+    const value = String(url);
+    if (isOpenRouter(value)) return jevOk(5);
+    lodgingEvents.push(callKind(value));
+    if (value.includes('nominatim') && value.includes('Jockey')) {
+      return jsonResponse([{ lat: '36.1100', lon: '-115.1700', display_name: 'Jockey Club' }]);
+    }
+    if (value.includes('nominatim')) throw new Error(`destination geocode ran before lodging: ${value}`);
+    if (value.includes('places-api.foursquare.com')) {
+      assert.match(decodeURIComponent(value), /ll=36\.11,-115\.17/);
+      const query = new URL(value).searchParams.get('query');
+      return jsonResponse({
+        results: [{
+          fsq_place_id: `fsq-${query}`,
+          name: `FSQ ${query}`,
+          latitude: 36.111,
+          longitude: -115.171,
+        }],
+      });
+    }
+    if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
+    if (value.includes('api.search.brave.com')) {
+      const query = new URL(value).searchParams.get('q');
+      return jsonResponse({
+        results: [{ title: `Brave ${query}`, coordinates: [36.112, -115.172] }],
+      });
+    }
+    throw new Error(`unexpected lodging search ${value}`);
+  },
+});
+assert.equal(lodgingEvents[0], 'nominatim');
+assert.equal(lodgingEvents.filter((kind) => kind === 'nominatim').length, 1);
+assert.equal(lodgingEvents.includes('brave'), true);
+assert.equal(lodgingSearch.center.geocoded, 'lodging');
+assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['poke', 'grocery store', 'restaurant']);
+assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave poke' && place.source === 'brave'), true);
+assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
+assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
+
+const manyFsq = [];
+const braveAfterMany = await searchPlaces({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: async (url) => {
+    const value = String(url);
+    if (isOpenRouter(value)) return jevOk(5);
+    manyFsq.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || new URL(value).searchParams.get('query') || ''}`);
+    if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
+    if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
+      return jsonResponse({
+        results: [1, 2, 3, 4].map((index) => ({
+          fsq_place_id: `fsq-r${index}`,
+          name: `Restaurant ${index}`,
+          latitude: 38.72 + index / 1000,
+          longitude: -9.14,
+        })),
+      });
+    }
+    if (value.includes('places-api.foursquare.com')) return jsonResponse({ results: [] });
+    if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
+    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    throw new Error(`unexpected many-fsq search ${value}`);
+  },
+});
+assert.equal(manyFsq.filter((entry) => entry.startsWith('brave:')).length, 3);
+assert.deepEqual(manyFsq.filter((entry) => entry.startsWith('brave:')), ['brave:restaurant', 'brave:store', 'brave:attraction']);
+assert.equal(braveAfterMany.places.length, 4);
+assert.equal(braveAfterMany.places.every((place) => place.source === 'foursquare_os'), true);
+
+const fallbackEvents = [];
+const lodgingMiss = await searchPlaces({
+  destination: 'Lisbon',
+  lodging: 'Missing House',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: async (url) => {
+    const value = String(url);
+    if (isOpenRouter(value)) return jevOk(5);
+    if (value.includes('nominatim')) {
+      fallbackEvents.push(decodeURIComponent(value));
+      if (value.includes('Missing')) return jsonResponse([]);
+      return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
+    }
+    if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
+      assert.match(decodeURIComponent(value), /ll=38\.7223,-9\.1393/);
+      return jsonResponse({
+        results: [{
+          fsq_place_id: 'fsq-lisbon',
+          name: 'Lisbon Cafe',
+          latitude: 38.7225,
+          longitude: -9.1395,
+          categories: [{ name: 'Café' }],
+        }],
+      });
+    }
+    if (value.includes('places-api.foursquare.com') || value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
+    throw new Error(`unexpected lodging miss ${value}`);
+  },
+});
+assert.match(fallbackEvents[0], /Missing House/);
+assert.match(fallbackEvents[1], /Lisbon/);
+assert.equal(lodgingMiss.center.geocoded, 'destination');
+assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
+assert.equal(lodgingMiss.places[0].externalId, 'fsq-lisbon');
+assert.equal(lodgingMiss.places[0].categoryName, 'Café');
+assert.equal(lodgingMiss.places[0].jevScore, 5);
+const savedCafe = placeToTripThing({
+  ...lodgingMiss.places[0],
+  rating: 4.4,
+  ratingCount: 12,
+});
+assert.deepEqual(savedCafe.metadata.sourceRef, { source: 'foursquare_os', id: 'fsq-lisbon' });
+assert.equal(savedCafe.ratings.source, 'foursquare_os');
+assert.equal(savedCafe.ratings.rating, '4.4');
+assert.equal(savedCafe.ratings.count, 12);
+assert.equal(savedCafe.ratings.googleRating, undefined);
+assert.equal(savedCafe.metadata.jevScore, 5);
+assert.equal(savedCafe.metadata.categoryName, 'Café');
+assert.equal(savedCafe.metadata.sourceRecord.categoryName, 'Café');
+
+const workerEvents = [];
+const workerFetch = recordingFetch(lisbonRoutes, workerEvents);
+const research = await runPublicResearch({
+  wantedThings: PLACE_WANTED,
+  artifacts: { destination: 'Lisbon', requestText: 'vacation in Lisbon' },
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: workerFetch.fetchImpl,
+});
+assert.equal(research.status, 'live_place_search');
+assert.equal(research.provider, 'place-search');
+assert.deepEqual(workerEvents, [
+  'nominatim',
+  'foursquare_os',
+  'foursquare_os',
+  'foursquare_os',
+  'osm',
+  'brave',
+  'brave',
+  'brave',
+]);
+assert.equal(research.things.some((thing) => thing.source === 'brave' && thing.title === 'River Walk'), true);
+assert.equal(research.things.some((thing) => thing.source === 'foursquare_os'), true);
+assert.equal(research.things.some((thing) => thing.source === 'osm'), true);
+assert.equal(workerFetch.calls.some((call) => /googleapis|places\.google/.test(call.url)), false);
+const braveQuery = decodeURIComponent(workerFetch.calls.find((call) => call.url.includes('place_search')).url);
+assert.match(braveQuery, /q=restaurant/);
+assert.doesNotMatch(braveQuery, /near /);
+
+await assert.rejects(
+  () => runPublicResearch({
+    wantedThings: PLACE_WANTED,
+    artifacts: { destination: 'Lisbon', requestText: 'restaurants in Lisbon' },
+    env: {},
+    priorPlaces: [],
+    fetchImpl: async () => {
+      throw new Error('missing keys must not fetch');
+    },
+  }),
+  (error) => error instanceof PlaceSearchError && error.code === 'missing_key',
+);
+
+const quiet = await searchPlaces({
+  destination: 'Lisbon',
+  env: {},
+  fetchImpl: async () => {
+    throw new Error('empty wanted things must not fetch');
+  },
+});
+assert.deepEqual(quiet.places, []);
+assert.deepEqual(quiet.notes, []);
+const quietResearch = await runPublicResearch({
+  artifacts: { destination: 'Lisbon' },
+  env: {},
+  fetchImpl: async () => {
+    throw new Error('no wanted things must not fetch');
+  },
+});
+assert.equal(quietResearch.status, 'no_wanted_things');
+assert.deepEqual(quietResearch.things, []);
+
+const tavilyCalls = [];
+const flightSearch = await searchPlaces({
+  wantedThings: [{ name: 'morning flight', kind: 'flight' }],
+  env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
+  fetchImpl: async (url, options) => {
+    if (isOpenRouter(url)) return jevOk(5);
+    tavilyCalls.push(String(url));
+    assert.equal(String(url), 'https://api.tavily.com/search');
+    const body = JSON.parse(options.body);
+    assert.equal(body.query, 'morning flight');
+    assert.equal(options.headers.authorization, 'Bearer tavily-test-key');
+    return jsonResponse({
+      results: [{
+        title: 'Morning departure',
+        url: 'https://example.test/flight',
+        content: 'A published schedule.',
+        score: 0.8,
+      }],
+    });
+  },
+});
+assert.deepEqual(tavilyCalls, ['https://api.tavily.com/search']);
+assert.deepEqual(flightSearch.places, []);
+assert.equal(flightSearch.notes[0].source, 'tavily');
+assert.equal(flightSearch.notes[0].title, 'Morning departure');
+const flightFill = await fillTripIntake({
+  wantedThings: [{ name: 'morning flight', kind: 'flight' }],
+  env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
+  fetchImpl: async (url) => {
+    if (isOpenRouter(url)) return jevOk(5);
+    return jsonResponse({
+      results: [{
+        title: 'Morning departure',
+        url: 'https://example.test/flight',
+        content: 'A published schedule.',
+        score: 0.8,
+      }],
+    });
+  },
+});
+assert.equal(flightFill.things[0].source, 'tavily');
+assert.equal(flightFill.things[0].metadata.source, 'tavily');
+await assert.rejects(
+  () => searchPlaces({
+    wantedThings: [{ name: 'rental car', kind: 'car' }],
+    env: placeEnv(),
+    fetchImpl: async () => {
+      throw new Error('missing tavily key must not fetch');
+    },
+  }),
+  (error) => {
+    assert.equal(error instanceof PlaceSearchError, true);
+    assert.equal(error.code, 'missing_key');
+    assert.match(error.message, /TAVILI_API_KEY/);
+    return true;
+  },
+);
+
+console.log(JSON.stringify({
+  ok: true,
+  checked: 'place-search',
+  places: found.places.map((place) => place.source),
+}));

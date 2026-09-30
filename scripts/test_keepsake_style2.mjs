@@ -31,7 +31,7 @@ import {
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPatchParses, STYLE2_USES_AE, STYLE2_USES_ZU } from '../src/vacation/trek-style2-bundle.mjs';
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
-import { KEEPSAKE_LIST_MINIMUMS, padKeepsakeListNames, padKeepsakeSharedPlaces, padLiveTabRows, LIVE_TAB_FILL, KEEPSAKE_LIST_FILL } from '../src/vacation/keepsake-list-minimums.mjs';
+import { KEEPSAKE_LIST_MINIMUMS } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
 
 const shared = {
@@ -93,21 +93,7 @@ assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
 
-const catalogNames = [
-  ...Object.keys(NAMED_THING_LOGOS),
-  ...LIVE_TAB_FILL.restaurant,
-  ...LIVE_TAB_FILL.store,
-  ...LIVE_TAB_FILL.rest,
-  ...KEEPSAKE_LIST_FILL.Restaurants,
-  ...KEEPSAKE_LIST_FILL.Stores,
-  ...KEEPSAKE_LIST_FILL['Shows, Tours and the Rest'],
-  'Bellagio Fountains',
-  'High Roller',
-  'The Sphere',
-  'Fremont Street Experience',
-  'Neon Museum',
-  'Atomic Museum',
-];
+const catalogNames = Object.keys(NAMED_THING_LOGOS);
 for (const name of new Set(catalogNames)) {
   const path = brandLogoPath({ name }, { title: name });
   assert.equal(isPlaceholderLogoUrl(path), false, `real logo for ${name}`);
@@ -154,7 +140,7 @@ for (const file of await readdir(new URL('../public/ts-thing-logos/', import.met
   }
 }
 
-const paddedLogos = applyCapturedLogos(padKeepsakeSharedPlaces(shared));
+const paddedLogos = applyCapturedLogos(shared);
 for (const place of paddedLogos.places) {
   const logo = paddedLogos.thingOverrides[`place:${place.id}`]?.logoUrl || place.logoUrl;
   assert.equal(isPlaceholderLogoUrl(logo), false, `padded ${place.name} has a real logo`);
@@ -633,7 +619,7 @@ const aeFixture = [
   '.daily-page{break-after:page;page-break-after:always;min-height:100vh}',
   'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()',
   'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn',
-  'r==="8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"&&(document.title="TimeSyncher Vacation")',
+  'void 0',
   '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}',
   '.style2-details{display:grid;grid-template-columns:1fr;gap:10px}',
 ].join('\n');
@@ -644,7 +630,7 @@ assert.doesNotMatch(patchedAe, /logoUrl:tsLogo\(name\)/);
 assert.doesNotMatch(patchedAe, /lat:36\.1147/);
 assert.doesNotMatch(patchedAe, /address:"Nevada"/);
 assert.match(patchedAe, /Os\.filter\(G=>tsListThings\(Cc\)/);
-assert.match(patchedAe, /const named=\(/);
+assert.doesNotMatch(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
 assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
@@ -663,7 +649,7 @@ assert.match(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}\$\{lg\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
-assert.match(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
+assert.doesNotMatch(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
 assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.match(patchedAe, /data-style2-centered-day="1"/);
 assert.match(patchedAe, /flex-direction:column/);
@@ -713,35 +699,8 @@ assert.deepEqual(KEEPSAKE_LIST_MINIMUMS, {
   Stores: DEFAULT_FIRST_PASS_MINIMUMS.store,
   'Shows, Tours and the Rest': DEFAULT_FIRST_PASS_MINIMUMS.rest,
 });
-assert.equal(padKeepsakeListNames('Restaurants', [
-  { name: 'Carbone at Aria' },
-  { name: 'Shake Shack near Cosmo/Aria' },
-  { name: 'Lotus of Siam' },
-  { name: 'Eggslut' },
-]).length, 11);
-assert.equal(padKeepsakeListNames('Stores', [{ name: 'Cosmopolitan shops' }]).length, 9);
-assert.equal(padKeepsakeListNames('Shows, Tours and the Rest', [{ name: 'Bellagio Conservatory — Anniversary Cocktails' }]).length, 14);
-const paddedShared = padKeepsakeSharedPlaces(liveOverride);
-const paddedBuckets = keepsakeListBuckets(paddedShared);
-assert.ok(paddedBuckets.Restaurants.length >= KEEPSAKE_LIST_MINIMUMS.Restaurants);
-assert.ok(paddedBuckets.Stores.length >= KEEPSAKE_LIST_MINIMUMS.Stores);
-assert.ok(paddedBuckets['Shows, Tours and the Rest'].length >= KEEPSAKE_LIST_MINIMUMS['Shows, Tours and the Rest']);
-assert.match(paddedShared.thingOverrides['place:941001'].summary, /Mon Ami Gabi|steak-frites|Vegas/i);
-assert.equal(paddedShared.thingOverrides['place:941001'].timeline, false);
-assert.ok(paddedShared.places.some((place) => place.__tsKeepsakeFill === 1 && place.lat));
-const liveRestaurants = [
-  { name: 'Carbone at Aria' },
-  { name: 'Shake Shack near Cosmo/Aria' },
-  { name: 'Lotus of Siam' },
-  { name: 'Eggslut' },
-];
-assert.deepEqual(padLiveTabRows('restaurant', liveRestaurants).map((row) => row.name), liveRestaurants.map((row) => row.name));
-assert.deepEqual(padLiveTabRows('store', [{ name: 'Cosmopolitan shops' }]).map((row) => row.name), ['Cosmopolitan shops']);
-assert.deepEqual(padLiveTabRows('rest', [
-  { name: 'Bellagio Conservatory — Anniversary Cocktails' },
-  { name: 'Mon Ami Gabi', __tsLiveFill: 1, lat: 36.1147, lng: -115.1729, address: 'Las Vegas' },
-]).map((row) => row.name), ['Bellagio Conservatory — Anniversary Cocktails']);
-assert.equal(JSON.stringify(padLiveTabRows('restaurant', liveRestaurants)).includes('36.1147'), false);
+const minimumsSource = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');
+assert.doesNotMatch(minimumsSource, /\b(?:KEEPSAKE_LIST_FILL|BIG_ISLAND_LIST_FILL|KEEPSAKE_FILL_DETAILS|BIG_ISLAND_FILL_DETAILS|LIVE_TAB_FILL|FILL_BUCKET_META|catalogForShared|padKeepsakeListNames|padLiveTabRows)\b/);
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("car"\)/);
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
@@ -894,10 +853,9 @@ for (const name of boundPhotos) {
   assert.equal(bytes[0], 0xff);
   assert.equal(bytes[1], 0xd8);
 }
-const liveTravel = await fetch('https://travel.timesyncher.com/assets/index-BKun7ofk.js');
-assert.equal(liveTravel.ok, true, 'product TREK bundle reachable');
-const livePatched = patchStyleTwoToConfigRenderer(await liveTravel.text());
+const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
+assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
 assert.equal(livePatched.includes('children:"Trip View"'), false);
 assertStyleTwoPatchParses(livePatched);
 const patchedCheckPath = '/tmp/patched-style2-check.js';
@@ -949,8 +907,8 @@ assert.match(sharedApp, /data-ts-pic-popup-tip/);
 assert.match(sharedApp, /leaflet-popup-tip-container/);
 assert.match(sharedApp, /box-sizing: content-box !important/);
 
-const trek = await readFile(new URL('../public/assets/index-0J54vUO3.js', import.meta.url), 'utf8');
-assert.match(trek, /_t==="flight"\?"✈️"/);
+const trek = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+assert.match(trek, /i==="flight"\?"✈️"/);
 assert.doesNotMatch(trek, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');

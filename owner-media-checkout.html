@@ -140,6 +140,7 @@
     let paymentReady = false;
     let stagingCardMode = true;
     let ownerSessionToken = params.get('session') || params.get('token') || '';
+    let videoUnlimitedCents = null;
 
     function splitOwnerName(name = '') {
       const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -183,7 +184,7 @@
     function prices() {
       return {
         photo: isUnlimited() ? 900 : 500,
-        video: isUnlimited() ? 2700 : 1700,
+        video: isUnlimited() ? (Number(videoUnlimitedCents) || 0) : 1700,
       };
     }
 
@@ -337,6 +338,13 @@
     videoUpload.addEventListener('change', updateSummary);
     couponCode.addEventListener('input', updateSummary);
     loadOwnerContact();
+    fetch('/api/checkout-config')
+      .then((response) => response.json())
+      .then((data) => {
+        videoUnlimitedCents = data?.products?.collaborator?.videoUnlimited ?? null;
+        updateSummary();
+      })
+      .catch(() => {});
     updateSummary();
 
     form.addEventListener('submit', async (event) => {

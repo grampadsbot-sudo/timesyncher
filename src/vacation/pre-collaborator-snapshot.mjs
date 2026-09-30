@@ -1,4 +1,3 @@
-import { padKeepsakeSharedPlaces } from './keepsake-list-minimums.mjs';
 import { sharedTripFromIntake } from './intake-shared-trip.mjs';
 
 function thingView(row) {
@@ -13,12 +12,13 @@ function thingView(row) {
     customerWhen: meta.customerWhen || '',
     notes: Array.isArray(meta.notes) ? meta.notes : [],
     collaboratorNotes: [],
+    source: meta.source || '',
   };
 }
 
 export function preCollaboratorPayload(trip, things) {
   const stripped = (things || []).map((thing) => ({ ...thing, collaboratorNotes: [] }));
-  return padKeepsakeSharedPlaces(sharedTripFromIntake({ trip, things: stripped }));
+  return sharedTripFromIntake({ trip, things: stripped });
 }
 
 export async function storePreCollaboratorSnapshot(db, tripId) {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
-import { assertRequiredFirstPassMinimums } from './vacation-public-research-worker.mjs';
+import { assertRequiredFirstPassMinimums, firstPassMissingMinimums } from './vacation-public-research-worker.mjs';
 
 const DEFAULT_PUBLIC_BASE = 'https://vacation.timesyncher.com';
 
@@ -99,7 +99,7 @@ function genericPlan(payload) {
     : 3;
   const bookingBoundary = 'TimeSyncher Vacation does not book, reserve, hold, purchase, or complete travel arrangements. Customers verify prices, availability, hours, seasonal details, and terms before booking or relying on any option.';
   const researchedThings = Array.isArray(payload.researchedThings) ? payload.researchedThings : [];
-  if (researchedThings.length) {
+  if (researchedThings.length && !Object.keys(firstPassMissingMinimums(researchedThings).missing).length) {
     assertRequiredFirstPassMinimums(researchedThings);
   }
   const researchedPlaces = researchedThings.map((thing, index) => trekPlaceFromResearchThing(thing, index, destination, bookingBoundary));

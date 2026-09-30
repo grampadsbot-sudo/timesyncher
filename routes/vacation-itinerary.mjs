@@ -2,7 +2,7 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
@@ -22,33 +22,33 @@ import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import {
   customerModality,
-  FIXED_OPENER_REASON,
   jevStamp,
-  LIVE_OPENER_PRODUCER,
   liveTurnRecord,
-  onboardingOpenerText,
+  produceOnboardingOpener,
   tripIsReturning,
-  postIntakeUpsellTurn,
+  intakeSpan,
+  firstMarkedIntake,
   produceLiveAppReply,
   finishTierRewrite,
+  activityCommitDecisions,
   applyAgreedAppSwim,
   applyCustomerNotes,
-  ensureNamedThings,
-  intakeFacts,
-  thingsFromIntake,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
+import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
   openCollaboratorAppSeats,
   recordDialogParty,
   seatFromSession,
-  seatJoinCustomerText,
+  collaboratorSeatJoinEvent,
   transcriptCustomerId,
 } from '../src/vacation/collaborator-app-seat.mjs';
 
@@ -278,39 +278,41 @@ async function loadVacationAppTurns(db, session, tripId) {
 
 async function ensureOnboardingOpener(db, session, trip) {
   if (seatFromSession(session)) return;
-  const text = onboardingOpenerText(tripIsReturning(trip));
+  const existing = await db`
+    select 1
+    from transcript_turns
+    where customer_id = ${session.customer_id}
+      and trip_id = ${trip.id}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+    limit 1
+  `;
+  if (existing.length) return;
+  const started = Date.now();
+  const produced = await produceOnboardingOpener({
+    returning: tripIsReturning(trip),
+    tripTitle: trip?.title || '',
+    session,
+    env: process.env,
+  });
+  if (!produced?.reply) {
+    const error = new Error(produced?.reason || 'onboarding opener model returned no reply');
+    error.statusCode = 502;
+    throw error;
+  }
+  const text = produced.reply;
+  const elapsed = Math.max(1, Date.now() - started);
   const live = liveTurnRecord({
     turnIndex: 1,
     role: 'app',
     modality: 'text',
     text,
     at: new Date().toISOString(),
-    latencyMs: null,
-    sessionE2eMs: null,
-    jev: { jevRan: false, error: FIXED_OPENER_REASON },
-    replyProducer: LIVE_OPENER_PRODUCER,
-    model: {
-      quality: {
-        judged: true,
-        score: null,
-        comment: null,
-        rewritten: false,
-      },
-      log: {
-        draftModel: null,
-        rewriteModel: null,
-        shippedModel: null,
-        jevScoreDraft: null,
-        jevScoreRaw: null,
-        jevScoreRewrite: null,
-        jevNote: null,
-        jevNoteReason: 'jev_no_free_text',
-        interimReply: { text: null, model: null, ms: null },
-        latencyMs: { draft: null, rewrite: null, total: null },
-        flagged: false,
-        held: false,
-      },
-    },
+    latencyMs: elapsed,
+    sessionE2eMs: elapsed,
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
   });
   const payload = {
     source: 'vacation_app',
@@ -393,6 +395,35 @@ async function queueVacationAppTurn(db, session, trip, body) {
   const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
   const customerTurnIndex = priorCount + 1;
   const receivedAt = new Date().toISOString();
+  const memoryRows = await db`
+    select speaker, body, payload
+    from transcript_turns
+    where customer_id = ${transcriptOwnerId}
+      and trip_id = ${tripId}
+      and channel = 'vacation-app'
+      and payload->'liveTranscript' is not null
+    order by coalesce(received_at, sent_at, created_at) desc
+    limit 120
+  `;
+  const priorTurns = [...memoryRows].reverse().map((row) => {
+    const stored = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = stored.liveTranscript && typeof stored.liveTranscript === 'object' ? stored.liveTranscript : {};
+    return {
+      role: row.speaker === 'app' ? 'app' : 'customer',
+      text: row.body || '',
+      intake: live.intake === true,
+    };
+  });
+  const classification = await classifyTripIntake({ text: requestText, env: process.env });
+  const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
+  const queuedJobType = 'trip_intake';
+  const jobFields = tripIntakeJobFields({
+    requestText,
+    receivedAt,
+    classification,
+    firstIntake,
+    jobKind: queuedJobType,
+  });
   const customerLive = liveTurnRecord({
     turnIndex: customerTurnIndex,
     role: 'customer',
@@ -403,6 +434,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     sessionE2eMs: sessionE2eMs(),
     jev: { jevRan: false, error: 'classify_pending' },
     speakerName,
+    intake: classification.ok === true && classification.intake === true,
   });
   const payload = {
     source: 'vacation_app',
@@ -412,8 +444,17 @@ async function queueVacationAppTurn(db, session, trip, body) {
     browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
     selectedTripId: tripId,
     liveTranscript: customerLive,
+    intakeEvent: jobFields.intakeEvent,
+    wantedThings: jobFields.wantedThings,
+    roster: jobFields.roster,
+    rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
+    intakeError: jobFields.intakeError,
   };
-  const turnTag = classifyTurn({
+  const turnTag = await classifyTurnWithModel({
     text: requestText,
     speaker: 'customer',
     direction: 'inbound',
@@ -426,7 +467,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       status, queued_at
     )
     values (
-      ${transcriptOwnerId}, ${tripId}, 'vacation-app', 'trip_intake', ${requestText},
+      ${transcriptOwnerId}, ${tripId}, 'vacation-app', ${queuedJobType}, ${requestText},
       ${{ turnTag }}, ${payload}, 'queued', now()
     )
     returning id, received_at, queued_at
@@ -454,32 +495,27 @@ async function queueVacationAppTurn(db, session, trip, body) {
   `;
   const jobRows = await db`
     insert into worker_jobs (request_id, trip_id, job_type, input)
-    values (${requestId}, ${tripId}, 'trip_intake', ${{
+    values (${requestId}, ${tripId}, ${queuedJobType}, ${{
       customerId: transcriptOwnerId,
       tripId,
       requestId,
       source: 'vacation-app',
-      requestType: 'trip_intake',
+      requestType: queuedJobType,
       requestText,
       payload,
+      intakeEvent: jobFields.intakeEvent,
+      wantedThings: jobFields.wantedThings,
+      roster: jobFields.roster,
+      rosterError: jobFields.rosterError,
+      destination: jobFields.destination,
+      hasDates: jobFields.hasDates,
+      title: jobFields.title,
+      titleError: jobFields.titleError,
+      intakeError: jobFields.intakeError,
     }})
     returning id
   `;
 
-  const memoryRows = await db`
-    select speaker, body
-    from transcript_turns
-    where customer_id = ${transcriptOwnerId}
-      and trip_id = ${tripId}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-    order by coalesce(received_at, sent_at, created_at) desc
-    limit 120
-  `;
-  const priorTurns = [...memoryRows].reverse().map((row) => ({
-    role: row.speaker === 'app' ? 'app' : 'customer',
-    text: row.body || '',
-  }));
   let produced;
   try {
     produced = await produceLiveAppReply({
@@ -488,6 +524,15 @@ async function queueVacationAppTurn(db, session, trip, body) {
       priorTurns,
       tripTitle: trip?.title || '',
       env: process.env,
+      seatDollars: configuredSeatDollars(process.env),
+      intake: classification.ok === true && classification.intake === true,
+      wantedThings: classification.ok === true ? classification.things : [],
+      roster: Array.isArray(classification.roster) ? classification.roster : [],
+      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
     });
   } catch (error) {
     produced = {
@@ -522,6 +567,15 @@ async function queueVacationAppTurn(db, session, trip, body) {
     sessionE2eMs: sessionE2eMs(),
     jev: customerLive.jev,
     reply: null,
+    intakeEvent: jobFields.intakeEvent,
+    wantedThings: jobFields.wantedThings,
+    roster: jobFields.roster,
+    rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
+    intakeError: jobFields.intakeError,
   };
   if (produced.status === 'interim' && produced.pending) {
     const pending = {
@@ -590,8 +644,16 @@ async function queueVacationAppTurn(db, session, trip, body) {
       collaborator: Boolean(seat),
       speakerName,
       appReply: produced.reply,
+      roster: Array.isArray(classification.roster) ? classification.roster : [],
+      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+      askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
     },
-    postIntakeUpsellTurn(requestText, priorTurns) ? requestText : '',
+    firstIntake ? requestText : '',
+    classification.ok === true ? classification.things : [],
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
   const vacationRows = await db`
@@ -614,16 +676,18 @@ async function queueVacationAppTurn(db, session, trip, body) {
 
 function thingView(row) {
   const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const notes = Array.isArray(meta.notes) ? meta.notes : (row.description ? [row.description] : []);
+  const notes = Array.isArray(meta.notes) ? meta.notes : [];
   const collaboratorNotes = Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [];
   return {
     id: row.id,
     category: row.category,
     title: row.title,
-    description: row.description || notes.join(' '),
+    description: row.description || '',
+    source: meta.source || '',
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
+    askWhichDay: meta.askWhichDay === true,
     notes,
     collaboratorNotes,
   };
@@ -658,58 +722,77 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text) {
-  const facts = intakeFacts(text);
-  const planned = facts.things.length ? facts.things : thingsFromIntake(text);
-  if (!planned.length) return loadTripThings(db, tripId);
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}) {
+  const planned = thingsFromIntake(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
-  const span = facts.span;
-  const priorRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  const span = intakeSpan(text);
+  const priorRows = await db`select destination, metadata from trips where id = ${tripId} limit 1`;
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
+  const priorDestination = String(priorRows[0]?.destination || '').trim();
+  const resolvedDestination = priorDestination
+    ? { destination: priorDestination, ask: false, source: 'saved-trip' }
+    : await resolveTripDestination({
+      saved: '',
+      texts: [text],
+      complete: (corpus) => openRouterDestinationComplete(corpus, process.env),
+    });
   const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
   const party = completeRosterParty({
     party: priorParty,
     customerName: priorParty.primary?.name || '',
     turns: [{ role: 'customer', text }],
+    ...(Array.isArray(roster) || rosterError ? {
+      roster: Array.isArray(roster) ? roster : [],
+      rosterError,
+      askRoster: askRoster === true,
+    } : {}),
   });
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
-  if (span?.destination || span?.start) {
-    await db`
-      update trips
-      set title = case
-            when ${span.placeTitle || ''} <> '' and title in (
-              'Vacation', 'TimeSyncher Vacation Coupon Checkout', 'TimeSyncher Vacation Setup', 'TimeSyncher Vacation Admin Test'
-            ) then ${span.placeTitle || 'Vacation'}
-            else title
-          end,
-          destination = case
-            when coalesce(destination, '') = '' then ${span.destination || ''}
-            else destination
-          end,
-          start_date = coalesce(start_date, ${span.start || null}::date),
-          end_date = coalesce(end_date, ${span.end || null}::date),
-          status = case when status = 'onboarding' then 'planning' else status end,
-          metadata = coalesce(metadata, '{}'::jsonb) || ${{
-            intakeRule: facts.rule || '',
-            intakeSpan: span.spanLabel || '',
-            intakeBadge: span.badge || '',
-            dialogParty: party,
-          }},
-          updated_at = now()
-      where id = ${tripId}
-    `;
-  }
+  const resolved = await resolveIntakePlace({
+    destination: extractedDestination || resolvedDestination.destination,
+    title: extractedTitle,
+    destinationError,
+    titleError,
+    searchImpl,
+  });
+  const tripTitle = resolved.title;
+  const tripDestination = resolved.destination || resolvedDestination.destination || '';
+  const missingTitle = tripTitle ? null : resolved.titleError;
+  const dated = span?.start ? 'yes' : '';
+  await db`
+    update trips
+    set title = case
+          when ${tripTitle} <> '' then ${tripTitle}
+          else title
+        end,
+        destination = case
+          when coalesce(destination, '') = '' and ${tripDestination} <> '' then ${tripDestination}
+          else destination
+        end,
+        start_date = coalesce(start_date, ${span?.start || null}::date),
+        end_date = coalesce(end_date, ${span?.end || null}::date),
+        status = case when status = 'onboarding' and ${dated} = 'yes' then 'planning' else status end,
+        metadata = coalesce(metadata, '{}'::jsonb) || ${{
+          ...(span?.spanLabel ? { intakeSpan: span.spanLabel, intakeBadge: span.badge || '' } : {}),
+          dialogParty: party,
+          ...(tripDestination ? { destinationSource: resolved.destination ? 'chat_extraction' : resolvedDestination.source } : { destinationError: resolved.destinationError || (resolvedDestination.ask ? 'missing' : null) }),
+          ...(tripTitle ? { titleSource: 'chat_extraction' } : { titleError: missingTitle }),
+        }},
+        updated_at = now()
+    where id = ${tripId}
+  `;
   for (const thing of planned) {
     await db`
       insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
       values (
         ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
         'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-          source: 'long-intake',
+          source: thing.source || 'chat_extraction',
           who: thing.who || '',
           whenLabel: thing.whenLabel || '',
           customerWhen: '',
+          askWhichDay: thing.askWhichDay === true,
           notes: thing.notes || [],
           collaboratorNotes: [],
         }}
@@ -719,10 +802,12 @@ async function ensureIntakeItinerary(db, tripId, text) {
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '') {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText);
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}, intakeText = '', extracted = []) {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl });
   const current = await loadTripThings(db, tripId);
-  if (!current.length || !String(text || '').trim()) return current;
+  const wanted = thingsFromIntake(extracted);
+  if (!current.length && !wanted.length) return current;
+  if (!String(text || '').trim() && !wanted.length) return current;
   const tripRows = await db`
     select start_date, end_date
     from trips
@@ -732,8 +817,14 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
-  let next = ensureNamedThings(current, text);
-  next = applyCustomerNotes(next, text, { collaborator, speakerName });
+  let next = mergeWantedThings(current, wanted);
+  let commits = null;
+  try {
+    commits = await activityCommitDecisions(text);
+  } catch (error) {
+    commits = { __ask: true, error: String(error?.message || error) };
+  }
+  next = applyCustomerNotes(next, text, { collaborator, speakerName, commits });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
@@ -744,10 +835,11 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         values (
           ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
           'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-            source: 'customer-turn',
+            source: thing.source || 'customer-turn',
             who: thing.who || '',
             whenLabel: thing.whenLabel || '',
             customerWhen: thing.customerWhen || '',
+            askWhichDay: thing.askWhichDay === true,
             notes: thing.notes || [],
             collaboratorNotes: thing.collaboratorNotes || [],
           }}
@@ -756,17 +848,18 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       continue;
     }
     if (JSON.stringify({
-      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who,
+      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who, askWhichDay: prior.askWhichDay === true,
     }) === JSON.stringify({
-      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who,
+      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who, askWhichDay: thing.askWhichDay === true,
     })) continue;
     await db`
       update trip_things
-      set description = ${thing.description || prior.description || ''},
+      set description = '',
           metadata = coalesce(metadata, '{}'::jsonb) || ${{
             who: thing.who || '',
             whenLabel: thing.whenLabel || prior.whenLabel || '',
             customerWhen: thing.customerWhen || '',
+            askWhichDay: thing.askWhichDay === true,
             notes: thing.notes || [],
             collaboratorNotes: thing.collaboratorNotes || [],
           }},
@@ -881,8 +974,20 @@ async function handleVacationApp(req, res, db, url) {
         db,
         pending.tripId,
         pending.customerTurn,
-        { collaborator: pending.collaborator === true, speakerName: pending.speakerName || '', appReply: finished.reply },
+        {
+          collaborator: pending.collaborator === true,
+          speakerName: pending.speakerName || '',
+          appReply: finished.reply,
+          roster: Array.isArray(pending.roster) ? pending.roster : [],
+          rosterError: pending.rosterError || null,
+          askRoster: Boolean(pending.rosterError),
+          extractedDestination: pending.extractedDestination || '',
+          extractedTitle: pending.extractedTitle || '',
+          destinationError: pending.destinationError || null,
+          titleError: pending.titleError || null,
+        },
         pending.postIntake === true ? pending.customerTurn : '',
+        pending.wantedThings || [],
       );
       if (itinerary.length) await publishIntakeShare(db, pending.tripId);
       await db`
@@ -915,14 +1020,22 @@ async function handleVacationApp(req, res, db, url) {
     if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
-      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records pay, EULA, and join.' });
-      const text = seatJoinCustomerText(seat);
+      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
+      const event = collaboratorSeatJoinEvent(seat);
       const prior = await loadVacationAppTurns(db, session, selected.id);
-      if (prior.some((turn) => turn.speaker === 'customer' && String(turn.body || '').includes(text))) {
+      if (prior.some((turn) => turn.speaker === 'system' && turn.payload?.event === 'collaborator_seat_join')) {
         return sendJson(res, 200, { ok: true, status: 'already_joined', reply: null });
       }
-      const queuedJoin = await queueVacationAppTurn(db, session, selected, { text, modality: 'text' });
-      return sendJson(res, queuedJoin.ok ? 201 : 502, { trip: selected, ...queuedJoin });
+      await db`
+        insert into transcript_turns (
+          customer_id, trip_id, speaker, channel, body, payload, direction, sent_at
+        )
+        values (
+          ${transcriptCustomerId(session)}, ${selected.id}, ${event.speaker}, ${event.channel}, ${event.body},
+          ${event.payload}, ${event.direction}, now()
+        )
+      `;
+      return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
     const queued = await queueVacationAppTurn(db, session, selected, body);
     return sendJson(res, queued.ok ? 201 : 502, {
@@ -994,7 +1107,7 @@ export default async function handler(req, res) {
 
     const things = await db`
       select id, category, subtype, title, description, starts_at, ends_at, cost_estimate_cents,
-        currency, location, links, ratings, metadata, created_at
+        currency, location, links, ratings, metadata, source, created_at
       from trip_things
       where trip_id = ${session.trip_id}
       order by

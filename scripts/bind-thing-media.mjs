@@ -73,7 +73,8 @@ function writePublicFile(shareToken, filename, bytes) {
 function applyTrek(binding, bytes, filename) {
   const runtimeDir = process.env.TIMESYNCHER_TREK_RUNTIME_DIR || '/home/timesyncher-agent/trek/runtime';
   const container = process.env.TIMESYNCHER_TREK_CONTAINER || 'trek';
-  const owner = process.env.TIMESYNCHER_TREK_DB_OWNER || 'ubishere9995';
+  const owner = String(process.env.TIMESYNCHER_TREK_DB_OWNER || '').trim();
+  if (!owner) throw new Error('TIMESYNCHER_TREK_DB_OWNER is required.');
   const destination = path.join(runtimeDir, 'uploads', 'photos', filename);
   const tmpPath = path.join('/tmp', `${process.pid}-${filename}`);
   fs.writeFileSync(tmpPath, bytes);

@@ -1,4 +1,3 @@
 # Excluded from the offline job. One path, then a one-line reason.
-scripts/test_keepsake_style2.mjs network: fetches https://travel.timesyncher.com/assets/index-BKun7ofk.js
 scripts/test_openclaw_control.mjs network: listens on 127.0.0.1 and fetch()es that server; ENETUNREACH with the network namespace down
 scripts/test_trip_summary_intake.mjs real bug: product-gbrain-dispatch.mjs does not export buildTripSummary

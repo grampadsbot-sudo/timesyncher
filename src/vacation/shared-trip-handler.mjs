@@ -1,12 +1,11 @@
 import { sql } from './db.mjs';
 import { cleanText, headerValue, sendJson } from './http.mjs';
-import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, windLookupPointsFromThings } from './intake-shared-trip.mjs';
+import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { TREK_SHARED_API_BASE, mergeBindingsIntoShared, stripKeepsakeJunkMedia } from './thing-media-bind.mjs';
 import { listBindings } from './thing-media-store.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyProductKeepsakeOverrides } from './keepsake-product-overrides.mjs';
-import { padKeepsakeSharedPlaces } from './keepsake-list-minimums.mjs';
 import { realTripSummary } from './keepsake-style2.mjs';
 
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
@@ -51,37 +50,24 @@ async function intakeSharedResponse(shareToken) {
   const trip = rows[0];
   if (!trip || intakeShareSlug(trip.id) !== shareToken) return null;
   const things = await db`
-    select id, category, title, description, metadata
+    select id, category, title, description, metadata, ratings, location, source
     from trip_things
     where trip_id = ${trip.id}
     order by created_at asc
   `;
-  const mappedThings = things.map((row) => {
-    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-    return {
-      id: row.id,
-      category: row.category,
-      title: row.title,
-      description: row.description || '',
-      who: meta.who || '',
-      whenLabel: meta.whenLabel || '',
-      customerWhen: meta.customerWhen || '',
-      notes: Array.isArray(meta.notes) ? meta.notes : [],
-      collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
-    };
-  });
-  const shared = padKeepsakeSharedPlaces(sharedTripFromIntake({ trip, things: mappedThings }));
-  let windBackup = '';
+  const mappedThings = things.map((row) => thingRecordFromTripRow(row));
+  const shared = sharedTripFromIntake({ trip, things: mappedThings });
+  let forecast = [];
   try {
-    windBackup = await lookupWindBackup(windLookupPointsFromThings(mappedThings), {
+    forecast = await lookupWindBackup(windLookupPointsFromThings(mappedThings), {
       startDate: trip.start_date,
       endDate: trip.end_date,
       timeoutMs: 2000,
     });
   } catch {
-    windBackup = '';
+    forecast = [];
   }
-  return applyCapturedLogos(applyThingPresentation(shared, { windBackup }));
+  return applyCapturedLogos(applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] }));
 }
 
 export default async function handler(req, res) {
@@ -130,7 +116,7 @@ export default async function handler(req, res) {
   }
 
   const bindings = shareToken ? await listBindings(shareToken, process.env) : [];
-  const merged = applyCapturedLogos(applyProductKeepsakeOverrides(padKeepsakeSharedPlaces(stripKeepsakeJunkMedia(mergeBindingsIntoShared(shared, bindings)))));
+  const merged = applyCapturedLogos(applyProductKeepsakeOverrides(stripKeepsakeJunkMedia(mergeBindingsIntoShared(shared, bindings))));
   const overrides = merged.thingOverrides && typeof merged.thingOverrides === 'object' ? merged.thingOverrides : {};
   merged.thingOverrides = {
     ...overrides,
