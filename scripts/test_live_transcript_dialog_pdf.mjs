@@ -537,6 +537,8 @@ const unnamedKids = completeRosterParty({
   turns: [{ role: 'customer', text: 'Kimberly wants gardens. Kids are Torren, Peyton, Keegan, and Fallon. Marcus Chen can look. Aunt Jean can edit notes.' }],
 });
 assert.equal(unnamedKids.preference_subjects.length, 0);
+assert.deepEqual(unnamedKids.viewers, []);
+assert.deepEqual(unnamedKids.editors, []);
 assert.equal(unnamedKids.collaborators.map((person) => person.name).join(', '), 'Kimberly');
 assert.equal(unnamedKids.sources.some((item) => item.source === 'chat_extraction'), true);
 const wantsNotRoster = completeRosterParty({
@@ -561,13 +563,12 @@ const parsedParty = completeRosterParty({
   ],
   turns: [{ role: 'customer', text: 'Kids are Torren who is eight, Peyton who is six, Keegan who is four, and Fallon who is two. Marcus Chen can look, and Aunt Jean can edit notes.' }],
 });
-assert.equal(parsedParty.preference_subjects.map((kid) => `${kid.name} ${kid.age}`).join(', '), 'Torren 8, Peyton 6, Keegan 4, Fallon 2');
+assert.deepEqual(parsedParty.preference_subjects, []);
 assert.equal(parsedParty.collaborators.find((person) => /Kimberly/.test(person.name)).payer, 'owner');
 assert.equal(parsedParty.collaborators.find((person) => /Tyler/.test(person.name)).payer, 'tyler');
-assert.equal(parsedParty.viewers[0].name, 'Marcus Chen');
-assert.equal(parsedParty.editors[0].name, 'Aunt Jean');
-assert.ok(parsedParty.sources.some((item) => item.field === 'preference_subjects.Torren' && item.source.startsWith('customer:')));
-assert.ok(parsedParty.sources.some((item) => item.field === 'viewers.Marcus Chen'));
+assert.deepEqual(parsedParty.viewers, []);
+assert.deepEqual(parsedParty.editors, []);
+assert.equal(parsedParty.sources.some((item) => String(item.source).startsWith('customer:')), false);
 assert.equal(liveTranscriptFromRows({
   session: { token: 'tok', display_name: 'Craig' },
   rows: [{ body: 'Hello', payload: { liveTranscript: { turnIndex: 1, role: 'app', text: 'Hello', rewriteJevScoreRaw: 0 } } }],

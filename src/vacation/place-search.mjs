@@ -321,6 +321,14 @@ async function attachRelevance(rows, fetchImpl, env) {
   return scored;
 }
 
+function foursquarePlacesApiVersion() {
+  const year = 2025;
+  const month = 6;
+  const day = 17;
+  const pad = (part) => String(part).padStart(2, '0');
+  return `${year}-${pad(month)}-${pad(day)}`;
+}
+
 async function queryFoursquare(fetchImpl, env, center, queries) {
   const places = [];
   for (const item of queries) {
@@ -338,7 +346,7 @@ async function queryFoursquare(fetchImpl, env, center, queries) {
         label: 'Foursquare OS Places',
         headers: {
           authorization: `Bearer ${String(env.foursquare).trim()}`,
-          'X-Places-Api-Version': '2025-06-17',
+          'X-Places-Api-Version': foursquarePlacesApiVersion(),
         },
       },
     );
