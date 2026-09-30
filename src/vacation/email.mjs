@@ -13,17 +13,40 @@ function fromEmail(env = process.env) {
   return env.TIMESYNCHER_EMAIL_FROM || `TimeSyncher Vacation <${supportEmail(env)}>`;
 }
 
-export function purchaseLaunchUrl({ publicUrl, publicSlug, env = process.env } = {}) {
-  const explicit = cleanText(publicUrl, 500);
-  if (explicit.includes('/shared/')) return explicit;
-  const slug = cleanText(publicSlug, 180);
-  if (slug) return sharedTripWebsiteUrl(slug, env);
-  return `${websiteTripBase(env)}/shared/`;
+function withPurchaseStep(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.searchParams.get('purchase') !== '1') parsed.searchParams.set('purchase', '1');
+    return parsed.toString();
+  } catch {
+    return url;
+  }
 }
 
-export function purchaseEmail({ contact, publicUrl, publicSlug, env = process.env }) {
+export function purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId = '', env = process.env } = {}) {
+  const explicit = cleanText(publicUrl, 500);
+  let url = '';
+  if (explicit.includes('/shared/')) url = explicit;
+  else {
+    const slug = cleanText(publicSlug, 180);
+    url = slug ? sharedTripWebsiteUrl(slug, env) : `${websiteTripBase(env)}/shared/`;
+  }
+  const sessionId = cleanText(eulaSessionId, 180);
+  if (sessionId) {
+    try {
+      const parsed = new URL(url);
+      parsed.searchParams.set('eulaSession', sessionId);
+      url = parsed.toString();
+    } catch {
+      url = `${url}${url.includes('?') ? '&' : '?'}eulaSession=${encodeURIComponent(sessionId)}`;
+    }
+  }
+  return withPurchaseStep(url);
+}
+
+export function purchaseEmail({ contact, publicUrl, publicSlug, eulaSessionId = '', env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
-  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, env });
+  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId, env });
   const subject = 'Your TimeSyncher Vacation purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
@@ -161,7 +184,13 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
     `;
     publicSlug = cleanText(slugRows[0]?.slug, 180);
   }
-  const message = purchaseEmail({ contact: onboarding.contact, publicSlug, publicUrl: onboarding.publicUrl, env });
+  const message = purchaseEmail({
+    contact: onboarding.contact,
+    publicSlug,
+    publicUrl: onboarding.publicUrl,
+    eulaSessionId: onboarding.eula?.sessionId || '',
+    env,
+  });
 
   const existing = await db`
     select id, status
