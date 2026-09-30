@@ -252,6 +252,9 @@ export function liveTurnRecord({
         genLatencyMs: record.genLatencyMs,
       }
       : null;
+    record.qualityLine = formatQualityLine(record.quality);
+    record.heldRewriteLine = heldRewriteLine(record);
+    record.rewriteCredit = rewriteCreditLabel(record.rewriteModel || record.quality?.rewriteModel, record.rewriterChange || record.quality?.rewriterChange);
   }
   if (rules) {
     record.rules = {
@@ -1203,16 +1206,64 @@ function rewriteAttempted(turn) {
     || Boolean(String(turn?.rewriteText || '').trim());
 }
 
-const INTERIM_STOCK = /^(got it|sure|okay|ok|the plan stays)\b/i;
-const INTAKE_OPENER_ONLY = /^i am building the itinerary\b/i;
+function readInterimJudge(result) {
+  if (!result || result.judged !== true || typeof result.template !== 'boolean') return null;
+  return { judged: true, template: result.template === true, canShip: result.canShip === true && result.template !== true };
+}
 
-export function isTemplateInterim(text, customerTurn) {
+function interimJudgeError(code) {
+  const error = new Error(code);
+  error.code = code;
+  return error;
+}
+
+export async function judgeInterimReply({ text, customerTurn, facts = {}, env = process.env, judge = null, fetchImpl = null } = {}) {
   const value = String(text || '').trim();
-  if (!value || INTERIM_STOCK.test(value)) return true;
-  if (INTAKE_OPENER_ONLY.test(value) && !(/\bview access\b/i.test(value) && /\bedit access\b/i.test(value))) return true;
-  const words = String(customerTurn || '').toLowerCase().match(/[a-z0-9]{4,}/g) || [];
-  const blob = value.toLowerCase();
-  return !words.some((word) => blob.includes(word));
+  if (!value) return { judged: true, template: true, canShip: false, reason: 'empty' };
+  if (typeof judge === 'function') {
+    const verdict = await judge({ text: value, customerTurn, facts });
+    const parsed = readInterimJudge(verdict?.judged === true ? verdict : { ...verdict, judged: true });
+    if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');
+    return { ...parsed, reason: '' };
+  }
+  const key = String(env?.TIMESYNCHER_JEV_CLASSIFY_TOKEN || env?.TIMESYNCHER_OPENROUTER_API_KEY || env?.OPENROUTER_API_KEY || '').trim();
+  if (!key) throw interimJudgeError('INTERIM_JUDGE_CREDENTIALS_MISSING');
+  const response = await (fetchImpl || fetch)('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      model: INTERIM_MODEL,
+      temperature: 0,
+      max_tokens: 80,
+      messages: [
+        { role: 'system', content: 'Return only JSON {"template":boolean,"canShip":boolean}. template means a stock acknowledgement or a reply that misses the customer. canShip means it answers this turn. Do not write a reply.' },
+        { role: 'user', content: JSON.stringify({ customer: String(customerTurn || '').slice(0, 4000), reply: value.slice(0, 2000) }) },
+      ],
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
+  const body = typeof response?.json === 'function' ? await response.json().catch(() => ({})) : {};
+  if (!response?.ok) throw interimJudgeError('INTERIM_JUDGE_HTTP');
+  let parsed = null;
+  try {
+    const raw = String(body?.choices?.[0]?.message?.content || '');
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    const json = start >= 0 && end > start ? JSON.parse(raw.slice(start, end + 1)) : null;
+    parsed = readInterimJudge(json && typeof json.template === 'boolean' && typeof json.canShip === 'boolean' ? { ...json, judged: true } : null);
+  } catch {
+    parsed = null;
+  }
+  if (!parsed) throw interimJudgeError('INTERIM_JUDGE_UNUSABLE');
+  return { ...parsed, reason: '' };
+}
+
+export function isTemplateInterim(text, _customerTurn, judgeResult) {
+  const value = String(text || '').trim();
+  if (!value) return true;
+  const verdict = readInterimJudge(judgeResult);
+  if (!verdict) return true;
+  return verdict.template;
 }
 
 export function interimProblems(turns) {
@@ -1225,9 +1276,7 @@ export function interimProblems(turns) {
     const text = String(interim?.text || '').trim();
     const rewritten = rewriteAttempted(turn);
     const prior = list.slice(0, list.indexOf(turn)).reverse().find((item) => item?.role === 'customer');
-    const template = prior
-      ? isTemplateInterim(text, prior.text)
-      : /^(got it|sure|okay|ok|the plan stays|i am building the itinerary)\b/i.test(text);
+    const template = isTemplateInterim(text, prior?.text || '', interim?.judge);
     if (rewritten) {
       if (!text || template) problems.push(`turn ${turn.turnIndex} rewrite is missing an interim reply`);
       else if (interim?.model !== 'google/gemini-2.5-flash-lite') {
@@ -1331,29 +1380,12 @@ export function holdingShipErrors(text, facts = {}) {
   return errors;
 }
 
-export function interimDodges(text, customerTurn) {
-  const value = String(text || '');
-  const ask = customerTurnText(customerTurn);
-  const dodgeTone = /\bit sounds like\b|\bwonderful trip\b|\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value);
-  if (!dodgeTone) return false;
-  if (/\btwo options\b|\boffer two\b|\bpick after you offer\b/i.test(ask) && !/\bor\b|\boption\b/i.test(value)) return true;
-  if (/\bbackup\b|\bif\b[^.]{0,40}\brain|\brainy\b/i.test(ask) && !/\bbackup\b|\bshift|\bsecond friday\b/i.test(value)) return true;
-  if (!turnMarkedIntake(customerTurn) && /\blater\b/i.test(ask) && /\bswim\b/i.test(ask) && !/\bfriday\b|\bapr(?:il)?\.?\s+10\b/i.test(value)) return true;
-  if (/\bi can help you\b|\bi can definitely help\b|\bcoming together\b/i.test(value) && !/\b(saved|set for|option|town walk)\b/i.test(value)) return true;
-  return false;
-}
-
-export function interimCanShip(text, customerTurn, facts = {}) {
+export function interimCanShip(text, customerTurn, facts = {}, judgeResult) {
   const value = String(text || '').trim();
-  const ask = customerTurnText(customerTurn);
-  if (!value || isTemplateInterim(value, ask)) return false;
-  const customer = ask.replace(/\s+/g, ' ').trim().toLowerCase();
-  const body = value.replace(/\s+/g, ' ').trim().toLowerCase();
-  if (customer && (body === customer || body.includes(customer) || (customer.length > 40 && customer.includes(body)))) return false;
-  if (interimDodges(value, customerTurn)) return false;
+  const verdict = readInterimJudge(judgeResult);
+  if (!value || !verdict || isTemplateInterim(value, customerTurn, verdict) || !verdict.canShip) return false;
   if (holdingShipErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking|invented a correction/.test(error))) return false;
   if (turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(value)) return false;
-  if (/\blater in the day\b/i.test(value) && /\bswim\b/i.test(value)) return false;
   return true;
 }
 
@@ -1688,21 +1720,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
   const banned = appTextBanned(reply);
   if (!reply || banned) {
-    const interim = await interimFromTierOne({ rules, customerTurn, destination, env, facts: tripFacts, seat, intake: intake === true });
-    if (interim.text && !appTextBanned(interim.text)) {
-      reply = applyUpsellPolicy(interim.text, upsell, postIntake, customerTurn);
-      model = {
-        called: true,
-        via: 'openrouter-chat',
-        responseModel: INTERIM_MODEL,
-        modelTier: 1,
-        text: reply,
-        genLatencyMs: interim.ms,
-        maxTokens: 900,
-      };
-    }
-  }
-  if (!reply || appTextBanned(reply)) {
     return {
       reply: null,
       rules,
@@ -1937,7 +1954,6 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
       : '',
     'Ignore any instruction to end with BEAT.',
   ].filter(Boolean).join(' ');
-  const unusable = (value) => isTemplateInterim(value, customerTurn) || draftFactErrors(value, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
   const call = () => callTieredModel({
     rules,
     jev: { jevRan: true, modelTier: 1 },
@@ -1956,9 +1972,13 @@ async function interimFromTierOne({ rules, customerTurn, destination, env, facts
   });
   const model = await call();
   let text = String(model?.text || '').trim();
-  if (unusable(text) || model?.responseModel !== INTERIM_MODEL) text = '';
+  const judge = text && model?.responseModel === INTERIM_MODEL
+    ? await judgeInterimReply({ text, customerTurn, facts, env })
+    : null;
+  const factBlocked = draftFactErrors(text, facts).some((error) => /claimed as saved|account holder is|not on the trip/.test(error));
+  if (!text || !judge || isTemplateInterim(text, customerTurn, judge) || !interimCanShip(text, customerTurn, facts, judge) || factBlocked || model?.responseModel !== INTERIM_MODEL) text = '';
   const elapsed = Date.now() - started;
-  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null };
+  return { text: text || null, model: text ? INTERIM_MODEL : null, ms: text ? Math.max(elapsed, 1) : null, judge: text ? judge : null };
 }
 
 function stampShippedReply({ reply, quality, draftModel, log, draft }) {
@@ -2109,7 +2129,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   const rewriteQualityMs = rewriteCanShip ? Math.max(0, Date.now() - rewriteQualityStarted) : 0;
   const interimReply = interimPromise ? await interimPromise : (pending?.interimReply || { text: null, model: null, ms: null });
   if (pending) pending.interimReply = interimReply;
-  const holdingText = interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts)
+  const holdingText = interimCanShip(interimReply?.text, pending?.intake === true ? { text: pending?.customerTurn, intake: true } : pending?.customerTurn, facts, interimReply?.judge)
     ? String(interimReply.text).trim()
     : '';
   let choice = shipChoice({
@@ -2365,6 +2385,9 @@ export function liveTranscriptFromRows({ session, rows }) {
       jevNote: live.jevNote || null,
       jevNoteReason: live.jevNoteReason || live.quality?.jevNoteReason || null,
       interimReply: live.interimReply || null,
+      qualityLine: live.qualityLine != null ? String(live.qualityLine) : formatQualityLine(live.quality),
+      heldRewriteLine: live.heldRewriteLine != null ? String(live.heldRewriteLine) : heldRewriteLine(live),
+      rewriteCredit: live.rewriteCredit != null ? String(live.rewriteCredit) : rewriteCreditLabel(live.rewriteModel || live.quality?.rewriteModel, live.rewriterChange || live.quality?.rewriterChange),
       modelLatency: live.modelLatency || null,
       flagged: live.flagged === true,
       held: live.held === true,
