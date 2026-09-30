@@ -632,7 +632,51 @@ function foldedStrings(text) {
   return folds;
 }
 
+export const EVASION_MODEL_LINE_ALLOW = [
+  {
+    file: '.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs',
+    line: "  const bannedMini = 'gpt-' + '4.1-mini';",
+  },
+];
+
+function sourceLine(text, index) {
+  const start = text.lastIndexOf('\n', Math.max(0, index - 1));
+  const from = start < 0 ? 0 : start + 1;
+  const end = text.indexOf('\n', index);
+  return text.slice(from, end < 0 ? text.length : end);
+}
+
+function evasionModelAllowlisted(file, text, index) {
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  const line = sourceLine(text, index);
+  return EVASION_MODEL_LINE_ALLOW.some((entry) => entry.file === normalized && entry.line === line);
+}
+
+function foldedModelSymbol(value) {
+  const text = String(value || '');
+  const mini = text.match(/gpt-[a-z0-9.]+-mini/i);
+  if (mini) return mini[0];
+  for (const vendor of text.match(/[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:-]*/g) || []) {
+    if (MODEL_VENDOR.test(vendor) && !ALLOWED_MODELS.has(vendor)) return vendor;
+  }
+  for (const bare of text.match(/(?:grok|gpt|claude|gemini|qwen|deepseek|mistral|mixtral|llama)\d*-(?:mini|flash|pro|sonnet|opus|haiku|turbo|max|large|small|nano|preview|v\d|\d)[a-z0-9._-]*/gi) || []) {
+    const id = bare.toLowerCase();
+    if (ALLOWED_BARE.has(id) || /^gpt-[a-z0-9.]+-mini$/.test(id)) continue;
+    return bare;
+  }
+  return '';
+}
+
+function evasionModelFindings(file, text, findings, seen) {
+  for (const fold of foldedStrings(text)) {
+    const model = foldedModelSymbol(fold.value);
+    if (!model || evasionModelAllowlisted(file, text, fold.index)) continue;
+    add(findings, seen, 'EVASION', file, text, fold.index, model.slice(0, 120));
+  }
+}
+
 function evasionFindings(file, text, findings, seen, needles) {
+  evasionModelFindings(file, text, findings, seen);
   for (const fold of foldedStrings(text)) {
     if (text.includes(fold.value)) continue;
     const matched = needles.some((needle) => fold.value.includes(needle) || (needle.includes(fold.value) && fold.value.length >= 12 && /[/\-]/.test(fold.value)));
@@ -1420,7 +1464,8 @@ function apiFunctionFiles(cwd) {
 
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
-  for (const file of contentPaths(cwd)) {
+  const covered = new Set(contentPaths(cwd));
+  for (const file of covered) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
   }
   for (const file of extraScriptPaths(cwd)) {
@@ -1435,6 +1480,7 @@ export function scanRoots(cwd = process.cwd()) {
     const text = fs.readFileSync(path.join(cwd, file), 'utf8');
     const seen = new Set();
     const extra = [];
+    if (!covered.has(file.split(path.sep).join('/'))) evasionModelFindings(file, text, extra, seen);
     modelAllowlistFindings(file, text, extra, seen);
     googlePlacesFindings(file, text, extra, seen);
     findings.push(...extra);

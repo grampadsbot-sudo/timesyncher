@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, baselineRemoteRef, classify, contentIdentity, EVASION_MODEL_LINE_ALLOW, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText } from './check-hardcoded-content.mjs';
 import { inTurnPriceScope, RULE } from './no-turn-price-env.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
@@ -490,6 +490,19 @@ const concatFail = fails('src/vacation/evasion-concat.mjs', 'evasion-concat.mjs'
 assert.deepEqual(concatFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
 const logoFail = fails('src/vacation/evasion-logo.mjs', 'evasion-logo.mjs');
 assert.deepEqual(logoFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', '/ts-thing-logos/']]);
+
+const bakeoffFile = '.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs';
+const bakeoffLine = "  const bannedMini = 'gpt-' + '4.1-mini';";
+assert.deepEqual(EVASION_MODEL_LINE_ALLOW, [{ file: bakeoffFile, line: bakeoffLine }]);
+const modelConcat = "const id = 'gpt-' + '4.1-mini';\n";
+assert.deepEqual(classify(scanText('src/vacation/model-concat.mjs', modelConcat), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText('routes/other-model-concat.mjs', modelConcat), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText(bakeoffFile, `${bakeoffLine}\n${modelConcat}`), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(scanText(bakeoffFile, `${bakeoffLine}\n`).filter((finding) => finding.rule === 'EVASION'), []);
+assert.deepEqual(classify(scanText('src/vacation/same-line-other-file.mjs', `${bakeoffLine}\n`), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText('src/vacation/model-join.mjs', "const id = ['gpt-', '4.1-mini'].join('');\n"), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText('src/vacation/model-template.mjs', "const id = `gpt-${'4.1-mini'}`;\n"), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.equal(scanText('src/vacation/allowed-model-concat.mjs', "const id = 'google/' + 'gemini-2.5-flash-lite';\n").some((finding) => finding.rule === 'EVASION'), false);
 
 const renamed = scanText('src/vacation/content-rename.mjs', readFixture('content-rename.mjs'));
 assert.equal(renamed.some((finding) => finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
