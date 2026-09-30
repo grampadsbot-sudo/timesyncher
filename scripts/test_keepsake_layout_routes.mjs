@@ -11,8 +11,8 @@ import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
 const artifactDir = process.env.KEEPSAKE_ARTIFACT_DIR || '/opt/cursor/artifacts';
-const bundleUrl = 'https://travel.timesyncher.com/assets/index-BKun7ofk.js';
-const cssUrl = 'https://travel.timesyncher.com/assets/index-CbEHlMj6.css';
+const bundlePath = new URL('../public/assets/index-BKun7ofk.js', import.meta.url);
+const cssPath = new URL('../public/assets/index-CbEHlMj6.css', import.meta.url);
 
 function loadPuppeteer() {
   try {
@@ -242,14 +242,8 @@ assert.equal(trip.places.some((place) => place.__tsKeepsakeFill), false);
 
 const html = await readFile(path.join(root, 'shared-app.html'), 'utf8');
 const [jsSource, css] = await Promise.all([
-  fetch(bundleUrl).then((response) => {
-    if (!response.ok) throw new Error(`bundle ${response.status}`);
-    return response.text();
-  }),
-  fetch(cssUrl).then((response) => {
-    if (!response.ok) throw new Error(`css ${response.status}`);
-    return response.text();
-  }),
+  readFile(bundlePath, 'utf8'),
+  readFile(cssPath, 'utf8'),
 ]);
 const js = patchStyleTwoToConfigRenderer(jsSource);
 assert.match(js, /\/shared\/:token\/journey/);
