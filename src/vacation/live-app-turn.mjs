@@ -819,7 +819,6 @@ export function stripChatMarkdown(value) {
     .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2');
 }
 
-const AGE_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const WEEKDAY_NAME = { sun: 'sunday', mon: 'monday', tue: 'tuesday', tues: 'tuesday', wed: 'wednesday', thu: 'thursday', thur: 'thursday', thurs: 'thursday', fri: 'friday', sat: 'saturday' };
 
 function customerCorpus(priorTurns, customerTurn = '') {
@@ -1118,26 +1117,12 @@ export function applyAccuracyRewrite(quality, errors) {
   };
 }
 
-function ageFromWords(token) {
-  const digits = String(token || '').match(/\b(\d{1,2})\b/);
-  if (digits) {
-    const age = Number(digits[1]);
-    if (age >= 0 && age <= 18) return age;
-  }
-  const word = String(token || '').toLowerCase().match(/\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/);
-  return word ? AGE_WORDS[word[1]] : null;
-}
-
 function rememberRoster(sources, field, value, source) {
   sources.push({ field, value, source });
 }
 
 export function completeRosterParty(doc) {
   const stored = doc?.party && typeof doc.party === 'object' ? doc.party : {};
-  const corpus = (Array.isArray(doc?.turns) ? doc.turns : [])
-    .filter((turn) => turn?.role !== 'app')
-    .map((turn) => String(turn?.text || ''))
-    .join('\n');
   const sources = [];
   const party = {
     primary: null,
@@ -1173,25 +1158,6 @@ export function completeRosterParty(doc) {
     if (!person?.name) continue;
     party.editors.push({ name: person.name });
     rememberRoster(sources, `editors.${person.name}`, 'editor', 'trip.dialogParty');
-  }
-  for (const match of corpus.matchAll(/\b([A-Z][a-z]+) who is ([a-z0-9-]+)/g)) {
-    const name = match[1];
-    const age = ageFromWords(match[2]);
-    if (age == null || party.preference_subjects.some((kid) => kid.name === name)) continue;
-    party.preference_subjects.push({ name, age });
-    rememberRoster(sources, `preference_subjects.${name}`, age, `customer: ${name} who is ${match[2]}`);
-  }
-  for (const match of corpus.matchAll(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) can (?:view|look)\b/g)) {
-    const name = match[1];
-    if (party.viewers.some((person) => person.name === name)) continue;
-    party.viewers.push({ name });
-    rememberRoster(sources, `viewers.${name}`, 'viewer', `customer: ${name} can view`);
-  }
-  for (const match of corpus.matchAll(/\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) can edit\b/g)) {
-    const name = match[1];
-    if (party.editors.some((person) => person.name === name)) continue;
-    party.editors.push({ name });
-    rememberRoster(sources, `editors.${name}`, 'editor', `customer: ${name} can edit`);
   }
   const samePerson = (left, right) => new RegExp(`^${String(left || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(String(right || ''));
   let unplaced = false;
