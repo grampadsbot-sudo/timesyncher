@@ -575,9 +575,24 @@ export function sourcedPlaceRule() {
   return 'Name a place only when this turn has a Thing with sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
+export function planFactsForReply({ rules, upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
+  const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
+  const dollars = Number(seatDollars);
+  let mode = 'forbidden';
+  if (postIntake) mode = 'post-intake';
+  else if (upsell === 'allow-once') mode = 'allow-once';
+  else if (priceAsk) mode = 'price';
+  return {
+    mode,
+    plan_name: phrase,
+    seat_dollars: Number.isFinite(dollars) && dollars > 0 ? dollars : null,
+    payer_line: String(planLine || '').trim() || null,
+    plan_owned: planOwned === true,
+  };
+}
+
 export function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
   const lock = text(destination, 160);
-  const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
   const priceAsk = /\b(price|pricing|how much|what(?:'s| is) (?:the )?(?:price|cost))\b/i.test(String(customerTurn || ''));
   const planLine = String(context.planLine || '').trim();
   const configuredSeat = Number(context.seatDollars);
@@ -590,13 +605,16 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const trip = itinerary.length || dates || roster || rule ? { itinerary, dates, roster, rule } : null;
   const seatName = String(context.seat?.name || context.seat?.displayName || '').trim();
   const seat = seatName ? { name: seatName, payer: String(context.seat?.payer || '').trim() } : null;
-  const upsellLine = postIntake
-      ? `Post-intake: this is the long trip dump. Say you are building the itinerary from that dump, once. Explain collaborator options in these words, once: View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens. Do not assign viewer or editor roles in this reply. Then offer the one unlimited plan in this same reply, using the words ${phrase}, as a plan they can take. Do not say it is already set up. Do not say you are setting it up. Do not say they are all set for it. Do not say "you also have unlimited vacations". Do not repeat a paragraph.`
-      : (upsell === 'allow-once'
-        ? `Single upsell: this customer turn asked about price, access, or joining as collaborators. Give the one full welcome now, and offer ${phrase} as a plan they can take. Do not say they already own it. Do not say you are setting it up. Do not answer with only that phrase.`
-        : (priceAsk && seatDollars && planLine
-          ? `This turn asks the price. Name the plan with the words ${phrase}. Each collaborator seat is $${seatDollars}. State this payer line exactly: ${planLine}. Make no coverage claims. Do not say whole group. Do not say they already own it, that you are setting it up, or that they are all set for the plan. Do not say no extra charge. Use only dates already named by the customer or the saved trip record. Do not add a collaborator welcome. Do not use a banned payment word.`
-          : `Single upsell: at most one full collab or access welcome in a session, and only when the customer asks about price, access, or joining as collaborators, or right after the long intake dump. This turn is not that pull. Do not append a welcome paragraph. Do not mention collaborators, access, price, or "${phrase}".`));
+  const planFacts = planFactsForReply({
+    rules,
+    upsell,
+    postIntake,
+    planLine,
+    seatDollars: seatDollars || 0,
+    planOwned: context.planOwned === true,
+    priceAsk,
+  });
+  const upsellLine = `Plan facts: ${JSON.stringify(planFacts)}`;
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
     'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
@@ -804,7 +822,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -830,6 +848,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planLine,
     seatDollars,
     seat,
+    planOwned,
   });
 }
 
@@ -859,7 +878,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -887,7 +906,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat })}${systemExtra ? `\n\n${systemExtra}` : ''}` },
+          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}` },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),
