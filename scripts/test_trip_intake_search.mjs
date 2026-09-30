@@ -21,7 +21,7 @@ assert.doesNotMatch(dispatchSource, /lodgingLane: lane/);
 assert.doesNotMatch(workerSource, /runGrokResearch|TIMESYNCHER_GROK_BIN|TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE|Perplexity|perplexity/);
 assert.doesNotMatch(runnerSource, /TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE|function fixtureRecentTravelerSentiment/);
 assert.doesNotMatch(poiSource, /\bGENERIC_NAME\b|\bAIRLINES\b|function flightPlan/);
-assert.match(poiSource, /TAVILY_API_KEY is not set/);
+assert.match(poiSource, /TAVILI_API_KEY is not set/);
 
 function jsonResponse(body, ok = true, status = 200) {
   return {
@@ -89,7 +89,7 @@ const research = await runPublicResearch({
   env: {
     BRAVE_SEARCH_API_KEY: 'brave-test-key',
     FOURSQUARE_SERVICE_KEY: 'fsq-test-key',
-    TAVILY_API_KEY: 'tavily-test-key',
+    TAVILI_API_KEY: 'tavily-test-key',
     OPENROUTER_API_KEY: 'test-openrouter-key',
   },
   priorPlaces: [],
