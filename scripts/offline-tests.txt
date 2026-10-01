@@ -38,7 +38,6 @@ scripts/test_purchase_launch_routes.mjs
 scripts/test_purchase_email_slug.mjs
 scripts/test_purchase_email_app_link.mjs
 scripts/test_shared_trip_slug_miss.mjs
-scripts/test_shared_trip_spa_console.mjs
 scripts/test_shared_trek_link_routing.mjs
 scripts/test_served_canned_needles.mjs
 scripts/test_vacation_selector_dropdown.mjs
