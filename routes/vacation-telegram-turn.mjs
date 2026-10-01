@@ -453,7 +453,7 @@ export function hasTripPlanningDetails(_text, extraction = null) {
   return Boolean(cleanText(extraction.destination, 180) || extraction.hasDates === true);
 }
 
-function missingSummaryQuestions(text, extraction = null) {
+export function missingSummaryQuestions(text, extraction = null) {
   const cleaned = cleanText(text, 3000);
   const questions = [];
   const known = extraction?.ok === true ? extraction : null;
