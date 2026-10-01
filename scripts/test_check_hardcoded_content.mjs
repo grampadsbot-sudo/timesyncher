@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, PAID_PLACES_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, EVASION_MODEL_LINE_ALLOW, explainSharedBundle, htmlRefsProducedByBuild, paidPlacesFindings, scanRoots, scanText, whitespacePadFindings } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, PAID_PLACES_BAN_LIST_LINES, PAID_PLACES_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, EVASION_MODEL_LINE_ALLOW, explainSharedBundle, htmlRefsProducedByBuild, paidPlacesFindings, scanRoots, scanText, whitespacePadFindings } from './check-hardcoded-content.mjs';
 import { inTurnPriceScope, RULE } from './no-turn-price-env.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
@@ -318,6 +318,8 @@ for (const row of failRows.filter((row) => row.rule === 'BAR-UNLIMITED-WORDING' 
   assert.equal(baseline.some((entry) => contentIdentity(entry) === contentIdentity(row)), false, contentIdentity(row));
 }
 assert.equal(baseline.some((row) => row.rule === 'NO-PAID-PLACES-API' && foursquarePaid.test(row.symbol_or_pattern)), false);
+assert.equal(failRows.some((row) => row.file === 'scripts/check-code-ratchet.mjs' || row.file === 'scripts/check-hardcoded-content.mjs'), false);
+assert.equal(failRows.some((row) => row.file === 'scripts/test_place_search.mjs' && row.rule === 'NO-PAID-PLACES-API'), true);
 assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
 assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
 assert.equal(baseline.some((row) => row.rule === 'BUNDLE-LEAK' || row.inventory_id === 'BUNDLE-LEAK'), false);
@@ -966,6 +968,22 @@ for (const [sample, label] of paidCases) {
   const run = runGuard(dir);
   assert.equal(run.status, 1, `${sample}\n${run.stdout}\n${run.stderr}`);
   assert.equal(identities(run.stderr).some((row) => row.rule === 'NO-PAID-PLACES-API' && row.symbol.startsWith(`${label} ::`)), true, run.stderr);
+}
+for (const entry of PAID_PLACES_BAN_LIST_LINES) {
+  const checkerText = fs.readFileSync(path.join(repo, entry.file), 'utf8');
+  const checkerLines = checkerText.split('\n');
+  assert.equal(checkerLines.includes(entry.line), true, `${entry.file} ${entry.line}`);
+  assert.equal(paidPlacesFindings(entry.file, checkerText).some((finding) => checkerLines[finding.line - 1] === entry.line), false, entry.file);
+  for (const other of ['src/vacation/not-a-checker.mjs', 'scripts/test_place_search.mjs']) {
+    const hits = paidPlacesFindings(other, `${entry.line}\n`);
+    assert.equal(hits.length > 0, true, other);
+    assert.equal(hits.every((finding) => finding.rule === 'NO-PAID-PLACES-API'), true, other);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-ban-list-'));
+    writeTree(dir, { [other]: `${entry.line}\n` }, []);
+    const run = runGuard(dir);
+    assert.equal(run.status, 1, `${other}\n${run.stdout}\n${run.stderr}`);
+    assert.equal(identities(run.stderr).some((row) => row.rule === 'NO-PAID-PLACES-API' && row.file === other), true, run.stderr);
+  }
 }
 const placesApiOnly = paidPlacesFindings(paidFile, "const url = 'https://places-api.foursquare.com/places/search';\n");
 assert.equal(placesApiOnly.some((finding) => finding.symbol_or_pattern.startsWith('api.foursquare.com ::')), false);

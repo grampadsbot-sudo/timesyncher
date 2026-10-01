@@ -407,17 +407,43 @@ const PAID_PLACES_PATTERNS = [
   [/\bPlacesClient\b/g, 'PlacesClient'],
 ];
 
+// Exact ban-list lines in the checkers. These name hosts the rule forbids.
+// They are not API calls. Any other file, including tests, still fails.
+export const PAID_PLACES_BAN_LIST_LINES = [
+  {
+    file: 'scripts/check-code-ratchet.mjs',
+    line: "  ['api.foursquare.com', 'foursquare'],",
+  },
+  {
+    file: 'scripts/check-code-ratchet.mjs',
+    line: "  ['places-api.foursquare.com', 'foursquare'],",
+  },
+  {
+    file: 'scripts/check-hardcoded-content.mjs',
+    line: "  [/(?<![\\w.-])api\\.foursquare\\.com/gi, 'api.foursquare.com'],",
+  },
+  {
+    file: 'scripts/check-hardcoded-content.mjs',
+    line: "  [/places-api\\.foursquare\\.com/gi, 'places-api.foursquare.com'],",
+  },
+];
+
+function paidPlacesBanListLine(file, line) {
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  return PAID_PLACES_BAN_LIST_LINES.some((entry) => entry.file === normalized && entry.line === line);
+}
+
 export function paidPlacesFindings(file, text) {
   const findings = [];
   const seen = new Set();
   const value = String(text || '');
   for (const [pattern, label] of PAID_PLACES_PATTERNS) {
     for (const match of collect(pattern, value, (item) => item)) {
-      const lineStart = value.lastIndexOf('\n', Math.max(0, match.index - 1)) + 1;
-      const lineEnd = value.indexOf('\n', match.index);
-      const sourceLine = value.slice(lineStart, lineEnd < 0 ? value.length : lineEnd).trim().slice(0, 100);
+      const rawLine = sourceLine(value, match.index);
+      if (paidPlacesBanListLine(file, rawLine)) continue;
+      const snippet = rawLine.trim().slice(0, 100);
       const lineNo = value.slice(0, match.index).split('\n').length;
-      add(findings, seen, 'NO-PAID-PLACES-API', file, value, match.index, `${label} :: ${sourceLine} @${lineNo}`);
+      add(findings, seen, 'NO-PAID-PLACES-API', file, value, match.index, `${label} :: ${snippet} @${lineNo}`);
     }
   }
   return findings;
