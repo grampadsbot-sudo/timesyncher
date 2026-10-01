@@ -117,17 +117,13 @@ try {
   assert.match(bundle.type, /javascript/);
   assert.match(bundle.body, /eulaSession/);
 
-  const config = await get('/api/auth/app-config');
-  assert.notEqual(config.status, 404, config.body);
-  assert.match(config.type, /application\/json/);
-  const configJson = JSON.parse(config.body);
-  assert.equal(configJson.password_login, true);
-  assert.notEqual(configJson.error, 'not found');
-
-  const notices = await get('/api/system-notices/active');
-  assert.notEqual(notices.status, 404, notices.body);
-  assert.match(notices.type, /application\/json/);
-  assert.deepEqual(JSON.parse(notices.body), []);
+  const trek = await get('/assets/index-BKun7ofk.js');
+  assert.notEqual(trek.status, 404, trek.body.slice(0, 120));
+  assert.match(trek.type, /javascript/);
+  assert.equal(trek.body.includes('Rt.get("/system-notices/active")'), false);
+  assert.equal(trek.body.includes('Rt.get("/auth/app-config")'), false);
+  assert.equal(trek.body.includes('async fetch(){e({notices:[],loaded:!0})}'), true);
+  assert.equal(trek.body.includes('getAppConfig:()=>Promise.resolve({})'), true);
 } finally {
   await new Promise((resolve) => server.close(resolve));
   await rm(storeDir, { recursive: true, force: true });
