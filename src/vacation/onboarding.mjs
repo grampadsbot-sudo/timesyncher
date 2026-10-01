@@ -6,6 +6,7 @@ import {
   loadSessionPersistent,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
+import { CheckoutConfigError, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { tripSiteUrlFailure } from './trip-site-url-failure.mjs';
 import { sharedTripWebsiteUrl } from './web-access.mjs';
@@ -180,7 +181,16 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
   throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
 }
 
-export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', amountCents = 0, metadata = {}, env = process.env }) {
+function couponPriceKey(plan) {
+  if (plan === 'owner_media') return 'TIMESYNCHER_MEDIA_PRICE_CENTS';
+  if (plan === 'unlimited') return 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS';
+  if (String(plan || '').includes('collaborator')) return 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS';
+  return 'TIMESYNCHER_BASE_PRICE_CENTS';
+}
+
+export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', amountCents, metadata = {}, env = process.env }) {
+  const original = Number(amountCents);
+  if (!Number.isInteger(original) || original < 0) throw new CheckoutConfigError(couponPriceKey(plan));
   const orderMetadata = {
     ...jsonObject(metadata),
     source: 'coupon_checkout',
@@ -202,14 +212,14 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     stripePaymentIntentId: null,
     amountCents: 0,
     currency: cleanText(orderMetadata.currency || 'usd', 12) || 'usd',
-    plan: cleanText(plan, 40) === 'unlimited' ? 'unlimited' : 'single',
+    plan: checkoutPlanFromMetadata({ ...orderMetadata, plan: cleanText(plan, 80) || orderMetadata.plan }),
     status: 'coupon_redeemed',
     contact: cleanContact,
     paidAt: new Date().toISOString(),
     metadata: {
       ...orderMetadata,
-      originalAmountCents: Number.isFinite(amountCents) ? amountCents : 0,
-      amountWaivedCents: Number.isFinite(amountCents) ? amountCents : 0,
+      originalAmountCents: original,
+      amountWaivedCents: original,
     },
   };
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
@@ -385,7 +395,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     ...jsonObject(resolvedPaymentIntent?.metadata),
   };
   const contact = customerContact({ stripeCustomer: resolvedCustomer, metadata });
-  const plan = cleanText(metadata.product || metadata.plan, 80).includes('unlimited') || metadata.order_bump === 'true' ? 'unlimited' : 'single';
+  const plan = checkoutPlanFromMetadata(metadata);
   const order = {
     stripeCustomerId: cleanText(customerIdFromStripe, 120) || null,
     stripeSubscriptionId: cleanText(resolvedSubscription?.id || resolvedInvoice?.subscription, 120) || null,

@@ -1,17 +1,9 @@
-const DEFAULT_BASE_PRICE_CENTS = 3700;
-const DEFAULT_PHOTO_MEMORIES_PRICE_CENTS = 500;
-
 export class CheckoutConfigError extends Error {
   constructor(configName) {
     super(`checkout config missing: ${configName}`);
     this.name = 'CheckoutConfigError';
     this.configName = configName;
   }
-}
-
-function intFromEnv(value, fallback) {
-  const parsed = Number.parseInt(String(value || ''), 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export function requiredConfigCents(value, configName) {
@@ -25,14 +17,38 @@ export function optionalConfigCents(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+export function requiredConfigText(value, configName) {
+  const text = String(value ?? '').trim();
+  if (!text) throw new CheckoutConfigError(configName);
+  return text;
+}
+
+const CHECKOUT_PLAN_IDS = Object.freeze([
+  'single',
+  'unlimited',
+  'owner_media',
+  'telegram_collaborators_single_trip',
+]);
+
 export const CHECKOUT_PRICE_CONFIG = [
+  'TIMESYNCHER_BASE_PRICE_CENTS',
   'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS',
   'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS',
-  'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS',
+  'TIMESYNCHER_MEDIA_PRICE_CENTS',
+];
+
+const CHECKOUT_LABEL_CONFIG = [
+  'TIMESYNCHER_SINGLE_NAME',
+  'TIMESYNCHER_UNLIMITED_NAME',
+  'TIMESYNCHER_COLLABORATOR_NAME',
+  'TIMESYNCHER_MEDIA_NAME',
 ];
 
 export function checkoutConfigHealth(env = process.env) {
   const missing = CHECKOUT_PRICE_CONFIG.filter((name) => optionalConfigCents(env?.[name]) == null);
+  for (const name of CHECKOUT_LABEL_CONFIG) {
+    if (!String(env?.[name] ?? '').trim()) missing.push(name);
+  }
   return { ok: missing.length === 0, missing };
 }
 
@@ -50,42 +66,53 @@ export function customerCheckoutFailure(error) {
   return customer;
 }
 
-function requiredOrderBumpCents(value) {
-  return requiredConfigCents(value, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
-}
-
 export function checkoutCurrency(env = process.env) {
   return String(env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd').trim().toLowerCase() || 'usd';
 }
 
+export function checkoutPlanFromMetadata(metadata = {}) {
+  const plan = String(metadata?.plan ?? '').trim();
+  if (plan === 'owner_media_single_vacation' || plan === 'owner_media_unlimited_vacations') return 'owner_media';
+  if (CHECKOUT_PLAN_IDS.includes(plan)) return plan;
+  if (metadata?.order_bump === true || String(metadata?.order_bump) === 'true') return 'unlimited';
+  const product = String(metadata?.product || '').trim();
+  if (product === 'timesyncher_vacation_unlimited') return 'unlimited';
+  if (product === 'timesyncher_vacation_single') return 'single';
+  if (product === 'timesyncher_vacation_owner_media_addons') return 'owner_media';
+  if (product === 'timesyncher_vacation_telegram_collaborator') return 'telegram_collaborators_single_trip';
+  return 'single';
+}
+
 export function checkoutAmounts(env = process.env, { orderBump = true } = {}) {
   const amounts = {
-    base: intFromEnv(env.TIMESYNCHER_BASE_PRICE_CENTS, DEFAULT_BASE_PRICE_CENTS),
-    photoMemoriesSingle: intFromEnv(
-      env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS,
-      DEFAULT_PHOTO_MEMORIES_PRICE_CENTS,
-    ),
-    photoMemoriesUnlimited: intFromEnv(
-      env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS,
-      DEFAULT_PHOTO_MEMORIES_PRICE_CENTS,
-    ),
+    base: requiredConfigCents(env?.TIMESYNCHER_BASE_PRICE_CENTS, 'TIMESYNCHER_BASE_PRICE_CENTS'),
+    media: requiredConfigCents(env?.TIMESYNCHER_MEDIA_PRICE_CENTS, 'TIMESYNCHER_MEDIA_PRICE_CENTS'),
   };
-  if (orderBump) amounts.orderBump = requiredOrderBumpCents(env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS);
+  if (orderBump) amounts.orderBump = requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
   return amounts;
 }
 
-export function checkoutOrderSummary({ orderBump = false, photoMemories = false } = {}, env = process.env) {
+export function checkoutChargeDisplay({ amountCents, coupon = false, missingKey = 'TIMESYNCHER_BASE_PRICE_CENTS' } = {}) {
+  const amount = Number(amountCents);
+  if (!Number.isInteger(amount) || amount <= 0) throw new CheckoutConfigError(missingKey);
+  if (coupon) return { totalCents: 0, waivedCents: amount };
+  return { totalCents: amount, waivedCents: 0 };
+}
+
+export function checkoutOrderSummary({ orderBump = false, photoMemories = false, media = false } = {}, env = process.env) {
   const bumped = Boolean(orderBump);
+  const mediaSelected = Boolean(media || photoMemories);
   const amounts = checkoutAmounts(env, { orderBump: bumped });
-  const photos = Boolean(photoMemories);
-  const photoAmount = photos ? (bumped ? amounts.photoMemoriesUnlimited : amounts.photoMemoriesSingle) : 0;
-  const amountCents = amounts.base + (bumped ? amounts.orderBump : 0) + photoAmount;
+  const mediaAmount = mediaSelected ? amounts.media : 0;
+  const amountCents = amounts.base + (bumped ? amounts.orderBump : 0) + mediaAmount;
   return {
     amountCents,
     currency: checkoutCurrency(env),
     plan: bumped ? 'unlimited' : 'single',
     orderBump: bumped,
-    photoMemories: photos,
-    photoMemoriesPlan: photos ? (bumped ? 'unlimited' : 'single') : null,
+    photoMemories: mediaSelected,
+    media: mediaSelected,
+    photoMemoriesPlan: mediaSelected ? 'owner_media' : null,
+    mediaPlan: mediaSelected ? 'owner_media' : null,
   };
 }

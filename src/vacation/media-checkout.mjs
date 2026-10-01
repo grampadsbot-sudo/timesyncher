@@ -1,46 +1,81 @@
 import { cleanText, upsertCustomer } from './onboarding.mjs';
-import { requiredConfigCents } from './checkout-pricing.mjs';
+import { CheckoutConfigError, requiredConfigCents } from './checkout-pricing.mjs';
 
-const PHOTO_SINGLE_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_PHOTO_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || '500', 10);
-const PHOTO_UNLIMITED_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_PHOTO_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || '900', 10);
-const VIDEO_SINGLE_CENTS = Number.parseInt(process.env.TIMESYNCHER_OWNER_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
+const OWNER_MEDIA_PLAN = 'owner_media';
 
-function ownerVideoUnlimitedCents(env = process.env) {
-  return requiredConfigCents(env.TIMESYNCHER_OWNER_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_OWNER_VIDEO_UNLIMITED_PRICE_CENTS');
+export function ownerMediaScope() {
+  return 'owner';
 }
 
-export function ownerMediaScope(value = 'single_trip') {
-  return value === 'unlimited_trips' || value === 'unlimited' ? 'unlimited_trips' : 'single_trip';
+export function mediaPriceCents(env = process.env) {
+  return requiredConfigCents(env?.TIMESYNCHER_MEDIA_PRICE_CENTS, 'TIMESYNCHER_MEDIA_PRICE_CENTS');
 }
 
-export function ownerMediaAddOns(body = {}, env = process.env) {
-  const selected = body.mediaAddOns && typeof body.mediaAddOns === 'object' ? body.mediaAddOns : body;
-  const scope = ownerMediaScope(body.mediaScope || body.scope || body.planScope || selected.mediaScope || selected.scope);
-  const unlimited = scope === 'unlimited_trips';
-  const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
-  const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
-  const photoAmountCents = photoUpload ? (unlimited ? PHOTO_UNLIMITED_CENTS : PHOTO_SINGLE_CENTS) : 0;
-  const videoAmountCents = videoUpload ? (unlimited ? ownerVideoUnlimitedCents(env) : VIDEO_SINGLE_CENTS) : 0;
+function mediaSelected(selected = {}) {
+  if (selected.media === false || selected.media === 'false') return false;
+  return Boolean(
+    selected.media
+    || selected.photoUpload
+    || selected.photo_upload
+    || selected.photoMemories
+    || selected.videoUpload
+    || selected.video_upload
+    || selected.videoMemories
+    || selected.canUploadPhotos
+    || selected.canUploadVideos,
+  );
+}
+
+export function selectedMediaAddOn(body = {}, env = process.env) {
+  const selected = body.accessAddOns && typeof body.accessAddOns === 'object'
+    ? body.accessAddOns
+    : body.mediaAddOns && typeof body.mediaAddOns === 'object'
+      ? body.mediaAddOns
+      : body;
+  const chosen = mediaSelected(selected);
+  const mediaAmountCents = chosen ? mediaPriceCents(env) : 0;
   return {
-    scope,
-    plan: unlimited ? 'owner_media_unlimited_vacations' : 'owner_media_single_vacation',
-    photoUpload,
-    videoUpload,
-    photoAmountCents,
-    videoAmountCents,
-    amountCents: photoAmountCents + videoAmountCents,
+    photoUpload: chosen,
+    videoUpload: chosen,
+    photoAmountCents: 0,
+    videoAmountCents: 0,
+    mediaAmountCents,
+    amountCents: mediaAmountCents,
+    plan: OWNER_MEDIA_PLAN,
+    scope: 'owner',
   };
 }
 
-export function requireOwnerMediaAddOns(body = {}) {
-  const addOns = ownerMediaAddOns(body);
-  if (!addOns.photoUpload && !addOns.videoUpload) {
-    throw Object.assign(new Error('Choose photo upload access, video upload access, or both.'), { statusCode: 400 });
-  }
-  if (!Number.isFinite(addOns.amountCents) || addOns.amountCents < 50) {
-    throw Object.assign(new Error('Invalid owner media add-on amount.'), { statusCode: 400 });
+export function ownerMediaAddOns(body = {}, env = process.env) {
+  const amountCents = mediaPriceCents(env);
+  const selected = body.mediaAddOns && typeof body.mediaAddOns === 'object' ? body.mediaAddOns : body;
+  return {
+    scope: 'owner',
+    plan: OWNER_MEDIA_PLAN,
+    photoUpload: true,
+    videoUpload: true,
+    photoAmountCents: 0,
+    videoAmountCents: 0,
+    mediaAmountCents: amountCents,
+    amountCents,
+    ownerCustomerId: cleanText(body.ownerCustomerId || body.owner_customer_id || selected.ownerCustomerId || selected.owner_customer_id, 80) || null,
+  };
+}
+
+export function requireOwnerMediaAddOns(body = {}, env = process.env) {
+  const addOns = ownerMediaAddOns(body, env);
+  if (!Number.isInteger(addOns.amountCents) || addOns.amountCents < 50) {
+    throw new CheckoutConfigError('TIMESYNCHER_MEDIA_PRICE_CENTS');
   }
   return addOns;
+}
+
+export function ownerMediaCoversTrip(entitlement, trip = {}) {
+  if (!entitlement || entitlement.status !== 'active' || entitlement.plan !== OWNER_MEDIA_PLAN) return false;
+  if (entitlement.trip_id || entitlement.tripId) return false;
+  const ownerId = trip.customer_id || trip.customerId || trip.ownerCustomerId || trip.owner_customer_id || '';
+  const entitledId = entitlement.customer_id || entitlement.customerId || '';
+  return Boolean(ownerId) && entitledId === ownerId;
 }
 
 export function ownerMediaMetadata(addOns, extra = {}) {
@@ -48,18 +83,33 @@ export function ownerMediaMetadata(addOns, extra = {}) {
     product: 'timesyncher_vacation_owner_media_addons',
     plan: addOns.plan,
     media_scope: addOns.scope,
-    photo_memories: String(addOns.photoUpload),
-    video_memories: String(addOns.videoUpload),
-    media_uploads: String(addOns.photoUpload || addOns.videoUpload),
-    media_memories: String(addOns.photoUpload || addOns.videoUpload),
-    photoAmountCents: addOns.photoAmountCents,
-    videoAmountCents: addOns.videoAmountCents,
+    photo_memories: 'true',
+    video_memories: 'true',
+    media_uploads: 'true',
+    media_memories: 'true',
+    photoAmountCents: 0,
+    videoAmountCents: 0,
+    mediaAmountCents: addOns.amountCents,
     totalAmountCents: addOns.amountCents,
+    owner_customer_id: addOns.ownerCustomerId || extra.owner_customer_id || extra.ownerCustomerId || '',
     ...extra,
   };
 }
 
-export async function recordOwnerMediaPurchase({ db, contact, addOns, amountCents = addOns?.amountCents || 0, currency = 'usd', status = 'paid', stripeCustomerId = null, stripePaymentIntentId = null, metadata = {} }) {
+export async function recordOwnerMediaPurchase({
+  db,
+  contact,
+  addOns,
+  ownerCustomerId = addOns?.ownerCustomerId || null,
+  amountCents,
+  currency = 'usd',
+  status = 'paid',
+  stripeCustomerId = null,
+  stripePaymentIntentId = null,
+  metadata = {},
+}) {
+  const chargedCents = amountCents ?? addOns?.amountCents;
+  if (!Number.isInteger(chargedCents) || chargedCents < 0) throw new CheckoutConfigError('TIMESYNCHER_MEDIA_PRICE_CENTS');
   const cleanContact = {
     email: cleanText(contact?.email, 180).toLowerCase() || null,
     phone: cleanText(contact?.phone, 80) || null,
@@ -67,8 +117,10 @@ export async function recordOwnerMediaPurchase({ db, contact, addOns, amountCent
     lastName: cleanText(contact?.lastName, 80) || null,
     displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' '), 180) || cleanText(contact?.email, 180) || null,
   };
-  const orderMetadata = ownerMediaMetadata(addOns, metadata);
-  const customerId = await upsertCustomer(db, cleanContact, orderMetadata);
+  const entitledOwnerId = cleanText(ownerCustomerId, 80);
+  const orderMetadata = ownerMediaMetadata({ ...addOns, ownerCustomerId: entitledOwnerId || null }, metadata);
+  const payerCustomerId = await upsertCustomer(db, cleanContact, orderMetadata);
+  const customerId = entitledOwnerId || payerCustomerId;
   const entitlementRows = await db`
     insert into entitlements (
       customer_id, trip_id, stripe_customer_id, stripe_payment_intent_id,
@@ -90,16 +142,17 @@ export async function recordOwnerMediaPurchase({ db, contact, addOns, amountCent
     )
     values (
       ${customerId}, null, ${entitlementRows[0].id}, ${stripeCustomerId}, ${stripePaymentIntentId},
-      ${amountCents}, ${currency}, ${addOns.plan}, ${status}, ${cleanContact}, ${orderMetadata}, now(), now()
+      ${chargedCents}, ${currency}, ${addOns.plan}, ${status}, ${cleanContact}, ${orderMetadata}, now(), now()
     )
     returning id
   `;
   return {
     ok: true,
     customerId,
+    payerCustomerId,
     entitlementId: entitlementRows[0].id,
     orderId: orderRows[0].id,
-    amountCents,
+    amountCents: chargedCents,
     currency,
     plan: addOns.plan,
     scope: addOns.scope,

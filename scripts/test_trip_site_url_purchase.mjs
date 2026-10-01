@@ -88,6 +88,7 @@ function mockDb({ existing = null, trip = tripId, tripMeta = {} } = {}) {
       }];
     }
     if (/insert into vacation_collaborators/i.test(text)) return [];
+    if (/insert into transcript_turns/i.test(text)) return [];
     if (/^\s*select\b/i.test(text)) return [];
     throw new Error(`unexpected sql: ${text.slice(0, 220)}`);
   };

@@ -1969,7 +1969,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       tripContext: pending?.tripContext || null,
       planTable: pending?.planTable || null,
       planLine: pending?.planLine || '',
-      seatDollars: pending?.seatDollars || 0,
+      seatDollars: pending?.seatDollars ?? null,
       seat: pending?.seat || null,
       systemExtra: [
         request.systemExtra,

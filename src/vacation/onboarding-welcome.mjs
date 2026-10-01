@@ -11,6 +11,12 @@ const REQUIRED = {
   collaborator_no_site: ['collabFirstName', 'ownerFirstName', 'tripTitle'],
 };
 
+export function missingWelcomeFields(input = {}) {
+  const audience = AUDIENCES.has(input?.audience) ? input.audience : '';
+  if (!audience) return ['audience'];
+  return REQUIRED[audience].filter((key) => !String(input[key] ?? '').trim());
+}
+
 function rejectWelcome(reason) {
   console.error(reason);
   const error = new Error(reason);

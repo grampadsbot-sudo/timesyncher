@@ -50,3 +50,15 @@ IBE Inc. may modify, limit, suspend, or terminate TimeSyncher functionality if r
 ## 10. Versioning and acceptance
 
 The onboarding record stores the accepted terms version, accepted timestamp, accepted-by name, text hash, capability/access snapshot hash, and receipt hash. The backend receipt is the authoritative acceptance record.
+
+## 11. Checkout plans
+
+Checkout offers four plans. The amount charged is the configured checkout price for that plan. This acknowledgment does not set those prices.
+
+Plan single is a single vacation purchase.
+
+Plan unlimited is the order bump added to plan single. The customer-facing name is the configured label for plan unlimited.
+
+Plan telegram_collaborators_single_trip lets the owner invite a collaborator onto a vacation. A collaborator may join any vacation the owner has, and the owner sends a separate invite for each vacation.
+
+Plan owner_media is a single media purchase. The owner or a collaborator may pay it. After payment, the entitlement is stored on the owner and covers media for each vacation that owner has.
