@@ -1,6 +1,6 @@
 # TimeSyncher Vacation verification map
 
-GBrain Feature Map is canonical. The repo `features/` mirror is the inventory. This directory is the drive. Target the real shared app (`/shared/las-vegas-vacation-3/` and an intake `/shared/intake-…` trip). Never the deleted card shell.
+GBrain Feature Map is canonical. The repo `features/` mirror is the inventory. This directory is the drive. Target the real shared app (`/shared/<testTripSlug>/` from `verify-config.json`, and an intake `/shared/intake-…` trip). Never the deleted card shell.
 
 ## Baseline preconditions
 

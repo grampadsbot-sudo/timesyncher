@@ -7,6 +7,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +16,11 @@ import { runWelcomeAfterIntake, selfTestMissingWelcomeDatabase, WELCOME_DATABASE
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const staging = 'https://vacation-staging.timesyncher.com';
-const sharedUrl = `${staging}/shared/las-vegas-vacation-3/`;
+const { testTripSlug } = JSON.parse(readFileSync(new URL('../verify-config.json', import.meta.url), 'utf8'));
+if (typeof testTripSlug !== 'string' || !testTripSlug.trim()) {
+  throw new Error('verify-config.json testTripSlug must be a non-empty string');
+}
+const sharedUrl = `${staging}/shared/${testTripSlug}/`;
 const intakeUrl = `${staging}/shared/intake-eab1cbb15144/`;
 const require = createRequire(import.meta.url);
 
@@ -168,19 +173,23 @@ async function sharedCounts() {
   const headers = {};
   const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || process.env.VERCEL_PROTECTION_BYPASS;
   if (bypass) headers['x-vercel-protection-bypass'] = bypass;
-  const response = await fetch(`${staging}/api/shared/las-vegas-vacation-3`, { headers });
-  if (!response.ok) return { packingHidden: false, minThings: false, budgetFlag: false };
+  const response = await fetch(`${staging}/api/shared/${testTripSlug}`, { headers });
+  if (!response.ok) return { packingHidden: false, minThings: false, budgetFlag: false, thingNames: null };
   const data = await response.json();
   const counts = {};
+  const thingNames = [];
   for (const place of data.places || []) {
     const name = place.category_name || '';
     counts[name] = (counts[name] || 0) + 1;
+    const title = String(place.name || place.title || '').trim();
+    if (title && !thingNames.includes(title)) thingNames.push(title);
   }
   const perms = data.permissions || {};
   return {
     packingHidden: perms.share_packing !== true,
     budgetFlag: perms.share_budget === true,
     minThings: (counts.Restaurant || 0) >= 15 && (counts.Store || 0) >= 10 && (counts.Attraction || 0) >= 15,
+    thingNames,
   };
 }
 
@@ -203,7 +212,7 @@ async function intakeSignals() {
   };
 }
 
-async function drive() {
+async function drive(thingNames) {
   const puppeteer = loadPuppeteer();
   const browser = await puppeteer.launch({
     executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
@@ -247,6 +256,20 @@ async function drive() {
       button.click();
       return true;
     }, label);
+  }
+  async function clickLoadedThing(names) {
+    if (!Array.isArray(names)) throw new Error('test trip Things did not load');
+    const loaded = [];
+    for (const name of names) {
+      const title = String(name || '').trim();
+      if (title && !loaded.includes(title)) loaded.push(title);
+    }
+    loaded.sort((left, right) => right.length - left.length);
+    if (!loaded.length) throw new Error('test trip has no Things to open');
+    for (const title of loaded) {
+      if (await clickIncludes(title)) return;
+    }
+    throw new Error('test trip Things are not on the page');
   }
 
   await go(sharedUrl);
@@ -318,7 +341,7 @@ async function drive() {
 
   await clickIncludes('Day-by-Day');
   await new Promise((resolve) => setTimeout(resolve, 500));
-  await clickIncludes('Bellagio');
+  await clickLoadedThing(thingNames);
   await new Promise((resolve) => setTimeout(resolve, 700));
   text = await bodyText();
   obs.detail = has(text, 'DETAIL PAGE') || has(text, 'Detail page');
@@ -376,10 +399,10 @@ async function drive() {
   obs.order = has(await bodyText(), 'Order Keepsakes');
   await shot('verify-order-keepsakes.png');
 
-  await go(`${staging}/shared/las-vegas-vacation-3/journey?style=1`);
+  await go(`${staging}/shared/${testTripSlug}/journey?style=1`);
   obs.style1 = page.url().includes('vacation-staging') && page.url().includes('style=1') && !page.url().includes('travel.timesyncher.com');
   await shot('verify-style-one.png');
-  await go(`${staging}/shared/las-vegas-vacation-3/journey?style=2`);
+  await go(`${staging}/shared/${testTripSlug}/journey?style=2`);
   obs.style2 = page.url().includes('vacation-staging') && page.url().includes('keepsake-style-2') && !page.url().includes('travel.timesyncher.com');
   await shot('verify-style-two.png');
   await shot('verify-keepsake-qa.png');
@@ -403,7 +426,7 @@ async function drive() {
   await go(intakeUrl);
   text = await bodyText();
   obs.intakeLayout = has(text, 'Day-by-Day') && has(text, 'Vacation Day View') && !has(text, 'Vacation path');
-  obs.telegramFill = obs.intakeLayout && (has(text, 'Kailua-Kona') || has(text, 'Big Island'));
+  obs.telegramFill = obs.intakeLayout && has(text, 'Big Island');
   obs.qualityOnScreen = has(text, 'quality:');
   await shot('verify-tg-intake.png');
   if (await clickIncludes('Budget')) {
@@ -510,11 +533,11 @@ async function main() {
   const searchRules = placeSearch.includes('skipping foursquare')
     && placeSearch.includes("source: 'osm'")
     && placeSearch.includes("source: 'brave'");
-  const counts = await sharedCounts();
+  const { thingNames, ...counts } = await sharedCounts();
   const intake = await intakeSignals();
   const jev = await jevSignals();
   await mkdir(shotDir, { recursive: true });
-  const observed = await drive();
+  const observed = await drive(thingNames);
   const obs = {
     ...observed,
     ...counts,

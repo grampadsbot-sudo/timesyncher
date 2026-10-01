@@ -14,7 +14,7 @@ There is no customer search screen. Do not invent one. Proof is the place-search
 - Rental cars: the 10 lowest prices, no brand limit. The customer can eliminate brands afterward.
 - Wind backup uses NWS, then Open-Meteo, for the trip location and dates.
 - Intake screenshot classification uses `google/gemini-2.5-flash-lite`. No `gpt-*-mini` call.
-- Live tabs are not padded with Las Vegas names or coordinates.
+- Live tabs are not padded with names or coordinates.
 
 ## How to get to it (user POV)
 
@@ -31,4 +31,4 @@ There is no customer search screen. Do not invent one. Proof is the place-search
 ## Gotchas
 
 - A screenshot of the deleted card shell is a fail, not a pass.
-- Reference trip for the TREK UI is `las-vegas-vacation-3`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.
+- Reference trip for the TREK UI is `testTripSlug` in `verify-config.json`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.
