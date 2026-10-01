@@ -1,5 +1,6 @@
 import { collaboratorEulaAcceptUrl } from './collaborators.mjs';
-import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
+import { vacationAppLink } from './onboarding.mjs';
+import { publicTripUrl, webAccessAcceptUrl } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -13,59 +14,32 @@ function fromEmail(env = process.env) {
   return env.TIMESYNCHER_EMAIL_FROM || `TimeSyncher Vacation <${supportEmail(env)}>`;
 }
 
-function withPurchaseStep(url) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.searchParams.get('purchase') !== '1') parsed.searchParams.set('purchase', '1');
-    return parsed.toString();
-  } catch {
-    return url;
-  }
-}
-
-function shareTokenFromUrl(url) {
-  try {
-    const parts = new URL(url).pathname.split('/').filter(Boolean);
-    const at = parts.indexOf('shared');
-    return at >= 0 ? cleanText(parts[at + 1], 180) : '';
-  } catch {
-    const match = String(url).match(/\/shared\/([^/?#]+)/);
-    return match ? cleanText(decodeURIComponent(match[1]), 180) : '';
-  }
-}
-
-function missingShareTokenError({ tripId = '', sessionId = '', eulaSessionId = '' } = {}) {
+function missingSessionError({ tripId = '', sessionId = '' } = {}) {
   const trip = cleanText(tripId, 80);
-  const session = cleanText(sessionId, 120) || cleanText(eulaSessionId, 120);
+  const session = cleanText(sessionId, 120);
   const named = [trip && `trip ${trip}`, session && `session ${session}`].filter(Boolean).join(', ');
-  const error = new Error(`purchase email missing share token${named ? ` for ${named}` : ''}`);
-  error.code = 'purchase_email_missing_share_token';
+  const error = new Error(`purchase email missing vacation app session${named ? ` for ${named}` : ''}`);
+  error.code = 'purchase_email_missing_session';
   console.error(JSON.stringify({ event: error.code, tripId: trip, sessionId: session }));
   return error;
 }
 
-export function purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId = '', tripId = '', sessionId = '', env = process.env } = {}) {
-  const explicit = cleanText(publicUrl, 500);
-  const slug = cleanText(publicSlug, 180);
-  const explicitToken = explicit.includes('/shared/') ? shareTokenFromUrl(explicit) : '';
-  let url = explicitToken ? explicit : (slug ? sharedTripWebsiteUrl(slug, env) : '');
-  if (!url || !shareTokenFromUrl(url)) throw missingShareTokenError({ tripId, sessionId, eulaSessionId });
-  const eulaId = cleanText(eulaSessionId, 180);
-  if (eulaId) {
-    try {
-      const parsed = new URL(url);
-      parsed.searchParams.set('eulaSession', eulaId);
-      url = parsed.toString();
-    } catch {
-      url = `${url}${url.includes('?') ? '&' : '?'}eulaSession=${encodeURIComponent(eulaId)}`;
-    }
+export function purchaseLaunchUrl({ sessionToken = '', token = '', tripId = '', sessionId = '', env = process.env } = {}) {
+  const appToken = cleanText(sessionToken || token, 180);
+  if (!appToken) throw missingSessionError({ tripId, sessionId });
+  const url = vacationAppLink(appToken, env);
+  if (url.includes('/shared/')) {
+    const error = new Error(`purchase email launch included a shared trip URL for session ${sessionId || appToken}`);
+    error.code = 'purchase_email_shared_launch';
+    console.error(JSON.stringify({ event: error.code, tripId, sessionId, url }));
+    throw error;
   }
-  return withPurchaseStep(url);
+  return url;
 }
 
-export function purchaseEmail({ contact, publicUrl, publicSlug, eulaSessionId = '', tripId = '', sessionId = '', env = process.env }) {
+export function purchaseEmail({ contact, sessionToken = '', token = '', tripId = '', sessionId = '', env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
-  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId, tripId, sessionId, env });
+  const launchUrl = purchaseLaunchUrl({ sessionToken, token, tripId, sessionId, env });
   const subject = 'Your TimeSyncher Vacation purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
@@ -193,22 +167,11 @@ async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
 export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env) {
   const to = cleanText(onboarding.contact?.email, 180).toLowerCase();
   if (!to) return { ok: false, status: 'skipped', reason: 'missing email' };
-  let publicSlug = cleanText(onboarding.publicSlug, 180);
-  if (!publicSlug && onboarding.tripId) {
-    const slugRows = await db`
-      select metadata->>'publicSlug' as slug
-      from trips
-      where id = ${onboarding.tripId}
-      limit 1
-    `;
-    publicSlug = cleanText(slugRows[0]?.slug, 180);
-  }
-  const sessionId = onboarding.session?.id || onboarding.token || '';
+  const sessionToken = onboarding.session?.token || onboarding.token || '';
+  const sessionId = onboarding.session?.id || '';
   const message = purchaseEmail({
     contact: onboarding.contact,
-    publicSlug,
-    publicUrl: onboarding.publicUrl,
-    eulaSessionId: onboarding.eula?.sessionId || '',
+    sessionToken,
     tripId: onboarding.tripId || '',
     sessionId,
     env,

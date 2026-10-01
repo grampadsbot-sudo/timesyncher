@@ -53,6 +53,17 @@ import {
   transcriptCustomerId,
 } from '../src/vacation/collaborator-app-seat.mjs';
 
+let vacationAppDatabase = null;
+
+export function useVacationAppDatabase(db) {
+  vacationAppDatabase = db || null;
+}
+
+function openVacationAppDb() {
+  if (vacationAppDatabase) return vacationAppDatabase;
+  return sql(process.env);
+}
+
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
   res.setHeader('content-type', 'text/html; charset=utf-8');
@@ -1050,7 +1061,7 @@ export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
     if (url.searchParams.get('app') === '1') {
-      return await handleVacationApp(req, res, sql(process.env), url);
+      return await handleVacationApp(req, res, openVacationAppDb(), url);
     }
     if (url.searchParams.get('trekBundle') === '1') {
       return await trekStyle2BundleHandler(req, res);

@@ -2,13 +2,7 @@ import { sql } from './db.mjs';
 import { cleanText, headerValue, sendJson } from './http.mjs';
 import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
-import { TREK_SHARED_API_BASE, mergeBindingsIntoShared, stripKeepsakeJunkMedia } from './thing-media-bind.mjs';
-import { listBindings } from './thing-media-store.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
-import { applyProductKeepsakeOverrides } from './keepsake-product-overrides.mjs';
-import { realTripSummary } from './keepsake-style2.mjs';
-
-const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
 
 let sharedTripDatabase = null;
 
@@ -52,15 +46,24 @@ function isIntakeEditAccess(method, trekPath, shareToken) {
   return trekRest(trekPath) === 'edit-access';
 }
 
+function logSharedTripFailure(event, shareToken, error) {
+  console.error(JSON.stringify({
+    event,
+    shareToken: String(shareToken || ''),
+    error: String(error?.message || error || ''),
+  }));
+}
+
+function slugMissError(shareToken) {
+  const slug = String(shareToken || '').trim();
+  const error = new Error(`shared_trip_slug_not_found ${slug}`.trim());
+  error.code = 'shared_trip_slug_not_found';
+  return error;
+}
+
 export async function intakeSharedResponse(shareToken, db = null) {
   if (!shareToken || !shareToken.startsWith('intake-')) return null;
-  if (!db) {
-    try {
-      db = openSharedDb();
-    } catch {
-      return null;
-    }
-  }
+  if (!db) db = openSharedDb();
   const rows = await db`
     select id, title, destination, start_date, end_date, metadata
     from trips
@@ -91,6 +94,70 @@ export async function intakeSharedResponse(shareToken, db = null) {
   return applyCapturedLogos(applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] }));
 }
 
+function sendSlugMiss(res, shareToken) {
+  const miss = slugMissError(shareToken);
+  logSharedTripFailure(miss.code, shareToken, miss);
+  return sendJson(res, 404, {
+    ok: false,
+    code: miss.code,
+    error: miss.message,
+    slug: String(shareToken || ''),
+  });
+}
+
+async function respondSharedTripGet(res, shareToken) {
+  try {
+    const local = await intakeSharedResponse(shareToken);
+    if (local) return sendJson(res, 200, local);
+    return sendSlugMiss(res, shareToken);
+  } catch (error) {
+    logSharedTripFailure('shared_trip_lookup_failed', shareToken, error);
+    return sendJson(res, 500, {
+      ok: false,
+      code: 'shared_trip_lookup_failed',
+      error: String(error?.message || error),
+      shareToken: String(shareToken || ''),
+    });
+  }
+}
+
+function trekUpstreamBase() {
+  const base = String(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || '').replace(/\/+$/, '');
+  if (!base) {
+    const error = new Error('shared trip upstream base is not configured');
+    error.code = 'shared_trip_upstream_unconfigured';
+    throw error;
+  }
+  return base;
+}
+
+async function proxyConfiguredUpstream(req, res, trekPath) {
+  const url = new URL(req.url || '/', 'https://timesyncher.com');
+  const incomingQuery = new URLSearchParams(url.search);
+  incomingQuery.delete('trekPath');
+  const dest = `${trekUpstreamBase()}/api/shared/${trekPath}${incomingQuery.toString() ? `?${incomingQuery}` : ''}`;
+  const headers = {};
+  for (const name of ['accept', 'content-type', 'cookie', 'authorization']) {
+    const value = headerValue(req, name);
+    if (value) headers[name] = value;
+  }
+  const chunks = [];
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    for await (const chunk of req) chunks.push(chunk);
+  }
+  const upstream = await fetch(dest, {
+    method: req.method,
+    headers,
+    body: chunks.length ? Buffer.concat(chunks) : undefined,
+  });
+  const contentType = upstream.headers.get('content-type') || '';
+  res.statusCode = upstream.status;
+  res.setHeader('cache-control', 'no-store');
+  if (contentType) res.setHeader('content-type', contentType);
+  const body = Buffer.from(await upstream.arrayBuffer());
+  res.end(body);
+}
+
 export default async function handler(req, res) {
   const trekPath = trekPathFromReq(req);
   const shareToken = shareTokenFromTrekPath(trekPath);
@@ -98,67 +165,22 @@ export default async function handler(req, res) {
     return sendJson(res, 200, { canEdit: false });
   }
   if (isSharedTripGet(req.method, trekPath)) {
-    const local = await intakeSharedResponse(shareToken).catch(() => null);
-    if (local) return sendJson(res, 200, local);
+    return respondSharedTripGet(res, shareToken);
   }
-  const url = new URL(req.url || '/', 'https://timesyncher.com');
-  const incomingQuery = new URLSearchParams(url.search);
-  incomingQuery.delete('trekPath');
-  const dest = `${TREK_PUBLIC}/api/shared/${trekPath}${incomingQuery.toString() ? `?${incomingQuery}` : ''}`;
-
-  const headers = {};
-  for (const name of ['accept', 'content-type', 'cookie', 'authorization']) {
-    const value = headerValue(req, name);
-    if (value) headers[name] = value;
+  if (String(shareToken || '').startsWith('intake-')) {
+    return sendSlugMiss(res, shareToken);
   }
-
-  const chunks = [];
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    for await (const chunk of req) chunks.push(chunk);
+  try {
+    return await proxyConfiguredUpstream(req, res, trekPath);
+  } catch (error) {
+    logSharedTripFailure(error.code || 'shared_trip_upstream_failed', shareToken, error);
+    return sendJson(res, error.statusCode || 500, {
+      ok: false,
+      code: error.code || 'shared_trip_upstream_failed',
+      error: String(error?.message || error),
+      slug: String(shareToken || ''),
+    });
   }
-
-  const upstream = await fetch(dest, {
-    method: req.method,
-    headers,
-    body: chunks.length ? Buffer.concat(chunks) : undefined,
-  });
-
-  const contentType = upstream.headers.get('content-type') || '';
-  res.statusCode = upstream.status;
-  res.setHeader('cache-control', 'no-store');
-  if (contentType) res.setHeader('content-type', contentType);
-
-  if (!isSharedTripGet(req.method, trekPath) || !contentType.includes('application/json')) {
-    const body = Buffer.from(await upstream.arrayBuffer());
-    res.end(body);
-    return;
-  }
-
-  const shared = await upstream.json().catch(() => null);
-  // An unknown token is an error payload, not a trip. Do not pad it with catalog Things.
-  if (!shared || typeof shared !== 'object' || !shared.trip || Number(upstream.status) >= 400) {
-    const status = Number(upstream.status) >= 400 ? upstream.status : 404;
-    const error = shared && typeof shared === 'object' && shared.error
-      ? shared.error
-      : 'Invalid or expired link';
-    return sendJson(res, status, { error });
-  }
-
-  const bindings = shareToken ? await listBindings(shareToken, process.env) : [];
-  const merged = applyCapturedLogos(applyProductKeepsakeOverrides(stripKeepsakeJunkMedia(mergeBindingsIntoShared(shared, bindings))));
-  const overrides = merged.thingOverrides && typeof merged.thingOverrides === 'object' ? merged.thingOverrides : {};
-  merged.thingOverrides = {
-    ...overrides,
-    __keepsakeSummary: realTripSummary(merged),
-  };
-  merged.timesyncherMediaBind = {
-    count: bindings.length,
-    source: '/api/bind-thing-media',
-    journeyBookPath: `/shared/${encodeURIComponent(shareToken)}/journey`,
-    style2Path: `/shared/${encodeURIComponent(shareToken)}/journey?style=2`,
-    style2PdfPath: `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/style-2`,
-  };
-  return sendJson(res, 200, merged);
 }
 
 export { cleanText };
