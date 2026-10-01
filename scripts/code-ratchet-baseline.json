@@ -1172,12 +1172,6 @@
   {
     "rule": "DEAD-CODE",
     "file": "src/vacation/coupons.mjs",
-    "symbol": "export:couponHash",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/coupons.mjs",
     "symbol": "export:generateCouponCode",
     "note": "existing; ratchet only shrinks"
   },
