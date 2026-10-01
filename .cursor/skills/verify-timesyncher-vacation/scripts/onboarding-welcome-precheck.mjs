@@ -2,6 +2,7 @@
  * Deterministic gates for the onboarding welcome verify.
  * A passing shape is not a pass. PASS requires an external judge grade.
  */
+import { renderOnboardingWelcome } from '../../../../src/vacation/onboarding-welcome.mjs';
 
 export const LONG_VOICE_TEMPLATE = [
   "Okay so, um, we're going to {destination} from {startDate} to {endDate}, so about {nNights} nights.",
@@ -17,17 +18,6 @@ export const LONG_VOICE_TEMPLATE = [
 
 export const SHORT_TRIP_TEXT = 'beach trip sometime next summer';
 export const QUESTION_FIRST_TEXT = "wait can my husband see this too? he's doing most of the planning";
-
-export const OWNER_WELCOME_TEMPLATE = [
-  "Welcome, {firstName}! You're all set, and your trip already has its own website: {tripSiteUrl}. Anyone you share that link with can see your plans and photos without signing in.",
-  "Here's how this works. You tell me about the vacation, and I'll build a day-by-day itinerary on that site: where you're staying, what you're doing each day, and notes for each day and place. As the trip happens, you and your family can add photos, videos, and stories, and at the end it all becomes a keepsake you can keep.",
-  "The easiest way to start is to hold the mic button and just talk for a minute or two. Tell me where you're going and when, who's coming, where you're staying, and anything you're excited about or still deciding on. Rough or rambling is perfect. I'll sort it out and ask about anything that's missing.",
-].join('\n\n');
-
-export const COLLABORATOR_WELCOME_TEMPLATE = "Hi {collabFirstName}, welcome! {ownerFirstName} added you to {tripTitle}. Here's the trip website: {tripSiteUrl}. You can add ideas, photos, videos, and notes for any day or place, and I'll keep everything organized in one itinerary. What are you most looking forward to? Or send a quick voice note with anything you want on the plan.";
-
-const OWNER_WELCOME_KEYS = ['firstName', 'tripSiteUrl'];
-const COLLABORATOR_WELCOME_KEYS = ['collabFirstName', 'ownerFirstName', 'tripTitle', 'tripSiteUrl'];
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const RELATIONS = ['cousin', 'sibling', 'neighbor', 'friend'];
@@ -290,19 +280,28 @@ export function normalizeWelcomeText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
-export function fillWelcomeTemplate(template, values = {}) {
-  return normalizeWelcomeText(String(template || '').replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? '')));
+export function renderedWelcome(audience, fields = {}) {
+  try {
+    return { ok: true, text: renderOnboardingWelcome({ audience, ...fields }) };
+  } catch (error) {
+    const message = String(error?.message || '');
+    const key = message.match(/missing ([A-Za-z0-9]+)/)?.[1] || '';
+    return { ok: false, reason: 'placeholder', key };
+  }
 }
 
-export function welcomeTemplateMatch(actual, template, values = {}, keys = []) {
-  for (const key of keys) {
-    if (!String(values?.[key] ?? '').trim()) return { ok: false, reason: 'placeholder', key };
-  }
-  const expected = fillWelcomeTemplate(template, values);
+export function welcomeTemplateMatch(actual, expected) {
   const got = normalizeWelcomeText(actual);
-  if (!got) return { ok: false, reason: 'missing' };
-  if (got !== expected) return { ok: false, reason: 'mismatch' };
+  const want = normalizeWelcomeText(expected);
+  if (!want || !got) return { ok: false, reason: 'missing' };
+  if (got !== want) return { ok: false, reason: 'mismatch' };
   return { ok: true };
+}
+
+function matchRenderedWelcome(actual, audience, fields) {
+  const rendered = renderedWelcome(audience, fields);
+  if (!rendered.ok) return rendered;
+  return welcomeTemplateMatch(actual, rendered.text);
 }
 
 function ownerCustomerNeedles(ownerTurns) {
@@ -460,7 +459,7 @@ export function precheckOnboardingRun({
       failures.push({ code: 'internal_word', trip: trip?.id || '', where: 'reply', word: code });
     }
     if (checkDialog) {
-      const match = welcomeTemplateMatch(text, OWNER_WELCOME_TEMPLATE, trip?.welcomePlaceholders || {}, OWNER_WELCOME_KEYS);
+      const match = matchRenderedWelcome(text, 'owner', trip?.welcomePlaceholders || {});
       if (!match.ok) failures.push({ code: 'welcome_template', trip: trip?.id || '', detail: match.reason, key: match.key || '' });
     } else {
       for (const code of bannedWordHits(text)) {
@@ -489,12 +488,7 @@ export function precheckOnboardingRun({
     if (!collabTiming.ok) {
       failures.push({ code: 'collaborator_welcome_before_first', detail: collabTiming.reason });
     }
-    const collabMatch = welcomeTemplateMatch(
-      turnText(collabTiming.welcome),
-      COLLABORATOR_WELCOME_TEMPLATE,
-      collaborator?.welcomePlaceholders || {},
-      COLLABORATOR_WELCOME_KEYS,
-    );
+    const collabMatch = matchRenderedWelcome(turnText(collabTiming.welcome), 'collaborator', collaborator?.welcomePlaceholders || {});
     if (!collabMatch.ok) {
       failures.push({ code: 'welcome_template', trip: 'collaborator', detail: collabMatch.reason, key: collabMatch.key || '' });
     }

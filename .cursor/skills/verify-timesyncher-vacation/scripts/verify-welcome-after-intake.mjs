@@ -129,6 +129,23 @@ function staticFail(error, message) {
   throw fail(message);
 }
 
+export function welcomeShownFromBubbles(bubbles) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  const firstUser = list.findIndex((bubble) => bubble.user === true);
+  const prior = firstUser < 0 ? list : list.slice(0, firstUser);
+  return prior.some((bubble) => bubble.user !== true && String(bubble.text || '').trim().length > 0);
+}
+
+export function priorWelcomeTexts(bubbles) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  const firstUser = list.findIndex((bubble) => bubble.user === true);
+  const prior = firstUser < 0 ? list : list.slice(0, firstUser);
+  return prior
+    .filter((bubble) => bubble.user !== true)
+    .map((bubble) => String(bubble.text || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
 export function welcomeTextSettled(text, { typing = false } = {}) {
   const value = String(text || '').replace(/\s+/g, ' ').trim();
   return typing !== true && value.length >= 40 && /[.!?]["']?$/.test(value);
@@ -460,6 +477,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
     await page.waitForSelector('#eulaScreen', { timeout: 30000 });
     const eulaAccepting = waitForEulaAccept(page);
     const domWelcome = await agreeThenReadWelcome(pageWelcomeDriver(page), { name: owner.displayName });
+    const welcomeShown = domWelcome?.shown === true;
     const eulaAcceptedAt = await eulaAccepting;
     const welcomeWall = new Date().toISOString();
     await shot(page, welcomeFile);
@@ -498,6 +516,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
       submittedWall,
       eulaAcceptedAt,
       publicUrl: onboarding.publicUrl || '',
+      welcomeShown,
     };
   } catch (error) {
     const failure = path.join(artifactsDir, `${spec.id}-failure.png`);

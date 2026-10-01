@@ -5,10 +5,8 @@ import {
   accessPosture,
   applyJudgeGrade,
   bannedWordHits,
-  COLLABORATOR_WELCOME_TEMPLATE,
   countRealVacations,
   endsWithExactlyOneQuestion,
-  fillWelcomeTemplate,
   generateOnboardingFixtures,
   gradeAuthorLabels,
   gradeNoVacationDropdown,
@@ -20,15 +18,16 @@ import {
   normalizeJudge,
   normalizeWelcomeText,
   onboardingVerdict,
-  OWNER_WELCOME_TEMPLATE,
   precheckOnboardingRun,
   QUESTION_FIRST_TEXT,
   renderJudgePacketMarkdown,
   SHORT_TRIP_TEXT,
   stampBuildSha,
+  renderedWelcome,
   welcomeBeforeFirstTurn,
   welcomeTemplateMatch,
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/onboarding-welcome-precheck.mjs';
+import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
   agreeThenReadWelcome,
   ensureCollaboratorPrice,
@@ -249,17 +248,19 @@ const ownerName = 'niaabcdef';
 const collabName = 'adaabcdef';
 const site = 'https://example.test/shared/trip-abcdefghi/';
 const tripTitle = 'trip-abcdefghi';
-const ownerWelcome = fillWelcomeTemplate(OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: site });
-const collabWelcome = fillWelcomeTemplate(COLLABORATOR_WELCOME_TEMPLATE, {
+const ownerWelcome = renderOnboardingWelcome({ audience: 'owner', firstName: ownerName, tripSiteUrl: site });
+const collabWelcome = renderOnboardingWelcome({
+  audience: 'collaborator',
   collabFirstName: collabName,
   ownerFirstName: ownerName,
   tripTitle,
   tripSiteUrl: site,
 });
-assert.equal(normalizeWelcomeText(`${ownerWelcome}\n\n`), ownerWelcome);
-assert.equal(welcomeTemplateMatch(ownerWelcome, OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: site }, ['firstName', 'tripSiteUrl']).ok, true);
-assert.equal(welcomeTemplateMatch('Hi there. Hold the mic.', OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: site }, ['firstName', 'tripSiteUrl']).reason, 'mismatch');
-assert.equal(welcomeTemplateMatch(ownerWelcome, OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: '' }, ['firstName', 'tripSiteUrl']).reason, 'placeholder');
+assert.equal(normalizeWelcomeText(`${ownerWelcome}\n\n`), normalizeWelcomeText(ownerWelcome));
+assert.equal(welcomeTemplateMatch(ownerWelcome, ownerWelcome).ok, true);
+assert.equal(welcomeTemplateMatch('Hi there. Hold the mic.', ownerWelcome).reason, 'mismatch');
+assert.equal(renderedWelcome('owner', { firstName: ownerName, tripSiteUrl: '' }).reason, 'placeholder');
+assert.equal(precheckSource.includes("You're all set"), false);
 const ownerNote = 'we are going to zon-abcdef12 for several nights together';
 const ownerTurns = [{ speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' }];
 assert.deepEqual(gradeAuthorLabels([
