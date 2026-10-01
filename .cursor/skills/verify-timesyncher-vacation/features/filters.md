@@ -6,11 +6,11 @@ Drive the real app at the staging shared trip for `testTripSlug` (`verify-config
 
 ## Sub-features
 
-- The Rest list has All areas and All types. Day-by-Day has no filter row.
+- Restaurants, Stores, and The Rest each have All areas and All types. Day-by-Day has no filter row.
 
 ## How to get to it (user POV)
 
-- Open The Rest. Look for All areas or All types.
+- Open Restaurants, Stores, or The Rest. Look for All areas or All types.
 
 ## Driving it
 

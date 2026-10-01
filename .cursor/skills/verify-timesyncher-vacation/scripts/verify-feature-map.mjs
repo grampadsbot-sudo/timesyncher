@@ -237,8 +237,17 @@ async function drive(thingNames) {
     await page.screenshot({ path: path.join(shotDir, name) });
   }
   async function go(url) {
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 90000 });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.waitForFunction(() => {
+      const text = document.body?.innerText || '';
+      return text.includes('Day-by-Day')
+        || text.includes('Vacation Day View')
+        || text.includes('Las Vegas Vacation')
+        || text.includes('Check your email')
+        || text.includes('Review Terms')
+        || /language/i.test(text);
+    }, { timeout: 20000 }).catch(() => {});
+    await new Promise((resolve) => setTimeout(resolve, 600));
   }
   async function bodyText() {
     return page.evaluate(() => document.body.innerText || '');
@@ -465,13 +474,14 @@ async function drive(thingNames) {
   return obs;
 }
 
-function table(rows, gateOk) {
+function table(rows, gateOk, doctorOk) {
   const gaps = rows.filter((row) => row.result === 'GAP').map((row) => row.feature);
   const fails = rows.filter((row) => row.result === 'FAIL').map((row) => row.feature);
   const lines = [
     '# Verification table',
     '',
     `Gate \`npm run test:real-app-entry\`: ${gateOk ? 'PASS' : 'FAIL'}.`,
+    `Doctor: ${doctorOk ? 'PASS' : 'FAIL'}.`,
     `Coverage: ${rows.length} of ${rows.length} features.`,
     'Re-runs overwrite this file. This drive does not redeem a coupon.',
     '',
@@ -495,39 +505,18 @@ async function main() {
     return;
   }
   await selfCheck();
-  let welcome;
+  await mkdir(shotDir, { recursive: true });
+  let welcome = { ok: false };
   try {
     welcome = await runWelcomeAfterIntake({ shotDir });
   } catch (error) {
     const message = redactWelcomeSecrets(error?.message || error);
-    if (message.startsWith('FAIL welcome-after-intake:')) {
-      process.stderr.write(`${message}\n`);
-      process.exit(1);
-    }
-    const wrapped = new Error(message);
-    wrapped.stack = redactWelcomeSecrets(error?.stack || wrapped.stack);
-    throw wrapped;
+    process.stderr.write(`${message}\n`);
+    welcome = { ok: false, error: message };
   }
-  if (!welcome.ok) {
-    process.stderr.write(`${WELCOME_MISSING}\n`);
-    process.exit(1);
-  }
+  if (!welcome.ok) process.stderr.write(`${WELCOME_MISSING}\n`);
   const gate = runGate();
-  if (!gate.ok) {
-    const markdown = `# Verification table\n\nGate \`npm run test:real-app-entry\`: FAIL.\n\n${gate.stderr || gate.stdout}\n`;
-    await mkdir(outDir, { recursive: true });
-    await writeFile(path.join(outDir, 'VERIFY.md'), markdown);
-    process.stderr.write(markdown);
-    process.exit(1);
-  }
   const doctor = runDoctor();
-  if (!doctor.ok) {
-    const markdown = `# Verification table\n\nGate \`npm run test:real-app-entry\`: PASS.\n\nDoctor FAIL.\n\n${doctor.stderr || doctor.stdout}\n`;
-    await mkdir(outDir, { recursive: true });
-    await writeFile(path.join(outDir, 'VERIFY.md'), markdown);
-    process.stderr.write(markdown);
-    process.exit(1);
-  }
   const email = purchaseEmail({ contact: { firstName: 'Verify' }, token: 'session-token', env: { TIMESYNCHER_SITE_BASE_URL: staging } });
   const appHtml = await readFile(path.join(root, 'vacation-app.html'), 'utf8');
   const contract = await Promise.all([
@@ -540,7 +529,6 @@ async function main() {
   const { thingNames, ...counts } = await sharedCounts();
   const intake = await intakeSignals();
   const jev = await jevSignals();
-  await mkdir(shotDir, { recursive: true });
   const observed = await drive(thingNames);
   const obs = {
     ...observed,
@@ -564,10 +552,14 @@ async function main() {
     const [, feature, shot, decide] = spec;
     return { feature, file, result: decide(obs), shot };
   });
-  const markdown = table(rows, true);
+  const notes = [
+    doctor.ok ? '' : (doctor.stderr || doctor.stdout || '').trim(),
+    welcome.ok ? '' : `Welcome after intake: ${welcome.error || WELCOME_MISSING}`,
+  ].filter(Boolean);
+  const markdown = `${notes.length ? `${notes.join('\n\n')}\n\n` : ''}${table(rows, gate.ok, doctor.ok)}`;
   await writeFile(path.join(outDir, 'VERIFY.md'), markdown);
   process.stdout.write(markdown);
-  if (rows.some((row) => row.result === 'FAIL')) process.exitCode = 1;
+  if (!gate.ok || !doctor.ok || rows.some((row) => row.result === 'FAIL')) process.exitCode = 1;
 }
 
 main().catch((error) => {

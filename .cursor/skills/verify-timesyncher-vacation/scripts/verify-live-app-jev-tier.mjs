@@ -10,7 +10,6 @@ const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
 const PRODUCER = 'vacation-app-reply-rules';
 const OPENER_PRODUCER = 'vacation-app-onboarding-opener';
-const OPENER_REASON = 'fixed_onboarding_opener';
 
 function argValue(flag) {
   const index = process.argv.indexOf(flag);
@@ -25,8 +24,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/produceLiveAppReply/.test(api) || !/jevStamp/.test(api)) {
     errors.push('vacation-app API does not store the shared-producer reply and Jev stamp');
   }
-  if (!/ensureOnboardingOpener/.test(api) || !/produceOnboardingOpener/.test(api)) {
-    errors.push('vacation-app API does not ask the model for the onboarding opener');
+  if (!/ensureOnboardingOpener/.test(api) || !/renderOnboardingWelcome/.test(api) || !/cannedWelcomeLiveTurn/.test(api)) {
+    errors.push('vacation-app API does not store the fixed onboarding welcome');
+  }
+  if (/produceOnboardingOpener/.test(api)) {
+    errors.push('vacation-app API still asks the model for the onboarding welcome');
   }
   if (/onboardingOpenerText/.test(`${api}\n${liveTurn}`) || /ONBOARDING_OPENER_WITH_SITE|ONBOARDING_OPENER_CHAT_ONLY|const CANNED_APP_REPLY/.test(liveTurn)) {
     errors.push('vacation-app still ships a fixed onboarding opener or a canned reply');
@@ -148,6 +150,15 @@ function jevErrors(turn) {
   return errors;
 }
 
+function cannedWelcomeTurn(turn) {
+  const telemetry = turn?.telemetry;
+  return telemetry?.kind === 'canned_welcome'
+    && telemetry?.tier === 'n/a'
+    && telemetry?.model === 'n/a'
+    && !Object.hasOwn(turn, 'jevLatencyMs')
+    && !Object.hasOwn(turn, 'generationMs');
+}
+
 export function assertLiveTurns(doc, { requireRan = false } = {}) {
   const errors = [];
   const turns = Array.isArray(doc?.turns) ? doc.turns : [];
@@ -157,11 +168,11 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
   if (!turns.length) errors.push('live transcript has no turns');
   let ran = 0;
   turns.forEach((turn, index) => {
-    errors.push(...jevErrors(turn));
     const text = String(turn.text || '');
+    const canned = index === 0 && turn.role === 'app' && cannedWelcomeTurn(turn);
+    if (!canned) errors.push(...jevErrors(turn));
     if (item34BanHit(text)) errors.push(`turn ${turn.turnIndex} uses split-payment jargon`);
     if (turn.role !== 'app') return;
-    const fixedOpener = index === 0 && (turn.fixedOpener === true || turn.replyProducer === OPENER_PRODUCER);
     if (turn.invented === true) errors.push(`turn ${turn.turnIndex} app text is marked invented`);
     if (!text.trim() || text.includes(CANNED) || text.includes(DIALOG_TEST_FINGERPRINT) || /dialog_vacation_test_turn|openrouter-selfcall/i.test(text)) {
       errors.push(`turn ${turn.turnIndex} app text is empty, canned, or from a pack sim`);
@@ -169,11 +180,15 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
     if (turn.storedText != null && String(turn.storedText) !== text) {
       errors.push(`turn ${turn.turnIndex} stored text does not match the customer-visible body`);
     }
-    if (fixedOpener) {
-      if (turn.replyProducer !== OPENER_PRODUCER) errors.push(`turn ${turn.turnIndex} fixed opener is not from ${OPENER_PRODUCER}`);
-      if (turn.jev?.jevRan !== false || turn.jev?.reason !== OPENER_REASON) {
-        errors.push(`turn ${turn.turnIndex} fixed opener must record jevRan false and reason ${OPENER_REASON}`);
+    if (canned) {
+      if (/\{[A-Za-z0-9]+\}/.test(text)) errors.push(`turn ${turn.turnIndex} welcome left a placeholder unfilled`);
+      if (turn.replyProducer === OPENER_PRODUCER || turn.fixedOpener === true) {
+        errors.push(`turn ${turn.turnIndex} welcome is still marked as a model opener`);
       }
+      return;
+    }
+    if (index === 0 && (turn.fixedOpener === true || turn.replyProducer === OPENER_PRODUCER)) {
+      errors.push(`turn ${turn.turnIndex} welcome must be the fixed canned template`);
       return;
     }
     if (turn.replyProducer !== PRODUCER) errors.push(`turn ${turn.turnIndex} app text is not from ${PRODUCER}`);
@@ -314,13 +329,10 @@ async function selfCheck() {
     turnIndex: 1,
     role: 'app',
     modality: 'text',
-    text: 'Welcome. Your vacation website is not built yet, so this chat is the whole workspace.',
-    latencyMs: 0,
-    sessionE2eMs: 0,
-    replyProducer: OPENER_PRODUCER,
-    fixedOpener: true,
-    invented: false,
-    jev: { jevRan: false, reason: OPENER_REASON, modelTier: null, routeType: null },
+    text: 'Welcome, Verify! You are all set, and your trip already has its own website: https://vacation-staging.timesyncher.com/shared/example/',
+    latencyMs: 1,
+    sessionE2eMs: 1,
+    telemetry: { kind: 'canned_welcome', tier: 'n/a', model: 'n/a' },
   };
   assert.deepEqual(assertLiveTurns(liveDoc([
     openerTurn,
@@ -330,8 +342,16 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), { ...openerTurn, turnIndex: 2 }])).length);
   assert.ok(assertLiveTurns(liveDoc([{
     ...openerTurn,
-    jev: { jevRan: true, modelTier: 1, routeType: 'general' },
+    telemetry: { kind: 'canned_welcome', tier: 'T2', model: 'qwen/qwen3-235b-a22b-2507' },
   }])).length);
+  assert.ok(assertLiveTurns(liveDoc([{
+    turnIndex: 1,
+    role: 'app',
+    text: 'Welcome. Your vacation website is not built yet.',
+    replyProducer: OPENER_PRODUCER,
+    fixedOpener: true,
+    jev: { jevRan: false, reason: 'fixed_onboarding_opener', modelTier: null, routeType: null },
+  }])).some((error) => /fixed canned template/.test(error)));
   const sources = await readSources();
   assert.deepEqual(assertComposerSource(sources), []);
   const opener = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace.';

@@ -17,8 +17,8 @@ Drive the real app at the staging shared trip for `testTripSlug` (`verify-config
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-jev-quality.png`.
-- Pass when the live page shows the control named above.
-- If the app no longer shows it, the result is a product gap. Do not delete or soften this file.
+- Pass when the customer app does not paint a Jev score, a quality line, or `rewritten by`. Those stay in the Dialog PDF and the JSONL log.
+- If the customer app starts painting the score, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas
 

@@ -7,10 +7,11 @@
  * The loaded value is never printed, logged, or written to disk.
  */
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { onboardingOpenerFacts, upsellFactsForTurn } from '../../../../src/vacation/live-app-turn.mjs';
+import { renderOnboardingWelcome } from '../../../../src/vacation/onboarding-welcome.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STAGING_DATABASE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true';
@@ -80,20 +81,82 @@ export async function ensureWelcomeDatabase({ env = process.env, fetchImpl = glo
   if (env !== process.env) env.DATABASE_URL = value;
 }
 
-function collaboratorWelcomeMarker() {
-  const opener = onboardingOpenerFacts();
-  const facts = upsellFactsForTurn({ intake: true, text: '' }, {}, true);
-  return opener.first_message === true
-    && opener.customer_said == null
-    && facts?.collaborators === true
-    && facts?.buildingItinerary === true;
+function normalizeWelcome(text) {
+  return String(text || '').replace(/\s+/g, ' ').trim();
 }
 
-function welcomeBeforeCustomer(turns) {
+function welcomeTemplates() {
+  return JSON.parse(readFileSync(new URL('../../../../content/onboarding-welcome.json', import.meta.url), 'utf8'));
+}
+
+function renderFixedWelcome(input) {
+  return renderOnboardingWelcome(input, {
+    jevPrecall() {
+      throw new Error('jev called');
+    },
+    callTieredModel() {
+      throw new Error('model called');
+    },
+  });
+}
+
+export function fixedWelcomeTexts({ firstName, tripSiteUrl, collabFirstName, ownerFirstName, tripTitle }) {
+  const templates = welcomeTemplates();
+  const ownerPlaceholders = [...String(templates.owner || '').matchAll(/\{([A-Za-z0-9]+)\}/g)].map((match) => match[1]);
+  const collaboratorPlaceholders = [...String(templates.collaborator || '').matchAll(/\{([A-Za-z0-9]+)\}/g)].map((match) => match[1]);
+  if (ownerPlaceholders.join(',') !== 'firstName,tripSiteUrl') {
+    throw fail('FAIL welcome-after-intake: owner template is not name and trip URL only');
+  }
+  if (collaboratorPlaceholders.join(',') !== 'collabFirstName,ownerFirstName,tripTitle,tripSiteUrl') {
+    throw fail('FAIL welcome-after-intake: collaborator template placeholders changed');
+  }
+  const owner = renderFixedWelcome({ audience: 'owner', firstName, tripSiteUrl });
+  const collaborator = renderFixedWelcome({
+    audience: 'collaborator',
+    collabFirstName,
+    ownerFirstName,
+    tripTitle,
+    tripSiteUrl,
+  });
+  if (owner === collaborator || /\{[A-Za-z0-9]+\}/.test(`${owner}\n${collaborator}`)) {
+    throw fail(WELCOME_MISSING);
+  }
+  return { owner, collaborator };
+}
+
+function stripWelcomeChrome(text) {
+  return normalizeWelcome(text).replace(/^timesyncher\s*/i, '');
+}
+
+function cannedOwnerStored(turns, firstName) {
   const bubbles = Array.isArray(turns) ? turns : [];
   const firstUser = bubbles.findIndex((turn) => turn.speaker === 'customer' || turn.speaker === 'user');
   const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
-  return prior.some((turn) => (turn.speaker === 'app' || turn.speaker === 'assistant') && String(turn.body || '').trim());
+  for (const turn of prior) {
+    if (turn.speaker !== 'app' && turn.speaker !== 'assistant') continue;
+    const body = String(turn.body || '');
+    const tripSiteUrl = (body.match(/https:\/\/[^\s]+/) || [])[0]?.replace(/[).,]+$/, '') || '';
+    if (!tripSiteUrl) continue;
+    const expected = fixedWelcomeTexts({
+      firstName,
+      tripSiteUrl,
+      collabFirstName: 'Casey',
+      ownerFirstName: firstName,
+      tripTitle: 'Create vacation intake check',
+    }).owner;
+    if (normalizeWelcome(body) !== normalizeWelcome(expected)) continue;
+    const live = turn.payload?.liveTranscript;
+    const telemetry = live?.telemetry;
+    const stamped = telemetry?.kind === 'canned_welcome'
+      && telemetry?.tier === 'n/a'
+      && telemetry?.model === 'n/a'
+      && live
+      && !Object.hasOwn(live, 'jevLatencyMs')
+      && !Object.hasOwn(live, 'generationMs');
+    if (!stamped) continue;
+    return expected;
+  }
+  return '';
 }
 
 export function welcomeShownFromBubbles(bubbles) {
@@ -211,6 +274,9 @@ function pageWelcomeDriver(page) {
       await page.waitForSelector(selector, { timeout: timeoutMs });
       return true;
     },
+    async alreadyOpen() {
+      return page.evaluate(() => Boolean(document.querySelector('#messages[data-screen="onboarding"]')));
+    },
     async readWelcome() {
       const bubbles = await page.evaluate(() => {
         const root = document.querySelector('#messages[data-screen="onboarding"]');
@@ -254,7 +320,10 @@ async function screenshotApp(url, shotDir, { name = 'Verify Intake', assertShot 
       });
     }
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 90000 });
-    const welcome = await agreeThenReadWelcome(pageWelcomeDriver(page), { name });
+    const driver = pageWelcomeDriver(page);
+    const welcome = await driver.alreadyOpen()
+      ? await driver.readWelcome()
+      : await agreeThenReadWelcome(driver, { name });
     await page.screenshot({ path: file });
     if (assertShot) {
       await mkdir(path.dirname(assertShot), { recursive: true });
@@ -318,6 +387,11 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot }) {
     ipAddress: '127.0.0.1',
     userAgent: 'verify-welcome-after-intake',
   });
+  const appUrl = `/?app=1&session=${encodeURIComponent(onboarding.token)}`;
+  const opened = await callHandler(appHandler.default, jsonRequest('GET', appUrl, null, { host: 'vacation-staging.timesyncher.com' }));
+  const turns = opened.body?.turns || [];
+  const expectedOwner = opened.body?.ok === true ? cannedOwnerStored(turns, contact.firstName) : '';
+  const welcomeShown = Boolean(expectedOwner);
   let screenshot = '';
   let pageShown = false;
   let prior = [];
@@ -325,13 +399,9 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot }) {
     const pageUrl = vacationAppLink(onboarding.token, { ...env, TIMESYNCHER_SITE_BASE_URL: env.TIMESYNCHER_SITE_BASE_URL || 'https://vacation-staging.timesyncher.com' });
     const shot = await screenshotApp(pageUrl, shotDir, { name: contact.displayName, assertShot });
     screenshot = shot.file;
-    pageShown = shot.shown === true;
+    pageShown = Boolean(expectedOwner) && shot.prior.some((text) => stripWelcomeChrome(text) === normalizeWelcome(expectedOwner));
     prior = shot.prior || [];
   }
-  const appUrl = `/?app=1&session=${encodeURIComponent(onboarding.token)}`;
-  const opened = await callHandler(appHandler.default, jsonRequest('GET', appUrl, null, { host: 'vacation-staging.timesyncher.com' }));
-  const turns = opened.body?.turns || [];
-  const welcomeShown = opened.body?.ok === true && collaboratorWelcomeMarker() && welcomeBeforeCustomer(turns);
   return {
     ok: welcomeShown && pageShown,
     welcomeShown,
