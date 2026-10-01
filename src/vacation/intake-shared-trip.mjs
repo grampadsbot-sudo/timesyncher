@@ -6,6 +6,12 @@ const MONTHS = {
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
 
+export function customerPlaceName(value) {
+  const text = String(value || '').trim();
+  if (!text || /^(shell|intake)-[a-z0-9]+$/i.test(text)) return '';
+  return text;
+}
+
 export function intakeShareSlug(tripId) {
   const hex = String(tripId || '').replace(/-/g, '').toLowerCase().slice(0, 12);
   if (!/^[0-9a-f]{12}$/.test(hex)) return '';
@@ -287,11 +293,15 @@ export function sharedTripFromIntake({ trip, things }) {
       assignments[key] = rows;
     }
   }
+  const destination = customerPlaceName(trip?.destination);
+  const planned = Boolean(destination || start || end || (things || []).length);
+  const rawTitle = String(trip?.title || '').trim();
+  const title = customerPlaceName(rawTitle);
   return {
     trip: {
       id: intId(trip.id),
-      title: trip.title || 'Vacation',
-      description: trip.destination || '',
+      title: planned ? (title || (rawTitle ? '' : 'Vacation')) : '',
+      description: destination,
       start_date: start || null,
       end_date: end || null,
       currency: 'usd',

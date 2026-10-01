@@ -120,6 +120,38 @@ const emptyShared = sharedTripFromIntake({
 assert.equal(Boolean(emptyShared.trip), true);
 assert.deepEqual(emptyShared.places, []);
 assert.equal(emptyShared.trip.description, '');
+const shellShared = sharedTripFromIntake({
+  trip: { id: emptyTripId, title: 'shell-abc12xy', destination: 'shell-abc12xy', start_date: null, end_date: null },
+  things: [],
+});
+assert.equal(shellShared.trip.title, '');
+assert.equal(shellShared.trip.description, '');
+assert.deepEqual(shellShared.places, []);
+assert.equal(JSON.stringify(shellShared).includes('shell-'), false);
+const selectorSource = vacationApp.slice(
+  vacationApp.indexOf('function customerPlaceName'),
+  vacationApp.indexOf('function realVacations'),
+);
+const selector = new Function(`${selectorSource}; return { isPlaceholderTrip, tripBadge };`)();
+const shellTrip = {
+  id: 'trip-1',
+  title: 'shell-abc12xy',
+  destination: '',
+  startDate: null,
+  endDate: null,
+  status: 'intake',
+  publicUrl: 'https://example.test/shared/shell-abc12xy/',
+  shareToken: 'shell-abc12xy',
+};
+assert.equal(selector.isPlaceholderTrip(shellTrip), true);
+assert.equal(selector.tripBadge(shellTrip), 'no vacations yet');
+assert.equal(selector.tripBadge(shellTrip).includes('shell-'), false);
+const datedShell = { ...shellTrip, startDate: '2026-06-01', endDate: '2026-06-03', status: 'planning' };
+assert.equal(selector.tripBadge(datedShell).includes('shell-'), false);
+assert.match(selector.tripBadge(datedShell), /Jun 1–3 2026/);
+const named = { title: 'shell-abc12xy', destination: 'Sample City', startDate: '2026-06-01', endDate: '2026-06-03' };
+assert.equal(selector.tripBadge(named).includes('shell-'), false);
+assert.match(selector.tripBadge(named), /Sample City/);
 
 function shareDb(thingCount) {
   const calls = [];
