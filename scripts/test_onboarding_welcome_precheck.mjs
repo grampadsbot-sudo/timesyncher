@@ -6,10 +6,14 @@ import {
   applyJudgeGrade,
   bannedWordHits,
   countRealVacations,
+  domBuildShaFromHtml,
   endsWithExactlyOneQuestion,
   generateOnboardingFixtures,
   gradeAuthorLabels,
+  gradeBuildStamps,
+  gradeJudgeRaw,
   gradeNoVacationDropdown,
+  gradeTripSite,
   hasVoiceInvitation,
   internalWordHits,
   literalLeaks,
@@ -292,6 +296,63 @@ assert.equal(listed.ok, false);
 assert.equal(listed.failures.some((item) => item.code === 'dropdown_preselected'), true);
 assert.equal(listed.failures.some((item) => item.code === 'dropdown_options'), true);
 assert.equal(gradeNoVacationDropdown({ vacationCount: 0, opened: false, selected: '', options: [] }).failures.some((item) => item.code === 'dropdown_not_opened'), true);
+const shellLabel = gradeNoVacationDropdown({
+  vacationCount: 0,
+  opened: true,
+  selected: '',
+  options: [],
+  label: 'shell-abc123',
+  visibleText: '',
+});
+assert.equal(shellLabel.ok, false);
+assert.equal(shellLabel.failures.some((item) => item.code === 'dropdown_visible_text' && item.detail === 'shell'), true);
+const visiblePlace = gradeNoVacationDropdown({
+  vacationCount: 0,
+  opened: true,
+  selected: '',
+  options: [],
+  visibleText: 'zon-abcdef12',
+});
+assert.equal(visiblePlace.failures.some((item) => item.code === 'dropdown_visible_text'), true);
+const buildSha = 'a'.repeat(40);
+const metaHtml = `<html><head><meta name="timesyncher-build" content="${buildSha}"></head></html>`;
+const dataHtml = `<html data-build-sha="${buildSha}"><body></body></html>`;
+assert.equal(domBuildShaFromHtml(metaHtml), buildSha);
+assert.equal(domBuildShaFromHtml(dataHtml), buildSha);
+assert.equal(domBuildShaFromHtml('<html><meta name="timesyncher-build" content="not-a-sha"></html>'), '');
+assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [{ target: '/vacation-app.html', sha: buildSha }] }).ok, true);
+assert.equal(gradeBuildStamps({ versionSha: '', pages: [{ sha: buildSha }] }).failures.some((item) => item.code === 'build_dom_sha' && item.detail === 'empty'), true);
+assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [] }).failures.some((item) => item.detail === 'missing'), true);
+assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [{ target: '/', sha: '' }] }).failures.some((item) => item.detail === 'empty'), true);
+assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [{ target: '/', sha: 'b'.repeat(40) }] }).failures.some((item) => item.detail === 'mismatch'), true);
+assert.equal(gradeTripSite({ url: site, status: 200, body: 'plans' }).length, 0);
+assert.equal(gradeTripSite({ url: site, status: 500, body: 'busy' }).length, 0);
+assert.equal(gradeTripSite({ url: '', status: 200 }).some((item) => item.detail === 'missing'), true);
+assert.equal(gradeTripSite({ url: site, status: 404, body: 'missing' }).some((item) => item.detail === 'status'), true);
+assert.equal(gradeTripSite({ url: site, status: null, body: '' }).some((item) => item.detail === 'status'), true);
+assert.equal(gradeTripSite({ url: site, status: 200, body: 'Invalid or expired link' }).some((item) => item.detail === 'expired'), true);
+const freshJudge = {
+  runId: 'welcome-test',
+  buildSha,
+  writtenAt: '2026-10-01T00:00:01.000Z',
+  judge: { graded: false, source: 'external' },
+};
+assert.equal(gradeJudgeRaw(freshJudge, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).ok, true);
+assert.equal(gradeJudgeRaw(null, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures[0].detail, 'missing');
+assert.equal(gradeJudgeRaw({ id: 'gen-dec-1790875777' }, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures[0].detail, 'missing');
+assert.equal(gradeJudgeRaw({ ...freshJudge, runId: 'welcome-other' }, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures.some((item) => item.detail === 'run'), true);
+assert.equal(gradeJudgeRaw({ ...freshJudge, buildSha: '' }, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures.some((item) => item.detail === 'sha'), true);
+assert.equal(gradeJudgeRaw({ ...freshJudge, buildSha: 'b'.repeat(40) }, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures.some((item) => item.detail === 'sha'), true);
+assert.equal(gradeJudgeRaw({ ...freshJudge, writtenAt: '2026-09-30T23:00:00.000Z' }, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures.some((item) => item.detail === 'time'), true);
+assert.equal(gradeJudgeRaw({ ...freshJudge, writtenAt: '' }, { runId: 'welcome-test', buildSha, runStartedAt: '2026-10-01T00:00:00.000Z' }).failures.some((item) => item.detail === 'time'), true);
+const dialogGates = {
+  runId: 'welcome-test',
+  runStartedAt: '2026-10-01T00:00:00.000Z',
+  versionSha: buildSha,
+  buildPages: [{ target: 'https://vacation-staging.timesyncher.com/vacation-app.html', sha: buildSha }],
+  judgeRaw: freshJudge,
+  tripSites: [{ url: site, status: 200, body: 'plans' }],
+};
 const unknownBuild = stampBuildSha({
   checkedAt: '2026-10-01T17:00:00.000Z',
   checked: [{ target: 'https://vacation-staging.timesyncher.com/api/version', sha: '' }],
@@ -340,9 +401,10 @@ const dialog = precheckOnboardingRun({
       { label: 'TimeSyncher', text: collabWelcome, user: false },
     ],
   },
-  noVacation: { vacationCount: 0, opened: true, selected: '', options: [] },
+  noVacation: { vacationCount: 0, opened: true, selected: '', options: [], visibleText: '', label: '' },
   eulaAccepts: [{ id: 'f1', at: '2026-10-01T00:00:00.000Z' }],
   checkDialog: true,
+  ...dialogGates,
 });
 assert.equal(dialog.ok, true, JSON.stringify(dialog.failures));
 const dialogFail = precheckOnboardingRun({
@@ -375,7 +437,7 @@ const dialogFail = precheckOnboardingRun({
   checkDialog: true,
 });
 assert.equal(dialogFail.ok, false);
-for (const code of ['welcome_template', 'internal_word', 'f1_one_question', 'author_label', 'access_granted', 'vacation_count', 'dropdown_not_opened', 'eula_accept_time']) {
+for (const code of ['welcome_template', 'internal_word', 'f1_one_question', 'author_label', 'access_granted', 'vacation_count', 'dropdown_not_opened', 'eula_accept_time', 'judge_raw_stale', 'build_dom_sha', 'trip_site']) {
   assert.equal(dialogFail.failures.some((item) => item.code === code), true, code);
 }
 assert.equal(dialogFail.failures.some((item) => item.code === 'collaborator_owns_thread'), false);

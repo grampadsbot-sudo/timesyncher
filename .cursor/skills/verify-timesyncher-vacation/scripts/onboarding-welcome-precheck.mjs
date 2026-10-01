@@ -254,7 +254,10 @@ export function gradeNoVacationDropdown(observation = {}) {
     .map((value) => String(value || '').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
   const selected = String(observation.selected || observation.preselected || '').replace(/\s+/g, ' ').trim();
+  const visibleText = String(observation.visibleText || '').replace(/\s+/g, ' ').trim();
+  const label = String(observation.label || '').replace(/\s+/g, ' ').trim();
   const placeNames = [...new Set([...(selected ? [selected] : []), ...options])];
+  const surface = `${label} ${visibleText} ${selected} ${options.join(' ')}`;
   const failures = [];
   if (Number(observation.vacationCount) !== 0) {
     failures.push({ code: 'vacation_count', detail: observation.vacationCount ?? null });
@@ -263,6 +266,8 @@ export function gradeNoVacationDropdown(observation = {}) {
   if (selected) failures.push({ code: 'dropdown_preselected', detail: selected });
   if (options.length) failures.push({ code: 'dropdown_options', detail: options });
   if (placeNames.length) failures.push({ code: 'dropdown_place', detail: placeNames });
+  if (visibleText) failures.push({ code: 'dropdown_visible_text', detail: visibleText });
+  if (/shell-[a-z0-9]/i.test(surface)) failures.push({ code: 'dropdown_visible_text', detail: 'shell' });
   return {
     ok: failures.length === 0,
     failures,
@@ -272,8 +277,68 @@ export function gradeNoVacationDropdown(observation = {}) {
     selected,
     options,
     placeNames,
+    visibleText,
+    label,
     screenshot: observation.screenshot || '',
   };
+}
+
+export function domBuildShaFromHtml(html) {
+  const text = String(html || '');
+  const meta = [...text.matchAll(/<meta\b[^>]*>/gi)].find((match) => /name\s*=\s*["']timesyncher-build["']/i.test(match[0]));
+  const metaSha = meta ? (meta[0].match(/content\s*=\s*["']([^"']+)["']/i)?.[1] || '') : '';
+  const dataSha = text.match(/<html\b[^>]*\bdata-build-sha\s*=\s*["']([^"']+)["']/i)?.[1] || '';
+  return normalizeBuildSha(metaSha) || normalizeBuildSha(dataSha) || '';
+}
+
+export function gradeBuildStamps({ versionSha, pages } = {}) {
+  const version = normalizeBuildSha(versionSha);
+  const list = Array.isArray(pages) ? pages : [];
+  const failures = [];
+  if (!version) failures.push({ code: 'build_dom_sha', target: '/api/version', detail: 'empty' });
+  if (!list.length) failures.push({ code: 'build_dom_sha', target: 'dom', detail: 'missing' });
+  for (const page of list) {
+    const sha = normalizeBuildSha(page?.sha ?? page?.domSha);
+    const target = page?.target || 'page';
+    if (!sha) failures.push({ code: 'build_dom_sha', target, detail: 'empty' });
+    else if (version && sha !== version) failures.push({ code: 'build_dom_sha', target, detail: 'mismatch' });
+  }
+  return { ok: failures.length === 0, failures, versionSha: version || '' };
+}
+
+export function gradeTripSite(site = {}) {
+  const failures = [];
+  const url = String(site?.url || '').trim();
+  if (!url) {
+    failures.push({ code: 'trip_site', detail: 'missing' });
+    return failures;
+  }
+  const status = site.status;
+  if (!Number.isInteger(status) || status === 404) {
+    failures.push({ code: 'trip_site', detail: 'status', status: Number.isInteger(status) ? status : null, url });
+  }
+  if (/invalid or expired link/i.test(String(site.body || ''))) {
+    failures.push({ code: 'trip_site', detail: 'expired', url });
+  }
+  return failures;
+}
+
+export function gradeJudgeRaw(raw, { runId, buildSha, runStartedAt } = {}) {
+  const failures = [];
+  if (!raw || typeof raw !== 'object' || !raw.runId) {
+    failures.push({ code: 'judge_raw_stale', detail: 'missing' });
+    return { ok: false, failures };
+  }
+  if (!runId || raw.runId !== runId) failures.push({ code: 'judge_raw_stale', detail: 'run' });
+  const want = normalizeBuildSha(buildSha);
+  const got = normalizeBuildSha(raw.buildSha);
+  if (!want || !got || got !== want) failures.push({ code: 'judge_raw_stale', detail: 'sha' });
+  const written = Date.parse(raw.writtenAt || '');
+  const started = Date.parse(runStartedAt || '');
+  if (!Number.isFinite(written) || (Number.isFinite(started) && written < started)) {
+    failures.push({ code: 'judge_raw_stale', detail: 'time' });
+  }
+  return { ok: failures.length === 0, failures };
 }
 
 export function normalizeWelcomeText(value) {
@@ -435,6 +500,12 @@ export function precheckOnboardingRun({
   noVacation = null,
   eulaAccepts = null,
   checkDialog = false,
+  runId = '',
+  runStartedAt = '',
+  versionSha = '',
+  buildPages = null,
+  judgeRaw = null,
+  tripSites = null,
 } = {}) {
   const failures = [];
   const welcomes = [];
@@ -500,6 +571,11 @@ export function precheckOnboardingRun({
     }
     const f3Reply = replyAfterCustomer((trips || []).find((trip) => trip?.id === 'f3')?.turns);
     if (!f3Reply) failures.push({ code: 'access_not_offered', trip: 'f3', where: 'reply' });
+    failures.push(...gradeJudgeRaw(judgeRaw, { runId, buildSha: versionSha, runStartedAt }).failures);
+    failures.push(...gradeBuildStamps({ versionSha, pages: buildPages }).failures);
+    const sites = Array.isArray(tripSites) ? tripSites : [];
+    if (!sites.length) failures.push({ code: 'trip_site', detail: 'missing' });
+    for (const site of sites) failures.push(...gradeTripSite(site));
   }
   let noVacationGrade = null;
   if (noVacation) {
@@ -598,12 +674,31 @@ export function renderJudgePacketMarkdown(packet) {
     '',
     '## Staging build',
     '',
+    `Run: ${packet?.runId || 'missing'}`,
     `Start: ${packet?.build?.start?.sha || 'UNKNOWN'} at ${packet?.build?.start?.checkedAt || 'missing'}`,
     `End: ${packet?.build?.end?.sha || 'UNKNOWN'} at ${packet?.build?.end?.checkedAt || 'missing'}`,
     '',
-    '## EULA accepts',
+    '## Page build stamps',
     '',
   ];
+  for (const page of packet?.buildPages || []) {
+    lines.push(`- ${page.target || 'page'}: ${page.sha || 'empty'}`);
+  }
+  lines.push(
+    '',
+    '## Trip sites',
+    '',
+  );
+  for (const site of packet?.tripSites || []) {
+    lines.push(`- ${site.status ?? 'missing'} ${site.url || 'missing'}${site.expired ? ' expired' : ''}`);
+  }
+  lines.push(
+    '',
+    `Judge raw: ${packet?.judgeRaw?.runId || 'missing'} ${packet?.judgeRaw?.buildSha || 'missing'}`,
+    '',
+    '## EULA accepts',
+    '',
+  );
   for (const row of packet?.eulaAccepts || []) {
     lines.push(`- ${row.id}: ${row.at || 'missing'}`);
   }

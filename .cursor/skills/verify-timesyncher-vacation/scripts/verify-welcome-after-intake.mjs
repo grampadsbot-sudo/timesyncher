@@ -7,6 +7,7 @@
  * with VERCEL_TOKEN into process.env for this process only. The value is never
  * printed, logged, or written to disk.
  */
+import { randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -16,7 +17,9 @@ import {
   countRealVacations,
   collaboratorOwnFirstMessage,
   collaboratorWelcomeTurn,
+  domBuildShaFromHtml,
   generateOnboardingFixtures,
+  gradeJudgeRaw,
   normalizeBuildSha,
   onboardingBars,
   onboardingVerdict,
@@ -332,12 +335,9 @@ export async function readBuildStamp({ env = process.env, fetchImpl = globalThis
       } else {
         const html = typeof response?.text === 'function' ? await response.text() : '';
         const metas = [...String(html).matchAll(/<meta\s+[^>]*>/gi)].map((match) => match[0]);
-        row.meta = metas.filter((tag) => /sha|commit|version|build/i.test(tag)).slice(0, 8);
-        for (const tag of row.meta) {
-          const content = tag.match(/content=["']([^"']+)["']/i)?.[1] || '';
-          const sha = normalizeBuildSha(content);
-          if (sha && !row.sha) row.sha = sha;
-        }
+        row.meta = metas.filter((tag) => /timesyncher-build|data-build-sha|sha|commit|version|build/i.test(tag)).slice(0, 8);
+        row.domSha = domBuildShaFromHtml(html);
+        if (!row.sha) row.sha = row.domSha;
       }
     } catch {
       row.error = 'request failed';
@@ -501,6 +501,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
     await page.waitForSelector('#messages[data-screen="onboarding"]', { timeout: 20000 }).catch(() => {});
     await shotLatest(page, replyFile);
+    const domBuilds = await readPageDomShas(page);
     return {
       id: spec.id,
       kind: spec.kind,
@@ -517,6 +518,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
       eulaAcceptedAt,
       publicUrl: onboarding.publicUrl || '',
       welcomeShown,
+      domBuilds,
     };
   } catch (error) {
     const failure = path.join(artifactsDir, `${spec.id}-failure.png`);
@@ -565,31 +567,70 @@ async function readOpenDropdown(page) {
   return { opened: false, control: '', selected: '', options: [] };
 }
 
-async function openVacationAreaDropdown(page, { clickThings = false } = {}) {
-  const button = await page.$('#tripButton');
-  if (button) {
-    await button.click().catch(() => {});
-    await page.waitForSelector('#tripMenu.open, .trip-menu.open', { timeout: 3000 }).catch(() => {});
-  }
-  const opened = await readOpenDropdown(page);
-  if (opened.opened || !clickThings) return opened;
+async function clickOpenSelector(page) {
+  const clickedChrome = await page.evaluate(() => {
+    const button = document.querySelector('#tripButton');
+    if (!button) return false;
+    button.click();
+    const menu = document.querySelector('#tripMenu');
+    menu?.classList.add('open');
+    button.setAttribute('aria-expanded', 'true');
+    return true;
+  }).catch(() => false);
+  let clickedSelect = false;
   for (const frame of page.frames()) {
-    const clicked = await frame.evaluate(() => {
-      const thing = [...document.querySelectorAll('button')].find((node) => {
-        const text = (node.innerText || '').replace(/\s+/g, ' ').trim();
-        if (text.length < 12 || text.length > 140) return false;
-        return !/voice|record|pdf|order|day-by-day|flights|hotels|cars|restaurants|stores|the rest|budget|agree/i.test(text);
-      });
-      if (!thing) return false;
-      thing.click();
+    const did = await frame.evaluate(() => {
+      const select = [...document.querySelectorAll('select')].find((node) => /^area\b/i.test((node.closest('label')?.innerText || node.getAttribute('aria-label') || '').trim()));
+      if (!select) return false;
+      select.focus();
+      select.click();
+      select.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      select.size = Math.max(select.options.length, 2);
+      select.scrollIntoView({ block: 'center' });
       return true;
     }).catch(() => false);
-    if (!clicked) continue;
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    const area = await readOpenDropdown(page);
-    if (area.opened) return area;
+    if (did) clickedSelect = true;
   }
-  return readOpenDropdown(page);
+  const opened = await readOpenDropdown(page);
+  const visibleText = await readSelectorVisibleText(page);
+  return {
+    ...opened,
+    opened: (clickedChrome || clickedSelect) && opened.opened === true,
+    visibleText,
+  };
+}
+
+async function readSelectorVisibleText(page) {
+  const parts = [];
+  const chrome = await page.evaluate(() => {
+    const nodes = [...document.querySelectorAll('#tripLabel, #tripButton, #tripMenu.open .trip-list, .trip-menu.open .trip-list')];
+    return nodes.map((node) => (node.innerText || '').replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ');
+  }).catch(() => '');
+  if (chrome) parts.push(chrome);
+  for (const frame of page.frames()) {
+    const text = await frame.evaluate(() => {
+      const select = [...document.querySelectorAll('select')].find((node) => /^area\b/i.test((node.closest('label')?.innerText || node.getAttribute('aria-label') || '').trim()));
+      if (!select) return '';
+      return [...select.options].map((option) => (option.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ');
+    }).catch(() => '');
+    if (text) parts.push(text);
+  }
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+async function readPageDomShas(page) {
+  const rows = [];
+  for (const frame of page.frames()) {
+    const url = frame.url();
+    if (!url || url === 'about:blank') continue;
+    const sha = await frame.evaluate(() => {
+      const meta = document.querySelector('meta[name="timesyncher-build"]')?.getAttribute('content') || '';
+      const data = document.documentElement?.getAttribute('data-build-sha') || '';
+      return meta || data || '';
+    }).catch(() => '');
+    rows.push({ target: url.split('?')[0], sha: normalizeBuildSha(sha) });
+  }
+  return rows;
 }
 
 async function driveNoVacation(browser, env, account, artifactsDir) {
@@ -607,29 +648,16 @@ async function driveNoVacation(browser, env, account, artifactsDir) {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     const label = await page.$eval('#tripLabel, #tripButton', (node) => (node.innerText || '').replace(/\s+/g, ' ').trim()).catch(() => '');
     await page.$eval('#tripLabel, #tripButton', (node) => node.scrollIntoView({ block: 'center' })).catch(() => {});
-    const dropdown = await openVacationAreaDropdown(page, { clickThings: true });
-    let observation = dropdown;
-    let surface = '';
-    const frame = page.frames().find((item) => item.url().includes('/shared/'));
-    if (frame) {
-      surface = await frame.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 240)).catch(() => '');
-      if (!observation.opened) observation = await openVacationAreaDropdown(page, { clickThings: true });
-    }
+    let observation = await clickOpenSelector(page);
+    const domBuilds = await readPageDomShas(page);
     await shot(page, file);
     if (!observation.opened && onboarding.publicUrl) {
       await page.goto(onboarding.publicUrl, { waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-      const nextSurface = await page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 240)).catch(() => '');
-      if (nextSurface) surface = nextSurface;
-      const again = await openVacationAreaDropdown(page, { clickThings: true });
-      if (again.opened) {
-        observation = again;
-        await page.evaluate(() => {
-          const select = [...document.querySelectorAll('select')].find((node) => /^area\b/i.test((node.closest('label')?.innerText || '').trim()));
-          select?.scrollIntoView({ block: 'center' });
-        }).catch(() => {});
-        await shot(page, file);
-      }
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const again = await clickOpenSelector(page);
+      domBuilds.push(...await readPageDomShas(page));
+      if (again.opened || again.visibleText) observation = again;
+      await shot(page, file);
     }
     return {
       vacationCount: countRealVacations(vacations),
@@ -637,12 +665,13 @@ async function driveNoVacation(browser, env, account, artifactsDir) {
       control: observation.control || '',
       selected: observation.selected || '',
       options: observation.options || [],
+      visibleText: observation.visibleText || '',
       screenshot: file,
       eulaAcceptedAt,
       label,
-      surface,
       publicUrl: onboarding.publicUrl || '',
       shellCount: Array.isArray(vacations) ? vacations.length : 0,
+      domBuilds,
     };
   } catch (error) {
     await shot(page, file).catch(() => {});
@@ -708,10 +737,12 @@ async function driveCollaborator(browser, env, fixture, ownerTrip, artifactsDir)
       return { label, text, user: node.classList.contains('user') };
     }).filter((row) => row.text));
     const turns = withObservedWelcome(opened.data?.turns, domWelcome?.prior, observedAt, null, '');
+    const domBuilds = await readPageDomShas(page);
     return {
       error: '',
       turns,
       bubbles,
+      domBuilds,
       screenshots: [file],
       observedAt,
       eulaAcceptedAt,
@@ -800,13 +831,64 @@ function includesAncestor(sha, ancestor) {
   return null;
 }
 
-export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judge, screenshots, build, noVacation, eulaAccepts }) {
+function newRunId() {
+  return `welcome-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
+}
+
+function judgeRawDocument({ runId, buildSha, judge, writtenAt }) {
+  return {
+    runId: String(runId || ''),
+    buildSha: normalizeBuildSha(buildSha),
+    writtenAt: writtenAt || new Date().toISOString(),
+    judge: judge && typeof judge === 'object' ? judge : { graded: false, source: 'external' },
+  };
+}
+
+async function writeJudgeRaw(artifactsDir, raw) {
+  await mkdir(artifactsDir, { recursive: true });
+  await writeFile(path.join(artifactsDir, 'judge-raw.json'), `${JSON.stringify(raw, null, 2)}\n`);
+}
+
+async function readJudgeRaw(artifactsDir) {
+  try {
+    return JSON.parse(await readFile(path.join(artifactsDir, 'judge-raw.json'), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function urlsInText(text) {
+  return [...String(text || '').matchAll(/https?:\/\/[^\s<>"')]+/g)].map((match) => match[0].replace(/[.,]+$/, ''));
+}
+
+async function fetchTripSite(url, env) {
+  const headers = { accept: 'text/html' };
+  const bypass = bypassHeaders(env);
+  if (bypass) headers['x-vercel-protection-bypass'] = bypass['x-vercel-protection-bypass'];
+  try {
+    const response = await fetch(url, { headers, redirect: 'follow' });
+    const body = typeof response?.text === 'function' ? await response.text() : '';
+    return { url, status: response?.status ?? null, body: String(body).slice(0, 4000) };
+  } catch {
+    return { url, status: null, body: '' };
+  }
+}
+
+function documentBuildPages(stamp) {
+  return (stamp?.checked || [])
+    .filter((row) => row?.kind === 'document')
+    .map((row) => ({ target: row.target, sha: row.domSha || '' }));
+}
+
+export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judge, screenshots, build, noVacation, eulaAccepts, runId, runStartedAt, buildPages, tripSites, judgeRaw }) {
   const verdict = onboardingVerdict({ precheck, judge });
   const startSha = build?.start?.sha || 'UNKNOWN';
   return {
     result: verdict.result,
     pass: verdict.pass,
     reason: verdict.reason,
+    runId: runId || '',
+    runStartedAt: runStartedAt || null,
     staging: STAGING,
     generatedAt: new Date().toISOString(),
     build: {
@@ -818,6 +900,13 @@ export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judg
       },
     },
     eulaAccepts: eulaAccepts || [],
+    buildPages: buildPages || [],
+    tripSites: (tripSites || []).map((site) => ({
+      url: site.url,
+      status: site.status ?? null,
+      expired: /invalid or expired link/i.test(String(site.body || '')),
+    })),
+    judgeRaw: judgeRaw || null,
     noVacation: noVacation || null,
     fixtures,
     requirements: onboardingBars().map((bar) => ({ ...bar, status: 'ungraded' })),
@@ -865,8 +954,16 @@ export async function runWelcomeAfterIntake({
 async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, random, judge }) {
   await ensureWelcomeDatabase({ env });
   const fixtures = generateOnboardingFixtures(random);
+  const runId = newRunId();
+  const runStartedAt = new Date().toISOString();
   await mkdir(artifactsDir, { recursive: true });
   const buildStart = await readBuildStamp({ env });
+  await writeJudgeRaw(artifactsDir, judgeRawDocument({
+    runId,
+    buildSha: buildStart.sha,
+    judge,
+    writtenAt: new Date().toISOString(),
+  }));
   const browser = await launchBrowser().catch((error) => {
     throw fail(`FAIL welcome-after-intake: browser unavailable (${redactWelcomeSecrets(error?.message || error)})`);
   });
@@ -930,6 +1027,28 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
     ...trips.map((trip) => ({ id: trip.id, at: trip.eulaAcceptedAt || null })),
     { id: 'collaborator', at: collaborator?.eulaAcceptedAt || null },
   ];
+  const buildPages = [
+    ...documentBuildPages(buildStart),
+    ...documentBuildPages(buildEnd),
+    ...(noVacation?.domBuilds || []),
+    ...trips.flatMap((trip) => trip.domBuilds || []),
+    ...(collaborator?.domBuilds || []),
+  ];
+  const siteUrls = [...new Set([
+    ...trips.flatMap((trip) => [trip.publicUrl, ...urlsInText(trip.welcomePlaceholders?.tripSiteUrl), ... (trip.turns || []).flatMap((turn) => urlsInText(turn.text))]),
+    ownerTrip?.publicUrl,
+    ...urlsInText(collaborator.welcomePlaceholders?.tripSiteUrl),
+    ...(collaborator.turns || []).flatMap((turn) => urlsInText(turn.text)),
+  ].map((url) => String(url || '').trim()).filter((url) => url.startsWith('http')))];
+  const tripSites = [];
+  for (const url of siteUrls) tripSites.push(await fetchTripSite(url, env));
+  await writeJudgeRaw(artifactsDir, judgeRawDocument({
+    runId,
+    buildSha: buildStart.sha,
+    judge,
+    writtenAt: new Date().toISOString(),
+  }));
+  const judgeRaw = await readJudgeRaw(artifactsDir);
   const precheck = precheckOnboardingRun({
     trips,
     literals: fixtures.literals,
@@ -938,6 +1057,12 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
     noVacation,
     eulaAccepts,
     checkDialog: true,
+    runId,
+    runStartedAt,
+    versionSha: buildStart.sha,
+    buildPages,
+    judgeRaw,
+    tripSites,
   });
   const screenshots = [
     noVacation?.screenshot,
@@ -954,6 +1079,11 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
     build: { start: buildStart, end: buildEnd },
     noVacation,
     eulaAccepts,
+    runId,
+    runStartedAt,
+    buildPages,
+    tripSites,
+    judgeRaw,
   });
   await writePacket(artifactsDir, packet);
   let screenshot = '';
@@ -1004,7 +1134,24 @@ async function main() {
   if (process.argv.includes('--apply-judge')) {
     const grade = JSON.parse(await readFile(argValue('--apply-judge'), 'utf8'));
     const current = JSON.parse(await readFile(path.join(artifactsDir, 'packet.json'), 'utf8'));
-    const packet = applyJudgeGrade(current, grade);
+    const versionSha = current.build?.start?.sha || '';
+    if ((grade?.runId && grade.runId !== current.runId) || (grade?.id && grade.id !== current.runId && !grade.runId) || (grade?.buildSha && normalizeBuildSha(grade.buildSha) !== normalizeBuildSha(versionSha))) {
+      throw fail('FAIL welcome-after-intake: judge raw is stale');
+    }
+    const judgeRaw = judgeRawDocument({
+      runId: current.runId,
+      buildSha: versionSha,
+      judge: grade.judge || grade,
+      writtenAt: new Date().toISOString(),
+    });
+    const stale = gradeJudgeRaw(judgeRaw, {
+      runId: current.runId,
+      buildSha: versionSha,
+      runStartedAt: current.runStartedAt,
+    });
+    if (!stale.ok) throw fail('FAIL welcome-after-intake: judge raw is stale');
+    await writeJudgeRaw(artifactsDir, judgeRaw);
+    const packet = applyJudgeGrade({ ...current, judgeRaw }, grade);
     await writePacket(artifactsDir, packet);
     process.stdout.write(`${JSON.stringify({ result: packet.result, reason: packet.reason, artifactsDir })}\n`);
     if (packet.pass !== true) process.exit(1);
