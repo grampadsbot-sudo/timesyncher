@@ -214,7 +214,7 @@ assert.doesNotMatch(questionPrompt, leakWord);
 assertCleanFacts(questionFacts);
 
 const voiceReply = 'I am putting the itinerary together from the Big Island of Hawaii, the April dates, the house in Kailua-Kona, gardens, and a swim. Nico, Tess, and Mara can join and help shape it. The yearly plan for that is timesyncher_vacation_unlimited. What is still open about dinner the day you land?';
-const gapReply = 'Where are you hoping to go, when would you leave, and who is coming? A longer voice note on those would help.';
+const gapReply = 'I can start a short draft from that. Where are you hoping to go? How long will you be away, and who is coming? A voice note would help.';
 const originalFetch = globalThis.fetch;
 const env = { OPENROUTER_API_KEY: 'test-key' };
 

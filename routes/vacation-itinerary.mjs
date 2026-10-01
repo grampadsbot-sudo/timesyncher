@@ -41,6 +41,8 @@ import {
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -266,14 +268,23 @@ async function loadVacationAppTurns(db, session, tripId) {
     order by coalesce(received_at, sent_at, created_at) desc nulls last
     limit 120
   `;
-  return rows.reverse().map((row) => ({
-    speaker: row.speaker || 'customer',
-    body: row.body || '',
-    channel: row.channel || '',
-    direction: row.direction || '',
-    payload: row.payload && typeof row.payload === 'object' ? row.payload : {},
-    at: row.received_at || row.sent_at || row.created_at || null,
-  }));
+  return rows.reverse().map((row) => {
+    const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = payload.liveTranscript && typeof payload.liveTranscript === 'object' ? payload.liveTranscript : {};
+    const turn = {
+      speaker: row.speaker || 'customer',
+      body: row.body || '',
+      channel: row.channel || '',
+      direction: row.direction || '',
+      payload,
+      authorName: String(payload.authorName || live.speakerName || ''),
+      authorId: String(payload.authorId || ''),
+      at: row.received_at || row.sent_at || row.created_at || null,
+    };
+    turn.authorLabel = turnAuthorLabel(turn, session);
+    if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
+    return turn;
+  });
 }
 
 function welcomeFirstName(value) {
@@ -478,6 +489,8 @@ async function queueVacationAppTurn(db, session, trip, body) {
     browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
     selectedTripId: tripId,
     liveTranscript: customerLive,
+    authorName: speakerName,
+    authorId: session.customer_id || null,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
     roster: jobFields.roster,
@@ -701,6 +714,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     ok: true,
     status: 'replied',
     reply: produced.reply,
+    ...appReplyTelemetry(appLive),
     appTurnIndex: appLive.turnIndex,
     itinerary,
     vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
@@ -949,6 +963,7 @@ async function handleVacationApp(req, res, db, url) {
         token: session.token,
         status: session.status,
         customerName: seat?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        viewerId: session.customer_id || null,
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
@@ -1034,6 +1049,7 @@ async function handleVacationApp(req, res, db, url) {
         ok: true,
         status: 'replied',
         reply: finished.reply,
+        ...appReplyTelemetry(appLive),
         interimReply: finished.log?.interimReply || pending.interimReply || null,
         itinerary,
         error: null,
