@@ -574,7 +574,7 @@ export function sourcedPlaceRule() {
   return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
-export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
+export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = null, planOwned = false, priceAsk = false } = {}) {
   const dollars = Number(seatDollars);
   let mode = 'forbidden';
   if (postIntake) mode = 'post-intake';
@@ -621,7 +621,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     upsell,
     postIntake,
     planLine,
-    seatDollars: seatDollars || 0,
+    seatDollars,
     planOwned: context.planOwned === true,
     priceAsk,
   });
@@ -830,7 +830,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -886,7 +886,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {

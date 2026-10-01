@@ -674,30 +674,23 @@ function isAccessPricingQuestion(requestText = '') {
   return asksPrice && accessTarget;
 }
 
-function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
+function accessPricingAnswer({ requestText = '' } = {}) {
   const source = text(requestText, 2000).toLowerCase();
   const person = accessPersonLabel(requestText);
-  const allVacations = /\b(all|every|unlimited|future)\b/.test(source) && /\b(vacations?|trips?)\b/.test(source);
   const wantsMedia = /\b(photo|photos|picture|pictures|pic|pics|video|videos|media|upload|uploads)\b/.test(source) || /\bfull access\b/.test(source);
-  const plans = Array.isArray(manifest?.collaboratorEntitlementPolicy?.plans) ? manifest.collaboratorEntitlementPolicy.plans : [];
-  const singleTrip = plans.find((plan) => text(plan?.scope, 80) === 'single_trip');
-  const unlimited = plans.find((plan) => text(plan?.scope, 80) === 'unlimited_trips');
-  const photo = manifest?.mediaAddOnPolicy?.photoMemories || {};
-  const video = manifest?.mediaAddOnPolicy?.videoMemoriesRecommendation || {};
-  const scope = allVacations ? 'unlimited_trips' : 'single_trip';
-  const telegramUsd = allVacations ? unlimited?.amountUsd : singleTrip?.amountUsd;
-  const photoUsd = wantsMedia ? (allVacations ? photo.unlimitedVacationsAmountUsd : photo.singleVacationAmountUsd) : null;
-  const videoUsd = wantsMedia ? (allVacations ? video.unlimitedVacationsAmountUsd : video.singleVacationAmountUsd) : null;
-  if (!telegramUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} collaborator`);
-  if (wantsMedia && !photoUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} photo`);
-  if (wantsMedia && !videoUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} video`);
+  const collaboratorCents = Number.parseInt(String(process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS ?? '').trim(), 10);
+  const mediaCents = Number.parseInt(String(process.env.TIMESYNCHER_MEDIA_PRICE_CENTS ?? '').trim(), 10);
+  const telegramUsd = Number.isFinite(collaboratorCents) && collaboratorCents > 0 ? collaboratorCents / 100 : null;
+  const mediaUsd = Number.isFinite(mediaCents) && mediaCents > 0 ? mediaCents / 100 : null;
+  if (!telegramUsd) console.error('config missing: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS');
+  if (wantsMedia && !mediaUsd) console.error('config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
   return {
     person,
-    scope,
+    scope: 'single_trip',
     wantsMedia,
-    telegramUsd: telegramUsd || null,
-    photoUsd: photoUsd || null,
-    videoUsd: videoUsd || null,
+    telegramUsd,
+    photoUsd: wantsMedia ? mediaUsd : null,
+    videoUsd: wantsMedia ? mediaUsd : null,
     collaboratorSeats: 1,
   };
 }
