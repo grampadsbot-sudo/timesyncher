@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
-import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, NAMED_THING_LOGOS, brandLogoPath, isPlaceholderLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, sourceLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mjs';
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
 import { qrModules, qrSvg } from '../src/vacation/qr-svg.mjs';
@@ -82,69 +82,39 @@ const bindings = [
 ];
 
 assert.equal(isBoundStoryMediaUrl('/api/bind-thing-media?shareToken=x&id=1&raw=1'), true);
-assert.equal(captureThingLogo(shared.places[0], {}), '/ts-thing-logos/carbone.svg');
-assert.equal(thingCreateLogoFields('Carbone at Aria', 'restaurant').logoUrl, '/ts-thing-logos/carbone.svg');
-assert.equal(thingCreateLogoFields('Carbone at Aria', 'restaurant').icon, '🍽️');
+assert.equal(captureThingLogo(shared.places[0], {}), '');
+assert.equal(thingCreateLogoFields('Sample place', 'restaurant').logoUrl, '');
+assert.equal(thingCreateLogoFields('Sample place', 'restaurant').icon, '🍽️');
 assert.equal(thingCreateLogoFields('SFO to LAS', 'flight').isFlight, true);
+assert.equal(sourceLogoUrl({ name: 'Sample place', source: { logo: 'https://cdn.example/mark.svg' } }), 'https://cdn.example/mark.svg');
+assert.equal(sourceLogoUrl({ website: 'https://cafe.example/menu' }), 'https://cafe.example/favicon.ico');
+assert.equal(sourceLogoUrl({ name: 'High Roller' }), '');
 
 const logos = applyCapturedLogos(shared);
-assert.equal(logos.thingOverrides['place:8872'].logoUrl, '/ts-thing-logos/carbone.svg');
+assert.equal(logos.thingOverrides['place:8872'].logoUrl, '');
 assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
-
-const catalogNames = Object.keys(NAMED_THING_LOGOS);
-for (const name of new Set(catalogNames)) {
-  const path = brandLogoPath({ name }, { title: name });
-  assert.equal(isPlaceholderLogoUrl(path), false, `real logo for ${name}`);
-  assert.match(path, /^\/ts-thing-logos\/.+\.svg$/, `bound brand path for ${name}`);
-  if (!/\bsfo\b|\blas to sfo\b|boarding pass/i.test(name)) {
-    assert.notEqual(path, '/ts-thing-logos/flight.svg', `no airplane fallback for ${name}`);
-  }
-}
-assert.equal(brandLogoPath({ name: 'Bellagio Fountains' }, { title: 'Bellagio Fountains' }), '/ts-thing-logos/bellagio-fountains.svg');
-assert.equal(brandLogoPath({ name: 'Bellagio Shops' }, { title: 'Bellagio Shops' }), '/ts-thing-logos/bellagio-shops.svg');
-assert.equal(captureThingLogo({ name: 'High Roller' }, { title: 'High Roller' }), '/ts-thing-logos/high-roller.svg');
-assert.equal(captureThingLogo({ name: 'Las Vegas transport and car research queue' }, { title: 'Las Vegas transport and car research queue' }), '/ts-thing-logos/car.svg');
-assert.doesNotMatch(captureThingLogo({ name: 'High Roller' }, {}), /data:image\/svg/);
-
-const LETTER_TILE_RE = /<text\b[^>]*>\s*[A-Za-z0-9]{1,3}\s*<\/text>/i;
-const GENERIC_BAG_RE = /M26 24a6 6 0 0 1 12 0|M24 28a8 8 0 0 1 16 0/;
-const qaFailLogoFiles = [
-  'carbone.svg',
-  'shake-shack.svg',
-  'bardot-brasserie.svg',
-  'best-friend-roy-choi.svg',
-  'giada.svg',
-  'javiers-at-aria.svg',
-  'latelier-robuchon.svg',
-  'lotus-of-siam.svg',
-  'mon-ami-gabi.svg',
-  'mott-32.svg',
-  'fashion-show-mall.svg',
-  'harmon-corner.svg',
-  'wynn-esplanade.svg',
-  'jean-georges.svg',
-  'miracle-mile-shops.svg',
-  'sichuan-house.svg',
-  'cosmopolitan-shops.svg',
-  'bellagio-shops.svg',
-];
-for (const file of await readdir(new URL('../public/ts-thing-logos/', import.meta.url))) {
-  if (!file.endsWith('.svg')) continue;
-  const svg = await readFile(new URL(`../public/ts-thing-logos/${file}`, import.meta.url), 'utf8');
-  assert.doesNotMatch(svg, LETTER_TILE_RE, `${file} must be a pictorial mark, not a letter/monogram tile`);
-  if (qaFailLogoFiles.includes(file)) {
-    assert.doesNotMatch(svg, GENERIC_BAG_RE, `${file} must not be a generic shopping-bag pictogram`);
-    assert.match(svg, /<path |<circle |<ellipse |<rect x=/, `${file} must draw a distinctive mark`);
-  }
-}
+assert.equal(captureThingLogo({ name: 'Sample Place' }, {}), '');
+const sampleShared = {
+  trip: { id: 1, title: 'Sample Trip', description: 'A sample trip.' },
+  days: [],
+  places: [{ id: 1, name: 'Sample Place' }],
+  assignments: {},
+};
+const sampleHtml = renderStyle2Html(sampleShared, [], { origin: 'https://example.test', shareToken: 'sample' });
+assert.match(sampleHtml, /data-thing-id="1"[^>]*>\s*<span class="thing-emoji">/);
+assert.doesNotMatch(sampleHtml, /data-thing-id="1"[^>]*>\s*<img/);
+const sourcedHtml = renderStyle2Html({
+  ...sampleShared,
+  places: [{ id: 2, name: 'Sample Place', source: { logo: 'https://cdn.example/mark.svg' } }],
+}, [], { origin: 'https://example.test', shareToken: 'sample' });
+assert.match(sourcedHtml, /https:\/\/cdn\.example\/mark\.svg/);
 
 const paddedLogos = applyCapturedLogos(shared);
 for (const place of paddedLogos.places) {
-  const logo = paddedLogos.thingOverrides[`place:${place.id}`]?.logoUrl || place.logoUrl;
-  assert.equal(isPlaceholderLogoUrl(logo), false, `padded ${place.name} has a real logo`);
-  assert.doesNotMatch(String(logo), /data:image\/svg\+xml/, `padded ${place.name} is not a letter-monogram fallback`);
+  const logo = paddedLogos.thingOverrides[`place:${place.id}`]?.logoUrl || '';
+  assert.equal(logo, '', `padded ${place.name} has no name-mapped logo`);
 }
 
 const summary = realTripSummary(shared);
@@ -178,20 +148,18 @@ assert.match(html, /data-min-things="8"/);
 assert.match(html, /Anniversary weekend at the Bellagio/);
 assert.match(html, /Spicy rigatoni/);
 assert.match(html, /wet petals/);
-assert.match(html, /carbone\.svg/);
-assert.match(html, /shake-shack\.svg/);
-assert.match(html, /cosmopolitan-shops\.svg/);
-assert.match(html, /bellagio-conservatory\.svg/);
+assert.doesNotMatch(html, /carbone\.svg|shake-shack\.svg|cosmopolitan-shops\.svg|bellagio-conservatory\.svg/);
 assert.doesNotMatch(html, /brought together your day-by-day plan/);
 assert.match(html, /data-icon-type="restaurant"/);
 assert.match(html, /data-icon-type="store"/);
-assert.match(html, /data-icon-type="flight"/);
+assert.match(html, /data-thing-id="8877" data-icon-type="transport"/);
+assert.doesNotMatch(html, /data-icon-type="flight"/);
 
 const page1 = html.match(/data-page="1"[\s\S]*?<\/section>/)[0];
 assert.match(page1, /data-trip-directory="1"/);
 assert.match(page1, /Carbone at Aria/);
 assert.match(page1, /Cosmopolitan shops/);
-assert.match(page1, /bellagio\.svg|bellagio-conservatory\.svg/);
+assert.doesNotMatch(page1, /bellagio\.svg|bellagio-conservatory\.svg/);
 
 const storiesIdx = html.indexOf('data-stories-up-front="1"');
 const daysIdx = html.indexOf('data-print-ready="daily"');
@@ -199,7 +167,7 @@ const listsIdx = html.indexOf('data-post-itinerary="1"');
 assert.ok(storiesIdx > 0 && daysIdx > storiesIdx, 'stories before itinerary');
 assert.ok(listsIdx > daysIdx, 'thing lists after itinerary');
 
-const airplaneOnNonFlight = [...html.matchAll(/data-icon-type="(?!flight)[^"]+"[\s\S]{0,220}(?:✈️|&#9992;)/g)];
+const airplaneOnNonFlight = [...html.matchAll(/data-icon-type="(?!flight)[^"]+">\s*(?:<span class="thing-emoji">)?(?:✈️|&#9992;)/g)];
 assert.equal(airplaneOnNonFlight.length, 0, 'no airplane on non-flight rows');
 assert.match(html, /data-story-card="1"/);
 assert.match(html, /data-story-media-only="1"/);
@@ -220,17 +188,18 @@ assert.doesNotMatch(conservatoryCard, /tiny-logo|thing-emoji/);
 assert.match(conservatoryCard, /conservatory-photo\.jpg/);
 assert.match(html, /data-row-thumb="1"/);
 const videoCover = pickStoryCover([
-  { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
-], '/ts-thing-logos/bellagio.svg');
+  { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'night-video.mp4' },
+], 'https://cdn.example/mark.svg');
 assert.equal(videoCover.kind, 'video');
+assert.equal(pickStoryCover([], '').kind, 'none');
 const mislabeledNightVideo = pickStoryCover([
   {
-    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+    publicUrl: 'https://example.test/api/bind-thing-media?shareToken=sample&id=1&raw=1',
     mimeType: 'application/octet-stream',
     mediaKind: 'photo',
-    originalName: 'bellagio-fountain-night-video.mp4',
+    originalName: 'night-video.mp4',
   },
-], '/ts-thing-logos/bellagio.svg');
+], 'https://cdn.example/mark.svg');
 assert.equal(mislabeledNightVideo.kind, 'video');
 
 const model = buildStyle2Model(shared, bindings, 'https://vacation-staging.timesyncher.com');
@@ -514,7 +483,7 @@ assert.equal(liveOverride.thingOverrides['place:8872'].category, 'restaurant');
 assert.equal(liveOverride.thingOverrides['place:8876'].category, 'store');
 assert.equal(liveOverride.thingOverrides['place:8873'].category, 'restaurant');
 assert.equal(liveOverride.thingOverrides['place:8869'].category, 'hotel');
-assert.equal(liveOverride.thingOverrides['place:8877'].category, 'flight');
+assert.equal(liveOverride.thingOverrides['place:8877'].category, 'transport');
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'restaurant');
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'store');
 assert.ok(liveOverride.thingOverrides['place:8872'].lat);
@@ -634,8 +603,8 @@ assert.doesNotMatch(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
 assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
-assert.match(patchedAe, /img.tiny-logo,img.thing-logo/);
-assert.match(patchedAe, /data-logo-inlined/);
+assert.match(patchedAe, /if\(raw&&!\/\^data:image\\\/svg\\\+xml\/i\.test\(raw\)\)return raw;return ""/);
+assert.doesNotMatch(patchedAe, /return named\|\|""/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
 assert.match(patchedAe, /data-post-itinerary="1"/);

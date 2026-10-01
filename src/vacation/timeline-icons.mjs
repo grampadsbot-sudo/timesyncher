@@ -61,22 +61,6 @@ function text(value) {
   return String(value || '').trim();
 }
 
-function haystack(thing = {}, extra = '') {
-  return [
-    thing.type,
-    thing.category_name,
-    thing.category?.name,
-    thing.category_icon,
-    thing.category?.icon,
-    thing.title,
-    thing.name,
-    thing.notes,
-    thing.description,
-    thing.address,
-    extra,
-  ].map(text).join(' ');
-}
-
 export function normalizeThingType(raw) {
   const value = text(raw);
   if (!value) return '';
@@ -104,34 +88,6 @@ export function normalizeThingType(raw) {
   return '';
 }
 
-export function looksLikeFlightText(value) {
-  const source = text(value);
-  if (!source) return false;
-  if (/\b(las vegas|vegas)\b/i.test(source) && !/\b(flight|airport|sfo|jfk|lga|ewr|lax|depart|arrive)\b/i.test(source) && !/\b[A-Z]{3}\s+to\s+[A-Z]{3}\b/.test(source)) {
-    return /\b(sfo|jfk|lga|ewr|lax|ord|dfw)\s+to\s+las\b/i.test(source) || /\blas\s+to\s+(sfo|jfk|lga|ewr|lax|ord|dfw)\b/i.test(source);
-  }
-  if (/\bflight\b|airport|jetblue|southwest|american airlines|\bdelta\b/i.test(source)) return true;
-  if (/\b(sfo|jfk|lga|ewr|lax|ord|dfw)\b/i.test(source)) return true;
-  if (/\b[A-Z]{3}\s+to\s+[A-Z]{3}\b/.test(source)) return true;
-  if (/\blas\b(?!\s+vegas)/i.test(source) && /\b(to|from|sfo|jfk|lga|ewr|lax|thu|sun|mon|tue|wed|fri|sat|oct|nov|dec|jan)\b/i.test(source)) return true;
-  return false;
-}
-
-export function inferThingTypeFromText(value) {
-  const source = text(value);
-  if (looksLikeFlightText(source)) return 'flight';
-  const lower = source.toLowerCase();
-  if (/rental car|car rental|hertz|avis|enterprise|budget rent|alamo/i.test(source)) return 'car';
-  if (/hotel|marriott|hyatt|hilton|sheraton|bellagio|lodging|accommodation/i.test(source)) return 'hotel';
-  if (/store|shop|shopping|grocery|market|pharmacy/i.test(source)) return 'store';
-  if (/restaurant|bistro|dinner|lunch|breakfast|dining|carbone|eggslut|shake shack|lotus of siam/i.test(source)) return 'restaurant';
-  if (/\bbar\b|cocktail|lounge|happy hour|conservatory/i.test(source)) return 'bar';
-  if (/theatre|theater|broadway|cirque/i.test(source)) return 'theatre';
-  if (/workout|fitness|gym/i.test(source)) return 'workout';
-  if (/tour|ticket|museum|show|sightseeing/i.test(source)) return 'event';
-  return '';
-}
-
 export function resolveThingType(thing = {}, override = {}, rowType = '') {
   const row = text(rowType).toLowerCase();
   if (row === 'hotel-wake' || row === 'hotel-sleep') return row;
@@ -148,13 +104,10 @@ export function resolveThingType(thing = {}, override = {}, rowType = '') {
   ];
   for (const candidate of candidates) {
     const normalized = normalizeThingType(candidate);
-    if (normalized && normalized !== 'other') {
-      if (normalized === 'transport' && looksLikeFlightText(haystack(thing, override.category))) return 'flight';
-      return normalized;
-    }
+    if (normalized && normalized !== 'other') return normalized;
   }
 
-  return inferThingTypeFromText(haystack(thing, override.category)) || 'other';
+  return 'other';
 }
 
 export const AIRPLANE_GLYPH_RE = /\u2708\uFE0F?|\u2708|✈️|^plane$/i;

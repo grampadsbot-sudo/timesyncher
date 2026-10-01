@@ -272,16 +272,21 @@ def category_meta(kind):
     if kind == 'attraction' or kind == 'activity': return ('Attraction', '#7c3aed', 'Landmark')
     return ('Attraction', '#7c3aed', 'MapPin')
 
-def captured_logo(title, kind):
-    lower = (title or '').lower()
-    if 'carbone' in lower: return '/ts-thing-logos/carbone.svg'
-    if 'shake' in lower and 'shack' in lower: return '/ts-thing-logos/shake-shack.svg'
-    if 'eggslut' in lower: return '/ts-thing-logos/eggslut.svg'
-    if 'lotus' in lower: return '/ts-thing-logos/lotus-of-siam.svg'
-    if 'conservatory' in lower: return '/ts-thing-logos/bellagio-conservatory.svg'
-    if 'bellagio' in lower: return '/ts-thing-logos/bellagio.svg'
-    if 'cosmo' in lower or 'shop' in lower: return '/ts-thing-logos/cosmopolitan-shops.svg'
-    if kind == 'flight': return '/ts-thing-logos/flight.svg'
+def captured_logo(item):
+    source = item.get('source') if isinstance(item.get('source'), dict) else {}
+    for value in (
+        source.get('logo'),
+        source.get('logoUrl'),
+        source.get('favicon'),
+        source.get('faviconUrl'),
+        item.get('logo'),
+        item.get('logoUrl'),
+        item.get('favicon'),
+        item.get('faviconUrl'),
+    ):
+        text = str(value or '').strip()
+        if text:
+            return text
     return ''
 
 def category_icon_emoji(kind):
@@ -358,7 +363,7 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     if not valid_coord(lat, lng) and address:
         lat, lng = geocode_address(address)
     has_coords = valid_coord(lat, lng)
-    logo_url = captured_logo(title, kind)
+    logo_url = captured_logo(item)
     if place:
         place_id = int(place['id'])
         run("UPDATE places SET category_id=?, description=COALESCE(NULLIF(description, ''), ?), reservation_status=?, place_time=COALESCE(NULLIF(?, ''), place_time), notes=COALESCE(NULLIF(notes, ''), ?), address=COALESCE(NULLIF(?, ''), address), lat=COALESCE(?, lat), lng=COALESCE(?, lng), image_url=COALESCE(NULLIF(image_url, ''), ?), updated_at=CURRENT_TIMESTAMP WHERE id=?", (cat_id, summary, 'considering', item.get('time') or '', summary, address, float(lat) if has_coords else None, float(lng) if has_coords else None, logo_url or None, place_id))

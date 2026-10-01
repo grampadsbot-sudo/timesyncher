@@ -1,15 +1,14 @@
 # Thing logos (list + detail)
 
-Bound brand marks on every Thing row. Product path: `thingOverrides.logoUrl` via `applyCapturedLogos` / `captureThingLogo` (`src/vacation/thing-logo-capture.mjs`). **Bytes** live as static public files in `public/ts-thing-logos/` (`/ts-thing-logos/*.svg`). Pointers are path strings on `thingOverrides.logoUrl` / `place.captured_logo_url` (GET overlay) — not Neon logo bytes, not Vercel Blob (those stores are story media).
+A Thing logo is the source record URL (`source.logo`, `source.favicon`, or the website favicon from `sourceLogoUrl`) or the row has no logo. Product path: `thingOverrides.logoUrl` via `applyCapturedLogos` / `captureThingLogo` (`src/vacation/thing-logo-capture.mjs`). Pointers are URLs on `thingOverrides.logoUrl` / `place.captured_logo_url` — not Neon logo bytes, not Vercel Blob (those stores are story media).
 
 ## Live list rule
 
 - Restaurants, Stores, and The Rest (and Hotels / Cars / Flights) show the **bound logo** for that Thing.
 - Fill extras (`__tsLiveFill` / first-pass catalog) get the same named brand path — not category emoji.
 - **Admit One / family-event placeholder** (`pDe`) is not used when a `logoUrl` exists.
-- Print `_l()` prefers named `tsLogo(mr(G))` `/ts-thing-logos/*.svg` over bound `logoUrl`, and skips `data:image/svg+xml` letter tiles.
-- Bound SVG files are **pictorial brand marks**, not Georgia-serif monogram tiles or generic shopping-bag icons.
-- **Airplane glyph** is flights only. Missing car/transport logos use `/ts-thing-logos/car.svg`, never ✈️.
+- Print `_l()` uses the source logo URL and skips `data:image/svg+xml` letter tiles. A name does not select a logo.
+- **Airplane glyph** is flights only. A Thing with no source logo has no logo image.
 
 ## Blast radius (this fix)
 

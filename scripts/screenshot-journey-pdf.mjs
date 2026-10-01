@@ -858,22 +858,6 @@ async function main() {
       } else {
         gap('Voice note', 'voice-note.md', 'The shared header did not show a microphone button. Unblock: mount the record-voice button where a screenshot can frame the mic.');
       }
-      const logoBox = await page.evaluate(() => {
-        const img = [...document.querySelectorAll('img')].find((node) => (node.src || '').includes('/ts-thing-logos/'));
-        if (!img) return null;
-        const row = img.closest('button, a, li, div') || img;
-        row.scrollIntoView({ block: 'center' });
-        const box = row.getBoundingClientRect();
-        return {
-          x: 0,
-          y: Math.max(0, box.y - 24),
-          width: Math.min(1280, window.innerWidth),
-          height: Math.max(200, Math.min(320, box.height + 80)),
-        };
-      });
-      if (logoBox) {
-        await shot('logos', 'After the gold conversation', 'Thing logos', { file: 'logos.md', note: sharedUrl, clipRect: logoBox });
-      }
       if (!has(text, 'Budget')) gap('Budget on the test itinerary', 'budget.md', 'the Big Island shared trip has no Budget tab');
       const navPanel = await page.evaluate(() => {
         const button = document.querySelector('[data-ts-guest-nav] button[aria-label="Open navigation"]');
@@ -967,21 +951,6 @@ async function main() {
               note: 'Restaurant tag chips on the intake list.',
               clipRect: await clipAround(has(dining, 'All tags') ? 'All tags' : 'Seafood', { height: 420, padTop: 12 }),
             });
-          }
-          if (!captured.has('logos.md')) {
-            const row = await page.evaluate(() => {
-              const img = [...document.querySelectorAll('img')].find((node) => (node.src || '').includes('/ts-thing-logos/'));
-              if (!img) return null;
-              img.scrollIntoView({ block: 'center' });
-              const box = img.getBoundingClientRect();
-              return {
-                x: 0,
-                y: Math.max(0, box.y - 36),
-                width: Math.min(1280, window.innerWidth),
-                height: 240,
-              };
-            });
-            if (row) await shot('logos', 'After the gold conversation', 'Thing logos', { file: 'logos.md', note: 'Restaurant row logos.', clipRect: row });
           }
         }
         if (label === 'Budget') mark('budget.md');
@@ -1279,7 +1248,6 @@ async function main() {
       }
     }
 
-    if (!captured.has('logos.md')) gap('Thing logos', 'logos.md', 'no /ts-thing-logos/ image rendered on a list row');
     if (!captured.has('filters.md')) gap('Filters', 'filters.md', 'The Rest list did not render All areas or All types');
     if (!captured.has('tags-chips.md')) gap('Tags and chips', 'tags-chips.md', 'the restaurants list did not render All tags or Seafood chips');
     if (!seenShot.has('tags-applied')) gap('Tags applied on a Thing', 'tags-chips.md', 'no Thing detail showed a tag that the Things list also displays');

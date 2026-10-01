@@ -6,7 +6,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## Sub-features
 
-- List rows use bound /ts-thing-logos/ marks. Airplane is flights only.
+- A list row uses the source logo URL, or it has no logo. Airplane is flights only.
 
 ## How to get to it (user POV)
 

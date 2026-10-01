@@ -53,10 +53,36 @@ assert.equal(shared.thingOverrides[`place:${swim.id}`].timeline, true);
 assert.deepEqual(shared.thingOverrides[`place:${swim.id}`].dayIds, [monday.id]);
 assert.ok((shared.assignments[String(monday.id)] || []).some((row) => row.place_id === swim.id));
 assert.equal(shared.places.some((place) => /Las Vegas/i.test(place.name)), false);
-assert.equal(shared.permissions.share_budget, true);
-assert.equal(shared.budget.length, 1);
-assert.equal(shared.budget[0].total_price, null);
-assert.equal(shared.places.length, 2);
+assert.equal(swim.category_name, 'activity');
+assert.notEqual(swim.category_name, 'Attraction');
+const house = shared.places.find((place) => place.name === 'Kailua-Kona house');
+assert.equal(house.category_name, 'Hotel');
+assert.equal(shared.permissions.share_budget, false);
+assert.deepEqual(shared.budget, []);
+const priced = sharedTripFromIntake({
+  trip: {
+    id: tripId,
+    title: 'Big Island',
+    destination: 'Big Island, Hawaii',
+    start_date: '2026-04-03',
+    end_date: '2026-04-03',
+  },
+  things: [{ id: 'fare', category: 'transport', title: 'Shuttle', total_price: 42 }],
+});
+assert.equal(priced.permissions.share_budget, true);
+assert.equal(priced.budget.length, 1);
+assert.equal(priced.budget[0].total_price, 42);
+const unlabeled = sharedTripFromIntake({
+  trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
+  things: [{ id: 'blank', title: 'Open block' }],
+});
+assert.equal(unlabeled.places[0].category_name, '');
+assert.equal(unlabeled.places[0].category_icon, '');
+const sourced = sharedTripFromIntake({
+  trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
+  things: [{ id: 'cafe', category: 'activity', title: 'Cafe', source: { category: 'restaurant' } }],
+});
+assert.equal(sourced.places[0].category_name, 'Restaurant');
 const located = sharedTripFromIntake({
   trip: { id: tripId, title: 'Week', destination: 'Lisbon', start_date: '2026-04-03', end_date: '2026-04-05' },
   things: [{ id: 'cafe', category: 'restaurant', title: 'Harbor Cafe', source: 'brave', lat: 38.72, lng: -9.14, address: '1 Dock' }],

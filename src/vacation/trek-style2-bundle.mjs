@@ -731,8 +731,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-print-media-ready') || !js.includes('b.size===3071') || !js.includes('bmp.width===1024')) {
     throw new Error('_se() must inline bound JPEG bytes and drop TREK 1024² 3071B stub canvases.');
   }
-  if (!js.includes('img.tiny-logo,img.thing-logo') || !js.includes('data-logo-inlined') || !js.includes('/ts-thing-logos\\/')) {
-    throw new Error('Print _se() must inline /ts-thing-logos tiny-logo SVG bytes (not the 4096B photo size kill).');
+  if (!js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('Print list logos must use the source logo URL or stay empty.');
   }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');

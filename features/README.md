@@ -87,7 +87,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Empty states | No restaurants/stores match those tags; no timeline-tagged things | `empty-states.md` |
 | Detail | Detail page, Detail name, Days, Timeline, Status, Type, Area, Start, Duration, Price, Estimated travel time, Summary, Story, recap checkbox, Website, Details | `detail-page.md` |
 | Tags / chips | Restaurant tags / chips; Store tags / chips (live `ot` / `gt`); list chips = tags on Things in that list | `tags-chips.md` |
-| Thing logos | Bound `/ts-thing-logos/` marks on list rows; no Admit One placeholder; airplane flights-only | `logos.md` |
+| Thing logos | Source logo URL or no logo; no Admit One placeholder; airplane flights-only | `logos.md` |
 | Status | considering / preferred / reservation / booked / eliminated | `status.md` |
 | Happy hour | Happy hour + Happy hour details | `happy-hour.md` |
 | Hotel fields | Stay days, Check-in/out date/time | `hotel-stay-fields.md` |
