@@ -1,26 +1,83 @@
 #!/usr/bin/env node
 /**
  * Welcome after a real create-vacation intake.
- * Requires DATABASE_URL. A missing database is a failure, not a skip, pass, or gap.
+ * Uses DATABASE_URL when it is set. Otherwise loads the staging project value
+ * with VERCEL_TOKEN into process.env for this process only. A missing token,
+ * failed fetch, or empty value is a failure, not a skip, pass, or gap.
+ * The loaded value is never printed, logged, or written to disk.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onboardingOpenerFacts, upsellFactsForTurn } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
-export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: DATABASE_URL missing';
+const STAGING_DATABASE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true';
+export const WELCOME_VERCEL_TOKEN_MISSING = 'FAIL welcome-after-intake: VERCEL_TOKEN missing';
+export const WELCOME_DATABASE_FETCH_FAILED = 'FAIL welcome-after-intake: staging DATABASE_URL fetch failed';
+export const WELCOME_DATABASE_EMPTY = 'FAIL welcome-after-intake: staging DATABASE_URL empty';
 export const WELCOME_MISSING = 'FAIL welcome-after-intake: welcome missing';
+export const WELCOME_ONBOARDING_TIMEOUT = 'FAIL welcome-after-intake: onboarding chat did not open';
 const scriptPath = fileURLToPath(import.meta.url);
 
-export function assertWelcomeDatabase(env = process.env) {
-  if (!String(env.DATABASE_URL || '').trim()) {
-    const error = new Error(WELCOME_DATABASE_MISSING);
-    error.exitCode = 1;
-    throw error;
+function fail(message) {
+  const error = new Error(message);
+  error.exitCode = 1;
+  return error;
+}
+
+export function redactWelcomeSecrets(text, secret = process.env.DATABASE_URL) {
+  let out = String(text ?? '');
+  const value = String(secret || '');
+  if (value) {
+    out = out.split(value).join('[redacted]');
+    const encoded = encodeURIComponent(value);
+    if (encoded && encoded !== value) out = out.split(encoded).join('[redacted]');
   }
-  return env.DATABASE_URL;
+  return out.replace(/postgres(?:ql)?:\/\/\S+/gi, '[redacted]').replace(/Bearer\s+\S+/gi, 'Bearer [redacted]');
+}
+
+function redactWelcomeError(error) {
+  const message = redactWelcomeSecrets(error?.message || WELCOME_DATABASE_FETCH_FAILED);
+  const wrapped = new Error(message);
+  wrapped.exitCode = error?.exitCode || 1;
+  const stack = redactWelcomeSecrets(error?.stack || '');
+  if (stack) wrapped.stack = stack;
+  return wrapped;
+}
+
+export async function ensureWelcomeDatabase({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  if (String(env.DATABASE_URL || '').trim()) return;
+  const token = String(env.VERCEL_TOKEN || '').trim();
+  if (!token) throw fail(WELCOME_VERCEL_TOKEN_MISSING);
+  let response;
+  try {
+    response = await fetchImpl(STAGING_DATABASE_ENV_URL, {
+      method: 'GET',
+      redirect: 'error',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    throw fail(WELCOME_DATABASE_FETCH_FAILED);
+  }
+  if (!response || response.ok !== true) {
+    const status = Number(response?.status);
+    const suffix = Number.isInteger(status) && status > 0 ? ` (HTTP ${status})` : '';
+    throw fail(`${WELCOME_DATABASE_FETCH_FAILED}${suffix}`);
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw fail(WELCOME_DATABASE_FETCH_FAILED);
+  }
+  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
+  if (payload?.key !== 'DATABASE_URL' || !value) {
+    throw fail(payload?.key === 'DATABASE_URL' ? WELCOME_DATABASE_EMPTY : WELCOME_DATABASE_FETCH_FAILED);
+  }
+  process.env.DATABASE_URL = value;
+  if (env !== process.env) env.DATABASE_URL = value;
 }
 
 function collaboratorWelcomeMarker() {
@@ -37,6 +94,49 @@ function welcomeBeforeCustomer(turns) {
   const firstUser = bubbles.findIndex((turn) => turn.speaker === 'customer' || turn.speaker === 'user');
   const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
   return prior.some((turn) => (turn.speaker === 'app' || turn.speaker === 'assistant') && String(turn.body || '').trim());
+}
+
+export function welcomeShownFromBubbles(bubbles) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  const firstUser = list.findIndex((bubble) => bubble.user === true);
+  const prior = firstUser < 0 ? list : list.slice(0, firstUser);
+  return prior.some((bubble) => bubble.user !== true && String(bubble.text || '').trim().length > 0);
+}
+
+export function priorWelcomeTexts(bubbles) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  const firstUser = list.findIndex((bubble) => bubble.user === true);
+  const prior = firstUser < 0 ? list : list.slice(0, firstUser);
+  return prior
+    .filter((bubble) => bubble.user !== true)
+    .map((bubble) => String(bubble.text || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+function staticFail(error, message) {
+  if (String(error?.message || '').startsWith('FAIL welcome-after-intake:')) throw error;
+  throw fail(message);
+}
+
+export async function agreeThenReadWelcome(driver, { name = 'Verify Intake', timeoutMs = 30000 } = {}) {
+  try {
+    await driver.fill('#eulaName', name);
+  } catch (error) {
+    staticFail(error, 'FAIL welcome-after-intake: terms name missing');
+  }
+  try {
+    await driver.check('#eulaAgree');
+    await driver.click('#eulaAgreeButton');
+  } catch (error) {
+    staticFail(error, 'FAIL welcome-after-intake: terms agree missing');
+  }
+  try {
+    const opened = await driver.waitFor('#messages[data-screen="onboarding"]', timeoutMs);
+    if (opened === false) throw new Error('not open');
+  } catch (error) {
+    staticFail(error, WELCOME_ONBOARDING_TIMEOUT);
+  }
+  return driver.readWelcome();
 }
 
 function jsonRequest(method, url, body, headers = {}) {
@@ -85,7 +185,50 @@ async function callHandler(handler, request) {
   return { status: captured.res.statusCode, body: captured.body() };
 }
 
-async function screenshotApp(url, shotDir) {
+function pageWelcomeDriver(page) {
+  return {
+    async fill(selector, value) {
+      await page.waitForSelector(selector, { timeout: 20000 });
+      await page.$eval(selector, (input, next) => {
+        input.value = next;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }, value);
+    },
+    async check(selector) {
+      await page.waitForSelector(selector, { timeout: 20000 });
+      await page.$eval(selector, (box) => {
+        box.checked = true;
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+        box.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    },
+    async click(selector) {
+      await page.waitForSelector(selector, { timeout: 20000 });
+      await page.click(selector);
+    },
+    async waitFor(selector, timeoutMs) {
+      await page.waitForSelector(selector, { timeout: timeoutMs });
+      return true;
+    },
+    async readWelcome() {
+      const bubbles = await page.evaluate(() => {
+        const root = document.querySelector('#messages[data-screen="onboarding"]');
+        if (!root) return [];
+        return [...root.querySelectorAll('article.bubble')].map((node) => ({
+          user: node.classList.contains('user'),
+          text: (node.textContent || '').replace(/\s+/g, ' ').trim(),
+        }));
+      });
+      return {
+        shown: welcomeShownFromBubbles(bubbles),
+        prior: priorWelcomeTexts(bubbles),
+      };
+    },
+  };
+}
+
+async function screenshotApp(url, shotDir, { name = 'Verify Intake', assertShot = '' } = {}) {
   const file = path.join(shotDir, 'verify-welcome-after-intake.png');
   await mkdir(shotDir, { recursive: true });
   let puppeteer;
@@ -111,24 +254,28 @@ async function screenshotApp(url, shotDir) {
       });
     }
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 90000 });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    const shown = await page.evaluate(() => {
-      const root = document.querySelector('#messages[data-screen="onboarding"]');
-      if (!root) return false;
-      const bubbles = [...root.querySelectorAll('article.bubble')];
-      const firstUser = bubbles.findIndex((node) => node.classList.contains('user'));
-      const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
-      return prior.some((node) => !node.classList.contains('user') && (node.textContent || '').replace(/\s+/g, ' ').trim().length > 0);
-    });
+    const welcome = await agreeThenReadWelcome(pageWelcomeDriver(page), { name });
     await page.screenshot({ path: file });
-    return { file, shown };
+    if (assertShot) {
+      await mkdir(path.dirname(assertShot), { recursive: true });
+      await copyFile(file, assertShot);
+    }
+    return { file, shown: welcome.shown === true, prior: welcome.prior || [] };
   } finally {
     await browser.close();
   }
 }
 
-export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {}) {
-  assertWelcomeDatabase(env);
+export async function runWelcomeAfterIntake({ env = process.env, shotDir, assertShot = '' } = {}) {
+  try {
+    return await runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot });
+  } catch (error) {
+    throw redactWelcomeError(error);
+  }
+}
+
+async function runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot }) {
+  await ensureWelcomeDatabase({ env });
   const [{ sql }, { buildOnboardingFromCoupon, ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationAppLink }, { acceptEulaPersistent }, { createPersistentStoreFromEnv }, requestHandler, appHandler] = await Promise.all([
     import('../../../../src/vacation/db.mjs'),
     import('../../../../src/vacation/onboarding.mjs'),
@@ -161,7 +308,8 @@ export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {})
     request: { source: 'web', type: 'trip_intake', text: intakeText },
   }, intakeHeaders));
   if (!intake.body?.ok || !intake.body?.requestId) {
-    throw Object.assign(new Error(`FAIL welcome-after-intake: create-vacation intake did not finish (${intake.body?.error || intake.status})`), { exitCode: 1 });
+    const intakeError = redactWelcomeSecrets(typeof intake.body?.error === 'string' ? intake.body.error : intake.status);
+    throw Object.assign(new Error(`FAIL welcome-after-intake: create-vacation intake did not finish (${intakeError})`), { exitCode: 1 });
   }
   const eula = await ensureVacationEulaSession(onboarding.session, { contact, env });
   await acceptEulaPersistent(createPersistentStoreFromEnv(env), eula?.sessionId || eulaSessionIdForOnboarding(onboarding.session), {
@@ -170,22 +318,25 @@ export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {})
     ipAddress: '127.0.0.1',
     userAgent: 'verify-welcome-after-intake',
   });
+  let screenshot = '';
+  let pageShown = false;
+  let prior = [];
+  if (shotDir) {
+    const pageUrl = vacationAppLink(onboarding.token, { ...env, TIMESYNCHER_SITE_BASE_URL: env.TIMESYNCHER_SITE_BASE_URL || 'https://vacation-staging.timesyncher.com' });
+    const shot = await screenshotApp(pageUrl, shotDir, { name: contact.displayName, assertShot });
+    screenshot = shot.file;
+    pageShown = shot.shown === true;
+    prior = shot.prior || [];
+  }
   const appUrl = `/?app=1&session=${encodeURIComponent(onboarding.token)}`;
   const opened = await callHandler(appHandler.default, jsonRequest('GET', appUrl, null, { host: 'vacation-staging.timesyncher.com' }));
   const turns = opened.body?.turns || [];
   const welcomeShown = opened.body?.ok === true && collaboratorWelcomeMarker() && welcomeBeforeCustomer(turns);
-  let screenshot = '';
-  let pageShown = false;
-  if (shotDir) {
-    const pageUrl = vacationAppLink(onboarding.token, { ...env, TIMESYNCHER_SITE_BASE_URL: env.TIMESYNCHER_SITE_BASE_URL || 'https://vacation-staging.timesyncher.com' });
-    const shot = await screenshotApp(pageUrl, shotDir);
-    screenshot = shot.file;
-    pageShown = shot.shown === true;
-  }
   return {
     ok: welcomeShown && pageShown,
     welcomeShown,
     pageShown,
+    prior,
     screenshot,
     tripId: onboarding.tripId,
     requestId: intake.body.requestId,
@@ -196,12 +347,25 @@ export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {})
 export function selfTestMissingWelcomeDatabase() {
   const env = { ...process.env };
   delete env.DATABASE_URL;
+  delete env.NEON_DATABASE_URL;
+  delete env.VERCEL_TOKEN;
   const child = spawnSync(process.execPath, [scriptPath, '--check'], { cwd: root, env, encoding: 'utf8' });
   const output = `${child.stdout || ''}${child.stderr || ''}`;
-  if (child.status === 0 || !output.includes(WELCOME_DATABASE_MISSING)) {
-    throw new Error(`welcome-after-intake missing-env self-test failed status=${child.status} output=${output}`);
+  if (/postgres(?:ql)?:\/\//i.test(output) || /Bearer\s+\S+/.test(output)) {
+    throw new Error('welcome-after-intake missing-env self-test leaked a secret');
   }
-  return output;
+  if (child.status === 0 || !output.includes(WELCOME_VERCEL_TOKEN_MISSING)) {
+    throw new Error(`welcome-after-intake missing-env self-test failed status=${child.status}`);
+  }
+}
+
+function writeRedacted(stream, text) {
+  stream.write(`${redactWelcomeSecrets(text)}`);
+}
+
+function argValue(flag) {
+  const index = process.argv.indexOf(flag);
+  return index === -1 ? '' : (process.argv[index + 1] || '');
 }
 
 async function main() {
@@ -211,17 +375,19 @@ async function main() {
     return;
   }
   const outDir = path.resolve(path.join(root, '.cursor/skills/verify-timesyncher-vacation/output/verify'));
+  const assertShot = argValue('--assert-shot');
   try {
-    const result = await runWelcomeAfterIntake({ shotDir: outDir });
+    const result = await runWelcomeAfterIntake({ shotDir: outDir, assertShot });
+    const line = `${redactWelcomeSecrets(JSON.stringify(result))}\n`;
     if (!result.ok) {
-      process.stderr.write(`${WELCOME_MISSING}\n`);
-      process.stdout.write(`${JSON.stringify(result)}\n`);
+      writeRedacted(process.stderr, `${WELCOME_MISSING}\n`);
+      writeRedacted(process.stdout, line);
       process.exit(1);
     }
-    process.stdout.write(`${JSON.stringify(result)}\n`);
+    writeRedacted(process.stdout, line);
   } catch (error) {
-    process.stderr.write(`${error.message || error}\n`);
-    process.exit(error.exitCode || 1);
+    writeRedacted(process.stderr, `${error?.message || WELCOME_DATABASE_FETCH_FAILED}\n`);
+    process.exit(error?.exitCode || 1);
   }
 }
 

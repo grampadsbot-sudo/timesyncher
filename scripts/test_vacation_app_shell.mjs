@@ -84,7 +84,8 @@ assert.match(acceptEula, /status !== 'joined'/);
 assert.match(acceptEula, /already_joined/);
 assert.doesNotMatch(acceptEula, /finish-rewrite/);
 assert.match(api, /ensureOnboardingOpener/);
-assert.match(api, /produceOnboardingOpener/);
+assert.match(api, /renderOnboardingWelcome/);
+assert.doesNotMatch(api, /produceOnboardingOpener/);
 assert.doesNotMatch(api, /onboardingOpenerText/);
 assert.doesNotMatch(api, /FIXED_OPENER_REASON/);
 

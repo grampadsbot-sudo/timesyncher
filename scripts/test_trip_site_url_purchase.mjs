@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 
 import { createAdminOnboarding } from '../routes/admin-onboardings.mjs';
 import { ensureOnboardingOpener } from '../routes/vacation-itinerary.mjs';
+import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { sendJson } from '../src/vacation/http.mjs';
 import { welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
@@ -223,6 +224,9 @@ try {
   );
   assert.match(welcomeInputs, /trip\?\.publicUrl/);
   assert.doesNotMatch(welcomeInputs, /assignTripSiteUrl|intakeShareSlug|sharedTripWebsiteUrl/);
+  assert.match(welcomeSource, /renderOnboardingWelcome\(await welcomeInputs\(db, session, trip\), deps\)/);
+  assert.match(welcomeSource, /onboardingWelcomeFailure\(error\?\.message, trip\.id\)/);
+  assert.doesNotMatch(welcomeSource, /produceOnboardingOpener|onboarding opener model returned no reply/);
 
   const appPage = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
   assert.match(appPage, /data\.code, data\.reason/);
@@ -234,6 +238,18 @@ try {
   const originalLog = console.log;
   console.log = (...args) => { logs.push(args); };
   try {
+    let rendered;
+    try {
+      rendered = renderOnboardingWelcome({
+        audience: 'owner',
+        firstName: 'Ada',
+        tripSiteUrl: '',
+      });
+    } catch (error) {
+      rendered = error;
+    }
+    assert.equal(rendered instanceof Error, true);
+    assert.equal(rendered.message, 'onboarding welcome missing tripSiteUrl');
     await assert.rejects(
       () => ensureOnboardingOpener(mockDb(), {
         customer_id: customerId,
@@ -245,7 +261,7 @@ try {
         id: tripId,
         publicUrl: '',
         title: 'Trip',
-      }),
+      }, {}),
       (error) => {
         assert.equal(error.message, 'onboarding welcome missing tripSiteUrl');
         assert.equal(error.statusCode, 502);
