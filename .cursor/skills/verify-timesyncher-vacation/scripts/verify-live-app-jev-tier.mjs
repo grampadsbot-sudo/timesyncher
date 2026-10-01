@@ -340,7 +340,7 @@ async function selfCheck() {
     sampleTurn({ turnIndex: 2, text: 'How much if they join as collaborators? Name unlimited vacations for the whole year.', intent: { pullsAccess: true } }),
     appTurn({ turnIndex: 3, text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' }),
     sampleTurn({ turnIndex: 4, text: 'Friday dinner on the Big Island. Name the day and the place.' }),
-    appTurn({ turnIndex: 5, text: 'Friday dinner stays in Kailua-Kona with Kimberly.' }),
+    appTurn({ turnIndex: 5, text: 'Friday dinner stays with Kimberly.' }),
   ]);
   assert.deepEqual(assertSingleUpsell(pulled), []);
   assert.ok(assertSingleUpsell(liveDoc([
