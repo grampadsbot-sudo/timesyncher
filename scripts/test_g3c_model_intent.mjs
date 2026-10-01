@@ -5,37 +5,6 @@ import { applyCustomerNotes } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, payerSeats } from '../src/vacation/seat-price.mjs';
 import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import { forecastReadings } from '../src/vacation/wind-backup.mjs';
-import { matchLinkedVacation, vacationSupportIntent, vacationSupportReply } from '../routes/vacation-telegram-turn.mjs';
-
-const vegas = { title: 'Las Vegas Strip Vacation', shareToken: 'vegas-strip' };
-const hawaii = { title: 'Big Island week', shareToken: 'big-island' };
-
-const byKeyword = matchLinkedVacation(
-  { linkedVacations: [hawaii, vegas] },
-  'Can you send the link to the Vegas vacation?',
-);
-assert.equal(byKeyword.vacation, null);
-assert.equal(byKeyword.ask, true);
-assert.deepEqual(byKeyword.titles, ['Big Island week', 'Las Vegas Strip Vacation']);
-
-const byTitle = matchLinkedVacation(
-  { customerVacations: [hawaii, vegas] },
-  'Send the Las Vegas Strip Vacation link',
-);
-assert.equal(byTitle.vacation.title, 'Las Vegas Strip Vacation');
-assert.equal(byTitle.ask, false);
-
-const onlyTrip = matchLinkedVacation({ linkedVacations: [hawaii] }, 'Send the website');
-assert.equal(onlyTrip.vacation.title, 'Big Island week');
-assert.equal(onlyTrip.ask, false);
-
-assert.equal(vacationSupportReply({
-  text: 'Send the link',
-  intent: { intent: 'website_link_question' },
-  access: { askTrip: true, tripTitles: ['Big Island week', 'Las Vegas Strip Vacation'], linked: true },
-}), 'Which trip: Big Island week; Las Vegas Strip Vacation?');
-assert.equal(vacationSupportIntent('What does this cost?'), null);
-assert.equal(vacationSupportIntent('Do I have access to the photos?'), null);
 
 const windy = forecastReadings([
   { name: 'Kahaluu', windMph: 22 },

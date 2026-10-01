@@ -262,7 +262,6 @@ assert.deepEqual(hung, []);
 
 const workerText = fs.readFileSync(new URL('./vacation-public-research-worker.mjs', import.meta.url), 'utf8');
 const poiText = fs.readFileSync(new URL('../src/vacation/poi-search.mjs', import.meta.url), 'utf8');
-const telegramText = fs.readFileSync(new URL('./telegram-vacation-intake-bot.mjs', import.meta.url), 'utf8');
 const runnerText = fs.readFileSync(new URL('./travel-source-adapter-runner.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(workerText, /places\.googleapis\.com/);
 assert.doesNotMatch(workerText, /live-google-places-new/);
@@ -272,9 +271,6 @@ assert.doesNotMatch(poiText, /\bAIRLINES\b/);
 assert.doesNotMatch(poiText, /function flightPlan/);
 assert.match(poiText, /export async function searchTavily/);
 assert.match(poiText, /jevRelevanceScore/);
-assert.match(telegramText, /google\/gemini-2\.5-flash-lite/);
-assert.doesNotMatch(telegramText, /gpt-4o-mini/);
-assert.match(telegramText, /openrouter\.ai\/api\/v1\/chat\/completions/);
 assert.match(runnerText, /async function runWanderlustGoat\(\) \{\n  return \[\];\n\}/);
 
 let tavilyFetched = false;

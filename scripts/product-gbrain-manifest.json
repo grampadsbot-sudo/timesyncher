@@ -48,10 +48,10 @@
       "mustSendOrQueueCustomerResponse": true,
       "notes": "Hosted worker may send a concise chat response, but the durable output must include a web itinerary page populated with source-linked candidates, caveats, and next verification steps. Do not mark a client-facing setup complete if it only restates intake text or creates queued placeholder artifacts.",
       "placeholderOnlyArtifactsAreIncomplete": true,
-      "telegramRequestsSendThroughBotWhenChatIdAvailable": true
+      "telegramRequestsSendThroughBotWhenChatIdAvailable": false
     },
     "placeholderRule": "If only placeholders were created, return retry/queued status or create a follow-up itinerary-generation job; do not report completed to the customer.",
-    "telegramDelivery": "For Telegram-originated onboarding_setup requests, send the initial itinerary draft back through the TimeSyncher Vacation bot when a telegramChatId is available."
+    "telegramDelivery": ""
   },
   "customerFacing": true,
   "defaultRuntime": "TimeStopper",
@@ -69,7 +69,7 @@
     },
     "supportRouter": {
       "policySkill": "timesyncher-vacation-support-router",
-      "canonicalEntrypoint": "/api/vacation-telegram-turn",
+      "canonicalEntrypoint": "",
       "runsAfterSessionCustomerLookup": true,
       "telegramBridgeMayAnswerAccountQuestions": false,
       "telegramBridgeMayUseDefaultTripToken": false,
@@ -246,7 +246,7 @@
         ],
         "telegramBotApiDownloadLimitBytes": 20971520,
         "fullProductLimitRequires": "private upload-link flow or local Telegram Bot API server before accepting raw originals near 200 MB",
-        "hostedApi": "/api/vacation-telegram-turn event=media_upload; GET action=media-list/media-download"
+        "hostedApi": ""
       }
     }
   },
@@ -262,7 +262,7 @@
         "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
-        "ctaLabel": "Add Telegram editing access for this vacation"
+        "ctaLabel": "Add collaborator editing access for this vacation"
       },
       {
         "id": "telegram_collaborator_unlimited_trips_purchase",
@@ -272,7 +272,7 @@
         "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
-        "ctaLabel": "Add Telegram editing access for this vacation"
+        "ctaLabel": "Add collaborator editing access for this vacation"
       },
       {
         "id": "photo_upload_single_vacation_purchase",
@@ -322,7 +322,7 @@
         "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
-        "ctaLabel": "Add full Telegram plus photo/video access for this vacation"
+        "ctaLabel": "Add photo and video access for this vacation"
       },
       {
         "id": "full_access_unlimited_vacations_bundle",
@@ -359,7 +359,7 @@
       "freeWhenOwnerApproved": true,
       "requiresNamedInvite": true,
       "requiresVerifiedEmail": true,
-      "telegramLinkedOwnersAndCollaboratorsMayEditFromTelegramLaunchedSiteLink": true,
+      "telegramLinkedOwnersAndCollaboratorsMayEditFromTelegramLaunchedSiteLink": false,
       "emailMagicLinksAreForNonTelegramInvitees": true,
       "possessionOfSharedUrlIsNeverEditAuthorization": true,
       "statusValues": [

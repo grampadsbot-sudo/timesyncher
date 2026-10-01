@@ -315,7 +315,7 @@ export function isAccessPricingTurn(value) {
   const source = text(value, 2000).toLowerCase();
   if (!source.includes('?') && !/\b(how much|cost|price|pricing)\b/.test(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
@@ -574,7 +574,7 @@ export function sourcedPlaceRule() {
   return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
-export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
+export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = null, planOwned = false, priceAsk = false } = {}) {
   const dollars = Number(seatDollars);
   let mode = 'forbidden';
   if (postIntake) mode = 'post-intake';
@@ -621,14 +621,13 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     upsell,
     postIntake,
     planLine,
-    seatDollars: seatDollars || 0,
+    seatDollars,
     planOwned: context.planOwned === true,
     priceAsk,
   });
   const upsellLine = `Plan facts: ${JSON.stringify(planFacts)}`;
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
-    'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
@@ -636,11 +635,9 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
-    postIntake
-      ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
-      : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
-        ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
-        : 'When the customer does not ask about access, do not add an access menu.'),
+    (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+      ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+      : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
     seatDollars && planLine ? `Seat price: $${seatDollars}. State this line exactly: ${planLine}.` : '',
     'Do not insert a welcome the customer did not ask for.',
@@ -654,7 +651,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
     'Do not put an activity on a day that is not already that activity on the saved trip record.',
     'When the customer asks to add a place, name the matches and ask "add these?" The chat box is the search. There is no separate search screen.',
-    'On the long trip dump, use the words "building the itinerary".',
     'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. A saved preference rule stays as saved. Do not call it locked in and do not rename it.',
     'When the customer asks for two options on a day, offer only activities already saved on that day or named in the question. Do not repeat a paragraph.',
     'Do not invent an activity the customer did not name.',
@@ -834,7 +830,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -860,7 +856,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planLine,
     seatDollars,
     seat,
-    planOwned,
+    planOwned, intakeReplyTurn, replyFacts,
   });
 }
 
@@ -890,7 +886,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -903,6 +899,8 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
   const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
+  const userContent = intakeReplyTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
+  const genStarted = Date.now();
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -920,9 +918,9 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         messages: [
           {
             role: 'system',
-            content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
+            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
           },
-          { role: 'user', content: JSON.stringify(request) },
+          { role: 'user', content: userContent },
         ],
       }),
       signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : 90000),
@@ -945,7 +943,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     }
     const visible = splitBeat(answer);
     if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900 };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted) };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
   }

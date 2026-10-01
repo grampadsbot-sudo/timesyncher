@@ -92,6 +92,13 @@ export function checkoutAmounts(env = process.env, { orderBump = true } = {}) {
   return amounts;
 }
 
+export function checkoutChargeDisplay({ amountCents, coupon = false, missingKey = 'TIMESYNCHER_BASE_PRICE_CENTS' } = {}) {
+  const amount = Number(amountCents);
+  if (!Number.isInteger(amount) || amount <= 0) throw new CheckoutConfigError(missingKey);
+  if (coupon) return { totalCents: 0, waivedCents: amount };
+  return { totalCents: amount, waivedCents: 0 };
+}
+
 export function checkoutOrderSummary({ orderBump = false, photoMemories = false, media = false } = {}, env = process.env) {
   const bumped = Boolean(orderBump);
   const mediaSelected = Boolean(media || photoMemories);

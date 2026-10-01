@@ -9,6 +9,9 @@ import handler from '../api/[...route].mjs';
 import { buildSha } from '../routes/version.mjs';
 import { createOnboardingSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { LocalJsonStore } from '../src/onboarding/eula-persistent-store.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { assignTripSiteUrl } from '../src/vacation/onboarding.mjs';
+import { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = path.join(root, 'dist');
@@ -40,11 +43,11 @@ function build() {
   });
 }
 
-if (!String(process.env.VERCEL_GIT_COMMIT_SHA || '').trim() && !String(process.env.TIMESYNCHER_BUILD_SHA || '').trim()) {
-  process.env.TIMESYNCHER_BUILD_SHA = '0123456789abcdef0123456789abcdef01234567';
-}
+const vercelSha = '0123456789abcdef0123456789abcdef01234567';
+process.env.VERCEL_GIT_COMMIT_SHA = vercelSha;
+delete process.env.TIMESYNCHER_BUILD_SHA;
 const expectedSha = buildSha();
-assert.ok(expectedSha, 'build sha is empty');
+assert.equal(expectedSha, vercelSha);
 
 const htmlEntries = [
   'index.html',
@@ -67,6 +70,13 @@ const htmlEntries = [
 
 await build();
 
+for (const name of ['vacation-app.html', 'shared-app.html', 'index.html']) {
+  const built = await readFile(path.join(dist, name), 'utf8');
+  const value = stampValue(built);
+  assert.ok(value, `${name} built stamp is empty`);
+  assert.equal(value, expectedSha, `${name} built stamp`);
+}
+
 const storeDir = await mkdtemp(path.join(tmpdir(), 'eula-purchase-'));
 delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL_BLOB_STORE_ID;
@@ -82,6 +92,37 @@ await createOnboardingSessionPersistent(new LocalJsonStore(storeDir), {
   google: {},
   eula: { version: '2026-06-terms-advisory-only', text: 'Terms for the purchase route.' },
 });
+
+const intakeTripId = '01234567-89ab-4cde-8f01-23456789abcd';
+const intakeTrip = {
+  id: intakeTripId,
+  title: 'Purchase trip',
+  destination: '',
+  start_date: null,
+  end_date: null,
+  metadata: {},
+};
+const purchaseDb = (strings, ...values) => {
+  const query = strings.join(' ');
+  if (/update trips/i.test(query)) {
+    const patch = values.find((value) => value && value.publicSlug);
+    intakeTrip.metadata = { ...(intakeTrip.metadata || {}), ...patch };
+    return [];
+  }
+  if (query.includes('from trips')) {
+    const meta = intakeTrip.metadata || {};
+    const shared = meta.intakeShare === true || meta.intakeShare === 'true';
+    if (meta.publicSlug === values[0] && shared && query.includes("metadata->>'intakeShare'")) return [{ ...intakeTrip }];
+    return [];
+  }
+  if (query.includes('from trip_things')) return [];
+  return [];
+};
+const assigned = await assignTripSiteUrl(purchaseDb, intakeTripId, process.env);
+assert.equal(assigned.publicSlug, intakeShareSlug(intakeTripId));
+assert.equal(assigned.publicSlug, 'intake-0123456789ab');
+assert.equal(intakeTrip.metadata.intakeShare, true);
+useSharedTripDatabase(purchaseDb);
 
 const vercel = JSON.parse(await readFile(path.join(root, 'vercel.json'), 'utf8'));
 const server = createServer(async (req, res) => {
@@ -123,12 +164,18 @@ async function get(pathname) {
   };
 }
 
+function stampValue(body) {
+  const meta = body.match(/<meta\b[^>]*\bname="timesyncher-build"[^>]*>/i);
+  const content = meta && meta[0].match(/\bcontent="([^"]*)"/i);
+  const data = body.match(/<html\b[^>]*\bdata-build-sha="([^"]*)"/i);
+  return (content && content[1]) || (data && data[1]) || '';
+}
+
 function assertStamp(result, label) {
   assert.notEqual(result.status, 404, `${label} ${result.body.slice(0, 180)}`);
-  assert.ok(
-    result.body.includes(`name="timesyncher-build" content="${expectedSha}"`),
-    `${label} missing build stamp`,
-  );
+  const value = stampValue(result.body);
+  assert.ok(value, `${label} build stamp is empty`);
+  assert.equal(value, expectedSha, `${label} stamp differs from /api/version`);
 }
 
 try {
@@ -170,17 +217,34 @@ try {
   assert.match(bundle.type, /javascript/);
   assert.match(bundle.body, /eulaSession/);
 
-  const intake = await get('/shared/intake-0123456789ab/');
+  const intake = await get(`/shared/${assigned.publicSlug}/`);
+  assert.notEqual(intake.status, 404, intake.body.slice(0, 180));
   assertStamp(intake, 'intake share');
   assert.match(intake.type, /text\/html/);
+  assert.doesNotMatch(intake.body, /Invalid or expired link/);
+
+  const intakeApi = await get(`/api/shared/${assigned.publicSlug}`);
+  assert.equal(intakeApi.status, 200, intakeApi.body.slice(0, 180));
+  assert.match(intakeApi.type, /json/);
+  const intakeBody = JSON.parse(intakeApi.body);
+  assert.ok(intakeBody.trip, intakeApi.body.slice(0, 180));
+  assert.equal(intakeBody.error, undefined);
+  assert.deepEqual(intakeBody.places, []);
+  assert.doesNotMatch(intakeApi.body, /Invalid or expired link/);
 
   const home = await get('/');
   assertStamp(home, 'home');
   assert.match(home.type, /text\/html/);
+  assert.match(home.body, /TimeSyncher/);
 
   const editAccess = await get('/edit-access');
   assertStamp(editAccess, 'edit-access');
   assert.match(editAccess.type, /text\/html/);
+
+  const editApi = await get(`/api/shared/${assigned.publicSlug}/edit-access`);
+  assert.equal(editApi.status, 200, editApi.body.slice(0, 180));
+  assert.match(editApi.type, /json/);
+  assert.equal(JSON.parse(editApi.body).canEdit, false);
 
   const trek = await get('/assets/index-BKun7ofk.js');
   assertStamp(trek, 'trek bundle');
@@ -190,6 +254,7 @@ try {
   assert.equal(trek.body.includes('async fetch(){e({notices:[],loaded:!0})}'), true);
   assert.equal(trek.body.includes('getAppConfig:()=>Promise.resolve({})'), true);
 } finally {
+  useSharedTripDatabase(null);
   await new Promise((resolve) => server.close(resolve));
   await rm(storeDir, { recursive: true, force: true });
 }

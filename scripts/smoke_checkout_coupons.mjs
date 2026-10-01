@@ -29,7 +29,9 @@ for (const file of ['index.html', 'order-test.html']) {
   assert.match(html, /id="couponCode"/, `${file} has coupon input`);
   assert.match(html, /<label(?:[^>]*)>(?:Enter coupon|Coupon)\s*<input[^>]+placeholder="(?:Enter coupon code|Coupon code)"/, `${file} uses customer-facing coupon copy`);
   assert.match(html, /\/api\/(?:create-payment-intent|checkout-coupon)/, `${file} posts to a checkout coupon endpoint`);
-  assert.match(html, /(?:No Stripe charge|Waived by coupon)/, `${file} shows no Stripe charge`);
+  assert.match(html, /id="waivedAmount"/, `${file} shows the waived amount on its own line`);
+  assert.match(html, /totalCents: 0, waivedCents: cents/, `${file} applies a full waiver to the total`);
+  assert.doesNotMatch(html, /Waived by coupon|No Stripe charge/, `${file} does not put the waiver on the tax line`);
 }
 
 const checkoutApi = readFileSync('routes/checkout-coupon.mjs', 'utf8');

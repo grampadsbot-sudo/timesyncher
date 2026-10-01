@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { stripeSecretKey } from '../src/vacation/stripe-env.mjs';
-import { sql } from '../src/vacation/db.mjs';
+import { onboardingDatabase } from './eula.mjs';
 import { buildOnboardingFromStripe, ensureVacationEulaSession, getSessionByToken, publicSession, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 import { sendJson } from '../src/vacation/http.mjs';
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
     const token = clean(url.searchParams.get('session') || url.searchParams.get('token'), 120);
     const paymentIntentId = clean(url.searchParams.get('payment_intent') || url.searchParams.get('paymentIntent'), 120);
-    const db = sql(process.env);
+    const db = onboardingDatabase();
 
     if (token) {
       const row = await getSessionByToken(db, token);

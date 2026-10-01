@@ -6,7 +6,6 @@ import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '..
 import { recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
-  collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
@@ -31,7 +30,7 @@ function requireContact(body) {
   };
 }
 
-function orderDetails(body) {
+export function orderDetails(body) {
   const summary = checkoutOrderSummary({
     orderBump: Boolean(body.orderBump),
     photoMemories: Boolean(body.photoMemories),
@@ -235,7 +234,6 @@ export default async function handler(req, res) {
         collaboratorInvite: {
           id: invite.id,
           status: invite.status,
-          telegramUrl: collaboratorTelegramLink(collaboratorInviteToken, process.env),
           vacationAppUrl: joined.vacationAppUrl,
           token: joined.token,
           payer: joined.payer,

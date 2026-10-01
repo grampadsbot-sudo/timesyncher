@@ -46,6 +46,10 @@
       "dest": "/shared-app.html"
     },
     {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
       "src": "/edit-access/?",
       "dest": "/shared-app.html"
     },
@@ -65,7 +69,7 @@
   "functions": {
     "api/[...route].mjs": {
       "maxDuration": 60,
-      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json}"
+      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json,dialog-runners/tier_models.json}"
     }
   },
   "headers": [

@@ -94,7 +94,6 @@ const former = [
   { path: '/api/track-click', handler: 'track-click' },
   { path: '/api/vacation-itinerary?app=1', handler: 'vacation-itinerary', url: '/api/vacation-itinerary?app=1' },
   { path: '/api/vacation-request', handler: 'vacation-request' },
-  { path: '/api/vacation-telegram-turn', handler: 'vacation-telegram-turn' },
   { path: '/api/version', handler: 'version' },
   { path: '/api/keepsake-order?slug=intake-example', handler: 'keepsake-order' },
   { path: '/api/worker-jobs', handler: 'worker-jobs' },
@@ -131,7 +130,7 @@ const acceptOriginal = publicApiRequest({ method: 'GET', url: '/accept/vacation-
 assert.equal(acceptOriginal.handler, 'eula');
 assert.match(acceptOriginal.url, /action=accept-page/);
 assert.match(acceptOriginal.url, /sessionId=vacation-abc/);
-assert.equal(firstRoute('/'), null);
+assert.equal(firstRoute('/').route.dest, '/index.html');
 
 const link = orderPage('intake-example', 'Big Island Family', '');
 assert.match(link, /Anyone with this link can order/);

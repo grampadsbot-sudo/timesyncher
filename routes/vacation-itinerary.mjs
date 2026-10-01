@@ -7,8 +7,6 @@ import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
-  isAllowedVacationWebsiteUrl,
-  loadWebAccessGrantBySessionToken,
   publicTripUrl,
   readCookie,
   requireWebEditAccess,
@@ -42,6 +40,9 @@ import {
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
+import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -77,23 +78,6 @@ async function handleWebAccess(req, res, db, url) {
     return sendHtml(res, 200, acceptedHtml(accepted), {
       'set-cookie': webAccessCookieHeader(accepted.sessionToken, process.env),
     });
-  }
-
-  if (req.method === 'GET' && action === 'telegram_launch') {
-    const token = cleanText(url.searchParams.get('token'), 220);
-    const requestedRedirect = cleanText(url.searchParams.get('redirect'), 600);
-    const grant = await loadWebAccessGrantBySessionToken(db, token, process.env);
-    if (!grant) return sendHtml(res, 404, '<!doctype html><title>Link expired</title><p>This Telegram website-edit link is invalid or expired. Ask the bot for a fresh vacation website link.</p>');
-    const fallbackUrl = cleanText(grant.public_url, 600) || 'https://travel.timesyncher.com';
-    const redirectUrl = requestedRedirect && isAllowedVacationWebsiteUrl(requestedRedirect, process.env)
-      ? requestedRedirect
-      : fallbackUrl;
-    res.statusCode = 302;
-    res.setHeader('cache-control', 'no-store');
-    res.setHeader('set-cookie', webAccessCookieHeader(token, process.env));
-    res.setHeader('location', redirectUrl);
-    res.end('');
-    return;
   }
 
   if (req.method === 'GET' && action === 'status') {
@@ -258,6 +242,11 @@ async function loadVacationAppTrips(db, session) {
 async function loadVacationAppTurns(db, session, tripId) {
   const customerId = transcriptCustomerId(session);
   if (!customerId || !tripId) return [];
+  const tripRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
+  const party = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
+  const collabRows = await db`select display_name from vacation_collaborators where owner_customer_id = ${customerId} and trip_id = ${tripId} and status = 'active'`;
+  const people = authorPeopleFromTrip(party, collabRows, customerId);
   const rows = await db`
     select speaker, body, channel, payload, direction, received_at, sent_at, created_at
     from transcript_turns
@@ -267,14 +256,25 @@ async function loadVacationAppTurns(db, session, tripId) {
     order by coalesce(received_at, sent_at, created_at) desc nulls last
     limit 120
   `;
-  return rows.reverse().map((row) => ({
-    speaker: row.speaker || 'customer',
-    body: row.body || '',
-    channel: row.channel || '',
-    direction: row.direction || '',
-    payload: row.payload && typeof row.payload === 'object' ? row.payload : {},
-    at: row.received_at || row.sent_at || row.created_at || null,
-  }));
+  return rows.reverse().map((row) => {
+    const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = payload.liveTranscript && typeof payload.liveTranscript === 'object' ? payload.liveTranscript : {};
+    const turn = {
+      speaker: row.speaker || 'customer',
+      body: row.body || '',
+      channel: row.channel || '',
+      direction: row.direction || '',
+      payload,
+      authorName: String(payload.authorName || live.speakerName || ''),
+      authorId: String(payload.authorId || ''),
+      at: row.received_at || row.sent_at || row.created_at || null,
+    };
+    const named = turnAuthorLabel(turn, session, people);
+    turn.authorLabel = named.label;
+    if (named.reason) turn.authorLabelReason = named.reason;
+    if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
+    return turn;
+  });
 }
 
 function welcomeFirstName(value) {
@@ -282,15 +282,9 @@ function welcomeFirstName(value) {
   return text ? text.split(/\s+/)[0] : '';
 }
 
-function welcomeTripSiteUrl(trip) {
-  const existing = String(trip?.publicUrl || '').trim();
-  const slug = existing ? '' : intakeShareSlug(trip?.id);
-  return existing || (slug ? publicTripUrl({ metadata: { publicSlug: slug } }, process.env) : '');
-}
-
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
-  const tripSiteUrl = welcomeTripSiteUrl(trip);
+  const tripSiteUrl = String(trip?.publicUrl || '').trim();
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`
@@ -497,6 +491,8 @@ async function queueVacationAppTurn(db, session, trip, body) {
     browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
     selectedTripId: tripId,
     liveTranscript: customerLive,
+    authorName: speakerName,
+    authorId: session.customer_id || null,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
     roster: jobFields.roster,
@@ -657,8 +653,11 @@ async function queueVacationAppTurn(db, session, trip, body) {
     };
   }
   if (!produced.reply) {
-    await db`delete from transcript_turns where id = ${turnRows[0].id}`;
-    return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
+    const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
+    payload.replyFailure = replyFailure;
+    customerLive.replyFailure = replyFailure;
+    await storeReplyFailure(db, turnRows[0].id, payload);
+    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
   }
 
   const appLive = liveTurnRecord({
@@ -720,6 +719,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     ok: true,
     status: 'replied',
     reply: produced.reply,
+    ...appReplyTelemetry(appLive),
     appTurnIndex: appLive.turnIndex,
     itinerary,
     vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
@@ -956,11 +956,7 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0]
       || null;
     const eula = await vacationAppEula(session, process.env);
-    let welcomeError = null;
-    if (selected && eula.accepted) {
-      try { await ensureOnboardingOpener(db, session, selected); }
-      catch (error) { welcomeError = error.welcomeError || { reason: String(error.message || ''), tripId: String(selected.id || ''), missing: [] }; }
-    }
+    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
     if (selected) await publishIntakeShare(db, selected.id);
     const published = selected ? await loadVacationAppTrips(db, session) : vacations;
@@ -972,12 +968,12 @@ async function handleVacationApp(req, res, db, url) {
         token: session.token,
         status: session.status,
         customerName: seat?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        viewerId: session.customer_id || null,
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
-      welcomeError,
       vacations: published,
       turns,
       itinerary,
@@ -1003,65 +999,11 @@ async function handleVacationApp(req, res, db, url) {
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
-      const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
-      const appLive = liveTurnRecord({
-        turnIndex: Number(pending.customerTurnIndex) + 1,
-        role: 'app',
-        modality: 'text',
-        text: finished.reply,
-        at: new Date().toISOString(),
-        latencyMs: wallMs,
-        sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
-        jev: finished.jev,
-        model: finished.model,
-        rules: finished.rules,
-        speakerName: pending.speakerName || null,
+      const shipped = await commitShippedRewrite(db, session, pending, finished, {
+        recordCustomerThingNotes,
+        publishIntakeShare,
       });
-      await db`
-        insert into transcript_turns (
-          customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-          sent_at, response_latency_ms
-        )
-        values (
-          ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
-          ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
-          'outbound', now(), ${wallMs}
-        )
-      `;
-      const itinerary = await recordCustomerThingNotes(
-        db,
-        pending.tripId,
-        pending.customerTurn,
-        {
-          collaborator: pending.collaborator === true,
-          speakerName: pending.speakerName || '',
-          appReply: finished.reply,
-          roster: Array.isArray(pending.roster) ? pending.roster : [],
-          rosterError: pending.rosterError || null,
-          askRoster: Boolean(pending.rosterError),
-          extractedDestination: pending.extractedDestination || '',
-          extractedTitle: pending.extractedTitle || '',
-          destinationError: pending.destinationError || null,
-          titleError: pending.titleError || null,
-        },
-        pending.postIntake === true ? pending.customerTurn : '',
-        pending.wantedThings || [],
-      );
-      if (itinerary.length) await publishIntakeShare(db, pending.tripId);
-      await db`
-        update onboarding_sessions
-        set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
-          updated_at = now()
-        where id = ${session.id}
-      `;
-      return sendJson(res, 200, {
-        ok: true,
-        status: 'replied',
-        reply: finished.reply,
-        interimReply: finished.log?.interimReply || pending.interimReply || null,
-        itinerary,
-        error: null,
-      });
+      return sendJson(res, 200, shipped);
     }
     if (body.action === 'record-party') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
@@ -1209,7 +1151,7 @@ export default async function handler(req, res) {
         telegram_message_id text,
         telegram_chat_id text,
         telegram_user_id text,
-        storage_provider text not null default 'telegram',
+        storage_provider text not null default 'url',
         status text not null default 'active',
         metadata jsonb not null default '{}'::jsonb,
         created_at timestamptz not null default now(),
@@ -1218,15 +1160,13 @@ export default async function handler(req, res) {
     `;
     const media = await db`
       select id, public_token, media_kind, attachment_scope, day_date, caption, mime_type,
-        file_size_bytes, width, height, duration_seconds, created_at
+        file_size_bytes, width, height, duration_seconds, storage_provider, created_at
       from vacation_media_uploads
       where trip_id = ${session.trip_id}
         and status = 'active'
       order by created_at desc
       limit 200
     `;
-    const origin = `https://${req.headers.host || 'vacation.timesyncher.com'}`;
-
     if (isStagingHost(req)) {
       res.setHeader('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
@@ -1244,20 +1184,26 @@ export default async function handler(req, res) {
       sections: groupBy(things, 'category'),
       things,
       budgets,
-      media: media.map((item) => ({
-        id: item.id,
-        kind: item.media_kind,
-        attachmentScope: item.attachment_scope,
-        dayDate: item.day_date,
-        caption: item.caption,
-        mimeType: item.mime_type,
-        fileSizeBytes: item.file_size_bytes,
-        width: item.width,
-        height: item.height,
-        durationSeconds: item.duration_seconds,
-        createdAt: item.created_at,
-        url: `${origin}/api/vacation-telegram-turn?action=media-download&id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(item.public_token)}`,
-      })),
+      media: media.flatMap((item) => {
+        if (item.storage_provider === 'telegram') {
+          console.error(`skipped vacation media ${item.id}: storage_provider=telegram is not fetched`);
+          return [];
+        }
+        return [{
+          id: item.id,
+          kind: item.media_kind,
+          attachmentScope: item.attachment_scope,
+          dayDate: item.day_date,
+          caption: item.caption,
+          mimeType: item.mime_type,
+          fileSizeBytes: item.file_size_bytes,
+          width: item.width,
+          height: item.height,
+          durationSeconds: item.duration_seconds,
+          createdAt: item.created_at,
+          storageProvider: item.storage_provider,
+        }];
+      }),
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {

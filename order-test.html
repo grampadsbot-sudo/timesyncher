@@ -182,6 +182,7 @@
               <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
               <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">unlimited</span><strong id="unlimitedPrice"></strong></div>
               <div class="summary-row" id="photoRow" hidden><span id="photoName">owner_media</span><strong id="photoPrice"></strong></div>
+              <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>
               <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
               <div class="summary-row total"><span>Total today</span><strong id="total"></strong></div>
             </div>
@@ -265,7 +266,6 @@
     const paymentElementMount = document.getElementById('paymentElement');
     const videoBox = document.querySelector('.video-box');
     const checkoutPanel = document.querySelector('.order-grid > .panel:last-child');
-
     let stripe;
     let elements;
     let paymentElement;
@@ -279,12 +279,12 @@
       return '$' + (cents / 100).toFixed(0);
     }
 
-    function productLabel(name) {
-      return String(name || '').replace(/ - /g, ' – ');
+    function pricedCents(amount, key) {
+      const cents = Number(amount);
+      if (!Number.isInteger(cents) || cents <= 0) throw new Error('checkout config missing: ' + key);
+      return cents;
     }
-
     let productConfig = {};
-
     function hasCoupon() {
       return couponCode.value.trim().length > 0;
     }
@@ -293,15 +293,20 @@
       return productConfig.products?.media || {};
     }
 
+    function orderCents() {
+      let cents = pricedCents(productConfig.products?.single?.amount, 'TIMESYNCHER_BASE_PRICE_CENTS');
+      if (bump.checked) cents += pricedCents(productConfig.products?.unlimited?.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+      if (photoMemories.checked) cents += pricedCents(activePhotoProduct().amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS');
+      return cents;
+    }
+
     function syncPhotoCopy() {
       const photos = activePhotoProduct();
-      const photoAmount = Number(photos.amount);
-      const priced = Number.isFinite(photoAmount) && photoAmount > 0;
       photoName.textContent = photos.name || 'owner_media';
-      photoPrice.textContent = priced ? '+' + money(photoAmount) : '';
-      photoRow.hidden = !photoMemories.checked;
       photoTitle.textContent = photos.name || 'owner_media';
       photoDescription.textContent = photos.description || '';
+      photoPrice.textContent = photoMemories.checked ? '+' + money(pricedCents(photos.amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS')) : '';
+      photoRow.hidden = !photoMemories.checked;
     }
 
     function applyProductCopy(config) {
@@ -309,9 +314,9 @@
       const single = config.products?.single || {};
       const unlimited = config.products?.unlimited || {};
       singleName.textContent = single.name || 'single';
-      singlePrice.textContent = single.amount ? money(single.amount) : '';
+      singlePrice.textContent = money(pricedCents(single.amount, 'TIMESYNCHER_BASE_PRICE_CENTS'));
       unlimitedName.textContent = unlimited.name || 'unlimited';
-      unlimitedPrice.textContent = unlimited.amount ? '+' + money(unlimited.amount) : '';
+      unlimitedPrice.textContent = '+' + money(pricedCents(unlimited.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'));
       bumpRow.hidden = !bump.checked;
       bumpTitle.textContent = unlimited.name || 'unlimited';
       bumpDescription.textContent = unlimited.description || '';
@@ -324,18 +329,7 @@
 
     function stripeCountryCode(country) {
       const normalized = String(country || '').trim().toLowerCase();
-      const map = {
-        'united states': 'US',
-        'us': 'US',
-        'usa': 'US',
-        'canada': 'CA',
-        'ca': 'CA',
-        'united kingdom': 'GB',
-        'uk': 'GB',
-        'gb': 'GB',
-        'australia': 'AU',
-        'au': 'AU',
-      };
+      const map = { 'united states': 'US', us: 'US', usa: 'US', canada: 'CA', ca: 'CA', 'united kingdom': 'GB', uk: 'GB', gb: 'GB', australia: 'AU', au: 'AU' };
       return map[normalized] || (normalized.length === 2 ? normalized.toUpperCase() : 'US');
     }
 
@@ -376,16 +370,23 @@
     }
 
     function updateTotal() {
-      const bumped = bump.checked;
-      const photos = photoMemories.checked;
-      const photoProduct = activePhotoProduct();
-      bumpRow.hidden = !bumped;
-      photoRow.hidden = !photos;
-      syncPhotoCopy();
-      const bumpAmount = Number(productConfig.products?.unlimited?.amount);
-      const cents = Number(productConfig.products?.single?.amount || 0) + (bumped && Number.isFinite(bumpAmount) ? bumpAmount : 0) + (photos ? (Number(photoProduct.amount) || 0) : 0);
-      total.textContent = hasCoupon() ? '$0 with coupon' : money(cents);
-      tax.textContent = hasCoupon() ? 'No Stripe charge' : 'Calculated by Stripe';
+      const waivedRow = document.getElementById('waivedRow');
+      const waivedAmount = document.getElementById('waivedAmount');
+      bumpRow.hidden = !bump.checked;
+      photoRow.hidden = !photoMemories.checked;
+      tax.textContent = 'Calculated by Stripe';
+      try {
+        syncPhotoCopy();
+        const cents = orderCents();
+        const charge = hasCoupon() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };
+        waivedRow.hidden = charge.waivedCents <= 0;
+        waivedAmount.textContent = charge.waivedCents ? money(charge.waivedCents) : '';
+        total.textContent = money(charge.totalCents);
+      } catch (error) {
+        waivedRow.hidden = true;
+        total.textContent = '';
+        setStatus(error.message, true);
+      }
     }
 
     async function loadStripeConfig() {
@@ -412,8 +413,7 @@
         paymentReady = false;
         payBtn.disabled = false;
         payBtn.textContent = 'Redeem coupon';
-        total.textContent = '$0 with coupon';
-        tax.textContent = 'No Stripe charge';
+        updateTotal();
         return true;
       }
       if (stripe && elements && paymentElement && paymentReady && currentOrderBump === requestedOrderBump && currentPhotoMemories === requestedPhotoMemories) {

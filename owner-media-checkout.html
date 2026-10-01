@@ -49,7 +49,7 @@
     <section>
       <div class="brand">TimeSyncher Vacation</div>
       <h1>Owner media add-ons</h1>
-      <p>Add photo and video upload access for the owner account. This checkout is separate from adding a Telegram collaborator.</p>
+      <p>Add photo and video upload access for the owner account. This checkout is separate from collaborator access.</p>
       <form id="form">
         <fieldset>
           <legend>Owner contact</legend>
@@ -92,7 +92,7 @@
       <h2>Order summary</h2>
       <div class="summary-row" id="photoRow"><span id="mediaName">owner_media</span><strong id="photoTotal"></strong></div>
       <div class="summary-row" id="videoRow" hidden><span>owner_media</span><strong id="videoTotal"></strong></div>
-      <div class="summary-row" id="couponRow" hidden><span>Media add-on coupon</span><strong>Covers selected media after validation</strong></div>
+      <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>
       <div class="summary-row"><span>Estimated tax</span><strong>Calculated at checkout</strong></div>
       <div class="summary-row total"><span>Total today</span><strong id="total"></strong></div>
       <p>After checkout, plan owner_media is active on the owner account.</p>
@@ -135,7 +135,7 @@
     }
 
     function money(cents) {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format((cents || 0) / 100);
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(cents / 100);
     }
 
     function contactPayload() {
@@ -152,7 +152,9 @@
     }
 
     function totalCents() {
-      return Number(mediaCents) || 0;
+      const amount = Number(mediaCents);
+      if (!Number.isInteger(amount) || amount <= 0) throw new Error('checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
+      return amount;
     }
 
     function couponMode() {
@@ -174,19 +176,23 @@
     }
 
     function updateSummary() {
+      try {
       const priced = totalCents();
-      document.getElementById('photoPrice').textContent = priced ? money(priced) : '';
-      document.getElementById('photoTotal').textContent = priced ? money(priced) : '';
+      const charge = couponMode() ? { totalCents: 0, waivedCents: priced } : { totalCents: priced, waivedCents: 0 };
+      document.getElementById('photoPrice').textContent = money(priced);
+      document.getElementById('photoTotal').textContent = money(priced);
       document.getElementById('videoTotal').textContent = '';
       document.getElementById('photoRow').hidden = false;
       document.getElementById('videoRow').hidden = true;
-      document.getElementById('couponRow').hidden = !couponMode();
-      const total = totalCents();
-      const totalText = couponMode() ? '$0 after valid coupon' : money(total);
-      accessTotal.textContent = totalText;
-      document.getElementById('total').textContent = totalText;
+      document.getElementById('waivedRow').hidden = charge.waivedCents <= 0;
+      document.getElementById('waivedAmount').textContent = charge.waivedCents ? money(charge.waivedCents) : '';
+      accessTotal.textContent = money(charge.totalCents);
+      document.getElementById('total').textContent = money(charge.totalCents);
       submit.textContent = couponMode() ? 'Redeem coupon' : 'Pay securely';
       paymentReady = false;
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
     }
 
     function cardBrand(number) {
@@ -297,9 +303,16 @@
     couponCode.addEventListener('input', updateSummary);
     loadOwnerContact();
     fetch('/api/checkout-config')
-      .then((response) => response.json())
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          const missing = data.checkout?.missing?.[0];
+          throw new Error(missing ? 'checkout config missing: ' + missing : (data.error || 'checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS'));
+        }
+        return data;
+      })
       .then((data) => {
-        mediaCents = data?.products?.media?.amount ?? null;
+        mediaCents = data?.products?.media?.amount;
         const mediaName = data?.products?.media?.name;
         if (mediaName) {
           document.getElementById('mediaPlan').textContent = mediaName;
@@ -307,14 +320,20 @@
         }
         updateSummary();
       })
-      .catch(() => {});
-    updateSummary();
+      .catch((error) => setStatus(error.message || 'checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS', 'error'));
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
-      if (totalCents() < 50) {
-        setStatus('Media price is not configured yet.', 'error');
+      let priced;
+      try {
+        priced = totalCents();
+      } catch (error) {
+        setStatus(error.message, 'error');
+        return;
+      }
+      if (priced < 50) {
+        setStatus('checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS', 'error');
         return;
       }
       submit.disabled = true;

@@ -6,7 +6,6 @@ import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/
 import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
-  collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
@@ -155,7 +154,7 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
     currency: CURRENCY,
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
-    description: 'TimeSyncher Vacation Telegram access',
+    description: 'Collaborator access for this vacation',
     metadata: {
       product: 'timesyncher_vacation_telegram_collaborator',
       invite_id: selected.invite.id,
@@ -238,7 +237,6 @@ async function completeStagingCollaboratorCheckout({ db, token, contact, card = 
     collaboratorInvite: {
       id: invite.id,
       status: invite.status,
-      telegramUrl: collaboratorTelegramLink(token, env),
       tripTitle: invite.trip_title || null,
       requestedFor: contact.displayName,
     },
@@ -496,9 +494,6 @@ export default async function handler(req, res) {
           tripId: clean(body.tripId, 80),
           planCode: clean(body.planCode || body.scope || 'single_trip', 80),
           requestedFor: clean(body.requestedFor, 180),
-          metadata: {
-            requestedByTelegramChatId: clean(body.telegramChatId, 120) || null,
-          },
         });
         return send(res, 200, checkout);
       } catch (error) {

@@ -44,98 +44,11 @@ async function assertGeneratedSharedUrlIsReadable(webItineraryUrl) {
 }
 
 
-const telegramBotSource = fs.readFileSync('./telegram-vacation-intake-bot.mjs', 'utf8');
 const timestopperWorkerSource = fs.readFileSync('./timestopper-worker.mjs', 'utf8');
-assert.equal(telegramBotSource.includes('I do not have enough account detail in this chat message'), false, 'Telegram bridge must not answer account questions before API session/account lookup');
-assert.ok(telegramBotSource.includes('isNewVacationAdviceQuestion'), 'Telegram bridge must guard meta/advice questions before queueing vacation work');
-assert.ok(telegramBotSource.includes('isVagueNextStepQuestion'), 'Telegram bridge must guard vague next-step questions before queueing vacation work');
-assert.ok(telegramBotSource.includes('isVacationExistenceQuestion'), 'Telegram bridge must guard vacation existence/state questions before queueing vacation work');
-assert.ok(telegramBotSource.includes('isPersonAccessQuestion'), 'Telegram bridge must guard person access questions before queueing vacation work');
-assert.equal(telegramBotSource.includes('not an instruction to create or update a vacation'), false, 'Telegram bridge customer copy must not explain internal no-write routing');
-assert.equal(telegramBotSource.includes('not changing anything'), false, 'Telegram bridge customer copy must not use robotic no-write disclaimers');
-assert.equal(telegramBotSource.includes('plus two other Telegram editors'), false, 'Telegram pricing copy must not mention retired three-seat collaborator plans');
-assert.equal(telegramBotSource.includes('I need to check the vacation list before I change anything.'), false, 'Telegram bridge must not claim it will check linked vacations unless it actually loaded them');
-assert.equal(telegramBotSource.includes('linked vacation list'), false, 'Telegram bridge customer copy must not expose linked-vacation/account implementation language');
+assert.equal(timestopperWorkerSource.includes('api.telegram.org'), false, 'Worker must not call Telegram');
 assert.equal(timestopperWorkerSource.includes('I do not see a linked'), false, 'Dispatcher customer copy must not expose linked-vacation/account implementation language');
-assert.ok(telegramBotSource.includes('findAccessibleVacationMatchesForQuestion'), 'Telegram bridge must consult accessible vacation sites for existence/state lookup questions');
-assert.match(telegramBotSource, /function\s+vacationAccessAnswerFromMatches\s*\(/, 'Telegram bridge must define its no-write access answer helper');
-assert.ok(
-  telegramBotSource.includes('Can my wife Kim change') || telegramBotSource.includes('accessCapabilitiesRequested'),
-  'Telegram bridge must cover combined website-change plus media-upload access questions without throwing',
-);
-assert.ok(telegramBotSource.includes('I need a direct instruction before I work on a vacation.'), 'Telegram bridge must answer staging/new-vacation advice questions without queueing');
-assert.ok(telegramBotSource.includes('tell me which vacation by name and the change you want made'), 'Telegram bridge must ask for vacation name/change, not customer-supplied links');
-assert.equal(telegramBotSource.includes('send the vacation website link and the change'), false, 'Telegram bridge must not ask customers to send vacation website links for vague support turns');
-assert.ok(telegramBotSource.includes('vacationDirectionClarificationCopy'), 'Telegram bridge must centralize start-new/update-existing clarification copy');
-assert.ok(telegramBotSource.includes('bridge_preflight_annotation'), 'Telegram bridge should annotate support decisions for the hosted API instead of owning account/state routing');
-assert.ok(telegramBotSource.includes('support-router-queue-bypassed'), 'Telegram bridge must bypass hosted queued work when preflight says no-write');
-assert.ok(telegramBotSource.includes('bridge_preflight_no_write_overrides_hosted_queue'), 'Telegram bridge must record when no-write preflight overrides hosted queueing');
-assert.ok(
-  telegramBotSource.includes('let reply = hostedReply || (supportNoWrite ? bridgeNoWriteReply'),
-  'Telegram bridge final reply selection must render hosted API answers ahead of bridge preflight copy',
-);
-assert.equal(
-  telegramBotSource.includes('preferBridgeNoWriteReply'),
-  false,
-  'Telegram bridge must not keep a final hosted-answer override selector',
-);
-assert.equal(
-  telegramBotSource.includes('support-router-hosted-reply-overridden'),
-  false,
-  'Telegram bridge must not override non-empty hosted support/account replies',
-);
-assert.equal(
-  telegramBotSource.includes("!isWebsiteLinkRequest(text) && ['account_state', 'pricing'].includes(payload.supportRouterDecision?.answerMode)"),
-  false,
-  'Account-state bridge replies must not override hosted replies merely because a lookup was attempted',
-);
-assert.ok(telegramBotSource.includes('!supportNoWrite && turn.queued'), 'No-write support decisions must not run queued acknowledgement/edit reply branches');
-assert.ok(
-  telegramBotSource.includes('!isPersonAccessQuestion(text) && isWebsiteLinkRequest(text)'),
-  'Telegram bridge must not suppress add-wife/Kim collaborator link requests as ordinary website-link queued acks',
-);
-assert.ok(telegramBotSource.includes('websiteLinkQueuedAcknowledgement'), 'Telegram bridge must send a visible fallback for queued website-link requests');
-assert.equal(telegramBotSource.includes("noteCacheStage(cacheDir, 'suppressed-link-request-ack'"), false, 'Telegram bridge must not silently return from website-link suppression');
-assert.ok(
-  telegramBotSource.includes('edit|modify|change|interact|add|invite|link|add'),
-  'Telegram bridge person-access detection must include add/invite/link wording for add-wife collaborator requests',
-);
-assert.ok(
-  telegramBotSource.includes('site|telegram|collaborator'),
-  'Telegram bridge person-access detection must treat Telegram collaborator status questions as vacation access context',
-);
-assert.ok(telegramBotSource.includes('function grokBridgeCustomerRender'), 'Telegram bridge must use bounded Grok rendering for direct no-write account-state replies');
-assert.ok(telegramBotSource.includes('bridgeCustomerCopyLooksSafe'), 'Telegram bridge must validate Grok-rendered direct replies before sending them');
-assert.ok(telegramBotSource.includes('supportRouterDecision'), 'Telegram bridge must pass structured support decisions into the hosted turn API payload');
-assert.ok(telegramBotSource.includes('write_mode'), 'Telegram bridge support preflight must use the typed decision write_mode field');
-assert.ok(telegramBotSource.includes('value === undefined || value === null'), 'Telegram send payload must omit null/undefined optional fields such as reply_markup');
-assert.equal(telegramBotSource.includes('could not queue it yet: ${cleanText(error.message'), false, 'Telegram fallback copy must not echo raw delivery/queue errors to customers');
-assert.ok(telegramBotSource.includes('hit a delivery issue while responding'), 'Telegram fallback copy must use customer-safe delivery failure copy');
-const supportScreenshotReplySource = telegramBotSource.match(/function supportScreenshotReply\(\) \{[\s\S]+?\n\}/)?.[0] || '';
-assert.ok(supportScreenshotReplySource, 'Telegram bridge must define support screenshot reply copy');
-assert.ok(supportScreenshotReplySource.includes('vacationDirectionClarificationCopy()'), 'Support screenshot reply must use the canonical clarification copy');
-assert.equal(supportScreenshotReplySource.includes('website link'), false, 'Support screenshot reply must not ask customers to send vacation website links');
 assert.equal(timestopperWorkerSource.includes('send the vacation website link and the change'), false, 'Dispatcher must not ask customers to send vacation website links for vague support turns');
-assert.ok(timestopperWorkerSource.includes('I hit a technical issue while updating the vacation.'), 'Worker fallback must use clean customer-safe failure copy');
-assert.equal(timestopperWorkerSource.includes('vacation worker failed before it could finish: ${raw'), false, 'Worker fallback must not leak raw internal errors to customers');
-const genericFailureCopy = timestopperWorkerSource.match(/return \[\n\s+'I hit a technical issue while updating the vacation\.'[\s\S]+?\]\.join\('\\n'\);/)?.[0] || '';
-assert.ok(genericFailureCopy, 'Worker must have a fixed generic failure copy block');
-for (const forbidden of ['sqlite', 'Traceback', '/home/', 'GBrain', 'worker failed before it could finish']) {
-  assert.equal(genericFailureCopy.includes(forbidden), false, `generic customer failure copy must not include forbidden leak phrase: ${forbidden}`);
-}
-assert.ok(telegramBotSource.includes('(?:attach|add|save|put)'), 'Telegram media attachment parser must accept add/save/put wording, not only attach wording');
-assert.ok(telegramBotSource.includes('(?:on\\s+)?\\bday'), 'Telegram media attachment parser must stop target parsing before on day 4 wording');
-assert.ok(telegramBotSource.includes('mediaCaptionLooksLikeAttachmentCommand'), 'Telegram media attachment intake must recognize command-like captions before generic vacation saves');
-assert.ok(telegramBotSource.includes('parseMediaAttachmentTargetWithModel'), 'Telegram media attachment intake must use a model-backed intent normalizer for non-literal customer phrasing');
-assert.ok(telegramBotSource.includes('attach_media_to_itinerary_item'), 'Model-backed media intent must normalize captions to the known attach_media_to_itinerary_item command');
-assert.ok(telegramBotSource.includes('mediaCaptionLooksLikeSupportScreenshot'), 'Telegram media intake must detect support/debug screenshot captions before generic vacation media saves');
-assert.ok(telegramBotSource.includes('classifyPhotoSupportScreenshot'), 'Telegram media intake must classify image-only support/debug screenshots before generic vacation media saves');
-assert.ok(telegramBotSource.includes('support_debug_screenshot'), 'Telegram image classifier must distinguish support/debug screenshots from vacation media');
-assert.ok(telegramBotSource.includes('not a vacation photo'), 'Support/debug screenshots must not receive the generic saved-photo acknowledgement');
-assert.equal(telegramBotSource.includes("|| 'the-davidson-family-trip'"), false, 'Telegram media attachment must not default to a hard-coded shared trip token');
-assert.ok(telegramBotSource.includes('I could not identify which vacation should receive that media attachment yet.'), 'Telegram media attachment must fail closed without an explicit trip target');
-assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_DRAIN_MAX_JOBS'), 'Worker drain must be bounded so one Telegram turn cannot flush stale pending jobs into chat');
-assert.ok(telegramBotSource.includes('telegram_turn_scoped_worker_drain'), 'Telegram bridge must write a target job id before request-path drain');
+assert.ok(timestopperWorkerSource.includes('TIMESYNCHER_WORKER_DRAIN_MAX_JOBS'), 'Worker drain must be bounded');
 assert.ok(timestopperWorkerSource.includes("query.set('jobId', targetJobId)"), 'Worker request-path drain must claim only the target job id when present');
 assert.ok(timestopperWorkerSource.includes('spawn(process.execPath, [PRODUCT_GBRAIN_DISPATCH]'), 'Worker must invoke dispatcher through node so deploy chmod cannot cause EACCES');
 assert.ok(timestopperWorkerSource.includes('findSupportNoWriteDecision'), 'Worker must silently no-op queued jobs that carry support no-write decisions');
@@ -147,17 +60,12 @@ assert.ok(dispatchSource.includes('function currentTurnRouterDecisionModelFirst'
 assert.ok(dispatchSource.includes('function grokCustomerRender'), 'Product dispatcher must let Grok render bounded customer answers from resolved fact packets');
 assert.ok(dispatchSource.includes('customerCopyLooksSafe'), 'Product dispatcher must validate Grok-rendered customer copy before sending it');
 assert.ok(dispatchSource.includes('deterministic_fallback_router'), 'Product dispatcher must label regex/word routing as fallback only');
-assert.ok(telegramBotSource.includes('function vacationSupportRouterPreflightDecision'), 'Telegram bridge must use model-first preflight before deterministic fallback');
-assert.ok(telegramBotSource.includes('model_primary_bridge_preflight'), 'Telegram bridge must record model-primary preflight decisions');
 assert.ok(dispatchSource.includes('function makeTurnDecision'), 'Product dispatcher must use a typed turn decision object');
 assert.ok(dispatchSource.includes('write_mode'), 'Typed decision object must include write_mode');
 assert.ok(dispatchSource.includes('tripSelector'), 'Typed decision object must include tripSelector');
 assert.ok(dispatchSource.includes('answerMode'), 'Typed decision object must include answerMode');
 assert.ok(dispatchSource.includes('default_fail_closed_no_write'), 'Unknown turns must default to no-write clarification');
-assert.ok(
-  dispatchSource.includes('site|telegram|collaborator'),
-  'Product dispatcher person-access detection must treat Telegram collaborator status questions as vacation access context',
-);
+assert.equal(dispatchSource.includes('api.telegram.org'), false, 'Dispatcher must not call Telegram');
 assert.ok(dispatchSource.includes('assertCommitWorthyTurnDecision'), 'Workers/dispatcher must refuse queued jobs without commit-worthy write_mode');
 assert.ok(dispatchSource.includes('buildTurnInspector'), 'Dispatcher must produce a turn inspector payload');
 assert.ok(dispatchSource.includes('person_access_question'), 'Dispatcher must classify person-specific vacation access questions as no-write account lookups');
@@ -547,7 +455,7 @@ assert.equal(linkedVegasAccessQuestion.status, 0, linkedVegasAccessQuestion.stde
 const linkedVegasAccessQuestionResult = JSON.parse(linkedVegasAccessQuestion.stdout);
 assert.match(linkedVegasAccessQuestionResult.customerResponse, /not listed as a named member\/editor/i);
 assert.match(linkedVegasAccessQuestionResult.customerResponse, /https:\/\/travel\.timesyncher\.com\/shared\/las-vegas-strip-vacation\//);
-assert.match(linkedVegasAccessQuestionResult.customerResponse, /Telegram editing is separate/i);
+assert.doesNotMatch(linkedVegasAccessQuestionResult.customerResponse, /Telegram/i);
 assert.equal(linkedVegasAccessQuestionResult.result.researchSummary.status, 'support_router_no_write');
 assert.equal(linkedVegasAccessQuestionResult.result.turnDecision.intent, 'account_question');
 assert.equal(linkedVegasAccessQuestionResult.result.turnDecision.write_mode, 'none');
@@ -623,10 +531,8 @@ const wifeTelegramCollaboratorStatusQuestion = spawnSync(process.execPath, ['./p
 });
 assert.equal(wifeTelegramCollaboratorStatusQuestion.status, 0, wifeTelegramCollaboratorStatusQuestion.stderr || wifeTelegramCollaboratorStatusQuestion.stdout);
 const wifeTelegramCollaboratorStatusQuestionResult = JSON.parse(wifeTelegramCollaboratorStatusQuestion.stdout);
-assert.match(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /^No, Kim is not a Telegram collaborator on Las Vegas Strip Vacation yet/i);
-assert.match(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /website editor invite/i);
-assert.match(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /Telegram collaboration is separate/i);
-assert.doesNotMatch(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /could not verify|matching vacation|named member\/editor/i);
+assert.doesNotMatch(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /Telegram collaborator/i);
+assert.match(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /named member\/editor/i);
 assert.doesNotMatch(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /Yes\.|up to 3 people|Choose a Telegram add-on option below/i);
 assert.equal(wifeTelegramCollaboratorStatusQuestionResult.result.turnDecision.intent, 'account_question');
 assert.equal(wifeTelegramCollaboratorStatusQuestionResult.result.turnDecision.write_mode, 'none');

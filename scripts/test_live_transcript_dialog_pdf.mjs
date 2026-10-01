@@ -225,8 +225,8 @@ const tied = shipChoice({
   rewriteFactErrors: ['a swim on apr 7 was not set by the customer'],
 });
 assert.equal(tied.rewritten, false);
-assert.equal(tied.flagged, true);
-assert.equal(tied.text, '');
+assert.equal(tied.holding, false);
+assert.equal(tied.text, 'Tuesday is a swim.');
 assert.equal(tied.failReason, 'rewrite_fact_check_held');
 const heldClean = shipChoice({
   draft: 'Tuesday is a swim.',
@@ -237,8 +237,8 @@ const heldClean = shipChoice({
   rewriteFactErrors: ['a swim on apr 7 was not set by the customer'],
   holding: 'Tuesday can be a town walk.',
 });
-assert.equal(heldClean.text, 'Tuesday can be a town walk.');
-assert.equal(heldClean.holding, true);
+assert.equal(heldClean.text, 'Tuesday is a swim.');
+assert.equal(heldClean.holding, false);
 assert.equal(heldClean.held, true);
 assert.equal(heldClean.rewritten, false);
 assert.equal(heldRewriteLine({

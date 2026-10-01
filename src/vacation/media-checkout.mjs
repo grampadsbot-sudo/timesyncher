@@ -1,5 +1,5 @@
 import { cleanText, upsertCustomer } from './onboarding.mjs';
-import { requiredConfigCents } from './checkout-pricing.mjs';
+import { CheckoutConfigError, requiredConfigCents } from './checkout-pricing.mjs';
 
 const OWNER_MEDIA_PLAN = 'owner_media';
 
@@ -64,8 +64,8 @@ export function ownerMediaAddOns(body = {}, env = process.env) {
 
 export function requireOwnerMediaAddOns(body = {}, env = process.env) {
   const addOns = ownerMediaAddOns(body, env);
-  if (!Number.isFinite(addOns.amountCents) || addOns.amountCents < 50) {
-    throw Object.assign(new Error('Invalid owner media amount.'), { statusCode: 400 });
+  if (!Number.isInteger(addOns.amountCents) || addOns.amountCents < 50) {
+    throw new CheckoutConfigError('TIMESYNCHER_MEDIA_PRICE_CENTS');
   }
   return addOns;
 }
@@ -101,13 +101,15 @@ export async function recordOwnerMediaPurchase({
   contact,
   addOns,
   ownerCustomerId = addOns?.ownerCustomerId || null,
-  amountCents = addOns?.amountCents || 0,
+  amountCents,
   currency = 'usd',
   status = 'paid',
   stripeCustomerId = null,
   stripePaymentIntentId = null,
   metadata = {},
 }) {
+  const chargedCents = amountCents ?? addOns?.amountCents;
+  if (!Number.isInteger(chargedCents) || chargedCents < 0) throw new CheckoutConfigError('TIMESYNCHER_MEDIA_PRICE_CENTS');
   const cleanContact = {
     email: cleanText(contact?.email, 180).toLowerCase() || null,
     phone: cleanText(contact?.phone, 80) || null,
@@ -140,7 +142,7 @@ export async function recordOwnerMediaPurchase({
     )
     values (
       ${customerId}, null, ${entitlementRows[0].id}, ${stripeCustomerId}, ${stripePaymentIntentId},
-      ${amountCents}, ${currency}, ${addOns.plan}, ${status}, ${cleanContact}, ${orderMetadata}, now(), now()
+      ${chargedCents}, ${currency}, ${addOns.plan}, ${status}, ${cleanContact}, ${orderMetadata}, now(), now()
     )
     returning id
   `;
@@ -150,7 +152,7 @@ export async function recordOwnerMediaPurchase({
     payerCustomerId,
     entitlementId: entitlementRows[0].id,
     orderId: orderRows[0].id,
-    amountCents,
+    amountCents: chargedCents,
     currency,
     plan: addOns.plan,
     scope: addOns.scope,

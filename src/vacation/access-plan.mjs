@@ -124,7 +124,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
       role: normalized.role,
       amountCents: plan.amountCents + media.amountCents,
       currency: CURRENCY,
-      label: normalized.name ? `${normalized.name} - Telegram collaborator` : 'Telegram collaborator',
+      label: normalized.name ? `${normalized.name} - collaborator` : 'Collaborator',
       planCode: plan.code,
       scope: plan.scope,
       photoAmountCents: 0,
@@ -136,7 +136,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
       mediaScope: normalized.planCode,
       photoUpload: normalized.canUploadPhotos,
       videoUpload: normalized.canUploadVideos,
-    });
+    }, env);
     return {
       role: normalized.role,
       amountCents: addOns.amountCents,

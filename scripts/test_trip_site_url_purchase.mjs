@@ -227,19 +227,12 @@ try {
   assert.doesNotMatch(adminSource, /produceOnboardingOpener|ensureOnboardingOpener/);
   assert.match(seatSource, /assignTripSiteUrl/);
   assert.match(collaboratorSource, /assignTripSiteUrl/);
-  const welcomeUrl = welcomeSource.slice(
-    welcomeSource.indexOf('function welcomeTripSiteUrl'),
-    welcomeSource.indexOf('async function welcomeInputs'),
-  );
-  assert.match(welcomeUrl, /trip\?\.publicUrl/);
-  assert.match(welcomeUrl, /intakeShareSlug\(trip\?\.id\)/);
-  assert.doesNotMatch(welcomeUrl, /assignTripSiteUrl/);
   const welcomeInputs = welcomeSource.slice(
     welcomeSource.indexOf('async function welcomeInputs'),
     welcomeSource.indexOf('function ensureOnboardingOpener'),
   );
-  assert.match(welcomeInputs, /welcomeTripSiteUrl\(trip\)/);
-  assert.doesNotMatch(welcomeInputs, /assignTripSiteUrl|intakeShareSlug|sharedTripWebsiteUrl/);
+  assert.match(welcomeInputs, /trip\?\.publicUrl/);
+  assert.doesNotMatch(welcomeInputs, /assignTripSiteUrl|intakeShareSlug|sharedTripWebsiteUrl|welcomeTripSiteUrl/);
   assert.match(welcomeSource, /renderOnboardingWelcome\(inputs, deps\)/);
   assert.match(welcomeSource, /onboardingWelcomeFailure\(error\?\.message, trip\.id\)/);
   assert.match(welcomeSource, /event: 'onboarding_welcome_failed'/);
@@ -267,22 +260,24 @@ try {
     }
     assert.equal(rendered instanceof Error, true);
     assert.equal(rendered.message, 'onboarding welcome missing tripSiteUrl');
-    const derivedDb = mockDb();
-    await ensureOnboardingOpener(derivedDb, {
-      customer_id: customerId,
-      token: 'session-token-value',
-      email: 'ada@example.com',
-      first_name: 'Ada',
-      display_name: 'Ada',
-    }, {
-      id: tripId,
-      publicUrl: '',
-      title: 'Trip',
-    }, {});
-    const derivedInsert = derivedDb.calls.find((call) => /insert into transcript_turns/i.test(call.text));
-    assert.ok(derivedInsert, 'empty publicUrl still opened a welcome from the intake slug');
-    const derivedBody = derivedInsert.values.find((value) => typeof value === 'string' && value.includes('/shared/'));
-    assert.match(derivedBody, /\/shared\/intake-aaaaaaaabbbb\//);
+    await assert.rejects(
+      () => ensureOnboardingOpener(mockDb(), {
+        customer_id: customerId,
+        token: 'session-token-value',
+        email: 'ada@example.com',
+        first_name: 'Ada',
+        display_name: 'Ada',
+      }, {
+        id: tripId,
+        publicUrl: '',
+        title: 'Trip',
+      }, {}),
+      (error) => {
+        assert.equal(error.message, 'onboarding welcome missing tripSiteUrl');
+        assert.equal(error.code, 'onboarding_welcome_failed');
+        return true;
+      },
+    );
     await assert.rejects(
       () => ensureOnboardingOpener(mockDb(), {
         customer_id: customerId,

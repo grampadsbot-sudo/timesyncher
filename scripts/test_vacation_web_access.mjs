@@ -9,7 +9,6 @@ import {
   webAccessAcceptUrl,
   webAccessCookieHeader,
   webAccessCookieName,
-  webAccessTelegramLaunchUrl,
   webAccessTokenHash,
   websiteTripBase,
 } from '../src/vacation/web-access.mjs';
@@ -24,10 +23,6 @@ const env = {
 assert.equal(
   webAccessAcceptUrl('abc 123', env),
   'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=abc%20123',
-);
-assert.equal(
-  webAccessTelegramLaunchUrl('telegram-session-token', 'https://travel.timesyncher.com/shared/las-vegas-strip-vacation/', env),
-  'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=telegram-session-token&redirect=https%3A%2F%2Ftravel.timesyncher.com%2Fshared%2Flas-vegas-strip-vacation%2F',
 );
 assert.equal(webAccessTokenHash('token', env), webAccessTokenHash('token', env));
 assert.notEqual(webAccessTokenHash('token', env), webAccessTokenHash('other', env));
@@ -86,8 +81,7 @@ assert.match(migration, /telegram_collaborator/);
 const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /create_owner_website_session/);
-assert.match(api, /telegram_launch/);
-assert.match(api, /isAllowedVacationWebsiteUrl/);
+assert.doesNotMatch(api, /telegram_launch/);
 assert.match(api, /assert_can_edit/);
 assert.match(api, /set-cookie/);
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');

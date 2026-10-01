@@ -8,12 +8,11 @@ import {
   JEV_QUALITY_MODEL,
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
-
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
-
+import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -134,9 +133,9 @@ export function liveTurnRecord({
     record.dispatcher = record.fixedOpener ? null : LIVE_DISPATCHER;
     record.invented = false;
     record.modelId = model?.responseModel || (record.fixedOpener ? null : jev?.responseModel) || null;
-    record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
+    record.generationMs = record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
     record.maxTokens = Number.isFinite(Number(model?.maxTokens)) ? Number(model.maxTokens) : null;
-    record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null;
+    record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null; record.tier = model?.modelTier ?? jev?.modelTier ?? null;
     record.jevBeforeModel = jev?.jevBeforeModel === true && jev?.jevRan === true;
     if (Array.isArray(model?.beats) && model.beats.length) {
       record.beats = model.beats.map((beat) => String(beat || '').trim()).filter(Boolean);
@@ -433,7 +432,7 @@ export function qualityFailureReason(quality, flags) {
   return parts.join('; ');
 }
 
-function appTextBanned(text) {
+export function appTextBanned(text) {
   const value = String(text || '');
   if (!value.trim()) return 'app reply text is empty';
   if (value.includes(DIALOG_TEST_FINGERPRINT)) return 'app reply carries the dialog test fingerprint';
@@ -1260,20 +1259,14 @@ export function shipChoice({
   if (rewriteCount > 0) failReason = 'rewrite_fact_check_held';
   else if (scoredLower && rewriteOk) failReason = 'rewrite_scored_lower';
   else if (!rewriteOk) failReason = 'rewrite_not_shipped';
-  if (draftCount > 0) {
-    if (hold && holdErrors.length === 0) {
-      return { text: hold, rewritten: false, flagged: false, held: true, failReason: failReason || 'holding_reply', holding: true };
-    }
-    if (rewriteOk) {
-      return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
-    }
-    return { text: '', rewritten: false, flagged: true, held: true, failReason: failReason || 'draft_held', holding: false };
+  if (draftCount > 0 && rewriteOk) {
+    return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
   }
   return {
-    text: draft,
+    text: String(draft || '').trim(),
     rewritten: false,
     flagged: false,
-    held: false,
+    held: draftCount > 0,
     failReason,
     holding: false,
   };
@@ -1430,7 +1423,7 @@ function cleanCandidate(text) {
   return applyUpsellPolicy(text);
 }
 
-async function loadSavedTripRecord(session, env = process.env) {
+export async function loadSavedTripRecord(session, env = process.env) {
   const tripId = session?.trip_id || session?.tripId;
   if (!tripId || !env?.DATABASE_URL) return null;
   try {
@@ -1517,6 +1510,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination });
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env });
@@ -1557,13 +1551,16 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     }
     : null;
   const jevStarted = Date.now();
-  const jev = await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
+  let jev = null;
+  for (let jevAttempt = 0; jevAttempt < 2 && !jev?.jevRan; jevAttempt += 1) {
+    jev = await jevPrecall({
+      customerTurn,
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      session: { seed_id: session?.token || null },
+      env,
+    });
+  }
   if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!rules?.ok) {
     return {
@@ -1972,7 +1969,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       tripContext: pending?.tripContext || null,
       planTable: pending?.planTable || null,
       planLine: pending?.planLine || '',
-      seatDollars: pending?.seatDollars || 0,
+      seatDollars: pending?.seatDollars ?? null,
       seat: pending?.seat || null,
       systemExtra: [
         request.systemExtra,
@@ -2057,6 +2054,9 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     holding: holdingText,
     holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking/.test(error)) : [],
   });
+  if (!choice.rewritten) {
+    Object.assign(choice, { text: String(pending.draft || '').trim(), holding: false, flagged: false, held: draftErrors.length > 0 || choice.held === true });
+  }
   if (!choice.text && !draftErrors.length) {
     choice = {
       text: String(pending.draft || '').trim(),
@@ -2066,14 +2066,14 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       failReason: choice.failReason || 'draft_held',
       holding: false,
     };
-  } else if (!choice.text && holdingText) {
+  } else if (!choice.text && String(pending.draft || '').trim()) {
     choice = {
-      text: holdingText,
+      text: String(pending.draft).trim(),
       rewritten: false,
       flagged: false,
       held: true,
-      failReason: choice.failReason || 'holding_reply',
-      holding: true,
+      failReason: choice.failReason || 'draft_shipped',
+      holding: false,
     };
   }
   let holdingQuality = null;
@@ -2139,9 +2139,9 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     shippedScore = rewriteQuality.score;
     shippedQuality = rewriteQuality;
   } else if (choice.holding && holdingQuality?.judged) {
-    shippedModel = pending.interimReply?.model || INTERIM_MODEL;
-    shippedScore = holdingQuality.score;
-    shippedQuality = holdingQuality;
+    shippedModel = pending.draftModel;
+    shippedScore = pending.draftScore;
+    shippedQuality = pending.quality;
   }
   const judgeMs = choice.rewritten ? rewriteQualityMs : (Number(pending.quality?.judgeMs) || draftQualityMs);
   const draftFactLine = draftErrors.length ? draftErrors.join('; ') : 'ok';
@@ -2213,7 +2213,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     log,
     draft: pending.draft,
   });
-  stamped.model.responseModel = pending.model?.responseModel || pending.draftModel;
+  stamped.model.responseModel = pending.draftModel || pending.model?.responseModel || null;
   stamped.model.modelTier = pending.model?.modelTier ?? pending.jev?.modelTier ?? null;
   stamped.model.genLatencyMs = pending.draftLatencyMs;
   const beatSource = choice.rewritten ? model?.beats : (choice.holding ? [] : pending.model?.beats);

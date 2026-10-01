@@ -1,5 +1,21 @@
 import crypto from 'node:crypto';
+import { CheckoutConfigError } from './checkout-pricing.mjs';
 import { cleanText } from './http.mjs';
+
+function priceKeyForPlan(plan) {
+  if (plan === 'owner_media') return 'TIMESYNCHER_MEDIA_PRICE_CENTS';
+  if (plan === 'unlimited') return 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS';
+  if (String(plan || '').includes('collaborator')) return 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS';
+  return 'TIMESYNCHER_BASE_PRICE_CENTS';
+}
+
+function requiredOriginalCents(originalAmountCents, plan) {
+  const original = Number(originalAmountCents);
+  if (originalAmountCents == null || originalAmountCents === '' || !Number.isInteger(original) || original < 0) {
+    throw new CheckoutConfigError(priceKeyForPlan(plan));
+  }
+  return original;
+}
 
 export function normalizeCouponCode(value) {
   return cleanText(value, 120).replace(/\s+/g, '').toUpperCase();
@@ -80,6 +96,7 @@ export async function listCoupons(db, limit = 100) {
 export async function consumeCoupon(db, code, { email, plan, originalAmountCents, metadata = {} } = {}, env = process.env) {
   const normalized = normalizeCouponCode(code);
   if (!normalized) throw Object.assign(new Error('Coupon code is required.'), { statusCode: 400 });
+  const original = requiredOriginalCents(originalAmountCents, plan);
   const rows = await db`
     update checkout_coupons
     set redemption_count = redemption_count + 1, updated_at = now()
@@ -95,7 +112,7 @@ export async function consumeCoupon(db, code, { email, plan, originalAmountCents
       coupon_id, email, plan, original_amount_cents, status, metadata
     )
     values (
-      ${rows[0].id}, ${cleanText(email, 180).toLowerCase() || null}, ${plan}, ${originalAmountCents || 0},
+      ${rows[0].id}, ${cleanText(email, 180).toLowerCase() || null}, ${plan}, ${original},
       'processing', ${metadata}
     )
     returning *
@@ -114,7 +131,6 @@ export async function completeCouponRedemption(db, redemptionId, onboarding, ema
       email_status = ${email?.status || 'unknown'},
       metadata = metadata || ${{
         onboardingUrl: onboarding.onboardingUrl,
-        telegramUrl: onboarding.telegramUrl,
         eula: onboarding.eula || null,
         email,
       }}
@@ -135,7 +151,6 @@ export async function completeCollaboratorCouponRedemption(db, redemptionId, { i
       email_status = ${email?.status || 'unknown'},
       metadata = metadata || ${{
         collaboratorInviteId: invite.id,
-        collaboratorTelegramUrl: token ? `telegram-token:${token.slice(0, 8)}` : null,
         email,
       }}
     where id = ${redemptionId}
