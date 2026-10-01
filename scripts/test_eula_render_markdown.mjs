@@ -25,6 +25,14 @@ assert.match(page, /id="eulaAgreeButton"/);
 assert.match(page, /id="eulaName"/);
 assert.match(page, /renderEulaMarkdown\(eula\.text\)/);
 
+const gate = await readFile(new URL('../public/post-purchase-gate.mjs', import.meta.url), 'utf8');
+assert.match(gate, /id = 'eulaScreen'/);
+assert.match(gate, /id = 'eulaAgree'/);
+assert.match(gate, /id = 'eulaAgreeButton'/);
+assert.match(gate, /id = 'eulaName'/);
+assert.match(gate, /terms\.innerHTML = renderEulaMarkdown\(text\)/);
+assert.doesNotMatch(gate, /terms\.textContent/);
+
 const hostile = renderEulaMarkdown([
   '# Sample heading',
   '',
