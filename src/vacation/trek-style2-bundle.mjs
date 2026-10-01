@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, stripCannedBundle, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
+import { applyLiveProductPatches, patchThingDetailRatings, LIST_LOGO_PATCH } from './trek-live-product-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -237,7 +238,6 @@ const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
-const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
@@ -261,18 +261,10 @@ const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
 const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
 const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
 const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
-const NOTICES_FETCH_CALLER = 'async fetch(){if(!(t().fetching||t().loaded)){e({fetching:!0});try{const i=await Rt.get("/system-notices/active");e({notices:i.data,loaded:!0,fetching:!1})}catch(i){console.warn("[systemNotices] failed to fetch:",i),e({loaded:!0,fetching:!1})}}}';
-const APP_CONFIG_CALLER = 'getAppConfig:()=>Rt.get("/auth/app-config").then(e=>e.data)';
+const NOTICES_FETCH_CALLER = 'async fetch(){if(!(t().fetching||t().loaded)){e({fetching:!0});try{const i=await Rt.get("/system-notices/active");e({notices:i.data,loaded:!0,fetching:!1})}catch(i){console.warn("[systemNotices] failed to fetch:",i),e({loaded:!0,fetching:!1})}}},';
+const APP_CONFIG_CALLER = 'getAppConfig:()=>Rt.get("/auth/app-config").then(e=>e.data),';
 const NOTICES_EMPTY_STUB = 'async fetch(){e({notices:[],loaded:!0})}';
 const APP_CONFIG_EMPTY_STUB = 'getAppConfig:()=>Promise.resolve({})';
-
-function removeTrekCaller(source, caller, label) {
-  const withComma = `${caller},`;
-  if (!source.includes(withComma)) {
-    throw new Error(`${label} caller was not in the trek bundle`);
-  }
-  return source.replace(withComma, '');
-}
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
@@ -419,9 +411,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(REST_TYPE_CHIPS_NEEDLE)) {
     patched = patched.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
   }
-  if (patched.includes(LIST_LOGO_NEEDLE)) {
-    patched = patched.replace(LIST_LOGO_NEEDLE, LIST_LOGO_PATCH);
-  }
+  patched = applyLiveProductPatches(patched);
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
@@ -515,18 +505,18 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(RP_NEEDLE)) {
     patched = patched.replace(RP_NEEDLE, RP_PATCH);
   }
-  if (patched.includes(DOC_TITLE_TOKEN_NEEDLE)) patched = patched.replace(DOC_TITLE_TOKEN_NEEDLE, DOC_TITLE_TOKEN_PATCH);
-  if (patched.includes(THING_BREAK_NEEDLE)) patched = patched.replace(THING_BREAK_NEEDLE, THING_BREAK_PATCH);
-  if (patched.includes(STYLE2_DETAILS_NEEDLE)) patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
-  patched = removeTrekCaller(patched, NOTICES_FETCH_CALLER, 'system notices');
-  patched = removeTrekCaller(patched, APP_CONFIG_CALLER, 'app config');
-  if (patched.includes(NOTICES_EMPTY_STUB) || patched.includes(APP_CONFIG_EMPTY_STUB)) {
-    throw new Error('trek bundle still has an empty system-notices or app-config stub');
+  if (patched.includes(DOC_TITLE_TOKEN_NEEDLE)) {
+    patched = patched.replace(DOC_TITLE_TOKEN_NEEDLE, DOC_TITLE_TOKEN_PATCH);
   }
-  if (patched.includes('/system-notices/active') || patched.includes('/auth/app-config')) {
-    throw new Error('trek bundle still references system-notices/active or auth/app-config');
+  if (patched.includes(THING_BREAK_NEEDLE)) {
+    patched = patched.replace(THING_BREAK_NEEDLE, THING_BREAK_PATCH);
   }
-  const finished = stripTripView(hideUnsourcedRatings(patched), { gear: !served });
+  if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
+    patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
+  }
+  patched = [NOTICES_FETCH_CALLER, APP_CONFIG_CALLER].reduce((source, caller) => { if (!source.includes(caller)) throw new Error('trek caller was not in the trek bundle'); return source.replace(caller, ''); }, patched);
+  if ([NOTICES_EMPTY_STUB, APP_CONFIG_EMPTY_STUB, '/system-notices/active', '/auth/app-config'].some((needle) => patched.includes(needle))) throw new Error('trek bundle still references system-notices/active or auth/app-config');
+  const finished = stripTripView(patchThingDetailRatings(patched), { gear: !served });
   return served ? finished : stripMissingPriceLabel(finished);
 }
 
@@ -595,24 +585,6 @@ function stripTripView(source, options = {}) {
   const print = js.indexOf('n.jsxs("div",{"data-print-menu-root":!0', start);
   if (print < 0 || js[print - 1] !== ',') return js;
   return js.slice(0, start) + js.slice(print);
-}
-
-function hideUnsourcedRatings(source) {
-  let js = String(source || '');
-  const ratingStart = js.indexOf('vo(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:8},children:[');
-  const ratingEndMarker = 'placeholder:"Tripadvisor/OpenTable/Booking",style:De})]})]})';
-  const ratingEnd = ratingStart >= 0 ? js.indexOf(ratingEndMarker, ratingStart) : -1;
-  if (ratingStart >= 0 && ratingEnd > ratingStart) {
-    const ratingPatch = '["googleRating","yelpRating","thirdPartyRating"].some(k=>/\\d/.test(String(No(Dt,k)||"")))&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:8},children:[["googleRating","Google rating"],["yelpRating","Yelp rating"],["thirdPartyRating","Other rating"]].filter(([k])=>/\\d/.test(String(No(Dt,k)||""))).map(([k,label])=>n.jsxs("label",{style:Hn,children:[label,n.jsx("input",{value:No(Dt,k),onChange:G=>Xa(Dt,k,G.target.value),style:De})]},k))})';
-    js = js.slice(0, ratingStart) + ratingPatch + js.slice(ratingEnd + ratingEndMarker.length);
-  }
-  const reviewStart = js.indexOf('vo(Dt)&&[1,2,3].map(G=>n.jsxs("label",{style:Hn,children:["5-star review quote "');
-  const reviewEnd = reviewStart >= 0 ? js.indexOf(']},G))]', reviewStart) : -1;
-  if (reviewStart >= 0 && reviewEnd > reviewStart) {
-    const reviewPatch = '[1,2,3].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G,n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]},G))]';
-    js = js.slice(0, reviewStart) + reviewPatch + js.slice(reviewEnd + ']},G))]'.length);
-  }
-  return js.replaceAll('placeholder:"4.6"', 'placeholder:""').replaceAll('placeholder:"4.4"', 'placeholder:""');
 }
 
 export function assertStyleTwoPatchParses(source = AE_LAYOUT_PATCH) {
