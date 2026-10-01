@@ -41,6 +41,27 @@ export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}
   };
 }
 
+export const ONBOARDING_WELCOME_INSTRUCTION = 'This is the welcome turn. The customer has not described the vacation yet. Warmly welcome them. In plain words, say briefly what TimeSyncher does for their vacation: it plans the trip, remembers and keeps the trip, invites travel companions, and turns the trip into keepsakes. Invite them to send a long voice note, or to type if they prefer, telling the whole story of the vacation: where, when, who is coming, what they want to do, and what matters to them. Write several plain sentences. Do not ask only for a destination. Do not use the words Thing, EULA, or TREK. Do not mention an internal plan id. Do not mention a price unless these facts include one. Write the welcome in your own words. Use the welcome facts as data. Do not copy this instruction to the customer.';
+
+export function onboardingWelcomeFacts({ returning = false, tripTitle = '' } = {}) {
+  return {
+    ...onboardingOpenerFacts({ returning, tripTitle }),
+    product: 'TimeSyncher',
+    product_does: [
+      'plans the trip',
+      'remembers and keeps the trip',
+      'invites travel companions',
+      'turns the trip into keepsakes',
+    ],
+    prices: null,
+  };
+}
+
+export function onboardingWelcomePrompt({ returning = false, tripTitle = '' } = {}) {
+  const facts = onboardingWelcomeFacts({ returning, tripTitle });
+  return `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+}
+
 export async function produceOnboardingOpener({ returning = false, tripTitle = '', session = null, env = process.env } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   if (!rules?.ok) {
@@ -59,28 +80,35 @@ export async function produceOnboardingOpener({ returning = false, tripTitle = '
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }
   jev.jevBeforeModel = true;
-  const facts = onboardingOpenerFacts({ returning, tripTitle });
-  const model = await callTieredModel({
-    rules,
-    jev,
-    customerTurn: '',
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    destination: '',
-    memory: [],
-    upsell: 'forbidden',
-    postIntake: false,
-    env,
-    systemExtra: `Opener facts: ${JSON.stringify(facts)}`,
-  });
-  const reply = model?.called && model.text ? String(model.text).trim() : '';
-  if (!reply || appTextBanned(reply)) {
+  const systemExtra = onboardingWelcomePrompt({ returning, tripTitle });
+  let model = null;
+  let reply = '';
+  for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
+    model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn: '',
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination: '',
+      memory: [],
+      upsell: 'forbidden',
+      postIntake: false,
+      welcomeTurn: true,
+      env,
+      systemExtra,
+    });
+    reply = model?.called && model.text ? String(model.text).trim() : '';
+    if (appTextBanned(reply)) reply = '';
+  }
+  if (!reply) {
+    const visible = model?.called && model.text ? String(model.text).trim() : '';
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: appTextBanned(reply) || model?.reason || 'onboarding opener model returned no reply',
+      reason: (visible && appTextBanned(visible)) || model?.reason || 'onboarding opener model returned no reply',
     };
   }
   return { reply, rules, jev, model, reason: null };
