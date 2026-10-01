@@ -1,9 +1,7 @@
 import crypto from 'node:crypto';
 import { checkoutOrderSummary } from './checkout-pricing.mjs';
-import { cleanText, ensureVacationEulaSession, onboardingLink, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { assignTripSiteUrl, cleanText, ensureVacationEulaSession, onboardingLink, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 import { queueOrSendPurchaseEmail } from './email.mjs';
-import { intakeShareSlug } from './intake-shared-trip.mjs';
-import { sharedTripWebsiteUrl } from './web-access.mjs';
 
 function token() {
   return crypto.randomBytes(18).toString('base64url');
@@ -103,6 +101,7 @@ async function createCouponOnboarding(db, { body, coupon, env, onOrderCreated = 
     returning id
   `;
   const tripId = tripRows[0].id;
+  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, env);
 
   const entitlementRows = await db`
     insert into entitlements (customer_id, trip_id, plan, status, metadata, updated_at)
@@ -139,16 +138,6 @@ async function createCouponOnboarding(db, { body, coupon, env, onOrderCreated = 
   `;
   const session = sessionRows[0];
   const eula = await ensureVacationEulaSession(session, { contact, env });
-  const publicSlug = intakeShareSlug(tripId);
-  const publicUrl = publicSlug ? sharedTripWebsiteUrl(publicSlug, env) : '';
-  if (publicSlug) {
-    await db`
-      update trips
-      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
-        updated_at = now()
-      where id = ${tripId}
-    `;
-  }
   const onboarding = {
     customerId,
     tripId,

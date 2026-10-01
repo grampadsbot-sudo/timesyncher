@@ -322,7 +322,7 @@ async function welcomeInputs(db, session, trip) {
   };
 }
 
-async function ensureOnboardingOpener(db, session, trip) {
+export async function ensureOnboardingOpener(db, session, trip) {
   const seat = seatFromSession(session);
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
   const welcomeAudience = seat ? 'collaborator' : 'owner';
