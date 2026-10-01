@@ -205,15 +205,23 @@ try {
   assert.equal(blankDb.calls.length, 0);
 
   const onboardingSource = await readFile(new URL('../src/vacation/onboarding.mjs', import.meta.url), 'utf8');
-  const couponSource = await readFile(new URL('../src/vacation/checkout-coupons.mjs', import.meta.url), 'utf8');
+  const couponRoute = await readFile(new URL('../routes/checkout-coupon.mjs', import.meta.url), 'utf8');
+  const couponModule = await readFile(new URL('../src/vacation/coupons.mjs', import.meta.url), 'utf8');
   const adminSource = await readFile(new URL('../routes/admin-onboardings.mjs', import.meta.url), 'utf8');
   const seatSource = await readFile(new URL('../src/vacation/collaborator-app-seat.mjs', import.meta.url), 'utf8');
   const collaboratorSource = await readFile(new URL('../src/vacation/collaborators.mjs', import.meta.url), 'utf8');
   const welcomeSource = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+  const couponOnboarding = onboardingSource.slice(
+    onboardingSource.indexOf('function buildOnboardingFromCoupon'),
+    onboardingSource.indexOf('async function ensureOnboardingSession'),
+  );
   assert.equal(onboardingSource.match(/assignTripSiteUrl\(/g).length, 4);
   assert.equal(onboardingSource.match(/intakeShareSlug\(/g).length, 1);
-  assert.doesNotMatch(couponSource, /intakeShareSlug/);
-  assert.match(couponSource, /assignTripSiteUrl/);
+  assert.match(couponOnboarding, /const \{ publicSlug, publicUrl \} = await assignTripSiteUrl\(db, tripId, env\)/);
+  assert.doesNotMatch(couponOnboarding, /intakeShareSlug|sharedTripWebsiteUrl/);
+  assert.match(couponRoute, /buildOnboardingFromCoupon/);
+  assert.doesNotMatch(couponRoute, /intakeShareSlug|sharedTripWebsiteUrl|assignTripSiteUrl|publicSlug/);
+  assert.doesNotMatch(couponModule, /intakeShareSlug|sharedTripWebsiteUrl|publicSlug/);
   assert.match(adminSource, /assignTripSiteUrl/);
   assert.doesNotMatch(adminSource, /produceOnboardingOpener|ensureOnboardingOpener/);
   assert.match(seatSource, /assignTripSiteUrl/);
