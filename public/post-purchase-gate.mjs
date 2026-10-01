@@ -1,3 +1,5 @@
+import { renderEulaMarkdown } from '../src/onboarding/eula-markdown.mjs';
+
 export function isPurchaseEntry(pathname, search = '') {
   const params = new URLSearchParams(String(search || '').replace(/^\?/, ''));
   if (params.get('app') === '1') return false;
@@ -40,7 +42,7 @@ function gateStyle() {
     #postPurchaseGate h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.1; }
     #postPurchaseGate p { color: #677280; margin: 0 0 14px; line-height: 1.45; }
     #postPurchaseGate .eula-text {
-      white-space: pre-wrap;
+      white-space: normal;
       max-height: min(46vh, 420px);
       overflow: auto;
       border: 1px solid #d9e0e8;
@@ -49,6 +51,16 @@ function gateStyle() {
       padding: 14px;
       line-height: 1.45;
     }
+    #postPurchaseGate .eula-text h1,
+    #postPurchaseGate .eula-text h2,
+    #postPurchaseGate .eula-text h3 { color: #15191f; line-height: 1.25; }
+    #postPurchaseGate .eula-text h1 { font-size: 20px; margin: 0 0 10px; }
+    #postPurchaseGate .eula-text h2 { font-size: 16px; margin: 16px 0 6px; }
+    #postPurchaseGate .eula-text h3 { font-size: 15px; margin: 14px 0 6px; }
+    #postPurchaseGate .eula-text p { margin: 0 0 10px; }
+    #postPurchaseGate .eula-text ul,
+    #postPurchaseGate .eula-text ol { margin: 0 0 10px; padding-left: 1.25em; }
+    #postPurchaseGate .eula-text li { margin: 0 0 4px; }
     #postPurchaseGate .eula-form { display: grid; gap: 12px; margin-top: 16px; max-width: 560px; }
     #postPurchaseGate input[type="text"] {
       width: 100%;
@@ -136,7 +148,7 @@ export function mountPostPurchaseGate(doc, loc) {
   fetch('/legal/terms-2026-06-advisory-only.md')
     .then((response) => (response.ok ? response.text() : ''))
     .then((text) => {
-      if (text) terms.textContent = text;
+      if (text) terms.innerHTML = renderEulaMarkdown(text);
     })
     .catch(() => {});
 

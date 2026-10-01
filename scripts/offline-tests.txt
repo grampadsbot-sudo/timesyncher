@@ -3,6 +3,8 @@ scripts/test_access_plan_checkout.mjs
 scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_build_used_vs_tip.mjs
+scripts/test_check_code_ratchet.mjs
+scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
 scripts/test_restaurant_list_tags.mjs
@@ -14,6 +16,7 @@ scripts/test_no_hardcoded_product_content.mjs
 scripts/test_deploy_required_env.mjs
 scripts/test_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
+scripts/test_eval_jev_cards.mjs
 scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
 scripts/test_roster_extraction_party.mjs
@@ -23,7 +26,9 @@ scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
 scripts/test_tg_intake_gbrain.mjs
 scripts/test_timeline_icons.mjs
+scripts/test_trip_summary_intake.mjs
 scripts/test_vacation_app_shell.mjs
+scripts/test_eula_render_markdown.mjs
 scripts/test_post_purchase_eula_open_app.mjs
 scripts/test_vacation_collaborators.mjs
 scripts/test_vacation_telegram_intake.mjs
@@ -34,6 +39,7 @@ scripts/test_customer_input_reply.mjs
 scripts/test_g2c_thing_notes_destination.mjs
 scripts/test_g2d_jev_score_rewrite.mjs
 scripts/test_g3a_canned_dialog.mjs
+scripts/test_onboarding_welcome.mjs
 scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs

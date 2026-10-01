@@ -834,7 +834,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -861,6 +861,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     seatDollars,
     seat,
     planOwned,
+    welcomeTurn,
   });
 }
 
@@ -890,7 +891,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -918,7 +919,12 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}` },
+          {
+            role: 'system',
+            content: welcomeTurn
+              ? String(systemExtra || '')
+              : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
+          },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),

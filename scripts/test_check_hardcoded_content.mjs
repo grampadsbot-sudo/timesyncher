@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, explainSharedBundle, htmlRefsProducedByBuild, scanRoots, scanText, whitespacePadFindings } from './check-hardcoded-content.mjs';
+import { BASELINE_NOTE, PAID_PLACES_BAN_LIST_LINES, PAID_PLACES_NOTE, SHARE_TOKEN_SHA256, baselineRemoteRef, bundleLeakFindings, classify, contentIdentity, crossOriginBundleFindings, EVASION_MODEL_LINE_ALLOW, explainSharedBundle, htmlRefsProducedByBuild, paidPlacesFindings, scanRoots, scanText, whitespacePadFindings } from './check-hardcoded-content.mjs';
+import { inTurnPriceScope, RULE } from './no-turn-price-env.mjs';
 import { INVENTORY_PATTERNS, UNMATCHED } from './hardcoded-inventory-patterns.mjs';
 
 const script = fileURLToPath(new URL('./check-hardcoded-content.mjs', import.meta.url));
@@ -119,8 +120,8 @@ for (const [fixture, file, symbol] of tokenShapes) {
 }
 assert.deepEqual(symbols('evidence/clean.txt', readFixture('tokens/clean.txt')), []);
 
-function runGuard(cwd, env = {}) {
-  return spawnSync(process.execPath, [script], {
+function runGuard(cwd, env = {}, args = []) {
+  return spawnSync(process.execPath, [script, ...args], {
     cwd,
     encoding: 'utf8',
     env: { ...process.env, BASE: '', GITHUB_BASE_REF: '', ...env },
@@ -220,7 +221,14 @@ const grown = repoWithBase([]);
 fs.writeFileSync(path.join(grown, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')])}\n`);
 const grownRun = runGuard(grown, { BASE: 'base' });
 assert.equal(grownRun.status, 1, grownRun.stdout);
-assertHit(grownRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
+assertHit(grownRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/place-list.mjs|HC-PLACE-LIST|EXTRA_LIST_FILL|A0');
+
+const swapped = repoWithBase([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')]);
+fs.writeFileSync(path.join(swapped, 'scripts/hardcoded-content-baseline.json'), `${JSON.stringify([entry('src/vacation/place-list.mjs', 'NEW_FILL', 'HC-PLACE-LIST')])}\n`);
+const swappedRun = runGuard(swapped, { BASE: 'base' });
+assert.equal(swappedRun.status, 1, swappedRun.stdout);
+assertHit(swappedRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/place-list.mjs|HC-PLACE-LIST|NEW_FILL|A0');
+assert.doesNotMatch(swappedRun.stderr, /EXTRA_LIST_FILL/);
 
 const same = repoWithBase([entry('src/vacation/place-list.mjs', 'EXTRA_LIST_FILL', 'HC-PLACE-LIST')]);
 const sameRun = runGuard(same, { BASE: 'base' });
@@ -260,11 +268,25 @@ git(prefixedWork, ['push', 'origin', 'HEAD:cursor/x']);
 for (const base of ['main', 'origin/main']) {
   const prefixRun = runGuard(prefixedWork, { BASE: base });
   assert.equal(prefixRun.status, 1, `${base}\n${prefixRun.stdout}\n${prefixRun.stderr}`);
-  assertHit(prefixRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', '1>0');
+  assertHit(prefixRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/place-list.mjs|HC-PLACE-LIST|EXTRA_LIST_FILL|A0');
 }
 const prefixedSame = runGuard(prefixedWork, { BASE: 'cursor/x' });
 assert.equal(prefixedSame.status, 0, prefixedSame.stderr);
 assert.match(prefixedSame.stdout, /hardcoded content check passed \(0 report, 0 fail\)/);
+
+const pruneDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-prune-'));
+writeTree(pruneDir, {
+  'src/vacation/place-list.mjs': 'const fills = [EXTRA_LIST_FILL, AAA_LIST_FILL, ZZZ_LIST_FILL];\n',
+}, [
+  { file: 'src/vacation/place-list.mjs', rule: 'HC-PLACE-LIST', symbol_or_pattern: 'EXTRA_LIST_FILL', inventory_id: 'B', note: NOTE },
+  { file: 'src/vacation/place-list.mjs', rule: 'HC-PLACE-LIST', symbol_or_pattern: 'GONE', inventory_id: 'C', note: NOTE },
+  { file: 'src/vacation/place-list.mjs', rule: 'HC-PLACE-LIST', symbol_or_pattern: 'AAA_LIST_FILL', inventory_id: 'A', note: NOTE },
+]);
+const pruneRun = runGuard(pruneDir, {}, ['--prune']);
+assert.equal(pruneRun.status, 0, pruneRun.stderr);
+assert.match(pruneRun.stdout, /STALE\tHC-PLACE-LIST\tsrc\/vacation\/place-list\.mjs\tGONE\tC/);
+assert.doesNotMatch(pruneRun.stdout, /ZZZ_LIST_FILL/);
+assert.deepEqual(JSON.parse(fs.readFileSync(path.join(pruneDir, 'scripts/hardcoded-content-baseline.json'), 'utf8')).map((row) => row.symbol_or_pattern), ['AAA_LIST_FILL', 'EXTRA_LIST_FILL']);
 
 const workflow = fs.readFileSync(path.join(repo, '.github/workflows/evidence-secrets.yml'), 'utf8');
 assert.match(workflow, /check-hardcoded-content\.mjs/);
@@ -272,11 +294,14 @@ assert.match(workflow, /test_check_hardcoded_content\.mjs/);
 
 const baseline = JSON.parse(fs.readFileSync(path.join(repo, 'scripts/hardcoded-content-baseline.json'), 'utf8'));
 assert.equal(baseline.length > 0, true);
-for (const row of baseline) assert.equal(row.note, BASELINE_NOTE);
+for (const row of baseline) {
+  if (row.rule === 'NO-PAID-PLACES-API') assert.equal(row.note, PAID_PLACES_NOTE, contentIdentity(row));
+  else assert.equal(row.note, BASELINE_NOTE, contentIdentity(row));
+}
 
 const repoRun = runGuard(repo);
-assert.equal(repoRun.status, 0, `${repoRun.stdout}\n${repoRun.stderr}`);
-const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check passed \((\d+) report, (\d+) fail\)/);
+assert.equal(repoRun.status, 0, repoRun.stderr);
+const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check (?:passed|failed) \((\d+) report, (\d+) fail\)/);
 assert.ok(liveSummary, `${repoRun.stdout}\n${repoRun.stderr}`);
 const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
@@ -284,8 +309,16 @@ const failRows = identities(repoRun.stderr);
 assert.equal(failRows.length, liveFail);
 // The travel download is gone and the served bundle is stripped. A live
 // NO-CROSS-ORIGIN-BUNDLE, BUNDLE-LEAK, or EVASION hit still fails the run.
-assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), []);
-for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK' || row.rule === 'EVASION', true, row.rule);
+// Customer-facing unlimited-vacation wording still fails and stays out of the baseline.
+// The paid Foursquare client is gone. Those hosts stay out of the baseline.
+// The free OpenStreetMap places URL is not one of those hosts.
+const foursquarePaid = /^(?:api\.foursquare\.com|places-api\.foursquare\.com|\/v3\/places|X-Places-Api-Version|foursquare-sdk) ::/;
+assert.equal(liveFail, 0);
+assert.deepEqual(failRows, []);
+assert.equal(baseline.some((row) => row.rule === 'BAR-UNLIMITED-WORDING'), false);
+assert.equal(baseline.some((row) => row.rule === 'NO-PAID-PLACES-API' && foursquarePaid.test(row.symbol_or_pattern)), false);
+assert.equal(failRows.some((row) => row.file === 'scripts/check-code-ratchet.mjs' || row.file === 'scripts/check-hardcoded-content.mjs'), false);
+assert.equal(failRows.some((row) => row.file === 'scripts/test_place_search.mjs' && row.rule === 'NO-PAID-PLACES-API'), false);
 assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
 assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
 assert.equal(baseline.some((row) => row.rule === 'BUNDLE-LEAK' || row.inventory_id === 'BUNDLE-LEAK'), false);
@@ -296,9 +329,9 @@ for (const row of failRows) {
 }
 assert.equal(liveReport <= baseline.length, true);
 const judged = classify(scanRoots(repo), baseline);
+assert.equal(judged.fail.length, 0);
 assert.equal(judged.fail.length, liveFail);
 assert.equal(judged.report.length, liveReport);
-assert.ok(judged.fail.every((finding) => finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION'));
 const liveRows = identities(repoRun.stdout);
 assert.deepEqual(
   liveRows.map(contentIdentity).sort(),
@@ -439,12 +472,12 @@ assert.equal(underRun.status, 0, underRun.stderr);
 assert.doesNotMatch(underRun.stdout, /API-FN-CAP/);
 assert.doesNotMatch(underRun.stdout, /BUILD-STAMP/);
 
-const shiftSource = 'src/vacation/thing-logo-capture.mjs';
+const shiftSource = 'scripts/vacation-app-reply-rules.mjs';
 const shiftOriginal = fs.readFileSync(path.join(repo, shiftSource), 'utf8');
 const originalHits = scanText(shiftSource, shiftOriginal);
 const shiftBaseline = baseline.filter((row) => row.file === shiftSource);
 assert.equal(shiftBaseline.length >= 2, true);
-const removed = shiftBaseline.find((row) => row.rule === 'HC-PLACE-LIST' && row.symbol_or_pattern === 'BRAND_LOGOS');
+const removed = shiftBaseline.find((row) => shiftOriginal.includes(row.symbol_or_pattern) && originalHits.some((finding) => contentIdentity(finding) === contentIdentity(row)));
 assert.ok(removed);
 const keptHit = originalHits.find((finding) => contentIdentity(finding) !== contentIdentity(removed) && shiftOriginal.includes(finding.symbol_or_pattern));
 assert.ok(keptHit);
@@ -484,6 +517,19 @@ const concatFail = fails('src/vacation/evasion-concat.mjs', 'evasion-concat.mjs'
 assert.deepEqual(concatFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'Price TBD']]);
 const logoFail = fails('src/vacation/evasion-logo.mjs', 'evasion-logo.mjs');
 assert.deepEqual(logoFail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', '/ts-thing-logos/']]);
+
+const bakeoffFile = '.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs';
+const bakeoffLine = "  const bannedMini = 'gpt-' + '4.1-mini';";
+assert.deepEqual(EVASION_MODEL_LINE_ALLOW, [{ file: bakeoffFile, line: bakeoffLine }]);
+const modelConcat = "const id = 'gpt-' + '4.1-mini';\n";
+assert.deepEqual(classify(scanText('src/vacation/model-concat.mjs', modelConcat), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText('routes/other-model-concat.mjs', modelConcat), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText(bakeoffFile, `${bakeoffLine}\n${modelConcat}`), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(scanText(bakeoffFile, `${bakeoffLine}\n`).filter((finding) => finding.rule === 'EVASION'), []);
+assert.deepEqual(classify(scanText('src/vacation/same-line-other-file.mjs', `${bakeoffLine}\n`), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText('src/vacation/model-join.mjs', "const id = ['gpt-', '4.1-mini'].join('');\n"), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.deepEqual(classify(scanText('src/vacation/model-template.mjs', "const id = `gpt-${'4.1-mini'}`;\n"), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
+assert.equal(scanText('src/vacation/allowed-model-concat.mjs', "const id = 'google/' + 'gemini-2.5-flash-lite';\n").some((finding) => finding.rule === 'EVASION'), false);
 
 const renamed = scanText('src/vacation/content-rename.mjs', readFixture('content-rename.mjs'));
 assert.equal(renamed.some((finding) => finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
@@ -538,7 +584,7 @@ const oldRuleGrowth = repoWithBase(newRuleBase);
 writeTree(oldRuleGrowth, {}, [...newRuleBase, entry('src/vacation/other.mjs', 'ALSO', 'HC-PLACE-LIST')]);
 const oldRuleRun = runGuard(oldRuleGrowth, { BASE: 'base' });
 assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
-assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/hardcoded-content-baseline\.json:1\t2>1/);
+assertHit(oldRuleRun.stderr, 'FAIL', 'BASELINE-GROWTH', 'scripts/hardcoded-content-baseline.json', 'src/vacation/other.mjs|HC-PLACE-LIST|ALSO|A0');
 
 const dateFile = 'src/vacation/date-range-rename.mjs';
 const dateText = readFixture('date-range-rename.mjs');
@@ -595,15 +641,18 @@ const placesVersion = fs.readFileSync(path.join(repo, 'src/vacation/place-search
 assert.equal(scanText('src/vacation/place-search.mjs', placesVersion).some((finding) => finding.symbol_or_pattern === '2025-06-17'), false);
 const apiVersionFile = 'src/vacation/api-version-header.mjs';
 const apiVersionText = [
-  "const headers = { 'X-Places-Api-Version': '2025-06-17' };",
-  "headers.set(\"x-places-api-version\", '2025-06-17');",
-  "const pairs = [['X-Places-Api-Version', '2025-06-17']];",
+  "const headers = { 'X-Catalog-Api-Version': '2025-06-17' };",
+  "headers.set(\"x-catalog-api-version\", '2025-06-17');",
+  "const pairs = [['X-Catalog-Api-Version', '2025-06-17']];",
 ].join('\n');
 assert.deepEqual(scanText(apiVersionFile, apiVersionText).filter((finding) => finding.rule === 'DATE-LITERAL'), []);
 const apiVersionDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-api-version-'));
-writeTree(apiVersionDir, { [apiVersionFile]: `${apiVersionText}\n` }, []);
+const apiVersionPaid = paidPlacesFindings(apiVersionFile, `${apiVersionText}\n`).map((finding) => entry(finding.file, finding.symbol_or_pattern, finding.rule));
+writeTree(apiVersionDir, { [apiVersionFile]: `${apiVersionText}\n` }, apiVersionPaid);
 const apiVersionRun = runGuard(apiVersionDir);
 assert.equal(apiVersionRun.status, 0, apiVersionRun.stderr);
+assert.equal(apiVersionPaid.length, 0);
+assert.doesNotMatch(apiVersionRun.stderr, /DATE-LITERAL/);
 
 const tripDateFile = 'src/vacation/trip-date.mjs';
 assert.deepEqual(
@@ -618,7 +667,7 @@ assert.deepEqual(
 const nearFile = 'src/vacation/api-version-neighbor.mjs';
 const nearText = [
   'const headers = {',
-  "  'X-Places-Api-Version': '2025-06-17',",
+  "  'X-Catalog-Api-Version': '2025-06-17',",
   "  startDate: '2025-06-17',",
   '};',
   '',
@@ -643,7 +692,7 @@ const bundleSymbol = '/assets/index-BKun7ofk.js is not in the repo and the build
 writeTree(bundleDir, {
   'shared-app.html': '<script>trek.src = \'/assets/index-BKun7ofk.js\';</script>\n',
   'extra.html': '<script src="/assets/other-bundle.js"></script>\n<link rel="modulepreload" href="/assets/preload.js">\n<script type="module">import(\'/assets/imported.js\');</script>\n<script src="https://js.stripe.com/v3/"></script>\n',
-  'src/onboarding/eula-page.mjs': 'export const page = true;\n',
+  'src/onboarding/eula-page.mjs': 'const page = true;\n',
   'kept.html': '<script type="module" src="/src/onboarding/eula-page.mjs"></script>\n<script src="/assets/kept.js"></script>\n',
   'public/assets/kept.js': 'console.log("kept");\n',
 }, [{
@@ -753,6 +802,29 @@ const built = spawnSync(process.execPath, ['scripts/scan-built-bundles.mjs'], { 
 assert.equal(built.status, 0, built.stderr);
 assert.match(built.stdout, /no HTML reference is produced by an offline build/);
 assert.match(workflow, /scan-built-bundles\.mjs/);
+assert.match(workflow, /eval-jev-cards\.mjs --gate/);
+assert.match(workflow, /JEV_EVAL_MODEL:\s*typesafe\/jev-1\.13/);
+assert.match(workflow, /OPENROUTER_API_KEY: \$\{\{ secrets\.OPENROUTER_API_KEY \}\}/);
+assert.doesNotMatch(workflow, /secrets\.JEV_OPENROUTER_API_KEY/);
+assert.doesNotMatch(workflow, /secrets\.TIMESYNCHER_JEV_CLASSIFY_TOKEN/);
+assert.doesNotMatch(workflow, /secrets\.TIMESYNCHER_OPENROUTER_API_KEY/);
+assert.doesNotMatch(workflow, /secrets\.TIMESYNCHER_JEV_OPENROUTER_API_KEY/);
+
+const barFile = 'src/vacation/bar-rules.mjs';
+const barText = [
+  'const book = "I will book the hotel for you and take a deposit.";',
+  'const billing = "Pay the product subscription in the Stripe billing portal.";',
+  'const thing = "I saved that Thing for Friday.";',
+  'const id = "productThingSummary";',
+  'function collaboratorInviteEmail() { return `Vacation website: ${site}`; }',
+  'function ownerReceipt() { return `Your vacation website: ${publicUrl}`; }',
+].join('\n');
+const barHits = scanText(barFile, barText).filter((finding) => finding.rule.startsWith('BAR-'));
+assert.equal(barHits.some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), true);
+assert.equal(barHits.some((finding) => finding.rule === 'BAR-THING-CUSTOMER'), true);
+assert.equal(barHits.some((finding) => finding.rule === 'BAR-COLLAB-URL'), true);
+assert.equal(barHits.some((finding) => /stripe billing portal/i.test(finding.symbol_or_pattern)), false);
+assert.equal(classify(barHits, []).fail.length, barHits.length);
 
 const localVite = 'export default { plugins: [{ name: "timesyncher-shared-assets", async buildStart() { await writeSharedAssets(); } }] };\n';
 const localWriter = [
@@ -789,6 +861,210 @@ writeTree(linkedBundle, {
   'shared-app.html': '<script src="https://travel.timesyncher.com/assets/index-BKun7ofk.js"></script>\n',
 }, []);
 assert.throws(() => assertSharedBundleSource(linkedBundle), /travel\.timesyncher\.com/);
+
+const purchase = 'const line = "I will book the hotel for you and take a deposit.";';
+for (const exempt of ['index.html', 'order-test.html', 'routes/stripe-webhook.mjs', 'routes/create-payment-intent.mjs', 'routes/checkout-coupon.mjs', 'src/vacation/coupons.mjs']) {
+  assert.equal(scanText(exempt, purchase).some((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT'), false, exempt);
+}
+const tripPay = scanText('src/vacation/live-app-turn.mjs', purchase).filter((finding) => finding.rule === 'BAR-RESERVATION-PAYMENT');
+assert.equal(tripPay.length > 0, true);
+assert.equal(classify(tripPay, []).fail.length, tripPay.length);
+
+const invite = 'function collaboratorInviteEmail() { return `Vacation website: ${site}`; }';
+assert.equal(scanText('src/vacation/email.mjs', invite).some((finding) => finding.rule === 'BAR-COLLAB-URL'), false);
+const seatReply = 'function vacationSupportReply() { return `Here is the vacation website: ${url}`; }';
+const seatHits = scanText('routes/vacation-telegram-turn.mjs', seatReply).filter((finding) => finding.rule === 'BAR-COLLAB-URL');
+assert.equal(seatHits.length, 1);
+assert.equal(classify(seatHits, []).fail.length, 1);
+
+const internalThing = [
+  '// developer note "saved that Thing for the print record"',
+  'const marker = "Thing";',
+  'throw new Error("Thing pages must not render rating.");',
+  'const row = { skipReason: "No Thing mapping for this filename" };',
+].join('\n');
+assert.equal(scanText('src/vacation/trek-style2-bundle.mjs', internalThing).some((finding) => finding.rule === 'BAR-THING-CUSTOMER'), false);
+const keepsake = scanText('src/vacation/keepsake-list-minimums.mjs', 'const summary = "Printed keepsake names the Thing for Friday.";').filter((finding) => finding.rule === 'BAR-THING-CUSTOMER');
+assert.equal(keepsake.length, 1);
+assert.equal(classify(keepsake, []).fail.length, 1);
+const said = scanText('scripts/vacation-app-reply-rules.mjs', 'const line = "Never say Thing to the customer on Friday.";').filter((finding) => finding.rule === 'BAR-THING-CUSTOMER');
+assert.equal(said.length, 1);
+assert.equal(classify(said, []).fail.length, 1);
+
+const barTerms = JSON.parse(fs.readFileSync(path.join(repo, 'scripts/dialog-bar-terms.json'), 'utf8'));
+function sourceLiteral(raw) {
+  if (!raw.includes("'") && !raw.includes('\n') && !raw.includes('\r')) return `'${raw}'`;
+  if (!raw.includes('"') && !raw.includes('\n') && !raw.includes('\r')) return `"${raw}"`;
+  throw new Error('exact allow string has no safe quote');
+}
+const exactText = barTerms.exactAllow.strings.map((raw) => `const line = ${sourceLiteral(raw)};`).join('\n');
+for (const file of barTerms.exactAllow.files) {
+  assert.equal(scanText(file, exactText).some((finding) => finding.rule.startsWith('BAR-')), false, file);
+}
+const paraphrase = exactText.replace('Do not mention reservations, payments, or checkout.', 'Do not mention reservations, payments, or billing.');
+for (const file of barTerms.exactAllow.files) {
+  const hits = scanText(file, paraphrase).filter((finding) => finding.rule.startsWith('BAR-'));
+  assert.equal(hits.length > 0, true, file);
+  assert.equal(classify(hits, []).fail.length, hits.length, file);
+}
+for (const file of ['routes/stripe-webhook.mjs', 'src/vacation/customer-intent.mjs']) {
+  const hits = scanText(file, exactText).filter((finding) => finding.rule.startsWith('BAR-'));
+  assert.equal(hits.length > 0, true, file);
+  assert.equal(classify(hits, []).fail.length, hits.length, file);
+}
+const barDoc = fs.readFileSync(path.join(repo, 'scripts/dialog-bars.md'), 'utf8');
+assert.match(barDoc, /scripts\/vacation-app-reply-rules\.mjs/);
+assert.match(barDoc, /src\/vacation\/live-app-turn\.mjs/);
+
+const unlimitedPhrase = 'const line = "unlimited vacations for the whole year";';
+assert.equal(scanText('src/vacation/live-app-turn.mjs', unlimitedPhrase).some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), true);
+assert.equal(classify(scanText('src/vacation/live-app-turn.mjs', unlimitedPhrase).filter((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), []).fail.length, 1);
+for (const sample of [
+  'const line = "You have an unlimited vacation ahead.";',
+  'const line = "This household gets unlimited access to vacations.";',
+  'const line = "UNLIMITED household vacations are included.";',
+  "const line = 'unlimited ' + 'vacations for the whole year';",
+  "const line = `the plan is unlimited ${'vacations'} for the whole year`;",
+]) {
+  const hits = scanText('scripts/vacation-app-reply-rules.mjs', sample).filter((finding) => finding.rule === 'BAR-UNLIMITED-WORDING');
+  assert.equal(hits.length > 0, true, sample);
+  assert.equal(classify(hits, []).fail.length, hits.length, sample);
+}
+assert.equal(scanText('routes/checkout-config.mjs', unlimitedPhrase).some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), false);
+assert.equal(scanText('src/vacation/live-app-turn.mjs', 'const line = "The pool is open all afternoon for the family.";').some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), false);
+for (const sample of [
+  "const line = 'unlimited vacations for the whole year'.split('').join('');",
+  "const line = ['unlimited ', 'vacations for the whole year'].join('');",
+]) {
+  const hits = scanText('scripts/vacation-app-reply-rules.mjs', sample).filter((finding) => finding.rule === 'BAR-UNLIMITED-WORDING');
+  assert.equal(hits.length > 0, true, sample);
+  assert.equal(classify(hits, [entry('scripts/vacation-app-reply-rules.mjs', hits[0].symbol_or_pattern, 'BAR-UNLIMITED-WORDING')]).fail.length, hits.length, sample);
+}
+const exactUnlimited = scanText('src/vacation/live-app-turn.mjs', unlimitedPhrase).filter((finding) => finding.rule === 'BAR-UNLIMITED-WORDING');
+assert.equal(classify(exactUnlimited, [entry('src/vacation/live-app-turn.mjs', exactUnlimited[0].symbol_or_pattern, 'BAR-UNLIMITED-WORDING')]).report.length, 0);
+
+const paidFile = 'src/vacation/paid-places.mjs';
+const paidCases = [
+  ["const url = 'https://api.foursquare.com/v2/venues';", 'api.foursquare.com'],
+  ["const url = 'https://places-api.foursquare.com/places/search';", 'places-api.foursquare.com'],
+  ["const url = 'https://example.com/v3/places/search';", '/v3/places'],
+  ["const headers = { 'X-Places-Api-Version': version };", 'X-Places-Api-Version'],
+  ["import { Client } from 'foursquare';", 'foursquare-sdk'],
+  ["const client = require('@foursquare/places');", 'foursquare-sdk'],
+  ["const url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';", 'maps.googleapis.com/maps/api/place'],
+  ["const host = 'places.googleapis.com';", 'places.googleapis.com'],
+  ["import { Places } from '@googlemaps/places';", '@googlemaps/places'],
+  ["import { Client } from '@googlemaps/google-maps-services';", '@googlemaps/google-maps-services'],
+  ["const client = new PlacesClient();", 'PlacesClient'],
+  ["const classic = google.maps.places;", 'google.maps.places'],
+];
+for (const [sample, label] of paidCases) {
+  const hits = paidPlacesFindings(paidFile, `${sample}\n`);
+  assert.equal(hits.length > 0, true, sample);
+  assert.equal(hits.every((finding) => finding.rule === 'NO-PAID-PLACES-API' && finding.symbol_or_pattern.startsWith(`${label} ::`)), true, `${sample}\n${hits.map((finding) => finding.symbol_or_pattern).join('\n')}`);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-paid-places-'));
+  writeTree(dir, { [paidFile]: `${sample}\n` }, []);
+  const run = runGuard(dir);
+  assert.equal(run.status, 1, `${sample}\n${run.stdout}\n${run.stderr}`);
+  assert.equal(identities(run.stderr).some((row) => row.rule === 'NO-PAID-PLACES-API' && row.symbol.startsWith(`${label} ::`)), true, run.stderr);
+}
+for (const entry of PAID_PLACES_BAN_LIST_LINES) {
+  const checkerText = fs.readFileSync(path.join(repo, entry.file), 'utf8');
+  const checkerLines = checkerText.split('\n');
+  assert.equal(checkerLines.includes(entry.line), true, `${entry.file} ${entry.line}`);
+  assert.equal(paidPlacesFindings(entry.file, checkerText).some((finding) => checkerLines[finding.line - 1] === entry.line), false, entry.file);
+  for (const other of ['src/vacation/not-a-checker.mjs', 'scripts/test_place_search.mjs']) {
+    const hits = paidPlacesFindings(other, `${entry.line}\n`);
+    assert.equal(hits.length > 0, true, other);
+    assert.equal(hits.every((finding) => finding.rule === 'NO-PAID-PLACES-API'), true, other);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-ban-list-'));
+    writeTree(dir, { [other]: `${entry.line}\n` }, []);
+    const run = runGuard(dir);
+    assert.equal(run.status, 1, `${other}\n${run.stdout}\n${run.stderr}`);
+    assert.equal(identities(run.stderr).some((row) => row.rule === 'NO-PAID-PLACES-API' && row.file === other), true, run.stderr);
+  }
+}
+const placesApiOnly = paidPlacesFindings(paidFile, "const url = 'https://places-api.foursquare.com/places/search';\n");
+assert.equal(placesApiOnly.some((finding) => finding.symbol_or_pattern.startsWith('api.foursquare.com ::')), false);
+const openPlaces = "const url = 'https://opensource.foursquare.com/os-places/abc';\n";
+assert.equal(paidPlacesFindings(paidFile, openPlaces).length, 0);
+const openPlacesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-open-places-'));
+writeTree(openPlacesDir, { [paidFile]: openPlaces }, []);
+const openPlacesRun = runGuard(openPlacesDir);
+assert.equal(openPlacesRun.status, 0, openPlacesRun.stderr);
+const paidSample = "const url = 'https://places-api.foursquare.com/places/search';\n";
+const paidHit = paidPlacesFindings(paidFile, paidSample)[0];
+const paidDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-paid-report-'));
+writeTree(paidDir, { [paidFile]: paidSample }, [entry(paidFile, paidHit.symbol_or_pattern, 'NO-PAID-PLACES-API')]);
+const paidReport = runGuard(paidDir);
+assert.equal(paidReport.status, 0, paidReport.stderr);
+assertHit(paidReport.stdout, 'REPORT', 'NO-PAID-PLACES-API', paidFile, paidHit.symbol_or_pattern);
+
+const allVacations = 'const description = "TimeSyncher Vacation Telegram access for all vacations";';
+const uploadVacations = 'const description = "TimeSyncher Vacation photo/video upload access for all vacations";';
+const payerEmail = 'throw new Error("A valid payer email is required.");';
+for (const file of ['routes/checkout-config.mjs', 'routes/create-payment-intent.mjs', 'routes/checkout-coupon.mjs']) {
+  assert.equal(scanText(file, allVacations).some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), false, file);
+  assert.equal(scanText(file, uploadVacations).some((finding) => finding.rule === 'BAR-UNLIMITED-WORDING'), false, file);
+  assert.equal(scanText(file, payerEmail).some((finding) => finding.rule === 'BAR-SPLIT-PAYER'), false, file);
+}
+for (const file of ['src/vacation/live-app-turn.mjs', 'scripts/vacation-app-reply-rules.mjs', 'routes/stripe-webhook.mjs']) {
+  for (const sample of [allVacations, payerEmail]) {
+    const hits = scanText(file, sample).filter((finding) => finding.rule === 'BAR-UNLIMITED-WORDING' || finding.rule === 'BAR-SPLIT-PAYER');
+    assert.equal(hits.length > 0, true, file);
+    assert.equal(classify(hits, []).fail.length, hits.length, file);
+  }
+}
+
+const priceRule = (file, text) => scanText(file, text).filter((finding) => finding.rule === RULE);
+const dot = priceRule('src/vacation/live-app-turn.mjs', 'const cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\n');
+assert.equal(dot.length, 1);
+assert.match(dot[0].symbol_or_pattern, /process\.env\.TIMESYNCHER_BASE_PRICE_CENTS/);
+assert.equal(classify(dot, []).fail.length, 1);
+const orderName = priceRule('routes/sample-turn.mjs', 'const id = process.env.TIMESYNCHER_ORDER_ID;\n');
+assert.equal(orderName.length, 1);
+const bracket = priceRule('routes/vacation-telegram-turn.mjs', 'const cents = process.env["TIMESYNCHER_ORDER_BUMP_PRICE_CENTS"];\n');
+assert.equal(bracket.length, 1);
+assert.match(bracket[0].symbol_or_pattern, /process\.env\["TIMESYNCHER_ORDER_BUMP_PRICE_CENTS"\]/);
+assert.equal(classify(bracket, []).fail.length, 1);
+const quoted = priceRule('routes/sample-turn.mjs', "const cents = process.env['TIMESYNCHER_BASE_PRICE_CENTS'];\n");
+assert.equal(quoted.length, 1);
+const destructure = priceRule('routes/sample-turn.mjs', 'const { TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS, TIMESYNCHER_ORDER_ID: orderId } = process.env;\n');
+assert.equal(destructure.length, 2);
+assert.equal(classify(destructure, []).fail.length, 2);
+const answered = priceRule('routes/sample-turn.mjs', 'priceAnswered(x, process.env);\n');
+assert.equal(answered.length, 1);
+assert.match(answered[0].symbol_or_pattern, /priceAnswered\(process\.env\)/);
+assert.equal(classify(answered, []).fail.length, 1);
+const handler = priceRule('routes/sample-turn.mjs', 'import { handler } from "./checkout-config.mjs";\n');
+assert.equal(handler.length, 1);
+assert.match(handler[0].symbol_or_pattern, /^fn:handler#/);
+const required = priceRule('routes/vacation-foo-turn.mjs', 'const mod = require("./create-payment-intent.mjs");\n');
+assert.equal(required.length, 1);
+assert.match(required[0].symbol_or_pattern, /module:\.\/create-payment-intent\.mjs/);
+const dynamicImport = priceRule('src/vacation/live-app-turn.mjs', 'const mod = await import("./checkout-coupon.mjs");\n');
+assert.equal(dynamicImport.length, 1);
+assert.match(dynamicImport[0].symbol_or_pattern, /module:\.\/checkout-coupon\.mjs/);
+const couponFns = priceRule('routes/sample-turn.mjs', 'import { couponCodeHash } from "./checkout-coupons.mjs";\n');
+assert.equal(couponFns.length, 1);
+assert.match(couponFns[0].symbol_or_pattern, /module:\.\/checkout-coupons\.mjs/);
+for (const exempt of ['routes/checkout-config.mjs', 'routes/create-payment-intent.mjs', 'routes/checkout-coupon.mjs', 'src/vacation/checkout-coupons.mjs', 'routes/checkout-config-turn.mjs', 'scripts/test_checkout_coupons.mjs', 'scripts/test_create-payment-intent.mjs']) {
+  const sample = 'priceAnswered(x, process.env);\nconst cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\nimport { handler } from "./checkout-config.mjs";\n';
+  assert.equal(priceRule(exempt, sample).length, 0, exempt);
+}
+assert.equal(priceRule('src/vacation/test_price-turn.mjs', 'process.env.TIMESYNCHER_BASE_PRICE_CENTS = "3700";\nprocess.env["TIMESYNCHER_ORDER_ID"] = "x";\n').length, 0);
+assert.equal(priceRule('src/vacation/test_price-turn.mjs', 'priceAnswered(x, process.env);\n').length, 1);
+assert.equal(priceRule('routes/sample-turn.mjs', 'process.env.TIMESYNCHER_BASE_PRICE_CENTS = "1";\n').length, 1);
+assert.equal(priceRule('src/vacation/live-app-turn.mjs', 'function priceAnswered(reply, customerTurn, env = process.env) {}\n').length, 0);
+assert.equal(priceRule('src/vacation/seat-price.mjs', 'const cents = process.env.TIMESYNCHER_BASE_PRICE_CENTS;\n').length, 0);
+assert.equal(priceRule('routes/sample-turn.mjs', 'const note = "process.env.TIMESYNCHER_BASE_PRICE_CENTS";\n// priceAnswered(x, process.env)\nconst token = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN;\n').length, 0);
+assert.equal(priceRule('scripts/vacation-app-reply-rules.mjs', 'priceAnswered(x, process.env);\n').length, 1);
+assert.equal(inTurnPriceScope('src/vacation/turn-tags.mjs'), false);
+assert.equal(inTurnPriceScope('scripts/vacation-app-reply-rules-snapshot.json'), false);
+const priceDoc = fs.readFileSync(path.join(repo, 'scripts/no-turn-price-env.md'), 'utf8');
+for (const scanned of ['src/vacation/live-app-turn.mjs', 'routes/vacation-telegram-turn.mjs', 'scripts/vacation-app-reply-rules.mjs']) {
+  assert.match(priceDoc, new RegExp(scanned.replaceAll('.', '\\.')));
+}
 
 const crossFile = 'scripts/cross-origin-bundle.mjs';
 const crossText = readFixture('cross-origin-bundle.mjs');
@@ -933,5 +1209,7 @@ assertHit(padRun.stderr, 'FAIL', 'EVASION', padFile, padHits[0].symbol_or_patter
 assert.equal(baseline.some((row) => row.rule === 'EVASION' || row.inventory_id === 'EVASION'), false);
 assert.equal(baseline.some((row) => row.file === 'public/assets/index-0J54vUO3.js' || row.file === 'public/assets/index-TimeSyncherVacationLogin.js'), false);
 assert.equal(failRows.length, 0);
+assert.equal(failRows.some((row) => row.rule === 'BAR-UNLIMITED-WORDING'), false);
+assert.equal(baseline.some((row) => foursquarePaid.test(row.symbol_or_pattern)), false);
 
 process.stdout.write('hardcoded content check test passed\n');

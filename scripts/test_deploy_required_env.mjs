@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { compareEnvNames, loadOptionalEnv, loadRequiredEnv, runPreflight } from './deploy-env-preflight.mjs';
 
 const ENV = '[A-Z][A-Z0-9]*_[A-Z0-9_]+';
-const THROW = new RegExp(String.raw`\bMissing\s+(${ENV})\b|\b(${ENV})\s+is not set\b|\b(${ENV})\s+missing\b|\b(${ENV})\s+or\s+(${ENV})\s+is required\b|\|\|\s*['"](${ENV})['"]|(?:brave|foursquare|tavily)Name:\s*['"](${ENV})['"]`, 'g');
+const THROW = new RegExp(String.raw`\bMissing\s+(${ENV})\b|\b(${ENV})\s+is not set\b|\b(${ENV})\s+missing\b|\b(${ENV})\s+or\s+(${ENV})\s+is required\b|\|\|\s*['"](${ENV})['"]|(?:brave|tavily)Name:\s*['"](${ENV})['"]`, 'g');
 const READ = new RegExp(String.raw`\b(?:process\.env|env\??|sourceEnv)\.(${ENV})`, 'g');
 
 function walk(dir, out = []) {
@@ -26,7 +26,7 @@ function requiredBeforeFetch() {
     for (const match of text.matchAll(new RegExp(String.raw`requiredConfigCents\(\s*(?:env\??|process\.env)\.([A-Z0-9_]*COLLABORATOR[A-Z0-9_]*)\s*,\s*['"]\1['"]`, 'g'))) names.add(match[1]);
     const search = /(?:^|\/)(?:place-search|poi-search|db)\.mjs$/.test(rel)
       || rel.endsWith('vacation-public-research-worker.mjs')
-      || /fillTripIntake|searchPlaces|searchTavily|places-api\.foursquare|api\.tavily\.com|api\.search\.brave\.com/.test(text);
+      || /fillTripIntake|searchPlaces|searchTavily|api\.tavily\.com|api\.search\.brave\.com/.test(text);
     if (!search) continue;
     for (const match of text.matchAll(THROW)) {
       const hit = match.slice(1).filter(Boolean);
@@ -50,10 +50,9 @@ const found = requiredBeforeFetch();
 const listed = new Set([...required, ...optional]);
 for (const name of [...required, ...optional]) assert.equal(found.has(name), true, name);
 assert.deepEqual([...found].filter((name) => !listed.has(name)), []);
-assert.equal(required.includes('FOURSQUARE_SERVICE_KEY'), false);
-assert.deepEqual(optional, ['FOURSQUARE_SERVICE_KEY']);
+assert.deepEqual(optional, []);
 assert.equal(compareEnvNames(required, required, optional).missing.length, 0);
-assert.deepEqual(compareEnvNames(required, required, optional).optionalMissing, ['FOURSQUARE_SERVICE_KEY']);
+assert.deepEqual(compareEnvNames(required, required, optional).optionalMissing, []);
 assert.deepEqual(compareEnvNames(required, required.filter((name) => name !== 'BRAVE_SEARCH_API_KEY')).missing, ['BRAVE_SEARCH_API_KEY']);
 const typo = required.map((name) => (name === 'BRAVE_SEARCH_API_KEY' ? 'BRAVE_SERCH_API_KEY' : name));
 assert.deepEqual(compareEnvNames(required, typo), { missing: ['BRAVE_SEARCH_API_KEY'], near: [{ name: 'BRAVE_SERCH_API_KEY', want: 'BRAVE_SEARCH_API_KEY' }], optionalMissing: [] });
@@ -65,8 +64,7 @@ const info = await runPreflight({ present: required });
 assert.equal(info.ok, true);
 assert.equal(info.near.length, 0);
 assert.doesNotMatch(info.text, /near-miss/);
-assert.match(info.text, /optional-missing: FOURSQUARE_SERVICE_KEY/);
-assert.doesNotMatch(info.text, /^missing: FOURSQUARE_SERVICE_KEY/m);
+assert.doesNotMatch(info.text, /optional-missing:/);
 assert.doesNotMatch(info.text, /missing: TAVILI_API_KEY/);
 const deploy = fs.readFileSync(new URL('./deploy-staging.mjs', import.meta.url), 'utf8');
 assert.ok(deploy.indexOf('runPreflight') < deploy.indexOf("spawnSync('vercel'"));

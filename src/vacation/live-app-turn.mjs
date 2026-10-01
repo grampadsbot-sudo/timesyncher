@@ -41,7 +41,129 @@ export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}
   };
 }
 
-export async function produceOnboardingOpener({ returning = false, tripTitle = '', session = null, env = process.env } = {}) {
+export const ONBOARDING_WELCOME_INSTRUCTION = [
+  'You are writing the first welcome in the TimeSyncher vacation app. The customer has not typed yet. Write it in your own words from the welcome facts. Do not copy this instruction back.',
+  'Audience comes from the facts. Follow only that audience.',
+  'Owner welcome, in this order, as three short paragraphs of about 90 to 150 words. Never a one-line reply.',
+  '1. Warm greeting by firstName, plus a confirmation that they are set up. If firstName is absent, use a warm greeting with no name.',
+  '2. Put the website up front. Their trip already has its own site at tripSiteUrl. Anyone with the link can see plans and photos without signing in. Use the tripSiteUrl fact exactly.',
+  '3. In two or three sentences, say how it works: they describe the trip, and the app builds a day-by-day itinerary on the site, including lodging, each day\'s plans, and notes for each day and place. During the trip, the family adds photos, videos, and stories, and at the end it all becomes a keepsake.',
+  '4. Ask for one long voice note. Ask them to hold the mic and talk for a minute or two about where and when, who is coming, where they are staying, what they are excited about, and what is still undecided. Rough or rambling is fine, and you will follow up on gaps. The voice-note ask is the last sentence. Stop there.',
+  'Collaborator welcome, about 40 to 70 words.',
+  '1. Greet them by collaboratorFirstName and say that ownerFirstName added them to tripTitle. If a name or title is absent, leave it out.',
+  '2. Share tripSiteUrl.',
+  '3. Explain what they can do: add ideas, photos, videos, and notes to any day or place.',
+  '4. Ask one open question about what they are looking forward to, or invite a voice note.',
+  'Tone: warm and plain, like a friendly travel-savvy friend, with contractions. No sales voice. At most one exclamation point. No emoji.',
+  'Do not use these words: Thing, Things, EULA, terms, agreement, seat, tier, account tier, model, Jev. No payments, bookings, or reservation offers. No upsell and no unlimited-plan pitch. Do not push a collaborator invite. If collaborators are in the facts, one short clause that a named person can join is allowed. No bare destination question. Do not invent a place, an example place, or any name that is not in the facts. If plan is in the facts, do not pitch it and do not mention a price. Leave missing facts out.',
+].join('\n');
+
+function welcomeName(value) {
+  const text = String(value || '').trim();
+  return text ? text.split(/\s+/)[0] : '';
+}
+
+export function onboardingWelcomeFacts({
+  audience = 'owner',
+  firstName = '',
+  ownerFirstName = '',
+  collaboratorFirstName = '',
+  tripSiteUrl = '',
+  tripTitle = '',
+  plan = '',
+  collaborators = [],
+} = {}) {
+  const site = String(tripSiteUrl || '').trim();
+  const title = String(tripTitle || '').trim();
+  const people = (Array.isArray(collaborators) ? collaborators : []).map((name) => welcomeName(name)).filter(Boolean);
+  if (audience === 'collaborator') {
+    const facts = { audience: 'collaborator', tripSiteUrl: site };
+    const owner = welcomeName(ownerFirstName);
+    const collaborator = welcomeName(collaboratorFirstName);
+    if (owner) facts.ownerFirstName = owner;
+    if (collaborator) facts.collaboratorFirstName = collaborator;
+    if (title) facts.tripTitle = title;
+    return facts;
+  }
+  const facts = {
+    audience: 'owner',
+    first_message: true,
+    customer_said: null,
+    tripSiteUrl: site,
+  };
+  const name = welcomeName(firstName);
+  if (name) facts.firstName = name;
+  if (title) facts.tripTitle = title;
+  const planName = String(plan || '').trim();
+  if (planName) facts.plan = planName;
+  if (people.length) facts.collaborators = people;
+  return facts;
+}
+
+export function onboardingWelcomePrompt(input = {}) {
+  const facts = onboardingWelcomeFacts(input);
+  return `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+}
+
+const WELCOME_BANNED = /\b(?:Things?|EULA|terms|agreement|Jev)\b|\b(?:seats?|tiers?|models?)\b|\baccount tier\b|\b(?:payments?|bookings?|reservations?)\b|\bunlimited\b/i;
+
+export function validateOnboardingWelcome(text, { audience = 'owner', tripSiteUrl = '', allowedPlaces = [] } = {}) {
+  const value = String(text || '').trim();
+  const errors = [];
+  if (!value) errors.push('empty');
+  const site = String(tripSiteUrl || '').trim();
+  if (site && !value.includes(site)) errors.push('missing_site_url');
+  if (WELCOME_BANNED.test(value)) errors.push('banned_wording');
+  const words = value.split(/\s+/).filter(Boolean);
+  if (audience === 'collaborator') {
+    if (words.length < 40 || words.length > 70) errors.push('length');
+    if (!/voice note|\?/i.test(value)) errors.push('open_question');
+  } else {
+    if (words.length < 90) errors.push('short');
+    const sentences = value.split(/(?<=[.!?])\s+/).map((part) => part.trim()).filter(Boolean);
+    const last = sentences.at(-1) || '';
+    if (!/voice note/i.test(last)) errors.push('voice_note_ask');
+  }
+  const allowed = new Set(['i', 'timesyncher']);
+  const allowBlob = [site, ...allowedPlaces].join(' ');
+  for (const token of allowBlob.match(/[A-Za-z0-9]+/g) || []) allowed.add(token.toLowerCase());
+  for (const sentence of value.split(/(?<=[.!?])\s+/)) {
+    const tokens = sentence.match(/[A-Za-z][A-Za-z'’-]*/g) || [];
+    tokens.forEach((token, index) => {
+      if (index === 0) return;
+      if (token[0] !== token[0].toUpperCase()) return;
+      const bare = token.replace(/['’].*$/, '');
+      if (!allowed.has(bare.toLowerCase())) errors.push(`place:${bare}`);
+    });
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+export async function produceOnboardingOpener({
+  session = null,
+  env = process.env,
+  audience = 'owner',
+  firstName = '',
+  ownerFirstName = '',
+  collaboratorFirstName = '',
+  tripSiteUrl = '',
+  tripTitle = '',
+  plan = '',
+  collaborators = [],
+} = {}) {
+  const facts = onboardingWelcomeFacts({
+    audience,
+    firstName: firstName || (audience === 'owner' ? targetPersonFromSession(session) : ''),
+    ownerFirstName,
+    collaboratorFirstName: collaboratorFirstName || (audience === 'collaborator' ? targetPersonFromSession(session) : ''),
+    tripSiteUrl,
+    tripTitle,
+    plan,
+    collaborators,
+  });
+  if (!facts.tripSiteUrl) {
+    return { reply: null, rules: null, jev: null, model: null, reason: 'onboarding welcome missing tripSiteUrl' };
+  }
   const rules = await loadVacationAppReplyRules(env);
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -59,28 +181,35 @@ export async function produceOnboardingOpener({ returning = false, tripTitle = '
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }
   jev.jevBeforeModel = true;
-  const facts = onboardingOpenerFacts({ returning, tripTitle });
-  const model = await callTieredModel({
-    rules,
-    jev,
-    customerTurn: '',
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    destination: '',
-    memory: [],
-    upsell: 'forbidden',
-    postIntake: false,
-    env,
-    systemExtra: `Opener facts: ${JSON.stringify(facts)}`,
-  });
-  const reply = model?.called && model.text ? String(model.text).trim() : '';
-  if (!reply || appTextBanned(reply)) {
+  const systemExtra = `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+  let model = null;
+  let reply = '';
+  for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
+    model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn: '',
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination: '',
+      memory: [],
+      upsell: 'forbidden',
+      postIntake: false,
+      welcomeTurn: true,
+      env,
+      systemExtra,
+    });
+    reply = model?.called && model.text ? String(model.text).trim() : '';
+    if (appTextBanned(reply)) reply = '';
+  }
+  if (!reply) {
+    const visible = model?.called && model.text ? String(model.text).trim() : '';
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: appTextBanned(reply) || model?.reason || 'onboarding opener model returned no reply',
+      reason: (visible && appTextBanned(visible)) || model?.reason || 'onboarding opener model returned no reply',
     };
   }
   return { reply, rules, jev, model, reason: null };

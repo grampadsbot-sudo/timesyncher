@@ -1,0 +1,10 @@
+{"id":"ack","state":{"current_turn":"Thanks, Friday works."},"expect":{"model_tier":{"min":0,"max":2},"route_type":"general"}}
+{"id":"day-plan","state":{"current_turn":"Plan Saturday as a beach day and Sunday as a town walk."},"expect":{"model_tier":{"min":2,"max":4},"route_type":"itinerary_advice"}}
+{"id":"note","state":{"current_turn":"Save a note that we want groceries on arrival."},"expect":{"route_type":"notes_where","needs_day_for_note":{"min":0.5,"max":1}}}
+{"id":"price","state":{"current_turn":"What is the price to add someone?"},"expect":{"route_type":"access_pricing","model_tier":{"min":2,"max":4}}}
+{"id":"join","state":{"current_turn":"Can my sister join the planning?"},"expect":{"route_type":"access_pricing"}}
+{"id":"book","state":{"current_turn":"Can you reserve the hotel for us?"},"expect":{"route_type":"product_boundary"}}
+{"id":"keep-simple","state":{"current_turn":"Ok."},"expect":{"model_tier":{"min":0,"max":2}}}
+{"id":"multi-day","state":{"current_turn":"Give me a loose plan for all ten days, with a rest day in the middle."},"expect":{"model_tier":{"min":2,"max":4},"route_type":"itinerary_advice"}}
+{"id":"no-day","state":{"current_turn":"The house has a pool."},"expect":{"needs_day_for_note":{"min":0,"max":0.5}}}
+{"id":"help","state":{"current_turn":"How do I invite someone with view access?"},"expect":{"route_type":"access_pricing"}}
