@@ -26,7 +26,7 @@ assert.equal(missingBrave.statusCode, 503);
 assert.deepEqual(missingBrave.body, { provider: 'brave', error: 'missing_key' });
 
 fetchCalls = 0;
-const missingTavily = await probePlaceSearchKeys({ BRAVE_SEARCH_API_KEY: MOCK_BRAVE }, async (url) => {
+const missingTavily = await probePlaceSearchKeys({ brave: MOCK_BRAVE }, async (url) => {
   fetchCalls += 1;
   return {
     ok: true,
@@ -40,8 +40,8 @@ assert.deepEqual(missingTavily.body, { provider: 'tavily', error: 'missing_key' 
 
 fetchCalls = 0;
 const ok = await probePlaceSearchKeys({
-  BRAVE_SEARCH_API_KEY: MOCK_BRAVE,
-  TAVILI_API_KEY: MOCK_TAVILY,
+  brave: MOCK_BRAVE,
+  tavily: MOCK_TAVILY,
 }, async () => {
   fetchCalls += 1;
   if (fetchCalls === 1) {
@@ -70,8 +70,8 @@ assert.doesNotMatch(serialized, new RegExp(MOCK_TAVILY));
 assert.doesNotMatch(serialized, /authorization|X-Subscription-Token/i);
 
 const braveError = await probePlaceSearchKeys({
-  BRAVE_SEARCH_API_KEY: MOCK_BRAVE,
-  TAVILI_API_KEY: MOCK_TAVILY,
+  brave: MOCK_BRAVE,
+  tavily: MOCK_TAVILY,
 }, async (url) => {
   if (String(url).includes('brave.com')) {
     return { ok: false, status: 402, json: async () => ({}) };

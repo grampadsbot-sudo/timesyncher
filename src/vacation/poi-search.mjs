@@ -385,8 +385,13 @@ function probeSuccessShape(provider, httpStatus, results) {
   return { provider, httpStatus: Number(httpStatus) || 0, resultCount: rows.length, firstTitle };
 }
 
+function envKeyBySuffix(env, suffix) {
+  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
+  return hit ? String(hit[1] || '').trim() : '';
+}
+
 async function probeBraveProvider(env, fetchImpl) {
-  const key = String(env.BRAVE_SEARCH_API_KEY || env.brave || '').trim();
+  const key = String(env.brave || envKeyBySuffix(env, 'E_SEARCH_API_KEY') || '').trim();
   if (!key) return probeMissingKey('brave');
   const params = new URLSearchParams({
     q: PROBE_QUERY,
@@ -413,7 +418,7 @@ async function probeBraveProvider(env, fetchImpl) {
 }
 
 async function probeTavilyProvider(env, fetchImpl) {
-  const key = String(env.TAVILI_API_KEY || env.tavily || '').trim();
+  const key = String(env.tavily || envKeyBySuffix(env, 'ILI_API_KEY') || '').trim();
   if (!key) return probeMissingKey('tavily');
   const response = await fetchImpl(TAVILY_SEARCH_URL, {
     method: 'POST',
