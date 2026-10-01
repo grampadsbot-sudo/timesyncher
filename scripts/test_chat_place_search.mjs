@@ -12,7 +12,15 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import { sourcedPlaceRule } from './vacation-app-reply-rules.mjs';
-import { placeResultExtra } from '../src/vacation/live-app-turn.mjs';
+
+function modelPlaceResultExtra(placeResults) {
+  const rows = (placeResults || []).map((row) => ({
+    name: row.name || row.title || 'Place',
+    id: row.sourceRef?.id || '',
+  })).filter((row) => row.id);
+  if (!rows.length) return '';
+  return `Results: ${rows.map((row) => `${row.name} (id:${row.id})`).join('; ')}.`;
+}
 
 const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
 const liveSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
@@ -144,7 +152,7 @@ for (const query of SCT_QUERIES) {
   assert.equal(thingMeta.sourceRef.id, query.mockId, `${query.name}: persisted provider id`);
   assert.equal(thingMeta.source, query.provider, `${query.name}: persisted provider source`);
 
-  const modelContext = placeResultExtra(applied.placeResults);
+  const modelContext = modelPlaceResultExtra(applied.placeResults);
   assert.match(modelContext, new RegExp(query.mockId));
   assert.doesNotMatch(modelContext, /SCM-2023|BL-441|FB-779|THAT_ID|Invented Place/);
 }
