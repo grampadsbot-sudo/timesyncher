@@ -1047,10 +1047,9 @@ export function completeRosterParty(doc) {
     rememberRoster(sources, `collaborators.${person.name}`, person.payer || '', 'trip.dialogParty');
   }
   for (const kid of Array.isArray(stored.preference_subjects) ? stored.preference_subjects : []) {
-    if (!kid?.name) continue;
-    const age = Number(kid.age);
-    party.preference_subjects.push(Number.isFinite(age) ? { name: kid.name, age } : { name: kid.name });
-    rememberRoster(sources, `preference_subjects.${kid.name}`, Number.isFinite(age) ? age : '', 'trip.dialogParty');
+    if (!kid?.name || !Number.isFinite(Number(kid.age))) continue;
+    party.preference_subjects.push({ name: kid.name, age: Number(kid.age) });
+    rememberRoster(sources, `preference_subjects.${kid.name}`, Number(kid.age), 'trip.dialogParty');
   }
   for (const person of Array.isArray(stored.viewers) ? stored.viewers : []) {
     if (!person?.name) continue;
@@ -2406,7 +2405,8 @@ export function transcriptToJsonl(doc) {
     buildSha: doc.buildSha || null,
     party: completeRosterParty(doc),
   };
-  const lines = [header, ...(doc.turns || []).map((turn) => ({ type: 'turn', ...turn }))];
+  const turns = Array.isArray(doc.turns) ? doc.turns : [];
+  const lines = [header, ...turns.map((turn) => ({ type: 'turn', ...turn }))];
   const jsonl = lines.map((line) => JSON.stringify(line)).join('\n');
   return `${jsonl}\n`;
 }
