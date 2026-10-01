@@ -3,7 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { renderEulaMarkdown } from '../src/onboarding/eula-markdown.mjs';
 import { loadDefaultEulaText } from '../src/onboarding/eula-persistent-core.mjs';
 
-const source = loadDefaultEulaText();
+process.env.TIMESYNCHER_COLLABORATOR_NAME = process.env.TIMESYNCHER_COLLABORATOR_NAME || 'Collaborator seat';
+const source = loadDefaultEulaText(process.env);
 const html = renderEulaMarkdown(source);
 
 for (const line of html.split('\n')) {
