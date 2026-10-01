@@ -230,7 +230,7 @@ const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return R
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
-const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=ot.filter(G=>tsListThings(Oc).some(Re=>or(Re).includes(G))),Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
+const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 
 const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -664,6 +664,9 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G)))') || js.includes('ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G)))')) {
     throw new Error('Live list tags must not harvest from the unfiltered full catalog.');
+  }
+  if (js.includes('ci=ot.filter(') || !js.includes('ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
+    throw new Error('Restaurant list chips must be saved tags on listed Things, not canned catalog names.');
   }
   if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
     throw new Error('Rest type chips must be types present on Things in that Rest list.');

@@ -17,8 +17,8 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-packing.png`.
-- Pass when the live page shows the control named above.
-- If the app no longer shows it, the result is a product gap. Do not delete or soften this file.
+- Pass on `las-vegas-vacation-3` when `share_packing` is off and the Packing tab is absent. Pass on a trip with the flag on when the tab is visible.
+- If the flag is on and the tab is missing, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas
 

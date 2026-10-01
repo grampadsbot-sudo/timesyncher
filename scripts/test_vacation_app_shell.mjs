@@ -98,9 +98,12 @@ assert.match(onboarding, /in_app_text_voice_and_file_intake/);
 
 const orderSuccess = await readFile(new URL('../order-success.html', import.meta.url), 'utf8');
 assert.match(orderSuccess, /Purchase confirmed/);
-assert.match(orderSuccess, /Check your email and click the link in that email to open TimeSyncher Vacation/);
+assert.match(orderSuccess, /Your TimeSyncher Vacation purchase is confirmed\./);
+assert.doesNotMatch(orderSuccess, /Check your email/i);
+assert.doesNotMatch(orderSuccess, /click the link in that email/i);
 assert.match(orderSuccess, /purchase_email_ack/);
-assert.doesNotMatch(orderSuccess, /id="openApp"/);
+assert.match(orderSuccess, /id="openApp"/);
+assert.match(orderSuccess, /id="purchaseLink"/);
 assert.doesNotMatch(orderSuccess, /Open TimeSyncher Vacation/);
 assert.doesNotMatch(orderSuccess, /id="acceptEula"/);
 assert.doesNotMatch(orderSuccess, /\/accept\//);
@@ -113,10 +116,10 @@ const confirmed = purchaseEmail({
 });
 assert.equal(
   confirmed.launchUrl,
-  'https://vacation-staging.timesyncher.com/shared/intake-eab1cbb15144/',
+  'https://vacation-staging.timesyncher.com/shared/intake-eab1cbb15144/?purchase=1',
 );
-assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\//);
-assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
+assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/\?purchase=1/);
+assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/\?purchase=1"/);
 assert.doesNotMatch(confirmed.htmlBody, /vacation-app\.html/);
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);
 

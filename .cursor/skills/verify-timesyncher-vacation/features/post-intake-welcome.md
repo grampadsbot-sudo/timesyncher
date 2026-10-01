@@ -10,7 +10,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## How to get to it (user POV)
 
-- Open the intake session chat and find that reply. Do not start a second gold dialog.
+- Open the intake session chat and find that reply. The shared itinerary tabs are not the chat. Do not start a second gold dialog. A drive without that chat session, or without `DATABASE_URL` for the stored turns, cannot show the reply.
 
 ## Driving it
 
