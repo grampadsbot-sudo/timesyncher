@@ -61,7 +61,7 @@
   "functions": {
     "api/[...route].mjs": {
       "maxDuration": 60,
-      "includeFiles": "scripts/vacation-app-reply-rules-snapshot.json"
+      "includeFiles": "{scripts/vacation-app-reply-rules-snapshot.json,content/onboarding-welcome.json}"
     }
   },
   "headers": [

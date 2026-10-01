@@ -33,6 +33,7 @@ scripts/test_purchase_launch_routes.mjs
 scripts/test_vacation_collaborators.mjs
 scripts/test_vacation_telegram_intake.mjs
 scripts/test_vacation_web_access.mjs
+scripts/test_welcome_after_intake_database.mjs
 scripts/test_void_stale_build.mjs
 scripts/test_brave_tavily_adapter.mjs
 scripts/test_customer_input_reply.mjs

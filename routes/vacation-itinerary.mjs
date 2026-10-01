@@ -31,7 +31,6 @@ import {
   customerModality,
   jevStamp,
   liveTurnRecord,
-  produceOnboardingOpener,
   intakeSpan,
   firstMarkedIntake,
   produceLiveAppReply,
@@ -41,6 +40,7 @@ import {
   applyCustomerNotes,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
+import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -296,33 +296,19 @@ async function welcomeInputs(db, session, trip) {
     return {
       audience: 'collaborator',
       ownerFirstName: welcomeFirstName(owner.first_name || owner.display_name),
-      collaboratorFirstName: welcomeFirstName(session.first_name || seat.displayName || session.display_name),
+      collabFirstName: welcomeFirstName(session.first_name || seat.displayName || session.display_name),
       tripTitle,
       tripSiteUrl,
     };
   }
-  let plan = '';
-  if (session.order_id) {
-    const orders = await db`select plan from paid_orders where id = ${session.order_id} limit 1`;
-    plan = String(orders[0]?.plan || '').trim();
-  }
-  const people = await db`
-    select display_name
-    from vacation_collaborators
-    where trip_id = ${trip.id}
-      and status = 'active'
-  `;
   return {
     audience: 'owner',
     firstName: welcomeFirstName(session.first_name || session.display_name),
-    tripTitle,
     tripSiteUrl,
-    plan,
-    collaborators: people.map((row) => welcomeFirstName(row.display_name)).filter(Boolean),
   };
 }
 
-async function ensureOnboardingOpener(db, session, trip) {
+export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
   const welcomeAudience = seat ? 'collaborator' : 'owner';
@@ -350,29 +336,13 @@ async function ensureOnboardingOpener(db, session, trip) {
     `;
   if (existing.length) return;
   const started = Date.now();
-  const produced = await produceOnboardingOpener({
-    ...await welcomeInputs(db, session, trip),
-    session,
-    env: process.env,
-  });
-  if (!produced?.reply) {
-    const error = new Error(produced?.reason || 'onboarding opener model returned no reply');
-    error.statusCode = 502;
-    throw error;
-  }
-  const text = produced.reply;
+  const text = renderOnboardingWelcome(await welcomeInputs(db, session, trip), deps);
   const elapsed = Math.max(1, Date.now() - started);
-  const live = liveTurnRecord({
-    turnIndex: 1,
-    role: 'app',
-    modality: 'text',
+  const live = cannedWelcomeLiveTurn({
     text,
     at: new Date().toISOString(),
     latencyMs: elapsed,
     sessionE2eMs: elapsed,
-    jev: produced.jev,
-    model: produced.model,
-    rules: produced.rules,
   });
   const payload = {
     source: 'vacation_app',
