@@ -1069,12 +1069,6 @@
   },
   {
     "rule": "DEAD-CODE",
-    "file": "src/vacation/checkout-pricing.mjs",
-    "symbol": "export:checkoutCurrency",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
     "file": "src/vacation/collaborators.mjs",
     "symbol": "export:COLLABORATOR_PLANS",
     "note": "existing; ratchet only shrinks"
