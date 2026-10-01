@@ -716,7 +716,7 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
     : (linkedVacations.length === 1 ? linkedVacations : []);
   const rawPerson = accessPersonLabel(requestText, contextText);
   const person = accessPersonCustomerLabel(rawPerson, requestText, contextText);
-  if (matches.length !== 1) return { matches, person, lookup, facts: null, fallbackAnswer: '' };
+  if (matches.length !== 1) return { matches, person, lookup, facts: null };
   const match = matches[0];
   const label = match.name || match.destination || lookup || 'that vacation';
   const url = publicVacationUrl(match, fallbackBase);
@@ -724,32 +724,13 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
   const namedMember = Array.isArray(match.members) && match.members.some((member) => memberMatchesAccessPerson(member, person) || memberMatchesAccessPerson(member, rawPerson));
   const telegramCollaborator = hasTelegramCollaboratorAccess({ namedMember, requestedCaps });
   const inviteState = accessInviteStateFrom(match, person) || accessInviteStateFrom(match, rawPerson);
-  const allowedClaims = [];
-  const forbiddenClaims = [];
-  if (inviteState === 'sent') allowedClaims.push(`${person} has been sent a website editor invite.`);
-  if (inviteState === 'accepted') allowedClaims.push(`${person} has accepted a website editor invite.`);
-  if (namedMember) allowedClaims.push(`${person} is listed as a named member/editor on ${label}.`);
-  else allowedClaims.push(`${person} is not listed as a named member/editor on ${label}.`);
-  if (url) allowedClaims.push(`The shared vacation website is ${url}.`);
-  forbiddenClaims.push(`${person} can edit through a removed chat channel.`);
-  forbiddenClaims.push(`${person} accepted the invite.`);
-  forbiddenClaims.push(`${person} is a collaborator.`);
-  forbiddenClaims.push(`${person} has website editor access.`);
-  const fallbackLines = [];
-  fallbackLines.push(namedMember
-    ? `${person} is listed as a named member/editor on ${label}.`
-    : `${person} is not listed as a named member/editor on ${label}.`);
-  if (url && !requestedCaps.includes('collab_telegram')) fallbackLines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
-  if (requestedCaps.includes('photo_upload') || requestedCaps.includes('video_upload')) {
-    const parts = [];
-    if (requestedCaps.includes('photo_upload')) parts.push('photo uploads');
-    if (requestedCaps.includes('video_upload')) parts.push('video uploads');
-    fallbackLines.push(`${person} is not currently enabled for ${parts.join(' or ')} on ${label}.`);
+  const remediationKeys = [];
+  if ((!namedMember || requestedCaps.includes('collab_telegram')) && !requestedCaps.includes('collab_telegram') && remediationCatalogItem(manifest, 'collab_telegram')) {
+    remediationKeys.push('collab_telegram');
   }
-  if (!namedMember || requestedCaps.includes('collab_telegram')) {
-    const line = remediationLine(manifest, 'collab_telegram', { person, label });
-    if (line && !requestedCaps.includes('collab_telegram')) fallbackLines.push(line);
-  }
+  if (requestedCaps.includes('photo_upload') && remediationCatalogItem(manifest, 'photo_upload')) remediationKeys.push('photo_upload');
+  if (requestedCaps.includes('video_upload') && remediationCatalogItem(manifest, 'video_upload')) remediationKeys.push('video_upload');
+  if (!match.shareCollab && requestedCaps.includes('collab_web') && remediationCatalogItem(manifest, 'collab_web')) remediationKeys.push('collab_web');
   return {
     matches,
     person,
@@ -761,16 +742,18 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
       person_reference: rawPerson,
       vacation_name: label,
       vacation_url: url || '',
+      shareCollab: Boolean(match.shareCollab),
+      linkAccess: 'view_only',
       requested_capabilities: requestedCaps,
       telegram_collaborator: telegramCollaborator,
       named_member_or_editor: namedMember,
       website_editor_invite: inviteState || 'unknown',
-      allowed_claims: allowedClaims,
-      forbidden_claims: forbiddenClaims,
+      photo_upload_enabled: false,
+      video_upload_enabled: false,
+      remediation_keys: remediationKeys,
       required_terms: [person, label],
       preferred_style: 'direct, warm, one or two short sentences',
     },
-    fallbackAnswer: fallbackLines.filter(Boolean).join('\n\n'),
   };
 }
 
@@ -785,19 +768,14 @@ function customerCopyLooksSafe(answer = '', facts = {}) {
   if (person && person !== 'that person' && !lower.includes(person.toLowerCase())) return false;
   if (label && !lower.includes(label.toLowerCase())) return false;
   if (facts.telegram_collaborator === true && /\bcan edit through a removed chat channel\b/i.test(source)) return false;
-  const forbidden = Array.isArray(facts.forbidden_claims) ? facts.forbidden_claims : [];
-  for (const claim of forbidden) {
-    const normalized = text(claim, 240).toLowerCase();
-    if (normalized && lower.includes(normalized.toLowerCase())) return false;
-  }
   return true;
 }
 
 function grokCustomerRender(facts = {}) {
   if (process.env.TIMESYNCHER_GROK_RESPONSE_RENDERER_FAKE === '1') {
-    const claims = Array.isArray(facts.allowed_claims) ? facts.allowed_claims : [];
-    const first = claims[0];
-    const answer = [first, claims[1], claims[2]].filter(Boolean).join(' ');
+    const person = text(facts.person_name, 120);
+    const label = text(facts.vacation_name, 180);
+    const answer = [person, label].filter(Boolean).join(' — ').trim();
     return customerCopyLooksSafe(answer, facts) ? answer : '';
   }
   if (process.env.TIMESYNCHER_DISABLE_GROK_RESPONSE_RENDERER === '1') return '';
@@ -826,61 +804,23 @@ function grokCustomerRender(facts = {}) {
   return '';
 }
 
-function vacationAccessQuestionAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE, contextText = '', manifest = null } = {}) {
+function vacationAccessQuestionReply({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE, contextText = '', manifest = null } = {}) {
   const resolved = vacationAccessAnswerFacts({ requestText, linkedVacations, fallbackBase, contextText, manifest });
-  const { lookup, matches, person } = resolved;
+  const { matches, person } = resolved;
   if (matches.length !== 1) {
-    if (matches.length > 1) {
-      const lines = matches.slice(0, 5).map((match) => {
-        const label = match.name || match.destination || match.token || 'Untitled vacation';
-        const url = publicVacationUrl(match, fallbackBase);
-        return url ? `- ${label}: ${url}` : `- ${label}`;
-      });
-      return [`I found more than one matching vacation:`, ...lines, '', `Which vacation should I check for ${person}?`].join('\n');
-    }
-    return [
-      `I could not verify ${person}'s access to a matching vacation yet.`,
-    ].join('\n');
+    const pool = matches.length ? matches : linkedVacations;
+    return {
+      answer: '',
+      facts: {
+        need: 'which_trip',
+        person,
+        candidates: vacationCandidateList(pool, fallbackBase),
+      },
+    };
   }
-  const modelAnswer = resolved.facts ? grokCustomerRender(resolved.facts) : '';
-  if (modelAnswer) return modelAnswer;
-  const match = matches[0];
-  const label = match.name || match.destination || lookup || 'that vacation';
-  const url = publicVacationUrl(match, fallbackBase);
-  const requestedCaps = accessCapabilitiesRequested(requestText);
-  const namedMember = Array.isArray(match.members) && match.members.some((member) => memberMatchesAccessPerson(member, person));
-  const lines = [];
-  lines.push(namedMember
-    ? `${person} is listed as a named member/editor on ${label}.`
-    : `${person} is not listed as a named member/editor on ${label}.`);
-  if (url) lines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
-  else lines.push('I found the vacation record, but I do not have a share-link URL for it yet.');
-  lines.push(match.shareCollab
-    ? 'Website editing requires an authenticated owner or an owner-approved email web editor.'
-    : 'The shared website is view-only unless the owner opens an authenticated session or invites a named email user as a web editor.');
-  if (requestedCaps.includes('photo_upload') || requestedCaps.includes('video_upload')) {
-    const parts = [];
-    if (requestedCaps.includes('photo_upload')) parts.push('photo uploads');
-    if (requestedCaps.includes('video_upload')) parts.push('video uploads');
-    lines.push(`${person} is not currently enabled for ${parts.join(' or ')} on ${label}.`);
-  }
-  if (!namedMember || requestedCaps.includes('collab_telegram')) {
-    const line = remediationLine(manifest, 'collab_telegram', { person, label });
-    if (line) lines.push(line);
-  }
-  if (requestedCaps.includes('photo_upload')) {
-    const line = remediationLine(manifest, 'photo_upload', { person, label });
-    if (line) lines.push(line);
-  }
-  if (requestedCaps.includes('video_upload')) {
-    const line = remediationLine(manifest, 'video_upload', { person, label });
-    if (line) lines.push(line);
-  }
-  if (!match.shareCollab && requestedCaps.includes('collab_web')) {
-    const line = remediationLine(manifest, 'collab_web', { person, label });
-    if (line) lines.push(line);
-  }
-  return lines.join('\n\n');
+  const facts = resolved.facts;
+  const modelAnswer = facts ? grokCustomerRender(facts) : '';
+  return { answer: modelAnswer || '', facts };
 }
 
 function vacationAccessRosterFacts({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
@@ -1086,7 +1026,9 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
       answer = '';
       answerMode = linkedVacations.length ? 'account_state' : 'access_state_unverified';
     } else if (['account_question', 'collaborator_access_question', 'media_upload_question'].includes(intent) || isPersonAccessQuestion(ownRequestText)) {
-      answer = vacationAccessQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest });
+      const access = vacationAccessQuestionReply({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest });
+      answer = access.answer;
+      facts = access.facts;
       answerMode = linkedVacations.length ? 'account_state' : 'access_state_unverified';
     } else if (/\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/i.test(ownRequestText)) {
       answer = 'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.';
@@ -1237,10 +1179,12 @@ function currentTurnRouterDecision(job) {
   }
 
   if (isPersonAccessQuestion(ownRequestText)) {
+    const access = vacationAccessQuestionReply({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest });
     return makeTurnDecision({
       intent: 'account_question',
       confidence: 0.93,
-      answer: vacationAccessQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest }),
+      answer: access.answer,
+      facts: access.facts,
       answerMode: linkedVacations.length ? 'account_state' : 'access_state_unverified',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['person_access_question', 'current_turn_no_write'],

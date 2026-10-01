@@ -453,8 +453,9 @@ const linkedVegasAccessQuestion = spawnSync(process.execPath, ['./product-gbrain
 });
 assert.equal(linkedVegasAccessQuestion.status, 0, linkedVegasAccessQuestion.stderr || linkedVegasAccessQuestion.stdout);
 const linkedVegasAccessQuestionResult = JSON.parse(linkedVegasAccessQuestion.stdout);
-assert.match(linkedVegasAccessQuestionResult.customerResponse, /not listed as a named member\/editor/i);
-assert.match(linkedVegasAccessQuestionResult.customerResponse, /https:\/\/travel\.timesyncher\.com\/shared\/las-vegas-strip-vacation\//);
+assert.equal(linkedVegasAccessQuestionResult.result.turnDecision.facts?.named_member_or_editor, false);
+assert.match(linkedVegasAccessQuestionResult.result.turnDecision.facts?.vacation_url || '', /las-vegas-strip-vacation/);
+assert.doesNotMatch(linkedVegasAccessQuestionResult.customerResponse, /named member\/editor|view-only unless|available to anyone with the shared link/i);
 assert.doesNotMatch(linkedVegasAccessQuestionResult.customerResponse, /Telegram/i);
 assert.equal(linkedVegasAccessQuestionResult.result.researchSummary.status, 'support_router_no_write');
 assert.equal(linkedVegasAccessQuestionResult.result.turnDecision.intent, 'account_question');
@@ -493,7 +494,8 @@ const thisVacationAccessQuestion = spawnSync(process.execPath, ['./product-gbrai
 });
 assert.equal(thisVacationAccessQuestion.status, 0, thisVacationAccessQuestion.stderr || thisVacationAccessQuestion.stdout);
 const thisVacationAccessQuestionResult = JSON.parse(thisVacationAccessQuestion.stdout);
-assert.match(thisVacationAccessQuestionResult.customerResponse, /Kim is not listed as a named member\/editor/i);
+assert.equal(thisVacationAccessQuestionResult.result.turnDecision.facts?.named_member_or_editor, false);
+assert.doesNotMatch(thisVacationAccessQuestionResult.customerResponse, /named member\/editor|view-only unless|available to anyone with the shared link/i);
 assert.equal(thisVacationAccessQuestionResult.result.turnDecision.intent, 'account_question');
 assert.equal(thisVacationAccessQuestionResult.result.turnDecision.write_mode, 'none');
 assert.equal(thisVacationAccessQuestionResult.result.editApplied, false);
@@ -531,8 +533,8 @@ const wifeTelegramCollaboratorStatusQuestion = spawnSync(process.execPath, ['./p
 });
 assert.equal(wifeTelegramCollaboratorStatusQuestion.status, 0, wifeTelegramCollaboratorStatusQuestion.stderr || wifeTelegramCollaboratorStatusQuestion.stdout);
 const wifeTelegramCollaboratorStatusQuestionResult = JSON.parse(wifeTelegramCollaboratorStatusQuestion.stdout);
-assert.doesNotMatch(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /Telegram collaborator/i);
-assert.match(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /named member\/editor/i);
+assert.doesNotMatch(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /Telegram collaborator|named member\/editor|view-only unless|available to anyone with the shared link/i);
+assert.equal(wifeTelegramCollaboratorStatusQuestionResult.result.turnDecision.facts?.website_editor_invite, 'sent');
 assert.doesNotMatch(wifeTelegramCollaboratorStatusQuestionResult.customerResponse, /Yes\.|up to 3 people|Choose a Telegram add-on option below/i);
 assert.equal(wifeTelegramCollaboratorStatusQuestionResult.result.turnDecision.intent, 'account_question');
 assert.equal(wifeTelegramCollaboratorStatusQuestionResult.result.turnDecision.write_mode, 'none');
