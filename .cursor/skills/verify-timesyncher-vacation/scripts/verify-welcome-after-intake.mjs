@@ -14,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 import {
   applyJudgeGrade,
   countRealVacations,
+  collaboratorOwnFirstMessage,
+  collaboratorWelcomeTurn,
   generateOnboardingFixtures,
   normalizeBuildSha,
   onboardingBars,
@@ -456,6 +458,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
       observedWelcomeWall: welcomeWall,
       submittedWall,
       eulaAcceptedAt,
+      publicUrl: onboarding.publicUrl || '',
     };
   } catch (error) {
     const failure = path.join(artifactsDir, `${spec.id}-failure.png`);
@@ -470,6 +473,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
       postedOk: false,
       postedError: redactWelcomeSecrets(error?.message || error),
       screenshots: [failure],
+      publicUrl: onboarding.publicUrl || '',
     };
   } finally {
     await page.close().catch(() => {});
@@ -639,16 +643,17 @@ async function driveCollaborator(browser, env, fixture, ownerTrip, artifactsDir)
     const observedAt = new Date().toISOString();
     await shotLatest(page, file);
     const opened = await readSession(page, joined.token);
-    const userTexts = await page.evaluate(() => [...document.querySelectorAll('#messages article.bubble.user')].map((node) => {
-      const label = node.querySelector('small')?.textContent || '';
+    const bubbles = await page.evaluate(() => [...document.querySelectorAll('#messages article.bubble')].filter((node) => node.id !== 'tsTyping').map((node) => {
+      const label = (node.querySelector('small')?.textContent || '').replace(/\s+/g, ' ').trim();
       const raw = (node.textContent || '').replace(/\s+/g, ' ').trim();
-      return label ? raw.replace(label, '').replace(/\s+/g, ' ').trim() : raw;
-    }).filter(Boolean));
+      const text = label ? raw.replace(label, '').replace(/\s+/g, ' ').trim() : raw;
+      return { label, text, user: node.classList.contains('user') };
+    }).filter((row) => row.text));
     const turns = withObservedWelcome(opened.data?.turns, domWelcome?.prior, observedAt, null, '');
     return {
       error: '',
       turns,
-      userTexts,
+      bubbles,
       screenshots: [file],
       observedAt,
       eulaAcceptedAt,
@@ -691,15 +696,19 @@ async function shippedTemplateSources() {
   return sources;
 }
 
-function collaboratorStamp(collaborator) {
-  const welcome = (collaborator?.turns || []).find((turn) => turn.speaker === 'app' && turn.text);
-  const customer = (collaborator?.turns || []).find((turn) => turn.speaker === 'customer' || turn.speaker === 'user');
+function collaboratorStamp(collaborator, ownerTurns) {
+  const welcome = collaboratorWelcomeTurn(collaborator);
+  const customer = collaboratorOwnFirstMessage(collaborator, ownerTurns);
+  const welcomeAt = welcome?.at || null;
+  const firstCustomerAt = customer?.at || null;
+  const welcomeMs = Date.parse(welcomeAt || '');
+  const customerMs = Date.parse(firstCustomerAt || '');
   return {
     id: 'collaborator',
-    welcomeAt: welcome?.at || null,
-    firstCustomerAt: customer?.at || null,
+    welcomeAt,
+    firstCustomerAt,
     eulaAcceptedAt: collaborator?.eulaAcceptedAt || null,
-    welcomeBeforeCustomer: Boolean(welcome?.text) && !customer,
+    welcomeBeforeCustomer: Boolean(turnText(welcome)) && (!customer || (Number.isFinite(welcomeMs) && Number.isFinite(customerMs) && welcomeMs < customerMs)),
   };
 }
 
@@ -756,7 +765,7 @@ export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judg
     requirements: onboardingBars().map((bar) => ({ ...bar, status: 'ungraded' })),
     precheck,
     judge: judge || { graded: false, pass: false, source: 'external' },
-    timestamps: [...timestampRows(trips), collaboratorStamp(collaborator)],
+    timestamps: [...timestampRows(trips), collaboratorStamp(collaborator, (trips || []).flatMap((trip) => trip.turns || []))],
     trips: (trips || []).map((trip) => ({
       id: trip.id,
       kind: trip.kind,
@@ -845,6 +854,19 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
   }
   const buildEnd = await readBuildStamp({ env });
   const sources = await shippedTemplateSources();
+  const ownerTrip = trips.find((trip) => trip.id === 'f1');
+  for (const trip of trips) {
+    trip.welcomePlaceholders = {
+      firstName: fixtures.owner.firstName,
+      tripSiteUrl: trip.publicUrl || '',
+    };
+  }
+  collaborator.welcomePlaceholders = {
+    collabFirstName: fixtures.collaborator.firstName,
+    ownerFirstName: fixtures.owner.firstName,
+    tripTitle: ownerTrip?.title || '',
+    tripSiteUrl: ownerTrip?.publicUrl || '',
+  };
   const eulaAccepts = [
     { id: 'no-vacation', at: noVacation?.eulaAcceptedAt || null },
     ...trips.map((trip) => ({ id: trip.id, at: trip.eulaAcceptedAt || null })),

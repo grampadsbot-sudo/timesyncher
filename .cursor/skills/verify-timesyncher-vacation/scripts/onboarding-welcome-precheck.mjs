@@ -18,6 +18,17 @@ export const LONG_VOICE_TEMPLATE = [
 export const SHORT_TRIP_TEXT = 'beach trip sometime next summer';
 export const QUESTION_FIRST_TEXT = "wait can my husband see this too? he's doing most of the planning";
 
+export const OWNER_WELCOME_TEMPLATE = [
+  "Welcome, {firstName}! You're all set, and your trip already has its own website: {tripSiteUrl}. Anyone you share that link with can see your plans and photos without signing in.",
+  "Here's how this works. You tell me about the vacation, and I'll build a day-by-day itinerary on that site: where you're staying, what you're doing each day, and notes for each day and place. As the trip happens, you and your family can add photos, videos, and stories, and at the end it all becomes a keepsake you can keep.",
+  "The easiest way to start is to hold the mic button and just talk for a minute or two. Tell me where you're going and when, who's coming, where you're staying, and anything you're excited about or still deciding on. Rough or rambling is perfect. I'll sort it out and ask about anything that's missing.",
+].join('\n\n');
+
+export const COLLABORATOR_WELCOME_TEMPLATE = "Hi {collabFirstName}, welcome! {ownerFirstName} added you to {tripTitle}. Here's the trip website: {tripSiteUrl}. You can add ideas, photos, videos, and notes for any day or place, and I'll keep everything organized in one itinerary. What are you most looking forward to? Or send a quick voice note with anything you want on the plan.";
+
+const OWNER_WELCOME_KEYS = ['firstName', 'tripSiteUrl'];
+const COLLABORATOR_WELCOME_KEYS = ['collabFirstName', 'ownerFirstName', 'tripTitle', 'tripSiteUrl'];
+
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const RELATIONS = ['cousin', 'sibling', 'neighbor', 'friend'];
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -275,21 +286,99 @@ export function gradeNoVacationDropdown(observation = {}) {
   };
 }
 
-export function collaboratorSeesOwnerThread(ownerTurns, collaboratorTurns, collaboratorUserTexts = []) {
-  const ownerTexts = (Array.isArray(ownerTurns) ? ownerTurns : [])
+export function normalizeWelcomeText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+export function fillWelcomeTemplate(template, values = {}) {
+  return normalizeWelcomeText(String(template || '').replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? '')));
+}
+
+export function welcomeTemplateMatch(actual, template, values = {}, keys = []) {
+  for (const key of keys) {
+    if (!String(values?.[key] ?? '').trim()) return { ok: false, reason: 'placeholder', key };
+  }
+  const expected = fillWelcomeTemplate(template, values);
+  const got = normalizeWelcomeText(actual);
+  if (!got) return { ok: false, reason: 'missing' };
+  if (got !== expected) return { ok: false, reason: 'mismatch' };
+  return { ok: true };
+}
+
+function ownerCustomerNeedles(ownerTurns) {
+  return (Array.isArray(ownerTurns) ? ownerTurns : [])
     .filter((turn) => isCustomer(turn))
     .map((turn) => turnText(turn))
-    .filter((value) => value.length >= 24);
-  const ownTexts = [
-    ...(Array.isArray(collaboratorTurns) ? collaboratorTurns : []).filter((turn) => isCustomer(turn)).map((turn) => turnText(turn)),
-    ...(Array.isArray(collaboratorUserTexts) ? collaboratorUserTexts : []).map((value) => String(value || '').replace(/\s+/g, ' ').trim()),
-  ].filter(Boolean);
-  const hits = [];
-  for (const owner of ownerTexts) {
-    const needle = owner.slice(0, 48);
-    if (ownTexts.some((value) => value.includes(needle))) hits.push(needle);
+    .filter((value) => value.length >= 24)
+    .map((value) => value.slice(0, 48));
+}
+
+export function collaboratorWelcomeTurn(collaborator) {
+  const appTurns = (Array.isArray(collaborator?.turns) ? collaborator.turns : []).filter((turn) => isApp(turn) && turnText(turn));
+  const eulaAt = Date.parse(collaborator?.eulaAcceptedAt || '');
+  if (Number.isFinite(eulaAt)) {
+    const after = appTurns.filter((turn) => {
+      const at = Date.parse(turn.at || '');
+      return Number.isFinite(at) && at >= eulaAt - 2000;
+    });
+    if (after.length) return after[0];
   }
-  return hits;
+  return appTurns.at(-1) || null;
+}
+
+export function collaboratorOwnFirstMessage(collaborator, ownerTurns = []) {
+  const needles = ownerCustomerNeedles(ownerTurns);
+  const turns = Array.isArray(collaborator?.turns) ? collaborator.turns : [];
+  return turns.find((turn) => {
+    if (!isCustomer(turn) || !turnText(turn)) return false;
+    const text = turnText(turn);
+    return !needles.some((needle) => text.includes(needle));
+  }) || null;
+}
+
+export function collaboratorWelcomeTiming(collaborator, ownerTurns = []) {
+  const welcome = collaboratorWelcomeTurn(collaborator);
+  if (!welcome) return { ok: false, reason: 'missing', welcome: null, customer: null };
+  const customer = collaboratorOwnFirstMessage(collaborator, ownerTurns);
+  if (!customer) return { ok: true, reason: null, welcome, customer: null };
+  const welcomeAt = Date.parse(welcome.at || '');
+  const customerAt = Date.parse(customer.at || '');
+  if (!Number.isFinite(welcomeAt) || !Number.isFinite(customerAt) || welcomeAt >= customerAt) {
+    return { ok: false, reason: 'timestamp', welcome, customer };
+  }
+  return { ok: true, reason: null, welcome, customer };
+}
+
+export function gradeAuthorLabels(bubbles, { ownerName = '', collabName = '', ownerTurns = [] } = {}) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  if (!list.length) return [{ code: 'author_label', detail: 'missing' }];
+  const needles = ownerCustomerNeedles(ownerTurns);
+  const owner = String(ownerName || '').trim().toLowerCase();
+  const collab = String(collabName || '').trim().toLowerCase();
+  const failures = [];
+  for (const bubble of list) {
+    const label = String(bubble?.label || '').replace(/\s+/g, ' ').trim();
+    const text = turnText(bubble);
+    if (!label) {
+      failures.push({ code: 'author_label', detail: 'empty', text: text.slice(0, 48) });
+      continue;
+    }
+    const labelKey = label.toLowerCase();
+    const labeledYou = labelKey === 'you';
+    const labeledOwner = Boolean(owner) && labelKey.includes(owner);
+    const labeledCollab = labeledYou || (Boolean(collab) && labelKey.includes(collab));
+    const ownerText = needles.some((needle) => text.includes(needle));
+    if (bubble?.user !== true) {
+      if (labeledYou || labeledOwner) failures.push({ code: 'author_label', detail: 'app_label', label });
+      continue;
+    }
+    if (ownerText) {
+      if (!labeledOwner || labeledYou) failures.push({ code: 'author_label', detail: 'owner_labeled_you', label });
+      continue;
+    }
+    if (!labeledCollab && !labeledOwner) failures.push({ code: 'author_label', detail: 'collaborator_label', label });
+  }
+  return failures;
 }
 
 export function normalizeBuildSha(value) {
@@ -334,7 +423,7 @@ function appTexts(trips, collaborator) {
     if (welcome) rows.push({ id: trip?.id || '', where: 'welcome', text: welcome });
     if (reply) rows.push({ id: trip?.id || '', where: 'reply', text: reply });
   }
-  const collabWelcome = (collaborator?.turns || []).find((turn) => isApp(turn) && turnText(turn));
+  const collabWelcome = collaboratorWelcomeTurn(collaborator);
   if (collabWelcome) rows.push({ id: 'collaborator', where: 'welcome', text: turnText(collabWelcome) });
   return rows;
 }
@@ -366,17 +455,22 @@ export function precheckOnboardingRun({
       continue;
     }
     const text = turnText(timing.welcome);
-    for (const code of bannedWordHits(text)) {
-      failures.push({ code: 'banned_word', trip: trip?.id || '', word: code });
-    }
-    for (const code of internalWordHits(text)) {
-      failures.push({ code: 'internal_word', trip: trip?.id || '', where: 'welcome', word: code });
-    }
     const reply = replyAfterCustomer(trip?.turns);
     for (const code of internalWordHits(reply)) {
       failures.push({ code: 'internal_word', trip: trip?.id || '', where: 'reply', word: code });
     }
-    if (!hasVoiceInvitation(text)) failures.push({ code: 'voice_invitation', trip: trip?.id || '' });
+    if (checkDialog) {
+      const match = welcomeTemplateMatch(text, OWNER_WELCOME_TEMPLATE, trip?.welcomePlaceholders || {}, OWNER_WELCOME_KEYS);
+      if (!match.ok) failures.push({ code: 'welcome_template', trip: trip?.id || '', detail: match.reason, key: match.key || '' });
+    } else {
+      for (const code of bannedWordHits(text)) {
+        failures.push({ code: 'banned_word', trip: trip?.id || '', word: code });
+      }
+      for (const code of internalWordHits(text)) {
+        failures.push({ code: 'internal_word', trip: trip?.id || '', where: 'welcome', word: code });
+      }
+      if (!hasVoiceInvitation(text)) failures.push({ code: 'voice_invitation', trip: trip?.id || '' });
+    }
   }
   for (const leak of literalLeaks(literals, sources)) failures.push(leak);
   if (checkDialog) {
@@ -386,8 +480,24 @@ export function precheckOnboardingRun({
       failures.push({ code: 'f1_one_question', detail: questionCount(f1Reply) });
     }
     const ownerTurns = (trips || []).flatMap((trip) => trip?.turns || []);
-    const ownThread = collaboratorSeesOwnerThread(ownerTurns, collaborator?.turns, collaborator?.userTexts);
-    if (ownThread.length) failures.push({ code: 'collaborator_owns_thread', detail: ownThread });
+    failures.push(...gradeAuthorLabels(collaborator?.bubbles, {
+      ownerName: collaborator?.welcomePlaceholders?.ownerFirstName || '',
+      collabName: collaborator?.welcomePlaceholders?.collabFirstName || '',
+      ownerTurns,
+    }));
+    const collabTiming = collaboratorWelcomeTiming(collaborator, ownerTurns);
+    if (!collabTiming.ok) {
+      failures.push({ code: 'collaborator_welcome_before_first', detail: collabTiming.reason });
+    }
+    const collabMatch = welcomeTemplateMatch(
+      turnText(collabTiming.welcome),
+      COLLABORATOR_WELCOME_TEMPLATE,
+      collaborator?.welcomePlaceholders || {},
+      COLLABORATOR_WELCOME_KEYS,
+    );
+    if (!collabMatch.ok) {
+      failures.push({ code: 'welcome_template', trip: 'collaborator', detail: collabMatch.reason, key: collabMatch.key || '' });
+    }
     for (const row of appTexts(trips, collaborator)) {
       const posture = accessPosture(row.text);
       if (posture.granted) failures.push({ code: 'access_granted', trip: row.id, where: row.where });
@@ -396,10 +506,6 @@ export function precheckOnboardingRun({
     }
     const f3Reply = replyAfterCustomer((trips || []).find((trip) => trip?.id === 'f3')?.turns);
     if (!f3Reply) failures.push({ code: 'access_not_offered', trip: 'f3', where: 'reply' });
-    const collabText = turnText((collaborator?.turns || []).find((turn) => isApp(turn)));
-    for (const code of internalWordHits(collabText)) {
-      failures.push({ code: 'internal_word', trip: 'collaborator', where: 'welcome', word: code });
-    }
   }
   let noVacationGrade = null;
   if (noVacation) {
@@ -545,6 +651,12 @@ export function renderJudgePacketMarkdown(packet) {
     lines.push(packet.collaborator.error ? `Capture: ${packet.collaborator.error}` : 'Capture recorded.');
     for (const turn of packet.collaborator.turns || []) {
       lines.push(`- ${turn.at || 'no-time'} ${turn.speaker}: ${turnText(turn)}`);
+    }
+    if (Array.isArray(packet.collaborator.bubbles)) {
+      lines.push('', 'Labels:');
+      for (const bubble of packet.collaborator.bubbles) {
+        lines.push(`- ${bubble.label || 'unlabeled'} (${bubble.user ? 'user' : 'app'}): ${turnText(bubble)}`);
+      }
     }
   }
   lines.push('', '## Screenshots', '');

@@ -5,10 +5,12 @@ import {
   accessPosture,
   applyJudgeGrade,
   bannedWordHits,
-  collaboratorSeesOwnerThread,
+  COLLABORATOR_WELCOME_TEMPLATE,
   countRealVacations,
   endsWithExactlyOneQuestion,
+  fillWelcomeTemplate,
   generateOnboardingFixtures,
+  gradeAuthorLabels,
   gradeNoVacationDropdown,
   hasVoiceInvitation,
   internalWordHits,
@@ -16,13 +18,16 @@ import {
   LONG_VOICE_TEMPLATE,
   mulberry32,
   normalizeJudge,
+  normalizeWelcomeText,
   onboardingVerdict,
+  OWNER_WELCOME_TEMPLATE,
   precheckOnboardingRun,
   QUESTION_FIRST_TEXT,
   renderJudgePacketMarkdown,
   SHORT_TRIP_TEXT,
   stampBuildSha,
   welcomeBeforeFirstTurn,
+  welcomeTemplateMatch,
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/onboarding-welcome-precheck.mjs';
 import {
   agreeThenReadWelcome,
@@ -235,16 +240,40 @@ assert.equal(endsWithExactlyOneQuestion('The days are in.'), false);
 assert.equal(accessPosture('Anyone with the link can see the plans without signing in.').offered, true);
 assert.equal(accessPosture('Anyone with the link can see the plans without signing in.').granted, false);
 assert.equal(accessPosture('I have added him. Access granted.').granted, true);
-const ownThread = collaboratorSeesOwnerThread(
-  [{ speaker: 'customer', text: 'we are going to zon-abcdef12 for several nights together' }],
-  [{ speaker: 'customer', text: 'we are going to zon-abcdef12 for several nights together' }],
-);
-assert.equal(ownThread.length, 1);
-assert.match(ownThread[0], /zon-abcdef12/);
-assert.deepEqual(collaboratorSeesOwnerThread(
-  [{ speaker: 'customer', text: 'we are going to zon-abcdef12 for several nights together' }],
-  [{ speaker: 'app', text: 'we are going to zon-abcdef12 for several nights together' }],
-), []);
+const ownerName = 'niaabcdef';
+const collabName = 'adaabcdef';
+const site = 'https://example.test/shared/trip-abcdefghi/';
+const tripTitle = 'trip-abcdefghi';
+const ownerWelcome = fillWelcomeTemplate(OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: site });
+const collabWelcome = fillWelcomeTemplate(COLLABORATOR_WELCOME_TEMPLATE, {
+  collabFirstName: collabName,
+  ownerFirstName: ownerName,
+  tripTitle,
+  tripSiteUrl: site,
+});
+assert.equal(normalizeWelcomeText(`${ownerWelcome}\n\n`), ownerWelcome);
+assert.equal(welcomeTemplateMatch(ownerWelcome, OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: site }, ['firstName', 'tripSiteUrl']).ok, true);
+assert.equal(welcomeTemplateMatch('Hi there. Hold the mic.', OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: site }, ['firstName', 'tripSiteUrl']).reason, 'mismatch');
+assert.equal(welcomeTemplateMatch(ownerWelcome, OWNER_WELCOME_TEMPLATE, { firstName: ownerName, tripSiteUrl: '' }, ['firstName', 'tripSiteUrl']).reason, 'placeholder');
+const ownerNote = 'we are going to zon-abcdef12 for several nights together';
+const ownerTurns = [{ speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' }];
+assert.deepEqual(gradeAuthorLabels([
+  { label: 'TimeSyncher', text: ownerWelcome, user: false },
+  { label: ownerName, text: ownerNote, user: true },
+  { label: 'TimeSyncher', text: collabWelcome, user: false },
+], { ownerName, collabName, ownerTurns }), []);
+const mislabeled = gradeAuthorLabels([
+  { label: 'You', text: ownerNote, user: true },
+], { ownerName, collabName, ownerTurns });
+assert.equal(mislabeled.some((item) => item.detail === 'owner_labeled_you'), true);
+assert.equal(gradeAuthorLabels([], { ownerName, collabName, ownerTurns })[0].detail, 'missing');
+const welcomePlaceholders = { firstName: ownerName, tripSiteUrl: site };
+const collabPlaceholders = {
+  collabFirstName: collabName,
+  ownerFirstName: ownerName,
+  tripTitle,
+  tripSiteUrl: site,
+};
 assert.equal(countRealVacations([{ destination: '', status: 'onboarding' }, { destination: 'zon-abcdef12' }]), 1);
 assert.equal(gradeNoVacationDropdown({ vacationCount: 0, opened: true, selected: '', options: [] }).ok, true);
 const listed = gradeNoVacationDropdown({
@@ -270,13 +299,41 @@ assert.equal(knownBuild.known, true);
 
 const dialog = precheckOnboardingRun({
   trips: [
-    { id: 'f1', turns: [...turns(SHAPED), { speaker: 'app', text: 'I heard the voice note. What should we decide first?', at: '2026-10-01T00:00:04.000Z' }] },
-    { id: 'f2', turns: turns(SHAPED) },
-    { id: 'f3', turns: [...turns(SHAPED, QUESTION_FIRST_TEXT), { speaker: 'app', text: 'Yes. Anyone with the link can see the plans without signing in. I can add him.', at: '2026-10-01T00:00:04.000Z' }] },
+    {
+      id: 'f1',
+      welcomePlaceholders,
+      turns: [
+        { speaker: 'app', text: ownerWelcome, at: '2026-10-01T00:00:00.000Z' },
+        { speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' },
+        { speaker: 'app', text: 'I heard the voice note. What should we decide first?', at: '2026-10-01T00:00:04.000Z' },
+      ],
+    },
+    { id: 'f2', welcomePlaceholders, turns: turns(ownerWelcome) },
+    {
+      id: 'f3',
+      welcomePlaceholders,
+      turns: [
+        ...turns(ownerWelcome, QUESTION_FIRST_TEXT),
+        { speaker: 'app', text: 'Yes. Anyone with the link can see the plans without signing in. I can add him.', at: '2026-10-01T00:00:04.000Z' },
+      ],
+    },
   ],
   literals: ['zon-abcdef12'],
   sources: cleanSources,
-  collaborator: { turns: [{ speaker: 'app', text: 'Hello. Hold the mic and talk.', at: '2026-10-01T00:00:03.000Z' }], userTexts: [] },
+  collaborator: {
+    eulaAcceptedAt: '2026-10-01T00:00:10.000Z',
+    welcomePlaceholders: collabPlaceholders,
+    turns: [
+      { speaker: 'app', text: ownerWelcome, at: '2026-10-01T00:00:00.000Z' },
+      { speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' },
+      { speaker: 'app', text: collabWelcome, at: '2026-10-01T00:00:11.000Z' },
+    ],
+    bubbles: [
+      { label: 'TimeSyncher', text: ownerWelcome, user: false },
+      { label: ownerName, text: ownerNote, user: true },
+      { label: 'TimeSyncher', text: collabWelcome, user: false },
+    ],
+  },
   noVacation: { vacationCount: 0, opened: true, selected: '', options: [] },
   eulaAccepts: [{ id: 'f1', at: '2026-10-01T00:00:00.000Z' }],
   checkDialog: true,
@@ -285,25 +342,37 @@ assert.equal(dialog.ok, true, JSON.stringify(dialog.failures));
 const dialogFail = precheckOnboardingRun({
   trips: [{
     id: 'f1',
-    turns: [...turns(`${SHAPED} The model is Jev.`), { speaker: 'app', text: 'What day? And who?', at: '2026-10-01T00:00:04.000Z' }],
+    welcomePlaceholders,
+    turns: [
+      { speaker: 'app', text: SHAPED, at: '2026-10-01T00:00:00.000Z' },
+      { speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' },
+      { speaker: 'app', text: 'What day? And who? The model is Jev.', at: '2026-10-01T00:00:04.000Z' },
+    ],
   }, {
     id: 'f3',
-    turns: [...turns(SHAPED), { speaker: 'app', text: 'I have added him. Access granted.', at: '2026-10-01T00:00:04.000Z' }],
+    welcomePlaceholders,
+    turns: [...turns(ownerWelcome), { speaker: 'app', text: 'I have added him. Access granted.', at: '2026-10-01T00:00:04.000Z' }],
   }],
   literals: ['zon-abcdef12'],
   sources: cleanSources,
   collaborator: {
-    turns: [{ speaker: 'customer', text: first.trips[0].text, at: '2026-10-01T00:00:03.000Z' }],
-    userTexts: [],
+    eulaAcceptedAt: '2026-10-01T00:00:10.000Z',
+    welcomePlaceholders: collabPlaceholders,
+    turns: [
+      { speaker: 'app', text: ownerWelcome, at: '2026-10-01T00:00:00.000Z' },
+      { speaker: 'customer', text: ownerNote, at: '2026-10-01T00:00:02.000Z' },
+    ],
+    bubbles: [{ label: 'You', text: ownerNote, user: true }],
   },
   noVacation: { vacationCount: 1, opened: false, selected: 'Area / Sample', options: ['Other / Sample'] },
   eulaAccepts: [{ id: 'f1', at: null }],
   checkDialog: true,
 });
 assert.equal(dialogFail.ok, false);
-for (const code of ['internal_word', 'f1_one_question', 'access_granted', 'vacation_count', 'dropdown_not_opened', 'eula_accept_time']) {
+for (const code of ['welcome_template', 'internal_word', 'f1_one_question', 'author_label', 'access_granted', 'vacation_count', 'dropdown_not_opened', 'eula_accept_time']) {
   assert.equal(dialogFail.failures.some((item) => item.code === code), true, code);
 }
+assert.equal(dialogFail.failures.some((item) => item.code === 'collaborator_owns_thread'), false);
 assert.match(first.emptyAccount.email, /^empty-/);
 assert.match(first.emptyAccount.title, /^shell-/);
 
