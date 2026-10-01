@@ -22,14 +22,14 @@ const planEnv = {
   TIMESYNCHER_SINGLE_NAME: 'TimeSyncher Vacation Single',
   TIMESYNCHER_UNLIMITED_NAME: 'TimeSyncher Vacation Year',
 };
+const tiers = bakeoffTierModels();
+const today = '2026-10-01';
+const tripId = 'niag5k2tq';
 const singlePlan = replyPlanFactsFromEntitlementRow({
   plan: 'single',
   status: 'active',
   metadata: { product: 'timesyncher_vacation_single' },
 }, planEnv, tripId);
-const tiers = bakeoffTierModels();
-const today = '2026-10-01';
-const tripId = 'niag5k2tq';
 const ownerId = 'owner-customer-0001';
 const collabId = 'collab-customer-0002';
 
