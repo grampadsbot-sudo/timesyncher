@@ -10,9 +10,7 @@ import {
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
-import { checkoutOrderSummary, customerCheckoutFailure } from '../src/vacation/checkout-pricing.mjs';
-
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
+import { checkoutCurrency, checkoutOrderSummary, customerCheckoutFailure } from '../src/vacation/checkout-pricing.mjs';
 
 function requireContact(body) {
   const firstName = cleanText(body.firstName, 80);
@@ -118,7 +116,7 @@ export default async function handler(req, res) {
         contact,
         addOns,
         amountCents: 0,
-        currency: CURRENCY,
+        currency: checkoutCurrency(),
         status: 'coupon_redeemed',
         metadata: {
           couponId: coupon.id,
@@ -155,7 +153,7 @@ export default async function handler(req, res) {
           amountCents: 0,
           originalAmountCents: addOns.amountCents,
           amountWaivedCents: addOns.amountCents,
-          currency: CURRENCY,
+          currency: checkoutCurrency(),
           plan: addOns.plan,
           status: 'coupon_redeemed',
           mediaAddOns: addOns,
@@ -211,7 +209,7 @@ export default async function handler(req, res) {
           addOns: { ...addOns, plan: 'owner_media', scope: 'owner', amountCents: addOns.amountCents, ownerCustomerId: pendingInvite.owner_customer_id },
           ownerCustomerId: pendingInvite.owner_customer_id,
           amountCents: 0,
-          currency: CURRENCY,
+          currency: checkoutCurrency(),
           status: 'coupon_redeemed',
           metadata: { paidVia: 'collaborator_coupon_checkout', collaboratorInviteId: pendingInvite.id },
         });
@@ -245,7 +243,7 @@ export default async function handler(req, res) {
           amountCents: 0,
           originalAmountCents,
           amountWaivedCents: originalAmountCents,
-          currency: CURRENCY,
+          currency: checkoutCurrency(),
           plan: plan.code,
           status: 'coupon_redeemed',
           accessAddOns: addOns,
@@ -259,7 +257,7 @@ export default async function handler(req, res) {
       order_bump: String(order.orderBump),
       photo_memories: String(order.photoMemories),
       vacation_date: cleanText(body.vacationDate, 40) || null,
-      currency: CURRENCY,
+      currency: checkoutCurrency(),
       product: plan === 'unlimited' ? 'timesyncher_vacation_unlimited' : plan === 'owner_media' ? 'timesyncher_vacation_owner_media_addons' : plan === 'telegram_collaborators_single_trip' ? 'timesyncher_vacation_telegram_collaborator' : 'timesyncher_vacation_single',
       plan,
       email: contact.email,
@@ -307,7 +305,7 @@ export default async function handler(req, res) {
         amountCents: 0,
         originalAmountCents: order.amount,
         amountWaivedCents: order.amount,
-        currency: CURRENCY,
+        currency: checkoutCurrency(),
         plan: grantedPlan,
         status: 'coupon_redeemed',
       },

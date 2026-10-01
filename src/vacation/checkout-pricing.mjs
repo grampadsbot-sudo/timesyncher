@@ -49,6 +49,7 @@ export function checkoutConfigHealth(env = process.env) {
   for (const name of CHECKOUT_LABEL_CONFIG) {
     if (!String(env?.[name] ?? '').trim()) missing.push(name);
   }
+  if (!String(env?.TIMESYNCHER_CHECKOUT_CURRENCY ?? '').trim()) missing.push('TIMESYNCHER_CHECKOUT_CURRENCY');
   return { ok: missing.length === 0, missing };
 }
 
@@ -67,7 +68,7 @@ export function customerCheckoutFailure(error) {
 }
 
 export function checkoutCurrency(env = process.env) {
-  return String(env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd').trim().toLowerCase() || 'usd';
+  return requiredConfigText(env?.TIMESYNCHER_CHECKOUT_CURRENCY, 'TIMESYNCHER_CHECKOUT_CURRENCY').toLowerCase();
 }
 
 export function checkoutPlanFromMetadata(metadata = {}) {

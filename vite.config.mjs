@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { appendFile, copyFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { buildSha } from './routes/version.mjs';
+import { buildSha, visibleBuildFooter } from './routes/version.mjs';
 import { writeSharedAssets } from './scripts/write-shared-assets.mjs';
 
 function serveSharedApp(req, _res, next) {
@@ -16,13 +16,23 @@ function serveSharedApp(req, _res, next) {
 }
 
 function buildStampMeta() {
-  return `<meta name="timesyncher-build" content="${buildSha()}">`;
+  const sha = buildSha();
+  visibleBuildFooter(sha);
+  return `<meta name="timesyncher-build" content="${sha}">`;
 }
 
 function stampHtml(html) {
-  const meta = buildStampMeta();
-  if (html.includes('name="timesyncher-build"')) return html;
-  return html.replace(/<head[^>]*>/i, (open) => `${open}${meta}`);
+  const sha = buildSha();
+  const footer = visibleBuildFooter(sha);
+  const meta = `<meta name="timesyncher-build" content="${sha}">`;
+  let next = html;
+  if (!next.includes('name="timesyncher-build"')) {
+    next = next.replace(/<head[^>]*>/i, (open) => `${open}${meta}`);
+  }
+  if (!next.includes('data-build-stamp="1"')) {
+    next = /<\/body>/i.test(next) ? next.replace(/<\/body>/i, `${footer}</body>`) : `${next}${footer}`;
+  }
+  return next;
 }
 
 async function copyEulaMarkdown(outDir) {

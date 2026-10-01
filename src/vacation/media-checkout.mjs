@@ -1,5 +1,5 @@
 import { cleanText, upsertCustomer } from './onboarding.mjs';
-import { CheckoutConfigError, requiredConfigCents } from './checkout-pricing.mjs';
+import { CheckoutConfigError, checkoutCurrency, requiredConfigCents } from './checkout-pricing.mjs';
 
 const OWNER_MEDIA_PLAN = 'owner_media';
 
@@ -102,7 +102,7 @@ export async function recordOwnerMediaPurchase({
   addOns,
   ownerCustomerId = addOns?.ownerCustomerId || null,
   amountCents,
-  currency = 'usd',
+  currency,
   status = 'paid',
   stripeCustomerId = null,
   stripePaymentIntentId = null,
@@ -110,6 +110,7 @@ export async function recordOwnerMediaPurchase({
 }) {
   const chargedCents = amountCents ?? addOns?.amountCents;
   if (!Number.isInteger(chargedCents) || chargedCents < 0) throw new CheckoutConfigError('TIMESYNCHER_MEDIA_PRICE_CENTS');
+  const paidCurrency = cleanText(currency, 12) || checkoutCurrency();
   const cleanContact = {
     email: cleanText(contact?.email, 180).toLowerCase() || null,
     phone: cleanText(contact?.phone, 80) || null,
@@ -142,7 +143,7 @@ export async function recordOwnerMediaPurchase({
     )
     values (
       ${customerId}, null, ${entitlementRows[0].id}, ${stripeCustomerId}, ${stripePaymentIntentId},
-      ${chargedCents}, ${currency}, ${addOns.plan}, ${status}, ${cleanContact}, ${orderMetadata}, now(), now()
+      ${chargedCents}, ${paidCurrency}, ${addOns.plan}, ${status}, ${cleanContact}, ${orderMetadata}, now(), now()
     )
     returning id
   `;
@@ -153,7 +154,7 @@ export async function recordOwnerMediaPurchase({
     entitlementId: entitlementRows[0].id,
     orderId: orderRows[0].id,
     amountCents: chargedCents,
-    currency,
+    currency: paidCurrency,
     plan: addOns.plan,
     scope: addOns.scope,
     mediaAddOns: addOns,

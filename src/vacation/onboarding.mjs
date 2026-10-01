@@ -6,7 +6,7 @@ import {
   loadSessionPersistent,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
-import { CheckoutConfigError, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
+import { CheckoutConfigError, checkoutCurrency, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { sharedTripWebsiteUrl } from './web-access.mjs';
 
@@ -201,7 +201,7 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     stripeInvoiceId: null,
     stripePaymentIntentId: null,
     amountCents: 0,
-    currency: cleanText(orderMetadata.currency || 'usd', 12) || 'usd',
+    currency: cleanText(orderMetadata.currency, 12) || checkoutCurrency(env),
     plan: checkoutPlanFromMetadata({ ...orderMetadata, plan: cleanText(plan, 80) || orderMetadata.plan }),
     status: 'coupon_redeemed',
     contact: cleanContact,
@@ -393,7 +393,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     stripeInvoiceId: cleanText(resolvedInvoice?.id || resolvedPaymentIntent?.invoice, 120) || null,
     stripePaymentIntentId: cleanText(resolvedPaymentIntent?.id, 120) || null,
     amountCents: resolvedPaymentIntent?.amount_received || resolvedInvoice?.amount_paid || resolvedPaymentIntent?.amount || null,
-    currency: cleanText(resolvedPaymentIntent?.currency || resolvedInvoice?.currency || 'usd', 12) || 'usd',
+    currency: cleanText(resolvedPaymentIntent?.currency || resolvedInvoice?.currency, 12) || checkoutCurrency(env),
     plan,
     contact,
     paidAt: resolvedPaymentIntent?.created ? new Date(resolvedPaymentIntent.created * 1000).toISOString() : new Date().toISOString(),

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import handler from '../api/[...route].mjs';
-import { buildSha } from '../routes/version.mjs';
+import { buildSha, visibleBuildFooter } from '../routes/version.mjs';
 import { createOnboardingSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { LocalJsonStore } from '../src/onboarding/eula-persistent-store.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
@@ -43,7 +43,13 @@ function build() {
   });
 }
 
+assert.throws(() => visibleBuildFooter(''), /timesyncher build SHA is missing/);
+assert.throws(() => visibleBuildFooter('dev'), /timesyncher build SHA is missing/);
+assert.throws(() => visibleBuildFooter('unknown'), /timesyncher build SHA is missing/);
+
 const vercelSha = '0123456789abcdef0123456789abcdef01234567';
+const shortSha = vercelSha.slice(0, 7);
+assert.equal(visibleBuildFooter(vercelSha), `<footer data-build-stamp="1">${shortSha}</footer>`);
 process.env.VERCEL_GIT_COMMIT_SHA = vercelSha;
 delete process.env.TIMESYNCHER_BUILD_SHA;
 const expectedSha = buildSha();
@@ -164,6 +170,16 @@ async function get(pathname) {
   };
 }
 
+async function filesUnder(dir) {
+  const out = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...await filesUnder(full));
+    else out.push(full);
+  }
+  return out;
+}
+
 function stampValue(body) {
   const meta = body.match(/<meta\b[^>]*\bname="timesyncher-build"[^>]*>/i);
   const content = meta && meta[0].match(/\bcontent="([^"]*)"/i);
@@ -192,6 +208,18 @@ try {
     assertStamp(page, name);
     assert.match(page.type, /text\/html/);
     assert.ok(page.body.includes(`content="${reportedSha}"`), `${name} stamp differs from /api/version`);
+    assert.match(page.body, new RegExp(`<footer data-build-stamp="1">${shortSha}</footer>`));
+    assert.doesNotMatch(page.body, /data-build-stamp="1"[^>]*display\s*:\s*none/i);
+  }
+
+  const builtAssets = await filesUnder(dist);
+  for (const file of builtAssets) {
+    if (!/\.(html|js|mjs|css)$/i.test(file)) continue;
+    const body = await readFile(file, 'utf8');
+    assert.equal(body.includes('/api/auth/app-config'), false, file);
+    assert.equal(body.includes('/api/system-notices/active'), false, file);
+    assert.equal(body.includes('Rt.get("/auth/app-config")'), false, file);
+    assert.equal(body.includes('Rt.get("/system-notices/active")'), false, file);
   }
 
   const markdown = await get('/src/onboarding/eula-markdown.mjs');
@@ -251,8 +279,10 @@ try {
   assert.match(trek.type, /javascript/);
   assert.equal(trek.body.includes('Rt.get("/system-notices/active")'), false);
   assert.equal(trek.body.includes('Rt.get("/auth/app-config")'), false);
-  assert.equal(trek.body.includes('async fetch(){e({notices:[],loaded:!0})}'), true);
-  assert.equal(trek.body.includes('getAppConfig:()=>Promise.resolve({})'), true);
+  assert.equal(trek.body.includes('/system-notices/active'), false);
+  assert.equal(trek.body.includes('/auth/app-config'), false);
+  assert.equal(trek.body.includes('async fetch(){e({notices:[],loaded:!0})}'), false);
+  assert.equal(trek.body.includes('getAppConfig:()=>Promise.resolve({})'), false);
 } finally {
   useSharedTripDatabase(null);
   await new Promise((resolve) => server.close(resolve));
