@@ -25,7 +25,37 @@ export function isCustomerPlaceSearchTurn(text = '') {
   if (!source || source.length < 12) return false;
   if (PLAN_INTAKE.test(source)) return false;
   if (!SEARCH_VERB.test(source)) return false;
-  return /\b(restaurant|taco|seafood|coffee|shop|store|bookstore|toy|things to do|museum|ferry|train|monorail|attraction|dinner|splurge|kid-?friendly|pike place|downtown|water view|walking distance)\b/i.test(source);
+  return /\b(restaurant|taco|seafood|coffee|cafe|shop|store|bookstore|book\s+store|toy|things to do|museum|ferry|ferries|train|trains|monorail|attraction|dinner|splurge|kid-?friendly|pike place|downtown|water view|walking distance|7\s*year\s*old)\b/i.test(source);
+}
+
+function emptyTripIntakeClassification() {
+  return {
+    ok: true,
+    intake: false,
+    things: [],
+    roster: [],
+    destination: '',
+    hasDates: false,
+    title: '',
+    error: null,
+  };
+}
+
+async function resolveTripIntakeForCustomerTurn({ text = '', env = process.env, classifyImpl } = {}) {
+  const placeSearchTurn = isCustomerPlaceSearchTurn(text);
+  const classification = placeSearchTurn
+    ? emptyTripIntakeClassification()
+    : await classifyImpl({ text, env });
+  return { classification, placeSearchTurn };
+}
+
+export async function classifyVacationAppCustomerTurn(requestText, env, classifyImpl) {
+  return resolveTripIntakeForCustomerTurn({ text: requestText, env, classifyImpl });
+}
+
+export function intakeExtractedThings(placeSearchTurn, classification) {
+  if (placeSearchTurn) return [];
+  return classification?.ok === true ? classification.things : [];
 }
 
 function queriesFromCustomerSearchTurn(customerTurn = '', tripDestination = '') {
@@ -104,9 +134,16 @@ export async function applyChatPlaceSearchForVacationTurn({
   turnId,
   env = process.env,
   publishShare,
+  searchImpl,
 } = {}) {
-  const chatSearch = await runCustomerChatPlaceSearch({ customerTurn, tripDestination, env });
-  if (chatSearch.status === 'skip') return { kind: 'skip', placeResults: [] };
+  const placeSearchTurn = isCustomerPlaceSearchTurn(customerTurn);
+  if (placeSearchTurn) {
+    payload.wantedThings = [];
+    payload.placeSearchTurn = true;
+    customerLive.placeSearchTurn = true;
+  }
+  const chatSearch = await runCustomerChatPlaceSearch({ customerTurn, tripDestination, env, searchImpl });
+  if (chatSearch.status === 'skip') return { kind: 'skip', placeResults: [], placeSearchTurn };
   if (chatSearch.status === 'failed') {
     const placeSearch = { status: 'failed', error: chatSearch.error };
     payload.placeSearch = placeSearch;
@@ -116,7 +153,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       set payload = ${payload}
       where id = ${turnId}
     `;
-    return { kind: 'failed', error: chatSearch.error, placeSearch };
+    return { kind: 'failed', error: chatSearch.error, placeSearch, placeSearchTurn };
   }
   for (const thing of chatSearch.things) {
     await insertTripThing(db, { tripId, requestId, thing });
@@ -134,5 +171,5 @@ export async function applyChatPlaceSearchForVacationTurn({
     set payload = ${payload}
     where id = ${turnId}
   `;
-  return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch };
+  return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
 }

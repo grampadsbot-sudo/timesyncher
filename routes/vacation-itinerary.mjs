@@ -25,33 +25,15 @@ import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboardin
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import {
-  customerModality,
-  jevStamp,
-  liveTurnRecord,
-  intakeSpan,
-  firstMarkedIntake,
-  produceLiveAppReply,
-  finishTierRewrite,
-  activityCommitDecisions,
-  applyAgreedAppSwim,
-  applyCustomerNotes,
-  completeRosterParty,
-} from '../src/vacation/live-app-turn.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
-import { applyChatPlaceSearchForVacationTurn } from '../src/vacation/chat-place-search.mjs';
+import { applyChatPlaceSearchForVacationTurn, classifyVacationAppCustomerTurn, intakeExtractedThings } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
-import {
-  openCollaboratorAppSeats,
-  recordDialogParty,
-  seatFromSession,
-  collaboratorSeatJoinEvent,
-  transcriptCustomerId,
-} from '../src/vacation/collaborator-app-seat.mjs';
+import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 
 let vacationAppDatabase = null;
 
@@ -487,7 +469,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       intake: live.intake === true,
     };
   });
-  const classification = await classifyTripIntake({ text: requestText, env: process.env });
+  const { classification, placeSearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = 'trip_intake';
   const jobFields = tripIntakeJobFields({
@@ -645,7 +627,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       env: process.env,
       seatDollars: configuredSeatDollars(process.env),
       intake: classification.ok === true && classification.intake === true,
-      wantedThings: classification.ok === true ? classification.things : [],
+      wantedThings: intakeExtractedThings(placeSearchTurn, classification),
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
       extractedDestination: jobFields.destination,
@@ -775,7 +757,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       titleError: jobFields.titleError,
     },
     firstIntake ? requestText : '',
-    classification.ok === true ? classification.things : [],
+    intakeExtractedThings(placeSearchTurn, classification),
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
   const vacationRows = await db`
