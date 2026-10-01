@@ -136,6 +136,13 @@ await withFetch(async (url, init = {}) => {
   assert.equal(produced.reason, 'Jev HTTP 503');
 });
 
+const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
+const includeFiles = String(vercel.functions['api/[...route].mjs'].includeFiles || '');
+const included = includeFiles.replace(/^\{|\}$/g, '').split(',').map((file) => file.trim()).filter(Boolean);
+assert.ok(included.includes('dialog-runners/tier_models.json'));
+assert.ok(included.every((file) => file.endsWith('.json')));
+assert.equal(included.some((file) => /\.(mjs|js|cjs|py)$/.test(file)), false);
+
 const route = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(route, /payload\.replyFailure = replyFailure/);
 assert.match(route, /error: replyFailure/);
