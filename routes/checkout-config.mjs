@@ -1,5 +1,20 @@
-import { logCheckoutConfig, optionalConfigCents } from '../src/vacation/checkout-pricing.mjs';
+import { CheckoutConfigError, logCheckoutConfig, optionalConfigCents, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
 import { stripePublishableKey } from '../src/vacation/stripe-env.mjs';
+
+function configuredCents(env, names, missing) {
+  const chosen = names.find((name) => optionalConfigCents(env?.[name]) != null);
+  if (!chosen) {
+    missing.push(names[0]);
+    return null;
+  }
+  try {
+    return requiredConfigCents(env[chosen], chosen);
+  } catch (error) {
+    if (error?.name !== 'CheckoutConfigError') throw error;
+    missing.push(error.configName || chosen);
+    return null;
+  }
+}
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -17,6 +32,15 @@ export default async function handler(req, res) {
     return send(res, 503, { ok: false, error: error.message || 'Stripe publishable key is not configured yet.' });
   }
   const checkout = logCheckoutConfig(process.env);
+  const priceMissing = [];
+  const singleAmount = configuredCents(process.env, ['TIMESYNCHER_BASE_PRICE_CENTS'], priceMissing);
+  const photoSingleAmount = configuredCents(process.env, ['TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS', 'TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS'], priceMissing);
+  const photoUnlimitedAmount = configuredCents(process.env, ['TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS', 'TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS'], priceMissing);
+  if (priceMissing.length) {
+    console.error(`checkout config missing: ${priceMissing.join(', ')}`);
+    const missing = [...new Set([...checkout.missing, ...priceMissing])];
+    return send(res, 503, { ok: false, checkout: { ok: false, missing } });
+  }
   return send(res, 200, {
     ok: true,
     checkout,
@@ -26,7 +50,7 @@ export default async function handler(req, res) {
       single: {
         name: process.env.TIMESYNCHER_SINGLE_NAME || 'TimeSyncher Vacation - Single',
         description: process.env.TIMESYNCHER_SINGLE_DESCRIPTION || '',
-        amount: Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10),
+        amount: singleAmount,
       },
       unlimited: {
         name: process.env.TIMESYNCHER_UNLIMITED_NAME || 'TimeSyncher Vacation - Unlimited',
@@ -37,13 +61,13 @@ export default async function handler(req, res) {
         single: {
           name: process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_NAME || 'Photo Memories Keepsake - Single Vacation',
           description: process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_DESCRIPTION || 'Add up to 100 favorite photos to this vacation keepsake.',
-          amount: Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10),
+          amount: photoSingleAmount,
           photoLimit: Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_LIMIT || process.env.TIMESYNCHER_PHOTO_MEMORIES_LIMIT || '100', 10),
         },
         unlimited: {
           name: process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_NAME || 'Photo Memories Keepsake - Unlimited Vacations',
           description: process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_DESCRIPTION || 'Add favorite photos to unlimited vacation keepsakes.',
-          amount: Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10),
+          amount: photoUnlimitedAmount,
           photoLimit: Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_LIMIT || process.env.TIMESYNCHER_PHOTO_MEMORIES_LIMIT || '100', 10),
         },
       },

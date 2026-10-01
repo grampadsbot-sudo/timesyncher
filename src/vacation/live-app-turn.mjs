@@ -268,7 +268,6 @@ export function liveTurnRecord({
   return record;
 }
 
-const UNLIMITED_PHRASE = 'unlimited vacations for the whole year';
 const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
 const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
 
@@ -1598,7 +1597,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     : '';
   const planTable = planLine
     ? {
-      plan_name: 'unlimited vacations for the whole year',
       dollars_per_collaborator_seat: pricedSeat,
       payer_line: planLine,
     }
@@ -1677,7 +1675,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
     const nudge = customerAsksPrice(customerTurn, intent)
       ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
-      : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
+      : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
@@ -1890,7 +1888,6 @@ export function upsellFactsForTurn(customerTurn, facts = {}, intake = false, int
     collaborators: marked,
     access: marked ? ['view', 'edit'] : [],
     emailInvite: marked,
-    planPhrase: 'unlimited vacations for the whole year',
     planOwned: facts.planOwned === true,
     payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, intent?.seats || facts.payerRows) : '',
   };
@@ -2032,7 +2029,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Do not say the unlimited plan is already owned.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
-          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
+          ? `$${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
           : '',
       ].filter(Boolean).join(' '),
     });
