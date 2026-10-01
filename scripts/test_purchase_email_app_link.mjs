@@ -10,7 +10,7 @@ import { useOnboardingLookup } from '../routes/eula.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrl, buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
@@ -241,6 +241,9 @@ try {
     metadata: { couponCheckout: true },
     env: process.env,
   });
+  const shareSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
+  onboarding.publicSlug = shareSite.publicSlug;
+  onboarding.publicUrl = shareSite.publicUrl;
   assert.equal(onboarding.contact.firstName, 'Ada');
   assert.equal(state.trip.destination, null);
   assert.equal(state.trip.start_date, null);

@@ -226,7 +226,6 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
   const eula = await ensureVacationEulaSession(session, { contact: cleanContact, env });
-  const site = await assignTripSiteUrl(db, tripId, env);
 
   return {
     customerId,
@@ -235,8 +234,8 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     orderId,
     session,
     token: session.token,
-    publicSlug: site.publicSlug,
-    publicUrl: site.publicUrl,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
     eula,
