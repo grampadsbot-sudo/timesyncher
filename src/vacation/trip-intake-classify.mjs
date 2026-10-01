@@ -5,6 +5,9 @@ import {
   bakeoffTierModels,
   openRouterAppKey,
 } from '../../scripts/vacation-app-reply-rules.mjs';
+import { intakeThingHasProperName } from './intake-thing-name.mjs';
+
+export { intakeThingHasProperName } from './intake-thing-name.mjs';
 
 const KINDS = new Set(['activity', 'restaurant', 'hotel', 'flight', 'car', 'store']);
 const INTAKE_THRESHOLD = 0.5;
@@ -84,7 +87,7 @@ function cleanThings(list) {
   const seen = new Set();
   for (const item of list) {
     const name = clean(item?.name || item?.title, 180);
-    if (!name) continue;
+    if (!name || !intakeThingHasProperName(name)) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

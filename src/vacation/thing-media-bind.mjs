@@ -8,7 +8,17 @@ import { cleanText } from './http.mjs';
 /** Color-card stubs were 15–21KB @ 960×640; TREK placeholder canvases are 1024² @ 3071B. */
 export const PRINT_STUB_MAX_BYTES = 24 * 1024;
 
-export const TREK_SHARED_API_BASE = 'https://travel.timesyncher.com';
+/** TREK shared API host comes from TIMESYNCHER_TRAVEL_BASE_URL (no baked-in default). */
+export function trekSharedApiBase(env = process.env) {
+  const value = String(
+    env.TIMESYNCHER_TRAVEL_BASE_URL
+    || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL
+    || env.TIMESYNCHER_TREK_PUBLIC_BASE_URL
+    || '',
+  ).trim().replace(/\/+$/, '');
+  if (!value) throw new Error('TIMESYNCHER_TRAVEL_BASE_URL is missing');
+  return value;
+}
 
 function text(value, max = 240) {
   return cleanText(value, max);

@@ -22,7 +22,7 @@ import {
   wantsStyleTwoView,
   PRODUCT_STYLE_TWO_REPORT,
   PRODUCT_STYLE_ONE_REPORT,
-  PRODUCT_TREK_PUBLIC,
+  getProductTrekPublic,
   PRODUCT_SOT,
   PRODUCT_SOT_TWIN as HANDLER_SOT_TWIN,
   forwardedKeepsakeSearch,
@@ -34,7 +34,7 @@ import { patchStyleTwoToConfigRenderer, assertPatchedStyleTwo, assertStyleTwoPat
 import { applyProductKeepsakeOverrides, keepsakeListBuckets, resolveThingCoords } from '../src/vacation/keepsake-product-overrides.mjs';
 import { KEEPSAKE_LIST_MINIMUMS } from '../src/vacation/keepsake-list-minimums.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research-worker.mjs';
-
+process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://trek-preview.example.com';
 const shared = {
   trip: {
     id: 197,
@@ -866,11 +866,11 @@ const patchedCheck = spawnSync('node', ['--check', patchedCheckPath], { encoding
 assert.equal(patchedCheck.status, 0, patchedCheck.stderr || 'patched TREK bundle failed node --check');
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'restaurants' }),
-  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/sample-trip/report/restaurants.pdf`,
+  `${getProductTrekPublic()}/api/pdf/shared/sample-trip/report/restaurants.pdf`,
 );
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'daily', pdfPath: 'sample-trip/daily/2.pdf' }),
-  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/sample-trip/daily/2.pdf`,
+  `${getProductTrekPublic()}/api/pdf/shared/sample-trip/daily/2.pdf`,
 );
 assert.match(
   forwardedKeepsakeSearch(new URL('https://x.test/?ksLogo=0&ksMapOff=1,2,3&other=1')),

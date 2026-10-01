@@ -1,11 +1,5 @@
 [
   {
-    "rule": "NO-FLOATING-PROMISE",
-    "file": "addons-checkout.html",
-    "symbol": ".then",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
     "rule": "FILE-SIZE-500",
     "file": "index.html",
     "symbol": "lines:941",

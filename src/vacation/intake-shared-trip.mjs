@@ -59,10 +59,11 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
-function assignDates(thing, year, tripDates) {
+export function assignDates(thing, year, tripDates) {
+  const whenText = [thing.customerWhen, thing.whenLabel].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
+  if (!whenText) return [];
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
   const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
-  if (!unique.length) return tripDates.slice(0, 1);
   return unique;
 }
 
@@ -183,19 +184,48 @@ function categoryKey(record = {}) {
     ? raw
     : (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw.name : '');
   const text = String(fromCategory || record?.category_name || '').trim().toLowerCase();
-  return text === 'flight' || text === 'car' ? text : '';
+  if (text === 'flight' || text === 'car') return text;
+  if (text === 'hotel' || text === 'lodging' || text === 'accommodation') return 'lodging';
+  return '';
 }
 
-/** Missing car/flight Things. Flight input starts at preferred airline. No wording. */
+function recordInputKind(record = {}) {
+  const keyed = categoryKey(record);
+  if (keyed) return keyed;
+  return transportKind(record);
+}
+
+function flightAirlineMissing(record = {}) {
+  const blob = [
+    record?.name,
+    record?.title,
+    record?.description,
+    ...(Array.isArray(record?.notes) ? record.notes : []),
+  ].map((part) => String(part || '')).join(' ');
+  if (!blob.trim()) return true;
+  if (/\bairline\b/i.test(blob)) return false;
+  if (/\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(blob)) return false;
+  return !/\b(?:united|delta|american|southwest|alaska|hawaiian|jetblue|frontier|spirit)\b/i.test(blob);
+}
+
+/** Missing lodging/car/flight facts only. Flight ask is preferred airline. No wording. */
 export function customerInputState(records = []) {
   const present = new Set();
+  let flightNeedsAirline = false;
   for (const record of records || []) {
-    const category = categoryKey(record);
-    if (category) present.add(category);
+    const kind = recordInputKind(record);
+    if (kind === 'flight') {
+      present.add('flight');
+      if (flightAirlineMissing(record)) flightNeedsAirline = true;
+    } else if (kind === 'car' || kind === 'lodging') {
+      present.add(kind);
+    }
   }
   const needsCustomerInput = [];
+  if (!present.has('lodging')) needsCustomerInput.push('lodging');
   if (!present.has('car')) needsCustomerInput.push('car');
   if (!present.has('flight')) needsCustomerInput.push('flight');
+  else if (flightNeedsAirline) needsCustomerInput.push('flight');
   if (!needsCustomerInput.length) return {};
   const state = { needsCustomerInput };
   if (needsCustomerInput.includes('flight')) state.flightAsk = 'preferredAirline';

@@ -27,7 +27,7 @@
       // QA/CDP: wait for [data-ae-print="1"] or [data-print-ready="style2"] before PDF.
       // If the browser sees Vercel 403 x-vercel-mitigated:deny, send
       // x-vercel-protection-bypass + x-vercel-set-bypass-cookie (Automation Bypass),
-      // or Craig: Vercel → timesyncher-vacation-staging → Firewall → ⋯ → Pause System Mitigations.
+      // or Pause System Mitigations on vacation-staging in Vercel Firewall.
       (function () {
         const path = String(location.pathname || '');
         if (!/\/shared\/[^/]+\/journey\/?$/.test(path)) return;

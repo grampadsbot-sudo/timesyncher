@@ -151,9 +151,14 @@
       };
     }
 
+    const PRICING_UNAVAILABLE = 'Prices are unavailable right now; please try again later.';
+
     function totalCents() {
       const amount = Number(mediaCents);
-      if (!Number.isInteger(amount) || amount <= 0) throw new Error('checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
+      if (!Number.isInteger(amount) || amount <= 0) {
+        console.error('checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
+        throw new Error(PRICING_UNAVAILABLE);
+      }
       return amount;
     }
 
@@ -307,7 +312,9 @@
         const data = await response.json();
         if (!response.ok || !data.ok) {
           const missing = data.checkout?.missing?.[0];
-          throw new Error(missing ? 'checkout config missing: ' + missing : (data.error || 'checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS'));
+          const raw = missing ? `checkout config missing: ${missing}` : (data.error || 'checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
+          console.error(raw);
+          throw new Error(PRICING_UNAVAILABLE);
         }
         return data;
       })
@@ -320,7 +327,7 @@
         }
         updateSummary();
       })
-      .catch((error) => setStatus(error.message || 'checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS', 'error'));
+      .catch((error) => setStatus(/checkout config missing/i.test(error.message || '') ? PRICING_UNAVAILABLE : (error.message || PRICING_UNAVAILABLE), 'error'));
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -333,7 +340,7 @@
         return;
       }
       if (priced < 50) {
-        setStatus('checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS', 'error');
+        setStatus(PRICING_UNAVAILABLE, 'error');
         return;
       }
       submit.disabled = true;

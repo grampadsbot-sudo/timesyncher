@@ -15,6 +15,11 @@ import { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = path.join(root, 'dist');
+const launchEnv = {
+  ...process.env,
+  TIMESYNCHER_SITE_BASE_URL: process.env.TIMESYNCHER_SITE_BASE_URL || 'https://vacation-staging.timesyncher.com/',
+  TIMESYNCHER_TRAVEL_BASE_URL: process.env.TIMESYNCHER_TRAVEL_BASE_URL || 'https://vacation-staging.timesyncher.com/',
+};
 
 function builderSrc(src) {
   if (src.startsWith('^') && src.endsWith('$')) return src;
@@ -124,7 +129,7 @@ const purchaseDb = (strings, ...values) => {
   if (query.includes('from trip_things')) return [];
   return [];
 };
-const assigned = await assignTripSiteUrl(purchaseDb, intakeTripId, process.env);
+const assigned = await assignTripSiteUrl(purchaseDb, intakeTripId, launchEnv);
 assert.equal(assigned.publicSlug, intakeShareSlug(intakeTripId));
 assert.equal(assigned.publicSlug, 'intake-0123456789ab');
 assert.equal(intakeTrip.metadata.intakeShare, true);
@@ -208,6 +213,7 @@ try {
     assertStamp(page, name);
     assert.match(page.type, /text\/html/);
     assert.ok(page.body.includes(`content="${reportedSha}"`), `${name} stamp differs from /api/version`);
+    assert.match(page.body, /timesyncher-build-stamp-style/);
     assert.match(page.body, new RegExp(`<footer data-build-stamp="1">${shortSha}</footer>`));
     assert.doesNotMatch(page.body, /data-build-stamp="1"[^>]*display\s*:\s*none/i);
   }

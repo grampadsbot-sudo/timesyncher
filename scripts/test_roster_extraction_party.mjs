@@ -100,7 +100,7 @@ const unfilled = completeRosterParty({
   turns: [{ role: 'customer', text: sentence }],
   roster: missing.roster,
 });
-assert.deepEqual(unfilled.preference_subjects, []);
+assert.deepEqual(unfilled.preference_subjects, [{ name: 'Kai' }]);
 assert.deepEqual(unfilled.viewers, []);
 assert.deepEqual(unfilled.editors, []);
 assert.equal(unfilled.sources.some((item) => String(item.source).startsWith('customer:')), false);

@@ -4,12 +4,12 @@ import { bakeoffTierModels } from './vacation-app-reply-rules.mjs';
 import {
   FIRST_INTAKE_GAP_INSTRUCTION,
   FIRST_INTAKE_VOICE_INSTRUCTION,
-  YEARLY_PLAN_ID,
   firstIntakeReplyFacts,
   intakeReplyBlock,
   weekdayForIso,
   whenRelativeToToday,
 } from '../src/vacation/first-intake-reply.mjs';
+import { replyPlanFactsFromEntitlementRow } from '../src/vacation/reply-plan-entitlement.mjs';
 import { liveTurnRecord } from '../src/vacation/live-app-turn.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
@@ -18,18 +18,25 @@ const root = new URL('../', import.meta.url);
 const plans = JSON.parse(await readFile(new URL('content/plans.json', root), 'utf8'));
 const route = await readFile(new URL('routes/vacation-itinerary.mjs', root), 'utf8');
 const page = await readFile(new URL('vacation-app.html', root), 'utf8');
-const intake = await readFile(new URL('src/vacation/first-intake-reply.mjs', root), 'utf8');
+const planEnv = {
+  TIMESYNCHER_SINGLE_NAME: 'TimeSyncher Vacation Single',
+  TIMESYNCHER_UNLIMITED_NAME: 'TimeSyncher Vacation Year',
+};
 const tiers = bakeoffTierModels();
 const today = '2026-10-01';
 const tripId = 'niag5k2tq';
+const singlePlan = replyPlanFactsFromEntitlementRow({
+  plan: 'single',
+  status: 'active',
+  metadata: { product: 'timesyncher_vacation_single' },
+}, planEnv, tripId);
 const ownerId = 'owner-customer-0001';
 const collabId = 'collab-customer-0002';
 
 assert.equal(weekdayForIso('2032-09-23'), 'Thursday');
 assert.equal(whenRelativeToToday('2032-09-23', today), false);
 assert.equal(whenRelativeToToday('2027-09-01', today), true);
-assert.equal(plans[YEARLY_PLAN_ID].plan_id, YEARLY_PLAN_ID);
-assert.match(intake, /content\/plans\.json/);
+assert.equal(plans.timesyncher_vacation_single.plan_id, 'timesyncher_vacation_single');
 assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /unlimited\s+\S*\s*vacations?/i);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Offer to add each person in collaborators/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
@@ -53,6 +60,8 @@ const facts = firstIntakeReplyFacts({
   customerName: 'Ada Lovelace',
   today,
   ids: [tripId, ownerId],
+  ownerPlan: singlePlan,
+  tripId,
 });
 assert.equal(facts.shape, 'voice-note');
 assert.equal(facts.weekday, 'Thursday');
@@ -60,7 +69,8 @@ assert.equal(facts.end_weekday, weekdayForIso('2032-09-30'));
 assert.equal(facts.when_relative, false);
 assert.equal(facts.customer_name, 'Ada Lovelace');
 assert.deepEqual(facts.collaborators, ['Bristol', 'Calvin']);
-assert.equal(facts.plan.plan_id, plans[YEARLY_PLAN_ID].plan_id);
+assert.equal(facts.plan.plan_id, plans.timesyncher_vacation_single.plan_id);
+assert.equal(facts.plan.plan_name, 'TimeSyncher Vacation Single');
 assert.equal(JSON.stringify(facts).includes(tripId), false);
 assert.equal(JSON.stringify(facts).includes(ownerId), false);
 assert.equal(intakeReplyBlock('See you Wednesday. What time do you land?', () => '', facts, []), 'first_intake_reply_flagged');
@@ -70,7 +80,7 @@ assert.equal(intakeReplyBlock('I can add Bristol and Calvin. What about the flig
 assert.equal(intakeReplyBlock(`${tripId} is all set. What time do you land?`, () => '', facts, [tripId]), 'first_intake_reply_flagged');
 assert.equal(intakeReplyBlock('Calvin already has access. What time do you land?', () => '', facts, []), 'first_intake_reply_flagged');
 assert.equal(intakeReplyBlock('It is just you and him. What time do you land?', () => '', facts, []), 'first_intake_reply_flagged');
-assert.equal(intakeReplyBlock('I can add Bristol and Calvin, and I will not grant access until you agree. The plan id is timesyncher_vacation_unlimited. What time do you land?', () => '', facts, [tripId]), '');
+assert.equal(intakeReplyBlock('I can add Bristol and Calvin, and I will not grant access until you agree. The plan id is timesyncher_vacation_single. What time do you land?', () => '', facts, [tripId]), '');
 
 const gaps = firstIntakeReplyFacts({
   customerTurn: 'Maybe a trip sometime.',

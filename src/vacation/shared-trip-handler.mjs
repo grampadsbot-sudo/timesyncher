@@ -105,11 +105,12 @@ function sendSlugMiss(res, shareToken) {
   });
 }
 
-async function respondSharedTripGet(res, shareToken) {
+async function respondSharedTripGet(req, res, shareToken) {
   try {
     const local = await intakeSharedResponse(shareToken);
     if (local) return sendJson(res, 200, local);
-    return sendSlugMiss(res, shareToken);
+    if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
+    return await proxyConfiguredUpstream(req, res, shareToken);
   } catch (error) {
     logSharedTripFailure('shared_trip_lookup_failed', shareToken, error);
     return sendJson(res, 500, {
@@ -165,7 +166,7 @@ export default async function handler(req, res) {
     return sendJson(res, 200, { canEdit: false });
   }
   if (isSharedTripGet(req.method, trekPath)) {
-    return respondSharedTripGet(res, shareToken);
+    return respondSharedTripGet(req, res, shareToken);
   }
   if (String(shareToken || '').startsWith('intake-')) {
     return sendSlugMiss(res, shareToken);

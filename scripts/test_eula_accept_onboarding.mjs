@@ -66,6 +66,7 @@ function lookupDb(row, seen) {
 delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL_BLOB_STORE_ID;
 process.env.TIMESYNCHER_EULA_STORE = '';
+process.env.TIMESYNCHER_COLLABORATOR_NAME = process.env.TIMESYNCHER_COLLABORATOR_NAME || 'Collaborator seat';
 
 const storeDir = await mkdtemp(path.join(tmpdir(), 'eula-accept-'));
 process.env.TIMESYNCHER_ONBOARDING_STORE = storeDir;

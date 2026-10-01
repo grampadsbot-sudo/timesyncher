@@ -59,6 +59,6 @@ Plan single is a single vacation purchase.
 
 Plan unlimited is the order bump added to plan single. The customer-facing name is the configured label for plan unlimited.
 
-Plan telegram_collaborators_single_trip lets the owner invite a collaborator onto a vacation. A collaborator may join any vacation the owner has, and the owner sends a separate invite for each vacation.
+Plan {{TIMESYNCHER_COLLABORATOR_NAME}} lets the owner invite a collaborator onto a vacation. A collaborator may join any vacation the owner has, and the owner sends a separate invite for each vacation.
 
 Plan owner_media is a single media purchase. The owner or a collaborator may pay it. After payment, the entitlement is stored on the owner and covers media for each vacation that owner has.

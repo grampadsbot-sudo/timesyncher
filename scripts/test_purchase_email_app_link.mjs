@@ -15,15 +15,28 @@ import { assignTripSiteUrl, buildOnboardingFromCoupon } from '../src/vacation/on
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
 const site = 'https://vacation-staging.timesyncher.com';
+
+const fixtureEnv = {
+  TIMESYNCHER_SITE_BASE_URL: site,
+  TIMESYNCHER_ONBOARDING_STORE: storeDir,
+  TIMESYNCHER_EULA_VERSION: 'test-eula',
+  RESEND_API_KEY: 'test-key',
+  TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
+  TIMESYNCHER_BASE_PRICE_CENTS: '3700',
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
+  TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS: '2100',
+  TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
+  TIMESYNCHER_SINGLE_NAME: 'Single vacation',
+  TIMESYNCHER_UNLIMITED_NAME: 'Unlimited add-on',
+  TIMESYNCHER_COLLABORATOR_NAME: 'Collaborator seat',
+  TIMESYNCHER_MEDIA_NAME: 'Photo memories',
+};
+
 const saved = {};
-for (const key of ['TIMESYNCHER_SITE_BASE_URL', 'TIMESYNCHER_ONBOARDING_STORE', 'TIMESYNCHER_EULA_VERSION', 'BLOB_READ_WRITE_TOKEN', 'VERCEL_BLOB_STORE_ID', 'TIMESYNCHER_EULA_STORE', 'RESEND_API_KEY', 'TIMESYNCHER_CHECKOUT_CURRENCY']) {
+for (const key of ['TIMESYNCHER_SITE_BASE_URL', 'TIMESYNCHER_ONBOARDING_STORE', 'TIMESYNCHER_EULA_VERSION', 'BLOB_READ_WRITE_TOKEN', 'VERCEL_BLOB_STORE_ID', 'TIMESYNCHER_EULA_STORE', 'RESEND_API_KEY', 'TIMESYNCHER_CHECKOUT_CURRENCY', 'TIMESYNCHER_BASE_PRICE_CENTS', 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS', 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS', 'TIMESYNCHER_MEDIA_PRICE_CENTS', 'TIMESYNCHER_SINGLE_NAME', 'TIMESYNCHER_UNLIMITED_NAME', 'TIMESYNCHER_COLLABORATOR_NAME', 'TIMESYNCHER_MEDIA_NAME']) {
   saved[key] = process.env[key];
 }
-process.env.TIMESYNCHER_CHECKOUT_CURRENCY = 'usd';
-process.env.TIMESYNCHER_SITE_BASE_URL = site;
-process.env.TIMESYNCHER_ONBOARDING_STORE = storeDir;
-process.env.TIMESYNCHER_EULA_VERSION = 'test-eula';
-process.env.RESEND_API_KEY = 'test-key';
+Object.assign(process.env, fixtureEnv);
 delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL_BLOB_STORE_ID;
 delete process.env.TIMESYNCHER_EULA_STORE;
@@ -70,8 +83,10 @@ function db(strings, ...values) {
   }
   if (/update trips/i.test(text)) {
     const patch = values.find((value) => value && typeof value === 'object' && !Array.isArray(value));
-    if (patch && state.trip) state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
-    if (/returning metadata/i.test(text)) return [{ public_slug: state.trip?.metadata?.publicSlug || null }];
+    if (patch && state.trip) {
+      state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
+      if (/returning/i.test(text)) return [{ public_slug: patch.publicSlug || state.trip?.metadata?.publicSlug || null }];
+    }
     return [];
   }
   if (/insert into entitlements/i.test(text)) return [{ id: state.entitlementId }];
@@ -95,8 +110,9 @@ function db(strings, ...values) {
   if (/insert into outbound_emails/i.test(text) || /update outbound_emails/i.test(text)) return [{ id: 'email-1' }];
   if (/update onboarding_sessions/i.test(text)) return [];
   if (/metadata->>'publicSlug'/i.test(text)) {
-    const slug = values[0];
     const meta = state.trip?.metadata || {};
+    if (/as public_slug/i.test(text)) return [{ public_slug: meta.publicSlug || '' }];
+    const slug = values[0];
     if (meta.publicSlug === slug && String(meta.intakeShare) === 'true') return [{ ...state.trip }];
     return [];
   }
@@ -154,54 +170,106 @@ function contentType(file) {
   return 'application/octet-stream';
 }
 
-function dumpDom(url) {
-  return new Promise((resolve, reject) => {
-    const profile = path.join(storeDir, `chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
-    const child = spawn('google-chrome', [
-      '--headless=new',
-      '--disable-gpu',
-      '--no-sandbox',
-      '--disable-dev-shm-usage',
-      '--no-first-run',
-      '--disable-background-networking',
-      '--disable-component-update',
-      '--disable-domain-reliability',
-      '--password-store=basic',
-      '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
-      `--user-data-dir=${profile}`,
-      '--virtual-time-budget=10000',
-      '--timeout=12000',
-      '--dump-dom',
-      url,
-    ], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '', HOME: profile },
-    });
-    const timer = setTimeout(() => {
-      child.kill('SIGKILL');
-      reject(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
-    }, 20000);
-    let out = '';
-    let err = '';
-    let settled = false;
-    const finish = (error) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      child.kill('SIGKILL');
-      if (error) reject(error);
-      else resolve(out);
-    };
-    child.stdout.on('data', (chunk) => {
-      out += chunk;
-      if (out.includes('</html>')) finish();
-    });
-    child.stderr.on('data', (chunk) => { err += chunk; });
-    child.on('exit', (code) => {
-      if (out.includes('</html>')) finish();
-      else finish(new Error(`chrome ${code}: ${err.slice(0, 500)}\n${out.slice(0, 500)}`));
-    });
+async function removeChromeProfile(profile) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rm(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+      return;
+    } catch (error) {
+      if (attempt === 4 || (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY')) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)));
+    }
+  }
+}
+
+function killChromeChild(child, signal) {
+  try {
+    child.kill(signal);
+  } catch (error) {
+    if (error?.code !== 'ESRCH') throw error;
+  }
+}
+
+function waitForChromeExit(child, waitMs = 2000) {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null) {
+      resolve();
+      return;
+    }
+    child.once('exit', () => resolve());
+    killChromeChild(child, 'SIGTERM');
+    setTimeout(() => {
+      killChromeChild(child, 'SIGKILL');
+      resolve();
+    }, waitMs);
   });
+}
+
+async function dumpDomOnce(url) {
+  const profile = path.join(tmpdir(), `purchase-app-link-chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const child = spawn('google-chrome', [
+    '--headless=new',
+    '--disable-gpu',
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--no-first-run',
+    '--disable-background-networking',
+    '--disable-component-update',
+    '--disable-domain-reliability',
+    '--password-store=basic',
+    '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
+    `--user-data-dir=${profile}`,
+    '--virtual-time-budget=20000',
+    '--timeout=30000',
+    '--dump-dom',
+    url,
+  ], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '' },
+  });
+  let out = '';
+  let err = '';
+  let domError = null;
+  try {
+    out = await new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        killChromeChild(child, 'SIGKILL');
+        done(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
+      }, 45000);
+      const done = (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) reject(error);
+        else resolve(out);
+      };
+      child.stdout.on('data', (chunk) => {
+        out += chunk;
+        if (out.includes('</html>')) done();
+      });
+      child.stderr.on('data', (chunk) => { err += chunk; });
+      child.on('exit', (code) => {
+        if (out.includes('</html>')) done();
+        else done(new Error(`chrome ${code}: ${err.slice(0, 500)}\n${out.slice(0, 500)}`));
+      });
+    });
+    return out;
+  } catch (error) {
+    domError = error;
+    throw error;
+  } finally {
+    await waitForChromeExit(child);
+    try {
+      await removeChromeProfile(profile);
+    } catch (cleanupError) {
+      if (!domError) throw cleanupError;
+    }
+  }
+}
+
+async function dumpDom(url) {
+  return dumpDomOnce(url);
 }
 
 useVacationAppDatabase(db);
@@ -238,8 +306,8 @@ try {
     contact: { email: 'ada.zero@example.com', firstName: 'Ada', lastName: 'Zero' },
     plan: 'single',
     amountCents: 0,
-    metadata: { couponCheckout: true },
-    env: process.env,
+    metadata: { couponCheckout: true, trip_title: 'Sample trip' },
+    env: fixtureEnv,
   });
   const shareSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
   onboarding.publicSlug = shareSite.publicSlug;
@@ -247,15 +315,18 @@ try {
   assert.equal(onboarding.contact.firstName, 'Ada');
   assert.equal(state.trip.destination, null);
   assert.equal(state.trip.start_date, null);
-  const sent = await queueOrSendPurchaseEmail(db, onboarding, process.env);
+  const sent = await queueOrSendPurchaseEmail(db, onboarding, fixtureEnv);
   assert.equal(sent.status, 'sent');
   const launchUrl = new URL(onboarding.vacationAppUrl);
   assert.equal(launchUrl.origin + launchUrl.pathname, `${site}/vacation-app.html`);
   assert.equal(launchUrl.searchParams.get('session'), onboarding.token);
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
-  assert.equal(onboarding.publicSlug.startsWith('intake-'), true);
+  assert.equal(onboarding.publicSlug, '');
+  assert.equal(onboarding.publicUrl, '');
+  const tripSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
+  assert.equal(tripSite.publicSlug.startsWith('intake-'), true);
 
-  const migrated = await intakeSharedResponse(onboarding.publicSlug, db);
+  const migrated = await intakeSharedResponse(tripSite.publicSlug, db);
   assert.equal(Boolean(migrated?.trip), true);
   assert.equal(migrated.error, undefined);
   assert.deepEqual(migrated.places, []);
@@ -322,7 +393,15 @@ try {
   useSharedTripDatabase(null);
   globalThis.fetch = originalFetch;
   await new Promise((resolve) => server.close(resolve));
-  await rm(storeDir, { recursive: true, force: true });
+  try {
+    await rm(storeDir, { recursive: true, force: true, maxRetries: 8, retryDelay: 100 });
+  } catch (error) {
+    if (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY' && error?.code !== 'EPERM') throw error;
+  }
+  for (const [key, value] of Object.entries(saved)) {
+    if (value == null) delete process.env[key];
+    else process.env[key] = value;
+  }
 }
 
 console.log('purchase email app link passed');

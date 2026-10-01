@@ -29,7 +29,7 @@ import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedInta
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   applyChatPlaceSearchForVacationTurn,
@@ -38,6 +38,7 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 
 let vacationAppDatabase = null;
 
@@ -693,7 +694,19 @@ async function queueVacationAppTurn(db, session, trip, body) {
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
+  const blockReplyIdCitation = (replyText) => blockVacationAppReplyIdCitation({
+    replyText,
+    tripId,
+    db,
+    turnId: turnRows[0].id,
+    payload,
+    customerLive,
+    base,
+    storeReplyFailure,
+  });
   if (produced.status === 'interim' && produced.pending) {
+    const interimBlocked = await blockReplyIdCitation(produced.interimReply?.text || '');
+    if (interimBlocked) return interimBlocked;
     const pending = {
       ...produced.pending,
       customerTurnIndex,
@@ -725,71 +738,31 @@ async function queueVacationAppTurn(db, session, trip, body) {
     return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
   }
 
-  const appLive = liveTurnRecord({
-    turnIndex: customerTurnIndex + 1,
-    role: 'app',
-    modality: 'text',
-    text: produced.reply,
-    at: new Date().toISOString(),
-    latencyMs: exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    jev: produced.jev,
-    model: produced.model,
-    rules: produced.rules,
-  });
-  const appPayload = {
-    source: 'vacation_app',
-    surface: 'vacation-app',
-    selectedTripId: tripId,
-    liveTranscript: appLive,
-  };
-  await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
-      now(), ${exchangeLatency}
-    )
-  `;
-  const itinerary = await recordCustomerThingNotes(
+  const citationBlocked = await blockReplyIdCitation(produced.reply);
+  if (citationBlocked) return citationBlocked;
+
+  return persistVacationAppOutboundReply({
     db,
+    transcriptOwnerId,
     tripId,
+    requestId,
+    jobId: jobRows[0].id,
+    produced,
+    base,
+    exchangeLatency,
+    sessionE2eMs: sessionE2eMs(),
+    customerTurnIndex,
+    speakerName,
+    seat,
+    classification,
+    jobFields,
+    firstIntake,
     requestText,
-    {
-      collaborator: Boolean(seat),
-      speakerName,
-      appReply: produced.reply,
-      roster: Array.isArray(classification.roster) ? classification.roster : [],
-      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
-      askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
-      extractedDestination: jobFields.destination,
-      extractedTitle: jobFields.title,
-      destinationError: jobFields.destinationError,
-      titleError: jobFields.titleError,
-    },
-    firstIntake ? requestText : '',
-    intakeExtractedThings(placeSearchTurn, classification),
-  );
-  if (itinerary.length) await publishIntakeShare(db, tripId);
-  const vacationRows = await db`
-    select id, title, destination, start_date, end_date, status, metadata
-    from trips
-    where id = ${tripId}
-    limit 1
-  `;
-  return {
-    ...base,
-    ok: true,
-    status: 'replied',
-    reply: produced.reply,
-    ...appReplyTelemetry(appLive),
-    appTurnIndex: appLive.turnIndex,
-    itinerary,
-    vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
-    error: null,
-  };
+    intakeThings: intakeExtractedThings(placeSearchTurn, classification),
+    recordCustomerThingNotes,
+    publishIntakeShare,
+    vacationAppTripSummary,
+  });
 }
 
 function thingView(row) {
@@ -1038,9 +1011,10 @@ async function handleVacationApp(req, res, db, url) {
     const body = await readJson(req);
     if (body.action === 'open-seats') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
+      const tripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id;
       const seats = await openCollaboratorAppSeats(db, {
         ownerCustomerId: session.customer_id,
-        tripId: session.trip_id,
+        tripId,
         seats: body.seats,
       });
       return sendJson(res, 200, { ok: true, seats });
