@@ -17,16 +17,15 @@ import {
 
 const ENV = {
   BRAVE_SEARCH_API_KEY: 'brave-test-key',
-  FOURSQUARE_SERVICE_KEY: 'fsq-test-key',
 };
+const PAID_PLACES_HOST = ['places-api', 'foursquare', 'com'].join('.');
 
 function placeEnv(env = ENV) {
   return {
     brave: env.BRAVE_SEARCH_API_KEY || env.brave || '',
-    foursquare: env.FOURSQUARE_SERVICE_KEY || env.foursquare || '',
     braveName: 'BRAVE_SEARCH_API_KEY',
-    foursquareName: 'FOURSQUARE_SERVICE_KEY',
     OPENROUTER_API_KEY: env.OPENROUTER_API_KEY || 'test-openrouter-key',
+    ...(env.foursquare ? { foursquare: env.foursquare } : {}),
   };
 }
 const CENTER = { lat: 38.7223, lng: -9.1393 };
@@ -53,7 +52,6 @@ function jsonResponse(body, status = 200) {
 function callKind(url) {
   const value = String(url);
   if (value.includes('nominatim.openstreetmap.org')) return 'nominatim';
-  if (value.includes('places-api.foursquare.com')) return 'foursquare_os';
   if (value.includes('overpass-api.de')) return 'osm';
   if (value.includes('api.search.brave.com/res/v1/local/place_search')) return 'brave';
   if (value.includes('api.tavily.com')) return 'tavily';
@@ -65,49 +63,6 @@ function lisbonRoutes(url) {
   const value = String(url);
   if (value.includes('nominatim.openstreetmap.org')) {
     return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon, Portugal' }]);
-  }
-  if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
-    return jsonResponse({
-      results: [
-        {
-          fsq_place_id: 'fsq-harbor',
-          name: 'Harbor Cafe',
-          latitude: 38.7225,
-          longitude: -9.1395,
-          location: { formatted_address: '1 Dock' },
-          link: 'https://example.test/harbor',
-        },
-        {
-          fsq_place_id: 'fsq-closed',
-          name: 'Closed Grill',
-          latitude: 38.73,
-          longitude: -9.14,
-          date_closed: '2020-01-01',
-        },
-        {
-          fsq_place_id: 'fsq-tile',
-          name: 'Tile Oven',
-          latitude: 38.73,
-          longitude: -9.14,
-          location: { address: '2 Tile Street' },
-          categories: [{ name: 'Pizza Place' }],
-        },
-      ],
-    });
-  }
-  if (value.includes('places-api.foursquare.com') && value.includes('query=store')) {
-    return jsonResponse({
-      results: [{
-        fsq_place_id: 'fsq-paper',
-        name: 'Paper Shop',
-        latitude: 38.71,
-        longitude: -9.15,
-        location: { formatted_address: '3 Paper Street' },
-      }],
-    });
-  }
-  if (value.includes('places-api.foursquare.com') && value.includes('query=attraction')) {
-    return jsonResponse({ results: [] });
   }
   if (value.includes('overpass-api.de')) {
     return jsonResponse({
@@ -161,7 +116,6 @@ function recordingFetch(routes, events) {
 
 const merged = mergePlaces([
   [{ title: 'Harbor Cafe', source: 'prior_db', category: 'restaurant', lat: 38.7223, lng: -9.1393 }],
-  [{ title: 'Harbor Cafe', source: 'foursquare_os', category: 'restaurant', lat: 38.7224, lng: -9.1394, url: 'https://example.test/harbor' }],
   [{ title: 'City Museum', source: 'osm', category: 'activity', lat: 38.74, lng: -9.15 }],
   [{ title: 'North Market', source: 'brave', category: 'store', lat: 10, lng: 10 }],
   [{ title: 'North Market', source: 'osm', category: 'store', lat: 11, lng: 11 }],
@@ -186,7 +140,7 @@ const recorded = recordingFetch(lisbonRoutes, events);
 const found = await searchPlaces({
   destination: 'Lisbon',
   wantedThings: PLACE_WANTED,
-  env: placeEnv(),
+  env: { ...placeEnv(), foursquare: 'paid-places-key' },
   fetchImpl: recorded.fetchImpl,
   loadPriorPlaces: async () => {
     events.push('prior_db');
@@ -196,37 +150,28 @@ const found = await searchPlaces({
 assert.deepEqual(events, [
   'nominatim',
   'prior_db',
-  'foursquare_os',
-  'foursquare_os',
-  'foursquare_os',
   'osm',
   'brave',
   'brave',
   'brave',
 ]);
+assert.equal(recorded.calls.filter((call) => String(call.url).includes(PAID_PLACES_HOST)).length, 0);
 assert.deepEqual(found.places.map((place) => [place.title, place.source]), [
   ['Harbor Cafe', 'prior_db'],
-  ['Tile Oven', 'foursquare_os'],
-  ['Paper Shop', 'foursquare_os'],
   ['City Museum', 'osm'],
+  ['Paper Shop', 'brave'],
   ['River Walk', 'brave'],
 ]);
-assert.equal(found.places.some((place) => place.title === 'Closed Grill'), false);
 assert.equal(found.places.some((place) => /google/i.test(place.source)), false);
 assert.equal(recorded.calls.some((call) => callKind(call.url) === 'google'), false);
 const braveCall = recorded.calls.find((call) => callKind(call.url) === 'brave');
 assert.equal(braveCall.options.headers['X-Subscription-Token'], 'brave-test-key');
 assert.equal(braveCall.url.includes('brave-test-key'), false);
-const fsqCall = recorded.calls.find((call) => callKind(call.url) === 'foursquare_os');
-assert.equal(fsqCall.options.headers.authorization, 'Bearer fsq-test-key');
 assert.equal(found.sourceCounts.prior_db, 1);
-assert.equal(found.sourceCounts.foursquare_os, 2);
 assert.equal(found.sourceCounts.osm, 1);
-assert.equal(found.sourceCounts.brave, 1);
+assert.equal(found.sourceCounts.brave, 2);
 const river = found.places.find((place) => place.title === 'River Walk');
 assert.equal(river.address, 'River Road, Lisbon');
-const tile = found.places.find((place) => place.title === 'Tile Oven');
-assert.equal(tile.categoryName, 'Pizza Place');
 const museum = found.places.find((place) => place.title === 'City Museum');
 assert.equal(museum.categoryName, 'museum');
 
@@ -237,7 +182,7 @@ await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
     wantedThings: PLACE_WANTED,
-    env: placeEnv({ FOURSQUARE_SERVICE_KEY: 'fsq-test-key' }),
+    env: placeEnv({}),
     fetchImpl: blockedFetch,
   }),
   (error) => {
@@ -247,50 +192,6 @@ await assert.rejects(
     return true;
   },
 );
-const skipWarnings = [];
-const originalWarn = console.warn;
-console.warn = (...args) => {
-  skipWarnings.push(args.map((part) => String(part)).join(' '));
-};
-try {
-  const skipCalls = [];
-  const skipEnv = placeEnv({ BRAVE_SEARCH_API_KEY: 'brave-test-key' });
-  assert.equal(skipEnv.foursquare, '');
-  const skipFetch = async (url) => {
-    const value = String(url);
-    skipCalls.push(value);
-    if (isOpenRouter(value)) return jevOk(5);
-    return lisbonRoutes(value);
-  };
-  const skipSearch = () => searchPlaces({
-    destination: 'Lisbon',
-    wantedThings: PLACE_WANTED,
-    env: skipEnv,
-    fetchImpl: skipFetch,
-    loadPriorPlaces: async () => prior,
-  });
-  const firstSkip = await skipSearch();
-  const secondSkip = await skipSearch();
-  assert.equal(skipCalls.some((url) => {
-    try {
-      return /foursquare/i.test(new URL(url).hostname);
-    } catch {
-      return /foursquare/i.test(url);
-    }
-  }), false);
-  assert.deepEqual(skipWarnings, ['place-search: FOURSQUARE_SERVICE_KEY unset, skipping foursquare']);
-  for (const result of [firstSkip, secondSkip]) {
-    const sources = [...new Set(result.places.map((place) => place.source))];
-    assert.deepEqual(sources.filter((source) => !['prior_db', 'osm', 'brave'].includes(source)), []);
-    assert.equal(sources.includes('prior_db'), true);
-    assert.equal(sources.includes('osm'), true);
-    assert.equal(sources.includes('brave'), true);
-    assert.equal(sources.includes('foursquare_os'), false);
-  }
-} finally {
-  console.warn = originalWarn;
-}
-
 const emptyLive = recordingFetch((url) => {
   if (String(url).includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393' }]);
   if (String(url).includes('overpass')) return jsonResponse({ elements: [] });
@@ -324,28 +225,6 @@ await assert.rejects(
   },
 );
 
-const failedCalls = [];
-await assert.rejects(
-  () => searchPlaces({
-    destination: 'Lisbon',
-    wantedThings: PLACE_WANTED,
-    env: placeEnv(),
-    priorPlaces: prior,
-    fetchImpl: async (url, options) => {
-      failedCalls.push(callKind(url));
-      if (String(url).includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393' }]);
-      if (String(url).includes('places-api.foursquare.com')) return jsonResponse('unauthorized', 401);
-      throw new Error(`continued after Foursquare failure: ${url}`);
-    },
-  }),
-  (error) => {
-    assert.equal(error.code, 'source_failed');
-    assert.match(error.message, /Foursquare OS Places failed: HTTP 401/);
-    return true;
-  },
-);
-assert.deepEqual(failedCalls, ['nominatim', 'foursquare_os']);
-
 const geocodeCalls = [];
 await assert.rejects(
   () => searchPlaces({
@@ -375,15 +254,14 @@ const fill = await fillTripIntake({
 });
 assert.deepEqual(fill.things.map((thing) => thing.source), [
   'prior_db',
-  'foursquare_os',
-  'foursquare_os',
   'osm',
+  'brave',
   'brave',
 ]);
 assert.equal(fill.things[0].metadata.source, 'prior_db');
-assert.equal(fill.researchedThings[3].source, 'osm');
-assert.equal(fill.researchedThings[3].lat, 38.74);
-assert.equal(fill.researchedThings[3].title, 'City Museum');
+assert.equal(fill.researchedThings[1].source, 'osm');
+assert.equal(fill.researchedThings[1].lat, 38.74);
+assert.equal(fill.researchedThings[1].title, 'City Museum');
 
 const keptPrior = selectPriorPlaces([
   { id: 'near', title: 'Harbor Cafe', category: 'restaurant', source: 'brave', location: { lat: 38.7224, lng: -9.1394, address: '1 Dock' } },
@@ -409,7 +287,7 @@ const db = async (strings, ...values) => {
 const written = await insertTripThing(db, {
   tripId: 'trip-1',
   requestId: 'request-1',
-  thing: fill.things[3],
+  thing: fill.things.find((thing) => thing.title === 'City Museum'),
 });
 assert.equal(written.source, 'osm');
 assert.match(inserts[0].sql, /insert into trip_things/);
@@ -468,18 +346,6 @@ const lodgingSearch = await searchPlaces({
       return jsonResponse([{ lat: '36.1100', lon: '-115.1700', display_name: 'Jockey Club' }]);
     }
     if (value.includes('nominatim')) throw new Error(`destination geocode ran before lodging: ${value}`);
-    if (value.includes('places-api.foursquare.com')) {
-      assert.match(decodeURIComponent(value), /ll=36\.11,-115\.17/);
-      const query = new URL(value).searchParams.get('query');
-      return jsonResponse({
-        results: [{
-          fsq_place_id: `fsq-${query}`,
-          name: `FSQ ${query}`,
-          latitude: 36.111,
-          longitude: -115.171,
-        }],
-      });
-    }
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
     if (value.includes('api.search.brave.com')) {
       const query = new URL(value).searchParams.get('q');
@@ -498,38 +364,30 @@ assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['poke', 'grocer
 assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave poke' && place.source === 'brave'), true);
 assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
 assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
+assert.equal(lodgingEvents.some((kind) => String(kind).includes(PAID_PLACES_HOST)), false);
 
-const manyFsq = [];
-const braveAfterMany = await searchPlaces({
-  destination: 'Lisbon',
-  wantedThings: PLACE_WANTED,
-  env: placeEnv(),
-  priorPlaces: [],
-  fetchImpl: async (url) => {
-    const value = String(url);
-    if (isOpenRouter(value)) return jevOk(5);
-    manyFsq.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || new URL(value).searchParams.get('query') || ''}`);
-    if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
-    if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
-      return jsonResponse({
-        results: [1, 2, 3, 4].map((index) => ({
-          fsq_place_id: `fsq-r${index}`,
-          name: `Restaurant ${index}`,
-          latitude: 38.72 + index / 1000,
-          longitude: -9.14,
-        })),
-      });
-    }
-    if (value.includes('places-api.foursquare.com')) return jsonResponse({ results: [] });
-    if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
-    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
-    throw new Error(`unexpected many-fsq search ${value}`);
-  },
-});
-assert.equal(manyFsq.filter((entry) => entry.startsWith('brave:')).length, 3);
-assert.deepEqual(manyFsq.filter((entry) => entry.startsWith('brave:')), ['brave:restaurant', 'brave:store', 'brave:attraction']);
-assert.equal(braveAfterMany.places.length, 4);
-assert.equal(braveAfterMany.places.every((place) => place.source === 'foursquare_os'), true);
+const braveCalls = [];
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Lisbon',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv(),
+    priorPlaces: [],
+    fetchImpl: async (url) => {
+      const value = String(url);
+      if (isOpenRouter(value)) return jevOk(5);
+      braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
+      if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
+      if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
+      if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+      throw new Error(`unexpected search ${value}`);
+    },
+  }),
+  (error) => error.code === 'empty',
+);
+assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
+assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:restaurant', 'brave:store', 'brave:attraction']);
+assert.equal(braveCalls.some((entry) => entry.includes(PAID_PLACES_HOST)), false);
 
 const fallbackEvents = [];
 const lodgingMiss = await searchPlaces({
@@ -546,19 +404,17 @@ const lodgingMiss = await searchPlaces({
       if (value.includes('Missing')) return jsonResponse([]);
       return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     }
-    if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
-      assert.match(decodeURIComponent(value), /ll=38\.7223,-9\.1393/);
+    if (value.includes('api.search.brave.com') && value.includes('q=restaurant')) {
       return jsonResponse({
         results: [{
-          fsq_place_id: 'fsq-lisbon',
-          name: 'Lisbon Cafe',
-          latitude: 38.7225,
-          longitude: -9.1395,
-          categories: [{ name: 'Café' }],
+          id: 'brave-lisbon',
+          title: 'Lisbon Cafe',
+          coordinates: [38.7225, -9.1395],
+          category: 'Café',
         }],
       });
     }
-    if (value.includes('places-api.foursquare.com') || value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
     throw new Error(`unexpected lodging miss ${value}`);
   },
@@ -567,7 +423,7 @@ assert.match(fallbackEvents[0], /Missing House/);
 assert.match(fallbackEvents[1], /Lisbon/);
 assert.equal(lodgingMiss.center.geocoded, 'destination');
 assert.equal(lodgingMiss.places[0].title, 'Lisbon Cafe');
-assert.equal(lodgingMiss.places[0].externalId, 'fsq-lisbon');
+assert.equal(lodgingMiss.places[0].externalId, 'brave-lisbon');
 assert.equal(lodgingMiss.places[0].categoryName, 'Café');
 assert.equal(lodgingMiss.places[0].jevScore, 5);
 const savedCafe = placeToTripThing({
@@ -575,8 +431,8 @@ const savedCafe = placeToTripThing({
   rating: 4.4,
   ratingCount: 12,
 });
-assert.deepEqual(savedCafe.metadata.sourceRef, { source: 'foursquare_os', id: 'fsq-lisbon' });
-assert.equal(savedCafe.ratings.source, 'foursquare_os');
+assert.deepEqual(savedCafe.metadata.sourceRef, { source: 'brave', id: 'brave-lisbon' });
+assert.equal(savedCafe.ratings.source, 'brave');
 assert.equal(savedCafe.ratings.rating, '4.4');
 assert.equal(savedCafe.ratings.count, 12);
 assert.equal(savedCafe.ratings.googleRating, undefined);
@@ -597,17 +453,14 @@ assert.equal(research.status, 'live_place_search');
 assert.equal(research.provider, 'place-search');
 assert.deepEqual(workerEvents, [
   'nominatim',
-  'foursquare_os',
-  'foursquare_os',
-  'foursquare_os',
   'osm',
   'brave',
   'brave',
   'brave',
 ]);
 assert.equal(research.things.some((thing) => thing.source === 'brave' && thing.title === 'River Walk'), true);
-assert.equal(research.things.some((thing) => thing.source === 'foursquare_os'), true);
 assert.equal(research.things.some((thing) => thing.source === 'osm'), true);
+assert.equal(workerFetch.calls.some((call) => String(call.url).includes(PAID_PLACES_HOST)), false);
 assert.equal(workerFetch.calls.some((call) => /googleapis|places\.google/.test(call.url)), false);
 const braveQuery = decodeURIComponent(workerFetch.calls.find((call) => call.url.includes('place_search')).url);
 assert.match(braveQuery, /q=restaurant/);
