@@ -6,6 +6,8 @@ import { collaboratorEulaAcceptUrl } from '../src/vacation/collaborators.mjs';
 import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl } from '../src/vacation/web-access.mjs';
 import { intakeShareSlug as slugFn } from '../src/vacation/intake-shared-trip.mjs';
 
+const UPSTREAM_SLUG = 'sample-shared-slug-01';
+
 const env = {
   TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com/',
   TIMESYNCHER_TRAVEL_BASE_URL: 'https://trek-upstream.example.com/',
@@ -15,8 +17,8 @@ const env = {
 const tripId = '01234567-89ab-4cde-8f01-23456789abcd';
 assert.equal(intakeShareSlug(tripId), 'intake-0123456789ab');
 assert.equal(sharedTripWebsiteUrl('intake-0123456789ab', env), 'https://vacation-staging.timesyncher.com/shared/intake-0123456789ab/');
-assert.equal(sharedTripWebsiteUrl('las-vegas-vacation-3', env), 'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/');
-assert.equal(publicTripUrl({ metadata: { publicSlug: 'las-vegas-vacation-3' } }, env), 'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/');
+assert.equal(sharedTripWebsiteUrl(UPSTREAM_SLUG, env), `https://vacation-staging.timesyncher.com/shared/${UPSTREAM_SLUG}/`);
+assert.equal(publicTripUrl({ metadata: { publicSlug: UPSTREAM_SLUG } }, env), `https://vacation-staging.timesyncher.com/shared/${UPSTREAM_SLUG}/`);
 assert.match(webAccessAcceptUrl('token-abc', env), /\/api\/vacation-web-access\?action=accept&token=/);
 assert.match(collaboratorEulaAcceptUrl({ id: 'inv-1' }, env), /\/accept\//);
 
@@ -40,9 +42,9 @@ globalThis.fetch = async (url) => {
 useSharedTripDatabase(() => []);
 try {
   const res = mockRes();
-  await sharedTripHandler({ method: 'GET', url: '/api/shared/las-vegas-vacation-3', headers: {} }, res);
+  await sharedTripHandler({ method: 'GET', url: `/api/shared/${UPSTREAM_SLUG}`, headers: {} }, res);
   assert.equal(res.statusCode, 200);
-  assert.match(upstreamUrl, /^https:\/\/trek-upstream\.example\.com\/api\/shared\/las-vegas-vacation-3/);
+  assert.match(upstreamUrl, new RegExp(`^https://trek-upstream\\.example\\.com/api/shared/${UPSTREAM_SLUG}`));
 
   upstreamUrl = '';
   const miss = mockRes();
