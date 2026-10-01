@@ -1,7 +1,6 @@
 export const CURRENT_EULA_VERSION = '2026-06-terms-advisory-only';
 export const CURRENT_EULA_TEXT = `# TimeSyncher Terms and Privacy Acknowledgment
 
-Status: product/legal workbench language, not final legal advice. Before customer-facing use, IBE Inc. should have counsel review it.
 
 ## Purpose
 
