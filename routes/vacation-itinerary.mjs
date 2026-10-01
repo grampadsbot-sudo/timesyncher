@@ -25,6 +25,7 @@ import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import {
@@ -262,11 +263,7 @@ async function loadVacationAppTurns(db, session, tripId) {
   const tripRows = await db`select metadata from trips where id = ${tripId} limit 1`;
   const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
   const party = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
-  const collabRows = await db`
-    select display_name
-    from vacation_collaborators
-    where owner_customer_id = ${customerId} and trip_id = ${tripId} and status = 'active'
-  `;
+  const collabRows = await db`select display_name from vacation_collaborators where owner_customer_id = ${customerId} and trip_id = ${tripId} and status = 'active'`;
   const people = authorPeopleFromTrip(party, collabRows, customerId);
   const rows = await db`
     select speaker, body, channel, payload, direction, received_at, sent_at, created_at
@@ -358,7 +355,12 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     `;
   if (existing.length) return;
   const started = Date.now();
-  const text = renderOnboardingWelcome(await welcomeInputs(db, session, trip), deps);
+  let text;
+  try {
+    text = renderOnboardingWelcome(await welcomeInputs(db, session, trip), deps);
+  } catch (error) {
+    throw onboardingWelcomeFailure(error?.message, trip.id);
+  }
   const elapsed = Math.max(1, Date.now() - started);
   const live = cannedWelcomeLiveTurn({
     text,
@@ -1264,6 +1266,7 @@ export default async function handler(req, res) {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return sendJson(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to load itinerary.' });
+    const welcome = welcomeFailureBody(error);
+    return sendJson(res, error.statusCode || 400, welcome || { ok: false, error: error.message || 'Unable to load itinerary.' });
   }
 }

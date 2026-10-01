@@ -22,6 +22,7 @@ scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
 scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
+scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
 scripts/test_tg_intake_gbrain.mjs
@@ -43,6 +44,7 @@ scripts/test_g3a_canned_dialog.mjs
 scripts/test_onboarding_welcome.mjs
 scripts/test_first_intake_reply.mjs
 scripts/test_first_intake_echo.mjs
+scripts/test_trip_site_url_purchase.mjs
 scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs
