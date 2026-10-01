@@ -7,6 +7,7 @@ scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
+scripts/test_restaurant_list_tags.mjs
 scripts/test_keepsake_style2.mjs
 scripts/test_real_app_entry.mjs
 scripts/test_check_hardcoded_content.mjs
@@ -23,6 +24,7 @@ scripts/test_screenshot_journey_pdf.mjs
 scripts/test_tg_intake_gbrain.mjs
 scripts/test_timeline_icons.mjs
 scripts/test_vacation_app_shell.mjs
+scripts/test_post_purchase_eula_open_app.mjs
 scripts/test_vacation_collaborators.mjs
 scripts/test_vacation_telegram_intake.mjs
 scripts/test_vacation_web_access.mjs
@@ -36,6 +38,7 @@ scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs
 scripts/test_place_search.mjs
+scripts/test_place_category_radius.mjs
 scripts/test_ratings_source.mjs
 scripts/test_seat_price_data.mjs
 scripts/test_trip_intake_classify.mjs

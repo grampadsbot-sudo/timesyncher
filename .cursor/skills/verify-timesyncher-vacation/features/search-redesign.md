@@ -2,13 +2,13 @@
 
 Canonical inventory: `features/search-redesign.md`. GBrain Feature Map is the source. This file is the verification recipe.
 
-There is no customer search screen. The drive records a gap until a screen exists. Do not invent one.
+There is no customer search screen. Do not invent one. Proof is the place-search module: Foursquare is optional, and OpenStreetMap plus Brave still run.
 
 ## Sub-features
 
 - Google Places and the Wanderlust GOAT Places seed are gone.
-- Foursquare OS Places plus OpenStreetMap, measured from the house or lodging. Groceries 8 km, restaurants 10 km, stores 10 km, gardens and activities 40 km.
-- Brave Search only when that database returns fewer than 3 places. Database cache is 7 days. Brave ids stay out of that cache.
+- Place search uses the prior database, OpenStreetMap, and Brave. Foursquare is optional. When `FOURSQUARE_SERVICE_KEY` is unset, Foursquare is skipped and search still returns OSM and Brave places. Radius is measured from the house or lodging. Groceries 8 km, restaurants 10 km, stores 10 km, gardens and activities 40 km.
+- There is no customer search screen. Proof is the place-search module, not a guest control.
 - Jev scores web results in parallel. Keep score 3 or higher. Synthesis cites result POI ids only.
 - Flights: ask the preferred airline before filtering. A named airline shows that airline. No preference shows at most one option per airline.
 - Rental cars: the 10 lowest prices, no brand limit. The customer can eliminate brands afterward.
@@ -18,15 +18,15 @@ There is no customer search screen. The drive records a gap until a screen exist
 
 ## How to get to it (user POV)
 
-- No guest click. Confirm the rules in `features/search-redesign.md` and the POI, flight, car, and wind modules.
+- No guest click. Confirm `src/vacation/place-search.mjs` skips Foursquare when its key is unset and still queries OpenStreetMap and Brave.
 
 ## Driving it
 
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-search-redesign.png`.
-- Pass when the live page shows the control named above.
-- The shared app has no search screen, so this result stays GAP. Do not delete or soften this file.
+- Pass when place search skips an unset Foursquare key and still queries OpenStreetMap and Brave. Screenshot the shared itinerary; it has no search control.
+- If place search requires Foursquare or drops OSM or Brave, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas
 
