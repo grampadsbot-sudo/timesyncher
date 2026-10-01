@@ -76,11 +76,17 @@ assert.doesNotMatch(dispatchSource, /I need to check one thing before I change a
 const trekScripts = ['./trek-itinerary-edit.mjs', './trek-agent-edit.mjs'];
 const familyTripToken = ['the', 'davidson', 'family', 'trip'].join('-');
 for (const script of trekScripts) {
-  const rg = spawnSync('rg', ['-n', '-i', `caldwell|davidson|CALDWELL_FAMILY|${familyTripToken}|mentionsOtherKnownTrip`, script], {
+  const source = fs.readFileSync(path.join(SCRIPT_DIR, script), 'utf8');
+  const rg = spawnSync('rg', ['-n', '-i', 'caldwell|davidson|CALDWELL_FAMILY|mentionsOtherKnownTrip', path.join(SCRIPT_DIR, script)], {
     encoding: 'utf8',
-    cwd: SCRIPT_DIR,
   });
-  assert.equal(rg.stdout.trim(), '', `banned trek literals in ${script}:\n${rg.stdout}`);
+  if (rg.error && rg.error.code === 'ENOENT') {
+    assert.doesNotMatch(source, /caldwell|davidson|CALDWELL_FAMILY|mentionsOtherKnownTrip/i);
+    assert.equal(source.includes(familyTripToken), false);
+  } else {
+    assert.equal(rg.status, 1, `rg should find no matches in ${script}:\n${rg.stdout}`);
+    assert.equal(source.includes(familyTripToken), false);
+  }
   const missing = spawnSync(process.execPath, [script], {
     input: JSON.stringify({ request_text: 'Add a timeline item.' }),
     encoding: 'utf8',
