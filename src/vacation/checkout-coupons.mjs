@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { checkoutOrderSummary } from './checkout-pricing.mjs';
-import { cleanText, ensureVacationEulaSession, onboardingLink, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { cleanText, ensureVacationEulaSession, onboardingLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 import { queueOrSendPurchaseEmail } from './email.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { sharedTripWebsiteUrl } from './web-access.mjs';
@@ -133,7 +133,7 @@ async function createCouponOnboarding(db, { body, coupon, env, onOrderCreated = 
     )
     values (
       ${customerId}, ${tripId}, ${orderId}, ${sessionToken}, 'purchase_confirmed',
-      'post_purchase', ${telegramLink(sessionToken, env)}, ${meta}, now()
+      'post_purchase', ${null}, ${meta}, now()
     )
     returning *
   `;
@@ -160,7 +160,6 @@ async function createCouponOnboarding(db, { body, coupon, env, onOrderCreated = 
     publicUrl,
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact,
     order: {
@@ -240,7 +239,6 @@ export async function redeemCheckoutCoupon(db, body = {}, env = process.env) {
         ${{
           couponLabel: coupon.label || null,
           onboardingUrl: onboarding.onboardingUrl,
-          telegramUrl: onboarding.telegramUrl,
           eula: onboarding.eula,
         }},
         now()
@@ -255,7 +253,6 @@ export async function redeemCheckoutCoupon(db, body = {}, env = process.env) {
         token: onboarding.token,
         onboardingUrl: onboarding.onboardingUrl,
         vacationAppUrl: onboarding.vacationAppUrl,
-        telegramUrl: onboarding.telegramUrl,
         eula: onboarding.eula,
       },
       order: onboarding.order,

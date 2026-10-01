@@ -173,7 +173,7 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
   };
 }
 
-export function tripIntakeConfig(env = process.env) {
+function tripIntakeConfig(env = process.env) {
   return {
     apiKey: openRouterAppKey(env),
     routerModel: env.JEV_ROUTER_MODEL || env.TIMESYNCHER_JEV_ROUTER_MODEL || JEV_QUALITY_MODEL,

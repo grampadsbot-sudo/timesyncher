@@ -6,7 +6,6 @@ import fs from 'node:fs';
 const API_BASE = (process.env.TIMESYNCHER_API_BASE_URL || 'https://vacation.timesyncher.com').replace(/\/+$/, '');
 const WORKER_ID = process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper';
 const WORKER_TOKEN = process.env.TIMESYNCHER_WORKER_TOKEN || '';
-const TELEGRAM_BOT_TOKEN = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || process.env.TIMESYNCHER_VACATION_TELEGRAM_BOT_TOKEN || '';
 const POLL_INTERVAL_MS = Number.parseInt(process.env.TIMESYNCHER_WORKER_POLL_MS || '15000', 10);
 const PRODUCT_GBRAIN_DISPATCH = process.env.TIMESYNCHER_PRODUCT_GBRAIN_DISPATCH || '';
 const ONCE = process.argv.includes('--once');
@@ -14,7 +13,7 @@ const DRAIN = process.argv.includes('--drain');
 const DRAIN_ALL = process.argv.includes('--drain-all');
 const DRAIN_MAX_JOBS = DRAIN_ALL ? 0 : Math.max(1, Number.parseInt(process.env.TIMESYNCHER_WORKER_DRAIN_MAX_JOBS || '1', 10));
 const TARGET_JOB_ID = cleanText(process.env.TIMESYNCHER_WORKER_TARGET_JOB_ID, 80);
-const TARGET_JOB_FILE = process.env.TIMESYNCHER_WORKER_TARGET_FILE || process.env.TIMESYNCHER_WORKER_DRAIN_TARGET_FILE || './telegram-worker-drain-target.json';
+const TARGET_JOB_FILE = process.env.TIMESYNCHER_WORKER_TARGET_FILE || process.env.TIMESYNCHER_WORKER_DRAIN_TARGET_FILE || './worker-drain-target.json';
 
 function requireEnv() {
   if (!WORKER_TOKEN) throw new Error('TIMESYNCHER_WORKER_TOKEN is required.');
@@ -155,62 +154,27 @@ async function completeJob(job, completion) {
   });
 }
 
-function findTelegramChatId(value) {
+function historicalChatId(value) {
   if (!value || typeof value !== 'object') return '';
   const direct = value.telegramChatId || value.telegram_chat_id;
   if (direct) return String(direct);
   for (const key of ['payload', 'input', 'message']) {
-    const nested = findTelegramChatId(value[key]);
+    const nested = historicalChatId(value[key]);
     if (nested) return nested;
   }
   if (Array.isArray(value.trip_transcript)) {
     for (const turn of value.trip_transcript) {
-      const nested = findTelegramChatId(turn);
+      const nested = historicalChatId(turn);
       if (nested) return nested;
     }
   }
   return '';
 }
 
-async function sendTelegram(chatId, text) {
-  if (!TELEGRAM_BOT_TOKEN || !chatId || !text) return false;
-  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: String(text).slice(0, 3900),
-      disable_web_page_preview: true,
-    }),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || body.ok === false) {
-    throw new Error(body.description || `Telegram sendMessage HTTP ${response.status}`);
-  }
-  return true;
-}
-
-function customerFailureMessage(error) {
-  const raw = String(error?.message || error || '').trim();
-  if (raw.includes('Concrete itinerary edit requests are not yet wired')) {
-    return [
-      'I received that, but I could not safely apply the itinerary edits automatically yet.',
-      '',
-      'I am not going to send the same unchanged vacation link and pretend it worked. The edit needs the deterministic trip mutator to run first.',
-    ].join('\n');
-  }
-  if (raw.includes('No target TREK trip/share token could be identified') || raw.includes('No target shared trip token could be identified')) {
-    return [
-      'I received that, but I need to know which vacation to update before I change anything.',
-      '',
-      'Send the vacation website link or the trip name, or say that this is a brand-new vacation.',
-    ].join('\n');
-  }
-  return [
-    'I hit a technical issue while updating the vacation.',
-    '',
-    'I saved your message and will retry it. You can keep sending details here.',
-  ].join('\n');
+function logSkippedChatDelivery(job) {
+  const chatId = historicalChatId(job);
+  if (!chatId) return;
+  console.error(`[${new Date().toISOString()}] ${WORKER_ID}: skipped delivery for ${job.id}: chat ${chatId} is not delivered because Telegram delivery was removed`);
 }
 
 async function retryJob(job, error) {
@@ -239,20 +203,12 @@ async function tick() {
       console.log(`[${new Date().toISOString()}] ${WORKER_ID}: claimed ${job.id} (${job.job_type})`);
       const completion = await handleJob(job);
       await completeJob(job, completion);
-      const chatId = findTelegramChatId(job);
-      if (chatId && completion.customerResponse) {
-        await sendTelegram(chatId, completion.customerResponse);
-        console.log(`[${new Date().toISOString()}] ${WORKER_ID}: sent Telegram response for ${job.id}`);
-      }
+      logSkippedChatDelivery(job);
       console.log(`[${new Date().toISOString()}] ${WORKER_ID}: completed ${job.id}`);
     } catch (error) {
       console.error(`[${new Date().toISOString()}] ${WORKER_ID}: failed ${job.id}: ${error.message}`);
       await retryJob(job, error);
-      const chatId = findTelegramChatId(job);
-      if (chatId) {
-        await sendTelegram(chatId, customerFailureMessage(error));
-        console.log(`[${new Date().toISOString()}] ${WORKER_ID}: sent Telegram failure response for ${job.id}`);
-      }
+      logSkippedChatDelivery(job);
     }
   }
   return jobs.length;

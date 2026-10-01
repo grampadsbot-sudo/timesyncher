@@ -6,7 +6,6 @@ import { createCoupon, disableCoupon, listCoupons } from '../src/vacation/coupon
 import {
   ensureVacationEulaSession,
   onboardingLink,
-  telegramLink,
   upsertCustomer,
 } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
@@ -33,8 +32,6 @@ function publicSession(row) {
     startedAt: row.started_at,
     completedAt: row.completed_at,
     emailSentAt: row.email_sent_at,
-    telegramInstallChoice: row.telegram_install_choice,
-    telegramUrl: row.telegram_deep_link,
     customer: {
       id: row.customer_id,
       email: row.email,
@@ -174,7 +171,7 @@ async function createAdminOnboarding(db, body) {
     )
     values (
       ${customerId}, ${tripId}, ${orderId}, ${sessionToken}, 'purchase_confirmed',
-      'post_purchase', ${telegramLink(sessionToken, process.env)}, ${meta}, now()
+      'post_purchase', ${null}, ${meta}, now()
     )
     returning *
   `;
@@ -188,7 +185,6 @@ async function createAdminOnboarding(db, body) {
     session,
     token: session.token,
     onboardingUrl: onboardingLink(session.token, process.env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, process.env),
     eula,
     contact,
     order: { amountCents: 0, currency: 'usd', plan, status: 'admin_no_charge' },
@@ -202,7 +198,6 @@ async function createAdminOnboarding(db, body) {
       status: session.status,
       currentStep: session.current_step,
       onboardingUrl: onboarding.onboardingUrl,
-      telegramUrl: onboarding.telegramUrl,
       eula,
     },
     customerId,
@@ -397,7 +392,6 @@ async function resendPurchaseEmailForSession(db, id, env = process.env) {
     session: row,
     token: row.token,
     onboardingUrl: onboardingLink(row.token, env),
-    telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
     contact: {
       email: row.email,
       phone: row.phone,

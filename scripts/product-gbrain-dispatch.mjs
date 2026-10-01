@@ -356,9 +356,9 @@ function linkCapabilityAnswer({ requestText = '', linkedVacations = [], fallback
   lines.push(`The shared website link for ${label} is view-only for people who have the URL.`);
   if (url) lines.push(`Website: ${url}`);
   lines.push(match.shareCollab
-    ? 'Website editing is enabled for approved sessions: the owner or paid Telegram collaborator can open from Telegram and edit, and non-Telegram invitees can use an owner-approved email magic link.'
-    : 'This shared link is view-only unless the owner opens from Telegram/session or grants a specific editor path.');
-  lines.push('The shared website link does not grant full Telegram editing or media-upload access by itself.');
+    ? 'Website editing is enabled for approved sessions: the owner can edit, and invitees can use an owner-approved email magic link.'
+    : 'This shared link is view-only unless the owner opens an authenticated session or grants a specific editor path.');
+  lines.push('The shared website link does not grant media-upload access by itself.');
   return lines.join('\n\n');
 }
 
@@ -491,10 +491,10 @@ function isPersonAccessQuestion(value) {
   if (!requestText) return false;
   if (/\bfamily event\b/.test(requestText)) return false;
   if (sharedTokenFromText(requestText) && /\b(update|change|edit|add|remove|delete|rename|move|make)\b/.test(requestText)) return false;
-  const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|use\s+telegram|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
+  const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
   const explicitNamedPerson = /\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/.test(rawText);
   const mentionsPerson = /\b(wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
-  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
 
@@ -502,7 +502,7 @@ function isAccessRosterQuestion(value) {
   const requestText = text(value, 4000).toLowerCase().replace(/\s+/g, ' ').trim();
   if (!requestText || !isQuestionLike(requestText)) return false;
   const asksWho = /\b(who|which people|what people|who all)\b/.test(requestText);
-  const mentionsAccess = /\b(access|permission|permissions|edit|editor|member|collaborator|collaborate|share|shared|view|see|telegram|upload|media)\b/.test(requestText);
+  const mentionsAccess = /\b(access|permission|permissions|edit|editor|member|collaborator|collaborate|share|shared|view|see|upload|media)\b/.test(requestText);
   const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
   return asksWho && mentionsAccess && mentionsVacationContext;
 }
@@ -627,19 +627,10 @@ function accessCapabilitiesRequested(requestText = '') {
   if (wantsPhoto || wantsMedia || wantsFull) caps.add('photo_upload');
   if (wantsVideo || wantsFull) caps.add('video_upload');
   if (wantsPhoto || wantsVideo || wantsMedia || wantsFull) caps.add('media_upload');
-  if (/\b(telegram|bot|message|chat|talk to|text|modify|change|edit|add to|interact|upload|uploads|photo|photos|video|videos|media|full access)\b/.test(source)) caps.add('collab_telegram');
+  if (/\b(bot|message|chat|talk to|text|modify|change|edit|add to|interact|upload|uploads|photo|photos|video|videos|media|full access)\b/.test(source)) caps.add('collab_telegram');
   if (/\b(website|site|web|web page|shared link|link|view|see|look at|open)\b/.test(source)) caps.add('view_shared');
   if (/\b(web collab|website collab|collaborate on the website|collaborate on the web page|comment on the shared website|comment on the website|edit the website|edit the web page|modify the website|modify the web page)\b/.test(source) || (/\b(collaborate|comment|edit|modify|change)\b/.test(source) && /\b(website|web page|site|web)\b/.test(source))) caps.add('collab_web');
-  if (!caps.size) caps.add('collab_telegram');
   return [...caps];
-}
-
-function isTelegramCollaboratorStatusQuestion(requestText = '') {
-  const source = text(requestText, 1200).toLowerCase();
-  if (!/\btelegram\b/.test(source) || !/\bcollaborator\b/.test(source)) return false;
-  if (!/\b(already|currently|now|is|are|listed|status)\b/.test(source)) return false;
-  if (/\b(can|could|may|able|allow|let|add|invite|make|give|grant|buy|purchase|cost|price|upload|photo|photos|video|videos|website|web page|site)\b/.test(source)) return false;
-  return true;
 }
 
 function checkoutBaseUrl(manifest) {
@@ -679,7 +670,7 @@ function isAccessPricingQuestion(requestText = '') {
   const source = text(requestText, 2000).toLowerCase();
   if (!isQuestionLike(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
@@ -697,7 +688,7 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const telegramUsd = allVacations ? unlimited?.amountUsd : singleTrip?.amountUsd;
   const photoUsd = wantsMedia ? (allVacations ? photo.unlimitedVacationsAmountUsd : photo.singleVacationAmountUsd) : null;
   const videoUsd = wantsMedia ? (allVacations ? video.unlimitedVacationsAmountUsd : video.singleVacationAmountUsd) : null;
-  if (!telegramUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} telegram`);
+  if (!telegramUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} collaborator`);
   if (wantsMedia && !photoUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} photo`);
   if (wantsMedia && !videoUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} video`);
   return {
@@ -735,31 +726,19 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
   const inviteState = accessInviteStateFrom(match, person) || accessInviteStateFrom(match, rawPerson);
   const allowedClaims = [];
   const forbiddenClaims = [];
-  allowedClaims.push(telegramCollaborator
-    ? `${person} is a Telegram collaborator on ${label}.`
-    : `${person} is not a Telegram collaborator on ${label} yet.`);
   if (inviteState === 'sent') allowedClaims.push(`${person} has been sent a website editor invite.`);
   if (inviteState === 'accepted') allowedClaims.push(`${person} has accepted a website editor invite.`);
-  allowedClaims.push(`Telegram collaboration is separate from website editor access.`);
   if (namedMember) allowedClaims.push(`${person} is listed as a named member/editor on ${label}.`);
   else allowedClaims.push(`${person} is not listed as a named member/editor on ${label}.`);
   if (url) allowedClaims.push(`The shared vacation website is ${url}.`);
-  forbiddenClaims.push(`${person} can edit through Telegram.`);
+  forbiddenClaims.push(`${person} can edit through a removed chat channel.`);
   forbiddenClaims.push(`${person} accepted the invite.`);
   forbiddenClaims.push(`${person} is a collaborator.`);
   forbiddenClaims.push(`${person} has website editor access.`);
   const fallbackLines = [];
-  if (requestedCaps.includes('collab_telegram')) {
-    fallbackLines.push(telegramCollaborator
-      ? `Yes, ${person} is a Telegram collaborator on ${label}.`
-      : `No, ${person} is not a Telegram collaborator on ${label} yet.`);
-    if (inviteState === 'sent') fallbackLines.push(`${person} has the website editor invite, but Telegram collaboration is separate.`);
-    else fallbackLines.push('Telegram collaboration is separate from website editor access.');
-  } else {
-    fallbackLines.push(namedMember
-      ? `${person} is listed as a named member/editor on ${label}.`
-      : `${person} is not listed as a named member/editor on ${label}.`);
-  }
+  fallbackLines.push(namedMember
+    ? `${person} is listed as a named member/editor on ${label}.`
+    : `${person} is not listed as a named member/editor on ${label}.`);
   if (url && !requestedCaps.includes('collab_telegram')) fallbackLines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
   if (requestedCaps.includes('photo_upload') || requestedCaps.includes('video_upload')) {
     const parts = [];
@@ -789,7 +768,7 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
       allowed_claims: allowedClaims,
       forbidden_claims: forbiddenClaims,
       required_terms: [person, label],
-      preferred_style: 'direct, warm, one or two short Telegram sentences',
+      preferred_style: 'direct, warm, one or two short sentences',
     },
     fallbackAnswer: fallbackLines.filter(Boolean).join('\n\n'),
   };
@@ -805,9 +784,7 @@ function customerCopyLooksSafe(answer = '', facts = {}) {
   const label = text(facts.vacation_name, 180);
   if (person && person !== 'that person' && !lower.includes(person.toLowerCase())) return false;
   if (label && !lower.includes(label.toLowerCase())) return false;
-  if (facts.telegram_collaborator === false && !/^\s*no\b/i.test(source)) return false;
-  if (facts.telegram_collaborator === true && !/^\s*yes\b/i.test(source)) return false;
-  if (facts.telegram_collaborator === false && /\b(is|already is|can edit through telegram|has telegram access)\b/i.test(source) && !/\bnot\b/i.test(source)) return false;
+  if (facts.telegram_collaborator === true && /\bcan edit through a removed chat channel\b/i.test(source)) return false;
   const forbidden = Array.isArray(facts.forbidden_claims) ? facts.forbidden_claims : [];
   for (const claim of forbidden) {
     const normalized = text(claim, 240).toLowerCase();
@@ -819,7 +796,7 @@ function customerCopyLooksSafe(answer = '', facts = {}) {
 function grokCustomerRender(facts = {}) {
   if (process.env.TIMESYNCHER_GROK_RESPONSE_RENDERER_FAKE === '1') {
     const claims = Array.isArray(facts.allowed_claims) ? facts.allowed_claims : [];
-    const first = facts.telegram_collaborator === false && claims[0] ? `No, ${claims[0]}` : claims[0];
+    const first = claims[0];
     const answer = [first, claims[1], claims[2]].filter(Boolean).join(' ');
     return customerCopyLooksSafe(answer, facts) ? answer : '';
   }
@@ -867,7 +844,6 @@ function vacationAccessQuestionAnswer({ requestText = '', linkedVacations = [], 
   }
   const modelAnswer = resolved.facts ? grokCustomerRender(resolved.facts) : '';
   if (modelAnswer) return modelAnswer;
-  if (resolved.fallbackAnswer && isTelegramCollaboratorStatusQuestion(requestText)) return resolved.fallbackAnswer;
   const match = matches[0];
   const label = match.name || match.destination || lookup || 'that vacation';
   const url = publicVacationUrl(match, fallbackBase);
@@ -880,8 +856,8 @@ function vacationAccessQuestionAnswer({ requestText = '', linkedVacations = [], 
   if (url) lines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
   else lines.push('I found the vacation record, but I do not have a share-link URL for it yet.');
   lines.push(match.shareCollab
-    ? 'Website editing requires an authenticated owner, a paid Telegram collaborator opening from Telegram, or an owner-approved email web editor.'
-    : 'The shared website is view-only unless the owner opens from Telegram/session, the paid Telegram collaborator opens from Telegram, or the owner invites a named email user as a web editor.');
+    ? 'Website editing requires an authenticated owner or an owner-approved email web editor.'
+    : 'The shared website is view-only unless the owner opens an authenticated session or invites a named email user as a web editor.');
   if (requestedCaps.includes('photo_upload') || requestedCaps.includes('video_upload')) {
     const parts = [];
     if (requestedCaps.includes('photo_upload')) parts.push('photo uploads');
@@ -889,7 +865,6 @@ function vacationAccessQuestionAnswer({ requestText = '', linkedVacations = [], 
     lines.push(`${person} is not currently enabled for ${parts.join(' or ')} on ${label}.`);
   }
   if (!namedMember || requestedCaps.includes('collab_telegram')) {
-    lines.push('Full Telegram editing is separate and requires paid collaborator access.');
     const line = remediationLine(manifest, 'collab_telegram', { person, label });
     if (line) lines.push(line);
   }
@@ -928,9 +903,8 @@ function vacationAccessRosterAnswer({ requestText = '', linkedVacations = [], fa
     : `I do not see any named members/editors for ${label}.`);
   if (url) lines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
   lines.push(match.shareCollab
-    ? 'Website editing requires an authenticated owner, a paid Telegram collaborator opening from Telegram, or an owner-approved email web editor.'
-    : 'The shared website is view-only unless the owner opens from Telegram/session, the paid Telegram collaborator opens from Telegram, or the owner invites a named email user as a web editor.');
-  lines.push('Full Telegram editing is separate and requires paid collaborator access.');
+    ? 'Website editing requires an authenticated owner or an owner-approved email web editor.'
+    : 'The shared website is view-only unless the owner opens an authenticated session or invites a named email user as a web editor.');
   return lines.join('\n\n');
 }
 
@@ -1699,7 +1673,7 @@ async function buildArtifacts(job, manifest) {
       budgetItems: [],
       supportNotes: [{
         actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-        note: 'Asked for clarification before starting a new first pass because the Telegram turn was linked to an existing shared trip.',
+        note: 'Asked for clarification before starting a new first pass because the turn was linked to an existing shared trip.',
         metadata: { requestedAt: new Date().toISOString(), shareToken: token || null },
       }],
       initialItinerary: '',

@@ -6,7 +6,6 @@ import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/
 import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
-  collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
@@ -247,7 +246,6 @@ async function completeStagingCollaboratorCheckout({ db, token, contact, card = 
     collaboratorInvite: {
       id: invite.id,
       status: invite.status,
-      telegramUrl: collaboratorTelegramLink(token, env),
       tripTitle: invite.trip_title || null,
       requestedFor: contact.displayName,
     },

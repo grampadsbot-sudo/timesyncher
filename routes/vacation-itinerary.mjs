@@ -7,8 +7,6 @@ import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
-  isAllowedVacationWebsiteUrl,
-  loadWebAccessGrantBySessionToken,
   publicTripUrl,
   readCookie,
   requireWebEditAccess,
@@ -76,23 +74,6 @@ async function handleWebAccess(req, res, db, url) {
     return sendHtml(res, 200, acceptedHtml(accepted), {
       'set-cookie': webAccessCookieHeader(accepted.sessionToken, process.env),
     });
-  }
-
-  if (req.method === 'GET' && action === 'telegram_launch') {
-    const token = cleanText(url.searchParams.get('token'), 220);
-    const requestedRedirect = cleanText(url.searchParams.get('redirect'), 600);
-    const grant = await loadWebAccessGrantBySessionToken(db, token, process.env);
-    if (!grant) return sendHtml(res, 404, '<!doctype html><title>Link expired</title><p>This Telegram website-edit link is invalid or expired. Ask the bot for a fresh vacation website link.</p>');
-    const fallbackUrl = cleanText(grant.public_url, 600) || 'https://travel.timesyncher.com';
-    const redirectUrl = requestedRedirect && isAllowedVacationWebsiteUrl(requestedRedirect, process.env)
-      ? requestedRedirect
-      : fallbackUrl;
-    res.statusCode = 302;
-    res.setHeader('cache-control', 'no-store');
-    res.setHeader('set-cookie', webAccessCookieHeader(token, process.env));
-    res.setHeader('location', redirectUrl);
-    res.end('');
-    return;
   }
 
   if (req.method === 'GET' && action === 'status') {
@@ -1215,7 +1196,7 @@ export default async function handler(req, res) {
         telegram_message_id text,
         telegram_chat_id text,
         telegram_user_id text,
-        storage_provider text not null default 'telegram',
+        storage_provider text not null default 'url',
         status text not null default 'active',
         metadata jsonb not null default '{}'::jsonb,
         created_at timestamptz not null default now(),
@@ -1224,15 +1205,13 @@ export default async function handler(req, res) {
     `;
     const media = await db`
       select id, public_token, media_kind, attachment_scope, day_date, caption, mime_type,
-        file_size_bytes, width, height, duration_seconds, created_at
+        file_size_bytes, width, height, duration_seconds, storage_provider, created_at
       from vacation_media_uploads
       where trip_id = ${session.trip_id}
         and status = 'active'
       order by created_at desc
       limit 200
     `;
-    const origin = `https://${req.headers.host || 'vacation.timesyncher.com'}`;
-
     if (isStagingHost(req)) {
       res.setHeader('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
@@ -1250,20 +1229,26 @@ export default async function handler(req, res) {
       sections: groupBy(things, 'category'),
       things,
       budgets,
-      media: media.map((item) => ({
-        id: item.id,
-        kind: item.media_kind,
-        attachmentScope: item.attachment_scope,
-        dayDate: item.day_date,
-        caption: item.caption,
-        mimeType: item.mime_type,
-        fileSizeBytes: item.file_size_bytes,
-        width: item.width,
-        height: item.height,
-        durationSeconds: item.duration_seconds,
-        createdAt: item.created_at,
-        url: `${origin}/api/vacation-telegram-turn?action=media-download&id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(item.public_token)}`,
-      })),
+      media: media.flatMap((item) => {
+        if (item.storage_provider === 'telegram') {
+          console.error(`skipped vacation media ${item.id}: storage_provider=telegram is not fetched`);
+          return [];
+        }
+        return [{
+          id: item.id,
+          kind: item.media_kind,
+          attachmentScope: item.attachment_scope,
+          dayDate: item.day_date,
+          caption: item.caption,
+          mimeType: item.mime_type,
+          fileSizeBytes: item.file_size_bytes,
+          width: item.width,
+          height: item.height,
+          durationSeconds: item.duration_seconds,
+          createdAt: item.created_at,
+          storageProvider: item.storage_provider,
+        }];
+      }),
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {

@@ -114,7 +114,6 @@ export async function completeCouponRedemption(db, redemptionId, onboarding, ema
       email_status = ${email?.status || 'unknown'},
       metadata = metadata || ${{
         onboardingUrl: onboarding.onboardingUrl,
-        telegramUrl: onboarding.telegramUrl,
         eula: onboarding.eula || null,
         email,
       }}
@@ -135,7 +134,6 @@ export async function completeCollaboratorCouponRedemption(db, redemptionId, { i
       email_status = ${email?.status || 'unknown'},
       metadata = metadata || ${{
         collaboratorInviteId: invite.id,
-        collaboratorTelegramUrl: token ? `telegram-token:${token.slice(0, 8)}` : null,
         email,
       }}
     where id = ${redemptionId}

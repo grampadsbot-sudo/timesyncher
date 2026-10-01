@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { createWebEditorInvite } from './web-access.mjs';
-import { ensureVacationEulaSession, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { ensureVacationEulaSession, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').trim().slice(0, max);
@@ -136,7 +136,7 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
     )
     values (
       ${customerId}, ${invite.trip_id}, ${token}, 'purchase_confirmed',
-      'post_purchase', ${telegramLink(token, env)}, ${{ seat, source: 'collaborator_app_seat' }}, now()
+      'post_purchase', ${null}, ${{ seat, source: 'collaborator_app_seat' }}, now()
     )
     returning *
   `;

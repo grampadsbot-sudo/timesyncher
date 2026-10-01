@@ -7,7 +7,6 @@ import {
   collaboratorEulaClientKey,
   collaboratorEulaSessionId,
   collaboratorPlan,
-  collaboratorTelegramLink,
   isCollaboratorInviteRequest,
 } from '../src/vacation/collaborators.mjs';
 import { collaboratorInviteEmail as buildCollaboratorInviteEmail, collaboratorInviteTargets } from '../src/vacation/email.mjs';
@@ -48,15 +47,6 @@ assert.equal(
   collaboratorEulaAcceptUrl(invite, { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com/' }),
   'https://vacation-staging.timesyncher.com/accept/vacation-collaborator-11111111-1111-1111-1111-111111111111',
 );
-assert.equal(
-  collaboratorTelegramLink('abc 123', { TIMESYNCHER_TELEGRAM_BOT_USERNAME: 'TimeSyncherVacationStagingBot' }),
-  'https://t.me/TimeSyncherVacationStagingBot?start=abc%20123',
-);
-assert.equal(
-  collaboratorTelegramLink('abc', { TIMESYNCHER_TELEGRAM_BOT_USERNAME: '"TimeSyncherVacationStagingBot\\n"' }),
-  'https://t.me/TimeSyncherVacationStagingBot?start=abc',
-);
-
 const email = buildCollaboratorInviteEmail({
   contact: { firstName: 'Kim', email: 'kim@example.com' },
   invite: {
@@ -67,7 +57,7 @@ const email = buildCollaboratorInviteEmail({
   token: 'invite-token',
   acceptUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=invite-token',
   publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-example/',
-  env: { TIMESYNCHER_TELEGRAM_BOT_USERNAME: 'TimeSyncherVacationStagingBot' },
+  env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.match(email.subject, /Craig invited you to edit Caldwell vacation/);
 assert.match(email.textBody, /View access/);

@@ -10,15 +10,10 @@ import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { sharedTripWebsiteUrl } from './web-access.mjs';
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
-const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
 const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
 
-export function siteBase(env = process.env) {
+function siteBase(env = process.env) {
   return String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).trim().replace(/\/+$/, '');
-}
-
-export function botUsername(env = process.env) {
-  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || DEFAULT_BOT_USERNAME).trim().replace(/^@/, '');
 }
 
 export function cleanText(value, max = 1000) {
@@ -31,10 +26,6 @@ export function onboardingLink(token, env = process.env) {
 
 export function vacationAppLink(token, env = process.env) {
   return `${siteBase(env)}/vacation-app.html?session=${encodeURIComponent(token)}`;
-}
-
-export function telegramLink(token, env = process.env) {
-  return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
 }
 
 export function eulaSessionIdForOnboarding(row) {
@@ -219,7 +210,6 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     publicUrl,
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact: cleanContact,
     order,
@@ -242,7 +232,7 @@ async function ensureOnboardingSession(db, customerId, tripId, orderId, metadata
     )
     values (
       ${customerId}, ${tripId}, ${orderId}, ${sessionToken}, 'purchase_confirmed', 'post_purchase',
-      ${telegramLink(sessionToken, env)}, ${metadata}, now()
+      ${null}, ${metadata}, now()
     )
     returning *
   `;
@@ -279,14 +269,11 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     selectedFunctionality: [
       'vacation_planning_onboarding',
       'in_app_text_voice_and_file_intake',
-      'telegram_fallback_intake',
-      'telegram_voice_note_intake',
       'hosted_itinerary_generation',
       'purchase_receipts_and_support',
     ],
     google: {
       returnUrl: vacationAppLink(row.token, env),
-      telegramFallbackUrl: row.telegram_deep_link || telegramLink(row.token, env),
     },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
@@ -350,7 +337,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         token: row.token,
         onboardingUrl: onboardingLink(row.token, env),
         vacationAppUrl: vacationAppLink(row.token, env),
-        telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
         eula,
         contact,
         order: {
@@ -417,7 +403,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     token: session.token,
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact,
     order,
@@ -458,7 +443,6 @@ export function publicSession(row, env = process.env, eula = null) {
     currency: row.currency,
     onboardingUrl: onboardingLink(row.token, env),
     vacationAppUrl: vacationAppLink(row.token, env),
-    telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
     eula: eula ? {
       status: eula.status || (eula.ok ? 'accepted' : 'pending'),
       accepted: Boolean(eula.ok || eula.status === 'accepted'),
@@ -466,10 +450,5 @@ export function publicSession(row, env = process.env, eula = null) {
       sessionId: eula.sessionId || eulaSessionIdForOnboarding(row),
       receiptSha256: eula.receiptSha256 || null,
     } : null,
-    telegramInstall: {
-      ios: 'https://apps.apple.com/app/telegram-messenger/id686449807',
-      android: 'https://play.google.com/store/apps/details?id=org.telegram.messenger',
-      desktop: 'https://apps.apple.com/us/app/telegram/id747648890?mt=12',
-    },
   };
 }

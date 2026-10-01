@@ -23,7 +23,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
 
   const activeCount = await countActiveCollaborators(db, ownerId);
   if (activeCount >= plan.maxActiveCollaborators) {
-    throw Object.assign(new Error('Telegram collaborator cap reached.'), { statusCode: 409 });
+    throw Object.assign(new Error('Collaborator cap reached.'), { statusCode: 409 });
   }
 
   const { invite, token } = await createCollaboratorInvite(db, {
@@ -32,7 +32,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
     planCode: plan.code,
     requestedFor: clean(requestedFor, 180),
     metadata: {
-      source: 'telegram_collaborator_checkout',
+      source: 'collaborator_checkout',
       ...metadata,
     },
     env,
@@ -47,7 +47,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
         currency: CURRENCY,
         product_data: {
           name: plan.scope === 'single_trip'
-            ? 'Telegram collaborator for this vacation'
+            ? 'Collaborator for this vacation'
             : plan.code,
         },
         unit_amount: plan.amountCents,

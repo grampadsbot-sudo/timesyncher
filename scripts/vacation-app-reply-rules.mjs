@@ -315,7 +315,7 @@ export function isAccessPricingTurn(value) {
   const source = text(value, 2000).toLowerCase();
   if (!source.includes('?') && !/\b(how much|cost|price|pricing)\b/.test(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
