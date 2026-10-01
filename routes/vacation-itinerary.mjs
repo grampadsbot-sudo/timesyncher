@@ -41,7 +41,8 @@ import {
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { assertCustomerReplyShippable } from '../src/vacation/reply-id-citation.mjs';
+import { commitShippedRewrite, markWorkerJobLiveHandled, outboundAppReplyForRequest, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -651,7 +652,22 @@ async function queueVacationAppTurn(db, session, trip, body) {
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
+  const blockReplyIdCitation = async (replyText) => {
+    try {
+      assertCustomerReplyShippable(replyText, tripId);
+      return null;
+    } catch (error) {
+      if (error?.name !== 'reply_id_citation_blocked') throw error;
+      const replyFailure = 'reply_id_citation_blocked';
+      payload.replyFailure = replyFailure;
+      customerLive.replyFailure = replyFailure;
+      await storeReplyFailure(db, turnRows[0].id, payload);
+      return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
+    }
+  };
   if (produced.status === 'interim' && produced.pending) {
+    const interimBlocked = await blockReplyIdCitation(produced.interimReply?.text || '');
+    if (interimBlocked) return interimBlocked;
     const pending = {
       ...produced.pending,
       customerTurnIndex,
@@ -683,6 +699,22 @@ async function queueVacationAppTurn(db, session, trip, body) {
     customerLive.replyFailure = replyFailure;
     await storeReplyFailure(db, turnRows[0].id, payload);
     return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
+  }
+
+  const citationBlocked = await blockReplyIdCitation(produced.reply);
+  if (citationBlocked) return citationBlocked;
+
+  const priorApp = await outboundAppReplyForRequest(db, requestId);
+  if (priorApp?.id) {
+    await markWorkerJobLiveHandled(db, jobRows[0].id);
+    return {
+      ...base,
+      ok: true,
+      status: 'replied',
+      reply: priorApp.body,
+      duplicateSuppressed: true,
+      error: null,
+    };
   }
 
   const appLive = liveTurnRecord({
@@ -733,6 +765,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     classification.ok === true ? classification.things : [],
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
+  await markWorkerJobLiveHandled(db, jobRows[0].id);
   const vacationRows = await db`
     select id, title, destination, start_date, end_date, status, metadata
     from trips

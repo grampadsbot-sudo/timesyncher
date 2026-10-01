@@ -47,6 +47,8 @@ scripts/test_g2d_jev_score_rewrite.mjs
 scripts/test_rewrite_ships_tier_draft.mjs
 scripts/test_g3a_canned_dialog.mjs
 scripts/test_onboarding_welcome.mjs
+scripts/test_reply_plan_entitlement.mjs
+scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs
 scripts/test_first_intake_echo.mjs
 scripts/test_trip_site_url_purchase.mjs
