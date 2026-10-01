@@ -25,17 +25,13 @@ function slugFromText(value) {
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 
-function targetToken(input) {
+function requireShareToken(input) {
   const requestText = text(input.requestText || input.request_text || '', 8000);
-  const explicit = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
-  const mentionsDavidson = /\b(caldwell|davidson)\b/i.test(requestText);
-  const mentionsOtherKnownTrip = /\b(las vegas|vegas|strip|jockey club|staycation|hawaii|waikiki|maui|kona|oahu)\b/i.test(requestText);
-  if (explicit) {
-    if (explicit === 'the-davidson-family-trip' && !mentionsDavidson && mentionsOtherKnownTrip) return '';
-    return explicit;
+  const token = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
+  if (!token) {
+    throw new Error('Missing TREK share token: provide token, shareToken, share_token, or a /shared/<token>/ URL.');
   }
-  if (mentionsDavidson) return 'the-davidson-family-trip';
-  return '';
+  return token;
 }
 
 function inferCategory(title, requestText) {
@@ -89,7 +85,7 @@ function cleanTitle(value) {
   return text(value, 180)
     .replace(/^\s*(?:add|create|put|include|schedule)\s+/i, '')
     .replace(/^\s*(?:a\s+)?(?:family\s+event|event|timeline\s+item)\s+/i, '')
-    .replace(/\s+(?:to|on|for)\s+(?:the\s+)?(?:caldwell|davidson|vacation|trip|itinerary)\b.*$/i, '')
+    .replace(/\s+(?:to|on|for)\s+(?:the\s+)?(?:vacation|trip|itinerary)\b.*$/i, '')
     .replace(/\s+\b(?:to|on|for)\s+day\s+\d+\b.*$/i, '')
     .replace(/\s+\bat\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b.*$/i, '')
     .replace(/^["'“”]+|["'“”]+$/g, '')
@@ -142,18 +138,6 @@ function requiresBroadEditRunner(requestText, structuredItems) {
 }
 
 
-const CALDWELL_FAMILY_HOME = {
-  address: '12364 Nantes Court, Caldwell, ID 83607, United States',
-  lat: 43.6182767,
-  lng: -116.6397578,
-};
-
-function defaultFamilyAddress(category, requestText, token) {
-  if (category !== 'family_event') return null;
-  if (/\b(caldwell|davidson)\b/i.test(requestText) || token === 'the-davidson-family-trip') return CALDWELL_FAMILY_HOME;
-  return null;
-}
-
 function editItems(input) {
   const requestText = text(input.requestText || input.request_text || '', 8000);
   const structured = Array.isArray(input.editItems) ? input.editItems : [];
@@ -175,12 +159,10 @@ function editItems(input) {
   })).filter((item) => item.title);
   items.push(...quotedItems, ...extractLineAdds(requestText, quotedItems.length > 0), ...extractHotelCorrection(requestText));
   const seen = new Set();
-  const token = targetToken(input);
   return items
     .map((item) => {
       const category = item.category || inferCategory(item.title, requestText);
-      const fallbackHome = defaultFamilyAddress(category, requestText, token);
-      const address = item.address || parseAddress(item.raw || '') || requestAddress || fallbackHome?.address || '';
+      const address = item.address || parseAddress(item.raw || '') || requestAddress || '';
       return {
         ...item,
         day: item.day || parseDay(item.raw || requestText),
@@ -188,8 +170,8 @@ function editItems(input) {
         category,
         summary: item.summary || 'Added from a TimeSyncher Vacation owner edit request.',
         address,
-        lat: item.lat ?? (address === fallbackHome?.address ? fallbackHome.lat : null),
-        lng: item.lng ?? (address === fallbackHome?.address ? fallbackHome.lng : null),
+        lat: item.lat ?? null,
+        lng: item.lng ?? null,
       };
     })
     .filter((item) => {
@@ -300,11 +282,6 @@ def category_icon_emoji(kind):
 def find_trip(token, request_text):
     if token:
         row = one('SELECT trips.*, share_tokens.token AS share_token FROM share_tokens JOIN trips ON trips.id=share_tokens.trip_id WHERE share_tokens.token=? ORDER BY share_tokens.id LIMIT 1', (token,))
-        if row:
-            return row
-    lower = (request_text or '').lower()
-    if 'caldwell' in lower or 'davidson' in lower:
-        row = one("SELECT trips.*, share_tokens.token AS share_token FROM trips JOIN share_tokens ON share_tokens.trip_id=trips.id WHERE lower(share_tokens.token)='the-davidson-family-trip' OR lower(trips.title) LIKE '%davidson%' OR lower(trips.description) LIKE '%caldwell%' ORDER BY trips.id DESC LIMIT 1")
         if row:
             return row
     return None
@@ -441,8 +418,9 @@ print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': 
 
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
+  const token = requireShareToken(input);
   const payload = {
-    token: targetToken(input),
+    token,
     requestText: text(input.requestText || input.request_text || '', 8000),
     items: editItems(input),
     dateRange: parseDateRange(input),
