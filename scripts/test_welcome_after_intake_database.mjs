@@ -311,6 +311,10 @@ if (process.argv[2] === '--child-resolve') {
     },
   );
   assert.deepEqual(timed, ['#eulaName', '#eulaAgree', '#eulaAgreeButton']);
+  const drive = fs.readFileSync(scriptPath, 'utf8');
+  const agreeAt = drive.indexOf('agreeThenReadWelcome(');
+  const sessionWelcomeAt = drive.indexOf('const welcomeShown');
+  assert.ok(agreeAt > 0 && sessionWelcomeAt > agreeAt);
 
   process.stdout.write('welcome database url test passed\n');
 }

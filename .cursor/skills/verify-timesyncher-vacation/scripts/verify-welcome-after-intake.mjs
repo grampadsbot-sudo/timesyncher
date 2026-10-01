@@ -318,10 +318,6 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot }) {
     ipAddress: '127.0.0.1',
     userAgent: 'verify-welcome-after-intake',
   });
-  const appUrl = `/?app=1&session=${encodeURIComponent(onboarding.token)}`;
-  const opened = await callHandler(appHandler.default, jsonRequest('GET', appUrl, null, { host: 'vacation-staging.timesyncher.com' }));
-  const turns = opened.body?.turns || [];
-  const welcomeShown = opened.body?.ok === true && collaboratorWelcomeMarker() && welcomeBeforeCustomer(turns);
   let screenshot = '';
   let pageShown = false;
   let prior = [];
@@ -332,6 +328,10 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot }) {
     pageShown = shot.shown === true;
     prior = shot.prior || [];
   }
+  const appUrl = `/?app=1&session=${encodeURIComponent(onboarding.token)}`;
+  const opened = await callHandler(appHandler.default, jsonRequest('GET', appUrl, null, { host: 'vacation-staging.timesyncher.com' }));
+  const turns = opened.body?.turns || [];
+  const welcomeShown = opened.body?.ok === true && collaboratorWelcomeMarker() && welcomeBeforeCustomer(turns);
   return {
     ok: welcomeShown && pageShown,
     welcomeShown,
