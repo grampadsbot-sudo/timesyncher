@@ -982,30 +982,8 @@ function calendarMonths() {
   return [...new Set(names)].sort((left, right) => right.length - left.length);
 }
 
-function calendarWords() {
-  const words = new Set();
-  for (const name of calendarMonths()) words.add(name.toLowerCase());
-  for (let day = 0; day < 7; day += 1) {
-    const date = new Date(Date.UTC(2026, 0, 4 + day));
-    words.add(date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase());
-    words.add(date.toLocaleString('en-US', { weekday: 'short', timeZone: 'UTC' }).toLowerCase());
-  }
-  return words;
-}
-
 function monthPattern() {
   return calendarMonths().map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-}
-
-function skippedRosterWord(name) {
-  if (calendarWords().has(String(name || '').toLowerCase())) return true;
-  return /^(with|option|both|which|either|since|that|this|they|your|the|and|for)$/i.test(name);
-}
-
-function rosterNamesIn(text) {
-  return [...String(text || '').matchAll(/\b[A-Z][a-z]{2,}\b/g)]
-    .map((match) => match[0])
-    .filter((name) => !skippedRosterWord(name));
 }
 
 function pushError(errors, line) {
@@ -1043,12 +1021,6 @@ export function draftFactErrors(reply, facts = {}) {
   const ownerFirst = ownerName.split(/\s+/)[0] || '';
   if (ownerFirst) {
     const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
-    const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
-    const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b|\byour\b/i.test(crewList[1]);
-    const rosterNames = crewList ? rosterNamesIn(crewList[1]) : [];
-    if (crewList && !crewAddressesOwner && rosterNames.length >= 2 && !ownerRe.test(crewList[1])) {
-      pushError(errors, `${ownerName} is traveling`);
-    }
     if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bwhole crew\b/i.test(body)) {
       pushError(errors, `${ownerName} is traveling`);
     }
@@ -1066,8 +1038,6 @@ export function draftFactErrors(reply, facts = {}) {
     const partyCount = sentence.match(/\bparty of (\d+)\b/i);
     if (partyCount) {
       const claimed = Number(partyCount[1]);
-      const names = new Set(rosterNamesIn(sentence));
-      if (names.size && names.size !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${names.size} people`);
       const savedCount = (facts.travelers || []).filter(Boolean).length;
       if (savedCount && claimed !== savedCount) pushError(errors, `saved party size is ${savedCount}`);
     }
