@@ -129,6 +129,7 @@ try {
         first_name: 'Ada',
         last_name: 'Lee',
         plan: 'single',
+        trip_title: 'Sample trip',
       },
     },
     env,
@@ -143,6 +144,7 @@ try {
     contact: { email: 'ada@example.com', firstName: 'Ada', lastName: 'Lee' },
     plan: 'single',
     amountCents: 3700,
+    metadata: { trip_title: 'Sample trip' },
     env,
   });
   assertNoPurchaseSlug(couponDb.calls);

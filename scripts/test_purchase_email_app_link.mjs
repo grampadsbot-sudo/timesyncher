@@ -248,7 +248,7 @@ try {
     contact: { email: 'ada.zero@example.com', firstName: 'Ada', lastName: 'Zero' },
     plan: 'single',
     amountCents: 0,
-    metadata: { couponCheckout: true },
+    metadata: { couponCheckout: true, trip_title: 'Sample trip' },
     env: fixtureEnv,
   });
   assert.equal(onboarding.contact.firstName, 'Ada');
