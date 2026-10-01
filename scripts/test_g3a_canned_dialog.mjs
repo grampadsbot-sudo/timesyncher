@@ -21,6 +21,8 @@ assert.doesNotMatch(live, /must include the word collaborators/);
 assert.doesNotMatch(page, /Your website is not built yet|I can update this vacation from here|Tell me the trip basics/);
 assert.doesNotMatch(rules, /View access lets them see the days/);
 assert.doesNotMatch(rules, /Say you are building the itinerary/);
+assert.doesNotMatch(rules, /This is the intake dump/);
+assert.doesNotMatch(rules, /On the long trip dump, use the words/);
 assert.doesNotMatch(rules, /State this payer line exactly/);
 assert.doesNotMatch(rules, /Single upsell:/);
 assert.doesNotMatch(telegram, /classic Waikiki beach energy/);

@@ -636,11 +636,9 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
-    postIntake
-      ? 'This is the intake dump. Explain view access and edit access, and that people join from an approved email invite. Use both phrases. Do not name a price.'
-      : (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
-        ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
-        : 'When the customer does not ask about access, do not add an access menu.'),
+    (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
+      ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
+      : 'When the customer does not ask about access, do not add an access menu.'),
     upsellLine,
     seatDollars && planLine ? `Seat price: $${seatDollars}. State this line exactly: ${planLine}.` : '',
     'Do not insert a welcome the customer did not ask for.',
@@ -654,7 +652,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
     'Do not put an activity on a day that is not already that activity on the saved trip record.',
     'When the customer asks to add a place, name the matches and ask "add these?" The chat box is the search. There is no separate search screen.',
-    'On the long trip dump, use the words "building the itinerary".',
     'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. A saved preference rule stays as saved. Do not call it locked in and do not rename it.',
     'When the customer asks for two options on a day, offer only activities already saved on that day or named in the question. Do not repeat a paragraph.',
     'Do not invent an activity the customer did not name.',
@@ -834,7 +831,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false, intakeReplyTurn = false } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -862,6 +859,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     seat,
     planOwned,
     welcomeTurn,
+    intakeReplyTurn,
   });
 }
 
@@ -891,7 +889,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false, intakeReplyTurn = false }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -921,7 +919,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         messages: [
           {
             role: 'system',
-            content: welcomeTurn
+            content: welcomeTurn || intakeReplyTurn
               ? String(systemExtra || '')
               : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
           },

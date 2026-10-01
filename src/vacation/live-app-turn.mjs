@@ -215,6 +215,198 @@ export async function produceOnboardingOpener({
   return { reply, rules, jev, model, reason: null };
 }
 
+export const YEARLY_PLAN_ID = 'timesyncher_vacation_unlimited';
+
+export const FIRST_INTAKE_VOICE_INSTRUCTION = [
+  'You are writing the first reply after the customer\'s intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
+  'Do all of the following in this one message, in order:',
+  '1. Confirm the itinerary is being built. Reflect where, when, who, lodging, and plans. Use only customer_said and the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, a plan, or a name.',
+  '2. Offer to add collaborators, naming each person in collaborators. Do not name anyone who is not in collaborators or customer_said.',
+  '3. Pitch the yearly plan. Identify that plan only by plan.plan_id and the other plan fields. You write the description. Do not state a price unless plan includes a price.',
+  '4. End with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Do not ask a second question.',
+  'Tone: warm and plain, with contractions. No sales voice. At most one exclamation point. No emoji.',
+  'Do not use these words: Thing, Things, EULA, terms, seat, tier, model, Jev. Say place, activity, or day. No payments, bookings, or reservation offers.',
+].join('\n');
+
+export const FIRST_INTAKE_GAP_INSTRUCTION = [
+  'You are writing the first reply after a short or vague intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
+  'This message is too thin to build from. Do not offer to add collaborators. Do not pitch a plan.',
+  'Ask two or three questions about the most important missing details. gaps is ordered with the most important first. Then offer one longer voice note about where and when, who is coming, where they are staying, and what they want to do.',
+  'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',
+  'Tone: warm and plain, with contractions. No sales voice. At most one exclamation point. No emoji.',
+  'Do not use these words: Thing, Things, EULA, terms, seat, tier, model, Jev. Say place, activity, or day. No payments, bookings, or reservation offers.',
+].join('\n');
+
+function intakeFactText(value, max = 240) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  return text ? text.slice(0, max) : '';
+}
+
+function uniqueFactNames(list, max = 80) {
+  const seen = new Set();
+  const names = [];
+  for (const item of list) {
+    const name = intakeFactText(item, max);
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    names.push(name);
+  }
+  return names;
+}
+
+export function firstIntakeReplyFacts({
+  customerTurn = '',
+  tripTitle = '',
+  wantedThings = [],
+  roster = [],
+  extractedDestination = '',
+  savedDates = '',
+  planOwned = false,
+  planPrice = null,
+} = {}) {
+  const said = intakeFactText(customerTurn, 6000);
+  const lodging = [];
+  const plans = [];
+  const mentioned = [];
+  const offer = [];
+  for (const thing of Array.isArray(wantedThings) ? wantedThings : []) {
+    const label = intakeFactText(thing?.name || thing?.title, 180);
+    const kind = intakeFactText(thing?.kind || thing?.category, 40).toLowerCase();
+    const person = intakeFactText(thing?.who, 80);
+    const when = intakeFactText(thing?.when || thing?.whenLabel || thing?.customerWhen, 180);
+    if (person) {
+      mentioned.push(person);
+      offer.push(person);
+    }
+    if (!label) continue;
+    const line = when ? `${label} (${when})` : label;
+    if (kind === 'hotel') lodging.push(line);
+    else plans.push(line);
+  }
+  for (const person of Array.isArray(roster) ? roster : []) {
+    const name = intakeFactText(person?.name, 80);
+    const role = intakeFactText(person?.role, 40).toLowerCase();
+    if (!name || role === 'viewer' || role === 'editor') continue;
+    mentioned.push(name);
+    if (role === 'collaborator' || role === 'child') offer.push(name);
+  }
+  const who = uniqueFactNames(mentioned);
+  const collaborators = uniqueFactNames(offer);
+  const where = intakeFactText(extractedDestination, 180);
+  const when = intakeFactText(savedDates, 180);
+  const stay = lodging.join('; ');
+  const planItems = uniqueFactNames(plans, 180);
+  const words = said ? said.split(/\s+/).filter(Boolean).length : 0;
+  const named = who.length > 0;
+  const grounded = Boolean(where || when || stay || planItems.length);
+  const voiceNote = named && ((words >= 40 && grounded) || words >= 70);
+  const gaps = [];
+  if (!where) gaps.push('where');
+  if (!when) gaps.push('when');
+  if (!named) gaps.push('who');
+  if (!stay) gaps.push('lodging');
+  if (!planItems.length) gaps.push('plans');
+  const facts = {
+    shape: voiceNote ? 'voice-note' : 'gaps',
+    customer_said: said || null,
+  };
+  const title = intakeFactText(tripTitle, 180);
+  if (title) facts.tripTitle = title;
+  if (where) facts.where = where;
+  if (when) facts.when = when;
+  if (who.length) facts.who = who;
+  if (stay) facts.lodging = stay;
+  if (planItems.length) facts.plans = planItems;
+  facts.gaps = gaps;
+  if (!voiceNote) return facts;
+  facts.collaborators = collaborators.length ? collaborators : who;
+  const plan = { plan_id: YEARLY_PLAN_ID, plan_owned: planOwned === true };
+  const price = Number(planPrice);
+  if (Number.isFinite(price) && price > 0) plan.price = price;
+  facts.plan = plan;
+  return facts;
+}
+
+export function firstIntakeReplyPrompt(input = {}) {
+  const facts = firstIntakeReplyFacts(input);
+  const instruction = facts.shape === 'voice-note' ? FIRST_INTAKE_VOICE_INSTRUCTION : FIRST_INTAKE_GAP_INSTRUCTION;
+  return `${instruction}\n\nIntake facts: ${JSON.stringify(facts)}`;
+}
+
+async function produceFirstIntakeReply({
+  customerTurn = '',
+  session = null,
+  tripTitle = '',
+  env = process.env,
+  rules = null,
+  wantedThings = [],
+  roster = null,
+  extractedDestination = '',
+} = {}) {
+  if (!rules?.ok) {
+    return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
+  }
+  const jevStarted = Date.now();
+  const jev = await jevPrecall({
+    customerTurn,
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!jev?.jevRan) {
+    return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
+  }
+  jev.jevBeforeModel = true;
+  const saved = await loadSavedTripRecord(session, env);
+  const savedStart = String(saved?.start || '').trim();
+  const savedEnd = String(saved?.end || '').trim();
+  const factInput = {
+    customerTurn,
+    tripTitle,
+    wantedThings,
+    roster,
+    extractedDestination: intakeFactText(extractedDestination, 180) || intakeFactText(saved?.destination, 180),
+    savedDates: savedStart && savedEnd ? `${savedStart} to ${savedEnd}` : (savedStart || savedEnd),
+    planOwned: saved?.planOwned === true,
+  };
+  const facts = firstIntakeReplyFacts(factInput);
+  const prompt = firstIntakeReplyPrompt(factInput);
+  let model = null;
+  let reply = '';
+  for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
+    model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn,
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination: facts.where || '',
+      memory: [],
+      upsell: facts.shape === 'voice-note' ? 'allow-once' : 'forbidden',
+      postIntake: true,
+      intakeReplyTurn: true,
+      env,
+      systemExtra: prompt,
+    });
+    reply = model?.called && model.text ? String(model.text).trim() : '';
+    if (appTextBanned(reply)) reply = '';
+  }
+  if (!reply) {
+    const visible = model?.called && model.text ? String(model.text).trim() : '';
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: (visible && appTextBanned(visible)) || model?.reason || 'first intake reply model returned no reply',
+    };
+  }
+  return { reply, rules, jev, model, reason: null };
+}
+
 export function customerModality(body) {
   return body?.voiceMode ? 'voice' : 'text';
 }
@@ -1691,6 +1883,18 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
+  if (postIntake) {
+    return produceFirstIntakeReply({
+      customerTurn,
+      session,
+      tripTitle,
+      env,
+      rules,
+      wantedThings,
+      roster,
+      extractedDestination,
+    });
+  }
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env });
