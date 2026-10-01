@@ -234,7 +234,7 @@
   <footer class="shell">
     <a href="/">Back to TimeSyncher.com</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a>
   </footer>
-
+  <script src="/checkout-price-client.js"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     const step1 = document.getElementById('step1');
@@ -321,6 +321,7 @@
       bumpTitle.textContent = unlimited.name || 'unlimited';
       bumpDescription.textContent = unlimited.description || '';
       syncPhotoCopy();
+      updateTotal();
     }
 
     function formData() {
@@ -376,6 +377,11 @@
       photoRow.hidden = !photoMemories.checked;
       tax.textContent = 'Calculated by Stripe';
       try {
+        if (!productConfig.products?.single?.amount) {
+          waivedRow.hidden = true;
+          total.textContent = '';
+          return;
+        }
         syncPhotoCopy();
         const cents = orderCents();
         const charge = hasCoupon() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };
@@ -395,7 +401,6 @@
           .then(async (response) => {
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.ok) throw new Error(data.error || 'Stripe checkout is not configured yet.');
-            applyProductCopy(data);
             return data;
           });
       }
@@ -497,6 +502,7 @@
 
     async function goToStepTwo() {
       if (!form.reportValidity()) return;
+      try { await loadProductCatalog(); } catch (error) { setStatus(error.message || 'Checkout prices are not configured yet.', true); return; }
       showStep(2);
       window.scrollTo({ top: document.querySelector('.order-grid').offsetTop - 12, behavior: 'smooth' });
       await preparePaymentElement();
@@ -578,6 +584,7 @@
         payBtn.textContent = 'Pay securely';
       }
     });
+    const loadProductCatalog = tsBootCheckoutCatalog({ applyProductCopy, setStatus, continueBtn, step2Pill });
     updateTotal();
     requestAnimationFrame(lockVideoToStepOneHeight);
     window.addEventListener('resize', lockVideoToStepOneHeight);

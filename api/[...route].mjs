@@ -3,6 +3,7 @@ import adminOnboardings from '../routes/admin-onboardings.mjs';
 
 logCheckoutConfig(process.env);
 import checkoutConfig from '../routes/checkout-config.mjs';
+import checkoutProducts from '../routes/checkout-products.mjs';
 import checkoutCoupon from '../routes/checkout-coupon.mjs';
 import createPaymentIntent from '../routes/create-payment-intent.mjs';
 import eula from '../routes/eula.mjs';
@@ -18,6 +19,7 @@ import workerJobs from '../routes/worker-jobs.mjs';
 const handlers = {
   'admin-onboardings': adminOnboardings,
   'checkout-config': checkoutConfig,
+  'checkout-products': checkoutProducts,
   'checkout-coupon': checkoutCoupon,
   'create-payment-intent': createPaymentIntent,
   eula,

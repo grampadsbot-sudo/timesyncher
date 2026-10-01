@@ -36,6 +36,8 @@ scripts/test_purchase_launch_routes.mjs
 scripts/test_purchase_email_slug.mjs
 scripts/test_purchase_email_app_link.mjs
 scripts/test_shared_trip_slug_miss.mjs
+scripts/test_shared_trip_spa_console.mjs
+scripts/test_vacation_selector_dropdown.mjs
 scripts/test_vacation_collaborators.mjs
 scripts/test_vacation_web_access.mjs
 scripts/test_welcome_after_intake_database.mjs

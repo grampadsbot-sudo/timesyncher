@@ -533,9 +533,20 @@ function dropServedTrekCallers(source) {
   return next;
 }
 
+/** Served bundle drops getAppConfig from the auth client; rewrite every caller to a no-op promise. */
+export function rewriteAppConfigCallers(source = '') {
+  let js = String(source || '');
+  js = js.replace(/\([A-Za-z_$][A-Za-z0-9_$]*=Cr\.getAppConfig\)==null\|\|[A-Za-z_$][A-Za-z0-9_$]*\.call\(Cr\)/g, 'Promise.resolve(null)');
+  js = js.replace(/await Cr\.getAppConfig\(\)/g, 'await Promise.resolve(null)');
+  js = js.replace(/Cr\.getAppConfig\(\)/g, 'Promise.resolve(null)');
+  if (js.includes('Cr.getAppConfig')) throw new Error('trek bundle still references Cr.getAppConfig');
+  return js;
+}
+
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const js = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
+  const patched = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
+  const js = rewriteAppConfigCallers(patched);
   assertServedBundleClean(js);
   return js;
 }
@@ -962,6 +973,12 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('[/bellagio|conservatory/i,') || js.includes('[/las vegas strip|las vegas/i,')) {
     throw new Error('Map pins must use Thing source coordinates, not a venue-name coordinate list.');
+  }
+  if (js.includes('Bi={JFK:') || js.includes('Si=[[/park central/i') || js.includes('ii=[[/61\\s+w')) {
+    throw new Error('Served bundle must not ship hardcoded airport or venue geocode tables.');
+  }
+  if (js.includes('Plan 75–90 min airport transfer') || js.includes('First stop / TBD')) {
+    throw new Error('Served bundle must not ship canned travel-gap or TBD labels.');
   }
   if (/children:ie\(G\)\|\|"[^"]/.test(js)) {
     throw new Error('A missing rental price must render blank.');

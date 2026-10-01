@@ -240,6 +240,17 @@
     .thing-notes, .collaborator-notes { margin: 12px 0; padding: 0; }
     .collaborator-notes { border-top: 1px solid var(--line); padding-top: 12px; }
     .collaborator-notes h2 { margin: 0 0 8px; font-size: 16px; }
+    .collaborator-invite {
+      margin: 0 clamp(12px, 3vw, 24px) 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+    .collaborator-invite label { display: grid; gap: 4px; font-size: 13px; }
+    .collaborator-invite input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
     .messages {
       min-height: 0;
       overflow: auto;
@@ -521,8 +532,10 @@
     }
 
     function vacationSelector(trips, trip) {
-      if (trips.length < 2) return `<div class="trip-label" id="tripLabel">${safe(tripBadge(trip))}</div>`;
       const label = (item) => (customerPlaceName(item.destination) || customerPlaceName(item.title)).split(',')[0].trim();
+      if (!trips.length) {
+        return `<div class="trip-menu" id="tripMenu"><button class="trip-button" id="tripButton" type="button" disabled aria-haspopup="listbox" aria-expanded="false"><span></span>${icon.chevron}</button><div class="trip-list" role="listbox"></div></div>`;
+      }
       return `<div class="trip-menu" id="tripMenu"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe([customerPlaceName(item.destination), item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span></button>`).join('')}</div></div>`;
     }
 
@@ -635,6 +648,13 @@
         }).join('')
         : '';
       const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>
+            ${!hasSite && !state.session?.seat ? `<form class="collaborator-invite" id="collaboratorInviteForm" aria-label="Invite collaborator">
+              <p>Invite a collaborator by email before the trip site is ready.</p>
+              <label>Name<input name="name" type="text" required autocomplete="name"></label>
+              <label>Email<input name="email" type="email" required autocomplete="email"></label>
+              <button type="submit">Send invite</button>
+              <div class="error" id="collaboratorInviteError" hidden></div>
+            </form>` : ''}
             <form class="composer" id="composer">
               <div class="attachment-row" id="attachmentRow"></div>
               <div class="compose-grid">
@@ -693,6 +713,46 @@
       });
       bindVoice();
       document.getElementById('composer').addEventListener('submit', sendMessage);
+      const inviteForm = document.getElementById('collaboratorInviteForm');
+      if (inviteForm) inviteForm.addEventListener('submit', submitCollaboratorInvite);
+    }
+
+    async function submitCollaboratorInvite(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const errorBox = document.getElementById('collaboratorInviteError');
+      const button = form.querySelector('button[type="submit"]');
+      const trip = currentTrip();
+      if (!trip?.id) {
+        errorBox.hidden = false;
+        errorBox.textContent = 'No vacation is selected yet.';
+        return;
+      }
+      button.disabled = true;
+      errorBox.hidden = true;
+      try {
+        const data = new FormData(event.currentTarget);
+        const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            action: 'open-seats',
+            tripId: trip.id,
+            seats: [{ name: data.get('name'), email: data.get('email') }],
+          }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok || payload.ok === false) throw new Error(payload.error || 'Unable to send collaborator invite.');
+        form.reset();
+        const messages = document.getElementById('messages');
+        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(`Invite sent to ${payload.seats?.[0]?.email || data.get('email')}.`)}</article>`);
+        messages.scrollTop = messages.scrollHeight;
+      } catch (error) {
+        errorBox.hidden = false;
+        errorBox.textContent = error.message || 'Unable to send collaborator invite.';
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function renderAttachments() {
@@ -802,8 +862,9 @@
             const index = state.vacations.findIndex((item) => item.id === data.vacation.id);
             if (index >= 0) state.vacations[index] = data.vacation;
             else state.vacations.push(data.vacation);
-            const label = document.getElementById('tripLabel');
-            if (label) label.textContent = tripBadge(data.vacation);
+            const tripButton = document.getElementById('tripButton');
+            const tripLabelSpan = tripButton?.querySelector('span');
+            if (tripLabelSpan) tripLabelSpan.textContent = tripBadge(data.vacation);
             if (!hadSite && realSiteUrl(data.vacation.publicUrl, data.vacation)) {
               await loadApp(data.vacation.id);
               return;

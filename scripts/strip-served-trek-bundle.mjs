@@ -4,6 +4,21 @@ export const SO_ORIGIN_NEEDLE = 'So=G=>{const Re=String(G||"").trim();if(!Re)ret
 
 const EMPTY = '""';
 
+const GEO_TABLE_START = 'Bi={JFK:[40.6413,-73.7781]';
+const GEO_TABLE_END = ',Wo=([G,Re])=>';
+const TRAVEL_GAP_LABEL = /jl=G=>\{const Re=Wn\(G\)[\s\S]*?min to get there`\}/;
+
+function stripHardcodedGeoTables(source) {
+  let patched = String(source || '');
+  if (patched.includes(GEO_TABLE_START) && patched.includes(GEO_TABLE_END)) {
+    const start = patched.indexOf(GEO_TABLE_START);
+    const end = patched.indexOf(GEO_TABLE_END, start);
+    if (start >= 0 && end > start) patched = `${patched.slice(0, start)}Bi={},Si=[],ii=[]${patched.slice(end)}`;
+  }
+  if (TRAVEL_GAP_LABEL.test(patched)) patched = patched.replace(TRAVEL_GAP_LABEL, 'jl=G=>""');
+  return patched;
+}
+
 export const CANNED_STRIP_RULES = [
   {
     id: 'share-alias-map',
@@ -90,6 +105,7 @@ export function stripCannedBundle(source) {
     out = parts.join(rule.replacement);
     counts.push({ id: rule.id, count });
   }
+  out = stripHardcodedGeoTables(out);
   assertServedBundleClean(out);
   return { source: out, counts };
 }

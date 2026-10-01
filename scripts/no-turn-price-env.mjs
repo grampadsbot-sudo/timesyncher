@@ -19,13 +19,13 @@ function isUnitTest(file) {
 }
 function checkoutStem(spec) {
   const base = String(spec || '').split('?')[0].split('/').pop().replace(/_/g, '-');
-  return /^(?:checkout-config|create-payment-intent|checkout-coupon)/.test(base);
+  return /^(?:checkout-config|checkout-products|create-payment-intent|checkout-coupon)/.test(base);
 }
 function allowed(file) {
   const flat = norm(file).replace(/_/g, '-');
   const base = baseName(flat);
-  if (/^(?:checkout-config|create-payment-intent|checkout-coupon).*\.(?:mjs|js|cjs)$/.test(base)) return true;
-  return isUnitTest(file) && /checkout-config|create-payment-intent|checkout-coupon/.test(flat);
+  if (/^(?:checkout-config|checkout-products|create-payment-intent|checkout-coupon).*\.(?:mjs|js|cjs)$/.test(base)) return true;
+  return isUnitTest(file) && /checkout-config|checkout-products|create-payment-intent|checkout-coupon/.test(flat);
 }
 export function inTurnPriceScope(file) {
   const name = norm(file);
