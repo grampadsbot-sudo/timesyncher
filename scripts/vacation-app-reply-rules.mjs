@@ -571,7 +571,7 @@ function chatReplyText(content) {
 }
 
 export function sourcedPlaceRule() {
-  return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
+  return 'Name a place only when this turn lists it under Results. Cite that row\'s exact id as (id:<id>). Never invent a place name or id.';
 }
 
 export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = null, planOwned = false, priceAsk = false } = {}) {

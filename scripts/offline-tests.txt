@@ -3,6 +3,7 @@ scripts/test_access_plan_checkout.mjs
 scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_build_used_vs_tip.mjs
+scripts/test_chat_place_search.mjs
 scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs

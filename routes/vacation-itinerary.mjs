@@ -43,6 +43,7 @@ import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-auth
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { applyChatPlaceSearchForVacationTurn } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
   openCollaboratorAppSeats,
@@ -590,13 +591,57 @@ async function queueVacationAppTurn(db, session, trip, body) {
     returning id
   `;
 
+  const searchTurn = await applyChatPlaceSearchForVacationTurn({
+    db,
+    tripId,
+    requestId,
+    customerTurn: requestText,
+    tripDestination: cleanText(trip?.destination || '', 180),
+    payload,
+    customerLive,
+    turnId: turnRows[0].id,
+    env: process.env,
+    publishShare: publishIntakeShare,
+  });
+  const placeResults = searchTurn.placeResults || [];
+  if (searchTurn.kind === 'failed') {
+    const failedLatency = Date.now() - started;
+    return {
+      requestId,
+      jobId: jobRows[0].id,
+      receivedAt: requestRows[0].received_at,
+      queuedAt: requestRows[0].queued_at,
+      turnTag,
+      modality,
+      turnIndex: customerTurnIndex,
+      latencyMs: failedLatency,
+      sessionE2eMs: sessionE2eMs(),
+      jev: customerLive.jev,
+      reply: null,
+      intakeEvent: jobFields.intakeEvent,
+      wantedThings: jobFields.wantedThings,
+      roster: jobFields.roster,
+      rosterError: jobFields.rosterError,
+      destination: jobFields.destination,
+      hasDates: jobFields.hasDates,
+      title: jobFields.title,
+      titleError: jobFields.titleError,
+      intakeError: jobFields.intakeError,
+      ok: false,
+      status: 'place_search_failed',
+      error: searchTurn.error,
+      placeSearch: searchTurn.placeSearch,
+    };
+  }
+
   let produced;
   try {
     produced = await produceLiveAppReply({
       customerTurn: requestText,
-      session,
+      session: { ...session, trip_id: tripId },
       priorTurns,
       tripTitle: trip?.title || '',
+      placeResults,
       env: process.env,
       seatDollars: configuredSeatDollars(process.env),
       intake: classification.ok === true && classification.intake === true,
