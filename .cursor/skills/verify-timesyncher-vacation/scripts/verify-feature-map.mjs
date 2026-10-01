@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 /**
  * Re-runnable Feature Map drive. Overwrites <out>/VERIFY.md.
- * Does not redeem coupons. The welcome-after-intake check writes a real
- * create-vacation intake when DATABASE_URL is set, and fails when it is not.
+ * Does not redeem coupons. The welcome-after-intake check signs up a fresh
+ * staging customer, agrees, and grades the onboarding welcome. Shape alone is
+ * not a pass. It uses DATABASE_URL when set, otherwise loads the staging value
+ * with VERCEL_TOKEN for this process only, and fails when that value cannot
+ * be loaded.
  * The real-app gate is required: a failing gate refuses a clean table.
  */
 import { spawnSync } from 'node:child_process';
@@ -11,7 +14,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { purchaseEmail } from '../../../../src/vacation/email.mjs';
-import { runWelcomeAfterIntake, selfTestMissingWelcomeDatabase, WELCOME_DATABASE_MISSING, WELCOME_MISSING } from './verify-welcome-after-intake.mjs';
+import { redactWelcomeSecrets, runWelcomeAfterIntake, selfTestMissingWelcomeDatabase, WELCOME_VERIFY_FAILED } from './verify-welcome-after-intake.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const staging = 'https://vacation-staging.timesyncher.com';
@@ -474,14 +477,17 @@ async function main() {
   try {
     welcome = await runWelcomeAfterIntake({ shotDir });
   } catch (error) {
-    if (error.message === WELCOME_DATABASE_MISSING || String(error.message || '').startsWith('FAIL welcome-after-intake:')) {
-      process.stderr.write(`${error.message}\n`);
+    const message = redactWelcomeSecrets(error?.message || error);
+    if (message.startsWith('FAIL welcome-after-intake:')) {
+      process.stderr.write(`${message}\n`);
       process.exit(1);
     }
-    throw error;
+    const wrapped = new Error(message);
+    wrapped.stack = redactWelcomeSecrets(error?.stack || wrapped.stack);
+    throw wrapped;
   }
   if (!welcome.ok) {
-    process.stderr.write(`${WELCOME_MISSING}\n`);
+    process.stderr.write(`${WELCOME_VERIFY_FAILED}\n`);
     process.exit(1);
   }
   const gate = runGate();

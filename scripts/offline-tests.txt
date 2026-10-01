@@ -18,6 +18,7 @@ scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
 scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
+scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
 scripts/test_tg_intake_gbrain.mjs

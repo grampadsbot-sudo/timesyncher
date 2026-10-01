@@ -99,6 +99,17 @@ The real-app gate is required. The command runs `npm run test:real-app-entry` fi
 
 A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
 
+## Onboarding welcome
+
+The welcome-after-intake check signs up a fresh staging customer, agrees on the terms screen, captures the welcome, then sends three fresh-trip fixtures and writes a judge packet. A non-empty bubble is not a pass. Deterministic gates only fail obvious problems: welcome missing before the first turn, banned words, fixture literals in shipped templates, and a missing mic or voice-note invitation. PASS is recorded only after an external judge grades a pass.
+
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --check
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --apply-judge <judge.json> --artifacts /opt/cursor/artifacts/onboarding-welcome-judge
+```
+
+The packet is `packet.json` and `packet.md` under `/opt/cursor/artifacts/onboarding-welcome-judge/`, with screenshots beside them.
+
 ## Screenshot journey
 
 Every test run also builds the Screenshot Journey PDF from these feature files. The script is idempotent: it overwrites `screenshot-journey.pdf`, the page PNGs under `journey-pages/`, and the `## Screenshot journey` section of `VERIFY.md`. It does not redeem a coupon and it does not click Agree.
