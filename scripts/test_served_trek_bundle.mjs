@@ -15,6 +15,32 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 assert.equal(createHash('sha256').update(raw).digest('hex'), UPSTREAM_SHA256);
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
+
+function sliceBetween(source, startMarker, endMarker) {
+  const start = source.indexOf(startMarker);
+  assert.ok(start >= 0, startMarker);
+  const end = source.indexOf(endMarker, start);
+  assert.ok(end >= 0, endMarker);
+  return source.slice(start, end + endMarker.length);
+}
+
+const chipExpr = sliceBetween(rendered, '(function(){const key=', 'return chips})()');
+const emptyChips = new Function('Gt', 'Ut', 'le', `return ${chipExpr}`)([], [], {});
+assert.deepEqual(emptyChips, []);
+const sourcedChips = new Function('Gt', 'Ut', 'le', `return ${chipExpr}`)(
+  [{ id: 1, name: 'Sample Venue', source: { neighborhood: 'Sample Area' } }],
+  [{ id: 9, title: 'Sample Walk', neighborhood: 'Other Area' }],
+  {},
+);
+assert.deepEqual(sourcedChips, ['Sample Area', 'Other Area']);
+const Sn = new Function('Ke', 'le', `${sliceBetween(rendered, 'Sn=(G,Re)=>', 'return a&&Ke.includes(a)?a:""}')}; return Sn`)(emptyChips, {});
+assert.equal(Sn('', {}), '');
+assert.equal(Sn('Unused Label', { id: 2, name: 'Sample Venue' }), '');
+assert.equal(Sn('', { id: 1, name: 'Sample Venue', source: { neighborhood: 'Sample Area' } }), 'Sample Area');
+const areaSelect = sliceBetween(rendered, '["Area",n.jsx("select"', 'Ke.map(G=>n.jsx("option"');
+assert.match(areaSelect, /value:En\(Dt\)/);
+assert.equal(areaSelect.includes('selected'), false);
+
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(rendered, committed);
 

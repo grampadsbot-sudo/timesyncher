@@ -215,20 +215,8 @@ const AREA_FALLBACK_NEEDLE = 'Sn=(G,Re)=>Ke.includes(String(G||""))?String(G):aa
 const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();return a&&Ke.includes(a)?a:""}';
 const COORD_NAME_MAP_NEEDLE = 'const Zn=is(G);return Zn||null';
 const COORD_SOURCE_PATCH = 'return null';
-const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Kailua-Kona / Palani","Islandwide / Flexible"]';
-const AREA_RENAMES = [
-  ['Upper West Side / Lincoln Center', 'Keauhou / Kahaluu'],
-  ['Upper West Side / Morningside', 'Waikoloa / Kohala Coast'],
-  ['Midtown / Central Park South', 'Waimea / Kamuela'],
-  ['Times Square / Hell’s Kitchen', 'Kailua-Kona / Alii Drive'],
-  ["Times Square / Hell's Kitchen", 'Kailua-Kona / Alii Drive'],
-  ['Chelsea / Greenwich Village', 'Hilo / Bayfront'],
-  ['Greenwich Village / West Village', 'Volcano / Hawaii Volcanoes'],
-  ['Downtown / Harbor', 'Captain Cook / Kealakekua'],
-  ['Hudson River / Harbor', 'Waipio / Hamakua'],
-  ['Airport / Transit', 'Kailua-Kona / Palani'],
-  ['Citywide / Flexible', 'Islandwide / Flexible'],
-];
+const AREA_NAME_MATCHER = /,aa=G=>\{const Re=Ot\(G\);return[\s\S]*?\},ha=G=>/;
+const AREA_NAME_MATCHER_PATCH = ',aa=()=>"",ha=G=>';
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
 const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
@@ -285,21 +273,17 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
-  if (served) {
-    if (patched.includes(AREA_CHIP_NYC)) {
-      patched = patched.replace(AREA_CHIP_NYC, AREA_CHIP_BIG_ISLAND);
-    }
-    for (const [from, to] of AREA_RENAMES) patched = patched.replaceAll(from, to);
-  } else {
-    if (patched.includes(NYC_AREA_LIST)) {
-      patched = patched.replace(NYC_AREA_LIST, AREA_CHIPS_FROM_SOURCE);
-    }
-    if (patched.includes(AREA_FALLBACK_NEEDLE)) {
-      patched = patched.replace(AREA_FALLBACK_NEEDLE, AREA_FALLBACK_PATCH);
-    }
-    if (patched.includes(COORD_NAME_MAP_NEEDLE)) {
-      patched = patched.replace(COORD_NAME_MAP_NEEDLE, COORD_SOURCE_PATCH);
-    }
+  if (patched.includes(NYC_AREA_LIST)) {
+    patched = patched.replace(NYC_AREA_LIST, AREA_CHIPS_FROM_SOURCE);
+  }
+  if (patched.includes(AREA_FALLBACK_NEEDLE)) {
+    patched = patched.replace(AREA_FALLBACK_NEEDLE, AREA_FALLBACK_PATCH);
+  }
+  if (AREA_NAME_MATCHER.test(patched)) {
+    patched = patched.replace(AREA_NAME_MATCHER, AREA_NAME_MATCHER_PATCH);
+  }
+  if (patched.includes(COORD_NAME_MAP_NEEDLE)) {
+    patched = patched.replace(COORD_NAME_MAP_NEEDLE, COORD_SOURCE_PATCH);
   }
   if (patched.includes(HC_QR_NEEDLE)) {
     patched = patched.replace(HC_QR_NEEDLE, HC_QR_PATCH);
