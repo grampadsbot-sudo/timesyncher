@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * Welcome after a real create-vacation intake.
- * Requires DATABASE_URL. A missing database is a failure, not a skip, pass, or gap.
+ * Uses DATABASE_URL when it is set. Otherwise loads the staging project value
+ * with VERCEL_TOKEN into process.env for this process only. A missing token,
+ * failed fetch, or empty value is a failure, not a skip, pass, or gap.
+ * The loaded value is never printed, logged, or written to disk.
  */
 import { spawnSync } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
@@ -10,17 +13,70 @@ import { fileURLToPath } from 'node:url';
 import { onboardingOpenerFacts, upsellFactsForTurn } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
-export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: DATABASE_URL missing';
+const STAGING_DATABASE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true';
+export const WELCOME_VERCEL_TOKEN_MISSING = 'FAIL welcome-after-intake: VERCEL_TOKEN missing';
+export const WELCOME_DATABASE_FETCH_FAILED = 'FAIL welcome-after-intake: staging DATABASE_URL fetch failed';
+export const WELCOME_DATABASE_EMPTY = 'FAIL welcome-after-intake: staging DATABASE_URL empty';
 export const WELCOME_MISSING = 'FAIL welcome-after-intake: welcome missing';
 const scriptPath = fileURLToPath(import.meta.url);
 
-export function assertWelcomeDatabase(env = process.env) {
-  if (!String(env.DATABASE_URL || '').trim()) {
-    const error = new Error(WELCOME_DATABASE_MISSING);
-    error.exitCode = 1;
-    throw error;
+function fail(message) {
+  const error = new Error(message);
+  error.exitCode = 1;
+  return error;
+}
+
+export function redactWelcomeSecrets(text, secret = process.env.DATABASE_URL) {
+  let out = String(text ?? '');
+  const value = String(secret || '');
+  if (value) {
+    out = out.split(value).join('[redacted]');
+    const encoded = encodeURIComponent(value);
+    if (encoded && encoded !== value) out = out.split(encoded).join('[redacted]');
   }
-  return env.DATABASE_URL;
+  return out.replace(/postgres(?:ql)?:\/\/\S+/gi, '[redacted]').replace(/Bearer\s+\S+/gi, 'Bearer [redacted]');
+}
+
+function redactWelcomeError(error) {
+  const message = redactWelcomeSecrets(error?.message || WELCOME_DATABASE_FETCH_FAILED);
+  const wrapped = new Error(message);
+  wrapped.exitCode = error?.exitCode || 1;
+  const stack = redactWelcomeSecrets(error?.stack || '');
+  if (stack) wrapped.stack = stack;
+  return wrapped;
+}
+
+export async function ensureWelcomeDatabase({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  if (String(env.DATABASE_URL || '').trim()) return;
+  const token = String(env.VERCEL_TOKEN || '').trim();
+  if (!token) throw fail(WELCOME_VERCEL_TOKEN_MISSING);
+  let response;
+  try {
+    response = await fetchImpl(STAGING_DATABASE_ENV_URL, {
+      method: 'GET',
+      redirect: 'error',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    throw fail(WELCOME_DATABASE_FETCH_FAILED);
+  }
+  if (!response || response.ok !== true) {
+    const status = Number(response?.status);
+    const suffix = Number.isInteger(status) && status > 0 ? ` (HTTP ${status})` : '';
+    throw fail(`${WELCOME_DATABASE_FETCH_FAILED}${suffix}`);
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw fail(WELCOME_DATABASE_FETCH_FAILED);
+  }
+  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
+  if (payload?.key !== 'DATABASE_URL' || !value) {
+    throw fail(payload?.key === 'DATABASE_URL' ? WELCOME_DATABASE_EMPTY : WELCOME_DATABASE_FETCH_FAILED);
+  }
+  process.env.DATABASE_URL = value;
+  if (env !== process.env) env.DATABASE_URL = value;
 }
 
 function collaboratorWelcomeMarker() {
@@ -128,7 +184,15 @@ async function screenshotApp(url, shotDir) {
 }
 
 export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {}) {
-  assertWelcomeDatabase(env);
+  try {
+    return await runWelcomeAfterIntakeUnchecked({ env, shotDir });
+  } catch (error) {
+    throw redactWelcomeError(error);
+  }
+}
+
+async function runWelcomeAfterIntakeUnchecked({ env, shotDir }) {
+  await ensureWelcomeDatabase({ env });
   const [{ sql }, { buildOnboardingFromCoupon, ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationAppLink }, { acceptEulaPersistent }, { createPersistentStoreFromEnv }, requestHandler, appHandler] = await Promise.all([
     import('../../../../src/vacation/db.mjs'),
     import('../../../../src/vacation/onboarding.mjs'),
@@ -161,7 +225,8 @@ export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {})
     request: { source: 'web', type: 'trip_intake', text: intakeText },
   }, intakeHeaders));
   if (!intake.body?.ok || !intake.body?.requestId) {
-    throw Object.assign(new Error(`FAIL welcome-after-intake: create-vacation intake did not finish (${intake.body?.error || intake.status})`), { exitCode: 1 });
+    const intakeError = redactWelcomeSecrets(typeof intake.body?.error === 'string' ? intake.body.error : intake.status);
+    throw Object.assign(new Error(`FAIL welcome-after-intake: create-vacation intake did not finish (${intakeError})`), { exitCode: 1 });
   }
   const eula = await ensureVacationEulaSession(onboarding.session, { contact, env });
   await acceptEulaPersistent(createPersistentStoreFromEnv(env), eula?.sessionId || eulaSessionIdForOnboarding(onboarding.session), {
@@ -196,12 +261,20 @@ export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {})
 export function selfTestMissingWelcomeDatabase() {
   const env = { ...process.env };
   delete env.DATABASE_URL;
+  delete env.NEON_DATABASE_URL;
+  delete env.VERCEL_TOKEN;
   const child = spawnSync(process.execPath, [scriptPath, '--check'], { cwd: root, env, encoding: 'utf8' });
   const output = `${child.stdout || ''}${child.stderr || ''}`;
-  if (child.status === 0 || !output.includes(WELCOME_DATABASE_MISSING)) {
-    throw new Error(`welcome-after-intake missing-env self-test failed status=${child.status} output=${output}`);
+  if (/postgres(?:ql)?:\/\//i.test(output) || /Bearer\s+\S+/.test(output)) {
+    throw new Error('welcome-after-intake missing-env self-test leaked a secret');
   }
-  return output;
+  if (child.status === 0 || !output.includes(WELCOME_VERCEL_TOKEN_MISSING)) {
+    throw new Error(`welcome-after-intake missing-env self-test failed status=${child.status}`);
+  }
+}
+
+function writeRedacted(stream, text) {
+  stream.write(`${redactWelcomeSecrets(text)}`);
 }
 
 async function main() {
@@ -213,15 +286,16 @@ async function main() {
   const outDir = path.resolve(path.join(root, '.cursor/skills/verify-timesyncher-vacation/output/verify'));
   try {
     const result = await runWelcomeAfterIntake({ shotDir: outDir });
+    const line = `${redactWelcomeSecrets(JSON.stringify(result))}\n`;
     if (!result.ok) {
-      process.stderr.write(`${WELCOME_MISSING}\n`);
-      process.stdout.write(`${JSON.stringify(result)}\n`);
+      writeRedacted(process.stderr, `${WELCOME_MISSING}\n`);
+      writeRedacted(process.stdout, line);
       process.exit(1);
     }
-    process.stdout.write(`${JSON.stringify(result)}\n`);
+    writeRedacted(process.stdout, line);
   } catch (error) {
-    process.stderr.write(`${error.message || error}\n`);
-    process.exit(error.exitCode || 1);
+    writeRedacted(process.stderr, `${error?.message || WELCOME_DATABASE_FETCH_FAILED}\n`);
+    process.exit(error?.exitCode || 1);
   }
 }
 

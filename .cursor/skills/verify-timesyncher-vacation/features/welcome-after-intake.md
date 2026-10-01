@@ -18,7 +18,8 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --check`.
 - That command creates a real database-backed create-vacation intake through the vacation request handler, accepts the terms, and opens the vacation app session. It is not a stub or a fixture transcript.
-- `DATABASE_URL` is required. When it is missing the process exits non-zero and prints `FAIL welcome-after-intake: DATABASE_URL missing`. That result is not a pass and not a gap.
+- `DATABASE_URL` is required. When it is already set, the check uses that value. When it is absent, the check loads the staging project value at runtime with `VERCEL_TOKEN` by `GET https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true` (staging project only) and stores it in `process.env` for that process. The value is not printed, logged, written to disk, or put in evidence, screenshots, artifacts, errors, or stack traces.
+- When `VERCEL_TOKEN` is missing, the fetch fails, or the response has no value, the process exits non-zero and prints a `FAIL welcome-after-intake:` line that does not include the value. That result is not a pass and not a gap.
 - Screenshot `verify-welcome-after-intake.png`.
 - Pass when the app session shows the welcome bubble in `#messages[data-screen="onboarding"]` before the first customer message, and the existing opener and collaborator markers are present.
 - Fail when the welcome is missing. Do not invent welcome copy in the app.
@@ -28,4 +29,4 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 - A screenshot of the deleted card shell is a fail, not a pass.
 - Reference trip for the TREK UI is `las-vegas-vacation-3`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.
 - The intake itinerary page is not the onboarding chat. A page with no `#messages` welcome fails this check.
-- Missing `DATABASE_URL` fails the check. Do not skip it.
+- Missing `DATABASE_URL` does not skip the check. The step loads the staging value, or fails without echoing it.
