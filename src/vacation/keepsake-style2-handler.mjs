@@ -1,4 +1,4 @@
-import { cleanText } from './http.mjs';
+import { cleanText, headerValue } from './http.mjs';
 
 function productTrekPublic() {
   const fromEnv = String(
@@ -11,7 +11,11 @@ function productTrekPublic() {
   return fromEnv;
 }
 
-export const PRODUCT_TREK_PUBLIC = productTrekPublic();
+let cachedProductTrekPublic;
+export function getProductTrekPublic() {
+  if (!cachedProductTrekPublic) cachedProductTrekPublic = productTrekPublic();
+  return cachedProductTrekPublic;
+}
 
 /** Sole SoT. CoS dated twin is the same rules. */
 export const PRODUCT_SOT = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
@@ -129,7 +133,7 @@ export function productPdfUrl({
   if (isDailyReport(report, pdfPath)) {
     const day = dailyDayFromPdfPath(pdfPath) || String(report).replace(/^[^\d]*/, '') || '';
     const suffix = day ? `/daily/${encodeURIComponent(day)}.pdf` : '/daily.pdf';
-    return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}${suffix}${search}`;
+    return `${getProductTrekPublic()}/api/pdf/shared/${token}${suffix}${search}`;
   }
   const name = normalizeReportName(report);
   if (name === PRODUCT_STYLE_TWO_REPORT) {
@@ -146,7 +150,7 @@ export function productPdfUrl({
       search,
     });
   }
-  return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
+  return `${getProductTrekPublic()}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
 }
 
 export function forwardedKeepsakeSearch(url) {
