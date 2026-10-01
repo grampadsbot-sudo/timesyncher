@@ -10,7 +10,7 @@ export class ReplyIdCitationBlockedError extends Error {
   }
 }
 
-export function replyIdCitationReason(reply) {
+function replyIdCitationReason(reply) {
   const body = String(reply || '');
   if (!body.trim()) return '';
   if (ID_CITATION.test(body)) return 'parenthetical_id_citation';
