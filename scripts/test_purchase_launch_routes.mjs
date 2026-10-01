@@ -193,9 +193,12 @@ try {
   assert.match(intake.type, /text\/html/);
 
   const intakeApi = await get('/api/shared/intake-0123456789ab');
-  assert.notEqual(intakeApi.status, 404, intakeApi.body.slice(0, 180));
+  assert.equal(intakeApi.status, 200, intakeApi.body.slice(0, 180));
   assert.match(intakeApi.type, /json/);
-  assert.equal(JSON.parse(intakeApi.body).trip.title, 'Purchase trip');
+  const intakeBody = JSON.parse(intakeApi.body);
+  assert.ok(intakeBody.trip, intakeApi.body.slice(0, 180));
+  assert.equal(intakeBody.error, undefined);
+  assert.deepEqual(intakeBody.places, []);
 
   const home = await get('/');
   assertStamp(home, 'home');
