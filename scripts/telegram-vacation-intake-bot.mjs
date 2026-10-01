@@ -489,38 +489,18 @@ function isAccessPricingQuestion(value = '') {
 
 function accessPricingAnswer(value = '') {
   const normalized = cleanText(value, 2000).toLowerCase();
-  const manifest = loadProductManifest();
   const person = accessPersonLabel(value);
-  const allVacations = /\b(all|every|unlimited|future)\b/.test(normalized) && /\b(vacations?|trips?)\b/.test(normalized);
   const wantsMedia = /\b(photo|photos|picture|pictures|pic|pics|video|videos|media|upload|uploads)\b/.test(normalized) || /\bfull access\b/.test(normalized);
-  const plans = Array.isArray(manifest?.collaboratorEntitlementPolicy?.plans) ? manifest.collaboratorEntitlementPolicy.plans : [];
-  const singleTrip = plans.find((plan) => cleanText(plan?.scope, 80) === 'single_trip');
-  const unlimited = plans.find((plan) => cleanText(plan?.scope, 80) === 'unlimited_trips');
-  const photo = manifest?.mediaAddOnPolicy?.photoMemories || {};
-  const video = manifest?.mediaAddOnPolicy?.videoMemoriesRecommendation || {};
-  const checkout = checkoutBaseUrl(manifest);
+  const checkout = checkoutBaseUrl(loadProductManifest());
+  const collaboratorCents = Number.parseInt(String(process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS ?? '').trim(), 10);
+  const mediaCents = Number.parseInt(String(process.env.TIMESYNCHER_MEDIA_PRICE_CENTS ?? '').trim(), 10);
+  const collaborator = Number.isFinite(collaboratorCents) && collaboratorCents > 0 ? collaboratorCents / 100 : null;
+  const media = Number.isFinite(mediaCents) && mediaCents > 0 ? mediaCents / 100 : null;
+  if (collaborator == null) console.error('checkout config missing: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS');
+  if (wantsMedia && media == null) console.error('checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
   const lines = [];
-  if (allVacations) {
-    if (unlimited?.amountUsd) lines.push(`For ${person}, full Telegram editing access across all of your vacations is $${unlimited.amountUsd}.`);
-    else console.error('access price is not configured: unlimited telegram');
-    lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
-    if (wantsMedia) {
-      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access across all vacations is $${photo.unlimitedVacationsAmountUsd}.`);
-      else console.error('access price is not configured: unlimited photo');
-      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access across all vacations is $${video.unlimitedVacationsAmountUsd}.`);
-      else console.error('access price is not configured: unlimited video');
-    }
-  } else {
-    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for one vacation is $${singleTrip.amountUsd}.`);
-    else console.error('access price is not configured: single telegram');
-    lines.push(`That adds one active Telegram collaborator for that vacation. Add more collaborators one checkout at a time.`);
-    if (wantsMedia) {
-      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for one vacation is $${photo.singleVacationAmountUsd}.`);
-      else console.error('access price is not configured: single photo');
-      if (video.singleVacationAmountUsd) lines.push(`Video upload access for one vacation is $${video.singleVacationAmountUsd}.`);
-      else console.error('access price is not configured: single video');
-    }
-  }
+  if (collaborator != null) lines.push(`For ${person}, plan telegram_collaborators_single_trip is $${collaborator}. The owner invites a collaborator to each vacation separately.`);
+  if (wantsMedia && media != null) lines.push(`Plan owner_media is $${media}. Paying it grants the owner media on each vacation that owner has.`);
   lines.push(`Checkout link: ${checkout}/order-test.html`);
   return lines.join('\n\n');
 }

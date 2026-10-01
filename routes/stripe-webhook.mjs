@@ -77,6 +77,23 @@ export default async function handler(req, res) {
             displayName: metadata.requested_for || `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim() || '',
           },
         }, process.env) : { status: 'skipped', reason: 'missing invite token' };
+        if (metadata.photo_upload === 'true' || metadata.video_upload === 'true' || metadata.media === 'true') {
+          const addOns = ownerMediaAddOns({ ownerCustomerId: metadata.owner_customer_id });
+          await recordOwnerMediaPurchase({
+            db,
+            contact: {
+              email: paymentIntent.receipt_email || metadata.email || '',
+              firstName: metadata.first_name || '',
+              lastName: metadata.last_name || '',
+            },
+            addOns,
+            ownerCustomerId: metadata.owner_customer_id,
+            amountCents: addOns.amountCents,
+            currency: paymentIntent.currency || 'usd',
+            stripePaymentIntentId: paymentIntent.id,
+            metadata: { paidVia: 'collaborator_payment_element', inviteId: metadata.invite_id },
+          });
+        }
         console.log('TimeSyncher collaborator payment succeeded', {
           paymentIntentId: paymentIntent.id,
           inviteId: metadata.invite_id,
@@ -99,6 +116,7 @@ export default async function handler(req, res) {
             lastName: metadata.last_name || '',
           },
           addOns,
+          ownerCustomerId: metadata.owner_customer_id || addOns.ownerCustomerId || null,
           amountCents: paymentIntent.amount_received || paymentIntent.amount || addOns.amountCents,
           currency: paymentIntent.currency || 'usd',
           status: 'paid',

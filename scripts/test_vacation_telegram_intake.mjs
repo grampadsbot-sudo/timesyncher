@@ -240,7 +240,7 @@ const collaboratorPlanFacts = factsFrom(collaboratorPlansModel.calls[0]);
 assert.equal(collaboratorPlanFacts.ask, 'collaborator_access');
 assert.equal(collaboratorPlanFacts.collaborator.statusQuestion, false);
 assert.ok(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.scope === 'single_trip' && plan.amountCents === 1500));
-assert.ok(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.scope === 'unlimited_trips' && plan.amountCents === 1900));
+assert.equal(collaboratorPlanFacts.collaborator.plans.some((plan) => plan.scope === 'unlimited_trips'), false);
 assert.equal(collaboratorPlanFacts.trip.title, 'Harbor Week');
 
 const wifeTelegramCollaboratorStatusIntent = vacationSupportIntent('Is my wife already a telegram collaborator?');

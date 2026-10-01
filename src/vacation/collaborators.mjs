@@ -13,45 +13,28 @@ export const COLLABORATOR_PLANS = {
     scope: 'single_trip',
     maxActiveCollaborators: 1,
   },
-  telegram_collaborators_unlimited_trips: {
-    code: 'telegram_collaborators_unlimited_trips',
-    scope: 'unlimited_trips',
-    maxActiveCollaborators: 1,
-  },
 };
 
 function withConfiguredAmount(plan, env) {
-  if (plan.scope === 'single_trip') {
-    return {
-      ...plan,
-      amountCents: requiredConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS'),
-    };
-  }
-  if (plan.scope !== 'unlimited_trips') return plan;
   return {
     ...plan,
-    amountCents: requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'),
+    amountCents: requiredConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS'),
   };
 }
 
 export function collaboratorPlanList(env = process.env) {
-  return Object.values(COLLABORATOR_PLANS).map((plan) => {
-    const amountCents = plan.scope === 'single_trip'
-      ? optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS)
-      : optionalConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS);
-    return {
-      code: plan.code,
-      scope: plan.scope,
-      amountCents,
-      maxActiveCollaborators: plan.maxActiveCollaborators,
-    };
-  });
+  return Object.values(COLLABORATOR_PLANS).map((plan) => ({
+    code: plan.code,
+    scope: plan.scope,
+    perVacation: true,
+    amountCents: optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS),
+    maxActiveCollaborators: plan.maxActiveCollaborators,
+  }));
 }
 
 export function collaboratorPlan(codeOrScope = 'single_trip', env = process.env) {
   if (COLLABORATOR_PLANS[codeOrScope]) return withConfiguredAmount(COLLABORATOR_PLANS[codeOrScope], env);
   if (codeOrScope === 'single_trip') return withConfiguredAmount(COLLABORATOR_PLANS.telegram_collaborators_single_trip, env);
-  if (codeOrScope === 'unlimited_trips') return withConfiguredAmount(COLLABORATOR_PLANS.telegram_collaborators_unlimited_trips, env);
   throw new Error(`Unsupported Telegram collaborator plan: ${codeOrScope}`);
 }
 
@@ -71,17 +54,13 @@ export function hashToken(token, env = process.env) {
   return crypto.createHash('sha256').update(`${salt}:${token}`).digest('hex');
 }
 
-export function collaboratorCheckoutCopy({ singleUrl = '', unlimitedUrl = '', env = process.env } = {}) {
+export function collaboratorCheckoutCopy({ singleUrl = '', url = '', env = process.env } = {}) {
   return {
     ask: 'collaborator_checkout',
-    singleTrip: {
-      cents: optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS),
-      url: singleUrl || null,
-    },
-    unlimitedTrips: {
-      cents: optionalConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS),
-      url: unlimitedUrl || null,
-    },
+    plan: 'telegram_collaborators_single_trip',
+    perVacation: true,
+    cents: optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS),
+    url: url || singleUrl || null,
   };
 }
 
@@ -349,26 +328,37 @@ export async function activeCollaboratorForTelegram(db, { ownerCustomerId, tripI
   return rows[0] || null;
 }
 
-export async function countActiveCollaborators(db, ownerCustomerId) {
+export async function countActiveCollaborators(db, ownerCustomerId, tripId = '') {
   if (!ownerCustomerId) return 0;
-  const rows = await db`
-    select count(*)::int as count
-    from vacation_collaborators
-    where owner_customer_id = ${ownerCustomerId}
-      and status = 'active'
-  `;
+  const rows = tripId
+    ? await db`
+      select count(*)::int as count
+      from vacation_collaborators
+      where owner_customer_id = ${ownerCustomerId}
+        and trip_id = ${tripId}
+        and status = 'active'
+    `
+    : await db`
+      select count(*)::int as count
+      from vacation_collaborators
+      where owner_customer_id = ${ownerCustomerId}
+        and status = 'active'
+    `;
   return Number(rows[0]?.count || 0);
 }
 
 export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {}, env = process.env }) {
-  const plan = collaboratorPlan(planCode, env);
+  if (!tripId) {
+    throw Object.assign(new Error('tripId is required. The owner invites a collaborator to each vacation separately.'), { statusCode: 400 });
+  }
+  const plan = collaboratorPlan(planCode || 'single_trip', env);
   const token = collaboratorToken();
   const rows = await db`
     insert into vacation_collaborator_invites (
       owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata
     )
     values (
-      ${ownerCustomerId}, ${plan.scope === 'single_trip' ? tripId : null}, ${plan.code}, ${plan.scope},
+      ${ownerCustomerId}, ${tripId}, ${plan.code}, ${plan.scope},
       ${requestedFor || null}, 'pending_payment', ${hashToken(token, env)}, ${metadata}
     )
     returning *

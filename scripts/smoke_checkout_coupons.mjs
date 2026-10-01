@@ -14,8 +14,7 @@ import {
 const env = {
   TIMESYNCHER_BASE_PRICE_CENTS: '3700',
   TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
-  TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS: '500',
-  TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS: '500',
+  TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
   TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
   TIMESYNCHER_COUPON_HASH_SALT: 'test-salt',
 };
@@ -35,8 +34,11 @@ assert.deepEqual(checkoutOrderSummary({}, env), {
   orderBump: false,
   photoMemories: false,
   photoMemoriesPlan: null,
+  media: false,
+  mediaPlan: null,
 });
-assert.equal(checkoutOrderSummary({ orderBump: true, photoMemories: true }, env).amountCents, 6900);
+assert.equal(checkoutOrderSummary({ orderBump: true }, env).amountCents, 6400);
+assert.equal(checkoutOrderSummary({ orderBump: true, photoMemories: true }, env).amountCents, 8100);
 
 for (const file of ['index.html', 'order-test.html']) {
   const html = readFileSync(file, 'utf8');

@@ -1563,9 +1563,6 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       },
     };
     single = await createCollaboratorCheckout({ ...base, planCode: 'telegram_collaborators_single_trip' });
-    if (showUnlimitedCollaboratorPlan) {
-      unlimited = await createCollaboratorCheckout({ ...base, planCode: 'telegram_collaborators_unlimited_trips' });
-    }
   } catch (error) {
     if (!/Live Stripe is disabled/i.test(error?.message || '')) throw error;
     single = await createTokenizedCollaboratorPaymentLink(db, session, {
@@ -1574,14 +1571,6 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       telegramUserId,
       planCode: 'telegram_collaborators_single_trip',
     });
-    if (showUnlimitedCollaboratorPlan) {
-      unlimited = await createTokenizedCollaboratorPaymentLink(db, session, {
-        text,
-        telegramChatId,
-        telegramUserId,
-        planCode: 'telegram_collaborators_unlimited_trips',
-      });
-    }
   }
   const checkoutLinks = {
     singleTrip: {
@@ -1590,13 +1579,6 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
       allowPromotionCodes: single.allowPromotionCodes,
     },
   };
-  if (unlimited) {
-    checkoutLinks.unlimitedTrips = {
-      inviteId: unlimited.inviteId,
-      checkoutUrl: unlimited.checkoutUrl,
-      allowPromotionCodes: unlimited.allowPromotionCodes,
-    };
-  }
   return {
     reply: await writeOnboardingReply(onboardingReplyFacts('collaborator_checkout', {
       plans: collaboratorPlanList(),
@@ -1605,9 +1587,7 @@ async function collaboratorCheckoutReply(db, session, { text, telegramChatId, te
     payload: {
       collaboratorEntitlement: {
         required: true,
-        plans: unlimited
-          ? ['telegram_collaborators_single_trip', 'telegram_collaborators_unlimited_trips']
-          : ['telegram_collaborators_single_trip'],
+        plans: ['telegram_collaborators_single_trip'],
         checkoutEndpoint: '/api/create-payment-intent',
         checkoutAction: 'create_collaborator_checkout',
         checkoutLinks,

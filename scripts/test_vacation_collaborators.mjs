@@ -20,9 +20,7 @@ assert.equal(collaboratorPlan('single_trip', priceEnv).code, 'telegram_collabora
 assert.equal(collaboratorPlan('single_trip', priceEnv).amountCents, 1500);
 assert.equal(collaboratorPlan('single_trip', priceEnv).maxActiveCollaborators, 1);
 assert.throws(() => collaboratorPlan('single_trip', {}), (error) => error?.name === 'CheckoutConfigError');
-assert.throws(() => collaboratorPlan('unlimited_trips', {}), (error) => error?.name === 'CheckoutConfigError');
-assert.equal(collaboratorPlan('unlimited_trips', priceEnv).amountCents, 1900);
-assert.equal(collaboratorPlan('unlimited_trips', priceEnv).maxActiveCollaborators, 1);
+assert.throws(() => collaboratorPlan('unlimited_trips', priceEnv), /Unsupported Telegram collaborator plan/);
 assert.equal(isCollaboratorInviteRequest('Add my wife to the Caldwell vacation so she can update it in Telegram'), true);
 assert.equal(isCollaboratorInviteRequest('I want to give my wife the ability to interact and change the vacation just like I am doing.'), true);
 assert.equal(isCollaboratorInviteRequest('Can you send me the link to set her up?'), true);
@@ -33,8 +31,9 @@ assert.equal(isCollaboratorInviteRequest('Can you send me the link to the Vegas 
 
 const checkoutCopy = collaboratorCheckoutCopy({ env: priceEnv });
 assert.equal(checkoutCopy.ask, 'collaborator_checkout');
-assert.equal(checkoutCopy.singleTrip.cents, 1500);
-assert.equal(checkoutCopy.unlimitedTrips.cents, 1900);
+assert.equal(checkoutCopy.plan, 'telegram_collaborators_single_trip');
+assert.equal(checkoutCopy.perVacation, true);
+assert.equal(checkoutCopy.cents, 1500);
 assert.equal(JSON.stringify(checkoutCopy).includes('$'), false);
 
 const deniedCopy = collaboratorDeniedCopy();

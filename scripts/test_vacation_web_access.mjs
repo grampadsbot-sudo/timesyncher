@@ -98,7 +98,8 @@ const checkout = await readFile(new URL('../addons-checkout.html', import.meta.u
 assert.match(checkout, /name="planScope"/);
 assert.match(checkout, /TimeSyncher Vacation Add-ons/i);
 assert.doesNotMatch(checkout, /collaborator-checkout\.html/);
-assert.match(checkout, /telegram_collaborators_unlimited_trips/);
+assert.match(checkout, /telegram_collaborators_single_trip/);
+assert.doesNotMatch(checkout, /telegram_collaborators_unlimited_trips/);
 
 const paymentApi = await readFile(new URL('../routes/create-payment-intent.mjs', import.meta.url), 'utf8');
 assert.match(paymentApi, /collaboratorInviteWithSelectedPlan/);

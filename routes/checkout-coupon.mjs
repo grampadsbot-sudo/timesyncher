@@ -3,7 +3,7 @@ import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption } from '../src/vacation/coupons.mjs';
 import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
+import { recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
   collaboratorTelegramLink,
@@ -11,14 +11,8 @@ import {
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
-import { customerCheckoutFailure, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
+import { checkoutOrderSummary, customerCheckoutFailure } from '../src/vacation/checkout-pricing.mjs';
 
-const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
-const PHOTO_MEMORIES_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
-const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
 const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 
 function requireContact(body) {
@@ -38,38 +32,28 @@ function requireContact(body) {
 }
 
 function orderDetails(body) {
-  const orderBump = Boolean(body.orderBump);
-  const photoMemories = Boolean(body.photoMemories);
-  const photoAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
-  const orderBumpCents = orderBump
-    ? requiredConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS')
-    : 0;
-  const amount = BASE_PRICE_CENTS + orderBumpCents + photoAmount;
+  const summary = checkoutOrderSummary({
+    orderBump: Boolean(body.orderBump),
+    photoMemories: Boolean(body.photoMemories),
+    media: Boolean(body.media),
+  }, process.env);
   return {
-    orderBump,
-    photoMemories,
-    amount,
-    plan: orderBump ? 'unlimited' : 'single',
+    orderBump: summary.orderBump,
+    photoMemories: summary.photoMemories,
+    amount: summary.amountCents,
+    plan: summary.plan,
   };
 }
 
 function collaboratorAccessAddOns(body = {}, plan = {}) {
-  const selected = body.accessAddOns && typeof body.accessAddOns === 'object' ? body.accessAddOns : body;
-  const unlimited = plan.scope === 'unlimited_trips';
-  const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
-  const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
-  const photoAmountCents = photoUpload ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-  const videoAmountCents = videoUpload
-    ? (unlimited
-      ? requiredConfigCents(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS')
-      : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS)
-    : 0;
+  const media = selectedMediaAddOn(body, process.env);
   return {
-    photoUpload,
-    videoUpload,
-    photoAmountCents,
-    videoAmountCents,
-    amountCents: photoAmountCents + videoAmountCents,
+    photoUpload: media.photoUpload,
+    videoUpload: media.videoUpload,
+    photoAmountCents: media.photoAmountCents,
+    videoAmountCents: media.videoAmountCents,
+    amountCents: media.amountCents,
+    plan: plan.code || media.plan,
   };
 }
 
@@ -193,6 +177,18 @@ export default async function handler(req, res) {
         },
       });
       const joined = await joinCollaboratorAppSession(db, { invite, contact, env: process.env });
+      if (addOns.amountCents > 0) {
+        await recordOwnerMediaPurchase({
+          db,
+          contact,
+          addOns: { ...addOns, plan: 'owner_media', scope: 'owner', amountCents: addOns.amountCents, ownerCustomerId: pendingInvite.owner_customer_id },
+          ownerCustomerId: pendingInvite.owner_customer_id,
+          amountCents: 0,
+          currency: CURRENCY,
+          status: 'coupon_redeemed',
+          metadata: { paidVia: 'collaborator_coupon_checkout', collaboratorInviteId: pendingInvite.id },
+        });
+      }
       const email = await queueOrSendCollaboratorInviteEmail(db, {
         invite,
         token: collaboratorInviteToken,

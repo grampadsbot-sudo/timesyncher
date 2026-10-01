@@ -61,34 +61,9 @@
         </fieldset>
 
         <fieldset>
-          <legend>Coverage</legend>
-          <div class="choices">
-            <label class="choice">
-              <input name="mediaScope" type="radio" value="single_trip" checked />
-              <span><b>This vacation</b><small>Add media upload access for the vacation linked to this checkout.</small></span>
-            </label>
-            <label class="choice">
-              <input name="mediaScope" type="radio" value="unlimited_trips" />
-              <span><b>All vacations</b><small>Add media upload access for all current and future vacations on the owner account.</small></span>
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Media options</legend>
-          <div class="choices">
-            <label class="choice">
-              <input name="photoUpload" type="checkbox" checked />
-              <span><b>Photo upload access</b><small>Add photos to vacation memories/keepsakes from Telegram.</small></span>
-              <strong id="photoPrice">$5</strong>
-            </label>
-            <label class="choice">
-              <input name="videoUpload" type="checkbox" checked />
-              <span><b>Video upload access</b><small>Add short keepsake videos within the current upload limits.</small></span>
-              <strong id="videoPrice">$17</strong>
-            </label>
-          </div>
-          <div class="summary-row total access-total"><span>Total today</span><strong id="accessTotal">$22</strong></div>
+          <legend>Media</legend>
+          <p>Plan <span id="mediaPlan">owner_media</span>. The owner or a collaborator can pay. The entitlement is stored on the owner and covers each vacation that owner has.</p>
+          <div class="summary-row total access-total"><span>Total today</span><strong id="accessTotal"></strong><strong id="photoPrice" hidden></strong></div>
         </fieldset>
 
         <fieldset>
@@ -115,12 +90,12 @@
 
     <aside class="summary">
       <h2>Order summary</h2>
-      <div class="summary-row" id="photoRow"><span>Photo upload access</span><strong id="photoTotal">$5</strong></div>
-      <div class="summary-row" id="videoRow"><span>Video upload access</span><strong id="videoTotal">$17</strong></div>
+      <div class="summary-row" id="photoRow"><span id="mediaName">owner_media</span><strong id="photoTotal"></strong></div>
+      <div class="summary-row" id="videoRow" hidden><span>owner_media</span><strong id="videoTotal"></strong></div>
       <div class="summary-row" id="couponRow" hidden><span>Media add-on coupon</span><strong>Covers selected media after validation</strong></div>
       <div class="summary-row"><span>Estimated tax</span><strong>Calculated at checkout</strong></div>
-      <div class="summary-row total"><span>Total today</span><strong id="total">$22</strong></div>
-      <p>After checkout, the owner can send photos and videos to the TimeSyncher Vacation bot for the covered vacation scope.</p>
+      <div class="summary-row total"><span>Total today</span><strong id="total"></strong></div>
+      <p>After checkout, plan owner_media is active on the owner account.</p>
     </aside>
   </main>
   <script>
@@ -131,8 +106,6 @@
     const stripeBox = document.getElementById('stripeBox');
     const stagingCardBox = document.getElementById('stagingCardBox');
     const stagingNotice = document.getElementById('stagingNotice');
-    const photoUpload = form.elements.photoUpload;
-    const videoUpload = form.elements.videoUpload;
     const couponCode = form.elements.couponCode;
     const accessTotal = document.getElementById('accessTotal');
     let stripe;
@@ -140,7 +113,7 @@
     let paymentReady = false;
     let stagingCardMode = true;
     let ownerSessionToken = params.get('session') || params.get('token') || '';
-    let videoUnlimitedCents = null;
+    let mediaCents = null;
 
     function splitOwnerName(name = '') {
       const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -169,28 +142,17 @@
       return { ...Object.fromEntries(new FormData(form).entries()), ownerSessionToken };
     }
 
-    function isUnlimited() {
-      return form.elements.mediaScope.value === 'unlimited_trips';
-    }
-
     function mediaAddOns() {
       return {
-        mediaScope: form.elements.mediaScope.value,
-        photoUpload: Boolean(photoUpload.checked),
-        videoUpload: Boolean(videoUpload.checked),
-      };
-    }
-
-    function prices() {
-      return {
-        photo: isUnlimited() ? 900 : 500,
-        video: isUnlimited() ? (Number(videoUnlimitedCents) || 0) : 1700,
+        media: true,
+        photoUpload: true,
+        videoUpload: true,
+        ownerCustomerId: params.get('ownerCustomerId') || '',
       };
     }
 
     function totalCents() {
-      const p = prices();
-      return (photoUpload.checked ? p.photo : 0) + (videoUpload.checked ? p.video : 0);
+      return Number(mediaCents) || 0;
     }
 
     function couponMode() {
@@ -212,13 +174,12 @@
     }
 
     function updateSummary() {
-      const p = prices();
-      document.getElementById('photoPrice').textContent = money(p.photo);
-      document.getElementById('photoTotal').textContent = money(p.photo);
-      document.getElementById('videoPrice').textContent = money(p.video);
-      document.getElementById('videoTotal').textContent = money(p.video);
-      document.getElementById('photoRow').hidden = !photoUpload.checked;
-      document.getElementById('videoRow').hidden = !videoUpload.checked;
+      const priced = totalCents();
+      document.getElementById('photoPrice').textContent = priced ? money(priced) : '';
+      document.getElementById('photoTotal').textContent = priced ? money(priced) : '';
+      document.getElementById('videoTotal').textContent = '';
+      document.getElementById('photoRow').hidden = false;
+      document.getElementById('videoRow').hidden = true;
       document.getElementById('couponRow').hidden = !couponMode();
       const total = totalCents();
       const totalText = couponMode() ? '$0 after valid coupon' : money(total);
@@ -240,7 +201,7 @@
     function validateStagingCard() {
       const data = contactPayload();
       const digits = String(data.cardNumber || '').replace(/\D/g, '');
-      if (totalCents() < 50) throw new Error('Choose at least one media add-on.');
+      if (totalCents() < 50) throw new Error('Media price is not configured yet.');
       if (digits.length < 12) throw new Error('Enter a valid card number for checkout.');
       if (!/^\d{1,2}\s*\/?\s*\d{2,4}$/.test(String(data.cardExpiry || '').trim())) throw new Error('Enter a valid expiration date.');
       if (!/^\d{3,4}$/.test(String(data.cardCvc || '').trim())) throw new Error('Enter a valid CVC.');
@@ -333,15 +294,17 @@
       }
     }
 
-    for (const input of form.elements.mediaScope) input.addEventListener('change', updateSummary);
-    photoUpload.addEventListener('change', updateSummary);
-    videoUpload.addEventListener('change', updateSummary);
     couponCode.addEventListener('input', updateSummary);
     loadOwnerContact();
     fetch('/api/checkout-config')
       .then((response) => response.json())
       .then((data) => {
-        videoUnlimitedCents = data?.products?.collaborator?.videoUnlimited ?? null;
+        mediaCents = data?.products?.media?.amount ?? null;
+        const mediaName = data?.products?.media?.name;
+        if (mediaName) {
+          document.getElementById('mediaPlan').textContent = mediaName;
+          document.getElementById('mediaName').textContent = mediaName;
+        }
         updateSummary();
       })
       .catch(() => {});
@@ -351,7 +314,7 @@
       event.preventDefault();
       if (!form.reportValidity()) return;
       if (totalCents() < 50) {
-        setStatus('Choose at least one media add-on.', 'error');
+        setStatus('Media price is not configured yet.', 'error');
         return;
       }
       submit.disabled = true;

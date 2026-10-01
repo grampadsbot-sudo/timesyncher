@@ -6,6 +6,7 @@ import {
   loadSessionPersistent,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
+import { checkoutPlanFromMetadata } from './checkout-pricing.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { sharedTripWebsiteUrl } from './web-access.mjs';
 
@@ -183,7 +184,7 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     stripePaymentIntentId: null,
     amountCents: 0,
     currency: cleanText(orderMetadata.currency || 'usd', 12) || 'usd',
-    plan: cleanText(plan, 40) === 'unlimited' ? 'unlimited' : 'single',
+    plan: checkoutPlanFromMetadata({ ...orderMetadata, plan: cleanText(plan, 80) || orderMetadata.plan }),
     status: 'coupon_redeemed',
     contact: cleanContact,
     paidAt: new Date().toISOString(),
@@ -379,7 +380,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     ...jsonObject(resolvedPaymentIntent?.metadata),
   };
   const contact = customerContact({ stripeCustomer: resolvedCustomer, metadata });
-  const plan = cleanText(metadata.product || metadata.plan, 80).includes('unlimited') || metadata.order_bump === 'true' ? 'unlimited' : 'single';
+  const plan = checkoutPlanFromMetadata(metadata);
   const order = {
     stripeCustomerId: cleanText(customerIdFromStripe, 120) || null,
     stripeSubscriptionId: cleanText(resolvedSubscription?.id || resolvedInvoice?.subscription, 120) || null,
