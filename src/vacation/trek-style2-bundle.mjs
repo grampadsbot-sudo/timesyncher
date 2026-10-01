@@ -278,10 +278,10 @@ const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
 export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   const served = options.served === true;
   const js = String(source || '');
-  if (!js.includes(ZU_STYLE2)) {
+  if (!js.includes(ZU_STYLE2) && !js.includes(AE_STYLE2)) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
   }
-  let patched = js.replace(ZU_STYLE2, AE_STYLE2);
+  let patched = js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js;
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
@@ -528,7 +528,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  const finished = stripTripView(hideUnsourcedRatings(patched));
+  const finished = stripTripView(hideUnsourcedRatings(patched), { gear: !served });
   return served ? finished : stripMissingPriceLabel(finished);
 }
 
@@ -545,8 +545,53 @@ export function renderServedTrekBundle(raw) {
   return js;
 }
 
-function stripTripView(source) {
-  const js = String(source || '');
+function endOfCall(text, callStart) {
+  const open = text.indexOf('(', callStart);
+  if (open < 0) return -1;
+  let depth = 0;
+  let quote = '';
+  for (let i = open; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === '\\') {
+        i += 1;
+        continue;
+      }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '(') depth += 1;
+    else if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return i + 1;
+    }
+  }
+  return -1;
+}
+
+function stripTripView(source, options = {}) {
+  let js = String(source || '');
+  if (options.gear) {
+    const gearPatch = '"aria-label":"Config Options","aria-expanded":Qe,onClick:()=>{Mt("config"),Ye(!1),Jt(!1),ht(!0),it(!0),Pt(!0)}';
+    const gearNeedle = '"aria-label":"Config Options","aria-expanded":Xe,onClick:()=>{Mt("config"),Ye(G=>!G),ht(!1)}';
+    const gearAt = js.indexOf(gearNeedle);
+    const menuAt = gearAt >= 0 ? js.indexOf(',Xe&&n.jsxs("div"', gearAt) : -1;
+    const menuEnd = menuAt >= 0 ? endOfCall(js, menuAt) : -1;
+    if (gearAt >= 0 && menuEnd >= 0) {
+      js = js.slice(0, gearAt) + gearPatch + js.slice(gearAt + gearNeedle.length, menuAt) + js.slice(menuEnd);
+    } else if (!js.includes(gearPatch)) {
+      const headerMenu = 'n.jsxs("div",{"data-print-menu-root":!0';
+      const headerAt = js.indexOf(headerMenu);
+      if (headerAt >= 0) {
+        const gearButton = `n.jsx("button",{${gearPatch},style:{minWidth:30,height:30},children:"Config"}),`;
+        js = js.slice(0, headerAt) + gearButton + js.slice(headerAt);
+      }
+    }
+  }
   const start = js.indexOf('n.jsxs("div",{"data-trip-view-root":!0');
   if (start < 0) return js;
   const print = js.indexOf('n.jsxs("div",{"data-print-menu-root":!0', start);
