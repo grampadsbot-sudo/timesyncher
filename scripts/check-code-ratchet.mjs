@@ -671,7 +671,7 @@ export function evaluate(cwd = process.cwd()) {
   const base = readBaseBaseline(cwd);
   const { report, fail } = classify(findings, baseline, base.status === 'ok' ? base.entries : null);
   for (const symbol of growthFails(baseline, base)) {
-    fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol });
+    const [file, rule, sym] = String(symbol).split('|'); const row = (base.entries || []).find((entry) => entry.rule === 'FILE-SIZE-500' && entry.file === file); const next = /^lines:(\d+)$/.exec(sym || ''); const prev = /^lines:(\d+)$/.exec(String(row?.symbol || row?.symbol_or_pattern || '')); if (!(rule === 'FILE-SIZE-500' && row && next && prev && Number(next[1]) < Number(prev[1]))) fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol });
   }
   return { report, fail, baselineCount: baseline.length, base };
 }

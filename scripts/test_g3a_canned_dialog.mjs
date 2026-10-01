@@ -5,7 +5,6 @@ import { planFactsForReply, replyRulesSystem } from './vacation-app-reply-rules.
 import {
   onboardingOpenerFacts,
   produceLiveAppReply,
-  produceOnboardingOpener,
 } from '../src/vacation/live-app-turn.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -26,8 +25,9 @@ assert.doesNotMatch(rules, /On the long trip dump, use the words/);
 assert.doesNotMatch(rules, /State this payer line exactly/);
 assert.doesNotMatch(rules, /Single upsell:/);
 assert.doesNotMatch(telegram, /classic Waikiki beach energy/);
-assert.match(api, /produceOnboardingOpener/);
-assert.match(api, /onboarding opener model returned no reply/);
+assert.match(api, /renderOnboardingWelcome/);
+assert.match(api, /cannedWelcomeLiveTurn/);
+assert.doesNotMatch(api, /produceOnboardingOpener|onboarding opener model returned no reply/);
 assert.doesNotMatch(api, /onboardingOpenerText|FIXED_OPENER_REASON/);
 
 const postIntake = planFactsForReply({
@@ -61,10 +61,6 @@ assert.equal(parsed.seat_dollars, 27);
 assert.equal(onboardingOpenerFacts({ returning: false }).customer_said, null);
 assert.equal(onboardingOpenerFacts({ returning: true, tripTitle: 'Anniversary' }).site_ready, true);
 
-const missedOpener = await produceOnboardingOpener({ returning: false, tripTitle: 'Anniversary', env: {} });
-assert.equal(missedOpener.reply, null);
-assert.ok(missedOpener.reason);
-
 const missedReply = await produceLiveAppReply({
   customerTurn: 'Where should we eat?',
   session: {},
@@ -74,86 +70,5 @@ const missedReply = await produceLiveAppReply({
 assert.equal(missedReply.reply, null);
 assert.ok(missedReply.reason);
 assert.notEqual(missedReply.reply, 'Got it. I saved that');
-
-const openerText = 'Where are you headed, and who is coming?';
-const originalFetch = globalThis.fetch;
-globalThis.fetch = async (url, init) => {
-  const target = String(url);
-  const body = JSON.parse(init.body);
-  if (target.includes('/api/alpha/decisions')) {
-    return {
-      ok: true,
-      json: async () => ({
-        ok: true,
-        answers: {
-          model_tier: { score: 0 },
-          route_type: { choice: 'general' },
-        },
-      }),
-    };
-  }
-  if (target.includes('/chat/completions')) {
-    const content = body.messages?.[0]?.content || '';
-    if (!content.includes('https://trips.example/site')) throw new Error('opener call omitted the site');
-    if (!content.includes('"firstName":"Ada"')) throw new Error('opener call omitted the name');
-    if (content.includes('Your website is not built yet') || content.includes('I can update this vacation from here')) {
-      throw new Error('opener prompt still dictates a fixed welcome');
-    }
-    return {
-      ok: true,
-      json: async () => ({
-        model: body.model,
-        choices: [{ message: { content: `${openerText}\nBEAT: asked for the trip` } }],
-      }),
-    };
-  }
-  throw new Error(`unexpected ${target}`);
-};
-
-try {
-  const produced = await produceOnboardingOpener({
-    returning: true,
-    tripTitle: 'Anniversary',
-    firstName: 'Ada',
-    tripSiteUrl: 'https://trips.example/site',
-    env: { OPENROUTER_API_KEY: 'test-key' },
-  });
-  assert.equal(produced.reply, openerText);
-  assert.equal(produced.reason, null);
-  assert.equal(produced.jev?.jevRan, true);
-
-  globalThis.fetch = async (url, init) => {
-    const target = String(url);
-    const body = JSON.parse(init.body);
-    if (target.includes('/api/alpha/decisions')) {
-      return {
-        ok: true,
-        json: async () => ({
-          ok: true,
-          answers: { model_tier: { score: 0 }, route_type: { choice: 'general' } },
-        }),
-      };
-    }
-    if (target.includes('/chat/completions')) {
-      return {
-        ok: true,
-        json: async () => ({
-          model: body.model,
-          choices: [{ message: { content: 'BEAT: empty' } }],
-        }),
-      };
-    }
-    throw new Error(`unexpected ${target}`);
-  };
-  const empty = await produceOnboardingOpener({
-    returning: false,
-    tripSiteUrl: 'https://trips.example/site',
-    env: { OPENROUTER_API_KEY: 'test-key' },
-  });
-  assert.equal(empty.reply, null);
-  assert.ok(empty.reason);
-} finally {
-  globalThis.fetch = originalFetch;
-}
 
 console.log('g3a canned dialog passed');
