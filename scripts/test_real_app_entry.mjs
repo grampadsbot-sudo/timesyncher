@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { intakeShareSlug, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
+import { intakeSharedResponse } from '../src/vacation/shared-trip-handler.mjs';
 import { lowestCarOffers, withoutCarBrand } from '../src/vacation/car-offers.mjs';
 
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
@@ -112,16 +113,36 @@ const offers = [
 ];
 assert.deepEqual(lowestCarOffers(offers, 2).map((row) => row.brand), ['Budget', 'National']);
 const emptyTripId = '11111111-1111-4111-8111-111111111111';
-assert.equal(intakeShareSlug(emptyTripId), 'intake-111111111111');
-const emptyShared = sharedTripFromIntake({
-  trip: { id: emptyTripId, title: 'Vacation', destination: '', start_date: null, end_date: null },
-  things: [],
-});
-assert.equal(Boolean(emptyShared.trip), true);
+const emptySlug = intakeShareSlug(emptyTripId);
+assert.equal(emptySlug, 'intake-111111111111');
+const storedEmptyTrip = {
+  id: emptyTripId,
+  title: 'shell-abc12xy',
+  destination: '',
+  start_date: null,
+  end_date: null,
+  metadata: { publicSlug: emptySlug, intakeShare: true },
+};
+const lookupSql = [];
+const emptyDb = (strings) => {
+  const text = strings.join(' ');
+  lookupSql.push(text);
+  if (text.includes('from trips')) return [storedEmptyTrip];
+  if (text.includes('from trip_things')) return [];
+  return [];
+};
+const emptyShared = await intakeSharedResponse(emptySlug, emptyDb);
+assert.equal(Boolean(emptyShared?.trip), true);
+assert.equal(emptyShared.error, undefined);
 assert.deepEqual(emptyShared.places, []);
+assert.equal(emptyShared.trip.title, '');
 assert.equal(emptyShared.trip.description, '');
+assert.equal(JSON.stringify(emptyShared).includes('shell-'), false);
+assert.equal(JSON.stringify(emptyShared).includes('Invalid or expired'), false);
+assert.equal(JSON.stringify(emptyShared).includes('Link expired'), false);
+assert.equal(lookupSql.some((sql) => sql.includes("metadata->>'publicSlug'") && sql.includes("metadata->>'intakeShare'")), true);
 const shellShared = sharedTripFromIntake({
-  trip: { id: emptyTripId, title: 'shell-abc12xy', destination: 'shell-abc12xy', start_date: null, end_date: null },
+  trip: storedEmptyTrip,
   things: [],
 });
 assert.equal(shellShared.trip.title, '');
@@ -152,28 +173,6 @@ assert.match(selector.tripBadge(datedShell), /Jun 1–3 2026/);
 const named = { title: 'shell-abc12xy', destination: 'Sample City', startDate: '2026-06-01', endDate: '2026-06-03' };
 assert.equal(selector.tripBadge(named).includes('shell-'), false);
 assert.match(selector.tripBadge(named), /Sample City/);
-
-function shareDb(thingCount) {
-  const calls = [];
-  const db = (strings) => {
-    const text = strings.join(' ');
-    calls.push(text);
-    if (text.includes('count(*)')) return [{ n: thingCount }];
-    if (text.includes('from trips')) return [{ id: emptyTripId, title: 'Vacation', destination: '', metadata: {} }];
-    if (text.includes('from trip_things')) return [];
-    return [];
-  };
-  return { db, calls };
-}
-const { publishIntakeShare } = await import('../routes/vacation-itinerary.mjs');
-const emptyShare = shareDb(0);
-await publishIntakeShare(emptyShare.db, emptyTripId);
-assert.equal(emptyShare.calls.some((sql) => sql.includes('update trips') && sql.includes('publicSlug')), true);
-assert.equal(emptyShare.calls.some((sql) => sql.includes('preCollaboratorSnapshot')), false);
-const filledShare = shareDb(2);
-await publishIntakeShare(filledShare.db, emptyTripId);
-assert.equal(filledShare.calls.some((sql) => sql.includes('update trips') && sql.includes('publicSlug')), true);
-assert.equal(filledShare.calls.some((sql) => sql.includes('preCollaboratorSnapshot')), true);
 
 assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budget'), false);
 assert.equal(withoutCarBrand(offers, 'Budget').length <= 10, true);

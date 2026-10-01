@@ -21,9 +21,10 @@ import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
-import { assignIntakeShare, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import {
@@ -688,7 +689,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     firstIntake ? requestText : '',
     classification.ok === true ? classification.things : [],
   );
-  await publishIntakeShare(db, tripId);
+  if (itinerary.length) await publishIntakeShare(db, tripId);
   const vacationRows = await db`
     select id, title, destination, start_date, end_date, status, metadata
     from trips
@@ -726,11 +727,21 @@ function thingView(row) {
   };
 }
 
-export async function publishIntakeShare(db, tripId) {
-  const share = await assignIntakeShare(db, tripId);
-  if (!share.publicSlug) return;
+async function publishIntakeShare(db, tripId) {
+  const slug = intakeShareSlug(tripId);
+  if (!slug) return;
   const things = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (!Number(things[0]?.n)) return;
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug: slug, intakeShare: true }},
+        updated_at = now()
+    where id = ${tripId}
+      and coalesce(metadata->>'sharedToken', '') = ''
+      and coalesce(metadata->>'shareToken', '') = ''
+      and coalesce(metadata->>'source_token', '') = ''
+      and coalesce(metadata->>'publicSlug', '') in ('', ${slug})
+  `;
   await storePreCollaboratorSnapshot(db, tripId);
 }
 
@@ -926,13 +937,10 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0]
       || null;
     const eula = await vacationAppEula(session, process.env);
+    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
+    const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
     if (selected) await publishIntakeShare(db, selected.id);
     const published = selected ? await loadVacationAppTrips(db, session) : vacations;
-    const opened = selected
-      ? published.find((trip) => trip.id === selected.id) || selected
-      : null;
-    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, opened);
-    const turns = opened ? await loadVacationAppTurns(db, session, opened.id) : [];
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
     return sendJson(res, 200, {
@@ -1015,7 +1023,7 @@ async function handleVacationApp(req, res, db, url) {
         pending.postIntake === true ? pending.customerTurn : '',
         pending.wantedThings || [],
       );
-      await publishIntakeShare(db, pending.tripId);
+      if (itinerary.length) await publishIntakeShare(db, pending.tripId);
       await db`
         update onboarding_sessions
         set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
