@@ -32,7 +32,6 @@ import {
   jevStamp,
   liveTurnRecord,
   produceOnboardingOpener,
-  tripIsReturning,
   intakeSpan,
   firstMarkedIntake,
   produceLiveAppReply,
@@ -218,6 +217,7 @@ async function loadVacationAppSession(db, token) {
       onboarding_sessions.customer_id,
       onboarding_sessions.trip_id,
       onboarding_sessions.status,
+      onboarding_sessions.order_id,
       customers.display_name,
       customers.first_name,
       customers.last_name,
@@ -276,22 +276,82 @@ async function loadVacationAppTurns(db, session, tripId) {
   }));
 }
 
-async function ensureOnboardingOpener(db, session, trip) {
-  if (seatFromSession(session)) return;
-  const existing = await db`
-    select 1
-    from transcript_turns
-    where customer_id = ${session.customer_id}
-      and trip_id = ${trip.id}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-    limit 1
+function welcomeFirstName(value) {
+  const text = String(value || '').trim();
+  return text ? text.split(/\s+/)[0] : '';
+}
+
+async function welcomeInputs(db, session, trip) {
+  const seat = seatFromSession(session);
+  const tripSiteUrl = String(trip?.publicUrl || '').trim();
+  const tripTitle = String(trip?.title || '').trim();
+  if (seat) {
+    const owners = await db`
+      select first_name, display_name
+      from customers
+      where id = ${seat.ownerCustomerId}
+      limit 1
+    `;
+    const owner = owners[0] || {};
+    return {
+      audience: 'collaborator',
+      ownerFirstName: welcomeFirstName(owner.first_name || owner.display_name),
+      collaboratorFirstName: welcomeFirstName(session.first_name || seat.displayName || session.display_name),
+      tripTitle,
+      tripSiteUrl,
+    };
+  }
+  let plan = '';
+  if (session.order_id) {
+    const orders = await db`select plan from paid_orders where id = ${session.order_id} limit 1`;
+    plan = String(orders[0]?.plan || '').trim();
+  }
+  const people = await db`
+    select display_name
+    from vacation_collaborators
+    where trip_id = ${trip.id}
+      and status = 'active'
   `;
+  return {
+    audience: 'owner',
+    firstName: welcomeFirstName(session.first_name || session.display_name),
+    tripTitle,
+    tripSiteUrl,
+    plan,
+    collaborators: people.map((row) => welcomeFirstName(row.display_name)).filter(Boolean),
+  };
+}
+
+async function ensureOnboardingOpener(db, session, trip) {
+  const seat = seatFromSession(session);
+  const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
+  const welcomeAudience = seat ? 'collaborator' : 'owner';
+  const welcomeFor = seat ? String(session.customer_id) : 'owner';
+  const existing = seat
+    ? await db`
+      select 1
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id = ${trip.id}
+        and channel = 'vacation-app'
+        and payload->>'welcomeAudience' = 'collaborator'
+        and payload->>'welcomeFor' = ${welcomeFor}
+      limit 1
+    `
+    : await db`
+      select 1
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id = ${trip.id}
+        and channel = 'vacation-app'
+        and payload->'liveTranscript' is not null
+        and coalesce(payload->>'welcomeAudience', 'owner') = 'owner'
+      limit 1
+    `;
   if (existing.length) return;
   const started = Date.now();
   const produced = await produceOnboardingOpener({
-    returning: tripIsReturning(trip),
-    tripTitle: trip?.title || '',
+    ...await welcomeInputs(db, session, trip),
     session,
     env: process.env,
   });
@@ -318,6 +378,8 @@ async function ensureOnboardingOpener(db, session, trip) {
     source: 'vacation_app',
     surface: 'vacation-app',
     selectedTripId: trip.id,
+    welcomeAudience,
+    welcomeFor,
     liveTranscript: live,
   };
   await db`
@@ -326,15 +388,17 @@ async function ensureOnboardingOpener(db, session, trip) {
       sent_at, response_latency_ms
     )
     select
-      ${session.customer_id}, ${trip.id}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
+      ${customerId}, ${trip.id}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
       now(), 0
     where not exists (
       select 1
       from transcript_turns
-      where customer_id = ${session.customer_id}
+      where customer_id = ${customerId}
         and trip_id = ${trip.id}
         and channel = 'vacation-app'
         and payload->'liveTranscript' is not null
+        and coalesce(payload->>'welcomeAudience', 'owner') = ${welcomeAudience}
+        and (${welcomeAudience} = 'owner' or payload->>'welcomeFor' = ${welcomeFor})
     )
   `;
 }
