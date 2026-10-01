@@ -514,8 +514,6 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  patched = [NOTICES_FETCH_CALLER, APP_CONFIG_CALLER].reduce((source, caller) => { if (!source.includes(caller)) { if (served) throw new Error('trek caller was not in the trek bundle'); return source; } return source.replace(caller, ''); }, patched);
-  if ([NOTICES_EMPTY_STUB, APP_CONFIG_EMPTY_STUB, '/system-notices/active', '/auth/app-config'].some((needle) => patched.includes(needle))) throw new Error('trek bundle still references system-notices/active or auth/app-config');
   const finished = stripTripView(patchThingDetailRatings(patched), { gear: !served });
   return served ? finished : stripMissingPriceLabel(finished);
 }
@@ -526,9 +524,18 @@ function stripMissingPriceLabel(source) {
     .replace(/(children:ie\(G\)\|\|)"[^"]*"/g, '$1""');
 }
 
+function dropServedTrekCallers(source) {
+  const next = [NOTICES_FETCH_CALLER, APP_CONFIG_CALLER].reduce((text, caller) => {
+    if (!text.includes(caller)) throw new Error('trek caller was not in the trek bundle');
+    return text.replace(caller, '');
+  }, source);
+  if ([NOTICES_EMPTY_STUB, APP_CONFIG_EMPTY_STUB, '/system-notices/active', '/auth/app-config'].some((needle) => next.includes(needle))) throw new Error('trek bundle still references system-notices/active or auth/app-config');
+  return next;
+}
+
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const js = patchStyleTwoToConfigRenderer(stripped.source, { served: true });
+  const js = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
   assertServedBundleClean(js);
   return js;
 }
