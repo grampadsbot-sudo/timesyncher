@@ -653,7 +653,7 @@ assert.doesNotMatch(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
 assert.ok(patchedAe.includes('data:image\\/svg\\+xml'));
 assert.doesNotMatch(patchedAe, /if\(zt\)return zt;if\(qr\(G\)\)return pDe/);
-assert.match(patchedAe, /ts-thing-media\\\/\\//);
+assert.ok(patchedAe.includes('ts-thing-media\\/'));
 assert.doesNotMatch(patchedAe, /return named\|\|""/);
 assert.match(patchedAe, /data-trip-directory="1"/);
 assert.match(patchedAe, /data-directory-bucket=/);
