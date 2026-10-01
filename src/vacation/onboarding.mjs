@@ -161,6 +161,23 @@ async function ensureOrder(db, customerId, tripId, entitlementId, order) {
   return rows[0].id;
 }
 
+export async function assignTripSiteUrl(db, tripId, env = process.env) {
+  const publicSlug = intakeShareSlug(tripId);
+  if (!publicSlug) return { publicSlug: '', publicUrl: '' };
+  const publicUrl = sharedTripWebsiteUrl(publicSlug, env);
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
+      updated_at = now()
+    where id = ${tripId}
+      and coalesce(metadata->>'sharedToken', '') = ''
+      and coalesce(metadata->>'shareToken', '') = ''
+      and coalesce(metadata->>'source_token', '') = ''
+      and coalesce(metadata->>'publicSlug', '') in ('', ${publicSlug})
+  `;
+  return { publicSlug, publicUrl };
+}
+
 export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', amountCents = 0, metadata = {}, env = process.env }) {
   const orderMetadata = {
     ...jsonObject(metadata),
@@ -176,6 +193,7 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
   };
   const customerId = await upsertCustomer(db, cleanContact, orderMetadata);
   const tripId = await ensureTrip(db, customerId, orderMetadata);
+  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, env);
   const order = {
     stripeCustomerId: null,
     stripeSubscriptionId: null,
@@ -197,16 +215,6 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
   const eula = await ensureVacationEulaSession(session, { contact: cleanContact, env });
-  const publicSlug = intakeShareSlug(tripId);
-  const publicUrl = publicSlug ? sharedTripWebsiteUrl(publicSlug, env) : '';
-  if (publicSlug) {
-    await db`
-      update trips
-      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
-        updated_at = now()
-      where id = ${tripId}
-    `;
-  }
 
   return {
     customerId,
@@ -340,6 +348,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     if (existing[0]) {
       const row = existing[0];
       const contact = row.contact || {};
+      const { publicSlug, publicUrl } = await assignTripSiteUrl(db, row.trip_id, env);
       const eula = await ensureVacationEulaSession(row, { contact, env });
       return {
         customerId: row.customer_id,
@@ -348,6 +357,8 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         orderId: row.order_id,
         session: row,
         token: row.token,
+        publicSlug,
+        publicUrl,
         onboardingUrl: onboardingLink(row.token, env),
         vacationAppUrl: vacationAppLink(row.token, env),
         telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
@@ -403,6 +414,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     ...metadata,
   });
   const tripId = await ensureTrip(db, customerId, metadata);
+  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, env);
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
@@ -415,6 +427,8 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     orderId,
     session,
     token: session.token,
+    publicSlug,
+    publicUrl,
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),

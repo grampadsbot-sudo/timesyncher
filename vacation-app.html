@@ -471,20 +471,6 @@
     const MAX_INLINE_FILE_BYTES = 2 * 1024 * 1024;
     const MAX_FILES_PER_TURN = 6;
 
-    const PLACEHOLDER_TITLES = new Set([
-      'vacation',
-      'choose vacation',
-      'new vacation',
-      'untitled',
-      'untitled vacation',
-      'placeholder',
-      'placeholder trip',
-      'no vacations yet',
-      'timesyncher vacation setup',
-      'timesyncher vacation admin test',
-      'timesyncher vacation coupon checkout',
-    ]);
-
     function realSiteUrl(url) {
       const value = String(url || '').trim();
       if (!value) return '';
@@ -497,16 +483,17 @@
       }
     }
 
+    function customerPlaceName(value) {
+      const text = String(value || '').trim();
+      if (!text || /^(shell|intake)-[a-z0-9]+$/i.test(text)) return '';
+      return text;
+    }
+
     function isPlaceholderTrip(trip) {
       if (!trip) return true;
-      const hasPlan = Boolean(String(trip.destination || '').trim() || trip.startDate || trip.endDate);
-      if (hasPlan) return false;
-      const title = String(trip.title || '').trim();
-      if (!title) return true;
-      const key = title.toLowerCase();
-      if (PLACEHOLDER_TITLES.has(key)) return true;
-      if (String(trip.status || '').toLowerCase() === 'onboarding' && !String(trip.destination || '').trim() && !realSiteUrl(trip.publicUrl)) return true;
-      return false;
+      const destination = customerPlaceName(trip.destination);
+      if (destination || trip.startDate || trip.endDate) return false;
+      return true;
     }
 
     function dateParts(value) {
@@ -518,13 +505,16 @@
 
     function tripBadge(trip) {
       if (!trip || isPlaceholderTrip(trip)) return 'no vacations yet';
-      const place = String(trip.destination || trip.title || '').split(',')[0].trim();
+      const place = (customerPlaceName(trip.destination) || customerPlaceName(trip.title)).split(',')[0].trim();
       const start = dateParts(trip.startDate);
       const end = dateParts(trip.endDate);
-      if (place && start && end) {
-        if (start.y === end.y && start.m === end.m) return `${place} ${start.mon} ${start.d}–${end.d} ${start.y}`;
-        if (start.y === end.y) return `${place} ${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`;
-        return `${place} ${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
+      if (start && end) {
+        const when = start.y === end.y && start.m === end.m
+          ? `${start.mon} ${start.d}–${end.d} ${start.y}`
+          : start.y === end.y
+            ? `${start.mon} ${start.d}–${end.mon} ${end.d} ${start.y}`
+            : `${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
+        return place ? `${place} ${when}` : when;
       }
       return place || 'no vacations yet';
     }
@@ -543,11 +533,10 @@
         <section class="gate-card">
           <img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
           <h1>TimeSyncher Vacation</h1>
-          <p>Open your vacation workspace with the link from your welcome email.</p>
+          ${message ? `<p class="error" role="alert">${safe(message)}</p>` : '<p>Open your vacation workspace with the link from your welcome email.</p>'}
           <form class="session-form" id="sessionForm">
             <input name="session" placeholder="Vacation session token" value="${safe(sessionToken)}" autocomplete="off" required>
             <button>Open app</button>
-            ${message ? `<div class="error">${safe(message)}</div>` : ''}
           </form>
         </section>
       </main>`;
@@ -658,7 +647,7 @@
             <div class="trip-list" role="listbox">
               ${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}">
                 <span>${item.id === trip?.id ? icon.check : ''}</span>
-                <span><b>${safe(item.title)}</b><small>${safe([item.destination, item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
+                <span><b>${safe((customerPlaceName(item.destination) || customerPlaceName(item.title)).split(',')[0].trim())}</b><small>${safe([customerPlaceName(item.destination), item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
               </button>`).join('')}
             </div>
           </div>` : `<div class="trip-label" id="tripLabel">${safe(tripBadge(trip))}</div>`}
@@ -790,7 +779,7 @@
           }),
         });
         const data = await res.json();
-        if (!res.ok || data.ok === false) throw new Error(data.error || 'The app did not return a reply.');
+        if (!res.ok || data.ok === false) throw new Error([data.code, data.reason || data.error].filter(Boolean).join(': ') || 'The app did not return a reply.');
         if (data.status === 'interim') {
           const typing = document.getElementById('tsTyping');
           if (data.interimReply?.text && typing) {
@@ -848,7 +837,7 @@
         if (tripId) query.set('tripId', tripId);
         const res = await fetch(`/api/vacation-itinerary?${query.toString()}`);
         const data = await res.json();
-        if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to open app.');
+        if (!res.ok || data.ok === false) throw new Error([data.code, data.reason || data.error].filter(Boolean).join(': ') || 'Unable to open app.');
         localStorage.setItem('tsVacationAppSession', sessionToken);
         state.session = data.session;
         state.eula = data.eula || null;

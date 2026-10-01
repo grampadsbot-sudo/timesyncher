@@ -52,13 +52,14 @@ function isIntakeEditAccess(method, trekPath, shareToken) {
   return trekRest(trekPath) === 'edit-access';
 }
 
-async function intakeSharedResponse(shareToken) {
+export async function intakeSharedResponse(shareToken, db = null) {
   if (!shareToken || !shareToken.startsWith('intake-')) return null;
-  let db;
-  try {
-    db = openSharedDb();
-  } catch {
-    return null;
+  if (!db) {
+    try {
+      db = openSharedDb();
+    } catch {
+      return null;
+    }
   }
   const rows = await db`
     select id, title, destination, start_date, end_date, metadata
