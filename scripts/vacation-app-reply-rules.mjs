@@ -575,8 +575,7 @@ export function sourcedPlaceRule() {
   return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
-export function planFactsForReply({ rules, upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
-  const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
+export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
   const dollars = Number(seatDollars);
   let mode = 'forbidden';
   if (postIntake) mode = 'post-intake';
@@ -584,7 +583,7 @@ export function planFactsForReply({ rules, upsell, postIntake = false, planLine 
   else if (priceAsk) mode = 'price';
   return {
     mode,
-    plan_name: phrase,
+    plan_id: 'timesyncher_vacation_unlimited',
     seat_dollars: Number.isFinite(dollars) && dollars > 0 ? dollars : null,
     payer_line: String(planLine || '').trim() || null,
     plan_owned: planOwned === true,
@@ -620,7 +619,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const seatName = String(context.seat?.name || context.seat?.displayName || '').trim();
   const seat = seatName ? { name: seatName, payer: String(context.seat?.payer || '').trim() } : null;
   const planFacts = planFactsForReply({
-    rules,
     upsell,
     postIntake,
     planLine,
@@ -662,7 +660,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'When the customer asks for two options on a day, offer only activities already saved on that day or named in the question. Do not repeat a paragraph.',
     'Do not invent an activity the customer did not name.',
     'Write plain sentences. Do not use markdown asterisks.',
-    'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     hasCustomerInput ? 'The saved trip record lists customer input that is still needed. Ask for that in your own words.' : '',
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',

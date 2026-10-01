@@ -36,7 +36,8 @@ const postIntake = planFactsForReply({
   planOwned: false,
 });
 assert.equal(postIntake.mode, 'post-intake');
-assert.equal(postIntake.plan_name, 'unlimited vacations for the whole year');
+assert.equal(postIntake.plan_id, 'timesyncher_vacation_unlimited');
+assert.equal(postIntake.plan_name, undefined);
 assert.equal(postIntake.seat_dollars, 27);
 assert.equal(postIntake.payer_line, 'Kimberly $27, paid by you');
 assert.equal(postIntake.plan_owned, false);
@@ -53,6 +54,9 @@ assert.match(system, /Plan facts: /);
 assert.doesNotMatch(system, /View access lets them see the days|State this payer line exactly|Say you are building the itinerary/);
 const parsed = JSON.parse(system.slice(system.indexOf('Plan facts: ') + 'Plan facts: '.length).split('\n')[0]);
 assert.equal(parsed.mode, 'post-intake');
+assert.equal(parsed.plan_id, 'timesyncher_vacation_unlimited');
+assert.equal(parsed.plan_name, undefined);
+assert.doesNotMatch(system, /unlimited vacations/);
 assert.equal(parsed.payer_line, 'Kimberly $27, paid by you');
 assert.equal(parsed.plan_owned, true);
 assert.equal(parsed.seat_dollars, 27);
