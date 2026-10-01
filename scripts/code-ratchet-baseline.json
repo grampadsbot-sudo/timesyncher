@@ -1,11 +1,5 @@
 [
   {
-    "rule": "NO-EMPTY-CATCH",
-    "file": "addons-checkout.html",
-    "symbol": "empty-catch",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
     "rule": "NO-FLOATING-PROMISE",
     "file": "addons-checkout.html",
     "symbol": ".then",

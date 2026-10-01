@@ -454,15 +454,17 @@ async function shotLatest(page, file) {
 }
 
 async function createFreshTrip(env, owner, title) {
-  const [{ sql }, { buildOnboardingFromCoupon }] = await Promise.all([
+  const [{ sql }, { buildOnboardingFromCoupon }, { requiredConfigCents }] = await Promise.all([
     import('../../../../src/vacation/db.mjs'),
     import('../../../../src/vacation/onboarding.mjs'),
+    import('../../../../src/vacation/checkout-pricing.mjs'),
   ]);
   const stagingEnv = { ...env, TIMESYNCHER_SITE_BASE_URL: STAGING, DATABASE_URL: env.DATABASE_URL || process.env.DATABASE_URL };
   return buildOnboardingFromCoupon({
     db: sql(stagingEnv),
     contact: owner,
     plan: 'single',
+    amountCents: requiredConfigCents(stagingEnv.TIMESYNCHER_BASE_PRICE_CENTS, 'TIMESYNCHER_BASE_PRICE_CENTS'),
     metadata: { trip_title: title, source: 'verify-onboarding-welcome' },
     env: stagingEnv,
   });

@@ -17,11 +17,11 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
   const ownerId = clean(ownerCustomerId, 80);
   const normalizedTripId = clean(tripId, 80);
   if (!ownerId) throw Object.assign(new Error('ownerCustomerId is required.'), { statusCode: 400 });
-  if (plan.scope === 'single_trip' && !normalizedTripId) {
-    throw Object.assign(new Error('tripId is required for single vacation collaborators.'), { statusCode: 400 });
+  if (!normalizedTripId) {
+    throw Object.assign(new Error('tripId is required. The owner invites a collaborator to each vacation separately.'), { statusCode: 400 });
   }
 
-  const activeCount = await countActiveCollaborators(db, ownerId);
+  const activeCount = await countActiveCollaborators(db, ownerId, normalizedTripId);
   if (activeCount >= plan.maxActiveCollaborators) {
     throw Object.assign(new Error('Collaborator cap reached.'), { statusCode: 409 });
   }
@@ -46,9 +46,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
       price_data: {
         currency: CURRENCY,
         product_data: {
-          name: plan.scope === 'single_trip'
-            ? 'Collaborator access for this vacation'
-            : 'Collaborator access',
+          name: 'Collaborator access for this vacation',
         },
         unit_amount: plan.amountCents,
       },
@@ -61,7 +59,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
       invite_id: invite.id,
       invite_token: token,
       owner_customer_id: ownerId,
-      trip_id: plan.scope === 'single_trip' ? normalizedTripId : '',
+      trip_id: normalizedTripId,
       plan_code: plan.code,
       scope: plan.scope,
     },
