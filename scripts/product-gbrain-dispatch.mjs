@@ -348,28 +348,18 @@ function vacationCandidateList(linkedVacations, fallbackBase) {
   })).filter((row) => row.label || row.token);
 }
 
-function linkCapabilityFacts({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+function linkedVacationResolution(requestText, linkedVacations) {
   const lookup = vacationLookupTerm(requestText);
-  const lookupMatches = lookup
-    ? linkedVacations.filter((vacation) => vacationMatchesLookup(vacation, lookup))
-    : [];
-  const matches = lookupMatches.length
-    ? lookupMatches
-    : (linkedVacations.length === 1 ? linkedVacations : []);
-  if (matches.length !== 1) {
-    const pool = matches.length ? matches : linkedVacations;
-    return { need: 'which_trip', candidates: vacationCandidateList(pool, fallbackBase) };
-  }
+  const lookupMatches = lookup ? linkedVacations.filter((vacation) => vacationMatchesLookup(vacation, lookup)) : [];
+  const matches = lookupMatches.length ? lookupMatches : (linkedVacations.length === 1 ? linkedVacations : []);
+  return { lookup, matches };
+}
+
+function linkCapabilityFacts({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const { lookup, matches } = linkedVacationResolution(requestText, linkedVacations);
+  if (matches.length !== 1) return { need: 'which_trip', candidates: vacationCandidateList(matches.length ? matches : linkedVacations, fallbackBase) };
   const match = matches[0];
-  const label = match.name || match.destination || lookup || '';
-  const url = publicVacationUrl(match, fallbackBase);
-  return {
-    label,
-    url,
-    linkAccess: 'view_only',
-    shareCollab: Boolean(match.shareCollab),
-    mediaUploadViaLink: false,
-  };
+  return { label: match.name || match.destination || lookup || '', url: publicVacationUrl(match, fallbackBase), linkAccess: 'view_only', shareCollab: Boolean(match.shareCollab), mediaUploadViaLink: false };
 }
 
 function isPaymentCredentialRequest(value) {
@@ -894,31 +884,13 @@ function vacationAccessQuestionAnswer({ requestText = '', linkedVacations = [], 
 }
 
 function vacationAccessRosterFacts({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
-  const lookup = vacationLookupTerm(requestText);
-  const matches = lookup
-    ? linkedVacations.filter((vacation) => vacationMatchesLookup(vacation, lookup))
-    : (linkedVacations.length === 1 ? linkedVacations : []);
-  if (matches.length !== 1) {
-    const pool = matches.length ? matches : linkedVacations;
-    return { need: 'which_trip', candidates: vacationCandidateList(pool, fallbackBase) };
-  }
+  const { lookup, matches } = linkedVacationResolution(requestText, linkedVacations);
+  if (matches.length !== 1) return { need: 'which_trip', candidates: vacationCandidateList(matches.length ? matches : linkedVacations, fallbackBase) };
   const match = matches[0];
-  const label = match.name || match.destination || lookup || '';
-  const url = publicVacationUrl(match, fallbackBase);
   const named = Array.isArray(match.members) && match.members.length
     ? match.members.map((member) => [member.username, member.email].filter(Boolean).join(' / ')).filter(Boolean)
     : [];
-  return {
-    label,
-    url,
-    shareCollab: Boolean(match.shareCollab),
-    namedMembers: named,
-    linkAccess: 'view_only',
-  };
-}
-
-function supportIntentClarificationFacts() {
-  return { need: 'trip_intent', choices: ['update_existing', 'create_new', 'account_question'] };
+  return { label: match.name || match.destination || lookup || '', url: publicVacationUrl(match, fallbackBase), shareCollab: Boolean(match.shareCollab), namedMembers: named, linkAccess: 'view_only' };
 }
 
 function tripIntentClarificationFacts({ currentShareToken = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
@@ -997,7 +969,6 @@ function makeTurnDecision({
   if (facts) decision.facts = facts;
   return decision;
 }
-
 
 function isQuestionLike(value) {
   const requestText = text(value, 2000).toLowerCase();
@@ -1125,7 +1096,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
       answer = '';
       answerMode = 'clarify';
     } else {
-      facts = supportIntentClarificationFacts();
+      facts = { need: 'trip_intent', choices: ['update_existing', 'create_new', 'account_question'] };
       answer = '';
       answerMode = 'clarify';
     }
@@ -1360,7 +1331,7 @@ function currentTurnRouterDecision(job) {
       intent: 'support_question',
       confidence: 0.8,
       answer: '',
-      facts: supportIntentClarificationFacts(),
+      facts: { need: 'trip_intent', choices: ['update_existing', 'create_new', 'account_question'] },
       answerMode: 'clarify',
       reasons: ['question_like_support_candidate'],
     });

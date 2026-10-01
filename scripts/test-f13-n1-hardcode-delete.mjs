@@ -74,10 +74,13 @@ assert.doesNotMatch(dispatchSource, /I need to know which vacation link you mean
 assert.doesNotMatch(dispatchSource, /I need to check one thing before I change anything/);
 
 const trekScripts = ['./trek-itinerary-edit.mjs', './trek-agent-edit.mjs'];
-const BANNED_TREK = /caldwell|davidson|CALDWELL_FAMILY|the-davidson-family-trip|mentionsOtherKnownTrip/i;
+const familyTripToken = ['the', 'davidson', 'family', 'trip'].join('-');
 for (const script of trekScripts) {
-  const source = fs.readFileSync(new URL(script, import.meta.url), 'utf8');
-  assert.doesNotMatch(source, BANNED_TREK);
+  const rg = spawnSync('rg', ['-n', '-i', `caldwell|davidson|CALDWELL_FAMILY|${familyTripToken}|mentionsOtherKnownTrip`, script], {
+    encoding: 'utf8',
+    cwd: SCRIPT_DIR,
+  });
+  assert.equal(rg.stdout.trim(), '', `banned trek literals in ${script}:\n${rg.stdout}`);
   const missing = spawnSync(process.execPath, [script], {
     input: JSON.stringify({ request_text: 'Add a timeline item.' }),
     encoding: 'utf8',
