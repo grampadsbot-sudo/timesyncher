@@ -11,7 +11,13 @@ function siteBase(env = process.env) {
 }
 
 function travelBase(env = process.env) {
-  return String(env.TIMESYNCHER_TRAVEL_BASE_URL || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
+  const value = String(env.TIMESYNCHER_TRAVEL_BASE_URL || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || '').trim().replace(/\/+$/, '');
+  if (!value) throw new Error('TIMESYNCHER_TRAVEL_BASE_URL is missing');
+  return value;
+}
+
+export function requiredTravelBase(env = process.env) {
+  return travelBase(env);
 }
 
 /** Staging website already honors Style two Config (`Ae()`). Do not invent hosts. */

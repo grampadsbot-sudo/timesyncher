@@ -32,11 +32,11 @@ function jsonResponse(body, ok = true, status = 200) {
   };
 }
 
-const requestText = 'Plan a week in Lisbon. We want a restaurant, a store, and a morning flight.';
+const requestText = 'Plan a week in Orindell. We want River Lantern, North Market Hall, and Harbor Jet.';
 const extracted = [
-  { name: 'restaurant', kind: 'restaurant', who: '', when: '' },
-  { name: 'store', kind: 'store', who: '', when: '' },
-  { name: 'morning flight', kind: 'flight', who: '', when: 'morning' },
+  { name: 'River Lantern', kind: 'restaurant', who: '', when: '' },
+  { name: 'North Market Hall', kind: 'store', who: '', when: '' },
+  { name: 'Harbor Jet', kind: 'flight', who: '', when: 'morning' },
 ];
 const classifyCalls = [];
 const classification = await classifyTripIntake({
@@ -52,7 +52,7 @@ const classification = await classifyTripIntake({
 });
 assert.equal(classification.ok, true);
 assert.equal(classification.intake, true);
-assert.deepEqual(classification.things.map((thing) => thing.name), ['restaurant', 'store', 'morning flight']);
+assert.deepEqual(classification.things.map((thing) => thing.name), ['River Lantern', 'North Market Hall', 'Harbor Jet']);
 assert.equal(classification.things.every((thing) => thing.source === 'chat_extraction'), true);
 assert.equal(classifyCalls.length, 2);
 
@@ -66,9 +66,9 @@ const jobFields = tripIntakeJobFields({
 assert.equal(jobFields.intakeEvent.kind, 'trip_intake');
 assert.equal(jobFields.intakeEvent.requestText, requestText);
 assert.deepEqual(jobFields.wantedThings.map((thing) => [thing.name, thing.kind, thing.source]), [
-  ['restaurant', 'restaurant', 'chat_extraction'],
-  ['store', 'store', 'chat_extraction'],
-  ['morning flight', 'flight', 'chat_extraction'],
+  ['River Lantern', 'restaurant', 'chat_extraction'],
+  ['North Market Hall', 'store', 'chat_extraction'],
+  ['Harbor Jet', 'flight', 'chat_extraction'],
 ]);
 
 const jobInput = {
@@ -85,7 +85,7 @@ const jobInput = {
 const searchCalls = [];
 const research = await runPublicResearch({
   job: { job_type: 'trip_intake', input: jobInput },
-  artifacts: { destination: 'Lisbon', requestText },
+  artifacts: { destination: 'Orindell', requestText },
   env: {
     BRAVE_SEARCH_API_KEY: 'brave-test-key',
     TAVILI_API_KEY: 'tavily-test-key',
@@ -106,21 +106,23 @@ const research = await runPublicResearch({
     if (!allowedHosts.has(hostname)) throw new Error(`unexpected host ${hostname}`);
     if (value.includes('googleapis') || value.includes('places.google')) throw new Error(`google places ${value}`);
     if (value.includes('nominatim.openstreetmap.org')) {
-      return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon, Portugal' }]);
+      return jsonResponse([{ lat: '41.1200', lon: '-8.6100', display_name: 'Orindell, Example' }]);
     }
     if (value.includes('overpass-api.de')) {
       return jsonResponse({
         elements: [
-          { type: 'node', id: 22, lat: 38.74, lon: -9.15, tags: { name: 'City Museum', tourism: 'museum' } },
+          { type: 'node', id: 22, lat: 41.12, lon: -8.61, tags: { name: 'River Lantern', amenity: 'restaurant' } },
         ],
       });
     }
-    if (value.includes('api.search.brave.com') && value.includes('q=restaurant')) {
+    if (value.includes('api.search.brave.com/res/v1/local/place_search')) {
+      const url = new URL(value);
+      const q = url.searchParams.get('q') || 'Example Place';
       return jsonResponse({
         results: [{
-          title: 'River Walk',
-          url: 'https://example.test/walk',
-          coordinates: [38.75, -9.16],
+          title: q,
+          url: 'https://example.test/place',
+          coordinates: [41.12, -8.61],
         }],
       });
     }
@@ -130,7 +132,7 @@ const research = await runPublicResearch({
     }
     if (value.includes('api.tavily.com/search')) {
       const body = JSON.parse(options.body);
-      assert.equal(body.query, 'morning flight');
+      assert.equal(body.query, 'Harbor Jet');
       assert.equal(options.headers.authorization, 'Bearer tavily-test-key');
       return jsonResponse({
         results: [{
@@ -148,7 +150,7 @@ const research = await runPublicResearch({
 assert.equal(research.status, 'live_place_search');
 assert.equal(research.provider, 'place-search');
 assert.equal(research.intakeEvent.kind, 'trip_intake');
-assert.deepEqual(research.wantedThings.map((thing) => thing.name), ['restaurant', 'store', 'morning flight']);
+assert.deepEqual(research.wantedThings.map((thing) => thing.name), ['River Lantern', 'North Market Hall', 'Harbor Jet']);
 assert.deepEqual([...new Set(searchCalls.map((call) => call.hostname))].sort(), [
   'api.search.brave.com',
   'api.tavily.com',

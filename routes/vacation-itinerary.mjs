@@ -1031,9 +1031,10 @@ async function handleVacationApp(req, res, db, url) {
     const body = await readJson(req);
     if (body.action === 'open-seats') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
+      const tripId = cleanText(body.tripId || body.trip_id, 80) || session.trip_id;
       const seats = await openCollaboratorAppSeats(db, {
         ownerCustomerId: session.customer_id,
-        tripId: session.trip_id,
+        tripId,
         seats: body.seats,
       });
       return sendJson(res, 200, { ok: true, seats });

@@ -15,6 +15,7 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 assert.equal(createHash('sha256').update(raw).digest('hex'), UPSTREAM_SHA256);
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
+assert.equal(rendered.includes('getAppConfig'), false);
 
 function sliceBetween(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);

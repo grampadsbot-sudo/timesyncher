@@ -59,6 +59,50 @@ export function logCheckoutConfig(env = process.env) {
   return health;
 }
 
+export function checkoutProductsBody(env = process.env) {
+  const checkout = checkoutConfigHealth(env);
+  if (!checkout.ok) {
+    throw new CheckoutConfigError(checkout.missing.join(', '));
+  }
+  const base = requiredConfigCents(env?.TIMESYNCHER_BASE_PRICE_CENTS, 'TIMESYNCHER_BASE_PRICE_CENTS');
+  const bump = requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+  const collaborate = requiredConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS');
+  const media = requiredConfigCents(env?.TIMESYNCHER_MEDIA_PRICE_CENTS, 'TIMESYNCHER_MEDIA_PRICE_CENTS');
+  return {
+    ok: true,
+    checkout,
+    currency: checkoutCurrency(env),
+    products: {
+      single: {
+        plan: 'single',
+        name: requiredConfigText(env?.TIMESYNCHER_SINGLE_NAME, 'TIMESYNCHER_SINGLE_NAME'),
+        description: env?.TIMESYNCHER_SINGLE_DESCRIPTION || '',
+        amount: base,
+      },
+      unlimited: {
+        plan: 'unlimited',
+        name: requiredConfigText(env?.TIMESYNCHER_UNLIMITED_NAME, 'TIMESYNCHER_UNLIMITED_NAME'),
+        description: env?.TIMESYNCHER_UNLIMITED_DESCRIPTION || '',
+        amount: bump,
+        totalAmount: base + bump,
+      },
+      collaborate: {
+        plan: 'telegram_collaborators_single_trip',
+        name: requiredConfigText(env?.TIMESYNCHER_COLLABORATOR_NAME, 'TIMESYNCHER_COLLABORATOR_NAME'),
+        description: env?.TIMESYNCHER_COLLABORATOR_DESCRIPTION || '',
+        amount: collaborate,
+        perVacation: true,
+      },
+      media: {
+        plan: 'owner_media',
+        name: requiredConfigText(env?.TIMESYNCHER_MEDIA_NAME, 'TIMESYNCHER_MEDIA_NAME'),
+        description: env?.TIMESYNCHER_MEDIA_DESCRIPTION || '',
+        amount: media,
+      },
+    },
+  };
+}
+
 export function customerCheckoutFailure(error) {
   if (error?.name !== 'CheckoutConfigError') return error;
   console.error(error.message);

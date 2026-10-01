@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { assertServedBundleClean, stripCannedBundle, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
+import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 import { applyLiveProductPatches, patchThingDetailRatings, LIST_LOGO_PATCH } from './trek-live-product-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
@@ -535,7 +535,8 @@ function dropServedTrekCallers(source) {
 
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const js = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
+  const patched = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
+  const js = stripServedQaCopy(rewriteAppConfigCallers(patched));
   assertServedBundleClean(js);
   return js;
 }
@@ -962,6 +963,12 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('[/bellagio|conservatory/i,') || js.includes('[/las vegas strip|las vegas/i,')) {
     throw new Error('Map pins must use Thing source coordinates, not a venue-name coordinate list.');
+  }
+  if (js.includes('Bi={JFK:') || js.includes('Si=[[/park central/i') || js.includes('ii=[[/61\\s+w')) {
+    throw new Error('Served bundle must not ship hardcoded airport or venue geocode tables.');
+  }
+  if (js.includes('Plan 75–90 min airport transfer') || js.includes('First stop / TBD')) {
+    throw new Error('Served bundle must not ship canned travel-gap or TBD labels.');
   }
   if (/children:ie\(G\)\|\|"[^"]/.test(js)) {
     throw new Error('A missing rental price must render blank.');

@@ -24,23 +24,29 @@ const sessionId = '44444444-5555-4666-8777-888888888888';
 const storeDir = mkdtempSync(path.join(tmpdir(), 'trip-site-url-'));
 const env = {
   TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com',
+  TIMESYNCHER_TRAVEL_BASE_URL: 'https://vacation-staging.timesyncher.com/',
   TIMESYNCHER_ONBOARDING_STORE: storeDir,
   TIMESYNCHER_EULA_VERSION: 'test-eula',
   TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
+  TIMESYNCHER_COLLABORATOR_NAME: 'Collaborator seat',
 };
 const savedEnv = {};
 const envKeys = [
   'TIMESYNCHER_SITE_BASE_URL',
+  'TIMESYNCHER_TRAVEL_BASE_URL',
   'TIMESYNCHER_ONBOARDING_STORE',
   'TIMESYNCHER_EULA_VERSION',
+  'TIMESYNCHER_COLLABORATOR_NAME',
   'BLOB_READ_WRITE_TOKEN',
   'VERCEL_BLOB_STORE_ID',
   'TIMESYNCHER_EULA_STORE',
 ];
 for (const key of envKeys) savedEnv[key] = process.env[key];
 process.env.TIMESYNCHER_SITE_BASE_URL = env.TIMESYNCHER_SITE_BASE_URL;
+process.env.TIMESYNCHER_TRAVEL_BASE_URL = env.TIMESYNCHER_TRAVEL_BASE_URL;
 process.env.TIMESYNCHER_ONBOARDING_STORE = storeDir;
 process.env.TIMESYNCHER_EULA_VERSION = env.TIMESYNCHER_EULA_VERSION;
+process.env.TIMESYNCHER_COLLABORATOR_NAME = env.TIMESYNCHER_COLLABORATOR_NAME;
 delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL_BLOB_STORE_ID;
 delete process.env.TIMESYNCHER_EULA_STORE;
@@ -129,6 +135,7 @@ try {
         first_name: 'Ada',
         last_name: 'Lee',
         plan: 'single',
+        trip_title: 'Sample trip',
       },
     },
     env,
@@ -143,6 +150,7 @@ try {
     contact: { email: 'ada@example.com', firstName: 'Ada', lastName: 'Lee' },
     plan: 'single',
     amountCents: 3700,
+    metadata: { trip_title: 'Sample trip' },
     env,
   });
   assertNoPurchaseSlug(couponDb.calls);

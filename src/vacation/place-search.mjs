@@ -1,10 +1,9 @@
 import { categoryRadiusMeters, firstPassSearchLimit, jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
+import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
 import { writeRatings } from './write-ratings.mjs';
 const DEDUPE_METERS = 250;
-const USER_AGENT = 'TimeSyncherVacation/1.0';
-const PLACE_SOURCES = ['prior_db', 'osm', 'brave'];
-const SOURCE_IDS = new Set(PLACE_SOURCES);
+const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
 const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
 const NOT_A_PLACE = /^(?:the|a|an|this|that|our|my|your|new|next|last|current|week|weeks|night|nights|day|days|morning|afternoon|evening|weekend|month|year|time|trip|trips|vacation|vacations|staycation|holiday|bot|staging|one|it|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)$/i;
@@ -116,6 +115,7 @@ export function queriesFromWantedThings(wantedThings = []) {
     if (!name || name.length < 2 || NOT_A_PLACE.test(name)) continue;
     const kind = String(thing?.kind || thing?.category || '').trim().toLowerCase();
     const place = PLACE_KINDS.has(kind);
+    if (place && !intakeThingHasProperName(name)) continue;
     const category = place ? kind : (kind || 'decision');
     const key = `${category}:${normalizeName(name)}`;
     if (seen.has(key)) continue;
@@ -211,7 +211,7 @@ async function readJson(fetchImpl, url, { headers, method, body, label }) {
       method: method || 'GET',
       headers: {
         accept: 'application/json',
-        'user-agent': USER_AGENT,
+        'user-agent': 'TimeSyncherVacation/1.0',
         ...(headers || {}),
       },
       body,
@@ -652,7 +652,7 @@ export async function searchPlaces({
     places,
     notes,
     queries: searchQueries,
-    queried: infoQueries.length ? [...PLACE_SOURCES, 'tavily'] : PLACE_SOURCES,
+    queried: infoQueries.length ? [...SOURCE_IDS, 'tavily'] : [...SOURCE_IDS],
     elapsedMs: Date.now() - started,
     sourceCounts: countSources(places),
   };

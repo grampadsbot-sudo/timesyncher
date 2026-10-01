@@ -95,7 +95,8 @@ export async function upsertCustomer(db, contact, metadata = {}) {
 }
 
 async function ensureTrip(db, customerId, metadata) {
-  const title = cleanText(metadata.trip_title || 'TimeSyncher Vacation Setup', 180) || 'TimeSyncher Vacation Setup';
+  const title = cleanText(metadata.trip_title, 180);
+  if (!title) throw new Error('trip title is required for onboarding purchase');
   const vacationDate = cleanText(metadata.vacation_date, 40);
   const rows = await db`
     insert into trips (customer_id, title, start_date, preferences, status, metadata)
@@ -305,7 +306,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
-      text: loadDefaultEulaText(),
+      text: loadDefaultEulaText(env),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
   });

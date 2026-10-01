@@ -15,15 +15,28 @@ import { assignTripSiteUrl, buildOnboardingFromCoupon } from '../src/vacation/on
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
 const site = 'https://vacation-staging.timesyncher.com';
+
+const fixtureEnv = {
+  TIMESYNCHER_SITE_BASE_URL: site,
+  TIMESYNCHER_ONBOARDING_STORE: storeDir,
+  TIMESYNCHER_EULA_VERSION: 'test-eula',
+  RESEND_API_KEY: 'test-key',
+  TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
+  TIMESYNCHER_BASE_PRICE_CENTS: '3700',
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
+  TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS: '2100',
+  TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
+  TIMESYNCHER_SINGLE_NAME: 'Single vacation',
+  TIMESYNCHER_UNLIMITED_NAME: 'Unlimited add-on',
+  TIMESYNCHER_COLLABORATOR_NAME: 'Collaborator seat',
+  TIMESYNCHER_MEDIA_NAME: 'Photo memories',
+};
+
 const saved = {};
-for (const key of ['TIMESYNCHER_SITE_BASE_URL', 'TIMESYNCHER_ONBOARDING_STORE', 'TIMESYNCHER_EULA_VERSION', 'BLOB_READ_WRITE_TOKEN', 'VERCEL_BLOB_STORE_ID', 'TIMESYNCHER_EULA_STORE', 'RESEND_API_KEY', 'TIMESYNCHER_CHECKOUT_CURRENCY']) {
+for (const key of ['TIMESYNCHER_SITE_BASE_URL', 'TIMESYNCHER_ONBOARDING_STORE', 'TIMESYNCHER_EULA_VERSION', 'BLOB_READ_WRITE_TOKEN', 'VERCEL_BLOB_STORE_ID', 'TIMESYNCHER_EULA_STORE', 'RESEND_API_KEY', 'TIMESYNCHER_CHECKOUT_CURRENCY', 'TIMESYNCHER_BASE_PRICE_CENTS', 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS', 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS', 'TIMESYNCHER_MEDIA_PRICE_CENTS', 'TIMESYNCHER_SINGLE_NAME', 'TIMESYNCHER_UNLIMITED_NAME', 'TIMESYNCHER_COLLABORATOR_NAME', 'TIMESYNCHER_MEDIA_NAME']) {
   saved[key] = process.env[key];
 }
-process.env.TIMESYNCHER_CHECKOUT_CURRENCY = 'usd';
-process.env.TIMESYNCHER_SITE_BASE_URL = site;
-process.env.TIMESYNCHER_ONBOARDING_STORE = storeDir;
-process.env.TIMESYNCHER_EULA_VERSION = 'test-eula';
-process.env.RESEND_API_KEY = 'test-key';
+Object.assign(process.env, fixtureEnv);
 delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL_BLOB_STORE_ID;
 delete process.env.TIMESYNCHER_EULA_STORE;
@@ -290,19 +303,20 @@ try {
     contact: { email: 'ada.zero@example.com', firstName: 'Ada', lastName: 'Zero' },
     plan: 'single',
     amountCents: 0,
-    metadata: { couponCheckout: true },
-    env: process.env,
+    metadata: { couponCheckout: true, trip_title: 'Sample trip' },
+    env: fixtureEnv,
   });
   assert.equal(onboarding.contact.firstName, 'Ada');
   assert.equal(state.trip.destination, null);
   assert.equal(state.trip.start_date, null);
-  const sent = await queueOrSendPurchaseEmail(db, onboarding, process.env);
+  const sent = await queueOrSendPurchaseEmail(db, onboarding, fixtureEnv);
   assert.equal(sent.status, 'sent');
   const launchUrl = new URL(onboarding.vacationAppUrl);
   assert.equal(launchUrl.origin + launchUrl.pathname, `${site}/vacation-app.html`);
   assert.equal(launchUrl.searchParams.get('session'), onboarding.token);
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
   assert.equal(onboarding.publicSlug, '');
+  assert.equal(onboarding.publicUrl, '');
   const tripSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
   assert.equal(tripSite.publicSlug.startsWith('intake-'), true);
 
@@ -373,7 +387,15 @@ try {
   useSharedTripDatabase(null);
   globalThis.fetch = originalFetch;
   await new Promise((resolve) => server.close(resolve));
-  await rm(storeDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  try {
+    await rm(storeDir, { recursive: true, force: true, maxRetries: 8, retryDelay: 100 });
+  } catch (error) {
+    if (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY' && error?.code !== 'EPERM') throw error;
+  }
+  for (const [key, value] of Object.entries(saved)) {
+    if (value == null) delete process.env[key];
+    else process.env[key] = value;
+  }
 }
 
 console.log('purchase email app link passed');

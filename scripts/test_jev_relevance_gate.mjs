@@ -23,7 +23,7 @@ let fetched = false;
 await assert.rejects(
   () => fillTripIntake({
     destination: 'Lisbon',
-    wantedThings: [{ name: 'restaurant', kind: 'restaurant' }],
+    wantedThings: [{ name: 'River Lantern', kind: 'restaurant' }],
     env: searchEnv,
     priorPlaces: [],
     fetchImpl: async () => {
@@ -37,7 +37,7 @@ assert.equal(fetched, false);
 
 await assert.rejects(
   () => runPublicResearch({
-    wantedThings: [{ name: 'restaurant', kind: 'restaurant' }],
+    wantedThings: [{ name: 'River Lantern', kind: 'restaurant' }],
     artifacts: { destination: 'Lisbon', requestText: 'a restaurant in Lisbon' },
     env: { BRAVE_SEARCH_API_KEY: 'brave-test-key' },
     priorPlaces: [],
@@ -59,7 +59,7 @@ const allowedHosts = new Set([
 ]);
 const scored = await fillTripIntake({
   destination: 'Lisbon',
-  wantedThings: [{ name: 'restaurant', kind: 'restaurant' }],
+  wantedThings: [{ name: 'River Lantern', kind: 'restaurant' }],
   env: { ...searchEnv, OPENROUTER_API_KEY: 'test-openrouter-key' },
   priorPlaces: [],
   fetchImpl: async (url, options) => {

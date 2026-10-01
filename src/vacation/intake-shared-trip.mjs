@@ -59,10 +59,11 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
-function assignDates(thing, year, tripDates) {
+export function assignDates(thing, year, tripDates) {
+  const whenText = [thing.customerWhen, thing.whenLabel].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
+  if (!whenText) return [];
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
   const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
-  if (!unique.length) return tripDates.slice(0, 1);
   return unique;
 }
 

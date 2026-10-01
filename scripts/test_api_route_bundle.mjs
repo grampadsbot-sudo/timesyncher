@@ -86,6 +86,7 @@ function destUrl(route, match, search = '') {
 const former = [
   { path: '/api/admin-onboardings', handler: 'admin-onboardings' },
   { path: '/api/checkout-config', handler: 'checkout-config' },
+  { path: '/api/checkout-products', handler: 'checkout-products' },
   { path: '/api/checkout-coupon', handler: 'checkout-coupon' },
   { path: '/api/create-payment-intent', handler: 'create-payment-intent' },
   { path: '/api/eula?action=accept-page&sessionId=sess', handler: 'eula', url: '/api/eula?action=accept-page&sessionId=sess' },

@@ -4,7 +4,7 @@ import { requireMediaBindAuth } from './auth.mjs';
 import { cleanText, headerValue, readJson, sendJson } from './http.mjs';
 import { hasDatabase } from './db.mjs';
 import {
-  TREK_SHARED_API_BASE,
+  trekSharedApiBase,
   chooseMediaStorage,
   mediaKindFromMime,
   mergeBindingsIntoShared,
@@ -16,7 +16,11 @@ import {
 import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
 const MAX_BYTES = Number.parseInt(process.env.TIMESYNCHER_MEDIA_BIND_MAX_BYTES || '20971520', 10);
-const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
+function trekPublic() {
+  const fromTrek = String(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || '').replace(/\/+$/, '');
+  if (fromTrek) return fromTrek;
+  return trekSharedApiBase();
+}
 
 function cors(res) {
   res.setHeader('access-control-allow-origin', '*');
@@ -72,7 +76,7 @@ function opsHelp(host = 'https://<this-preview>') {
 }
 
 async function fetchShared(shareToken) {
-  const url = `${TREK_PUBLIC}/api/shared/${encodeURIComponent(shareToken)}/?_=${Date.now()}`;
+  const url = `${trekPublic()}/api/shared/${encodeURIComponent(shareToken)}/?_=${Date.now()}`;
   const response = await fetch(url, { headers: { accept: 'application/json' } });
   const json = await response.json().catch(() => ({}));
   if (!response.ok) {

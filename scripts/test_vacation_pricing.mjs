@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import {
   CheckoutConfigError,
   checkoutAmounts,
@@ -14,6 +15,7 @@ import { consumeCoupon } from '../src/vacation/coupons.mjs';
 import { mediaPriceCents, ownerMediaAddOns, ownerMediaCoversTrip, recordOwnerMediaPurchase } from '../src/vacation/media-checkout.mjs';
 import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 import { orderDetails } from '../routes/checkout-coupon.mjs';
+import handler from '../api/[...route].mjs';
 
 const env = {
   TIMESYNCHER_BASE_PRICE_CENTS: '3700',
@@ -247,8 +249,91 @@ for (const file of currencyFiles) {
 const indexPage = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 assert.match(indexPage, /id="waivedAmount"/);
 assert.match(indexPage, /totalCents: 0, waivedCents: cents/);
-assert.match(indexPage, /checkout config missing: ' \+ key/);
+assert.match(indexPage, /tsPricedCents/);
+assert.doesNotMatch(indexPage, /throw new Error\('checkout config missing: ' \+ key\)/);
 assert.match(indexPage, /TIMESYNCHER_BASE_PRICE_CENTS/);
+assert.match(indexPage, /\/checkout-price-client\.js/);
+assert.match(readFileSync(new URL('../public/checkout-price-client.js', import.meta.url), 'utf8'), /\/api\/checkout-products/);
 assert.doesNotMatch(indexPage, /\|\|\s*3700|\$37|\+\$27|\+\$5/);
+
+const catalogEnv = {
+  TIMESYNCHER_BASE_PRICE_CENTS: '3700',
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
+  TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS: '2100',
+  TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
+  TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
+  TIMESYNCHER_SINGLE_NAME: 'Single vacation',
+  TIMESYNCHER_UNLIMITED_NAME: 'Unlimited add-on',
+  TIMESYNCHER_COLLABORATOR_NAME: 'Collaborator seat',
+  TIMESYNCHER_MEDIA_NAME: 'Photo memories',
+};
+const savedCatalogEnv = {};
+for (const key of Object.keys(catalogEnv)) {
+  savedCatalogEnv[key] = process.env[key];
+  process.env[key] = catalogEnv[key];
+}
+const catalogRes = {
+  statusCode: 0,
+  headers: {},
+  body: '',
+  setHeader(name, value) { this.headers[name.toLowerCase()] = value; },
+  end(payload) { this.body = String(payload || ''); },
+};
+await handler({ method: 'GET', url: '/api/checkout-products', headers: {}, query: { route: ['checkout-products'] } }, catalogRes);
+assert.equal(catalogRes.statusCode, 200);
+assert.match(catalogRes.body, /"amount":\s*3700/);
+assert.match(catalogRes.body, /"currency":\s*"usd"/);
+const stripeOff = {
+  statusCode: 0,
+  headers: {},
+  body: '',
+  setHeader(name, value) { this.headers[name.toLowerCase()] = value; },
+  end(payload) { this.body = String(payload || ''); },
+};
+await handler({ method: 'GET', url: '/api/checkout-config', headers: {}, query: { route: ['checkout-config'] } }, stripeOff);
+assert.equal(stripeOff.statusCode, 503);
+for (const key of Object.keys(catalogEnv)) {
+  delete process.env[key];
+}
+const catalogMissing = {
+  statusCode: 0,
+  headers: {},
+  body: '',
+  setHeader(name, value) { this.headers[name.toLowerCase()] = value; },
+  end(payload) { this.body = String(payload || ''); },
+};
+await handler({ method: 'GET', url: '/api/checkout-products', headers: {}, query: { route: ['checkout-products'] } }, catalogMissing);
+assert.equal(catalogMissing.statusCode, 503);
+assert.match(catalogMissing.body, /checkout config missing: TIMESYNCHER_BASE_PRICE_CENTS/);
+for (const [key, value] of Object.entries(savedCatalogEnv)) {
+  if (value == null) delete process.env[key];
+  else process.env[key] = value;
+}
+
+execFileSync('npm', ['run', 'build'], {
+  stdio: 'pipe',
+  env: { ...process.env, VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || '0123456789abcdef0123456789abcdef01234567' },
+});
+const centsLiteral = /\b(?:3700|2700|2100|1700)\b/;
+for (const file of servedPages) {
+  const distPath = new URL(`../dist/${file}`, import.meta.url);
+  try {
+    const text = stripRegexGroups(readFileSync(distPath, 'utf8'));
+    assert.doesNotMatch(text, priceLiteral, `dist/${file} contains a literal price`);
+    assert.doesNotMatch(text, centsLiteral, `dist/${file} contains a cents literal`);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+const distAssetDir = new URL('../dist/assets/', import.meta.url);
+for (const name of readdirSync(distAssetDir)) {
+  if (!name.endsWith('.js') || name === 'index-BKun7ofk.js') continue;
+  const text = stripRegexGroups(readFileSync(new URL(name, distAssetDir), 'utf8'));
+  assert.doesNotMatch(text, priceLiteral, `dist/assets/${name} contains a literal price`);
+  assert.doesNotMatch(text, centsLiteral, `dist/assets/${name} contains a cents literal`);
+}
+const trekBundleText = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+assert.doesNotMatch(trekBundleText, /\$37|\$27|\$21|\$17|Plan 75–90 min airport transfer|First stop \/ TBD|Bi=\{JFK:/);
+assert.doesNotMatch(trekBundleText, /\b3700\b|\b2700\b|\b2100\b/);
 
 console.log('vacation pricing ok');
