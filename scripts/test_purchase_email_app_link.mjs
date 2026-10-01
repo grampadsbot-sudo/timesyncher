@@ -10,7 +10,7 @@ import { useOnboardingLookup } from '../routes/eula.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrl, buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
@@ -70,7 +70,10 @@ function db(strings, ...values) {
   }
   if (/update trips/i.test(text)) {
     const patch = values.find((value) => value && value.publicSlug);
-    if (patch && state.trip) state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
+    if (patch && state.trip) {
+      state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
+      if (/returning/i.test(text)) return [{ public_slug: patch.publicSlug }];
+    }
     return [];
   }
   if (/insert into entitlements/i.test(text)) return [{ id: state.entitlementId }];
@@ -94,8 +97,9 @@ function db(strings, ...values) {
   if (/insert into outbound_emails/i.test(text) || /update outbound_emails/i.test(text)) return [{ id: 'email-1' }];
   if (/update onboarding_sessions/i.test(text)) return [];
   if (/metadata->>'publicSlug'/i.test(text)) {
-    const slug = values[0];
     const meta = state.trip?.metadata || {};
+    if (/as public_slug/i.test(text)) return [{ public_slug: meta.publicSlug || '' }];
+    const slug = values[0];
     if (meta.publicSlug === slug && String(meta.intakeShare) === 'true') return [{ ...state.trip }];
     return [];
   }
@@ -246,9 +250,11 @@ try {
   assert.equal(launchUrl.origin + launchUrl.pathname, `${site}/vacation-app.html`);
   assert.equal(launchUrl.searchParams.get('session'), onboarding.token);
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
-  assert.equal(onboarding.publicSlug.startsWith('intake-'), true);
+  assert.equal(onboarding.publicSlug, '');
+  const tripSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
+  assert.equal(tripSite.publicSlug.startsWith('intake-'), true);
 
-  const migrated = await intakeSharedResponse(onboarding.publicSlug, db);
+  const migrated = await intakeSharedResponse(tripSite.publicSlug, db);
   assert.equal(Boolean(migrated?.trip), true);
   assert.equal(migrated.error, undefined);
   assert.deepEqual(migrated.places, []);
