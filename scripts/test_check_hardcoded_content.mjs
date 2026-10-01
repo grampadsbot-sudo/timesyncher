@@ -300,6 +300,7 @@ for (const row of baseline) {
 }
 
 const repoRun = runGuard(repo);
+assert.equal(repoRun.status, 0, repoRun.stderr);
 const liveSummary = `${repoRun.stdout}\n${repoRun.stderr}`.match(/hardcoded content check (?:passed|failed) \((\d+) report, (\d+) fail\)/);
 assert.ok(liveSummary, `${repoRun.stdout}\n${repoRun.stderr}`);
 const liveReport = Number(liveSummary[1]);
@@ -308,18 +309,16 @@ const failRows = identities(repoRun.stderr);
 assert.equal(failRows.length, liveFail);
 // The travel download is gone and the served bundle is stripped. A live
 // NO-CROSS-ORIGIN-BUNDLE, BUNDLE-LEAK, or EVASION hit still fails the run.
-// Unlimited-vacation wording fails and stays out of the baseline.
-// Foursquare Places API hits fail until Search removes the client. They are not baselined.
+// Customer-facing unlimited-vacation wording still fails and stays out of the baseline.
+// The paid Foursquare client is gone. Those hosts stay out of the baseline.
+// The free OpenStreetMap places URL is not one of those hosts.
 const foursquarePaid = /^(?:api\.foursquare\.com|places-api\.foursquare\.com|\/v3\/places|X-Places-Api-Version|foursquare-sdk) ::/;
-assert.deepEqual(failRows.filter((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE'), []);
-for (const row of failRows) assert.equal(row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.rule === 'BUNDLE-LEAK' || row.rule === 'EVASION' || row.rule === 'BAR-UNLIMITED-WORDING' || row.rule === 'NO-PAID-PLACES-API', true, row.rule);
-assert.equal(failRows.some((row) => row.rule === 'BAR-UNLIMITED-WORDING'), true);
-for (const row of failRows.filter((row) => row.rule === 'BAR-UNLIMITED-WORDING' || row.rule === 'NO-PAID-PLACES-API')) {
-  assert.equal(baseline.some((entry) => contentIdentity(entry) === contentIdentity(row)), false, contentIdentity(row));
-}
+assert.equal(liveFail, 0);
+assert.deepEqual(failRows, []);
+assert.equal(baseline.some((row) => row.rule === 'BAR-UNLIMITED-WORDING'), false);
 assert.equal(baseline.some((row) => row.rule === 'NO-PAID-PLACES-API' && foursquarePaid.test(row.symbol_or_pattern)), false);
 assert.equal(failRows.some((row) => row.file === 'scripts/check-code-ratchet.mjs' || row.file === 'scripts/check-hardcoded-content.mjs'), false);
-assert.equal(failRows.some((row) => row.file === 'scripts/test_place_search.mjs' && row.rule === 'NO-PAID-PLACES-API'), true);
+assert.equal(failRows.some((row) => row.file === 'scripts/test_place_search.mjs' && row.rule === 'NO-PAID-PLACES-API'), false);
 assert.equal(failRows.some((row) => row.file === 'shared-app.html'), false);
 assert.equal(baseline.some((row) => row.rule === 'NO-CROSS-ORIGIN-BUNDLE' || row.inventory_id === 'NO-CROSS-ORIGIN-BUNDLE'), false);
 assert.equal(baseline.some((row) => row.rule === 'BUNDLE-LEAK' || row.inventory_id === 'BUNDLE-LEAK'), false);
@@ -330,9 +329,9 @@ for (const row of failRows) {
 }
 assert.equal(liveReport <= baseline.length, true);
 const judged = classify(scanRoots(repo), baseline);
+assert.equal(judged.fail.length, 0);
 assert.equal(judged.fail.length, liveFail);
 assert.equal(judged.report.length, liveReport);
-assert.ok(judged.fail.every((finding) => finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION' || finding.rule === 'BAR-UNLIMITED-WORDING' || finding.rule === 'NO-PAID-PLACES-API'));
 const liveRows = identities(repoRun.stdout);
 assert.deepEqual(
   liveRows.map(contentIdentity).sort(),
@@ -473,12 +472,12 @@ assert.equal(underRun.status, 0, underRun.stderr);
 assert.doesNotMatch(underRun.stdout, /API-FN-CAP/);
 assert.doesNotMatch(underRun.stdout, /BUILD-STAMP/);
 
-const shiftSource = 'src/vacation/thing-logo-capture.mjs';
+const shiftSource = 'scripts/vacation-app-reply-rules.mjs';
 const shiftOriginal = fs.readFileSync(path.join(repo, shiftSource), 'utf8');
 const originalHits = scanText(shiftSource, shiftOriginal);
 const shiftBaseline = baseline.filter((row) => row.file === shiftSource);
 assert.equal(shiftBaseline.length >= 2, true);
-const removed = shiftBaseline.find((row) => row.rule === 'HC-PLACE-LIST' && row.symbol_or_pattern === 'BRAND_LOGOS');
+const removed = shiftBaseline.find((row) => shiftOriginal.includes(row.symbol_or_pattern) && originalHits.some((finding) => contentIdentity(finding) === contentIdentity(row)));
 assert.ok(removed);
 const keptHit = originalHits.find((finding) => contentIdentity(finding) !== contentIdentity(removed) && shiftOriginal.includes(finding.symbol_or_pattern));
 assert.ok(keptHit);
@@ -652,7 +651,7 @@ const apiVersionPaid = paidPlacesFindings(apiVersionFile, `${apiVersionText}\n`)
 writeTree(apiVersionDir, { [apiVersionFile]: `${apiVersionText}\n` }, apiVersionPaid);
 const apiVersionRun = runGuard(apiVersionDir);
 assert.equal(apiVersionRun.status, 0, apiVersionRun.stderr);
-assert.equal(apiVersionPaid.length > 0, true);
+assert.equal(apiVersionPaid.length, 0);
 assert.doesNotMatch(apiVersionRun.stderr, /DATE-LITERAL/);
 
 const tripDateFile = 'src/vacation/trip-date.mjs';
@@ -1209,7 +1208,8 @@ assert.equal(padRun.status, 1, padRun.stdout);
 assertHit(padRun.stderr, 'FAIL', 'EVASION', padFile, padHits[0].symbol_or_pattern);
 assert.equal(baseline.some((row) => row.rule === 'EVASION' || row.inventory_id === 'EVASION'), false);
 assert.equal(baseline.some((row) => row.file === 'public/assets/index-0J54vUO3.js' || row.file === 'public/assets/index-TimeSyncherVacationLogin.js'), false);
-assert.equal(failRows.every((row) => row.rule === 'BAR-UNLIMITED-WORDING' || (row.rule === 'NO-PAID-PLACES-API' && foursquarePaid.test(row.symbol))), true);
-assert.equal(failRows.some((row) => row.rule === 'BAR-UNLIMITED-WORDING'), true);
+assert.equal(failRows.length, 0);
+assert.equal(failRows.some((row) => row.rule === 'BAR-UNLIMITED-WORDING'), false);
+assert.equal(baseline.some((row) => foursquarePaid.test(row.symbol_or_pattern)), false);
 
 process.stdout.write('hardcoded content check test passed\n');
