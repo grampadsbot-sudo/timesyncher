@@ -1129,36 +1129,6 @@
   },
   {
     "rule": "DEAD-CODE",
-    "file": "src/vacation/checkout-coupons.mjs",
-    "symbol": "export:couponContactFromBody",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/checkout-coupons.mjs",
-    "symbol": "export:createCheckoutCoupon",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/checkout-coupons.mjs",
-    "symbol": "export:generateCouponCode",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/checkout-coupons.mjs",
-    "symbol": "export:listCheckoutCoupons",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/checkout-coupons.mjs",
-    "symbol": "export:redeemCheckoutCoupon",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
     "file": "src/vacation/checkout-pricing.mjs",
     "symbol": "export:CHECKOUT_PRICE_CONFIG",
     "note": "existing; ratchet only shrinks"
