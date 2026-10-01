@@ -14,6 +14,12 @@ const env = {
   TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://trek-upstream.example.com/',
 };
 
+const savedEnv = {};
+for (const key of Object.keys(env)) {
+  savedEnv[key] = process.env[key];
+  process.env[key] = env[key];
+}
+
 const tripId = '01234567-89ab-4cde-8f01-23456789abcd';
 assert.equal(intakeShareSlug(tripId), 'intake-0123456789ab');
 assert.equal(sharedTripWebsiteUrl('intake-0123456789ab', env), 'https://vacation-staging.timesyncher.com/shared/intake-0123456789ab/');
@@ -52,6 +58,10 @@ try {
   assert.equal(miss.statusCode, 404);
   assert.equal(upstreamUrl, '');
 } finally {
+  for (const [key, value] of Object.entries(savedEnv)) {
+    if (value == null) delete process.env[key];
+    else process.env[key] = value;
+  }
   useSharedTripDatabase(null);
   globalThis.fetch = originalFetch;
 }
