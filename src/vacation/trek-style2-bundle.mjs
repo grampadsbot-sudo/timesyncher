@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { assertServedBundleClean, stripCannedBundle, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
+import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 import { applyLiveProductPatches, patchThingDetailRatings, LIST_LOGO_PATCH } from './trek-live-product-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
@@ -533,20 +533,10 @@ function dropServedTrekCallers(source) {
   return next;
 }
 
-/** Served bundle drops getAppConfig from the auth client; rewrite every caller to a no-op promise. */
-export function rewriteAppConfigCallers(source = '') {
-  let js = String(source || '');
-  js = js.replace(/\([A-Za-z_$][A-Za-z0-9_$]*=Cr\.getAppConfig\)==null\|\|[A-Za-z_$][A-Za-z0-9_$]*\.call\(Cr\)/g, 'Promise.resolve(null)');
-  js = js.replace(/await Cr\.getAppConfig\(\)/g, 'await Promise.resolve(null)');
-  js = js.replace(/Cr\.getAppConfig\(\)/g, 'Promise.resolve(null)');
-  if (js.includes('Cr.getAppConfig')) throw new Error('trek bundle still references Cr.getAppConfig');
-  return js;
-}
-
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
   const patched = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
-  const js = rewriteAppConfigCallers(patched);
+  const js = stripServedQaCopy(rewriteAppConfigCallers(patched));
   assertServedBundleClean(js);
   return js;
 }

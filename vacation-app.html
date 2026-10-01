@@ -240,15 +240,7 @@
     .thing-notes, .collaborator-notes { margin: 12px 0; padding: 0; }
     .collaborator-notes { border-top: 1px solid var(--line); padding-top: 12px; }
     .collaborator-notes h2 { margin: 0 0 8px; font-size: 16px; }
-    .collaborator-invite {
-      margin: 0 clamp(12px, 3vw, 24px) 12px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fff;
-      display: grid;
-      gap: 8px;
-    }
+    .collaborator-invite { margin: 0 clamp(12px, 3vw, 24px) 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; display: grid; gap: 8px; }
     .collaborator-invite label { display: grid; gap: 4px; font-size: 13px; }
     .collaborator-invite input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
     .messages {
@@ -464,6 +456,7 @@
 </head>
 <body>
   <div id="root"></div>
+  <script src="/vacation-app-collaborator-invite.js"></script>
   <script type="module">
     import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
     const root = document.getElementById('root');
@@ -647,15 +640,7 @@
           return `<article class="bubble ${user ? 'user' : ''}"><small>${safe(user ? (turn.authorLabel || '') : (turn.authorLabel || 'TimeSyncher'))}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
         }).join('')
         : '';
-      const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>
-            ${!hasSite && !state.session?.seat ? `<form class="collaborator-invite" id="collaboratorInviteForm" aria-label="Invite collaborator">
-              <p>Invite a collaborator by email before the trip site is ready.</p>
-              <label>Name<input name="name" type="text" required autocomplete="name"></label>
-              <label>Email<input name="email" type="email" required autocomplete="email"></label>
-              <button type="submit">Send invite</button>
-              <div class="error" id="collaboratorInviteError" hidden></div>
-            </form>` : ''}
-            <form class="composer" id="composer">
+      const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>${!hasSite && !state.session?.seat ? `<form class="collaborator-invite" id="collaboratorInviteForm" aria-label="Invite collaborator"><p>Invite a collaborator by email before the trip site is ready.</p><label>Name<input name="name" type="text" required autocomplete="name"></label><label>Email<input name="email" type="email" required autocomplete="email"></label><button type="submit">Send invite</button><div class="error" id="collaboratorInviteError" hidden></div></form>` : ''}<form class="composer" id="composer">
               <div class="attachment-row" id="attachmentRow"></div>
               <div class="compose-grid">
                 <button class="icon-button" id="attachButton" type="button" title="Add vacation files">${icon.clip}</button>
@@ -713,46 +698,7 @@
       });
       bindVoice();
       document.getElementById('composer').addEventListener('submit', sendMessage);
-      const inviteForm = document.getElementById('collaboratorInviteForm');
-      if (inviteForm) inviteForm.addEventListener('submit', submitCollaboratorInvite);
-    }
-
-    async function submitCollaboratorInvite(event) {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const errorBox = document.getElementById('collaboratorInviteError');
-      const button = form.querySelector('button[type="submit"]');
-      const trip = currentTrip();
-      if (!trip?.id) {
-        errorBox.hidden = false;
-        errorBox.textContent = 'No vacation is selected yet.';
-        return;
-      }
-      button.disabled = true;
-      errorBox.hidden = true;
-      try {
-        const data = new FormData(event.currentTarget);
-        const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            action: 'open-seats',
-            tripId: trip.id,
-            seats: [{ name: data.get('name'), email: data.get('email') }],
-          }),
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok || payload.ok === false) throw new Error(payload.error || 'Unable to send collaborator invite.');
-        form.reset();
-        const messages = document.getElementById('messages');
-        messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${safe(`Invite sent to ${payload.seats?.[0]?.email || data.get('email')}.`)}</article>`);
-        messages.scrollTop = messages.scrollHeight;
-      } catch (error) {
-        errorBox.hidden = false;
-        errorBox.textContent = error.message || 'Unable to send collaborator invite.';
-      } finally {
-        button.disabled = false;
-      }
+      if (window.tsBindCollaboratorInvite) window.tsBindCollaboratorInvite({ sessionToken, safe, currentTrip, getMessagesEl: () => document.getElementById('messages') });
     }
 
     function renderAttachments() {

@@ -20,7 +20,7 @@ assert.match(page, /alt="TimeSyncher"/);
 assert.match(page, /function vacationSelector/);
 assert.match(page, /if \(!trips\.length\)/);
 assert.match(page, /id="collaboratorInviteForm"/);
-assert.match(page, /action: 'open-seats'/);
+assert.match(page, /vacation-app-collaborator-invite\.js/);
 assert.doesNotMatch(page, /id="tripLabel"/);
 assert.doesNotMatch(page, /no vacations yet/);
 assert.match(page, /function tripBadge/);

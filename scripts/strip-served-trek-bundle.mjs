@@ -106,6 +106,7 @@ export function stripCannedBundle(source) {
     counts.push({ id: rule.id, count });
   }
   out = stripHardcodedGeoTables(out);
+  out = stripServedQaCopy(out);
   assertServedBundleClean(out);
   return { source: out, counts };
 }
@@ -117,4 +118,38 @@ export function assertServedBundleClean(source) {
       throw new Error(`served bundle still contains ${forbidden}`);
     }
   }
+  for (const needle of SERVED_QA_NEEDLES) {
+    if (text.includes(needle)) {
+      throw new Error(`served bundle still contains QA needle ${needle}`);
+    }
+  }
+}
+
+/** Served bundle drops getAppConfig from the auth client; rewrite every caller to a no-op promise. */
+export function rewriteAppConfigCallers(source = '') {
+  let js = String(source || '');
+  js = js.replace(/\([A-Za-z_$][A-Za-z0-9_$]*=Cr\.getAppConfig\)==null\|\|[A-Za-z_$][A-Za-z0-9_$]*\.call\(Cr\)/g, 'Promise.resolve(null)');
+  js = js.replace(/await Cr\.getAppConfig\(\)/g, 'await Promise.resolve(null)');
+  js = js.replace(/Cr\.getAppConfig\(\)/g, 'Promise.resolve(null)');
+  if (js.includes('Cr.getAppConfig')) throw new Error('trek bundle still references Cr.getAppConfig');
+  return js;
+}
+
+export const SERVED_QA_NEEDLES = [
+  'Anniversary Escape',
+  '$1,180 under target',
+  '75-90 min airport transfer',
+  'Plan 75–90 min airport transfer',
+  'First stop / TBD',
+  'speedishuttle',
+  'Bi={JFK:',
+  'Craig_Kim_NYC_June_2026',
+  'placeholder:"Craig"',
+];
+
+export function stripServedQaCopy(source = '') {
+  let js = String(source || '');
+  js = js.replace(/"TBD"/g, '""');
+  js = js.replace(/Quote TBD/g, '');
+  return js;
 }

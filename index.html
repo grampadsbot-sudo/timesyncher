@@ -720,11 +720,7 @@
       photoRow.hidden = !photoMemories.checked;
       tax.textContent = 'Calculated by Stripe';
       try {
-        if (!productConfig.products?.single?.amount) {
-          waivedRow.hidden = true;
-          total.textContent = '';
-          return;
-        }
+        if (!productConfig.products?.single?.amount) { waivedRow.hidden = true; total.textContent = ''; return; }
         syncPhotoCopy();
         const cents = orderCents();
         const charge = couponMode() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };

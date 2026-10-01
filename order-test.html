@@ -161,7 +161,7 @@
         <form id="orderForm">
           <div id="step1" role="tabpanel" aria-labelledby="step1Pill">
             <div class="fields">
-              <label>First name<input name="firstName" autocomplete="given-name" placeholder="Craig" required /></label>
+              <label>First name<input name="firstName" autocomplete="given-name" placeholder="First name" required /></label>
               <label>Last name<input name="lastName" autocomplete="family-name" placeholder="Doe" required /></label>
               <label class="full">Email<input type="email" name="email" autocomplete="email" placeholder="you@example.com" required /></label>
               <label>Phone<input name="phone" autocomplete="tel" placeholder="(555) 123-4567" /></label>
@@ -377,11 +377,7 @@
       photoRow.hidden = !photoMemories.checked;
       tax.textContent = 'Calculated by Stripe';
       try {
-        if (!productConfig.products?.single?.amount) {
-          waivedRow.hidden = true;
-          total.textContent = '';
-          return;
-        }
+        if (!productConfig.products?.single?.amount) { waivedRow.hidden = true; total.textContent = ''; return; }
         syncPhotoCopy();
         const cents = orderCents();
         const charge = hasCoupon() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };
@@ -584,10 +580,8 @@
         payBtn.textContent = 'Pay securely';
       }
     });
-    const loadProductCatalog = tsBootCheckoutCatalog({ applyProductCopy, setStatus, continueBtn, step2Pill });
-    updateTotal();
-    requestAnimationFrame(lockVideoToStepOneHeight);
-    window.addEventListener('resize', lockVideoToStepOneHeight);
+    tsBootCheckoutCatalog({ applyProductCopy, setStatus, continueBtn, step2Pill }); updateTotal();
+    requestAnimationFrame(lockVideoToStepOneHeight); window.addEventListener('resize', lockVideoToStepOneHeight);
   </script>
 </body>
 </html>
