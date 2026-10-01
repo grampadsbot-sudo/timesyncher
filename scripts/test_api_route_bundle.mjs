@@ -131,7 +131,7 @@ const acceptOriginal = publicApiRequest({ method: 'GET', url: '/accept/vacation-
 assert.equal(acceptOriginal.handler, 'eula');
 assert.match(acceptOriginal.url, /action=accept-page/);
 assert.match(acceptOriginal.url, /sessionId=vacation-abc/);
-assert.equal(firstRoute('/'), null);
+assert.equal(firstRoute('/').route.dest, '/index.html');
 
 const link = orderPage('intake-example', 'Big Island Family', '');
 assert.match(link, /Anyone with this link can order/);

@@ -30,6 +30,7 @@ scripts/test_timeline_icons.mjs
 scripts/test_trip_summary_intake.mjs
 scripts/test_vacation_app_shell.mjs
 scripts/test_eula_render_markdown.mjs
+scripts/test_eula_accept_onboarding.mjs
 scripts/test_post_purchase_eula_open_app.mjs
 scripts/test_purchase_launch_routes.mjs
 scripts/test_vacation_collaborators.mjs

@@ -10,6 +10,17 @@ import { realTripSummary } from './keepsake-style2.mjs';
 
 const TREK_PUBLIC = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE).replace(/\/+$/, '');
 
+let sharedTripDatabase = null;
+
+export function useSharedTripDatabase(db) {
+  sharedTripDatabase = db || null;
+}
+
+function openSharedDb() {
+  if (sharedTripDatabase) return sharedTripDatabase;
+  return sql(process.env);
+}
+
 function trekPathFromReq(req) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   const fromQuery = url.searchParams.get('trekPath');
@@ -26,17 +37,26 @@ function shareTokenFromTrekPath(trekPath = '') {
   }
 }
 
+function trekRest(trekPath = '') {
+  return String(trekPath || '').split('/').slice(1).filter(Boolean).join('/');
+}
+
 function isSharedTripGet(method, trekPath) {
   if (method !== 'GET' && method !== 'HEAD') return false;
-  const rest = String(trekPath || '').split('/').slice(1).filter(Boolean).join('/');
-  return !rest || rest === '';
+  return trekRest(trekPath) === '';
+}
+
+function isIntakeEditAccess(method, trekPath, shareToken) {
+  if (method !== 'GET' && method !== 'HEAD') return false;
+  if (!String(shareToken || '').startsWith('intake-')) return false;
+  return trekRest(trekPath) === 'edit-access';
 }
 
 async function intakeSharedResponse(shareToken) {
   if (!shareToken || !shareToken.startsWith('intake-')) return null;
   let db;
   try {
-    db = sql(process.env);
+    db = openSharedDb();
   } catch {
     return null;
   }
@@ -73,6 +93,9 @@ async function intakeSharedResponse(shareToken) {
 export default async function handler(req, res) {
   const trekPath = trekPathFromReq(req);
   const shareToken = shareTokenFromTrekPath(trekPath);
+  if (isIntakeEditAccess(req.method, trekPath, shareToken)) {
+    return sendJson(res, 200, { canEdit: false });
+  }
   if (isSharedTripGet(req.method, trekPath)) {
     const local = await intakeSharedResponse(shareToken).catch(() => null);
     if (local) return sendJson(res, 200, local);

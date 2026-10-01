@@ -9,6 +9,7 @@ import handler from '../api/[...route].mjs';
 import { buildSha } from '../routes/version.mjs';
 import { createOnboardingSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { LocalJsonStore } from '../src/onboarding/eula-persistent-store.mjs';
+import { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = path.join(root, 'dist');
@@ -81,6 +82,23 @@ await createOnboardingSessionPersistent(new LocalJsonStore(storeDir), {
   selectedFunctionality: ['vacation_planning_onboarding'],
   google: {},
   eula: { version: '2026-06-terms-advisory-only', text: 'Terms for the purchase route.' },
+});
+
+const intakeTripId = '01234567-89ab-4cde-8f01-23456789abcd';
+const intakeSlug = 'intake-0123456789ab';
+const intakeTrip = {
+  id: intakeTripId,
+  title: 'Purchase trip',
+  destination: '',
+  start_date: null,
+  end_date: null,
+  metadata: { publicSlug: intakeSlug, intakeShare: 'true' },
+};
+useSharedTripDatabase((strings, ...values) => {
+  const query = strings.join(' ');
+  if (query.includes('from trips') && values[0] === intakeSlug) return [intakeTrip];
+  if (query.includes('from trip_things')) return [];
+  return [];
 });
 
 const vercel = JSON.parse(await readFile(path.join(root, 'vercel.json'), 'utf8'));
@@ -174,13 +192,24 @@ try {
   assertStamp(intake, 'intake share');
   assert.match(intake.type, /text\/html/);
 
+  const intakeApi = await get('/api/shared/intake-0123456789ab');
+  assert.notEqual(intakeApi.status, 404, intakeApi.body.slice(0, 180));
+  assert.match(intakeApi.type, /json/);
+  assert.equal(JSON.parse(intakeApi.body).trip.title, 'Purchase trip');
+
   const home = await get('/');
   assertStamp(home, 'home');
   assert.match(home.type, /text\/html/);
+  assert.match(home.body, /TimeSyncher/);
 
   const editAccess = await get('/edit-access');
   assertStamp(editAccess, 'edit-access');
   assert.match(editAccess.type, /text\/html/);
+
+  const editApi = await get('/api/shared/intake-0123456789ab/edit-access');
+  assert.equal(editApi.status, 200, editApi.body.slice(0, 180));
+  assert.match(editApi.type, /json/);
+  assert.equal(JSON.parse(editApi.body).canEdit, false);
 
   const trek = await get('/assets/index-BKun7ofk.js');
   assertStamp(trek, 'trek bundle');
@@ -190,6 +219,7 @@ try {
   assert.equal(trek.body.includes('async fetch(){e({notices:[],loaded:!0})}'), true);
   assert.equal(trek.body.includes('getAppConfig:()=>Promise.resolve({})'), true);
 } finally {
+  useSharedTripDatabase(null);
   await new Promise((resolve) => server.close(resolve));
   await rm(storeDir, { recursive: true, force: true });
 }

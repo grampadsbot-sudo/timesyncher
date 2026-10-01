@@ -46,6 +46,10 @@
       "dest": "/shared-app.html"
     },
     {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
       "src": "/edit-access/?",
       "dest": "/shared-app.html"
     },
