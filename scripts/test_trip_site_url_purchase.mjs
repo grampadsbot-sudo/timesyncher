@@ -6,9 +6,6 @@ import { readFile } from 'node:fs/promises';
 
 import { createAdminOnboarding } from '../routes/admin-onboardings.mjs';
 import { ensureOnboardingOpener } from '../routes/vacation-itinerary.mjs';
-import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
-import { sendJson } from '../src/vacation/http.mjs';
-import { welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import {
@@ -16,7 +13,8 @@ import {
   buildOnboardingFromCoupon,
   buildOnboardingFromStripe,
 } from '../src/vacation/onboarding.mjs';
-import { publicTripUrl, sharedTripWebsiteUrl } from '../src/vacation/web-access.mjs';
+import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { sharedTripWebsiteUrl } from '../src/vacation/web-access.mjs';
 
 const tripId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
 const customerId = '11111111-2222-4333-8444-555555555555';
@@ -46,6 +44,8 @@ delete process.env.BLOB_READ_WRITE_TOKEN;
 delete process.env.VERCEL_BLOB_STORE_ID;
 delete process.env.TIMESYNCHER_EULA_STORE;
 
+const templates = JSON.parse(await readFile(new URL('../content/onboarding-welcome.json', import.meta.url), 'utf8'));
+
 const originalFetch = globalThis.fetch;
 let fetches = 0;
 globalThis.fetch = async () => {
@@ -57,18 +57,18 @@ function sqlText(strings) {
   return strings.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-function sitePayload(calls) {
-  const update = calls.find((call) => /update trips/i.test(call.text) && call.values.some((value) => value && value.publicSlug));
-  assert.ok(update, 'purchase persisted a trip site slug');
-  return update.values.find((value) => value && value.publicSlug);
-}
-
-function mockDb({ existing = null, trip = tripId } = {}) {
+function mockDb({ existing = null, trip = tripId, tripMeta = {} } = {}) {
   const calls = [];
   const tag = async (strings, ...values) => {
     const text = sqlText(strings);
     calls.push({ text, values });
-    if (/update trips/i.test(text)) return [];
+    if (/update trips/i.test(text)) {
+      if (values.some((value) => value && value.publicSlug)) return [{ public_slug: values.find((v) => v?.publicSlug)?.publicSlug }];
+      return [];
+    }
+    if (/select metadata->>'publicSlug'/i.test(text)) {
+      return [{ public_slug: tripMeta.publicSlug || '' }];
+    }
     if (/join onboarding_sessions/i.test(text)) return existing ? [existing] : [];
     if (/insert into customers/i.test(text)) return [{ id: customerId }];
     if (/insert into trips/i.test(text)) return [{ id: trip }];
@@ -85,7 +85,6 @@ function mockDb({ existing = null, trip = tripId } = {}) {
         trip_id: trip,
         status: 'purchase_confirmed',
         current_step: 'post_purchase',
-        telegram_deep_link: values.find((value) => typeof value === 'string' && value.startsWith('https://t.me/')) || '',
       }];
     }
     if (/insert into vacation_collaborators/i.test(text)) return [];
@@ -96,15 +95,8 @@ function mockDb({ existing = null, trip = tripId } = {}) {
   return tag;
 }
 
-function assertStoredSite(calls, id) {
-  const payload = sitePayload(calls);
-  const publicSlug = intakeShareSlug(id);
-  assert.equal(payload.publicSlug, publicSlug);
-  assert.equal(payload.intakeShare, true);
-  const publicUrl = sharedTripWebsiteUrl(publicSlug, env);
-  assert.equal(publicTripUrl({ metadata: payload }, env), publicUrl);
-  assert.match(publicUrl, new RegExp(`/shared/${publicSlug}/$`));
-  return { publicSlug, publicUrl };
+function assertNoPurchaseSlug(calls) {
+  assert.equal(calls.some((call) => /update trips/i.test(call.text) && call.values.some((v) => v?.publicSlug)), false);
 }
 
 try {
@@ -116,13 +108,10 @@ try {
     plan: 'single',
     sendEmail: false,
   });
-  const stored = assertStoredSite(adminDb.calls, tripId);
-  assert.equal(purchase.publicSlug, stored.publicSlug);
-  assert.equal(purchase.publicUrl, stored.publicUrl);
+  assertNoPurchaseSlug(adminDb.calls);
+  assert.equal(purchase.publicSlug, '');
+  assert.equal(purchase.publicUrl, '');
   assert.equal(fetches, 0);
-  const assignAt = adminDb.calls.findIndex((call) => /update trips/i.test(call.text));
-  assert.ok(assignAt > adminDb.calls.findIndex((call) => /insert into trips/i.test(call.text)));
-  assert.ok(purchase.publicUrl);
 
   const paidDb = mockDb();
   const paid = await buildOnboardingFromStripe({
@@ -142,35 +131,9 @@ try {
     },
     env,
   });
-  const paidSite = assertStoredSite(paidDb.calls, tripId);
-  assert.equal(paid.publicUrl, paidSite.publicUrl);
-
-  const retryTripId = 'bbbbbbbb-cccc-4ddd-8eee-ffffffffffff';
-  const retryDb = mockDb({
-    trip: retryTripId,
-    existing: {
-      customer_id: customerId,
-      trip_id: retryTripId,
-      entitlement_id: entitlementId,
-      order_id: orderId,
-      contact: { email: 'ada@example.com', firstName: 'Ada', lastName: 'Lee' },
-      amount_cents: 3700,
-      currency: 'usd',
-      plan: 'single',
-      id: sessionId,
-      token: 'existing-session-token-value',
-      telegram_deep_link: 'https://t.me/TimeSyncherVacationBot?start=existing-session-token-value',
-    },
-  });
-  const retry = await buildOnboardingFromStripe({
-    db: retryDb,
-    stripe: {},
-    paymentIntent: { id: 'pi_test_retry', status: 'succeeded' },
-    env,
-  });
-  const retrySite = assertStoredSite(retryDb.calls, retryTripId);
-  assert.equal(retry.publicUrl, retrySite.publicUrl);
-  assert.equal(retryDb.calls.some((call) => /insert into trips/i.test(call.text)), false);
+  assertNoPurchaseSlug(paidDb.calls);
+  assert.equal(paid.publicUrl, '');
+  assert.equal(paid.publicSlug, '');
 
   const couponDb = mockDb();
   const coupon = await buildOnboardingFromCoupon({
@@ -180,8 +143,8 @@ try {
     amountCents: 3700,
     env,
   });
-  const couponSite = assertStoredSite(couponDb.calls, tripId);
-  assert.equal(coupon.publicUrl, couponSite.publicUrl);
+  assertNoPurchaseSlug(couponDb.calls);
+  assert.equal(coupon.publicSlug, '');
 
   const collabDb = mockDb();
   await joinCollaboratorAppSession(collabDb, {
@@ -197,113 +160,84 @@ try {
     contact: { email: 'sam@example.com', firstName: 'Sam', lastName: 'Lee', displayName: 'Sam Lee' },
     env,
   });
-  assertStoredSite(collabDb.calls, tripId);
+  assertNoPurchaseSlug(collabDb.calls);
 
-  const blankDb = mockDb();
-  const blank = await assignTripSiteUrl(blankDb, 'not-a-trip', env);
-  assert.deepEqual(blank, { publicSlug: '', publicUrl: '' });
-  assert.equal(blankDb.calls.length, 0);
+  const publicSlug = intakeShareSlug(tripId);
+  const siteDb = mockDb({ tripMeta: { publicSlug } });
+  const site = await assignTripSiteUrl(siteDb, tripId, env);
+  assert.equal(site.publicSlug, publicSlug);
+  assert.match(site.publicUrl, new RegExp(`/shared/${publicSlug}/$`));
+  assert.equal(siteDb.calls.filter((call) => /update trips/i.test(call.text)).length, 1);
 
-  const onboardingSource = await readFile(new URL('../src/vacation/onboarding.mjs', import.meta.url), 'utf8');
-  const couponRoute = await readFile(new URL('../routes/checkout-coupon.mjs', import.meta.url), 'utf8');
-  const couponModule = await readFile(new URL('../src/vacation/coupons.mjs', import.meta.url), 'utf8');
-  const adminSource = await readFile(new URL('../routes/admin-onboardings.mjs', import.meta.url), 'utf8');
-  const seatSource = await readFile(new URL('../src/vacation/collaborator-app-seat.mjs', import.meta.url), 'utf8');
-  const collaboratorSource = await readFile(new URL('../src/vacation/collaborators.mjs', import.meta.url), 'utf8');
-  const welcomeSource = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
-  const couponOnboarding = onboardingSource.slice(
-    onboardingSource.indexOf('function buildOnboardingFromCoupon'),
-    onboardingSource.indexOf('async function ensureOnboardingSession'),
-  );
-  assert.equal(onboardingSource.match(/assignTripSiteUrl\(/g).length, 4);
-  assert.equal(onboardingSource.match(/intakeShareSlug\(/g).length, 1);
-  assert.match(couponOnboarding, /const \{ publicSlug, publicUrl \} = await assignTripSiteUrl\(db, tripId, env\)/);
-  assert.doesNotMatch(couponOnboarding, /intakeShareSlug|sharedTripWebsiteUrl/);
-  assert.match(couponRoute, /buildOnboardingFromCoupon/);
-  assert.doesNotMatch(couponRoute, /intakeShareSlug|sharedTripWebsiteUrl|assignTripSiteUrl|publicSlug/);
-  assert.doesNotMatch(couponModule, /intakeShareSlug|sharedTripWebsiteUrl|publicSlug/);
-  assert.match(adminSource, /assignTripSiteUrl/);
-  assert.doesNotMatch(adminSource, /produceOnboardingOpener|ensureOnboardingOpener/);
-  assert.match(seatSource, /assignTripSiteUrl/);
-  assert.match(collaboratorSource, /assignTripSiteUrl/);
-  const welcomeInputs = welcomeSource.slice(
-    welcomeSource.indexOf('async function welcomeInputs'),
-    welcomeSource.indexOf('function ensureOnboardingOpener'),
-  );
-  assert.match(welcomeInputs, /trip\?\.publicUrl/);
-  assert.doesNotMatch(welcomeInputs, /assignTripSiteUrl|intakeShareSlug|sharedTripWebsiteUrl/);
-  assert.match(welcomeSource, /renderOnboardingWelcome\(await welcomeInputs\(db, session, trip\), deps\)/);
-  assert.match(welcomeSource, /onboardingWelcomeFailure\(error\?\.message, trip\.id\)/);
-  assert.doesNotMatch(welcomeSource, /produceOnboardingOpener|onboarding opener model returned no reply/);
-
-  const appPage = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
-  assert.match(appPage, /data\.code, data\.reason/);
-  assert.match(appPage, /role="alert"/);
-  const handlerCatch = welcomeSource.slice(welcomeSource.lastIndexOf('} catch (error)'));
-  assert.match(handlerCatch, /welcomeFailureBody\(error\)/);
-
+  const failCalls = [];
+  const failDb = async (strings, ...values) => {
+    const text = sqlText(strings);
+    failCalls.push({ text, values });
+    if (/update trips/i.test(text)) return [];
+    if (/select metadata->>'publicSlug'/i.test(text)) return [{ public_slug: 'other-slug' }];
+    throw new Error(`unexpected fail sql: ${text}`);
+  };
   const logs = [];
   const originalLog = console.log;
   console.log = (...args) => { logs.push(args); };
+  let siteError;
   try {
-    let rendered;
-    try {
-      rendered = renderOnboardingWelcome({
-        audience: 'owner',
-        firstName: 'Ada',
-        tripSiteUrl: '',
-      });
-    } catch (error) {
-      rendered = error;
-    }
-    assert.equal(rendered instanceof Error, true);
-    assert.equal(rendered.message, 'onboarding welcome missing tripSiteUrl');
-    await assert.rejects(
-      () => ensureOnboardingOpener(mockDb(), {
-        customer_id: customerId,
-        token: 'session-token-value',
-        email: 'ada@example.com',
-        first_name: 'Ada',
-        display_name: 'Ada',
-      }, {
-        id: tripId,
-        publicUrl: '',
-        title: 'Trip',
-      }, {}),
-      (error) => {
-        assert.equal(error.message, 'onboarding welcome missing tripSiteUrl');
-        assert.equal(error.statusCode, 502);
-        assert.equal(error.code, 'onboarding_welcome_failed');
-        const res = {
-          statusCode: 0,
-          headers: {},
-          body: '',
-          setHeader(name, value) { this.headers[name] = value; },
-          getHeader(name) { return this.headers[name]; },
-          end(payload) { this.body = payload; },
-        };
-        const welcome = welcomeFailureBody(error);
-        sendJson(res, error.statusCode || 400, welcome);
-        const payload = JSON.parse(res.body);
-        assert.equal(res.statusCode, 502);
-        assert.equal(payload.ok, false);
-        assert.equal(payload.code, 'onboarding_welcome_failed');
-        assert.equal(payload.reason, 'onboarding welcome missing tripSiteUrl');
-        assert.equal(logs.length, 1);
-        assert.equal(logs[0].length, 1);
-        const logged = JSON.parse(logs[0][0]);
-        assert.deepEqual(logged, { reason: 'onboarding welcome missing tripSiteUrl', tripId });
-        assert.deepEqual(Object.keys(logged), ['reason', 'tripId']);
-        assert.equal(logs[0][0].includes('ada@example.com'), false);
-        assert.equal(logs[0][0].includes('Ada'), false);
-        assert.equal(logs[0][0].includes('session-token-value'), false);
-        assert.equal(logs[0][0].includes('http'), false);
-        return true;
-      },
-    );
+    await assignTripSiteUrl(failDb, tripId, env);
+  } catch (error) {
+    siteError = error;
   } finally {
     console.log = originalLog;
   }
+  assert.equal(siteError?.code, 'onboarding_trip_site_url_failed');
+  assert.equal(siteError?.reason, 'onboarding trip site url not stored');
+  assert.equal(siteError?.tripId, tripId);
+  assert.equal(logs.length, 1);
+  assert.deepEqual(JSON.parse(logs[0][0]), { reason: siteError.reason, tripId });
+
+  const ownerNoSite = renderOnboardingWelcome({ audience: 'owner_no_site', firstName: 'Ada' });
+  assert.doesNotMatch(ownerNoSite, /https?:\/\//);
+  assert.doesNotMatch(templates.owner_no_site, /\{tripSiteUrl\}/);
+  assert.doesNotMatch(templates.collaborator_no_site, /\{tripSiteUrl\}/);
+
+  const collabNoSite = renderOnboardingWelcome({
+    audience: 'collaborator_no_site',
+    collabFirstName: 'Sam',
+    ownerFirstName: 'Ada',
+    tripTitle: 'Beach week',
+  });
+  assert.doesNotMatch(collabNoSite, /https?:\/\//);
+
+  const tripSiteUrl = sharedTripWebsiteUrl(publicSlug, env);
+  const ownerWithSite = renderOnboardingWelcome({ audience: 'owner', firstName: 'Ada', tripSiteUrl });
+  assert.match(ownerWithSite, new RegExp(tripSiteUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+  const mockWelcomeDb = async (strings, ...values) => {
+    const text = sqlText(strings);
+    if (/select 1/i.test(text)) return [];
+    if (/from customers/i.test(text)) return [{ first_name: 'Ada', display_name: 'Ada' }];
+    if (/insert into transcript_turns/i.test(text)) return [];
+    throw new Error(`unexpected welcome sql: ${text}`);
+  };
+
+  await ensureOnboardingOpener(mockWelcomeDb, {
+    customer_id: customerId,
+    first_name: 'Ada',
+    display_name: 'Ada',
+  }, {
+    id: tripId,
+    title: 'Trip',
+    publicUrl: '',
+    shareToken: '',
+  }, {});
+
+  const itinerarySource = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+  assert.match(itinerarySource, /assignTripSiteUrl\(db, tripId, process\.env\)/);
+  assert.doesNotMatch(itinerarySource, /publicSlug: slug, intakeShare: true/);
+  const onboardingSource = await readFile(new URL('../src/vacation/onboarding.mjs', import.meta.url), 'utf8');
+  assert.equal(onboardingSource.match(/assignTripSiteUrl\(/g).length, 1);
+  assert.doesNotMatch(onboardingSource, /buildOnboardingFromCoupon[\s\S]*assignTripSiteUrl/);
+  assert.doesNotMatch(onboardingSource, /buildOnboardingFromStripe[\s\S]*assignTripSiteUrl/);
+
   assert.equal(fetches, 0);
 } finally {
   globalThis.fetch = originalFetch;

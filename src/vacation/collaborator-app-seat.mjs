@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { createWebEditorInvite } from './web-access.mjs';
-import { assignTripSiteUrl, ensureVacationEulaSession, upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { ensureVacationEulaSession, upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').trim().slice(0, max);
@@ -110,7 +110,6 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
   if (!invite?.owner_customer_id || !invite?.trip_id) {
     throw Object.assign(new Error('Collaborator invite is not attached to a vacation.'), { statusCode: 409 });
   }
-  await assignTripSiteUrl(db, invite.trip_id, env);
   const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
   const displayName = clean(contact?.displayName || metadata.displayName || invite.requested_for, 180);
   const [firstName, ...rest] = displayName.split(/\s+/).filter(Boolean);

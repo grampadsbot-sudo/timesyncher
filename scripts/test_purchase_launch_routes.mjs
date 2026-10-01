@@ -107,7 +107,7 @@ const purchaseDb = (strings, ...values) => {
   if (/update trips/i.test(query)) {
     const patch = values.find((value) => value && value.publicSlug);
     intakeTrip.metadata = { ...(intakeTrip.metadata || {}), ...patch };
-    return [];
+    return [{ public_slug: patch?.publicSlug || intakeTrip.metadata.publicSlug }];
   }
   if (query.includes('from trips')) {
     const meta = intakeTrip.metadata || {};

@@ -2,9 +2,13 @@ import { readFileSync } from 'node:fs';
 
 const TEMPLATE_FILE = new URL('../../content/onboarding-welcome.json', import.meta.url);
 
+const AUDIENCES = new Set(['owner', 'collaborator', 'owner_no_site', 'collaborator_no_site']);
+
 const REQUIRED = {
   owner: ['firstName', 'tripSiteUrl'],
   collaborator: ['collabFirstName', 'ownerFirstName', 'tripTitle', 'tripSiteUrl'],
+  owner_no_site: ['firstName'],
+  collaborator_no_site: ['collabFirstName', 'ownerFirstName', 'tripTitle'],
 };
 
 function rejectWelcome(reason) {
@@ -17,7 +21,7 @@ function rejectWelcome(reason) {
 export function renderOnboardingWelcome(input = {}, deps = {}) {
   void deps?.jevPrecall;
   void deps?.callTieredModel;
-  const audience = input?.audience === 'owner' || input?.audience === 'collaborator' ? input.audience : '';
+  const audience = AUDIENCES.has(input?.audience) ? input.audience : '';
   if (!audience) rejectWelcome('onboarding welcome missing audience');
   const required = REQUIRED[audience];
   const values = {};
@@ -58,6 +62,8 @@ export function cannedWelcomeLiveTurn({ text, at, latencyMs = null, sessionE2eMs
       kind: 'canned_welcome',
       tier: 'n/a',
       model: 'n/a',
+      jevRan: false,
+      reason: 'fixed_onboarding_opener',
     },
   };
 }
