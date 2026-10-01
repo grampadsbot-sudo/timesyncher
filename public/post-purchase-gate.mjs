@@ -8,19 +8,35 @@ export function isPurchaseEntry(pathname, search = '') {
   return path === '/shared';
 }
 
-export function openAppHref(pathname) {
-  const parts = String(pathname || '').split('/').filter(Boolean);
-  if (parts[0] === 'shared' && parts[1]) return `/shared/${parts[1]}/`;
-  return '/shared/?app=1';
+export function appSessionToken(search = '') {
+  const params = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  const direct = String(params.get('session') || params.get('token') || '').trim();
+  if (direct) return direct;
+  const eula = String(params.get('eulaSession') || '');
+  if (eula.startsWith('vacation-') && !eula.startsWith('vacation-collaborator-')) return eula.slice('vacation-'.length);
+  return '';
+}
+
+export function openAppHref(_pathname, search = '') {
+  const token = appSessionToken(search);
+  if (!token) {
+    const error = new Error('Vacation app session is missing. Open the link in your purchase email.');
+    error.code = 'vacation_app_session_missing';
+    throw error;
+  }
+  return `/vacation-app.html?session=${encodeURIComponent(token)}`;
 }
 
 export function successHref(pathname, search = '') {
   const params = new URLSearchParams(String(search || '').replace(/^\?/, ''));
   const next = new URLSearchParams();
+  const href = openAppHref(pathname, search);
+  const token = appSessionToken(search);
   next.set('eula', 'accepted');
-  next.set('open', openAppHref(pathname));
+  next.set('session', token);
+  next.set('open', href);
   if (params.get('test') === '1') next.set('test', '1');
-  for (const key of ['accessPlanCheckout', 'checkout', 'session']) {
+  for (const key of ['accessPlanCheckout', 'checkout']) {
     const value = params.get(key);
     if (value) next.set(key, value);
   }

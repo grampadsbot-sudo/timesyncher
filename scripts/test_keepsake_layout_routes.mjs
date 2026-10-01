@@ -266,7 +266,11 @@ const browser = await puppeteer.launch({
 try {
   const invalidApi = await getJson(`${app.origin}/api/shared/not-a-real-token-xyz`);
   assert.equal(invalidApi.status, 404);
-  assert.equal(invalidApi.body.error, 'Invalid or expired link');
+  assert.equal(invalidApi.body.code, 'shared_trip_slug_not_found');
+  assert.match(invalidApi.body.error, /not-a-real-token-xyz/);
+  assert.equal(String(invalidApi.body.error).includes('Invalid or expired link'), false);
+  assert.equal(JSON.stringify(invalidApi.body).includes('travel.timesyncher.com'), false);
+  assert.doesNotMatch(String(invalidApi.body.error), /expired/i);
   assert.equal(invalidApi.body.places, undefined);
   assert.equal(JSON.stringify(invalidApi.body).includes(marker), false);
   assert.equal(JSON.stringify(invalidApi.body).includes('__tsKeepsakeFill'), false);

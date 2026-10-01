@@ -1,9 +1,8 @@
+import { checkoutCurrency } from './checkout-pricing.mjs';
 import { createCollaboratorInvite, collaboratorPlan, markCollaboratorInvitePaid } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendWebEditorInviteEmail } from './email.mjs';
 import { ownerMediaAddOns, recordOwnerMediaPurchase, selectedMediaAddOn } from './media-checkout.mjs';
 import { createWebEditorInvite } from './web-access.mjs';
-
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 
 function clean(value, max = 500) {
   return String(value || '').trim().slice(0, max);
@@ -123,7 +122,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
     return {
       role: normalized.role,
       amountCents: plan.amountCents + media.amountCents,
-      currency: CURRENCY,
+      currency: checkoutCurrency(env),
       label: normalized.name ? `${normalized.name} - collaborator` : 'Collaborator',
       planCode: plan.code,
       scope: plan.scope,
@@ -140,7 +139,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
     return {
       role: normalized.role,
       amountCents: addOns.amountCents,
-      currency: CURRENCY,
+      currency: checkoutCurrency(env),
       label: normalized.name ? `${normalized.name} - owner media uploads` : 'Owner media uploads',
       planCode: addOns.plan,
       scope: addOns.scope,
@@ -151,7 +150,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
   return {
     role: normalized.role,
     amountCents: 0,
-    currency: CURRENCY,
+    currency: checkoutCurrency(env),
     label: normalized.role === 'web_editor' ? 'Website editor invite' : 'Viewer access',
     planCode: 'free',
     scope: 'single_trip',
@@ -330,7 +329,7 @@ export async function createAccessPlanCheckout({ db, ownerCustomerId, tripId, pa
     )
     values (
       ${ownerId}, ${normalizedTripId}, ${payer.name || null}, ${payer.email || null},
-      ${amountCents}, ${CURRENCY}, ${lineItems},
+      ${amountCents}, ${checkoutCurrency(env)}, ${lineItems},
       ${{
         source: 'access_plan_grouped_checkout',
         rowIds: lineItems.map((item) => item.rowId),
@@ -350,7 +349,7 @@ export async function createAccessPlanCheckout({ db, ownerCustomerId, tripId, pa
       status: inserted[0].status,
       payer,
       amountCents,
-      currency: CURRENCY,
+      currency: checkoutCurrency(env),
       lineItems,
       checkoutUrl: checkoutUrl(inserted[0].id, env),
     },
@@ -496,7 +495,7 @@ async function activatePaidRow({ db, row, checkout, paymentIntentId = '', env })
       const media = ownerMediaAddOns({ ownerCustomerId: row.owner_customer_id }, env);
       await recordOwnerMediaPurchase({
         db, contact: { email: row.email || checkout.payer_email, displayName: row.name || row.email },
-        addOns: media, ownerCustomerId: row.owner_customer_id, currency: checkout.currency || CURRENCY,
+        addOns: media, ownerCustomerId: row.owner_customer_id, currency: checkout.currency || checkoutCurrency(env),
         stripePaymentIntentId: paymentIntentId || checkout.stripe_payment_intent_id || null,
         metadata: { paidVia: 'access_plan_collaborator_media', accessPlanRowId: row.id },
       });
@@ -528,7 +527,7 @@ async function activatePaidRow({ db, row, checkout, paymentIntentId = '', env })
       addOns,
       ownerCustomerId: row.owner_customer_id,
       amountCents: addOns.amountCents,
-      currency: checkout.currency || CURRENCY,
+      currency: checkout.currency || checkoutCurrency(env),
       status: 'paid',
       stripePaymentIntentId: paymentIntentId || checkout.stripe_payment_intent_id || null,
       metadata: {

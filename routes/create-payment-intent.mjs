@@ -11,7 +11,7 @@ import {
 } from '../src/vacation/collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from '../src/vacation/email.mjs';
 import checkoutCouponHandler from './checkout-coupon.mjs';
-import { CheckoutConfigError, customerCheckoutFailure, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
+import { CheckoutConfigError, checkoutCurrency, customerCheckoutFailure, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
 import {
   activateAccessPlanCheckout,
   activateFreeAccessPlanRows,
@@ -23,7 +23,6 @@ import {
   saveAccessPlan,
 } from '../src/vacation/access-plan.mjs';
 
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 const SINGLE_PRICE_ID = process.env.TIMESYNCHER_SINGLE_PRICE_ID || '';
 const UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_UNLIMITED_PRICE_ID || '';
 
@@ -111,7 +110,7 @@ async function grantCollaboratorMedia(db, { contact, ownerCustomerId, addOns, st
     addOns: { plan: 'owner_media', scope: 'owner', amountCents: addOns.amountCents, photoUpload: true, videoUpload: true, ownerCustomerId },
     ownerCustomerId,
     amountCents: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     stripePaymentIntentId,
     metadata,
   });
@@ -151,7 +150,7 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
   const amount = plan.amountCents + addOns.amountCents;
   const paymentIntent = await stripe.paymentIntents.create({
     amount,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
     description: 'Collaborator access for this vacation',
@@ -191,7 +190,7 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
     amount,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     plan: plan.code,
     scope: plan.scope,
   };
@@ -262,7 +261,7 @@ async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
   }, metadata);
   const paymentIntent = await stripe.paymentIntents.create({
     amount: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     customer: stripeCustomer.id,
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
@@ -274,7 +273,7 @@ async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
     amount: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     plan: addOns.plan,
     scope: addOns.scope,
     mediaAddOns: addOns,
@@ -291,7 +290,7 @@ async function completeStagingOwnerMediaCheckout({ db, contact, card = {}, body 
     contact,
     addOns,
     amountCents: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     status: 'paid',
     metadata: {
       paidVia: 'staging_card_checkout',
@@ -356,7 +355,7 @@ async function accessPlanPaymentIntent({ db, stripe, body = {} }) {
   }
   const paymentIntent = await stripe.paymentIntents.create({
     amount: checkout.amount_cents,
-    currency: checkout.currency || CURRENCY,
+    currency: checkout.currency || checkoutCurrency(),
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
     description: `TimeSyncher Vacation access for ${checkout.trip_title || 'a vacation'}`,
@@ -377,7 +376,7 @@ async function accessPlanPaymentIntent({ db, stripe, body = {} }) {
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
     amount: checkout.amount_cents,
-    currency: checkout.currency || CURRENCY,
+    currency: checkout.currency || checkoutCurrency(),
     checkout: publicAccessPlanCheckout({ ...checkout, stripe_payment_intent_id: paymentIntent.id }),
   };
 }
@@ -457,7 +456,7 @@ export default async function handler(req, res) {
             mode: 'staging_card',
             stripeUnavailable: true,
             amount: checkout.amount_cents,
-            currency: checkout.currency || CURRENCY,
+            currency: checkout.currency || checkoutCurrency(),
             checkout: publicAccessPlanCheckout(checkout),
             error: error.message,
           });
@@ -521,7 +520,7 @@ export default async function handler(req, res) {
             mode: 'staging_card',
             stripeUnavailable: true,
             amount: plan.amountCents + addOns.amountCents,
-            currency: CURRENCY,
+            currency: checkoutCurrency(),
             plan: plan.code,
             accessAddOns: addOns,
             error: error.message,
@@ -562,7 +561,7 @@ export default async function handler(req, res) {
             mode: 'staging_card',
             stripeUnavailable: true,
             amount: addOns.amountCents,
-            currency: CURRENCY,
+            currency: checkoutCurrency(),
             plan: addOns.plan,
             scope: addOns.scope,
             mediaAddOns: addOns,
@@ -678,7 +677,7 @@ export default async function handler(req, res) {
       customerId: stripeCustomer.id,
       amount: invoice?.amount_due ?? amount,
       estimatedAmount: amount,
-      currency: CURRENCY,
+      currency: checkoutCurrency(),
       orderBump,
       photoMemories,
       photoMemoriesPlan: photoMemories ? 'owner_media' : null,

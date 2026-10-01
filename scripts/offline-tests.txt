@@ -35,6 +35,8 @@ scripts/test_eula_accept_onboarding.mjs
 scripts/test_post_purchase_eula_open_app.mjs
 scripts/test_purchase_launch_routes.mjs
 scripts/test_purchase_email_slug.mjs
+scripts/test_purchase_email_app_link.mjs
+scripts/test_shared_trip_slug_miss.mjs
 scripts/test_vacation_collaborators.mjs
 scripts/test_vacation_web_access.mjs
 scripts/test_welcome_after_intake_database.mjs

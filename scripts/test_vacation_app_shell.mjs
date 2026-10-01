@@ -103,8 +103,7 @@ assert.match(onboarding, /in_app_text_voice_and_file_intake/);
 const orderSuccess = await readFile(new URL('../order-success.html', import.meta.url), 'utf8');
 assert.match(orderSuccess, /Purchase confirmed/);
 assert.match(orderSuccess, /Your TimeSyncher Vacation purchase is confirmed\./);
-assert.doesNotMatch(orderSuccess, /Check your email/i);
-assert.doesNotMatch(orderSuccess, /click the link in that email/i);
+assert.match(orderSuccess, /Check your email and click the link in that email/i);
 assert.match(orderSuccess, /purchase_email_ack/);
 assert.match(orderSuccess, /id="openApp"/);
 assert.match(orderSuccess, /id="purchaseLink"/);
@@ -115,16 +114,16 @@ assert.doesNotMatch(orderSuccess, /telegram|telegraph/i);
 
 const confirmed = purchaseEmail({
   contact: { firstName: 'Alex' },
-  publicSlug: 'intake-eab1cbb15144',
+  sessionToken: 'app-session-token',
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.equal(
   confirmed.launchUrl,
-  'https://vacation-staging.timesyncher.com/shared/intake-eab1cbb15144/?purchase=1',
+  'https://vacation-staging.timesyncher.com/vacation-app.html?session=app-session-token',
 );
-assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/\?purchase=1/);
-assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/\?purchase=1"/);
-assert.doesNotMatch(confirmed.htmlBody, /vacation-app\.html/);
+assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token/);
+assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token"/);
+assert.doesNotMatch(`${confirmed.launchUrl}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /\/shared\/intake-/);
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);
 
 const orderTest = await readFile(new URL('../order-test.html', import.meta.url), 'utf8');

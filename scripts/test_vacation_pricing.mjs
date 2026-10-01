@@ -4,6 +4,7 @@ import {
   CheckoutConfigError,
   checkoutAmounts,
   checkoutChargeDisplay,
+  checkoutCurrency,
   checkoutOrderSummary,
   checkoutPlanFromMetadata,
 } from '../src/vacation/checkout-pricing.mjs';
@@ -19,6 +20,7 @@ const env = {
   TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
   TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS: '2100',
   TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
+  TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
 };
 
 assert.equal(checkoutAmounts(env).base, 3700);
@@ -26,6 +28,19 @@ assert.equal(checkoutAmounts(env).orderBump, 2700);
 assert.equal(checkoutAmounts(env).media, 1700);
 assert.equal(mediaPriceCents(env), 1700);
 assert.equal(collaboratorPlan('telegram_collaborators_single_trip', env).amountCents, 2100);
+assert.equal(checkoutCurrency(env), 'usd');
+assert.throws(() => checkoutCurrency({}), (error) => {
+  assert.equal(error.message, 'checkout config missing: TIMESYNCHER_CHECKOUT_CURRENCY');
+  return true;
+});
+assert.throws(() => checkoutOrderSummary({}, {
+  TIMESYNCHER_BASE_PRICE_CENTS: '3700',
+  TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
+}), (error) => {
+  assert.equal(error.message, 'checkout config missing: TIMESYNCHER_CHECKOUT_CURRENCY');
+  return true;
+});
+assert.equal(checkoutOrderSummary({ orderBump: true }, env).currency, 'usd');
 assert.equal(checkoutOrderSummary({ orderBump: true }, env).amountCents, 6400);
 assert.equal(checkoutOrderSummary({ orderBump: true }, env).plan, 'unlimited');
 assert.equal(checkoutOrderSummary({ orderBump: true, media: true }, env).amountCents, 8100);
@@ -213,6 +228,21 @@ for (const file of priceModules) {
   const text = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
   assert.doesNotMatch(text, priceFallback, `${file} contains a price fallback`);
   assert.doesNotMatch(text, /unlimited vacations?/i, `${file} says unlimited vacation`);
+}
+const currencyFiles = [
+  'routes/checkout-coupon.mjs',
+  'routes/create-payment-intent.mjs',
+  'src/vacation/checkout-pricing.mjs',
+  'src/vacation/access-plan.mjs',
+  'src/vacation/media-checkout.mjs',
+  'src/vacation/onboarding.mjs',
+  'src/vacation/collaborator-checkout.mjs',
+];
+for (const file of currencyFiles) {
+  const text = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+  assert.doesNotMatch(text, /TIMESYNCHER_CHECKOUT_CURRENCY\s*\|\|\s*['"]usd['"]/, `${file} falls back to usd`);
+  assert.doesNotMatch(text, /\bcurrency\s*=\s*['"]usd['"]/, `${file} defaults currency to usd`);
+  assert.doesNotMatch(text, /\|\|\s*['"]usd['"]/, `${file} falls back to usd`);
 }
 const indexPage = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 assert.match(indexPage, /id="waivedAmount"/);

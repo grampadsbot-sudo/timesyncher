@@ -4,7 +4,6 @@ import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { createCoupon, disableCoupon, listCoupons } from '../src/vacation/coupons.mjs';
 import {
-  assignTripSiteUrl,
   ensureVacationEulaSession,
   onboardingLink,
   upsertCustomer,
@@ -143,7 +142,6 @@ export async function createAdminOnboarding(db, body) {
     returning id
   `;
   const tripId = tripRows[0].id;
-  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, process.env);
 
   const entitlementRows = await db`
     insert into entitlements (customer_id, trip_id, plan, status, metadata, updated_at)
@@ -186,8 +184,8 @@ export async function createAdminOnboarding(db, body) {
     orderId,
     session,
     token: session.token,
-    publicSlug,
-    publicUrl,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, process.env),
     eula,
     contact,
@@ -207,8 +205,8 @@ export async function createAdminOnboarding(db, body) {
     customerId,
     tripId,
     orderId,
-    publicSlug,
-    publicUrl,
+    publicSlug: '',
+    publicUrl: '',
     email,
   };
 }

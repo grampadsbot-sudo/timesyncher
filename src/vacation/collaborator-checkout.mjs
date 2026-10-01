@@ -1,8 +1,7 @@
 import Stripe from 'stripe';
+import { checkoutCurrency } from './checkout-pricing.mjs';
 import { stripeSecretKey } from './stripe-env.mjs';
 import { collaboratorPlan, countActiveCollaborators, createCollaboratorInvite } from './collaborators.mjs';
-
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 
 function clean(value, max = 500) {
   return String(value || '').trim().slice(0, max);
@@ -44,7 +43,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
     allow_promotion_codes: true,
     line_items: [{
       price_data: {
-        currency: CURRENCY,
+        currency: checkoutCurrency(env),
         product_data: {
           name: 'Collaborator access for this vacation',
         },

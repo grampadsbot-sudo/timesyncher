@@ -471,12 +471,13 @@
     const MAX_INLINE_FILE_BYTES = 2 * 1024 * 1024;
     const MAX_FILES_PER_TURN = 6;
 
-    function realSiteUrl(url) {
+    function realSiteUrl(url, trip) {
       const value = String(url || '').trim();
       if (!value) return '';
       try {
         const parsed = new URL(value, 'https://timesyncher.com');
         if (!parsed.pathname || parsed.pathname === '/') return '';
+        if (/\/shared\/intake-/i.test(parsed.pathname) && !customerPlaceName(trip?.destination)) return '';
         return value;
       } catch {
         return '';
@@ -624,7 +625,7 @@
     function renderApp() {
       const trip = currentTrip();
       const trips = realVacations();
-      const siteUrl = realSiteUrl(trip?.publicUrl);
+      const siteUrl = realSiteUrl(trip?.publicUrl, trip);
       const hasSite = Boolean(siteUrl);
       const chatTurns = state.turns.filter((turn) => turn.speaker !== 'system' && turn.direction !== 'system');
       const turnMarkup = chatTurns.length
@@ -754,7 +755,7 @@
       const textarea = document.getElementById('messageText');
       const text = textarea.value.trim();
       if (!text && state.attachments.length === 0) return;
-      const hadSite = Boolean(realSiteUrl(currentTrip()?.publicUrl));
+      const hadSite = Boolean(realSiteUrl(currentTrip()?.publicUrl, currentTrip()));
       const voiceTurn = state.voiceArmed === true;
       state.voiceArmed = false;
       const messages = document.getElementById('messages');
@@ -803,7 +804,7 @@
             else state.vacations.push(data.vacation);
             const label = document.getElementById('tripLabel');
             if (label) label.textContent = tripBadge(data.vacation);
-            if (!hadSite && realSiteUrl(data.vacation.publicUrl)) {
+            if (!hadSite && realSiteUrl(data.vacation.publicUrl, data.vacation)) {
               await loadApp(data.vacation.id);
               return;
             }
