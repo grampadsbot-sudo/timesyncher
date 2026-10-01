@@ -638,8 +638,15 @@ async function queueVacationAppTurn(db, session, trip, body) {
     };
   }
   if (!produced.reply) {
-    await db`delete from transcript_turns where id = ${turnRows[0].id}`;
-    return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
+    const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
+    payload.replyFailure = replyFailure;
+    customerLive.replyFailure = replyFailure;
+    await db`
+      update transcript_turns
+      set payload = ${payload}
+      where id = ${turnRows[0].id}
+    `;
+    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
   }
 
   const appLive = liveTurnRecord({
