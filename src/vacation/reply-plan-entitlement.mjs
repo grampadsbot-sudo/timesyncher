@@ -53,7 +53,28 @@ export async function savedTripWithOwnerPlan(saved, tripId, env = process.env) {
   const id = String(tripId || '').trim();
   if (!saved || !id || !env?.DATABASE_URL) return saved;
   const ownerPlan = await loadTripOwnerReplyPlan({ tripId: id, env });
-  return { ...saved, ownerPlan, planOwned: ownerPlan.order_bump_owned === true };
+  return {
+    ...saved,
+    ownerPlan,
+    purchased_plan: ownerPlan.checkout_plan,
+    planOwned: ownerPlan.checkout_plan === 'unlimited',
+  };
+}
+
+export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = null, planOwned = false, purchasedPlan = '', priceAsk = false } = {}) {
+  const dollars = Number(seatDollars);
+  const purchased = String(purchasedPlan || '').trim();
+  let mode = 'forbidden';
+  if (postIntake) mode = 'post-intake';
+  else if (upsell === 'allow-once') mode = 'allow-once';
+  else if (priceAsk) mode = 'price';
+  return {
+    mode,
+    seat_dollars: Number.isFinite(dollars) && dollars > 0 ? dollars : null,
+    payer_line: String(planLine || '').trim() || null,
+    purchased_plan: purchased || null,
+    plan_owned: Boolean(purchased) || planOwned === true,
+  };
 }
 
 export async function loadTripOwnerReplyPlan({ tripId, env = process.env, db = null } = {}) {

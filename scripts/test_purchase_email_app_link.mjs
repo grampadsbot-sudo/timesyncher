@@ -253,17 +253,7 @@ async function dumpDomOnce(url) {
 }
 
 async function dumpDom(url) {
-  let lastError = null;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      return await dumpDomOnce(url);
-    } catch (error) {
-      lastError = error;
-      if (attempt === 2) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
-    }
-  }
-  throw lastError || new Error(`chrome failed for ${url}`);
+  return dumpDomOnce(url);
 }
 
 useVacationAppDatabase(db);

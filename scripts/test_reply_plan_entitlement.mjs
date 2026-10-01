@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { firstIntakeReplyFacts, firstIntakeReplyPrompt } from '../src/vacation/first-intake-reply.mjs';
+import { draftFactErrors } from '../src/vacation/live-app-turn.mjs';
+import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import {
   ReplyIdCitationBlockedError,
   assertCustomerReplyShippable,
@@ -116,11 +118,28 @@ await assert.rejects(
 const replyFiles = [
   'src/vacation/first-intake-reply.mjs',
   'scripts/vacation-app-reply-rules.mjs',
-  'content/plans.json',
 ];
 for (const file of replyFiles) {
   const text = await readFile(new URL(file, root), 'utf8');
   assert.doesNotMatch(text, /unlimited/i, `${file} must not contain unlimited`);
 }
+
+const plans = JSON.parse(await readFile(new URL('content/plans.json', root), 'utf8'));
+assert.equal(plans.timesyncher_vacation_single.plan_id, 'timesyncher_vacation_single');
+assert.equal(plans.timesyncher_vacation_unlimited.plan_id, 'timesyncher_vacation_unlimited');
+
+const singleFacts = { purchased_plan: 'single', planOwned: false };
+const exactUnlimited = "You're currently on the timesyncher vacation unlimited plan.";
+assert.ok(
+  draftFactErrors(exactUnlimited, singleFacts).some((line) => /unlimited plan is not owned/.test(line)),
+  'exact unlimited plan phrase must fail draftFactErrors for single purchasers',
+);
+
+const ownedUnlimited = { purchased_plan: 'unlimited', planOwned: true };
+assert.equal(draftFactErrors(exactUnlimited, ownedUnlimited).some((line) => /unlimited plan is not owned/.test(line)), false);
+
+const planFacts = planFactsForReply({ upsell: 'forbidden', purchasedPlan: 'single' });
+assert.equal(planFacts.purchased_plan, 'single');
+assert.equal(planFacts.plan_owned, true);
 
 console.log('reply plan entitlement passed');

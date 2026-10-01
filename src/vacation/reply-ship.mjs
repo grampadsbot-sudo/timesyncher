@@ -3,6 +3,35 @@ import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry } from './reply-telemetry.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 
+export async function outboundAppReplyForRequest(db, requestId) {
+  const id = String(requestId || '').trim();
+  if (!id) return null;
+  const rows = await db`
+    select id, body
+    from transcript_turns
+    where request_id = ${id}
+      and speaker = 'app'
+      and channel = 'vacation-app'
+      and direction = 'outbound'
+    order by sent_at asc
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+export async function markWorkerJobLiveHandled(db, jobId) {
+  const id = String(jobId || '').trim();
+  if (!id) return;
+  await db`
+    update worker_jobs
+    set status = 'completed',
+      result = ${JSON.stringify({ liveAppReply: true })},
+      updated_at = now()
+    where id = ${id}
+      and status in ('pending', 'retry')
+  `;
+}
+
 export async function storeReplyFailure(db, turnId, payload) {
   await db`
     update transcript_turns

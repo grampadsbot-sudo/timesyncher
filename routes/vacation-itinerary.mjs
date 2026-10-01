@@ -42,7 +42,7 @@ import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } 
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { assertCustomerReplyShippable } from '../src/vacation/reply-id-citation.mjs';
-import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { commitShippedRewrite, markWorkerJobLiveHandled, outboundAppReplyForRequest, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -704,6 +704,19 @@ async function queueVacationAppTurn(db, session, trip, body) {
   const citationBlocked = await blockReplyIdCitation(produced.reply);
   if (citationBlocked) return citationBlocked;
 
+  const priorApp = await outboundAppReplyForRequest(db, requestId);
+  if (priorApp?.id) {
+    await markWorkerJobLiveHandled(db, jobRows[0].id);
+    return {
+      ...base,
+      ok: true,
+      status: 'replied',
+      reply: priorApp.body,
+      duplicateSuppressed: true,
+      error: null,
+    };
+  }
+
   const appLive = liveTurnRecord({
     turnIndex: customerTurnIndex + 1,
     role: 'app',
@@ -752,6 +765,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     classification.ok === true ? classification.things : [],
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
+  await markWorkerJobLiveHandled(db, jobRows[0].id);
   const vacationRows = await db`
     select id, title, destination, start_date, end_date, status, metadata
     from trips

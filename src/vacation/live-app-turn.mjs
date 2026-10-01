@@ -11,6 +11,7 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
+import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
@@ -875,6 +876,7 @@ export function savedTripFacts(record = {}) {
   const things = Array.isArray(record.things) ? record.things : [];
   const span = record.span?.end ? record.span : spanFromIso(record.start, record.end);
   const party = record.party && typeof record.party === 'object' ? record.party : {};
+  const purchasedPlan = String(record.purchased_plan || record.ownerPlan?.checkout_plan || '').trim();
   const notTraveling = [
     ...(Array.isArray(party.viewers) ? party.viewers : []).map((person) => ({ name: person?.name, role: 'viewer' })),
     ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
@@ -883,7 +885,7 @@ export function savedTripFacts(record = {}) {
   return {
     span,
     owners: {},
-    planOwned: record.planOwned === true,
+    purchased_plan: purchasedPlan, planOwned: purchasedPlan === 'unlimited' || record.planOwned === true,
     activities,
     notTraveling,
     travelers: [
@@ -931,9 +933,7 @@ export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
   const errors = [];
   const span = facts.span || null;
-  if (!facts.planOwned && /you(?:'|’)re all set (?:with|for) the\b[^.]{0,80}unlimited|you are all set (?:with|for) the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
-    pushError(errors, 'the unlimited plan is not owned yet');
-  }
+  pushPlanAndStyleDraftErrors(body, errors, pushError, facts);
   const endDay = endDayNumber(span);
   const ranges = body.matchAll(rangeEndRe());
   for (const shortened of ranges) {
@@ -1047,9 +1047,10 @@ export function completeRosterParty(doc) {
     rememberRoster(sources, `collaborators.${person.name}`, person.payer || '', 'trip.dialogParty');
   }
   for (const kid of Array.isArray(stored.preference_subjects) ? stored.preference_subjects : []) {
-    if (!kid?.name || !Number.isFinite(Number(kid.age))) continue;
-    party.preference_subjects.push({ name: kid.name, age: Number(kid.age) });
-    rememberRoster(sources, `preference_subjects.${kid.name}`, Number(kid.age), 'trip.dialogParty');
+    if (!kid?.name) continue;
+    const age = Number(kid.age);
+    party.preference_subjects.push(Number.isFinite(age) ? { name: kid.name, age } : { name: kid.name });
+    rememberRoster(sources, `preference_subjects.${kid.name}`, Number.isFinite(age) ? age : '', 'trip.dialogParty');
   }
   for (const person of Array.isArray(stored.viewers) ? stored.viewers : []) {
     if (!person?.name) continue;
@@ -1074,13 +1075,9 @@ export function completeRosterParty(doc) {
       }
     } else if (role === 'child') {
       const age = person.age === null || person.age === undefined || person.age === '' ? NaN : Number(person.age);
-      if (!Number.isFinite(age)) {
-        unplaced = true;
-        continue;
-      }
       if (party.preference_subjects.some((kid) => samePerson(name, kid.name))) continue;
-      party.preference_subjects.push({ name, age });
-      rememberRoster(sources, `preference_subjects.${name}`, age, 'chat_extraction');
+      party.preference_subjects.push(Number.isFinite(age) ? { name, age } : { name });
+      rememberRoster(sources, `preference_subjects.${name}`, Number.isFinite(age) ? age : '', 'chat_extraction');
     } else if (role === 'viewer') {
       if (party.viewers.some((item) => samePerson(name, item.name))) continue;
       party.viewers.push({ name });
@@ -1499,7 +1496,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     things,
     party,
     planOwned: saved?.planOwned === true,
-    rule: saved?.rule || projected.rule,
+    purchased_plan: String(saved?.purchased_plan || saved?.ownerPlan?.checkout_plan || '').trim(), rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
     ...customerInputFields(saved),
   };
@@ -1529,6 +1526,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
   const tripContext = draftingFacts(history, customerTurn, mergedTrip);
+  tripContext.purchased_plan = String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim();
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);

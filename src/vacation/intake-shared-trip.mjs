@@ -183,19 +183,54 @@ function categoryKey(record = {}) {
     ? raw
     : (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw.name : '');
   const text = String(fromCategory || record?.category_name || '').trim().toLowerCase();
-  return text === 'flight' || text === 'car' ? text : '';
+  if (text === 'flight' || text === 'car') return text;
+  if (text === 'hotel' || text === 'lodging' || text === 'accommodation') return 'lodging';
+  return '';
 }
 
-/** Missing car/flight Things. Flight input starts at preferred airline. No wording. */
+function recordInputKind(record = {}) {
+  const keyed = categoryKey(record);
+  if (keyed) return keyed;
+  return transportKind({
+    category: record?.category,
+    category_name: record?.category_name,
+    name: record?.name || record?.title,
+    title: record?.title || record?.name,
+    description: record?.description,
+  });
+}
+
+function flightAirlineMissing(record = {}) {
+  const blob = [
+    record?.name,
+    record?.title,
+    record?.description,
+    ...(Array.isArray(record?.notes) ? record.notes : []),
+  ].map((part) => String(part || '')).join(' ');
+  if (!blob.trim()) return true;
+  if (/\bairline\b/i.test(blob)) return false;
+  if (/\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(blob)) return false;
+  return !/\b(?:united|delta|american|southwest|alaska|hawaiian|jetblue|frontier|spirit)\b/i.test(blob);
+}
+
+/** Missing lodging/car/flight facts only. Flight ask is preferred airline. No wording. */
 export function customerInputState(records = []) {
   const present = new Set();
+  let flightNeedsAirline = false;
   for (const record of records || []) {
-    const category = categoryKey(record);
-    if (category) present.add(category);
+    const kind = recordInputKind(record);
+    if (kind === 'flight') {
+      present.add('flight');
+      if (flightAirlineMissing(record)) flightNeedsAirline = true;
+    } else if (kind === 'car' || kind === 'lodging') {
+      present.add(kind);
+    }
   }
   const needsCustomerInput = [];
+  if (!present.has('lodging')) needsCustomerInput.push('lodging');
   if (!present.has('car')) needsCustomerInput.push('car');
   if (!present.has('flight')) needsCustomerInput.push('flight');
+  else if (flightNeedsAirline) needsCustomerInput.push('flight');
   if (!needsCustomerInput.length) return {};
   const state = { needsCustomerInput };
   if (needsCustomerInput.includes('flight')) state.flightAsk = 'preferredAirline';

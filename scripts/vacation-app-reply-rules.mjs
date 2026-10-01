@@ -1,3 +1,4 @@
+import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -574,19 +575,7 @@ export function sourcedPlaceRule() {
   return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
-export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = null, planOwned = false, priceAsk = false } = {}) {
-  const dollars = Number(seatDollars);
-  let mode = 'forbidden';
-  if (postIntake) mode = 'post-intake';
-  else if (upsell === 'allow-once') mode = 'allow-once';
-  else if (priceAsk) mode = 'price';
-  return {
-    mode,
-    seat_dollars: Number.isFinite(dollars) && dollars > 0 ? dollars : null,
-    payer_line: String(planLine || '').trim() || null,
-    plan_owned: planOwned === true,
-  };
-}
+export { planFactsForReply };
 
 export function replyRulesSystem(rules, destination, upsell, postIntake, customerTurn = '', context = {}) {
   const lock = text(destination, 160);
@@ -623,6 +612,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     planLine,
     seatDollars,
     planOwned: context.planOwned === true,
+    purchasedPlan: context.purchasedPlan || '',
     priceAsk,
   });
   const upsellLine = `Plan facts: ${JSON.stringify(planFacts)}`;
@@ -635,6 +625,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
+    'Do not say seat to the customer; say collaborator or person joining instead.',
+    'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
     (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
       ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
       : 'When the customer does not ask about access, do not add an access menu.'),
@@ -830,7 +822,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -918,7 +910,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         messages: [
           {
             role: 'system',
-            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
+            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '' })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
           },
           { role: 'user', content: userContent },
         ],
