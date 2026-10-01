@@ -111,6 +111,38 @@ const offers = [
   { brand: 'National', price: 42 },
 ];
 assert.deepEqual(lowestCarOffers(offers, 2).map((row) => row.brand), ['Budget', 'National']);
+const emptyTripId = '11111111-1111-4111-8111-111111111111';
+assert.equal(intakeShareSlug(emptyTripId), 'intake-111111111111');
+const emptyShared = sharedTripFromIntake({
+  trip: { id: emptyTripId, title: 'Vacation', destination: '', start_date: null, end_date: null },
+  things: [],
+});
+assert.equal(Boolean(emptyShared.trip), true);
+assert.deepEqual(emptyShared.places, []);
+assert.equal(emptyShared.trip.description, '');
+
+function shareDb(thingCount) {
+  const calls = [];
+  const db = (strings) => {
+    const text = strings.join(' ');
+    calls.push(text);
+    if (text.includes('count(*)')) return [{ n: thingCount }];
+    if (text.includes('from trips')) return [{ id: emptyTripId, title: 'Vacation', destination: '', metadata: {} }];
+    if (text.includes('from trip_things')) return [];
+    return [];
+  };
+  return { db, calls };
+}
+const { publishIntakeShare } = await import('../routes/vacation-itinerary.mjs');
+const emptyShare = shareDb(0);
+await publishIntakeShare(emptyShare.db, emptyTripId);
+assert.equal(emptyShare.calls.some((sql) => sql.includes('update trips') && sql.includes('publicSlug')), true);
+assert.equal(emptyShare.calls.some((sql) => sql.includes('preCollaboratorSnapshot')), false);
+const filledShare = shareDb(2);
+await publishIntakeShare(filledShare.db, emptyTripId);
+assert.equal(filledShare.calls.some((sql) => sql.includes('update trips') && sql.includes('publicSlug')), true);
+assert.equal(filledShare.calls.some((sql) => sql.includes('preCollaboratorSnapshot')), true);
+
 assert.equal(withoutCarBrand(offers, 'Budget').some((row) => row.brand === 'Budget'), false);
 assert.equal(withoutCarBrand(offers, 'Budget').length <= 10, true);
 const carScript = await readFile(new URL('../public/ts-car-brand-filter.js', import.meta.url), 'utf8');
