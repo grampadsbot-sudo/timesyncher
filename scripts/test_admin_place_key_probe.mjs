@@ -17,7 +17,7 @@ assert.throws(
 );
 
 let fetchCalls = 0;
-const missingBrave = await probePlaceSearchKeys({ TAVILI_API_KEY: MOCK_TAVILY }, async () => {
+const missingBrave = await probePlaceSearchKeys({ tavily: MOCK_TAVILY }, async () => {
   fetchCalls += 1;
   return { ok: true, status: 200, json: async () => ({ results: [] }) };
 });
