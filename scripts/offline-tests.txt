@@ -43,3 +43,4 @@ scripts/test_seat_price_data.mjs
 scripts/test_trip_intake_classify.mjs
 scripts/test_trip_intake_search.mjs
 scripts/test_trip_literal_ban_g2a.mjs
+scripts/test_keepsake_order_buy_link.mjs
