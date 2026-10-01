@@ -45,7 +45,8 @@
         "\\bmultiple\\s+vacations?\\b",
         "\\b(?:several|many|a\\s+few|a\\s+couple\\s+of)\\s+(?:vacations?|trips?)\\b",
         "\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+vacations?\\b",
-        "\\ball\\s+vacations\\b"
+        "\\ball\\s+vacations\\b",
+        "\\bunlimited\\b(?:\\s+\\w+){0,6}\\s+vacations?\\b"
       ]
     },
     "BAR-THING-CUSTOMER": {

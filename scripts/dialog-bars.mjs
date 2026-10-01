@@ -130,7 +130,8 @@ function termHits(prose, terms, ruleId) {
     while (match) {
       const end = match.index + match[0].length;
       const canonical = terms.canonicalPlan || '';
-      const insideCanonical = canonical && prose.slice(Math.max(0, match.index - canonical.length), end + canonical.length).toLowerCase().includes(canonical)
+      const unlimitedWording = source.includes('unlimited');
+      const insideCanonical = !unlimitedWording && canonical && prose.slice(Math.max(0, match.index - canonical.length), end + canonical.length).toLowerCase().includes(canonical)
         && canonical.toLowerCase().includes(match[0].toLowerCase());
       if (!covered(allows, match.index, end) && !insideCanonical) {
         hits.push({ rule: ruleId, index: match.index, length: match[0].length, match: snippet(prose, match.index, match[0].length) });
@@ -332,7 +333,7 @@ export function barFindings(file, text, terms = loadBarTerms()) {
   const thingRe = compile(terms.rules['BAR-THING-CUSTOMER'].terms[0], terms.rules['BAR-THING-CUSTOMER'].flags || '');
   const comments = commentSpans(value);
   const push = (rule, index, symbol) => {
-    const key = `${rule}\0${symbol}`;
+    const key = rule === 'BAR-UNLIMITED-WORDING' ? `${rule}\0${index}\0${symbol}` : `${rule}\0${symbol}`;
     if (seen.has(key)) return;
     seen.add(key);
     findings.push({ rule, file, line: lineNumber(value, index), symbol_or_pattern: symbol });

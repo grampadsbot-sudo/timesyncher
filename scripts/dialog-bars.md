@@ -22,3 +22,5 @@ The same text in any other file stays in scope. A paraphrase in either file stay
 - `routes/checkout-coupon.mjs`
 
 Other files, including chat, reply, and prompt files, stay in scope for those rules.
+
+`BAR-UNLIMITED-WORDING` matches `unlimited` followed by at most six words and then `vacation` or `vacations`, in any case. The canonical plan line is included. Adjacent string `+` joins, quoted template interpolations, array `.join` results, and `.split().join()` results are folded and checked the same way. The three checkout modules stay exempt. A baseline row cannot hide a hit: customer-facing matches fail.

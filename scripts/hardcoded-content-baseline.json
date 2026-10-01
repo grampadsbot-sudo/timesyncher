@@ -1,26 +1,5 @@
 [
   {
-    "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs",
-    "rule": "MODEL-ALLOWLIST",
-    "symbol_or_pattern": "google/gemini-2.5-flash",
-    "inventory_id": "MODEL-ALLOWLIST",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs",
-    "rule": "MODEL-ALLOWLIST",
-    "symbol_or_pattern": "gpt-4.1-mini",
-    "inventory_id": "MODEL-ALLOWLIST",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs",
-    "rule": "MODEL-ALLOWLIST",
-    "symbol_or_pattern": "openai/gpt-4.1-mini",
-    "inventory_id": "MODEL-ALLOWLIST",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
     "file": "index.html",
     "symbol_or_pattern": "Las Vegas",
     "inventory_id": "CONTENT-MATCH",
@@ -392,6 +371,13 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
+    "file": "scripts/live_v7_dialog_pdf.py",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
     "file": "scripts/live-transcript-dialog-pdf.mjs",
     "rule": "MODEL-ALLOWLIST",
     "symbol_or_pattern": "gpt-5-mini",
@@ -402,13 +388,6 @@
     "file": "scripts/live-transcript-dialog-pdf.mjs",
     "rule": "MODEL-ALLOWLIST",
     "symbol_or_pattern": "openai/gpt-5-mini",
-    "inventory_id": "MODEL-ALLOWLIST",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/live_v7_dialog_pdf.py",
-    "rule": "MODEL-ALLOWLIST",
-    "symbol_or_pattern": "gpt-5-mini",
     "inventory_id": "MODEL-ALLOWLIST",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -638,6 +617,13 @@
   },
   {
     "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "NO-PAID-PLACES-API",
+    "symbol_or_pattern": "places.googleapis.com :: return host === 'places.googleapis.com' || host === 'maps.googleapis.com'; @119",
+    "inventory_id": "NO-PAID-PLACES-API",
+    "note": "TODO: Search is removing the paid places client"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
     "rule": "THING-SOURCE",
     "symbol_or_pattern": "thing-without-source:{ category: 'activity', title: text(attraction.n",
     "inventory_id": "THING-SOURCE",
@@ -723,15 +709,15 @@
   {
     "file": "src/vacation/access-plan.mjs",
     "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "This payer has no paid upgrades.",
-    "inventory_id": "ce0518f7",
+    "symbol_or_pattern": "lan rows found for this payer.",
+    "inventory_id": "889d1c56",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "src/vacation/access-plan.mjs",
     "rule": "BAR-SPLIT-PAYER",
-    "symbol_or_pattern": "lan rows found for this payer.",
-    "inventory_id": "889d1c56",
+    "symbol_or_pattern": "This payer has no paid upgrades.",
+    "inventory_id": "ce0518f7",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -834,14 +820,14 @@
   },
   {
     "file": "src/vacation/keepsake-product-overrides.mjs",
-    "symbol_or_pattern": "Las Vegas",
+    "symbol_or_pattern": "las vegas",
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "CONTENT-MATCH"
   },
   {
     "file": "src/vacation/keepsake-product-overrides.mjs",
-    "symbol_or_pattern": "las vegas",
+    "symbol_or_pattern": "Las Vegas",
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "CONTENT-MATCH"
@@ -905,20 +891,6 @@
   {
     "file": "src/vacation/keepsake-product-overrides.mjs",
     "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "PRODUCT_THING_FIELDS",
-    "inventory_id": "A14",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-product-overrides.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "PRODUCT_VENUE_COORDS",
-    "inventory_id": "A13",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/keepsake-product-overrides.mjs",
-    "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "inventory:A13",
     "inventory_id": "A13",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -931,6 +903,20 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "PRODUCT_THING_FIELDS",
+    "inventory_id": "A14",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-product-overrides.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "PRODUCT_VENUE_COORDS",
+    "inventory_id": "A13",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
     "file": "src/vacation/keepsake-style2.mjs",
     "rule": "DATE-LITERAL",
     "symbol_or_pattern": "Oct 9",
@@ -940,14 +926,14 @@
   {
     "file": "src/vacation/live-app-turn.mjs",
     "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)",
+    "symbol_or_pattern": "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
     "inventory_id": "DATE-LITERAL",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "src/vacation/live-app-turn.mjs",
     "rule": "DATE-LITERAL",
-    "symbol_or_pattern": "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
+    "symbol_or_pattern": "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)",
     "inventory_id": "DATE-LITERAL",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -1052,6 +1038,13 @@
   {
     "file": "src/vacation/seat-price.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "’]ll| will)?\\s+(?:cover|pay)\\s+ ['’]s\\s+\\$",
+    "inventory_id": "818300af",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "\\s+will\\s+pay\\s+(?:his|her|their)\\s+o",
     "inventory_id": "9babcbbb",
     "note": "removed by Search Eng / Reply Eng deletion PR"
@@ -1061,13 +1054,6 @@
     "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "own\\s+\\$ | \\s+(?:covers|pays)\\s+(?:his|her|their)\\s+",
     "inventory_id": "b328fe7f",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/seat-price.mjs",
-    "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "’]ll| will)?\\s+(?:cover|pay)\\s+ ['’]s\\s+\\$",
-    "inventory_id": "818300af",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
@@ -1100,6 +1086,13 @@
   },
   {
     "file": "src/vacation/thing-logo-capture.mjs",
+    "symbol_or_pattern": "las vegas",
+    "inventory_id": "CONTENT-MATCH",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "CONTENT-MATCH"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
     "symbol_or_pattern": "Las Vegas",
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR",
@@ -1108,13 +1101,6 @@
   {
     "file": "src/vacation/thing-logo-capture.mjs",
     "symbol_or_pattern": "Mon Ami Gabi",
-    "inventory_id": "CONTENT-MATCH",
-    "note": "removed by Search Eng / Reply Eng deletion PR",
-    "rule": "CONTENT-MATCH"
-  },
-  {
-    "file": "src/vacation/thing-logo-capture.mjs",
-    "symbol_or_pattern": "las vegas",
     "inventory_id": "CONTENT-MATCH",
     "note": "removed by Search Eng / Reply Eng deletion PR",
     "rule": "CONTENT-MATCH"
@@ -1143,14 +1129,14 @@
   {
     "file": "src/vacation/thing-logo-capture.mjs",
     "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "NAMED_THING_LOGOS",
+    "symbol_or_pattern": "inventory:A19",
     "inventory_id": "A19",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "src/vacation/thing-logo-capture.mjs",
     "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A19",
+    "symbol_or_pattern": "NAMED_THING_LOGOS",
     "inventory_id": "A19",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -1165,6 +1151,13 @@
     "file": "src/vacation/thing-media-bind.mjs",
     "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "FILENAME_THING_HINTS",
+    "inventory_id": "A17",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-media-bind.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:A17",
     "inventory_id": "A17",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -1186,13 +1179,6 @@
     "file": "src/vacation/thing-media-bind.mjs",
     "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "VACATION3_SHARE_TOKEN",
-    "inventory_id": "A17",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/thing-media-bind.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A17",
     "inventory_id": "A17",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
@@ -1262,15 +1248,15 @@
   {
     "file": "src/vacation/trek-style2-bundle.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type",
-    "inventory_id": "2b2836ac",
+    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type",
+    "inventory_id": "a303930b",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
     "file": "src/vacation/trek-style2-bundle.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
-    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type",
-    "inventory_id": "a303930b",
+    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type",
+    "inventory_id": "2b2836ac",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
