@@ -12,7 +12,7 @@ import {
 } from '../src/vacation/first-intake-reply.mjs';
 import { liveTurnRecord } from '../src/vacation/live-app-turn.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-import { turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 
 const root = new URL('../', import.meta.url);
 const plans = JSON.parse(await readFile(new URL('content/plans.json', root), 'utf8'));
@@ -105,7 +105,15 @@ assert.equal(route.includes('...appReplyTelemetry(appLive)'), true);
 assert.equal(route.includes('authorId: session.customer_id'), true);
 assert.equal(route.includes('viewerId: session.customer_id'), true);
 assert.match(page, /turn\.authorLabel/);
+assert.doesNotMatch(page, /authorLabel \|\| \(user \? 'You'/);
+assert.match(route, /authorPeopleFromTrip/);
+assert.match(route, /authorLabelReason/);
 
+const people = authorPeopleFromTrip(
+  { primary: { name: 'Ada Lovelace' }, seats: [{ id: collabId, displayName: 'Nico Hale' }] },
+  [],
+  ownerId,
+);
 const ownerVoice = {
   speaker: 'customer',
   direction: 'inbound',
@@ -113,15 +121,18 @@ const ownerVoice = {
   authorName: 'Ada Lovelace',
   payload: { liveTranscript: { speakerName: 'Ada Lovelace', modality: 'voice' } },
 };
-const collab = { viewerId: collabId, customerName: 'Nico', seat: { displayName: 'Nico' } };
-assert.equal(turnAuthorLabel(ownerVoice, collab), 'Ada');
-assert.equal(turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: collabId, authorName: 'Nico' }, collab), 'You');
-assert.equal(turnAuthorLabel({ speaker: 'app', direction: 'outbound', authorName: 'Ada Lovelace' }, collab), 'TimeSyncher');
-assert.equal(turnAuthorLabel({
-  speaker: 'customer',
-  direction: 'inbound',
-  payload: { liveTranscript: { speakerName: 'Ada Lovelace' } },
-}, collab), 'Ada');
-assert.equal(turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: ownerId, authorName: 'Ada Lovelace' }, { viewerId: ownerId, customerName: 'Ada Lovelace' }), 'You');
+const collab = { viewerId: collabId, customerName: 'Nico Hale', seat: { displayName: 'Nico Hale' } };
+const ownerSeenByCollab = turnAuthorLabel(ownerVoice, collab, people);
+assert.equal(ownerSeenByCollab.label, 'Ada');
+assert.equal(ownerSeenByCollab.reason, '');
+const ownTurn = turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: collabId, authorName: 'Nico Hale' }, collab, people);
+assert.equal(ownTurn.label, 'You');
+assert.equal(ownTurn.reason, '');
+assert.equal(turnAuthorLabel({ speaker: 'app', direction: 'outbound', authorName: 'Ada Lovelace' }, collab, people).label, 'TimeSyncher');
+const unnamed = turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: 'someone-else' }, collab, people);
+assert.equal(unnamed.label, '');
+assert.equal(unnamed.reason, 'author_name_missing');
+assert.notEqual(unnamed.label, 'You');
+assert.equal(turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: ownerId, authorName: 'Ada Lovelace' }, { viewerId: ownerId, customerName: 'Ada Lovelace' }, people).label, 'You');
 
 console.log('first intake echo passed');

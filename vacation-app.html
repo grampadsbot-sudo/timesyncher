@@ -635,7 +635,7 @@
       const turnMarkup = chatTurns.length
         ? chatTurns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
-          return `<article class="bubble ${user ? 'user' : ''}"><small>${safe(turn.authorLabel || (user ? 'You' : 'TimeSyncher'))}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
+          return `<article class="bubble ${user ? 'user' : ''}"><small>${safe(user ? (turn.authorLabel || '') : (turn.authorLabel || 'TimeSyncher'))}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
         }).join('')
         : '';
       const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>

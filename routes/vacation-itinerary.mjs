@@ -41,7 +41,7 @@ import {
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
-import { turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
@@ -259,6 +259,15 @@ async function loadVacationAppTrips(db, session) {
 async function loadVacationAppTurns(db, session, tripId) {
   const customerId = transcriptCustomerId(session);
   if (!customerId || !tripId) return [];
+  const tripRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
+  const party = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
+  const collabRows = await db`
+    select display_name
+    from vacation_collaborators
+    where owner_customer_id = ${customerId} and trip_id = ${tripId} and status = 'active'
+  `;
+  const people = authorPeopleFromTrip(party, collabRows, customerId);
   const rows = await db`
     select speaker, body, channel, payload, direction, received_at, sent_at, created_at
     from transcript_turns
@@ -281,7 +290,9 @@ async function loadVacationAppTurns(db, session, tripId) {
       authorId: String(payload.authorId || ''),
       at: row.received_at || row.sent_at || row.created_at || null,
     };
-    turn.authorLabel = turnAuthorLabel(turn, session);
+    const named = turnAuthorLabel(turn, session, people);
+    turn.authorLabel = named.label;
+    if (named.reason) turn.authorLabelReason = named.reason;
     if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
     return turn;
   });
