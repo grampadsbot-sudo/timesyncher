@@ -87,7 +87,7 @@ export async function consumeCoupon(db, code, { email, plan, originalAmountCents
       and status = 'active'
       and redemption_count < max_redemptions
       and (expires_at is null or expires_at > now())
-    returning id, code_hint, label, max_redemptions, redemption_count, status, expires_at
+    returning id, code_hint, label, max_redemptions, redemption_count, status, expires_at, metadata
   `;
   if (!rows[0]) throw Object.assign(new Error('Coupon is invalid, expired, disabled, or already used.'), { statusCode: 400 });
   const redemptions = await db`
@@ -146,7 +146,7 @@ export async function completeCollaboratorCouponRedemption(db, redemptionId, { i
 
 function publicCoupon(row) {
   if (!row) return null;
-  return {
+  const coupon = {
     id: row.id,
     codeHint: row.code_hint,
     label: row.label,
@@ -158,4 +158,8 @@ function publicCoupon(row) {
     updatedAt: row.updated_at,
     redemptions: row.redemptions || undefined,
   };
+  if (row.metadata !== undefined) {
+    coupon.metadata = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {};
+  }
+  return coupon;
 }

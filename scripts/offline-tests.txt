@@ -15,6 +15,7 @@ scripts/test_check-no-hardcoded-product-cosmetic.mjs
 scripts/test_no_hardcoded_product_content.mjs
 scripts/test_deploy_required_env.mjs
 scripts/test_checkout_coupons.mjs
+scripts/test_mint_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
 scripts/test_eval_jev_cards.mjs
 scripts/test_first_pass_minimums.mjs
