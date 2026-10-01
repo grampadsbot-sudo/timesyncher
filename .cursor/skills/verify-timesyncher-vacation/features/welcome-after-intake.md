@@ -24,6 +24,9 @@ Drive the real staging app after a fresh signup. Never drive the deleted shell (
 - When `VERCEL_TOKEN` is missing, the fetch fails, or the response has no value, the process exits non-zero and prints a `FAIL welcome-after-intake:` line that does not include the value.
 - The packet is `/opt/cursor/artifacts/onboarding-welcome-judge/packet.json` and `packet.md`, with screenshots in that directory. Screenshot `verify-welcome-after-intake.png` is the first welcome.
 - Deterministic gates fail the run when the welcome is missing before the first customer turn, the welcome contains Thing, EULA, terms, seat, payments, or reservations, a generated fixture literal appears in a shipped template, or the welcome has no mic or voice-note invitation.
+- The same gates also fail when a welcome or reply mentions tier, route, model, or Jev; when the long voice-note reply does not end with exactly one question; when the collaborator sees the owner's thread as their own; or when access is granted instead of offered.
+- Each run stamps the staging build SHA at the start and at the end. The stamp reads `/api/version`, response headers, and meta tags on `/`, `/vacation-app.html`, and `/shared/`. A missing SHA is recorded as `UNKNOWN` with the targets that were checked. Each EULA accept time is recorded.
+- A separate fresh account with no destination is opened, and its vacation/area dropdown is opened and saved as `no-vacations-dropdown.png`. The gate fails unless that account has zero vacations, the dropdown is open, nothing is preselected, the option list is empty, and no place name is shown.
 - Pass only when those gates are clear and the external judge grades a pass. Do not mark a pass from shape alone.
 
 ## Gotchas

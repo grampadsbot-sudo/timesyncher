@@ -2,10 +2,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
+  accessPosture,
   applyJudgeGrade,
   bannedWordHits,
+  collaboratorSeesOwnerThread,
+  countRealVacations,
+  endsWithExactlyOneQuestion,
   generateOnboardingFixtures,
+  gradeNoVacationDropdown,
   hasVoiceInvitation,
+  internalWordHits,
   literalLeaks,
   LONG_VOICE_TEMPLATE,
   mulberry32,
@@ -15,6 +21,7 @@ import {
   QUESTION_FIRST_TEXT,
   renderJudgePacketMarkdown,
   SHORT_TRIP_TEXT,
+  stampBuildSha,
   welcomeBeforeFirstTurn,
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/onboarding-welcome-precheck.mjs';
 import {
@@ -219,5 +226,85 @@ try {
 }
 
 selfTestMissingWelcomeDatabase();
+
+assert.deepEqual(internalWordHits('The tier and the route use a model named Jev.'), ['tier', 'route', 'model', 'jev']);
+assert.deepEqual(internalWordHits('Hold the mic and talk about the day.'), []);
+assert.equal(endsWithExactlyOneQuestion('The days are in. What should we decide first?'), true);
+assert.equal(endsWithExactlyOneQuestion('What day? And who is coming?'), false);
+assert.equal(endsWithExactlyOneQuestion('The days are in.'), false);
+assert.equal(accessPosture('Anyone with the link can see the plans without signing in.').offered, true);
+assert.equal(accessPosture('Anyone with the link can see the plans without signing in.').granted, false);
+assert.equal(accessPosture('I have added him. Access granted.').granted, true);
+const ownThread = collaboratorSeesOwnerThread(
+  [{ speaker: 'customer', text: 'we are going to zon-abcdef12 for several nights together' }],
+  [{ speaker: 'customer', text: 'we are going to zon-abcdef12 for several nights together' }],
+);
+assert.equal(ownThread.length, 1);
+assert.match(ownThread[0], /zon-abcdef12/);
+assert.deepEqual(collaboratorSeesOwnerThread(
+  [{ speaker: 'customer', text: 'we are going to zon-abcdef12 for several nights together' }],
+  [{ speaker: 'app', text: 'we are going to zon-abcdef12 for several nights together' }],
+), []);
+assert.equal(countRealVacations([{ destination: '', status: 'onboarding' }, { destination: 'zon-abcdef12' }]), 1);
+assert.equal(gradeNoVacationDropdown({ vacationCount: 0, opened: true, selected: '', options: [] }).ok, true);
+const listed = gradeNoVacationDropdown({
+  vacationCount: 0,
+  opened: true,
+  selected: 'Area / Sample',
+  options: ['Other / Sample'],
+});
+assert.equal(listed.ok, false);
+assert.equal(listed.failures.some((item) => item.code === 'dropdown_preselected'), true);
+assert.equal(listed.failures.some((item) => item.code === 'dropdown_options'), true);
+assert.equal(gradeNoVacationDropdown({ vacationCount: 0, opened: false, selected: '', options: [] }).failures.some((item) => item.code === 'dropdown_not_opened'), true);
+const unknownBuild = stampBuildSha({
+  checkedAt: '2026-10-01T17:00:00.000Z',
+  checked: [{ target: 'https://vacation-staging.timesyncher.com/api/version', sha: '' }],
+});
+assert.equal(unknownBuild.sha, 'UNKNOWN');
+assert.equal(unknownBuild.known, false);
+assert.equal(unknownBuild.checked[0].target.includes('/api/version'), true);
+const knownBuild = stampBuildSha({ checked: [{ sha: 'bcccb56b201b554f0ca0771d3ee3796c74e05e0c' }] });
+assert.equal(knownBuild.sha, 'bcccb56b201b554f0ca0771d3ee3796c74e05e0c');
+assert.equal(knownBuild.known, true);
+
+const dialog = precheckOnboardingRun({
+  trips: [
+    { id: 'f1', turns: [...turns(SHAPED), { speaker: 'app', text: 'I heard the voice note. What should we decide first?', at: '2026-10-01T00:00:04.000Z' }] },
+    { id: 'f2', turns: turns(SHAPED) },
+    { id: 'f3', turns: [...turns(SHAPED, QUESTION_FIRST_TEXT), { speaker: 'app', text: 'Yes. Anyone with the link can see the plans without signing in. I can add him.', at: '2026-10-01T00:00:04.000Z' }] },
+  ],
+  literals: ['zon-abcdef12'],
+  sources: cleanSources,
+  collaborator: { turns: [{ speaker: 'app', text: 'Hello. Hold the mic and talk.', at: '2026-10-01T00:00:03.000Z' }], userTexts: [] },
+  noVacation: { vacationCount: 0, opened: true, selected: '', options: [] },
+  eulaAccepts: [{ id: 'f1', at: '2026-10-01T00:00:00.000Z' }],
+  checkDialog: true,
+});
+assert.equal(dialog.ok, true, JSON.stringify(dialog.failures));
+const dialogFail = precheckOnboardingRun({
+  trips: [{
+    id: 'f1',
+    turns: [...turns(`${SHAPED} The model is Jev.`), { speaker: 'app', text: 'What day? And who?', at: '2026-10-01T00:00:04.000Z' }],
+  }, {
+    id: 'f3',
+    turns: [...turns(SHAPED), { speaker: 'app', text: 'I have added him. Access granted.', at: '2026-10-01T00:00:04.000Z' }],
+  }],
+  literals: ['zon-abcdef12'],
+  sources: cleanSources,
+  collaborator: {
+    turns: [{ speaker: 'customer', text: first.trips[0].text, at: '2026-10-01T00:00:03.000Z' }],
+    userTexts: [],
+  },
+  noVacation: { vacationCount: 1, opened: false, selected: 'Area / Sample', options: ['Other / Sample'] },
+  eulaAccepts: [{ id: 'f1', at: null }],
+  checkDialog: true,
+});
+assert.equal(dialogFail.ok, false);
+for (const code of ['internal_word', 'f1_one_question', 'access_granted', 'vacation_count', 'dropdown_not_opened', 'eula_accept_time']) {
+  assert.equal(dialogFail.failures.some((item) => item.code === code), true, code);
+}
+assert.match(first.emptyAccount.email, /^empty-/);
+assert.match(first.emptyAccount.title, /^shell-/);
 
 process.stdout.write('onboarding welcome precheck passed\n');

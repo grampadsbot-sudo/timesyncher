@@ -101,7 +101,7 @@ A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCH
 
 ## Onboarding welcome
 
-The welcome-after-intake check signs up a fresh staging customer, agrees on the terms screen, captures the welcome, then sends three fresh-trip fixtures and writes a judge packet. A non-empty bubble is not a pass. Deterministic gates only fail obvious problems: welcome missing before the first turn, banned words, fixture literals in shipped templates, and a missing mic or voice-note invitation. PASS is recorded only after an external judge grades a pass.
+The welcome-after-intake check signs up a fresh staging customer, agrees on the terms screen, captures the welcome, then sends three fresh-trip fixtures and writes a judge packet. A non-empty bubble is not a pass. Deterministic gates fail obvious problems: welcome missing before the first turn, banned words, fixture literals in shipped templates, a missing mic or voice-note invitation, tier/route/model/Jev wording, a long-note reply that does not end on exactly one question, a collaborator seeing the owner's thread as their own, access that is granted instead of offered, and a vacation/area dropdown that is preselected or lists a place for an account with zero vacations. The packet stamps the staging build SHA at the start and end of the run and records each EULA accept time. PASS is recorded only after an external judge grades a pass.
 
 ```bash
 node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --check

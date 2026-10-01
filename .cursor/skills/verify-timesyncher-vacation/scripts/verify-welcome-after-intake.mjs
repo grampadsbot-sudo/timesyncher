@@ -13,11 +13,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   applyJudgeGrade,
+  countRealVacations,
   generateOnboardingFixtures,
+  normalizeBuildSha,
   onboardingBars,
   onboardingVerdict,
   precheckOnboardingRun,
   renderJudgePacketMarkdown,
+  stampBuildSha,
   turnText,
 } from './onboarding-welcome-precheck.mjs';
 
@@ -214,6 +217,92 @@ function bypassHeaders(env) {
   };
 }
 
+const BUILD_HEADER_NAMES = [
+  'x-timesyncher-build',
+  'x-timesyncher-sha',
+  'x-git-sha',
+  'x-commit-sha',
+  'x-vercel-git-commit-sha',
+];
+
+function headerSha(response) {
+  const found = [];
+  let sha = '';
+  for (const name of BUILD_HEADER_NAMES) {
+    const value = response?.headers?.get?.(name) || '';
+    if (!value) continue;
+    found.push(name);
+    if (!sha) sha = normalizeBuildSha(value);
+  }
+  return { found, sha };
+}
+
+export async function readBuildStamp({ env = process.env, fetchImpl = globalThis.fetch, origin = STAGING } = {}) {
+  const headers = { accept: 'application/json' };
+  const bypass = bypassHeaders(env);
+  if (bypass) headers['x-vercel-protection-bypass'] = bypass['x-vercel-protection-bypass'];
+  const targets = [
+    { kind: 'endpoint', url: `${origin}/api/version` },
+    { kind: 'document', url: `${origin}/vacation-app.html` },
+    { kind: 'document', url: `${origin}/` },
+    { kind: 'document', url: `${origin}/shared/` },
+  ];
+  const checked = [];
+  for (const target of targets) {
+    const row = {
+      target: target.url,
+      kind: target.kind,
+      status: null,
+      sha: '',
+      headers: [],
+      meta: [],
+    };
+    try {
+      const response = await fetchImpl(target.url, {
+        headers: { ...headers, accept: target.kind === 'endpoint' ? 'application/json' : 'text/html' },
+        redirect: 'follow',
+      });
+      row.status = response?.status ?? null;
+      const fromHeaders = headerSha(response);
+      row.headers = fromHeaders.found;
+      row.sha = fromHeaders.sha;
+      if (target.kind === 'endpoint') {
+        const payload = await response.json().catch(() => null);
+        const sha = normalizeBuildSha(payload?.sha || payload?.gitSha || payload?.commit);
+        row.bodyField = payload && typeof payload === 'object' && ('sha' in payload || 'gitSha' in payload || 'commit' in payload) ? 'sha' : '';
+        if (sha) row.sha = sha;
+      } else {
+        const html = typeof response?.text === 'function' ? await response.text() : '';
+        const metas = [...String(html).matchAll(/<meta\s+[^>]*>/gi)].map((match) => match[0]);
+        row.meta = metas.filter((tag) => /sha|commit|version|build/i.test(tag)).slice(0, 8);
+        for (const tag of row.meta) {
+          const content = tag.match(/content=["']([^"']+)["']/i)?.[1] || '';
+          const sha = normalizeBuildSha(content);
+          if (sha && !row.sha) row.sha = sha;
+        }
+      }
+    } catch {
+      row.error = 'request failed';
+    }
+    checked.push(row);
+  }
+  return stampBuildSha({ checked, checkedAt: new Date().toISOString() });
+}
+
+async function waitForEulaAccept(page) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(new Date().toISOString()), 20000);
+    const onResponse = (response) => {
+      const url = response.url();
+      if (response.request().method() !== 'POST' || !url.includes('/api/eula')) return;
+      clearTimeout(timer);
+      page.off('response', onResponse);
+      resolve(new Date().toISOString());
+    };
+    page.on('response', onResponse);
+  });
+}
+
 async function openSession(browser, url, env) {
   const page = await browser.newPage();
   page.setDefaultTimeout(180000);
@@ -328,7 +417,9 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
   const replyFile = path.join(artifactsDir, `${spec.id}-reply.png`);
   try {
     await page.waitForSelector('#eulaScreen', { timeout: 30000 });
+    const eulaAccepting = waitForEulaAccept(page);
     const domWelcome = await agreeThenReadWelcome(pageWelcomeDriver(page), { name: owner.displayName });
+    const eulaAcceptedAt = await eulaAccepting;
     const welcomeWall = new Date().toISOString();
     await shot(page, welcomeFile);
     const opened = await readSession(page, onboarding.token);
@@ -364,6 +455,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
       screenshots: [welcomeFile, replyFile],
       observedWelcomeWall: welcomeWall,
       submittedWall,
+      eulaAcceptedAt,
     };
   } catch (error) {
     const failure = path.join(artifactsDir, `${spec.id}-failure.png`);
@@ -378,6 +470,116 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
       postedOk: false,
       postedError: redactWelcomeSecrets(error?.message || error),
       screenshots: [failure],
+    };
+  } finally {
+    await page.close().catch(() => {});
+  }
+}
+
+async function readOpenDropdown(page) {
+  const frames = page.frames();
+  for (const frame of frames) {
+    const area = await frame.evaluate(() => {
+      const select = [...document.querySelectorAll('select')].find((node) => /^area\b/i.test((node.closest('label')?.innerText || '').trim()));
+      if (!select) return null;
+      const options = [...select.options].map((option) => (option.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+      select.size = Math.max(options.length, 1);
+      select.focus();
+      select.scrollIntoView({ block: 'center' });
+      const selected = (select.options[select.selectedIndex]?.textContent || '').replace(/\s+/g, ' ').trim();
+      return { selected, options };
+    }).catch(() => null);
+    if (area) return { opened: true, control: 'area-select', ...area };
+  }
+  const menu = await page.evaluate(() => {
+    const root = document.querySelector('#tripMenu.open .trip-list, .trip-menu.open .trip-list');
+    if (!root) return null;
+    const options = [...root.querySelectorAll('.trip-option, [role="option"]')].map((node) => (node.innerText || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const selectedNode = root.querySelector('[aria-selected="true"]');
+    const selected = selectedNode ? (selectedNode.innerText || '').replace(/\s+/g, ' ').trim() : '';
+    return { selected, options };
+  }).catch(() => null);
+  if (menu) return { opened: true, control: 'trip-menu', ...menu };
+  return { opened: false, control: '', selected: '', options: [] };
+}
+
+async function openVacationAreaDropdown(page, { clickThings = false } = {}) {
+  const button = await page.$('#tripButton');
+  if (button) {
+    await button.click().catch(() => {});
+    await page.waitForSelector('#tripMenu.open, .trip-menu.open', { timeout: 3000 }).catch(() => {});
+  }
+  const opened = await readOpenDropdown(page);
+  if (opened.opened || !clickThings) return opened;
+  for (const frame of page.frames()) {
+    const clicked = await frame.evaluate(() => {
+      const thing = [...document.querySelectorAll('button')].find((node) => {
+        const text = (node.innerText || '').replace(/\s+/g, ' ').trim();
+        if (text.length < 12 || text.length > 140) return false;
+        return !/voice|record|pdf|order|day-by-day|flights|hotels|cars|restaurants|stores|the rest|budget|agree/i.test(text);
+      });
+      if (!thing) return false;
+      thing.click();
+      return true;
+    }).catch(() => false);
+    if (!clicked) continue;
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    const area = await readOpenDropdown(page);
+    if (area.opened) return area;
+  }
+  return readOpenDropdown(page);
+}
+
+async function driveNoVacation(browser, env, account, artifactsDir) {
+  const onboarding = await createFreshTrip(env, account, account.title);
+  const page = await openSession(browser, onboarding.vacationAppUrl, env);
+  const file = path.join(artifactsDir, 'no-vacations-dropdown.png');
+  try {
+    await page.waitForSelector('#eulaScreen', { timeout: 30000 });
+    const eulaAccepting = waitForEulaAccept(page);
+    await agreeThenReadWelcome(pageWelcomeDriver(page), { name: account.displayName });
+    const eulaAcceptedAt = await eulaAccepting;
+    const opened = await readSession(page, onboarding.token);
+    const vacations = opened.data?.vacations || [];
+    await page.waitForSelector('iframe, #tripButton, #tripLabel', { timeout: 15000 }).catch(() => {});
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const label = await page.$eval('#tripLabel, #tripButton', (node) => (node.innerText || '').replace(/\s+/g, ' ').trim()).catch(() => '');
+    const dropdown = await openVacationAreaDropdown(page);
+    await shot(page, file);
+    let observation = dropdown;
+    if (!observation.opened && onboarding.publicUrl) {
+      const frame = page.frames().find((item) => item.url().includes('/shared/'));
+      if (frame) observation = await openVacationAreaDropdown(page, { clickThings: true });
+      if (!observation.opened) {
+        await page.goto(onboarding.publicUrl, { waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        observation = await openVacationAreaDropdown(page, { clickThings: true });
+      }
+      if (observation.opened) await shot(page, file);
+    }
+    return {
+      vacationCount: countRealVacations(vacations),
+      opened: observation.opened === true,
+      control: observation.control || '',
+      selected: observation.selected || '',
+      options: observation.options || [],
+      screenshot: file,
+      eulaAcceptedAt,
+      label,
+      publicUrl: onboarding.publicUrl || '',
+      shellCount: Array.isArray(vacations) ? vacations.length : 0,
+    };
+  } catch (error) {
+    await shot(page, file).catch(() => {});
+    return {
+      vacationCount: null,
+      opened: false,
+      control: '',
+      selected: '',
+      options: [],
+      screenshot: file,
+      eulaAcceptedAt: null,
+      error: redactWelcomeSecrets(error?.message || error),
     };
   } finally {
     await page.close().catch(() => {});
@@ -415,19 +617,28 @@ async function driveCollaborator(browser, env, fixture, ownerTrip, artifactsDir)
   const file = path.join(artifactsDir, 'collaborator-before-first.png');
   try {
     await page.waitForSelector('#eulaScreen', { timeout: 30000 });
+    const eulaAccepting = waitForEulaAccept(page);
     const domWelcome = await agreeThenReadWelcome(pageWelcomeDriver(page), { name: fixture.collaborator.displayName }).catch((error) => {
       if (String(error?.message || '') !== WELCOME_ONBOARDING_TIMEOUT) throw error;
       return { shown: false, prior: [] };
     });
+    const eulaAcceptedAt = await eulaAccepting;
     const observedAt = new Date().toISOString();
     await shotLatest(page, file);
     const opened = await readSession(page, joined.token);
+    const userTexts = await page.evaluate(() => [...document.querySelectorAll('#messages article.bubble.user')].map((node) => {
+      const label = node.querySelector('small')?.textContent || '';
+      const raw = (node.textContent || '').replace(/\s+/g, ' ').trim();
+      return label ? raw.replace(label, '').replace(/\s+/g, ' ').trim() : raw;
+    }).filter(Boolean));
     const turns = withObservedWelcome(opened.data?.turns, domWelcome?.prior, observedAt, null, '');
     return {
       error: '',
       turns,
+      userTexts,
       screenshots: [file],
       observedAt,
+      eulaAcceptedAt,
       firstMessageSent: false,
     };
   } finally {
@@ -474,6 +685,7 @@ function collaboratorStamp(collaborator) {
     id: 'collaborator',
     welcomeAt: welcome?.at || null,
     firstCustomerAt: customer?.at || null,
+    eulaAcceptedAt: collaborator?.eulaAcceptedAt || null,
     welcomeBeforeCustomer: Boolean(welcome?.text) && !customer,
   };
 }
@@ -490,19 +702,39 @@ function timestampRows(trips) {
       id: trip.id,
       welcomeAt,
       firstCustomerAt,
+      eulaAcceptedAt: trip.eulaAcceptedAt || null,
       welcomeBeforeCustomer: Number.isFinite(welcomeMs) && Number.isFinite(customerMs) && welcomeMs < customerMs,
     };
   });
 }
 
-export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judge, screenshots }) {
+function includesAncestor(sha, ancestor) {
+  if (!normalizeBuildSha(sha)) return null;
+  const result = spawnSync('git', ['merge-base', '--is-ancestor', ancestor, sha], { cwd: root, encoding: 'utf8' });
+  if (result.status === 0) return true;
+  if (result.status === 1) return false;
+  return null;
+}
+
+export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judge, screenshots, build, noVacation, eulaAccepts }) {
   const verdict = onboardingVerdict({ precheck, judge });
+  const startSha = build?.start?.sha || 'UNKNOWN';
   return {
     result: verdict.result,
     pass: verdict.pass,
     reason: verdict.reason,
     staging: STAGING,
     generatedAt: new Date().toISOString(),
+    build: {
+      ...(build || {}),
+      pr97: {
+        merge: 'c8bd92b8321dff632da7d4135d8d97ed9bcea708',
+        includedAtStart: includesAncestor(startSha, 'c8bd92b8321dff632da7d4135d8d97ed9bcea708'),
+        includedAtEnd: includesAncestor(build?.end?.sha, 'c8bd92b8321dff632da7d4135d8d97ed9bcea708'),
+      },
+    },
+    eulaAccepts: eulaAccepts || [],
+    noVacation: noVacation || null,
     fixtures,
     requirements: onboardingBars().map((bar) => ({ ...bar, status: 'ungraded' })),
     precheck,
@@ -550,12 +782,26 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
   await ensureWelcomeDatabase({ env });
   const fixtures = generateOnboardingFixtures(random);
   await mkdir(artifactsDir, { recursive: true });
+  const buildStart = await readBuildStamp({ env });
   const browser = await launchBrowser().catch((error) => {
     throw fail(`FAIL welcome-after-intake: browser unavailable (${redactWelcomeSecrets(error?.message || error)})`);
   });
   const trips = [];
-  let collaborator = { error: 'not captured', turns: [], screenshots: [] };
+  let collaborator = { error: 'not captured', turns: [], screenshots: [], userTexts: [] };
+  let noVacation = { vacationCount: null, opened: false, selected: '', options: [], eulaAcceptedAt: null };
   try {
+    try {
+      noVacation = await driveNoVacation(browser, env, fixtures.emptyAccount, artifactsDir);
+    } catch (error) {
+      noVacation = {
+        vacationCount: null,
+        opened: false,
+        selected: '',
+        options: [],
+        eulaAcceptedAt: null,
+        error: redactWelcomeSecrets(error?.message || error),
+      };
+    }
     for (const spec of fixtures.trips) {
       try {
         trips.push(await driveOwnerTrip(browser, env, fixtures.owner, spec, artifactsDir));
@@ -580,12 +826,27 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
   } finally {
     await browser.close().catch(() => {});
   }
+  const buildEnd = await readBuildStamp({ env });
   const sources = await shippedTemplateSources();
-  const precheck = precheckOnboardingRun({ trips, literals: fixtures.literals, sources });
+  const eulaAccepts = [
+    { id: 'no-vacation', at: noVacation?.eulaAcceptedAt || null },
+    ...trips.map((trip) => ({ id: trip.id, at: trip.eulaAcceptedAt || null })),
+    { id: 'collaborator', at: collaborator?.eulaAcceptedAt || null },
+  ];
+  const precheck = precheckOnboardingRun({
+    trips,
+    literals: fixtures.literals,
+    sources,
+    collaborator,
+    noVacation,
+    eulaAccepts,
+    checkDialog: true,
+  });
   const screenshots = [
+    noVacation?.screenshot,
     ...trips.flatMap((trip) => trip.screenshots || []),
     ...(collaborator.screenshots || []),
-  ];
+  ].filter(Boolean);
   const packet = buildJudgePacket({
     fixtures,
     trips,
@@ -593,6 +854,9 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
     precheck,
     judge: judge || { graded: false, pass: false, source: 'external' },
     screenshots,
+    build: { start: buildStart, end: buildEnd },
+    noVacation,
+    eulaAccepts,
   });
   await writePacket(artifactsDir, packet);
   let screenshot = '';

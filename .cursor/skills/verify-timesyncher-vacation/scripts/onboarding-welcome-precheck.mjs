@@ -155,6 +155,12 @@ export function generateOnboardingFixtures(random = Math.random) {
       displayName: ownerFirst,
       email: `verify-${stamp}@timesyncher.test`,
     },
+    emptyAccount: {
+      firstName: `lea${stamp.slice(0, 6)}`,
+      displayName: `lea${stamp.slice(0, 6)}`,
+      email: `empty-${stamp}@timesyncher.test`,
+      title: `shell-${stamp}`,
+    },
     collaborator: {
       firstName: values.collab1,
       displayName: values.collab1,
@@ -202,6 +208,106 @@ export function hasVoiceInvitation(text) {
   return VOICE_INVITE.test(String(text || ''));
 }
 
+const INTERNAL_WORDS = [
+  { code: 'tier', re: /\btiers?\b/i },
+  { code: 'route', re: /\broutes?\b/i },
+  { code: 'model', re: /\bmodels?\b/i },
+  { code: 'jev', re: /\bjev\b/i },
+];
+
+const ACCESS_GRANTED = /\baccess granted\b|\baccess has been granted\b|\balready (?:has|have) access\b|\bi(?:'ve| have) (?:added|granted)\b|\byou now have access\b/i;
+const ACCESS_OFFERED = /\bwithout signing in\b|\banyone with the link\b|\bcan see (?:the |plans|photos)\b|\b(?:can|could) add\b|\bwant me to add\b/i;
+
+export function internalWordHits(text) {
+  const value = String(text || '');
+  return INTERNAL_WORDS.filter((item) => item.re.test(value)).map((item) => item.code);
+}
+
+export function questionCount(text) {
+  return (String(text || '').match(/\?/g) || []).length;
+}
+
+export function endsWithExactlyOneQuestion(text) {
+  const value = String(text || '').trim();
+  return value.endsWith('?') && questionCount(value) === 1;
+}
+
+export function accessPosture(text) {
+  const value = String(text || '');
+  return {
+    offered: ACCESS_OFFERED.test(value),
+    granted: ACCESS_GRANTED.test(value),
+  };
+}
+
+export function countRealVacations(vacations) {
+  return (Array.isArray(vacations) ? vacations : []).filter((trip) => {
+    if (String(trip?.destination || '').trim()) return true;
+    if (trip?.startDate || trip?.endDate) return true;
+    return false;
+  }).length;
+}
+
+export function gradeNoVacationDropdown(observation = {}) {
+  const options = (Array.isArray(observation.options) ? observation.options : [])
+    .map((value) => String(value || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  const selected = String(observation.selected || observation.preselected || '').replace(/\s+/g, ' ').trim();
+  const placeNames = [...new Set([...(selected ? [selected] : []), ...options])];
+  const failures = [];
+  if (Number(observation.vacationCount) !== 0) {
+    failures.push({ code: 'vacation_count', detail: observation.vacationCount ?? null });
+  }
+  if (observation.opened !== true) failures.push({ code: 'dropdown_not_opened' });
+  if (selected) failures.push({ code: 'dropdown_preselected', detail: selected });
+  if (options.length) failures.push({ code: 'dropdown_options', detail: options });
+  if (placeNames.length) failures.push({ code: 'dropdown_place', detail: placeNames });
+  return {
+    ok: failures.length === 0,
+    failures,
+    vacationCount: observation.vacationCount ?? null,
+    opened: observation.opened === true,
+    control: observation.control || '',
+    selected,
+    options,
+    placeNames,
+    screenshot: observation.screenshot || '',
+  };
+}
+
+export function collaboratorSeesOwnerThread(ownerTurns, collaboratorTurns, collaboratorUserTexts = []) {
+  const ownerTexts = (Array.isArray(ownerTurns) ? ownerTurns : [])
+    .filter((turn) => isCustomer(turn))
+    .map((turn) => turnText(turn))
+    .filter((value) => value.length >= 24);
+  const ownTexts = [
+    ...(Array.isArray(collaboratorTurns) ? collaboratorTurns : []).filter((turn) => isCustomer(turn)).map((turn) => turnText(turn)),
+    ...(Array.isArray(collaboratorUserTexts) ? collaboratorUserTexts : []).map((value) => String(value || '').replace(/\s+/g, ' ').trim()),
+  ].filter(Boolean);
+  const hits = [];
+  for (const owner of ownerTexts) {
+    const needle = owner.slice(0, 48);
+    if (ownTexts.some((value) => value.includes(needle))) hits.push(needle);
+  }
+  return hits;
+}
+
+export function normalizeBuildSha(value) {
+  const text = String(value || '').trim().toLowerCase();
+  return /^[0-9a-f]{40}$/.test(text) ? text : '';
+}
+
+export function stampBuildSha(probe = {}) {
+  const checked = Array.isArray(probe.checked) ? probe.checked : [];
+  const sha = checked.map((row) => normalizeBuildSha(row?.sha)).find(Boolean) || '';
+  return {
+    sha: sha || 'UNKNOWN',
+    known: Boolean(sha),
+    checkedAt: probe.checkedAt || null,
+    checked,
+  };
+}
+
 export function accessLineCount(text) {
   const sentences = String(text || '').split(/\n+/).flatMap((line) => line.split(/(?<=[.!?])\s+/));
   return sentences.filter((sentence) => /without signing in|viewer access|can see the site|no sign-?in/i.test(sentence)).length;
@@ -219,7 +325,29 @@ export function literalLeaks(literals, sources) {
   return failures;
 }
 
-export function precheckOnboardingRun({ trips, literals, sources } = {}) {
+function appTexts(trips, collaborator) {
+  const rows = [];
+  for (const trip of trips || []) {
+    const timing = welcomeBeforeFirstTurn(trip?.turns);
+    const welcome = turnText(timing.welcome);
+    const reply = replyAfterCustomer(trip?.turns);
+    if (welcome) rows.push({ id: trip?.id || '', where: 'welcome', text: welcome });
+    if (reply) rows.push({ id: trip?.id || '', where: 'reply', text: reply });
+  }
+  const collabWelcome = (collaborator?.turns || []).find((turn) => isApp(turn) && turnText(turn));
+  if (collabWelcome) rows.push({ id: 'collaborator', where: 'welcome', text: turnText(collabWelcome) });
+  return rows;
+}
+
+export function precheckOnboardingRun({
+  trips,
+  literals,
+  sources,
+  collaborator = null,
+  noVacation = null,
+  eulaAccepts = null,
+  checkDialog = false,
+} = {}) {
   const failures = [];
   const welcomes = [];
   for (const trip of trips || []) {
@@ -241,10 +369,49 @@ export function precheckOnboardingRun({ trips, literals, sources } = {}) {
     for (const code of bannedWordHits(text)) {
       failures.push({ code: 'banned_word', trip: trip?.id || '', word: code });
     }
+    for (const code of internalWordHits(text)) {
+      failures.push({ code: 'internal_word', trip: trip?.id || '', where: 'welcome', word: code });
+    }
+    const reply = replyAfterCustomer(trip?.turns);
+    for (const code of internalWordHits(reply)) {
+      failures.push({ code: 'internal_word', trip: trip?.id || '', where: 'reply', word: code });
+    }
     if (!hasVoiceInvitation(text)) failures.push({ code: 'voice_invitation', trip: trip?.id || '' });
   }
   for (const leak of literalLeaks(literals, sources)) failures.push(leak);
-  return { ok: failures.length === 0, failures, welcomes };
+  if (checkDialog) {
+    const f1 = (trips || []).find((trip) => trip?.id === 'f1');
+    const f1Reply = replyAfterCustomer(f1?.turns);
+    if (!endsWithExactlyOneQuestion(f1Reply)) {
+      failures.push({ code: 'f1_one_question', detail: questionCount(f1Reply) });
+    }
+    const ownerTurns = (trips || []).flatMap((trip) => trip?.turns || []);
+    const ownThread = collaboratorSeesOwnerThread(ownerTurns, collaborator?.turns, collaborator?.userTexts);
+    if (ownThread.length) failures.push({ code: 'collaborator_owns_thread', detail: ownThread });
+    for (const row of appTexts(trips, collaborator)) {
+      const posture = accessPosture(row.text);
+      if (posture.granted) failures.push({ code: 'access_granted', trip: row.id, where: row.where });
+      const mustOffer = (row.id !== 'collaborator' && row.where === 'welcome') || (row.id === 'f3' && row.where === 'reply');
+      if (mustOffer && !posture.offered) failures.push({ code: 'access_not_offered', trip: row.id, where: row.where });
+    }
+    const f3Reply = replyAfterCustomer((trips || []).find((trip) => trip?.id === 'f3')?.turns);
+    if (!f3Reply) failures.push({ code: 'access_not_offered', trip: 'f3', where: 'reply' });
+    const collabText = turnText((collaborator?.turns || []).find((turn) => isApp(turn)));
+    for (const code of internalWordHits(collabText)) {
+      failures.push({ code: 'internal_word', trip: 'collaborator', where: 'welcome', word: code });
+    }
+  }
+  let noVacationGrade = null;
+  if (noVacation) {
+    noVacationGrade = gradeNoVacationDropdown(noVacation);
+    failures.push(...noVacationGrade.failures.map((failure) => ({ ...failure, trip: 'no-vacation' })));
+  }
+  if (Array.isArray(eulaAccepts)) {
+    for (const row of eulaAccepts) {
+      if (!row?.at) failures.push({ code: 'eula_accept_time', trip: row?.id || '' });
+    }
+  }
+  return { ok: failures.length === 0, failures, welcomes, noVacation: noVacationGrade };
 }
 
 function affirmative(value) {
@@ -329,6 +496,25 @@ export function renderJudgePacketMarkdown(packet) {
     '',
     'PASS is recorded only after the external judge grades a pass and the deterministic gates are clear.',
     '',
+    '## Staging build',
+    '',
+    `Start: ${packet?.build?.start?.sha || 'UNKNOWN'} at ${packet?.build?.start?.checkedAt || 'missing'}`,
+    `End: ${packet?.build?.end?.sha || 'UNKNOWN'} at ${packet?.build?.end?.checkedAt || 'missing'}`,
+    '',
+    '## EULA accepts',
+    '',
+  ];
+  for (const row of packet?.eulaAccepts || []) {
+    lines.push(`- ${row.id}: ${row.at || 'missing'}`);
+  }
+  lines.push(
+    '',
+    '## No-vacation dropdown',
+    '',
+    '```json',
+    JSON.stringify(packet?.noVacation || packet?.precheck?.noVacation || {}, null, 2),
+    '```',
+    '',
     '## Fixture values',
     '',
     '```json',
@@ -337,7 +523,7 @@ export function renderJudgePacketMarkdown(packet) {
     '',
     '## Timestamps',
     '',
-  ];
+  );
   for (const row of packet?.timestamps || []) {
     lines.push(`- ${row.id}: welcome ${row.welcomeAt || 'missing'} ; first customer turn ${row.firstCustomerAt || 'missing'} ; before=${row.welcomeBeforeCustomer === true}`);
   }
