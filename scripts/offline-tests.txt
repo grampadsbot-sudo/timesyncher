@@ -3,6 +3,8 @@ scripts/test_access_plan_checkout.mjs
 scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_build_used_vs_tip.mjs
+scripts/test_check_code_ratchet.mjs
+scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
 scripts/test_restaurant_list_tags.mjs
@@ -14,6 +16,7 @@ scripts/test_no_hardcoded_product_content.mjs
 scripts/test_deploy_required_env.mjs
 scripts/test_checkout_coupons.mjs
 scripts/test_evidence_secrets.mjs
+scripts/test_eval_jev_cards.mjs
 scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
 scripts/test_roster_extraction_party.mjs
