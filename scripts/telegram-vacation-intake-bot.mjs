@@ -33,7 +33,7 @@ const TREK_RUNTIME_DIR = process.env.TIMESYNCHER_TREK_RUNTIME_DIR || '/home/time
 const TREK_DB_PATH = process.env.TIMESYNCHER_TREK_DB_PATH || path.join(TREK_RUNTIME_DIR, 'data', 'travel.db');
 const TREK_PUBLIC_BASE_URL = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
 const TREK_CONTAINER = process.env.TIMESYNCHER_TREK_CONTAINER || 'trek';
-const TREK_DB_OWNER = process.env.TIMESYNCHER_TREK_DB_OWNER || 'ubishere9995';
+const TREK_DB_OWNER = process.env.TIMESYNCHER_TREK_DB_OWNER || '';
 const PRODUCT_MANIFEST_PATH = process.env.TIMESYNCHER_PRODUCT_GBRAIN_MANIFEST || path.join(process.cwd(), 'product-gbrain-manifest.json');
 
 function requireEnv() {
@@ -113,7 +113,7 @@ function isPersonAccessQuestion(value = '') {
   if (/\bfamily event\b/.test(normalized)) return false;
   if (/\/shared\/[^/?#\s]+/i.test(normalized) && /\b(update|change|edit|add|remove|delete|rename|move|make)\b/.test(normalized)) return false;
   const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|edit|modify|change|interact|add|invite|link|add\s+(?:pics?|photos?|videos?|media)|upload)\b/.test(normalized);
-  const mentionsPerson = /\b(kim|wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(normalized);
+  const mentionsPerson = /\b(wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(normalized);
   const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|site|telegram|collaborator)\b/.test(normalized);
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
@@ -121,7 +121,6 @@ function isPersonAccessQuestion(value = '') {
 function vacationLookupTerm(value = '') {
   const normalized = cleanText(value, 2000).toLowerCase().replace(/\s+/g, ' ').trim();
   if (/\b(vegas|las vegas|strip|jockey club)\b/.test(normalized)) return 'Las Vegas';
-  if (/\b(hawaii|oahu|waikiki|maui|kona|big island)\b/.test(normalized)) return 'Hawaii';
   if (isPersonAccessQuestion(normalized) && !/\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(normalized)) return '';
   const match = normalized.match(/\b(?:is there|are there|do we have|do i have|did we create|did i create|is my|is our)\s+(?:a|an|the|any)?\s*([a-z][a-z0-9 .'-]{2,80}?)(?:\s+(?:vacation|trip|itinerary|staycation|travel plan)\b|[?!.]|$)/i);
   return cleanText(match?.[1] || '', 120);
@@ -146,8 +145,6 @@ if lookup:
     terms = [lookup]
     if "vegas" in lookup or "las vegas" in lookup:
         terms += ["vegas", "las vegas", "strip", "jockey club"]
-    if "hawaii" in lookup:
-        terms += ["hawaii", "oahu", "waikiki", "maui", "kona", "big island"]
     terms = ["%" + term + "%" for term in dict.fromkeys(terms) if term]
     for term in terms:
         rows.extend(conn.execute("""
@@ -299,7 +296,6 @@ function loadProductManifest() {
 
 function accessPersonLabel(value = '') {
   const normalized = cleanText(value, 2000);
-  if (/\bkim\b/i.test(normalized)) return 'Kim';
   if (/\bwife\b/i.test(normalized)) return 'your wife';
   if (/\bhusband\b/i.test(normalized)) return 'your husband';
   if (/\bspouse\b/i.test(normalized)) return 'your spouse';
@@ -312,7 +308,6 @@ function accessPersonLabel(value = '') {
 function accessPersonCustomerLabel(person = '', requestText = '') {
   const configuredWifeName = cleanText(process.env.TIMESYNCHER_CUSTOMER_WIFE_DISPLAY_NAME || process.env.TIMESYNCHER_PRIMARY_SPOUSE_NAME, 80);
   if (person === 'your wife' && configuredWifeName) return configuredWifeName;
-  if (person === 'your wife' && /\bkim\b/i.test(requestText)) return 'Kim';
   return cleanText(person || 'that person', 120);
 }
 
@@ -488,7 +483,7 @@ function isAccessPricingQuestion(value = '') {
   const normalized = cleanText(value, 2000).toLowerCase();
   if (!isQuestionLike(normalized)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(normalized);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant|kim)\b/.test(normalized);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(normalized);
   return asksPrice && accessTarget;
 }
 
@@ -506,18 +501,24 @@ function accessPricingAnswer(value = '') {
   const checkout = checkoutBaseUrl(manifest);
   const lines = [];
   if (allVacations) {
-    lines.push(`For ${person}, full Telegram editing access across all of your vacations is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
+    if (unlimited?.amountUsd) lines.push(`For ${person}, full Telegram editing access across all of your vacations is $${unlimited.amountUsd}.`);
+    else console.error('access price is not configured: unlimited telegram');
     lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
     if (wantsMedia) {
-      lines.push(`Photo upload access across all vacations is ${photo.unlimitedVacationsAmountUsd ? `$${photo.unlimitedVacationsAmountUsd}` : '$9'}.`);
-      lines.push(`Video upload access across all vacations is ${video.unlimitedVacationsAmountUsd ? `$${video.unlimitedVacationsAmountUsd}` : '$27'}.`);
+      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access across all vacations is $${photo.unlimitedVacationsAmountUsd}.`);
+      else console.error('access price is not configured: unlimited photo');
+      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access across all vacations is $${video.unlimitedVacationsAmountUsd}.`);
+      else console.error('access price is not configured: unlimited video');
     }
   } else {
-    lines.push(`For ${person}, Telegram editing access for one vacation is ${singleTrip?.amountUsd ? `$${singleTrip.amountUsd}` : '$15'}.`);
+    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for one vacation is $${singleTrip.amountUsd}.`);
+    else console.error('access price is not configured: single telegram');
     lines.push(`That adds one active Telegram collaborator for that vacation. Add more collaborators one checkout at a time.`);
     if (wantsMedia) {
-      lines.push(`Photo upload access for one vacation is ${photo.singleVacationAmountUsd ? `$${photo.singleVacationAmountUsd}` : '$5'}.`);
-      lines.push(`Video upload access for one vacation is ${video.singleVacationAmountUsd ? `$${video.singleVacationAmountUsd}` : '$17'}.`);
+      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for one vacation is $${photo.singleVacationAmountUsd}.`);
+      else console.error('access price is not configured: single photo');
+      if (video.singleVacationAmountUsd) lines.push(`Video upload access for one vacation is $${video.singleVacationAmountUsd}.`);
+      else console.error('access price is not configured: single video');
     }
   }
   lines.push(`Checkout link: ${checkout}/order-test.html`);
@@ -1201,7 +1202,7 @@ function parseMediaAttachmentTargetWithModel(caption = '') {
   const text = cleanText(caption, 1000);
   if (!mediaCaptionLooksLikeAttachmentCommand(text)) return null;
   if (process.env.TIMESYNCHER_MEDIA_INTENT_DISABLE_MODEL === '1') return null;
-  const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
+  const grokBin = process.env.TIMESYNCHER_GROK_BIN || 'grok';
   const grokModel = process.env.TIMESYNCHER_MEDIA_INTENT_MODEL || process.env.TIMESYNCHER_GROK_MODEL || 'grok-4.5';
   const prompt = [
     'Classify this Telegram media caption into one known TimeSyncher Vacation command.',
@@ -1211,7 +1212,9 @@ function parseMediaAttachmentTargetWithModel(caption = '') {
     `Caption: ${JSON.stringify(text)}`,
   ].join('\n');
   const timeoutSeconds = Math.max(8, Number.parseInt(process.env.TIMESYNCHER_MEDIA_INTENT_TIMEOUT_SECONDS || '35', 10));
-  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${timeoutSeconds}s`, 'sudo', '-n', '-u', 'ubishere9995', grokBin, '-p', prompt, '--output-format', 'json', '--json-schema', mediaAttachmentIntentSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '1'], {
+  const grokUser = String(process.env.TIMESYNCHER_GROK_USER || TREK_DB_OWNER || '').trim();
+  const grokPrefix = grokUser ? ['sudo', '-n', '-u', grokUser] : [];
+  const result = spawnSync('/usr/bin/timeout', ['-k', '5s', `${timeoutSeconds}s`, ...grokPrefix, grokBin, '-p', prompt, '--output-format', 'json', '--json-schema', mediaAttachmentIntentSchema(), '--no-alt-screen', '--model', grokModel, '--max-turns', '1'], {
     encoding: 'utf8',
     timeout: (timeoutSeconds + 8) * 1000,
     maxBuffer: 1024 * 1024,
@@ -1702,10 +1705,8 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
   if (media) {
     await telegram('sendChatAction', { chat_id: chatId, action: media.mediaKind === 'video' ? 'upload_video' : 'upload_photo' }).catch(() => {});
     const result = await recordMediaUpload(message, media, { cacheDir });
-    const reply = result.reply || (media.mediaKind === 'video'
-      ? 'Got it — I saved that video to this vacation.'
-      : 'Got it — I saved that photo to this vacation.');
-    await sendMessage(chatId, reply, messageId);
+    if (!result.reply) throw new Error('media upload returned no model reply');
+    await sendMessage(chatId, result.reply, messageId);
     return;
   }
 

@@ -1,0 +1,18 @@
+[
+  {
+    "n": 1,
+    "speaker": "alex",
+    "speaker_id": "alex",
+    "channel": "customer",
+    "in_reply_to": null,
+    "text": "Friday is arrival and groceries only."
+  },
+  {
+    "n": 2,
+    "speaker": "app",
+    "speaker_id": "app",
+    "channel": "app",
+    "in_reply_to": 1,
+    "text": "Friday is set for arrival and groceries. I saved that note for Friday. The vacation site is https://vacation.timesyncher.com/v/sample-week."
+  }
+]

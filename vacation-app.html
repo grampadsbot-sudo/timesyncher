@@ -394,7 +394,7 @@
     }
     .eula-screen p { color: var(--muted); margin: 0 0 14px; line-height: 1.45; }
     .eula-text {
-      white-space: pre-wrap;
+      white-space: normal;
       max-height: min(46vh, 420px);
       overflow: auto;
       border: 1px solid var(--line);
@@ -403,6 +403,20 @@
       padding: 14px;
       line-height: 1.45;
     }
+    .eula-text h1,
+    .eula-text h2,
+    .eula-text h3 {
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .eula-text h1 { font-size: 20px; margin: 0 0 10px; }
+    .eula-text h2 { font-size: 16px; margin: 16px 0 6px; }
+    .eula-text h3 { font-size: 15px; margin: 14px 0 6px; }
+    .eula-text p { margin: 0 0 10px; }
+    .eula-text ul,
+    .eula-text ol { margin: 0 0 10px; padding-left: 1.25em; }
+    .eula-text li { margin: 0 0 4px; }
+    .eula-text :last-child { margin-bottom: 0; }
     .eula-form {
       display: grid;
       gap: 12px;
@@ -440,6 +454,7 @@
 <body>
   <div id="root"></div>
   <script type="module">
+    import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
     let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
@@ -490,7 +505,6 @@
       if (!title) return true;
       const key = title.toLowerCase();
       if (PLACEHOLDER_TITLES.has(key)) return true;
-      if (key === 'vegas anniversary' && !hasPlan) return true;
       if (String(trip.status || '').toLowerCase() === 'onboarding' && !String(trip.destination || '').trim() && !realSiteUrl(trip.publicUrl)) return true;
       return false;
     }
@@ -556,7 +570,7 @@
         <section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy">
           <h1>Review Terms &amp; Privacy</h1>
           <p>These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.</p>
-          <div class="eula-text" id="eulaText">${safe(eula.text || 'Terms are not ready yet. Open the link from your purchase email again in a moment.')}</div>
+          <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe('Terms are not ready yet. Open the link from your purchase email again in a moment.')}</div>
           <form class="eula-form" id="eulaForm">
             <label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label>
             <label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label>
@@ -600,15 +614,7 @@
           });
           const joinData = await joinRes.json().catch(() => ({}));
           if (!joinRes.ok || joinData.ok === false) throw new Error(joinData.error || 'Seat join was not stored.');
-          if (joinData.status === 'interim') {
-            const finRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ action: 'finish-rewrite', tripId: state.session?.currentTripId }),
-            });
-            const fin = await finRes.json().catch(() => ({}));
-            if (!finRes.ok || fin.ok === false || !fin.reply) throw new Error(fin.error || 'Seat join was not stored.');
-          } else if (joinData.status !== 'already_joined' && !joinData.reply) {
+          if (joinData.status !== 'joined' && joinData.status !== 'already_joined') {
             throw new Error(joinData.error || 'Seat join was not stored.');
           }
         }
@@ -625,16 +631,13 @@
       const trips = realVacations();
       const siteUrl = realSiteUrl(trip?.publicUrl);
       const hasSite = Boolean(siteUrl);
-      const returningTrip = hasSite && trip?.intakeShare !== true && !/\/shared\/intake-/i.test(siteUrl);
-      const welcome = returningTrip
-        ? 'I can update this vacation from here.\n\nTell me the trip basics you want changed: where you are going, when you leave and come back, who is coming, and what matters most.\n\nFamily and friends can join this same vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType a message, tap the microphone to the right to speak, or attach photos, reservations, and notes.'
-        : 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace until it is actually up.\n\nTell me the trip basics: where you are going, when you leave and come back, who is coming, and what matters most.\n\nIf family or friends are coming, we can welcome them onto this vacation as collaborators. View access lets them see the days. Edit access lets them add notes after you approve an email invite. They join from that email, accept the terms, and then this vacation opens.\n\nType in the box, tap the microphone to the right of it and speak, or use the paperclip for photos, reservations, and notes.';
-      const turnMarkup = state.turns.length
-        ? state.turns.map((turn) => {
+      const chatTurns = state.turns.filter((turn) => turn.speaker !== 'system' && turn.direction !== 'system');
+      const turnMarkup = chatTurns.length
+        ? chatTurns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
           return `<article class="bubble ${user ? 'user' : ''}"><small>${user ? 'You' : 'TimeSyncher'}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
         }).join('')
-        : `<article class="bubble"><small>TimeSyncher</small>${welcome}</article>`;
+        : '';
       const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>
             <form class="composer" id="composer">
               <div class="attachment-row" id="attachmentRow"></div>

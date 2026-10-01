@@ -1,0 +1,10 @@
+{"id":"dates","state":{"draft":"You leave on the third and return on the twelfth.","issue":"dates"},"expect":{"covers_dates":{"min":0.55,"max":1},"overall_ready":{"min":0.55,"max":1}}}
+{"id":"missed-dates","state":{"draft":"Sounds fun.","issue":"dates"},"expect":{"covers_dates":{"min":0,"max":0.45},"overall_ready":{"min":0,"max":0.45}}}
+{"id":"food","state":{"draft":"One night is a fish dinner.","issue":"restaurants_food"},"expect":{"covers_restaurants_food":{"min":0.55,"max":1}}}
+{"id":"who","state":{"draft":"Two adults and two kids are on the trip.","issue":"travelers"},"expect":{"covers_travelers":{"min":0.55,"max":1}}}
+{"id":"where","state":{"draft":"The week stays on the north coast.","issue":"destination"},"expect":{"covers_destination":{"min":0.55,"max":1}}}
+{"id":"secret","state":{"draft":"The database password is in the repo.","issue":"unsafe_internal"},"expect":{"overall_ready":{"min":0,"max":0.2}}}
+{"id":"link","state":{"draft":"Open the vacation from the website link on your account.","issue":"website_link"},"expect":{"covers_website_link":{"min":0.55,"max":1}}}
+{"id":"budget","state":{"draft":"I kept the lodging modest.","issue":"budget"},"expect":{"covers_budget":{"min":0.55,"max":1}}}
+{"id":"access","state":{"draft":"Blair can edit notes after you approve the email invite.","issue":"collaborator_access"},"expect":{"covers_collaborator_access":{"min":0.55,"max":1}}}
+{"id":"partial","state":{"draft":"Friday is arrival.","issue":"dates"},"expect":{"covers_dates":{"min":0,"max":0.7}}}

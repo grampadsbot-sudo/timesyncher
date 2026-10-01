@@ -1,21 +1,11 @@
 #!/usr/bin/env node
 
-import fs from 'node:fs';
-import { execFile } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
-import { promisify } from 'node:util';
-import { runApprovedSourceAdapters } from './travel-source-adapter-runner.mjs';
-import { jevRelevanceScore, scoreWebPoisInParallel, searchPois, synthesizeFromIds } from '../src/vacation/poi-search.mjs';
+import { fillTripIntake, lodgingFromChat } from '../src/vacation/place-search.mjs';
+import { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit } from '../src/vacation/keepsake-list-minimums.mjs';
 
-const execFileAsync = promisify(execFile);
+export { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit };
 
 const VALID_CATEGORIES = new Set(['hotel', 'flight', 'car', 'restaurant', 'store', 'activity', 'tour', 'event', 'transport', 'decision']);
-/** Per-category initial website fill. Not a total-of-8. Do not invent replacements. */
-export const DEFAULT_FIRST_PASS_MINIMUMS = {
-  restaurant: 15,
-  store: 10,
-  rest: 15,
-};
 
 function floorCategoryMin(value, floor) {
   const parsed = Number(value);
@@ -111,7 +101,7 @@ export function assertRequiredFirstPassMinimums(candidates = [], minimums = DEFA
   if (Object.keys(missing).length) {
     throw new Error(
       `initial website fill requires per-category mins restaurant>=${required.restaurant} store>=${required.store} rest>=${required.rest} `
-      + `(DEFAULT_FIRST_PASS_MINIMUMS in scripts/vacation-public-research-worker.mjs:13-16). `
+      + `(DEFAULT_FIRST_PASS_MINIMUMS in src/vacation/keepsake-list-minimums.mjs). `
       + `Got ${JSON.stringify(counts)}; missing ${JSON.stringify(missing)}. Under-min is fail-closed and cannot be skipped.`,
     );
   }
@@ -192,7 +182,7 @@ export function buildResearchQueries(artifacts = {}) {
   if (needsFlights && !suppressFlights) queries.push({ category: 'flight', query: `${base} flights airlines airports baggage fare official` });
   if (!suppressHotels) queries.push({ category: 'hotel', query: `${base} hotels official site cancellation fees location` });
   queries.push(
-    { category: 'restaurant', query: `${base} restaurants official menu hours reservations` },
+    { category: 'restaurant', query: `${base} restaurants official menu hours` },
     { category: 'store', query: `${base} shopping grocery market official visitor information` },
     { category: 'activity', query: `${base} activities wineries kid friendly sightseeing official tickets hours` },
   );
@@ -237,7 +227,7 @@ export function normalizeCandidate(raw = {}, context = {}) {
   const sourceQuality = {
     sourceCount: Number(raw.sourceQuality?.sourceCount || sources.length),
     adapterCount: Number(raw.sourceQuality?.adapterCount || Math.max(adapterCount, context.provider ? 1 : 0)),
-    safetyClass: text(raw.sourceQuality?.safetyClass || raw.safetyClass || (context.provider === 'live-grok-web-search' ? 'approved_public_search' : ''), 80),
+    safetyClass: text(raw.sourceQuality?.safetyClass || raw.safetyClass || '', 80),
     confidence: text(raw.sourceQuality?.confidence || (sources.length > 1 ? 'medium' : sourceBacked ? 'basic' : 'unverified'), 80),
     lastVerifiedAt: verifiedAt,
     expiresAt,
@@ -304,81 +294,26 @@ function mergeCandidateLists(primary = [], supplemental = []) {
   return merged;
 }
 
-function parseProviderCandidates(content) {
-  const fenced = /```json\s*([\s\S]*?)```/i.exec(content);
-  const raw = (fenced?.[1] || content).trim();
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    const start = raw.indexOf('{');
-    const end = raw.lastIndexOf('}');
-    if (start < 0 || end <= start) throw new Error('Public research provider did not return parseable JSON.');
-    parsed = JSON.parse(raw.slice(start, end + 1));
-  }
-  return Array.isArray(parsed) ? parsed : Array.isArray(parsed.candidates) ? parsed.candidates : [];
+function listed(value) {
+  return Array.isArray(value) ? value : [];
 }
 
-async function runGrokResearch(input, queries, startedAt) {
-  if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_DISABLE_LIVE === '1') return null;
-  if (process.env.TIMESYNCHER_PUBLIC_RESEARCH_PROVIDER && process.env.TIMESYNCHER_PUBLIC_RESEARCH_PROVIDER !== 'grok') return null;
-  const targetMinutes = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_TARGET_MINUTES || input.targetMinutes || 15);
-  const minMinutes = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_MINUTES || input.minMinutes || 10);
-  const prompt = [
-    'You are the paid Grok web_search provider for TimeSyncher Vacation public research.',
-    'Use only web_search. Return ONLY JSON with a top-level candidates array.',
-    'Every candidate must have category, title, summary, details, website, sources[{label,url}], verificationStatus, caveats, address, lat, lng.',
-    'First-pass minimums are mandatory unless the customer explicitly excludes a category: at least 15 restaurant candidates, 10 store candidates, and 15 The Rest candidates. The Rest means activities, wineries, sightseeing, tours, events, parks, kid-friendly stops, transport/logistics notes, and open decisions; do not count restaurants or stores as The Rest.',
-    'For every restaurant, store, activity, tour, event, winery, sightseeing stop, and park, include review1, review2, review3 with real sourced positive quote-style snippets or snippets from public review/search sources. Do not fabricate reviewer names or quotes.',
-    'For every restaurant, include happyHourDetails and happyHourSources. If no current/recent happy hour is found, set happyHour false and write: "No current happy-hour offer found in recent official/public sources as of YYYY-MM-DD; recheck before using for planning."',
-    'Use lat/lng coordinates centered on the actual place so the map can fit Caldwell/Boise instead of falling back.',
-    'Use public web sources only. Do not use Gmail, Google Calendar, Google Drive, private GBrain, shell, booking, payment, holds, purchases, or reservations.',
-    'Do not invent source URLs. If a detail needs checking, say so in caveats or verificationStatus.',
-    `Destination/context: ${JSON.stringify(input.artifacts || {})}`,
-    `Queries: ${JSON.stringify(queries)}`,
-    `Research duration target: ${minMinutes}-${targetMinutes} minutes. If provider runtime is shorter, still return only actually sourced candidates.`,
-  ].join('\n');
-  const grokBin = process.env.TIMESYNCHER_GROK_BIN || '/home/ubishere9995/.local/bin/grok';
-  const grokModel = process.env.TIMESYNCHER_GROK_MODEL || 'grok-composer-2.5-fast';
-  const command = 'cd /tmp && exec "$2" -p "$1" --tools web_search --disallowed-tools run_terminal_cmd --output-format plain --no-alt-screen --permission-mode dontAsk --model "$3" --max-turns 20';
-  const { stdout } = await execFileAsync('sudo', ['-n', '-u', 'ubishere9995', 'bash', '-lc', command, 'grok-vacation-worker', prompt, grokBin, grokModel], {
-    timeout: Number(process.env.TIMESYNCHER_GROK_TIMEOUT_MS || 900000),
-    maxBuffer: 4 * 1024 * 1024,
-  });
-  const elapsed = Date.now() - startedAt;
-  if (elapsed < minMinutes * 60_000 && process.env.TIMESYNCHER_PUBLIC_RESEARCH_ENFORCE_MINUTES === '1') await sleep(minMinutes * 60_000 - elapsed);
-  return { provider: 'live-grok-web-search', rawCandidates: parseProviderCandidates(stdout) };
+function researchJob(input = {}) {
+  const job = input.job && typeof input.job === 'object' ? input.job : {};
+  const jobInput = job.input && typeof job.input === 'object' ? job.input : {};
+  const artifacts = input.artifacts && typeof input.artifacts === 'object' ? input.artifacts : {};
+  const wantedThings = listed(input.wantedThings).length
+    ? input.wantedThings
+    : listed(jobInput.wantedThings).length
+      ? jobInput.wantedThings
+      : listed(job.wantedThings).length
+        ? job.wantedThings
+        : listed(artifacts.wantedThings);
+  const intakeEvent = input.intakeEvent ?? jobInput.intakeEvent ?? job.intakeEvent ?? artifacts.intakeEvent ?? null;
+  return { wantedThings, intakeEvent, artifacts };
 }
 
-async function runPerplexityResearch(input, queries, startedAt) {
-  const apiKey = process.env.PERPLEXITY_API_KEY;
-  if (!apiKey || process.env.TIMESYNCHER_PUBLIC_RESEARCH_LIVE !== '1') return null;
-  const targetMinutes = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_TARGET_MINUTES || input.targetMinutes || 15);
-  const minMinutes = Number(process.env.TIMESYNCHER_PUBLIC_RESEARCH_MIN_MINUTES || input.minMinutes || 10);
-  const prompt = [
-    'You are the public-source research provider for TimeSyncher Vacation.',
-    'Return ONLY JSON with a top-level candidates array.',
-    'Every candidate must have category, title, summary, details, website, sources[{label,url}], verificationStatus, caveats.',
-    'Use public web sources only. Do not use Gmail, Google Calendar, Google Drive, private GBrain, shell, booking, payment, holds, purchases, or reservations.',
-    'Do not invent source URLs. If a detail needs checking, say so in caveats or verificationStatus.',
-    `Destination/context: ${JSON.stringify(input.artifacts || {})}`,
-    `Queries: ${JSON.stringify(queries)}`,
-    `Research duration target: ${minMinutes}-${targetMinutes} minutes. If provider runtime is shorter, still return only actually sourced candidates.`,
-  ].join('\n');
-  const res = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: process.env.PERPLEXITY_MODEL || 'sonar-pro', messages: [{ role: 'user', content: prompt }] }),
-  });
-  if (!res.ok) throw new Error(`Perplexity public research failed: ${res.status} ${await res.text()}`.slice(0, 1000));
-  const body = await res.json();
-  const content = body?.choices?.[0]?.message?.content || '';
-  const elapsed = Date.now() - startedAt;
-  if (elapsed < minMinutes * 60_000 && process.env.TIMESYNCHER_PUBLIC_RESEARCH_ENFORCE_MINUTES === '1') await sleep(minMinutes * 60_000 - elapsed);
-  return { provider: 'live-perplexity', rawCandidates: parseProviderCandidates(content) };
-}
-
-function houseOrigin(artifacts = {}) {
+function stayPoint(artifacts = {}) {
   const places = [artifacts.house, artifacts.lodging, artifacts.origin, artifacts.stay];
   for (const place of places) {
     if (!place || typeof place !== 'object') continue;
@@ -392,151 +327,75 @@ function houseOrigin(artifacts = {}) {
   return null;
 }
 
-function poiCandidate(poi, { destination, retrievedAt }) {
-  const category = poi.category === 'grocery' || poi.category === 'store' ? 'store' : (poi.category === 'garden' ? 'activity' : poi.category);
-  const url = publicUrl(poi.url);
-  const restaurant = category === 'restaurant';
-  return {
-    category,
-    title: poi.name,
-    summary: `${poi.name} is listed in the house-radius ${poi.category || category} results.`,
-    details: `POI ${poi.id} from ${poi.source}. Measured from the house or lodging.`,
-    website: url,
-    lat: finiteNumber(poi.lat),
-    lng: finiteNumber(poi.lng),
-    poiId: poi.id,
-    structuredPoi: poi.source !== 'brave',
-    sources: url ? [{
-      label: poi.source === 'osm' ? 'OpenStreetMap' : (poi.source === 'fsq-os-places' ? 'Foursquare OS Places' : 'Brave Search'),
-      url,
-      retrievedAt,
-    }] : [],
-    happyHour: false,
-    happyHourDetails: restaurant ? `No happy-hour offer is stored on ${poi.id}.` : '',
-    happyHourSources: restaurant && url ? [url] : [],
-    verificationStatus: 'source_checked',
-    caveats: ['POI database record. Verify hours before planning.'],
-    sourceCaveats: ['House-radius Foursquare OS Places and OpenStreetMap. Brave runs only when that database is thin.'],
-    area: destination,
-  };
-}
-
-async function runHousePoiResearch(input, startedAt) {
-  const artifacts = input.artifacts || {};
-  const origin = houseOrigin(artifacts);
-  if (!origin) return null;
-  const braveKey = input.braveKey ?? (process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || '');
-  const dateBucket = text(artifacts.dates?.startDate || artifacts.dates?.dateText || '', 40);
-  const collected = [];
-  for (const category of ['grocery', 'restaurant', 'store', 'activity']) {
-    const found = await searchPois({
-      origin,
-      category,
-      dateBucket,
-      fsqRecords: Array.isArray(input.fsqRecords) ? input.fsqRecords : [],
-      fetchImpl: input.fetchImpl,
-      braveKey,
-      now: input.now,
-    });
-    collected.push(...(found.pois || []));
-  }
-  const scoreOne = input.scorePoi || ((poi) => jevRelevanceScore(poi, {
-    fetchImpl: input.fetchImpl,
-    apiKey: process.env.OPENROUTER_API_KEY || '',
-  }));
-  const scored = await scoreWebPoisInParallel(collected, scoreOne);
-  const citedIds = Array.isArray(input.citedPoiIds) ? input.citedPoiIds : scored.map((poi) => poi.id);
-  const allowed = new Set(synthesizeFromIds(citedIds, scored).map((poi) => poi.id));
-  const destination = text(artifacts.destination || '', 160);
-  const retrievedAt = new Date().toISOString();
-  const rawCandidates = scored
-    .filter((poi) => allowed.has(poi.id) && finiteNumber(poi.lat) !== null && finiteNumber(poi.lng) !== null)
-    .map((poi) => poiCandidate(poi, { destination, retrievedAt }));
-  if (!rawCandidates.length) return null;
-  return { provider: 'house-radius-poi', rawCandidates, elapsedMs: Date.now() - startedAt, origin };
-}
-
 export async function runPublicResearch(input = {}) {
   const startedAt = Date.now();
-  const artifacts = input.artifacts || {};
-  const destination = text(artifacts.destination || '', 160);
   const blocked = blockedPrivateSignals(input);
-  if (blocked.length) return { status: 'blocked_private_or_booking_signal', provider: 'capability-gate', elapsedMs: Date.now() - startedAt, sourceBackedCandidateCount: 0, candidates: [], blockedSignals: blocked };
-  const queries = buildResearchQueries(artifacts);
-  const retrievedAt = new Date().toISOString();
-  let provider = null;
-  if (input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE) {
-    const fixturePath = input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE;
-    const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-    provider = { provider: fixture.provider || 'fixture-public-sources', rawCandidates: fixture.candidates || [] };
-  } else {
-    let providerError = null;
-    try {
-      provider = await runHousePoiResearch(input, startedAt);
-    } catch (error) {
-      providerError = error;
-    }
-    if (!provider) {
-      try {
-        provider = await runPerplexityResearch(input, queries, startedAt);
-      } catch (error) {
-        providerError = providerError || error;
-      }
-    }
-    if (!provider) {
-      try {
-        provider = await runGrokResearch(input, queries, startedAt);
-      } catch (error) {
-        providerError = providerError || error;
-      }
-    }
-    if (providerError && !provider) {
-      return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: `Approved public research provider failed or is unavailable: ${text(providerError.message, 500)}` };
-    }
+  if (blocked.length) {
+    return {
+      status: 'blocked_private_or_booking_signal',
+      provider: 'capability-gate',
+      elapsedMs: Date.now() - startedAt,
+      sourceBackedCandidateCount: 0,
+      candidates: [],
+      things: [],
+      blockedSignals: blocked,
+    };
   }
-  if (!provider) {
-    return { status: 'provider_not_configured', provider: 'none', elapsedMs: Date.now() - startedAt, queries, sourceBackedCandidateCount: 0, candidates: [], note: 'No approved public research provider is available after the house-radius POI database, Brave when that database is thin, explicit Perplexity fallback, and paid Ubuntu Grok web_search fallback. Pass a house or lodging lat/lng, set BRAVE_SEARCH_API_KEY or BRAVE_API_KEY for thin asks, set PERPLEXITY_API_KEY when needed, or pass a fixture for smoke tests.' };
-  }
-  const candidates = provider.rawCandidates
-    .map((candidate) => normalizeCandidate(candidate, { provider: provider.provider, retrievedAt, destination }))
-    .filter((candidate) => candidate.sourceBacked && candidate.title && candidate.summary);
-  const adapterRun = await runApprovedSourceAdapters({
-    mode: input.mode,
-    fixtureMode: input.mode === 'fixture' || input.fixturePath || process.env.TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE,
-    artifacts,
-    destination,
-    retrievedAt,
-  });
-  const adapterCandidates = (adapterRun.candidates || [])
-    .map((candidate) => normalizeCandidate(candidate, { provider: 'travel-source-adapter-runner', retrievedAt, destination }))
-    .filter((candidate) => candidate.sourceBacked && candidate.title && candidate.summary);
+  const { wantedThings, intakeEvent, artifacts } = researchJob(input);
   const minimums = firstPassMinimums(input);
-  const mergedCandidates = mergeCandidateLists(candidates, adapterCandidates);
-  const readyCandidates = mergedCandidates.filter(firstPassReadyCandidate);
-  const allCandidates = selectFirstPassCandidates(readyCandidates, minimums);
-  const minimumGate = firstPassMissingMinimums(allCandidates, minimums);
-  const detailGate = missingThingDetails(allCandidates);
-  const qualityGatePassed = allCandidates.length > 0 &&
-    Object.keys(minimumGate.missing).length === 0 &&
-    detailGate.missingReviews.length === 0 &&
-    detailGate.missingHappyHour.length === 0 &&
-    detailGate.missingCoordinates.length === 0;
+  if (!wantedThings.length) {
+    return {
+      status: 'no_wanted_things',
+      provider: 'place-search',
+      elapsedMs: Date.now() - startedAt,
+      intakeEvent,
+      wantedThings: [],
+      queries: [],
+      firstPassMinimums: minimums,
+      candidates: [],
+      things: [],
+      sourceBackedCandidateCount: 0,
+    };
+  }
+  const origin = stayPoint(artifacts);
+  const lodgingText = typeof artifacts.lodging === 'string' ? artifacts.lodging : '';
+  const stay = lodgingFromChat(artifacts.requestText || intakeEvent?.requestText || '', {
+    lodging: lodgingText,
+    lat: origin?.lat,
+    lng: origin?.lng,
+  });
+  const sourceEnv = input.env || process.env;
+  const intake = await fillTripIntake({
+    destination: artifacts.destination || '',
+    lodging: stay.text,
+    lodgingPoint: origin || undefined,
+    wantedThings,
+    env: {
+      brave: sourceEnv.brave || sourceEnv.BRAVE_SEARCH_API_KEY || '',
+      tavily: sourceEnv.tavily || sourceEnv.TAVILI_API_KEY || '',
+      OPENROUTER_API_KEY: sourceEnv.OPENROUTER_API_KEY || '',
+      JEV_RELEVANCE_MINIMUM: sourceEnv.JEV_RELEVANCE_MINIMUM,
+      braveName: 'BRAVE_SEARCH_API_KEY',
+      tavilyName: 'TAVILI_API_KEY',
+      DATABASE_URL: sourceEnv.DATABASE_URL || '',
+      NEON_DATABASE_URL: sourceEnv.NEON_DATABASE_URL || '',
+    },
+    fetchImpl: input.fetchImpl,
+    priorPlaces: input.priorPlaces,
+    loadPriorPlaces: input.loadPriorPlaces,
+  });
   return {
-    status: qualityGatePassed ? 'source_backed_research_complete' : allCandidates.length ? 'first_pass_quality_gate_failed' : 'needs_live_research',
-    provider: provider.provider,
+    status: 'live_place_search',
+    provider: 'place-search',
     elapsedMs: Date.now() - startedAt,
-    queries,
-    adapterRun,
+    intakeEvent,
+    wantedThings,
+    queries: intake.search.queries,
     firstPassMinimums: minimums,
-    categoryCounts: minimumGate.counts,
-    missingMinimums: minimumGate.missing,
-    missingReviews: detailGate.missingReviews,
-    missingHappyHour: detailGate.missingHappyHour,
-    missingCoordinates: detailGate.missingCoordinates,
-    sourceBackedCandidateCount: allCandidates.length,
-    rejectedCandidateCount: mergedCandidates.length - readyCandidates.length,
-    heldBackCandidateCount: readyCandidates.length - allCandidates.length,
-    candidates: allCandidates,
+    sourceCounts: intake.search.sourceCounts,
+    candidates: intake.researchedThings,
+    things: intake.things,
+    sourceBackedCandidateCount: intake.things.length,
   };
 }
 

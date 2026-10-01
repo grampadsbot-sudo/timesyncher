@@ -46,14 +46,6 @@
       "dest": "/api/[...route]?...route=vacation-web-access&webAccess=1"
     },
     {
-      "src": "/icons/(.*)",
-      "dest": "https://travel.timesyncher.com/icons/$1"
-    },
-    {
-      "src": "/manifest.webmanifest",
-      "dest": "https://travel.timesyncher.com/manifest.webmanifest"
-    },
-    {
       "src": "/accept/([^/]+)",
       "dest": "/api/[...route]?...route=eula&action=accept-page&sessionId=$1"
     },

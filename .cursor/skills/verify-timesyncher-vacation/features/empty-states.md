@@ -2,7 +2,7 @@
 
 Canonical inventory: `features/empty-states.md`. GBrain Feature Map is the source. This file is the verification recipe.
 
-Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/`. Never drive the deleted shell (Onboarding / Itinerary buttons, `data-screen="itinerary"` cards).
+Drive the real app at the staging shared trip for `testTripSlug` (`verify-config.json`). Never drive the deleted shell (Onboarding / Itinerary buttons, `data-screen="itinerary"` cards).
 
 ## Sub-features
 
@@ -10,17 +10,17 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## How to get to it (user POV)
 
-- If a list or day is empty, that sentence is the proof. A filled Vegas day is not a failure of the copy.
+- If a list or day is empty, that sentence is the proof. A filled day is not a failure of the copy.
 
 ## Driving it
 
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-empty-states.png`.
-- Pass when the live page shows the control named above.
+- Pass when the served app bundle still contains the three empty-state sentences and the filled reference day does not show the empty timeline line.
 - If the app no longer shows it, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas
 
 - A screenshot of the deleted card shell is a fail, not a pass.
-- Reference trip for the TREK UI is `las-vegas-vacation-3`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.
+- Reference trip for the TREK UI is `testTripSlug` in `verify-config.json`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.

@@ -217,7 +217,8 @@ for (const forbidden of ['Moana Surfrider', 'Banzai Pipeline', 'Marugame Udon', 
   assert.equal(serialized.includes(forbidden), false, `hard-coded Hawaii recommendation leaked: ${forbidden}`);
 }
 assert.match(e2e.customerResponse, /first TimeSyncher Vacation pass is ready/i);
-assert.match(e2e.customerResponse, /Here is the website: https:\/\/travel\.timesyncher\.com\/shared\//);
+assert.equal(e2e.replyFacts?.url, e2e.result.webItineraryUrl);
+assert.doesNotMatch(e2e.customerResponse, /Here is the website:/);
 assert.doesNotMatch(e2e.customerResponse, /\bTREK\b/);
 assert.doesNotMatch(e2e.customerResponse, /research workspace/i);
 
@@ -244,7 +245,8 @@ const editResult = JSON.parse(edit.stdout);
 assert.match(editResult.customerResponse, /updated the vacation website/i);
 assert.match(editResult.customerResponse, new RegExp(editTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.doesNotMatch(editResult.customerResponse, /with \d+ itinerary changes/i);
-assert.match(editResult.customerResponse, /Here is the website: https:\/\/travel\.timesyncher\.com\/shared\//);
+assert.equal(editResult.replyFacts?.url, editResult.result.webItineraryUrl);
+assert.doesNotMatch(editResult.customerResponse, /Here is the website:/);
 assert.equal(editResult.result.editApplied, true);
 assert.equal(editResult.result.trekSync.updatedItems[0].title, editTitle);
 assert.equal(editResult.result.trekSync.updatedItems[0].category, 'family_event');
@@ -464,7 +466,7 @@ assert.match(vegasExistenceQuestionResult.customerResponse, /could not find a ma
 assert.equal(vegasExistenceQuestionResult.result.createNewTrip, false);
 assert.equal(vegasExistenceQuestionResult.result.editApplied, false);
 assert.equal(vegasExistenceQuestionResult.result.webItineraryUrl, null);
-assert.equal(vegasExistenceQuestionResult.result.normalizedTrip.destination, 'Las Vegas');
+assert.equal(vegasExistenceQuestionResult.result.normalizedTrip.destination, 'Vegas');
 assert.equal(vegasExistenceQuestionResult.result.researchSummary.status, 'support_router_no_write');
 assert.equal(vegasExistenceQuestionResult.result.trekSync, null);
 assert.equal(vegasExistenceQuestionResult.result.turnDecision.write_mode, 'none');

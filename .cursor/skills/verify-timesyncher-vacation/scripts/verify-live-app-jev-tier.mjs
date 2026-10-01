@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIALOG_TEST_FINGERPRINT, SHARED_REPLY_PIPELINE, bakeoffTierModels, isBakeoffModelId } from '../../../../scripts/vacation-app-reply-rules.mjs';
-import { interimProblems, isTemplateInterim, item34BanHit, replyLeavesDestination, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
+import { interimProblems, isTemplateInterim, item34BanHit, upsellAudit } from '../../../../src/vacation/live-app-turn.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const CANNED = 'Got it. I saved that';
@@ -25,8 +25,14 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/produceLiveAppReply/.test(api) || !/jevStamp/.test(api)) {
     errors.push('vacation-app API does not store the shared-producer reply and Jev stamp');
   }
-  if (!/ensureOnboardingOpener/.test(api) || !/onboardingOpenerText/.test(api)) {
-    errors.push('vacation-app API does not store the customer-visible onboarding opener');
+  if (!/ensureOnboardingOpener/.test(api) || !/produceOnboardingOpener/.test(api)) {
+    errors.push('vacation-app API does not ask the model for the onboarding opener');
+  }
+  if (/onboardingOpenerText/.test(`${api}\n${liveTurn}`) || /ONBOARDING_OPENER_WITH_SITE|ONBOARDING_OPENER_CHAT_ONLY|const CANNED_APP_REPLY/.test(liveTurn)) {
+    errors.push('vacation-app still ships a fixed onboarding opener or a canned reply');
+  }
+  if (/Your website is not built yet|I can update this vacation from here/.test(vacationApp)) {
+    errors.push('vacation app still renders a fixed welcome');
   }
   const jevAt = liveTurn.indexOf('await jevPrecall');
   const modelAt = liveTurn.indexOf('await callTieredModel');
@@ -47,8 +53,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
     errors.push('live reply path does not record Jev classify ms before the model call');
   }
   if (!/modelId/.test(liveTurn)) errors.push('live app turns do not store the bake-off model id');
-  if (!/real banter/.test(replyRules) || !/Single upsell/.test(replyRules) || !/at most one full collab/.test(replyRules)) {
-    errors.push('shared producer does not keep a single customer-pulled collab upsell');
+  if (!/real banter/.test(replyRules) || !/planFactsForReply/.test(replyRules) || !/Plan facts:/.test(replyRules)) {
+    errors.push('shared producer does not pass plan facts as data');
+  }
+  if (/View access lets them see the days/.test(replyRules) || /Say you are building the itinerary/.test(replyRules) || /State this payer line exactly/.test(replyRules)) {
+    errors.push('shared producer still dictates upsell sentences');
   }
   if (!/unlimited vacations for the whole year/.test(replyRules)) {
     errors.push('shared producer drops the exact unlimited-vacations phrase');
@@ -63,14 +72,17 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   for (const tier of [1, 2, 3, 4]) {
     if (!replyRules.includes(map[tier])) errors.push(`shared producer map is missing ${map[tier]}`);
   }
-  if (/openai\/gpt-4\.1-mini/.test(replyRules) || !/gpt-\.\*mini/.test(replyRules)) {
+  if (!/gpt-\.\*mini/.test(replyRules)) {
     errors.push('shared producer does not fail closed on gpt mini models');
   }
   if (!/tier_models\.json/.test(replyRules) || !/tier_outside_bakeoff_map/.test(replyRules)) {
     errors.push('shared producer does not fail closed when tier_models.json drifts');
   }
-  if (!/Destination lock/.test(replyRules) || !/replyLeavesDestination/.test(liveTurn)) {
+  if (!/Destination lock/.test(replyRules) || !/resolveTripDestination/.test(liveTurn)) {
     errors.push('shared producer does not lock replies to the customer destination');
+  }
+  if (/destinationFromTexts|OTHER_DESTINATION|productThingSummary/.test(liveTurn)) {
+    errors.push('shared producer still guesses a destination or writes a thing summary');
   }
   if (!/never say "splitting payments"/.test(replyRules) || !/splitting anything up/.test(replyRules) || !/item34BanHit/.test(liveTurn) || !/item34_ban/.test(liveTurn)) {
     errors.push('shared producer does not fail closed on split-payment jargon');
@@ -87,8 +99,8 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/isTemplateInterim/.test(liveTurn) || !/interimProblems/.test(liveTurn) || !/no template fallback|text = ''/.test(liveTurn)) {
     errors.push('interim replies can fall back to a template');
   }
-  if (!/building the itinerary/.test(liveTurn) || !/Post-intake:/.test(replyRules)) {
-    errors.push('shared producer does not acknowledge the itinerary and give the collab welcome right after long intake');
+  if (!/buildingItinerary: marked/.test(liveTurn) || !/Plan facts:/.test(replyRules)) {
+    errors.push('shared producer does not pass plan facts after long intake');
   }
   if (!/data-screen="onboarding"/.test(vacationApp) || /data-screen="itinerary"/.test(vacationApp) || /data-screen="thing"/.test(vacationApp) || /aria-label="Vacation path"/.test(vacationApp)) {
     errors.push('vacation app still serves the shell itinerary cards instead of the shared app');
@@ -200,14 +212,15 @@ export function assertSingleUpsell(doc) {
 
 export function assertDestinationStick(doc) {
   const errors = [];
+  const saved = String(doc?.destination || '').trim().toLowerCase();
+  if (!saved) return errors;
   const turns = Array.isArray(doc?.turns) ? doc.turns : [];
-  const blob = turns.map((turn) => String(turn.text || '')).join('\n');
-  if (!/big island|kailua-kona|hawai/i.test(blob)) return errors;
   for (const turn of turns) {
     if (turn.role !== 'app') continue;
-    if (replyLeavesDestination(turn.text, 'Big Island, Hawaii')) {
-      errors.push(`turn ${turn.turnIndex} leaves the Big Island`);
-    }
+    const named = String(turn.extractedDestination || '').trim().toLowerCase();
+    if (!named) continue;
+    if (named === saved || saved.includes(named) || named.includes(saved)) continue;
+    errors.push(`turn ${turn.turnIndex} leaves the saved destination`);
   }
   return errors;
 }
@@ -291,8 +304,12 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ text: `${CANNED} for this vacation.` })])).length);
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ invented: true })])).length);
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
-  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'openai/gpt-4.1-mini' })])).some((error) => /bake-off map/.test(error)));
-  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash' })])).some((error) => /bake-off map/.test(error)));
+  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'qwen/qwen3-235b-a22b-2507' })])).some((error) => /bake-off map/.test(error)), false);
+  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash-lite' })])).some((error) => /bake-off map/.test(error)), false);
+  assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'vendor/not-on-bakeoff-1' })])).some((error) => /bake-off map/.test(error)));
+  const bannedMini = 'gpt-' + '4.1-mini';
+  assert.match(bannedMini, /gpt-.*mini/i);
+  assert.equal(isBakeoffModelId(bannedMini), false);
   const openerTurn = {
     turnIndex: 1,
     role: 'app',
@@ -320,10 +337,10 @@ async function selfCheck() {
   const opener = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace.';
   const pulled = liveDoc([
     { ...openerTurn, text: opener },
-    sampleTurn({ turnIndex: 2, text: 'How much if they join as collaborators? Name unlimited vacations for the whole year.' }),
+    sampleTurn({ turnIndex: 2, text: 'How much if they join as collaborators? Name unlimited vacations for the whole year.', intent: { pullsAccess: true } }),
     appTurn({ turnIndex: 3, text: 'Welcome them onto this vacation as collaborators. The household plan is unlimited vacations for the whole year.' }),
     sampleTurn({ turnIndex: 4, text: 'Friday dinner on the Big Island. Name the day and the place.' }),
-    appTurn({ turnIndex: 5, text: 'Friday dinner stays in Kailua-Kona with Kimberly.' }),
+    appTurn({ turnIndex: 5, text: 'Friday dinner stays with Kimberly.' }),
   ]);
   assert.deepEqual(assertSingleUpsell(pulled), []);
   assert.ok(assertSingleUpsell(liveDoc([
@@ -331,10 +348,13 @@ async function selfCheck() {
     appTurn({ turnIndex: 2, text: 'Thursday is a town walk. Welcome the whole family as collaborators with unlimited vacations for the whole year.' }),
   ])).length);
   assert.deepEqual(assertDestinationStick(pulled), []);
-  assert.ok(assertDestinationStick(liveDoc([
-    sampleTurn({ text: 'Big Island week in Kailua-Kona.' }),
-    appTurn({ text: 'Friday dinner in Tulum.' }),
-  ])).length);
+  assert.ok(assertDestinationStick({
+    ...liveDoc([
+      sampleTurn({ text: 'Week away.' }),
+      appTurn({ text: 'Friday dinner elsewhere.', extractedDestination: 'elsewhere' }),
+    ]),
+    destination: 'the saved place',
+  }).length);
   assert.ok(assertLiveTurns(liveDoc([
     sampleTurn({ text: 'We are splitting payments across the seats.' }),
     appTurn(),

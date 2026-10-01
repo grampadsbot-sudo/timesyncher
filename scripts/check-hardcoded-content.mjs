@@ -1,10 +1,17 @@
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { growthFails, pruneBaseline } from './baseline-subset.mjs';
+import { barFindings, loadBarTerms } from './dialog-bars.mjs';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
+import { jevCardFindings } from './jev-cards.mjs';
+import { turnPriceFindings } from './no-turn-price-env.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
+export const PAID_PLACES_NOTE = 'TODO: Search is removing the paid places client';
+export const SHARE_TOKEN_SHA256 = '613987cf2ce687adbe97f074d9979ec3717c65d4b4807467ffb696e809e055d8';
 export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
 
@@ -383,6 +390,65 @@ function googlePlacesFindings(file, text, findings, seen) {
   }
 }
 
+// Paid place clients. The free Foursquare open-places dataset
+// (opensource.foursquare.com / os-places) is not one of these.
+// api.foursquare.com is not allowed to match inside places-api.foursquare.com.
+const PAID_PLACES_PATTERNS = [
+  [/(?<![\w.-])api\.foursquare\.com/gi, 'api.foursquare.com'],
+  [/places-api\.foursquare\.com/gi, 'places-api.foursquare.com'],
+  [/\/v3\/places\b/g, '/v3/places'],
+  [/x-places-api-version/gi, 'X-Places-Api-Version'],
+  [/(?:import\s+(?:[\w$*{}\s,]+\s+from\s+)?|require\s*\(\s*)['"]@?foursquare(?:\/[^'"]*)?['"]/g, 'foursquare-sdk'],
+  [/maps\.googleapis\.com\/maps\/api\/place\b/gi, 'maps.googleapis.com/maps/api/place'],
+  [/places\.googleapis\.com/gi, 'places.googleapis.com'],
+  [/@googlemaps\/places\b/g, '@googlemaps/places'],
+  [/@googlemaps\/google-maps-services\b/g, '@googlemaps/google-maps-services'],
+  [/google\.maps\.places\b/g, 'google.maps.places'],
+  [/\bPlacesClient\b/g, 'PlacesClient'],
+];
+
+// Exact ban-list lines in the checkers. These name hosts the rule forbids.
+// They are not API calls. Any other file, including tests, still fails.
+export const PAID_PLACES_BAN_LIST_LINES = [
+  {
+    file: 'scripts/check-code-ratchet.mjs',
+    line: "  ['api.foursquare.com', 'foursquare'],",
+  },
+  {
+    file: 'scripts/check-code-ratchet.mjs',
+    line: "  ['places-api.foursquare.com', 'foursquare'],",
+  },
+  {
+    file: 'scripts/check-hardcoded-content.mjs',
+    line: "  [/(?<![\\w.-])api\\.foursquare\\.com/gi, 'api.foursquare.com'],",
+  },
+  {
+    file: 'scripts/check-hardcoded-content.mjs',
+    line: "  [/places-api\\.foursquare\\.com/gi, 'places-api.foursquare.com'],",
+  },
+];
+
+function paidPlacesBanListLine(file, line) {
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  return PAID_PLACES_BAN_LIST_LINES.some((entry) => entry.file === normalized && entry.line === line);
+}
+
+export function paidPlacesFindings(file, text) {
+  const findings = [];
+  const seen = new Set();
+  const value = String(text || '');
+  for (const [pattern, label] of PAID_PLACES_PATTERNS) {
+    for (const match of collect(pattern, value, (item) => item)) {
+      const rawLine = sourceLine(value, match.index);
+      if (paidPlacesBanListLine(file, rawLine)) continue;
+      const snippet = rawLine.trim().slice(0, 100);
+      const lineNo = value.slice(0, match.index).split('\n').length;
+      add(findings, seen, 'NO-PAID-PLACES-API', file, value, match.index, `${label} :: ${snippet} @${lineNo}`);
+    }
+  }
+  return findings;
+}
+
 function tokenFindings(file, text, findings, seen) {
   for (const [pattern, symbol] of TOKEN_PATTERNS) {
     for (const match of collect(pattern, text, (item) => item)) {
@@ -628,7 +694,76 @@ function foldedStrings(text) {
   return folds;
 }
 
+export const EVASION_MODEL_LINE_ALLOW = [
+  {
+    file: '.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs',
+    line: "  const bannedMini = 'gpt-' + '4.1-mini';",
+  },
+];
+
+function sourceLine(text, index) {
+  const start = text.lastIndexOf('\n', Math.max(0, index - 1));
+  const from = start < 0 ? 0 : start + 1;
+  const end = text.indexOf('\n', index);
+  return text.slice(from, end < 0 ? text.length : end);
+}
+
+function evasionModelAllowlisted(file, text, index) {
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  const line = sourceLine(text, index);
+  return EVASION_MODEL_LINE_ALLOW.some((entry) => entry.file === normalized && entry.line === line);
+}
+
+function foldedModelSymbol(value) {
+  const text = String(value || '');
+  const mini = text.match(/gpt-[a-z0-9.]+-mini/i);
+  if (mini) return mini[0];
+  for (const vendor of text.match(/[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:-]*/g) || []) {
+    if (MODEL_VENDOR.test(vendor) && !ALLOWED_MODELS.has(vendor)) return vendor;
+  }
+  for (const bare of text.match(/(?:grok|gpt|claude|gemini|qwen|deepseek|mistral|mixtral|llama)\d*-(?:mini|flash|pro|sonnet|opus|haiku|turbo|max|large|small|nano|preview|v\d|\d)[a-z0-9._-]*/gi) || []) {
+    const id = bare.toLowerCase();
+    if (ALLOWED_BARE.has(id) || /^gpt-[a-z0-9.]+-mini$/.test(id)) continue;
+    return bare;
+  }
+  return '';
+}
+
+function evasionModelFindings(file, text, findings, seen) {
+  for (const fold of foldedStrings(text)) {
+    const model = foldedModelSymbol(fold.value);
+    if (!model || evasionModelAllowlisted(file, text, fold.index)) continue;
+    add(findings, seen, 'EVASION', file, text, fold.index, model.slice(0, 120));
+  }
+}
+
+function unlimitedFoldFindings(file, text, findings, seen) {
+  const terms = loadBarTerms();
+  const exempt = (terms.exempt && terms.exempt['BAR-UNLIMITED-WORDING'] && terms.exempt['BAR-UNLIMITED-WORDING'].paths) || [];
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  if (exempt.includes(normalized)) return;
+  const rule = terms.rules['BAR-UNLIMITED-WORDING'];
+  if (!rule) return;
+  for (const fold of foldedStrings(text)) {
+    for (const source of rule.terms) {
+      if (!source.includes('unlimited')) continue;
+      const flags = rule.flags || '';
+      const re = new RegExp(source, flags.includes('g') ? flags : `${flags}g`);
+      let match = re.exec(fold.value);
+      while (match) {
+        const start = Math.max(0, match.index - 24);
+        const end = Math.min(fold.value.length, match.index + match[0].length + 24);
+        const symbol = fold.value.slice(start, end).replace(/\s+/g, ' ').trim().slice(0, 80);
+        add(findings, seen, 'BAR-UNLIMITED-WORDING', file, text, fold.index, symbol);
+        if (match.index === re.lastIndex) re.lastIndex += 1;
+        match = re.exec(fold.value);
+      }
+    }
+  }
+}
+
 function evasionFindings(file, text, findings, seen, needles) {
+  evasionModelFindings(file, text, findings, seen);
   for (const fold of foldedStrings(text)) {
     if (text.includes(fold.value)) continue;
     const matched = needles.some((needle) => fold.value.includes(needle) || (needle.includes(fold.value) && fold.value.length >= 12 && /[/\-]/.test(fold.value)));
@@ -1071,9 +1206,51 @@ function monthRegexFindings(file, text, findings, seen) {
   }
 }
 
+const API_VERSION_HEADER = /-api-version$/i;
+
+function skipWsBack(text, index) {
+  let cursor = index;
+  while (cursor >= 0 && /\s/.test(text[cursor])) cursor -= 1;
+  return cursor;
+}
+
+function quotedEndingAt(text, end) {
+  const quote = text[end];
+  if (quote !== "'" && quote !== '"') return null;
+  const limit = Math.max(0, end - 240);
+  for (let start = end - 1; start >= limit; start -= 1) {
+    if (text[start] !== quote) continue;
+    let slashes = 0;
+    for (let look = start - 1; look >= 0 && text[look] === '\\'; look -= 1) slashes += 1;
+    if (slashes % 2 === 1) continue;
+    const parsed = readQuoted(text, start);
+    if (parsed && parsed.end === end + 1) return { start, value: parsed.value };
+  }
+  return null;
+}
+
+// An ISO date is exempt only as the entire value of an HTTP header whose name
+// ends in -Api-Version (case-insensitive). Object-literal form is
+// 'X-Catalog-Api-Version': '2025-06-17'. Headers form is a name/value pair:
+// ['X-Catalog-Api-Version', '2025-06-17'] or .set('X-Catalog-Api-Version', '2025-06-17').
+function apiVersionHeaderDate(text, index, date) {
+  const quote = text[index - 1];
+  if ((quote !== "'" && quote !== '"') || text[index + date.length] !== quote) return false;
+  const separator = skipWsBack(text, index - 2);
+  if (separator < 0) return false;
+  const sep = text[separator];
+  if (sep !== ':' && sep !== ',') return false;
+  const key = quotedEndingAt(text, skipWsBack(text, separator - 1));
+  if (!key || !API_VERSION_HEADER.test(key.value)) return false;
+  if (sep === ':') return true;
+  const beforeKey = skipWsBack(text, key.start - 1);
+  return beforeKey >= 0 && (text[beforeKey] === '(' || text[beforeKey] === '[');
+}
+
 function dateLiteralFindings(file, text, findings, seen) {
   for (const pattern of [ISO_DATE, MONTH_DATE, ORDINAL_WEEKDAY]) {
     for (const match of collect(pattern, text, (item) => item)) {
+      if (pattern === ISO_DATE && apiVersionHeaderDate(text, match.index, match[1])) continue;
       add(findings, seen, 'DATE-LITERAL', file, text, match.index, match[1]);
     }
   }
@@ -1160,7 +1337,7 @@ function gitTracked(cwd, rel) {
   return listed.status === 0;
 }
 
-export function fetchedBundleNames(cwd = process.cwd()) {
+function fetchedBundleNames(cwd = process.cwd()) {
   const writer = path.join(cwd, 'scripts/write-shared-assets.mjs');
   if (!fs.existsSync(writer)) return [];
   const text = fs.readFileSync(writer, 'utf8');
@@ -1168,7 +1345,7 @@ export function fetchedBundleNames(cwd = process.cwd()) {
   return [...text.matchAll(/['"`](index-[A-Za-z0-9._-]+\.js)['"`]/g)].map((match) => match[1]);
 }
 
-export function offlineBuildProduces(cwd, repoRelativePath) {
+function offlineBuildProduces(cwd, repoRelativePath) {
   const base = path.posix.basename(String(repoRelativePath || '').split(path.sep).join('/'));
   if (!base || fetchedBundleNames(cwd).includes(base)) return false;
   const pkgPath = path.join(cwd, 'package.json');
@@ -1215,7 +1392,7 @@ function committedHtmlFiles(cwd) {
   const listed = spawnSync('git', ['ls-files', '-z', '--', '*.html'], { cwd, encoding: 'utf8' });
   const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
   if (inside.status === 0 && inside.stdout.trim() === 'true' && listed.status === 0) {
-    return listed.stdout.split('\0').filter(Boolean);
+    return listed.stdout.split('\0').filter(Boolean).filter((file) => !guardExempt(file));
   }
   const files = [];
   const walkHtml = (abs) => {
@@ -1228,7 +1405,7 @@ function committedHtmlFiles(cwd) {
     }
   };
   walkHtml(cwd);
-  return files;
+  return files.filter((file) => !guardExempt(file));
 }
 
 export function htmlRefsProducedByBuild(cwd = process.cwd()) {
@@ -1276,6 +1453,23 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     coordFindings(file, value, findings, seen);
     thingFindings(file, value, findings, seen);
     dialogFindings(file, value, findings, seen);
+    for (const finding of barFindings(file, value)) {
+      const key = finding.rule === 'BAR-UNLIMITED-WORDING'
+        ? `${finding.rule}\0${file}\0${finding.line}\0${finding.symbol_or_pattern}`
+        : `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push(finding);
+      }
+    }
+    unlimitedFoldFindings(file, value, findings, seen);
+    for (const finding of turnPriceFindings(file, value)) {
+      const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push(finding);
+      }
+    }
     inventoryFindings(file, value, findings, seen);
     thingSourceFindings(file, value, findings, seen);
     cannedFallbackFindings(file, value, findings, seen);
@@ -1348,6 +1542,10 @@ function bundlePaths(cwd) {
   return BUNDLE_FILES.filter((file) => fs.existsSync(path.join(cwd, file)));
 }
 
+// Direct children of public/assets only. The one raw pulled input,
+// public/assets/upstream/index-BKun7ofk.js, still contains the canned strings
+// and is not a direct child, so this scan skips it. The stripped file the build
+// writes, public/assets/index-BKun7ofk.js, is a direct child and is scanned when present.
 function assetBundlePaths(cwd) {
   const dir = path.join(cwd, 'public/assets');
   if (!fs.existsSync(dir)) return [];
@@ -1363,6 +1561,8 @@ function guardExempt(file) {
 function repoTextFiles(cwd) {
   const files = [];
   walk(cwd, cwd, files, false);
+  // public/assets/ stays out of the repo-text walk. That existing skip is what
+  // leaves the one raw pulled file, public/assets/upstream/index-BKun7ofk.js, unscanned.
   return files.filter((file) => !guardExempt(file) && !file.split(path.sep).join('/').startsWith('evidence/') && !file.split(path.sep).join('/').startsWith('public/assets/') && !file.split(path.sep).join('/').startsWith('artifacts/'));
 }
 
@@ -1400,9 +1600,768 @@ function apiFunctionFiles(cwd) {
   return files;
 }
 
+const CROSS_ORIGIN_RULE = 'NO-CROSS-ORIGIN-BUNDLE';
+const SCRIPT_LOAD_EXT = /\.(?:mjs|cjs|js|jsx|tsx|ts|mts|cts)(?:[?#]|$)/i;
+const CROSS_ORIGIN_EXT = new Set(['.html', '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.mts', '.cts']);
+
+function skipRegex(text, index) {
+  if (text[index] !== '/' || !regexLikely(text, index)) return null;
+  let cursor = index + 1;
+  let inClass = false;
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '\n') return null;
+    if (text[cursor] === '[') inClass = true;
+    else if (text[cursor] === ']') inClass = false;
+    else if (text[cursor] === '/' && !inClass) {
+      cursor += 1;
+      while (/[a-z]/i.test(text[cursor] || '')) cursor += 1;
+      return cursor;
+    }
+    cursor += 1;
+  }
+  return null;
+}
+
+function codeMask(text) {
+  const mask = new Uint8Array(text.length);
+  let cursor = 0;
+  while (cursor < text.length) {
+    const ch = text[cursor];
+    if (ch === "'" || ch === '"') {
+      const lit = readQuoted(text, cursor);
+      cursor = lit ? lit.end : cursor + 1;
+      continue;
+    }
+    if (ch === '`') {
+      cursor += 1;
+      while (cursor < text.length) {
+        if (text[cursor] === '\\') {
+          cursor += 2;
+          continue;
+        }
+        if (text[cursor] === '`') {
+          cursor += 1;
+          break;
+        }
+        if (text[cursor] === '$' && text[cursor + 1] === '{') {
+          cursor += 2;
+          let depth = 1;
+          while (cursor < text.length && depth > 0) {
+            if (text[cursor] === '\\') {
+              cursor += 2;
+              continue;
+            }
+            if (text[cursor] === "'" || text[cursor] === '"') {
+              const lit = readQuoted(text, cursor);
+              cursor = lit ? lit.end : cursor + 1;
+              continue;
+            }
+            if (text[cursor] === '`') break;
+            if (text[cursor] === '{') depth += 1;
+            else if (text[cursor] === '}') depth -= 1;
+            if (depth > 0) cursor += 1;
+          }
+          continue;
+        }
+        cursor += 1;
+      }
+      continue;
+    }
+    if (ch === '/' && text[cursor + 1] === '/') {
+      cursor += 2;
+      while (cursor < text.length && text[cursor] !== '\n') cursor += 1;
+      continue;
+    }
+    if (ch === '/') {
+      const regexEnd = skipRegex(text, cursor);
+      if (regexEnd) {
+        cursor = regexEnd;
+        continue;
+      }
+    }
+    if (ch === '/' && text[cursor + 1] === '*') {
+      cursor += 2;
+      while (cursor < text.length && !(text[cursor] === '*' && text[cursor + 1] === '/')) cursor += 1;
+      cursor = Math.min(text.length, cursor + 2);
+      continue;
+    }
+    mask[cursor] = 1;
+    cursor += 1;
+  }
+  return mask;
+}
+
+function readIdent(text, index) {
+  if (!/[A-Za-z_$]/.test(text[index] || '')) return null;
+  let cursor = index + 1;
+  while (cursor < text.length && /[A-Za-z0-9_$]/.test(text[cursor])) cursor += 1;
+  return { end: cursor, value: text.slice(index, cursor) };
+}
+
+function readUrlTemplate(text, index) {
+  if (text[index] !== '`') return null;
+  const folded = readTemplate(text, index);
+  if (folded) return folded;
+  let cursor = index + 1;
+  let value = '';
+  while (cursor < text.length) {
+    if (text[cursor] === '\\') {
+      value += text[cursor + 1] ?? '';
+      cursor += 2;
+      continue;
+    }
+    if (text[cursor] === '`') return value.includes('://') ? { end: cursor + 1, value } : null;
+    if (text[cursor] === '$' && text[cursor + 1] === '{') {
+      let depth = 1;
+      cursor += 2;
+      while (cursor < text.length && depth > 0) {
+        if (text[cursor] === '\\') {
+          cursor += 2;
+          continue;
+        }
+        if (text[cursor] === "'" || text[cursor] === '"') {
+          const lit = readQuoted(text, cursor);
+          if (!lit) return null;
+          cursor = lit.end;
+          continue;
+        }
+        if (text[cursor] === '{') depth += 1;
+        else if (text[cursor] === '}') depth -= 1;
+        if (depth > 0) cursor += 1;
+      }
+      continue;
+    }
+    value += text[cursor];
+    cursor += 1;
+  }
+  return null;
+}
+
+function readUrlExpr(text, index) {
+  const start = skipWs(text, index);
+  const ch = text[start];
+  let fold = null;
+  if (ch === '[') fold = readArrayJoin(text, start);
+  else if (ch === "'" || ch === '"') fold = readSplitJoin(text, start) || readConcat(text, start) || readQuoted(text, start);
+  else if (ch === '`') fold = readUrlTemplate(text, start);
+  if (!fold) {
+    const ident = readIdent(text, start);
+    if (!ident) return null;
+    return { end: ident.end, value: null, name: ident.value, symbol: ident.value };
+  }
+  const raw = text.slice(start, fold.end);
+  const symbol = (raw.startsWith('`') ? raw.slice(1, -1) : fold.value).replace(/\s+/g, ' ').slice(0, 180);
+  return { end: fold.end, value: fold.value, symbol };
+}
+
+function timesyncherUrl(value) {
+  const match = /^(https?:)\/\/([^/?#\s:]+)(?::\d+)?([/?#][\s\S]*)?$/i.exec(String(value || ''));
+  if (!match) return null;
+  const host = match[2].toLowerCase();
+  if (host !== 'timesyncher.com' && !host.endsWith('.timesyncher.com')) return null;
+  const tail = match[3] || '';
+  return {
+    host,
+    script: SCRIPT_LOAD_EXT.test(tail) || SCRIPT_LOAD_EXT.test(String(value)),
+    travel: host === 'travel.timesyncher.com',
+  };
+}
+
+function resolveUrl(text, index, bindings) {
+  const expr = readUrlExpr(text, index);
+  if (!expr) return null;
+  if (expr.value == null) {
+    const bound = bindings.get(expr.name);
+    if (!bound) return null;
+    return { end: expr.end, ...bound };
+  }
+  const hit = timesyncherUrl(expr.value);
+  if (!hit) return null;
+  return { end: expr.end, symbol: expr.symbol, ...hit };
+}
+
+function urlBindings(text, mask) {
+  const bindings = new Map();
+  const declared = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*/g;
+  let match = declared.exec(text);
+  while (match) {
+    if (mask[match.index] === 1) {
+      const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+      if (resolved) {
+        bindings.set(match[1], {
+          symbol: resolved.symbol,
+          host: resolved.host,
+          script: resolved.script,
+          travel: resolved.travel,
+        });
+      }
+    }
+    match = declared.exec(text);
+  }
+  return bindings;
+}
+
+function forwarders(text, mask) {
+  const names = new Map();
+  const declared = /\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(\s*([A-Za-z_$][\w$]*)/g;
+  let match = declared.exec(text);
+  while (match) {
+    if (mask[match.index] === 1) {
+      const bodyAt = text.indexOf('{', match.index);
+      if (bodyAt >= 0) {
+        const bodyEnd = matchingBrace(text, bodyAt);
+        if (bodyEnd - bodyAt <= 4000) {
+          const body = text.slice(bodyAt, bodyEnd);
+          const param = match[2];
+          const call = new RegExp(`\\b(?:fetch|got|axios(?:\\.request|\\.get)?|https\\.get|http\\.get)\\s*\\(\\s*${param}\\b`);
+          if (call.test(body)) names.set(match[1], param);
+        }
+      }
+    }
+    match = declared.exec(text);
+  }
+  return names;
+}
+
+function pushCrossOrigin(findings, seen, file, text, index, symbol) {
+  const clean = String(symbol || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  if (!clean) return;
+  add(findings, seen, CROSS_ORIGIN_RULE, file, text, index, clean);
+}
+
+function scanCallArgs(text, openParen, bindings, onArg) {
+  let depth = 0;
+  for (let index = openParen; index < text.length; index += 1) {
+    const ch = text[index];
+    if (ch === "'" || ch === '"') {
+      const lit = readQuoted(text, index);
+      if (depth === 1) {
+        const resolved = resolveUrl(text, index, bindings);
+        if (resolved) onArg(index, resolved);
+      }
+      if (lit) index = lit.end - 1;
+      continue;
+    }
+    if (ch === '`') {
+      if (depth === 1) {
+        const resolved = resolveUrl(text, index, bindings);
+        if (resolved) onArg(index, resolved);
+      }
+      const template = readUrlTemplate(text, index);
+      if (template) index = template.end - 1;
+      continue;
+    }
+    if (ch === '[') {
+      const resolved = depth === 1 ? resolveUrl(text, index, bindings) : null;
+      if (resolved) {
+        onArg(index, resolved);
+        index = resolved.end - 1;
+      }
+      continue;
+    }
+    if (ch === '(') {
+      depth += 1;
+      continue;
+    }
+    if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return;
+      continue;
+    }
+    if (depth === 1 && /[A-Za-z_$]/.test(ch) && !isIdentChar(text[index - 1])) {
+      const resolved = resolveUrl(text, index, bindings);
+      if (resolved) {
+        onArg(index, resolved);
+        index = Math.max(index, resolved.end - 1);
+      }
+    }
+  }
+}
+
+function clientPattern(extraNames) {
+  const names = ['axios.request', 'axios.get', 'https.get', 'http.get', 'axios', 'fetch', 'got', ...extraNames];
+  names.sort((left, right) => right.length - left.length);
+  return new RegExp(`\\b(?:${names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*\\(`, 'g');
+}
+
+function downloadFindings(file, text, findings, seen, mask, bindings) {
+  const names = [...forwarders(text, mask).keys()];
+  const calls = clientPattern(names);
+  let match = calls.exec(text);
+  while (match) {
+    if (mask[match.index] === 1) {
+      const open = match.index + match[0].lastIndexOf('(');
+      scanCallArgs(text, open, bindings, (index, resolved) => {
+        if (resolved.travel) pushCrossOrigin(findings, seen, file, text, index, resolved.symbol);
+      });
+    }
+    match = calls.exec(text);
+  }
+  const spawned = /\bspawnSync\s*\(\s*(['"])(?:\/usr\/bin\/)?(?:curl|wget)\1/g;
+  let spawn = spawned.exec(text);
+  while (spawn) {
+    if (mask[spawn.index] === 1) {
+      const open = text.indexOf('(', spawn.index);
+      scanCallArgs(text, open, bindings, (index, resolved) => {
+        if (resolved.travel) pushCrossOrigin(findings, seen, file, text, index, resolved.symbol);
+      });
+    }
+    spawn = spawned.exec(text);
+  }
+  const shell = /\b(?:curl|wget)\b[^\n]*?(https?:\/\/travel\.timesyncher\.com[^\s'"`]*)/gi;
+  let line = shell.exec(text);
+  while (line) {
+    const urlAt = line.index + line[0].indexOf(line[1]);
+    if (mask[line.index] === 1 && mask[urlAt] === 1) pushCrossOrigin(findings, seen, file, text, urlAt, line[1]);
+    line = shell.exec(text);
+  }
+}
+
+function scriptishSrc(text, index, resolved) {
+  if (resolved.script) return true;
+  const lhs = text.slice(Math.max(0, index - 40), index);
+  if (/(?:^|[^\w$])script\s*$/.test(lhs)) return true;
+  return /createElement\(\s*['"]script['"]/.test(text.slice(Math.max(0, index - 800), index));
+}
+
+function scriptLoadFindings(file, text, findings, seen, mask, bindings) {
+  const attr = (tag, name) => {
+    const quoted = tag.match(new RegExp(`\\b${name}\\s*=\\s*(['"])(.*?)\\1`, 'i'));
+    return quoted ? quoted[2] : '';
+  };
+  for (const match of text.matchAll(/<script\b[^>]*?\bsrc\s*=\s*/gi)) {
+    if (mask[match.index] !== 1) continue;
+    const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+    if (resolved) pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+  }
+  for (const match of text.matchAll(/<link\b[^>]*>/gi)) {
+    if (mask[match.index] !== 1) continue;
+    const tag = match[0];
+    const rel = attr(tag, 'rel');
+    const kind = attr(tag, 'as');
+    if (!/\bmodulepreload\b/i.test(rel) && !(/\bpreload\b/i.test(rel) && /\bscript\b/i.test(kind))) continue;
+    const href = attr(tag, 'href');
+    if (timesyncherUrl(href)) pushCrossOrigin(findings, seen, file, text, match.index, href);
+  }
+  for (const match of text.matchAll(/\bimport\s*\(\s*/g)) {
+    if (mask[match.index] !== 1) continue;
+    const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+    if (resolved) pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+  }
+  for (const match of text.matchAll(/\bimport\s+(?:[^'"`;\n]*?\s+from\s+)?(['"`])/g)) {
+    if (mask[match.index] !== 1) continue;
+    const quoteAt = match.index + match[0].lastIndexOf(match[1]);
+    const resolved = resolveUrl(text, quoteAt, bindings);
+    if (resolved) pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+  }
+  for (const match of text.matchAll(/\.src\s*=\s*/g)) {
+    if (mask[match.index] !== 1) continue;
+    const resolved = resolveUrl(text, match.index + match[0].length, bindings);
+    if (resolved && scriptishSrc(text, match.index, resolved)) {
+      pushCrossOrigin(findings, seen, file, text, match.index, resolved.symbol);
+    }
+  }
+  const calls = clientPattern([]);
+  let call = calls.exec(text);
+  while (call) {
+    if (mask[call.index] === 1) {
+      const open = call.index + call[0].lastIndexOf('(');
+      scanCallArgs(text, open, bindings, (index, resolved) => {
+        if (resolved.script) pushCrossOrigin(findings, seen, file, text, index, resolved.symbol);
+      });
+    }
+    call = calls.exec(text);
+  }
+}
+
+function isBuildScript(file) {
+  const rel = file.split(path.sep).join('/');
+  return rel.startsWith('scripts/') || /^vite\.config\./.test(path.posix.basename(rel));
+}
+
+function crossOriginFiles(cwd) {
+  const files = [];
+  const skipDir = new Set(['node_modules', 'dist', '.git', 'artifacts', 'evidence', 'coverage']);
+  const walkFiles = (abs) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (skipDir.has(entry.name)) continue;
+      const next = path.join(abs, entry.name);
+      const rel = path.relative(cwd, next).split(path.sep).join('/');
+      if (rel === 'public/assets' || rel.startsWith('public/assets/')) continue;
+      if (entry.isDirectory()) {
+        walkFiles(next);
+        continue;
+      }
+      if (!CROSS_ORIGIN_EXT.has(path.extname(entry.name).toLowerCase())) continue;
+      if (guardExempt(rel)) continue;
+      files.push(rel);
+    }
+  };
+  walkFiles(cwd);
+  return files;
+}
+
+function resolveSpecifier(file, spec) {
+  const dir = path.posix.dirname(file.split(path.sep).join('/'));
+  return path.posix.normalize(path.posix.join(dir, spec)).replace(/^\.\//, '');
+}
+
+function viteBuildStartFindings(file, text, downloading) {
+  const findings = [];
+  const seen = new Set();
+  const locals = [];
+  for (const match of text.matchAll(/\bimport\s+(\{[^}]+\}|\w+)\s+from\s+(['"])([^'"]+)\2/g)) {
+    if (!match[3].startsWith('.')) continue;
+    if (!downloading.has(resolveSpecifier(file, match[3]))) continue;
+    const clause = match[1].trim();
+    if (clause.startsWith('{')) {
+      for (const part of clause.slice(1, -1).split(',')) {
+        const bits = part.trim().split(/\s+as\s+/i);
+        const local = (bits[1] || bits[0] || '').trim();
+        if (local) locals.push(local);
+      }
+    } else if (clause) locals.push(clause);
+  }
+  if (!locals.length) return findings;
+  for (const hook of text.matchAll(/\bbuildStart\b/g)) {
+    const brace = text.indexOf('{', hook.index);
+    if (brace < 0) continue;
+    const end = matchingBrace(text, brace);
+    const body = text.slice(brace, end);
+    for (const name of locals) {
+      const at = body.search(new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\(`));
+      if (at >= 0) pushCrossOrigin(findings, seen, file, text, brace + at, `${name}()`);
+    }
+  }
+  return findings;
+}
+
+function commandFindings(file, text, command, keyAt) {
+  const mask = new Uint8Array(command.length);
+  mask.fill(1);
+  const bindings = urlBindings(command, mask);
+  const extra = [];
+  const seen = new Set();
+  downloadFindings(file, command, extra, seen, mask, bindings);
+  scriptLoadFindings(file, command, extra, seen, mask, bindings);
+  return extra.map((hit) => ({ ...hit, file, line: lineNumber(text, keyAt) }));
+}
+
+function packageScriptFindings(cwd) {
+  const rel = 'package.json';
+  const abs = path.join(cwd, rel);
+  if (!fs.existsSync(abs)) return [];
+  const text = fs.readFileSync(abs, 'utf8');
+  let pkg;
+  try {
+    pkg = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const findings = [];
+  for (const [name, command] of Object.entries(pkg.scripts || {})) {
+    if (typeof command !== 'string' || !command) continue;
+    const keyAt = text.indexOf(`"${name}"`);
+    findings.push(...commandFindings(rel, text, command, keyAt < 0 ? 0 : keyAt));
+  }
+  return findings;
+}
+
+function vercelCommandFindings(cwd) {
+  const rel = 'vercel.json';
+  const abs = path.join(cwd, rel);
+  if (!fs.existsSync(abs)) return [];
+  const text = fs.readFileSync(abs, 'utf8');
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const commands = [];
+  if (typeof json.buildCommand === 'string') commands.push(['buildCommand', json.buildCommand]);
+  if (typeof json.installCommand === 'string') commands.push(['installCommand', json.installCommand]);
+  if (Array.isArray(json.builds)) {
+    for (const build of json.builds) {
+      if (typeof build?.config?.buildCommand === 'string') commands.push(['buildCommand', build.config.buildCommand]);
+      if (typeof build?.config?.installCommand === 'string') commands.push(['installCommand', build.config.installCommand]);
+    }
+  }
+  const findings = [];
+  for (const [key, command] of commands) {
+    const keyAt = text.indexOf(`"${key}"`);
+    findings.push(...commandFindings(rel, text, command, keyAt < 0 ? 0 : keyAt));
+  }
+  return findings;
+}
+
+export function crossOriginBundleFindings(file, text, { downloads = false, scripts = true } = {}) {
+  const value = String(text || '');
+  const findings = [];
+  const seen = new Set();
+  const mask = codeMask(value);
+  const bindings = urlBindings(value, mask);
+  if (scripts) scriptLoadFindings(file, value, findings, seen, mask, bindings);
+  if (downloads) downloadFindings(file, value, findings, seen, mask, bindings);
+  return findings;
+}
+
+export function crossOriginBundleScan(cwd = process.cwd()) {
+  const findings = [];
+  const downloading = new Set();
+  const texts = new Map();
+  for (const file of crossOriginFiles(cwd)) {
+    const text = fs.readFileSync(path.join(cwd, file), 'utf8');
+    texts.set(file, text);
+    const build = isBuildScript(file);
+    const scriptHits = crossOriginBundleFindings(file, text, { downloads: false, scripts: true });
+    const downloadHits = build ? crossOriginBundleFindings(file, text, { downloads: true, scripts: false }) : [];
+    if (downloadHits.length) downloading.add(file);
+    const seen = new Set();
+    for (const hit of [...scriptHits, ...downloadHits]) {
+      const key = `${hit.symbol_or_pattern}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      findings.push(hit);
+    }
+  }
+  for (const [file, text] of texts) {
+    if (!/^vite\.config\./.test(path.posix.basename(file))) continue;
+    findings.push(...viteBuildStartFindings(file, text, downloading));
+  }
+  findings.push(...packageScriptFindings(cwd));
+  findings.push(...vercelCommandFindings(cwd));
+  return findings;
+}
+
+// BUNDLE-LEAK reads committed and on-disk bundles under public/assets, bundles, and dist.
+// It does not run vite build. The raw committed file under public/assets/upstream is in that
+// tree and is scanned with the other bundles. dist/ is included when a build already wrote it.
+const BUNDLE_LEAK_EXT = new Set(['.js', '.mjs', '.cjs', '.css', '.html', '.json', '.map']);
+const BUNDLE_LEAK_DIRS = ['public/assets', 'public/bundles', 'bundles', 'dist'];
+const TBD_SYMBOL = { 'price tbd': 'Price TBD', 'depart tbd': 'Depart TBD', 'arrive tbd': 'Arrive TBD' };
+const IP_RE = /(?<!\d)(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?!\d)/g;
+const TOKEN_RE = /(?<![A-Za-z0-9])[A-Za-z0-9]{32}(?![A-Za-z0-9])/g;
+
+function privateIp(ip) {
+  const parts = ip.split('.').map(Number);
+  if (parts.length !== 4 || parts.some((part) => part > 255)) return false;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  return false;
+}
+
+function nameFlags(value) {
+  const lower = String(value || '').toLowerCase();
+  return { craig: lower.includes('craig'), kim: lower.includes('kim'), nyc: lower.includes('nyc') };
+}
+
+function readCheckedValue(text, index) {
+  return readConcat(text, index) || readArrayJoin(text, index) || readSplitJoin(text, index) || readTemplate(text, index) || readQuoted(text, index);
+}
+
+function dictionaryWordRun(token) {
+  return /^([A-Z][a-z]+)+$/.test(token) || /^[a-z]+(?:[A-Z][a-z]+)+$/.test(token);
+}
+
+function iconPrefixed(token) {
+  return /^(?:Lucide|Icon)/.test(token);
+}
+
+function genericShareToken(token) {
+  if (!/[A-Z]/.test(token) || !/[a-z]/.test(token) || !/[0-9]/.test(token)) return false;
+  if (dictionaryWordRun(token) || iconPrefixed(token)) return false;
+  return true;
+}
+
+function leakTokenFindings(file, original, findings, seen, hashes, text, origin) {
+  TOKEN_RE.lastIndex = 0;
+  for (const match of text.matchAll(TOKEN_RE)) {
+    const token = match[0];
+    const digest = createHash('sha256').update(token).digest('hex');
+    const at = origin + match.index;
+    if (hashes.has(digest)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, `sha256:${digest}`);
+    if (!genericShareToken(token)) continue;
+    const window = original.slice(Math.max(0, at - 80), at + token.length + 80);
+    if (/share/i.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near share');
+    if (/token/i.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near token');
+    if (/\/s\//.test(window)) add(findings, seen, 'BUNDLE-LEAK', file, original, at, '32-alnum near /s/');
+  }
+}
+
+function leakLiteralFindings(file, original, findings, seen, text, origin) {
+  for (const match of text.matchAll(/craig_kim_nyc_june_2026/ig)) {
+    add(findings, seen, 'BUNDLE-LEAK', file, original, origin + match.index, 'Craig_Kim_NYC_June_2026');
+  }
+  for (const match of text.matchAll(/price tbd|depart tbd|arrive tbd/ig)) {
+    add(findings, seen, 'BUNDLE-LEAK', file, original, origin + match.index, TBD_SYMBOL[match[0].toLowerCase()]);
+  }
+  IP_RE.lastIndex = 0;
+  for (const match of text.matchAll(IP_RE)) {
+    if (!privateIp(match[0])) continue;
+    add(findings, seen, 'BUNDLE-LEAK', file, original, origin + match.index, match[0]);
+  }
+}
+
+function leakCheckFindings(file, original, findings, seen) {
+  const sites = [];
+  const opRe = /(?:\.includes|\.indexOf|\.startsWith)\(\s*|(?:===|!==|==|!=)(?!=)/g;
+  let match = opRe.exec(original);
+  while (match) {
+    const at = skipWs(original, match.index + match[0].length);
+    const value = readCheckedValue(original, at);
+    if (value && value.end > at) opRe.lastIndex = value.end;
+    if (value) {
+      const flags = nameFlags(value.value);
+      if (flags.craig || flags.kim || flags.nyc) sites.push({ index: match.index, ...flags });
+    }
+    match = opRe.exec(original);
+  }
+  sites.sort((left, right) => left.index - right.index);
+  for (let left = 0; left < sites.length; left += 1) {
+    let craig = false;
+    let kim = false;
+    let nyc = false;
+    for (let right = left; right < sites.length && sites[right].index - sites[left].index <= 400; right += 1) {
+      craig = craig || sites[right].craig;
+      kim = kim || sites[right].kim;
+      nyc = nyc || sites[right].nyc;
+      if (craig && kim && nyc) {
+        add(findings, seen, 'BUNDLE-LEAK', file, original, sites[left].index, 'craig+kim+nyc');
+        return;
+      }
+    }
+  }
+}
+
+export function bundleLeakFindings(file, text, { hashes = [SHARE_TOKEN_SHA256] } = {}) {
+  const original = String(text || '');
+  const findings = [];
+  const seen = new Set();
+  const hashSet = new Set(hashes);
+  leakTokenFindings(file, original, findings, seen, hashSet, original, 0);
+  leakLiteralFindings(file, original, findings, seen, original, 0);
+  leakCheckFindings(file, original, findings, seen);
+  for (const fold of foldedStrings(original)) {
+    leakTokenFindings(file, original, findings, seen, hashSet, fold.value, fold.index);
+    leakLiteralFindings(file, original, findings, seen, fold.value, fold.index);
+  }
+  return findings;
+}
+
+function bundleLeakFiles(cwd) {
+  const files = new Set();
+  const addFile = (rel) => {
+    const normalized = String(rel || '').split(path.sep).join('/');
+    if (!normalized || normalized.includes('node_modules/') || guardExempt(normalized)) return;
+    if (!BUNDLE_LEAK_EXT.has(path.extname(normalized).toLowerCase())) return;
+    if (!fs.existsSync(path.join(cwd, normalized))) return;
+    files.add(normalized);
+  };
+  const walk = (abs, rel) => {
+    if (!fs.existsSync(abs)) return;
+    const stat = fs.statSync(abs);
+    if (stat.isFile()) {
+      addFile(rel);
+      return;
+    }
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      walk(path.join(abs, entry.name), rel ? `${rel}/${entry.name}` : entry.name);
+    }
+  };
+  for (const dir of BUNDLE_LEAK_DIRS) walk(path.join(cwd, dir), dir);
+  const listed = spawnSync('git', ['ls-files', '-z'], { cwd, encoding: 'utf8' });
+  if (listed.status === 0) {
+    for (const rel of listed.stdout.split('\0').filter(Boolean)) {
+      if (/(^|\/)(?:assets|bundles|dist)\//.test(rel)) addFile(rel);
+    }
+  }
+  return [...files].sort();
+}
+
+function bundleLeakScan(cwd) {
+  const findings = [];
+  for (const file of bundleLeakFiles(cwd)) {
+    findings.push(...bundleLeakFindings(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
+  }
+  return findings;
+}
+
+// EVASION also flags padding inside committed JS bundles. A run is 20 or more
+// consecutive spaces or tabs. Newlines do not count and end a run. The symbol
+// is spaces:N@offset, tabs:N@offset, or whitespace:N@offset. Template literals
+// are not exempt. The rule id is always-fail, so a baseline row cannot hide it.
+const WHITESPACE_PAD = /[ \t]{20,}/g;
+const PAD_DIRS = ['public/assets', 'bundles', 'dist'];
+const PAD_EXT = new Set(['.js', '.mjs', '.cjs']);
+
+function whitespacePadSymbol(run, offset) {
+  const kind = /^ +$/.test(run) ? 'spaces' : /^\t+$/.test(run) ? 'tabs' : 'whitespace';
+  return `${kind}:${run.length}@${offset}`;
+}
+
+export function whitespacePadFindings(file, text) {
+  const findings = [];
+  const seen = new Set();
+  const value = String(text || '');
+  WHITESPACE_PAD.lastIndex = 0;
+  for (const match of value.matchAll(WHITESPACE_PAD)) {
+    add(findings, seen, 'EVASION', file, value, match.index, whitespacePadSymbol(match[0], match.index));
+  }
+  return findings;
+}
+
+function whitespacePadFiles(cwd) {
+  const wanted = (rel) => {
+    const normalized = String(rel || '').split(path.sep).join('/');
+    if (!PAD_EXT.has(path.posix.extname(normalized).toLowerCase())) return false;
+    return PAD_DIRS.some((dir) => normalized === dir || normalized.startsWith(`${dir}/`));
+  };
+  const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, encoding: 'utf8' });
+  if (inside.status === 0 && inside.stdout.trim() === 'true') {
+    const listed = spawnSync('git', ['ls-files', '-z'], { cwd, encoding: 'utf8' });
+    if (listed.status === 0) {
+      return listed.stdout.split('\0').filter((file) => file && wanted(file) && fs.existsSync(path.join(cwd, file))).sort();
+    }
+  }
+  const files = [];
+  const walk = (abs) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      const next = path.join(abs, entry.name);
+      if (entry.isDirectory()) walk(next);
+      else {
+        const rel = path.relative(cwd, next).split(path.sep).join('/');
+        if (wanted(rel)) files.push(rel);
+      }
+    }
+  };
+  for (const dir of PAD_DIRS) walk(path.join(cwd, dir));
+  return files.sort();
+}
+
+function whitespacePadScan(cwd) {
+  const findings = [];
+  for (const file of whitespacePadFiles(cwd)) {
+    findings.push(...whitespacePadFindings(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
+  }
+  return findings;
+}
+
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
-  for (const file of contentPaths(cwd)) {
+  const covered = new Set(contentPaths(cwd));
+  for (const file of covered) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
   }
   for (const file of extraScriptPaths(cwd)) {
@@ -1417,8 +2376,16 @@ export function scanRoots(cwd = process.cwd()) {
     const text = fs.readFileSync(path.join(cwd, file), 'utf8');
     const seen = new Set();
     const extra = [];
+    if (!covered.has(file.split(path.sep).join('/'))) evasionModelFindings(file, text, extra, seen);
     modelAllowlistFindings(file, text, extra, seen);
     googlePlacesFindings(file, text, extra, seen);
+    for (const finding of paidPlacesFindings(file, text)) {
+      const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        extra.push(finding);
+      }
+    }
     findings.push(...extra);
   }
   for (const file of bundlePaths(cwd)) {
@@ -1450,6 +2417,10 @@ export function scanRoots(cwd = process.cwd()) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));
   }
   findings.push(...servedBundleFindings(cwd));
+  findings.push(...jevCardFindings(cwd));
+  findings.push(...crossOriginBundleScan(cwd));
+  findings.push(...bundleLeakScan(cwd));
+  findings.push(...whitespacePadScan(cwd));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule) || a.symbol_or_pattern.localeCompare(b.symbol_or_pattern));
   return findings;
 }
@@ -1463,7 +2434,7 @@ export function classify(findings, baseline) {
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || !keys.has(contentIdentity(finding))) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION' || finding.rule === 'BAR-UNLIMITED-WORDING' || !keys.has(contentIdentity(finding))) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };
@@ -1478,24 +2449,6 @@ export function loadBaselineFile(file) {
     }
   }
   return parsed;
-}
-
-function baselineRuleId(row) {
-  return row.rule || row.inventory_id;
-}
-
-function baselineRowKey(row) {
-  return `${row.file}\0${row.symbol_or_pattern}\0${row.inventory_id}`;
-}
-
-export function baselineGrowthAllowed(current, baseRows) {
-  if (current.length <= baseRows.length) return true;
-  if (baseRows.length === 0) return false;
-  const baseKeys = new Set(baseRows.map(baselineRowKey));
-  const added = current.filter((row) => !baseKeys.has(baselineRowKey(row)));
-  if (added.length !== current.length - baseRows.length) return false;
-  const baseRules = new Set(baseRows.map(baselineRuleId));
-  return added.every((row) => !baseRules.has(baselineRuleId(row)));
 }
 
 export function baselineRemoteRef(ref) {
@@ -1527,25 +2480,17 @@ export function evaluate(cwd = process.cwd()) {
   const findings = scanRoots(cwd);
   const { report, fail } = classify(findings, baseline);
   const ceiling = baseBaselineCount(cwd);
-  if (ceiling.status === 'error') {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol_or_pattern: ceiling.error,
-    });
-  } else if (ceiling.status === 'ok' && baseline.length > ceiling.count && !baselineGrowthAllowed(baseline, ceiling.rows)) {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol_or_pattern: `${baseline.length}>${ceiling.count}`,
-    });
+  for (const symbol of growthFails(baseline, ceiling)) {
+    fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol_or_pattern: symbol });
   }
   return { report, fail, baselineCount: baseline.length, ceiling };
 }
 
 function main() {
+  if (process.argv.includes('--prune')) {
+    pruneBaseline(process.cwd(), BASELINE_REL, loadBaselineFile, scanRoots, (entry, findings) => findings.some((finding) => finding.file === entry.file && finding.symbol_or_pattern === entry.symbol_or_pattern));
+    return;
+  }
   const { report, fail } = evaluate(process.cwd());
   for (const finding of report) {
     process.stdout.write(`REPORT\t${finding.rule}\t${finding.file}:${finding.line}\t${finding.symbol_or_pattern}\n`);

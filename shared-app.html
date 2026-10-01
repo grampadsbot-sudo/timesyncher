@@ -51,7 +51,8 @@
         const slug = String(location.pathname || '').split('/').filter(Boolean).slice(-2, -1)[0] || '';
         const order = document.createElement('a');
         order.href = '/api/keepsake-order?slug=' + encodeURIComponent(slug);
-        order.textContent = 'Order this keepsake';
+        order.textContent = 'Order Keepsakes';
+        order.setAttribute('aria-label', 'Order Keepsakes');
         order.setAttribute('data-keepsake-order', '1');
         order.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;background:#0b3d91;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font:600 14px sans-serif';
         document.addEventListener('DOMContentLoaded', () => document.body.appendChild(order));
@@ -358,5 +359,6 @@
         const timer = setInterval(() => { if (installChrome()) clearInterval(timer); }, 500);
       })();
     </script>
+    <script type="module" src="/post-purchase-gate.mjs"></script>
   </body>
 </html>

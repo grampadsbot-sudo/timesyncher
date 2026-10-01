@@ -10,7 +10,7 @@ On vacation-staging, the website link uses `websiteTripBase` → `https://vacati
 
 ## Rules
 
-1. Persist each initial prompt + reply to GBrain (`persistIntakeTurnToGbrain` in `src/vacation/tg-intake-gbrain.mjs`). Slug: `bot-admin/messages/time-syncher/tg-intake/{chat}/{turn}`. Write-through root is existing `privateGBrain` (`/home/ubishere9995/gbrain`) or `gbrain capture` when present.
+1. Persist each initial prompt + reply to GBrain (`persistIntakeTurnToGbrain` in `src/vacation/tg-intake-gbrain.mjs`). Slug: `bot-admin/messages/time-syncher/tg-intake/{chat}/{turn}`. Write-through root is `TIMESYNCHER_PRODUCT_GBRAIN_ROOT` or `TIMESYNCHER_PRIVATE_GBRAIN`. A missing path fails; there is no default directory. `gbrain capture` is used when it succeeds.
 2. After enough info (vacation name + unforgettable goal + trip details, existing `hasVacationIdentity` / `hasTripPlanningDetails`), reply with **I'm building your initial itinerary now and it may take 10–15 minutes.** then queue autonomous fill.
 3. Fill uses confirmed per-category mins **15 / 10 / 15** (`features/min-things.md`).
 

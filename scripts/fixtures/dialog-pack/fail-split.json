@@ -1,0 +1,18 @@
+[
+  {
+    "n": 1,
+    "speaker": "alex",
+    "speaker_id": "alex",
+    "channel": "customer",
+    "in_reply_to": null,
+    "text": "How is the cost divided?"
+  },
+  {
+    "n": 2,
+    "speaker": "app",
+    "speaker_id": "app",
+    "channel": "app",
+    "in_reply_to": 1,
+    "text": "The split-payer line says who pays."
+  }
+]

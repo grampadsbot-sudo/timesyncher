@@ -1,0 +1,18 @@
+{
+  "targetPerson": "Alex Owner",
+  "party": { "primary": { "name": "Alex Owner", "role": "Owner" } },
+  "turns": [
+    {
+      "turnIndex": 1,
+      "role": "customer",
+      "speakerName": "Blair Guest",
+      "text": "Please send the website link to the editor."
+    },
+    {
+      "turnIndex": 2,
+      "role": "app",
+      "speakerName": null,
+      "text": "Editor link: https://vacation.timesyncher.com/v/sample-week."
+    }
+  ]
+}

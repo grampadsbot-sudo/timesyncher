@@ -5,7 +5,7 @@ description: "Re-runnable TimeSyncher Vacation verification. Drives the real sha
 
 # Verify TimeSyncher Vacation
 
-The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
+The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: the staging shared trip for `testTripSlug` in `verify-config.json` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
 
 Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path. After a trip has a shared site, the app iframe is that real itinerary.
 
@@ -55,7 +55,7 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-ema
 The harness exits non-zero when:
 
 - the evidence directory has no purchase email HTML or text (the run skipped email);
-- the email launch link is order-success or `/accept` instead of `vacation-app.html?session=`;
+- the email launch link is not `/shared/` (it is order-success, `/accept`, or `vacation-app.html`);
 - EULA acceptance is only on order-success (`#acceptEula` or an `/accept/` customer link) and the app URL did not show `#eulaScreen` first;
 - onboarding chat proof is missing after that EULA screen.
 

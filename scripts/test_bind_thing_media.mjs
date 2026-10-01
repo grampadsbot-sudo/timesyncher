@@ -3,10 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 import { requireMediaBindAuth, stagingMediaBindHost } from '../src/vacation/auth.mjs';
 import {
-  SCT_VACATION3_MEDIA_PACK,
   chooseMediaStorage,
-  guessThingNameFromFilename,
-  mapVacation3SctMediaFile,
   mergeBindingsIntoShared,
   isKeepsakeJunkMedia,
   stripKeepsakeJunkMedia,
@@ -20,62 +17,53 @@ import {
 } from '../src/vacation/thing-media-bind.mjs';
 
 const shared = {
-  trip: { id: 197, title: 'Las Vegas Vacation' },
+  trip: { id: 41, title: 'Sample Trip' },
   media: [],
   places: [
-    { id: 8872, trip_id: 197, name: 'Carbone at Aria', category_name: 'Restaurant', image_url: null },
-    { id: 8873, trip_id: 197, name: 'Shake Shack near Cosmo/Aria', category_name: 'Restaurant' },
-    { id: 8871, trip_id: 197, name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction' },
+    { id: 11, trip_id: 41, name: 'Sample Venue', category_name: 'Restaurant', image_url: null },
+    { id: 12, trip_id: 41, name: 'Sample Cafe', category_name: 'Restaurant' },
+    { id: 13, trip_id: 41, name: 'Sample Hall', category_name: 'Attraction' },
   ],
-  days: [{ id: 1236, day_number: 1 }],
+  days: [{ id: 1, day_number: 1 }],
   assignments: {
-    1236: [{ id: 1, place: { id: 8872, name: 'Carbone at Aria' } }],
+    1: [{ id: 1, place: { id: 11, name: 'Sample Venue' } }],
   },
   thingOverrides: {
-    'place:8871': { title: 'Bellagio Conservatory — Anniversary Cocktails', category: 'other' },
+    'place:13': { title: 'Sample Hall Evening', category: 'other' },
   },
 };
 
-assert.equal(resolveThingFromShared(shared, { thingName: 'Carbone' }).thingId, 8872);
-assert.equal(resolveThingFromShared(shared, { thingId: 8872 }).name, 'Carbone at Aria');
-assert.equal(resolveThingFromShared(shared, { thingName: 'Conservatory' }).thingId, 8871);
-assert.equal(guessThingNameFromFilename('carbone-dinner.jpg').thingName, 'Carbone');
-assert.equal(guessThingNameFromFilename('boarding-passes-photo.jpg').thingName, 'SFO to LAS');
-assert.equal(guessThingNameFromFilename('high-roller.jpg').missing, true);
-assert.equal(guessThingNameFromFilename('sphere-show.jpg').missing, true);
+assert.equal(resolveThingFromShared(shared, { thingName: 'Sample Venue' }).thingId, 11);
+assert.equal(resolveThingFromShared(shared, { thingId: 11 }).name, 'Sample Venue');
+assert.equal(resolveThingFromShared(shared, { thingName: 'Sample Hall' }).thingId, 13);
 
-assert.equal(SCT_VACATION3_MEDIA_PACK.length, 15);
-const carboneHands = mapVacation3SctMediaFile('carbone-late-hands-photo.jpg');
-assert.equal(carboneHands.action, 'bind');
-assert.equal(carboneHands.targets[0].thingId, 8872);
-const boarding = mapVacation3SctMediaFile('/workspace/sct-runs/story-draft-20260907/media/boarding-passes-photo.jpg');
-assert.equal(boarding.action, 'bind');
-assert.deepEqual(boarding.targets.map((row) => row.thingId), [8877, 8878]);
-assert.equal(mapVacation3SctMediaFile('conservatory-photo.jpg').targets[0].thingId, 8871);
-assert.equal(mapVacation3SctMediaFile('shake-shack-fries-photo.jpg').targets[0].thingId, 8873);
-assert.equal(mapVacation3SctMediaFile('eggslut-sandwich-photo.jpg').targets[0].thingId, 8875);
-assert.equal(mapVacation3SctMediaFile('bellagio-fountain-late-video.mp4').targets[0].thingId, 8869);
-assert.equal(mapVacation3SctMediaFile('bellagio-fountain-night-video.mp4').targets[0].thingId, 8869);
-assert.equal(mapVacation3SctMediaFile('cirque-program-photo.jpg').action, 'skip');
-assert.equal(mapVacation3SctMediaFile('high-roller-photo-01.jpg').action, 'skip');
-assert.equal(mapVacation3SctMediaFile('high-roller-photo-02.jpg').action, 'skip');
-assert.equal(mapVacation3SctMediaFile('high-roller-photo-03.jpg').action, 'skip');
-assert.equal(mapVacation3SctMediaFile('sphere-late-photo-01.jpg').action, 'skip');
-assert.equal(mapVacation3SctMediaFile('sphere-late-photo-02.jpg').action, 'skip');
-assert.equal(mapVacation3SctMediaFile('sphere-led-video.mp4').action, 'skip');
+const bindSource = await readFile(new URL('../src/vacation/thing-media-bind.mjs', import.meta.url), 'utf8');
+const bindCli = await readFile(new URL('../scripts/bind-thing-media.mjs', import.meta.url), 'utf8');
+for (const symbol of ['SCT_VACATION3_MEDIA_PACK', 'THINGS_NOT_ON_VACATION3', 'VACATION3_SHARE_TOKEN']) {
+  assert.equal(bindSource.includes(symbol), false, symbol);
+  assert.equal(bindCli.includes(symbol), false, symbol);
+}
+const absent = mergeBindingsIntoShared(shared, [{
+  id: 'bind-missing',
+  publicUrl: '/ts-thing-media/sample-trip/venue-b-photo.png',
+  thingName: 'Sample Venue',
+}]);
+assert.equal(absent.places[0].image_url, null);
+assert.equal(absent.media.length, 0);
+assert.equal(absent.places[0].bound_media, undefined);
 
 const merged = mergeBindingsIntoShared(shared, [{
   id: 'bind-1',
-  shareToken: 'las-vegas-vacation-3',
-  thingId: 8872,
-  thingName: 'Carbone at Aria',
-  publicUrl: '/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png',
+  shareToken: 'sample-trip',
+  thingId: 11,
+  thingName: 'Sample Venue',
+  publicUrl: '/ts-thing-media/sample-trip/venue-a-bind-proof.png',
   mimeType: 'image/png',
-  originalName: 'carbone-bind-proof.png',
+  originalName: 'venue-a-bind-proof.png',
 }]);
-assert.equal(merged.places[0].image_url, '/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png');
-assert.equal(merged.media[0].place_id, 8872);
-assert.match(merged.media[0].url, /carbone-bind-proof/);
+assert.equal(merged.places[0].image_url, '/ts-thing-media/sample-trip/venue-a-bind-proof.png');
+assert.equal(merged.media[0].place_id, 11);
+assert.match(merged.media[0].url, /venue-a-bind-proof/);
 assert.equal(isKeepsakeJunkMedia(merged.media[0]), true);
 const printShared = stripKeepsakeJunkMedia(merged);
 assert.equal(printShared.media.length, 0);
@@ -133,16 +121,16 @@ const neonChoice = chooseMediaStorage({
   blobUrl: '',
   hasDatabase: true,
   origin: 'https://vacation-staging.timesyncher.com',
-  shareToken: 'las-vegas-vacation-3',
+  shareToken: 'sample-trip',
   bindingId: 'bind-neon-1',
 });
 assert.equal(neonChoice.storageProvider, 'neon');
 assert.equal(neonChoice.storeBytes, true);
-assert.equal(neonChoice.publicUrl, `https://vacation-staging.timesyncher.com${neonRawMediaPath('las-vegas-vacation-3', 'bind-neon-1')}`);
+assert.equal(neonChoice.publicUrl, `https://vacation-staging.timesyncher.com${neonRawMediaPath('sample-trip', 'bind-neon-1')}`);
 
 const urlChoice = chooseMediaStorage({
   bytes: null,
-  sourceUrl: 'https://vacation-staging.timesyncher.com/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png',
+  sourceUrl: 'https://cdn.example/venue-a-photo.png',
   hasDatabase: true,
 });
 assert.equal(urlChoice.storageProvider, 'url');
@@ -153,11 +141,11 @@ assert.equal(noStore.error, 'no-store');
 
 const mislabeled = toPublicBinding({
   id: '6ba36f2a-e9f2-467e-9e61-3aac64fe165a',
-  thingId: 8869,
+  thingId: 14,
   mediaKind: 'photo',
   mimeType: 'application/octet-stream',
-  originalName: 'bellagio-fountain-night-video.mp4',
-  publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+  originalName: 'venue-b-video.mp4',
+  publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=sample-trip&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
 });
 assert.equal(mislabeled.mediaKind, 'video');
 assert.equal(mislabeled.mimeType, 'video/mp4');
@@ -166,15 +154,15 @@ assert.equal(isPhotoBinding(mislabeled), false);
 assert.equal(isPhotoBinding({
   mediaKind: 'photo',
   mimeType: 'application/octet-stream',
-  originalName: 'bellagio-fountain-night-video.mp4',
+  originalName: 'venue-b-video.mp4',
   publicUrl: mislabeled.publicUrl,
 }), false);
 assert.equal(sniffMediaType(Buffer.from('....ftypisom........'), 'x.bin', 'application/octet-stream'), 'video/mp4');
 
 const hotelShared = {
-  trip: { id: 197 },
+  trip: { id: 41 },
   media: [],
-  places: [{ id: 8869, name: 'Bellagio', category_name: 'Hotel', image_url: null }],
+  places: [{ id: 14, name: 'Sample Hotel', category_name: 'Hotel', image_url: null }],
 };
 const hotelMerged = mergeBindingsIntoShared(hotelShared, [mislabeled]);
 assert.ok(!hotelMerged.places[0].image_url);

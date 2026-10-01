@@ -343,9 +343,9 @@
                   <label>Phone<input name="phone" autocomplete="tel" placeholder="(555) 123-4567" /></label>
                   <label>Vacation date<input type="date" name="vacationDate" /></label>
                   <label class="full">Billing address<input name="address" autocomplete="billing street-address" placeholder="Street address" /></label>
-                  <label>City<input name="city" autocomplete="billing address-level2" placeholder="Las Vegas" /></label>
-                  <label>State<input name="state" autocomplete="billing address-level1" placeholder="NV" /></label>
-                  <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="89101" /></label>
+                  <label>City<input name="city" autocomplete="billing address-level2" placeholder="City" /></label>
+                  <label>State<input name="state" autocomplete="billing address-level1" placeholder="State" /></label>
+                  <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="ZIP" /></label>
                   <label>Country<select name="country" autocomplete="billing country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option></select></label>
                 </div>
                 <div class="button-row">
@@ -650,9 +650,11 @@
       singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
       singlePrice.textContent = money(single.amount || 3700);
       unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
-      unlimitedPrice.textContent = '+' + money(unlimited.amount || 2700);
+      unlimitedPrice.textContent = unlimited.amount ? '+' + money(unlimited.amount) : '';
       bumpRow.hidden = !bump.checked;
-      bumpTitle.textContent = `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount || 2700)}`;
+      bumpTitle.textContent = unlimited.amount
+        ? `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount)}`
+        : `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')}`;
       bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
       syncPhotoCopy();
     }
@@ -728,7 +730,8 @@
       bumpRow.hidden = !bumped;
       photoRow.hidden = !photos;
       syncPhotoCopy();
-      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? activePhotoAmountCents(photoProduct) : 0);
+      const bumpAmount = Number(productConfig.products?.unlimited?.amount);
+      const cents = Number(productConfig.products?.single?.amount || 3700) + (bumped && Number.isFinite(bumpAmount) ? bumpAmount : 0) + (photos ? activePhotoAmountCents(photoProduct) : 0);
       total.textContent = money(cents);
       tax.textContent = couponMode() ? 'Waived by coupon' : 'Calculated by Stripe';
     }

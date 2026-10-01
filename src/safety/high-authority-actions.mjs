@@ -1,5 +1,3 @@
-const DEFAULT_BLOCK_MESSAGE = 'I can research, compare, summarize, or draft this for you, but TimeSyncher is advisory-only right now. You will need to take the actual action yourself.';
-
 export const HIGH_AUTHORITY_ACTION_KINDS = Object.freeze([
   'booking_or_reservation',
   'purchase_or_payment',
@@ -67,12 +65,7 @@ export function classifyHighAuthorityRequest(text) {
 
 export function blockHighAuthorityRequest(text, env = process.env) {
   if (highAuthorityActionsAllowed(env)) return { blocked: false, kinds: [] };
-  const result = classifyHighAuthorityRequest(text);
-  if (!result.blocked) return result;
-  return {
-    ...result,
-    message: DEFAULT_BLOCK_MESSAGE,
-  };
+  return classifyHighAuthorityRequest(text);
 }
 
 export function assertHighAuthorityActionAllowed(actionKind, env = process.env) {
@@ -83,6 +76,6 @@ export function assertHighAuthorityActionAllowed(actionKind, env = process.env) 
   const error = new Error(`high-authority action blocked: ${actionKind}`);
   error.statusCode = 403;
   error.code = 'HIGH_AUTHORITY_ACTION_BLOCKED';
-  error.customerMessage = DEFAULT_BLOCK_MESSAGE;
+  error.kinds = [actionKind];
   throw error;
 }

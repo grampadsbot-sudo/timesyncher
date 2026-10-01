@@ -1,20 +1,14 @@
 import { normalizeThingType, resolveThingType } from './timeline-icons.mjs';
 
-/** Product Si() is NYC-only. Same mechanism: name → coords for mapped itinerary stops. */
-export const PRODUCT_VENUE_COORDS = [
-  [/shake\s*shack/i, [36.1097, -115.1739]],
-  [/carbone/i, [36.1073, -115.1766]],
-  [/eggslut/i, [36.1097, -115.1739]],
-  [/cosmopolitan|cosmo.*shop/i, [36.1097, -115.1739]],
-  [/lotus of siam/i, [36.1436, -115.1415]],
-  [/conservatory/i, [36.1126, -115.1767]],
-  [/bellagio|lodging/i, [36.1126, -115.1767]],
-  [/\b(sfo to las|las to sfo)\b/i, [36.084, -115.1537]],
-  [/las vegas strip|las vegas/i, [36.1147, -115.1729]],
-];
-
 function text(value) {
   return String(value || '').trim();
+}
+
+function sourceObject(...rows) {
+  for (const row of rows) {
+    if (row && typeof row === 'object' && !Array.isArray(row)) return row;
+  }
+  return null;
 }
 
 function finiteCoord(value) {
@@ -22,25 +16,17 @@ function finiteCoord(value) {
   return Number.isFinite(number) && number !== 0 ? number : null;
 }
 
-function haystack(place = {}, override = {}) {
-  return [
-    override.title,
-    place.name,
-    place.title,
-    override.address,
-    place.address,
-    override.category,
-    place.category_name,
-  ].map(text).join(' ');
-}
-
 export function resolveThingCoords(place = {}, override = {}) {
-  const lat = finiteCoord(override.lat ?? override.latitude ?? place.lat ?? place.latitude);
-  const lng = finiteCoord(override.lng ?? override.longitude ?? place.lng ?? place.longitude);
-  if (lat != null && lng != null) return [lat, lng];
-  const source = haystack(place, override);
-  for (const [pattern, coords] of PRODUCT_VENUE_COORDS) {
-    if (pattern.test(source)) return coords;
+  const source = sourceObject(override.source, place.source, override.sourceRecord, place.sourceRecord);
+  const pairs = [
+    [override.lat ?? override.latitude, override.lng ?? override.longitude],
+    [place.lat ?? place.latitude, place.lng ?? place.longitude],
+    [source?.lat ?? source?.latitude, source?.lng ?? source?.longitude],
+  ];
+  for (const [lat, lng] of pairs) {
+    const la = finiteCoord(lat);
+    const ln = finiteCoord(lng);
+    if (la != null && ln != null) return [la, ln];
   }
   return null;
 }
@@ -51,82 +37,39 @@ export function productThingCategory(place = {}, override = {}) {
   return normalizeThingType(place.category_name || place.category?.name) || resolved || 'other';
 }
 
-/**
- * Product thing-editor summaries / happy-hour for known vacation-3 venues.
- * Fill only when the TREK override field is empty — do not invent a third PDF template.
- */
-export const PRODUCT_THING_FIELDS = [
-  {
-    match: /carbone/i,
-    summary: 'Mario Carbone’s theatrical Italian-American at Aria — spicy rigatoni, tableside Caesar, and a special-night Strip reservation.',
-    longDetails: 'Aria special-night reservation: theatrical Italian-American, spicy rigatoni and tableside Caesar. Opens 5pm daily. No published Carbone happy-hour menu on ARIA official pages as of 2026-09-11 (nearby: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm). Recheck https://aria.mgmresorts.com/en/restaurants/carbone.html and https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html before planning.',
-    happyHour: true,
-    happyHourDetails: 'Happy-hour field on: Carbone itself has no published happy-hour menu on ARIA official pages as of 2026-09-11 (opens 5pm daily; not listed among ARIA HH venues). Nearby ARIA happy hour: Bardot Brasserie Tue–Sat 5–7pm; Proper Bar Mon–Fri 4–6pm. Recheck https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html and https://aria.mgmresorts.com/en/restaurants/carbone.html before planning.',
-    happyHourSources: [
-      'https://aria.mgmresorts.com/en/restaurants/happy-hour-at-aria.html',
-      'https://aria.mgmresorts.com/en/restaurants/carbone.html',
-    ],
-  },
-  {
-    match: /shake\s*shack/i,
-    summary: 'Counter-service burgers and crinkle fries by Cosmo/Aria — the easy, air-conditioned lunch stop between Strip walking.',
-    longDetails: 'Cosmo/Aria counter: burgers, crinkle fries, and a fast air-conditioned lunch between Strip walking. No current happy-hour program; recheck the Cosmopolitan location page before planning.',
-    happyHour: false,
-    happyHourDetails: 'No current happy-hour offer found for Shake Shack near Cosmo/Aria as of 2026-09-11; this is a counter-service burger stop, not a bar program. Recheck the Cosmopolitan location page before using for planning.',
-  },
-  {
-    match: /lotus of siam/i,
-    summary: 'Celebrated Northern Thai off the Strip — fiery, sour, and still the Las Vegas Thai pilgrimage for a serious lunch.',
-    longDetails: 'Flamingo Rd Northern Thai pilgrimage lunch. Bar happy hour Mon–Fri 3–5pm on recent 2025–2026 listings ($7 small plates, $4–$8 drinks). Recheck happyhourvegas.com/happy-hour/lotus-of-siam/ before planning.',
-    happyHour: true,
-    happyHourDetails: 'Flamingo Rd bar happy hour Mon–Fri 3–5pm: $7 small plates (crispy rice lettuce wraps, satay, tartare cups), $4 sake / $5 beer / $6 wine / $8 cocktails as of recent 2025–2026 listings. Recheck before using for planning — hours change. Sources: https://happyhourvegas.com/happy-hour/lotus-of-siam/ and Las Vegas Advisor Lotus happy-hour report.',
-    happyHourSources: [
-      'https://happyhourvegas.com/happy-hour/lotus-of-siam/',
-      'https://www.lasvegasadvisor.com/blog/lotus-happy-hour/',
-    ],
-  },
-  {
-    match: /eggslut/i,
-    summary: 'Cosmopolitan breakfast counter known for the Fairfax sandwich; expect a line, a brioche bun, and a runny yolk.',
-    longDetails: 'Cosmopolitan breakfast counter: Fairfax sandwich, brioche, runny yolk, expect a line. No current happy-hour offer; recheck The Cosmopolitan location page before planning.',
-    happyHour: false,
-    happyHourDetails: 'No current happy-hour offer found for Eggslut as of 2026-09-11; this is a breakfast/lunch counter. Recheck The Cosmopolitan location page before using for planning.',
-  },
-  {
-    match: /cosmopolitan|cosmo.*shop/i,
-    summary: 'In-hotel boutiques at The Cosmopolitan — a walkable shop stretch between the casino floor and a Shake Shack break.',
-    longDetails: 'In-hotel boutiques at The Cosmopolitan — a walkable shop stretch between the casino floor and a Shake Shack break.',
-  },
-  {
-    match: /conservatory/i,
-    summary: 'A sparkling first-night stop in the Bellagio Conservatory for Alex & Kim: seasonal flowers, a slow wander, and anniversary cocktails nearby.',
-    longDetails: 'First-night Bellagio Conservatory wander for Alex & Kim: seasonal flowers and anniversary cocktails nearby.',
-  },
-  {
-    match: /\bsfo to las\b/i,
-    summary: 'Thursday afternoon SFO→LAS arrival into Harry Reid for the Bellagio check-in window.',
-  },
-  {
-    match: /\blas to sfo\b/i,
-    summary: 'Sunday LAS→SFO return after the anniversary weekend; keep a morning buffer after a late Strip night.',
-  },
-];
+function copyBlank(next, key, ...values) {
+  if (text(next[key])) return;
+  for (const value of values) {
+    if (Array.isArray(value)) {
+      const items = value.map((item) => text(item)).filter(Boolean);
+      if (items.length) next[key] = items;
+      return;
+    }
+    if (text(value)) {
+      next[key] = text(value);
+      return;
+    }
+  }
+}
 
-function applyProductThingFields(place = {}, override = {}) {
-  const source = haystack(place, override);
-  const spec = PRODUCT_THING_FIELDS.find((row) => row.match.test(source));
-  if (!spec) return override;
+/** Keep summary, happy hour, and neighborhood only when the Thing or its source record already has them. */
+function applySourcedFields(place = {}, override = {}) {
+  const source = sourceObject(override.source, place.source, override.sourceRecord, place.sourceRecord);
   const next = { ...override };
-  if (!text(next.summary) && spec.summary) next.summary = spec.summary;
-  if (Object.prototype.hasOwnProperty.call(spec, 'happyHour')) {
-    if (spec.happyHour === true || next.happyHour == null) next.happyHour = spec.happyHour;
+  copyBlank(next, 'summary', place.summary, source?.summary);
+  copyBlank(next, 'longDetails', place.longDetails, source?.longDetails, source?.details);
+  copyBlank(next, 'happyHourDetails', place.happyHourDetails, source?.happyHourDetails);
+  copyBlank(next, 'neighborhood', place.neighborhood, source?.neighborhood);
+  if ((!Array.isArray(next.happyHourSources) || !next.happyHourSources.length) && Array.isArray(source?.happyHourSources)) {
+    copyBlank(next, 'happyHourSources', source.happyHourSources);
   }
-  if (!text(next.longDetails) && spec.longDetails) next.longDetails = spec.longDetails;
-  if (!text(next.happyHourDetails) && spec.happyHourDetails) {
-    next.happyHourDetails = spec.happyHourDetails;
+  if (next.happyHour == null) {
+    const flag = place.happyHour ?? source?.happyHour;
+    if (typeof flag === 'boolean') next.happyHour = flag;
   }
-  if ((!Array.isArray(next.happyHourSources) || !next.happyHourSources.length) && spec.happyHourSources) {
-    next.happyHourSources = spec.happyHourSources;
+  if (!Array.isArray(next.restaurantTags) || !next.restaurantTags.length) {
+    const tags = Array.isArray(place.restaurantTags) ? place.restaurantTags : source?.restaurantTags;
+    if (Array.isArray(tags)) copyBlank(next, 'restaurantTags', tags);
   }
   return next;
 }
@@ -151,7 +94,7 @@ export function applyProductKeepsakeOverrides(shared = {}) {
       if (finiteCoord(place.lat) == null) place.lat = coords[0];
       if (finiteCoord(place.lng) == null) place.lng = coords[1];
     }
-    Object.assign(override, applyProductThingFields(place, override));
+    Object.assign(override, applySourcedFields(place, override));
     next.thingOverrides[key] = override;
     if (category === 'restaurant') {
       place.category_id = place.category_id || 2;

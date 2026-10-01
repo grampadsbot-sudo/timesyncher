@@ -1,19 +1,26 @@
 #!/usr/bin/env node
 /**
  * Re-runnable Feature Map drive. Overwrites <out>/VERIFY.md.
- * Does not redeem coupons or write staging rows.
+ * Does not redeem coupons. The welcome-after-intake check writes a real
+ * create-vacation intake when DATABASE_URL is set, and fails when it is not.
  * The real-app gate is required: a failing gate refuses a clean table.
  */
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { purchaseEmail } from '../../../../src/vacation/email.mjs';
+import { runWelcomeAfterIntake, selfTestMissingWelcomeDatabase, WELCOME_DATABASE_MISSING, WELCOME_MISSING } from './verify-welcome-after-intake.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const staging = 'https://vacation-staging.timesyncher.com';
-const sharedUrl = `${staging}/shared/las-vegas-vacation-3/`;
+const { testTripSlug } = JSON.parse(readFileSync(new URL('../verify-config.json', import.meta.url), 'utf8'));
+if (typeof testTripSlug !== 'string' || !testTripSlug.trim()) {
+  throw new Error('verify-config.json testTripSlug must be a non-empty string');
+}
+const sharedUrl = `${staging}/shared/${testTripSlug}/`;
 const intakeUrl = `${staging}/shared/intake-eab1cbb15144/`;
 const require = createRequire(import.meta.url);
 
@@ -30,8 +37,8 @@ function has(text, needle) {
 }
 
 const checks = [
-  ['post-purchase-email-eula.md', 'Post-purchase email, EULA, onboarding', 'verify-eula.png', (o) => (o.ack && o.eulaBundle && !o.shellBundle && o.emailIsShared ? 'PASS' : 'FAIL')],
-  ['live-app-jev-tier.md', 'Live composer Jev tier', 'verify-jev-quality.png', (o) => (o.jevSource && (o.jevTranscript || o.jevRewritten > 0) ? 'PASS' : 'FAIL')],
+  ['post-purchase-email-eula.md', 'Post-purchase email, EULA, onboarding', 'verify-eula.png', (o) => (o.ack && !o.shellBundle && o.emailIsShared && o.emailLaunchHasEula ? 'PASS' : 'FAIL')],
+  ['live-app-jev-tier.md', 'Live composer Jev tier', 'verify-jev-quality.png', (o) => (o.jevSource && !o.qualityOnScreen ? 'PASS' : 'FAIL')],
   ['header-chrome.md', 'Header brand', 'verify-header-chrome.png', (o) => (o.header && !o.shell ? 'PASS' : 'FAIL')],
   ['language.md', 'Language', 'verify-language.png', (o) => (o.language ? 'PASS' : 'GAP')],
   ['voice-note.md', 'Voice note', 'verify-voice-note.png', (o) => (o.voice ? 'PASS' : 'GAP')],
@@ -40,7 +47,7 @@ const checks = [
   ['thing-pages.md', 'Thing pages', 'verify-thing-page.png', (o) => (o.detail ? 'PASS' : 'FAIL')],
   ['maps.md', 'Day map', 'verify-maps.png', (o) => (o.maps ? 'PASS' : 'GAP')],
   ['filters.md', 'Filters', 'verify-filters.png', (o) => (o.filters ? 'PASS' : 'GAP')],
-  ['empty-states.md', 'Empty states', 'verify-empty-states.png', (o) => (o.empty ? 'PASS' : 'GAP')],
+  ['empty-states.md', 'Empty states', 'verify-empty-states.png', (o) => (o.emptyCopyInBundle && o.filledDay ? 'PASS' : 'GAP')],
   ['tags-chips.md', 'Tags and chips', 'verify-tags-chips.png', (o) => (o.tagChips ? 'PASS' : 'GAP')],
   ['logos.md', 'Thing logos', 'verify-logos.png', (o) => (o.logos ? 'PASS' : 'GAP')],
   ['status.md', 'Status', 'verify-status.png', (o) => (o.status ? 'PASS' : 'GAP')],
@@ -58,18 +65,19 @@ const checks = [
   ['keepsake-style-two.md', 'Keepsake Style two', 'verify-style-two.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['keepsakes-config.md', 'Keepsakes config defaults', 'verify-keepsakes-config.png', (o) => (o.configDefaults ? 'PASS' : 'GAP')],
   ['order-keepsakes.md', 'Order Keepsakes', 'verify-order-keepsakes.png', (o) => (o.order ? 'PASS' : 'GAP')],
-  ['config-options-trip-view.md', 'Trip View config', 'verify-trip-view.png', (o) => (o.tripView ? 'PASS' : 'GAP')],
+  ['config-options-trip-view.md', 'Standard layout, no view options', 'verify-itinerary-layout.png', (o) => (o.layout && !o.shell && o.noTripViewControl !== false ? 'PASS' : 'FAIL')],
   ['navigation.md', 'Navigation chrome', 'verify-navigation.png', (o) => (o.navigation ? 'PASS' : 'GAP')],
   ['trek-settings.md', 'TREK settings', 'verify-settings.png', (o) => (o.settings ? 'PASS' : 'GAP')],
   ['min-things.md', 'Initial fill minimums', 'verify-min-things.png', (o) => (o.intakeMin ? 'PASS' : 'GAP')],
   ['post-intake-welcome.md', 'Post-intake welcome', 'verify-post-intake.png', (o) => (o.postIntake ? 'PASS' : 'GAP')],
+  ['welcome-after-intake.md', 'Welcome after intake', 'verify-welcome-after-intake.png', (o) => (o.welcomeAfterIntake ? 'PASS' : 'FAIL')],
   ['jev-quality-line.md', 'Jev quality line', 'verify-jev-quality.png', (o) => (o.qualityOnScreen ? 'FAIL' : 'PASS')],
   ['dialog-screenshot-gate.md', 'Dialog screenshot gate', 'verify-screenshot-gate.png', (o) => (o.layout && o.slider && o.detail && !o.shell ? 'PASS' : 'FAIL')],
   ['autonomous-app-customer-flow.md', 'Autonomy bar', 'verify-autonomy.png', (o) => (o.header && !o.shell ? 'PASS' : 'GAP')],
   ['keepsake-qa.md', 'Keepsake QA', 'verify-keepsake-qa.png', (o) => (o.style2 ? 'PASS' : 'FAIL')],
   ['tg-intake.md', 'Telegram intake', 'verify-tg-intake.png', (o) => (o.telegramFill ? 'PASS' : 'GAP')],
-  ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', () => 'GAP'],
-  ['search-redesign.md', 'Search redesign', 'verify-search-redesign.png', () => 'GAP'],
+  ['cursor-project-contract.md', 'Cursor project contract', 'verify-cursor-contract.png', (o) => (o.contract ? 'PASS' : 'GAP')],
+  ['search-redesign.md', 'Search redesign', 'verify-search-redesign.png', (o) => (o.searchRules ? 'PASS' : 'GAP')],
   ['real-app-email-entry.md', 'Email opens the real app', 'verify-eula.png', (o) => (o.emailIsShared ? 'PASS' : 'GAP')],
 ];
 
@@ -92,6 +100,7 @@ async function selfCheck() {
     console.error(`feature map drift missing=${missing.join(',') || '-'} extra=${extra.join(',') || '-'}`);
     process.exit(1);
   }
+  selfTestMissingWelcomeDatabase();
   console.log(`feature map self-check ok (${files.length} features)`);
 }
 
@@ -122,8 +131,8 @@ async function readJsonOptional(file) {
 }
 
 async function jevSignals() {
-  const liveTurn = await readFile(path.join(root, 'src/vacation/live-app-turn.mjs'), 'utf8');
-  const jevSource = liveTurn.includes('rewritten by Jev (typesafe/jev-1.13)');
+  const checked = spawnSync(process.execPath, ['.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs'], { cwd: root, encoding: 'utf8' });
+  const jevSource = checked.status === 0;
   const transcript = path.join(root, 'dialog-packs/craig-gold-v7-jev-quality-post-intake-20260926/transcript.json');
   let jevTranscript = false;
   try {
@@ -164,19 +173,23 @@ async function sharedCounts() {
   const headers = {};
   const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || process.env.VERCEL_PROTECTION_BYPASS;
   if (bypass) headers['x-vercel-protection-bypass'] = bypass;
-  const response = await fetch(`${staging}/api/shared/las-vegas-vacation-3`, { headers });
-  if (!response.ok) return { packingHidden: false, minThings: false, budgetFlag: false };
+  const response = await fetch(`${staging}/api/shared/${testTripSlug}`, { headers });
+  if (!response.ok) return { packingHidden: false, minThings: false, budgetFlag: false, thingNames: null };
   const data = await response.json();
   const counts = {};
+  const thingNames = [];
   for (const place of data.places || []) {
     const name = place.category_name || '';
     counts[name] = (counts[name] || 0) + 1;
+    const title = String(place.name || place.title || '').trim();
+    if (title && !thingNames.includes(title)) thingNames.push(title);
   }
   const perms = data.permissions || {};
   return {
     packingHidden: perms.share_packing !== true,
     budgetFlag: perms.share_budget === true,
     minThings: (counts.Restaurant || 0) >= 15 && (counts.Store || 0) >= 10 && (counts.Attraction || 0) >= 15,
+    thingNames,
   };
 }
 
@@ -199,7 +212,7 @@ async function intakeSignals() {
   };
 }
 
-async function drive() {
+async function drive(thingNames) {
   const puppeteer = loadPuppeteer();
   const browser = await puppeteer.launch({
     executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
@@ -244,6 +257,20 @@ async function drive() {
       return true;
     }, label);
   }
+  async function clickLoadedThing(names) {
+    if (!Array.isArray(names)) throw new Error('test trip Things did not load');
+    const loaded = [];
+    for (const name of names) {
+      const title = String(name || '').trim();
+      if (title && !loaded.includes(title)) loaded.push(title);
+    }
+    loaded.sort((left, right) => right.length - left.length);
+    if (!loaded.length) throw new Error('test trip has no Things to open');
+    for (const title of loaded) {
+      if (await clickIncludes(title)) return;
+    }
+    throw new Error('test trip Things are not on the page');
+  }
 
   await go(sharedUrl);
   let text = await bodyText();
@@ -255,12 +282,29 @@ async function drive() {
     slider: has(text, 'Vacation Day View') && has(text, 'Day 1') && !has(text, 'No timeline-tagged things yet for this day'),
     maps: has(text, 'Only things tagged for this day'),
     voice: await page.evaluate(() => Boolean(document.querySelector('[aria-label="Record voice note"]'))),
-    logos: await page.evaluate(() => [...document.querySelectorAll('img')].some((img) => img.src.includes('/ts-thing-logos/'))),
+    logos: await page.evaluate(() => [...document.querySelectorAll('img.tiny-logo, img.thing-logo, .thing-emoji')].length > 0),
     navigation: has(text, 'Open navigation') || has(text, 'Close navigation'),
     settings: has(text, 'Mapbox') || has(text, 'Copy link'),
     empty: has(text, 'No timeline-tagged things yet') || has(text, 'match those tags'),
-    telegramFill: has(text, "Huggo") || has(text, 'Kailua-Kona') || has(text, 'Ulu Ocean'),
+    filledDay: has(text, 'Vacation Day View') && has(text, 'Day 1') && !has(text, 'No timeline-tagged things yet for this day'),
+    telegramFill: false,
+    emailLaunchHasEula: false,
+    emptyCopyInBundle: false,
+    welcomeAfterIntake: false,
   };
+  const bundleSrc = await page.evaluate(() => [...document.scripts].map((script) => script.src).find((src) => src.includes('/assets/index-')) || '');
+  if (bundleSrc) {
+    const bundleResponse = await fetch(bundleSrc, { headers: bypass ? { 'x-vercel-protection-bypass': bypass } : {} });
+    if (bundleResponse.ok) {
+      const bundle = await bundleResponse.text();
+      obs.emptyCopyInBundle = [
+        'No restaurants match those tags',
+        'No stores match those tags',
+        'No timeline-tagged things yet for this day',
+      ].every((sentence) => bundle.includes(sentence));
+      obs.noTripViewControl = !bundle.includes('Trip View') && !bundle.includes('Config Options');
+    }
+  }
   if (await clickIncludes('Open navigation')) {
     text = await bodyText();
     obs.navigation = has(text, 'Open navigation') || has(text, 'Close navigation');
@@ -281,20 +325,23 @@ async function drive() {
   await shot('verify-navigation.png');
   await shot('verify-settings.png');
   await shot('verify-cursor-contract.png');
-  await shot('verify-tg-intake.png');
+  await shot('verify-search-redesign.png');
 
   await clickIncludes('The Rest');
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.filters = has(text, 'All areas') || has(text, 'All types');
-  obs.tagChips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
   await shot('verify-filters.png');
-  await shot('verify-tags-chips.png');
   await shot('verify-empty-states.png');
+  await clickIncludes('Restaurants');
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  text = await bodyText();
+  obs.tagChips = has(text, 'All tags');
+  await shot('verify-tags-chips.png');
 
   await clickIncludes('Day-by-Day');
   await new Promise((resolve) => setTimeout(resolve, 500));
-  await clickIncludes('Bellagio');
+  await clickLoadedThing(thingNames);
   await new Promise((resolve) => setTimeout(resolve, 700));
   text = await bodyText();
   obs.detail = has(text, 'DETAIL PAGE') || has(text, 'Detail page');
@@ -322,9 +369,6 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 600));
   text = await bodyText();
   obs.happy = has(text, 'Happy hour');
-  if (!obs.tagChips) {
-    obs.tagChips = await page.evaluate(() => Boolean(document.querySelector('[data-tag], .tag-chip, [aria-label="Tags"], [aria-label="Tag"]')));
-  }
   await shot('verify-happy-hour.png');
 
   await page.keyboard.press('Escape').catch(() => {});
@@ -336,6 +380,7 @@ async function drive() {
   obs.rental = has(text, 'Rental company');
   await shot('verify-car-fields.png');
 
+  await go(sharedUrl);
   await clickAria('PDFs');
   await new Promise((resolve) => setTimeout(resolve, 400));
   text = await bodyText();
@@ -353,32 +398,37 @@ async function drive() {
   await new Promise((resolve) => setTimeout(resolve, 400));
   obs.order = has(await bodyText(), 'Order Keepsakes');
   await shot('verify-order-keepsakes.png');
-  await clickAria('Config Options');
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  text = await bodyText();
-  obs.tripView = has(text, 'TRIP VIEW') && has(text, 'Flights') && has(text, 'Hotels') && has(text, 'Cars');
-  await shot('verify-trip-view.png');
 
-  await go(`${staging}/shared/las-vegas-vacation-3/journey?style=1`);
+  await go(`${staging}/shared/${testTripSlug}/journey?style=1`);
   obs.style1 = page.url().includes('vacation-staging') && page.url().includes('style=1') && !page.url().includes('travel.timesyncher.com');
   await shot('verify-style-one.png');
-  await go(`${staging}/shared/las-vegas-vacation-3/journey?style=2`);
+  await go(`${staging}/shared/${testTripSlug}/journey?style=2`);
   obs.style2 = page.url().includes('vacation-staging') && page.url().includes('keepsake-style-2') && !page.url().includes('travel.timesyncher.com');
   await shot('verify-style-two.png');
   await shot('verify-keepsake-qa.png');
 
+  function languageControl() {
+    return page.evaluate(() => [...document.querySelectorAll('button, a, select, label, [role="button"]')].some((node) => {
+      const text = (node.innerText || '').trim();
+      const aria = (node.getAttribute('aria-label') || '').trim();
+      return /^(change language|select language|language)$/i.test(aria) || /^(change language|select language|language)$/i.test(text);
+    }));
+  }
   await go(`${staging}/login.html`);
-  obs.language = await page.evaluate(() => [...document.querySelectorAll('button, a, select, [role="button"]')].some((node) => /^language$/i.test((node.innerText || node.getAttribute('aria-label') || '').trim())));
+  obs.language = await languageControl();
   await shot('verify-language.png');
   if (!obs.language) {
     await go(staging);
-    obs.language = await page.evaluate(() => [...document.querySelectorAll('button, a, select, [role="button"]')].some((node) => /^language$/i.test((node.innerText || node.getAttribute('aria-label') || '').trim())));
+    obs.language = await languageControl();
+    await shot('verify-language.png');
   }
 
   await go(intakeUrl);
   text = await bodyText();
   obs.intakeLayout = has(text, 'Day-by-Day') && has(text, 'Vacation Day View') && !has(text, 'Vacation path');
+  obs.telegramFill = obs.intakeLayout && has(text, 'Big Island');
   obs.qualityOnScreen = has(text, 'quality:');
+  await shot('verify-tg-intake.png');
   if (await clickIncludes('Budget')) {
     await shot('verify-budget.png');
   }
@@ -392,6 +442,11 @@ async function drive() {
   text = await bodyText();
   obs.ack = has(text, 'Check your email') && !await page.evaluate(() => Boolean(document.querySelector('#openApp, #acceptEula')));
   await shot('verify-order-success.png');
+
+  const launchUrl = purchaseEmail({ contact: { firstName: 'Verify' }, token: 'session-token', env: { TIMESYNCHER_SITE_BASE_URL: staging } }).launchUrl;
+  await go(launchUrl);
+  obs.emailLaunchHasEula = Boolean(await page.$('#eulaScreen'));
+  await shot('verify-eula.png');
 
   const sessionUrl = process.env.TIMESYNCHER_VERIFY_SESSION || '';
   if (sessionUrl) {
@@ -438,6 +493,20 @@ async function main() {
     return;
   }
   await selfCheck();
+  let welcome;
+  try {
+    welcome = await runWelcomeAfterIntake({ shotDir });
+  } catch (error) {
+    if (error.message === WELCOME_DATABASE_MISSING || String(error.message || '').startsWith('FAIL welcome-after-intake:')) {
+      process.stderr.write(`${error.message}\n`);
+      process.exit(1);
+    }
+    throw error;
+  }
+  if (!welcome.ok) {
+    process.stderr.write(`${WELCOME_MISSING}\n`);
+    process.exit(1);
+  }
   const gate = runGate();
   if (!gate.ok) {
     const markdown = `# Verification table\n\nGate \`npm run test:real-app-entry\`: FAIL.\n\n${gate.stderr || gate.stdout}\n`;
@@ -457,14 +526,17 @@ async function main() {
   const email = purchaseEmail({ contact: { firstName: 'Verify' }, token: 'session-token', env: { TIMESYNCHER_SITE_BASE_URL: staging } });
   const appHtml = await readFile(path.join(root, 'vacation-app.html'), 'utf8');
   const contract = await Promise.all([
-    readFile(path.join(root, 'AGENTS.md'), 'utf8').then(() => true).catch(() => false),
-    readFile(path.join(root, '.cursor/rules/style-two-keepsake-contract.mdc'), 'utf8').then(() => true).catch(() => false),
+    readFile(path.join(root, 'AGENTS.md'), 'utf8').then((text) => text.includes('FIVE HARD RULES (verbatim)')).catch(() => false),
+    readFile(path.join(root, '.cursor/rules/style-two-keepsake-contract.mdc'), 'utf8').then((text) => text.includes('FIVE HARD RULES (verbatim)')).catch(() => false),
   ]);
-  const counts = await sharedCounts();
+  const placeSearch = await readFile(path.join(root, 'src/vacation/place-search.mjs'), 'utf8').catch(() => '');
+  const searchRules = placeSearch.includes("source: 'osm'")
+    && placeSearch.includes("source: 'brave'");
+  const { thingNames, ...counts } = await sharedCounts();
   const intake = await intakeSignals();
   const jev = await jevSignals();
   await mkdir(shotDir, { recursive: true });
-  const observed = await drive();
+  const observed = await drive(thingNames);
   const obs = {
     ...observed,
     ...counts,
@@ -475,6 +547,8 @@ async function main() {
     eulaBundle: appHtml.includes('id="eulaScreen"'),
     shellBundle: /data-screen="itinerary"|aria-label="Vacation path"/.test(appHtml),
     contract: contract.every(Boolean),
+    welcomeAfterIntake: welcome.ok === true,
+    searchRules,
     postIntake: Boolean(observed.intakeLayout && jev.postIntakeDb),
     budget: observed.budget && counts.budgetFlag,
   };

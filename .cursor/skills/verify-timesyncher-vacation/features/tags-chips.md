@@ -2,7 +2,7 @@
 
 Canonical inventory: `features/tags-chips.md`. GBrain Feature Map is the source. This file is the verification recipe.
 
-Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/`. Never drive the deleted shell (Onboarding / Itinerary buttons, `data-screen="itinerary"` cards).
+Drive the real app at the staging shared trip for `testTripSlug` (`verify-config.json`). Never drive the deleted shell (Onboarding / Itinerary buttons, `data-screen="itinerary"` cards).
 
 ## Sub-features
 
@@ -10,7 +10,7 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 
 ## How to get to it (user POV)
 
-- Open Restaurants. Look for tag chips on a row.
+- Open Restaurants. The list chip row includes All tags and the tags on those Things. The Thing detail field Restaurant tags / chips is not a substitute for that row.
 
 ## Driving it
 
@@ -23,4 +23,4 @@ Drive the real app at `https://vacation-staging.timesyncher.com/shared/las-vegas
 ## Gotchas
 
 - A screenshot of the deleted card shell is a fail, not a pass.
-- Reference trip for the TREK UI is `las-vegas-vacation-3`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.
+- Reference trip for the TREK UI is `testTripSlug` in `verify-config.json`. The intake trip is `/shared/intake-eab1cbb15144/` when the proof is the Big Island itinerary.

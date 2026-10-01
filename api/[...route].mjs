@@ -1,4 +1,7 @@
+import { logCheckoutConfig } from '../src/vacation/checkout-pricing.mjs';
 import adminOnboardings from '../routes/admin-onboardings.mjs';
+
+logCheckoutConfig(process.env);
 import checkoutConfig from '../routes/checkout-config.mjs';
 import checkoutCoupon from '../routes/checkout-coupon.mjs';
 import createPaymentIntent from '../routes/create-payment-intent.mjs';

@@ -145,7 +145,7 @@
   "purpose": "Restricted public-launch travel concierge brain for TimeSyncher Vacation customer requests.",
   "sourceOfTruth": {
     "hostedApp": "https://www.timesyncher.com",
-    "privateGBrain": "/home/ubishere9995/gbrain",
+    "privateGBrain": "",
     "queue": "Neon Postgres via Vercel API routes"
   },
   "capabilityObject": {

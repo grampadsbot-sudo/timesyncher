@@ -1,0 +1,18 @@
+[
+  {
+    "n": 1,
+    "speaker": "alex",
+    "speaker_id": "alex",
+    "channel": "customer",
+    "in_reply_to": null,
+    "text": "Can you handle the hotel?"
+  },
+  {
+    "n": 2,
+    "speaker": "app",
+    "speaker_id": "app",
+    "channel": "app",
+    "in_reply_to": 1,
+    "text": "I will book the hotel for you and take a deposit."
+  }
+]

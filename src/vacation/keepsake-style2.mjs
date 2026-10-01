@@ -50,7 +50,7 @@ function placeOverride(shared, place) {
 }
 
 function displayName(place, override) {
-  return text(override.title || place.name || place.title || 'Untitled');
+  return text(override.title || place.name || place.title || '');
 }
 
 function storyText(place, override) {
@@ -64,13 +64,7 @@ function realTripSummary(shared = {}) {
   const trip = shared.trip || {};
   const description = text(trip.description);
   if (description && !BOILERPLATE_RE.test(description)) return description;
-  const stories = (shared.places || [])
-    .map((place) => storyText(place, placeOverride(shared, place)))
-    .filter(Boolean);
-  if (stories.length) {
-    return `Anniversary trip notes from ${trip.title || 'this vacation'}: ${stories.length} saved stor${stories.length === 1 ? 'y' : 'ies'} already on the itinerary.`;
-  }
-  return `${trip.title || 'This vacation'} — day-by-day plan with meals, lodging, and flights.`;
+  return '';
 }
 
 function storyCoverIsSafePhoto(cover, media = []) {
@@ -173,7 +167,7 @@ function dayRows(shared, byPlace) {
       const override = placeOverride(shared, place);
       const media = mediaForPlace(byPlace, place);
       return {
-        time: formatClock(place.place_time || row.assignment_time || override.startTime || '') || 'TBD',
+        time: formatClock(place.place_time || row.assignment_time || override.startTime || ''),
         endTime: formatClock(override.endTime || place.end_time || ''),
         title: displayName(place, override),
         notes: text(override.summary || override.longDetails || place.description || place.notes || ''),
@@ -374,7 +368,7 @@ function dailyPageHtml(model, dayBlock, origin) {
   const rows = dayBlock.items.map((item, index) => {
     const type = item.resolved.isFlight ? 'flight' : item.resolved.type;
     return `<div class="time-row" data-icon-type="${esc(type)}" data-thing-id="${esc(item.place.id || '')}"><div class="time">${esc(item.time)}${item.endTime ? `<br /><span class="end-time">${esc(item.endTime)}</span>` : ''}</div><div class="timeline-rail">${timelineDotHtml(item.place, item.override)}${index < dayBlock.items.length - 1 ? '<div class="timeline-line"></div>' : ''}</div><div class="timeline-title">${esc(item.title)}</div>${rowThumbHtml(item, origin)}</div>`;
-  }).join('') || '<p class="muted">No timeline-tagged things yet for this day.</p>';
+  }).join('');
 
   const details = dayBlock.items.map((item) => {
     const type = item.resolved.isFlight ? 'flight' : item.resolved.type;
@@ -384,15 +378,17 @@ function dailyPageHtml(model, dayBlock, origin) {
     return `<article class="thing daily-thing" data-thing-id="${esc(item.place.id || '')}" data-icon-type="${esc(type)}"><div class="thing-head">${iconHtml(item.place, item.override)}<div><h3>${esc(item.title)}</h3></div></div>${notes}<div class="thing-media">${photos}${qrs}</div></article>`;
   }).join('');
 
+  const dailyTitle = model.trip.title ? `<h1>${esc(model.trip.title)}</h1>` : '';
+  const dayHeading = day.title ? `<h2 style="margin:0">${esc(day.title)}</h2>` : '';
   return `<section class="page daily-page keepsake-day" data-print-ready="daily" data-day="${esc(day.day_number || '')}">
     <div class="print-brand">TimeSyncher · Journey Book · Style 2</div>
-    <h1>${esc(model.trip.title || 'Trip')}</h1>
+    ${dailyTitle}
     <div class="daily-grid">
       <aside class="daily-left">
         <div class="daily-itinerary">
           <div class="daily-itinerary-head">
             <div class="day-badge">${esc(day.day_number || '')}</div>
-            <div><h2 style="margin:0">${esc(day.title || `Day ${day.day_number || ''}`)}</h2>${dateLabel ? `<div class="muted">${esc(dateLabel)}</div>` : ''}</div>
+            <div>${dayHeading}${dateLabel ? `<div class="muted">${esc(dateLabel)}</div>` : ''}</div>
           </div>
           <div class="daily-itinerary-body">${rows}</div>
         </div>
@@ -417,12 +413,20 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
     ['Flights', String(model.flights.length)],
   ].map(([label, value]) => `<div class="summary-stat"><strong>${esc(value)}</strong>${esc(label)}</div>`).join('');
 
-  const storyCards = model.stories.map((story) => storyCardHtml(story, origin)).join('') || '<p class="muted">No saved stories yet.</p>';
+  const storyCards = model.stories.map((story) => storyCardHtml(story, origin)).join('');
 
+  const tripDateLabel = [model.trip.start_date, model.trip.end_date].filter(Boolean).join(' – ');
+  let subtitle = '';
+  if (tripDateLabel && token) subtitle = `${esc(tripDateLabel)} · ${esc(token)}`;
+  else if (tripDateLabel) subtitle = esc(tripDateLabel);
+  else if (token) subtitle = esc(token);
+  const subtitleHtml = subtitle ? `<p class="muted">${subtitle}</p>` : '';
+  const titleHtml = model.trip.title ? `<h1>${esc(model.trip.title)}</h1>` : '';
+  const documentTitle = model.trip.title ? `${esc(model.trip.title)} · Style 2` : '';
   const page1 = `<section class="page keepsake-report" data-page="1" data-style="2">
     <div class="print-brand">TimeSyncher · Journey Book · Style 2</div>
-    <h1>${esc(model.trip.title || 'Vacation')}</h1>
-    <p class="muted">${esc([model.trip.start_date, model.trip.end_date].filter(Boolean).join(' – ') || 'Oct 9–12 anniversary weekend')} · ${esc(token || 'shared trip')}</p>
+    ${titleHtml}
+    ${subtitleHtml}
     <p class="muted">Trip summary</p>
     ${paragraphs(model.summary).map((part) => `<div class="keepsake-summary">${esc(part)}</div>`).join('')}
     <p class="keepsake-summary">You visited ${model.placeCount} places across this vacation.</p>
@@ -455,7 +459,7 @@ export function renderStyle2Html(sharedInput = {}, bindings = [], options = {}) 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${esc(model.trip.title || 'Journey Book')} · Style 2</title>
+  <title>${documentTitle}</title>
   <meta name="timesyncher-product-sot" content="${esc(PRODUCT_SOT_SLUG)}" />
   <meta name="timesyncher-product-sot-alias" content="${esc(PRODUCT_SOT_ALIAS)}" />
   <meta name="timesyncher-product-receipt" content="${esc(PRODUCT_SOT_RECEIPT)}" />
