@@ -8,12 +8,11 @@ import {
   JEV_QUALITY_MODEL,
   loadVacationAppReplyRules,
 } from '../../scripts/vacation-app-reply-rules.mjs';
-
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
-
+import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -134,9 +133,9 @@ export function liveTurnRecord({
     record.dispatcher = record.fixedOpener ? null : LIVE_DISPATCHER;
     record.invented = false;
     record.modelId = model?.responseModel || (record.fixedOpener ? null : jev?.responseModel) || null;
-    record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
+    record.generationMs = record.genLatencyMs = Number.isFinite(Number(model?.genLatencyMs)) ? Number(model.genLatencyMs) : null;
     record.maxTokens = Number.isFinite(Number(model?.maxTokens)) ? Number(model.maxTokens) : null;
-    record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null;
+    record.jevLatencyMs = Number.isFinite(Number(jev?.jevLatencyMs)) ? Number(jev.jevLatencyMs) : null; record.tier = model?.modelTier ?? jev?.modelTier ?? null;
     record.jevBeforeModel = jev?.jevBeforeModel === true && jev?.jevRan === true;
     if (Array.isArray(model?.beats) && model.beats.length) {
       record.beats = model.beats.map((beat) => String(beat || '').trim()).filter(Boolean);
@@ -433,7 +432,7 @@ export function qualityFailureReason(quality, flags) {
   return parts.join('; ');
 }
 
-function appTextBanned(text) {
+export function appTextBanned(text) {
   const value = String(text || '');
   if (!value.trim()) return 'app reply text is empty';
   if (value.includes(DIALOG_TEST_FINGERPRINT)) return 'app reply carries the dialog test fingerprint';
@@ -1424,7 +1423,7 @@ function cleanCandidate(text) {
   return applyUpsellPolicy(text);
 }
 
-async function loadSavedTripRecord(session, env = process.env) {
+export async function loadSavedTripRecord(session, env = process.env) {
   const tripId = session?.trip_id || session?.tripId;
   if (!tripId || !env?.DATABASE_URL) return null;
   try {
@@ -1511,6 +1510,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination });
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env });

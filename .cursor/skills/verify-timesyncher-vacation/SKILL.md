@@ -99,6 +99,17 @@ The real-app gate is required. The command runs `npm run test:real-app-entry` fi
 
 A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
 
+## Onboarding welcome
+
+The welcome-after-intake check signs up a fresh staging customer, agrees on the terms screen, captures the welcome, then sends three fresh-trip fixtures and writes a judge packet. A non-empty bubble is not a pass. The owner and collaborator welcomes are the canned templates in `content/onboarding-welcome.json`. The check renders that text with `renderOnboardingWelcome` and compares it with whitespace collapsed. The owner welcome arrives before the customer's first turn. The collaborator welcome arrives before the collaborator's own first message. Every turn in the collaborator view stays visible and is labeled with its real author, so the owner's voice note labeled You fails. Replies must not mention tier, route, model, or Jev. The long-note reply ends on exactly one question. Access is offered, not granted. A fresh account with zero vacations must click its vacation selector open and show an empty option list with no visible text: no place names and no ids or slugs such as `shell-…`. Each run writes a fresh `judge-raw.json` stamped with that run's id and build SHA, and fails when the file is stale. Each page's DOM build stamp (`meta[name="timesyncher-build"]` or `html[data-build-sha]`) must be present and match `/api/version`. The welcome's trip site URL must load with a non-404 response and without `Invalid or expired link`. The packet stamps the staging build SHA at the start and end of the run and records each EULA accept time. PASS is recorded only after an external judge grades a pass on the later replies.
+
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --check
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs --apply-judge <judge.json> --artifacts /opt/cursor/artifacts/onboarding-welcome-judge
+```
+
+The packet is `packet.json` and `packet.md` under `/opt/cursor/artifacts/onboarding-welcome-judge/`, with screenshots beside them.
+
 ## Screenshot journey
 
 Every test run also builds the Screenshot Journey PDF from these feature files. The script is idempotent: it overwrites `screenshot-journey.pdf`, the page PNGs under `journey-pages/`, and the `## Screenshot journey` section of `VERIFY.md`. It does not redeem a coupon and it does not click Agree.

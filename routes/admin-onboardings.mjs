@@ -4,6 +4,7 @@ import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import { createCoupon, disableCoupon, listCoupons } from '../src/vacation/coupons.mjs';
 import {
+  assignTripSiteUrl,
   ensureVacationEulaSession,
   onboardingLink,
   telegramLink,
@@ -124,7 +125,7 @@ function adminCreatedMetadata(body, contact) {
   };
 }
 
-async function createAdminOnboarding(db, body) {
+export async function createAdminOnboarding(db, body) {
   const contact = contactFromBody(body);
   const plan = cleanText(body.plan, 40) === 'unlimited' ? 'unlimited' : 'single';
   const sendEmail = Boolean(body.sendEmail);
@@ -145,6 +146,7 @@ async function createAdminOnboarding(db, body) {
     returning id
   `;
   const tripId = tripRows[0].id;
+  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, process.env);
 
   const entitlementRows = await db`
     insert into entitlements (customer_id, trip_id, plan, status, metadata, updated_at)
@@ -187,6 +189,8 @@ async function createAdminOnboarding(db, body) {
     orderId,
     session,
     token: session.token,
+    publicSlug,
+    publicUrl,
     onboardingUrl: onboardingLink(session.token, process.env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, process.env),
     eula,
@@ -208,6 +212,8 @@ async function createAdminOnboarding(db, body) {
     customerId,
     tripId,
     orderId,
+    publicSlug,
+    publicUrl,
     email,
   };
 }

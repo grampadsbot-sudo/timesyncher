@@ -32,13 +32,14 @@ function isSharedTripGet(method, trekPath) {
   return !rest || rest === '';
 }
 
-async function intakeSharedResponse(shareToken) {
+export async function intakeSharedResponse(shareToken, db = null) {
   if (!shareToken || !shareToken.startsWith('intake-')) return null;
-  let db;
-  try {
-    db = sql(process.env);
-  } catch {
-    return null;
+  if (!db) {
+    try {
+      db = sql(process.env);
+    } catch {
+      return null;
+    }
   }
   const rows = await db`
     select id, title, destination, start_date, end_date, metadata
