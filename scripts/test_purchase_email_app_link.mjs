@@ -189,7 +189,7 @@ function waitForChromeExit(child, waitMs = 2000) {
   });
 }
 
-async function dumpDom(url) {
+async function dumpDomOnce(url) {
   const profile = path.join(tmpdir(), `purchase-app-link-chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   const child = spawn('google-chrome', [
     '--headless=new',
@@ -203,8 +203,8 @@ async function dumpDom(url) {
     '--password-store=basic',
     '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
     `--user-data-dir=${profile}`,
-    '--virtual-time-budget=10000',
-    '--timeout=12000',
+    '--virtual-time-budget=20000',
+    '--timeout=30000',
     '--dump-dom',
     url,
   ], {
@@ -216,11 +216,14 @@ async function dumpDom(url) {
   let domError = null;
   try {
     out = await new Promise((resolve, reject) => {
+      let settled = false;
       const timer = setTimeout(() => {
         killChromeChild(child, 'SIGKILL');
-        reject(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
-      }, 20000);
+        done(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
+      }, 45000);
       const done = (error) => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timer);
         if (error) reject(error);
         else resolve(out);
@@ -247,6 +250,20 @@ async function dumpDom(url) {
       if (!domError) throw cleanupError;
     }
   }
+}
+
+async function dumpDom(url) {
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await dumpDomOnce(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+    }
+  }
+  throw lastError || new Error(`chrome failed for ${url}`);
 }
 
 useVacationAppDatabase(db);
