@@ -24,9 +24,11 @@ const sessionId = '44444444-5555-4666-8777-888888888888';
 const storeDir = mkdtempSync(path.join(tmpdir(), 'trip-site-url-'));
 const env = {
   TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com',
+  TIMESYNCHER_TRAVEL_BASE_URL: 'https://vacation-staging.timesyncher.com/',
   TIMESYNCHER_ONBOARDING_STORE: storeDir,
   TIMESYNCHER_EULA_VERSION: 'test-eula',
   TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
+  TIMESYNCHER_COLLABORATOR_NAME: 'Collaborator seat',
 };
 const savedEnv = {};
 const envKeys = [
