@@ -104,6 +104,16 @@ const gradedPass = normalizeJudge({
 });
 assert.equal(gradedPass.pass, true);
 assert.equal(normalizeJudge({ graded: true, pass: false }).pass, false);
+const nested = normalizeJudge({
+  judge: {
+    response_ready: false,
+    needs_repair: true,
+    priority_coverage_status: { choice: 'missing_material' },
+  },
+});
+assert.equal(nested.graded, true);
+assert.equal(nested.pass, false);
+assert.equal(nested.coverage, 'missing_material');
 assert.equal(normalizeJudge(null).graded, false);
 
 const packet = applyJudgeGrade({

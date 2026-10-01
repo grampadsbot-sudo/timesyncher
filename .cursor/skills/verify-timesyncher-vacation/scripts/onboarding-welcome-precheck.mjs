@@ -276,7 +276,10 @@ export function normalizeJudge(input) {
   const answers = input.answers || input.judge || input.result || input;
   const ready = affirmative(answers?.response_ready);
   const repair = affirmative(answers?.needs_repair);
-  const coverage = answers?.priority_coverage_status || null;
+  const coverageValue = answers?.priority_coverage_status;
+  const coverage = typeof coverageValue === 'object' && coverageValue
+    ? (coverageValue.choice || null)
+    : (coverageValue || null);
   const graded = ready !== null || repair !== null || Boolean(coverage);
   const pass = ready === true && repair === false && coverage === 'all_covered';
   return {
