@@ -1,11 +1,14 @@
-import { cleanText, headerValue, sendJson } from './http.mjs';
-
-const TRAVEL_TREK = 'https://travel.timesyncher.com';
+import { cleanText } from './http.mjs';
 
 function productTrekPublic() {
-  const fromEnv = String(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || '').replace(/\/+$/, '');
-  if (/^https:\/\/travel\.timesyncher\.com$/i.test(fromEnv)) return fromEnv;
-  return TRAVEL_TREK;
+  const fromEnv = String(
+    process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL
+    || process.env.TIMESYNCHER_TRAVEL_BASE_URL
+    || process.env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL
+    || '',
+  ).replace(/\/+$/, '');
+  if (!fromEnv) throw new Error('TIMESYNCHER_TREK_PUBLIC_BASE_URL is missing');
+  return fromEnv;
 }
 
 export const PRODUCT_TREK_PUBLIC = productTrekPublic();

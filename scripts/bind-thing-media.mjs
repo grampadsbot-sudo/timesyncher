@@ -5,7 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import {
-  TREK_SHARED_API_BASE,
+  trekSharedApiBase,
   mediaKindFromMime,
   mimeFromName,
   newBindingId,
@@ -248,7 +248,7 @@ async function main() {
   const writePublic = hasFlag('--write-public') || (!apiBase && !hasFlag('--apply-trek'));
   const applyTrekHost = hasFlag('--apply-trek');
   const makeProof = hasFlag('--proof');
-  const sharedBase = arg('--shared-api', process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || TREK_SHARED_API_BASE);
+  const sharedBase = arg('--shared-api', process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || trekSharedApiBase());
 
   if (!shareToken) throw new Error('Pass --share-token for this trip.');
   const files = collectFiles(fileArg, dirArg);

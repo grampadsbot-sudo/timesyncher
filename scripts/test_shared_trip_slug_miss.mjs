@@ -71,7 +71,7 @@ try {
     if (text.includes('from trips')) {
       return [{
         id: tripId,
-        title: 'TimeSyncher Vacation Setup',
+        title: 'Fixture Intake Trip',
         destination: null,
         start_date: null,
         end_date: null,

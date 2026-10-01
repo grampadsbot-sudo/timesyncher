@@ -189,7 +189,7 @@ const marker = String(fixture.candidates?.[0]?.title || '').trim();
 assert.ok(marker, 'fixture needs a candidate title');
 
 const committed = await readFile(bundlePath, 'utf8');
-assert.equal(committed.includes('Cr.getAppConfig'), false);
+assert.equal(committed.includes('getAppConfig'), false);
 
 const [html, css] = await Promise.all([
   readFile(path.join(root, 'shared-app.html'), 'utf8'),
