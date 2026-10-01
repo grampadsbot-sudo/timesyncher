@@ -306,7 +306,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
-      text: loadDefaultEulaText(),
+      text: loadDefaultEulaText(env),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
   });
