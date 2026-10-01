@@ -18,18 +18,20 @@ assert.deepEqual(thingsFromIntake('gardens swim groceries dinner town walk house
 assert.deepEqual(mergeWantedThings([{ title: 'Existing', category: 'activity' }], 'swim').map((thing) => thing.title), ['Existing']);
 
 const extracted = thingsFromIntake([
-  { name: 'museum morning', kind: 'activity', who: 'Ana', when: 'Tuesday' },
-  { name: 'museum morning', kind: 'activity', who: 'Ana', when: 'Tuesday' },
-  { name: 'long dinner', kind: 'restaurant', who: '', when: '' },
+  { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' },
+  { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' },
+  { name: 'mid-range options', kind: 'hotel', who: '', when: '' },
   { name: '', kind: 'activity' },
 ]);
-assert.deepEqual(extracted.map((thing) => thing.title), ['museum morning', 'long dinner']);
+assert.deepEqual(extracted.map((thing) => thing.title), ['North Market Hall']);
 assert.equal(extracted[0].who, 'Ana');
 assert.equal(extracted[0].whenLabel, 'Tuesday');
 assert.equal(extracted[0].source, 'chat_extraction');
-assert.equal(extracted[1].category, 'restaurant');
-const merged = mergeWantedThings([{ title: 'museum morning', category: 'activity' }], extracted);
-assert.deepEqual(merged.map((thing) => thing.title), ['museum morning', 'long dinner']);
+const merged = mergeWantedThings([{ title: 'North Market Hall', category: 'activity' }], [
+  { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: 'Tuesday' },
+  { name: 'Zephyr Pavilion', kind: 'hotel', who: '', when: '' },
+]);
+assert.deepEqual(merged.map((thing) => thing.title), ['North Market Hall', 'Zephyr Pavilion']);
 
 function jsonResponse(body, ok = true, status = 200) {
   return { ok, status, json: async () => body };
@@ -54,12 +56,12 @@ function mockFetch({ score, things, roster = [], destination = '', hasDates = fa
 }
 
 const env = { OPENROUTER_API_KEY: 'test-key' };
-const lisbon = 'We want a week in Lisbon. Ana wants a museum morning and a long dinner.';
+const lisbon = 'We want a week in Lisbon. Ana wants North Market Hall and Zephyr Pavilion.';
 const intakeFetch = mockFetch({
   score: 0.91,
   things: [
-    { name: 'museum morning', kind: 'activity', who: 'Ana', when: '' },
-    { name: 'long dinner', kind: 'restaurant', who: '', when: 'the last night' },
+    { name: 'North Market Hall', kind: 'restaurant', who: 'Ana', when: '' },
+    { name: 'Zephyr Pavilion', kind: 'hotel', who: '', when: 'the last night' },
   ],
   roster: [
     { name: 'Ana', role: 'collaborator', age: null },
@@ -74,7 +76,7 @@ const intakeFetch = mockFetch({
 const intake = await classifyTripIntake({ text: lisbon, env, fetchImpl: intakeFetch });
 assert.equal(intake.ok, true);
 assert.equal(intake.intake, true);
-assert.deepEqual(intake.things.map((thing) => thing.name), ['museum morning', 'long dinner']);
+assert.deepEqual(intake.things.map((thing) => thing.name), ['North Market Hall', 'Zephyr Pavilion']);
 assert.equal(intake.things[0].who, 'Ana');
 assert.equal(intake.things[1].when, 'the last night');
 assert.deepEqual(intake.roster, [{ name: 'Ana', role: 'collaborator', age: null }]);
@@ -89,7 +91,7 @@ const followUp = await classifyTripIntake({
   env,
   fetchImpl: mockFetch({
     score: 0.12,
-    things: [{ name: 'museum morning', kind: 'activity', who: '', when: '' }],
+    things: [{ name: 'North Market Hall', kind: 'restaurant', who: '', when: '' }],
   }),
 });
 assert.equal(followUp.ok, true);

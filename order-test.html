@@ -280,9 +280,7 @@
     }
 
     function pricedCents(amount, key) {
-      const cents = Number(amount);
-      if (!Number.isInteger(cents) || cents <= 0) throw new Error('checkout config missing: ' + key);
-      return cents;
+      return tsPricedCents(amount, key);
     }
     let productConfig = {};
     function hasCoupon() {
@@ -387,7 +385,8 @@
       } catch (error) {
         waivedRow.hidden = true;
         total.textContent = '';
-        setStatus(error.message, true);
+        const msg = error.message || '';
+        setStatus(/checkout config missing/i.test(msg) ? TS_PRICING_UNAVAILABLE : msg, true);
       }
     }
 

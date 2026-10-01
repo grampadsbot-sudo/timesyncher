@@ -31,6 +31,8 @@
     button { cursor: pointer; }
     .app {
       height: 100vh;
+      padding-bottom: 24px;
+      box-sizing: border-box;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
       overflow: hidden;
@@ -491,13 +493,16 @@
     function customerPlaceName(value) {
       const text = String(value || '').trim();
       if (!text || /^(shell|intake)-[a-z0-9]+$/i.test(text)) return '';
+      if (/^timesyncher vacation setup$/i.test(text)) return '';
       return text;
     }
 
     function isPlaceholderTrip(trip) {
       if (!trip) return true;
       const destination = customerPlaceName(trip.destination);
+      const title = customerPlaceName(trip.title);
       if (destination || trip.startDate || trip.endDate) return false;
+      if (title) return false;
       return true;
     }
 

@@ -249,7 +249,8 @@ for (const file of currencyFiles) {
 const indexPage = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 assert.match(indexPage, /id="waivedAmount"/);
 assert.match(indexPage, /totalCents: 0, waivedCents: cents/);
-assert.match(indexPage, /checkout config missing: ' \+ key/);
+assert.match(indexPage, /tsPricedCents/);
+assert.doesNotMatch(indexPage, /throw new Error\('checkout config missing: ' \+ key\)/);
 assert.match(indexPage, /TIMESYNCHER_BASE_PRICE_CENTS/);
 assert.match(indexPage, /\/checkout-price-client\.js/);
 assert.match(readFileSync(new URL('../public/checkout-price-client.js', import.meta.url), 'utf8'), /\/api\/checkout-products/);

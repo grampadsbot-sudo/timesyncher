@@ -620,9 +620,7 @@
     }
 
     function pricedCents(amount, key) {
-      const cents = Number(amount);
-      if (!Number.isInteger(cents) || cents <= 0) throw new Error('checkout config missing: ' + key);
-      return cents;
+      return tsPricedCents(amount, key);
     }
 
     function activePhotoProduct() {
@@ -730,7 +728,7 @@
       } catch (error) {
         waivedRow.hidden = true;
         total.textContent = '';
-        setStatus(error.message, true);
+        setStatus(error.message && !/checkout config missing/i.test(error.message) ? error.message : TS_PRICING_UNAVAILABLE, true);
       }
     }
 

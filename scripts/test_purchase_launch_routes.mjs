@@ -213,6 +213,7 @@ try {
     assertStamp(page, name);
     assert.match(page.type, /text\/html/);
     assert.ok(page.body.includes(`content="${reportedSha}"`), `${name} stamp differs from /api/version`);
+    assert.match(page.body, /timesyncher-build-stamp-style/);
     assert.match(page.body, new RegExp(`<footer data-build-stamp="1">${shortSha}</footer>`));
     assert.doesNotMatch(page.body, /data-build-stamp="1"[^>]*display\s*:\s*none/i);
   }
