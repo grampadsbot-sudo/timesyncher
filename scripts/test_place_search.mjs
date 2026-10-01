@@ -18,15 +18,27 @@ import {
 const ENV = {
   BRAVE_SEARCH_API_KEY: 'brave-test-key',
 };
-const PAID_PLACES_HOST = ['places-api', 'foursquare', 'com'].join('.');
+const ALLOWED_HOSTS = new Set([
+  'overpass-api.de',
+  'api.search.brave.com',
+  'openrouter.ai',
+  'nominatim.openstreetmap.org',
+  'api.tavily.com',
+]);
 
 function placeEnv(env = ENV) {
   return {
     brave: env.BRAVE_SEARCH_API_KEY || env.brave || '',
     braveName: 'BRAVE_SEARCH_API_KEY',
     OPENROUTER_API_KEY: env.OPENROUTER_API_KEY || 'test-openrouter-key',
-    ...(env.foursquare ? { foursquare: env.foursquare } : {}),
   };
+}
+
+function recordHost(url, hosts) {
+  const hostname = new URL(String(url)).hostname;
+  hosts.push(hostname);
+  if (!ALLOWED_HOSTS.has(hostname)) throw new Error(`unexpected host ${hostname}`);
+  return hostname;
 }
 const CENTER = { lat: 38.7223, lng: -9.1393 };
 const PLACE_WANTED = [
@@ -105,13 +117,15 @@ function isOpenRouter(url) {
 
 function recordingFetch(routes, events) {
   const calls = [];
+  const hosts = [];
   const fetchImpl = async (url, options) => {
-    calls.push({ url: String(url), options });
+    const hostname = recordHost(url, hosts);
+    calls.push({ url: String(url), options, hostname });
     if (isOpenRouter(url)) return jevOk(5);
     events?.push(callKind(url));
     return routes(url, options);
   };
-  return { fetchImpl, calls };
+  return { fetchImpl, calls, hosts };
 }
 
 const merged = mergePlaces([
@@ -140,7 +154,7 @@ const recorded = recordingFetch(lisbonRoutes, events);
 const found = await searchPlaces({
   destination: 'Lisbon',
   wantedThings: PLACE_WANTED,
-  env: { ...placeEnv(), foursquare: 'paid-places-key' },
+  env: placeEnv(),
   fetchImpl: recorded.fetchImpl,
   loadPriorPlaces: async () => {
     events.push('prior_db');
@@ -155,7 +169,12 @@ assert.deepEqual(events, [
   'brave',
   'brave',
 ]);
-assert.equal(recorded.calls.filter((call) => String(call.url).includes(PAID_PLACES_HOST)).length, 0);
+assert.deepEqual([...new Set(recorded.hosts)].sort(), [
+  'api.search.brave.com',
+  'nominatim.openstreetmap.org',
+  'openrouter.ai',
+  'overpass-api.de',
+]);
 assert.deepEqual(found.places.map((place) => [place.title, place.source]), [
   ['Harbor Cafe', 'prior_db'],
   ['City Museum', 'osm'],
@@ -233,7 +252,7 @@ await assert.rejects(
     env: placeEnv(),
     priorPlaces: [],
     fetchImpl: async (url) => {
-      geocodeCalls.push(callKind(url));
+      recordHost(url, geocodeCalls);
       return jsonResponse([]);
     },
   }),
@@ -243,7 +262,7 @@ await assert.rejects(
     return true;
   },
 );
-assert.deepEqual(geocodeCalls, ['nominatim']);
+assert.deepEqual(geocodeCalls, ['nominatim.openstreetmap.org']);
 
 const fill = await fillTripIntake({
   destination: 'Lisbon',
@@ -332,6 +351,7 @@ assert.match(placeSource, /queriesFromWantedThings/);
 assert.match(placeSource, /searchTavily/);
 
 const lodgingEvents = [];
+const lodgingHosts = [];
 const lodgingSearch = await searchPlaces({
   destination: 'Lisbon',
   lodging: 'Jockey Club',
@@ -340,6 +360,7 @@ const lodgingSearch = await searchPlaces({
   priorPlaces: [],
   fetchImpl: async (url) => {
     const value = String(url);
+    recordHost(url, lodgingHosts);
     if (isOpenRouter(value)) return jevOk(5);
     lodgingEvents.push(callKind(value));
     if (value.includes('nominatim') && value.includes('Jockey')) {
@@ -364,9 +385,15 @@ assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['poke', 'grocer
 assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave poke' && place.source === 'brave'), true);
 assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
 assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
-assert.equal(lodgingEvents.some((kind) => String(kind).includes(PAID_PLACES_HOST)), false);
+assert.deepEqual([...new Set(lodgingHosts)].sort(), [
+  'api.search.brave.com',
+  'nominatim.openstreetmap.org',
+  'openrouter.ai',
+  'overpass-api.de',
+]);
 
 const braveCalls = [];
+const emptyHosts = [];
 await assert.rejects(
   () => searchPlaces({
     destination: 'Lisbon',
@@ -375,6 +402,7 @@ await assert.rejects(
     priorPlaces: [],
     fetchImpl: async (url) => {
       const value = String(url);
+      recordHost(url, emptyHosts);
       if (isOpenRouter(value)) return jevOk(5);
       braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
       if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
@@ -387,9 +415,14 @@ await assert.rejects(
 );
 assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
 assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:restaurant', 'brave:store', 'brave:attraction']);
-assert.equal(braveCalls.some((entry) => entry.includes(PAID_PLACES_HOST)), false);
+assert.deepEqual([...new Set(emptyHosts)].sort(), [
+  'api.search.brave.com',
+  'nominatim.openstreetmap.org',
+  'overpass-api.de',
+]);
 
 const fallbackEvents = [];
+const fallbackHosts = [];
 const lodgingMiss = await searchPlaces({
   destination: 'Lisbon',
   lodging: 'Missing House',
@@ -398,6 +431,7 @@ const lodgingMiss = await searchPlaces({
   priorPlaces: [],
   fetchImpl: async (url) => {
     const value = String(url);
+    recordHost(url, fallbackHosts);
     if (isOpenRouter(value)) return jevOk(5);
     if (value.includes('nominatim')) {
       fallbackEvents.push(decodeURIComponent(value));
@@ -419,6 +453,12 @@ const lodgingMiss = await searchPlaces({
     throw new Error(`unexpected lodging miss ${value}`);
   },
 });
+assert.deepEqual([...new Set(fallbackHosts)].sort(), [
+  'api.search.brave.com',
+  'nominatim.openstreetmap.org',
+  'openrouter.ai',
+  'overpass-api.de',
+]);
 assert.match(fallbackEvents[0], /Missing House/);
 assert.match(fallbackEvents[1], /Lisbon/);
 assert.equal(lodgingMiss.center.geocoded, 'destination');
@@ -460,7 +500,12 @@ assert.deepEqual(workerEvents, [
 ]);
 assert.equal(research.things.some((thing) => thing.source === 'brave' && thing.title === 'River Walk'), true);
 assert.equal(research.things.some((thing) => thing.source === 'osm'), true);
-assert.equal(workerFetch.calls.some((call) => String(call.url).includes(PAID_PLACES_HOST)), false);
+assert.deepEqual([...new Set(workerFetch.hosts)].sort(), [
+  'api.search.brave.com',
+  'nominatim.openstreetmap.org',
+  'openrouter.ai',
+  'overpass-api.de',
+]);
 assert.equal(workerFetch.calls.some((call) => /googleapis|places\.google/.test(call.url)), false);
 const braveQuery = decodeURIComponent(workerFetch.calls.find((call) => call.url.includes('place_search')).url);
 assert.match(braveQuery, /q=restaurant/);
@@ -499,10 +544,12 @@ assert.equal(quietResearch.status, 'no_wanted_things');
 assert.deepEqual(quietResearch.things, []);
 
 const tavilyCalls = [];
+const flightHosts = [];
 const flightSearch = await searchPlaces({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
   env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
   fetchImpl: async (url, options) => {
+    recordHost(url, flightHosts);
     if (isOpenRouter(url)) return jevOk(5);
     tavilyCalls.push(String(url));
     assert.equal(String(url), 'https://api.tavily.com/search');
@@ -520,13 +567,16 @@ const flightSearch = await searchPlaces({
   },
 });
 assert.deepEqual(tavilyCalls, ['https://api.tavily.com/search']);
+assert.deepEqual([...new Set(flightHosts)].sort(), ['api.tavily.com', 'openrouter.ai']);
 assert.deepEqual(flightSearch.places, []);
 assert.equal(flightSearch.notes[0].source, 'tavily');
 assert.equal(flightSearch.notes[0].title, 'Morning departure');
+const flightFillHosts = [];
 const flightFill = await fillTripIntake({
   wantedThings: [{ name: 'morning flight', kind: 'flight' }],
   env: { ...placeEnv(), TAVILI_API_KEY: 'tavily-test-key', tavilyName: 'TAVILI_API_KEY' },
   fetchImpl: async (url) => {
+    recordHost(url, flightFillHosts);
     if (isOpenRouter(url)) return jevOk(5);
     return jsonResponse({
       results: [{
@@ -538,6 +588,7 @@ const flightFill = await fillTripIntake({
     });
   },
 });
+assert.deepEqual([...new Set(flightFillHosts)].sort(), ['api.tavily.com', 'openrouter.ai']);
 assert.equal(flightFill.things[0].source, 'tavily');
 assert.equal(flightFill.things[0].metadata.source, 'tavily');
 await assert.rejects(

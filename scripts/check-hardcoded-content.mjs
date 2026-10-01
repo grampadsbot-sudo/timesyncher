@@ -1098,8 +1098,8 @@ function quotedEndingAt(text, end) {
 
 // An ISO date is exempt only as the entire value of an HTTP header whose name
 // ends in -Api-Version (case-insensitive). Object-literal form is
-// 'X-Places-Api-Version': '2025-06-17'. Headers form is a name/value pair:
-// ['X-Places-Api-Version', '2025-06-17'] or .set('X-Places-Api-Version', '2025-06-17').
+// 'X-Catalog-Api-Version': '2025-06-17'. Headers form is a name/value pair:
+// ['X-Catalog-Api-Version', '2025-06-17'] or .set('X-Catalog-Api-Version', '2025-06-17').
 function apiVersionHeaderDate(text, index, date) {
   const quote = text[index - 1];
   if ((quote !== "'" && quote !== '"') || text[index + date.length] !== quote) return false;

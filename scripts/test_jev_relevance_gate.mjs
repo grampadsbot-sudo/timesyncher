@@ -16,7 +16,6 @@ const low = JEV_RELEVANCE_MINIMUM - 1;
 const high = JEV_RELEVANCE_MINIMUM;
 const searchEnv = {
   brave: 'brave-test-key',
-  foursquare: 'paid-places-key',
   braveName: 'BRAVE_SEARCH_API_KEY',
 };
 
@@ -40,7 +39,7 @@ await assert.rejects(
   () => runPublicResearch({
     wantedThings: [{ name: 'restaurant', kind: 'restaurant' }],
     artifacts: { destination: 'Lisbon', requestText: 'a restaurant in Lisbon' },
-    env: { BRAVE_SEARCH_API_KEY: 'brave-test-key', foursquare: 'paid-places-key' },
+    env: { BRAVE_SEARCH_API_KEY: 'brave-test-key' },
     priorPlaces: [],
     fetchImpl: async () => {
       fetched = true;
@@ -51,7 +50,13 @@ await assert.rejects(
 );
 assert.equal(fetched, false);
 
-const scoredCalls = [];
+const scoredHosts = [];
+const allowedHosts = new Set([
+  'overpass-api.de',
+  'api.search.brave.com',
+  'openrouter.ai',
+  'nominatim.openstreetmap.org',
+]);
 const scored = await fillTripIntake({
   destination: 'Lisbon',
   wantedThings: [{ name: 'restaurant', kind: 'restaurant' }],
@@ -59,7 +64,9 @@ const scored = await fillTripIntake({
   priorPlaces: [],
   fetchImpl: async (url, options) => {
     const value = String(url);
-    scoredCalls.push(value);
+    const hostname = new URL(value).hostname;
+    scoredHosts.push(hostname);
+    if (!allowedHosts.has(hostname)) throw new Error(`unexpected host ${hostname}`);
     if (value.includes('nominatim.openstreetmap.org')) {
       return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     }
@@ -81,7 +88,12 @@ const scored = await fillTripIntake({
   },
 });
 
-assert.equal(scoredCalls.filter((url) => url.includes(['places-api', 'foursquare', 'com'].join('.'))).length, 0);
+assert.deepEqual([...new Set(scoredHosts)].sort(), [
+  'api.search.brave.com',
+  'nominatim.openstreetmap.org',
+  'openrouter.ai',
+  'overpass-api.de',
+]);
 assert.deepEqual(scored.things.map((thing) => thing.title), ['High Cafe']);
 assert.equal(scored.things[0].metadata.jevScore, high);
 assert.deepEqual(scored.things[0].metadata.sourceRef, { source: 'brave', id: 'high-cafe' });

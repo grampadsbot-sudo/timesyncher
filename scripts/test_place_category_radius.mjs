@@ -99,19 +99,26 @@ priorRows.push(
 );
 
 const calls = [];
-const paidPlacesHost = ['places-api', 'foursquare', 'com'].join('.');
+const hosts = [];
+const allowedHosts = new Set([
+  'overpass-api.de',
+  'api.search.brave.com',
+  'openrouter.ai',
+]);
 const found = await searchPlaces({
   lodgingPoint: CENTER,
   queries,
   env: {
     brave: 'brave-test',
-    foursquare: 'paid-places-key',
     OPENROUTER_API_KEY: 'openrouter-test',
   },
   priorPlaces: priorRows,
   fetchImpl: async (url, options) => {
     const value = String(url);
-    calls.push({ url: value, options });
+    const hostname = new URL(value).hostname;
+    hosts.push(hostname);
+    if (!allowedHosts.has(hostname)) throw new Error(`unexpected host ${hostname}`);
+    calls.push({ url: value, options, hostname });
     if (value.includes('openrouter.ai')) {
       return jsonResponse({ answers: { relevance: { choice: 5 } } });
     }
@@ -134,7 +141,7 @@ const found = await searchPlaces({
 
 const brave = calls.filter((call) => call.url.includes('api.search.brave.com'));
 const overpass = calls.filter((call) => call.url.includes('overpass-api.de'));
-assert.equal(calls.filter((call) => call.url.includes(paidPlacesHost)).length, 0);
+assert.deepEqual([...new Set(hosts)].sort(), ['api.search.brave.com', 'openrouter.ai', 'overpass-api.de']);
 assert.equal(brave.length, CATEGORIES.length + 1);
 assert.equal(overpass.length, 1);
 assert.equal(calls.some((call) => /nominatim|googleapis|places\.google/.test(call.url)), false);
