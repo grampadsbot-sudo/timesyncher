@@ -1,21 +1,19 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import handler from '../api/[...route].mjs';
 import { useOnboardingLookup } from '../routes/eula.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
-import { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
+import { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
-import { createChromeProfileDir, removeChromeProfileDir } from './test-helpers/chrome-temp-profile.mjs';
+import { assignTripSiteUrl, buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
-const chromeProfiles = [];
 const site = 'https://vacation-staging.timesyncher.com';
 
 const fixtureEnv = {
@@ -85,7 +83,10 @@ function db(strings, ...values) {
   }
   if (/update trips/i.test(text)) {
     const patch = values.find((value) => value && value.publicSlug);
-    if (patch && state.trip) state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
+    if (patch && state.trip) {
+      state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
+      if (/returning/i.test(text)) return [{ public_slug: patch.publicSlug }];
+    }
     return [];
   }
   if (/insert into entitlements/i.test(text)) return [{ id: state.entitlementId }];
@@ -109,8 +110,9 @@ function db(strings, ...values) {
   if (/insert into outbound_emails/i.test(text) || /update outbound_emails/i.test(text)) return [{ id: 'email-1' }];
   if (/update onboarding_sessions/i.test(text)) return [];
   if (/metadata->>'publicSlug'/i.test(text)) {
-    const slug = values[0];
     const meta = state.trip?.metadata || {};
+    if (/as public_slug/i.test(text)) return [{ public_slug: meta.publicSlug || '' }];
+    const slug = values[0];
     if (meta.publicSlug === slug && String(meta.intakeShare) === 'true') return [{ ...state.trip }];
     return [];
   }
@@ -165,55 +167,106 @@ function contentType(file) {
   return 'application/octet-stream';
 }
 
-async function dumpDom(url) {
-  const profile = await createChromeProfileDir('purchase-app-link-chrome-');
-  chromeProfiles.push(profile);
-  return new Promise((resolve, reject) => {
-      const child = spawn('google-chrome', [
-        '--headless=new',
-        '--disable-gpu',
-        '--no-sandbox',
-        '--disable-dev-shm-usage',
-        '--no-first-run',
-        '--disable-background-networking',
-        '--disable-component-update',
-        '--disable-domain-reliability',
-        '--password-store=basic',
-        '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
-        `--user-data-dir=${profile}`,
-        '--virtual-time-budget=10000',
-        '--timeout=12000',
-        '--dump-dom',
-        url,
-      ], {
-        stdio: ['ignore', 'pipe', 'pipe'],
-        env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '', HOME: profile },
-      });
-      const timer = setTimeout(() => {
-        child.kill('SIGKILL');
-        reject(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
-      }, 20000);
-      let out = '';
-      let err = '';
+async function removeChromeProfile(profile) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rm(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+      return;
+    } catch (error) {
+      if (attempt === 4 || (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY')) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)));
+    }
+  }
+}
+
+function killChromeChild(child, signal) {
+  try {
+    child.kill(signal);
+  } catch (error) {
+    if (error?.code !== 'ESRCH') throw error;
+  }
+}
+
+function waitForChromeExit(child, waitMs = 2000) {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null) {
+      resolve();
+      return;
+    }
+    child.once('exit', () => resolve());
+    killChromeChild(child, 'SIGTERM');
+    setTimeout(() => {
+      killChromeChild(child, 'SIGKILL');
+      resolve();
+    }, waitMs);
+  });
+}
+
+async function dumpDomOnce(url) {
+  const profile = path.join(tmpdir(), `purchase-app-link-chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const child = spawn('google-chrome', [
+    '--headless=new',
+    '--disable-gpu',
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--no-first-run',
+    '--disable-background-networking',
+    '--disable-component-update',
+    '--disable-domain-reliability',
+    '--password-store=basic',
+    '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
+    `--user-data-dir=${profile}`,
+    '--virtual-time-budget=20000',
+    '--timeout=30000',
+    '--dump-dom',
+    url,
+  ], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '' },
+  });
+  let out = '';
+  let err = '';
+  let domError = null;
+  try {
+    out = await new Promise((resolve, reject) => {
       let settled = false;
-      const finish = (error) => {
+      const timer = setTimeout(() => {
+        killChromeChild(child, 'SIGKILL');
+        done(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
+      }, 45000);
+      const done = (error) => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        child.kill('SIGKILL');
         if (error) reject(error);
         else resolve(out);
       };
       child.stdout.on('data', (chunk) => {
         out += chunk;
-        if (out.includes('</html>')) finish();
+        if (out.includes('</html>')) done();
       });
       child.stderr.on('data', (chunk) => { err += chunk; });
       child.on('exit', (code) => {
-        if (out.includes('</html>')) finish();
-        else finish(new Error(`chrome ${code}: ${err.slice(0, 500)}\n${out.slice(0, 500)}`));
+        if (out.includes('</html>')) done();
+        else done(new Error(`chrome ${code}: ${err.slice(0, 500)}\n${out.slice(0, 500)}`));
       });
-  });
+    });
+    return out;
+  } catch (error) {
+    domError = error;
+    throw error;
+  } finally {
+    await waitForChromeExit(child);
+    try {
+      await removeChromeProfile(profile);
+    } catch (cleanupError) {
+      if (!domError) throw cleanupError;
+    }
+  }
+}
+
+async function dumpDom(url) {
+  return dumpDomOnce(url);
 }
 
 useVacationAppDatabase(db);
@@ -229,6 +282,8 @@ const server = createServer(async (req, res) => {
     }
     const rel = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname).replace(/^\//, '');
     const filePath = path.join(root, rel);
+    const info = await stat(filePath);
+    if (!info.isFile()) throw new Error('not a file');
     const body = await readFile(filePath);
     res.statusCode = 200;
     res.setHeader('content-type', contentType(filePath));
@@ -262,6 +317,13 @@ try {
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
   assert.equal(onboarding.publicSlug, '');
   assert.equal(onboarding.publicUrl, '');
+  const tripSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
+  assert.equal(tripSite.publicSlug.startsWith('intake-'), true);
+
+  const migrated = await intakeSharedResponse(tripSite.publicSlug, db);
+  assert.equal(Boolean(migrated?.trip), true);
+  assert.equal(migrated.error, undefined);
+  assert.deepEqual(migrated.places, []);
 
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
@@ -325,9 +387,6 @@ try {
   useSharedTripDatabase(null);
   globalThis.fetch = originalFetch;
   await new Promise((resolve) => server.close(resolve));
-  for (const profile of chromeProfiles) {
-    await removeChromeProfileDir(profile);
-  }
   try {
     await rm(storeDir, { recursive: true, force: true, maxRetries: 8, retryDelay: 100 });
   } catch (error) {

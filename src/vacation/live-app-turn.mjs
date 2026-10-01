@@ -11,8 +11,10 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
+import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
+import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
 export const LIVE_OPENER_PRODUCER = 'vacation-app-onboarding-opener';
@@ -874,6 +876,7 @@ export function savedTripFacts(record = {}) {
   const things = Array.isArray(record.things) ? record.things : [];
   const span = record.span?.end ? record.span : spanFromIso(record.start, record.end);
   const party = record.party && typeof record.party === 'object' ? record.party : {};
+  const purchasedPlan = String(record.purchased_plan || record.ownerPlan?.checkout_plan || '').trim();
   const notTraveling = [
     ...(Array.isArray(party.viewers) ? party.viewers : []).map((person) => ({ name: person?.name, role: 'viewer' })),
     ...(Array.isArray(party.editors) ? party.editors : []).map((person) => ({ name: person?.name, role: 'editor' })),
@@ -882,7 +885,7 @@ export function savedTripFacts(record = {}) {
   return {
     span,
     owners: {},
-    planOwned: record.planOwned === true,
+    purchased_plan: purchasedPlan, planOwned: purchasedPlan === 'unlimited' || record.planOwned === true,
     activities,
     notTraveling,
     travelers: [
@@ -930,9 +933,7 @@ export function draftFactErrors(reply, facts = {}) {
   const body = String(reply || '');
   const errors = [];
   const span = facts.span || null;
-  if (!facts.planOwned && /you(?:'|’)re all set (?:with|for) the\b[^.]{0,80}unlimited|you are all set (?:with|for) the\b[^.]{0,80}unlimited|already (?:own|have|set up)[^.]{0,40}unlimited/i.test(body)) {
-    pushError(errors, 'the unlimited plan is not owned yet');
-  }
+  pushPlanAndStyleDraftErrors(body, errors, pushError, facts);
   const endDay = endDayNumber(span);
   const ranges = body.matchAll(rangeEndRe());
   for (const shortened of ranges) {
@@ -1073,13 +1074,9 @@ export function completeRosterParty(doc) {
       }
     } else if (role === 'child') {
       const age = person.age === null || person.age === undefined || person.age === '' ? NaN : Number(person.age);
-      if (!Number.isFinite(age)) {
-        unplaced = true;
-        continue;
-      }
       if (party.preference_subjects.some((kid) => samePerson(name, kid.name))) continue;
-      party.preference_subjects.push({ name, age });
-      rememberRoster(sources, `preference_subjects.${name}`, age, 'chat_extraction');
+      party.preference_subjects.push(Number.isFinite(age) ? { name, age } : { name });
+      rememberRoster(sources, `preference_subjects.${name}`, Number.isFinite(age) ? age : '', 'chat_extraction');
     } else if (role === 'viewer') {
       if (party.viewers.some((item) => samePerson(name, item.name))) continue;
       party.viewers.push({ name });
@@ -1498,19 +1495,19 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     things,
     party,
     planOwned: saved?.planOwned === true,
-    rule: saved?.rule || projected.rule,
+    purchased_plan: String(saved?.purchased_plan || saved?.ownerPlan?.checkout_plan || '').trim(), rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
     ...customerInputFields(saved),
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, loadOwnerPlan = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination });
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env });
@@ -1519,7 +1516,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
-  const savedTrip = await loadSavedTripRecord(session, env);
+  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env);
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
   const rosterList = Array.isArray(roster) ? roster : [];
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session, {
@@ -1528,6 +1525,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
   const tripContext = draftingFacts(history, customerTurn, mergedTrip);
+  tripContext.purchased_plan = String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim();
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
@@ -1978,7 +1976,6 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
-        'Do not say the unlimited plan is already owned.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
           ? `$${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
@@ -2408,6 +2405,9 @@ export function transcriptToJsonl(doc) {
     buildSha: doc.buildSha || null,
     party: completeRosterParty(doc),
   };
-  const lines = [header, ...(doc.turns || []).map((turn) => ({ type: 'turn', ...turn }))];
-  return `${lines.map((line) => JSON.stringify(line)).join('\n')}\n`;
+  const turns = Array.isArray(doc.turns) ? doc.turns : [];
+  const lines = [header, ...turns.map((turn) => ({ type: 'turn', ...turn }))];
+  const jsonl = lines.map((line) => JSON.stringify(line)).join('\n');
+  return `${jsonl}\n`;
 }
+

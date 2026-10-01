@@ -14,24 +14,24 @@ assert.doesNotMatch(liveSource, cannedQuestion);
 
 const carried = draftingFacts([], 'Friday.', {
   things: [{ title: 'Swim' }],
-  needsCustomerInput: ['car', 'flight'],
+  needsCustomerInput: ['lodging', 'car', 'flight'],
   flightAsk: 'preferredAirline',
 });
-assert.deepEqual(carried.needsCustomerInput, ['car', 'flight']);
+assert.deepEqual(carried.needsCustomerInput, ['lodging', 'car', 'flight']);
 assert.equal(carried.flightAsk, 'preferredAirline');
 const absent = draftingFacts([], 'Friday.', { things: [{ title: 'Swim' }] });
-assert.deepEqual(absent.needsCustomerInput, ['car', 'flight']);
+assert.deepEqual(absent.needsCustomerInput, ['lodging', 'car', 'flight']);
 assert.equal(absent.flightAsk, 'preferredAirline');
 
 const inputContext = {
   itinerary: ['Swim: Monday'],
   dates: 'Saved trip dates: Fri through Sun.',
   roster: 'Traveling: Ada.',
-  needsCustomerInput: ['car', 'flight'],
+  needsCustomerInput: ['lodging', 'car', 'flight'],
   flightAsk: 'preferredAirline',
 };
 const withInput = replyRulesSystem({}, '', 'forbidden', false, 'We arrive Friday.', { tripContext: inputContext });
-assert.match(withInput, /"needsCustomerInput":\["car","flight"\]/);
+assert.match(withInput, /"needsCustomerInput":\["lodging","car","flight"\]/);
 assert.match(withInput, /"flightAsk":"preferredAirline"/);
 assert.match(withInput, /Ask for that in your own words/);
 assert.doesNotMatch(withInput, cannedQuestion);
@@ -75,9 +75,9 @@ try {
   assert.equal(asked.responseModel, MODEL);
   const system = calls[0].body.messages.find((message) => message.role === 'system').content;
   const user = calls[0].body.messages.find((message) => message.role === 'user').content;
-  assert.match(system, /"needsCustomerInput":\["car","flight"\]/);
+  assert.match(system, /"needsCustomerInput":\["lodging","car","flight"\]/);
   assert.match(system, /"flightAsk":"preferredAirline"/);
-  assert.match(user, /"needsCustomerInput":\["car","flight"\]/);
+  assert.match(user, /"needsCustomerInput":\["lodging","car","flight"\]/);
   assert.match(user, /"flightAsk":"preferredAirline"/);
   assert.doesNotMatch(system, cannedQuestion);
   assert.doesNotMatch(user, cannedQuestion);

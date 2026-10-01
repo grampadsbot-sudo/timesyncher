@@ -25,7 +25,7 @@ function present(things, destination = 'KOA') {
 const empty = present([]);
 assert.deepEqual(empty.places, []);
 assert.equal(Object.hasOwn(empty, 'carOfferPool'), false);
-assert.deepEqual(empty.needsCustomerInput, ['car', 'flight']);
+assert.deepEqual(empty.needsCustomerInput, ['lodging', 'car', 'flight']);
 assert.equal(empty.flightAsk, 'preferredAirline');
 assert.equal(empty.places.some((place) => /car|flight/i.test(String(place.category_name || ''))), false);
 assert.equal(JSON.stringify(empty).includes('SpeediShuttle'), false);
@@ -43,6 +43,7 @@ for (const place of named.places) {
 }
 assert.equal(named.places.some((place) => /car|flight/i.test(String(place.category_name || ''))), false);
 assert.deepEqual(named.needsCustomerInput, ['car', 'flight']);
+assert.deepEqual(present([{ id: 'house', category: 'hotel', title: 'Kailua-Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] }]).needsCustomerInput, ['car', 'flight']);
 assert.equal(named.flightAsk, 'preferredAirline');
 const house = named.places.find((place) => place.name === 'Kailua-Kona house');
 const swim = named.places.find((place) => place.name === 'Swim');
@@ -79,7 +80,7 @@ assert.equal(blank.places[0].category.icon, '');
 const withCar = present([
   { id: 'car', category: 'car', title: 'Saved rental', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
 ]);
-assert.deepEqual(withCar.needsCustomerInput, ['flight']);
+assert.deepEqual(withCar.needsCustomerInput, ['lodging', 'flight']);
 assert.equal(withCar.flightAsk, 'preferredAirline');
 assert.equal(withCar.places[0].category_name, 'Car');
 assert.equal(withCar.places[0].name, 'Saved rental');
@@ -89,8 +90,14 @@ assert.equal(withCar.places[0].airport, undefined);
 const withFlight = present([
   { id: 'flight', category: 'flight', title: 'Saved flight', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
 ]);
-assert.deepEqual(withFlight.needsCustomerInput, ['car']);
-assert.equal(Object.hasOwn(withFlight, 'flightAsk'), false);
+assert.deepEqual(withFlight.needsCustomerInput, ['lodging', 'car', 'flight']);
+assert.equal(withFlight.flightAsk, 'preferredAirline');
+
+const withFlightAirline = present([
+  { id: 'flight', category: 'flight', title: 'United KOA arrival', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
+]);
+assert.deepEqual(withFlightAirline.needsCustomerInput, ['lodging', 'car']);
+assert.equal(Object.hasOwn(withFlightAirline, 'flightAsk'), false);
 assert.equal(withFlight.places[0].category_name, 'Flight');
 assert.equal(withFlight.places[0].airline, undefined);
 assert.equal(withFlight.places[0].airport, undefined);
@@ -98,18 +105,20 @@ assert.doesNotMatch(withFlight.places[0].name, /KOA|Kona|Hawaiian|United/);
 
 const both = present([
   { id: 'car', category: 'car', title: 'Saved rental', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
-  { id: 'flight', category: 'flight', title: 'Saved flight', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
+  { id: 'flight', category: 'flight', title: 'United KOA arrival', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
+  { id: 'house', category: 'hotel', title: 'Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
 ]);
 assert.equal(Object.hasOwn(both, 'needsCustomerInput'), false);
 assert.equal(Object.hasOwn(both, 'flightAsk'), false);
-assert.deepEqual(both.places.map((place) => place.category_name), ['Car', 'Flight']);
+assert.deepEqual(both.places.map((place) => place.category_name), ['Car', 'Flight', 'Hotel']);
 
 const cleared = applyThingPresentation({
-  needsCustomerInput: ['car', 'flight'],
+  needsCustomerInput: ['lodging', 'car', 'flight'],
   flightAsk: 'preferredAirline',
   places: [
-    { id: 1, name: 'Saved flight', category_name: 'Flight' },
+    { id: 1, name: 'United KOA', category_name: 'Flight' },
     { id: 2, name: 'Saved rental', category_name: 'Car' },
+    { id: 3, name: 'Kona house', category_name: 'Hotel' },
   ],
   thingOverrides: {},
 });
@@ -119,12 +128,13 @@ assert.equal(Object.hasOwn(cleared, 'flightAsk'), false);
 const replyFacts = draftingFacts([], 'Friday April 3.', {
   things: [{ title: 'Swim', category: 'activity' }],
 });
-assert.deepEqual(replyFacts.needsCustomerInput, ['car', 'flight']);
+assert.deepEqual(replyFacts.needsCustomerInput, ['lodging', 'car', 'flight']);
 assert.equal(replyFacts.flightAsk, 'preferredAirline');
 const coveredFacts = draftingFacts([], 'Friday April 3.', {
   things: [
+    { title: 'Kona house', category: 'hotel' },
     { title: 'Saved rental', category: 'car' },
-    { title: 'Saved flight', category: 'flight' },
+    { title: 'United KOA', category: 'flight' },
   ],
 });
 assert.equal(Object.hasOwn(coveredFacts, 'needsCustomerInput'), false);

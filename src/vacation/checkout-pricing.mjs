@@ -17,7 +17,7 @@ export function optionalConfigCents(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-function requiredConfigText(value, configName) {
+export function requiredConfigText(value, configName) {
   const text = String(value ?? '').trim();
   if (!text) throw new CheckoutConfigError(configName);
   return text;

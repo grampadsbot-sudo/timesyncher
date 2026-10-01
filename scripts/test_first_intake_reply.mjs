@@ -6,18 +6,20 @@ import {
   FIRST_INTAKE_QUESTION_INSTRUCTION,
   FIRST_INTAKE_VOICE_INSTRUCTION,
   VIEW_WITHOUT_SIGN_IN,
-  YEARLY_PLAN_ID,
   firstIntakeReplyFacts,
   firstIntakeReplyLeak,
   firstIntakeReplyPrompt,
   intakeCustomerName,
 } from '../src/vacation/first-intake-reply.mjs';
+import { loadTestSingleOwnerPlan, testPlanEnv, testSingleOwnerPlan } from './fixtures/reply-plan-test-fixtures.mjs';
 import { liveTurnRecord, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 const root = new URL('../', import.meta.url);
-const live = await readFile(new URL('src/vacation/first-intake-reply.mjs', root), 'utf8');
 const rules = await readFile(new URL('scripts/vacation-app-reply-rules.mjs', root), 'utf8');
 const phrase = /unlimited\s+\S*\s*vacations?/i;
-const intakeBlock = live.slice(live.indexOf('export const ' + 'YEARLY_PLAN_ID'));
+const planEnv = testPlanEnv;
+const testOwnerPlan = testSingleOwnerPlan;
+const loadTestOwnerPlan = loadTestSingleOwnerPlan;
+const intakeLive = { intake: true, priorTurns: [], session: { token: 'sess', trip_id: 'test-trip' }, env: { OPENROUTER_API_KEY: 'test-key', ...planEnv }, loadOwnerPlan: loadTestOwnerPlan };
 const tiers = bakeoffTierModels();
 assert.deepEqual(Object.values(tiers), [
   'google/gemini-2.5-flash-lite',
@@ -26,10 +28,6 @@ assert.deepEqual(Object.values(tiers), [
   'qwen/qwen3-max',
 ]);
 for (const id of Object.values(tiers)) assert.doesNotMatch(id, /gpt-.*mini/i);
-assert.doesNotMatch(live, /gpt-.*mini/i);
-assert.match(intakeBlock, /timesyncher_vacation_unlimited/);
-assert.equal(YEARLY_PLAN_ID, 'timesyncher_vacation_unlimited');
-assert.doesNotMatch(intakeBlock, phrase);
 assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, phrase);
 assert.doesNotMatch(FIRST_INTAKE_GAP_INSTRUCTION, phrase);
 assert.doesNotMatch(rules, phrase);
@@ -52,7 +50,9 @@ assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /planned activities/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Offer to add each person in collaborators/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Do not grant view or edit/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /including to children/);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Pitch the yearly plan/);
+assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /plan they already purchased/i);
+assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /yearly/i);
+assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /unlimited/i);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Never ask a second question/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
@@ -102,6 +102,8 @@ const voiceNote = [
 const voiceInput = {
   customerTurn: voiceNote,
   tripTitle: 'Hawaii trip',
+  ownerPlan: testOwnerPlan,
+  tripId: 'test-trip',
   extractedDestination: 'Big Island of Hawaii',
   wantedThings: [
     { name: 'gardens', kind: 'activity', who: 'Nico' },
@@ -127,8 +129,10 @@ assert.deepEqual(voiceFacts.activities, ['gardens', 'swim']);
 assert.deepEqual(voiceFacts.collaborators, ['Nico', 'Tess', 'Mara']);
 assert.deepEqual(voiceFacts.who, ['Sam', 'Nico', 'Tess', 'Mara']);
 assert.equal(voiceFacts.collaborators.includes('Sam'), false);
-assert.equal(voiceFacts.plan.plan_id, 'timesyncher_vacation_unlimited');
-assert.equal(voiceFacts.plan.plan_owned, false);
+assert.equal(voiceFacts.plan.plan_id, 'timesyncher_vacation_single');
+assert.equal(voiceFacts.plan.plan_name, 'TimeSyncher Vacation Single');
+assert.equal(voiceFacts.plan.purchased_plan, 'single');
+assert.equal(voiceFacts.plan.plan_owned, true);
 assert.equal(voiceFacts.plan.price, undefined);
 assert.match(voicePrompt, /Nico/);
 assert.match(voicePrompt, /Tess/);
@@ -136,7 +140,7 @@ assert.match(voicePrompt, /Mara/);
 assert.match(voicePrompt, /Big Island of Hawaii/);
 assert.match(voicePrompt, /house in Kailua-Kona/);
 assert.match(voicePrompt, /gardens/);
-assert.match(voicePrompt, /timesyncher_vacation_unlimited/);
+assert.match(voicePrompt, /TimeSyncher Vacation Single/);
 assert.doesNotMatch(voicePrompt, phrase);
 assert.doesNotMatch(voicePrompt, leakWord);
 assert.doesNotMatch(JSON.stringify(voiceFacts), /"price"/);
@@ -168,8 +172,8 @@ for (const input of [shortInput, vagueInput]) {
   assert.equal(facts.collaborators, undefined);
   assert.equal(facts.plan, undefined);
   assert.equal(facts.customer_name, undefined);
-  assert.doesNotMatch(prompt, /timesyncher_vacation_unlimited/);
-  assert.doesNotMatch(prompt, /Pitch the yearly plan/);
+  assert.doesNotMatch(prompt, /timesyncher_vacation_single/);
+  assert.doesNotMatch(prompt, /plan they already purchased/);
   assert.doesNotMatch(prompt, /Offer to add collaborators, naming/);
   assert.doesNotMatch(prompt, leakWord);
   assert.match(prompt, /Start the trip draft anyway/);
@@ -213,10 +217,10 @@ assert.match(questionPrompt, /Answer the question first/);
 assert.doesNotMatch(questionPrompt, leakWord);
 assertCleanFacts(questionFacts);
 
-const voiceReply = 'I am putting the itinerary together from the Big Island of Hawaii, the April dates, the house in Kailua-Kona, gardens, and a swim. Nico, Tess, and Mara can join and help shape it. The yearly plan for that is timesyncher_vacation_unlimited. What is still open about dinner the day you land?';
+const voiceReply = 'I am putting the itinerary together from the Big Island of Hawaii, the April dates, the house in Kailua-Kona, gardens, and a swim. Nico, Tess, and Mara can join and help shape it. You are on the TimeSyncher Vacation Single plan for this trip. What is still open about dinner the day you land?';
 const gapReply = 'I can start a short draft from that. Where are you hoping to go? How long will you be away, and who is coming? A voice note would help.';
 const originalFetch = globalThis.fetch;
-const env = { OPENROUTER_API_KEY: 'test-key' };
+const env = intakeLive.env;
 
 function jevOk(score = 0) {
   return {
@@ -248,10 +252,13 @@ globalThis.fetch = async (url, init) => {
     assert.match(system, /Confirm the itinerary is being built/);
     assert.match(system, /Offer to add each person in collaborators/);
     assert.match(system, /Do not grant view or edit/);
-    assert.match(system, /Pitch the yearly plan/);
+    assert.doesNotMatch(system, /plan they already purchased/i);
+    assert.doesNotMatch(system, /yearly/i);
+    assert.doesNotMatch(system, /unlimited/i);
     assert.match(system, /exactly one question/);
     assert.match(system, /"collaborators":\["Nico","Tess","Mara"\]/);
-    assert.match(system, /"plan_id":"timesyncher_vacation_unlimited"/);
+    assert.match(system, /"plan_id":"timesyncher_vacation_single"/);
+    assert.match(system, /"plan_name":"TimeSyncher Vacation Single"/);
     assert.match(system, /Big Island of Hawaii/);
     assert.doesNotMatch(system, phrase);
     return {
@@ -266,13 +273,7 @@ globalThis.fetch = async (url, init) => {
 };
 
 try {
-  const produced = await produceLiveAppReply({
-    ...voiceInput,
-    intake: true,
-    priorTurns: [],
-    session: { token: 'sess' },
-    env,
-  });
+  const produced = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
   assert.equal(chatCalls.length, 1);
   assert.equal(produced.reply, voiceReply);
   assert.equal(produced.reason, null);
@@ -318,8 +319,8 @@ try {
       assert.match(system, /where they are going and for how long/);
       assert.match(system, /voice note/);
       assert.match(system, /second person/);
-      assert.doesNotMatch(system, /timesyncher_vacation_unlimited/);
-      assert.doesNotMatch(system, /Pitch the yearly plan/);
+      assert.doesNotMatch(system, /timesyncher_vacation_single/);
+      assert.doesNotMatch(system, /plan they already purchased/);
       assert.doesNotMatch(system, /Offer to add collaborators, naming/);
       return {
         ok: true,
@@ -400,13 +401,7 @@ try {
     }
     throw new Error(`unexpected ${target}`);
   };
-  const flagged = await produceLiveAppReply({
-    ...voiceInput,
-    intake: true,
-    priorTurns: [],
-    session: { token: 'sess' },
-    env,
-  });
+  const flagged = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
   assert.equal(chatCalls.length, 2);
   assert.equal(flagged.reply, null);
   assert.equal(flagged.reason, 'first_intake_reply_flagged');
@@ -433,13 +428,7 @@ try {
     }
     throw new Error(`unexpected ${target}`);
   };
-  const tierThree = await produceLiveAppReply({
-    ...voiceInput,
-    intake: true,
-    priorTurns: [],
-    session: { token: 'sess' },
-    env,
-  });
+  const tierThree = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
   assert.equal(chatCalls.length, 1);
   assert.equal(tierThree.reply, voiceReply);
   assert.equal(tierThree.jev.modelTier, 3);
@@ -457,13 +446,7 @@ try {
     }
     throw new Error(`unexpected ${target}`);
   };
-  const jevFailed = await produceLiveAppReply({
-    ...voiceInput,
-    intake: true,
-    priorTurns: [],
-    session: { token: 'sess' },
-    env,
-  });
+  const jevFailed = await produceLiveAppReply({ ...voiceInput, ...intakeLive });
   assert.equal(chatCalls.length, 0);
   assert.equal(jevFailed.reply, null);
   assert.equal(jevFailed.reason, 'jev down');
@@ -480,13 +463,7 @@ try {
     }
     throw new Error(`unexpected ${target}`);
   };
-  const failed = await produceLiveAppReply({
-    ...voiceInput,
-    intake: true,
-    priorTurns: [],
-    session: {},
-    env,
-  });
+  const failed = await produceLiveAppReply({ ...voiceInput, ...intakeLive, session: { trip_id: 'test-trip' } });
   assert.equal(chatCalls.length, 2);
   assert.equal(failed.reply, null);
   assert.equal(failed.reason, 'model down');

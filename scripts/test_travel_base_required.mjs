@@ -14,4 +14,11 @@ assert.equal(requiredTravelBase(env), 'https://trek-preview.example.com');
 assert.equal(trekSharedApiBase(env), 'https://trek-preview.example.com');
 assert.equal(websiteTripBase(env), 'https://vacation-staging.timesyncher.com');
 
+const slashEnv = {
+  TIMESYNCHER_TRAVEL_BASE_URL: 'https://trek-preview.example.com',
+  TIMESYNCHER_TREK_PUBLIC_BASE_URL: 'https://trek-upstream.example.com/',
+};
+assert.equal(requiredTravelBase(slashEnv), 'https://trek-preview.example.com');
+assert.equal(trekSharedApiBase(slashEnv), 'https://trek-preview.example.com');
+
 console.log('travel base env required passed');

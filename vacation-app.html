@@ -493,7 +493,6 @@
     function customerPlaceName(value) {
       const text = String(value || '').trim();
       if (!text || /^(shell|intake)-[a-z0-9]+$/i.test(text)) return '';
-      if (/^timesyncher vacation setup$/i.test(text)) return '';
       return text;
     }
 

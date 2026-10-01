@@ -5,6 +5,7 @@ import { readFile as readFileAsync } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { loadDefaultEulaText } from '../src/onboarding/eula-persistent-core.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { SERVED_QA_NEEDLES } from '../scripts/strip-served-trek-bundle.mjs';
 
@@ -17,11 +18,17 @@ const SERVED_CANNED_NEEDLES = [
   'ii=[[/61\\s+w',
   '"TBD"',
   'Craig',
+  'TimeSyncher Vacation Setup',
+  'telegram_collaborators_single_trip',
 ];
 
 const HTML_FILES = [
   'index.html',
   'order-test.html',
+  'order-success.html',
+  'addons-checkout.html',
+  'access-checkout.html',
+  'owner-media-checkout.html',
   'shared-app.html',
   'vacation-app.html',
 ];
@@ -70,6 +77,10 @@ for (const target of await readServedAssets()) {
 }
 
 assert.equal(hits.length, 0, hits.map((h) => `${h.needle} @ ${h.file}:${h.line}`).join('\n'));
+
+const eulaText = loadDefaultEulaText({ TIMESYNCHER_COLLABORATOR_NAME: 'Collaborator seat' });
+assert.doesNotMatch(eulaText, /telegram_collaborators_single_trip/);
+assert.doesNotMatch(eulaText, /TimeSyncher Vacation Setup/);
 
 execFileSync('npm', ['run', 'build'], {
   cwd: root,
