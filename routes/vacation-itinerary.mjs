@@ -29,9 +29,13 @@ import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedInta
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
-import { applyChatPlaceSearchForVacationTurn, classifyVacationAppCustomerTurn, intakeExtractedThings } from '../src/vacation/chat-place-search.mjs';
+import {
+  applyChatPlaceSearchForVacationTurn,
+  classifyVacationAppCustomerTurn,
+  intakeExtractedThings,
+} from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 
@@ -584,6 +588,16 @@ async function queueVacationAppTurn(db, session, trip, body) {
     turnId: turnRows[0].id,
     env: process.env,
     publishShare: publishIntakeShare,
+    workerJobId: jobRows[0].id,
+    workerJobContext: placeSearchTurn ? {
+      customerId: transcriptOwnerId,
+      tripId,
+      requestId,
+      queuedJobType,
+      requestText,
+      payload,
+      jobFields,
+    } : null,
   });
   const placeResults = searchTurn.placeResults || [];
   if (searchTurn.kind === 'failed') {
@@ -624,6 +638,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       priorTurns,
       tripTitle: trip?.title || '',
       placeResults,
+      placeSearchTurn,
       env: process.env,
       seatDollars: configuredSeatDollars(process.env),
       intake: classification.ok === true && classification.intake === true,
@@ -705,11 +720,9 @@ async function queueVacationAppTurn(db, session, trip, body) {
     };
   }
   if (!produced.reply) {
-    const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
-    payload.replyFailure = replyFailure;
-    customerLive.replyFailure = replyFailure;
+    const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     await storeReplyFailure(db, turnRows[0].id, payload);
-    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
+    return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
   }
 
   const appLive = liveTurnRecord({

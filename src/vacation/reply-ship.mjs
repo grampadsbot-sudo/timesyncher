@@ -10,6 +10,32 @@ export async function storeReplyFailure(db, turnId, payload) {
   `;
 }
 
+function liveAppReplyFailureOutcome(produced = {}) {
+  const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
+  const failureStatus = produced.status === 'unsourced_place' ? 'unsourced_place' : 'reply_unavailable';
+  return {
+    replyFailure,
+    failureStatus,
+    invented: produced.status === 'unsourced_place' ? (produced.invented || []) : undefined,
+  };
+}
+
+export function applyLiveAppReplyFailureToPayload(payload, customerLive, produced = {}) {
+  const failure = liveAppReplyFailureOutcome(produced);
+  payload.replyFailure = failure.replyFailure;
+  customerLive.replyFailure = failure.replyFailure;
+  if (produced.status === 'unsourced_place') {
+    const record = {
+      status: produced.status,
+      invented: Array.isArray(produced.invented) ? produced.invented : [],
+      error: failure.replyFailure,
+    };
+    payload.unsourcedPlaceReply = record;
+    customerLive.unsourcedPlaceReply = record;
+  }
+  return failure;
+}
+
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare }) {
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({

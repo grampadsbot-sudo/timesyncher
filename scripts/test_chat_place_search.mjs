@@ -12,6 +12,7 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import { sourcedPlaceRule } from './vacation-app-reply-rules.mjs';
+import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
 
 function modelPlaceResultExtra(placeResults) {
   const rows = (placeResults || []).map((row) => ({
@@ -25,6 +26,7 @@ function modelPlaceResultExtra(placeResults) {
 const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
 const liveSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const chatPlaceSearchSource = fs.readFileSync(new URL('../src/vacation/chat-place-search.mjs', import.meta.url), 'utf8');
 
 assert.doesNotMatch(rulesSource, /THAT_ID/);
 assert.doesNotMatch(liveSource, /THAT_ID/);
@@ -32,6 +34,9 @@ assert.match(sourcedPlaceRule(), /Results/);
 assert.match(routeSource, /classifyVacationAppCustomerTurn/);
 assert.match(routeSource, /intakeExtractedThings\(placeSearchTurn/);
 assert.match(routeSource, /applyChatPlaceSearchForVacationTurn/);
+assert.match(routeSource, /workerJobId:\s*jobRows\[0\]\.id/);
+assert.match(chatPlaceSearchSource, /placeSearchHandledInTurn:\s*true/);
+assert.match(routeSource, /placeSearchTurn,/);
 
 const SCT_QUERIES = [
   {
@@ -212,6 +217,16 @@ assert.equal(errorDb.inserts.length, 0);
 const thing = placeToTripThing(mockPlace(SCT_QUERIES[0]));
 assert.equal(thing.metadata.sourceRef.id, SCT_QUERIES[0].mockId);
 
+const inTurnRows = [{
+  name: 'Mock El Camión',
+  title: 'Mock El Camión',
+  sourceRef: { source: 'brave', id: 'brave-el-camion-1' },
+}];
+assert.equal(inTurnPlaceReplyViolation('Try Mock El Camión (id:brave-fake-99) for tacos.', inTurnRows)?.status, 'unsourced_place');
+assert.match(inTurnPlaceReplyViolation('Try Mock El Camión (id:brave-fake-99) for tacos.', inTurnRows)?.error || '', /in-turn provider/);
+assert.equal(inTurnPlaceReplyViolation('Glass Lagoon (id:missing) is open late.', inTurnRows)?.invented?.[0], 'Glass Lagoon');
+assert.equal(inTurnPlaceReplyViolation('Mock El Camión (id:brave-el-camion-1) works for your crew.', inTurnRows), null);
+
 console.log(JSON.stringify({
   ok: true,
   checked: 'chat-place-search',
@@ -224,5 +239,8 @@ console.log(JSON.stringify({
     'placeResultExtra_uses_provider_ids_only',
     'classify_skipped_on_place_search_turn',
     'empty_provider_place_search_failed_no_inserts',
+    'invented_id_blocks_in_turn_reply',
+    'invented_place_name_blocks_in_turn_reply',
+    'provider_ids_allow_in_turn_reply',
   ],
 }));

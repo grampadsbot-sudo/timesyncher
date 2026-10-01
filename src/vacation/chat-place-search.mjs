@@ -135,12 +135,17 @@ export async function applyChatPlaceSearchForVacationTurn({
   env = process.env,
   publishShare,
   searchImpl,
+  workerJobId = null,
+  workerJobContext = null,
 } = {}) {
   const placeSearchTurn = isCustomerPlaceSearchTurn(customerTurn);
   if (placeSearchTurn) {
     payload.wantedThings = [];
     payload.placeSearchTurn = true;
     customerLive.placeSearchTurn = true;
+    if (workerJobId && workerJobContext) {
+      await syncWorkerJobAfterInTurnPlaceSearch(db, workerJobId, workerInputAfterInTurnPlaceSearch(workerJobContext));
+    }
   }
   const chatSearch = await runCustomerChatPlaceSearch({ customerTurn, tripDestination, env, searchImpl });
   if (chatSearch.status === 'skip') return { kind: 'skip', placeResults: [], placeSearchTurn };
@@ -172,4 +177,185 @@ export async function applyChatPlaceSearchForVacationTurn({
     where id = ${turnId}
   `;
   return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
+}
+
+function inTurnPlaceRows(sources) {
+  return (Array.isArray(sources) ? sources : []).flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
+    const id = String(ref?.id ?? item.id ?? '').trim();
+    const name = String(item.name ?? item.title ?? '').trim();
+    return id && name ? [{ id, name }] : [];
+  });
+}
+
+function spokenPlaceName(text, index) {
+  const before = String(text || '').slice(Math.max(0, index - 80), index);
+  return (before.match(/([\p{Lu}][\p{L}\p{M}'’.-]*(?:\s+[\p{Lu}][\p{L}\p{M}'’.-]*)*)\s*$/u) || [])[1] || '';
+}
+
+function unsourcedAgainstInTurnResults(reply, sources) {
+  const text = String(reply || '');
+  const rows = inTurnPlaceRows(sources);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const flagged = [];
+  const cited = new Set();
+  for (const match of text.matchAll(/\(id:([^)\s]+)\)/g)) {
+    const id = match[1];
+    cited.add(id);
+    const row = byId.get(id);
+    const spoken = spokenPlaceName(text, match.index);
+    if (!row) flagged.push(spoken || id);
+    else if (spoken && spoken.toLowerCase() !== row.name.toLowerCase()) flagged.push(spoken);
+  }
+  for (const row of rows) {
+    const named = new RegExp(`(^|[^\\p{L}\\p{N}])${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
+    if (named && !cited.has(row.id)) flagged.push(row.name);
+  }
+  return [...new Set(flagged)];
+}
+
+export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
+  const sources = Array.isArray(inTurnPlaceResults) ? inTurnPlaceResults : [];
+  if (!sources.length) return null;
+  const invented = unsourcedAgainstInTurnResults(String(reply || ''), sources);
+  if (!invented.length) return null;
+  return {
+    status: 'unsourced_place',
+    invented,
+    error: `reply cites place not from in-turn provider results: ${invented.join(', ')}`,
+  };
+}
+
+export function blockInTurnPlaceReply(reply, enforceInTurnPlaces, inTurnPlaceResults, carry = {}) {
+  if (!enforceInTurnPlaces) return null;
+  const violation = inTurnPlaceReplyViolation(reply, inTurnPlaceResults);
+  if (!violation) return null;
+  console.error(`place search reply blocked: ${violation.error}`);
+  return {
+    reply: null,
+    status: violation.status,
+    reason: violation.error,
+    invented: violation.invented,
+    ...carry,
+  };
+}
+
+function workerInputAfterInTurnPlaceSearch({
+  customerId,
+  tripId,
+  requestId,
+  queuedJobType,
+  requestText,
+  payload,
+  jobFields,
+}) {
+  return {
+    customerId,
+    tripId,
+    requestId,
+    source: 'vacation-app',
+    requestType: queuedJobType,
+    requestText,
+    payload,
+    intakeEvent: jobFields.intakeEvent,
+    wantedThings: [],
+    roster: jobFields.roster,
+    rosterError: jobFields.rosterError,
+    destination: jobFields.destination,
+    hasDates: jobFields.hasDates,
+    title: jobFields.title,
+    titleError: jobFields.titleError,
+    intakeError: jobFields.intakeError,
+    placeSearchHandledInTurn: true,
+  };
+}
+
+export function buildLiveAppRewritePending({
+  customerTurn,
+  originalDraft,
+  draftModel,
+  quality,
+  jevNote,
+  jev,
+  upsell,
+  postIntake,
+  intake,
+  wantedThings,
+  rosterList,
+  rosterError,
+  extractedDestination,
+  extractedTitle,
+  destinationError,
+  titleError,
+  destination,
+  corpus,
+  modelPlaceSources,
+  inTurnProviderResults,
+  enforceInTurnPlaces,
+  tripContext,
+  tripFacts,
+  planTable,
+  planLine,
+  intent,
+  seatDollars,
+  seat,
+  model,
+  failureReason,
+  draftLatencyMs,
+  draftQualityMs,
+}) {
+  return {
+    customerTurn,
+    draft: originalDraft,
+    draftModel,
+    draftScore: quality.score,
+    jevNote,
+    quality,
+    jev,
+    upsell,
+    postIntake,
+    intake: intake === true,
+    wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
+    roster: rosterList,
+    rosterError: rosterError || null,
+    extractedDestination: String(extractedDestination || ''),
+    extractedTitle: String(extractedTitle || ''),
+    destinationError: destinationError || null,
+    titleError: titleError || null,
+    destination,
+    corpus,
+    placeResults: modelPlaceSources,
+    inTurnPlaceResults: inTurnProviderResults,
+    enforceInTurnPlaces,
+    tripContext,
+    tripFacts,
+    planTable,
+    planLine,
+    intent,
+    seatDollars,
+    seat,
+    rawModelText: model?.text == null ? null : String(model.text),
+    failureReason,
+    interimReply: { text: null, model: null, ms: null },
+    draftLatencyMs,
+    qualityJevMs: draftQualityMs,
+    model: {
+      called: Boolean(model?.called),
+      via: model?.via || null,
+      responseModel: model?.responseModel || null,
+      modelTier: model?.modelTier ?? null,
+      genLatencyMs: draftLatencyMs,
+      maxTokens: model?.maxTokens ?? null,
+      beats: model?.beats || null,
+    },
+  };
+}
+
+async function syncWorkerJobAfterInTurnPlaceSearch(db, jobId, input) {
+  await db`
+    update worker_jobs
+    set input = ${input}
+    where id = ${jobId}
+  `;
 }
