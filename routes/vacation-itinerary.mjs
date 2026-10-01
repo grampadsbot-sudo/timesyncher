@@ -42,6 +42,9 @@ import {
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
 import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
+import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -258,6 +261,11 @@ async function loadVacationAppTrips(db, session) {
 async function loadVacationAppTurns(db, session, tripId) {
   const customerId = transcriptCustomerId(session);
   if (!customerId || !tripId) return [];
+  const tripRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
+  const party = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
+  const collabRows = await db`select display_name from vacation_collaborators where owner_customer_id = ${customerId} and trip_id = ${tripId} and status = 'active'`;
+  const people = authorPeopleFromTrip(party, collabRows, customerId);
   const rows = await db`
     select speaker, body, channel, payload, direction, received_at, sent_at, created_at
     from transcript_turns
@@ -267,14 +275,25 @@ async function loadVacationAppTurns(db, session, tripId) {
     order by coalesce(received_at, sent_at, created_at) desc nulls last
     limit 120
   `;
-  return rows.reverse().map((row) => ({
-    speaker: row.speaker || 'customer',
-    body: row.body || '',
-    channel: row.channel || '',
-    direction: row.direction || '',
-    payload: row.payload && typeof row.payload === 'object' ? row.payload : {},
-    at: row.received_at || row.sent_at || row.created_at || null,
-  }));
+  return rows.reverse().map((row) => {
+    const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
+    const live = payload.liveTranscript && typeof payload.liveTranscript === 'object' ? payload.liveTranscript : {};
+    const turn = {
+      speaker: row.speaker || 'customer',
+      body: row.body || '',
+      channel: row.channel || '',
+      direction: row.direction || '',
+      payload,
+      authorName: String(payload.authorName || live.speakerName || ''),
+      authorId: String(payload.authorId || ''),
+      at: row.received_at || row.sent_at || row.created_at || null,
+    };
+    const named = turnAuthorLabel(turn, session, people);
+    turn.authorLabel = named.label;
+    if (named.reason) turn.authorLabelReason = named.reason;
+    if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
+    return turn;
+  });
 }
 
 function welcomeFirstName(value) {
@@ -484,6 +503,8 @@ async function queueVacationAppTurn(db, session, trip, body) {
     browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
     selectedTripId: tripId,
     liveTranscript: customerLive,
+    authorName: speakerName,
+    authorId: session.customer_id || null,
     intakeEvent: jobFields.intakeEvent,
     wantedThings: jobFields.wantedThings,
     roster: jobFields.roster,
@@ -644,8 +665,11 @@ async function queueVacationAppTurn(db, session, trip, body) {
     };
   }
   if (!produced.reply) {
-    await db`delete from transcript_turns where id = ${turnRows[0].id}`;
-    return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
+    const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
+    payload.replyFailure = replyFailure;
+    customerLive.replyFailure = replyFailure;
+    await storeReplyFailure(db, turnRows[0].id, payload);
+    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
   }
 
   const appLive = liveTurnRecord({
@@ -707,6 +731,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     ok: true,
     status: 'replied',
     reply: produced.reply,
+    ...appReplyTelemetry(appLive),
     appTurnIndex: appLive.turnIndex,
     itinerary,
     vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
@@ -955,6 +980,7 @@ async function handleVacationApp(req, res, db, url) {
         token: session.token,
         status: session.status,
         customerName: seat?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        viewerId: session.customer_id || null,
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
@@ -985,65 +1011,11 @@ async function handleVacationApp(req, res, db, url) {
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
-      const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
-      const appLive = liveTurnRecord({
-        turnIndex: Number(pending.customerTurnIndex) + 1,
-        role: 'app',
-        modality: 'text',
-        text: finished.reply,
-        at: new Date().toISOString(),
-        latencyMs: wallMs,
-        sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
-        jev: finished.jev,
-        model: finished.model,
-        rules: finished.rules,
-        speakerName: pending.speakerName || null,
+      const shipped = await commitShippedRewrite(db, session, pending, finished, {
+        recordCustomerThingNotes,
+        publishIntakeShare,
       });
-      await db`
-        insert into transcript_turns (
-          customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-          sent_at, response_latency_ms
-        )
-        values (
-          ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
-          ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
-          'outbound', now(), ${wallMs}
-        )
-      `;
-      const itinerary = await recordCustomerThingNotes(
-        db,
-        pending.tripId,
-        pending.customerTurn,
-        {
-          collaborator: pending.collaborator === true,
-          speakerName: pending.speakerName || '',
-          appReply: finished.reply,
-          roster: Array.isArray(pending.roster) ? pending.roster : [],
-          rosterError: pending.rosterError || null,
-          askRoster: Boolean(pending.rosterError),
-          extractedDestination: pending.extractedDestination || '',
-          extractedTitle: pending.extractedTitle || '',
-          destinationError: pending.destinationError || null,
-          titleError: pending.titleError || null,
-        },
-        pending.postIntake === true ? pending.customerTurn : '',
-        pending.wantedThings || [],
-      );
-      if (itinerary.length) await publishIntakeShare(db, pending.tripId);
-      await db`
-        update onboarding_sessions
-        set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
-          updated_at = now()
-        where id = ${session.id}
-      `;
-      return sendJson(res, 200, {
-        ok: true,
-        status: 'replied',
-        reply: finished.reply,
-        interimReply: finished.log?.interimReply || pending.interimReply || null,
-        itinerary,
-        error: null,
-      });
+      return sendJson(res, 200, shipped);
     }
     if (body.action === 'record-party') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
