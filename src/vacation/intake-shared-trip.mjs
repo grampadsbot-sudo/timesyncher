@@ -66,6 +66,16 @@ function assignDates(thing, year, tripDates) {
   return unique;
 }
 
+function flightLikeLabel(record = {}) {
+  const text = [record.name, record.title, record.description, record.whenLabel]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+    .join(' ');
+  if (!text) return false;
+  if (/\bflight\b/i.test(text)) return true;
+  return /\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(text);
+}
+
 function transportKind(record = {}) {
   const tokens = new Set();
   for (const part of [record.category, record.category_name, record.category?.name, record.type]) {
@@ -75,6 +85,7 @@ function transportKind(record = {}) {
   }
   if (tokens.has('flight')) return 'flight';
   if (tokens.has('car')) return 'car';
+  if (flightLikeLabel(record) && (tokens.has('transport') || tokens.has('transfer'))) return 'flight';
   return '';
 }
 
