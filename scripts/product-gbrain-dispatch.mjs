@@ -493,7 +493,7 @@ function isPersonAccessQuestion(value) {
   if (sharedTokenFromText(requestText) && /\b(update|change|edit|add|remove|delete|rename|move|make)\b/.test(requestText)) return false;
   const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|use\s+telegram|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
   const explicitNamedPerson = /\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/.test(rawText);
-  const mentionsPerson = /\b(kim|wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
+  const mentionsPerson = /\b(wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
   const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
@@ -561,7 +561,7 @@ function accessPersonLabel(value = '') {
   if (/\bspouse|partner\b/.test(requestText)) return 'your spouse';
   if (/\bfamily\b/.test(requestText)) return 'your family';
   const named = rawText.match(/\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/)?.[1];
-  if (named && !/^(TimeSyncher|Vegas|Las|The|This|That|A|An)$/i.test(named)) return named;
+  if (named) return named;
   return 'that person';
 }
 
