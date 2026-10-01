@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, sourceLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
@@ -8,7 +9,7 @@ import { isAirplaneGlyph, timelineIcon } from '../src/vacation/timeline-icons.mj
 import { backfillAssignments, itineraryMinThings } from '../src/vacation/itinerary-minimums.mjs';
 import { qrModules, qrSvg } from '../src/vacation/qr-svg.mjs';
 import handlePdfQrSvg, { allowedQrPayload, PDF_QR_SIZE } from '../src/vacation/pdf-qr-svg-handler.mjs';
-import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia, mergeBindingsIntoShared, printDataUrlForPublicFile, PRINT_STUB_MAX_BYTES } from '../src/vacation/thing-media-bind.mjs';
+import { isKeepsakeJunkMedia, stripKeepsakeJunkMedia, mergeBindingsIntoShared, printDataUrlForPublicFile, publicMediaDiskPath, PRINT_STUB_MAX_BYTES } from '../src/vacation/thing-media-bind.mjs';
 import {
   isJourneyBookReport,
   journeyBookGate,
@@ -37,47 +38,47 @@ import { DEFAULT_FIRST_PASS_MINIMUMS } from '../scripts/vacation-public-research
 const shared = {
   trip: {
     id: 197,
-    title: 'Las Vegas Vacation',
-    description: 'Anniversary weekend at the Bellagio with dinner, a show, Conservatory cocktails, Carbone, and Strip wandering.',
+    title: 'Sample trip',
+    description: 'Notes from the trip record.',
   },
   days: [
     { id: 1236, day_number: 1 },
     { id: 1237, day_number: 2 },
   ],
   thingOverrides: {
-    'place:8871': { title: 'Bellagio Conservatory — Anniversary Cocktails', category: 'other', story: 'The air smelled like wet petals and cold gin.' },
+    'place:8871': { title: 'Sample place A', category: 'other', story: 'The air smelled like wet petals and cold gin.' },
     'place:8872': { story: 'Spicy rigatoni split down the middle.' },
     'place:8873': { story: 'Paper boat of fries after the heat.' },
-    'place:8869': { title: 'Bellagio — Alex & Kim Anniversary Stay', category: 'hotel', story: 'Fountain spray lit gold outside the glass.' },
+    'place:8869': { title: 'Sample place B', category: 'hotel', story: 'Fountain spray lit gold outside the glass.' },
   },
   places: [
-    { id: 8872, name: 'Carbone at Aria', category_name: 'Restaurant', category_icon: '🍽️', image_url: '/api/bind-thing-media?shareToken=x&id=1&raw=1' },
-    { id: 8873, name: 'Shake Shack near Cosmo/Aria', category_name: 'Restaurant', category_icon: '🍽️' },
-    { id: 8876, name: 'Cosmopolitan shops', category_name: 'Store', category_icon: 'ShoppingBag' },
-    { id: 8871, name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction', category_icon: '🏛️' },
-    { id: 8869, name: 'Las Vegas lodging research queue', category_name: 'Hotel', category_icon: '🏨' },
-    { id: 8877, name: 'SFO to LAS Thu Oct 9', category_name: 'Transport', category_icon: '🚌', address: 'SFO to LAS' },
+    { id: 8872, name: 'Sample place C', category_name: 'Restaurant', category_icon: '🍽️', image_url: '/api/bind-thing-media?shareToken=x&id=1&raw=1' },
+    { id: 8873, name: 'Sample place D', category_name: 'Restaurant', category_icon: '🍽️' },
+    { id: 8876, name: 'Sample place E', category_name: 'Store', category_icon: 'ShoppingBag' },
+    { id: 8871, name: 'Sample place F', category_name: 'Attraction', category_icon: '🏛️' },
+    { id: 8869, name: 'Sample place G', category_name: 'Hotel', category_icon: '🏨' },
+    { id: 8877, name: 'Sample transfer', category_name: 'Transport', category_icon: '🚌', address: 'Sample route' },
   ],
   assignments: {
     1237: [
-      { place: { id: 8872, name: 'Carbone at Aria', category_name: 'Restaurant' } },
-      { place: { id: 8876, name: 'Cosmopolitan shops', category_name: 'Store' } },
+      { place: { id: 8872, name: 'Sample place C', category_name: 'Restaurant' } },
+      { place: { id: 8876, name: 'Sample place E', category_name: 'Store' } },
     ],
   },
 };
 
 const bindings = [
-  { id: 's1', thingId: 8872, thingName: 'Carbone', publicUrl: '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
-  { id: 's2', thingId: 8871, thingName: 'Conservatory', publicUrl: '/ts-thing-media/las-vegas-vacation-3/conservatory-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
-  { id: 's3', thingId: 8869, thingName: 'Bellagio', publicUrl: '/api/bind-thing-media?shareToken=x&id=vid&raw=1', mimeType: 'application/octet-stream', mediaKind: 'video', originalName: 'bellagio-fountain-night-video.mp4' },
+  { id: 's1', thingId: 8872, thingName: 'Sample place C', publicUrl: '/ts-thing-media/sample-trip/venue-c-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
+  { id: 's2', thingId: 8871, thingName: 'Sample place F', publicUrl: '/ts-thing-media/sample-trip/venue-f-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
+  { id: 's3', thingId: 8869, thingName: 'Sample place B', publicUrl: '/api/bind-thing-media?shareToken=x&id=vid&raw=1', mimeType: 'application/octet-stream', mediaKind: 'video', originalName: 'venue-b-video.mp4' },
   {
     id: '6ba36f2a-e9f2-467e-9e61-3aac64fe165a',
     thingId: 8869,
-    thingName: 'Bellagio',
-    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
+    thingName: 'Sample place B',
+    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=sample-trip&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
     mimeType: 'application/octet-stream',
     mediaKind: 'photo',
-    originalName: 'bellagio-fountain-night-video.mp4',
+    originalName: 'venue-b-video.mp4',
   },
 ];
 
@@ -85,10 +86,10 @@ assert.equal(isBoundStoryMediaUrl('/api/bind-thing-media?shareToken=x&id=1&raw=1
 assert.equal(captureThingLogo(shared.places[0], {}), '');
 assert.equal(thingCreateLogoFields('Sample place', 'restaurant').logoUrl, '');
 assert.equal(thingCreateLogoFields('Sample place', 'restaurant').icon, '🍽️');
-assert.equal(thingCreateLogoFields('SFO to LAS', 'flight').isFlight, true);
+assert.equal(thingCreateLogoFields('Sample route', 'flight').isFlight, true);
 assert.equal(sourceLogoUrl({ name: 'Sample place', source: { logo: 'https://cdn.example/mark.svg' } }), 'https://cdn.example/mark.svg');
 assert.equal(sourceLogoUrl({ website: 'https://cafe.example/menu' }), 'https://cafe.example/favicon.ico');
-assert.equal(sourceLogoUrl({ name: 'High Roller' }), '');
+assert.equal(sourceLogoUrl({ name: 'Sample place J' }), '');
 
 const logos = applyCapturedLogos(shared);
 assert.equal(logos.thingOverrides['place:8872'].logoUrl, '');
@@ -104,6 +105,40 @@ const sampleShared = {
 };
 const sampleHtml = renderStyle2Html(sampleShared, [], { origin: 'https://example.test', shareToken: 'sample' });
 assert.match(sampleHtml, /data-thing-id="1"[^>]*>\s*<span class="thing-emoji">/);
+assert.match(sampleHtml, /<p class="muted">sample<\/p>/);
+const datedHtml = renderStyle2Html({
+  ...sampleShared,
+  trip: { ...sampleShared.trip, start_date: '1 Mar', end_date: '4 Mar' },
+}, [], { origin: 'https://example.test', shareToken: 'sample' });
+assert.match(datedHtml, /<p class="muted">1 Mar – 4 Mar · sample<\/p>/);
+const missingTitle = renderStyle2Html({
+  trip: { id: 1 },
+  days: [],
+  places: [],
+  assignments: {},
+}, [], { shareToken: 'sample' });
+assert.doesNotMatch(missingTitle, /<h1[\s>]/);
+assert.match(missingTitle, /<p class="muted">sample<\/p>/);
+assert.match(missingTitle, /<title><\/title>/);
+const missingToken = renderStyle2Html({
+  trip: { id: 1, title: 'Sample Trip' },
+  days: [],
+  places: [],
+  assignments: {},
+}, [], {});
+const missingTokenPage = missingToken.match(/data-page="1"[\s\S]*?<\/section>/)[0];
+assert.match(missingTokenPage, /<h1>Sample Trip<\/h1>/);
+assert.equal((missingTokenPage.match(/<p class="muted">/g) || []).length, 1);
+assert.match(missingTokenPage, /<p class="muted">Trip summary<\/p>/);
+assert.match(missingToken, /<title>Sample Trip · Style 2<\/title>/);
+const dateOnly = renderStyle2Html({
+  trip: { id: 1, title: 'Sample Trip', start_date: '1 Mar', end_date: '4 Mar' },
+  days: [],
+  places: [],
+  assignments: {},
+}, [], {});
+assert.match(dateOnly, /<p class="muted">1 Mar – 4 Mar<\/p>/);
+assert.doesNotMatch(dateOnly, /<p class="muted">1 Mar – 4 Mar ·/);
 assert.doesNotMatch(sampleHtml, /data-thing-id="1"[^>]*>\s*<img/);
 const sourcedHtml = renderStyle2Html({
   ...sampleShared,
@@ -119,11 +154,11 @@ for (const place of paddedLogos.places) {
 
 const summary = realTripSummary(shared);
 assert.equal(BOILERPLATE_RE.test(summary), false);
-assert.match(summary, /Bellagio|Carbone|anniversary/i);
+assert.match(summary, /Notes from the trip record/);
 
 const html = renderStyle2Html(shared, bindings, {
   origin: 'https://vacation-staging.timesyncher.com',
-  shareToken: 'las-vegas-vacation-3',
+  shareToken: 'sample-trip',
 });
 
 assert.match(html, /data-style="2"/);
@@ -145,10 +180,10 @@ assert.match(html, /class="daily-grid"/);
 assert.match(html, /class="timeline-rail"/);
 assert.match(html, /data-maps="omitted"/);
 assert.match(html, /data-min-things="8"/);
-assert.match(html, /Anniversary weekend at the Bellagio/);
+assert.match(html, /Notes from the trip record/);
 assert.match(html, /Spicy rigatoni/);
 assert.match(html, /wet petals/);
-assert.doesNotMatch(html, /carbone\.svg|shake-shack\.svg|cosmopolitan-shops\.svg|bellagio-conservatory\.svg/);
+assert.doesNotMatch(html, /\.svg"/);
 assert.doesNotMatch(html, /brought together your day-by-day plan/);
 assert.match(html, /data-icon-type="restaurant"/);
 assert.match(html, /data-icon-type="store"/);
@@ -157,9 +192,9 @@ assert.doesNotMatch(html, /data-icon-type="flight"/);
 
 const page1 = html.match(/data-page="1"[\s\S]*?<\/section>/)[0];
 assert.match(page1, /data-trip-directory="1"/);
-assert.match(page1, /Carbone at Aria/);
-assert.match(page1, /Cosmopolitan shops/);
-assert.doesNotMatch(page1, /bellagio\.svg|bellagio-conservatory\.svg/);
+assert.match(page1, /Sample place C/);
+assert.match(page1, /Sample place E/);
+assert.doesNotMatch(page1, /\.svg"/);
 
 const storiesIdx = html.indexOf('data-stories-up-front="1"');
 const daysIdx = html.indexOf('data-print-ready="daily"');
@@ -172,20 +207,20 @@ assert.equal(airplaneOnNonFlight.length, 0, 'no airplane on non-flight rows');
 assert.match(html, /data-story-card="1"/);
 assert.match(html, /data-story-media-only="1"/);
 assert.match(html, /data-video-qr="1"/);
-assert.doesNotMatch(html, /bellagio-fountain-night-video\.mp4/);
+assert.doesNotMatch(html, /venue-b-video\.mp4/);
 assert.doesNotMatch(html, /<video /);
 const hotelCard = html.match(/<article class="story-card"[^>]*data-thing-id="8869"[\s\S]*?<\/article>/)[0];
 assert.match(hotelCard, /data-icon-type="hotel"/);
 assert.doesNotMatch(hotelCard, /✈️/);
-assert.doesNotMatch(hotelCard, /tiny-logo|thing-emoji|bellagio\.svg/);
+assert.doesNotMatch(hotelCard, /tiny-logo|thing-emoji|\.svg"/);
 assert.doesNotMatch(hotelCard, /data-cover-kind="photo"/);
 assert.doesNotMatch(hotelCard, /<img[^>]+6ba36f2a/);
 assert.match(hotelCard, /data-video-qr="1"/);
-const conservatoryCard = html.match(/<article class="story-card"[^>]*data-thing-id="8871"[\s\S]*?<\/article>/)[0];
-assert.match(conservatoryCard, /data-icon-type="attraction"/);
-assert.doesNotMatch(conservatoryCard, /✈️/);
-assert.doesNotMatch(conservatoryCard, /tiny-logo|thing-emoji/);
-assert.match(conservatoryCard, /conservatory-photo\.jpg/);
+const attractionCard = html.match(/<article class="story-card"[^>]*data-thing-id="8871"[\s\S]*?<\/article>/)[0];
+assert.match(attractionCard, /data-icon-type="attraction"/);
+assert.doesNotMatch(attractionCard, /✈️/);
+assert.doesNotMatch(attractionCard, /tiny-logo|thing-emoji/);
+assert.match(attractionCard, /venue-f-photo\.jpg/);
 assert.match(html, /data-row-thumb="1"/);
 const videoCover = pickStoryCover([
   { publicUrl: '/x.mp4', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'night-video.mp4' },
@@ -210,7 +245,7 @@ assert.equal(itineraryMinThings({}), 8);
 assert.ok(model.assignedCount >= Math.min(model.placeCount, model.minThings));
 const filled = backfillAssignments(shared, { TIMESYNCHER_ITINERARY_MIN_THINGS: '8' });
 assert.equal(filled.shortfall, 2);
-const playbackUrl = 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=las-vegas-vacation-3&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1';
+const playbackUrl = 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=sample-trip&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1';
 const playbackQr = qrSvg(playbackUrl, { size: PDF_QR_SIZE });
 assert.match(playbackQr, /<svg[\s\S]*<rect/);
 assert.match(playbackQr, /fill="#fff"/);
@@ -227,34 +262,34 @@ assert.equal(qrRes.body, playbackQr);
 assert.doesNotMatch(qrRes.body, /camera|placeholder|NOT_FOUND/i);
 
 assert.equal(isKeepsakeJunkMedia({
-  filename: 'carbone-neon-bind-proof.png',
+  filename: 'venue-c-neon-bind-proof.png',
   caption: 'Neon file bind proof',
   url: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=x&id=c67aeea4&raw=1',
 }), true);
 assert.equal(isKeepsakeJunkMedia({
-  originalName: 'carbone-bind-proof.png',
-  caption: 'Carbone at Aria',
-  publicUrl: 'https://travel.timesyncher.com/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png',
+  originalName: 'venue-c-bind-proof.png',
+  caption: 'Sample place C',
+  publicUrl: 'https://travel.timesyncher.com/ts-thing-media/sample-trip/venue-c-bind-proof.png',
 }), true);
 assert.equal(isKeepsakeJunkMedia({
-  filename: 'carbone-plates-photo.jpg',
-  caption: 'Carbone at Aria',
+  filename: 'venue-c-plates-photo.jpg',
+  caption: 'Sample place C',
   url: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=x&id=bb277e4a&raw=1',
 }), false);
 const stripped = stripKeepsakeJunkMedia({
   media: [
-    { filename: 'carbone-plates-photo.jpg', caption: 'Carbone at Aria', url: '/plates.jpg' },
-    { filename: 'carbone-late-hands-photo.jpg', caption: 'Carbone at Aria', url: '/hands.jpg' },
-    { filename: 'carbone-neon-bind-proof.png', caption: 'Neon file bind proof', url: '/neon.png' },
-    { filename: 'carbone-bind-proof.png', caption: 'Carbone at Aria', url: 'https://travel.timesyncher.com/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png' },
+    { filename: 'venue-c-plates-photo.jpg', caption: 'Sample place C', url: '/plates.jpg' },
+    { filename: 'venue-c-hands-photo.jpg', caption: 'Sample place C', url: '/hands.jpg' },
+    { filename: 'venue-c-neon-bind-proof.png', caption: 'Neon file bind proof', url: '/neon.png' },
+    { filename: 'venue-c-bind-proof.png', caption: 'Sample place C', url: 'https://travel.timesyncher.com/ts-thing-media/sample-trip/venue-c-bind-proof.png' },
   ],
   places: [{
     id: 8872,
-    name: 'Carbone at Aria',
+    name: 'Sample place C',
     image_url: '/plates.jpg',
     bound_media: [
-      { originalName: 'carbone-plates-photo.jpg', publicUrl: '/plates.jpg', mimeType: 'image/jpeg' },
-      { originalName: 'carbone-neon-bind-proof.png', caption: 'Neon file bind proof', publicUrl: '/neon.png' },
+      { originalName: 'venue-c-plates-photo.jpg', publicUrl: '/plates.jpg', mimeType: 'image/jpeg' },
+      { originalName: 'venue-c-neon-bind-proof.png', caption: 'Neon file bind proof', publicUrl: '/neon.png' },
     ],
   }],
 });
@@ -263,27 +298,47 @@ assert.ok(stripped.media.every((item) => /plates|hands/.test(item.filename)));
 assert.equal(stripped.places[0].bound_media.length, 1);
 assert.doesNotMatch(JSON.stringify(stripped), /Neon file bind proof|bind-proof/i);
 
-const mergedMedia = mergeBindingsIntoShared({
-  places: [{ id: 8872, name: 'Carbone at Aria' }, { id: 8869, name: 'Bellagio' }],
-  media: [],
-}, [
-  { thingId: 8872, originalName: 'carbone-plates-photo.jpg', publicUrl: '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
-  { thingId: 8869, originalName: 'bellagio-fountain-night-video.mp4', publicUrl: '/ts-thing-media/las-vegas-vacation-3/bellagio-fountain-night-video.mp4', mimeType: 'video/mp4', mediaKind: 'video' },
-]);
-assert.equal(mergedMedia.media.length, 2);
-assert.equal(mergedMedia.places[0].photos.length, 1);
-assert.equal(mergedMedia.places[0].photos[0].publicUrl, '/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg');
-assert.match(mergedMedia.places[0].photos[0].printDataUrl, /^data:image\/jpeg;base64,/);
-assert.ok(mergedMedia.places[0].photos[0].printDataUrl.length > 40_000, 'printDataUrl must be real photo bytes, not a 3071B stub');
-assert.match(mergedMedia.places[0].photos[0].url, /^data:image\/jpeg;base64,/);
-assert.equal(mergedMedia.places[1].videos.length, 1);
-assert.match(mergedMedia.places[1].videos[0].url, /bellagio-fountain-night-video\.mp4/);
-assert.equal(mergedMedia.places[1].videos[0].printDataUrl, undefined);
+const samplePhotoUrl = '/ts-thing-media/sample-trip/venue-c-plates-photo.jpg';
+const sampleStubUrl = '/ts-thing-media/sample-trip/venue-c-bind-proof.png';
+const samplePhotoDisk = publicMediaDiskPath(samplePhotoUrl);
+const sampleStubDisk = publicMediaDiskPath(sampleStubUrl);
+await mkdir(dirname(samplePhotoDisk), { recursive: true });
+const samplePhoto = Buffer.alloc(36 * 1024, 0x11);
+samplePhoto[0] = 0xff;
+samplePhoto[1] = 0xd8;
+await writeFile(samplePhotoDisk, samplePhoto);
+await writeFile(sampleStubDisk, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+try {
+  const mergedMedia = mergeBindingsIntoShared({
+    places: [{ id: 8872, name: 'Sample place C' }, { id: 8869, name: 'Sample place B' }],
+    media: [],
+  }, [
+    { thingId: 8872, originalName: 'venue-c-plates-photo.jpg', publicUrl: samplePhotoUrl, mimeType: 'image/jpeg', mediaKind: 'photo' },
+    { thingId: 8869, originalName: 'venue-b-video.mp4', publicUrl: '/ts-thing-media/sample-trip/venue-b-video.mp4', mimeType: 'video/mp4', mediaKind: 'video' },
+  ]);
+  assert.equal(mergedMedia.media.length, 2);
+  assert.equal(mergedMedia.places[0].photos.length, 1);
+  assert.equal(mergedMedia.places[0].photos[0].publicUrl, samplePhotoUrl);
+  assert.match(mergedMedia.places[0].photos[0].printDataUrl, /^data:image\/jpeg;base64,/);
+  assert.ok(mergedMedia.places[0].photos[0].printDataUrl.length > 40_000, 'printDataUrl must be real photo bytes, not a 3071B stub');
+  assert.match(mergedMedia.places[0].photos[0].url, /^data:image\/jpeg;base64,/);
+  assert.equal(mergedMedia.places[1].videos.length, 1);
+  assert.match(mergedMedia.places[1].videos[0].url, /venue-b-video\.mp4/);
+  assert.equal(mergedMedia.places[1].videos[0].printDataUrl, undefined);
 
-const platesData = printDataUrlForPublicFile('/ts-thing-media/las-vegas-vacation-3/carbone-plates-photo.jpg', 'image/jpeg');
-assert.match(platesData, /^data:image\/jpeg;base64,/);
-assert.ok(Buffer.from(platesData.split(',')[1], 'base64').length > PRINT_STUB_MAX_BYTES);
-assert.equal(printDataUrlForPublicFile('/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png', 'image/png'), '');
+  const platesData = printDataUrlForPublicFile(samplePhotoUrl, 'image/jpeg');
+  assert.match(platesData, /^data:image\/jpeg;base64,/);
+  assert.ok(Buffer.from(platesData.split(',')[1], 'base64').length > PRINT_STUB_MAX_BYTES);
+  assert.equal(printDataUrlForPublicFile(sampleStubUrl, 'image/png'), '');
+  const platesBytes = await readFile(samplePhotoDisk);
+  assert.ok(platesBytes.length > PRINT_STUB_MAX_BYTES, 'sample photo must not be a color-card stub');
+  assert.notEqual(platesBytes.length, 3071, 'sample photo must not be a TREK 1024 canvas');
+  assert.equal(platesBytes[0], 0xff);
+  assert.equal(platesBytes[1], 0xd8);
+} finally {
+  await rm(samplePhotoDisk, { force: true });
+  await rm(sampleStubDisk, { force: true });
+}
 
 const overlay = await readFile(new URL('../public/ts-thing-media-overlay.js', import.meta.url), 'utf8');
 assert.doesNotMatch(overlay, /wantsJourneyBook/);
@@ -379,24 +434,24 @@ assert.equal(journeyBookGate({ report: 'restaurants' }).kind, 'trek-report');
 assert.equal(wantsStyleTwoView({ report: 'journey' }), true);
 assert.equal(wantsStyleTwoView({ report: 'style-2' }), false);
 assert.equal(
-  productStyleTwoViewUrl({ shareToken: 'las-vegas-vacation-3' }),
-  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
+  productStyleTwoViewUrl({ shareToken: 'sample-trip' }),
+  'https://vacation-staging.timesyncher.com/shared/sample-trip/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
 );
 assert.equal(
-  productStyleOneViewUrl({ shareToken: 'las-vegas-vacation-3' }),
-  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=1&printMode=report&pdfReport=keepsake',
+  productStyleOneViewUrl({ shareToken: 'sample-trip' }),
+  'https://vacation-staging.timesyncher.com/shared/sample-trip/journey?style=1&printMode=report&pdfReport=keepsake',
 );
 assert.equal(isProductStyleOne('keepsake'), true);
 assert.equal(isProductStyleOne('keepsake-style-2'), false);
 assert.equal(PRODUCT_STYLE_ONE_REPORT, 'keepsake');
 const styleTwoUrl = productPdfUrl({
-  shareToken: 'las-vegas-vacation-3',
+  shareToken: 'sample-trip',
   report: 'style-2',
   origin: 'https://vacation-staging.timesyncher.com',
 });
 assert.equal(
   styleTwoUrl,
-  'https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
+  'https://vacation-staging.timesyncher.com/shared/sample-trip/journey?style=2&printMode=report&pdfReport=keepsake-style-2',
 );
 assert.doesNotMatch(styleTwoUrl, /travel\.timesyncher\.com/);
 assert.equal(
@@ -405,14 +460,14 @@ assert.equal(
 );
 assert.equal(
   styleOneLocationStaysOnStaging(
-    productStyleOneViewUrl({ shareToken: 'las-vegas-vacation-3' }),
+    productStyleOneViewUrl({ shareToken: 'sample-trip' }),
     'https://vacation-staging.timesyncher.com',
   ),
   true,
 );
 assert.equal(
   styleTwoLocationStaysOnStaging(
-    'https://travel.timesyncher.com/api/pdf/shared/las-vegas-vacation-3/report/keepsake.pdf',
+    'https://travel.timesyncher.com/api/pdf/shared/sample-trip/report/keepsake.pdf',
     'https://vacation-staging.timesyncher.com',
   ),
   false,
@@ -430,9 +485,9 @@ function mockRes() {
 }
 
 for (const url of [
-  '/api/vacation-itinerary?keepsakePdf=1&pdfPath=las-vegas-vacation-3/report/style-2',
-  '/api/vacation-itinerary?keepsakePdf=1&pdfPath=las-vegas-vacation-3/report/keepsake-style-2.pdf',
-  '/api/vacation-itinerary?keepsakePdf=1&shareToken=las-vegas-vacation-3&report=style-2',
+  '/api/vacation-itinerary?keepsakePdf=1&pdfPath=sample-trip/report/style-2',
+  '/api/vacation-itinerary?keepsakePdf=1&pdfPath=sample-trip/report/keepsake-style-2.pdf',
+  '/api/vacation-itinerary?keepsakePdf=1&shareToken=sample-trip&report=style-2',
 ]) {
   const res = mockRes();
   await keepsakeStyle2Handler({
@@ -444,13 +499,13 @@ for (const url of [
   }, res);
   assert.equal(res.statusCode, 302, url);
   assert.equal(res.headers['x-timesyncher-style2'], 'staging-ae', url);
-  assert.match(res.headers.location, /vacation-staging\.timesyncher\.com\/shared\/las-vegas-vacation-3\/journey\?.*pdfReport=keepsake-style-2/);
+  assert.match(res.headers.location, /vacation-staging\.timesyncher\.com\/shared\/sample-trip\/journey\?.*pdfReport=keepsake-style-2/);
   assert.doesNotMatch(res.headers.location, /travel\.timesyncher\.com/);
 }
 {
   const res = mockRes();
   await keepsakeStyle2Handler({
-    url: '/api/vacation-itinerary?keepsakePdf=1&shareToken=las-vegas-vacation-3&report=keepsake',
+    url: '/api/vacation-itinerary?keepsakePdf=1&shareToken=sample-trip&report=keepsake',
     headers: {
       host: 'vacation-staging.timesyncher.com',
       'x-forwarded-proto': 'https',
@@ -469,14 +524,14 @@ assert.equal(
 const liveOverride = applyProductKeepsakeOverrides({
   places: [
     ...shared.places,
-    { id: 8874, name: 'Lotus of Siam', category_name: 'Restaurant' },
-    { id: 8875, name: 'Eggslut', category_name: 'Restaurant' },
+    { id: 8874, name: 'Sample place H', category_name: 'Restaurant' },
+    { id: 8875, name: 'Sample place I', category_name: 'Restaurant' },
   ],
   assignments: shared.assignments,
   thingOverrides: {
-    'place:8871': { title: 'Bellagio Conservatory — Anniversary Cocktails', category: 'other', story: 'wet petals' },
+    'place:8871': { title: 'Sample place A', category: 'other', story: 'wet petals' },
     'place:8872': { story: 'Spicy rigatoni' },
-    'place:8869': { title: 'Bellagio — Alex & Kim Anniversary Stay', category: 'hotel' },
+    'place:8869': { title: 'Sample place B', category: 'hotel' },
   },
 });
 assert.equal(liveOverride.thingOverrides['place:8872'].category, 'restaurant');
@@ -486,33 +541,30 @@ assert.equal(liveOverride.thingOverrides['place:8869'].category, 'hotel');
 assert.equal(liveOverride.thingOverrides['place:8877'].category, 'transport');
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'restaurant');
 assert.notEqual(liveOverride.thingOverrides['place:8871'].category, 'store');
-assert.ok(liveOverride.thingOverrides['place:8872'].lat);
-assert.ok(liveOverride.thingOverrides['place:8876'].lng);
+assert.equal(liveOverride.thingOverrides['place:8872'].lat, undefined);
+assert.equal(liveOverride.thingOverrides['place:8876'].lng, undefined);
 assert.equal(liveOverride.places.find((place) => String(place.id) === '8872').category.name, 'Restaurant');
-const carboneAssign = (liveOverride.assignments?.['1237'] || []).find((row) => /carbone/i.test(row.place?.name || ''));
-assert.equal(carboneAssign.place.lat, 36.1073);
-assert.equal(carboneAssign.place.lng, -115.1766);
+const restaurantAssign = (liveOverride.assignments?.['1237'] || []).find((row) => Number(row.place?.id) === 8872);
+assert.equal(restaurantAssign.place.lat, undefined);
+assert.equal(restaurantAssign.place.lng, undefined);
 assert.equal(liveOverride.thingOverrides['place:8872'].timeline, true);
-assert.match(liveOverride.thingOverrides['place:8872'].summary, /Carbone|Italian-American|Aria/i);
-assert.match(liveOverride.thingOverrides['place:8872'].longDetails, /Aria special-night|tableside Caesar|Bardot/i);
-assert.equal(liveOverride.thingOverrides['place:8872'].happyHour, true);
-assert.match(liveOverride.thingOverrides['place:8872'].happyHourDetails, /Happy-hour field on|ARIA/i);
-assert.match(liveOverride.thingOverrides['place:8873'].summary, /Shake Shack|burger/i);
-assert.equal(liveOverride.thingOverrides['place:8873'].happyHour, false);
-assert.match(liveOverride.thingOverrides['place:8874'].summary, /Northern Thai/i);
-assert.equal(liveOverride.thingOverrides['place:8874'].happyHour, true);
-assert.match(liveOverride.thingOverrides['place:8874'].happyHourDetails, /3–5pm|3-5/i);
-assert.match(liveOverride.thingOverrides['place:8875'].summary, /Fairfax|Eggslut/i);
-assert.equal(liveOverride.thingOverrides['place:8875'].happyHour, false);
-assert.match(liveOverride.thingOverrides['place:8876'].summary, /Cosmopolitan/i);
-assert.match(liveOverride.thingOverrides['place:8871'].summary, /Conservatory|cocktails/i);
-assert.deepEqual(resolveThingCoords({ name: 'Carbone at Aria', address: 'Aria, Las Vegas' }), [36.1073, -115.1766]);
-assert.deepEqual(resolveThingCoords({ name: 'Shake Shack near Cosmo/Aria', address: 'Las Vegas Strip' }), [36.1097, -115.1739]);
-assert.equal(liveOverride.thingOverrides['place:8873'].lat, 36.1097);
+assert.equal(liveOverride.thingOverrides['place:8872'].summary, undefined);
+assert.equal(liveOverride.thingOverrides['place:8872'].happyHour, undefined);
+assert.equal(liveOverride.thingOverrides['place:8872'].happyHourDetails, undefined);
+assert.equal(liveOverride.thingOverrides['place:8873'].summary, undefined);
+assert.equal(liveOverride.thingOverrides['place:8874'].summary, undefined);
+assert.equal(liveOverride.thingOverrides['place:8871'].summary, undefined);
+assert.equal(resolveThingCoords({ name: 'Sample Venue', address: 'Sample City' }), null);
+assert.equal(resolveThingCoords({ name: 'Sample Cafe', address: 'Sample Road' }), null);
+assert.deepEqual(resolveThingCoords({
+  name: 'Sample Venue',
+  source: { lat: 10, lng: 20, neighborhood: 'Sample Area' },
+}), [10, 20]);
+assert.equal(liveOverride.thingOverrides['place:8873'].lat, undefined);
 const buckets = keepsakeListBuckets(liveOverride);
-assert.ok(buckets.Restaurants.some((row) => row.place.name.includes('Carbone')));
-assert.ok(buckets.Stores.some((row) => row.place.name.includes('Cosmopolitan')));
-assert.ok(!buckets['Shows, Tours and the Rest'].some((row) => /carbone|cosmopolitan shops/i.test(row.place.name)));
+assert.ok(buckets.Restaurants.some((row) => row.place.name.includes('Sample place C')));
+assert.ok(buckets.Stores.some((row) => row.place.name.includes('Sample place E')));
+assert.ok(!buckets['Shows, Tours and the Rest'].some((row) => row.place.name === 'Sample place C' || row.place.name === 'Sample place E'));
 assert.ok(buckets.Hotels.some((row) => String(row.place.id) === '8869'));
 
 const aeFixture = [
@@ -527,7 +579,7 @@ const aeFixture = [
   'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58}',
   'js&&n.jsxs("div",{style:{position:"absolute",zIndex:9e3,left:zt?-8:0,bottom:zt?48:66,width:248,background:"white",border:"1px solid #d1d5db",borderRadius:14,boxShadow:"0 18px 45px rgba(15,23,42,0.22)",padding:10},children:[',
   '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=',
-  ',[/guided walking|audio history/i,[40.7794,-73.9632]]]',
+  ',[/guided walking|audio history/i,[1.5,2.5]]]',
   'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
   '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
   'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)',
@@ -596,8 +648,6 @@ const patchedAe = patchStyleTwoToConfigRenderer(aeFixture);
 assertPatchedStyleTwo(patchedAe);
 assert.match(patchedAe, /tsListThings=\(rows\)/);
 assert.doesNotMatch(patchedAe, /logoUrl:tsLogo\(name\)/);
-assert.doesNotMatch(patchedAe, /lat:36\.1147/);
-assert.doesNotMatch(patchedAe, /address:"Nevada"/);
 assert.match(patchedAe, /Os\.filter\(G=>tsListThings\(Cc\)/);
 assert.doesNotMatch(patchedAe, /const named=\(/);
 assert.match(patchedAe, /data-logo-src=/);
@@ -618,7 +668,6 @@ assert.match(patchedAe, /\$\{zt\.map\(fs\)\.join\(""\)\}/);
 assert.match(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{sm\}\$\{js\}\$\{zl\}\$\{Qi\}\$\{lg\}/);
 assert.doesNotMatch(patchedAe, /\$\{wn\}\$\{Qi\}\$\{js\}\$\{zl\}/);
-assert.doesNotMatch(patchedAe, /\[\/bellagio\|conservatory\/i,\[36\.1126,-115\.1767\]\]/);
 assert.match(patchedAe, /\$\{Mc\(nr\)\}/);
 assert.match(patchedAe, /data-style2-centered-day="1"/);
 assert.match(patchedAe, /flex-direction:column/);
@@ -677,12 +726,12 @@ assert.match(patchedAe, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/)
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn\)\.length===0/);
-assert.match(patchedAe, /tsFillOv=/);
-assert.match(patchedAe, /ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\)/);
-assert.match(patchedAe, /names\.some\(n=>row\.match\.test\(n\)\)/);
+assert.doesNotMatch(patchedAe, /tsFillOv=/);
+assert.doesNotMatch(patchedAe, /tsPf=/);
+assert.match(patchedAe, /ha=G=>le\[Qt\(G\)\]\|\|\{\}/);
 assert.match(patchedAe, /getSharedTrip:e=>Rt\.get\(`\/shared\/\$\{e\}`,\{params:\{_ts:Date\.now\(\)\},headers:\{"Cache-Control":"no-cache"\}\}\)\.then\(t=>t\.data\)/);
 assert.doesNotMatch(patchedAe, /G\.thingOverrides=ov;return G/);
-assert.match(patchedAe, /tsPf\.some\(row=>row\.happyHour===true/);
+assert.doesNotMatch(patchedAe, /tsPf\.some\(row=>row\.happyHour===true/);
 assert.doesNotMatch(patchedAe, /typeof tsFillOv==="function"/);
 assert.match(patchedAe, /pe\(\(G!=null&&G\.thingOverrides&&typeof G\.thingOverrides=="object"\)\?G\.thingOverrides:\{\}\)/);
 assert.doesNotMatch(patchedAe, /pe\(tsMergeLe\(G\)\)/);
@@ -699,7 +748,7 @@ assert.match(patchedAe, /path:"\/shared\/:token\/journey"/);
 assert.match(patchedAe, /\?"report":null\)\|\|\(i\.includes\("printMode=daily"\)/);
 assert.match(patchedAe, /\?"keepsake-style-2":\(/);
 assert.match(patchedAe, /\?"keepsake":null\)/);
-assert.match(patchedAe, /Co=G=>ha\(G\)\.longDetails\|\|\(tsPf\.find/);
+assert.match(patchedAe, /Co=G=>ha\(G\)\.longDetails\?\?Fl\(G\)/);
 assert.match(patchedAe, /ha\(G\)\.happyHour\|\|zi\(G\)/);
 assert.match(patchedAe, /data-happy-hour="\$\{ha\(G\)\.happyHour\?"1":"0"\}"/);
 assert.doesNotMatch(patchedAe, /ha\(nr\)\.story&&fo\(nr\)\.filter\(Km\)\.some/);
@@ -806,22 +855,6 @@ assert.doesNotMatch(patchedAe, /<div class="thing-head"><div class="style2-thing
 assert.match(patchedAe, /grid-template-columns:32px minmax\(0,1fr\)/);
 assert.doesNotMatch(patchedAe, /\.style2-details\{display:grid;grid-template-columns:1fr;gap:10px\}/);
 
-const boundPhotos = [
-  'carbone-plates-photo.jpg',
-  'carbone-late-hands-photo.jpg',
-  'conservatory-photo.jpg',
-  'eggslut-sandwich-photo.jpg',
-  'shake-shack-fries-photo.jpg',
-  'boarding-passes-photo.jpg',
-];
-for (const name of boundPhotos) {
-  const path = new URL(`../public/ts-thing-media/las-vegas-vacation-3/${name}`, import.meta.url);
-  const bytes = await readFile(path);
-  assert.ok(bytes.length > PRINT_STUB_MAX_BYTES, `${name} must not be a color-card stub`);
-  assert.notEqual(bytes.length, 3071, `${name} must not be a TREK 1024 canvas`);
-  assert.equal(bytes[0], 0xff);
-  assert.equal(bytes[1], 0xd8);
-}
 const livePatched = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assertPatchedStyleTwo(livePatched);
 assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
@@ -832,12 +865,12 @@ await writeFile(patchedCheckPath, livePatched);
 const patchedCheck = spawnSync('node', ['--check', patchedCheckPath], { encoding: 'utf8' });
 assert.equal(patchedCheck.status, 0, patchedCheck.stderr || 'patched TREK bundle failed node --check');
 assert.equal(
-  productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'restaurants' }),
-  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/report/restaurants.pdf`,
+  productPdfUrl({ shareToken: 'sample-trip', report: 'restaurants' }),
+  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/sample-trip/report/restaurants.pdf`,
 );
 assert.equal(
-  productPdfUrl({ shareToken: 'las-vegas-vacation-3', report: 'daily', pdfPath: 'las-vegas-vacation-3/daily/2.pdf' }),
-  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/las-vegas-vacation-3/daily/2.pdf`,
+  productPdfUrl({ shareToken: 'sample-trip', report: 'daily', pdfPath: 'sample-trip/daily/2.pdf' }),
+  `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/sample-trip/daily/2.pdf`,
 );
 assert.match(
   forwardedKeepsakeSearch(new URL('https://x.test/?ksLogo=0&ksMapOff=1,2,3&other=1')),
@@ -853,7 +886,7 @@ assert.match(create, /captured_logo/);
 assert.match(create, /image_url/);
 assert.match(create, /minThings/);
 assert.match(create, /Backfilled from existing trip things/);
-assert.doesNotMatch(create, /airport\|las\|boi/);
+assert.doesNotMatch(create, /airport\|[a-z]{3}\|boi/);
 
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
 assert.match(sharedApp, /index-BKun7ofk\.js/);
@@ -876,8 +909,7 @@ assert.match(sharedApp, /data-ts-pic-popup-tip/);
 assert.match(sharedApp, /leaflet-popup-tip-container/);
 assert.match(sharedApp, /box-sizing: content-box !important/);
 
-const trek = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
-assert.match(trek, /i==="flight"\?"✈️"/);
-assert.doesNotMatch(trek, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
+assert.match(livePatched, /i==="flight"\?"✈️"/);
+assert.doesNotMatch(livePatched, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
 
 console.log('keepsake style-2 tests passed');

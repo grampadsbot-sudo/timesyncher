@@ -10,77 +10,77 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-const carbone = {
-  name: 'Carbone at Aria',
+const placeA = {
+  name: 'Sample place A',
   category_name: 'Restaurant',
   category_icon: '🍽️',
-  address: 'Aria, Las Vegas',
-  notes: 'Kim TG note',
-  description: 'Added from Kim TG collaborator note',
+  address: 'Sample road',
+  notes: 'Sample note',
+  description: 'Added from a sample note',
 };
-const shake = {
-  name: 'Shake Shack near Cosmo/Aria',
+const placeB = {
+  name: 'Sample place B',
   category_name: 'Restaurant',
   category_icon: '🍽️',
-  address: 'Las Vegas Strip',
+  address: 'Sample road',
 };
-const shops = {
-  name: 'Cosmopolitan shops',
+const placeC = {
+  name: 'Sample place C',
   category_name: 'Store',
   category_icon: 'ShoppingBag',
-  address: 'The Cosmopolitan, Las Vegas',
+  address: 'Sample road',
 };
 const outbound = {
-  name: 'SFO to LAS Thu Oct 9',
+  name: 'Sample transfer',
   category_name: 'Transport',
   category_icon: '🚌',
-  address: 'SFO to LAS',
+  address: 'Sample route',
 };
 const inbound = {
-  name: 'LAS to SFO Sun Oct 12',
+  name: 'Sample return',
   category_name: 'Transport',
   category_icon: '🚌',
-  address: 'LAS to SFO',
+  address: 'Sample route',
 };
 const lodging = {
-  name: 'Las Vegas lodging research queue',
+  name: 'Sample lodging',
   category_name: 'Hotel',
   category_icon: '🏨',
-  address: 'Las Vegas',
+  address: 'Sample road',
 };
-const conservatory = {
-  name: 'Bellagio Conservatory — Anniversary Cocktails',
+const attraction = {
+  name: 'Sample place D',
   category_name: 'Attraction',
   category_icon: '🏛️',
-  address: 'Las Vegas',
+  address: 'Sample road',
 };
 const withLogo = {
-  name: 'Carbone at Aria',
+  name: 'Sample place A',
   category_name: 'Restaurant',
-  image_url: 'https://example.com/carbone.png',
+  image_url: 'https://example.com/sample-place.png',
 };
 
-assert(timelineIcon(carbone).icon === '🍽️', 'Carbone uses restaurant icon');
-assert(timelineIcon(carbone).isFlight === false, 'Carbone is not a flight');
-assert(timelineIcon(shake).icon === '🍽️', 'Shake Shack uses restaurant icon');
-assert(timelineIcon(shops).icon === '🛍️', 'Cosmopolitan shops uses store icon');
+assert(timelineIcon(placeA).icon === '🍽️', 'a restaurant uses the restaurant icon');
+assert(timelineIcon(placeA).isFlight === false, 'a restaurant is not a flight');
+assert(timelineIcon(placeB).icon === '🍽️', 'a second restaurant uses the restaurant icon');
+assert(timelineIcon(placeC).icon === '🛍️', 'a store uses the store icon');
 assert(timelineIcon(outbound).icon === '🚕', 'transport category stays transport');
 assert(timelineIcon(inbound).icon === '🚕', 'return transport stays transport');
 assert(timelineIcon({ name: 'Thursday departure', category_name: 'Flight' }).icon === '✈️', 'flight category uses airplane');
 assert(timelineIcon(lodging, { category: 'hotel' }).icon === '🧳', 'Hotel override uses lodging icon');
-assert(timelineIcon(conservatory, { category: 'other' }).icon === '🏛️', 'other override does not beat Attraction');
-assert(timelineIcon(carbone, { category: 'other' }).icon === '🍽️', 'other override does not beat Restaurant');
-assert(thingLogoUrl(withLogo) === 'https://example.com/carbone.png', 'image_url is used as thing logo');
-assert(timelineIcon(withLogo).logoUrl === 'https://example.com/carbone.png', 'logo wins over category icon when present');
-assert(resolveThingType({ name: 'Random Las Vegas walk' }) !== 'flight', 'bare Las Vegas text is not a flight');
-assert(resolveThingType({ name: 'Bellagio Conservatory', category_name: 'Attraction' }) !== 'flight', 'Conservatory is not a flight');
-assert(resolveThingType({ name: 'Bellagio Conservatory', category_name: 'Attraction' }) !== 'car', 'attraction does not become car');
-assert(timelineIcon(carbone, { icon: '✈️' }).icon === '🍽️', 'stored airplane icon is not used for restaurants');
-assert(timelineIcon(shops, { icon: 'Plane' }).icon === '🛍️', 'Plane lucide is not a missing-logo fallback');
+assert(timelineIcon(attraction, { category: 'other' }).icon === '🏛️', 'other override does not beat Attraction');
+assert(timelineIcon(placeA, { category: 'other' }).icon === '🍽️', 'other override does not beat Restaurant');
+assert(thingLogoUrl(withLogo) === 'https://example.com/sample-place.png', 'image_url is used as thing logo');
+assert(timelineIcon(withLogo).logoUrl === 'https://example.com/sample-place.png', 'logo wins over category icon when present');
+assert(resolveThingType({ name: 'Sample walk' }) !== 'flight', 'a plain name is not a flight');
+assert(resolveThingType({ name: 'Sample place D', category_name: 'Attraction' }) !== 'flight', 'an attraction is not a flight');
+assert(resolveThingType({ name: 'Sample place D', category_name: 'Attraction' }) !== 'car', 'an attraction is not a car');
+assert(timelineIcon(placeA, { icon: '✈️' }).icon === '🍽️', 'stored airplane icon is not used for restaurants');
+assert(timelineIcon(placeC, { icon: 'Plane' }).icon === '🛍️', 'Plane lucide is not a missing-logo fallback');
 assert(sanitizeTimelineGlyph('✈️', 'restaurant') === '🍽️', 'sanitize strips airplane from restaurants');
 assert(sanitizeTimelineGlyph('✈️', 'flight') === '✈️', 'sanitize keeps airplane on flights');
 assert(isAirplaneGlyph('✈️') === true, 'airplane glyph detected');
-assert(timelineIcon({ name: 'Las Vegas restaurants, activities, and shopping research queue', category_name: 'Attraction' }).isFlight === false, 'research queue is not a flight');
+assert(timelineIcon({ name: 'Sample research queue', category_name: 'Attraction' }).isFlight === false, 'a research queue is not a flight');
 assert(resolveThingType({ name: 'Sample Hotel' }) === 'other', 'a name alone has no icon type');
 assert(resolveThingType({ name: 'City A to City B' }) === 'other', 'a route name alone is not a flight');
 assert(resolveThingType({ name: 'Sample Rental' }) === 'other', 'a rental name alone is not a car');
