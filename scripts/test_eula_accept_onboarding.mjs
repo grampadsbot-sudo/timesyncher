@@ -4,8 +4,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import handler from '../api/[...route].mjs';
 import { useOnboardingLookup } from '../routes/eula.mjs';
-import { sessionKey } from '../src/onboarding/eula-persistent-core.mjs';
 import { LocalJsonStore, VercelBlobStore } from '../src/onboarding/eula-persistent-store.mjs';
+
+function sessionKey(sessionId) {
+  return `sessions/${sessionId}.json`;
+}
 import { ensureVacationEulaSession, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 
 function mockRes() {
