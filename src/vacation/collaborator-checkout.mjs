@@ -47,8 +47,8 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
         currency: CURRENCY,
         product_data: {
           name: plan.scope === 'single_trip'
-            ? 'Collaborator for this vacation'
-            : plan.code,
+            ? 'Collaborator access for this vacation'
+            : 'Collaborator access for all vacations',
         },
         unit_amount: plan.amountCents,
       },

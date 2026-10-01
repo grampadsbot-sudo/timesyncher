@@ -168,8 +168,8 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
     description: plan.scope === 'single_trip'
-      ? 'TimeSyncher Vacation Telegram access'
-      : 'TimeSyncher Vacation Telegram access for all vacations',
+      ? 'Collaborator access for this vacation'
+      : 'Collaborator access for all vacations',
     metadata: {
       product: 'timesyncher_vacation_telegram_collaborator',
       invite_id: selected.invite.id,
@@ -505,9 +505,6 @@ export default async function handler(req, res) {
           tripId: clean(body.tripId, 80),
           planCode: clean(body.planCode || body.scope || 'single_trip', 80),
           requestedFor: clean(body.requestedFor, 180),
-          metadata: {
-            requestedByTelegramChatId: clean(body.telegramChatId, 120) || null,
-          },
         });
         return send(res, 200, checkout);
       } catch (error) {
