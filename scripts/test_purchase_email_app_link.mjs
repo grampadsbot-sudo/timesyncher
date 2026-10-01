@@ -69,8 +69,9 @@ function db(strings, ...values) {
     return [{ id: state.tripId }];
   }
   if (/update trips/i.test(text)) {
-    const patch = values.find((value) => value && value.publicSlug);
+    const patch = values.find((value) => value && typeof value === 'object' && !Array.isArray(value));
     if (patch && state.trip) state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
+    if (/returning metadata/i.test(text)) return [{ public_slug: state.trip?.metadata?.publicSlug || null }];
     return [];
   }
   if (/insert into entitlements/i.test(text)) return [{ id: state.entitlementId }];
@@ -115,7 +116,10 @@ function db(strings, ...values) {
   }
   if (/select metadata from trips/i.test(text)) return [{ metadata: state.trip?.metadata || {} }];
   if (/from vacation_collaborators/i.test(text)) return [];
-  if (/from trips/i.test(text)) return state.trip ? [{ ...state.trip, current: true }] : [];
+  if (/from trips/i.test(text)) {
+    if (/public_slug/i.test(text)) return [{ public_slug: state.trip?.metadata?.publicSlug || '' }];
+    return state.trip ? [{ ...state.trip, current: true }] : [];
+  }
   if (/select 1\s+from transcript_turns/i.test(text)) return state.turns.length ? [1] : [];
   if (/insert into transcript_turns/i.test(text)) {
     const body = [...values].reverse().find((value) => typeof value === 'string' && value.length > 20);
