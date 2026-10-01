@@ -6,7 +6,7 @@ Drive the real app at the staging shared trip for `testTripSlug` (`verify-config
 
 ## Sub-features
 
-- The day view says only timeline-tagged things appear on the map below.
+- The Vacation Day View helper line is: Only things tagged for this day + Timeline appear on the map below.
 
 ## How to get to it (user POV)
 

@@ -73,7 +73,7 @@ The harness only writes under a temp directory during `--self-check`, and it rem
 
 ## Live composer Jev tier
 
-Prove `features/live-app-jev-tier.md`. The composer reply is Jev, then that model tier, then the stored text. Same shared producer as Dialog.
+Prove `features/live-app-jev-tier.md`. The composer reply is Jev, then that model tier, then the stored text. Same shared producer as Dialog. The first welcome after terms is not that path: it is the fixed template in `content/onboarding-welcome.json`, filled with the owner first name and trip URL, or the collaborator first name, owner first name, trip title, and trip URL. Telemetry is `canned_welcome`, tier `n/a`, model `n/a`.
 
 ```bash
 node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs
@@ -95,7 +95,7 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs -
 
 `<dir>` defaults to `.cursor/skills/verify-timesyncher-vacation/output`, which is not committed. The same input overwrites the same table. QA reads that table: one row per feature file, result `PASS`, `FAIL`, or `GAP`.
 
-The real-app gate is required. The command runs `npm run test:real-app-entry` first and refuses a clean table when that gate fails. A doctor failure overwrites the same table with `Doctor FAIL` so a later run cannot leave an older PASS table in place. A product gap stays a `GAP` row. Do not delete or soften the feature file.
+The real-app gate is required. The command runs `npm run test:real-app-entry` and the doctor, writes both results at the top of the table, and still drives every feature. A failing gate or doctor exits non-zero and cannot leave an older PASS table in place. A product gap stays a `GAP` row. Do not delete or soften the feature file.
 
 A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
 
