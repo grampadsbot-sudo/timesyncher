@@ -37,6 +37,7 @@ import {
   selfTestMissingWelcomeDatabase,
   WELCOME_ONBOARDING_TIMEOUT,
   WELCOME_VERCEL_TOKEN_MISSING,
+  welcomeTextSettled,
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs';
 
 const OLD_WELCOME = 'I can help you plan your trip. What destination do you have in mind for this vacation?';
@@ -188,6 +189,10 @@ assert.deepEqual(steps, [
   ['assert'],
 ]);
 assert.equal(welcome.shown, true);
+assert.equal(welcomeTextSettled('Hi'), false);
+assert.equal(welcomeTextSettled('Hi there, the trip is ready.'), false);
+assert.equal(welcomeTextSettled('Hi there, the trip is ready. Hold the mic and talk for a minute.'), true);
+assert.equal(welcomeTextSettled('Hi there, the trip is ready. Hold the mic and talk for a minute.', { typing: true }), false);
 
 await assert.rejects(
   () => agreeThenReadWelcome({

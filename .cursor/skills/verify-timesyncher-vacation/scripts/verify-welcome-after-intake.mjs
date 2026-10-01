@@ -129,6 +129,11 @@ function staticFail(error, message) {
   throw fail(message);
 }
 
+export function welcomeTextSettled(text, { typing = false } = {}) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  return typing !== true && value.length >= 40 && /[.!?]["']?$/.test(value);
+}
+
 export async function agreeThenReadWelcome(driver, { name = 'Verify', timeoutMs = 90000 } = {}) {
   try {
     await driver.fill('#eulaName', name);
@@ -177,9 +182,9 @@ function pageWelcomeDriver(page) {
       return true;
     },
     async readWelcome() {
-      return page.evaluate(() => {
+      const snapshot = () => page.evaluate(() => {
         const root = document.querySelector('#messages[data-screen="onboarding"]');
-        if (!root) return { shown: false, prior: [] };
+        if (!root) return { shown: false, prior: [], lastApp: '', typing: false, appCount: 0 };
         const bubbles = [...root.querySelectorAll('article.bubble')].filter((node) => node.id !== 'tsTyping').map((node) => {
           const label = node.querySelector('small')?.textContent || '';
           const raw = (node.textContent || '').replace(/\s+/g, ' ').trim();
@@ -189,8 +194,42 @@ function pageWelcomeDriver(page) {
         const firstUser = bubbles.findIndex((bubble) => bubble.user === true);
         const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
         const texts = prior.filter((bubble) => bubble.user !== true).map((bubble) => bubble.text).filter(Boolean);
-        return { shown: texts.length > 0, prior: texts };
+        const appTexts = bubbles.filter((bubble) => bubble.user !== true).map((bubble) => bubble.text).filter(Boolean);
+        return {
+          shown: texts.length > 0,
+          prior: texts,
+          lastApp: appTexts.at(-1) || '',
+          typing: Boolean(root.querySelector('#tsTyping')),
+          appCount: appTexts.length,
+          hasUser: firstUser >= 0,
+        };
       });
+      const initial = await snapshot();
+      const started = Date.now();
+      let previous = initial.hasUser ? initial.lastApp : initial.prior.join('\n');
+      let stable = 0;
+      let sawTyping = initial.typing === true;
+      let latest = initial;
+      while (Date.now() - started < 50000) {
+        latest = await snapshot();
+        if (latest.typing) sawTyping = true;
+        const candidate = latest.hasUser ? latest.lastApp : latest.prior.join('\n');
+        const grew = latest.hasUser
+          ? (latest.appCount > initial.appCount || latest.lastApp.length > initial.lastApp.length)
+          : candidate.length > 0;
+        const settled = grew && candidate === previous && welcomeTextSettled(candidate, { typing: latest.typing });
+        if (settled) {
+          stable += 1;
+          if (stable >= 2) break;
+        } else {
+          stable = 0;
+        }
+        previous = candidate;
+        const quiet = !latest.hasUser ? false : (!sawTyping && !grew && Date.now() - started > 12000);
+        if (quiet && welcomeTextSettled(candidate, { typing: false })) break;
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+      return { shown: latest.shown || latest.prior.length > 0, prior: latest.prior };
     },
   };
 }
