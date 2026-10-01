@@ -5,10 +5,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  agreeThenReadWelcome,
   ensureWelcomeDatabase,
+  priorWelcomeTexts,
   redactWelcomeSecrets,
+  welcomeShownFromBubbles,
   WELCOME_DATABASE_EMPTY,
   WELCOME_DATABASE_FETCH_FAILED,
+  WELCOME_ONBOARDING_TIMEOUT,
   WELCOME_VERCEL_TOKEN_MISSING,
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs';
 
@@ -264,6 +268,49 @@ if (process.argv[2] === '--child-resolve') {
   assertNoLeak(self.stdout, 'self-test stdout');
   assertNoLeak(self.stderr, 'self-test stderr');
   assert.match(self.stdout, /missing-env self-test passed/);
+
+  const steps = [];
+  const welcome = await agreeThenReadWelcome({
+    async fill(selector) { steps.push(['fill', selector]); },
+    async check(selector) { steps.push(['check', selector]); },
+    async click(selector) { steps.push(['click', selector]); },
+    async waitFor(selector) { steps.push(['wait', selector]); return true; },
+    async readWelcome() {
+      steps.push(['assert']);
+      const bubbles = [{ user: false, text: 'Welcome aboard' }, { user: true, text: 'Hello' }];
+      return { shown: welcomeShownFromBubbles(bubbles), prior: priorWelcomeTexts(bubbles) };
+    },
+  });
+  assert.deepEqual(steps, [
+    ['fill', '#eulaName'],
+    ['check', '#eulaAgree'],
+    ['click', '#eulaAgreeButton'],
+    ['wait', '#messages[data-screen="onboarding"]'],
+    ['assert'],
+  ]);
+  assert.equal(welcome.shown, true);
+  assert.deepEqual(welcome.prior, ['Welcome aboard']);
+  assert.equal(welcomeShownFromBubbles([{ user: true, text: 'Hello' }]), false);
+  assert.equal(welcomeShownFromBubbles([{ user: false, text: '   ' }]), false);
+  assert.equal(welcomeShownFromBubbles([{ user: false, text: 'Welcome aboard' }, { user: true, text: 'Hello' }]), true);
+
+  const timed = [];
+  await assert.rejects(
+    () => agreeThenReadWelcome({
+      async fill(selector) { timed.push(selector); },
+      async check(selector) { timed.push(selector); },
+      async click(selector) { timed.push(selector); },
+      async waitFor() { throw new Error('https://example.test/session-secret-token'); },
+      async readWelcome() { timed.push('assert'); return { shown: true, prior: [] }; },
+    }),
+    (error) => {
+      assert.equal(error.message, WELCOME_ONBOARDING_TIMEOUT);
+      assert.equal(String(error.message).includes('session-secret'), false);
+      assert.equal(String(error.stack || '').includes('session-secret'), false);
+      return true;
+    },
+  );
+  assert.deepEqual(timed, ['#eulaName', '#eulaAgree', '#eulaAgreeButton']);
 
   process.stdout.write('welcome database url test passed\n');
 }

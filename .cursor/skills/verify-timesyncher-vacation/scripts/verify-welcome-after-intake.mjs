@@ -7,7 +7,7 @@
  * The loaded value is never printed, logged, or written to disk.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onboardingOpenerFacts, upsellFactsForTurn } from '../../../../src/vacation/live-app-turn.mjs';
@@ -18,6 +18,7 @@ export const WELCOME_VERCEL_TOKEN_MISSING = 'FAIL welcome-after-intake: VERCEL_T
 export const WELCOME_DATABASE_FETCH_FAILED = 'FAIL welcome-after-intake: staging DATABASE_URL fetch failed';
 export const WELCOME_DATABASE_EMPTY = 'FAIL welcome-after-intake: staging DATABASE_URL empty';
 export const WELCOME_MISSING = 'FAIL welcome-after-intake: welcome missing';
+export const WELCOME_ONBOARDING_TIMEOUT = 'FAIL welcome-after-intake: onboarding chat did not open';
 const scriptPath = fileURLToPath(import.meta.url);
 
 function fail(message) {
@@ -95,6 +96,49 @@ function welcomeBeforeCustomer(turns) {
   return prior.some((turn) => (turn.speaker === 'app' || turn.speaker === 'assistant') && String(turn.body || '').trim());
 }
 
+export function welcomeShownFromBubbles(bubbles) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  const firstUser = list.findIndex((bubble) => bubble.user === true);
+  const prior = firstUser < 0 ? list : list.slice(0, firstUser);
+  return prior.some((bubble) => bubble.user !== true && String(bubble.text || '').trim().length > 0);
+}
+
+export function priorWelcomeTexts(bubbles) {
+  const list = Array.isArray(bubbles) ? bubbles : [];
+  const firstUser = list.findIndex((bubble) => bubble.user === true);
+  const prior = firstUser < 0 ? list : list.slice(0, firstUser);
+  return prior
+    .filter((bubble) => bubble.user !== true)
+    .map((bubble) => String(bubble.text || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+function staticFail(error, message) {
+  if (String(error?.message || '').startsWith('FAIL welcome-after-intake:')) throw error;
+  throw fail(message);
+}
+
+export async function agreeThenReadWelcome(driver, { name = 'Verify Intake', timeoutMs = 30000 } = {}) {
+  try {
+    await driver.fill('#eulaName', name);
+  } catch (error) {
+    staticFail(error, 'FAIL welcome-after-intake: terms name missing');
+  }
+  try {
+    await driver.check('#eulaAgree');
+    await driver.click('#eulaAgreeButton');
+  } catch (error) {
+    staticFail(error, 'FAIL welcome-after-intake: terms agree missing');
+  }
+  try {
+    const opened = await driver.waitFor('#messages[data-screen="onboarding"]', timeoutMs);
+    if (opened === false) throw new Error('not open');
+  } catch (error) {
+    staticFail(error, WELCOME_ONBOARDING_TIMEOUT);
+  }
+  return driver.readWelcome();
+}
+
 function jsonRequest(method, url, body, headers = {}) {
   const raw = Buffer.from(JSON.stringify(body || {}));
   return {
@@ -141,7 +185,50 @@ async function callHandler(handler, request) {
   return { status: captured.res.statusCode, body: captured.body() };
 }
 
-async function screenshotApp(url, shotDir) {
+function pageWelcomeDriver(page) {
+  return {
+    async fill(selector, value) {
+      await page.waitForSelector(selector, { timeout: 20000 });
+      await page.$eval(selector, (input, next) => {
+        input.value = next;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }, value);
+    },
+    async check(selector) {
+      await page.waitForSelector(selector, { timeout: 20000 });
+      await page.$eval(selector, (box) => {
+        box.checked = true;
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+        box.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    },
+    async click(selector) {
+      await page.waitForSelector(selector, { timeout: 20000 });
+      await page.click(selector);
+    },
+    async waitFor(selector, timeoutMs) {
+      await page.waitForSelector(selector, { timeout: timeoutMs });
+      return true;
+    },
+    async readWelcome() {
+      const bubbles = await page.evaluate(() => {
+        const root = document.querySelector('#messages[data-screen="onboarding"]');
+        if (!root) return [];
+        return [...root.querySelectorAll('article.bubble')].map((node) => ({
+          user: node.classList.contains('user'),
+          text: (node.textContent || '').replace(/\s+/g, ' ').trim(),
+        }));
+      });
+      return {
+        shown: welcomeShownFromBubbles(bubbles),
+        prior: priorWelcomeTexts(bubbles),
+      };
+    },
+  };
+}
+
+async function screenshotApp(url, shotDir, { name = 'Verify Intake', assertShot = '' } = {}) {
   const file = path.join(shotDir, 'verify-welcome-after-intake.png');
   await mkdir(shotDir, { recursive: true });
   let puppeteer;
@@ -167,31 +254,27 @@ async function screenshotApp(url, shotDir) {
       });
     }
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 90000 });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    const shown = await page.evaluate(() => {
-      const root = document.querySelector('#messages[data-screen="onboarding"]');
-      if (!root) return false;
-      const bubbles = [...root.querySelectorAll('article.bubble')];
-      const firstUser = bubbles.findIndex((node) => node.classList.contains('user'));
-      const prior = firstUser < 0 ? bubbles : bubbles.slice(0, firstUser);
-      return prior.some((node) => !node.classList.contains('user') && (node.textContent || '').replace(/\s+/g, ' ').trim().length > 0);
-    });
+    const welcome = await agreeThenReadWelcome(pageWelcomeDriver(page), { name });
     await page.screenshot({ path: file });
-    return { file, shown };
+    if (assertShot) {
+      await mkdir(path.dirname(assertShot), { recursive: true });
+      await copyFile(file, assertShot);
+    }
+    return { file, shown: welcome.shown === true, prior: welcome.prior || [] };
   } finally {
     await browser.close();
   }
 }
 
-export async function runWelcomeAfterIntake({ env = process.env, shotDir } = {}) {
+export async function runWelcomeAfterIntake({ env = process.env, shotDir, assertShot = '' } = {}) {
   try {
-    return await runWelcomeAfterIntakeUnchecked({ env, shotDir });
+    return await runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot });
   } catch (error) {
     throw redactWelcomeError(error);
   }
 }
 
-async function runWelcomeAfterIntakeUnchecked({ env, shotDir }) {
+async function runWelcomeAfterIntakeUnchecked({ env, shotDir, assertShot }) {
   await ensureWelcomeDatabase({ env });
   const [{ sql }, { buildOnboardingFromCoupon, ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationAppLink }, { acceptEulaPersistent }, { createPersistentStoreFromEnv }, requestHandler, appHandler] = await Promise.all([
     import('../../../../src/vacation/db.mjs'),
@@ -241,16 +324,19 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir }) {
   const welcomeShown = opened.body?.ok === true && collaboratorWelcomeMarker() && welcomeBeforeCustomer(turns);
   let screenshot = '';
   let pageShown = false;
+  let prior = [];
   if (shotDir) {
     const pageUrl = vacationAppLink(onboarding.token, { ...env, TIMESYNCHER_SITE_BASE_URL: env.TIMESYNCHER_SITE_BASE_URL || 'https://vacation-staging.timesyncher.com' });
-    const shot = await screenshotApp(pageUrl, shotDir);
+    const shot = await screenshotApp(pageUrl, shotDir, { name: contact.displayName, assertShot });
     screenshot = shot.file;
     pageShown = shot.shown === true;
+    prior = shot.prior || [];
   }
   return {
     ok: welcomeShown && pageShown,
     welcomeShown,
     pageShown,
+    prior,
     screenshot,
     tripId: onboarding.tripId,
     requestId: intake.body.requestId,
@@ -277,6 +363,11 @@ function writeRedacted(stream, text) {
   stream.write(`${redactWelcomeSecrets(text)}`);
 }
 
+function argValue(flag) {
+  const index = process.argv.indexOf(flag);
+  return index === -1 ? '' : (process.argv[index + 1] || '');
+}
+
 async function main() {
   if (process.argv.includes('--self-test-missing-env')) {
     selfTestMissingWelcomeDatabase();
@@ -284,8 +375,9 @@ async function main() {
     return;
   }
   const outDir = path.resolve(path.join(root, '.cursor/skills/verify-timesyncher-vacation/output/verify'));
+  const assertShot = argValue('--assert-shot');
   try {
-    const result = await runWelcomeAfterIntake({ shotDir: outDir });
+    const result = await runWelcomeAfterIntake({ shotDir: outDir, assertShot });
     const line = `${redactWelcomeSecrets(JSON.stringify(result))}\n`;
     if (!result.ok) {
       writeRedacted(process.stderr, `${WELCOME_MISSING}\n`);
