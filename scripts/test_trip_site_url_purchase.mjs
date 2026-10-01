@@ -6,6 +6,8 @@ import { readFile } from 'node:fs/promises';
 
 import { createAdminOnboarding } from '../routes/admin-onboardings.mjs';
 import { ensureOnboardingOpener } from '../routes/vacation-itinerary.mjs';
+import { sendJson } from '../src/vacation/http.mjs';
+import { welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import {
@@ -222,22 +224,62 @@ try {
   assert.match(welcomeInputs, /trip\?\.publicUrl/);
   assert.doesNotMatch(welcomeInputs, /assignTripSiteUrl|intakeShareSlug|sharedTripWebsiteUrl/);
 
-  await assert.rejects(
-    () => ensureOnboardingOpener(mockDb(), {
-      customer_id: customerId,
-      first_name: 'Ada',
-      display_name: 'Ada',
-    }, {
-      id: tripId,
-      publicUrl: '',
-      title: 'Trip',
-    }),
-    (error) => {
-      assert.equal(error.message, 'onboarding welcome missing tripSiteUrl');
-      assert.equal(error.statusCode, 502);
-      return true;
-    },
-  );
+  const appPage = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
+  assert.match(appPage, /data\.code, data\.reason/);
+  assert.match(appPage, /role="alert"/);
+  const handlerCatch = welcomeSource.slice(welcomeSource.lastIndexOf('} catch (error)'));
+  assert.match(handlerCatch, /welcomeFailureBody\(error\)/);
+
+  const logs = [];
+  const originalLog = console.log;
+  console.log = (...args) => { logs.push(args); };
+  try {
+    await assert.rejects(
+      () => ensureOnboardingOpener(mockDb(), {
+        customer_id: customerId,
+        token: 'session-token-value',
+        email: 'ada@example.com',
+        first_name: 'Ada',
+        display_name: 'Ada',
+      }, {
+        id: tripId,
+        publicUrl: '',
+        title: 'Trip',
+      }),
+      (error) => {
+        assert.equal(error.message, 'onboarding welcome missing tripSiteUrl');
+        assert.equal(error.statusCode, 502);
+        assert.equal(error.code, 'onboarding_welcome_failed');
+        const res = {
+          statusCode: 0,
+          headers: {},
+          body: '',
+          setHeader(name, value) { this.headers[name] = value; },
+          getHeader(name) { return this.headers[name]; },
+          end(payload) { this.body = payload; },
+        };
+        const welcome = welcomeFailureBody(error);
+        sendJson(res, error.statusCode || 400, welcome);
+        const payload = JSON.parse(res.body);
+        assert.equal(res.statusCode, 502);
+        assert.equal(payload.ok, false);
+        assert.equal(payload.code, 'onboarding_welcome_failed');
+        assert.equal(payload.reason, 'onboarding welcome missing tripSiteUrl');
+        assert.equal(logs.length, 1);
+        assert.equal(logs[0].length, 1);
+        const logged = JSON.parse(logs[0][0]);
+        assert.deepEqual(logged, { reason: 'onboarding welcome missing tripSiteUrl', tripId });
+        assert.deepEqual(Object.keys(logged), ['reason', 'tripId']);
+        assert.equal(logs[0][0].includes('ada@example.com'), false);
+        assert.equal(logs[0][0].includes('Ada'), false);
+        assert.equal(logs[0][0].includes('session-token-value'), false);
+        assert.equal(logs[0][0].includes('http'), false);
+        return true;
+      },
+    );
+  } finally {
+    console.log = originalLog;
+  }
   assert.equal(fetches, 0);
 } finally {
   globalThis.fetch = originalFetch;
