@@ -445,7 +445,6 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     ...customerInputState(things),
     ...customerInputFields(record),
   };
-  if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
 }
@@ -656,11 +655,6 @@ function mentionsThing(title, sentence) {
   return new RegExp(`\\b${escaped}\\b`, 'i').test(String(sentence || ''));
 }
 
-function swimDayKey(label) {
-  const match = String(label || '').match(/^((?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) [A-Z][a-z]{2,3} \d{1,2})/);
-  return match ? match[1] : '';
-}
-
 function customerNamedWeekday(customerText, weekdayName) {
   if (!weekdayName) return false;
   return new RegExp(`\\b${weekdayName}\\b`, 'i').test(String(customerText || ''));
@@ -705,21 +699,6 @@ function spanStartLabel(span) {
   const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
   if (Number.isNaN(start.getTime())) return '';
   return spanDateLabel(start);
-}
-
-function customerNamedAnyWeekday(customerText) {
-  return /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
-}
-
-export function swimDayUnset(customerText) {
-  const text = String(customerText || '');
-  if (!/\bswim\b/i.test(text)) return false;
-  return /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(text) && !customerNamedAnyWeekday(text);
-}
-
-function arrivalSwimLabel(label, arrival) {
-  const day = swimDayKey(label);
-  return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
 }
 
 export function applyAgreedAppSwim(things) {
@@ -949,9 +928,6 @@ export function savedTripFacts(record = {}) {
   const activities = things.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean);
   return {
     span,
-    swimDays: [],
-    gardenDays: [],
-    townWalkDays: [],
     owners: {},
     planOwned: record.planOwned === true,
     activities,
@@ -1524,7 +1500,6 @@ async function loadSavedTripRecord(session, env = process.env) {
           who: thingMeta.who || '',
           whenLabel: thingMeta.whenLabel || '',
           customerWhen: thingMeta.customerWhen || '',
-          askWhichDay: thingMeta.askWhichDay === true,
           notes: thingMeta.notes || [],
           ...(sourceRef ? { sourceRef } : {}),
         };
@@ -1575,7 +1550,6 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     span,
     things,
     party,
-    askWhichDay: things.some((thing) => thing?.askWhichDay === true) || swimDayUnset(customerTurn),
     planOwned: saved?.planOwned === true,
     rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
@@ -1610,7 +1584,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
-  tripFacts.askWhichDay = mergedTrip.askWhichDay === true;
   const seatDollars = Number(suppliedSeatDollars);
   const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
   tripFacts.seatDollars = pricedSeat;
@@ -1741,10 +1714,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const savedTripLog = {
     start: tripFacts.span?.start || '',
     end: tripFacts.span?.end || '',
-    swimDays: tripFacts.swimDays || [],
-    gardenDays: tripFacts.gardenDays || [],
     owner: tripFacts.ownerName || '',
-    askWhichDay: tripFacts.askWhichDay === true,
   };
   const baseLog = {
     draftModel,
@@ -2261,8 +2231,6 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     savedTrip: {
       start: facts.span?.start || '',
       end: facts.span?.end || '',
-      swimDays: facts.swimDays || [],
-      gardenDays: facts.gardenDays || [],
       owner: facts.ownerName || '',
     },
     interimReply: pending.interimReply || { text: null, model: null, ms: null },

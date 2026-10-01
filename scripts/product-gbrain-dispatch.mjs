@@ -534,6 +534,25 @@ function publicVacationUrl(vacation, fallbackBase) {
   return '';
 }
 
+function websiteFacts(linkedVacations, fallbackBase) {
+  const match = linkedVacations.length === 1 ? linkedVacations[0] : null;
+  return {
+    url: match ? publicVacationUrl(match, fallbackBase) : '',
+    label: match ? (match.name || match.destination || '') : '',
+    linkedVacationCount: linkedVacations.length,
+  };
+}
+
+function existenceReply(value) {
+  if (value && typeof value === 'object') return { answer: '', facts: value.facts || null };
+  return { answer: value || '', facts: null };
+}
+
+function rememberReplyFacts(artifacts, facts) {
+  if (!facts || typeof facts !== 'object') return;
+  artifacts.replyFacts = { ...(artifacts.replyFacts || {}), ...facts };
+}
+
 function accessPersonLabel(value = '') {
   const rawText = text(value, 500);
   const requestText = rawText.toLowerCase();
@@ -674,29 +693,22 @@ function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
   const unlimited = plans.find((plan) => text(plan?.scope, 80) === 'unlimited_trips');
   const photo = manifest?.mediaAddOnPolicy?.photoMemories || {};
   const video = manifest?.mediaAddOnPolicy?.videoMemoriesRecommendation || {};
-  const lines = [];
-  if (allVacations) {
-    if (unlimited?.amountUsd) lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is $${unlimited.amountUsd}.`);
-    else console.error('access price is not configured: unlimited telegram');
-    lines.push('That adds one active Telegram collaborator. Add more collaborators one at a time.');
-    if (wantsMedia) {
-      if (photo.unlimitedVacationsAmountUsd) lines.push(`Photo upload access for unlimited vacations for the whole year is $${photo.unlimitedVacationsAmountUsd}.`);
-      else console.error('access price is not configured: unlimited photo');
-      if (video.unlimitedVacationsAmountUsd) lines.push(`Video upload access for unlimited vacations for the whole year is $${video.unlimitedVacationsAmountUsd}.`);
-      else console.error('access price is not configured: unlimited video');
-    }
-  } else {
-    if (singleTrip?.amountUsd) lines.push(`For ${person}, Telegram editing access for this vacation is $${singleTrip.amountUsd}.`);
-    else console.error('access price is not configured: single telegram');
-    lines.push('That adds one active Telegram collaborator for that vacation. Add more collaborators one at a time.');
-    if (wantsMedia) {
-      if (photo.singleVacationAmountUsd) lines.push(`Photo upload access for this vacation is $${photo.singleVacationAmountUsd}.`);
-      else console.error('access price is not configured: single photo');
-      if (video.singleVacationAmountUsd) lines.push(`Video upload access for this vacation is $${video.singleVacationAmountUsd}.`);
-      else console.error('access price is not configured: single video');
-    }
-  }
-  return lines.join('\n\n');
+  const scope = allVacations ? 'unlimited_trips' : 'single_trip';
+  const telegramUsd = allVacations ? unlimited?.amountUsd : singleTrip?.amountUsd;
+  const photoUsd = wantsMedia ? (allVacations ? photo.unlimitedVacationsAmountUsd : photo.singleVacationAmountUsd) : null;
+  const videoUsd = wantsMedia ? (allVacations ? video.unlimitedVacationsAmountUsd : video.singleVacationAmountUsd) : null;
+  if (!telegramUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} telegram`);
+  if (wantsMedia && !photoUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} photo`);
+  if (wantsMedia && !videoUsd) console.error(`access price is not configured: ${scope === 'unlimited_trips' ? 'unlimited' : 'single'} video`);
+  return {
+    person,
+    scope,
+    wantsMedia,
+    telegramUsd: telegramUsd || null,
+    photoUsd: photoUsd || null,
+    videoUsd: videoUsd || null,
+    collaboratorSeats: 1,
+  };
 }
 
 function hasTelegramCollaboratorAccess({ namedMember = false, requestedCaps = [] } = {}) {
@@ -929,9 +941,7 @@ function vacationExistenceQuestionAnswer({ requestText = '', linkedVacations = [
     const match = matches[0];
     const label = match.name || match.destination || lookup || 'that vacation';
     const url = publicVacationUrl(match, fallbackBase);
-    return url
-      ? `Yes, I found ${label}. Here is the website: ${url}`
-      : `Yes, I found ${label}.`;
+    return { facts: { label, url } };
   }
   if (matches.length > 1) {
     const lines = matches.slice(0, 5).map((match) => {
@@ -970,8 +980,9 @@ function makeTurnDecision({
   tripSelector = null,
   reasons = [],
   source = 'deterministic_current_turn_router',
+  facts = null,
 }) {
-  return {
+  const decision = {
     intent,
     write_mode: writeMode,
     writeMode,
@@ -984,6 +995,8 @@ function makeTurnDecision({
     reasons: Array.isArray(reasons) ? reasons.map((reason) => text(reason, 240)).filter(Boolean) : [],
     source,
   };
+  if (facts) decision.facts = facts;
+  return decision;
 }
 
 
@@ -1077,6 +1090,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
   if (writeMode !== 'none') return null;
   let answer = text(decision.answer, 2400);
   let answerMode = decision.answerMode || 'clarify';
+  let facts = null;
   const selectedSkill = decision.selectedSkill || 'timesyncher-vacation-support-router';
   if (!answer) {
     if (intent === 'unsafe_internal' || isSensitiveDumpRequest(ownRequestText)) {
@@ -1086,16 +1100,20 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
       answer = 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.';
       answerMode = 'payment_refusal';
     } else if (isAccessPricingQuestion(ownRequestText)) {
-      answer = accessPricingAnswer({ requestText: ownRequestText, manifest });
+      facts = accessPricingAnswer({ requestText: ownRequestText, manifest });
+      answer = '';
       answerMode = 'pricing';
     } else if (isDeleteVacationRequest(ownRequestText)) {
       answer = deleteVacationSafetyAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
       answerMode = 'delete_safety';
     } else if (intent === 'website_link_question' || isWebsiteLinkRequestText(ownRequestText)) {
-      answer = linkedVacations.length === 1 ? 'Here is the website: ' + publicVacationUrl(linkedVacations[0], fallbackBase) : 'I need to know which vacation website you want.';
+      facts = websiteFacts(linkedVacations, fallbackBase);
+      answer = '';
       answerMode = 'account_state';
     } else if (isVacationExistenceQuestion(ownRequestText)) {
-      answer = vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+      const existence = existenceReply(vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }));
+      answer = existence.answer;
+      facts = existence.facts;
       answerMode = linkedVacations.length ? 'account_state' : 'clarify';
     } else if (isAccessRosterQuestion(ownRequestText)) {
       answer = vacationAccessRosterAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
@@ -1120,6 +1138,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
     shouldQueueWorker: false,
     confidence: decision.confidence,
     answer,
+    facts,
     selectedSkill,
     answerMode,
     tripSelector: decision.tripSelector || { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
@@ -1206,7 +1225,8 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.94,
-      answer: accessPricingAnswer({ requestText: ownRequestText, manifest }),
+      answer: '',
+      facts: accessPricingAnswer({ requestText: ownRequestText, manifest }),
       answerMode: 'pricing',
       tripSelector: { candidatesConsidered: linkedVacations.length },
       reasons: ['access_pricing_question', 'current_turn_no_write'],
@@ -1223,10 +1243,12 @@ function currentTurnRouterDecision(job) {
     });
   }
   if (isVacationExistenceQuestion(ownRequestText)) {
+    const existence = existenceReply(vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }));
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.92,
-      answer: vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answer: existence.answer,
+      facts: existence.facts,
       answerMode: linkedVacations.length ? 'account_state' : 'clarify',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['vacation_existence_question', 'current_turn_no_write'],
@@ -1303,9 +1325,8 @@ function currentTurnRouterDecision(job) {
       writeMode: 'none',
       shouldQueueWorker: false,
       confidence: 0.8,
-      answer: linkedVacations.length === 1
-        ? `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}`
-        : 'I need to know which linked vacation website you want.',
+      answer: '',
+      facts: websiteFacts(linkedVacations, fallbackBase),
       answerMode: 'account_state',
       tripSelector: { candidatesConsidered: linkedVacations.length },
       reasons: ['website_link_lookup_no_write'],
@@ -1829,11 +1850,14 @@ function renderCustomerResponse(job, artifacts) {
   const url = text(artifacts.webItineraryUrl || '', 500);
   const requestText = text(job.request_text || job.text || job.message || artifacts.requestText || '', 2000).toLowerCase();
   if (artifacts.supportRouterDecision && artifacts.supportRouterDecision.shouldQueueWorker === false) {
+    if (artifacts.supportRouterDecision.facts) rememberReplyFacts(artifacts, artifacts.supportRouterDecision.facts);
     const answer = text(artifacts.supportRouterDecision.answer, 1800);
     if (answer) return answer.slice(0, 3900);
+    if (artifacts.replyFacts) return '';
   }
   if (url && isWebsiteLinkRequestText(requestText)) {
-    return `Here is the website: ${url}`.slice(0, 3900);
+    rememberReplyFacts(artifacts, { url });
+    return '';
   }
   if (artifacts.clarificationNeeded) {
     return [
@@ -1858,13 +1882,12 @@ function renderCustomerResponse(job, artifacts) {
       })
       .filter(Boolean)
       .slice(0, 8);
+    rememberReplyFacts(artifacts, { url });
     return [
       itemLines.length
         ? 'I updated the vacation website:'
         : 'I updated the vacation website.',
       ...itemLines,
-      '',
-      `Here is the website: ${url}`,
     ].join('\n').slice(0, 3900);
   }
   if (requestType === 'itinerary_research_update' || url) {
@@ -1881,14 +1904,13 @@ function renderCustomerResponse(job, artifacts) {
         url ? `Here is the current website: ${url}` : 'I will send the website link once the next pass is ready.',
       ].join('\n').slice(0, 3900);
     }
+    rememberReplyFacts(artifacts, { url: url || '' });
     return [
       'Your first TimeSyncher Vacation pass is ready.',
       '',
       count
         ? `I researched and organized ${count} source-linked options for the trip, including restaurants, activities, wineries, sightseeing, transportation notes, and open decisions.`
         : 'I organized the details you sent into the vacation website and marked the remaining research areas for the next pass.',
-      '',
-      url ? `Here is the website: ${url}` : 'The website was created, but I could not attach the link in this message. I will retry sending it.',
     ].join('\n').slice(0, 3900);
   }
 
@@ -1987,6 +2009,7 @@ function emitProducerResponse({ manifest, capabilities, job, artifacts, customer
   const turnInspector = buildTurnInspector(job, artifacts, customerResponseText);
   const response = {
     customerResponse: customerResponseText,
+    replyFacts: artifacts.replyFacts || null,
     sharedReply,
     result: {
       handledBy: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
