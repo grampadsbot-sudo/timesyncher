@@ -43,11 +43,11 @@ function build() {
   });
 }
 
-if (!String(process.env.VERCEL_GIT_COMMIT_SHA || '').trim() && !String(process.env.TIMESYNCHER_BUILD_SHA || '').trim()) {
-  process.env.TIMESYNCHER_BUILD_SHA = '0123456789abcdef0123456789abcdef01234567';
-}
+const vercelSha = '0123456789abcdef0123456789abcdef01234567';
+process.env.VERCEL_GIT_COMMIT_SHA = vercelSha;
+delete process.env.TIMESYNCHER_BUILD_SHA;
 const expectedSha = buildSha();
-assert.ok(expectedSha, 'build sha is empty');
+assert.equal(expectedSha, vercelSha);
 
 const htmlEntries = [
   'index.html',
@@ -69,6 +69,13 @@ const htmlEntries = [
 ];
 
 await build();
+
+for (const name of ['vacation-app.html', 'shared-app.html', 'index.html']) {
+  const built = await readFile(path.join(dist, name), 'utf8');
+  const value = stampValue(built);
+  assert.ok(value, `${name} built stamp is empty`);
+  assert.equal(value, expectedSha, `${name} built stamp`);
+}
 
 const storeDir = await mkdtemp(path.join(tmpdir(), 'eula-purchase-'));
 delete process.env.BLOB_READ_WRITE_TOKEN;
@@ -157,12 +164,18 @@ async function get(pathname) {
   };
 }
 
+function stampValue(body) {
+  const meta = body.match(/<meta\b[^>]*\bname="timesyncher-build"[^>]*>/i);
+  const content = meta && meta[0].match(/\bcontent="([^"]*)"/i);
+  const data = body.match(/<html\b[^>]*\bdata-build-sha="([^"]*)"/i);
+  return (content && content[1]) || (data && data[1]) || '';
+}
+
 function assertStamp(result, label) {
   assert.notEqual(result.status, 404, `${label} ${result.body.slice(0, 180)}`);
-  assert.ok(
-    result.body.includes(`name="timesyncher-build" content="${expectedSha}"`),
-    `${label} missing build stamp`,
-  );
+  const value = stampValue(result.body);
+  assert.ok(value, `${label} build stamp is empty`);
+  assert.equal(value, expectedSha, `${label} stamp differs from /api/version`);
 }
 
 try {
