@@ -62,6 +62,7 @@ function assertFixture(fixture, output) {
   const expected = fixture.expect || {};
   const response = String(output.customerResponse || '');
   const decision = output.result?.turnDecision || output.result?.supportRouterDecision || {};
+  const factsBlob = JSON.stringify(output.replyFacts || decision.facts || {});
   if (expected.intent) assert.equal(decision.intent, expected.intent, `${fixture.id} intent`);
   if (expected.write_mode) assert.equal(decision.write_mode || decision.writeMode, expected.write_mode, `${fixture.id} write_mode`);
   if (expected.shouldQueueWorker !== undefined) assert.equal(Boolean(decision.shouldQueueWorker), Boolean(expected.shouldQueueWorker), `${fixture.id} shouldQueueWorker`);
@@ -69,6 +70,9 @@ function assertFixture(fixture, output) {
   if (expected.createNewTrip !== undefined) assert.equal(Boolean(output.result?.createNewTrip), Boolean(expected.createNewTrip), `${fixture.id} createNewTrip`);
   for (const needle of expected.responseIncludes || []) {
     assert.match(response, literalRegex(needle), `${fixture.id} response should include ${needle}\n${response}`);
+  }
+  for (const needle of expected.factsIncludes || []) {
+    assert.match(factsBlob, literalRegex(needle), `${fixture.id} facts should include ${needle}\n${factsBlob}`);
   }
   for (const needle of expected.responseExcludes || []) {
     assert.doesNotMatch(response, literalRegex(needle), `${fixture.id} response should not include ${needle}\n${response}`);

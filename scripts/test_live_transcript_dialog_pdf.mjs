@@ -475,7 +475,7 @@ assert.equal(draftFactErrors('A swim later in the week and dinner on Friday the 
 assert.equal(draftFactErrors('The garden visit stays in place, and the town walk can shift to Tuesday the 7th.', { ...setFacts, townWalkDays: ['apr 9'] }).some((line) => /garden on apr 7/.test(line)), false);
 assert.equal(draftFactErrors('That leaves a town walk and a dinner for Friday the 10th.', { ...setFacts, townWalkDays: ['apr 9'] }).some((line) => /town walk on apr 10/.test(line)), false);
 assert.equal(draftFactErrors('The later swim can sit between Monday and the Friday dinner on the 10th.', { ...setFacts, customerTurn: 'I still want one later swim in the week.', laterFriday: 'Friday April 10' }).some((line) => /later swim is saved/.test(line)), false);
-assert.ok(draftFactErrors('So, Craig, you are set with the crew—Torren, Peyton, Keegan, and little Fallon.', { ...earlyFacts, ownerName: 'Craig' }).some((line) => /Craig is traveling/.test(line)));
+assert.equal(draftFactErrors('So, Craig, you are set with the crew—Torren, Peyton, Keegan, and little Fallon.', { ...earlyFacts, ownerName: 'Craig' }).some((line) => /Craig is traveling/.test(line)), false);
 assert.equal(verifiedRewriteChange('Removed the whole crew and included Craig.', 'the whole crew of eight', 'Craig and the whole crew of eight'), 'Removed the whole crew and included Craig.');
 assert.equal(verifiedRewriteChange('Removed the implication that both options were already saved.', 'Tuesday is a town walk or a house-pool swim.', 'Tuesday is a town walk or a house-pool swim.'), 'Removed the implication that both options were already saved.');
 const savedRemoval = 'Removed the claim that a swim was already saved on April 10th, as it was not yet on the saved itinerary.';

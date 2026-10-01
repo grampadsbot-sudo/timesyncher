@@ -41,7 +41,129 @@ export function onboardingOpenerFacts({ returning = false, tripTitle = '' } = {}
   };
 }
 
-export async function produceOnboardingOpener({ returning = false, tripTitle = '', session = null, env = process.env } = {}) {
+export const ONBOARDING_WELCOME_INSTRUCTION = [
+  'You are writing the first welcome in the TimeSyncher vacation app. The customer has not typed yet. Write it in your own words from the welcome facts. Do not copy this instruction back.',
+  'Audience comes from the facts. Follow only that audience.',
+  'Owner welcome, in this order, as three short paragraphs of about 90 to 150 words. Never a one-line reply.',
+  '1. Warm greeting by firstName, plus a confirmation that they are set up. If firstName is absent, use a warm greeting with no name.',
+  '2. Put the website up front. Their trip already has its own site at tripSiteUrl. Anyone with the link can see plans and photos without signing in. Use the tripSiteUrl fact exactly.',
+  '3. In two or three sentences, say how it works: they describe the trip, and the app builds a day-by-day itinerary on the site, including lodging, each day\'s plans, and notes for each day and place. During the trip, the family adds photos, videos, and stories, and at the end it all becomes a keepsake.',
+  '4. Ask for one long voice note. Ask them to hold the mic and talk for a minute or two about where and when, who is coming, where they are staying, what they are excited about, and what is still undecided. Rough or rambling is fine, and you will follow up on gaps. The voice-note ask is the last sentence. Stop there.',
+  'Collaborator welcome, about 40 to 70 words.',
+  '1. Greet them by collaboratorFirstName and say that ownerFirstName added them to tripTitle. If a name or title is absent, leave it out.',
+  '2. Share tripSiteUrl.',
+  '3. Explain what they can do: add ideas, photos, videos, and notes to any day or place.',
+  '4. Ask one open question about what they are looking forward to, or invite a voice note.',
+  'Tone: warm and plain, like a friendly travel-savvy friend, with contractions. No sales voice. At most one exclamation point. No emoji.',
+  'Do not use these words: Thing, Things, EULA, terms, agreement, seat, tier, account tier, model, Jev. No payments, bookings, or reservation offers. No upsell and no unlimited-plan pitch. Do not push a collaborator invite. If collaborators are in the facts, one short clause that a named person can join is allowed. No bare destination question. Do not invent a place, an example place, or any name that is not in the facts. If plan is in the facts, do not pitch it and do not mention a price. Leave missing facts out.',
+].join('\n');
+
+function welcomeName(value) {
+  const text = String(value || '').trim();
+  return text ? text.split(/\s+/)[0] : '';
+}
+
+export function onboardingWelcomeFacts({
+  audience = 'owner',
+  firstName = '',
+  ownerFirstName = '',
+  collaboratorFirstName = '',
+  tripSiteUrl = '',
+  tripTitle = '',
+  plan = '',
+  collaborators = [],
+} = {}) {
+  const site = String(tripSiteUrl || '').trim();
+  const title = String(tripTitle || '').trim();
+  const people = (Array.isArray(collaborators) ? collaborators : []).map((name) => welcomeName(name)).filter(Boolean);
+  if (audience === 'collaborator') {
+    const facts = { audience: 'collaborator', tripSiteUrl: site };
+    const owner = welcomeName(ownerFirstName);
+    const collaborator = welcomeName(collaboratorFirstName);
+    if (owner) facts.ownerFirstName = owner;
+    if (collaborator) facts.collaboratorFirstName = collaborator;
+    if (title) facts.tripTitle = title;
+    return facts;
+  }
+  const facts = {
+    audience: 'owner',
+    first_message: true,
+    customer_said: null,
+    tripSiteUrl: site,
+  };
+  const name = welcomeName(firstName);
+  if (name) facts.firstName = name;
+  if (title) facts.tripTitle = title;
+  const planName = String(plan || '').trim();
+  if (planName) facts.plan = planName;
+  if (people.length) facts.collaborators = people;
+  return facts;
+}
+
+export function onboardingWelcomePrompt(input = {}) {
+  const facts = onboardingWelcomeFacts(input);
+  return `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+}
+
+const WELCOME_BANNED = /\b(?:Things?|EULA|terms|agreement|Jev)\b|\b(?:seats?|tiers?|models?)\b|\baccount tier\b|\b(?:payments?|bookings?|reservations?)\b|\bunlimited\b/i;
+
+export function validateOnboardingWelcome(text, { audience = 'owner', tripSiteUrl = '', allowedPlaces = [] } = {}) {
+  const value = String(text || '').trim();
+  const errors = [];
+  if (!value) errors.push('empty');
+  const site = String(tripSiteUrl || '').trim();
+  if (site && !value.includes(site)) errors.push('missing_site_url');
+  if (WELCOME_BANNED.test(value)) errors.push('banned_wording');
+  const words = value.split(/\s+/).filter(Boolean);
+  if (audience === 'collaborator') {
+    if (words.length < 40 || words.length > 70) errors.push('length');
+    if (!/voice note|\?/i.test(value)) errors.push('open_question');
+  } else {
+    if (words.length < 90) errors.push('short');
+    const sentences = value.split(/(?<=[.!?])\s+/).map((part) => part.trim()).filter(Boolean);
+    const last = sentences.at(-1) || '';
+    if (!/voice note/i.test(last)) errors.push('voice_note_ask');
+  }
+  const allowed = new Set(['i', 'timesyncher']);
+  const allowBlob = [site, ...allowedPlaces].join(' ');
+  for (const token of allowBlob.match(/[A-Za-z0-9]+/g) || []) allowed.add(token.toLowerCase());
+  for (const sentence of value.split(/(?<=[.!?])\s+/)) {
+    const tokens = sentence.match(/[A-Za-z][A-Za-z'’-]*/g) || [];
+    tokens.forEach((token, index) => {
+      if (index === 0) return;
+      if (token[0] !== token[0].toUpperCase()) return;
+      const bare = token.replace(/['’].*$/, '');
+      if (!allowed.has(bare.toLowerCase())) errors.push(`place:${bare}`);
+    });
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+export async function produceOnboardingOpener({
+  session = null,
+  env = process.env,
+  audience = 'owner',
+  firstName = '',
+  ownerFirstName = '',
+  collaboratorFirstName = '',
+  tripSiteUrl = '',
+  tripTitle = '',
+  plan = '',
+  collaborators = [],
+} = {}) {
+  const facts = onboardingWelcomeFacts({
+    audience,
+    firstName: firstName || (audience === 'owner' ? targetPersonFromSession(session) : ''),
+    ownerFirstName,
+    collaboratorFirstName: collaboratorFirstName || (audience === 'collaborator' ? targetPersonFromSession(session) : ''),
+    tripSiteUrl,
+    tripTitle,
+    plan,
+    collaborators,
+  });
+  if (!facts.tripSiteUrl) {
+    return { reply: null, rules: null, jev: null, model: null, reason: 'onboarding welcome missing tripSiteUrl' };
+  }
   const rules = await loadVacationAppReplyRules(env);
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -59,28 +181,35 @@ export async function produceOnboardingOpener({ returning = false, tripTitle = '
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }
   jev.jevBeforeModel = true;
-  const facts = onboardingOpenerFacts({ returning, tripTitle });
-  const model = await callTieredModel({
-    rules,
-    jev,
-    customerTurn: '',
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    destination: '',
-    memory: [],
-    upsell: 'forbidden',
-    postIntake: false,
-    env,
-    systemExtra: `Opener facts: ${JSON.stringify(facts)}`,
-  });
-  const reply = model?.called && model.text ? String(model.text).trim() : '';
-  if (!reply || appTextBanned(reply)) {
+  const systemExtra = `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+  let model = null;
+  let reply = '';
+  for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
+    model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn: '',
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination: '',
+      memory: [],
+      upsell: 'forbidden',
+      postIntake: false,
+      welcomeTurn: true,
+      env,
+      systemExtra,
+    });
+    reply = model?.called && model.text ? String(model.text).trim() : '';
+    if (appTextBanned(reply)) reply = '';
+  }
+  if (!reply) {
+    const visible = model?.called && model.text ? String(model.text).trim() : '';
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: appTextBanned(reply) || model?.reason || 'onboarding opener model returned no reply',
+      reason: (visible && appTextBanned(visible)) || model?.reason || 'onboarding opener model returned no reply',
     };
   }
   return { reply, rules, jev, model, reason: null };
@@ -268,7 +397,6 @@ export function liveTurnRecord({
   return record;
 }
 
-const UNLIMITED_PHRASE = 'unlimited vacations for the whole year';
 const UNLIMITED_PATTERN = /unlimited vacations for the whole year/i;
 const COLLAB_WELCOME = /welcome\b[^.\n]{0,180}\bcollaborat|\bcollaborat\w*[^.\n]{0,180}(?:add notes|help shape the days|whole household|whole family|unlimited vacations)/i;
 
@@ -445,7 +573,6 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     ...customerInputState(things),
     ...customerInputFields(record),
   };
-  if (record?.askWhichDay === true || things.some((thing) => thing?.askWhichDay === true)) facts.askWhichDay = true;
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
 }
@@ -656,11 +783,6 @@ function mentionsThing(title, sentence) {
   return new RegExp(`\\b${escaped}\\b`, 'i').test(String(sentence || ''));
 }
 
-function swimDayKey(label) {
-  const match = String(label || '').match(/^((?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) [A-Z][a-z]{2,3} \d{1,2})/);
-  return match ? match[1] : '';
-}
-
 function customerNamedWeekday(customerText, weekdayName) {
   if (!weekdayName) return false;
   return new RegExp(`\\b${weekdayName}\\b`, 'i').test(String(customerText || ''));
@@ -705,21 +827,6 @@ function spanStartLabel(span) {
   const start = new Date(`${isoDay(span.start)}T00:00:00Z`);
   if (Number.isNaN(start.getTime())) return '';
   return spanDateLabel(start);
-}
-
-function customerNamedAnyWeekday(customerText) {
-  return /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i.test(String(customerText || ''));
-}
-
-export function swimDayUnset(customerText) {
-  const text = String(customerText || '');
-  if (!/\bswim\b/i.test(text)) return false;
-  return /\blater\b|\bsecond\b|\banother\b|\bstill want\b/i.test(text) && !customerNamedAnyWeekday(text);
-}
-
-function arrivalSwimLabel(label, arrival) {
-  const day = swimDayKey(label);
-  return day === arrival || String(label || '').startsWith(`${arrival} `) || String(label || '') === arrival;
 }
 
 export function applyAgreedAppSwim(things) {
@@ -949,9 +1056,6 @@ export function savedTripFacts(record = {}) {
   const activities = things.map((thing) => String(thing?.title || '').toLowerCase()).filter(Boolean);
   return {
     span,
-    swimDays: [],
-    gardenDays: [],
-    townWalkDays: [],
     owners: {},
     planOwned: record.planOwned === true,
     activities,
@@ -982,30 +1086,8 @@ function calendarMonths() {
   return [...new Set(names)].sort((left, right) => right.length - left.length);
 }
 
-function calendarWords() {
-  const words = new Set();
-  for (const name of calendarMonths()) words.add(name.toLowerCase());
-  for (let day = 0; day < 7; day += 1) {
-    const date = new Date(Date.UTC(2026, 0, 4 + day));
-    words.add(date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase());
-    words.add(date.toLocaleString('en-US', { weekday: 'short', timeZone: 'UTC' }).toLowerCase());
-  }
-  return words;
-}
-
 function monthPattern() {
   return calendarMonths().map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-}
-
-function skippedRosterWord(name) {
-  if (calendarWords().has(String(name || '').toLowerCase())) return true;
-  return /^(with|option|both|which|either|since|that|this|they|your|the|and|for)$/i.test(name);
-}
-
-function rosterNamesIn(text) {
-  return [...String(text || '').matchAll(/\b[A-Z][a-z]{2,}\b/g)]
-    .map((match) => match[0])
-    .filter((name) => !skippedRosterWord(name));
 }
 
 function pushError(errors, line) {
@@ -1034,7 +1116,7 @@ export function draftFactErrors(reply, facts = {}) {
     }
   }
   if (/no extra charge|no extra cost|at no extra/i.test(body)) {
-    pushError(errors, 'no extra is not in what the customer set');
+    pushError(errors, 'no extra charge is not in what the customer set');
   }
   if (/\b(?:we|i)(?:'|’)ve corrected\b|\b(?:we|i) have corrected\b/i.test(body)) {
     pushError(errors, 'the reply invented a correction');
@@ -1043,12 +1125,6 @@ export function draftFactErrors(reply, facts = {}) {
   const ownerFirst = ownerName.split(/\s+/)[0] || '';
   if (ownerFirst) {
     const ownerRe = new RegExp(`\\b${ownerFirst}\\b`, 'i');
-    const crewList = body.match(/\bthe crew\b([\s\S]{0,180})/i);
-    const crewAddressesOwner = crewList && /\bwith you\b|\byou(?:'|’)re\b|\byour\b/i.test(crewList[1]);
-    const rosterNames = crewList ? rosterNamesIn(crewList[1]) : [];
-    if (crewList && !crewAddressesOwner && rosterNames.length >= 2 && !ownerRe.test(crewList[1])) {
-      pushError(errors, `${ownerName} is traveling`);
-    }
     if (!ownerRe.test(body) && /\bjust the crew\b|\bfull party\b|\bwhole crew\b/i.test(body)) {
       pushError(errors, `${ownerName} is traveling`);
     }
@@ -1066,8 +1142,6 @@ export function draftFactErrors(reply, facts = {}) {
     const partyCount = sentence.match(/\bparty of (\d+)\b/i);
     if (partyCount) {
       const claimed = Number(partyCount[1]);
-      const names = new Set(rosterNamesIn(sentence));
-      if (names.size && names.size !== claimed) pushError(errors, `party of ${partyCount[1]} lists ${names.size} people`);
       const savedCount = (facts.travelers || []).filter(Boolean).length;
       if (savedCount && claimed !== savedCount) pushError(errors, `saved party size is ${savedCount}`);
     }
@@ -1554,7 +1628,6 @@ async function loadSavedTripRecord(session, env = process.env) {
           who: thingMeta.who || '',
           whenLabel: thingMeta.whenLabel || '',
           customerWhen: thingMeta.customerWhen || '',
-          askWhichDay: thingMeta.askWhichDay === true,
           notes: thingMeta.notes || [],
           ...(sourceRef ? { sourceRef } : {}),
         };
@@ -1605,7 +1678,6 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     span,
     things,
     party,
-    askWhichDay: things.some((thing) => thing?.askWhichDay === true) || swimDayUnset(customerTurn),
     planOwned: saved?.planOwned === true,
     rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
@@ -1640,7 +1712,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
-  tripFacts.askWhichDay = mergedTrip.askWhichDay === true;
   const seatDollars = Number(suppliedSeatDollars);
   const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
   tripFacts.seatDollars = pricedSeat;
@@ -1655,7 +1726,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     : '';
   const planTable = planLine
     ? {
-      plan_name: 'unlimited vacations for the whole year',
       dollars_per_collaborator_seat: pricedSeat,
       payer_line: planLine,
     }
@@ -1734,7 +1804,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
     const nudge = customerAsksPrice(customerTurn, intent)
       ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
-      : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price, access, or ${UNLIMITED_PHRASE}. Answer the day only.`;
+      : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
@@ -1771,10 +1841,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const savedTripLog = {
     start: tripFacts.span?.start || '',
     end: tripFacts.span?.end || '',
-    swimDays: tripFacts.swimDays || [],
-    gardenDays: tripFacts.gardenDays || [],
     owner: tripFacts.ownerName || '',
-    askWhichDay: tripFacts.askWhichDay === true,
   };
   const baseLog = {
     draftModel,
@@ -1950,7 +2017,6 @@ export function upsellFactsForTurn(customerTurn, facts = {}, intake = false, int
     collaborators: marked,
     access: marked ? ['view', 'edit'] : [],
     emailInvite: marked,
-    planPhrase: 'unlimited vacations for the whole year',
     planOwned: facts.planOwned === true,
     payerLine: price ? payerLineFromDollars(ask, facts.seatDollars, intent?.seats || facts.payerRows) : '',
   };
@@ -2087,12 +2153,12 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
         'Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID).',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
-        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
+        'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
         'Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say "splitting payments" or splitting anything up.',
         'Do not say the unlimited plan is already owned.',
         placeResultExtra(pending?.placeResults),
         pending?.planTable?.payer_line && Number(pending.planTable.dollars_per_collaborator_seat) > 0
-          ? `Plan table: ${pending.planTable.plan_name}. $${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
+          ? `$${pending.planTable.dollars_per_collaborator_seat} per collaborator seat. State this line exactly: ${pending.planTable.payer_line}. Make no coverage claims. Do not say whole group.`
           : '',
       ].filter(Boolean).join(' '),
     });
@@ -2291,8 +2357,6 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     savedTrip: {
       start: facts.span?.start || '',
       end: facts.span?.end || '',
-      swimDays: facts.swimDays || [],
-      gardenDays: facts.gardenDays || [],
       owner: facts.ownerName || '',
     },
     interimReply: pending.interimReply || { text: null, model: null, ms: null },

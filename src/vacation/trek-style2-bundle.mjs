@@ -1,4 +1,3 @@
-
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, stripCannedBundle, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 
@@ -170,25 +169,10 @@ const FLIGHT_FIELDS_PATCH = '(bn(Dt)||ha(Dt).category==="flight"||Dt.category===
 const CAR_FIELDS_NEEDLE = 'Mi(Dt)&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
 const CAR_FIELDS_PATCH = '(Mi(Dt)||ha(Dt).category==="car"||Dt.category==="car")&&n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},children:[n.jsxs("label",{style:Hn,children:["Rental company"';
 
-const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
-const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 
 const PE_EFFECT_NEEDLE = 'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})';
-// Do not close over tsFillOv here. wse() returns the loading branch while P is
-// null, before the later `const tsFillOv=...` runs, so getSharedTrip.then() hit
-// TDZ ("Cannot access 'tsFillOv' before initialization") and .catch() set the
-// expired lock after A(G) had already applied the trip title. ha()/tsPf fill
-// product fields on the post-load render, after those consts exist.
 const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
 
-const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
-const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
-
-const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
-const HH_DETAILS_PATCH = 'value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
-
-const CO_NEEDLE = 'Co=G=>ha(G).longDetails??Fl(G)';
-const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String(G.name||G.title||"")))||{}).longDetails||Fl(G)';
 
 const PRINT_HH_NEEDLE = 'ua=zi(G)?ha(G).happyHourDetails:""';
 const PRINT_HH_PATCH = 'ua=(ha(G).happyHour||zi(G))?(ha(G).happyHourDetails||""):""';
@@ -225,7 +209,24 @@ const DAILY_CARD_NEEDLE = 'return`<article class="thing daily-thing"><div class=
 const DAILY_CARD_PATCH = 'return`<article class="thing daily-thing" data-two-col-card="1" data-happy-hour="${ha(G).happyHour?"1":"0"}"><div class="thing-head">';
 
 const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side / Morningside","Midtown / Central Park South","Times Square / Hell’s Kitchen","Chelsea / Greenwich Village","Greenwich Village / West Village","Downtown / Harbor","Hudson River / Harbor","Airport / Transit","Citywide / Flexible"]';
-const AREA_CHIP_BIG_ISLAND = 'Ya=["Kailua-Kona / Alii Drive","Keauhou / Kahaluu","Waikoloa / Kohala Coast","Waimea / Kamuela","Hilo / Bayfront","Volcano / Hawaii Volcanoes","Captain Cook / Kealakekua","Waipio / Hamakua","Kailua-Kona / Palani","Islandwide / Flexible"]';
+const NYC_AREA_LIST = AREA_CHIP_NYC.slice('Ya='.length);
+const AREA_CHIPS_FROM_SOURCE = '(function(){const key=G=>G?`${G.name?"place":"reservation"}:${G.id||G.place_id||G.title||G.name}`:"";const nb=G=>{if(!G)return"";const ov=le[key(G)]||{};const src=G.source&&typeof G.source==="object"?G.source:(ov.source&&typeof ov.source==="object"?ov.source:{});return String(src.neighborhood||G.neighborhood||ov.neighborhood||"").trim()};const seen=new Set();const chips=[];for(const G of [...(Gt||[]),...(Ut||[])]){const n=nb(G);if(n&&!seen.has(n)){seen.add(n);chips.push(n)}}return chips})()';
+const AREA_FALLBACK_NEEDLE = 'Sn=(G,Re)=>Ke.includes(String(G||""))?String(G):aa(Re)||"Citywide / Flexible"';
+const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();return a&&Ke.includes(a)?a:""}';
+const COORD_NAME_MAP_NEEDLE = 'const Zn=is(G);return Zn||null';
+const COORD_SOURCE_PATCH = 'return null';
+const AREA_NAME_MATCHER = /,aa=G=>\{const Re=Ot\(G\);return[\s\S]*?\},ha=G=>/;
+const AREA_NAME_MATCHER_PATCH = ',aa=()=>"",ha=G=>';
+
+const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
+const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
+const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
+const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
+const HH_DETAILS_PATCH = 'value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
+const CO_NEEDLE = 'Co=G=>ha(G).longDetails??Fl(G)';
+const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String(G.name||G.title||"")))||{}).longDetails||Fl(G)';
+
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
@@ -262,33 +263,28 @@ const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
 const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
-export function patchStyleTwoToConfigRenderer(source = '') {
+export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
+  const served = options.served === true;
   const js = String(source || '');
-  if (!js.includes(ZU_STYLE2)) {
+  if (!js.includes(ZU_STYLE2) && !js.includes(AE_STYLE2)) {
     throw new Error('Refusing to serve TREK bundle: Style two still not the zu() site we patch to Ae().');
   }
-  let patched = js.replace(ZU_STYLE2, AE_STYLE2);
+  let patched = js.includes(ZU_STYLE2) ? js.replace(ZU_STYLE2, AE_STYLE2) : js;
   if (patched.includes(AE_LAYOUT_NEEDLE)) {
     patched = patched.replace(AE_LAYOUT_NEEDLE, AE_LAYOUT_PATCH);
   }
-  // Day-map coordinates stay on the trip thing. Do not append a venue-name geocode table.
-  if (patched.includes(AREA_CHIP_NYC)) {
-    patched = patched.replace(AREA_CHIP_NYC, AREA_CHIP_BIG_ISLAND);
+  if (patched.includes(NYC_AREA_LIST)) {
+    patched = patched.replace(NYC_AREA_LIST, AREA_CHIPS_FROM_SOURCE);
   }
-  const areaRenames = [
-    ['Upper West Side / Lincoln Center', 'Keauhou / Kahaluu'],
-    ['Upper West Side / Morningside', 'Waikoloa / Kohala Coast'],
-    ['Midtown / Central Park South', 'Waimea / Kamuela'],
-    ['Times Square / Hell’s Kitchen', 'Kailua-Kona / Alii Drive'],
-    ["Times Square / Hell's Kitchen", 'Kailua-Kona / Alii Drive'],
-    ['Chelsea / Greenwich Village', 'Hilo / Bayfront'],
-    ['Greenwich Village / West Village', 'Volcano / Hawaii Volcanoes'],
-    ['Downtown / Harbor', 'Captain Cook / Kealakekua'],
-    ['Hudson River / Harbor', 'Waipio / Hamakua'],
-    ['Airport / Transit', 'Kailua-Kona / Palani'],
-    ['Citywide / Flexible', 'Islandwide / Flexible'],
-  ];
-  for (const [from, to] of areaRenames) patched = patched.replaceAll(from, to);
+  if (patched.includes(AREA_FALLBACK_NEEDLE)) {
+    patched = patched.replace(AREA_FALLBACK_NEEDLE, AREA_FALLBACK_PATCH);
+  }
+  if (AREA_NAME_MATCHER.test(patched)) {
+    patched = patched.replace(AREA_NAME_MATCHER, AREA_NAME_MATCHER_PATCH);
+  }
+  if (patched.includes(COORD_NAME_MAP_NEEDLE)) {
+    patched = patched.replace(COORD_NAME_MAP_NEEDLE, COORD_SOURCE_PATCH);
+  }
   if (patched.includes(HC_QR_NEEDLE)) {
     patched = patched.replace(HC_QR_NEEDLE, HC_QR_PATCH);
   }
@@ -352,9 +348,6 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(DAILY_THING_NEEDLE)) {
     patched = patched.replace(DAILY_THING_NEEDLE, DAILY_THING_PATCH);
   }
-  if (patched.includes(HA_NEEDLE)) {
-    patched = patched.replace(HA_NEEDLE, HA_PATCH);
-  }
   if (patched.includes(FLIGHT_ROW_NEEDLE)) {
     patched = patched.replace(FLIGHT_ROW_NEEDLE, FLIGHT_ROW_PATCH);
   }
@@ -367,14 +360,19 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(PE_EFFECT_NEEDLE)) {
     patched = patched.replace(PE_EFFECT_NEEDLE, PE_EFFECT_PATCH);
   }
-  while (patched.includes(HH_CHECK_NEEDLE)) {
-    patched = patched.replace(HH_CHECK_NEEDLE, HH_CHECK_PATCH);
-  }
-  while (patched.includes(HH_DETAILS_NEEDLE)) {
-    patched = patched.replace(HH_DETAILS_NEEDLE, HH_DETAILS_PATCH);
-  }
-  if (patched.includes(CO_NEEDLE)) {
-    patched = patched.replace(CO_NEEDLE, CO_PATCH);
+  if (served) {
+    if (patched.includes(HA_NEEDLE)) {
+      patched = patched.replace(HA_NEEDLE, HA_PATCH);
+    }
+    while (patched.includes(HH_CHECK_NEEDLE)) {
+      patched = patched.replace(HH_CHECK_NEEDLE, HH_CHECK_PATCH);
+    }
+    while (patched.includes(HH_DETAILS_NEEDLE)) {
+      patched = patched.replace(HH_DETAILS_NEEDLE, HH_DETAILS_PATCH);
+    }
+    if (patched.includes(CO_NEEDLE)) {
+      patched = patched.replace(CO_NEEDLE, CO_PATCH);
+    }
   }
   while (patched.includes(PRINT_HH_NEEDLE)) {
     patched = patched.replace(PRINT_HH_NEEDLE, PRINT_HH_PATCH);
@@ -514,18 +512,70 @@ export function patchStyleTwoToConfigRenderer(source = '') {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  return stripTripView(hideUnsourcedRatings(patched));
+  const finished = stripTripView(hideUnsourcedRatings(patched), { gear: !served });
+  return served ? finished : stripMissingPriceLabel(finished);
+}
+
+function stripMissingPriceLabel(source) {
+  return String(source || '')
+    .replace(/(\.match\(\/\\\$\\s\?\\d\[\\d,\]\*\/\)[\s\S]{0,180}?\)\|\|)"[^"]*"/g, '$1""')
+    .replace(/(children:ie\(G\)\|\|)"[^"]*"/g, '$1""');
 }
 
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const js = patchStyleTwoToConfigRenderer(stripped.source);
+  const js = patchStyleTwoToConfigRenderer(stripped.source, { served: true });
   assertServedBundleClean(js);
   return js;
 }
 
-function stripTripView(source) {
-  const js = String(source || '');
+function endOfCall(text, callStart) {
+  const open = text.indexOf('(', callStart);
+  if (open < 0) return -1;
+  let depth = 0;
+  let quote = '';
+  for (let i = open; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === '\\') {
+        i += 1;
+        continue;
+      }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '(') depth += 1;
+    else if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return i + 1;
+    }
+  }
+  return -1;
+}
+
+function stripTripView(source, options = {}) {
+  let js = String(source || '');
+  if (options.gear) {
+    const gearPatch = '"aria-label":"Config Options","aria-expanded":Qe,onClick:()=>{Mt("config"),Ye(!1),Jt(!1),ht(!0),it(!0),Pt(!0)}';
+    const gearNeedle = '"aria-label":"Config Options","aria-expanded":Xe,onClick:()=>{Mt("config"),Ye(G=>!G),ht(!1)}';
+    const gearAt = js.indexOf(gearNeedle);
+    const menuAt = gearAt >= 0 ? js.indexOf(',Xe&&n.jsxs("div"', gearAt) : -1;
+    const menuEnd = menuAt >= 0 ? endOfCall(js, menuAt) : -1;
+    if (gearAt >= 0 && menuEnd >= 0) {
+      js = js.slice(0, gearAt) + gearPatch + js.slice(gearAt + gearNeedle.length, menuAt) + js.slice(menuEnd);
+    } else if (!js.includes(gearPatch)) {
+      const headerMenu = 'n.jsxs("div",{"data-print-menu-root":!0';
+      const headerAt = js.indexOf(headerMenu);
+      if (headerAt >= 0) {
+        const gearButton = `n.jsx("button",{${gearPatch},style:{minWidth:30,height:30},children:"Config"}),`;
+        js = js.slice(0, headerAt) + gearButton + js.slice(headerAt);
+      }
+    }
+  }
   const start = js.indexOf('n.jsxs("div",{"data-trip-view-root":!0');
   if (start < 0) return js;
   const print = js.indexOf('n.jsxs("div",{"data-print-menu-root":!0', start);
@@ -692,23 +742,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
     throw new Error('Style two live tab empty-state pad check did not apply.');
   }
-  if (!js.includes('tsFillOv=') || !js.includes('ha=G=>tsFillOv(le[Qt(G)]||{},G)')) {
-    throw new Error('Style two ha() product-field fill did not apply.');
+  if (js.includes('tsPf=') && !js.includes('tsPf=[]')) {
+    throw new Error('Style two must keep sourced thing fields and must not inject a name-matched summary or happy-hour map.');
   }
-  if (!js.includes('names.some(n=>row.match.test(n))')) {
-    throw new Error('Style two ha() must match thing.name, not only override title.');
-  }
-  if (!js.includes(PE_EFFECT_PATCH) || js.includes(PE_EFFECT_NEEDLE) || js.includes('typeof tsFillOv==="function"')) {
-    throw new Error('Style two live pe() hydrate must apply without closing over tsFillOv (wse TDZ expired lock).');
-  }
-  if (js.includes(HH_CHECK_NEEDLE) || !js.includes(HH_CHECK_PATCH)) {
-    throw new Error('Style two live Happy hour checkbox product match did not apply.');
-  }
-  if (js.includes(HH_DETAILS_NEEDLE) || !js.includes(HH_DETAILS_PATCH)) {
-    throw new Error('Style two live Happy hour details product match did not apply.');
-  }
-  if (js.includes(CO_NEEDLE) || !js.includes(CO_PATCH)) {
-    throw new Error('Style two live Details longDetails product match did not apply.');
+  if (!js.includes(PE_EFFECT_PATCH) || js.includes(PE_EFFECT_NEEDLE)) {
+    throw new Error('Style two live pe() hydrate must apply the saved thingOverrides.');
   }
   if (js.includes(PRINT_HH_NEEDLE) || !js.includes(PRINT_HH_PATCH)) {
     throw new Error('Style two print Happy Hour Details must follow ha() product fill.');
@@ -731,8 +769,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-print-media-ready') || !js.includes('b.size===3071') || !js.includes('bmp.width===1024')) {
     throw new Error('_se() must inline bound JPEG bytes and drop TREK 1024² 3071B stub canvases.');
   }
-  if (!js.includes('img.tiny-logo,img.thing-logo') || !js.includes('data-logo-inlined') || !js.includes('/ts-thing-logos\\/')) {
-    throw new Error('Print _se() must inline /ts-thing-logos tiny-logo SVG bytes (not the 4096B photo size kill).');
+  if (!js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('Print list logos must use the source logo URL or stay empty.');
   }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');
@@ -752,7 +790,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-happy-hour="${ha(G).happyHour?"1":"0"}"')) {
     throw new Error('Style two op() happy-hour card marker did not apply.');
   }
-  if (!js.includes('longDetails') || !js.includes('tsPf=[]')) {
+  if (!js.includes('longDetails')) {
     throw new Error('Style two ha() must keep trip longDetails and must not embed a venue catalog.');
   }
   if (!js.includes('data-end-continuous="1"') || !js.includes('padding-top:18mm') || !js.includes('tsMapsOn=Qa.some(so)')) {
@@ -923,8 +961,17 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('[data-end-continuous] .map-box') || !js.includes('.style2-cover')) {
     throw new Error('_se() must strip end-list maps and leftover zu() style2-cover.');
   }
-  if (js.includes('Times Square') || js.includes(AREA_CHIP_NYC)) {
-    throw new Error('Area chips must be Big Island places, not Times Square.');
+  if (js.includes(NYC_AREA_LIST) || js.includes('Times Square')) {
+    throw new Error('Area chips must come from each Thing source neighborhood, not a fixed city list.');
+  }
+  if (js.includes(AREA_FALLBACK_NEEDLE)) {
+    throw new Error('Area assignment must read the Thing source neighborhood.');
+  }
+  if (js.includes('[/bellagio|conservatory/i,') || js.includes('[/las vegas strip|las vegas/i,')) {
+    throw new Error('Map pins must use Thing source coordinates, not a venue-name coordinate list.');
+  }
+  if (/children:ie\(G\)\|\|"[^"]/.test(js)) {
+    throw new Error('A missing rental price must render blank.');
   }
   if (js.includes('||"Airline"') && (js.includes(FLIGHT_ROW_NEEDLE) || !js.includes(FLIGHT_ROW_PATCH))) {
     throw new Error('Flight list rows must show the full thing name.');
@@ -934,9 +981,6 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (js.includes('children:["Rental company"') && !js.includes(CAR_FIELDS_PATCH)) {
     throw new Error('Open car detail must render Rental company and Car type for a car thing.');
-  }
-  if (js.includes('Ya=["') && !js.includes('Kailua-Kona / Alii Drive')) {
-    throw new Error('Area chips must list Kailua-Kona / Alii Drive.');
   }
   return true;
 }

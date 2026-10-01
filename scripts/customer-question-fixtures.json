@@ -162,13 +162,14 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Yes, I found",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation"
         ]
       }
     },
@@ -382,13 +383,15 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -422,13 +425,7 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "$15",
-          "$5",
-          "$17",
-          "one active Telegram collaborator",
-          "Add-on checkout link: https://vacation-staging.timesyncher.com/addons-checkout.html"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I need a little more direction",
           "To start a new vacation",
@@ -438,6 +435,14 @@
           "pricing lookup",
           "not changing anything",
           "not an instruction"
+        ],
+        "factsIncludes": [
+          "\"person\":\"your wife\"",
+          "\"scope\":\"single_trip\"",
+          "\"telegramUsd\":15",
+          "\"photoUsd\":5",
+          "\"videoUsd\":17",
+          "\"collaboratorSeats\":1"
         ]
       }
     },
@@ -667,13 +672,7 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Kim",
-          "$15",
-          "$5",
-          "one active Telegram collaborator",
-          "Add-on checkout link: https://vacation-staging.timesyncher.com/addons-checkout.html"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I need a little more direction",
           "To start a new vacation",
@@ -682,6 +681,14 @@
           "pricing lookup",
           "not changing anything",
           "not an instruction"
+        ],
+        "factsIncludes": [
+          "\"person\":\"that person\"",
+          "\"scope\":\"single_trip\"",
+          "\"telegramUsd\":15",
+          "\"photoUsd\":5",
+          "\"videoUsd\":17",
+          "\"collaboratorSeats\":1"
         ]
       }
     },
@@ -5920,14 +5927,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -5941,14 +5950,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -5962,14 +5973,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -6025,14 +6038,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -6046,14 +6061,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -6067,14 +6084,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -6088,14 +6107,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -6130,14 +6151,16 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Here is the website",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass",
           "I need a direct instruction"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation",
+          "\"linkedVacationCount\":1"
         ]
       }
     },
@@ -6172,13 +6195,14 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Yes, I found",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation"
         ]
       }
     },
@@ -6192,13 +6216,14 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Yes, I found",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation"
         ]
       }
     },
@@ -6212,13 +6237,14 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Yes, I found",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation"
         ]
       }
     },
@@ -6312,13 +6338,14 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Yes, I found",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation"
         ]
       }
     },
@@ -6352,13 +6379,14 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Yes, I found",
-          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I am updating",
           "first TimeSyncher Vacation pass"
+        ],
+        "factsIncludes": [
+          "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+          "Las Vegas Strip Vacation"
         ]
       }
     },
@@ -6988,15 +7016,7 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Kim",
-          "$27",
-          "unlimited vacations for the whole year",
-          "$9",
-          "Video upload access across all vacations is $27",
-          "https://vacation-staging.timesyncher.com/addons-checkout.html",
-          "one active Telegram collaborator"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I need a little more direction",
           "To start a new vacation",
@@ -7006,6 +7026,14 @@
           "pricing lookup",
           "not changing anything",
           "not an instruction"
+        ],
+        "factsIncludes": [
+          "\"person\":\"your wife\"",
+          "\"scope\":\"unlimited_trips\"",
+          "\"telegramUsd\":27",
+          "\"photoUsd\":9",
+          "\"videoUsd\":27",
+          "\"collaboratorSeats\":1"
         ]
       }
     },
@@ -7019,15 +7047,7 @@
         "shouldQueueWorker": false,
         "editApplied": false,
         "createNewTrip": false,
-        "responseIncludes": [
-          "Kim",
-          "$15",
-          "one vacation",
-          "$5",
-          "$17",
-          "https://vacation-staging.timesyncher.com/addons-checkout.html",
-          "one active Telegram collaborator"
-        ],
+        "responseIncludes": [],
         "responseExcludes": [
           "I need a little more direction",
           "To start a new vacation",
@@ -7036,6 +7056,14 @@
           "pricing lookup",
           "not changing anything",
           "not an instruction"
+        ],
+        "factsIncludes": [
+          "\"person\":\"that person\"",
+          "\"scope\":\"single_trip\"",
+          "\"telegramUsd\":15",
+          "\"photoUsd\":5",
+          "\"videoUsd\":17",
+          "\"collaboratorSeats\":1"
         ]
       }
     }

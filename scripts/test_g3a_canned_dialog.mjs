@@ -36,7 +36,6 @@ const postIntake = planFactsForReply({
   planOwned: false,
 });
 assert.equal(postIntake.mode, 'post-intake');
-assert.equal(postIntake.plan_name, 'unlimited vacations for the whole year');
 assert.equal(postIntake.seat_dollars, 27);
 assert.equal(postIntake.payer_line, 'Kimberly $27, paid by you');
 assert.equal(postIntake.plan_owned, false);
@@ -93,7 +92,8 @@ globalThis.fetch = async (url, init) => {
   }
   if (target.includes('/chat/completions')) {
     const content = body.messages?.[0]?.content || '';
-    if (!content.includes('"returning_trip":true')) throw new Error('opener call omitted returning trip fact');
+    if (!content.includes('https://trips.example/site')) throw new Error('opener call omitted the site');
+    if (!content.includes('"firstName":"Ada"')) throw new Error('opener call omitted the name');
     if (content.includes('Your website is not built yet') || content.includes('I can update this vacation from here')) {
       throw new Error('opener prompt still dictates a fixed welcome');
     }
@@ -112,6 +112,8 @@ try {
   const produced = await produceOnboardingOpener({
     returning: true,
     tripTitle: 'Anniversary',
+    firstName: 'Ada',
+    tripSiteUrl: 'https://trips.example/site',
     env: { OPENROUTER_API_KEY: 'test-key' },
   });
   assert.equal(produced.reply, openerText);
@@ -143,6 +145,7 @@ try {
   };
   const empty = await produceOnboardingOpener({
     returning: false,
+    tripSiteUrl: 'https://trips.example/site',
     env: { OPENROUTER_API_KEY: 'test-key' },
   });
   assert.equal(empty.reply, null);

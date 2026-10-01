@@ -1,0 +1,10 @@
+{"id":"where","state":{"current_turn":"We want the north coast, not the city."},"expect":{"tag_destination":{"min":0.55,"max":1}}}
+{"id":"when","state":{"current_turn":"We leave on the third and come back on the twelfth."},"expect":{"tag_dates":{"min":0.55,"max":1}}}
+{"id":"who","state":{"current_turn":"Two adults and two kids are coming."},"expect":{"tag_travelers":{"min":0.55,"max":1}}}
+{"id":"budget","state":{"current_turn":"Keep it modest, no luxury hotels."},"expect":{"tag_budget":{"min":0.55,"max":1}}}
+{"id":"food","state":{"current_turn":"We want a fish dinner one night."},"expect":{"tag_restaurants_food":{"min":0.55,"max":1}}}
+{"id":"stay","state":{"current_turn":"The house is already picked."},"expect":{"tag_lodging":{"min":0.55,"max":1}}}
+{"id":"ride","state":{"current_turn":"No rental car. We want a shuttle."},"expect":{"tag_cars_transport":{"min":0.55,"max":1}}}
+{"id":"photo","state":{"current_turn":"Can I upload photos after the trip?"},"expect":{"tag_media_upload":{"min":0.55,"max":1}}}
+{"id":"collab","state":{"current_turn":"Can Blair edit notes too?"},"expect":{"tag_collaborator_access":{"min":0.55,"max":1}}}
+{"id":"link","state":{"current_turn":"Send me the vacation website link."},"expect":{"tag_website_link":{"min":0.55,"max":1}}}

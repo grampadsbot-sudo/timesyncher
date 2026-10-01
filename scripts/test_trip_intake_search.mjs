@@ -88,39 +88,25 @@ const research = await runPublicResearch({
   artifacts: { destination: 'Lisbon', requestText },
   env: {
     BRAVE_SEARCH_API_KEY: 'brave-test-key',
-    FOURSQUARE_SERVICE_KEY: 'fsq-test-key',
     TAVILI_API_KEY: 'tavily-test-key',
     OPENROUTER_API_KEY: 'test-openrouter-key',
   },
   priorPlaces: [],
   fetchImpl: async (url, options) => {
     const value = String(url);
-    searchCalls.push(value);
+    const hostname = new URL(value).hostname;
+    searchCalls.push({ url: value, hostname });
+    const allowedHosts = new Set([
+      'overpass-api.de',
+      'api.search.brave.com',
+      'openrouter.ai',
+      'nominatim.openstreetmap.org',
+      'api.tavily.com',
+    ]);
+    if (!allowedHosts.has(hostname)) throw new Error(`unexpected host ${hostname}`);
     if (value.includes('googleapis') || value.includes('places.google')) throw new Error(`google places ${value}`);
     if (value.includes('nominatim.openstreetmap.org')) {
       return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon, Portugal' }]);
-    }
-    if (value.includes('places-api.foursquare.com') && value.includes('query=restaurant')) {
-      return jsonResponse({
-        results: [{
-          fsq_place_id: 'fsq-harbor',
-          name: 'Harbor Cafe',
-          latitude: 38.7225,
-          longitude: -9.1395,
-          location: { formatted_address: '1 Dock' },
-        }],
-      });
-    }
-    if (value.includes('places-api.foursquare.com') && value.includes('query=store')) {
-      return jsonResponse({
-        results: [{
-          fsq_place_id: 'fsq-paper',
-          name: 'Paper Shop',
-          latitude: 38.71,
-          longitude: -9.15,
-          location: { formatted_address: '3 Paper Street' },
-        }],
-      });
     }
     if (value.includes('overpass-api.de')) {
       return jsonResponse({
@@ -163,13 +149,18 @@ assert.equal(research.status, 'live_place_search');
 assert.equal(research.provider, 'place-search');
 assert.equal(research.intakeEvent.kind, 'trip_intake');
 assert.deepEqual(research.wantedThings.map((thing) => thing.name), ['restaurant', 'store', 'morning flight']);
-assert.equal(searchCalls.some((url) => url.includes('nominatim')), true);
-assert.equal(searchCalls.some((url) => url.includes('places-api.foursquare.com')), true);
-assert.equal(searchCalls.some((url) => url.includes('api.search.brave.com')), true);
-assert.equal(searchCalls.some((url) => url.includes('api.tavily.com')), true);
-assert.equal(searchCalls.some((url) => /googleapis|places\.google/.test(url)), false);
+assert.deepEqual([...new Set(searchCalls.map((call) => call.hostname))].sort(), [
+  'api.search.brave.com',
+  'api.tavily.com',
+  'nominatim.openstreetmap.org',
+  'openrouter.ai',
+  'overpass-api.de',
+]);
+assert.equal(searchCalls.some((call) => call.url.includes('nominatim')), true);
+assert.equal(searchCalls.some((call) => call.url.includes('api.search.brave.com')), true);
+assert.equal(searchCalls.some((call) => call.url.includes('api.tavily.com')), true);
+assert.equal(searchCalls.some((call) => /googleapis|places\.google/.test(call.url)), false);
 const sources = research.things.map((thing) => thing.source);
-assert.equal(sources.includes('foursquare_os'), true);
 assert.equal(sources.includes('osm'), true);
 assert.equal(sources.includes('brave'), true);
 assert.equal(sources.includes('tavily'), true);

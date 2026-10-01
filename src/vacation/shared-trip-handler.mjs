@@ -111,8 +111,13 @@ export default async function handler(req, res) {
   }
 
   const shared = await upstream.json().catch(() => null);
-  if (!shared || typeof shared !== 'object') {
-    return sendJson(res, upstream.status, shared || { ok: false, error: 'Upstream shared trip failed.' });
+  // An unknown token is an error payload, not a trip. Do not pad it with catalog Things.
+  if (!shared || typeof shared !== 'object' || !shared.trip || Number(upstream.status) >= 400) {
+    const status = Number(upstream.status) >= 400 ? upstream.status : 404;
+    const error = shared && typeof shared === 'object' && shared.error
+      ? shared.error
+      : 'Invalid or expired link';
+    return sendJson(res, status, { error });
   }
 
   const bindings = shareToken ? await listBindings(shareToken, process.env) : [];

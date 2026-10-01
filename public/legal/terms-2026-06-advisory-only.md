@@ -1,6 +1,5 @@
 # TimeSyncher Terms and Privacy Acknowledgment
 
-Status: product/legal workbench language, not final legal advice. Before customer-facing use, IBE Inc. should have counsel review it.
 
 ## Purpose
 

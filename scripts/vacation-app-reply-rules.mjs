@@ -390,7 +390,7 @@ function decisionsPayload(context) {
         instructions: 'Which vacation-app reply route should the generator follow?',
         criteria: {
           itinerary_advice: 'Day-by-day plan, weather backup, activities, or where to go.',
-          notes_where: 'Customer wants to save a note. Day is required and place is optional.',
+          notes_where: 'Customer wants to save a note. Day is required and place is optional. Never say Thing.',
           access_pricing: 'The customer asked about price, access, or joining as collaborators. Not a day plan that only names family.',
           collab_upsell: 'The one collab assessment, only when the customer asked to join and it has not been given. Do not use this for day advice.',
           product_boundary: 'Reservations, payments, split-payer, or other language the reply rules ban.',
@@ -550,7 +550,6 @@ function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, 
     rules_slug: rules?.slug || REPLY_RULES_SLUG,
     rules: {
       smoke_bar_id: rules?.smoke_bar_id || null,
-      access_pricing_language: rules?.access_pricing_language || null,
       notes_where: rules?.notes_where || null,
     },
     jev: {
@@ -575,8 +574,7 @@ export function sourcedPlaceRule() {
   return 'Name a place only when this turn has a sourceRef, and cite sourceRef.id as (id:THAT_ID). Do not name a place that has no sourceRef id.';
 }
 
-export function planFactsForReply({ rules, upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
-  const phrase = rules?.access_pricing_language || 'unlimited vacations for the whole year';
+export function planFactsForReply({ upsell, postIntake = false, planLine = '', seatDollars = 0, planOwned = false, priceAsk = false } = {}) {
   const dollars = Number(seatDollars);
   let mode = 'forbidden';
   if (postIntake) mode = 'post-intake';
@@ -584,7 +582,6 @@ export function planFactsForReply({ rules, upsell, postIntake = false, planLine 
   else if (priceAsk) mode = 'price';
   return {
     mode,
-    plan_name: phrase,
     seat_dollars: Number.isFinite(dollars) && dollars > 0 ? dollars : null,
     payer_line: String(planLine || '').trim() || null,
     plan_owned: planOwned === true,
@@ -636,7 +633,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
-    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}).`,
+    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     postIntake
@@ -649,7 +646,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Do not insert a welcome the customer did not ask for.',
     seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
     'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
-    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
+    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
     'You know only what the customer said in chat and what is in the saved trip record. Ask the customer for anything they haven\'t said. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
     'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
     'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
@@ -662,7 +659,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'When the customer asks for two options on a day, offer only activities already saved on that day or named in the question. Do not repeat a paragraph.',
     'Do not invent an activity the customer did not name.',
     'Write plain sentences. Do not use markdown asterisks.',
-    'Do not say the customer already has unlimited vacations. Do not say you are setting that plan up. Do not say you also have unlimited vacations. Do not say a plan covers people the customer did not name as covered.',
+    'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     hasCustomerInput ? 'The saved trip record lists customer input that is still needed. Ask for that in your own words.' : '',
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
@@ -837,7 +834,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -864,6 +861,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     seatDollars,
     seat,
     planOwned,
+    welcomeTurn,
   });
 }
 
@@ -893,7 +891,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -921,7 +919,12 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         messages: [
-          { role: 'system', content: `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}` },
+          {
+            role: 'system',
+            content: welcomeTurn
+              ? String(systemExtra || '')
+              : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
+          },
           { role: 'user', content: JSON.stringify(request) },
         ],
       }),
