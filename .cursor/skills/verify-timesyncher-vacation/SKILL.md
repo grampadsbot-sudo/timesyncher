@@ -5,7 +5,7 @@ description: "Re-runnable TimeSyncher Vacation verification. Drives the real sha
 
 # Verify TimeSyncher Vacation
 
-The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
+The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: the staging shared trip for `testTripSlug` in `verify-config.json` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
 
 Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path. After a trip has a shared site, the app iframe is that real itinerary.
 

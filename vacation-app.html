@@ -394,7 +394,7 @@
     }
     .eula-screen p { color: var(--muted); margin: 0 0 14px; line-height: 1.45; }
     .eula-text {
-      white-space: pre-wrap;
+      white-space: normal;
       max-height: min(46vh, 420px);
       overflow: auto;
       border: 1px solid var(--line);
@@ -403,6 +403,20 @@
       padding: 14px;
       line-height: 1.45;
     }
+    .eula-text h1,
+    .eula-text h2,
+    .eula-text h3 {
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .eula-text h1 { font-size: 20px; margin: 0 0 10px; }
+    .eula-text h2 { font-size: 16px; margin: 16px 0 6px; }
+    .eula-text h3 { font-size: 15px; margin: 14px 0 6px; }
+    .eula-text p { margin: 0 0 10px; }
+    .eula-text ul,
+    .eula-text ol { margin: 0 0 10px; padding-left: 1.25em; }
+    .eula-text li { margin: 0 0 4px; }
+    .eula-text :last-child { margin-bottom: 0; }
     .eula-form {
       display: grid;
       gap: 12px;
@@ -440,6 +454,7 @@
 <body>
   <div id="root"></div>
   <script type="module">
+    import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
     let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
@@ -490,7 +505,6 @@
       if (!title) return true;
       const key = title.toLowerCase();
       if (PLACEHOLDER_TITLES.has(key)) return true;
-      if (key === 'vegas anniversary' && !hasPlan) return true;
       if (String(trip.status || '').toLowerCase() === 'onboarding' && !String(trip.destination || '').trim() && !realSiteUrl(trip.publicUrl)) return true;
       return false;
     }
@@ -556,7 +570,7 @@
         <section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy">
           <h1>Review Terms &amp; Privacy</h1>
           <p>These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.</p>
-          <div class="eula-text" id="eulaText">${safe(eula.text || 'Terms are not ready yet. Open the link from your purchase email again in a moment.')}</div>
+          <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe('Terms are not ready yet. Open the link from your purchase email again in a moment.')}</div>
           <form class="eula-form" id="eulaForm">
             <label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label>
             <label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label>

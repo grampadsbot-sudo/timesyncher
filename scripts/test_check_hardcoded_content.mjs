@@ -642,9 +642,9 @@ const placesVersion = fs.readFileSync(path.join(repo, 'src/vacation/place-search
 assert.equal(scanText('src/vacation/place-search.mjs', placesVersion).some((finding) => finding.symbol_or_pattern === '2025-06-17'), false);
 const apiVersionFile = 'src/vacation/api-version-header.mjs';
 const apiVersionText = [
-  "const headers = { 'X-Places-Api-Version': '2025-06-17' };",
-  "headers.set(\"x-places-api-version\", '2025-06-17');",
-  "const pairs = [['X-Places-Api-Version', '2025-06-17']];",
+  "const headers = { 'X-Catalog-Api-Version': '2025-06-17' };",
+  "headers.set(\"x-catalog-api-version\", '2025-06-17');",
+  "const pairs = [['X-Catalog-Api-Version', '2025-06-17']];",
 ].join('\n');
 assert.deepEqual(scanText(apiVersionFile, apiVersionText).filter((finding) => finding.rule === 'DATE-LITERAL'), []);
 const apiVersionDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-api-version-'));
@@ -668,7 +668,7 @@ assert.deepEqual(
 const nearFile = 'src/vacation/api-version-neighbor.mjs';
 const nearText = [
   'const headers = {',
-  "  'X-Places-Api-Version': '2025-06-17',",
+  "  'X-Catalog-Api-Version': '2025-06-17',",
   "  startDate: '2025-06-17',",
   '};',
   '',

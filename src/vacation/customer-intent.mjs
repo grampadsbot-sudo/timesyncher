@@ -44,7 +44,7 @@ async function askModelJson(instructions, state, { fetchImpl = fetch, env = proc
 
 export async function customerIntent(text, options) {
   const body = await askModelJson(
-    'asksPrice, asksAccess, and pullsAccess are true only when the turn asks that. seats is {name, payer} only when the turn says who pays. Otherwise false or []. ask is true when you cannot tell.',
+    'asksPrice, asksAccess, and pullsAccess are true only when the turn asks that. Otherwise false or []. ask is true when you cannot tell.',
     { customerTurn: String(text || '').slice(0, 4000) },
     options,
   );
