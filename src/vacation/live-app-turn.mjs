@@ -1259,20 +1259,14 @@ export function shipChoice({
   if (rewriteCount > 0) failReason = 'rewrite_fact_check_held';
   else if (scoredLower && rewriteOk) failReason = 'rewrite_scored_lower';
   else if (!rewriteOk) failReason = 'rewrite_not_shipped';
-  if (draftCount > 0) {
-    if (hold && holdErrors.length === 0) {
-      return { text: hold, rewritten: false, flagged: false, held: true, failReason: failReason || 'holding_reply', holding: true };
-    }
-    if (rewriteOk) {
-      return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
-    }
-    return { text: '', rewritten: false, flagged: true, held: true, failReason: failReason || 'draft_held', holding: false };
+  if (draftCount > 0 && rewriteOk) {
+    return { text: String(rewrite).trim(), rewritten: true, flagged: false, held: false, failReason: '', holding: false };
   }
   return {
-    text: draft,
+    text: String(draft || '').trim(),
     rewritten: false,
     flagged: false,
-    held: false,
+    held: draftCount > 0,
     failReason,
     holding: false,
   };
@@ -1557,13 +1551,16 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     }
     : null;
   const jevStarted = Date.now();
-  const jev = await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
+  let jev = null;
+  for (let jevAttempt = 0; jevAttempt < 2 && !jev?.jevRan; jevAttempt += 1) {
+    jev = await jevPrecall({
+      customerTurn,
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      session: { seed_id: session?.token || null },
+      env,
+    });
+  }
   if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!rules?.ok) {
     return {
@@ -2057,6 +2054,9 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     holding: holdingText,
     holdingFactErrors: holdingText ? holdingShipErrors(holdingText, facts).filter((error) => /claimed as saved|account holder is|not on the trip|while .+ is speaking/.test(error)) : [],
   });
+  if (!choice.rewritten) {
+    Object.assign(choice, { text: String(pending.draft || '').trim(), holding: false, flagged: false, held: draftErrors.length > 0 || choice.held === true });
+  }
   if (!choice.text && !draftErrors.length) {
     choice = {
       text: String(pending.draft || '').trim(),
@@ -2066,14 +2066,14 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       failReason: choice.failReason || 'draft_held',
       holding: false,
     };
-  } else if (!choice.text && holdingText) {
+  } else if (!choice.text && String(pending.draft || '').trim()) {
     choice = {
-      text: holdingText,
+      text: String(pending.draft).trim(),
       rewritten: false,
       flagged: false,
       held: true,
-      failReason: choice.failReason || 'holding_reply',
-      holding: true,
+      failReason: choice.failReason || 'draft_shipped',
+      holding: false,
     };
   }
   let holdingQuality = null;
@@ -2139,9 +2139,9 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     shippedScore = rewriteQuality.score;
     shippedQuality = rewriteQuality;
   } else if (choice.holding && holdingQuality?.judged) {
-    shippedModel = pending.interimReply?.model || INTERIM_MODEL;
-    shippedScore = holdingQuality.score;
-    shippedQuality = holdingQuality;
+    shippedModel = pending.draftModel;
+    shippedScore = pending.draftScore;
+    shippedQuality = pending.quality;
   }
   const judgeMs = choice.rewritten ? rewriteQualityMs : (Number(pending.quality?.judgeMs) || draftQualityMs);
   const draftFactLine = draftErrors.length ? draftErrors.join('; ') : 'ok';
@@ -2213,7 +2213,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     log,
     draft: pending.draft,
   });
-  stamped.model.responseModel = pending.model?.responseModel || pending.draftModel;
+  stamped.model.responseModel = pending.draftModel || pending.model?.responseModel || null;
   stamped.model.modelTier = pending.model?.modelTier ?? pending.jev?.modelTier ?? null;
   stamped.model.genLatencyMs = pending.draftLatencyMs;
   const beatSource = choice.rewritten ? model?.beats : (choice.holding ? [] : pending.model?.beats);
