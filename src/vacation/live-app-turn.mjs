@@ -101,7 +101,7 @@ export function onboardingWelcomeFacts({
 
 export function onboardingWelcomePrompt(input = {}) {
   const facts = onboardingWelcomeFacts(input);
-  return `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+  return `${ONBOARDING_WELCOME_INSTRUCTION.replace(', tier, account tier, model, Jev', '')}\n\nWelcome facts: ${JSON.stringify(facts)}`;
 }
 
 const WELCOME_BANNED = /\b(?:Things?|EULA|terms|agreement|Jev)\b|\b(?:seats?|tiers?|models?)\b|\baccount tier\b|\b(?:payments?|bookings?|reservations?)\b|\bunlimited\b/i;
@@ -180,7 +180,7 @@ export async function produceOnboardingOpener({
     return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
   }
   jev.jevBeforeModel = true;
-  const systemExtra = `${ONBOARDING_WELCOME_INSTRUCTION}\n\nWelcome facts: ${JSON.stringify(facts)}`;
+  const systemExtra = onboardingWelcomePrompt({ audience, firstName: facts.firstName || '', ownerFirstName: facts.ownerFirstName || '', collaboratorFirstName: facts.collaboratorFirstName || '', tripSiteUrl: facts.tripSiteUrl, tripTitle: facts.tripTitle || '', plan: facts.plan || '', collaborators: facts.collaborators || [] });
   let model = null;
   let reply = '';
   for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
@@ -194,7 +194,7 @@ export async function produceOnboardingOpener({
       memory: [],
       upsell: 'forbidden',
       postIntake: false,
-      welcomeTurn: true,
+      welcomeTurn: true, replyFacts: facts,
       env,
       systemExtra,
     });

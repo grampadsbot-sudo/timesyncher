@@ -902,7 +902,8 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
   const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
-  const userContent = intakeReplyTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
+  const userContent = intakeReplyTurn || welcomeTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
+  const genStarted = Date.now();
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -947,7 +948,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     }
     const visible = splitBeat(answer);
     if (!visible.text) return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900 };
+    return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted) };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
   }

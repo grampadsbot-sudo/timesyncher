@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { bakeoffTierModels } from './vacation-app-reply-rules.mjs';
 import {
   ONBOARDING_WELCOME_INSTRUCTION,
+  liveTurnRecord,
   onboardingWelcomeFacts,
   onboardingWelcomePrompt,
   produceOnboardingOpener,
@@ -71,6 +73,14 @@ assert.equal(collabFacts.ownerFirstName, 'Sam');
 assert.equal(collabFacts.collaboratorFirstName, 'Ada');
 assert.equal(collabFacts.tripSiteUrl, site);
 
+const tiers = bakeoffTierModels();
+assert.deepEqual(Object.values(tiers), [
+  'google/gemini-2.5-flash-lite',
+  'qwen/qwen3-235b-a22b-2507',
+  'deepseek/deepseek-v3.2',
+  'qwen/qwen3-max',
+]);
+const leakWord = /\b(?:tier|route|model|jev)\b/i;
 const ownerPrompt = onboardingWelcomePrompt({
   firstName: 'Ada',
   tripSiteUrl: site,
@@ -78,9 +88,11 @@ const ownerPrompt = onboardingWelcomePrompt({
   plan: 'single',
   collaborators: ['Sam'],
 });
-assert.match(ownerPrompt, new RegExp(ONBOARDING_WELCOME_INSTRUCTION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+assert.match(ONBOARDING_WELCOME_INSTRUCTION, /, tier, account tier, model, Jev/);
+assert.match(ownerPrompt, /You are writing the first welcome/);
 assert.match(ownerPrompt, new RegExp(site.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.match(ownerPrompt, /"firstName":"Ada"/);
+assert.doesNotMatch(ownerPrompt, leakWord);
 assert.doesNotMatch(ownerPrompt, cannedWelcome);
 
 const ownerWelcome = [
@@ -118,12 +130,12 @@ assert.ok(validateOnboardingWelcome(`${ownerWelcome} We should see Paris.`, { au
 const originalFetch = globalThis.fetch;
 const chatCalls = [];
 
-function jevOk() {
+function jevOk(score = 0) {
   return {
     ok: true,
     json: async () => ({
       ok: true,
-      answers: { model_tier: { score: 0 }, route_type: { choice: 'general' } },
+      answers: { model_tier: { score }, route_type: { choice: 'general' } },
     }),
   };
 }
@@ -136,6 +148,13 @@ globalThis.fetch = async (url, init) => {
     chatCalls.push(body);
     const system = body.messages?.find((message) => message.role === 'system')?.content || '';
     assert.equal(system, ownerPrompt);
+    assert.equal(body.model, tiers[1]);
+    assert.doesNotMatch(body.model, /gpt-.*mini/i);
+    assert.doesNotMatch(system, leakWord);
+    const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
+    assert.deepEqual(user, ownerFacts);
+    assert.equal(user.jev, undefined);
+    assert.equal(user.pipeline, undefined);
     assert.match(system, /"firstName":"Ada"/);
     assert.match(system, new RegExp(site.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     assert.doesNotMatch(system, cannedWelcome);
@@ -162,6 +181,27 @@ try {
   assert.equal(chatCalls.length, 1);
   assert.equal(produced.reply, ownerWelcome);
   assert.equal(produced.reason, null);
+  assert.equal(produced.jev.modelTier, 1);
+  assert.equal(produced.model.responseModel, tiers[1]);
+  assert.equal(Number.isFinite(produced.jev.jevLatencyMs), true);
+  assert.equal(Number.isFinite(produced.model.genLatencyMs), true);
+  const stored = liveTurnRecord({
+    turnIndex: 1,
+    role: 'app',
+    modality: 'text',
+    text: produced.reply,
+    at: new Date().toISOString(),
+    latencyMs: 10,
+    sessionE2eMs: 10,
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
+  });
+  assert.equal(stored.tier, 1);
+  assert.equal(stored.modelId, tiers[1]);
+  assert.equal(stored.jevLatencyMs, produced.jev.jevLatencyMs);
+  assert.equal(stored.generationMs, produced.model.genLatencyMs);
+  assert.doesNotMatch(stored.modelId, /gpt-.*mini/i);
   assert.deepEqual(validateOnboardingWelcome(produced.reply, {
     audience: 'owner',
     tripSiteUrl: site,
@@ -184,6 +224,11 @@ try {
       chatCalls.push(body);
       const system = body.messages?.find((message) => message.role === 'system')?.content || '';
       assert.equal(system, collabPrompt);
+      assert.equal(body.model, tiers[1]);
+      assert.doesNotMatch(system, leakWord);
+      const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
+      assert.equal(user.audience, 'collaborator');
+      assert.equal(user.jev, undefined);
       assert.match(system, /"collaboratorFirstName":"Ada"/);
       assert.match(system, /"ownerFirstName":"Sam"/);
       assert.match(system, new RegExp(site.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
@@ -233,6 +278,57 @@ try {
   assert.equal(failed.reply, null);
   assert.equal(failed.reason, 'model down');
   assert.doesNotMatch(String(failed.reason), cannedWelcome);
+
+  chatCalls.length = 0;
+  globalThis.fetch = async (url, init) => {
+    const target = String(url);
+    const body = init?.body ? JSON.parse(init.body) : {};
+    if (target.includes('/api/alpha/decisions')) return jevOk(2);
+    if (target.includes('/chat/completions')) {
+      chatCalls.push(body);
+      assert.equal(body.model, tiers[3]);
+      assert.doesNotMatch(body.model, /gpt-.*mini/i);
+      return {
+        ok: true,
+        json: async () => ({ model: body.model, choices: [{ message: { content: ownerWelcome } }] }),
+      };
+    }
+    throw new Error(`unexpected ${target}`);
+  };
+  const tierThree = await produceOnboardingOpener({
+    firstName: 'Ada',
+    tripSiteUrl: site,
+    tripTitle: 'Anniversary',
+    plan: 'single',
+    collaborators: ['Sam'],
+    env: { OPENROUTER_API_KEY: 'test-key' },
+  });
+  assert.equal(chatCalls.length, 1);
+  assert.equal(tierThree.reply, ownerWelcome);
+  assert.equal(tierThree.jev.modelTier, 3);
+  assert.equal(tierThree.model.responseModel, tiers[3]);
+
+  chatCalls.length = 0;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('/api/alpha/decisions')) {
+      return { ok: false, status: 503, json: async () => ({ error: { message: 'jev down' } }) };
+    }
+    if (target.includes('/chat/completions')) {
+      chatCalls.push({});
+      throw new Error('fallback model was called');
+    }
+    throw new Error(`unexpected ${target}`);
+  };
+  const jevFailed = await produceOnboardingOpener({
+    firstName: 'Ada',
+    tripSiteUrl: site,
+    env: { OPENROUTER_API_KEY: 'test-key' },
+  });
+  assert.equal(chatCalls.length, 0);
+  assert.equal(jevFailed.reply, null);
+  assert.equal(jevFailed.reason, 'jev down');
+  assert.equal(jevFailed.model, null);
 
   const missing = await produceOnboardingOpener({ firstName: 'Ada', env: { OPENROUTER_API_KEY: 'test-key' } });
   assert.equal(missing.reply, null);
