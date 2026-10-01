@@ -94,9 +94,11 @@ assert.ok(
 );
 
 const itinerary = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
-assert.match(itinerary, /outboundAppReplyForRequest\(db, requestId\)/);
-assert.match(itinerary, /duplicateSuppressed: true/);
-assert.match(itinerary, /markWorkerJobLiveHandled\(db, jobRows\[0\]\.id\)/);
+const replyShip = await readFile(new URL('../src/vacation/reply-ship.mjs', import.meta.url), 'utf8');
+assert.match(itinerary, /persistVacationAppOutboundReply\(/);
+assert.match(replyShip, /outboundAppReplyForRequest\(db, requestId\)/);
+assert.match(replyShip, /duplicateSuppressed: true/);
+assert.match(replyShip, /markWorkerJobLiveHandled\(db, jobId\)/);
 
 const welcomeTemplates = JSON.parse(await readFile(new URL('../content/onboarding-welcome.json', import.meta.url), 'utf8'));
 assert.ok(welcomeTemplates.owner_no_site && welcomeTemplates.collaborator_no_site);
