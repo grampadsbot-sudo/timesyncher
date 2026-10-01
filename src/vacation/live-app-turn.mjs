@@ -2407,5 +2407,7 @@ export function transcriptToJsonl(doc) {
     party: completeRosterParty(doc),
   };
   const lines = [header, ...(doc.turns || []).map((turn) => ({ type: 'turn', ...turn }))];
-  return `${lines.map((line) => JSON.stringify(line)).join('\n')}\n`;
+  const jsonl = lines.map((line) => JSON.stringify(line)).join('\n');
+  return `${jsonl}\n`;
 }
+

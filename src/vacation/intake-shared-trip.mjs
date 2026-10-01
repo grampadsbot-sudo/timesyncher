@@ -191,13 +191,7 @@ function categoryKey(record = {}) {
 function recordInputKind(record = {}) {
   const keyed = categoryKey(record);
   if (keyed) return keyed;
-  return transportKind({
-    category: record?.category,
-    category_name: record?.category_name,
-    name: record?.name || record?.title,
-    title: record?.title || record?.name,
-    description: record?.description,
-  });
+  return transportKind(record);
 }
 
 function flightAirlineMissing(record = {}) {
