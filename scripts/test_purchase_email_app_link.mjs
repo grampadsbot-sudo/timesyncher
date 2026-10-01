@@ -158,12 +158,21 @@ function dumpDom(url) {
       '--disable-gpu',
       '--no-sandbox',
       '--disable-dev-shm-usage',
+      '--no-first-run',
+      '--disable-background-networking',
+      '--disable-component-update',
+      '--disable-domain-reliability',
+      '--password-store=basic',
+      '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
       `--user-data-dir=${profile}`,
       '--virtual-time-budget=10000',
       '--timeout=12000',
       '--dump-dom',
       url,
-    ], { stdio: ['ignore', 'pipe', 'pipe'] });
+    ], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '', HOME: profile },
+    });
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
       reject(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
