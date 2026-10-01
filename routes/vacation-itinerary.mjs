@@ -44,6 +44,7 @@ import {
 import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
+import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -667,11 +668,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
     payload.replyFailure = replyFailure;
     customerLive.replyFailure = replyFailure;
-    await db`
-      update transcript_turns
-      set payload = ${payload}
-      where id = ${turnRows[0].id}
-    `;
+    await storeReplyFailure(db, turnRows[0].id, payload);
     return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
   }
 
@@ -1014,66 +1011,11 @@ async function handleVacationApp(req, res, db, url) {
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
-      const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
-      const appLive = liveTurnRecord({
-        turnIndex: Number(pending.customerTurnIndex) + 1,
-        role: 'app',
-        modality: 'text',
-        text: finished.reply,
-        at: new Date().toISOString(),
-        latencyMs: wallMs,
-        sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
-        jev: finished.jev,
-        model: finished.model,
-        rules: finished.rules,
-        speakerName: pending.speakerName || null,
+      const shipped = await commitShippedRewrite(db, session, pending, finished, {
+        recordCustomerThingNotes,
+        publishIntakeShare,
       });
-      await db`
-        insert into transcript_turns (
-          customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-          sent_at, response_latency_ms
-        )
-        values (
-          ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
-          ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
-          'outbound', now(), ${wallMs}
-        )
-      `;
-      const itinerary = await recordCustomerThingNotes(
-        db,
-        pending.tripId,
-        pending.customerTurn,
-        {
-          collaborator: pending.collaborator === true,
-          speakerName: pending.speakerName || '',
-          appReply: finished.reply,
-          roster: Array.isArray(pending.roster) ? pending.roster : [],
-          rosterError: pending.rosterError || null,
-          askRoster: Boolean(pending.rosterError),
-          extractedDestination: pending.extractedDestination || '',
-          extractedTitle: pending.extractedTitle || '',
-          destinationError: pending.destinationError || null,
-          titleError: pending.titleError || null,
-        },
-        pending.postIntake === true ? pending.customerTurn : '',
-        pending.wantedThings || [],
-      );
-      if (itinerary.length) await publishIntakeShare(db, pending.tripId);
-      await db`
-        update onboarding_sessions
-        set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
-          updated_at = now()
-        where id = ${session.id}
-      `;
-      return sendJson(res, 200, {
-        ok: true,
-        status: 'replied',
-        reply: finished.reply,
-        ...appReplyTelemetry(appLive),
-        interimReply: finished.log?.interimReply || pending.interimReply || null,
-        itinerary,
-        error: null,
-      });
+      return sendJson(res, 200, shipped);
     }
     if (body.action === 'record-party') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
