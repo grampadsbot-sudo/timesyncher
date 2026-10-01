@@ -166,75 +166,87 @@ async function removeChromeProfile(profile) {
   }
 }
 
-function dumpDom(url) {
-  return new Promise((resolve, reject) => {
-    const profile = path.join(tmpdir(), `purchase-app-link-chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
-    const child = spawn('google-chrome', [
-      '--headless=new',
-      '--disable-gpu',
-      '--no-sandbox',
-      '--disable-dev-shm-usage',
-      '--no-first-run',
-      '--disable-background-networking',
-      '--disable-component-update',
-      '--disable-domain-reliability',
-      '--password-store=basic',
-      '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
-      `--user-data-dir=${profile}`,
-      '--virtual-time-budget=10000',
-      '--timeout=12000',
-      '--dump-dom',
-      url,
-    ], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '' },
-    });
-    const timer = setTimeout(() => {
-      child.kill('SIGKILL');
-      reject(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
-    }, 20000);
-    let out = '';
-    let err = '';
-    let settled = false;
-    const finish = (error) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      const afterExit = async () => {
-        try {
-          await removeChromeProfile(profile);
-        } catch (cleanupError) {
-          if (!error) {
-            reject(cleanupError);
-            return;
-          }
-        }
+function killChromeChild(child, signal) {
+  try {
+    child.kill(signal);
+  } catch (error) {
+    if (error?.code !== 'ESRCH') throw error;
+  }
+}
+
+function waitForChromeExit(child, waitMs = 2000) {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null) {
+      resolve();
+      return;
+    }
+    child.once('exit', () => resolve());
+    killChromeChild(child, 'SIGTERM');
+    setTimeout(() => {
+      killChromeChild(child, 'SIGKILL');
+      resolve();
+    }, waitMs);
+  });
+}
+
+async function dumpDom(url) {
+  const profile = path.join(tmpdir(), `purchase-app-link-chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const child = spawn('google-chrome', [
+    '--headless=new',
+    '--disable-gpu',
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--no-first-run',
+    '--disable-background-networking',
+    '--disable-component-update',
+    '--disable-domain-reliability',
+    '--password-store=basic',
+    '--host-resolver-rules=EXCLUDE 127.0.0.1, EXCLUDE localhost, MAP * ~NOTFOUND',
+    `--user-data-dir=${profile}`,
+    '--virtual-time-budget=10000',
+    '--timeout=12000',
+    '--dump-dom',
+    url,
+  ], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '' },
+  });
+  let out = '';
+  let err = '';
+  let domError = null;
+  try {
+    out = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        killChromeChild(child, 'SIGKILL');
+        reject(new Error(`chrome timed out for ${url}\n${err.slice(0, 400)}\n${out.slice(0, 400)}`));
+      }, 20000);
+      const done = (error) => {
+        clearTimeout(timer);
         if (error) reject(error);
         else resolve(out);
       };
-      if (child.exitCode !== null) {
-        afterExit();
-        return;
-      }
-      child.once('exit', () => {
-        try { child.kill('SIGKILL'); } catch {}
-        afterExit();
+      child.stdout.on('data', (chunk) => {
+        out += chunk;
+        if (out.includes('</html>')) done();
       });
-      try { child.kill('SIGTERM'); } catch {}
-      setTimeout(() => {
-        try { child.kill('SIGKILL'); } catch {}
-      }, 2000);
-    };
-    child.stdout.on('data', (chunk) => {
-      out += chunk;
-      if (out.includes('</html>')) finish();
+      child.stderr.on('data', (chunk) => { err += chunk; });
+      child.on('exit', (code) => {
+        if (out.includes('</html>')) done();
+        else done(new Error(`chrome ${code}: ${err.slice(0, 500)}\n${out.slice(0, 500)}`));
+      });
     });
-    child.stderr.on('data', (chunk) => { err += chunk; });
-    child.on('exit', (code) => {
-      if (out.includes('</html>')) finish();
-      else finish(new Error(`chrome ${code}: ${err.slice(0, 500)}\n${out.slice(0, 500)}`));
-    });
-  });
+    return out;
+  } catch (error) {
+    domError = error;
+    throw error;
+  } finally {
+    await waitForChromeExit(child);
+    try {
+      await removeChromeProfile(profile);
+    } catch (cleanupError) {
+      if (!domError) throw cleanupError;
+    }
+  }
 }
 
 useVacationAppDatabase(db);
