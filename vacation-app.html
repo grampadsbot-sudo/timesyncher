@@ -457,7 +457,7 @@
     import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
-    let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
+    let sessionToken = params.get('session') || params.get('token') || ((eula) => eula.startsWith('vacation-') && !eula.startsWith('vacation-collaborator-') ? eula.slice('vacation-'.length) : '')(params.get('eulaSession') || '') || localStorage.getItem('tsVacationAppSession') || '';
     let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     const chatText = (value) => safe(String(value || '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2'));

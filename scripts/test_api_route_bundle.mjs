@@ -125,6 +125,12 @@ for (const probe of former) {
 assert.equal(firstRoute('/assets/index-BKun7ofk.js'), null);
 assert.equal(firstRoute('/assets/index-CbEHlMj6.css'), null);
 assert.equal(firstRoute('/shared/las-vegas-vacation-3').route.dest, '/shared-app.html');
+assert.equal(firstRoute('/shared').route.dest, '/vacation-app.html');
+assert.equal(firstRoute('/shared/').route.dest, '/vacation-app.html');
+const acceptOriginal = publicApiRequest({ method: 'GET', url: '/accept/vacation-abc', headers: {}, query: {} });
+assert.equal(acceptOriginal.handler, 'eula');
+assert.match(acceptOriginal.url, /action=accept-page/);
+assert.match(acceptOriginal.url, /sessionId=vacation-abc/);
 assert.equal(firstRoute('/'), null);
 
 const link = orderPage('intake-example', 'Big Island Family', '');

@@ -171,16 +171,39 @@ try {
   assert.deepEqual(stored[1].liveTranscript.telemetry, { kind: 'canned_welcome', tier: 'n/a', model: 'n/a' });
 
   const storedBeforeMiss = stored.length;
+  const loggedBeforeMiss = logged.length;
+  const secretEmail = 'secret-owner@example.com';
   await assert.rejects(
     () => ensureOnboardingOpener(db, {
       customer_id: 'owner-customer-2',
       first_name: ' ',
       display_name: '',
+      email: secretEmail,
       metadata: {},
     }, { ...trip, id: 'trip-2' }, stubs),
     /firstName/,
   );
   assert.equal(stored.length, storedBeforeMiss);
+  const failureLog = logged.slice(loggedBeforeMiss).join('\n');
+  const failure = JSON.parse(logged[loggedBeforeMiss]);
+  assert.equal(failure.event, 'onboarding_welcome_failed');
+  assert.equal(failure.tripId, 'trip-2');
+  assert.deepEqual(failure.missing, ['firstName']);
+  assert.match(failure.reason, /firstName/);
+  assert.equal(failureLog.includes(secretEmail), false);
+  assert.equal(failureLog.includes(owner.text), false);
+
+  const derivedId = '22222222-2222-2222-2222-222222222222';
+  await ensureOnboardingOpener(db, {
+    customer_id: 'owner-derived',
+    first_name: firstName,
+    display_name: firstName,
+    metadata: {},
+  }, { id: derivedId, publicUrl: '', title: tripTitle }, stubs);
+  const derived = stored.find((row) => row.selectedTripId === derivedId);
+  assert.ok(derived, 'derived welcome was not stored');
+  assert.match(derived.liveTranscript.text, /\/shared\/intake-222222222222\//);
+  assert.equal(derived.liveTranscript.text.includes('{tripSiteUrl}'), false);
 
   const api = await readFile(new URL('routes/vacation-itinerary.mjs', root), 'utf8');
   const appGet = api.slice(api.indexOf('async function handleVacationApp'), api.indexOf("if (req.method === 'POST')", api.indexOf('async function handleVacationApp')));
@@ -188,7 +211,12 @@ try {
   const openerAt = appGet.indexOf('ensureOnboardingOpener');
   const turnsAt = appGet.indexOf('loadVacationAppTurns');
   assert.ok(acceptedAt >= 0 && acceptedAt < openerAt && openerAt < turnsAt);
-  assert.match(appGet, /if \(selected && eula\.accepted\) await ensureOnboardingOpener/);
+  assert.match(appGet, /let welcomeError = null/);
+  assert.match(appGet, /await ensureOnboardingOpener\(db, session, selected\)/);
+  assert.match(appGet, /welcomeError = error\.welcomeError/);
+  assert.match(appGet, /return sendJson\(res, 200/);
+  assert.ok(appGet.indexOf('welcomeError = error.welcomeError') < appGet.indexOf('return sendJson(res, 200'));
+  assert.match(appGet, /welcomeError,/);
   assert.match(api, /welcomeAudience = seat \? 'collaborator' : 'owner'/);
   assert.match(api, /welcomeFor = seat \? String\(session\.customer_id\) : 'owner'/);
   const queueAt = api.indexOf('async function queueVacationAppTurn');

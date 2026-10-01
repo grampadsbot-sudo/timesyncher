@@ -89,6 +89,7 @@ function mockDb({ existing = null, trip = tripId } = {}) {
       }];
     }
     if (/insert into vacation_collaborators/i.test(text)) return [];
+    if (/insert into transcript_turns/i.test(text)) return [];
     if (/^\s*select\b/i.test(text)) return [];
     throw new Error(`unexpected sql: ${text.slice(0, 220)}`);
   };
@@ -226,14 +227,22 @@ try {
   assert.doesNotMatch(adminSource, /produceOnboardingOpener|ensureOnboardingOpener/);
   assert.match(seatSource, /assignTripSiteUrl/);
   assert.match(collaboratorSource, /assignTripSiteUrl/);
+  const welcomeUrl = welcomeSource.slice(
+    welcomeSource.indexOf('function welcomeTripSiteUrl'),
+    welcomeSource.indexOf('async function welcomeInputs'),
+  );
+  assert.match(welcomeUrl, /trip\?\.publicUrl/);
+  assert.match(welcomeUrl, /intakeShareSlug\(trip\?\.id\)/);
+  assert.doesNotMatch(welcomeUrl, /assignTripSiteUrl/);
   const welcomeInputs = welcomeSource.slice(
     welcomeSource.indexOf('async function welcomeInputs'),
     welcomeSource.indexOf('function ensureOnboardingOpener'),
   );
-  assert.match(welcomeInputs, /trip\?\.publicUrl/);
+  assert.match(welcomeInputs, /welcomeTripSiteUrl\(trip\)/);
   assert.doesNotMatch(welcomeInputs, /assignTripSiteUrl|intakeShareSlug|sharedTripWebsiteUrl/);
-  assert.match(welcomeSource, /renderOnboardingWelcome\(await welcomeInputs\(db, session, trip\), deps\)/);
+  assert.match(welcomeSource, /renderOnboardingWelcome\(inputs, deps\)/);
   assert.match(welcomeSource, /onboardingWelcomeFailure\(error\?\.message, trip\.id\)/);
+  assert.match(welcomeSource, /event: 'onboarding_welcome_failed'/);
   assert.doesNotMatch(welcomeSource, /produceOnboardingOpener|onboarding opener model returned no reply/);
 
   const appPage = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
@@ -258,20 +267,36 @@ try {
     }
     assert.equal(rendered instanceof Error, true);
     assert.equal(rendered.message, 'onboarding welcome missing tripSiteUrl');
+    const derivedDb = mockDb();
+    await ensureOnboardingOpener(derivedDb, {
+      customer_id: customerId,
+      token: 'session-token-value',
+      email: 'ada@example.com',
+      first_name: 'Ada',
+      display_name: 'Ada',
+    }, {
+      id: tripId,
+      publicUrl: '',
+      title: 'Trip',
+    }, {});
+    const derivedInsert = derivedDb.calls.find((call) => /insert into transcript_turns/i.test(call.text));
+    assert.ok(derivedInsert, 'empty publicUrl still opened a welcome from the intake slug');
+    const derivedBody = derivedInsert.values.find((value) => typeof value === 'string' && value.includes('/shared/'));
+    assert.match(derivedBody, /\/shared\/intake-aaaaaaaabbbb\//);
     await assert.rejects(
       () => ensureOnboardingOpener(mockDb(), {
         customer_id: customerId,
         token: 'session-token-value',
         email: 'ada@example.com',
-        first_name: 'Ada',
-        display_name: 'Ada',
+        first_name: ' ',
+        display_name: '',
       }, {
         id: tripId,
-        publicUrl: '',
+        publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-aaaaaaaabbbb/',
         title: 'Trip',
       }, {}),
       (error) => {
-        assert.equal(error.message, 'onboarding welcome missing tripSiteUrl');
+        assert.equal(error.message, 'onboarding welcome missing firstName');
         assert.equal(error.statusCode, 502);
         assert.equal(error.code, 'onboarding_welcome_failed');
         const res = {
@@ -288,11 +313,11 @@ try {
         assert.equal(res.statusCode, 502);
         assert.equal(payload.ok, false);
         assert.equal(payload.code, 'onboarding_welcome_failed');
-        assert.equal(payload.reason, 'onboarding welcome missing tripSiteUrl');
+        assert.equal(payload.reason, 'onboarding welcome missing firstName');
         assert.equal(logs.length, 1);
         assert.equal(logs[0].length, 1);
         const logged = JSON.parse(logs[0][0]);
-        assert.deepEqual(logged, { reason: 'onboarding welcome missing tripSiteUrl', tripId });
+        assert.deepEqual(logged, { reason: 'onboarding welcome missing firstName', tripId });
         assert.deepEqual(Object.keys(logged), ['reason', 'tripId']);
         assert.equal(logs[0][0].includes('ada@example.com'), false);
         assert.equal(logs[0][0].includes('Ada'), false);

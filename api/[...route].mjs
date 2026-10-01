@@ -54,7 +54,7 @@ function routeParts(req) {
 
 function publicApiRequest(req) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
-  const parts = routeParts(req);
+  let parts = routeParts(req);
   const params = new URLSearchParams(url.search);
   if (req.query && typeof req.query === 'object') {
     for (const [key, value] of Object.entries(req.query)) {
@@ -64,6 +64,13 @@ function publicApiRequest(req) {
         if (item != null && item !== '') params.append(key, String(item));
       }
     }
+  }
+  if (parts[0] === 'accept' && parts[1]) {
+    let sessionId = parts[1];
+    try { sessionId = decodeURIComponent(sessionId); } catch { sessionId = parts[1]; }
+    if (!params.get('sessionId')) params.set('sessionId', sessionId);
+    if (!params.get('action')) params.set('action', 'accept-page');
+    parts = ['eula'];
   }
   for (const key of ROUTING_QUERY_KEYS) params.delete(key);
   const path = `/api/${parts.map((part) => encodeURIComponent(part)).join('/')}`;
