@@ -101,8 +101,7 @@ assert.deepEqual(placeSourceRows(sourcedThing), [{ id: 'way/11', name: 'Harbor M
 assert.deepEqual(unsourcedPlaces('Harbor Market (id:way/11) fits Tuesday.', sourcedThing), []);
 assert.deepEqual(savedThingPlaceResults({ things: sourcedThing }), [{ name: 'Harbor Market', sourceRef: { source: 'osm', id: 'way/11' } }]);
 assert.deepEqual(savedThingPlaceResults({ things: [{ title: 'Uncited Cafe' }] }), []);
-assert.match(sourcedPlaceRule(), /Results/);
-assert.doesNotMatch(sourcedPlaceRule(), /THAT_ID/);
+assert.ok(/Results/.test(sourcedPlaceRule()) && !/THAT_ID/.test(sourcedPlaceRule()));
 const goldIntake = 'okay voice note dumping — sorry it is a ramble. Big Island Hawaiʻi, not Oahu. We leave Friday April third and come home Sunday April twelfth, twenty twenty-six. Base is a house in Kailua-Kona. SpeediShuttle from the airport, then groceries the same day. Kimberly wants gardens. Tyler wants a swim, including one later in the week if the beach is windy. Lauren does not want two big activities stacked on the same day.';
 const goldSpan = intakeSpan(goldIntake);
 assert.equal(goldSpan.badge, 'Apr 3–12 2026');
