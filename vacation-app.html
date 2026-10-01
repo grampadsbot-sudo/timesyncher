@@ -457,7 +457,7 @@
     import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
-    let sessionToken = params.get('session') || params.get('token') || localStorage.getItem('tsVacationAppSession') || '';
+    let sessionToken = params.get('session') || params.get('token') || ((eula) => eula.startsWith('vacation-') && !eula.startsWith('vacation-collaborator-') ? eula.slice('vacation-'.length) : '')(params.get('eulaSession') || '') || localStorage.getItem('tsVacationAppSession') || '';
     let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     const chatText = (value) => safe(String(value || '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2'));
@@ -504,7 +504,7 @@
     }
 
     function tripBadge(trip) {
-      if (!trip || isPlaceholderTrip(trip)) return 'no vacations yet';
+      if (!trip || isPlaceholderTrip(trip)) return '';
       const place = (customerPlaceName(trip.destination) || customerPlaceName(trip.title)).split(',')[0].trim();
       const start = dateParts(trip.startDate);
       const end = dateParts(trip.endDate);
@@ -516,7 +516,13 @@
             : `${start.mon} ${start.d} ${start.y}–${end.mon} ${end.d} ${end.y}`;
         return place ? `${place} ${when}` : when;
       }
-      return place || 'no vacations yet';
+      return place || '';
+    }
+
+    function vacationSelector(trips, trip) {
+      if (trips.length < 2) return `<div class="trip-label" id="tripLabel">${safe(tripBadge(trip))}</div>`;
+      const label = (item) => (customerPlaceName(item.destination) || customerPlaceName(item.title)).split(',')[0].trim();
+      return `<div class="trip-menu" id="tripMenu"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe([customerPlaceName(item.destination), item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {
@@ -642,18 +648,10 @@
       root.innerHTML = `<main class="app">
         <header class="topbar">
           <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
-          ${trips.length > 1 ? `<div class="trip-menu" id="tripMenu">
-            <button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button>
-            <div class="trip-list" role="listbox">
-              ${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}">
-                <span>${item.id === trip?.id ? icon.check : ''}</span>
-                <span><b>${safe((customerPlaceName(item.destination) || customerPlaceName(item.title)).split(',')[0].trim())}</b><small>${safe([customerPlaceName(item.destination), item.status].filter(Boolean).join(' · ') || 'Vacation')}</small></span>
-              </button>`).join('')}
-            </div>
-          </div>` : `<div class="trip-label" id="tripLabel">${safe(tripBadge(trip))}</div>`}
+          ${vacationSelector(trips, trip)}
         </header>
         <section class="workspace${hasSite ? '' : ' chat-only'}" id="workspace">
-          ${hasSite ? `<div class="site-pane"><iframe title="${safe(trip.title)} website" src="${safe(siteUrl)}"></iframe></div>
+          ${hasSite ? `<div class="site-pane"><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(siteUrl)}"></iframe></div>
           <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
           <section class="chat-pane" aria-label="Vacation chat">
             ${body}

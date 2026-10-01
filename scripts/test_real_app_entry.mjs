@@ -153,20 +153,28 @@ const selectorSource = vacationApp.slice(
   vacationApp.indexOf('function customerPlaceName'),
   vacationApp.indexOf('function realVacations'),
 );
-const selector = new Function(`${selectorSource}; return { isPlaceholderTrip, tripBadge };`)();
+const selector = new Function('safe', 'icon', `${selectorSource}; return { isPlaceholderTrip, tripBadge, vacationSelector };`)(
+  (value) => String(value ?? ''),
+  { chevron: '', check: '' },
+);
 const shellTrip = {
-  id: 'trip-1',
-  title: 'shell-abc12xy',
+  id: 'shell-xxxxxxxx',
+  title: 'shell-xxxxxxxx',
   destination: '',
   startDate: null,
   endDate: null,
   status: 'intake',
-  publicUrl: 'https://example.test/shared/shell-abc12xy/',
-  shareToken: 'shell-abc12xy',
+  publicUrl: 'https://example.test/shared/shell-xxxxxxxx/',
+  shareToken: 'shell-xxxxxxxx',
 };
 assert.equal(selector.isPlaceholderTrip(shellTrip), true);
-assert.equal(selector.tripBadge(shellTrip), 'no vacations yet');
-assert.equal(selector.tripBadge(shellTrip).includes('shell-'), false);
+assert.equal(selector.tripBadge(shellTrip), '');
+const zeroTrips = [shellTrip].filter((trip) => !selector.isPlaceholderTrip(trip));
+const zeroSelector = selector.vacationSelector(zeroTrips, null);
+assert.equal(zeroTrips.length, 0);
+assert.equal(zeroSelector.includes('trip-option'), false);
+assert.equal(zeroSelector.includes('shell-'), false);
+assert.equal(zeroSelector.replace(/<[^>]+>/g, '').trim(), '');
 const datedShell = { ...shellTrip, startDate: '2026-06-01', endDate: '2026-06-03', status: 'planning' };
 assert.equal(selector.tripBadge(datedShell).includes('shell-'), false);
 assert.match(selector.tripBadge(datedShell), /Jun 1–3 2026/);

@@ -9,6 +9,42 @@ import {
 } from '../src/onboarding/eula-persistent-core.mjs';
 import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
+import { sql } from '../src/vacation/db.mjs';
+import { ensureVacationEulaSession, getSessionByToken } from '../src/vacation/onboarding.mjs';
+
+let onboardingLookup = null;
+
+export function useOnboardingLookup(db) {
+  onboardingLookup = db || null;
+}
+
+export function onboardingDatabase() {
+  if (onboardingLookup) return onboardingLookup;
+  return sql(process.env);
+}
+
+function ownerOnboardingToken(sessionId) {
+  const id = String(sessionId || '');
+  if (!id.startsWith('vacation-') || id.startsWith('vacation-collaborator-')) return '';
+  return id.slice('vacation-'.length);
+}
+
+async function sessionForAccept(store, sessionId) {
+  const loaded = await loadSessionPersistent(store, sessionId);
+  if (loaded) return loaded;
+  const token = ownerOnboardingToken(sessionId);
+  if (!token) return null;
+  let db;
+  try {
+    db = onboardingDatabase();
+  } catch {
+    return null;
+  }
+  const row = await getSessionByToken(db, token).catch(() => null);
+  if (!row?.id || !row?.token) return null;
+  await ensureVacationEulaSession(row, { env: process.env });
+  return loadSessionPersistent(store, sessionId);
+}
 
 const DEFAULT_EULA_VERSION = process.env.TIMESYNCHER_EULA_VERSION || '2026-06-terms-advisory-only';
 
@@ -50,18 +86,20 @@ export default async function handler(req, res) {
       return send(res, 201, { ok: true, sessionId: session.sessionId, session: publicSession(session) });
     }
     if (req.method === 'GET' && action === 'get-session') {
-      const session = await loadSessionPersistent(store, url.searchParams.get('sessionId'));
+      const session = await sessionForAccept(store, url.searchParams.get('sessionId'));
       if (!session || session.unavailableReason) return send(res, 404, { ok: false, error: session?.unavailableReason || 'session not found' });
       return send(res, 200, { ok: true, session: publicSession(session) });
     }
     if (req.method === 'GET' && action === 'accept-page') {
-      const session = await loadSessionPersistent(store, url.searchParams.get('sessionId'));
+      const session = await sessionForAccept(store, url.searchParams.get('sessionId'));
       if (!session || session.unavailableReason) return send(res, 404, 'Acceptance session not found or unavailable', 'text/plain');
       return send(res, 200, renderAcceptPage(session), 'text/html');
     }
     if (req.method === 'POST' && action === 'accept') {
       const body = await readBody(req);
-      const result = await acceptEulaPersistent(store, url.searchParams.get('sessionId'), {
+      const sessionId = url.searchParams.get('sessionId');
+      await sessionForAccept(store, sessionId);
+      const result = await acceptEulaPersistent(store, sessionId, {
         acceptedByName: body.acceptedByName,
         checkboxConfirmed: body.checkboxConfirmed,
         ipAddress: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
