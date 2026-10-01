@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
-import { copyFile, mkdir } from 'node:fs/promises';
+import { appendFile, copyFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { buildSha } from './routes/version.mjs';
 import { writeSharedAssets } from './scripts/write-shared-assets.mjs';
 
 function serveSharedApp(req, _res, next) {
@@ -9,8 +10,19 @@ function serveSharedApp(req, _res, next) {
   const path = query === -1 ? url : url.slice(0, query);
   const search = query === -1 ? '' : url.slice(query);
   if (path === '/shared' || path === '/shared/') req.url = `/vacation-app.html${search}`;
+  else if (path === '/edit-access' || path === '/edit-access/') req.url = `/shared-app.html${search}`;
   else if (path.startsWith('/shared/')) req.url = `/shared-app.html${search}`;
   next();
+}
+
+function buildStampMeta() {
+  return `<meta name="timesyncher-build" content="${buildSha()}">`;
+}
+
+function stampHtml(html) {
+  const meta = buildStampMeta();
+  if (html.includes('name="timesyncher-build"')) return html;
+  return html.replace(/<head[^>]*>/i, (open) => `${open}${meta}`);
 }
 
 async function copyEulaMarkdown(outDir) {
@@ -18,6 +30,12 @@ async function copyEulaMarkdown(outDir) {
   const to = resolve(outDir, 'src/onboarding/eula-markdown.mjs');
   await mkdir(dirname(to), { recursive: true });
   await copyFile(from, to);
+}
+
+async function stampServedScript(file) {
+  const body = await readFile(file, 'utf8');
+  if (body.includes('name="timesyncher-build"')) return;
+  await appendFile(file, `\n/* ${buildStampMeta()} */\n`);
 }
 
 export default defineConfig({
@@ -33,8 +51,14 @@ export default defineConfig({
       configurePreviewServer(server) {
         server.middlewares.use(serveSharedApp);
       },
+      transformIndexHtml(html) {
+        return stampHtml(html);
+      },
       async closeBundle() {
-        await copyEulaMarkdown(resolve(__dirname, 'dist'));
+        const outDir = resolve(__dirname, 'dist');
+        await copyEulaMarkdown(outDir);
+        await stampServedScript(resolve(outDir, 'src/onboarding/eula-markdown.mjs'));
+        await stampServedScript(resolve(outDir, 'assets/index-BKun7ofk.js'));
       },
     },
   ],

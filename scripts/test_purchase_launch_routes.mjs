@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import handler from '../api/[...route].mjs';
+import { buildSha } from '../routes/version.mjs';
 import { createOnboardingSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { LocalJsonStore } from '../src/onboarding/eula-persistent-store.mjs';
 
@@ -34,10 +35,15 @@ function contentType(file) {
 
 function build() {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['run', 'build'], { cwd: root, stdio: 'inherit' });
+    const child = spawn('npm', ['run', 'build'], { cwd: root, stdio: 'inherit', env: process.env });
     child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`vite build exited ${code}`))));
   });
 }
+
+if (!String(process.env.VERCEL_GIT_COMMIT_SHA || '').trim() && !String(process.env.TIMESYNCHER_BUILD_SHA || '').trim()) {
+  process.env.TIMESYNCHER_BUILD_SHA = '0123456789abcdef0123456789abcdef01234567';
+}
+const expectedSha = buildSha();
 
 await build();
 
@@ -65,10 +71,14 @@ const server = createServer(async (req, res) => {
     await handler(req, res);
     return;
   }
-  const filePath = found && !String(found.route.dest).startsWith('/api/')
-    ? path.join(dist, found.route.dest.replace(/^\//, ''))
-    : path.join(dist, url.pathname.replace(/^\//, ''));
+  const pathname = found && !String(found.route.dest).startsWith('/api/')
+    ? found.route.dest
+    : url.pathname;
+  const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+  const filePath = path.join(dist, rel);
   try {
+    const info = await stat(filePath);
+    if (!info.isFile()) throw new Error('not a file');
     const body = await readFile(filePath);
     res.statusCode = 200;
     res.setHeader('content-type', contentType(filePath));
@@ -93,20 +103,28 @@ async function get(pathname) {
   };
 }
 
+function assertStamp(result, label) {
+  assert.notEqual(result.status, 404, `${label} ${result.body.slice(0, 180)}`);
+  assert.ok(
+    result.body.includes(`name="timesyncher-build" content="${expectedSha}"`),
+    `${label} missing build stamp`,
+  );
+}
+
 try {
   const markdown = await get('/src/onboarding/eula-markdown.mjs');
-  assert.notEqual(markdown.status, 404, markdown.body);
+  assertStamp(markdown, 'eula module');
   assert.match(markdown.type, /javascript/);
   assert.ok(markdown.body.includes(['export', 'function', 'renderEulaMarkdown'].join(' ')));
 
   const accept = await get(`/accept/${sessionId}`);
-  assert.notEqual(accept.status, 404, accept.body);
+  assertStamp(accept, 'accept');
   assert.match(accept.type, /text\/html/);
   assert.match(accept.body, /Review & continue/);
   assert.doesNotMatch(accept.body, /"error":"not found"/);
 
   const purchase = await get('/shared/?eulaSession=vacation-route-token&purchase=1');
-  assert.notEqual(purchase.status, 404, purchase.body);
+  assertStamp(purchase, 'purchase');
   assert.match(purchase.type, /text\/html/);
   assert.match(purchase.body, /TimeSyncher Vacation App/);
   assert.doesNotMatch(purchase.body, /index-BKun7ofk\.js/);
@@ -117,8 +135,20 @@ try {
   assert.match(bundle.type, /javascript/);
   assert.match(bundle.body, /eulaSession/);
 
+  const intake = await get('/shared/intake-0123456789ab/');
+  assertStamp(intake, 'intake share');
+  assert.match(intake.type, /text\/html/);
+
+  const home = await get('/');
+  assertStamp(home, 'home');
+  assert.match(home.type, /text\/html/);
+
+  const editAccess = await get('/edit-access');
+  assertStamp(editAccess, 'edit-access');
+  assert.match(editAccess.type, /text\/html/);
+
   const trek = await get('/assets/index-BKun7ofk.js');
-  assert.notEqual(trek.status, 404, trek.body.slice(0, 120));
+  assertStamp(trek, 'trek bundle');
   assert.match(trek.type, /javascript/);
   assert.equal(trek.body.includes('Rt.get("/system-notices/active")'), false);
   assert.equal(trek.body.includes('Rt.get("/auth/app-config")'), false);

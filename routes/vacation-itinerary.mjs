@@ -21,7 +21,7 @@ import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
-import { intakeShareSlug, welcomeSiteUrl } from '../src/vacation/intake-shared-trip.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
@@ -283,7 +283,7 @@ function welcomeFirstName(value) {
 
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
-  const tripSiteUrl = await welcomeSiteUrl(db, trip);
+  const tripSiteUrl = String(trip?.publicUrl || '').trim();
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`

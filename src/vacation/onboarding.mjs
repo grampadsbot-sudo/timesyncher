@@ -341,7 +341,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
       const row = existing[0];
       const contact = row.contact || {};
       const eula = await ensureVacationEulaSession(row, { contact, env });
-      const share = await publishIntakeSlug(db, row.trip_id, env);
       return {
         customerId: row.customer_id,
         tripId: row.trip_id,
@@ -349,8 +348,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         orderId: row.order_id,
         session: row,
         token: row.token,
-        publicSlug: share.publicSlug,
-        publicUrl: share.publicUrl,
         onboardingUrl: onboardingLink(row.token, env),
         vacationAppUrl: vacationAppLink(row.token, env),
         telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
@@ -410,7 +407,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
   const eula = await ensureVacationEulaSession(session, { contact, env });
-  const share = await publishIntakeSlug(db, tripId, env);
 
   return {
     customerId,
@@ -419,8 +415,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     orderId,
     session,
     token: session.token,
-    publicSlug: share.publicSlug,
-    publicUrl: share.publicUrl,
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
     telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
@@ -428,23 +422,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     contact,
     order,
   };
-}
-
-async function publishIntakeSlug(db, tripId, env) {
-  const publicSlug = intakeShareSlug(tripId);
-  const publicUrl = publicSlug ? sharedTripWebsiteUrl(publicSlug, env) : '';
-  if (!publicSlug) return { publicSlug: '', publicUrl: '' };
-  await db`
-    update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
-      updated_at = now()
-    where id = ${tripId}
-      and coalesce(metadata->>'publicSlug', '') in ('', ${publicSlug})
-      and coalesce(metadata->>'sharedToken', '') = ''
-      and coalesce(metadata->>'shareToken', '') = ''
-      and coalesce(metadata->>'source_token', '') = ''
-  `;
-  return { publicSlug, publicUrl };
 }
 
 export async function getSessionByToken(db, tokenValue) {
