@@ -89,30 +89,43 @@ export class VercelBlobStore {
       });
     } catch (error) {
       if (!blobDenied(error)) throw error;
+      return this.writeDatabaseJson(this.key(key), value);
+    }
+  }
+
+  async writeDatabaseJson(pathname, value) {
+    const db = await eulaDb();
+    await db`
+      insert into eula_store_objects (key, document, updated_at)
+      values (${pathname}, ${value}, now())
+      on conflict (key) do update set document = excluded.document, updated_at = now()
+    `;
+    return { key: pathname, fallback: 'database' };
+  }
+
+  async readDatabaseJson(pathname) {
+    try {
       const db = await eulaDb();
-      await db`
-        insert into eula_store_objects (key, document, updated_at)
-        values (${this.key(key)}, ${value}, now())
-        on conflict (key) do update set document = excluded.document, updated_at = now()
-      `;
-      return { key: this.key(key), fallback: 'database' };
+      const rows = await db`select document from eula_store_objects where key = ${pathname} limit 1`;
+      return rows[0]?.document ?? null;
+    } catch {
+      return null;
     }
   }
 
   async getJson(key) {
+    const pathname = this.key(key);
     try {
       const { get } = await this.blob();
-      const pathname = this.key(key);
       const result = await get(pathname, { access: 'private', useCache: false });
-      if (!result || result.statusCode !== 200 || !result.stream) return null;
-      const text = await new Response(result.stream).text();
-      return JSON.parse(text);
+      if (result?.statusCode === 200 && result.stream) {
+        const text = await new Response(result.stream).text();
+        return JSON.parse(text);
+      }
     } catch (error) {
       if (!blobDenied(error)) throw error;
-      const db = await eulaDb();
-      const rows = await db`select document from eula_store_objects where key = ${this.key(key)} limit 1`;
-      return rows[0]?.document || null;
     }
+    return this.readDatabaseJson(pathname);
   }
 
   async putText(key, text, contentType = 'text/plain') {
@@ -126,22 +139,22 @@ export class VercelBlobStore {
       });
     } catch (error) {
       if (!blobDenied(error)) throw error;
-      const db = await eulaDb();
-      const document = { kind: 'text', text, contentType };
-      await db`
-        insert into eula_store_objects (key, document, updated_at)
-        values (${this.key(key)}, ${document}, now())
-        on conflict (key) do update set document = excluded.document, updated_at = now()
-      `;
-      return { key: this.key(key), fallback: 'database' };
+      return this.writeDatabaseJson(this.key(key), { kind: 'text', text, contentType });
     }
   }
 
   async listJson(prefix) {
     try {
-      return await this.listBlobJson(prefix);
+      const listed = await this.listBlobJson(prefix);
+      if (listed.length) return listed;
     } catch (error) {
       if (!blobDenied(error)) throw error;
+    }
+    return this.listDatabaseJson(prefix);
+  }
+
+  async listDatabaseJson(prefix) {
+    try {
       const db = await eulaDb();
       const like = `${this.key(prefix)}%`;
       const rows = await db`
@@ -151,6 +164,8 @@ export class VercelBlobStore {
           and key like '%.json'
       `;
       return rows.map((row) => row.document).filter(Boolean);
+    } catch {
+      return [];
     }
   }
 

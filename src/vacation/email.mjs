@@ -1,4 +1,4 @@
-import { collaboratorEulaAcceptUrl, collaboratorTelegramLink } from './collaborators.mjs';
+import { collaboratorEulaAcceptUrl } from './collaborators.mjs';
 import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
@@ -23,30 +23,49 @@ function withPurchaseStep(url) {
   }
 }
 
-export function purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId = '', env = process.env } = {}) {
-  const explicit = cleanText(publicUrl, 500);
-  let url = '';
-  if (explicit.includes('/shared/')) url = explicit;
-  else {
-    const slug = cleanText(publicSlug, 180);
-    url = slug ? sharedTripWebsiteUrl(slug, env) : `${websiteTripBase(env)}/shared/`;
+function shareTokenFromUrl(url) {
+  try {
+    const parts = new URL(url).pathname.split('/').filter(Boolean);
+    const at = parts.indexOf('shared');
+    return at >= 0 ? cleanText(parts[at + 1], 180) : '';
+  } catch {
+    const match = String(url).match(/\/shared\/([^/?#]+)/);
+    return match ? cleanText(decodeURIComponent(match[1]), 180) : '';
   }
-  const sessionId = cleanText(eulaSessionId, 180);
-  if (sessionId) {
+}
+
+function missingShareTokenError({ tripId = '', sessionId = '', eulaSessionId = '' } = {}) {
+  const trip = cleanText(tripId, 80);
+  const session = cleanText(sessionId, 120) || cleanText(eulaSessionId, 120);
+  const named = [trip && `trip ${trip}`, session && `session ${session}`].filter(Boolean).join(', ');
+  const error = new Error(`purchase email missing share token${named ? ` for ${named}` : ''}`);
+  error.code = 'purchase_email_missing_share_token';
+  console.error(JSON.stringify({ event: error.code, tripId: trip, sessionId: session }));
+  return error;
+}
+
+export function purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId = '', tripId = '', sessionId = '', env = process.env } = {}) {
+  const explicit = cleanText(publicUrl, 500);
+  const slug = cleanText(publicSlug, 180);
+  const explicitToken = explicit.includes('/shared/') ? shareTokenFromUrl(explicit) : '';
+  let url = explicitToken ? explicit : (slug ? sharedTripWebsiteUrl(slug, env) : '');
+  if (!url || !shareTokenFromUrl(url)) throw missingShareTokenError({ tripId, sessionId, eulaSessionId });
+  const eulaId = cleanText(eulaSessionId, 180);
+  if (eulaId) {
     try {
       const parsed = new URL(url);
-      parsed.searchParams.set('eulaSession', sessionId);
+      parsed.searchParams.set('eulaSession', eulaId);
       url = parsed.toString();
     } catch {
-      url = `${url}${url.includes('?') ? '&' : '?'}eulaSession=${encodeURIComponent(sessionId)}`;
+      url = `${url}${url.includes('?') ? '&' : '?'}eulaSession=${encodeURIComponent(eulaId)}`;
     }
   }
   return withPurchaseStep(url);
 }
 
-export function purchaseEmail({ contact, publicUrl, publicSlug, eulaSessionId = '', env = process.env }) {
+export function purchaseEmail({ contact, publicUrl, publicSlug, eulaSessionId = '', tripId = '', sessionId = '', env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
-  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId, env });
+  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, eulaSessionId, tripId, sessionId, env });
   const subject = 'Your TimeSyncher Vacation purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
@@ -184,11 +203,14 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
     `;
     publicSlug = cleanText(slugRows[0]?.slug, 180);
   }
+  const sessionId = onboarding.session?.id || onboarding.token || '';
   const message = purchaseEmail({
     contact: onboarding.contact,
     publicSlug,
     publicUrl: onboarding.publicUrl,
     eulaSessionId: onboarding.eula?.sessionId || '',
+    tripId: onboarding.tripId || '',
+    sessionId,
     env,
   });
 
@@ -336,7 +358,6 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           sent_at = ${sentAt},
           metadata = metadata || ${{
             collaboratorInviteId: invite.id,
-            collaboratorTelegramUrl: collaboratorTelegramLink(token, env),
             toEmail: to,
           }}
         where id = ${existing[0].id}
@@ -352,7 +373,6 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
           ${providerMessageId}, ${status}, ${errorSummary}, ${{
             collaboratorInviteId: invite.id,
-            collaboratorTelegramUrl: collaboratorTelegramLink(token, env),
             collaboratorRequestedFor: normalizedContact.displayName || null,
           }}, ${sentAt}
         )

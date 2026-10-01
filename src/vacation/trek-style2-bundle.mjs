@@ -261,6 +261,10 @@ const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
 const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
 const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
 const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
+const NOTICES_FETCH_NEEDLE = 'async fetch(){if(!(t().fetching||t().loaded)){e({fetching:!0});try{const i=await Rt.get("/system-notices/active");e({notices:i.data,loaded:!0,fetching:!1})}catch(i){console.warn("[systemNotices] failed to fetch:",i),e({loaded:!0,fetching:!1})}}}';
+const NOTICES_FETCH_PATCH = 'async fetch(){e({notices:[],loaded:!0})}';
+const APP_CONFIG_NEEDLE = 'getAppConfig:()=>Rt.get("/auth/app-config").then(e=>e.data)';
+const APP_CONFIG_PATCH = 'getAppConfig:()=>Promise.resolve({})';
 
 /** Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections. */
 export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
@@ -509,6 +513,12 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   }
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
+  }
+  if (patched.includes(NOTICES_FETCH_NEEDLE)) {
+    patched = patched.replace(NOTICES_FETCH_NEEDLE, NOTICES_FETCH_PATCH);
+  }
+  if (patched.includes(APP_CONFIG_NEEDLE)) {
+    patched = patched.replace(APP_CONFIG_NEEDLE, APP_CONFIG_PATCH);
   }
   const finished = stripTripView(patchThingDetailRatings(patched), { gear: !served });
   return served ? finished : stripMissingPriceLabel(finished);

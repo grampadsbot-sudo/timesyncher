@@ -134,7 +134,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
       role: normalized.role,
       amountCents: plan.amountCents + photoAmountCents + videoAmountCents,
       currency: CURRENCY,
-      label: normalized.name ? `${normalized.name} - Telegram collaborator` : 'Telegram collaborator',
+      label: normalized.name ? `${normalized.name} - collaborator` : 'Collaborator',
       planCode: plan.code,
       scope: plan.scope,
       photoAmountCents,
