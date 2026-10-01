@@ -1580,7 +1580,7 @@
   {
     "rule": "FILE-SIZE-500",
     "file": "src/vacation/trek-style2-bundle.mjs",
-    "symbol": "lines:1020",
+    "symbol": "lines:1004",
     "note": "existing; ratchet only shrinks"
   },
   {

@@ -926,21 +926,7 @@
   {
     "file": "src/vacation/trek-style2-bundle.mjs",
     "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "AREA_CHIP_BIG_ISLAND",
-    "inventory_id": "A15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
     "symbol_or_pattern": "AREA_CHIP_NYC",
-    "inventory_id": "A15",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "src/vacation/trek-style2-bundle.mjs",
-    "rule": "HC-PLACE-LIST",
-    "symbol_or_pattern": "inventory:A15",
     "inventory_id": "A15",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
