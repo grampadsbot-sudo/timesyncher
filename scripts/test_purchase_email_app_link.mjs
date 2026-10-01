@@ -321,12 +321,11 @@ try {
   assert.equal(launchUrl.origin + launchUrl.pathname, `${site}/vacation-app.html`);
   assert.equal(launchUrl.searchParams.get('session'), onboarding.token);
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
-  assert.equal(onboarding.publicSlug, '');
-  assert.equal(onboarding.publicUrl, '');
-  const tripSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
-  assert.equal(tripSite.publicSlug.startsWith('intake-'), true);
+  assert.equal(onboarding.publicSlug, shareSite.publicSlug);
+  assert.equal(onboarding.publicUrl, shareSite.publicUrl);
+  assert.equal(shareSite.publicSlug.startsWith('intake-'), true);
 
-  const migrated = await intakeSharedResponse(tripSite.publicSlug, db);
+  const migrated = await intakeSharedResponse(shareSite.publicSlug, db);
   assert.equal(Boolean(migrated?.trip), true);
   assert.equal(migrated.error, undefined);
   assert.deepEqual(migrated.places, []);
