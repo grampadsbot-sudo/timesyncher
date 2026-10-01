@@ -33,7 +33,7 @@ function stampHtml(html) {
   if (!next.includes('name="timesyncher-build"')) {
     next = next.replace(/<head[^>]*>/i, (open) => `${open}${meta}`);
   }
-  if (!next.includes('data-build-stamp="1"')) {
+  if (!next.includes('<footer data-build-stamp="1">')) {
     next = /<\/body>/i.test(next) ? next.replace(/<\/body>/i, `${footer}</body>`) : `${next}${footer}`;
   }
   return next;
