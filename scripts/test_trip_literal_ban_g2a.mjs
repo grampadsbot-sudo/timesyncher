@@ -4,8 +4,12 @@ import { checkoutAmounts, checkoutOrderSummary } from '../src/vacation/checkout-
 import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, planSeatDollars, priceAnswered } from '../src/vacation/seat-price.mjs';
 
-assert.throws(() => checkoutAmounts({}), /checkout config missing: TIMESYNCHER_ORDER_BUMP_PRICE_CENTS/);
-assert.equal(checkoutAmounts({ TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900' }).orderBump, 1900);
+assert.throws(() => checkoutAmounts({}), /checkout config missing: TIMESYNCHER_BASE_PRICE_CENTS/);
+assert.equal(checkoutAmounts({
+  TIMESYNCHER_BASE_PRICE_CENTS: '3700',
+  TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
+  TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '1900',
+}).orderBump, 1900);
 
 const unconfigured = {};
 const missingPrice = (error) => error?.name === 'CheckoutConfigError' && /TIMESYNCHER_ORDER_BUMP_PRICE_CENTS/.test(error.message);
@@ -46,8 +50,8 @@ for (const [key, value] of Object.entries(savedCheckoutEnv)) {
   if (value == null) delete process.env[key];
   else process.env[key] = value;
 }
-assert.equal(checkoutOrderSummary({}, {}).amountCents, 3700);
-assert.throws(() => checkoutOrderSummary({ orderBump: true }, {}), missingPrice);
+assert.throws(() => checkoutOrderSummary({}, {}), /checkout config missing: TIMESYNCHER_BASE_PRICE_CENTS/);
+assert.throws(() => checkoutOrderSummary({ orderBump: true }, {}), /checkout config missing: TIMESYNCHER_BASE_PRICE_CENTS/);
 
 const chatTurn = await produceLiveAppReply({
   customerTurn: 'How much is a seat? I pay for Ada.',

@@ -39,7 +39,7 @@ import {
   applyCustomerNotes,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
-import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { commitShippedRewrite, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
@@ -336,12 +336,19 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
       limit 1
     `;
   if (existing.length) return;
+  const inputs = await welcomeInputs(db, session, trip);
+  const missing = missingWelcomeFields(inputs);
   const started = Date.now();
   let text;
   try {
-    text = renderOnboardingWelcome(await welcomeInputs(db, session, trip), deps);
+    if (missing.length) throw onboardingWelcomeFailure(`onboarding welcome missing ${missing[0]}`, trip.id);
+    text = renderOnboardingWelcome(inputs, deps);
   } catch (error) {
-    throw onboardingWelcomeFailure(error?.message, trip.id);
+    const failed = error?.code === 'onboarding_welcome_failed' ? error : onboardingWelcomeFailure(error?.message, trip.id);
+    const welcomeError = { reason: String(failed.reason || failed.message || ''), tripId: String(trip?.id || ''), missing };
+    console.error(JSON.stringify({ event: 'onboarding_welcome_failed', ...welcomeError }));
+    failed.welcomeError = welcomeError;
+    throw failed;
   }
   const elapsed = Math.max(1, Date.now() - started);
   const live = cannedWelcomeLiveTurn({

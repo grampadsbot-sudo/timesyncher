@@ -1,17 +1,9 @@
-import { requiredConfigCents } from './checkout-pricing.mjs';
 import { createCollaboratorInvite, collaboratorPlan, markCollaboratorInvitePaid } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendWebEditorInviteEmail } from './email.mjs';
-import { ownerMediaAddOns, recordOwnerMediaPurchase } from './media-checkout.mjs';
+import { ownerMediaAddOns, recordOwnerMediaPurchase, selectedMediaAddOn } from './media-checkout.mjs';
 import { createWebEditorInvite } from './web-access.mjs';
 
 const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
-const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
-const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-
-function collaboratorVideoUnlimitedCents(env = process.env) {
-  return requiredConfigCents(env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS');
-}
 
 function clean(value, max = 500) {
   return String(value || '').trim().slice(0, max);
@@ -127,18 +119,16 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
   const normalized = normalizeAccessPlanRow(row);
   if (normalized.role === 'telegram_collaborator') {
     const plan = collaboratorPlan(normalized.planCode, env);
-    const unlimited = plan.scope === 'unlimited_trips';
-    const photoAmountCents = normalized.canUploadPhotos ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-    const videoAmountCents = normalized.canUploadVideos ? (unlimited ? collaboratorVideoUnlimitedCents(env) : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
+    const media = selectedMediaAddOn({ media: normalized.canUploadPhotos || normalized.canUploadVideos }, env);
     return {
       role: normalized.role,
-      amountCents: plan.amountCents + photoAmountCents + videoAmountCents,
+      amountCents: plan.amountCents + media.amountCents,
       currency: CURRENCY,
       label: normalized.name ? `${normalized.name} - collaborator` : 'Collaborator',
       planCode: plan.code,
       scope: plan.scope,
-      photoAmountCents,
-      videoAmountCents,
+      photoAmountCents: 0,
+      videoAmountCents: 0,
     };
   }
   if (normalized.role === 'owner_media') {
@@ -146,7 +136,7 @@ export function priceAccessPlanRow(row = {}, env = process.env) {
       mediaScope: normalized.planCode,
       photoUpload: normalized.canUploadPhotos,
       videoUpload: normalized.canUploadVideos,
-    });
+    }, env);
     return {
       role: normalized.role,
       amountCents: addOns.amountCents,
@@ -502,6 +492,15 @@ async function activatePaidRow({ db, row, checkout, paymentIntentId = '', env })
         displayName: row.name || row.email,
       },
     }, env);
+    if (row.can_upload_photos || row.can_upload_videos) {
+      const media = ownerMediaAddOns({ ownerCustomerId: row.owner_customer_id }, env);
+      await recordOwnerMediaPurchase({
+        db, contact: { email: row.email || checkout.payer_email, displayName: row.name || row.email },
+        addOns: media, ownerCustomerId: row.owner_customer_id, currency: checkout.currency || CURRENCY,
+        stripePaymentIntentId: paymentIntentId || checkout.stripe_payment_intent_id || null,
+        metadata: { paidVia: 'access_plan_collaborator_media', accessPlanRowId: row.id },
+      });
+    }
     const updated = await db`
       update vacation_access_plan_rows
       set checkout_status = 'paid',
@@ -527,6 +526,7 @@ async function activatePaidRow({ db, row, checkout, paymentIntentId = '', env })
         displayName: row.name || checkout.payer_name || row.email || checkout.payer_email,
       },
       addOns,
+      ownerCustomerId: row.owner_customer_id,
       amountCents: addOns.amountCents,
       currency: checkout.currency || CURRENCY,
       status: 'paid',

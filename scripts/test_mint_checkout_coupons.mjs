@@ -126,7 +126,7 @@ assert.deepEqual(result.coupon.metadata, { plan: 'unlimited' });
 assert.equal(result.redemption.status, 'processing');
 
 const second = consumeDb({ plan: 'single' }, { redemptionCount: 1, maxRedemptions: 1 });
-await assert.rejects(() => consumeCoupon(second.db, 'TS-EXAMPLE-001', { plan: 'single' }, env), /already used/);
+await assert.rejects(() => consumeCoupon(second.db, 'TS-EXAMPLE-001', { plan: 'single', originalAmountCents: 0 }, env), /already used/);
 assert.equal(second.state.redemption_count, 1);
 
 console.log('mint checkout coupon tests passed');

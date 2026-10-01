@@ -355,24 +355,25 @@
 
               <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
                 <div class="order-summary" aria-label="Order summary">
-                  <div class="summary-row"><span id="singleName">TimeSyncher Vacation - Single</span><strong id="singlePrice">$37</strong></div>
-                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">Upgrade to TimeSyncher Vacation - Unlimited</span><strong id="unlimitedPrice">+$27</strong></div>
-                  <div class="summary-row" id="photoRow" hidden><span id="photoName">Photo Memories Keepsake</span><strong id="photoPrice">+$5</strong></div>
+                  <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
+                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">unlimited</span><strong id="unlimitedPrice"></strong></div>
+                  <div class="summary-row" id="photoRow" hidden><span id="photoName">owner_media</span><strong id="photoPrice"></strong></div>
+                  <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>
                   <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
-                  <div class="summary-row total"><span>Total today</span><strong id="total">$37</strong></div>
+                  <div class="summary-row total"><span>Total today</span><strong id="total"></strong></div>
                 </div>
 
                 <div class="bump">
                   <label>
                     <input type="checkbox" id="orderBump" />
-                    <span><b id="bumpTitle">Upgrade to TimeSyncher Vacation - Unlimited for +$27</b><span id="bumpDescription">The order bump moves the setup from the Single product to the Unlimited subscription product.</span></span>
+                    <span><b id="bumpTitle">unlimited</b><span id="bumpDescription"></span></span>
                   </label>
                 </div>
 
                 <div class="bump">
                   <label>
                     <input type="checkbox" id="photoMemories" />
-                    <span><b id="photoTitle">Add Photo Memories Keepsake for +$5/year</b><span id="photoDescription">Include up to 100 favorite photos in the printable vacation keepsake. Photos only for MVP.</span></span>
+                    <span><b id="photoTitle">owner_media</b><span id="photoDescription"></span></span>
                   </label>
                 </div>
 
@@ -520,7 +521,7 @@
               <div class="screen">
                 <div class="screen-row"><div class="icon">🏨</div><div><b>Upper West Side suite</b><span>Quiet, larger rooms, easy Lincoln Center logistics</span></div><em class="pill">Top</em></div>
                 <div class="screen-row"><div class="icon">🗽</div><div><b>Midtown luxury tower</b><span>Best for shows, weaker for quiet mornings</span></div><em class="pill">Alt</em></div>
-                <div class="screen-row"><div class="icon">💳</div><div><b>Vacation budget</b><span>$1,180 under target with current timeline</span></div><em class="pill">OK</em></div>
+                <div class="screen-row"><div class="icon">💳</div><div><b>Vacation budget</b><span>Under the budget target with the current timeline</span></div><em class="pill">OK</em></div>
               </div>
             </div>
           </div>
@@ -620,42 +621,43 @@
       return '$' + (cents / 100).toFixed(0);
     }
 
-    function productLabel(name) {
-      return String(name || '').replace(/ - /g, ' - ');
+    function pricedCents(amount, key) {
+      const cents = Number(amount);
+      if (!Number.isInteger(cents) || cents <= 0) throw new Error('checkout config missing: ' + key);
+      return cents;
     }
 
     function activePhotoProduct() {
-      const photos = productConfig.products?.photoMemories || {};
-      return bump.checked ? (photos.unlimited || {}) : (photos.single || {});
+      return productConfig.products?.media || {};
     }
 
-    function activePhotoAmountCents(photos = activePhotoProduct()) {
-      return photos.amount || (bump.checked ? 900 : 500);
+    function orderCents() {
+      let cents = pricedCents(productConfig.products?.single?.amount, 'TIMESYNCHER_BASE_PRICE_CENTS');
+      if (bump.checked) cents += pricedCents(productConfig.products?.unlimited?.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+      if (photoMemories.checked) cents += pricedCents(activePhotoProduct().amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS');
+      return cents;
     }
 
     function syncPhotoCopy() {
       const photos = activePhotoProduct();
-      const photoAmount = activePhotoAmountCents(photos);
-      photoName.textContent = productLabel(photos.name || 'Photo Memories Keepsake');
-      photoPrice.textContent = '+' + money(photoAmount);
+      photoName.textContent = photos.name || 'owner_media';
+      photoTitle.textContent = photos.name || 'owner_media';
+      photoDescription.textContent = photos.description || '';
+      photoPrice.textContent = photoMemories.checked ? '+' + money(pricedCents(photos.amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS')) : '';
       photoRow.hidden = !photoMemories.checked;
-      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photoAmount)}/year`;
-      photoDescription.textContent = photos.description || 'Include favorite photos in the printable vacation keepsake. Photos only for MVP.';
     }
 
     function applyProductCopy(config) {
       productConfig = config || {};
       const single = config.products?.single || {};
       const unlimited = config.products?.unlimited || {};
-      singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
-      singlePrice.textContent = money(single.amount || 3700);
-      unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
-      unlimitedPrice.textContent = unlimited.amount ? '+' + money(unlimited.amount) : '';
+      singleName.textContent = single.name || 'single';
+      singlePrice.textContent = money(pricedCents(single.amount, 'TIMESYNCHER_BASE_PRICE_CENTS'));
+      unlimitedName.textContent = unlimited.name || 'unlimited';
+      unlimitedPrice.textContent = '+' + money(pricedCents(unlimited.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'));
       bumpRow.hidden = !bump.checked;
-      bumpTitle.textContent = unlimited.amount
-        ? `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount)}`
-        : `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')}`;
-      bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
+      bumpTitle.textContent = unlimited.name || 'unlimited';
+      bumpDescription.textContent = unlimited.description || '';
       syncPhotoCopy();
     }
 
@@ -672,18 +674,7 @@
 
     function stripeCountryCode(country) {
       const normalized = String(country || '').trim().toLowerCase();
-      const map = {
-        'united states': 'US',
-        'us': 'US',
-        'usa': 'US',
-        'canada': 'CA',
-        'ca': 'CA',
-        'united kingdom': 'GB',
-        'uk': 'GB',
-        'gb': 'GB',
-        'australia': 'AU',
-        'au': 'AU',
-      };
+      const map = { 'united states': 'US', us: 'US', usa: 'US', canada: 'CA', ca: 'CA', 'united kingdom': 'GB', uk: 'GB', gb: 'GB', australia: 'AU', au: 'AU' };
       return map[normalized] || (normalized.length === 2 ? normalized.toUpperCase() : 'US');
     }
 
@@ -724,16 +715,23 @@
     }
 
     function updateTotal() {
-      const bumped = bump.checked;
-      const photos = photoMemories.checked;
-      const photoProduct = activePhotoProduct();
-      bumpRow.hidden = !bumped;
-      photoRow.hidden = !photos;
-      syncPhotoCopy();
-      const bumpAmount = Number(productConfig.products?.unlimited?.amount);
-      const cents = Number(productConfig.products?.single?.amount || 3700) + (bumped && Number.isFinite(bumpAmount) ? bumpAmount : 0) + (photos ? activePhotoAmountCents(photoProduct) : 0);
-      total.textContent = money(cents);
-      tax.textContent = couponMode() ? 'Waived by coupon' : 'Calculated by Stripe';
+      const waivedRow = document.getElementById('waivedRow');
+      const waivedAmount = document.getElementById('waivedAmount');
+      bumpRow.hidden = !bump.checked;
+      photoRow.hidden = !photoMemories.checked;
+      tax.textContent = 'Calculated by Stripe';
+      try {
+        syncPhotoCopy();
+        const cents = orderCents();
+        const charge = couponMode() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };
+        waivedRow.hidden = charge.waivedCents <= 0;
+        waivedAmount.textContent = charge.waivedCents ? money(charge.waivedCents) : '';
+        total.textContent = money(charge.totalCents);
+      } catch (error) {
+        waivedRow.hidden = true;
+        total.textContent = '';
+        setStatus(error.message, true);
+      }
     }
 
     async function loadStripeConfig() {
@@ -763,7 +761,7 @@
         couponPayBtn.disabled = false;
         couponPayBtn.textContent = 'Redeem coupon';
         paymentElementMount.innerHTML = '<div class="stripe-loading"><strong>Coupon checkout</strong></div>';
-        tax.textContent = 'Waived by coupon';
+        updateTotal();
         return true;
       }
       payBtn.hidden = false;
