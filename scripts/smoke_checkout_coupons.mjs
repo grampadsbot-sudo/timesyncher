@@ -3,29 +3,13 @@ import assert from 'node:assert/strict';
 import {
   checkoutOrderSummary,
 } from '../src/vacation/checkout-pricing.mjs';
-import {
-  couponAuditHint,
-  couponCodeHash,
-  couponCodeHint,
-  normalizeCouponCode,
-  validateCouponCode,
-} from '../src/vacation/checkout-coupons.mjs';
 
 const env = {
   TIMESYNCHER_BASE_PRICE_CENTS: '3700',
   TIMESYNCHER_ORDER_BUMP_PRICE_CENTS: '2700',
   TIMESYNCHER_MEDIA_PRICE_CENTS: '1700',
   TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
-  TIMESYNCHER_COUPON_HASH_SALT: 'test-salt',
 };
-
-assert.equal(normalizeCouponCode('  tsv-free-1  '), 'TSV-FREE-1');
-assert.equal(validateCouponCode('tsv-free-1'), 'TSV-FREE-1');
-assert.equal(couponCodeHint('TSV-ABCDEFGH'), 'TSV-...EFGH');
-assert.equal(couponAuditHint({ codeHint: 'TS-...JRX' }, 'TS-WBO06AM1OJRX'), 'TS-...JRX');
-assert.equal(couponAuditHint({}, 'TS-WBO06AM1OJRX'), 'TS-W...OJRX');
-assert.equal(couponCodeHash('TSV-FREE-1', env), couponCodeHash('tsv-free-1', env));
-assert.throws(() => validateCouponCode('x'), /valid coupon/);
 
 assert.deepEqual(checkoutOrderSummary({}, env), {
   amountCents: 3700,
@@ -54,4 +38,4 @@ assert.ok(
   'coupon endpoint redeems without loading Stripe',
 );
 
-console.log(JSON.stringify({ ok: true, checked: ['coupon helpers', 'pricing', 'checkout UI', 'coupon endpoint without Stripe'] }, null, 2));
+console.log(JSON.stringify({ ok: true, checked: ['pricing', 'checkout UI', 'coupon endpoint without Stripe'] }, null, 2));

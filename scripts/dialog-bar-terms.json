@@ -82,7 +82,6 @@
         "routes/onboarding-session.mjs",
         "src/vacation/stripe-env.mjs",
         "src/vacation/checkout-pricing.mjs",
-        "src/vacation/checkout-coupons.mjs",
         "src/vacation/coupons.mjs",
         "src/vacation/access-plan.mjs",
         "src/vacation/collaborator-checkout.mjs",

@@ -1,6 +1,6 @@
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption } from '../src/vacation/coupons.mjs';
+import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption, couponHash } from '../src/vacation/coupons.mjs';
 import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 import { recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
@@ -45,6 +45,32 @@ function orderDetails(body) {
   };
 }
 
+const COUPON_PLANS = new Set(['single', 'unlimited', 'owner_media', 'telegram_collaborators_single_trip']);
+
+export function storedCouponPlan(metadata) {
+  if (metadata == null || typeof metadata !== 'object' || Array.isArray(metadata)) return null;
+  if (!Object.hasOwn(metadata, 'plan')) return null;
+  const plan = metadata.plan;
+  if (plan == null || plan === '') return null;
+  if (plan === 'owner_media_single_vacation' || plan === 'owner_media_unlimited_vacations') return 'owner_media';
+  if (typeof plan === 'string' && COUPON_PLANS.has(plan)) return plan;
+  const shown = typeof plan === 'string' ? plan : '';
+  throw Object.assign(new Error(shown
+    ? `Coupon plan "${shown}" is not supported. Use single or unlimited.`
+    : 'Coupon plan is not supported. Use single or unlimited.'), { statusCode: 400 });
+}
+
+export function resolveRedeemPlan(metadata, orderBump) {
+  return storedCouponPlan(metadata) || (orderBump ? 'unlimited' : 'single');
+}
+
+async function readStoredCouponMetadata(db, couponCode) {
+  const hash = couponHash(couponCode, process.env);
+  if (!hash) return null;
+  const rows = await db`select metadata from checkout_coupons where code_hash = ${hash} limit 1`;
+  return rows[0]?.metadata ?? null;
+}
+
 function collaboratorAccessAddOns(body = {}, plan = {}) {
   const media = selectedMediaAddOn(body, process.env);
   return {
@@ -66,6 +92,8 @@ export default async function handler(req, res) {
     const db = sql(process.env);
     const couponCode = cleanText(body.couponCode || body.coupon, 120);
     const collaboratorInviteToken = cleanText(body.collaboratorInvite || body.collaboratorInviteToken, 200);
+    const couponMetadata = await readStoredCouponMetadata(db, couponCode);
+    storedCouponPlan(couponMetadata);
     if (body.action === 'redeem_owner_media_coupon' || body.product === 'owner_media_addons') {
       const addOns = requireOwnerMediaAddOns(body);
       const { coupon, redemption } = await consumeCoupon(db, couponCode, {
@@ -227,14 +255,15 @@ export default async function handler(req, res) {
         email,
       });
     }
+    const plan = resolveRedeemPlan(couponMetadata, order.orderBump);
     const metadata = {
       source: 'coupon_checkout',
       order_bump: String(order.orderBump),
       photo_memories: String(order.photoMemories),
       vacation_date: cleanText(body.vacationDate, 40) || null,
       currency: CURRENCY,
-      product: order.plan === 'unlimited' ? 'timesyncher_vacation_unlimited' : 'timesyncher_vacation_single',
-      plan: order.plan,
+      product: plan === 'unlimited' ? 'timesyncher_vacation_unlimited' : plan === 'owner_media' ? 'timesyncher_vacation_owner_media_addons' : plan === 'telegram_collaborators_single_trip' ? 'timesyncher_vacation_telegram_collaborator' : 'timesyncher_vacation_single',
+      plan,
       email: contact.email,
       phone: contact.phone,
       first_name: contact.firstName,
@@ -242,17 +271,20 @@ export default async function handler(req, res) {
     };
     const { coupon, redemption } = await consumeCoupon(db, couponCode, {
       email: contact.email,
-      plan: order.plan,
+      plan,
       originalAmountCents: order.amount,
       metadata,
     }, process.env);
+    const grantedPlan = resolveRedeemPlan(coupon.metadata, order.orderBump);
     const onboarding = await buildOnboardingFromCoupon({
       db,
       contact,
-      plan: order.plan,
+      plan: grantedPlan,
       amountCents: order.amount,
       metadata: {
         ...metadata,
+        plan: grantedPlan,
+        product: grantedPlan === 'unlimited' ? 'timesyncher_vacation_unlimited' : grantedPlan === 'owner_media' ? 'timesyncher_vacation_owner_media_addons' : grantedPlan === 'telegram_collaborators_single_trip' ? 'timesyncher_vacation_telegram_collaborator' : 'timesyncher_vacation_single',
         couponId: coupon.id,
         couponHint: coupon.codeHint,
         couponRedemptionId: redemption.id,
@@ -278,7 +310,7 @@ export default async function handler(req, res) {
         originalAmountCents: order.amount,
         amountWaivedCents: order.amount,
         currency: CURRENCY,
-        plan: order.plan,
+        plan: grantedPlan,
         status: 'coupon_redeemed',
       },
       email,
