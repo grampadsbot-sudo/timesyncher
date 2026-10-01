@@ -359,7 +359,7 @@
         };
         updateScope();
       })
-      .catch(() => {});
+      .catch((error) => setStatus(error.message || 'checkout config missing: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS', 'error'));
 
     if (!collaboratorInvite) {
       setStatus('This collaborator access checkout link is missing its invite token.', 'error');
