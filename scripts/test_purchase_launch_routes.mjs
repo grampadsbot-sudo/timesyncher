@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,6 +44,26 @@ if (!String(process.env.VERCEL_GIT_COMMIT_SHA || '').trim() && !String(process.e
   process.env.TIMESYNCHER_BUILD_SHA = '0123456789abcdef0123456789abcdef01234567';
 }
 const expectedSha = buildSha();
+assert.ok(expectedSha, 'build sha is empty');
+
+const htmlEntries = [
+  'index.html',
+  'privacy.html',
+  'terms.html',
+  'support.html',
+  'login.html',
+  'order-test.html',
+  'addons-checkout.html',
+  'owner-media-checkout.html',
+  'access-checkout.html',
+  'order-success.html',
+  'admin-onboardings.html',
+  'openclaw-admin.html',
+  'itinerary.html',
+  'vacation-app.html',
+  'shared-app.html',
+  'onboarding-eula.html',
+];
 
 await build();
 
@@ -112,6 +132,21 @@ function assertStamp(result, label) {
 }
 
 try {
+  const version = await get('/api/version');
+  assert.equal(version.status, 200, version.body);
+  assert.match(version.type, /json/);
+  const reportedSha = JSON.parse(version.body).sha;
+  assert.equal(reportedSha, expectedSha);
+
+  const builtHtml = (await readdir(dist)).filter((name) => name.endsWith('.html')).sort();
+  assert.deepEqual(builtHtml, [...htmlEntries].sort());
+  for (const name of htmlEntries) {
+    const page = await get(`/${name}`);
+    assertStamp(page, name);
+    assert.match(page.type, /text\/html/);
+    assert.ok(page.body.includes(`content="${reportedSha}"`), `${name} stamp differs from /api/version`);
+  }
+
   const markdown = await get('/src/onboarding/eula-markdown.mjs');
   assertStamp(markdown, 'eula module');
   assert.match(markdown.type, /javascript/);
