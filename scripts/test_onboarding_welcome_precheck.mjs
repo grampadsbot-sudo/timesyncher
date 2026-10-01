@@ -49,7 +49,7 @@ function turns(welcome, customer = 'hello there', welcomeAt = '2026-10-01T00:00:
   ];
 }
 
-const cleanSources = [{ file: 'src/vacation/example.mjs', text: 'export const ready = true;\n' }];
+const cleanSources = [{ file: 'src/vacation/example.mjs', text: 'const marker = 1;\n' }];
 
 function run(welcome, extra = {}) {
   return precheckOnboardingRun({
