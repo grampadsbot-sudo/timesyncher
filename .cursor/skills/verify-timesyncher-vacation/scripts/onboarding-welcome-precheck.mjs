@@ -306,6 +306,25 @@ export function gradeBuildStamps({ versionSha, pages } = {}) {
   return { ok: failures.length === 0, failures, versionSha: version || '' };
 }
 
+export function tripSiteLooksExpired(body) {
+  const text = String(body || '');
+  return /invalid or expired link/i.test(text)
+    || /link expired or invalid/i.test(text)
+    || /this shared trip link is no longer active/i.test(text);
+}
+
+export function sharedTripApiUrl(pageUrl) {
+  let parsed;
+  try {
+    parsed = new URL(String(pageUrl || ''));
+  } catch {
+    return '';
+  }
+  const match = parsed.pathname.match(/^\/shared\/([^/]+)\/?$/);
+  if (!match) return '';
+  return `${parsed.origin}/api/shared/${encodeURIComponent(decodeURIComponent(match[1]))}`;
+}
+
 export function gradeTripSite(site = {}) {
   const failures = [];
   const url = String(site?.url || '').trim();
@@ -317,7 +336,10 @@ export function gradeTripSite(site = {}) {
   if (!Number.isInteger(status) || status === 404) {
     failures.push({ code: 'trip_site', detail: 'status', status: Number.isInteger(status) ? status : null, url });
   }
-  if (/invalid or expired link/i.test(String(site.body || ''))) {
+  if (Number.isInteger(site.apiStatus) && site.apiStatus === 404) {
+    failures.push({ code: 'trip_site', detail: 'status', status: 404, url });
+  }
+  if (tripSiteLooksExpired(site.body)) {
     failures.push({ code: 'trip_site', detail: 'expired', url });
   }
   return failures;
@@ -690,7 +712,8 @@ export function renderJudgePacketMarkdown(packet) {
     '',
   );
   for (const site of packet?.tripSites || []) {
-    lines.push(`- ${site.status ?? 'missing'} ${site.url || 'missing'}${site.expired ? ' expired' : ''}`);
+    const apiNote = Number.isInteger(site.apiStatus) ? ` api ${site.apiStatus}` : '';
+    lines.push(`- ${site.status ?? 'missing'} ${site.url || 'missing'}${apiNote}${site.expired ? ' expired' : ''}`);
   }
   lines.push(
     '',

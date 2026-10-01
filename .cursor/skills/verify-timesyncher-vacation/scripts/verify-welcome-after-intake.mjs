@@ -25,7 +25,9 @@ import {
   onboardingVerdict,
   precheckOnboardingRun,
   renderJudgePacketMarkdown,
+  sharedTripApiUrl,
   stampBuildSha,
+  tripSiteLooksExpired,
   turnText,
 } from './onboarding-welcome-precheck.mjs';
 
@@ -861,16 +863,49 @@ function urlsInText(text) {
   return [...String(text || '').matchAll(/https?:\/\/[^\s<>"')]+/g)].map((match) => match[0].replace(/[.,]+$/, ''));
 }
 
-async function fetchTripSite(url, env) {
+async function readResponsePrefix(response, limit = 4000) {
+  const stream = response?.body;
+  if (!stream || typeof stream.getReader !== 'function') {
+    const text = typeof response?.text === 'function' ? await response.text() : '';
+    return String(text).slice(0, limit);
+  }
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let out = '';
+  try {
+    while (out.length < limit) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      out += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return out.slice(0, limit);
+}
+
+export async function fetchTripSite(url, env = process.env) {
   const headers = { accept: 'text/html' };
   const bypass = bypassHeaders(env);
   if (bypass) headers['x-vercel-protection-bypass'] = bypass['x-vercel-protection-bypass'];
   try {
     const response = await fetch(url, { headers, redirect: 'follow' });
-    const body = typeof response?.text === 'function' ? await response.text() : '';
-    return { url, status: response?.status ?? null, body: String(body).slice(0, 4000) };
+    const html = await readResponsePrefix(response);
+    const apiUrl = sharedTripApiUrl(response?.url || url);
+    let apiStatus = null;
+    let apiBody = '';
+    if (apiUrl) {
+      const apiResponse = await fetch(apiUrl, {
+        headers: { ...headers, accept: 'application/json' },
+        redirect: 'follow',
+      });
+      apiStatus = Number.isInteger(apiResponse?.status) ? apiResponse.status : null;
+      apiBody = await readResponsePrefix(apiResponse);
+    }
+    const body = [html, apiBody].filter(Boolean).join('\n');
+    return { url, status: response?.status ?? null, apiStatus, body };
   } catch {
-    return { url, status: null, body: '' };
+    return { url, status: null, apiStatus: null, body: '' };
   }
 }
 
@@ -904,7 +939,8 @@ export function buildJudgePacket({ fixtures, trips, collaborator, precheck, judg
     tripSites: (tripSites || []).map((site) => ({
       url: site.url,
       status: site.status ?? null,
-      expired: /invalid or expired link/i.test(String(site.body || '')),
+      apiStatus: Number.isInteger(site.apiStatus) ? site.apiStatus : null,
+      expired: tripSiteLooksExpired(site.body),
     })),
     judgeRaw: judgeRaw || null,
     noVacation: noVacation || null,

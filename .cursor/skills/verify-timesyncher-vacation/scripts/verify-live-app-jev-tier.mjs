@@ -25,8 +25,11 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/produceLiveAppReply/.test(api) || !/jevStamp/.test(api)) {
     errors.push('vacation-app API does not store the shared-producer reply and Jev stamp');
   }
-  if (!/ensureOnboardingOpener/.test(api) || !/produceOnboardingOpener/.test(api)) {
-    errors.push('vacation-app API does not ask the model for the onboarding opener');
+  if (!/ensureOnboardingOpener/.test(api) || !/renderOnboardingWelcome/.test(api) || !/cannedWelcomeLiveTurn/.test(api)) {
+    errors.push('vacation-app API does not render the canned onboarding welcome');
+  }
+  if (/produceOnboardingOpener/.test(api)) {
+    errors.push('vacation-app API still asks the model for the onboarding opener');
   }
   if (/onboardingOpenerText/.test(`${api}\n${liveTurn}`) || /ONBOARDING_OPENER_WITH_SITE|ONBOARDING_OPENER_CHAT_ONLY|const CANNED_APP_REPLY/.test(liveTurn)) {
     errors.push('vacation-app still ships a fixed onboarding opener or a canned reply');
@@ -59,8 +62,8 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (/View access lets them see the days/.test(replyRules) || /Say you are building the itinerary/.test(replyRules) || /State this payer line exactly/.test(replyRules)) {
     errors.push('shared producer still dictates upsell sentences');
   }
-  if (!/unlimited vacations for the whole year/.test(replyRules)) {
-    errors.push('shared producer drops the exact unlimited-vacations phrase');
+  if (!/unlimited vacations for the whole year/.test(liveTurn)) {
+    errors.push('live reply path drops the exact unlimited-vacations phrase');
   }
   if (!/limit 120/.test(api)) {
     errors.push('vacation-app memory does not keep the early intake for the destination lock');
@@ -157,8 +160,13 @@ export function assertLiveTurns(doc, { requireRan = false } = {}) {
   if (!turns.length) errors.push('live transcript has no turns');
   let ran = 0;
   turns.forEach((turn, index) => {
-    errors.push(...jevErrors(turn));
     const text = String(turn.text || '');
+    if (cannedWelcomeTurn(turn)) {
+      if (!text.trim()) errors.push(`turn ${turn.turnIndex} canned welcome is empty`);
+      if (/quality:\s*[1-5]/i.test(text)) errors.push(`turn ${turn.turnIndex} canned welcome paints a quality line`);
+      return;
+    }
+    errors.push(...jevErrors(turn));
     if (item34BanHit(text)) errors.push(`turn ${turn.turnIndex} uses split-payment jargon`);
     if (turn.role !== 'app') return;
     const fixedOpener = index === 0 && (turn.fixedOpener === true || turn.replyProducer === OPENER_PRODUCER);
@@ -241,6 +249,13 @@ export function assertGoldSessionDepth(doc) {
   const opener = turns[0];
   if (opener?.role !== 'app') errors.push('missing app open');
   return errors;
+}
+
+function cannedWelcomeTurn(turn) {
+  if (turn?.telemetry?.kind === 'canned_welcome') return true;
+  const text = String(turn?.text || '');
+  return /You're all set, and your trip already has its own website:/.test(text)
+    || /Here's the trip website:/.test(text);
 }
 
 function sampleTurn(overrides = {}) {
@@ -332,6 +347,19 @@ async function selfCheck() {
     ...openerTurn,
     jev: { jevRan: true, modelTier: 1, routeType: 'general' },
   }])).length);
+  const cannedWelcome = {
+    turnIndex: 1,
+    role: 'app',
+    modality: 'text',
+    text: "Welcome, Nia! You're all set, and your trip already has its own website: https://vacation-staging.timesyncher.com/shared/example/",
+    telemetry: { kind: 'canned_welcome', tier: 'n/a', model: 'n/a' },
+    jev: null,
+  };
+  assert.deepEqual(assertLiveTurns(liveDoc([
+    cannedWelcome,
+    sampleTurn({ turnIndex: 2 }),
+    appTurn({ turnIndex: 3 }),
+  ]), { requireRan: true }), []);
   const sources = await readSources();
   assert.deepEqual(assertComposerSource(sources), []);
   const opener = 'Welcome. I am here to build this vacation with you. Your website is not built yet, so this chat is the whole workspace.';
