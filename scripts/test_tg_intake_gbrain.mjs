@@ -9,13 +9,8 @@ import {
   intakeTurnSlug,
   persistIntakeTurnToGbrain,
 } from '../src/vacation/tg-intake-gbrain.mjs';
-import { vacationIdentityAck } from '../routes/vacation-telegram-turn.mjs';
 
 assert.equal(INITIAL_BUILD_CUE, "I'm building your initial itinerary now and it may take 10–15 minutes.");
-const identityFacts = vacationIdentityAck({ vacationName: 'Hawaii 2026', text: 'Hawaii 2026 seven nights in Oahu', queued: { id: '1' } });
-assert.equal(identityFacts.building, true);
-assert.equal(identityFacts.buildCue, INITIAL_BUILD_CUE);
-assert.match(identityFacts.customerText, /seven nights in Oahu/);
 
 const slug = intakeTurnSlug({ telegramChatId: '123', inboundTranscriptId: 'turn-a' });
 assert.equal(slug, 'bot-admin/messages/time-syncher/tg-intake/123/turn-a');
@@ -43,9 +38,5 @@ const written = persistIntakeTurnToGbrain({
 assert.equal(written.ok, true);
 assert.equal(written.slug, slug);
 assert.ok(fs.existsSync(path.join(root, `${slug}.md`)));
-
-const turnSrc = fs.readFileSync(new URL('../routes/vacation-telegram-turn.mjs', import.meta.url), 'utf8');
-assert.match(turnSrc, /persistIntakeTurnToGbrain/);
-assert.match(turnSrc, /INITIAL_BUILD_CUE/);
 
 console.log('tg intake gbrain track + build-cue tests passed');
