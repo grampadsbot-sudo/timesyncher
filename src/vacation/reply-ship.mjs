@@ -1,6 +1,7 @@
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
 import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry } from './reply-telemetry.mjs';
+import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 
 export async function storeReplyFailure(db, turnId, payload) {
   await db`
@@ -11,6 +12,7 @@ export async function storeReplyFailure(db, turnId, payload) {
 }
 
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare }) {
+  assertCustomerReplyShippable(finished.reply, pending.tripId);
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,

@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { firstIntakeReplyFacts, firstIntakeReplyPrompt } from '../src/vacation/first-intake-reply.mjs';
 import {
+  ReplyIdCitationBlockedError,
+  assertCustomerReplyShippable,
+  failReplyIdCitation,
+} from '../src/vacation/reply-id-citation.mjs';
+import {
   ReplyPlanEntitlementMissingError,
   failReplyPlanEntitlement,
   loadTripOwnerReplyPlan,
@@ -49,7 +54,33 @@ const blob = `${JSON.stringify(facts)}\n${prompt}`;
 
 assert.equal(facts.plan.plan_id, 'timesyncher_vacation_single');
 assert.equal(facts.plan.plan_name, 'TimeSyncher Vacation Single');
+assert.equal(facts.plan.purchased_plan, 'single');
+assert.equal(facts.plan.plan_owned, true);
 assert.doesNotMatch(blob, /unlimited/i);
+assert.doesNotMatch(blob, /yearly/i);
+assert.doesNotMatch(prompt, /plan they already purchased/i);
+assert.doesNotMatch(prompt, /Pitch the yearly/i);
+
+assert.throws(
+  () => assertCustomerReplyShippable('Thanks for the note (id: abc)', 'trip-cite'),
+  (error) => error instanceof ReplyIdCitationBlockedError && error.name === 'reply_id_citation_blocked',
+);
+
+let citeLogged = '';
+const priorCiteLog = console.error;
+console.error = (line) => {
+  citeLogged = String(line);
+};
+try {
+  assert.throws(
+    () => failReplyIdCitation('parenthetical_id_citation', 'trip-cite'),
+    (error) => error instanceof ReplyIdCitationBlockedError,
+  );
+  assert.equal(JSON.parse(citeLogged).reason, 'parenthetical_id_citation');
+  assert.equal(JSON.parse(citeLogged).tripId, 'trip-cite');
+} finally {
+  console.error = priorCiteLog;
+}
 
 assert.throws(
   () => firstIntakeReplyFacts({ ...voiceInput, ownerPlan: null }),

@@ -1,5 +1,6 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
+import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAY_WORD = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g;
@@ -94,8 +95,7 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
   'Do all of the following in this one message, in order:',
   '1. Confirm the itinerary is being built. Reflect where, the dates, the end date, the number of nights, who is coming, lodging, and the planned activities, when those are in customer_said or the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, an activity, a weekday, or a name.',
   '2. Offer to add each person in collaborators, as a statement, not a question. Say you will not grant view or edit until they agree. Do not say they are already collaborators or that they already have access. Do not grant view or edit in this message, including to children. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
-  '3. State the plan they already purchased. Use only plan.plan_name and plan.plan_id from the facts. You write how it fits this trip. Do not state a price unless plan includes a price.',
-  '4. End with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
+  '3. End with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');
 
@@ -327,10 +327,13 @@ export function firstIntakeReplyFacts({
   if (!voiceNote) return scrubFacts(facts, hidden);
   if (collaborators.length) facts.collaborators = collaborators;
   if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', tripId);
+  const purchasedPlan = String(ownerPlan.checkout_plan || '').trim();
   const plan = {
+    purchased_plan: purchasedPlan,
     plan_id: String(ownerPlan.plan_id || '').trim(),
     plan_name: String(ownerPlan.plan_name || '').trim(),
-    plan_owned: planOwned === true || ownerPlan.order_bump_owned === true,
+    plan_owned: true,
+    order_bump_owned: planOwned === true || ownerPlan.order_bump_owned === true,
   };
   if (!plan.plan_id || !plan.plan_name) failReplyPlanEntitlement('owner_plan_incomplete', tripId);
   const price = Number(planPrice);
@@ -435,6 +438,7 @@ export async function produceFirstIntakeReply({
       reason: (visible && intakeReplyBlock(visible, appTextBanned, facts, ids)) || model?.reason || 'first intake reply model returned no reply',
     };
   }
+  assertCustomerReplyShippable(reply, tripId);
   return { reply, rules, jev, model, reason: null };
 }
 
