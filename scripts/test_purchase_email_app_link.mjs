@@ -154,9 +154,21 @@ function contentType(file) {
   return 'application/octet-stream';
 }
 
+async function removeChromeProfile(profile) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rm(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+      return;
+    } catch (error) {
+      if (attempt === 4 || (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY')) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)));
+    }
+  }
+}
+
 function dumpDom(url) {
   return new Promise((resolve, reject) => {
-    const profile = path.join(storeDir, `chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const profile = path.join(tmpdir(), `purchase-app-link-chrome-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     const child = spawn('google-chrome', [
       '--headless=new',
       '--disable-gpu',
@@ -175,7 +187,7 @@ function dumpDom(url) {
       url,
     ], {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '', HOME: profile },
+      env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: '' },
     });
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
@@ -188,9 +200,30 @@ function dumpDom(url) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      child.kill('SIGKILL');
-      if (error) reject(error);
-      else resolve(out);
+      const afterExit = async () => {
+        try {
+          await removeChromeProfile(profile);
+        } catch (cleanupError) {
+          if (!error) {
+            reject(cleanupError);
+            return;
+          }
+        }
+        if (error) reject(error);
+        else resolve(out);
+      };
+      if (child.exitCode !== null) {
+        afterExit();
+        return;
+      }
+      child.once('exit', () => {
+        try { child.kill('SIGKILL'); } catch {}
+        afterExit();
+      });
+      try { child.kill('SIGTERM'); } catch {}
+      setTimeout(() => {
+        try { child.kill('SIGKILL'); } catch {}
+      }, 2000);
     };
     child.stdout.on('data', (chunk) => {
       out += chunk;
@@ -321,7 +354,7 @@ try {
   useSharedTripDatabase(null);
   globalThis.fetch = originalFetch;
   await new Promise((resolve) => server.close(resolve));
-  await rm(storeDir, { recursive: true, force: true });
+  await rm(storeDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
 }
 
 console.log('purchase email app link passed');
