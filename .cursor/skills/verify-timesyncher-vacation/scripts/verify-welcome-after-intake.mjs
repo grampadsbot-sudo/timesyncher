@@ -544,18 +544,30 @@ async function driveNoVacation(browser, env, account, artifactsDir) {
     await page.waitForSelector('iframe, #tripButton, #tripLabel', { timeout: 15000 }).catch(() => {});
     await new Promise((resolve) => setTimeout(resolve, 1500));
     const label = await page.$eval('#tripLabel, #tripButton', (node) => (node.innerText || '').replace(/\s+/g, ' ').trim()).catch(() => '');
-    const dropdown = await openVacationAreaDropdown(page);
-    await shot(page, file);
+    await page.$eval('#tripLabel, #tripButton', (node) => node.scrollIntoView({ block: 'center' })).catch(() => {});
+    const dropdown = await openVacationAreaDropdown(page, { clickThings: true });
     let observation = dropdown;
+    let surface = '';
+    const frame = page.frames().find((item) => item.url().includes('/shared/'));
+    if (frame) {
+      surface = await frame.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 240)).catch(() => '');
+      if (!observation.opened) observation = await openVacationAreaDropdown(page, { clickThings: true });
+    }
+    await shot(page, file);
     if (!observation.opened && onboarding.publicUrl) {
-      const frame = page.frames().find((item) => item.url().includes('/shared/'));
-      if (frame) observation = await openVacationAreaDropdown(page, { clickThings: true });
-      if (!observation.opened) {
-        await page.goto(onboarding.publicUrl, { waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        observation = await openVacationAreaDropdown(page, { clickThings: true });
+      await page.goto(onboarding.publicUrl, { waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      const nextSurface = await page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 240)).catch(() => '');
+      if (nextSurface) surface = nextSurface;
+      const again = await openVacationAreaDropdown(page, { clickThings: true });
+      if (again.opened) {
+        observation = again;
+        await page.evaluate(() => {
+          const select = [...document.querySelectorAll('select')].find((node) => /^area\b/i.test((node.closest('label')?.innerText || '').trim()));
+          select?.scrollIntoView({ block: 'center' });
+        }).catch(() => {});
+        await shot(page, file);
       }
-      if (observation.opened) await shot(page, file);
     }
     return {
       vacationCount: countRealVacations(vacations),
@@ -566,6 +578,7 @@ async function driveNoVacation(browser, env, account, artifactsDir) {
       screenshot: file,
       eulaAcceptedAt,
       label,
+      surface,
       publicUrl: onboarding.publicUrl || '',
       shellCount: Array.isArray(vacations) ? vacations.length : 0,
     };
@@ -710,6 +723,10 @@ function timestampRows(trips) {
 
 function includesAncestor(sha, ancestor) {
   if (!normalizeBuildSha(sha)) return null;
+  const seen = spawnSync('git', ['cat-file', '-t', sha], { cwd: root, encoding: 'utf8' });
+  if (seen.status !== 0) {
+    spawnSync('git', ['fetch', 'origin', sha, '--depth=40'], { cwd: root, encoding: 'utf8' });
+  }
   const result = spawnSync('git', ['merge-base', '--is-ancestor', ancestor, sha], { cwd: root, encoding: 'utf8' });
   if (result.status === 0) return true;
   if (result.status === 1) return false;
