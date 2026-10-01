@@ -114,14 +114,14 @@ const ownerVoice = {
   payload: { liveTranscript: { speakerName: 'Ada Lovelace', modality: 'voice' } },
 };
 const collab = { viewerId: collabId, customerName: 'Nico', seat: { displayName: 'Nico' } };
-assert.equal(turnAuthorLabel(ownerVoice, collab), 'Ada Lovelace');
+assert.equal(turnAuthorLabel(ownerVoice, collab), 'Ada');
 assert.equal(turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: collabId, authorName: 'Nico' }, collab), 'You');
 assert.equal(turnAuthorLabel({ speaker: 'app', direction: 'outbound', authorName: 'Ada Lovelace' }, collab), 'TimeSyncher');
 assert.equal(turnAuthorLabel({
   speaker: 'customer',
   direction: 'inbound',
   payload: { liveTranscript: { speakerName: 'Ada Lovelace' } },
-}, collab), 'Ada Lovelace');
+}, collab), 'Ada');
 assert.equal(turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: ownerId, authorName: 'Ada Lovelace' }, { viewerId: ownerId, customerName: 'Ada Lovelace' }), 'You');
 
 console.log('first intake echo passed');
