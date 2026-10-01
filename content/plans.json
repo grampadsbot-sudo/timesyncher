@@ -1,5 +1,5 @@
 {
-  "timesyncher_vacation_unlimited": {
-    "plan_id": "timesyncher_vacation_unlimited"
+  "timesyncher_vacation_single": {
+    "plan_id": "timesyncher_vacation_single"
   }
 }

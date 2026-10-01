@@ -1,8 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
-
-const PLAN_FILE = new URL('../../content/plans.json', import.meta.url);
+import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAY_WORD = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g;
 const INVENTED_PARTY = /\balready (?:a |your )?collaborator\b|\balready (?:has|have) access\b|\bjust you and (?:him|her|them)\b/i;
@@ -79,15 +77,6 @@ function civilToday(nowMs = Date.now()) {
   return `${parts.year}-${month}-${day}`;
 }
 
-function yearlyPlanRecord() {
-  const plans = JSON.parse(readFileSync(PLAN_FILE, 'utf8'));
-  const plan = plans?.[YEARLY_PLAN_ID];
-  if (!plan || plan.plan_id !== YEARLY_PLAN_ID) throw new Error('yearly plan source missing');
-  return { plan_id: String(plan.plan_id) };
-}
-
-export const YEARLY_PLAN_ID = 'timesyncher_vacation_unlimited';
-
 export const VIEW_WITHOUT_SIGN_IN = 'anyone with the trip link can view plans and photos without signing in';
 
 const FIRST_INTAKE_LEAK = /\b(?:tier|route|model|jev)\b/i;
@@ -105,7 +94,7 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
   'Do all of the following in this one message, in order:',
   '1. Confirm the itinerary is being built. Reflect where, the dates, the end date, the number of nights, who is coming, lodging, and the planned activities, when those are in customer_said or the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, an activity, a weekday, or a name.',
   '2. Offer to add each person in collaborators, as a statement, not a question. Say you will not grant view or edit until they agree. Do not say they are already collaborators or that they already have access. Do not grant view or edit in this message, including to children. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
-  '3. Pitch the yearly plan. Identify that plan only by plan.plan_id and the other plan fields from the plan source. You write the description. Do not state a price unless plan includes a price.',
+  '3. State the plan they already purchased. Use only plan.plan_name and plan.plan_id from the facts. You write how it fits this trip. Do not state a price unless plan includes a price.',
   '4. End with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');
@@ -239,6 +228,8 @@ export function firstIntakeReplyFacts({
   savedEnd = '',
   planOwned = false,
   planPrice = null,
+  ownerPlan = null,
+  tripId = '',
   customerName = '',
   ids = [],
   today = '',
@@ -335,7 +326,13 @@ export function firstIntakeReplyFacts({
   facts.gaps = gaps;
   if (!voiceNote) return scrubFacts(facts, hidden);
   if (collaborators.length) facts.collaborators = collaborators;
-  const plan = { ...yearlyPlanRecord(), plan_owned: planOwned === true };
+  if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', tripId);
+  const plan = {
+    plan_id: String(ownerPlan.plan_id || '').trim(),
+    plan_name: String(ownerPlan.plan_name || '').trim(),
+    plan_owned: planOwned === true || ownerPlan.order_bump_owned === true,
+  };
+  if (!plan.plan_id || !plan.plan_name) failReplyPlanEntitlement('owner_plan_incomplete', tripId);
   const price = Number(planPrice);
   if (Number.isFinite(price) && price > 0) plan.price = price;
   facts.plan = plan;
@@ -361,6 +358,7 @@ export async function produceFirstIntakeReply({
   wantedThings = [],
   roster = null,
   extractedDestination = '',
+  loadOwnerPlan = loadTripOwnerReplyPlan,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -381,7 +379,10 @@ export async function produceFirstIntakeReply({
   const saved = await loadSavedTripRecord(session, env);
   const savedStart = saved?.start || '';
   const savedEnd = saved?.end || '';
-  const ids = hiddenIds(session, [saved?.id, saved?.tripId, saved?.trip_id]);
+  const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
+  const ownerPlan = saved?.ownerPlan
+    || (tripId ? await loadOwnerPlan({ tripId, env }) : null);
+  const ids = hiddenIds(session, [saved?.id, saved?.tripId, saved?.trip_id, tripId]);
   const factInput = {
     customerTurn,
     tripTitle,
@@ -391,7 +392,9 @@ export async function produceFirstIntakeReply({
     savedStart,
     savedEnd,
     savedDates: isoDay(savedStart) && isoDay(savedEnd) ? `${isoDay(savedStart)} to ${isoDay(savedEnd)}` : '',
-    planOwned: saved?.planOwned === true,
+    planOwned: saved?.planOwned === true || ownerPlan?.order_bump_owned === true,
+    ownerPlan,
+    tripId,
     customerName: intakeCustomerName(session),
     ids,
   };
