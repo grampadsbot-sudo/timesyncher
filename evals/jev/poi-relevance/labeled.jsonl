@@ -1,0 +1,10 @@
+{"id":"grill","state":{"channel":"vacation-search","name":"North Shore Grill","category":"restaurant","url":"https://example.test/grill"},"expect":{"relevance":{"min":4,"max":5}}}
+{"id":"listicle","state":{"channel":"vacation-search","name":"Ten best things to do","category":"restaurant","url":"https://example.test/list"},"expect":{"relevance":{"min":1,"max":2}}}
+{"id":"beach","state":{"channel":"vacation-search","name":"Harbor Beach","category":"beach","url":"https://example.test/beach"},"expect":{"relevance":{"min":4,"max":5}}}
+{"id":"news","state":{"channel":"vacation-search","name":"City council notes","category":"museum","url":"https://example.test/news"},"expect":{"relevance":{"min":1,"max":2}}}
+{"id":"hotel","state":{"channel":"vacation-search","name":"Lighthouse Inn","category":"hotel","url":"https://example.test/inn"},"expect":{"relevance":{"min":4,"max":5}}}
+{"id":"generic","state":{"channel":"vacation-search","name":"Restaurants near me","category":"restaurant","url":"https://example.test/near"},"expect":{"relevance":{"min":1,"max":2}}}
+{"id":"museum","state":{"channel":"vacation-search","name":"Harbor Museum","category":"museum","url":"https://example.test/museum"},"expect":{"relevance":{"min":4,"max":5}}}
+{"id":"homepage","state":{"channel":"vacation-search","name":"Travel blog home","category":"beach","url":"https://example.test/"},"expect":{"relevance":{"min":1,"max":2}}}
+{"id":"market","state":{"channel":"vacation-search","name":"Sunday Fish Market","category":"market","url":"https://example.test/market"},"expect":{"relevance":{"min":4,"max":5}}}
+{"id":"wrong-category","state":{"channel":"vacation-search","name":"Airport parking rules","category":"restaurant","url":"https://example.test/parking"},"expect":{"relevance":{"min":1,"max":2}}}

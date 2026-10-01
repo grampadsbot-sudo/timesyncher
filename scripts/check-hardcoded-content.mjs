@@ -3,9 +3,14 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { growthFails, pruneBaseline } from './baseline-subset.mjs';
+import { barFindings, loadBarTerms } from './dialog-bars.mjs';
 import { INVENTORY_PATTERNS } from './hardcoded-inventory-patterns.mjs';
+import { jevCardFindings } from './jev-cards.mjs';
+import { turnPriceFindings } from './no-turn-price-env.mjs';
 
 export const BASELINE_NOTE = 'removed by Search Eng / Reply Eng deletion PR';
+export const PAID_PLACES_NOTE = 'TODO: Search is removing the paid places client';
 export const SHARE_TOKEN_SHA256 = '613987cf2ce687adbe97f074d9979ec3717c65d4b4807467ffb696e809e055d8';
 export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
@@ -385,6 +390,65 @@ function googlePlacesFindings(file, text, findings, seen) {
   }
 }
 
+// Paid place clients. The free Foursquare open-places dataset
+// (opensource.foursquare.com / os-places) is not one of these.
+// api.foursquare.com is not allowed to match inside places-api.foursquare.com.
+const PAID_PLACES_PATTERNS = [
+  [/(?<![\w.-])api\.foursquare\.com/gi, 'api.foursquare.com'],
+  [/places-api\.foursquare\.com/gi, 'places-api.foursquare.com'],
+  [/\/v3\/places\b/g, '/v3/places'],
+  [/x-places-api-version/gi, 'X-Places-Api-Version'],
+  [/(?:import\s+(?:[\w$*{}\s,]+\s+from\s+)?|require\s*\(\s*)['"]@?foursquare(?:\/[^'"]*)?['"]/g, 'foursquare-sdk'],
+  [/maps\.googleapis\.com\/maps\/api\/place\b/gi, 'maps.googleapis.com/maps/api/place'],
+  [/places\.googleapis\.com/gi, 'places.googleapis.com'],
+  [/@googlemaps\/places\b/g, '@googlemaps/places'],
+  [/@googlemaps\/google-maps-services\b/g, '@googlemaps/google-maps-services'],
+  [/google\.maps\.places\b/g, 'google.maps.places'],
+  [/\bPlacesClient\b/g, 'PlacesClient'],
+];
+
+// Exact ban-list lines in the checkers. These name hosts the rule forbids.
+// They are not API calls. Any other file, including tests, still fails.
+export const PAID_PLACES_BAN_LIST_LINES = [
+  {
+    file: 'scripts/check-code-ratchet.mjs',
+    line: "  ['api.foursquare.com', 'foursquare'],",
+  },
+  {
+    file: 'scripts/check-code-ratchet.mjs',
+    line: "  ['places-api.foursquare.com', 'foursquare'],",
+  },
+  {
+    file: 'scripts/check-hardcoded-content.mjs',
+    line: "  [/(?<![\\w.-])api\\.foursquare\\.com/gi, 'api.foursquare.com'],",
+  },
+  {
+    file: 'scripts/check-hardcoded-content.mjs',
+    line: "  [/places-api\\.foursquare\\.com/gi, 'places-api.foursquare.com'],",
+  },
+];
+
+function paidPlacesBanListLine(file, line) {
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  return PAID_PLACES_BAN_LIST_LINES.some((entry) => entry.file === normalized && entry.line === line);
+}
+
+export function paidPlacesFindings(file, text) {
+  const findings = [];
+  const seen = new Set();
+  const value = String(text || '');
+  for (const [pattern, label] of PAID_PLACES_PATTERNS) {
+    for (const match of collect(pattern, value, (item) => item)) {
+      const rawLine = sourceLine(value, match.index);
+      if (paidPlacesBanListLine(file, rawLine)) continue;
+      const snippet = rawLine.trim().slice(0, 100);
+      const lineNo = value.slice(0, match.index).split('\n').length;
+      add(findings, seen, 'NO-PAID-PLACES-API', file, value, match.index, `${label} :: ${snippet} @${lineNo}`);
+    }
+  }
+  return findings;
+}
+
 function tokenFindings(file, text, findings, seen) {
   for (const [pattern, symbol] of TOKEN_PATTERNS) {
     for (const match of collect(pattern, text, (item) => item)) {
@@ -630,7 +694,76 @@ function foldedStrings(text) {
   return folds;
 }
 
+export const EVASION_MODEL_LINE_ALLOW = [
+  {
+    file: '.cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs',
+    line: "  const bannedMini = 'gpt-' + '4.1-mini';",
+  },
+];
+
+function sourceLine(text, index) {
+  const start = text.lastIndexOf('\n', Math.max(0, index - 1));
+  const from = start < 0 ? 0 : start + 1;
+  const end = text.indexOf('\n', index);
+  return text.slice(from, end < 0 ? text.length : end);
+}
+
+function evasionModelAllowlisted(file, text, index) {
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  const line = sourceLine(text, index);
+  return EVASION_MODEL_LINE_ALLOW.some((entry) => entry.file === normalized && entry.line === line);
+}
+
+function foldedModelSymbol(value) {
+  const text = String(value || '');
+  const mini = text.match(/gpt-[a-z0-9.]+-mini/i);
+  if (mini) return mini[0];
+  for (const vendor of text.match(/[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:-]*/g) || []) {
+    if (MODEL_VENDOR.test(vendor) && !ALLOWED_MODELS.has(vendor)) return vendor;
+  }
+  for (const bare of text.match(/(?:grok|gpt|claude|gemini|qwen|deepseek|mistral|mixtral|llama)\d*-(?:mini|flash|pro|sonnet|opus|haiku|turbo|max|large|small|nano|preview|v\d|\d)[a-z0-9._-]*/gi) || []) {
+    const id = bare.toLowerCase();
+    if (ALLOWED_BARE.has(id) || /^gpt-[a-z0-9.]+-mini$/.test(id)) continue;
+    return bare;
+  }
+  return '';
+}
+
+function evasionModelFindings(file, text, findings, seen) {
+  for (const fold of foldedStrings(text)) {
+    const model = foldedModelSymbol(fold.value);
+    if (!model || evasionModelAllowlisted(file, text, fold.index)) continue;
+    add(findings, seen, 'EVASION', file, text, fold.index, model.slice(0, 120));
+  }
+}
+
+function unlimitedFoldFindings(file, text, findings, seen) {
+  const terms = loadBarTerms();
+  const exempt = (terms.exempt && terms.exempt['BAR-UNLIMITED-WORDING'] && terms.exempt['BAR-UNLIMITED-WORDING'].paths) || [];
+  const normalized = String(file || '').split(path.sep).join('/').replace(/^\.\//, '');
+  if (exempt.includes(normalized)) return;
+  const rule = terms.rules['BAR-UNLIMITED-WORDING'];
+  if (!rule) return;
+  for (const fold of foldedStrings(text)) {
+    for (const source of rule.terms) {
+      if (!source.includes('unlimited')) continue;
+      const flags = rule.flags || '';
+      const re = new RegExp(source, flags.includes('g') ? flags : `${flags}g`);
+      let match = re.exec(fold.value);
+      while (match) {
+        const start = Math.max(0, match.index - 24);
+        const end = Math.min(fold.value.length, match.index + match[0].length + 24);
+        const symbol = fold.value.slice(start, end).replace(/\s+/g, ' ').trim().slice(0, 80);
+        add(findings, seen, 'BAR-UNLIMITED-WORDING', file, text, fold.index, symbol);
+        if (match.index === re.lastIndex) re.lastIndex += 1;
+        match = re.exec(fold.value);
+      }
+    }
+  }
+}
+
 function evasionFindings(file, text, findings, seen, needles) {
+  evasionModelFindings(file, text, findings, seen);
   for (const fold of foldedStrings(text)) {
     if (text.includes(fold.value)) continue;
     const matched = needles.some((needle) => fold.value.includes(needle) || (needle.includes(fold.value) && fold.value.length >= 12 && /[/\-]/.test(fold.value)));
@@ -1204,7 +1337,7 @@ function gitTracked(cwd, rel) {
   return listed.status === 0;
 }
 
-export function fetchedBundleNames(cwd = process.cwd()) {
+function fetchedBundleNames(cwd = process.cwd()) {
   const writer = path.join(cwd, 'scripts/write-shared-assets.mjs');
   if (!fs.existsSync(writer)) return [];
   const text = fs.readFileSync(writer, 'utf8');
@@ -1212,7 +1345,7 @@ export function fetchedBundleNames(cwd = process.cwd()) {
   return [...text.matchAll(/['"`](index-[A-Za-z0-9._-]+\.js)['"`]/g)].map((match) => match[1]);
 }
 
-export function offlineBuildProduces(cwd, repoRelativePath) {
+function offlineBuildProduces(cwd, repoRelativePath) {
   const base = path.posix.basename(String(repoRelativePath || '').split(path.sep).join('/'));
   if (!base || fetchedBundleNames(cwd).includes(base)) return false;
   const pkgPath = path.join(cwd, 'package.json');
@@ -1320,6 +1453,23 @@ export function scanText(file, text, { tokens = false, inventoryOnly = false } =
     coordFindings(file, value, findings, seen);
     thingFindings(file, value, findings, seen);
     dialogFindings(file, value, findings, seen);
+    for (const finding of barFindings(file, value)) {
+      const key = finding.rule === 'BAR-UNLIMITED-WORDING'
+        ? `${finding.rule}\0${file}\0${finding.line}\0${finding.symbol_or_pattern}`
+        : `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push(finding);
+      }
+    }
+    unlimitedFoldFindings(file, value, findings, seen);
+    for (const finding of turnPriceFindings(file, value)) {
+      const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push(finding);
+      }
+    }
     inventoryFindings(file, value, findings, seen);
     thingSourceFindings(file, value, findings, seen);
     cannedFallbackFindings(file, value, findings, seen);
@@ -2210,7 +2360,8 @@ function whitespacePadScan(cwd) {
 
 export function scanRoots(cwd = process.cwd()) {
   const findings = [];
-  for (const file of contentPaths(cwd)) {
+  const covered = new Set(contentPaths(cwd));
+  for (const file of covered) {
     findings.push(...scanText(file, fs.readFileSync(path.join(cwd, file), 'utf8')));
   }
   for (const file of extraScriptPaths(cwd)) {
@@ -2225,8 +2376,16 @@ export function scanRoots(cwd = process.cwd()) {
     const text = fs.readFileSync(path.join(cwd, file), 'utf8');
     const seen = new Set();
     const extra = [];
+    if (!covered.has(file.split(path.sep).join('/'))) evasionModelFindings(file, text, extra, seen);
     modelAllowlistFindings(file, text, extra, seen);
     googlePlacesFindings(file, text, extra, seen);
+    for (const finding of paidPlacesFindings(file, text)) {
+      const key = `${finding.rule}\0${file}\0${finding.symbol_or_pattern}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        extra.push(finding);
+      }
+    }
     findings.push(...extra);
   }
   for (const file of bundlePaths(cwd)) {
@@ -2258,6 +2417,7 @@ export function scanRoots(cwd = process.cwd()) {
     findings.push(...scanText(file, readScanned(path.join(cwd, file)), { tokens: true }));
   }
   findings.push(...servedBundleFindings(cwd));
+  findings.push(...jevCardFindings(cwd));
   findings.push(...crossOriginBundleScan(cwd));
   findings.push(...bundleLeakScan(cwd));
   findings.push(...whitespacePadScan(cwd));
@@ -2274,7 +2434,7 @@ export function classify(findings, baseline) {
   const report = [];
   const fail = [];
   for (const finding of findings) {
-    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION' || !keys.has(contentIdentity(finding))) fail.push(finding);
+    if (finding.rule === 'TOKEN-EVIDENCE' || finding.rule === 'NO-GOOGLE-PLACES' || finding.rule === 'API-FN-CAP' || finding.rule === 'NO-CROSS-ORIGIN-BUNDLE' || finding.rule === 'BUNDLE-LEAK' || finding.rule === 'EVASION' || finding.rule === 'BAR-UNLIMITED-WORDING' || !keys.has(contentIdentity(finding))) fail.push(finding);
     else report.push(finding);
   }
   return { report, fail };
@@ -2289,24 +2449,6 @@ export function loadBaselineFile(file) {
     }
   }
   return parsed;
-}
-
-function baselineRuleId(row) {
-  return row.rule || row.inventory_id;
-}
-
-function baselineRowKey(row) {
-  return `${row.file}\0${row.symbol_or_pattern}\0${row.inventory_id}`;
-}
-
-export function baselineGrowthAllowed(current, baseRows) {
-  if (current.length <= baseRows.length) return true;
-  if (baseRows.length === 0) return false;
-  const baseKeys = new Set(baseRows.map(baselineRowKey));
-  const added = current.filter((row) => !baseKeys.has(baselineRowKey(row)));
-  if (added.length !== current.length - baseRows.length) return false;
-  const baseRules = new Set(baseRows.map(baselineRuleId));
-  return added.every((row) => !baseRules.has(baselineRuleId(row)));
 }
 
 export function baselineRemoteRef(ref) {
@@ -2338,25 +2480,17 @@ export function evaluate(cwd = process.cwd()) {
   const findings = scanRoots(cwd);
   const { report, fail } = classify(findings, baseline);
   const ceiling = baseBaselineCount(cwd);
-  if (ceiling.status === 'error') {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol_or_pattern: ceiling.error,
-    });
-  } else if (ceiling.status === 'ok' && baseline.length > ceiling.count && !baselineGrowthAllowed(baseline, ceiling.rows)) {
-    fail.push({
-      rule: 'BASELINE-GROWTH',
-      file: BASELINE_REL,
-      line: 1,
-      symbol_or_pattern: `${baseline.length}>${ceiling.count}`,
-    });
+  for (const symbol of growthFails(baseline, ceiling)) {
+    fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol_or_pattern: symbol });
   }
   return { report, fail, baselineCount: baseline.length, ceiling };
 }
 
 function main() {
+  if (process.argv.includes('--prune')) {
+    pruneBaseline(process.cwd(), BASELINE_REL, loadBaselineFile, scanRoots, (entry, findings) => findings.some((finding) => finding.file === entry.file && finding.symbol_or_pattern === entry.symbol_or_pattern));
+    return;
+  }
   const { report, fail } = evaluate(process.cwd());
   for (const finding of report) {
     process.stdout.write(`REPORT\t${finding.rule}\t${finding.file}:${finding.line}\t${finding.symbol_or_pattern}\n`);
