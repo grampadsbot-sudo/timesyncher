@@ -14,7 +14,6 @@ import {
   searchPlaces,
   selectPriorPlaces,
 } from '../src/vacation/place-search.mjs';
-
 const ENV = {
   BRAVE_SEARCH_API_KEY: 'brave-test-key',
 };
@@ -42,14 +41,14 @@ function recordHost(url, hosts) {
 }
 const CENTER = { lat: 38.7223, lng: -9.1393 };
 const PLACE_WANTED = [
-  { name: 'restaurant', kind: 'restaurant' },
-  { name: 'store', kind: 'store' },
-  { name: 'attraction', kind: 'activity' },
+  { name: 'Louise Cafe', kind: 'restaurant' },
+  { name: 'Paper Shop', kind: 'store' },
+  { name: 'River Walk', kind: 'activity' },
 ];
 const POKE_WANTED = [
-  { name: 'poke', kind: 'activity' },
-  { name: 'grocery store', kind: 'store' },
-  { name: 'restaurant', kind: 'restaurant' },
+  { name: 'Poke Harbor', kind: 'activity' },
+  { name: 'North Market', kind: 'store' },
+  { name: 'River Lantern', kind: 'restaurant' },
 ];
 
 function jsonResponse(body, status = 200) {
@@ -84,25 +83,29 @@ function lisbonRoutes(url) {
       ],
     });
   }
-  if (value.includes('api.search.brave.com') && value.includes('q=restaurant')) return jsonResponse({ results: [] });
-  if (value.includes('api.search.brave.com') && value.includes('q=store')) {
-    return jsonResponse({
-      results: [{
-        title: 'Paper Shop',
-        url: 'https://example.test/paper',
-        coordinates: [38.71, -9.15],
-      }],
-    });
-  }
-  if (value.includes('api.search.brave.com') && value.includes('q=attraction')) {
-    return jsonResponse({
-      results: [{
-        title: 'River Walk | Listing',
-        url: 'https://example.test/walk',
-        coordinates: [38.75, -9.16],
-        postal_address: { streetAddress: 'River Road', addressLocality: 'Lisbon' },
-      }],
-    });
+  if (value.includes('api.search.brave.com/res/v1/local/place_search')) {
+    const q = new URL(value).searchParams.get('q') || '';
+    if (q === 'Paper Shop') {
+      return jsonResponse({
+        results: [{
+          title: 'Paper Shop',
+          url: 'https://example.test/paper',
+          coordinates: [38.71, -9.15],
+        }],
+      });
+    }
+    if (q === 'River Walk') {
+      return jsonResponse({
+        results: [{
+          title: 'River Walk | Listing',
+          url: 'https://example.test/walk',
+          coordinates: [38.75, -9.16],
+          postal_address: { streetAddress: 'River Road', addressLocality: 'Lisbon' },
+        }],
+      });
+    }
+    if (q === 'Louise Cafe') return jsonResponse({ results: [] });
+    return jsonResponse({ results: [] });
   }
   throw new Error(`unexpected place search request ${value}`);
 }
@@ -335,9 +338,9 @@ assert.equal(lodgingFromChat('', { lat: 36.11, lng: -115.17 }).lat, 36.11);
 
 const intentQueries = queriesFromWantedThings(POKE_WANTED);
 assert.deepEqual(intentQueries.map((query) => [query.category, query.q, query.limit]), [
-  ['activity', 'poke', DEFAULT_FIRST_PASS_MINIMUMS.rest],
-  ['store', 'grocery store', DEFAULT_FIRST_PASS_MINIMUMS.store],
-  ['restaurant', 'restaurant', DEFAULT_FIRST_PASS_MINIMUMS.restaurant],
+  ['activity', 'Poke Harbor', DEFAULT_FIRST_PASS_MINIMUMS.rest],
+  ['store', 'North Market', DEFAULT_FIRST_PASS_MINIMUMS.store],
+  ['restaurant', 'River Lantern', DEFAULT_FIRST_PASS_MINIMUMS.restaurant],
 ]);
 assert.deepEqual(DEFAULT_FIRST_PASS_MINIMUMS, { restaurant: 15, store: 10, rest: 15 });
 assert.equal(intentQueries.some((query) => /huggo|bellagio|kona brewing|catch las vegas|speedishuttle/i.test(query.q)), false);
@@ -381,8 +384,8 @@ assert.equal(lodgingEvents[0], 'nominatim');
 assert.equal(lodgingEvents.filter((kind) => kind === 'nominatim').length, 1);
 assert.equal(lodgingEvents.includes('brave'), true);
 assert.equal(lodgingSearch.center.geocoded, 'lodging');
-assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['poke', 'grocery store', 'restaurant']);
-assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave poke' && place.source === 'brave'), true);
+assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['Poke Harbor', 'North Market', 'River Lantern']);
+assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave Poke Harbor' && place.source === 'brave'), true);
 assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
 assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
 assert.deepEqual([...new Set(lodgingHosts)].sort(), [
@@ -414,7 +417,7 @@ await assert.rejects(
   (error) => error.code === 'empty',
 );
 assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
-assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:restaurant', 'brave:store', 'brave:attraction']);
+assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:Louise Cafe', 'brave:Paper Shop', 'brave:River Walk']);
 assert.deepEqual([...new Set(emptyHosts)].sort(), [
   'api.search.brave.com',
   'nominatim.openstreetmap.org',
@@ -438,7 +441,7 @@ const lodgingMiss = await searchPlaces({
       if (value.includes('Missing')) return jsonResponse([]);
       return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
     }
-    if (value.includes('api.search.brave.com') && value.includes('q=restaurant')) {
+    if (value.includes('api.search.brave.com') && value.includes('q=Louise')) {
       return jsonResponse({
         results: [{
           id: 'brave-lisbon',
@@ -508,7 +511,7 @@ assert.deepEqual([...new Set(workerFetch.hosts)].sort(), [
 ]);
 assert.equal(workerFetch.calls.some((call) => /googleapis|places\.google/.test(call.url)), false);
 const braveQuery = decodeURIComponent(workerFetch.calls.find((call) => call.url.includes('place_search')).url);
-assert.match(braveQuery, /q=restaurant/);
+assert.match(braveQuery, /q=Louise(\+|%20)Cafe/);
 assert.doesNotMatch(braveQuery, /near /);
 
 await assert.rejects(
@@ -607,8 +610,4 @@ await assert.rejects(
   },
 );
 
-console.log(JSON.stringify({
-  ok: true,
-  checked: 'place-search',
-  places: found.places.map((place) => place.source),
-}));
+console.log(JSON.stringify({ ok: true, checked: 'place-search', places: found.places.map((place) => place.source) }));
