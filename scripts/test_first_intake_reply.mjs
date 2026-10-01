@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-
-import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
+import { bakeoffTierModels, replyRulesSystem } from './vacation-app-reply-rules.mjs';
 import {
   FIRST_INTAKE_GAP_INSTRUCTION,
   FIRST_INTAKE_QUESTION_INSTRUCTION,
@@ -12,18 +11,22 @@ import {
   firstIntakeReplyLeak,
   firstIntakeReplyPrompt,
   intakeCustomerName,
-  produceLiveAppReply,
-} from '../src/vacation/live-app-turn.mjs';
-
+} from '../src/vacation/first-intake-reply.mjs';
+import { liveTurnRecord, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 const root = new URL('../', import.meta.url);
-const live = await readFile(new URL('src/vacation/live-app-turn.mjs', root), 'utf8');
+const live = await readFile(new URL('src/vacation/first-intake-reply.mjs', root), 'utf8');
 const rules = await readFile(new URL('scripts/vacation-app-reply-rules.mjs', root), 'utf8');
 const phrase = /unlimited\s+\S*\s*vacations?/i;
-const intakeBlock = live.slice(
-  live.indexOf('export const YEARLY_PLAN_ID'),
-  live.indexOf('export function customerModality'),
-);
-
+const intakeBlock = live.slice(live.indexOf('export const ' + 'YEARLY_PLAN_ID'));
+const tiers = bakeoffTierModels();
+assert.deepEqual(Object.values(tiers), [
+  'google/gemini-2.5-flash-lite',
+  'qwen/qwen3-235b-a22b-2507',
+  'deepseek/deepseek-v3.2',
+  'qwen/qwen3-max',
+]);
+for (const id of Object.values(tiers)) assert.doesNotMatch(id, /gpt-.*mini/i);
+assert.doesNotMatch(live, /gpt-.*mini/i);
 assert.match(intakeBlock, /timesyncher_vacation_unlimited/);
 assert.equal(YEARLY_PLAN_ID, 'timesyncher_vacation_unlimited');
 assert.doesNotMatch(intakeBlock, phrase);
@@ -65,7 +68,6 @@ assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /view_without_sign_in/);
 assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /no name or contact/);
 assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /just the two of you/);
 assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /exactly one question/);
-
 function assertCleanFacts(facts) {
   const walk = (value) => {
     if (value == null) return;
@@ -86,37 +88,34 @@ function assertCleanFacts(facts) {
   };
   walk(facts);
 }
-
 const voiceNote = [
   'Okay, this is a voice note about the trip.',
   'We are going to the Big Island of Hawaii.',
   'We leave Friday April third and come home Sunday April twelfth, twenty twenty-six.',
   'We are staying in a house in Kailua-Kona.',
-  'Kimberly wants gardens.',
-  'Tyler wants a swim later if the beach is windy.',
-  'Lauren does not want two big activities stacked on the same day.',
+  'Nico wants gardens.',
+  'Tess wants a swim later if the beach is windy.',
+  'Mara does not want two big activities stacked on the same day.',
   'Groceries the day we land, then a quiet dinner.',
   'That is the rough shape, and I can fill in more after this note.',
 ].join(' ');
-
 const voiceInput = {
   customerTurn: voiceNote,
   tripTitle: 'Hawaii trip',
   extractedDestination: 'Big Island of Hawaii',
   wantedThings: [
-    { name: 'gardens', kind: 'activity', who: 'Kimberly' },
-    { name: 'swim', kind: 'activity', who: 'Tyler' },
+    { name: 'gardens', kind: 'activity', who: 'Nico' },
+    { name: 'swim', kind: 'activity', who: 'Tess' },
     { name: 'house in Kailua-Kona', kind: 'hotel' },
   ],
   roster: [
-    { name: 'Kimberly', role: 'collaborator' },
-    { name: 'Tyler', role: 'collaborator' },
-    { name: 'Lauren', role: 'collaborator' },
+    { name: 'Nico', role: 'collaborator' },
+    { name: 'Tess', role: 'collaborator' },
+    { name: 'Mara', role: 'collaborator' },
     { name: 'Sam', role: 'child' },
     { name: '', role: 'collaborator' },
   ],
 };
-
 const voiceFacts = firstIntakeReplyFacts(voiceInput);
 const voicePrompt = firstIntakeReplyPrompt(voiceInput);
 assert.equal(voiceFacts.shape, 'voice-note');
@@ -125,15 +124,15 @@ assert.equal(voiceFacts.where, 'Big Island of Hawaii');
 assert.equal(voiceFacts.lodging, 'house in Kailua-Kona');
 assert.deepEqual(voiceFacts.plans, ['gardens', 'swim']);
 assert.deepEqual(voiceFacts.activities, ['gardens', 'swim']);
-assert.deepEqual(voiceFacts.collaborators, ['Kimberly', 'Tyler', 'Lauren']);
-assert.deepEqual(voiceFacts.who, ['Sam', 'Kimberly', 'Tyler', 'Lauren']);
+assert.deepEqual(voiceFacts.collaborators, ['Nico', 'Tess', 'Mara']);
+assert.deepEqual(voiceFacts.who, ['Sam', 'Nico', 'Tess', 'Mara']);
 assert.equal(voiceFacts.collaborators.includes('Sam'), false);
 assert.equal(voiceFacts.plan.plan_id, 'timesyncher_vacation_unlimited');
 assert.equal(voiceFacts.plan.plan_owned, false);
 assert.equal(voiceFacts.plan.price, undefined);
-assert.match(voicePrompt, /Kimberly/);
-assert.match(voicePrompt, /Tyler/);
-assert.match(voicePrompt, /Lauren/);
+assert.match(voicePrompt, /Nico/);
+assert.match(voicePrompt, /Tess/);
+assert.match(voicePrompt, /Mara/);
 assert.match(voicePrompt, /Big Island of Hawaii/);
 assert.match(voicePrompt, /house in Kailua-Kona/);
 assert.match(voicePrompt, /gardens/);
@@ -142,7 +141,6 @@ assert.doesNotMatch(voicePrompt, phrase);
 assert.doesNotMatch(voicePrompt, leakWord);
 assert.doesNotMatch(JSON.stringify(voiceFacts), /"price"/);
 assertCleanFacts(voiceFacts);
-
 const dated = firstIntakeReplyFacts({
   ...voiceInput,
   savedStart: '2026-04-03',
@@ -215,17 +213,17 @@ assert.match(questionPrompt, /Answer the question first/);
 assert.doesNotMatch(questionPrompt, leakWord);
 assertCleanFacts(questionFacts);
 
-const voiceReply = 'I am putting the itinerary together from the Big Island of Hawaii, the April dates, the house in Kailua-Kona, gardens, and a swim. Kimberly, Tyler, and Lauren can join and help shape it. The yearly plan for that is timesyncher_vacation_unlimited. What is still open about dinner the day you land?';
+const voiceReply = 'I am putting the itinerary together from the Big Island of Hawaii, the April dates, the house in Kailua-Kona, gardens, and a swim. Nico, Tess, and Mara can join and help shape it. The yearly plan for that is timesyncher_vacation_unlimited. What is still open about dinner the day you land?';
 const gapReply = 'Where are you hoping to go, when would you leave, and who is coming? A longer voice note on those would help.';
 const originalFetch = globalThis.fetch;
 const env = { OPENROUTER_API_KEY: 'test-key' };
 
-function jevOk() {
+function jevOk(score = 0) {
   return {
     ok: true,
     json: async () => ({
       ok: true,
-      answers: { model_tier: { score: 0 }, route_type: { choice: 'general' } },
+      answers: { model_tier: { score }, route_type: { choice: 'general' } },
     }),
   };
 }
@@ -239,6 +237,8 @@ globalThis.fetch = async (url, init) => {
     chatCalls.push(body);
     const system = body.messages?.find((message) => message.role === 'system')?.content || '';
     assert.equal(system, voicePrompt);
+    assert.equal(body.model, tiers[1]);
+    assert.doesNotMatch(body.model, /gpt-.*mini/i);
     const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
     assert.deepEqual(user, voiceFacts);
     assert.equal(user.jev, undefined);
@@ -250,7 +250,7 @@ globalThis.fetch = async (url, init) => {
     assert.match(system, /Do not grant view or edit/);
     assert.match(system, /Pitch the yearly plan/);
     assert.match(system, /exactly one question/);
-    assert.match(system, /"collaborators":\["Kimberly","Tyler","Lauren"\]/);
+    assert.match(system, /"collaborators":\["Nico","Tess","Mara"\]/);
     assert.match(system, /"plan_id":"timesyncher_vacation_unlimited"/);
     assert.match(system, /Big Island of Hawaii/);
     assert.doesNotMatch(system, phrase);
@@ -276,6 +276,27 @@ try {
   assert.equal(chatCalls.length, 1);
   assert.equal(produced.reply, voiceReply);
   assert.equal(produced.reason, null);
+  assert.equal(produced.jev.modelTier, 1);
+  assert.equal(produced.model.responseModel, tiers[1]);
+  assert.equal(Number.isFinite(produced.jev.jevLatencyMs), true);
+  assert.equal(Number.isFinite(produced.model.genLatencyMs), true);
+  const stored = liveTurnRecord({
+    turnIndex: 2,
+    role: 'app',
+    modality: 'text',
+    text: produced.reply,
+    at: new Date().toISOString(),
+    latencyMs: 10,
+    sessionE2eMs: 10,
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
+  });
+  assert.equal(stored.tier, 1);
+  assert.equal(stored.modelId, tiers[1]);
+  assert.equal(stored.jevLatencyMs, produced.jev.jevLatencyMs);
+  assert.equal(stored.generationMs, produced.model.genLatencyMs);
+  assert.doesNotMatch(stored.modelId, /gpt-.*mini/i);
 
   chatCalls.length = 0;
   const gapPrompt = firstIntakeReplyPrompt({ ...shortInput, customerName: 'Ada' });
@@ -390,6 +411,63 @@ try {
   assert.equal(flagged.reply, null);
   assert.equal(flagged.reason, 'first_intake_reply_flagged');
   assert.equal(firstIntakeReplyLeak(leaked), true);
+
+  chatCalls.length = 0;
+  globalThis.fetch = async (url, init) => {
+    const target = String(url);
+    const body = init?.body ? JSON.parse(init.body) : {};
+    if (target.includes('/api/alpha/decisions')) return jevOk(2);
+    if (target.includes('/chat/completions')) {
+      chatCalls.push(body);
+      assert.equal(body.model, tiers[3]);
+      assert.doesNotMatch(body.model, /gpt-.*mini/i);
+      const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+      assert.doesNotMatch(system, leakWord);
+      return {
+        ok: true,
+        json: async () => ({
+          model: body.model,
+          choices: [{ message: { content: voiceReply } }],
+        }),
+      };
+    }
+    throw new Error(`unexpected ${target}`);
+  };
+  const tierThree = await produceLiveAppReply({
+    ...voiceInput,
+    intake: true,
+    priorTurns: [],
+    session: { token: 'sess' },
+    env,
+  });
+  assert.equal(chatCalls.length, 1);
+  assert.equal(tierThree.reply, voiceReply);
+  assert.equal(tierThree.jev.modelTier, 3);
+  assert.equal(tierThree.model.responseModel, tiers[3]);
+
+  chatCalls.length = 0;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('/api/alpha/decisions')) {
+      return { ok: false, status: 503, json: async () => ({ error: { message: 'jev down' } }) };
+    }
+    if (target.includes('/chat/completions')) {
+      chatCalls.push({});
+      throw new Error('fallback model was called');
+    }
+    throw new Error(`unexpected ${target}`);
+  };
+  const jevFailed = await produceLiveAppReply({
+    ...voiceInput,
+    intake: true,
+    priorTurns: [],
+    session: { token: 'sess' },
+    env,
+  });
+  assert.equal(chatCalls.length, 0);
+  assert.equal(jevFailed.reply, null);
+  assert.equal(jevFailed.reason, 'jev down');
+  assert.equal(jevFailed.model, null);
 
   chatCalls.length = 0;
   globalThis.fetch = async (url, init) => {
