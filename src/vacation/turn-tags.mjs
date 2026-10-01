@@ -48,7 +48,7 @@ export function classifyTurn({ speaker = '', direction = '', channel = '', paylo
   if (speaker === 'assistant') tags.push('assistant_response');
   if (speaker === 'system' || /error/.test(String(channel || ''))) tags.push('support_problem');
   if (direction === 'inbound' || speaker === 'customer') tags.push('customer_request');
-  if (payload?.telegramVoice || payload?.voice || payload?.transcriptionModel) tags.push('voice_note');
+  if (payload?.voice || payload?.transcriptionModel) tags.push('voice_note');
   const finalTags = unique(tags);
   const category = categoryFor(finalTags);
   return {

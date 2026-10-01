@@ -4,11 +4,6 @@ import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 
 const TARGETS = {
   onboarding_page: null,
-  telegram_open: 'telegramUrl',
-  telegram_ios: 'telegramInstall.ios',
-  telegram_android: 'telegramInstall.android',
-  telegram_desktop: 'telegramInstall.desktop',
-  telegram_skip_install: 'telegramUrl',
 };
 
 function header(req, name) {
@@ -21,11 +16,12 @@ function clientIp(req) {
 }
 
 function targetHref(session, target) {
+  if (String(target || '').startsWith('telegram_')) {
+    console.error(`skipped click redirect: target ${target} is not served because Telegram delivery was removed`);
+    return '';
+  }
   if (!session) return '';
-  if (target === 'telegram_open' || target === 'telegram_skip_install') return session.telegram_deep_link || '';
-  if (target === 'telegram_ios') return 'https://apps.apple.com/app/telegram-messenger/id686449807';
-  if (target === 'telegram_android') return 'https://play.google.com/store/apps/details?id=org.telegram.messenger';
-  if (target === 'telegram_desktop') return 'https://apps.apple.com/us/app/telegram/id747648890?mt=12';
+  if (TARGETS[target] === null) return '';
   return '';
 }
 
@@ -53,10 +49,6 @@ async function recordClick(req, body) {
     await db`
       update onboarding_sessions
       set current_step = ${target},
-        telegram_install_choice = case
-          when ${target} in ('telegram_ios', 'telegram_android', 'telegram_desktop', 'telegram_skip_install') then ${target}
-          else telegram_install_choice
-        end,
         updated_at = now()
       where id = ${session.id}
     `;

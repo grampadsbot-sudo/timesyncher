@@ -11,7 +11,6 @@ const root = new URL('../', import.meta.url);
 const live = await readFile(new URL('src/vacation/live-app-turn.mjs', root), 'utf8');
 const rules = await readFile(new URL('scripts/vacation-app-reply-rules.mjs', root), 'utf8');
 const page = await readFile(new URL('vacation-app.html', root), 'utf8');
-const telegram = await readFile(new URL('routes/vacation-telegram-turn.mjs', root), 'utf8');
 const api = await readFile(new URL('routes/vacation-itinerary.mjs', root), 'utf8');
 
 assert.doesNotMatch(live, /ONBOARDING_OPENER_WITH_SITE|ONBOARDING_OPENER_CHAT_ONLY|onboardingOpenerText/);
@@ -24,7 +23,6 @@ assert.doesNotMatch(rules, /This is the intake dump/);
 assert.doesNotMatch(rules, /On the long trip dump, use the words/);
 assert.doesNotMatch(rules, /State this payer line exactly/);
 assert.doesNotMatch(rules, /Single upsell:/);
-assert.doesNotMatch(telegram, /classic Waikiki beach energy/);
 assert.match(api, /renderOnboardingWelcome/);
 assert.match(api, /cannedWelcomeLiveTurn/);
 assert.doesNotMatch(api, /produceOnboardingOpener|onboarding opener model returned no reply/);

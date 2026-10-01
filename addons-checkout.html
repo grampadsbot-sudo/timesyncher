@@ -51,7 +51,7 @@
     <section>
       <div class="brand">TimeSyncher Vacation</div>
       <h1>Family access add-ons</h1>
-      <p>This adds Telegram editing access for one owner-approved person. The shared vacation URL stays view-only unless that person verifies an invited email address.</p>
+      <p>This adds editing access for one owner-approved person. The shared vacation URL stays view-only unless that person verifies an invited email address.</p>
       <form id="form">
         <fieldset>
           <legend>Who gets access</legend>
@@ -77,12 +77,12 @@
           <div class="choices">
             <label class="choice">
               <input type="checkbox" checked disabled />
-              <span><b id="telegramTitle">Telegram editing access</b><small>Lets this person interact with the vacation through the TimeSyncher bot. One collaborator is added per checkout.</small></span>
-              <strong id="telegramPrice">$15</strong>
+              <span><b id="accessTitle">Collaborator editing access</b><small>Lets this person interact with the vacation. One collaborator is added per checkout.</small></span>
+              <strong id="accessPrice">$15</strong>
             </label>
             <label class="choice">
               <input name="photoUpload" type="checkbox" checked />
-              <span><b>Photo upload access</b><small>Add photos to this vacation’s memories/keepsake from Telegram.</small></span>
+              <span><b>Photo upload access</b><small>Add photos to this vacation’s memories and keepsake.</small></span>
               <strong id="photoPrice">$5</strong>
             </label>
             <label class="choice">
@@ -91,7 +91,7 @@
               <strong id="videoPrice">$17</strong>
             </label>
           </div>
-          <div class="notice">Website editing is separate and FREE: the owner can approve named email users for web edits without giving them Telegram access.</div>
+          <div class="notice">Website editing is separate and FREE: the owner can approve named email users for web edits.</div>
           <div class="summary-row total access-total"><span>Total today</span><strong id="accessTotal">$15</strong></div>
         </fieldset>
 
@@ -119,13 +119,13 @@
 
     <aside class="summary">
       <h2>Order summary</h2>
-      <div class="summary-row"><span id="planName">Telegram access</span><strong id="planPrice">$15</strong></div>
+      <div class="summary-row"><span id="planName">Collaborator access</span><strong id="planPrice">$15</strong></div>
       <div class="summary-row" id="photoRow" hidden><span>Photo upload access</span><strong id="photoTotal">$5</strong></div>
       <div class="summary-row" id="videoRow" hidden><span>Video upload access</span><strong id="videoTotal">$17</strong></div>
       <div class="summary-row" id="couponRow" hidden><span>Access add-on coupon</span><strong>Covers selected access after validation</strong></div>
       <div class="summary-row"><span>Estimated tax</span><strong>Calculated at checkout</strong></div>
       <div class="summary-row total"><span>Total today</span><strong id="total">$15</strong></div>
-      <p>The invite email is sent after payment. The Telegram link in that email completes collaborator setup. Shared website editing still requires owner-approved email verification.</p>
+      <p>The invite email is sent after payment. Shared website editing still requires owner-approved email verification.</p>
     </aside>
   </main>
   <script>
@@ -211,10 +211,10 @@
       planScope = form.elements.planScope.value;
       plan = PLAN_CODES[planScope];
       const prices = addOnPrices();
-      document.getElementById('telegramTitle').textContent = isUnlimited() ? 'Telegram editing access for all vacations' : 'Telegram editing access for this vacation';
-      document.getElementById('planName').textContent = isUnlimited() ? 'Telegram access for all vacations' : 'Telegram access for this vacation';
+      document.getElementById('accessTitle').textContent = isUnlimited() ? 'Collaborator editing access for all vacations' : 'Collaborator editing access for this vacation';
+      document.getElementById('planName').textContent = isUnlimited() ? 'Collaborator access for all vacations' : 'Collaborator access for this vacation';
       document.getElementById('planPrice').textContent = money(baseAmountCents());
-      document.getElementById('telegramPrice').textContent = money(baseAmountCents());
+      document.getElementById('accessPrice').textContent = money(baseAmountCents());
       document.getElementById('photoPrice').textContent = money(prices.photo);
       document.getElementById('photoTotal').textContent = money(prices.photo);
       document.getElementById('videoPrice').textContent = money(prices.video);
@@ -268,7 +268,7 @@
         }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to prepare Telegram access checkout.');
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to prepare collaborator access checkout.');
       if (data.mode === 'staging_card' || data.stripeUnavailable) {
         stagingCardMode = true;
         stripeBox.classList.add('hidden');
@@ -362,7 +362,7 @@
       .catch(() => {});
 
     if (!collaboratorInvite) {
-      setStatus('This Telegram access checkout link is missing its invite token.', 'error');
+      setStatus('This collaborator access checkout link is missing its invite token.', 'error');
       submit.disabled = true;
     }
 
@@ -397,7 +397,7 @@
         }
         await completeStripePayment();
       } catch (error) {
-        setStatus(error.message || 'Unable to complete Telegram access checkout.', 'error');
+        setStatus(error.message || 'Unable to complete collaborator access checkout.', 'error');
         submit.disabled = false;
         submit.textContent = couponMode() ? 'Redeem coupon' : 'Pay securely';
       }

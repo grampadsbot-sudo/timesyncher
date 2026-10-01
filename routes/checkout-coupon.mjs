@@ -6,7 +6,6 @@ import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '..
 import { recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
-  collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
@@ -236,7 +235,6 @@ export default async function handler(req, res) {
         collaboratorInvite: {
           id: invite.id,
           status: invite.status,
-          telegramUrl: collaboratorTelegramLink(collaboratorInviteToken, process.env),
           vacationAppUrl: joined.vacationAppUrl,
           token: joined.token,
           payer: joined.payer,

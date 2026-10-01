@@ -1,5 +1,5 @@
-import { collaboratorEulaAcceptUrl, collaboratorTelegramLink } from './collaborators.mjs';
-import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl } from './web-access.mjs';
+import { collaboratorEulaAcceptUrl } from './collaborators.mjs';
+import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -358,7 +358,6 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           sent_at = ${sentAt},
           metadata = metadata || ${{
             collaboratorInviteId: invite.id,
-            collaboratorTelegramUrl: collaboratorTelegramLink(token, env),
             toEmail: to,
           }}
         where id = ${existing[0].id}
@@ -374,7 +373,6 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
           ${providerMessageId}, ${status}, ${errorSummary}, ${{
             collaboratorInviteId: invite.id,
-            collaboratorTelegramUrl: collaboratorTelegramLink(token, env),
             collaboratorRequestedFor: normalizedContact.displayName || null,
           }}, ${sentAt}
         )

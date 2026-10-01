@@ -17,7 +17,6 @@ const session = await createOnboardingSessionPersistent(store, {
 const html = renderAcceptPage(session);
 if (!html.includes("/api/eula?action=accept&sessionId=route-smoke")) throw new Error('accept API target missing');
 if (html.includes('<pre id="receipt"')) throw new Error('raw JSON receipt display returned');
-if (!html.includes('Continuing to Telegram onboarding')) throw new Error('success message missing');
-if (!html.includes('Continue to Telegram onboarding')) throw new Error('continue link missing');
-if (html.includes('saved server-side')) throw new Error('server-side success text returned');
+if (!html.includes('Your acceptance receipt was saved server-side')) throw new Error('success message missing');
+if (!html.includes('Agree and continue')) throw new Error('continue control missing');
 console.log(JSON.stringify({ ok: true, sessionId: session.sessionId }, null, 2));

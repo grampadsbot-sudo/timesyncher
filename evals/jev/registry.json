@@ -24,24 +24,6 @@
       "file": "src/vacation/poi-search.mjs",
       "anchor": "export async function jevRelevanceScore",
       "extract": "questions"
-    },
-    {
-      "id": "telegram-intent",
-      "file": "routes/vacation-telegram-turn.mjs",
-      "anchor": "const JEV_VACATION_INTENT_QUESTIONS",
-      "extract": "object"
-    },
-    {
-      "id": "telegram-issue-tags",
-      "file": "routes/vacation-telegram-turn.mjs",
-      "anchor": "const JEV_CUSTOMER_ISSUE_TAGS",
-      "extract": "object"
-    },
-    {
-      "id": "telegram-coverage",
-      "file": "routes/vacation-telegram-turn.mjs",
-      "anchor": "function jevCoverageQuestions",
-      "extract": "function"
     }
   ]
 }
