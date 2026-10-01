@@ -6,7 +6,7 @@ const MONTHS = {
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
 
-export function customerPlaceName(value) {
+function customerPlaceName(value) {
   const text = String(value || '').trim();
   if (!text || /^(shell|intake)-[a-z0-9]+$/i.test(text)) return '';
   return text;
