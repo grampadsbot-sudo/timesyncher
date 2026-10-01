@@ -24,6 +24,7 @@ import {
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STAGING = 'https://vacation-staging.timesyncher.com';
 const STAGING_DATABASE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true';
+const STAGING_COLLAB_PRICE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/wxF011VOpOXjWFqi?decrypt=true';
 const DEFAULT_ARTIFACTS = '/opt/cursor/artifacts/onboarding-welcome-judge';
 export const WELCOME_VERCEL_TOKEN_MISSING = 'FAIL welcome-after-intake: VERCEL_TOKEN missing';
 export const WELCOME_DATABASE_FETCH_FAILED = 'FAIL welcome-after-intake: staging DATABASE_URL fetch failed';
@@ -89,6 +90,33 @@ export async function ensureWelcomeDatabase({ env = process.env, fetchImpl = glo
   }
   process.env.DATABASE_URL = value;
   if (env !== process.env) env.DATABASE_URL = value;
+}
+
+export async function ensureCollaboratorPrice({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  if (String(env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS || '').trim()) return;
+  const token = String(env.VERCEL_TOKEN || '').trim();
+  if (!token) return;
+  let response;
+  try {
+    response = await fetchImpl(STAGING_COLLAB_PRICE_ENV_URL, {
+      method: 'GET',
+      redirect: 'error',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    return;
+  }
+  if (!response || response.ok !== true) return;
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    return;
+  }
+  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
+  if (payload?.key !== 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS' || !value) return;
+  process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = value;
+  if (env !== process.env) env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = value;
 }
 
 function staticFail(error, message) {
@@ -269,6 +297,15 @@ async function shot(page, file) {
   return file;
 }
 
+async function shotLatest(page, file) {
+  await page.setViewport({ width: 1280, height: 1400 });
+  await page.evaluate(() => {
+    const nodes = document.querySelectorAll('#messages article.bubble');
+    nodes[nodes.length - 1]?.scrollIntoView({ block: 'center' });
+  }).catch(() => {});
+  return shot(page, file);
+}
+
 async function createFreshTrip(env, owner, title) {
   const [{ sql }, { buildOnboardingFromCoupon }] = await Promise.all([
     import('../../../../src/vacation/db.mjs'),
@@ -313,7 +350,7 @@ async function driveOwnerTrip(browser, env, owner, spec, artifactsDir) {
     }
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
     await page.waitForSelector('#messages[data-screen="onboarding"]', { timeout: 20000 }).catch(() => {});
-    await shot(page, replyFile);
+    await shotLatest(page, replyFile);
     return {
       id: spec.id,
       kind: spec.kind,
@@ -383,7 +420,7 @@ async function driveCollaborator(browser, env, fixture, ownerTrip, artifactsDir)
       return { shown: false, prior: [] };
     });
     const observedAt = new Date().toISOString();
-    await shot(page, file);
+    await shotLatest(page, file);
     const opened = await readSession(page, joined.token);
     const turns = withObservedWelcome(opened.data?.turns, domWelcome?.prior, observedAt, null, '');
     return {
@@ -535,6 +572,7 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
       }
     }
     try {
+      await ensureCollaboratorPrice({ env });
       collaborator = await driveCollaborator(browser, env, fixtures, trips.find((trip) => trip.id === 'f1'), artifactsDir);
     } catch (error) {
       collaborator = { error: redactWelcomeSecrets(error?.message || error), turns: [], screenshots: [] };

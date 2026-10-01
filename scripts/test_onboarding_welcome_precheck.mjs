@@ -19,6 +19,7 @@ import {
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/onboarding-welcome-precheck.mjs';
 import {
   agreeThenReadWelcome,
+  ensureCollaboratorPrice,
   ensureWelcomeDatabase,
   redactWelcomeSecrets,
   selfTestMissingWelcomeDatabase,
@@ -176,6 +177,36 @@ await assert.rejects(
   }),
   (error) => error.message === WELCOME_ONBOARDING_TIMEOUT && !String(error.stack || '').includes('session-secret'),
 );
+
+const priceKey = 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS';
+const priorPrice = process.env[priceKey];
+delete process.env[priceKey];
+try {
+  let calls = 0;
+  await ensureCollaboratorPrice({
+    env: { VERCEL_TOKEN: 'unit-token', [priceKey]: 'already-set' },
+    fetchImpl: async () => { calls += 1; return { ok: false }; },
+  });
+  assert.equal(calls, 0);
+  await ensureCollaboratorPrice({
+    env: { VERCEL_TOKEN: 'unit-token' },
+    fetchImpl: async () => ({ ok: true, json: async () => ({ key: 'OTHER', value: 'sentinel-price-value' }) }),
+  });
+  assert.equal(process.env[priceKey], undefined);
+  const loaded = { VERCEL_TOKEN: 'unit-token' };
+  await ensureCollaboratorPrice({
+    env: loaded,
+    fetchImpl: async () => ({
+      ok: true,
+      json: async () => ({ key: priceKey, value: 'sentinel-price-value' }),
+    }),
+  });
+  assert.equal(loaded[priceKey], 'sentinel-price-value');
+  assert.equal(process.env[priceKey], 'sentinel-price-value');
+} finally {
+  if (priorPrice === undefined) delete process.env[priceKey];
+  else process.env[priceKey] = priorPrice;
+}
 
 selfTestMissingWelcomeDatabase();
 
