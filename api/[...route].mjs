@@ -54,7 +54,7 @@ function routeParts(req) {
 
 function publicApiRequest(req) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
-  const parts = routeParts(req);
+  let parts = routeParts(req);
   const params = new URLSearchParams(url.search);
   if (req.query && typeof req.query === 'object') {
     for (const [key, value] of Object.entries(req.query)) {
@@ -64,6 +64,13 @@ function publicApiRequest(req) {
         if (item != null && item !== '') params.append(key, String(item));
       }
     }
+  }
+  if (parts[0] === 'accept' && parts[1]) {
+    let sessionId = parts[1];
+    try { sessionId = decodeURIComponent(sessionId); } catch { sessionId = parts[1]; }
+    if (!params.get('sessionId')) params.set('sessionId', sessionId);
+    if (!params.get('action')) params.set('action', 'accept-page');
+    parts = ['eula'];
   }
   for (const key of ROUTING_QUERY_KEYS) params.delete(key);
   const path = `/api/${parts.map((part) => encodeURIComponent(part)).join('/')}`;
@@ -81,8 +88,37 @@ function sendJson(res, status, body) {
   res.end(`${JSON.stringify(body)}\n`);
 }
 
+function trekShell(req, res, described) {
+  const method = String(req.method || 'GET').toUpperCase();
+  if (described.head === 'auth' && described.parts[1] === 'app-config' && method === 'GET') {
+    sendJson(res, 200, {
+      has_users: true,
+      password_login: true,
+      oidc_login: false,
+      oidc_configured: false,
+      demo_mode: false,
+      dev_mode: false,
+      is_prerelease: false,
+      has_maps_key: false,
+      require_mfa: false,
+      trip_reminders_enabled: false,
+      places_photos_enabled: true,
+      places_autocomplete_enabled: true,
+      places_details_enabled: true,
+      available_channels: { email: false },
+    });
+    return true;
+  }
+  if (described.head === 'system-notices' && described.parts[1] === 'active' && method === 'GET') {
+    sendJson(res, 200, []);
+    return true;
+  }
+  return false;
+}
+
 export default async function handler(req, res) {
   const described = publicApiRequest(req);
+  if (trekShell(req, res, described)) return undefined;
   const fn = handlers[described.head];
   if (!fn) return sendJson(res, 404, { ok: false, error: 'not found' });
   return fn(req, res);

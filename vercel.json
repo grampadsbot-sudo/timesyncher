@@ -38,6 +38,10 @@
       "dest": "/api/[...route]?...route=pdf&keepsakePdf=1&shareToken=$1&report=$2"
     },
     {
+      "src": "/shared/?",
+      "dest": "/vacation-app.html"
+    },
+    {
       "src": "/shared(?:/.*)?",
       "dest": "/shared-app.html"
     },

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'node:path';
+import { copyFile, mkdir } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { writeSharedAssets } from './scripts/write-shared-assets.mjs';
 
 function serveSharedApp(req, _res, next) {
@@ -7,8 +8,16 @@ function serveSharedApp(req, _res, next) {
   const query = url.indexOf('?');
   const path = query === -1 ? url : url.slice(0, query);
   const search = query === -1 ? '' : url.slice(query);
-  if (path === '/shared' || path.startsWith('/shared/')) req.url = `/shared-app.html${search}`;
+  if (path === '/shared' || path === '/shared/') req.url = `/vacation-app.html${search}`;
+  else if (path.startsWith('/shared/')) req.url = `/shared-app.html${search}`;
   next();
+}
+
+async function copyEulaMarkdown(outDir) {
+  const from = resolve(__dirname, 'src/onboarding/eula-markdown.mjs');
+  const to = resolve(outDir, 'src/onboarding/eula-markdown.mjs');
+  await mkdir(dirname(to), { recursive: true });
+  await copyFile(from, to);
 }
 
 export default defineConfig({
@@ -23,6 +32,9 @@ export default defineConfig({
       },
       configurePreviewServer(server) {
         server.middlewares.use(serveSharedApp);
+      },
+      async closeBundle() {
+        await copyEulaMarkdown(resolve(__dirname, 'dist'));
       },
     },
   ],

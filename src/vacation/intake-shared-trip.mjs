@@ -1,4 +1,5 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
+import { publicTripUrl } from './web-access.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
 const MONTHS = {
@@ -405,4 +406,24 @@ export function applyThingPresentation(shared = {}, options = {}) {
   delete next.needsCustomerInput;
   delete next.flightAsk;
   return { ...next, ...customerInputState(places) };
+}
+
+export async function welcomeSiteUrl(db, trip) {
+  const existing = String(trip?.publicUrl || '').trim();
+  if (existing) return existing;
+  const slug = intakeShareSlug(trip?.id);
+  if (!slug || !trip?.id) return '';
+  const url = publicTripUrl({ metadata: { publicSlug: slug } }, process.env);
+  if (!url) return '';
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug: slug, intakeShare: true }},
+        updated_at = now()
+    where id = ${trip.id}
+      and coalesce(metadata->>'publicSlug', '') in ('', ${slug})
+      and coalesce(metadata->>'sharedToken', '') = ''
+      and coalesce(metadata->>'shareToken', '') = ''
+      and coalesce(metadata->>'source_token', '') = ''
+  `;
+  return url;
 }
