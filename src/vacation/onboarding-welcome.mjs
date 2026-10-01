@@ -7,6 +7,12 @@ const REQUIRED = {
   collaborator: ['collabFirstName', 'ownerFirstName', 'tripTitle', 'tripSiteUrl'],
 };
 
+export function missingWelcomeFields(input = {}) {
+  const audience = input?.audience === 'owner' || input?.audience === 'collaborator' ? input.audience : '';
+  if (!audience) return ['audience'];
+  return REQUIRED[audience].filter((key) => !String(input[key] ?? '').trim());
+}
+
 function rejectWelcome(reason) {
   console.error(reason);
   const error = new Error(reason);

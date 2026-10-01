@@ -40,7 +40,7 @@ import {
   applyCustomerNotes,
   completeRosterParty,
 } from '../src/vacation/live-app-turn.mjs';
-import { cannedWelcomeLiveTurn, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
@@ -281,9 +281,15 @@ function welcomeFirstName(value) {
   return text ? text.split(/\s+/)[0] : '';
 }
 
+function welcomeTripSiteUrl(trip) {
+  const existing = String(trip?.publicUrl || '').trim();
+  const slug = existing ? '' : intakeShareSlug(trip?.id);
+  return existing || (slug ? publicTripUrl({ metadata: { publicSlug: slug } }, process.env) : '');
+}
+
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
-  const tripSiteUrl = String(trip?.publicUrl || '').trim();
+  const tripSiteUrl = welcomeTripSiteUrl(trip);
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`
@@ -335,8 +341,20 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
       limit 1
     `;
   if (existing.length) return;
+  const inputs = await welcomeInputs(db, session, trip);
+  const missing = missingWelcomeFields(inputs);
   const started = Date.now();
-  const text = renderOnboardingWelcome(await welcomeInputs(db, session, trip), deps);
+  let text;
+  try {
+    if (missing.length) throw Object.assign(new Error(`onboarding welcome missing ${missing[0]}`), { statusCode: 502 });
+    text = renderOnboardingWelcome(inputs, deps);
+  } catch (error) {
+    const welcomeError = { reason: String(error?.message || ''), tripId: String(trip?.id || ''), missing };
+    console.error(JSON.stringify({ event: 'onboarding_welcome_failed', ...welcomeError }));
+    error.welcomeError = welcomeError;
+    if (!error.statusCode) error.statusCode = 502;
+    throw error;
+  }
   const elapsed = Math.max(1, Date.now() - started);
   const live = cannedWelcomeLiveTurn({
     text,
@@ -937,7 +955,11 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0]
       || null;
     const eula = await vacationAppEula(session, process.env);
-    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
+    let welcomeError = null;
+    if (selected && eula.accepted) {
+      try { await ensureOnboardingOpener(db, session, selected); }
+      catch (error) { welcomeError = error.welcomeError || { reason: String(error.message || ''), tripId: String(selected.id || ''), missing: [] }; }
+    }
     const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
     if (selected) await publishIntakeShare(db, selected.id);
     const published = selected ? await loadVacationAppTrips(db, session) : vacations;
@@ -954,6 +976,7 @@ async function handleVacationApp(req, res, db, url) {
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
+      welcomeError,
       vacations: published,
       turns,
       itinerary,
