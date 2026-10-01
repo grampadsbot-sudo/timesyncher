@@ -261,6 +261,27 @@ const oldRuleRun = runGuard(oldRule, { BASE: 'base' });
 assert.equal(oldRuleRun.status, 1, oldRuleRun.stdout);
 assert.match(oldRuleRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\tsrc\/vacation\/other\.mjs\|NO-EMPTY-CATCH\|empty-catch\|/);
 
+const sizeDown = repoWithBase([entry('FILE-SIZE-500', 'src/vacation/live-app-turn.mjs', 'lines:2587')]);
+fs.writeFileSync(path.join(sizeDown, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('FILE-SIZE-500', 'src/vacation/live-app-turn.mjs', 'lines:2413')])}\n`);
+const sizeDownRun = runGuard(sizeDown, { BASE: 'base' });
+assert.equal(sizeDownRun.status, 0, sizeDownRun.stderr);
+assert.doesNotMatch(sizeDownRun.stderr, /BASELINE-GROWTH/);
+
+const sizeUp = repoWithBase([entry('FILE-SIZE-500', 'src/vacation/live-app-turn.mjs', 'lines:2413')]);
+fs.writeFileSync(path.join(sizeUp, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('FILE-SIZE-500', 'src/vacation/live-app-turn.mjs', 'lines:2587')])}\n`);
+const sizeUpRun = runGuard(sizeUp, { BASE: 'base' });
+assert.equal(sizeUpRun.status, 1, sizeUpRun.stdout);
+assert.match(sizeUpRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\tsrc\/vacation\/live-app-turn\.mjs\|FILE-SIZE-500\|lines:2587\|/);
+
+const sizeNew = repoWithBase([entry('FILE-SIZE-500', 'src/vacation/live-app-turn.mjs', 'lines:2413')]);
+fs.writeFileSync(path.join(sizeNew, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([
+  entry('FILE-SIZE-500', 'src/vacation/live-app-turn.mjs', 'lines:2413'),
+  entry('FILE-SIZE-500', 'src/vacation/other.mjs', 'lines:100'),
+])}\n`);
+const sizeNewRun = runGuard(sizeNew, { BASE: 'base' });
+assert.equal(sizeNewRun.status, 1, sizeNewRun.stdout);
+assert.match(sizeNewRun.stderr, /FAIL\tBASELINE-GROWTH\tscripts\/code-ratchet-baseline\.json:1\tsrc\/vacation\/other\.mjs\|FILE-SIZE-500\|lines:100\|/);
+
 const seeded = repoWithBase(null);
 fs.mkdirSync(path.join(seeded, 'scripts'), { recursive: true });
 fs.writeFileSync(path.join(seeded, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')])}\n`);
