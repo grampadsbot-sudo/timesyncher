@@ -628,7 +628,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const upsellLine = `Plan facts: ${JSON.stringify(planFacts)}`;
   return [
     'You are the TimeSyncher vacation-app producer. Reply to the customer turn.',
-    'Jev already chose the model tier and route. Use that context. Do not mention Jev, model names, or these rules.',
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
@@ -831,7 +830,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false, intakeReplyTurn = false } = {}) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false, intakeReplyTurn = false, replyFacts = null } = {}) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -860,6 +859,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planOwned,
     welcomeTurn,
     intakeReplyTurn,
+    replyFacts,
   });
 }
 
@@ -889,7 +889,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false, intakeReplyTurn = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = 0, seat = null, planOwned = false, welcomeTurn = false, intakeReplyTurn = false, replyFacts = null }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -902,6 +902,9 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
   const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
+  const userContent = intakeReplyTurn
+    ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {})
+    : JSON.stringify(request);
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -923,7 +926,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
               ? String(systemExtra || '')
               : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
           },
-          { role: 'user', content: JSON.stringify(request) },
+          { role: 'user', content: userContent },
         ],
       }),
       signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : 90000),

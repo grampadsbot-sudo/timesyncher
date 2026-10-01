@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
+import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 import {
   FIRST_INTAKE_GAP_INSTRUCTION,
+  FIRST_INTAKE_QUESTION_INSTRUCTION,
   FIRST_INTAKE_VOICE_INSTRUCTION,
+  VIEW_WITHOUT_SIGN_IN,
   YEARLY_PLAN_ID,
   firstIntakeReplyFacts,
+  firstIntakeReplyLeak,
   firstIntakeReplyPrompt,
+  intakeCustomerName,
   produceLiveAppReply,
 } from '../src/vacation/live-app-turn.mjs';
 
@@ -28,17 +33,59 @@ assert.doesNotMatch(rules, phrase);
 assert.doesNotMatch(rules, /This is the intake dump/);
 assert.doesNotMatch(rules, /On the long trip dump, use the words/);
 assert.doesNotMatch(rules, /Say you are building the itinerary/);
+const leakWord = /\b(?:tier|route|model|jev)\b/i;
+assert.doesNotMatch(rules, /Jev already chose the model tier and route/);
+const rulesPrompt = replyRulesSystem({}, '', 'forbidden', false, 'hello', {});
+assert.doesNotMatch(rulesPrompt, leakWord);
+assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, leakWord);
+assert.doesNotMatch(FIRST_INTAKE_GAP_INSTRUCTION, leakWord);
+assert.doesNotMatch(FIRST_INTAKE_QUESTION_INSTRUCTION, leakWord);
+assert.equal(firstIntakeReplyLeak("I see you've already picked out your model tier and route"), true);
+assert.equal(firstIntakeReplyLeak('I am putting the itinerary together from the house and the gardens.'), false);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Confirm the itinerary is being built/);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Reflect where, when, who, lodging, and plans/);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Offer to add collaborators/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /end date/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /number of nights/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /planned activities/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Offer to add each person in collaborators/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Do not grant view or edit/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /including to children/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Pitch the yearly plan/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
-assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Ask two or three questions/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Never ask a second question/);
+assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
+assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /where they are going and for how long/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /voice note/);
+assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /second person/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Do not offer to add collaborators/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Do not pitch a plan/);
 assert.doesNotMatch(FIRST_INTAKE_GAP_INSTRUCTION, /Pitch the yearly plan/);
 assert.doesNotMatch(FIRST_INTAKE_GAP_INSTRUCTION, /Offer to add collaborators, naming/);
+assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /Answer the question first/);
+assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /view_without_sign_in/);
+assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /no name or contact/);
+assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /just the two of you/);
+assert.match(FIRST_INTAKE_QUESTION_INSTRUCTION, /exactly one question/);
+
+function assertCleanFacts(facts) {
+  const walk = (value) => {
+    if (value == null) return;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      assert.doesNotMatch(String(value), leakWord);
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    if (typeof value === 'object') {
+      for (const [key, item] of Object.entries(value)) {
+        assert.doesNotMatch(key, leakWord);
+        walk(item);
+      }
+    }
+  };
+  walk(facts);
+}
 
 const voiceNote = [
   'Okay, this is a voice note about the trip.',
@@ -65,6 +112,8 @@ const voiceInput = {
     { name: 'Kimberly', role: 'collaborator' },
     { name: 'Tyler', role: 'collaborator' },
     { name: 'Lauren', role: 'collaborator' },
+    { name: 'Sam', role: 'child' },
+    { name: '', role: 'collaborator' },
   ],
 };
 
@@ -75,7 +124,10 @@ assert.equal(voiceFacts.customer_said, voiceNote);
 assert.equal(voiceFacts.where, 'Big Island of Hawaii');
 assert.equal(voiceFacts.lodging, 'house in Kailua-Kona');
 assert.deepEqual(voiceFacts.plans, ['gardens', 'swim']);
+assert.deepEqual(voiceFacts.activities, ['gardens', 'swim']);
 assert.deepEqual(voiceFacts.collaborators, ['Kimberly', 'Tyler', 'Lauren']);
+assert.deepEqual(voiceFacts.who, ['Sam', 'Kimberly', 'Tyler', 'Lauren']);
+assert.equal(voiceFacts.collaborators.includes('Sam'), false);
 assert.equal(voiceFacts.plan.plan_id, 'timesyncher_vacation_unlimited');
 assert.equal(voiceFacts.plan.plan_owned, false);
 assert.equal(voiceFacts.plan.price, undefined);
@@ -87,12 +139,29 @@ assert.match(voicePrompt, /house in Kailua-Kona/);
 assert.match(voicePrompt, /gardens/);
 assert.match(voicePrompt, /timesyncher_vacation_unlimited/);
 assert.doesNotMatch(voicePrompt, phrase);
+assert.doesNotMatch(voicePrompt, leakWord);
 assert.doesNotMatch(JSON.stringify(voiceFacts), /"price"/);
+assertCleanFacts(voiceFacts);
+
+const dated = firstIntakeReplyFacts({
+  ...voiceInput,
+  savedStart: '2026-04-03',
+  savedEnd: '2026-04-12',
+});
+assert.equal(dated.start, '2026-04-03');
+assert.equal(dated.end, '2026-04-12');
+assert.equal(dated.nights, 9);
+assert.equal(dated.when, '2026-04-03 to 2026-04-12');
+assertCleanFacts(dated);
 
 const shortInput = { customerTurn: 'Maybe a trip sometime.', tripTitle: '' };
 const vagueInput = {
   customerTurn: 'We might do something sometime if everyone is free, but nothing is chosen.',
 };
+const customerId = '11111111-2222-4333-8444-555555555555';
+assert.equal(intakeCustomerName({ customer_id: customerId, first_name: customerId }), '');
+assert.equal(intakeCustomerName({ customer_id: customerId, first_name: 'Ada' }), 'Ada');
+assert.equal(intakeCustomerName({ customer_id: customerId }), '');
 for (const input of [shortInput, vagueInput]) {
   const facts = firstIntakeReplyFacts(input);
   const prompt = firstIntakeReplyPrompt(input);
@@ -100,13 +169,51 @@ for (const input of [shortInput, vagueInput]) {
   assert.equal(facts.customer_said, input.customerTurn);
   assert.equal(facts.collaborators, undefined);
   assert.equal(facts.plan, undefined);
+  assert.equal(facts.customer_name, undefined);
   assert.doesNotMatch(prompt, /timesyncher_vacation_unlimited/);
   assert.doesNotMatch(prompt, /Pitch the yearly plan/);
   assert.doesNotMatch(prompt, /Offer to add collaborators, naming/);
-  assert.match(prompt, /Ask two or three questions/);
+  assert.doesNotMatch(prompt, leakWord);
+  assert.match(prompt, /Start the trip draft anyway/);
+  assert.match(prompt, /where they are going and for how long/);
   assert.match(prompt, /voice note/);
+  assert.match(prompt, /second person/);
   assert.equal(prompt.startsWith(FIRST_INTAKE_GAP_INSTRUCTION), true);
+  assertCleanFacts(facts);
 }
+const idNamed = firstIntakeReplyFacts({ customerTurn: shortInput.customerTurn, customerName: customerId });
+assert.equal(idNamed.customer_name, undefined);
+assert.equal(JSON.stringify(idNamed).includes(customerId), false);
+const adaGaps = firstIntakeReplyFacts({ customerTurn: shortInput.customerTurn, customerName: 'Ada' });
+assert.equal(adaGaps.customer_name, 'Ada');
+assert.equal(adaGaps.shape, 'gaps');
+const nightFacts = firstIntakeReplyFacts({ customerTurn: 'We want 9 nights somewhere.' });
+assert.equal(nightFacts.nights, 9);
+assert.equal(nightFacts.shape, 'gaps');
+
+const questionTurn = 'Can he view without signing in?';
+const questionFacts = firstIntakeReplyFacts({
+  customerTurn: questionTurn,
+  customerName: 'Ada',
+  roster: [{ name: '', role: 'collaborator' }, { name: 'he', role: 'collaborator' }],
+});
+const questionPrompt = firstIntakeReplyPrompt({
+  customerTurn: questionTurn,
+  customerName: 'Ada',
+  roster: [{ name: '', role: 'collaborator' }, { name: 'he', role: 'collaborator' }],
+});
+assert.equal(questionFacts.shape, 'question');
+assert.equal(questionFacts.customer_name, 'Ada');
+assert.equal(questionFacts.view_without_sign_in, VIEW_WITHOUT_SIGN_IN);
+assert.equal(questionFacts.missing_name, true);
+assert.equal(questionFacts.collaborators, undefined);
+assert.equal(questionFacts.who, undefined);
+assert.equal(questionFacts.plan, undefined);
+assert.equal(JSON.stringify(questionFacts).includes('just the two of you'), false);
+assert.equal(questionPrompt.startsWith(FIRST_INTAKE_QUESTION_INSTRUCTION), true);
+assert.match(questionPrompt, /Answer the question first/);
+assert.doesNotMatch(questionPrompt, leakWord);
+assertCleanFacts(questionFacts);
 
 const voiceReply = 'I am putting the itinerary together from the Big Island of Hawaii, the April dates, the house in Kailua-Kona, gardens, and a swim. Kimberly, Tyler, and Lauren can join and help shape it. The yearly plan for that is timesyncher_vacation_unlimited. What is still open about dinner the day you land?';
 const gapReply = 'Where are you hoping to go, when would you leave, and who is coming? A longer voice note on those would help.';
@@ -132,8 +239,15 @@ globalThis.fetch = async (url, init) => {
     chatCalls.push(body);
     const system = body.messages?.find((message) => message.role === 'system')?.content || '';
     assert.equal(system, voicePrompt);
+    const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
+    assert.deepEqual(user, voiceFacts);
+    assert.equal(user.jev, undefined);
+    assert.equal(user.pipeline, undefined);
+    assertCleanFacts(user);
+    assert.doesNotMatch(system, leakWord);
     assert.match(system, /Confirm the itinerary is being built/);
-    assert.match(system, /Offer to add collaborators/);
+    assert.match(system, /Offer to add each person in collaborators/);
+    assert.match(system, /Do not grant view or edit/);
     assert.match(system, /Pitch the yearly plan/);
     assert.match(system, /exactly one question/);
     assert.match(system, /"collaborators":\["Kimberly","Tyler","Lauren"\]/);
@@ -164,7 +278,7 @@ try {
   assert.equal(produced.reason, null);
 
   chatCalls.length = 0;
-  const gapPrompt = firstIntakeReplyPrompt(shortInput);
+  const gapPrompt = firstIntakeReplyPrompt({ ...shortInput, customerName: 'Ada' });
   globalThis.fetch = async (url, init) => {
     const target = String(url);
     const body = init?.body ? JSON.parse(init.body) : {};
@@ -173,8 +287,16 @@ try {
       chatCalls.push(body);
       const system = body.messages?.find((message) => message.role === 'system')?.content || '';
       assert.equal(system, gapPrompt);
-      assert.match(system, /Ask two or three questions/);
+      const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
+      assert.equal(user.customer_name, 'Ada');
+      assert.equal(JSON.stringify(user).includes(customerId), false);
+      assert.equal(user.jev, undefined);
+      assertCleanFacts(user);
+      assert.doesNotMatch(system, leakWord);
+      assert.match(system, /Start the trip draft anyway/);
+      assert.match(system, /where they are going and for how long/);
       assert.match(system, /voice note/);
+      assert.match(system, /second person/);
       assert.doesNotMatch(system, /timesyncher_vacation_unlimited/);
       assert.doesNotMatch(system, /Pitch the yearly plan/);
       assert.doesNotMatch(system, /Offer to add collaborators, naming/);
@@ -192,12 +314,82 @@ try {
     customerTurn: shortInput.customerTurn,
     intake: true,
     priorTurns: [],
-    session: {},
+    session: { customer_id: customerId, first_name: 'Ada' },
     env,
   });
   assert.equal(chatCalls.length, 1);
   assert.equal(gaps.reply, gapReply);
   assert.equal(gaps.reason, null);
+
+  chatCalls.length = 0;
+  const questionReply = 'Yes. Anyone with the trip link can view plans and photos without signing in. What is his name?';
+  globalThis.fetch = async (url, init) => {
+    const target = String(url);
+    const body = init?.body ? JSON.parse(init.body) : {};
+    if (target.includes('/api/alpha/decisions')) return jevOk();
+    if (target.includes('/chat/completions')) {
+      chatCalls.push(body);
+      const system = body.messages?.find((message) => message.role === 'system')?.content || '';
+      const user = JSON.parse(body.messages.find((message) => message.role === 'user')?.content || '{}');
+      assert.equal(system, questionPrompt);
+      assert.equal(user.view_without_sign_in, VIEW_WITHOUT_SIGN_IN);
+      assert.equal(user.customer_name, 'Ada');
+      assert.equal(user.collaborators, undefined);
+      assert.equal(user.missing_name, true);
+      assert.equal(JSON.stringify(user).includes(customerId), false);
+      assert.equal(JSON.stringify(user).includes('just the two of you'), false);
+      assert.doesNotMatch(system, leakWord);
+      assertCleanFacts(user);
+      return {
+        ok: true,
+        json: async () => ({
+          model: body.model,
+          choices: [{ message: { content: questionReply } }],
+        }),
+      };
+    }
+    throw new Error(`unexpected ${target}`);
+  };
+  const asked = await produceLiveAppReply({
+    customerTurn: questionTurn,
+    intake: true,
+    priorTurns: [],
+    session: { customer_id: customerId, first_name: 'Ada' },
+    env,
+  });
+  assert.equal(chatCalls.length, 1);
+  assert.equal(asked.reply, questionReply);
+  assert.equal(asked.reason, null);
+
+  chatCalls.length = 0;
+  const leaked = "I see you've already picked out your model tier and route.";
+  globalThis.fetch = async (url, init) => {
+    const target = String(url);
+    const body = init?.body ? JSON.parse(init.body) : {};
+    if (target.includes('/api/alpha/decisions')) return jevOk();
+    if (target.includes('/chat/completions')) {
+      chatCalls.push(body);
+      return {
+        ok: true,
+        json: async () => ({
+          model: body.model,
+          choices: [{ message: { content: leaked } }],
+        }),
+      };
+    }
+    throw new Error(`unexpected ${target}`);
+  };
+  const flagged = await produceLiveAppReply({
+    ...voiceInput,
+    intake: true,
+    priorTurns: [],
+    session: { token: 'sess' },
+    env,
+  });
+  assert.equal(chatCalls.length, 2);
+  assert.equal(flagged.reply, null);
+  assert.equal(flagged.reason, 'first_intake_reply_flagged');
+  assert.equal(firstIntakeReplyLeak(leaked), true);
 
   chatCalls.length = 0;
   globalThis.fetch = async (url, init) => {
