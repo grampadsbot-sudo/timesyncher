@@ -28,6 +28,7 @@ const env = {
   TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com',
   TIMESYNCHER_ONBOARDING_STORE: storeDir,
   TIMESYNCHER_EULA_VERSION: 'test-eula',
+  TIMESYNCHER_CHECKOUT_CURRENCY: 'usd',
 };
 const savedEnv = {};
 const envKeys = [

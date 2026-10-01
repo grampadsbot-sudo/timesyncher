@@ -27,7 +27,13 @@ function missingSessionError({ tripId = '', sessionId = '' } = {}) {
 export function purchaseLaunchUrl({ sessionToken = '', token = '', tripId = '', sessionId = '', env = process.env } = {}) {
   const appToken = cleanText(sessionToken || token, 180);
   if (!appToken) throw missingSessionError({ tripId, sessionId });
-  const url = vacationAppLink(appToken, env);
+  const url = cleanText(vacationAppLink(appToken, env), 600);
+  if (!url || !url.includes('/vacation-app.html?session=')) {
+    const error = new Error(`purchase email missing launch URL${sessionId ? ` for session ${sessionId}` : ''}`);
+    error.code = 'purchase_email_missing_launch_url';
+    console.error(JSON.stringify({ event: error.code, tripId, sessionId, url }));
+    throw error;
+  }
   if (url.includes('/shared/')) {
     const error = new Error(`purchase email launch included a shared trip URL for session ${sessionId || appToken}`);
     error.code = 'purchase_email_shared_launch';

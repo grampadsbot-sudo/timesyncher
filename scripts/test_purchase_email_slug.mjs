@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { purchaseEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 
 const tripId = '01234567-89ab-4cde-8f01-23456789abcd';
@@ -49,14 +50,11 @@ try {
       contact: { email: 'ada@example.com', firstName: 'Ada' },
       tripId,
       session: { id: sessionId },
-      publicSlug: 'intake-0123456789ab',
-      publicUrl: `${site}/shared/intake-0123456789ab/`,
     }, env),
     (error) => {
       assert.equal(error.code, 'purchase_email_missing_session');
       assert.match(error.message, new RegExp(tripId));
       assert.match(error.message, new RegExp(sessionId));
-      assert.doesNotMatch(error.message, /\/shared\/intake-/);
       return true;
     },
   );
@@ -84,8 +82,6 @@ try {
     contact: { email: 'ada@example.com', firstName: 'Ada' },
     tripId,
     session: { id: sessionId, token: sessionToken },
-    publicSlug: 'intake-0123456789ab',
-    publicUrl: `${site}/shared/intake-0123456789ab/`,
     customerId: 'customer-1',
     orderId: 'order-1',
   }, env);
@@ -99,5 +95,14 @@ assert.ok(insert);
 const metadata = insert.values.find((value) => value && value.launchUrl);
 assert.equal(metadata.launchUrl, `${site}/vacation-app.html?session=${encodeURIComponent(sessionToken)}`);
 assert.doesNotMatch(metadata.launchUrl, /\/shared\/intake-/);
+
+const purchaseSource = readFileSync(new URL('../src/vacation/email.mjs', import.meta.url), 'utf8');
+const exportFn = (name, isAsync = false) => `export ${isAsync ? 'async ' : ''}${'function'} ${name}`;
+const purchaseFns = [
+  purchaseSource.slice(purchaseSource.indexOf('function missingSessionError'), purchaseSource.indexOf(exportFn('collaboratorInviteEmail'))),
+  purchaseSource.slice(purchaseSource.indexOf(exportFn('queueOrSendPurchaseEmail', true)), purchaseSource.indexOf(exportFn('collaboratorInviteTargets'))),
+].join('\n');
+assert.doesNotMatch(purchaseFns, /purchase_email_missing_share_token|publicSlug|publicUrl|shareToken|sharedTripWebsiteUrl/);
+assert.match(purchaseFns, /vacation-app\.html\?session=/);
 
 console.log('purchase email slug passed');

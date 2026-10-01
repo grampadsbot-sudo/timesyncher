@@ -16,9 +16,10 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
 const site = 'https://vacation-staging.timesyncher.com';
 const saved = {};
-for (const key of ['TIMESYNCHER_SITE_BASE_URL', 'TIMESYNCHER_ONBOARDING_STORE', 'TIMESYNCHER_EULA_VERSION', 'BLOB_READ_WRITE_TOKEN', 'VERCEL_BLOB_STORE_ID', 'TIMESYNCHER_EULA_STORE', 'RESEND_API_KEY']) {
+for (const key of ['TIMESYNCHER_SITE_BASE_URL', 'TIMESYNCHER_ONBOARDING_STORE', 'TIMESYNCHER_EULA_VERSION', 'BLOB_READ_WRITE_TOKEN', 'VERCEL_BLOB_STORE_ID', 'TIMESYNCHER_EULA_STORE', 'RESEND_API_KEY', 'TIMESYNCHER_CHECKOUT_CURRENCY']) {
   saved[key] = process.env[key];
 }
+process.env.TIMESYNCHER_CHECKOUT_CURRENCY = 'usd';
 process.env.TIMESYNCHER_SITE_BASE_URL = site;
 process.env.TIMESYNCHER_ONBOARDING_STORE = storeDir;
 process.env.TIMESYNCHER_EULA_VERSION = 'test-eula';

@@ -29,6 +29,7 @@ const familyPlan = [
   },
 ];
 
+process.env.TIMESYNCHER_CHECKOUT_CURRENCY = 'usd';
 const [ownerMedia, editor, collaborator, viewer] = familyPlan.map((row) => normalizeAccessPlanRow(row));
 assert.equal(ownerMedia.role, 'owner_media');
 assert.equal(ownerMedia.canEditSite, true);
