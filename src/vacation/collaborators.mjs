@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import { optionalConfigCents, requiredConfigCents } from './checkout-pricing.mjs';
-import { assignTripSiteUrl } from './onboarding.mjs';
 
 export const COLLABORATOR_PLANS = {
   telegram_collaborators_single_trip: {
@@ -96,7 +95,6 @@ export async function markCollaboratorInvitePaid(db, { inviteId, token = '', met
     ? await loadCollaboratorInviteForEmail(db, inviteId)
     : await loadCollaboratorInviteByToken(db, token, env);
   if (!invite) throw Object.assign(new Error('Collaborator invite not found.'), { statusCode: 404 });
-  if (invite.trip_id) await assignTripSiteUrl(db, invite.trip_id, env);
   if (invite.status === 'accepted' || invite.status === 'paid') return invite;
   if (invite.status !== 'pending_payment') {
     throw Object.assign(new Error(`Collaborator invite is ${invite.status}.`), { statusCode: 409 });

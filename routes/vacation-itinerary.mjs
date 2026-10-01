@@ -19,10 +19,9 @@ import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
-import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
-import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
@@ -293,9 +292,14 @@ function welcomeFirstName(value) {
   return text ? text.split(/\s+/)[0] : '';
 }
 
+function tripHasVacationSite(trip) {
+  return Boolean(String(trip?.shareToken || '').trim());
+}
+
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
-  const tripSiteUrl = String(trip?.publicUrl || '').trim();
+  const hasSite = tripHasVacationSite(trip);
+  const tripSiteUrl = hasSite ? String(trip?.publicUrl || '').trim() : '';
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`
@@ -305,19 +309,29 @@ async function welcomeInputs(db, session, trip) {
       limit 1
     `;
     const owner = owners[0] || {};
+    const collabFirstName = welcomeFirstName(session.first_name || seat.displayName || session.display_name);
+    const ownerFirstName = welcomeFirstName(owner.first_name || owner.display_name);
+    if (hasSite) {
+      return {
+        audience: 'collaborator',
+        ownerFirstName,
+        collabFirstName,
+        tripTitle,
+        tripSiteUrl,
+      };
+    }
     return {
-      audience: 'collaborator',
-      ownerFirstName: welcomeFirstName(owner.first_name || owner.display_name),
-      collabFirstName: welcomeFirstName(session.first_name || seat.displayName || session.display_name),
+      audience: 'collaborator_no_site',
+      ownerFirstName,
+      collabFirstName,
       tripTitle,
-      tripSiteUrl,
     };
   }
-  return {
-    audience: 'owner',
-    firstName: welcomeFirstName(session.first_name || session.display_name),
-    tripSiteUrl,
-  };
+  const firstName = welcomeFirstName(session.first_name || session.display_name);
+  if (hasSite) {
+    return { audience: 'owner', firstName, tripSiteUrl };
+  }
+  return { audience: 'owner_no_site', firstName };
 }
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
@@ -758,20 +772,9 @@ function thingView(row) {
 }
 
 async function publishIntakeShare(db, tripId) {
-  const slug = intakeShareSlug(tripId);
-  if (!slug) return;
   const things = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (!Number(things[0]?.n)) return;
-  await db`
-    update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug: slug, intakeShare: true }},
-        updated_at = now()
-    where id = ${tripId}
-      and coalesce(metadata->>'sharedToken', '') = ''
-      and coalesce(metadata->>'shareToken', '') = ''
-      and coalesce(metadata->>'source_token', '') = ''
-      and coalesce(metadata->>'publicSlug', '') in ('', ${slug})
-  `;
+  await assignTripSiteUrl(db, tripId, process.env);
   await storePreCollaboratorSnapshot(db, tripId);
 }
 

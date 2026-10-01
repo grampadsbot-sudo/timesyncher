@@ -8,6 +8,7 @@ import {
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
 import { CheckoutConfigError, checkoutCurrency, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
+import { tripSiteUrlFailure } from './trip-site-url-failure.mjs';
 import { sharedTripWebsiteUrl } from './web-access.mjs';
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
@@ -155,9 +156,8 @@ async function ensureOrder(db, customerId, tripId, entitlementId, order) {
 
 export async function assignTripSiteUrl(db, tripId, env = process.env) {
   const publicSlug = intakeShareSlug(tripId);
-  if (!publicSlug) return { publicSlug: '', publicUrl: '' };
-  const publicUrl = sharedTripWebsiteUrl(publicSlug, env);
-  await db`
+  if (!publicSlug) throw tripSiteUrlFailure('onboarding trip site url missing slug', tripId);
+  const updated = await db`
     update trips
     set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
       updated_at = now()
@@ -166,8 +166,19 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
       and coalesce(metadata->>'shareToken', '') = ''
       and coalesce(metadata->>'source_token', '') = ''
       and coalesce(metadata->>'publicSlug', '') in ('', ${publicSlug})
+    returning metadata->>'publicSlug' as public_slug
   `;
-  return { publicSlug, publicUrl };
+  const stored = String(updated[0]?.public_slug || '').trim();
+  if (stored === publicSlug) return { publicSlug, publicUrl: sharedTripWebsiteUrl(publicSlug, env) };
+  const existing = await db`
+    select metadata->>'publicSlug' as public_slug
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const prior = String(existing[0]?.public_slug || '').trim();
+  if (prior === publicSlug) return { publicSlug, publicUrl: sharedTripWebsiteUrl(publicSlug, env) };
+  throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
 }
 
 function couponPriceKey(plan) {
@@ -194,7 +205,6 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
   };
   const customerId = await upsertCustomer(db, cleanContact, orderMetadata);
   const tripId = await ensureTrip(db, customerId, orderMetadata);
-  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, env);
   const order = {
     stripeCustomerId: null,
     stripeSubscriptionId: null,
@@ -224,8 +234,8 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     orderId,
     session,
     token: session.token,
-    publicSlug,
-    publicUrl,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
     eula,
@@ -345,7 +355,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     if (existing[0]) {
       const row = existing[0];
       const contact = row.contact || {};
-      const { publicSlug, publicUrl } = await assignTripSiteUrl(db, row.trip_id, env);
       const eula = await ensureVacationEulaSession(row, { contact, env });
       return {
         customerId: row.customer_id,
@@ -354,8 +363,8 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         orderId: row.order_id,
         session: row,
         token: row.token,
-        publicSlug,
-        publicUrl,
+        publicSlug: '',
+        publicUrl: '',
         onboardingUrl: onboardingLink(row.token, env),
         vacationAppUrl: vacationAppLink(row.token, env),
         eula,
@@ -410,7 +419,6 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     ...metadata,
   });
   const tripId = await ensureTrip(db, customerId, metadata);
-  const { publicSlug, publicUrl } = await assignTripSiteUrl(db, tripId, env);
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
@@ -423,8 +431,8 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     orderId,
     session,
     token: session.token,
-    publicSlug,
-    publicUrl,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
     eula,
