@@ -3,7 +3,7 @@ import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
 import { writeRatings } from './write-ratings.mjs';
 const DEDUPE_METERS = 250;
 const USER_AGENT = 'TimeSyncherVacation/1.0';
-const PLACE_SOURCES = ['prior_db', 'foursquare_os', 'osm', 'brave'];
+const PLACE_SOURCES = ['prior_db', 'osm', 'brave'];
 const SOURCE_IDS = new Set(PLACE_SOURCES);
 const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
@@ -195,12 +195,11 @@ export function mergePlaces(groups = []) {
 export function missingSearchKeys(env = {}) {
   const missing = [];
   if (!String(env.brave || '').trim()) missing.push(String(env.braveName || 'brave'));
-  // Foursquare is optional. An empty key skips that source instead of refusing the search.
   return missing;
 }
 
 function countSources(places) {
-  const counts = { prior_db: 0, foursquare_os: 0, osm: 0, brave: 0 };
+  const counts = { prior_db: 0, osm: 0, brave: 0 };
   for (const place of places) counts[place.source] += 1;
   return counts;
 }
@@ -331,60 +330,6 @@ async function attachRelevance(rows, fetchImpl, env) {
   return scored;
 }
 
-function foursquarePlacesApiVersion() {
-  const year = 2025;
-  const month = 6;
-  const day = 17;
-  const pad = (part) => String(part).padStart(2, '0');
-  return `${year}-${pad(month)}-${pad(day)}`;
-}
-
-async function queryFoursquare(fetchImpl, env, center, queries) {
-  const places = [];
-  for (const item of queries) {
-    const params = new URLSearchParams({
-      query: item.q,
-      ll: `${center.lat},${center.lng}`,
-      radius: String(categoryRadiusMeters(item.category)),
-      limit: String(item.limit || searchLimit(item.category)),
-      fields: 'fsq_place_id,name,latitude,longitude,location,link,date_closed,rating,stats,categories',
-    });
-    const payload = await readJson(
-      fetchImpl,
-      `https://places-api.foursquare.com/places/search?${params}`,
-      {
-        label: 'Foursquare OS Places',
-        headers: {
-          authorization: `Bearer ${String(env.foursquare).trim()}`,
-          'X-Places-Api-Version': foursquarePlacesApiVersion(),
-        },
-      },
-    );
-    const results = Array.isArray(payload?.results) ? payload.results : [];
-    for (const result of results) {
-      if (result?.date_closed) continue;
-      const lat = finite(result?.latitude);
-      const lng = finite(result?.longitude);
-      const title = String(result?.name || '').trim();
-      if (!title || lat === null || lng === null) continue;
-      if (metersInsideCategory(center, { lat, lng }, item.category) === null) continue;
-      places.push({
-        source: 'foursquare_os',
-        title,
-        category: item.category,
-        lat,
-        lng,
-        address: String(result.location?.formatted_address || result.location?.address || ''),
-        url: String(result.link || ''),
-        externalId: String(result.fsq_place_id || ''),
-        ...ratingFromRecord(result),
-        ...categoryNameField(foursquareCategoryName(result)),
-      });
-    }
-  }
-  return places;
-}
-
 const OSM_CATEGORIES = [
   {
     category: 'grocery',
@@ -430,11 +375,6 @@ function overpassQuery(center) {
 function categoryNameField(name) {
   const categoryName = String(name || '').trim();
   return categoryName ? { categoryName } : {};
-}
-
-function foursquareCategoryName(result) {
-  const categories = Array.isArray(result?.categories) ? result.categories : [];
-  return categories.map((item) => String(item?.name || '').trim()).find(Boolean) || '';
 }
 
 function osmCategory(tags = {}) {
@@ -592,7 +532,7 @@ async function queryPriorRows(env) {
   return db`
     select id, title, category, location, source
     from trip_things
-    where source in ('prior_db', 'foursquare_os', 'osm', 'brave')
+    where source in ('prior_db', 'osm', 'brave')
     order by updated_at desc
     limit 400
   `;
@@ -692,15 +632,14 @@ export async function searchPlaces({
     else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
     else prior = await readPriorPlaces(center, { env });
     prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
-    const foursquare = await placesFromFoursquare(fetchImpl, env, center, placeQueries);
     const osm = await queryOsm(fetchImpl, center);
     const brave = await queryBrave(fetchImpl, env, center, placeQueries);
-    places = await attachRelevance(mergePlaces([prior, foursquare, osm, brave]), fetchImpl, env);
+    places = await attachRelevance(mergePlaces([prior, osm, brave]), fetchImpl, env);
     const liveCount = places.filter((place) => place.source !== 'prior_db').length;
     if (!liveCount) {
       fail(
         places.length
-          ? 'Saved places are not a sole source. Foursquare OS Places, OpenStreetMap, and Brave Place Search returned no places.'
+          ? 'Saved places are not a sole source. OpenStreetMap and Brave Place Search returned no places.'
           : `Place search returned no places for ${dest || lodging || center.label}.`,
         places.length ? 'prior_db_sole_source' : 'empty',
       );
@@ -807,22 +746,6 @@ export function noteToResearchCandidate(note, destination = '') {
       source: 'tavily',
     },
   };
-}
-
-let loggedFoursquareSkip = false;
-
-function foursquareServiceKey(env = {}) {
-  return String(env.foursquare || env.FOURSQUARE_SERVICE_KEY || '').trim();
-}
-
-async function placesFromFoursquare(fetchImpl, env, center, queries) {
-  const key = foursquareServiceKey(env);
-  if (key) return queryFoursquare(fetchImpl, { ...env, foursquare: key }, center, queries);
-  if (!loggedFoursquareSkip) {
-    loggedFoursquareSkip = true;
-    console.warn('place-search: FOURSQUARE_SERVICE_KEY unset, skipping foursquare');
-  }
-  return [];
 }
 
 export async function fillTripIntake(options) {

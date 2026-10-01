@@ -99,32 +99,28 @@ priorRows.push(
 );
 
 const calls = [];
+const hosts = [];
+const allowedHosts = new Set([
+  'overpass-api.de',
+  'api.search.brave.com',
+  'openrouter.ai',
+]);
 const found = await searchPlaces({
   lodgingPoint: CENTER,
   queries,
   env: {
     brave: 'brave-test',
-    foursquare: 'fsq-test',
     OPENROUTER_API_KEY: 'openrouter-test',
   },
   priorPlaces: priorRows,
   fetchImpl: async (url, options) => {
     const value = String(url);
-    calls.push({ url: value, options });
+    const hostname = new URL(value).hostname;
+    hosts.push(hostname);
+    if (!allowedHosts.has(hostname)) throw new Error(`unexpected host ${hostname}`);
+    calls.push({ url: value, options, hostname });
     if (value.includes('openrouter.ai')) {
       return jsonResponse({ answers: { relevance: { choice: 5 } } });
-    }
-    if (value.includes('places-api.foursquare.com')) {
-      const category = new URL(value).searchParams.get('query');
-      const band = category === 'hotel'
-        ? { inside: hotelInside, outside: hotelOutside }
-        : bands[category];
-      return jsonResponse({
-        results: [
-          { fsq_place_id: `fsq-in-${category}`, name: `fsq-in-${category}`, latitude: band.inside.lat, longitude: band.inside.lng },
-          { fsq_place_id: `fsq-out-${category}`, name: `fsq-out-${category}`, latitude: band.outside.lat, longitude: band.outside.lng },
-        ],
-      });
     }
     if (value.includes('overpass-api.de')) return jsonResponse({ elements: osmElements });
     if (value.includes('api.search.brave.com')) {
@@ -143,10 +139,9 @@ const found = await searchPlaces({
   },
 });
 
-const foursquare = calls.filter((call) => call.url.includes('places-api.foursquare.com'));
 const brave = calls.filter((call) => call.url.includes('api.search.brave.com'));
 const overpass = calls.filter((call) => call.url.includes('overpass-api.de'));
-assert.equal(foursquare.length, CATEGORIES.length + 1);
+assert.deepEqual([...new Set(hosts)].sort(), ['api.search.brave.com', 'openrouter.ai', 'overpass-api.de']);
 assert.equal(brave.length, CATEGORIES.length + 1);
 assert.equal(overpass.length, 1);
 assert.equal(calls.some((call) => /nominatim|googleapis|places\.google/.test(call.url)), false);
@@ -154,27 +149,20 @@ assert.equal(calls.some((call) => /nominatim|googleapis|places\.google/.test(cal
 const overpassQuery = decodeURIComponent(String(overpass[0].options.body).replace(/^data=/, ''));
 for (const category of CATEGORIES) {
   const radius = String(bands[category].radius);
-  const fsq = foursquare.find((call) => new URL(call.url).searchParams.get('query') === category);
   const braveCall = brave.find((call) => new URL(call.url).searchParams.get('q') === category);
-  assert.equal(new URL(fsq.url).searchParams.get('radius'), radius);
   assert.equal(new URL(braveCall.url).searchParams.get('radius'), radius);
-  assert.match(fsq.url, /ll=0%2C0|ll=0,0/);
   const filter = OSM_FILTER[category].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(overpassQuery, new RegExp(`${filter}\\(around:${radius},${CENTER.lat},${CENTER.lng}\\)`));
-  for (const source of ['prior', 'fsq', 'osm', 'brave']) {
+  for (const source of ['prior', 'osm', 'brave']) {
     assert.equal(found.places.some((place) => place.title === `${source}-in-${category}`), true, `${source}-in-${category}`);
     assert.equal(found.places.some((place) => place.title === `${source}-out-${category}`), false, `${source}-out-${category}`);
   }
 }
 
-const hotelFsq = foursquare.find((call) => new URL(call.url).searchParams.get('query') === 'hotel');
 const hotelBrave = brave.find((call) => new URL(call.url).searchParams.get('q') === 'hotel');
-assert.equal(new URL(hotelFsq.url).searchParams.get('radius'), String(hotelRadius));
 assert.equal(new URL(hotelBrave.url).searchParams.get('radius'), String(hotelRadius));
 assert.equal(found.places.some((place) => place.title === 'prior-in-hotel'), true);
 assert.equal(found.places.some((place) => place.title === 'prior-out-hotel'), false);
-assert.equal(found.places.some((place) => place.title === 'fsq-in-hotel'), true);
-assert.equal(found.places.some((place) => place.title === 'fsq-out-hotel'), false);
 assert.equal(found.places.some((place) => place.title === 'brave-in-hotel'), true);
 assert.equal(found.places.some((place) => place.title === 'brave-out-hotel'), false);
 assert.equal(overpassQuery.includes('around:20000'), false);

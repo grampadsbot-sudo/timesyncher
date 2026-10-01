@@ -530,8 +530,7 @@ async function main() {
     readFile(path.join(root, '.cursor/rules/style-two-keepsake-contract.mdc'), 'utf8').then((text) => text.includes('FIVE HARD RULES (verbatim)')).catch(() => false),
   ]);
   const placeSearch = await readFile(path.join(root, 'src/vacation/place-search.mjs'), 'utf8').catch(() => '');
-  const searchRules = placeSearch.includes('skipping foursquare')
-    && placeSearch.includes("source: 'osm'")
+  const searchRules = placeSearch.includes("source: 'osm'")
     && placeSearch.includes("source: 'brave'");
   const { thingNames, ...counts } = await sharedCounts();
   const intake = await intakeSignals();
