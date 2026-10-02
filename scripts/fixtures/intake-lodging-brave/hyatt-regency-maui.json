@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "type": "location_result",
+      "id": "fixture-hyatt-regency-maui",
+      "title": "Hyatt Regency Maui Resort & Spa",
+      "url": "https://example.test/hyatt-regency-maui",
+      "coordinates": [20.9679, -156.6789],
+      "postal_address": {
+        "streetAddress": "200 Nohea Kai Dr",
+        "addressLocality": "Lahaina",
+        "addressRegion": "HI",
+        "postalCode": "96761",
+        "displayAddress": "200 Nohea Kai Dr, Lahaina, HI 96761"
+      },
+      "categories": ["Hotel", "Resort"],
+      "icon_category": "lodging",
+      "description": "Resort hotel on Kaanapali Beach"
+    }
+  ]
+}

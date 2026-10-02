@@ -71,6 +71,19 @@ export function braveCategoryName(result) {
   return categories.map((item) => String(item?.name || item || '').trim()).find(Boolean) || '';
 }
 
+export function braveProviderCategories(result) {
+  const tags = [];
+  const push = (value) => {
+    const text = String(value || '').trim();
+    if (text) tags.push(text);
+  };
+  push(braveCategoryName(result));
+  const categories = Array.isArray(result?.categories) ? result.categories : [];
+  for (const item of categories) push(typeof item === 'string' ? item : item?.name);
+  push(result?.icon_category);
+  return [...new Set(tags.filter(Boolean))];
+}
+
 export function braveTitle(value) {
   const raw = String(value || '').trim();
   const cut = raw.split(/\s+[|]\s+/)[0].trim();

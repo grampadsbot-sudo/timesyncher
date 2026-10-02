@@ -1,5 +1,7 @@
 import { insertTripThing } from './trip-things.mjs';
-import { placeToTripThing, searchPlaces, PlaceSearchError } from './place-search.mjs';
+import { placeToTripThing, PlaceSearchError } from './place-search.mjs';
+import { pickIntakeLodgingCandidate, intakeLodgingPickMissReason } from './intake-lodging-candidate.mjs';
+import { searchIntakeLodgingPlaces } from './intake-lodging-search.mjs';
 import { placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
 import {
   intakeLodgingLookupMissDiagnostic,
@@ -47,26 +49,19 @@ async function resolveIntakeLodgingThing({
   tripId = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
-  searchImpl = searchPlaces,
+  searchImpl = searchIntakeLodgingPlaces,
 } = {}) {
   const name = String(title || '').trim();
   if (!name) throw new IntakeLodgingResolveError('intake lodging thing missing a name');
-  const geocodeDestination = String(destinationHint || areaHint || '').trim() || name;
-  const lookupQuery = intakeLodgingLookupQuery(name, areaHint || destinationHint);
+  const areaText = String(areaHint || destinationHint || '').trim();
+  const lookupQuery = intakeLodgingLookupQuery(name, areaText);
   let search;
   try {
     search = await searchImpl({
-      destination: geocodeDestination,
+      destination: destinationHint,
+      areaHint: areaText,
+      propertyName: name,
       tripId,
-      queries: [{
-        category: 'hotel',
-        q: lookupQuery,
-        limit: 5,
-        place: true,
-        target: name,
-      }],
-      relevanceTarget: name,
-      relevanceArea: geocodeDestination,
       env,
       fetchImpl,
     });
@@ -89,24 +84,25 @@ async function resolveIntakeLodgingThing({
     throw new IntakeLodgingResolveError(telemetry.error, telemetry);
   }
   const places = (Array.isArray(search?.places) ? search.places : []).filter((place) => hasCoordinates(place));
-  const hotel = places.find((place) => String(place?.category || '').toLowerCase() === 'hotel');
-  if (!hotel) {
+  const areaCenter = search?.center && hasCoordinates(search.center) ? search.center : null;
+  const picked = pickIntakeLodgingCandidate(places, {
+    propertyName: name,
+    areaText,
+    areaCenter,
+  });
+  if (!picked) {
     return lodgingLookupMiss({
       name,
       query: lookupQuery,
-      reason: places.length ? 'no_hotel_category_result' : 'no_coordinates',
+      reason: intakeLodgingPickMissReason(places, {
+        propertyName: name,
+        areaText,
+        areaCenter,
+      }),
       search,
     });
   }
-  if (!hasCoordinates(hotel)) {
-    return lodgingLookupMiss({
-      name,
-      query: lookupQuery,
-      reason: 'no_coordinates',
-      search,
-    });
-  }
-  const thing = placeToTripThing(hotel);
+  const thing = placeToTripThing({ ...picked, category: 'hotel' });
   const address = String(thing?.location?.address || thing?.description || '').trim();
   if (!hasCoordinates(thing.location) || !address) {
     return lodgingLookupMiss({
@@ -156,7 +152,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
   areaHint = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
-  searchImpl = searchPlaces,
+  searchImpl = searchIntakeLodgingPlaces,
   existingTitles = [],
 } = {}) {
   const have = new Set((Array.isArray(existingTitles) ? existingTitles : []).map((title) => String(title || '').toLowerCase()));

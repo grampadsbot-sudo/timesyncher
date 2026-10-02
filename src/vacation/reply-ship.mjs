@@ -164,7 +164,10 @@ export async function persistVacationAppOutboundReply({
 }
 
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare }) {
-  assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null);
+  const claimContext = pending.intent && typeof pending.intent === 'object'
+    ? { activeCollaborators: Array.isArray(pending.intent.activeCollaborators) ? pending.intent.activeCollaborators : [] }
+    : null;
+  assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null, claimContext);
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,

@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "type": "location_result",
+      "id": "fixture-kihei-kai-nani",
+      "title": "Kihei Kai Nani",
+      "url": "https://example.test/kihei-kai-nani",
+      "coordinates": [20.7514, -156.4547],
+      "postal_address": {
+        "streetAddress": "2495 S Kihei Rd",
+        "addressLocality": "Kihei",
+        "addressRegion": "HI",
+        "postalCode": "96753",
+        "displayAddress": "2495 S Kihei Rd, Kihei, HI 96753"
+      },
+      "categories": ["Condominium", "Vacation rental"],
+      "icon_category": "lodging",
+      "description": "Condo resort"
+    }
+  ]
+}

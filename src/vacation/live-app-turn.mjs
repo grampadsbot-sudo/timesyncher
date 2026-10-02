@@ -11,7 +11,7 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
-import { replyActionClaimReason } from './reply-action-claim.mjs';
+import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs'; import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
@@ -1348,7 +1348,7 @@ export function hardQualityFlags(reply, customerTurn, corpus, sources, intent) {
     ? intent
     : (sources && !Array.isArray(sources) && typeof sources === 'object' ? sources : null);
   const placeSources = Array.isArray(sources) ? sources : (Array.isArray(corpus) ? corpus : []);
-  const unbackedInviteClaim = replyActionClaimReason(body, intentArg?.turnActionResults) !== '';
+  const unbackedInviteClaim = replyActionClaimReason(body, intentArg?.turnActionResults, replyClaimContextFromIntent(intentArg)) !== '';
   return {
     split: item34BanHit(body),
     invented: unsourcedPlaces(body, placeSources),
@@ -1506,7 +1506,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rosterError: rosterError || null,
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
-  const tripContext = draftingFacts(history, customerTurn, mergedTrip);
+  let tripContext = applyTurnInviteReplyFacts(draftingFacts(history, customerTurn, mergedTrip), turnActionResults); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   tripContext.purchased_plan = String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim();
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
