@@ -215,7 +215,7 @@ export function dbFor(state) {
     if (/insert into trip_things/i.test(text)) {
       const source = values.find((v) => v === 'brave' || v === 'tavily') || 'brave';
       state.tripThings.push({ source });
-      return [];
+      return [{ id: `trip-thing-${state.tripThings.length}` }];
     }
     if (/insert into vacation_request_events/i.test(text)) return [];
     if (/update worker_jobs/i.test(text)) return [];

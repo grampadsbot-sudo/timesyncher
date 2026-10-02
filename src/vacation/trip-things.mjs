@@ -1,5 +1,12 @@
 const PLACE_SOURCES = new Set(['prior_db', 'osm', 'brave', 'tavily']);
 
+export class TripThingInsertError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'TripThingInsertError';
+  }
+}
+
 export function tripThingSource(thing) {
   const source = String(thing?.source || '').trim();
   return PLACE_SOURCES.has(source) ? source : null;
@@ -50,5 +57,8 @@ export async function insertTripThing(db, { tripId, requestId, thing }) {
     returning id
   `;
   const id = rows?.[0]?.id ? String(rows[0].id) : null;
+  if (!id) {
+    throw new TripThingInsertError(`insertTripThing returned no row for title "${item.title}"`);
+  }
   return { ...item, source: item.source, id };
 }

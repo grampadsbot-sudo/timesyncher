@@ -41,6 +41,7 @@ scripts/test_travel_base_required.mjs
 scripts/test_vacation_app_shell.mjs
 scripts/test_vacation_app_provider_env_route.mjs
 scripts/test_place_intent_brave_fallback_route.mjs
+scripts/test_place_search_any_provider_ok_route.mjs
 scripts/test_eula_render_markdown.mjs
 scripts/test_eula_accept_onboarding.mjs
 scripts/test_eula_collaborator_name.mjs
@@ -73,6 +74,7 @@ scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs
 scripts/test_place_search.mjs
+scripts/test_trip_things_insert.mjs
 scripts/test_place_category_radius.mjs
 scripts/test_ratings_source.mjs
 scripts/test_seat_price_data.mjs

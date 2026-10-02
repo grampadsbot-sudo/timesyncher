@@ -183,8 +183,10 @@ assert.equal(sources.includes(null), false);
 assert.equal(research.things.every((thing) => thing.source), true);
 
 const inserts = [];
+let tripThingInsertSeq = 0;
 const db = async (strings, ...values) => {
   inserts.push({ sql: strings.join(' '), values });
+  return [{ id: `trip-thing-${++tripThingInsertSeq}` }];
 };
 for (const thing of research.things) {
   const written = await insertTripThing(db, { tripId: 'trip-1', requestId: 'request-1', thing });
