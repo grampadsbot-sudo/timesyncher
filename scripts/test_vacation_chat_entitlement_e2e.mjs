@@ -119,42 +119,32 @@ async function runPlanFlow(plan) {
       return { status: res.status, body };
     }
 
-    globalThis.fetch = intakeFetchMock({ title: '', destination: '', hasDates: false, intake: false });
+    globalThis.fetch = providerFetchMock(state, process.env, originalFetch, {
+      title: '',
+      destination: '',
+      hasDates: false,
+      intake: false,
+    });
     const hi = await postTurn('hi');
-    globalThis.fetch = providerFetchMock(state, process.env, originalFetch);
     assert.notEqual(hi.status, 502, JSON.stringify(hi.body));
     assert.equal(state.tripCount, 0);
 
-    globalThis.fetch = intakeFetchMock({
+    globalThis.fetch = providerFetchMock(state, process.env, originalFetch, {
       title: TRIP_TITLE,
       destination: DESTINATION,
       hasDates: true,
       intake: true,
     });
-    const createdTrip = await createVacationFromChatMessage(
-      db,
-      state.session,
-      { text: `We are planning ${TRIP_TITLE} in ${DESTINATION} from October 7 to October 9, 2026.` },
-      async () => state.trips.map((trip) => ({
-        id: trip.id,
-        title: trip.title,
-        destination: trip.destination,
-        startDate: trip.start_date,
-        endDate: trip.end_date,
-        status: trip.status,
-        current: trip.id === state.session.trip_id,
-        publicUrl: '',
-        shareToken: '',
-        intakeShare: false,
-      })),
-      process.env,
-    );
-    globalThis.fetch = providerFetchMock(state, process.env, originalFetch);
-    assert.equal(createdTrip.ok, true, JSON.stringify(createdTrip));
-    assert.equal(createdTrip.action, 'created');
+    state.tripOwnerPlanLoads = [];
+    const tripCreate = await postTurn(`We are planning ${TRIP_TITLE} in ${DESTINATION} from October 7 to October 9, 2026.`);
+    assert.notEqual(tripCreate.status, 502, JSON.stringify(tripCreate.body));
+    assert.ok(tripCreate.status >= 200 && tripCreate.status < 300, JSON.stringify(tripCreate.body));
+    assert.equal(tripCreate.body.ok, true, JSON.stringify(tripCreate.body));
+    assert.ok(String(tripCreate.body.reply || '').trim().length > 0, JSON.stringify(tripCreate.body));
     assert.equal(state.tripCount, 1);
     assert.equal(state.session.trip_id, TRIP_ID);
     assert.equal(state.entitlement.trip_id, TRIP_ID);
+    assert.equal(state.tripOwnerPlanLoads.includes(TRIP_ID), true, JSON.stringify(state.tripOwnerPlanLoads));
 
     const taco = await postTurn('Find kid-friendly taco spots within walking distance of Pike Place');
     assert.notEqual(taco.status, 502, JSON.stringify(taco.body));
