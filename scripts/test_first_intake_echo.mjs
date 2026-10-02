@@ -17,6 +17,7 @@ import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-auth
 const root = new URL('../', import.meta.url);
 const plans = JSON.parse(await readFile(new URL('content/plans.json', root), 'utf8'));
 const route = await readFile(new URL('routes/vacation-itinerary.mjs', root), 'utf8');
+const replyShip = await readFile(new URL('src/vacation/reply-ship.mjs', root), 'utf8');
 const page = await readFile(new URL('vacation-app.html', root), 'utf8');
 const planEnv = {
   TIMESYNCHER_SINGLE_NAME: 'TimeSyncher Vacation Single',
@@ -111,7 +112,7 @@ assert.equal(telemetry.tier, 2);
 assert.equal(telemetry.modelId, tiers[2]);
 assert.equal(telemetry.generationMs, 88);
 assert.doesNotMatch(telemetry.modelId, /gpt-.*mini/i);
-assert.equal(route.includes('...appReplyTelemetry(appLive)'), true);
+assert.equal(replyShip.includes('...appReplyTelemetry(appLive)'), true);
 assert.equal(route.includes('authorId: session.customer_id'), true);
 assert.equal(route.includes('viewerId: session.customer_id'), true);
 assert.match(page, /turn\.authorLabel/);
