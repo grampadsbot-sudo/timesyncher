@@ -206,7 +206,10 @@ export async function runPlaceProviderPass({
       const message = `Place search relevance rejected all live provider results. ${providerFailureMessage(providerLog)}`;
       fail(message, 'relevance_rejected_all', providerLog, relevanceRejections, diagnosticsBase(relevanceRejections));
     }
-    if (placeSearchProvidersAllEmpty(providerLog)) {
+    const nominatimErrored = providerLog.some(
+      (row) => String(row?.provider || '').trim() === 'nominatim' && providerRowIsError(row),
+    );
+    if (placeSearchProvidersAllEmpty(providerLog) && !nominatimErrored) {
       return {
         status: 'no_results',
         center,
