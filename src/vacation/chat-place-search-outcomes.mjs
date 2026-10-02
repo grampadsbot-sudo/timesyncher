@@ -1,6 +1,39 @@
-import { placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
+import { placeToTripThing } from './place-search.mjs';
+import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts } from './in-turn-search-telemetry.mjs';
 import { placeSearchReplyFacts } from './place-search-reply-facts.mjs';
 import { pickPlaceSearchDiagnostics } from './place-search-diagnostics-pick.mjs';
+
+function placesToChatResultRows(places = []) {
+  return (Array.isArray(places) ? places : []).flatMap((place) => {
+    const thing = placeToTripThing(place);
+    const name = String(thing?.title || '').trim();
+    if (!name) return [];
+    const providerRef = thing?.metadata?.sourceRef;
+    const providerId = String(providerRef?.id || '').trim();
+    if (!providerId) return [];
+    return [{
+      name,
+      title: name,
+      sourceRef: { source: String(providerRef.source || thing.source || ''), id: providerId },
+    }];
+  });
+}
+
+export function finishCustomerChatPlaceSearch({ places = [], search = {}, errorMessage = null } = {}) {
+  const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
+  const normalizedPlaces = Array.isArray(places) ? places : [];
+  const things = normalizedPlaces.map((place) => placeToTripThing(place));
+  const status = placeSearchStatusFromProviderAttempts(things);
+  if (status === 'failed') {
+    const error = String(
+      errorMessage || `Place search returned no results for ${search?.destination || 'the requested area'}.`,
+    ).trim();
+    console.error(`customer chat place search failed: ${error}`);
+    return { status: 'failed', error, placeResults: [], things: [], search };
+  }
+  const placeResults = placesToChatResultRows(normalizedPlaces);
+  return { status: 'ok', error: null, places: normalizedPlaces, things, placeResults, search };
+}
 
 export function customerChatPlaceSearchNoResults(search) {
   return {
