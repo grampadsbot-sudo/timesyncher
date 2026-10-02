@@ -37,7 +37,9 @@ export function intakeLodgingLookupOkDiagnostic({
   thingId = '',
   addressSource = '',
   coordsSource = '',
+  pickRanking = null,
 } = {}) {
+  const ranking = pickRanking && typeof pickRanking === 'object' ? pickRanking : null;
   return {
     status: 'ok',
     property: clean(propertyName, 180),
@@ -46,6 +48,7 @@ export function intakeLodgingLookupOkDiagnostic({
     thingId: clean(thingId, 80),
     ...(addressSource ? { addressSource: clean(addressSource, 80) } : {}),
     ...(coordsSource ? { coordsSource: clean(coordsSource, 80) } : {}),
+    ...(ranking ? { pickRanking: ranking } : {}),
     providers: (Array.isArray(providerAttempts) ? providerAttempts : []).slice(0, 12),
   };
 }

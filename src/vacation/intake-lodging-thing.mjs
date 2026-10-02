@@ -1,7 +1,10 @@
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { placeToTripThing, PlaceSearchError } from './place-search.mjs';
 import { braveAddress } from './brave-place-query.mjs';
-import { pickIntakeLodgingCandidate, intakeLodgingPickMissReason } from './intake-lodging-candidate.mjs';
+import {
+  rankIntakeLodgingCandidates,
+  intakeLodgingPickMissReason,
+} from './intake-lodging-candidate.mjs';
 import { isLodgingProviderPlace } from './intake-lodging-category.mjs';
 import { searchIntakeLodgingPlaces } from './intake-lodging-search.mjs';
 import { placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
@@ -185,7 +188,9 @@ async function resolveIntakeLodgingThing({
   const braveLodgingEstablished = braveLodgingCategoryEstablished(bravePlaces);
   const requireTourismLodging = !braveLodgingEstablished;
 
-  let picked = pickIntakeLodgingCandidate(bravePlaces, pickOptions);
+  const braveRanked = rankIntakeLodgingCandidates(bravePlaces, pickOptions);
+  let picked = braveRanked.picked;
+  let pickRanking = braveRanked.pickRanking;
   let addressSource = 'brave';
   let coordsSource = 'brave';
   let lat = null;
@@ -292,6 +297,7 @@ async function resolveIntakeLodgingThing({
     providerAttempts,
     addressSource,
     coordsSource,
+    pickRanking,
   }), search);
   return { ok: true, thing, search, lookup };
 }

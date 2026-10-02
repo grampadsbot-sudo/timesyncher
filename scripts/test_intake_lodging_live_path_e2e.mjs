@@ -25,7 +25,9 @@ function loadFixture(name) {
 
 function bravePlacesFromFixture(fixture, category = 'hotel') {
   const rows = [];
-  for (const result of bravePlaceSearchRows(fixture, 'local')) {
+  const braveRows = bravePlaceSearchRows(fixture, 'local');
+  for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
+    const result = braveRows[providerRank];
     if (!braveLocalPlaceResult(result)) continue;
     const point = bravePoint(result);
     const title = braveTitle(result?.title || result?.name);
@@ -42,6 +44,8 @@ function bravePlacesFromFixture(fixture, category = 'hotel') {
       externalId: String(result?.id || result?.url || ''),
       categoryName: braveCategoryName(result),
       providerCategories: braveProviderCategories(result),
+      providerRank,
+      sourceRecord: result,
     });
   }
   return rows;
