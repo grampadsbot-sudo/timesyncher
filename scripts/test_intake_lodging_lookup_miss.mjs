@@ -51,8 +51,8 @@ const lookupOutcome = await persistIntakeLodgingThings(lookupDb, 'trip-1', 'req-
   areaHint: 'Kaanapali',
   destinationHint: 'Maui',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
-  searchImpl: async ({ queries }) => {
-    capturedQuery = String(queries?.[0]?.q || '');
+  searchImpl: async ({ areaHint, propertyName }) => {
+    capturedQuery = intakeLodgingLookupQuery(propertyName, areaHint);
     return {
       places: [{
         source: 'brave',
@@ -60,9 +60,10 @@ const lookupOutcome = await persistIntakeLodgingThings(lookupDb, 'trip-1', 'req-
         category: 'hotel',
         lat: 20.92,
         lng: -156.69,
-        address: '200 Nohea Kai Dr',
+        address: '200 Nohea Kai Dr, Kaanapali, HI',
         externalId: 'h1',
       }],
+      center: { lat: 20.92, lng: -156.69 },
       providers: [{ provider: 'brave', status: 'ok', resultCount: 1, query: capturedQuery }],
     };
   },
@@ -76,9 +77,9 @@ missTurns.set('turn-customer-1', { liveTranscript: { turnIndex: 1 } });
 const missOutcome = await persistIntakeLodgingThings(missDb, 'trip-2', 'req-2', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
-  searchImpl: async ({ queries }) => ({
+  searchImpl: async ({ areaHint, propertyName }) => ({
     places: [],
-    providers: [{ provider: 'brave', status: 'empty', reason: 'no_results', resultCount: 0, query: queries?.[0]?.q }],
+    providers: [{ provider: 'brave', status: 'empty', reason: 'no_results', resultCount: 0, query: intakeLodgingLookupQuery(propertyName, areaHint) }],
   }),
 });
 assert.equal(missOutcome.saved.length, 1);
@@ -106,21 +107,24 @@ const nonHotelOutcome = await persistIntakeLodgingThings(nonHotelDb, 'trip-non-h
         source: 'brave',
         title: 'Beach Grill',
         category: 'restaurant',
+        categoryName: 'Restaurant',
         lat: 20.921,
         lng: -156.691,
-        address: '1 Beach Rd',
+        address: '1 Beach Rd, Kaanapali, HI',
         externalId: 'r1',
       },
       {
         source: 'brave',
         title: 'Coastal Lookout',
         category: 'activity',
+        categoryName: 'Viewpoint',
         lat: 20.922,
         lng: -156.692,
-        address: 'Lookout Point',
+        address: 'Lookout Point, Kaanapali, HI',
         externalId: 'v1',
       },
     ],
+    center: { lat: 20.92, lng: -156.69 },
     providers: [{ provider: 'brave', status: 'ok', resultCount: 2 }],
   }),
 });
