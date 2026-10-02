@@ -5,17 +5,19 @@ import { customerModality, jevStamp, liveTurnRecord, firstMarkedIntake, produceL
 import { produceNoTripStarterReply } from '../src/vacation/no-trip-starter-reply.mjs';
 import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.mjs';
 import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
-import { classifyTripIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
-import { applyChatPlaceSearchForVacationTurn, classifyVacationAppCustomerTurn, intakeExtractedThings } from '../src/vacation/chat-place-search.mjs';
+import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
+import { applyChatPlaceSearchForVacationTurn, intakeExtractedThings } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 
-export async function queueVacationAppTurn(db, session, trip, body, hooks) {
+export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
+  const env = process.env;
   const tripId = trip?.id ?? null;
   if (trip) await hooks.ensureOnboardingOpener(db, session, trip);
   const started = Date.now();
-  const text = cleanText(body.text || body.message, 12000);
+  const text = cleanText(intake.requestText || body.text || body.message, 12000);
   const attachments = Array.isArray(body.attachments)
     ? body.attachments.slice(0, 20).map((item) => ({
       name: cleanText(item?.name, 240),
@@ -107,9 +109,11 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks) {
       intake: live.intake === true,
     };
   });
-  const { classification, placeSearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
+  const classification = intake.classification;
+  const placeSearchTurn = intake.placeSearchTurn;
+  if (!classification) throw new Error('vacation app queue intake classification is required');
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
-  const queuedJobType = 'trip_intake';
+  const queuedJobType = tripIntakeJobKind();
   const jobFields = tripIntakeJobFields({
     requestText,
     receivedAt,
@@ -220,7 +224,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks) {
     payload,
     customerLive,
     turnId: turnRows[0].id,
-    env: process.env,
+    env: env,
     publishShare: hooks.publishIntakeShare,
     workerJobId: jobRows[0].id,
     workerJobContext: placeSearchTurn ? {
@@ -268,11 +272,11 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks) {
   try {
     const loadOwnerPlan = async (opts) => loadSessionOwnerReplyPlan({ ...opts, db });
     if (!tripId) {
-      const rules = await loadVacationAppReplyRules(process.env);
+      const rules = await loadVacationAppReplyRules(env);
       produced = await produceNoTripStarterReply({
         customerTurn: requestText,
         session,
-        env: process.env,
+        env: env,
         rules,
         loadOwnerPlan,
       });
@@ -284,8 +288,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks) {
         tripTitle: trip?.title || '',
         placeResults,
         placeSearchTurn,
-        env: process.env,
-        seatDollars: configuredSeatDollars(process.env),
+        env: env,
+        seatDollars: configuredSeatDollars(env),
         intake: classification.ok === true && classification.intake === true,
         wantedThings: intakeExtractedThings(placeSearchTurn, classification),
         roster: Array.isArray(classification.roster) ? classification.roster : [],

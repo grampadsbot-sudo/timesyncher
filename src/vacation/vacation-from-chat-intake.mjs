@@ -5,7 +5,7 @@ import { classifyVacationAppCustomerTurn } from './chat-place-search.mjs';
 import { classifyTripIntake, tripIntakeJobFields } from './trip-intake-classify.mjs';
 import { seatFromSession } from './collaborator-app-seat.mjs';
 
-function tripIntakeJobKind() {
+export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
 }
 

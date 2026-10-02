@@ -27,7 +27,8 @@ import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/we
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
-import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-queue-turn.mjs';
+import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
+// Live queue turn: classifyVacationAppCustomerTurn, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn,
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
@@ -412,7 +413,13 @@ function queueVacationAppHooks() {
 }
 
 async function queueVacationAppTurn(db, session, trip, body) {
-  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks());
+  const requestText = cleanText(body.text || body.message, 12000);
+  const { classification, placeSearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
+  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
+    requestText,
+    classification,
+    placeSearchTurn,
+  });
 }
 
 function thingView(row) {
