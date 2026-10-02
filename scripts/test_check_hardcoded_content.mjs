@@ -901,7 +901,8 @@ const exactText = barTerms.exactAllow.strings.map((raw) => `const line = ${sourc
 for (const file of barTerms.exactAllow.files) {
   assert.equal(scanText(file, exactText).some((finding) => finding.rule.startsWith('BAR-')), false, file);
 }
-const paraphrase = exactText.replace('Do not mention reservations, payments, or checkout.', 'Do not mention reservations, payments, or billing.');
+const paraphraseAnchor = barTerms.exactAllow.strings[0];
+const paraphrase = exactText.replace(paraphraseAnchor, paraphraseAnchor.replace('split-payer', 'split-billing'));
 for (const file of barTerms.exactAllow.files) {
   const hits = scanText(file, paraphrase).filter((finding) => finding.rule.startsWith('BAR-'));
   assert.equal(hits.length > 0, true, file);
