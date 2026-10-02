@@ -189,65 +189,7 @@ export async function applyChatPlaceSearchForVacationTurn({
   return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
 }
 
-function providerResultNeedsIdCitation(sourceRef) {
-  const source = String(sourceRef?.source || '').trim();
-  const id = String(sourceRef?.id || '').trim();
-  if (source === 'tavily') return false;
-  if (/^https?:\/\//i.test(id)) return false;
-  return true;
-}
-
-export function placeResultExtra(sources) {
-  const items = Array.isArray(sources) ? sources : [];
-  const parts = items.flatMap((item) => {
-    if (!item || typeof item !== 'object') return [];
-    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
-    const id = String(ref?.id ?? item.id ?? '').trim();
-    const name = String(item.name ?? item.title ?? '').trim();
-    if (!id || !name) return [];
-    return providerResultNeedsIdCitation(ref) ? [`${name} (id:${id})`] : [name];
-  });
-  if (!parts.length) return '';
-  return `Results: ${parts.join('; ')}.`;
-}
-
-function inTurnPlaceRows(sources) {
-  return (Array.isArray(sources) ? sources : []).flatMap((item) => {
-    if (!item || typeof item !== 'object') return [];
-    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
-    const id = String(ref?.id ?? item.id ?? '').trim();
-    const name = String(item.name ?? item.title ?? '').trim();
-    if (!id || !name) return [];
-    return [{ id, name, needsIdCitation: providerResultNeedsIdCitation(ref) }];
-  });
-}
-
-function spokenPlaceName(text, index) {
-  const before = String(text || '').slice(Math.max(0, index - 80), index);
-  return (before.match(/([\p{Lu}][\p{L}\p{M}'’.-]*(?:\s+[\p{Lu}][\p{L}\p{M}'’.-]*)*)\s*$/u) || [])[1] || '';
-}
-
-function unsourcedAgainstInTurnResults(reply, sources) {
-  const text = String(reply || '');
-  const rows = inTurnPlaceRows(sources);
-  const byId = new Map(rows.map((row) => [row.id, row]));
-  const flagged = [];
-  const cited = new Set();
-  for (const match of text.matchAll(/\(id:([^)\s]+)\)/g)) {
-    const id = match[1];
-    cited.add(id);
-    const row = byId.get(id);
-    const spoken = spokenPlaceName(text, match.index);
-    if (!row) flagged.push(spoken || id);
-    else if (spoken && spoken.toLowerCase() !== row.name.toLowerCase()) flagged.push(spoken);
-  }
-  for (const row of rows) {
-    if (row.needsIdCitation === false) continue;
-    const named = new RegExp(`(^|[^\\p{L}\\p{N}])${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
-    if (named && !cited.has(row.id)) flagged.push(row.name);
-  }
-  return [...new Set(flagged)];
-}
+import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 
 export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
   const sources = Array.isArray(inTurnPlaceResults) ? inTurnPlaceResults : [];
@@ -440,7 +382,7 @@ export async function runVacationAppInTurnSearch({
   return {
     ok: true,
     inTurnProviderResults,
-    enforceInTurnSearch: placeSearchTurn === true && inTurnProviderResults.length > 0,
+    enforceInTurnSearch: (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0,
     webResearchTurn: webTurn.webResearchTurn,
   };
 }
