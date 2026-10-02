@@ -1,6 +1,6 @@
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption, couponHash } from '../src/vacation/coupons.mjs';
+import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption, couponHash, lookupCoupon } from '../src/vacation/coupons.mjs';
 import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
 import { recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
@@ -10,7 +10,7 @@ import {
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
-import { checkoutCurrency, checkoutOrderSummary, customerCheckoutFailure } from '../src/vacation/checkout-pricing.mjs';
+import { checkoutChargeDisplay, checkoutCurrency, checkoutOrderSummary, customerCheckoutFailure } from '../src/vacation/checkout-pricing.mjs';
 
 function requireContact(body) {
   const firstName = cleanText(body.firstName, 80);
@@ -91,6 +91,24 @@ export default async function handler(req, res) {
     const collaboratorInviteToken = cleanText(body.collaboratorInvite || body.collaboratorInviteToken, 200);
     const couponMetadata = await readStoredCouponMetadata(db, couponCode);
     storedCouponPlan(couponMetadata);
+    if (body.action === 'validate_coupon') {
+      const plan = resolveRedeemPlan(couponMetadata, order.orderBump);
+      const coupon = await lookupCoupon(db, couponCode, process.env);
+      const charge = checkoutChargeDisplay({ amountCents: order.amount, coupon: true });
+      return sendJson(res, 200, {
+        ok: true,
+        status: 'coupon_valid',
+        coupon,
+        order: {
+          amountCents: charge.totalCents,
+          originalAmountCents: order.amount,
+          amountWaivedCents: charge.waivedCents,
+          currency: checkoutCurrency(),
+          plan,
+          status: 'coupon_valid',
+        },
+      });
+    }
     if (body.action === 'redeem_owner_media_coupon' || body.product === 'owner_media_addons') {
       const addOns = requireOwnerMediaAddOns(body);
       const { coupon, redemption } = await consumeCoupon(db, couponCode, {

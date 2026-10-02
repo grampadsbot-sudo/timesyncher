@@ -214,6 +214,8 @@
 
             <div class="button-row">
               <button type="button" class="secondary" id="backBtn">Back to Step 1</button>
+              <button type="button" class="primary" id="applyCouponBtn" hidden>Apply coupon</button>
+              <button type="button" class="primary" id="completeZeroPurchaseBtn" hidden>Complete purchase</button>
               <button type="button" class="primary" id="payBtn">Pay securely</button>
             </div>
             <div class="notice">Test purchases use coupon checkout. Enter the minted code and choose Redeem coupon. Do not click a live Stripe payment.</div>
@@ -244,6 +246,8 @@
     const continueBtn = document.getElementById('continueBtn');
     const backBtn = document.getElementById('backBtn');
     const payBtn = document.getElementById('payBtn');
+    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    const completeZeroPurchaseBtn = document.getElementById('completeZeroPurchaseBtn');
     const bump = document.getElementById('orderBump');
     const photoMemories = document.getElementById('photoMemories');
     const couponCode = document.getElementById('couponCode');
@@ -274,6 +278,7 @@
     let paymentReady = false;
     let stripeConfigPromise;
     let paymentRequestId = 0;
+    let couponQuote = null;
 
     function money(cents) {
       return '$' + (cents / 100).toFixed(0);
@@ -283,7 +288,7 @@
       return tsPricedCents(amount, key);
     }
     let productConfig = {};
-    function hasCoupon() {
+    function hasCouponDraft() {
       return couponCode.value.trim().length > 0;
     }
 
@@ -378,10 +383,16 @@
         if (!productConfig.products?.single?.amount) { waivedRow.hidden = true; total.textContent = ''; return; }
         syncPhotoCopy();
         const cents = orderCents();
-        const charge = hasCoupon() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };
+        const charge = couponQuote
+          ? { totalCents: couponQuote.amountCents, waivedCents: couponQuote.amountWaivedCents }
+          : { totalCents: cents, waivedCents: 0 };
         waivedRow.hidden = charge.waivedCents <= 0;
         waivedAmount.textContent = charge.waivedCents ? money(charge.waivedCents) : '';
         total.textContent = money(charge.totalCents);
+        const couponMode = hasCouponDraft();
+        payBtn.hidden = couponMode;
+        applyCouponBtn.hidden = !couponMode || Boolean(couponQuote);
+        completeZeroPurchaseBtn.hidden = !couponQuote;
       } catch (error) {
         waivedRow.hidden = true;
         total.textContent = '';
@@ -407,15 +418,19 @@
       const requestId = ++paymentRequestId;
       const requestedOrderBump = bump.checked;
       const requestedPhotoMemories = photoMemories.checked;
-      if (hasCoupon()) {
+      if (hasCouponDraft()) {
         if (paymentElement) paymentElement.unmount();
-        paymentElementMount.innerHTML = '<div class="stripe-loading">Coupon checkout skips Stripe. Click Redeem coupon to finish.</div>';
+        paymentElementMount.innerHTML = '<div class="stripe-loading">Coupon checkout skips Stripe. Apply the coupon to review the order total, then complete the purchase.</div>';
         paymentReady = false;
-        payBtn.disabled = false;
-        payBtn.textContent = 'Redeem coupon';
+        payBtn.hidden = true;
+        applyCouponBtn.hidden = Boolean(couponQuote);
+        completeZeroPurchaseBtn.hidden = !couponQuote;
         updateTotal();
         return true;
       }
+      payBtn.hidden = false;
+      applyCouponBtn.hidden = true;
+      completeZeroPurchaseBtn.hidden = true;
       if (stripe && elements && paymentElement && paymentReady && currentOrderBump === requestedOrderBump && currentPhotoMemories === requestedPhotoMemories) {
         payBtn.disabled = false;
         payBtn.textContent = 'Pay securely';
@@ -516,36 +531,68 @@
       if (!step2.classList.contains('hidden')) await preparePaymentElement();
     });
     couponCode.addEventListener('input', async () => {
+      couponQuote = null;
       updateTotal();
       paymentReady = false;
       if (!step2.classList.contains('hidden')) await preparePaymentElement();
     });
-    payBtn.addEventListener('click', async () => {
-      if (hasCoupon()) {
-        payBtn.disabled = true;
-        payBtn.textContent = 'Redeeming coupon...';
-        hideStatus();
-        try {
-          const response = await fetch('/api/checkout-coupon', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be redeemed.');
-          setStatus('Coupon redeemed. Opening your TimeSyncher onboarding...', false);
-          const nextUrl = data.session?.onboardingUrl
-            || (data.session?.token ? `/order-success.html?session=${encodeURIComponent(data.session.token)}` : '')
-            || data.onboarding?.onboardingUrl
-            || '/order-success.html';
-          window.location.href = nextUrl;
-        } catch (error) {
-          setStatus(error.message || 'Coupon could not be redeemed.', true);
-          payBtn.disabled = false;
-          payBtn.textContent = 'Redeem coupon';
-        }
-        return;
+    applyCouponBtn.addEventListener('click', async () => {
+      if (!form.reportValidity()) return;
+      applyCouponBtn.disabled = true;
+      hideStatus();
+      try {
+        const response = await fetch('/api/checkout-coupon', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            ...formData(),
+            action: 'validate_coupon',
+            orderBump: bump.checked,
+            photoMemories: photoMemories.checked,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be applied.');
+        couponQuote = data.order;
+        completeZeroPurchaseBtn.textContent = `Complete ${money(couponQuote.amountCents)} purchase`; setStatus(`Coupon applied. Review the order summary, then complete your ${money(couponQuote.amountCents)} purchase.`, false);
+        updateTotal();
+        await preparePaymentElement();
+      } catch (error) {
+        couponQuote = null;
+        setStatus(error.message || 'Coupon could not be applied.', true);
+        updateTotal();
+      } finally {
+        applyCouponBtn.disabled = false;
       }
+    });
+    completeZeroPurchaseBtn.addEventListener('click', async () => {
+      if (!couponQuote) return;
+      if (!form.reportValidity()) return;
+      completeZeroPurchaseBtn.disabled = true;
+      completeZeroPurchaseBtn.textContent = 'Completing purchase...';
+      hideStatus();
+      try {
+        const response = await fetch('/api/checkout-coupon', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be redeemed.');
+        setStatus('Coupon redeemed. Opening your TimeSyncher onboarding...', false);
+        const nextUrl = data.session?.onboardingUrl
+          || (data.session?.token ? `/order-success.html?session=${encodeURIComponent(data.session.token)}` : '')
+          || data.onboarding?.onboardingUrl
+          || '/order-success.html';
+        window.location.href = nextUrl;
+      } catch (error) {
+        setStatus(error.message || 'Coupon could not be redeemed.', true);
+        completeZeroPurchaseBtn.disabled = false;
+        completeZeroPurchaseBtn.textContent = `Complete ${money(couponQuote.amountCents)} purchase`;
+      }
+    });
+    payBtn.addEventListener('click', async () => {
+      if (hasCouponDraft()) return;
       if (!stripe || !elements || !paymentReady || currentOrderBump !== bump.checked || currentPhotoMemories !== photoMemories.checked) {
         const ready = await preparePaymentElement();
         if (!ready) return;

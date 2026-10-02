@@ -332,6 +332,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedStart: jobFields.startDate,
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
+        inviteResult: intake.inviteResult || null,
       });
     }
   } catch (error) {
@@ -380,6 +381,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     intakeError: jobFields.intakeError,
     placeSearch: customerLive.placeSearch ?? payload.placeSearch ?? null,
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
+    inviteResult: intake.inviteResult || null,
   };
   const blockReplyIdCitation = (replyText) => blockVacationAppReplyIdCitation({
     replyText,

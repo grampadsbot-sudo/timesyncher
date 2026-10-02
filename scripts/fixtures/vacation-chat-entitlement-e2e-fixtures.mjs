@@ -223,6 +223,7 @@ export function dbFor(state) {
     if (/from transcript_turns/i.test(text) && /count\(\*\)/i.test(text)) return [{ n: 0, started_at: new Date() }];
     if (/from transcript_turns/i.test(text) && /order by/i.test(text)) return [];
     if (/from trip_things/i.test(text)) return [];
+    if (/update vacation_collaborator_invites/i.test(text)) return [];
     if (/from vacation_collaborators/i.test(text)) return [];
     if (/insert into outbound_emails/i.test(text)) return [{ id: 'email-1' }];
     if (/update outbound_emails/i.test(text)) return [{ id: 'email-1' }];

@@ -131,6 +131,7 @@ function db(strings, ...values) {
     }));
   }
   if (/from trip_things/i.test(text)) return [];
+  if (/update vacation_collaborator_invites/i.test(text)) return [];
   if (/update trips/i.test(text)) return [];
   if (/^\s*select\b/i.test(text)) return [];
   throw new Error(`unexpected sql: ${text.slice(0, 240)}`);

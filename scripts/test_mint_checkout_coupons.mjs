@@ -32,6 +32,19 @@ function consumeDb(metadata, { redemptionCount = 0, maxRedemptions = 1, status =
   const state = { redemption_count: redemptionCount, max_redemptions: maxRedemptions, status, metadata };
   const db = async (strings) => {
     const text = strings.join(' ');
+    if (text.includes('from checkout_coupons') && text.includes('code_hash')) {
+      if (state.status !== 'active' || state.redemption_count >= state.max_redemptions) return [];
+      return [{
+        id: 'coupon-1',
+        code_hint: 'TS-...001',
+        label: 'batch',
+        max_redemptions: state.max_redemptions,
+        redemption_count: state.redemption_count,
+        status: state.status,
+        expires_at: null,
+        metadata: state.metadata,
+      }];
+    }
     if (text.includes('update checkout_coupons')) {
       assert.match(text, /redemption_count = redemption_count \+ 1/);
       if (state.status !== 'active' || state.redemption_count >= state.max_redemptions) return [];
