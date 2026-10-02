@@ -38,4 +38,14 @@ const hard = inTurnPlaceSearchSoftNoResults({
 });
 assert.equal(hard, null);
 
+const missingKey = inTurnPlaceSearchSoftNoResults({
+  classification: { target: 'tacos' },
+  tripDestination: 'Maui',
+  placeSearch: {
+    error: 'Place search refused to run. Missing BRAVE_SEARCH_API_KEY.',
+    providers: [],
+  },
+});
+assert.equal(missingKey, null);
+
 console.log('test_place_search_no_results_reply_facts: ok');

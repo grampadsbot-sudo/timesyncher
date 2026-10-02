@@ -8,6 +8,7 @@ import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail } from './plac
 import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
 import {
   inTurnPlaceSearchSoftNoResults,
+  placeSearchClientError,
 } from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
@@ -457,10 +458,11 @@ export async function runVacationAppInTurnSearch({
       classification,
       tripDestination,
       placeSearch: searchTurn.placeSearch,
+      turnError: searchTurn.error,
     });
     if (soft) return { ok: true, ...soft };
     const routeStatus = placeSearchFailureRouteStatus(searchTurn.placeSearch?.reason);
-    return { ok: false, status: routeStatus, error: 'place_search_failed', placeSearch: searchTurn.placeSearch };
+    return { ok: false, status: routeStatus, error: placeSearchClientError(searchTurn.placeSearch, searchTurn.error), placeSearch: searchTurn.placeSearch };
   }
   const webTurn = searchTurn.kind === 'skip'
     ? await applyChatWebResearchForVacationTurn({

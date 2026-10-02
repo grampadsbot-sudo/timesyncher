@@ -57,7 +57,6 @@ export function placeSearchNoResultsOutcome({
   if (!normalizedCode && providerAttempts.length) {
     return !placeSearchHardProviderFailure(normalizedCode, providerAttempts);
   }
-  if (!normalizedCode) return true;
   return false;
 }
 
@@ -82,13 +81,22 @@ export function placeSearchReplyFacts({
   };
 }
 
+export function placeSearchClientError(messageSource = {}, fallback = 'place_search_failed') {
+  const msg = String(messageSource?.error || fallback || '').trim();
+  if (/missing_key|refused to run|Missing [A-Z0-9_]+/i.test(msg)) return msg;
+  return 'place_search_failed';
+}
+
 export function inTurnPlaceSearchSoftNoResults({
   classification = null,
   tripDestination = '',
   placeSearch = {},
+  turnError = '',
 } = {}) {
   const providerAttempts = Array.isArray(placeSearch?.providers) ? placeSearch.providers : [];
   const failureCode = String(placeSearch?.reason || placeSearch?.code || '').trim();
+  const failureError = String(placeSearch?.error || placeSearch?.internalError || turnError || '').trim();
+  if (/missing_key|refused to run|Missing [A-Z0-9_]+/i.test(failureError)) return null;
   if (!placeSearchNoResultsOutcome({
     code: failureCode || 'all_providers_failed',
     providerAttempts,

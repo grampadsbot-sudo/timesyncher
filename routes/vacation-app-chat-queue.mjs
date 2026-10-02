@@ -13,6 +13,7 @@ import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citati
 import { activeCollaboratorsFromDialogParty, blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
+import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
 
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -283,7 +284,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         intakeError: jobFields.intakeError,
         ok: false,
         status: inTurnSearch.status,
-        error: inTurnSearch.error,
+        error: placeSearchClientError(inTurnSearch.placeSearch, inTurnSearch.error),
         placeSearch: inTurnSearch.placeSearch,
         webSearch: inTurnSearch.webSearch,
       };
