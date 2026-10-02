@@ -11,6 +11,19 @@ function lodgingAreaText(thing, location) {
   return locality || address || described || title;
 }
 
+export async function loadTripLodgingThing(db, tripId) {
+  if (!db || !tripId) return null;
+  const rows = await db`
+    select title, category, location, description
+    from trip_things
+    where trip_id = ${tripId}
+      and category = 'hotel'
+    order by created_at desc
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
 export function lodgingAnchorFromThing(thing) {
   if (!thing || typeof thing !== 'object') return { text: '', point: null };
   const location = thing.location && typeof thing.location === 'object' ? thing.location : {};

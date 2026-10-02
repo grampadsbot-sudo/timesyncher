@@ -153,6 +153,14 @@ export function thingsFromIntake(extracted) {
   }));
 }
 
+export function intakeLodgingThings(extracted) {
+  return thingsFromIntake(extracted).filter((thing) => thing.category === 'hotel');
+}
+
+export function intakeActivityThings(extracted) {
+  return thingsFromIntake(extracted).filter((thing) => thing.category !== 'hotel');
+}
+
 export function mergeWantedThings(things, extracted) {
   const next = Array.isArray(things) ? [...things] : [];
   const have = new Set(next.map((thing) => clean(thing?.title, 180).toLowerCase()).filter(Boolean));

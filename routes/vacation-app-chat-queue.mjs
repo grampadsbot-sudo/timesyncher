@@ -368,6 +368,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     title: jobFields.title,
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
+    placeSearch: customerLive.placeSearch ?? payload.placeSearch ?? null,
+    webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
   };
   const blockReplyIdCitation = (replyText) => blockVacationAppReplyIdCitation({
     replyText,

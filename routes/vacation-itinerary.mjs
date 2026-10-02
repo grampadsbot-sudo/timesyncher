@@ -33,7 +33,8 @@ import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } 
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
-import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { classifyTripIntake, intakeActivityThings, intakeLodgingThings, mergeWantedThings, resolveIntakePlace, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
@@ -462,8 +463,9 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}) {
-  const planned = thingsFromIntake(extracted);
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  const planned = intakeActivityThings(extracted);
+  const lodgingWanted = intakeLodgingThings(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
   const span = intakeSpan(text);
@@ -522,6 +524,14 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         updated_at = now()
     where id = ${tripId}
   `;
+  if (lodgingWanted.length) {
+    await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+      destinationHint: tripDestination || extractedDestination,
+      env,
+      fetchImpl,
+      searchImpl: searchPlacesImpl,
+    });
+  }
   for (const thing of planned) {
     await db`
       insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
@@ -542,10 +552,21 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl } = {}, intakeText = '', extracted = []) {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl });
-  const current = await loadTripThings(db, tripId);
-  const wanted = thingsFromIntake(extracted);
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch } = {}, intakeText = '', extracted = []) {
+  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl });
+  let current = await loadTripThings(db, tripId);
+  const lodgingWanted = intakeLodgingThings(extracted);
+  if (lodgingWanted.length) {
+    await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+      destinationHint: extractedDestination,
+      env,
+      fetchImpl,
+      searchImpl: searchPlacesImpl,
+      existingTitles: current.map((item) => item.title),
+    });
+    current = await loadTripThings(db, tripId);
+  }
+  const wanted = intakeActivityThings(extracted);
   if (!current.length && !wanted.length) return current;
   if (!String(text || '').trim() && !wanted.length) return current;
   const tripRows = await db`
