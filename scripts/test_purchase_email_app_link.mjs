@@ -82,10 +82,10 @@ function db(strings, ...values) {
     return [{ id: state.tripId }];
   }
   if (/update trips/i.test(text)) {
-    const patch = values.find((value) => value && value.publicSlug);
+    const patch = values.find((value) => value && typeof value === 'object' && !Array.isArray(value));
     if (patch && state.trip) {
       state.trip.metadata = { ...(state.trip.metadata || {}), ...patch };
-      if (/returning/i.test(text)) return [{ public_slug: patch.publicSlug }];
+      if (/returning/i.test(text)) return [{ public_slug: patch.publicSlug || state.trip?.metadata?.publicSlug || null }];
     }
     return [];
   }
@@ -132,7 +132,10 @@ function db(strings, ...values) {
   }
   if (/select metadata from trips/i.test(text)) return [{ metadata: state.trip?.metadata || {} }];
   if (/from vacation_collaborators/i.test(text)) return [];
-  if (/from trips/i.test(text)) return state.trip ? [{ ...state.trip, current: true }] : [];
+  if (/from trips/i.test(text)) {
+    if (/public_slug/i.test(text)) return [{ public_slug: state.trip?.metadata?.publicSlug || '' }];
+    return state.trip ? [{ ...state.trip, current: true }] : [];
+  }
   if (/select 1\s+from transcript_turns/i.test(text)) return state.turns.length ? [1] : [];
   if (/insert into transcript_turns/i.test(text)) {
     const body = [...values].reverse().find((value) => typeof value === 'string' && value.length > 20);
@@ -306,6 +309,9 @@ try {
     metadata: { couponCheckout: true, trip_title: 'Sample trip' },
     env: fixtureEnv,
   });
+  const shareSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
+  onboarding.publicSlug = shareSite.publicSlug;
+  onboarding.publicUrl = shareSite.publicUrl;
   assert.equal(onboarding.contact.firstName, 'Ada');
   assert.equal(state.trip.destination, null);
   assert.equal(state.trip.start_date, null);
@@ -315,12 +321,11 @@ try {
   assert.equal(launchUrl.origin + launchUrl.pathname, `${site}/vacation-app.html`);
   assert.equal(launchUrl.searchParams.get('session'), onboarding.token);
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
-  assert.equal(onboarding.publicSlug, '');
-  assert.equal(onboarding.publicUrl, '');
-  const tripSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
-  assert.equal(tripSite.publicSlug.startsWith('intake-'), true);
+  assert.equal(onboarding.publicSlug, shareSite.publicSlug);
+  assert.equal(onboarding.publicUrl, shareSite.publicUrl);
+  assert.equal(shareSite.publicSlug.startsWith('intake-'), true);
 
-  const migrated = await intakeSharedResponse(tripSite.publicSlug, db);
+  const migrated = await intakeSharedResponse(shareSite.publicSlug, db);
   assert.equal(Boolean(migrated?.trip), true);
   assert.equal(migrated.error, undefined);
   assert.deepEqual(migrated.places, []);

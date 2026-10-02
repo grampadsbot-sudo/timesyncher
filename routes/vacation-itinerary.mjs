@@ -25,33 +25,20 @@ import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboardin
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import {
-  customerModality,
-  jevStamp,
-  liveTurnRecord,
-  intakeSpan,
-  firstMarkedIntake,
-  produceLiveAppReply,
-  finishTierRewrite,
-  activityCommitDecisions,
-  applyAgreedAppSwim,
-  applyCustomerNotes,
-  completeRosterParty,
-} from '../src/vacation/live-app-turn.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-import { assertCustomerReplyShippable } from '../src/vacation/reply-id-citation.mjs';
-import { commitShippedRewrite, markWorkerJobLiveHandled, outboundAppReplyForRequest, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
-import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import {
-  openCollaboratorAppSeats,
-  recordDialogParty,
-  seatFromSession,
-  collaboratorSeatJoinEvent,
-  transcriptCustomerId,
-} from '../src/vacation/collaborator-app-seat.mjs';
+  applyChatPlaceSearchForVacationTurn,
+  classifyVacationAppCustomerTurn,
+  intakeExtractedThings,
+} from '../src/vacation/chat-place-search.mjs';
+import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
+import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 
 let vacationAppDatabase = null;
 
@@ -487,7 +474,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       intake: live.intake === true,
     };
   });
-  const classification = await classifyTripIntake({ text: requestText, env: process.env });
+  const { classification, placeSearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = 'trip_intake';
   const jobFields = tripIntakeJobFields({
@@ -591,17 +578,72 @@ async function queueVacationAppTurn(db, session, trip, body) {
     returning id
   `;
 
+  const searchTurn = await applyChatPlaceSearchForVacationTurn({
+    db,
+    tripId,
+    requestId,
+    customerTurn: requestText,
+    tripDestination: cleanText(trip?.destination || '', 180),
+    payload,
+    customerLive,
+    turnId: turnRows[0].id,
+    env: process.env,
+    publishShare: publishIntakeShare,
+    workerJobId: jobRows[0].id,
+    workerJobContext: placeSearchTurn ? {
+      customerId: transcriptOwnerId,
+      tripId,
+      requestId,
+      queuedJobType,
+      requestText,
+      payload,
+      jobFields,
+    } : null,
+  });
+  const placeResults = searchTurn.placeResults || [];
+  if (searchTurn.kind === 'failed') {
+    const failedLatency = Date.now() - started;
+    return {
+      requestId,
+      jobId: jobRows[0].id,
+      receivedAt: requestRows[0].received_at,
+      queuedAt: requestRows[0].queued_at,
+      turnTag,
+      modality,
+      turnIndex: customerTurnIndex,
+      latencyMs: failedLatency,
+      sessionE2eMs: sessionE2eMs(),
+      jev: customerLive.jev,
+      reply: null,
+      intakeEvent: jobFields.intakeEvent,
+      wantedThings: jobFields.wantedThings,
+      roster: jobFields.roster,
+      rosterError: jobFields.rosterError,
+      destination: jobFields.destination,
+      hasDates: jobFields.hasDates,
+      title: jobFields.title,
+      titleError: jobFields.titleError,
+      intakeError: jobFields.intakeError,
+      ok: false,
+      status: 'place_search_failed',
+      error: searchTurn.error,
+      placeSearch: searchTurn.placeSearch,
+    };
+  }
+
   let produced;
   try {
     produced = await produceLiveAppReply({
       customerTurn: requestText,
-      session,
+      session: { ...session, trip_id: tripId },
       priorTurns,
       tripTitle: trip?.title || '',
+      placeResults,
+      placeSearchTurn,
       env: process.env,
       seatDollars: configuredSeatDollars(process.env),
       intake: classification.ok === true && classification.intake === true,
-      wantedThings: classification.ok === true ? classification.things : [],
+      wantedThings: intakeExtractedThings(placeSearchTurn, classification),
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
       extractedDestination: jobFields.destination,
@@ -652,19 +694,16 @@ async function queueVacationAppTurn(db, session, trip, body) {
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
-  const blockReplyIdCitation = async (replyText) => {
-    try {
-      assertCustomerReplyShippable(replyText, tripId);
-      return null;
-    } catch (error) {
-      if (error?.name !== 'reply_id_citation_blocked') throw error;
-      const replyFailure = 'reply_id_citation_blocked';
-      payload.replyFailure = replyFailure;
-      customerLive.replyFailure = replyFailure;
-      await storeReplyFailure(db, turnRows[0].id, payload);
-      return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
-    }
-  };
+  const blockReplyIdCitation = (replyText) => blockVacationAppReplyIdCitation({
+    replyText,
+    tripId,
+    db,
+    turnId: turnRows[0].id,
+    payload,
+    customerLive,
+    base,
+    storeReplyFailure,
+  });
   if (produced.status === 'interim' && produced.pending) {
     const interimBlocked = await blockReplyIdCitation(produced.interimReply?.text || '');
     if (interimBlocked) return interimBlocked;
@@ -694,95 +733,36 @@ async function queueVacationAppTurn(db, session, trip, body) {
     };
   }
   if (!produced.reply) {
-    const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
-    payload.replyFailure = replyFailure;
-    customerLive.replyFailure = replyFailure;
+    const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     await storeReplyFailure(db, turnRows[0].id, payload);
-    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
+    return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
   }
 
   const citationBlocked = await blockReplyIdCitation(produced.reply);
   if (citationBlocked) return citationBlocked;
 
-  const priorApp = await outboundAppReplyForRequest(db, requestId);
-  if (priorApp?.id) {
-    await markWorkerJobLiveHandled(db, jobRows[0].id);
-    return {
-      ...base,
-      ok: true,
-      status: 'replied',
-      reply: priorApp.body,
-      duplicateSuppressed: true,
-      error: null,
-    };
-  }
-
-  const appLive = liveTurnRecord({
-    turnIndex: customerTurnIndex + 1,
-    role: 'app',
-    modality: 'text',
-    text: produced.reply,
-    at: new Date().toISOString(),
-    latencyMs: exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    jev: produced.jev,
-    model: produced.model,
-    rules: produced.rules,
-  });
-  const appPayload = {
-    source: 'vacation_app',
-    surface: 'vacation-app',
-    selectedTripId: tripId,
-    liveTranscript: appLive,
-  };
-  await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
-      now(), ${exchangeLatency}
-    )
-  `;
-  const itinerary = await recordCustomerThingNotes(
+  return persistVacationAppOutboundReply({
     db,
+    transcriptOwnerId,
     tripId,
+    requestId,
+    jobId: jobRows[0].id,
+    produced,
+    base,
+    exchangeLatency,
+    sessionE2eMs: sessionE2eMs(),
+    customerTurnIndex,
+    speakerName,
+    seat,
+    classification,
+    jobFields,
+    firstIntake,
     requestText,
-    {
-      collaborator: Boolean(seat),
-      speakerName,
-      appReply: produced.reply,
-      roster: Array.isArray(classification.roster) ? classification.roster : [],
-      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
-      askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
-      extractedDestination: jobFields.destination,
-      extractedTitle: jobFields.title,
-      destinationError: jobFields.destinationError,
-      titleError: jobFields.titleError,
-    },
-    firstIntake ? requestText : '',
-    classification.ok === true ? classification.things : [],
-  );
-  if (itinerary.length) await publishIntakeShare(db, tripId);
-  await markWorkerJobLiveHandled(db, jobRows[0].id);
-  const vacationRows = await db`
-    select id, title, destination, start_date, end_date, status, metadata
-    from trips
-    where id = ${tripId}
-    limit 1
-  `;
-  return {
-    ...base,
-    ok: true,
-    status: 'replied',
-    reply: produced.reply,
-    ...appReplyTelemetry(appLive),
-    appTurnIndex: appLive.turnIndex,
-    itinerary,
-    vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
-    error: null,
-  };
+    intakeThings: intakeExtractedThings(placeSearchTurn, classification),
+    recordCustomerThingNotes,
+    publishIntakeShare,
+    vacationAppTripSummary,
+  });
 }
 
 function thingView(row) {

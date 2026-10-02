@@ -747,7 +747,6 @@ export function noteToResearchCandidate(note, destination = '') {
     },
   };
 }
-
 export async function fillTripIntake(options) {
   const search = await searchPlaces(options);
   const notes = Array.isArray(search.notes) ? search.notes : [];
@@ -760,3 +759,4 @@ export async function fillTripIntake(options) {
     ],
   };
 }
+

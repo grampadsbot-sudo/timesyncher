@@ -144,8 +144,8 @@ assert.ok(included.every((file) => file.endsWith('.json')));
 assert.equal(included.some((file) => /\.(mjs|js|cjs|py)$/.test(file)), false);
 
 const route = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
-assert.match(route, /payload\.replyFailure = replyFailure/);
-assert.match(route, /error: replyFailure/);
+assert.match(route, /applyLiveAppReplyFailureToPayload/);
+assert.match(route, /error: failure\.replyFailure/);
 assert.doesNotMatch(route, /delete from transcript_turns where id = \$\{turnRows\[0\]\.id\}/);
 assert.doesNotMatch(route, /Sorry|try again later|I could not write/i);
 

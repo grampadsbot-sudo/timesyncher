@@ -29,3 +29,26 @@ export function assertCustomerReplyShippable(reply, tripId = '') {
   if (reason) failReplyIdCitation(reason, tripId);
   return reply;
 }
+
+export async function blockVacationAppReplyIdCitation({
+  replyText,
+  tripId,
+  db,
+  turnId,
+  payload,
+  customerLive,
+  base,
+  storeReplyFailure,
+}) {
+  try {
+    assertCustomerReplyShippable(replyText, tripId);
+    return null;
+  } catch (error) {
+    if (error?.name !== 'reply_id_citation_blocked') throw error;
+    const replyFailure = 'reply_id_citation_blocked';
+    payload.replyFailure = replyFailure;
+    customerLive.replyFailure = replyFailure;
+    await storeReplyFailure(db, turnId, payload);
+    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
+  }
+}

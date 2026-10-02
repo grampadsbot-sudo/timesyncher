@@ -756,21 +756,9 @@
     "note": "existing; ratchet only shrinks"
   },
   {
-    "rule": "TEST-TRIP-LITERALS",
-    "file": "scripts/trek-agent-edit.mjs",
-    "symbol": "the-davidson-family-trip",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
     "rule": "SEARCH-MODULE-ONLY",
     "file": "scripts/trek-itinerary-edit.mjs",
     "symbol": "nominatim",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "TEST-TRIP-LITERALS",
-    "file": "scripts/trek-itinerary-edit.mjs",
-    "symbol": "the-davidson-family-trip",
     "note": "existing; ratchet only shrinks"
   },
   {

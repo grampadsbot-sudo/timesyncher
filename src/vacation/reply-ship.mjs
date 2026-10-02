@@ -40,6 +40,122 @@ export async function storeReplyFailure(db, turnId, payload) {
   `;
 }
 
+function liveAppReplyFailureOutcome(produced = {}) {
+  const replyFailure = String(produced.reason || 'live dispatcher returned no reply');
+  const failureStatus = produced.status === 'unsourced_place' ? 'unsourced_place' : 'reply_unavailable';
+  return {
+    replyFailure,
+    failureStatus,
+    invented: produced.status === 'unsourced_place' ? (produced.invented || []) : undefined,
+  };
+}
+
+export function applyLiveAppReplyFailureToPayload(payload, customerLive, produced = {}) {
+  const failure = liveAppReplyFailureOutcome(produced);
+  payload.replyFailure = failure.replyFailure;
+  customerLive.replyFailure = failure.replyFailure;
+  if (produced.status === 'unsourced_place') {
+    const record = {
+      status: produced.status,
+      invented: Array.isArray(produced.invented) ? produced.invented : [],
+      error: failure.replyFailure,
+    };
+    payload.unsourcedPlaceReply = record;
+    customerLive.unsourcedPlaceReply = record;
+  }
+  return failure;
+}
+
+export async function persistVacationAppOutboundReply({
+  db,
+  transcriptOwnerId,
+  tripId,
+  requestId,
+  jobId,
+  produced,
+  base,
+  exchangeLatency,
+  sessionE2eMs,
+  customerTurnIndex,
+  speakerName,
+  seat,
+  classification,
+  jobFields,
+  firstIntake,
+  requestText,
+  intakeThings,
+  recordCustomerThingNotes,
+  publishIntakeShare,
+  vacationAppTripSummary,
+}) {
+  const priorApp = await outboundAppReplyForRequest(db, requestId);
+  if (priorApp?.id) {
+    await markWorkerJobLiveHandled(db, jobId);
+    return { ...base, ok: true, status: 'replied', reply: priorApp.body, duplicateSuppressed: true, error: null };
+  }
+  const appLive = liveTurnRecord({
+    turnIndex: customerTurnIndex + 1,
+    role: 'app',
+    modality: 'text',
+    text: produced.reply,
+    at: new Date().toISOString(),
+    latencyMs: exchangeLatency,
+    sessionE2eMs,
+    jev: produced.jev,
+    model: produced.model,
+    rules: produced.rules,
+  });
+  await db`
+    insert into transcript_turns (
+      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
+      sent_at, response_latency_ms
+    )
+    values (
+      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply},
+      ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: tripId, liveTranscript: appLive }},
+      'outbound', now(), ${exchangeLatency}
+    )
+  `;
+  const itinerary = await recordCustomerThingNotes(
+    db,
+    tripId,
+    requestText,
+    {
+      collaborator: Boolean(seat),
+      speakerName,
+      appReply: produced.reply,
+      roster: Array.isArray(classification.roster) ? classification.roster : [],
+      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+      askRoster: classification.ok !== true || (classification.intake === true && !(classification.roster || []).length),
+      extractedDestination: jobFields.destination,
+      extractedTitle: jobFields.title,
+      destinationError: jobFields.destinationError,
+      titleError: jobFields.titleError,
+    },
+    firstIntake ? requestText : '',
+    intakeThings,
+  );
+  if (itinerary.length) await publishIntakeShare(db, tripId);
+  await markWorkerJobLiveHandled(db, jobId);
+  const vacationRows = await db`
+    select id, title, destination, start_date, end_date, status, metadata
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  return {
+    ...base,
+    ok: true,
+    status: 'replied',
+    reply: produced.reply,
+    ...appReplyTelemetry(appLive),
+    appTurnIndex: appLive.turnIndex,
+    itinerary,
+    vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
+    error: null,
+  };
+}
+
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare }) {
   assertCustomerReplyShippable(finished.reply, pending.tripId);
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));

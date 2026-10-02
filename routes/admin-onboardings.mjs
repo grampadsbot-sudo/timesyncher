@@ -9,6 +9,7 @@ import {
   upsertCustomer,
 } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
+import { probePlaceSearchKeys } from '../src/vacation/poi-search.mjs';
 
 function token() {
   return crypto.randomBytes(18).toString('base64url');
@@ -434,6 +435,10 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { ok: true, email: await resendPurchaseEmailForSession(db, id, process.env) });
     }
     if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
+    if (url.searchParams.get('action') === 'probe-place-keys') {
+      const probe = await probePlaceSearchKeys(process.env);
+      return sendJson(res, probe.statusCode, probe.body);
+    }
     if (url.searchParams.get('action') === 'coupons') {
       return sendJson(res, 200, { ok: true, coupons: await listCoupons(db, url.searchParams.get('limit') || '100') });
     }

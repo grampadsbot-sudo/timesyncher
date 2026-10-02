@@ -14,6 +14,7 @@ import { customerInputState } from './intake-shared-trip.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
+import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -1501,7 +1502,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, loadOwnerPlan = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, loadOwnerPlan = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1517,7 +1518,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env);
+  const inTurnProviderResults = placeSearchTurn === true ? (Array.isArray(placeResults) ? placeResults : []) : [];
+  const enforceInTurnPlaces = placeSearchTurn === true && inTurnProviderResults.length > 0;
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
+  const modelPlaceSources = enforceInTurnPlaces ? inTurnProviderResults : citedPlaces;
   const rosterList = Array.isArray(roster) ? roster : [];
   const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session, {
     roster: Array.isArray(roster) ? roster : null,
@@ -1594,7 +1598,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
-    placeResultExtra(citedPlaces),
+    placeResultExtra(modelPlaceSources),
     resolvedDestination.ask ? DESTINATION_ASK : '',
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
@@ -1643,7 +1647,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
   const draftLatencyMs = Number(model?.genLatencyMs) || Math.max(0, Date.now() - genStarted);
-  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, citedPlaces, intent);
+  const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, modelPlaceSources, intent);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
@@ -1692,8 +1696,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     flagged: false,
   };
   if (!quality?.judged) {
-    return {
-      reply: originalDraft,
+    const unjudged = {
       rules,
       jev,
       model: {
@@ -1705,9 +1708,14 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
       reason: quality?.reason || 'quality_not_judged',
     };
+    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, unjudged);
+    if (blocked) return blocked;
+    return { reply: originalDraft, ...unjudged };
   }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
+    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev });
+    if (blocked) return blocked;
     const shipped = stampShippedReply({
       reply: originalDraft,
       quality,
@@ -1725,49 +1733,37 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     interim.ms = String(interim.text || '').trim() ? Math.max(Number(interim.ms) || 0, Date.now() - interimStarted) : null;
     return interim;
   });
-  const pending = {
+  const pending = buildLiveAppRewritePending({
     customerTurn,
-    draft: originalDraft,
+    originalDraft,
     draftModel,
-    draftScore: quality.score,
-    jevNote,
     quality,
+    jevNote,
     jev,
     upsell,
     postIntake,
-    intake: intake === true,
-    wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
-    roster: rosterList,
-    rosterError: rosterError || null,
-    extractedDestination: String(extractedDestination || ''),
-    extractedTitle: String(extractedTitle || ''),
-    destinationError: destinationError || null,
-    titleError: titleError || null,
+    intake,
+    wantedThings,
+    rosterList,
+    rosterError,
+    extractedDestination,
+    extractedTitle,
+    destinationError,
+    titleError,
     destination,
     corpus,
-    placeResults: citedPlaces,
+    modelPlaceSources,
+    inTurnProviderResults,
+    enforceInTurnPlaces,
     tripContext,
     tripFacts,
     planTable,
     planLine,
     intent,
-    seatDollars,
-    seat,
-    rawModelText: model?.text == null ? null : String(model.text),
-    failureReason: qualityFailureReason(quality, draftFlags),
-    interimReply: { text: null, model: null, ms: null },
-    draftLatencyMs,
-    qualityJevMs: draftQualityMs,
-    model: {
-      called: Boolean(model?.called),
-      via: model?.via || null,
-      responseModel: model?.responseModel || null,
-      modelTier: model?.modelTier ?? null,
-      genLatencyMs: draftLatencyMs,
-      maxTokens: model?.maxTokens ?? null,
-      beats: model?.beats || null,
-    },
-  };
+    seatDollars, seat,
+    model,
+    failureReason: qualityFailureReason(quality, draftFlags), draftLatencyMs, draftQualityMs,
+  });
   const finished = await finishTierRewrite({ pending, env, interimPromise });
   const interimReply = finished.log?.interimReply || { text: null, model: null, ms: null };
   if (finished.log) finished.log.interimReply = interimReply;
@@ -1783,7 +1779,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     };
   }
   const shippedDraft = String(pending.draft || '').trim();
-  if (shippedDraft) {
+  if (shippedDraft && !enforceInTurnPlaces) {
     return {
       reply: shippedDraft,
       rules,
@@ -1971,7 +1967,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       seat: pending?.seat || null,
       systemExtra: [
         request.systemExtra,
-        'Keep the days already on the saved trip. A place must cite a passed result as (id:THAT_ID).',
+        'Keep the days already on the saved trip. When you name a place from Results, cite its exact id as (id:<id>). Never invent a place or id.',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',
@@ -2203,6 +2199,10 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewritten: choice.rewritten === true,
     judgeMs,
   };
+  if (pending.enforceInTurnPlaces) {
+    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true } });
+    if (blocked) return { ...blocked, log: { ...log, rewriteFailReason: blocked.reason, held: true } };
+  }
   const stamped = stampShippedReply({
     reply: shippedText,
     quality,

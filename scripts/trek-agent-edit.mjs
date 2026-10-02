@@ -24,17 +24,13 @@ function slugFromText(value) {
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 
-function targetToken(input) {
+function requireShareToken(input) {
   const requestText = text(input.requestText || input.request_text || '', 8000);
-  const explicit = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
-  const mentionsDavidson = /\b(caldwell|davidson)\b/i.test(requestText);
-  const mentionsOtherKnownTrip = /\b(las vegas|vegas|strip|jockey club|staycation|hawaii|waikiki|maui|kona|oahu)\b/i.test(requestText);
-  if (explicit) {
-    if (explicit === 'the-davidson-family-trip' && !mentionsDavidson && mentionsOtherKnownTrip) return '';
-    return explicit;
+  const token = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
+  if (!token) {
+    throw new Error('Missing TREK share token: provide token, shareToken, share_token, or a /shared/<token>/ URL.');
   }
-  if (mentionsDavidson) return 'the-davidson-family-trip';
-  return '';
+  return token;
 }
 
 function parseJson(value) {
@@ -92,10 +88,7 @@ function inferFallbackPlan(requestText) {
     const day = Number((requestText.match(/\bday\s*(\d{1,2})\b/i) || [])[1] || 1);
     const timeMatch = requestText.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
     const category = /family/i.test(requestText) ? 'family_event' : 'event';
-    const caldwellFamilyHome = category === 'family_event' && /\b(caldwell|davidson)\b/i.test(requestText)
-      ? { address: '12364 Nantes Court, Caldwell, ID 83607, United States', lat: 43.6182767, lng: -116.6397578 }
-      : {};
-    ops.push({ op: 'add_thing', title, category, day, time: timeMatch ? timeMatch[0] : '', status: /preferred/i.test(requestText) ? 'preferred' : 'considering', summary: 'Added from a TimeSyncher Vacation edit request.', ...caldwellFamilyHome });
+    ops.push({ op: 'add_thing', title, category, day, time: timeMatch ? timeMatch[0] : '', status: /preferred/i.test(requestText) ? 'preferred' : 'considering', summary: 'Added from a TimeSyncher Vacation edit request.' });
   }
   if (/\b(share|access|family|collab|collaborat|edit rights?|view rights?)\b/i.test(requestText)) {
     ops.push({ op: 'set_share_flags', shareCollab: true, shareBudget: true, sharePacking: true, shareBookings: true, shareMap: true });
@@ -260,17 +253,9 @@ def geocode_address(address):
   except Exception:
     pass
   return (None,None)
-CALDWELL_FAMILY_ADDRESS = "12364 Nantes Court, Caldwell, ID 83607, United States"
-CALDWELL_FAMILY_LAT = 43.6182767
-CALDWELL_FAMILY_LNG = -116.6397578
-
 def op_location(op):
   address=txt(op.get("address") or (op.get("fields") or {}).get("address"),500) if isinstance(op.get("fields"),dict) else txt(op.get("address"),500)
   lat=op.get("lat", op.get("latitude")); lng=op.get("lng", op.get("longitude"))
-  if not address and txt(op.get("category"),80).lower() in ("family_event", "family event"):
-    address = CALDWELL_FAMILY_ADDRESS
-    lat = lat if valid_coord(lat,lng) else CALDWELL_FAMILY_LAT
-    lng = lng if valid_coord(lat,lng) else CALDWELL_FAMILY_LNG
   if not valid_coord(lat,lng) and isinstance(op.get("fields"),dict):
     lat=op["fields"].get("lat", op["fields"].get("latitude")); lng=op["fields"].get("lng", op["fields"].get("longitude"))
   if not valid_coord(lat,lng) and address:
@@ -455,8 +440,7 @@ function verifyChanged({ before, after, token, publicBase }) {
 
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
-  const token = targetToken(input);
-  if (!token) throw new Error('No target shared trip token could be identified for broad TREK edit.');
+  const token = requireShareToken(input);
   const publicBase = text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, '');
   const dbPath = text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || DEFAULT_DB_PATH, 500);
   const requestText = text(input.requestText || input.request_text || '', 12000);

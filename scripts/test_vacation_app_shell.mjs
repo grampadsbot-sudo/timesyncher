@@ -46,7 +46,7 @@ assert.match(api, /queueVacationAppTurn/);
 assert.match(api, /vacation-app/);
 assert.match(api, /worker_jobs/);
 assert.match(api, /transcript_turns/);
-assert.match(api, /payload\.replyFailure/);
+assert.match(api, /applyLiveAppReplyFailureToPayload/);
 assert.doesNotMatch(api, /delete from transcript_turns where id = \$\{turnRows\[0\]\.id\}/);
 assert.match(api, /classifyTurn/);
 assert.match(api, /publicTripUrl/);

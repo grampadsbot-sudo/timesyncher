@@ -152,8 +152,17 @@ export class TavilySearchError extends Error {
   }
 }
 
+function envKeyBySuffix(env, suffix) {
+  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
+  return hit ? String(hit[1] || '').trim() : '';
+}
+
+function braveSubscriptionKey(env = process.env) {
+  return String(env?.brave || envKeyBySuffix(env, 'E_SEARCH_API_KEY') || '').trim();
+}
+
 export function tavilyApiKey(env = process.env) {
-  return String(env?.TAVILI_API_KEY || '').trim();
+  return String(env?.tavily || env?.TAVILI_API_KEY || envKeyBySuffix(env, 'ILI_API_KEY') || '').trim();
 }
 
 function requireTavilyApiKey(apiKey) {
@@ -369,4 +378,82 @@ export function lowestRentalPrices(offers = [], { limit = 10, eliminatedBrands =
     .filter((offer) => Number.isFinite(Number(offer.price)) && !blocked.has(String(offer.brand || '').trim().toLowerCase()))
     .sort((a, b) => Number(a.price) - Number(b.price) || String(a.brand || '').localeCompare(String(b.brand || '')))
     .slice(0, limit);
+}
+
+const PROBE_QUERY = 'coffee';
+const PROBE_LAT = 47.6097;
+const PROBE_LNG = -122.3331;
+
+function probeMissingKey(provider) {
+  return { provider, error: 'missing_key' };
+}
+
+function probeSuccessShape(provider, httpStatus, results) {
+  const rows = Array.isArray(results) ? results : [];
+  const firstTitle = String(rows[0]?.title || rows[0]?.name || '').trim() || null;
+  return { provider, httpStatus: Number(httpStatus) || 0, resultCount: rows.length, firstTitle };
+}
+
+async function probeBraveProvider(env, fetchImpl) {
+  const key = braveSubscriptionKey(env);
+  if (!key) return probeMissingKey('brave');
+  const params = new URLSearchParams({
+    q: PROBE_QUERY,
+    latitude: String(PROBE_LAT),
+    longitude: String(PROBE_LNG),
+    radius: '2500',
+    count: '3',
+  });
+  const response = await fetchImpl(`https://api.search.brave.com/res/v1/local/place_search?${params}`, {
+    method: 'GET',
+    headers: { accept: 'application/json', 'X-Subscription-Token': key },
+  });
+  const httpStatus = Number(response?.status) || 0;
+  if (!response?.ok) return probeSuccessShape('brave', httpStatus, []);
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch {
+    payload = {};
+  }
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  const titles = results.map((row) => ({ title: String(row?.title || row?.name || '').trim() })).filter((row) => row.title);
+  return probeSuccessShape('brave', httpStatus, titles);
+}
+
+async function probeTavilyProvider(env, fetchImpl) {
+  const key = tavilyApiKey(env);
+  if (!key) return probeMissingKey('tavily');
+  const response = await fetchImpl(TAVILY_SEARCH_URL, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json', authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      query: PROBE_QUERY,
+      search_depth: 'basic',
+      topic: 'general',
+      max_results: 3,
+      include_answer: false,
+      include_raw_content: false,
+      auto_parameters: false,
+    }),
+  });
+  const httpStatus = Number(response?.status) || 0;
+  if (!response?.ok) return probeSuccessShape('tavily', httpStatus, []);
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch {
+    payload = {};
+  }
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  const titles = results.map((row) => ({ title: String(row?.title || '').trim() })).filter((row) => row.title);
+  return probeSuccessShape('tavily', httpStatus, titles);
+}
+
+export async function probePlaceSearchKeys(env = process.env, fetchImpl = globalThis.fetch) {
+  const brave = await probeBraveProvider(env, fetchImpl);
+  if (brave.error === 'missing_key') return { ok: false, statusCode: 503, body: brave };
+  const tavily = await probeTavilyProvider(env, fetchImpl);
+  if (tavily.error === 'missing_key') return { ok: false, statusCode: 503, body: tavily };
+  return { ok: true, statusCode: 200, body: { ok: true, providers: [brave, tavily] } };
 }
