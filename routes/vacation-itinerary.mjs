@@ -22,6 +22,7 @@ import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
@@ -1038,13 +1039,19 @@ async function handleVacationApp(req, res, db, url) {
       const party = await recordDialogParty(db, session.trip_id, body.party);
       return sendJson(res, 200, { ok: true, party });
     }
-    const vacations = await loadVacationAppTrips(db, session);
+    let vacations = await loadVacationAppTrips(db, session);
+    const eula = await vacationAppEula(session, process.env);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
-    const selected = vacations.find((trip) => trip.id === requestedTripId)
+    let selected = vacations.find((trip) => trip.id === requestedTripId)
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
-    if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
-    const eula = await vacationAppEula(session, process.env);
+    if (!selected) {
+      if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+      const created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
+      if (!created.ok) return sendJson(res, created.statusCode || 409, { ok: false, error: created.error });
+      vacations = created.vacations;
+      selected = created.selected;
+    }
     if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
