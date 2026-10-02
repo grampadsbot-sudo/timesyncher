@@ -230,6 +230,7 @@ try {
   const missingDatesClass = await classifyTripIntake({
     text: CREATE_TEXT,
     env: process.env,
+    requireExtractedTripDates: true,
     fetchImpl: missingDatesFetch,
   });
   assert.equal(missingDatesClass.ok, false);

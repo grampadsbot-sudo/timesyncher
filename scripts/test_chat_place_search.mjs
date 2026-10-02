@@ -172,8 +172,9 @@ for (const query of SCT_QUERIES) {
   assert.equal(applied.placeResults[0]?.sourceRef?.source, 'trip_thing', `${query.name}: in-turn row uses trip_thing id`);
   assert.equal(applied.placeResults[0]?.sourceRef?.id, 'trip-thing-1', `${query.name}: persisted thing id for citation`);
   const modelContext = placeResultExtra(applied.placeResults);
-  assert.match(modelContext, /\(id:trip-thing-1\)/, `${query.name}: model Results cites internal thing id`);
+  assert.doesNotMatch(modelContext, /\(id:/, `${query.name}: model Results omit internal ids`);
   assert.doesNotMatch(modelContext, new RegExp(query.mockId), `${query.name}: provider brave/osm id omitted from Results`);
+  assert.match(modelContext, /Results:/, `${query.name}: model Results list place names`);
   assert.doesNotMatch(modelContext, /SCM-2023|BL-441|FB-779|THAT_ID|Invented Place/);
 }
 
@@ -254,10 +255,9 @@ const inTurnRows = [{
   title: 'Mock El Camión',
   sourceRef: { source: 'trip_thing', id: 'trip-thing-cite-1' },
 }];
-assert.equal(inTurnPlaceReplyViolation('Try Mock El Camión (id:brave-fake-99) for tacos.', inTurnRows)?.status, 'unsourced_place');
-assert.match(inTurnPlaceReplyViolation('Try Mock El Camión (id:brave-fake-99) for tacos.', inTurnRows)?.error || '', /in-turn provider/);
+assert.equal(inTurnPlaceReplyViolation('Try Mock El Camión for tacos.', inTurnRows), null);
 assert.equal(inTurnPlaceReplyViolation('Glass Lagoon (id:missing) is open late.', inTurnRows)?.invented?.[0], 'Glass Lagoon');
-assert.equal(inTurnPlaceReplyViolation('Mock El Camión (id:trip-thing-cite-1) works for your crew.', inTurnRows), null);
+assert.equal(inTurnPlaceReplyViolation('Try lunch at Secret Taco Cove near the hotel.', inTurnRows)?.status, 'unsourced_place');
 assert.doesNotMatch(
   placeResultExtra([{ name: 'Brave Taco Cart', sourceRef: { source: 'brave', id: 'brave-ext-1' } }]),
   /\(id:/,
@@ -272,11 +272,10 @@ console.log(JSON.stringify({
     'mock_ids_match_place_results',
     'trip_things_inserted_with_provider_sourceRef',
     'wantedThings_cleared_no_chat_extraction',
-    'placeResultExtra_uses_trip_thing_ids_not_provider_ids',
+    'placeResultExtra_names_only_no_internal_ids',
     'classifier_runs_on_place_search_turn',
     'empty_provider_place_search_failed_no_inserts',
-    'invented_id_blocks_in_turn_reply',
     'invented_place_name_blocks_in_turn_reply',
-    'provider_ids_allow_in_turn_reply',
+    'sourced_place_name_allows_in_turn_reply',
   ],
 }));

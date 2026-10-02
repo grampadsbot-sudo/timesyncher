@@ -5,6 +5,7 @@ scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_chat_place_search.mjs
+scripts/test_place_search_reply_no_internal_ids.mjs
 scripts/test_intake_lodging_thing_hotel.mjs
 scripts/test_place_search_lodging_anchor.mjs
 scripts/test_vacation_app_interim_place_search.mjs
@@ -26,6 +27,7 @@ scripts/test_coupon_purchase_no_trip.mjs
 scripts/test_vacation_chat_no_trip.mjs
 scripts/test_chat_trip_entitlement_attach.mjs
 scripts/test_chat_trip_destination_at_creation.mjs
+scripts/test_trip_intake_hasdates_scope.mjs
 scripts/test_vacation_chat_entitlement_e2e.mjs
 scripts/test_no_app_config_in_served_bundles.mjs
 scripts/test_vacation_pricing.mjs

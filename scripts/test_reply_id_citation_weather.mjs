@@ -4,10 +4,7 @@ import {
   assertCustomerReplyShippable,
   ReplyIdCitationBlockedError,
 } from '../src/vacation/reply-id-citation.mjs';
-import {
-  placeResultExtra,
-  resultsNeedInternalPlaceIds,
-} from '../src/vacation/provider-result-context.mjs';
+import { placeResultExtra } from '../src/vacation/provider-result-context.mjs';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
 import { replyRulesSystem, sourcedPlaceRule } from './vacation-app-reply-rules.mjs';
 
@@ -48,14 +45,9 @@ assertCustomerReplyShippable(tavilyNameReply, 'trip-tavily');
 const weatherEventsContext = placeResultExtra(tavilyPlaceResults);
 assert.doesNotMatch(weatherEventsContext, /\(id:/);
 assert.match(weatherEventsContext, /Maui Now/);
-assert.equal(resultsNeedInternalPlaceIds(tavilyPlaceResults), false);
-
-const rulesBlob = replyRulesSystem({ ok: true, notes_where: 'day_required_place_optional' }, 'Maui', 'forbidden', false, 'what is the weather', {
-  resultsNeedInternalPlaceIds: false,
-});
+const rulesBlob = replyRulesSystem({ ok: true, notes_where: 'day_required_place_optional' }, 'Maui', 'forbidden', false, 'what is the weather', {});
 assert.doesNotMatch(rulesBlob, /\(id:/);
-assert.doesNotMatch(sourcedPlaceRule(false), /\(id:/);
-assert.match(sourcedPlaceRule(true), /\(id:<id>\)/);
+assert.doesNotMatch(sourcedPlaceRule(), /\(id:/);
 
 const inventedWeb = inTurnPlaceReplyViolation(
   'You might catch live Hawaiian music or cultural performances at Whalers Village, just a short walk down the beach path.',
