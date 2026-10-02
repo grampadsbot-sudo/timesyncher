@@ -194,7 +194,7 @@ try {
   const openerAt = appGet.indexOf('ensureOnboardingOpener');
   const turnsAt = appGet.indexOf('loadVacationAppTurns');
   assert.ok(acceptedAt >= 0 && acceptedAt < openerAt && openerAt < turnsAt);
-  assert.match(appGet, /if \(eula\.accepted && !seatFromSession\(session\)\)/);
+  assert.match(appGet, /if \(eula\.accepted\)/);
   assert.match(appGet, /await ensureOnboardingOpener\(db, session, selected \|\| null\)/);
   assert.match(api, /welcomeAudience = seat \? 'collaborator' : 'owner'/);
   assert.match(api, /welcomeFor = seat \? String\(session\.customer_id\) : 'owner'/);
