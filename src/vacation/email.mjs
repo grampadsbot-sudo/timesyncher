@@ -72,6 +72,22 @@ export function purchaseEmail({ contact, sessionToken = '', token = '', tripId =
   return { subject, textBody, htmlBody, launchUrl };
 }
 
+const INVITEE_EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+
+function collaboratorInviteeName(contact, invite) {
+  for (const value of [contact?.firstName, contact?.displayName, invite?.requested_for]) {
+    const text = cleanText(value, 80);
+    if (!text || INVITEE_EMAIL_RE.test(text)) continue;
+    return text;
+  }
+  return '';
+}
+
+function collaboratorInviteGreeting(contact, invite) {
+  const name = collaboratorInviteeName(contact, invite);
+  return name ? `Hi ${name},` : 'Hello,';
+}
+
 function collaboratorInviteOwnerLabel(invite) {
   const ownerName = cleanText(invite?.owner_display_name, 160);
   if (ownerName) return { owner: ownerName, ownerNameMissing: false };
@@ -83,7 +99,7 @@ function collaboratorInviteOwnerLabel(invite) {
 }
 
 export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = '', publicUrl = '', env = process.env }) {
-  const name = cleanText(contact?.firstName || contact?.displayName || invite?.requested_for || 'there', 80) || 'there';
+  const greeting = collaboratorInviteGreeting(contact, invite);
   const { owner, ownerNameMissing } = collaboratorInviteOwnerLabel(invite);
   if (ownerNameMissing) {
     console.log(JSON.stringify({
@@ -104,13 +120,16 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
     ? `${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.`
     : `${owner} approved this email address to join a <strong>TimeSyncher Vacation</strong> chat.`;
   const htmlTitle = hasTrip ? `You can edit ${tripTitle}` : 'You can join this vacation chat';
+  const termsStep = hasTrip
+    ? 'Open the link below, review and accept the terms, then continue into the vacation chat and website.'
+    : 'Open the link below, review and accept the terms, then continue into the vacation chat.';
   const textBody = [
-    `Hi ${name},`,
+    greeting,
     '',
     inviteLead,
     '',
     'View access lets you see the days. Edit access lets you add notes after this email invite is approved.',
-    'You join from this email, accept the terms, and then the vacation opens.',
+    termsStep,
     '',
     link ? `Approved email invite: ${link}` : '',
     site ? `Vacation website: ${site}` : '',
@@ -123,9 +142,9 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
 <html><body style="margin:0;background:#050505;color:#fffaf0;font-family:Arial,sans-serif">
   <div style="max-width:640px;margin:0 auto;padding:28px">
     <h1 style="color:#f5d37b">${htmlTitle}</h1>
-    <p>Hi ${name},</p>
+    <p>${greeting}</p>
     <p>${htmlLead}</p>
-    <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. You join from this email, accept the terms, and then the vacation opens.</p>
+    <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. ${termsStep}</p>
     ${link ? `<p><a href="${link}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the approved email invite</a></p>` : ''}
     ${link ? `<p><a href="${link}" style="color:#f5d37b;word-break:break-all">${link}</a></p>` : ''}
     ${site ? `<p><a href="${site}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the vacation</a></p>` : ''}

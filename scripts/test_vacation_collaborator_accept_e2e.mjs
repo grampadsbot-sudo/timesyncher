@@ -291,6 +291,14 @@ const emailPreSite = collaboratorInviteEmail({
 });
 assert.match(emailPreSite.subject, /Owner Ada invited you to a TimeSyncher Vacation/);
 assert.doesNotMatch(emailPreSite.textBody, /edit null/);
+assert.match(emailPreSite.textBody, /review and accept the terms/i);
+const emailNoName = collaboratorInviteEmail({
+  contact: { email: 'alex@example.com' },
+  invite: { id: crypto.randomUUID(), owner_display_name: 'Owner Ada', trip_id: null },
+  acceptUrl: 'https://example.com/accept',
+});
+assert.doesNotMatch(emailNoName.textBody, /Hi alex@/i);
+assert.match(emailNoName.textBody, /^Hello,/m);
 
 const logs = [];
 const originalLog = console.log;

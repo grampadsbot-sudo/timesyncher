@@ -1,12 +1,13 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
-import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
 import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
+  loadWebAccessGrantByInviteToken,
   publicTripUrl,
   readCookie,
   requireWebEditAccess,
@@ -14,6 +15,7 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import { collaboratorEulaAcceptUrl } from '../src/vacation/collaborators.mjs';
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
@@ -97,6 +99,15 @@ async function handleWebAccess(req, res, db, url) {
   const action = cleanText(url.searchParams.get('action'), 80);
   if (req.method === 'GET' && action === 'accept') {
     const token = cleanText(url.searchParams.get('token'), 220);
+    const pending = await loadWebAccessGrantByInviteToken(db, token, process.env);
+    const pendingMeta = pending?.metadata && typeof pending.metadata === 'object' ? pending.metadata : {};
+    const collaboratorInviteId = cleanText(pendingMeta.collaboratorInviteId, 80);
+    if (collaboratorInviteId) {
+      res.statusCode = 302;
+      res.setHeader('location', collaboratorEulaAcceptUrl({ id: collaboratorInviteId }, process.env));
+      res.setHeader('cache-control', 'no-store');
+      return res.end();
+    }
     const accepted = await acceptWebAccessInvite(db, token, process.env);
     return sendHtml(res, 200, acceptedHtml(accepted), {
       'set-cookie': webAccessCookieHeader(accepted.sessionToken, process.env),
@@ -767,21 +778,32 @@ async function handleVacationApp(req, res, db, url) {
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
     if (!selected) {
-      if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+      if (!eula.accepted) {
+        return sendJson(res, 409, vacationAppErrorBody({
+          error: 'Accept the terms before sending a message.',
+          code: 'eula_not_accepted',
+          customerMessage: 'Accept the terms before you send a message.',
+        }));
+      }
       const created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
       if (!created.ok) {
-        return sendJson(res, created.statusCode || 500, {
-          ok: false,
+        return sendJson(res, created.statusCode || 500, vacationAppErrorBody({
           error: created.error,
           code: created.code || 'vacation_app_chat_failed',
-        });
+        }));
       }
       if (created.action === 'created' || created.action === 'existing') {
         vacations = created.vacations;
         selected = created.selected;
       }
     }
-    if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+    if (!eula.accepted) {
+      return sendJson(res, 409, vacationAppErrorBody({
+        error: 'Accept the terms before sending a message.',
+        code: 'eula_not_accepted',
+        customerMessage: 'Accept the terms before you send a message.',
+      }));
+    }
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
       if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
