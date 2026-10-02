@@ -15,6 +15,7 @@ import { vacationAppReplyClaimContext } from '../src/vacation/chat-place-search-
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
+import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings, withGateMs } from '../src/vacation/turn-stage-timings.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -155,7 +156,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     title: jobFields.title,
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
+    stageTimings: turnStageTimings({ classifierMs: intake.classifierMs }),
   };
+  customerLive.stageTimings = payload.stageTimings;
   const turnTag = (tripId && (placeSearchTurn || webResearchTurn))
     ? classifyTurn({
       text: requestText,
@@ -229,6 +232,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   `;
   let placeResults = [], enforceInTurnSearch = false, activeWebResearchTurn = webResearchTurn, placeSearchReplyFacts = null;
   if (tripId) {
+    const searchStarted = Date.now();
     const inTurnSearch = await runVacationAppInTurnSearch({
       db,
       tripId,
@@ -256,9 +260,10 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       placeSearchTurn,
       webResearchTurn,
     });
+    customerLive.stageTimings = payload.stageTimings = turnStageTimings({ ...(payload.stageTimings || {}), searchMs: Date.now() - searchStarted });
+    await db`update transcript_turns set payload = ${payload} where id = ${turnRows[0].id}`;
     if (!inTurnSearch.ok) {
-      const failedLatency = Date.now() - started;
-      return {
+      return failedInTurnSearchTurn({
         requestId,
         jobId: jobRows[0].id,
         receivedAt: requestRows[0].received_at,
@@ -266,27 +271,14 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         turnTag,
         modality,
         turnIndex: customerTurnIndex,
-        latencyMs: failedLatency,
+        latencyMs: Date.now() - started,
         sessionE2eMs: sessionE2eMs(),
         jev: customerLive.jev,
-        reply: null,
-        intakeEvent: jobFields.intakeEvent,
-        wantedThings: jobFields.wantedThings,
-        roster: jobFields.roster,
-        rosterError: jobFields.rosterError,
-        destination: jobFields.destination,
-        hasDates: jobFields.hasDates,
-        startDate: jobFields.startDate,
-        endDate: jobFields.endDate,
-        title: jobFields.title,
-        titleError: jobFields.titleError,
-        intakeError: jobFields.intakeError,
-        ok: false,
-        status: inTurnSearch.status,
+        jobFields,
+        inTurnSearch,
+        stageTimings: payload.stageTimings,
         error: inTurnSearch.status === 'turn_classifier_failed' ? String(inTurnSearch.error || 'classifier down') : placeSearchClientError(inTurnSearch.placeSearch, inTurnSearch.error),
-        placeSearch: inTurnSearch.placeSearch,
-        webSearch: inTurnSearch.webSearch,
-      };
+      });
     }
     placeResults = inTurnSearch.inTurnProviderResults || [];
     enforceInTurnSearch = inTurnSearch.enforceInTurnSearch;
@@ -318,6 +310,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   }
 
   let produced;
+  const replyStarted = Date.now();
   try {
     const loadOwnerPlan = async (opts) => loadOwnerReplyPlanForTurn({
       session: opts?.session ?? session,
@@ -370,6 +363,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       reason: error?.message || 'live dispatcher failed',
     };
   }
+  const replyStages = replyStageMillis(produced, Date.now() - replyStarted);
+  payload.stageTimings = turnStageTimings({ ...(payload.stageTimings || {}), ...replyStages });
+  customerLive.stageTimings = payload.stageTimings;
   customerLive.jev = jevStamp(produced.jev);
   customerLive.rules = produced.rules
     ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
@@ -408,9 +404,11 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     placeSearch: customerLive.placeSearch ?? payload.placeSearch ?? null,
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
     turnActionResults,
+    stageTimings: payload.stageTimings,
   };
   const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts, { roster: classification.roster, turnActionResults });
   const blockReplyShipGate = async (replyText) => {
+    const gateStarted = Date.now();
     const actionBlocked = await blockVacationAppReplyActionClaim({
       replyText,
       tripId,
@@ -423,8 +421,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       base,
       storeReplyFailure,
     });
-    if (actionBlocked) return actionBlocked;
-    return blockVacationAppReplyIdCitation({
+    const blocked = actionBlocked || await blockVacationAppReplyIdCitation({
       replyText,
       tripId,
       db,
@@ -434,6 +431,9 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       base,
       storeReplyFailure,
     });
+    withGateMs(payload, customerLive, base, gateStarted);
+    await db`update transcript_turns set payload = ${payload} where id = ${turnRows[0].id}`;
+    return blocked;
   };
   if (produced.status === 'interim' && produced.pending) {
     const interimBlocked = await blockReplyShipGate(produced.interimReply?.text || '');

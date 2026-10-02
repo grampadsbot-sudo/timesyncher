@@ -1531,16 +1531,13 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const seatDollars = commerce.seatDollars;
   const pricedSeat = commerce.pricedSeat;
   const jevStarted = Date.now();
-  let jev = null;
-  for (let jevAttempt = 0; jevAttempt < 2 && !jev?.jevRan; jevAttempt += 1) {
-    jev = await jevPrecall({
-      customerTurn,
-      stage: 'vacation_conversation',
-      screen: 'vacation-app',
-      session: { seed_id: session?.token || null },
-      env,
-    });
-  }
+  const jev = await jevPrecall({
+    customerTurn,
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
   if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!rules?.ok) {
     return {
@@ -1600,10 +1597,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
-  for (let attempt = 0; attempt < 2 && !String(reply || '').trim(); attempt += 1) {
-    model = await callTieredModel(modelArgs(`${customerTurn}\n\nWrite the reply in sentences. Do not return an empty message.`, upsell));
-    reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
-  }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
     const nudge = commerce.collaboratorSeat ? `${customerTurn}\n\nAnswer the travel question only. Stay on itinerary and dates; omit billing and product access topics.` : customerAsksPrice(customerTurn, intent) ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.` : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
@@ -1626,7 +1619,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const draftFlags = hardQualityFlags(originalDraft, intakeTurn, corpus, modelPlaceSources, intent);
   const qualityStarted = Date.now();
   let quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
-  if (!quality?.judged) quality = await jevQualityRewrite({ customerTurn, draft: originalDraft, tripContext, planLine, env });
   const draftQualityMs = Math.max(0, Date.now() - qualityStarted);
   const factErrors = draftFactErrors(originalDraft, tripFacts);
   if (quality?.judged) {
@@ -1964,18 +1956,9 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     const rewritten = split.reply ? cleanCandidate(split.reply) : '';
     return { modelText, rewritten, change: split.change, called };
   }
-  let attempt = await askRewrite(pending?.failureReason);
-  let rewriteMs = attempt.ms;
-  let parsed = acceptText(attempt.called);
-  if (!parsed.modelText) {
-    const again = await askRewrite(pending?.failureReason);
-    rewriteMs += again.ms;
-    const second = acceptText(again.called);
-    if (second.modelText) {
-      attempt = again;
-      parsed = second;
-    }
-  }
+  const attempt = await askRewrite(pending?.failureReason);
+  const rewriteMs = attempt.ms;
+  const parsed = acceptText(attempt.called);
   let rewriteErrors = parsed.rewritten ? draftFactErrors(parsed.rewritten, facts) : [];
   const model = attempt.called;
   const { modelText, rewritten, change } = parsed;
@@ -1991,7 +1974,6 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   const rewriteQualityStarted = Date.now();
   if (rewriteCanShip) {
     rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
-    if (!rewriteQuality?.judged) rewriteQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: judgedText, tripContext: pending.tripContext, planLine: pending.planLine, env });
     if (rewriteQuality?.judged) {
       const rewriteFlags = hardQualityFlags(judgedText, pending.intake === true ? { text: pending.customerTurn, intake: true } : pending.customerTurn, pending.corpus, pending.placeResults, pending.intent);
       rewriteQuality = correctFalsePriceMiss(
@@ -2050,9 +2032,6 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
   let holdingQuality = null;
   if (choice.holding && choice.text) {
     holdingQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: choice.text, tripContext: pending.tripContext, planLine: pending.planLine, env });
-    if (!holdingQuality?.judged) {
-      holdingQuality = await jevQualityRewrite({ customerTurn: pending.customerTurn, draft: choice.text, tripContext: pending.tripContext, planLine: pending.planLine, env });
-    }
     if (holdingQuality?.judged) {
       holdingQuality.jevNote = null;
       holdingQuality.comment = null;

@@ -828,6 +828,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 }
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
+export const TIERED_REPLY_TIMEOUT_MS = 20000;
 
 export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const modelTier = Number(jev?.modelTier);
@@ -922,7 +923,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
           { role: 'user', content: userContent },
         ],
       }),
-      signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : 90000),
+      signal: AbortSignal.timeout(timeoutMs > 0 ? timeoutMs : TIERED_REPLY_TIMEOUT_MS),
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || body.ok === false) {

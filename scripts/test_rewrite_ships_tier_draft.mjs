@@ -130,7 +130,7 @@ await withFetch(async (url, init = {}) => {
     const system = call.body.messages?.find((message) => message.role === 'system')?.content || '';
     return !/Do not write a customer reply/.test(system);
   });
-  assert.equal(decisions.length, 2);
+  assert.equal(decisions.length, 1);
   assert.equal(tierChats.length, 0);
   assert.equal(produced.reply, null);
   assert.equal(produced.reason, 'Jev HTTP 503');

@@ -3,6 +3,7 @@ import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
+import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 
 export async function outboundAppReplyForRequest(db, requestId) {
   const id = String(requestId || '').trim();
@@ -144,6 +145,18 @@ export async function persistVacationAppOutboundReply({
     intakeThings,
   );
   if (itinerary.length) await publishIntakeShare(db, tripId);
+  const savedFields = await savedThingFieldsForTurn(db, tripId, itinerary?.savedThingIds || []);
+  if (customerTurnId) {
+    await db`
+      update transcript_turns
+      set payload = coalesce(payload, '{}'::jsonb) || ${{
+        thingId: savedFields.thingId,
+        sharedDayIds: savedFields.sharedDayIds,
+        savedThings: savedFields.savedThings,
+      }}
+      where id = ${customerTurnId}
+    `;
+  }
   await markWorkerJobLiveHandled(db, jobId);
   const vacationRows = await db`
     select id, title, destination, start_date, end_date, status, metadata
@@ -159,6 +172,9 @@ export async function persistVacationAppOutboundReply({
     ...appReplyTelemetry(appLive),
     appTurnIndex: appLive.turnIndex,
     itinerary,
+    thingId: savedFields.thingId,
+    sharedDayIds: savedFields.sharedDayIds,
+    savedThings: savedFields.savedThings,
     vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
     error: null,
   };
@@ -216,6 +232,18 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     pending.wantedThings || [],
   );
   if (itinerary.length) await publishIntakeShare(db, pending.tripId);
+  const savedFields = await savedThingFieldsForTurn(db, pending.tripId, itinerary?.savedThingIds || []);
+  if (pending.customerTurnId) {
+    await db`
+      update transcript_turns
+      set payload = coalesce(payload, '{}'::jsonb) || ${{
+        thingId: savedFields.thingId,
+        sharedDayIds: savedFields.sharedDayIds,
+        savedThings: savedFields.savedThings,
+      }}
+      where id = ${pending.customerTurnId}
+    `;
+  }
   await db`
     update onboarding_sessions
     set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
@@ -229,6 +257,9 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     ...appReplyTelemetry(appLive),
     interimReply: finished.log?.interimReply || pending.interimReply || null,
     itinerary,
+    thingId: savedFields.thingId,
+    sharedDayIds: savedFields.sharedDayIds,
+    savedThings: savedFields.savedThings,
     error: null,
   };
 }

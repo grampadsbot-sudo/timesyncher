@@ -24,7 +24,7 @@ function itineraryHasStatus(line) {
   return colon >= 0 && text.slice(colon + 1).trim().length > 0;
 }
 
-export function applyUnscheduledDayStatus(ctx) {
+function applyUnscheduledDayStatus(ctx) {
   if (!ctx || typeof ctx !== 'object' || !Array.isArray(ctx.itinerary)) return ctx;
   const search = ctx.chatPlaceSearch;
   const rows = Array.isArray(search?.unscheduled) ? search.unscheduled : [];

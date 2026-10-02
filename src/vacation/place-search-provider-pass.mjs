@@ -220,55 +220,69 @@ export async function runPlaceProviderPass({
     });
   }
 
-  let osm = [];
   const osmFilter = Array.isArray(osmCategoryFilter)
     ? [...new Set(osmCategoryFilter.map((c) => String(c || '').trim().toLowerCase()).filter(Boolean))]
     : [];
-  if (queryCenter && osmFilter.length) {
-    try {
-      osm = dropOutsideAnchorRadius(await queryOsm(fetchImpl, queryCenter, osmFilter));
-      providerLog.push({
-        provider: 'osm',
-        status: osm.length ? 'ok' : 'empty',
-        ...(osm.length ? {} : { reason: 'no_results' }),
-        resultCount: osm.length,
-      });
-    } catch (error) {
-      const reason = String(error?.message || error || 'osm failed').trim();
-      const httpStatus = httpStatusFromReason(reason);
-      console.error(`place search provider osm failed: ${reason}`);
-      providerLog.push({
-        provider: 'osm',
-        status: 'error',
-        reason,
-        ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
-        resultCount: 0,
-      });
-    }
-  } else if (queryCenter) {
+  const osmQuery = queryCenter && osmFilter.length
+    ? queryOsm(fetchImpl, queryCenter, osmFilter).then((places) => ({ places })).catch((error) => ({ error }))
+    : Promise.resolve({ skipped: queryCenter ? 'no_osm_category' : 'no_coordinates' });
+  const braveQuery = queryBrave(fetchImpl, env, {
+    center: queryCenter,
+    locationText,
+    compactLocality: braveCompactLocality,
+    namedPlaceLookup,
+  }, placeQueries).then((found) => ({ found })).catch((error) => ({ error }));
+  const [osmSettled, braveSettled] = await Promise.all([osmQuery, braveQuery]);
+
+  let osm = [];
+  if (osmSettled.skipped) {
     providerLog.push({
       provider: 'osm',
       status: 'skipped',
-      reason: 'no_osm_category',
+      reason: osmSettled.skipped,
+      resultCount: 0,
+    });
+  } else if (osmSettled.error) {
+    const reason = String(osmSettled.error?.message || osmSettled.error || 'osm failed').trim();
+    const httpStatus = httpStatusFromReason(reason);
+    console.error(`place search provider osm failed: ${reason}`);
+    providerLog.push({
+      provider: 'osm',
+      status: 'error',
+      reason,
+      ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
       resultCount: 0,
     });
   } else {
+    osm = dropOutsideAnchorRadius(osmSettled.places);
     providerLog.push({
       provider: 'osm',
-      status: 'skipped',
-      reason: 'no_coordinates',
-      resultCount: 0,
+      status: osm.length ? 'ok' : 'empty',
+      ...(osm.length ? {} : { reason: 'no_results' }),
+      resultCount: osm.length,
     });
   }
 
   let brave = [];
-  try {
-    const found = await queryBrave(fetchImpl, env, {
-      center: queryCenter,
-      locationText,
-      compactLocality: braveCompactLocality,
-      namedPlaceLookup,
-    }, placeQueries);
+  if (braveSettled.error) {
+    const error = braveSettled.error;
+    const reason = String(error?.message || error || 'brave failed').trim();
+    const httpStatus = httpStatusFromReason(reason);
+    const query = String(error?.braveQuery || '').trim();
+    const endpoint = String(error?.braveEndpoint || '').trim();
+    if (query && endpoint) braveLookups = [{ query, endpoint }];
+    console.error(`place search provider brave failed: ${reason}`);
+    providerLog.push({
+      provider: 'brave',
+      status: 'error',
+      reason,
+      ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
+      resultCount: 0,
+      ...(query ? { query } : {}),
+      ...(endpoint ? { endpoint } : {}),
+    });
+  } else {
+    const found = braveSettled.found;
     if (Number(found?.anchorRadiusRejected) > 0) {
       anchorRadiusRejected += Number(found.anchorRadiusRejected);
     }
@@ -288,22 +302,6 @@ export async function runPlaceProviderPass({
       status: brave.length ? 'ok' : 'empty',
       ...(brave.length ? {} : { reason: 'no_results' }),
       resultCount: brave.length,
-      ...(query ? { query } : {}),
-      ...(endpoint ? { endpoint } : {}),
-    });
-  } catch (error) {
-    const reason = String(error?.message || error || 'brave failed').trim();
-    const httpStatus = httpStatusFromReason(reason);
-    const query = String(error?.braveQuery || '').trim();
-    const endpoint = String(error?.braveEndpoint || '').trim();
-    if (query && endpoint) braveLookups = [{ query, endpoint }];
-    console.error(`place search provider brave failed: ${reason}`);
-    providerLog.push({
-      provider: 'brave',
-      status: 'error',
-      reason,
-      ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
-      resultCount: 0,
       ...(query ? { query } : {}),
       ...(endpoint ? { endpoint } : {}),
     });
