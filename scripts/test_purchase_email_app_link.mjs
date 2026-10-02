@@ -159,6 +159,13 @@ function db(strings, ...values) {
     return [];
   }
   if (/from transcript_turns/i.test(text)) return state.turns.map((turn) => ({ ...turn }));
+  if (/from customers/i.test(text) && /first_name/i.test(text)) {
+    return [{
+      id: state.customerId,
+      first_name: state.contact?.first_name || 'Owner',
+      display_name: state.contact?.display_name || 'Owner',
+    }];
+  }
   throw new Error(`unexpected sql: ${text}`);
 }
 

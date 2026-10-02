@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
-import { createWebEditorInvite } from './web-access.mjs';
+import { publicTripUrl } from './web-access.mjs';
 import { upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
@@ -19,6 +19,10 @@ export function seatFromSession(session) {
   if (!seat.ownerCustomerId) return null;
   if (!seat.ownerTripId && !seat.ownerOnboardingSessionId) return null;
   return seat;
+}
+
+export function isCollaboratorAppSeat(session) {
+  return Boolean(seatFromSession(session));
 }
 
 export function transcriptCustomerId(session) {
@@ -76,24 +80,17 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
       },
       env,
     });
-    let web = null;
+    let publicUrl = '';
     if (resolvedTripId) {
-      web = await createWebEditorInvite(db, {
-        ownerCustomerId,
-        tripId: resolvedTripId,
-        email,
-        displayName: name,
-        role: 'web_editor',
-        metadata: { payer, channel: 'email-invite' },
-        env,
-      });
+      const trips = await db`select title, metadata from trips where id = ${resolvedTripId} limit 1`;
+      if (trips[0]) publicUrl = publicTripUrl(trips[0], env);
     }
     const sent = await queueOrSendCollaboratorInviteEmail(db, {
       invite,
       token,
       contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
       acceptUrl: '',
-      publicUrl: web?.grant?.public_url || '',
+      publicUrl,
     }, env);
     opened.push({
       name,
@@ -205,5 +202,52 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
     vacationAppUrl: vacationAppLink(session.token, env),
     displayName,
     payer: seat.payer,
+  };
+}
+
+export function liveReplyCommerceGate({
+  session,
+  suppliedSeatDollars,
+  customerTurn,
+  intent,
+  mergedTrip,
+  upsellMode,
+  asksPriceFn,
+  payerLineFn,
+}) {
+  if (!isCollaboratorAppSeat(session)) {
+    const seatDollars = Number(suppliedSeatDollars);
+    const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
+    const payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
+      .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
+      .filter((row) => row.name && row.payer);
+    const extractedSeats = Array.isArray(intent?.seats) && intent.seats.some((seat) => seat?.name && seat?.payer)
+      ? intent.seats
+      : payerRows;
+    const planLine = asksPriceFn(customerTurn, intent) && pricedSeat
+      ? payerLineFn(customerTurn, pricedSeat, extractedSeats)
+      : '';
+    return {
+      upsell: upsellMode,
+      seatDollars,
+      pricedSeat,
+      payerRows,
+      planLine,
+      planTable: planLine ? { dollars_per_collaborator_seat: pricedSeat, payer_line: planLine } : null,
+      purchasedPlan: String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim(),
+      planOwned: mergedTrip.planOwned === true,
+      collaboratorSeat: false,
+    };
+  }
+  return {
+    upsell: 'forbidden',
+    seatDollars: null,
+    pricedSeat: null,
+    payerRows: [],
+    planLine: '',
+    planTable: null,
+    purchasedPlan: '',
+    planOwned: false,
+    collaboratorSeat: true,
   };
 }

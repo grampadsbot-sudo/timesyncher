@@ -345,7 +345,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         placeSearchTurn: enforceInTurnSearch,
         webResearchTurn: activeWebResearchTurn,
         env: env,
-        seatDollars: configuredSeatDollars(env),
+        seatDollars: seat ? null : configuredSeatDollars(env),
         intake: classification.ok === true && classification.intake === true,
         wantedThings: intakeExtractedThings(placeSearchTurn, classification, webResearchTurn),
         roster: Array.isArray(classification.roster) ? classification.roster : [],

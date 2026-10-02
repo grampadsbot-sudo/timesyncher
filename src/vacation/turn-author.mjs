@@ -22,8 +22,28 @@ export function authorPeopleFromTrip(party = {}, collaborators = [], ownerId = '
   if (party?.primary) push(personRecord(party.primary, ownerId));
   for (const person of Array.isArray(party?.collaborators) ? party.collaborators : []) push(personRecord(person));
   for (const seat of Array.isArray(party?.seats) ? party.seats : []) push(personRecord(seat));
-  for (const row of Array.isArray(collaborators) ? collaborators : []) push(personRecord(row));
+  for (const row of Array.isArray(collaborators) ? collaborators : []) {
+    const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    const inviteMeta = row?.invite_metadata && typeof row.invite_metadata === 'object' ? row.invite_metadata : {};
+    const collabId = String(
+      row?.customer_id || meta.collaboratorCustomerId || inviteMeta.collaboratorCustomerId || '',
+    ).trim();
+    push(personRecord(row, collabId));
+  }
   return people;
+}
+
+export function transcriptAuthorMissingError(turn = {}, session = {}, tripId = null) {
+  return {
+    event: 'transcript_author_missing',
+    tripId: tripId ? String(tripId) : null,
+    viewerId: String(session.viewerId || session.customer_id || ''),
+    speaker: String(turn.speaker || ''),
+    direction: String(turn.direction || ''),
+    authorId: String(turn.authorId || turn.payload?.authorId || ''),
+    authorName: String(turn.authorName || turn.payload?.authorName || ''),
+    bodyPreview: String(turn.body || '').slice(0, 120),
+  };
 }
 
 function rosterName(person) {

@@ -11,7 +11,7 @@ import {
 import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
 import { attachSessionCollaboratorInvitesToTrip, loadCollaboratorInviteForEmail } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
-import { createWebEditorInvite, publicTripUrl } from './web-access.mjs';
+import { publicTripUrl } from './web-access.mjs';
 
 export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
@@ -175,33 +175,22 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     const email = String(metadata.email || '').trim().toLowerCase();
     const displayName = String(metadata.displayName || invite.requested_for || '').trim();
     if (!email) continue;
-    if (metadata.deferredWebEditor) {
-      try {
-        await createWebEditorInvite(db, {
-          ownerCustomerId: session.customer_id,
-          tripId,
-          email,
-          displayName,
-          role: 'web_editor',
-          metadata: { payer: metadata.payer || 'owner', channel: 'email-invite', collaboratorInviteId: invite.id },
-        });
-      } catch (error) {
-        console.warn(JSON.stringify({
-          event: 'deferred_web_editor_attach_skipped',
-          tripId: String(tripId || ''),
-          inviteId: String(invite.id || ''),
-          message: String(error?.message || error || ''),
-        }));
-      }
-    }
     try {
       const inviteForEmail = await loadCollaboratorInviteForEmail(db, invite.id);
       if (!inviteForEmail) continue;
-      await queueOrSendCollaboratorInviteEmail(db, {
+      const emailResult = await queueOrSendCollaboratorInviteEmail(db, {
         invite: inviteForEmail,
         contact: { email, displayName },
         publicUrl: tripPublicUrl,
       }, env);
+      if (emailResult.status === 'already_sent') {
+        console.log(JSON.stringify({
+          event: 'collaborator_invite_email_skipped',
+          reason: 'already_sent',
+          inviteId: String(invite.id || ''),
+          tripId: String(tripId || ''),
+        }));
+      }
     } catch (error) {
       console.warn(JSON.stringify({
         event: 'collaborator_invite_trip_attach_email_skipped',

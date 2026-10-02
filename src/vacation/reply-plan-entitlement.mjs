@@ -1,4 +1,5 @@
 import { checkoutPlanFromMetadata, requiredConfigText } from './checkout-pricing.mjs';
+import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 
 const OWNER_VACATION_PLANS = new Set(['single', 'unlimited']);
 
@@ -50,6 +51,7 @@ export function replyPlanFactsFromEntitlementRow(row, env = process.env, tripId 
 }
 
 export async function loadOwnerReplyPlanForTurn({ session, tripId, env = process.env, db = null } = {}) {
+  if (isCollaboratorAppSeat(session)) return null;
   const id = String(tripId || session?.trip_id || session?.tripId || '').trim();
   if (id) return loadTripOwnerReplyPlan({ tripId: id, env, db });
   return loadSessionOwnerReplyPlan({ session, env, db });
@@ -83,6 +85,10 @@ export async function loadSessionOwnerReplyPlan({ session, env = process.env, db
 }
 
 export async function savedTripWithOwnerPlan(saved, tripId, env = process.env, session = null) {
+  if (isCollaboratorAppSeat(session)) {
+    const base = saved && typeof saved === 'object' ? saved : {};
+    return { ...base, planOwned: false, purchased_plan: '', ownerPlan: null };
+  }
   const id = String(tripId || '').trim();
   if (!id) {
     const orderId = String(session?.order_id || '').trim();
