@@ -1,6 +1,7 @@
 /** OSM Overpass category keys in `place-search.mjs` OSM_CATEGORIES. */
 export const PLACE_SEARCH_CATEGORY_KEYS = Object.freeze([
   'grocery',
+  'market',
   'restaurant',
   'store',
   'garden',

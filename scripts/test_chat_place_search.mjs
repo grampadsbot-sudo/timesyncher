@@ -18,6 +18,7 @@ const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', im
 const liveSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const chatPlaceSearchSource = fs.readFileSync(new URL('../src/vacation/chat-place-search.mjs', import.meta.url), 'utf8');
+const chatPlaceSearchOutcomesSource = fs.readFileSync(new URL('../src/vacation/chat-place-search-outcomes.mjs', import.meta.url), 'utf8');
 const chatPlaceWhenSource = fs.readFileSync(new URL('../src/vacation/chat-place-search-when.mjs', import.meta.url), 'utf8');
 
 assert.doesNotMatch(rulesSource, /THAT_ID/);
@@ -28,6 +29,7 @@ assert.match(routeSource, /intakeExtractedThings\(placeSearchTurn/);
 assert.match(routeSource, /runVacationAppInTurnSearch/);
 assert.match(routeSource, /workerJobId:\s*jobRows\[0\]\.id/);
 assert.match(chatPlaceWhenSource, /placeSearchHandledInTurn:\s*true/);
+assert.match(chatPlaceSearchOutcomesSource, /syncWorkerJobAfterInTurnPlaceSearch/);
 assert.match(routeSource, /placeSearchTurn,/);
 
 const SCT_QUERIES = [

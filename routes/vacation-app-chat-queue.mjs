@@ -7,7 +7,7 @@ import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.m
 import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
-import { intakeExtractedThings, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
+import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
@@ -491,7 +491,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     jobFields,
     firstIntake,
     requestText,
-    intakeThings: intakeExtractedThings(placeSearchTurn, classification),
+    intakeThings: intakeThingsForPersistence(placeSearchTurn, classification, webResearchTurn, jobFields.wantedThings),
     customerTurnId: turnRows[0].id,
     recordCustomerThingNotes: hooks.recordCustomerThingNotes,
     publishIntakeShare: hooks.publishIntakeShare,

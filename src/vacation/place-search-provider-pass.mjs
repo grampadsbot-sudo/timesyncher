@@ -1,5 +1,29 @@
-import { providerFailureMessage, resolveSearchContext } from './place-search-geocode.mjs';
+import { providerFailureMessage, resolveSearchContext, tryGeocodeLabel } from './place-search-geocode.mjs';
 import { buildPlaceSearchFailureDiagnostics } from './place-search-failure-diagnostics.mjs';
+import { anchorRadiusCenter, filterPlacesWithinRadius } from './place-search-radius-filter.mjs';
+
+function providerRowIsError(row = {}) {
+  return String(row?.status || '').trim().toLowerCase() === 'error';
+}
+
+function providerRowIsHit(row = {}) {
+  return String(row?.status || '').trim().toLowerCase() === 'ok';
+}
+
+const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
+
+/** All place-result providers finished without errors and none returned live rows. */
+export function placeSearchProvidersAllEmpty(providerLog = []) {
+  const rows = (Array.isArray(providerLog) ? providerLog : [])
+    .filter((row) => PLACE_RESULT_PROVIDERS.has(String(row?.provider || '').trim()));
+  if (!rows.length) return false;
+  if (rows.some(providerRowIsError)) return false;
+  if (rows.some(providerRowIsHit)) return false;
+  return rows.every((row) => {
+    const status = String(row?.status || '').trim().toLowerCase();
+    return status === 'empty' || status === 'skipped';
+  });
+}
 
 export async function runPlaceProviderPass({
   fetchImpl,
@@ -35,14 +59,33 @@ export async function runPlaceProviderPass({
   );
   const center = context.center;
   const locationText = context.locationText || dest;
+  const anchorText = String(searchAnchor?.text || '').trim();
+  let anchorGeocode = null;
+  if (anchorText) {
+    anchorGeocode = await tryGeocodeLabel(fetchImpl, anchorText, providerLog, readJson);
+  }
+  const radiusCenter = anchorRadiusCenter(anchorGeocode, center);
+  const queryCenter = radiusCenter || center;
+  let anchorRadiusRejected = 0;
+
+  function dropOutsideAnchorRadius(places, categoryFallback = '') {
+    if (!radiusCenter) return Array.isArray(places) ? places : [];
+    const filtered = filterPlacesWithinRadius(places, radiusCenter, (place) => (
+      String(place?.category || categoryFallback || '').trim().toLowerCase()
+    ));
+    anchorRadiusRejected += filtered.rejected;
+    return filtered.places;
+  }
 
   let prior = [];
-  if (center) {
-    if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), center);
-    else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
-    else if (readPriorPlaces) prior = await readPriorPlaces(center, { env, tripId });
+  if (queryCenter) {
+    if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), queryCenter);
+    else if (loadPriorPlaces) prior = await loadPriorPlaces(queryCenter);
+    else if (readPriorPlaces) prior = await readPriorPlaces(queryCenter, { env, tripId });
     else prior = [];
-    prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
+    prior = dropOutsideAnchorRadius(
+      (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' })),
+    );
     providerLog.push({
       provider: 'prior_db',
       status: prior.length ? 'ok' : 'empty',
@@ -62,9 +105,9 @@ export async function runPlaceProviderPass({
   const osmFilter = Array.isArray(osmCategoryFilter)
     ? [...new Set(osmCategoryFilter.map((c) => String(c || '').trim().toLowerCase()).filter(Boolean))]
     : [];
-  if (center && osmFilter.length) {
+  if (queryCenter && osmFilter.length) {
     try {
-      osm = await queryOsm(fetchImpl, center, osmFilter);
+      osm = dropOutsideAnchorRadius(await queryOsm(fetchImpl, queryCenter, osmFilter));
       providerLog.push({
         provider: 'osm',
         status: osm.length ? 'ok' : 'empty',
@@ -79,7 +122,7 @@ export async function runPlaceProviderPass({
         resultCount: 0,
       });
     }
-  } else if (center) {
+  } else if (queryCenter) {
     providerLog.push({
       provider: 'osm',
       status: 'skipped',
@@ -97,8 +140,11 @@ export async function runPlaceProviderPass({
 
   let brave = [];
   try {
-    const found = await queryBrave(fetchImpl, env, { center, locationText }, placeQueries);
-    brave = Array.isArray(found) ? found : (found?.places || []);
+    const found = await queryBrave(fetchImpl, env, { center: queryCenter, locationText }, placeQueries);
+    if (Number(found?.anchorRadiusRejected) > 0) {
+      anchorRadiusRejected += Number(found.anchorRadiusRejected);
+    }
+    brave = dropOutsideAnchorRadius(Array.isArray(found) ? found : (found?.places || []));
     const query = String(found?.query || '').trim();
     const endpoint = String(found?.endpoint || '').trim();
     providerLog.push({
@@ -132,6 +178,7 @@ export async function runPlaceProviderPass({
     judgeTarget,
     judgeArea,
     anchor: searchAnchor,
+    anchorRadiusRejected,
     relevanceRejections: rejections,
     survivingPriorDbTitles,
     dedupeMerges,
@@ -183,11 +230,26 @@ export async function runPlaceProviderPass({
       const message = `Place search relevance rejected all live provider results. ${providerFailureMessage(providerLog)}`;
       fail(message, 'relevance_rejected_all', providerLog, relevanceRejections, diagnosticsBase(relevanceRejections));
     }
+    const nominatimErrored = providerLog.some(
+      (row) => String(row?.provider || '').trim() === 'nominatim' && providerRowIsError(row),
+    );
+    if (placeSearchProvidersAllEmpty(providerLog) && !nominatimErrored) {
+      return {
+        status: 'no_results',
+        center,
+        locationText,
+        places: [],
+        providerLog,
+        relevanceRejections: [],
+        ...diagnosticsBase(),
+      };
+    }
     const message = `Place search failed: ${providerFailureMessage(providerLog)}`;
     fail(message, 'all_providers_failed', providerLog, null, diagnosticsBase());
   }
 
   return {
+    status: 'ok',
     center,
     locationText,
     places,

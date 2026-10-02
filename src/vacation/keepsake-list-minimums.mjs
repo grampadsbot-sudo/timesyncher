@@ -13,6 +13,7 @@ export const DEFAULT_FIRST_PASS_MINIMUMS = {
  */
 export const POI_RADIUS_METERS = {
   grocery: 8000,
+  market: 8000,
   restaurant: 10000,
   store: 10000,
   garden: 40000,
@@ -28,6 +29,8 @@ export const DEFAULT_CATEGORY_RADIUS_KEY = 'activity';
 
 const CATEGORY_RADIUS_ALIASES = {
   groceries: 'grocery',
+  farmers_market: 'market',
+  market: 'market',
   restaurants: 'restaurant',
   stores: 'store',
   gardens: 'garden',

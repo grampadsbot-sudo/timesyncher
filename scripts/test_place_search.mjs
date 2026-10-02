@@ -195,7 +195,7 @@ assert.equal(found.sourceCounts.brave, 2);
 const river = found.places.find((place) => place.title === 'River Walk');
 assert.equal(river.address, 'River Road, Lisbon');
 const museum = found.places.find((place) => place.title === 'City Museum');
-assert.equal(museum.categoryName, 'museum');
+assert.equal(museum.categoryName, 'Museum');
 
 const blockedFetch = async () => {
   throw new Error('fetch should not run');
@@ -233,40 +233,33 @@ await assert.rejects(
     return true;
   },
 );
-await assert.rejects(
-  () => searchPlaces({
-    destination: 'Lisbon',
-    wantedThings: PLACE_WANTED,
-    env: placeEnv(),
-    fetchImpl: emptyLive.fetchImpl,
-    priorPlaces: [],
-  }),
-  (error) => {
-    assert.equal(error.code, 'all_providers_failed');
-    return true;
-  },
-);
+const allEmpty = await searchPlaces({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  fetchImpl: emptyLive.fetchImpl,
+  priorPlaces: [],
+});
+assert.equal(allEmpty.outcomeStatus, 'no_results');
+assert.equal(allEmpty.places.length, 0);
+assert.ok(Array.isArray(allEmpty.providers));
+assert.ok(allEmpty.providers.filter((row) => ['prior_db', 'osm', 'brave'].includes(String(row.provider || ''))).every((row) => row.status === 'empty' || row.status === 'skipped'));
 
 const geocodeCalls = [];
-await assert.rejects(
-  () => searchPlaces({
-    destination: 'Nowhereville',
-    wantedThings: PLACE_WANTED,
-    env: placeEnv(),
-    priorPlaces: [],
-    fetchImpl: async (url) => {
-      recordHost(url, geocodeCalls);
-      const value = String(url);
-      return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value.includes('api.search.brave.com') ? { results: [] } : []);
-    },
-  }),
-  (error) => {
-    assert.equal(error.code, 'all_providers_failed');
-    assert.match(error.message, /Nowhereville|nominatim|brave/i);
-    assert.ok(Array.isArray(error.providers));
-    return true;
+const nowhere = await searchPlaces({
+  destination: 'Nowhereville',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: async (url) => {
+    recordHost(url, geocodeCalls);
+    const value = String(url);
+    return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value.includes('api.search.brave.com') ? { results: [] } : []);
   },
-);
+});
+assert.equal(nowhere.outcomeStatus, 'no_results');
+assert.equal(nowhere.places.length, 0);
+assert.ok(Array.isArray(nowhere.providers));
 assert.ok(geocodeCalls.includes('nominatim.openstreetmap.org') && geocodeCalls.includes('api.search.brave.com'));
 const fill = await fillTripIntake({
   destination: 'Lisbon',
@@ -397,25 +390,24 @@ assert.deepEqual([...new Set(lodgingHosts)].sort(), [
 
 const braveCalls = [];
 const emptyHosts = [];
-await assert.rejects(
-  () => searchPlaces({
-    destination: 'Lisbon',
-    wantedThings: PLACE_WANTED,
-    env: placeEnv(),
-    priorPlaces: [],
-    fetchImpl: async (url) => {
-      const value = String(url);
-      recordHost(url, emptyHosts);
-      if (isOpenRouter(value)) return jevOk(5);
-      braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
-      if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
-      if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
-      if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
-      throw new Error(`unexpected search ${value}`);
-    },
-  }),
-  (error) => error.code === 'all_providers_failed',
-);
+const emptyLiveSearch = await searchPlaces({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: async (url) => {
+    const value = String(url);
+    recordHost(url, emptyHosts);
+    if (isOpenRouter(value)) return jevOk(5);
+    braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
+    if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
+    if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
+    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    throw new Error(`unexpected search ${value}`);
+  },
+});
+assert.equal(emptyLiveSearch.outcomeStatus, 'no_results');
+assert.equal(emptyLiveSearch.places.length, 0);
 assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
 assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:Louise Cafe', 'brave:Paper Shop', 'brave:River Walk']);
 assert.deepEqual([...new Set(emptyHosts)].sort(), [

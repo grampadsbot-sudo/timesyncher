@@ -18,6 +18,7 @@ export function buildPlaceSearchFailureDiagnostics({
   judgeTarget = '',
   judgeArea = '',
   anchor = null,
+  anchorRadiusRejected = 0,
   relevanceRejections = [],
   survivingPriorDbTitles = [],
   dedupeMerges = [],
@@ -39,6 +40,8 @@ export function buildPlaceSearchFailureDiagnostics({
   };
   if (lat !== null && lng !== null) diagnostics.searchCenter = { lat, lng };
   if (anchorText) diagnostics.anchor = { text: anchorText, source: anchorSource || 'unknown' };
+  const rejected = Number(anchorRadiusRejected);
+  if (Number.isFinite(rejected) && rejected > 0) diagnostics.anchorRadiusRejected = rejected;
   const merges = (Array.isArray(dedupeMerges) ? dedupeMerges : []).slice(0, 20);
   if (merges.length) diagnostics.dedupeMerges = merges;
   return diagnostics;
@@ -54,6 +57,7 @@ export function placeSearchDiagnosticsFromError(error) {
     'anchor',
     'survivingPriorDbTitles',
     'dedupeMerges',
+    'anchorRadiusRejected',
     'judgeHttpStatus',
     'judgeBodySnippet',
   ]) {

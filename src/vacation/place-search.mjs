@@ -24,12 +24,14 @@ import { distanceMeters, samePlace } from './place-search-same-place.mjs';
 
 export { PlaceSearchError };
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
-const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
+const PLACE_KINDS = new Set(['grocery', 'market', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
 const NOT_A_PLACE = /^(?:the|a|an|this|that|our|my|your|new|next|last|current|week|weeks|night|nights|day|days|morning|afternoon|evening|weekend|month|year|time|trip|trips|vacation|vacations|staycation|holiday|bot|staging|one|it|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)$/i;
 const PRIOR_CATEGORIES = new Map([
   ['grocery', 'grocery'],
   ['groceries', 'grocery'],
+  ['market', 'market'],
+  ['farmers_market', 'market'],
   ['restaurant', 'restaurant'],
   ['food', 'restaurant'],
   ['dining', 'restaurant'],
@@ -229,12 +231,26 @@ function sourceRefFor(place) {
 }
 
 function sourceRecordFor(place) {
+  const embedded = place?.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null;
+  if (embedded && (embedded.id || embedded.icon_category || embedded.categories || embedded.class || embedded.type || embedded.osm_tags)) {
+    return {
+      ...embedded,
+      source: String(place.source || embedded.source || '').trim(),
+      url: String(place.url || embedded.url || '').trim(),
+    };
+  }
   return {
     source: place.source,
     url: place.url || '',
     ...(place.rating != null ? { rating: place.rating } : {}),
     ...(place.ratingCount != null ? { count: place.ratingCount } : {}),
     ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
+    ...(Array.isArray(place.providerCategories) && place.providerCategories.length
+      ? { providerCategories: place.providerCategories }
+      : {}),
+    ...(place.nominatimClass ? { class: place.nominatimClass } : {}),
+    ...(place.nominatimType ? { type: place.nominatimType } : {}),
+    ...(place.nominatimTourism ? { tourism: place.nominatimTourism } : {}),
   };
 }
 
@@ -277,6 +293,7 @@ function braveCallSummary(calls) {
 export async function queryBravePlaceSearch(fetchImpl, env, { center, locationText }, queries) {
   const places = [];
   const calls = [];
+  let anchorRadiusRejected = 0;
   const area = String(locationText || center?.label || '').trim();
   try {
     for (const item of queries) {
@@ -311,7 +328,10 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
         const address = braveAddress(result);
         const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
         if (!title) continue;
-        if (center && metersInsideCategory(center, point, item.category) === null) continue;
+        if (center && metersInsideCategory(center, point, item.category) === null) {
+          anchorRadiusRejected += 1;
+          continue;
+        }
         const providerCategories = braveProviderCategories(result);
         places.push({
           source: 'brave',
@@ -339,7 +359,12 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
     throw error;
   }
   const rawResults = calls.flatMap((row) => (Array.isArray(row.rawResults) ? row.rawResults : [])).slice(0, 5);
-  return { places, rawResults, ...braveCallSummary(calls) };
+  return {
+    places,
+    rawResults,
+    ...(anchorRadiusRejected > 0 ? { anchorRadiusRejected } : {}),
+    ...braveCallSummary(calls),
+  };
 }
 
 export function selectPriorPlaces(rows = [], center) {
@@ -526,8 +551,25 @@ export async function searchPlaces({
       judgeInput: pass.judgeInput,
       searchCenter: pass.searchCenter,
       anchor: pass.anchor,
+      ...(Number(pass.anchorRadiusRejected) > 0 ? { anchorRadiusRejected: pass.anchorRadiusRejected } : {}),
       ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
     };
+    if (pass.status === 'no_results') {
+      return {
+        destination: dest || center?.label || locationText || '',
+        center,
+        places: [],
+        notes: [],
+        queries: searchQueries,
+        queried: [...SOURCE_IDS],
+        providers: providerLog,
+        relevanceRejections: [],
+        outcomeStatus: 'no_results',
+        ...placeSearchDiagnostics,
+        elapsedMs: Date.now() - started,
+        sourceCounts: countSources([]),
+      };
+    }
   }
   const noteRelevance = infoQueries.length
     ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })

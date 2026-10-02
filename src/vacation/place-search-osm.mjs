@@ -1,39 +1,11 @@
 import { categoryRadiusMeters } from './keepsake-list-minimums.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
-
-const OSM_CATEGORIES = [
-  {
-    category: 'grocery',
-    filter: '["shop"~"supermarket|grocery|convenience|greengrocer"]',
-    match: (tags) => /^(?:supermarket|grocery|convenience|greengrocer)$/.test(String(tags.shop || '')),
-    name: (tags) => String(tags.shop || '').trim(),
-  },
-  {
-    category: 'restaurant',
-    filter: '["amenity"~"restaurant|cafe|fast_food"]',
-    match: (tags) => /restaurant|cafe|fast_food/.test(String(tags.amenity || '')),
-    name: (tags) => String(tags.amenity || '').trim(),
-  },
-  {
-    category: 'store',
-    filter: '["shop"]',
-    match: (tags) => Boolean(tags.shop),
-    name: (tags) => String(tags.shop || '').trim(),
-  },
-  {
-    category: 'garden',
-    filter: '["leisure"="garden"]',
-    match: (tags) => String(tags.leisure || '') === 'garden' || String(tags.tourism || '') === 'garden',
-    name: () => 'garden',
-  },
-  {
-    category: 'activity',
-    filter: '["tourism"~"attraction|museum|gallery|viewpoint"]',
-    match: (tags) => Boolean(tags.tourism),
-    name: (tags) => String(tags.tourism || '').trim(),
-  },
-];
+import {
+  OSM_TAG_TO_APP_CATEGORY,
+  osmAppCategoryFromTags,
+  osmProviderCategoryNameFromTags,
+} from './place-search-osm-tag-map.mjs';
 
 function osmFail(message, code) {
   throw new PlaceSearchError(message, code);
@@ -48,8 +20,8 @@ function osmCategoriesForPlaceSearch(categoryFilter = null) {
   if (!wanted.length) {
     osmFail('Place search refused: classifier place category missing.', 'missing_place_category');
   }
-  const filtered = OSM_CATEGORIES.filter((entry) => wanted.includes(entry.category));
-  const unknown = wanted.filter((cat) => !filtered.some((entry) => entry.category === cat));
+  const filtered = OSM_TAG_TO_APP_CATEGORY.filter((entry) => wanted.includes(entry.appCategory));
+  const unknown = wanted.filter((cat) => !filtered.some((entry) => entry.appCategory === cat));
   if (unknown.length) {
     osmFail(`Place search refused: unknown place category ${unknown.join(', ')}.`, 'unknown_place_category');
   }
@@ -59,7 +31,7 @@ function osmCategoriesForPlaceSearch(categoryFilter = null) {
 export function overpassQuery(center, categoryFilter = null) {
   const parts = [];
   for (const entry of osmCategoriesForPlaceSearch(categoryFilter)) {
-    const around = `(around:${categoryRadiusMeters(entry.category)},${center.lat},${center.lng})`;
+    const around = `(around:${categoryRadiusMeters(entry.appCategory)},${center.lat},${center.lng})`;
     parts.push(`node${entry.filter}${around};`, `way${entry.filter}${around};`);
   }
   return `[out:json][timeout:25];(${parts.join('')});out center 40;`;
@@ -70,14 +42,32 @@ function categoryNameField(name) {
   return categoryName ? { categoryName } : {};
 }
 
-function osmCategory(tags = {}) {
-  const found = OSM_CATEGORIES.find((entry) => entry.match(tags));
-  return found ? found.category : '';
+const OSM_POI_ROOT_KEYS = ['amenity', 'shop', 'tourism', 'leisure', 'natural'];
+
+function osmHasBusinessPoiTag(tags = {}) {
+  for (const key of OSM_POI_ROOT_KEYS) {
+    const value = String(tags[key] || '').trim();
+    if (!value) continue;
+    if (key === 'leisure' && value.toLowerCase() === 'slipway') continue;
+    return true;
+  }
+  return false;
 }
 
-function osmCategoryName(tags = {}) {
-  const found = OSM_CATEGORIES.find((entry) => entry.match(tags));
-  return found ? found.name(tags) : '';
+/** Structural gate: only named OSM POIs, not highways, junctions, or generic access features. */
+export function osmPlaceQualifiesForSave(tags = {}) {
+  const title = String(tags.name || '').trim();
+  if (!title) return false;
+  if (String(tags.highway || '').trim()) return false;
+  if (String(tags.junction || '').trim()) return false;
+  if (String(tags.crossing || '').trim()) return false;
+  if (String(tags.leisure || '').trim().toLowerCase() === 'slipway') return false;
+  if (String(tags.bridge || '').trim() && !osmHasBusinessPoiTag(tags)) return false;
+  const entrance = String(tags.entrance || '').trim();
+  if (entrance && !osmHasBusinessPoiTag(tags)) return false;
+  const access = String(tags.access || '').trim();
+  if (access && !osmHasBusinessPoiTag(tags)) return false;
+  return osmHasBusinessPoiTag(tags);
 }
 
 export function placesFromOsmPayload(payload, center, { finite, metersInsideCategory, ratingFromRecord }) {
@@ -85,8 +75,9 @@ export function placesFromOsmPayload(payload, center, { finite, metersInsideCate
   const places = [];
   for (const element of elements) {
     const tags = element?.tags || {};
+    if (!osmPlaceQualifiesForSave(tags)) continue;
     const title = String(tags.name || '').trim();
-    const category = osmCategory(tags);
+    const category = osmAppCategoryFromTags(tags);
     const lat = finite(element?.lat ?? element?.center?.lat);
     const lng = finite(element?.lon ?? element?.center?.lon);
     if (!title || !category || lat === null || lng === null) continue;
@@ -101,8 +92,10 @@ export function placesFromOsmPayload(payload, center, { finite, metersInsideCate
       url: element.type && element.id ? `https://www.openstreetmap.org/${element.type}/${element.id}` : '',
       externalId: element.type && element.id ? `${element.type}/${element.id}` : '',
       ...ratingFromRecord(tags),
-      ...categoryNameField(osmCategoryName(tags)),
+      ...categoryNameField(osmProviderCategoryNameFromTags(tags)),
     });
   }
   return places;
 }
+
+export { OSM_TAG_TO_APP_CATEGORY } from './place-search-osm-tag-map.mjs';
