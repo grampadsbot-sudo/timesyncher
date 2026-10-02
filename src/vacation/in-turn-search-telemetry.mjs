@@ -86,6 +86,7 @@ export function placeSearchTelemetry({
   judgeHttpStatus = null,
   judgeBodySnippet = null,
   providerErrors = null,
+  braveLookups = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -133,6 +134,12 @@ export function placeSearchTelemetry({
       ...(Number.isFinite(Number(row?.httpStatus)) ? { httpStatus: Number(row.httpStatus) } : {}),
       message: String(row?.message || row?.reason || '').trim(),
     })).filter((row) => row.provider && row.message);
+  }
+  if (Array.isArray(braveLookups) && braveLookups.length) {
+    telemetry.braveLookups = braveLookups.slice(0, 10).map((row) => ({
+      query: String(row?.query || '').trim().slice(0, 500),
+      endpoint: String(row?.endpoint || '').trim().slice(0, 40),
+    })).filter((row) => row.query && row.endpoint);
   }
   return telemetry;
 }

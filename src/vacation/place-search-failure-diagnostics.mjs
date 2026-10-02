@@ -23,6 +23,7 @@ export function buildPlaceSearchFailureDiagnostics({
   survivingPriorDbTitles = [],
   dedupeMerges = [],
   providerErrors = [],
+  braveLookups = [],
 } = {}) {
   const lat = finite(center?.lat);
   const lng = finite(center?.lng);
@@ -51,6 +52,11 @@ export function buildPlaceSearchFailureDiagnostics({
     message: String(row?.message || row?.reason || '').trim(),
   })).filter((row) => row.provider && row.message);
   if (errors.length) diagnostics.providerErrors = errors;
+  const lookups = (Array.isArray(braveLookups) ? braveLookups : []).map((row) => ({
+    query: String(row?.query || '').trim().slice(0, 500),
+    endpoint: String(row?.endpoint || '').trim().slice(0, 40),
+  })).filter((row) => row.query && row.endpoint);
+  if (lookups.length) diagnostics.braveLookups = lookups;
   return diagnostics;
 }
 
@@ -68,6 +74,7 @@ export function placeSearchDiagnosticsFromError(error) {
     'judgeHttpStatus',
     'judgeBodySnippet',
     'providerErrors',
+    'braveLookups',
   ]) {
     if (error[key] !== undefined) picked[key] = error[key];
   }

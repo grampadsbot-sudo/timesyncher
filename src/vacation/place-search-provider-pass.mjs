@@ -56,6 +56,18 @@ function everyPlaceResultProviderErrored(providerLog = []) {
 
 const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
 
+function resolveBraveCompactLocality({ searchAnchor, context, relevanceContext, dest }) {
+  const anchor = String(searchAnchor?.text || '').trim();
+  if (anchor) return anchor;
+  const fromContext = String(context?.compactLocality || context?.center?.compactLocality || '').trim();
+  if (fromContext) return fromContext;
+  const fromRelevance = String(relevanceContext?.area || '').trim();
+  if (fromRelevance && !fromRelevance.includes(',')) return fromRelevance;
+  const tripDest = String(dest || '').trim();
+  if (tripDest && !tripDest.includes(',')) return tripDest;
+  return fromRelevance || tripDest;
+}
+
 /** All place-result providers finished without errors and none returned live rows. */
 export function placeSearchProvidersAllEmpty(providerLog = []) {
   const rows = (Array.isArray(providerLog) ? providerLog : [])
@@ -103,6 +115,13 @@ export async function runPlaceProviderPass({
   );
   const center = context.center;
   const locationText = context.locationText || dest;
+  const braveCompactLocality = resolveBraveCompactLocality({
+    searchAnchor,
+    context,
+    relevanceContext,
+    dest,
+  });
+  let braveLookups = [];
   const anchorText = String(searchAnchor?.text || '').trim();
   let anchorGeocode = null;
   if (anchorText) {
@@ -188,13 +207,22 @@ export async function runPlaceProviderPass({
 
   let brave = [];
   try {
-    const found = await queryBrave(fetchImpl, env, { center: queryCenter, locationText }, placeQueries);
+    const found = await queryBrave(fetchImpl, env, {
+      center: queryCenter,
+      locationText,
+      compactLocality: braveCompactLocality,
+    }, placeQueries);
     if (Number(found?.anchorRadiusRejected) > 0) {
       anchorRadiusRejected += Number(found.anchorRadiusRejected);
     }
     brave = dropOutsideAnchorRadius(Array.isArray(found) ? found : (found?.places || []));
     const query = String(found?.query || '').trim();
     const endpoint = String(found?.endpoint || '').trim();
+    if (Array.isArray(found?.braveLookups) && found.braveLookups.length) {
+      braveLookups = found.braveLookups;
+    } else if (query && endpoint) {
+      braveLookups = [{ query, endpoint }];
+    }
     providerLog.push({
       provider: 'brave',
       status: brave.length ? 'ok' : 'empty',
@@ -208,6 +236,7 @@ export async function runPlaceProviderPass({
     const httpStatus = httpStatusFromReason(reason);
     const query = String(error?.braveQuery || '').trim();
     const endpoint = String(error?.braveEndpoint || '').trim();
+    if (query && endpoint) braveLookups = [{ query, endpoint }];
     console.error(`place search provider brave failed: ${reason}`);
     providerLog.push({
       provider: 'brave',
@@ -237,6 +266,7 @@ export async function runPlaceProviderPass({
       survivingPriorDbTitles,
       dedupeMerges,
       ...(providerErrors.length ? { providerErrors } : {}),
+      ...(braveLookups.length ? { braveLookups } : {}),
     });
   };
   let relevance;

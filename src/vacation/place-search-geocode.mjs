@@ -16,12 +16,34 @@ export function providerFailureMessage(providerLog = []) {
     .join('; ');
 }
 
+const NOMINATIM_LOCALITY_KEYS = ['city', 'town', 'village', 'hamlet', 'municipality', 'island'];
+
+function nominatimAddress(hit) {
+  return hit?.address && typeof hit.address === 'object' ? hit.address : null;
+}
+
+function nominatimLocalityName(address) {
+  if (!address) return '';
+  return NOMINATIM_LOCALITY_KEYS
+    .map((key) => String(address[key] || '').trim())
+    .find(Boolean) || '';
+}
+
+export function compactLocalityText(hit, fallback = '') {
+  const address = nominatimAddress(hit);
+  const place = nominatimLocalityName(address);
+  if (place) return place;
+  const state = String(address?.state || address?.region || '').trim();
+  if (state) return state;
+  const fb = String(fallback || '').trim();
+  if (fb && !fb.includes(',')) return fb;
+  return '';
+}
+
 export function resolvedAreaText(hit, fallback = '') {
-  const address = hit?.address && typeof hit.address === 'object' ? hit.address : null;
+  const address = nominatimAddress(hit);
   if (address) {
-    const place = ['city', 'town', 'village', 'hamlet', 'municipality']
-      .map((key) => String(address[key] || '').trim())
-      .find(Boolean) || '';
+    const place = nominatimLocalityName(address);
     const county = String(address.county || '').trim();
     const state = String(address.state || address.region || '').trim();
     const country = String(address.country_code || '').trim().toUpperCase();
@@ -64,7 +86,12 @@ async function geocodeLabel(fetchImpl, label, readJson) {
   const lat = finite(hit?.lat);
   const lng = finite(hit?.lon ?? hit?.lng);
   if (lat === null || lng === null) return null;
-  return { lat, lng, label: resolvedAreaText(hit, label) };
+  return {
+    lat,
+    lng,
+    label: resolvedAreaText(hit, label),
+    compactLocality: compactLocalityText(hit, label),
+  };
 }
 
 export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
@@ -106,12 +133,17 @@ export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, d
     return {
       center: { ...given, geocoded: 'lodging' },
       locationText: lodgingLabel || destinationLabel || given.label || '',
+      compactLocality: compactLocalityText(null, lodgingLabel || destinationLabel || given.label || ''),
     };
   }
   if (lodgingLabel) {
     const found = await tryGeocodeLabel(fetchImpl, lodgingLabel, providerLog, readJson);
     if (found) {
-      return { center: { ...found, geocoded: 'lodging' }, locationText: lodgingLabel };
+      return {
+        center: { ...found, geocoded: 'lodging' },
+        locationText: lodgingLabel,
+        compactLocality: found.compactLocality || compactLocalityText(null, lodgingLabel),
+      };
     }
     console.error(`Nominatim returned no coordinates for lodging "${lodgingLabel}".`);
   }
@@ -122,10 +154,18 @@ export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, d
     const found = await tryGeocodeLabel(fetchImpl, destinationLabel, providerLog, readJson);
     if (found) {
       const locationText = keepAreaText ? destinationLabel : (found.label || destinationLabel);
-      return { center: { ...found, geocoded: 'destination' }, locationText };
+      return {
+        center: { ...found, geocoded: 'destination' },
+        locationText,
+        compactLocality: found.compactLocality || compactLocalityText(null, destinationLabel),
+      };
     }
   }
   const locationText = lodgingLabel || destinationLabel;
   if (!locationText) fail('Place search needs a destination.', 'missing_destination');
-  return { center: null, locationText };
+  return {
+    center: null,
+    locationText,
+    compactLocality: compactLocalityText(null, locationText),
+  };
 }

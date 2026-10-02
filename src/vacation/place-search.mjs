@@ -290,14 +290,15 @@ function braveCallSummary(calls) {
   return { query, endpoint };
 }
 
-export async function queryBravePlaceSearch(fetchImpl, env, { center, locationText }, queries) {
+export async function queryBravePlaceSearch(fetchImpl, env, { center, locationText, compactLocality = '' }, queries) {
   const places = [];
   const calls = [];
   let anchorRadiusRejected = 0;
   const area = String(locationText || center?.label || '').trim();
+  const locality = String(compactLocality || center?.compactLocality || '').trim();
   try {
     for (const item of queries) {
-      const query = braveQueryString(item, area, center);
+      const query = braveQueryString(item, area, center, locality);
       const endpoint = braveEndpoint(center);
       calls.push({ query, endpoint });
       const params = new URLSearchParams({
@@ -359,9 +360,14 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
     throw error;
   }
   const rawResults = calls.flatMap((row) => (Array.isArray(row.rawResults) ? row.rawResults : [])).slice(0, 5);
+  const braveLookups = calls.map((row) => ({
+    query: String(row.query || '').trim(),
+    endpoint: String(row.endpoint || '').trim(),
+  })).filter((row) => row.query && row.endpoint);
   return {
     places,
     rawResults,
+    ...(braveLookups.length ? { braveLookups } : {}),
     ...(anchorRadiusRejected > 0 ? { anchorRadiusRejected } : {}),
     ...braveCallSummary(calls),
   };
@@ -554,6 +560,7 @@ export async function searchPlaces({
       ...(Number(pass.anchorRadiusRejected) > 0 ? { anchorRadiusRejected: pass.anchorRadiusRejected } : {}),
       ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
       ...(Array.isArray(pass.providerErrors) && pass.providerErrors.length ? { providerErrors: pass.providerErrors } : {}),
+      ...(Array.isArray(pass.braveLookups) && pass.braveLookups.length ? { braveLookups: pass.braveLookups } : {}),
     };
     if (pass.status === 'no_results') {
       return {

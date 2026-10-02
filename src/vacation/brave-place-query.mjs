@@ -1,3 +1,6 @@
+import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
+import { intakeThingHasProperName } from './intake-thing-name.mjs';
+
 function finite(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
@@ -7,13 +10,17 @@ export function braveEndpoint(center) {
   return finite(center?.lat) !== null && finite(center?.lng) !== null ? 'local' : 'web';
 }
 
-export function braveQueryString(item, resolvedArea, center) {
+export function braveQueryString(item, resolvedArea, center, compactLocality = '') {
   const target = String(item?.target || '').trim();
   const area = String(resolvedArea || '').trim();
+  const locality = String(compactLocality || '').trim();
   const named = String(item?.q || '').trim();
   const local = braveEndpoint(center) === 'local';
   if (item?.intakeLodgingLookup === true && named) {
     return named.replace(/\s+/g, ' ').trim().slice(0, 500);
+  }
+  if (target && intakeThingHasProperName(target)) {
+    return intakeLodgingLookupQuery(target, locality).slice(0, 500);
   }
   let text = named || target || area;
   if (target && area) text = `${target} near ${area}`;
