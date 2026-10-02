@@ -32,14 +32,23 @@ import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-<<<<<<< HEAD
-import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import {
+  applyLiveAppReplyFailureToPayload,
+  commitShippedRewrite,
+  markWorkerJobLiveHandled,
+  persistVacationAppOutboundReply,
+  storeReplyFailure,
+  vacationAppTurnPayloadForClient,
+} from '../src/vacation/reply-ship.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
-import { classifyTripIntake, intakeActivityThings, intakeLodgingThings, mergeWantedThings, resolveIntakePlace, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
-=======
-import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure, vacationAppTurnPayloadForClient } from '../src/vacation/reply-ship.mjs';
-import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
->>>>>>> bf361a25d8a621069958c5c61898dc0e0ac6e975
+import {
+  classifyTripIntake,
+  intakeActivityThings,
+  intakeLodgingThings,
+  mergeWantedThings,
+  resolveIntakePlace,
+  tripIntakeJobFields,
+} from '../src/vacation/trip-intake-classify.mjs';
 import {
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
