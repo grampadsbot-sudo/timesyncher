@@ -41,7 +41,11 @@ export async function searchIntakeLodgingPlaces({
   let braveQuery = lookupQuery;
   let braveEndpoint = '';
   try {
-    const found = await queryBravePlaceSearch(fetchImpl, providerEnv, { center, locationText }, [{
+    const found = await queryBravePlaceSearch(fetchImpl, providerEnv, {
+      center,
+      locationText,
+      compactLocality: context.compactLocality || area || destinationHint,
+    }, [{
       category: 'hotel',
       q: lookupQuery,
       target: name,

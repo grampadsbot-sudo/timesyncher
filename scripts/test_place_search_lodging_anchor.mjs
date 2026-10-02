@@ -10,6 +10,7 @@ const lodgingClassification = {
   category: 'restaurant',
   anchor: 'our hotel',
   anchorIsLodging: true,
+  targetKind: 'category',
 };
 
 assert.equal(
@@ -100,7 +101,7 @@ assert.equal(ok.status, 'ok');
 
 assert.equal(
   resolvePlaceSearchDestination({
-    classification: { anchorIsLodging: false, anchor: 'Kaanapali Maui' },
+    classification: { anchorIsLodging: false, anchor: 'Kaanapali Maui', targetKind: 'category', category: 'restaurant', target: 'tacos' },
     tripDestination: 'Maui',
     tripResolvedArea: '',
   }),

@@ -170,6 +170,7 @@ const farmersPlan = queriesFromPlaceClassification({
   category: 'market',
   anchor: 'Kihei',
   anchorIsLodging: false,
+  targetKind: 'category',
 }, 'Kihei', '', '', '');
 assert.equal(farmersPlan.queries[0].category, 'market');
 assert.match(farmersPlan.queries[0].q, /Farmers market/i);
@@ -220,6 +221,7 @@ const chatNoResults = await runCustomerChatPlaceSearch({
     category: 'market',
     anchor: 'Kihei',
     anchorIsLodging: false,
+    targetKind: 'category',
   },
   tripDestination: 'Kihei',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
@@ -346,6 +348,7 @@ const anchorSearch = await searchPlaces({
     q: 'cafe near Kihei',
     limit: 5,
     place: true,
+    targetKind: 'category',
     target: 'cafe',
   }],
   relevanceTarget: 'cafe',

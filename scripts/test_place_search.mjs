@@ -85,7 +85,7 @@ function lisbonRoutes(url) {
   }
   if (value.includes('api.search.brave.com/res/v1/local/place_search')) {
     const q = new URL(value).searchParams.get('q') || '';
-    if (q === 'Paper Shop') {
+    if (q === 'Paper Shop' || q === 'Paper Shop, Lisbon') {
       return jsonResponse({
         results: [{
           title: 'Paper Shop',
@@ -94,7 +94,7 @@ function lisbonRoutes(url) {
         }],
       });
     }
-    if (q === 'River Walk') {
+    if (q === 'River Walk' || q === 'River Walk, Lisbon') {
       return jsonResponse({
         results: [{
           title: 'River Walk | Listing',
@@ -104,7 +104,7 @@ function lisbonRoutes(url) {
         }],
       });
     }
-    if (q === 'Louise Cafe') return jsonResponse({ results: [] });
+    if (q === 'Louise Cafe' || q === 'Louise Cafe, Lisbon') return jsonResponse({ results: [] });
     return jsonResponse({ results: [] });
   }
   throw new Error(`unexpected place search request ${value}`);
@@ -344,6 +344,7 @@ assert.doesNotMatch(placeSource, /SEARCH_TARGETS|DEFAULT_QUERIES|wantedSearchQue
 assert.doesNotMatch(placeSource, /DEFAULT_FIRST_PASS_MINIMUMS/);
 assert.match(placeSource, /firstPassSearchLimit/);
 assert.match(placeSource, /queriesFromWantedThings/);
+assert.doesNotMatch(placeSource, /intakeThingHasProperName/);
 assert.match(placeSource, /searchTavily/);
 
 const lodgingEvents = [];
@@ -378,7 +379,10 @@ assert.equal(lodgingEvents.filter((kind) => kind === 'nominatim').length, 1);
 assert.equal(lodgingEvents.includes('brave'), true);
 assert.equal(lodgingSearch.center.geocoded, 'lodging');
 assert.deepEqual(lodgingSearch.queries.map((query) => query.q), ['Poke Harbor', 'North Market', 'River Lantern']);
-assert.equal(lodgingSearch.places.some((place) => place.title === 'Brave Poke Harbor' && place.source === 'brave'), true);
+assert.equal(
+  lodgingSearch.places.some((place) => place.title === 'Brave Poke Harbor, Jockey Club' && place.source === 'brave'),
+  true,
+);
 assert.equal(lodgingSearch.places.length < DEFAULT_FIRST_PASS_MINIMUMS.restaurant, true);
 assert.equal(lodgingSearch.places.some((place) => /huggo|bellagio|catch las vegas/i.test(place.title)), false);
 assert.deepEqual([...new Set(lodgingHosts)].sort(), [
@@ -409,7 +413,11 @@ const emptyLiveSearch = await searchPlaces({
 assert.equal(emptyLiveSearch.outcomeStatus, 'no_results');
 assert.equal(emptyLiveSearch.places.length, 0);
 assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
-assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:Louise Cafe', 'brave:Paper Shop', 'brave:River Walk']);
+assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), [
+  'brave:Louise Cafe, Lisbon',
+  'brave:Paper Shop, Lisbon',
+  'brave:River Walk, Lisbon',
+]);
 assert.deepEqual([...new Set(emptyHosts)].sort(), [
   'api.search.brave.com',
   'nominatim.openstreetmap.org',

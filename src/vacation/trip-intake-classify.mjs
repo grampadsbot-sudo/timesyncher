@@ -11,6 +11,7 @@ import {
   intakePlaceSearchCategoryError,
   normalizePlaceSearchCategory,
 } from './place-search-category-keys.mjs';
+import { intakePlaceSearchTargetKindError, normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
 
 export { intakeThingHasProperName } from './intake-thing-name.mjs';
@@ -28,11 +29,11 @@ export const TRIP_INTAKE_HAS_DATES_PROMPT = 'hasDates is true only when the cust
 
 export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'Classify one customer chat message and extract fields.',
-  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":null}],"inviteeName":string,"inviteeEmail":string,"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
+  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"targetKind":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":null}],"inviteeName":string,"inviteeEmail":string,"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
   'In that JSON, target is the customer specific place wording for their ask (for example tacos, taco spots, or snorkeling); category is separate and only scopes map or OSM place-type filters.',
   `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
   'For place_search, target must be their specific ask in their words (never the category label); anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
-  `For place_search, category is required and must be exactly one of: ${PLACE_SEARCH_CATEGORY_KEYS.join(', ')} (map or OSM place-type scope only; never copy category into target).`,
+  `For place_search, category is required and must be exactly one of: ${PLACE_SEARCH_CATEGORY_KEYS.join(', ')} (map or OSM place-type scope only; never copy category into target). For place_search, targetKind is required named_place or category (named_place for one specific venue; category for a kind of place near the anchor).`,
   'For web_research, question is the research ask in their words; leave target, anchor, category empty and anchorIsLodging false.',
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, category, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
@@ -150,6 +151,7 @@ function parseExtraction(raw) {
     anchor: parsed.anchor,
     anchorIsLodging: parsed.anchorIsLodging === true,
     category: parsed.category,
+    targetKind: parsed.targetKind,
     question: parsed.question ?? parsed.webQuestion,
     things: parsed.things,
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
@@ -322,6 +324,7 @@ export async function classifyTripIntake({
     anchor: '',
     anchorIsLodging: false,
     category: '',
+    targetKind: '',
     question: '',
     things: [],
     roster: [],
@@ -342,6 +345,7 @@ export async function classifyTripIntake({
       anchor: '',
       anchorIsLodging: false,
       category: '',
+      targetKind: '',
       question: '',
       things: [],
       roster: [],
@@ -380,6 +384,8 @@ export async function classifyTripIntake({
     const extractedFields = parseExtraction(chatText(extracted));
     const categoryError = intakePlaceSearchCategoryError(extractedFields);
     if (categoryError) return failed(categoryError);
+    const targetKindError = intakePlaceSearchTargetKindError(extractedFields);
+    if (targetKindError) return failed(targetKindError);
     const turnKind = extractedFields.turnKind;
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);
@@ -395,6 +401,7 @@ export async function classifyTripIntake({
       anchor: clean(extractedFields.anchor, 180),
       anchorIsLodging: extractedFields.anchorIsLodging === true,
       category: normalizePlaceSearchCategory(extractedFields.category),
+      targetKind: normalizePlaceSearchTargetKind(extractedFields.targetKind),
       question: clean(extractedFields.question, 600),
       intake,
       things,

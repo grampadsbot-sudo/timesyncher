@@ -137,6 +137,15 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
       limit 1
     `;
     if (prior[0]?.token) {
+      await db`
+        update vacation_collaborator_invites
+        set status = 'accepted',
+          accepted_at = coalesce(accepted_at, now()),
+          paid_at = coalesce(paid_at, now()),
+          updated_at = now()
+        where id = ${invite.id}
+          and status in ('pending_payment', 'paid')
+      `;
       const priorSeat = seatFromSession(prior[0]);
       return {
         token: prior[0].token,
