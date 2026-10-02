@@ -161,7 +161,7 @@ for (const category of CATEGORIES) {
 
 const hotelBrave = brave.find((call) => new URL(call.url).searchParams.get('q') === 'hotel');
 assert.equal(new URL(hotelBrave.url).searchParams.get('radius'), String(hotelRadius));
-assert.equal(found.places.some((place) => place.title === 'prior-in-hotel'), true);
+assert.equal(found.places.some((place) => place.title === 'prior-in-hotel'), false);
 assert.equal(found.places.some((place) => place.title === 'prior-out-hotel'), false);
 assert.equal(found.places.some((place) => place.title === 'brave-in-hotel'), true);
 assert.equal(found.places.some((place) => place.title === 'brave-out-hotel'), false);
@@ -171,7 +171,7 @@ assert.equal(calls.some((call) => /(?:radius=20000|around:20000)/.test(call.url 
 const keptPrior = selectPriorPlaces(priorRows, CENTER);
 assert.deepEqual(
   keptPrior.map((place) => place.title).sort(),
-  [...CATEGORIES.map((category) => `prior-in-${category}`), 'prior-in-hotel'].sort(),
+  CATEGORIES.map((category) => `prior-in-${category}`).sort(),
 );
 
 console.log('place category radius tests passed');

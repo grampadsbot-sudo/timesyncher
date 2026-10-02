@@ -22,6 +22,7 @@ const ZIP_LOCATION_TEXT = 'Kaanapali, Maui County, Hawaii, 96761, United States'
 
 function relevanceScoreForName(name) {
   const lower = String(name || '').toLowerCase();
+  if (lower.includes('saved maui grill')) return 3.9;
   if (lower.includes('taco borracho') || lower.includes('whalers village')) return 3.9;
   if (STAGING_HOTEL_BRAVE_REJECTIONS.some((row) => row.title.toLowerCase() === lower)) return 0.4;
   return 2.0;
@@ -113,7 +114,9 @@ await assert.rejects(
       if (href.includes(OPENROUTER_HOST) && href.includes('decisions')) {
         const raw = options.body ? JSON.parse(String(options.body)) : {};
         soleSourceAreas.push(raw.state?.searchArea);
-        return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 0.1 } } }) };
+        const name = String(raw.state?.name || '');
+        const score = name === 'Only Prior Row' ? 3.9 : 0.1;
+        return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score } } }) };
       }
       return mockFetch({ relevanceAreas: soleSourceAreas, braveResults: KAANAPALI_ON_TARGET_BRAVE })(url, options);
     },

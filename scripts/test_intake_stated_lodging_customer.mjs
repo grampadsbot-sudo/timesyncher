@@ -9,7 +9,10 @@ const OTHER_TRIP_HOTEL = 'Hyatt Regency Maui Resort & Spa';
 function mockTripDb(tripId) {
   const tripThings = [];
   const db = async (strings, ...values) => {
-    const sql = String(strings[0] || '');
+    const sql = strings.join(' ');
+    if (/select\s+id,\s*title,\s*location/i.test(sql) && /from trip_things/i.test(sql)) {
+      return [];
+    }
     if (sql.includes('insert into trip_things')) {
       const categoryIndex = values.findIndex((value) => value === 'hotel');
       const title = categoryIndex >= 0 ? values[categoryIndex + 2] : values[4];
@@ -42,10 +45,10 @@ assert.match(missOutcome.saved[0].title, /Kihei Kai Nani/i);
 assert.equal(missOutcome.saved[0].category, 'hotel');
 assert.equal(tripThings.filter((row) => /Hyatt/i.test(row.title)).length, 0);
 
-const foreignRows = [{
+const foreignActivityRows = [{
   id: 'foreign-1',
-  title: OTHER_TRIP_HOTEL,
-  category: 'hotel',
+  title: 'Whalers Village',
+  category: 'activity',
   location: { lat: 20.92, lng: -156.69, address: 'Kaanapali' },
   source: 'prior_db',
 }];
@@ -53,10 +56,28 @@ const priorLeak = await readPriorPlaces(
   { lat: 20.92, lng: -156.69 },
   {
     env: { DATABASE_URL: 'postgres://test' },
-    query: async () => foreignRows,
+    tripId: 'trip-other',
+    query: async () => foreignActivityRows,
   },
 );
 assert.equal(priorLeak.length, 1);
-assert.match(priorLeak[0].title, /Hyatt/i);
+assert.match(priorLeak[0].title, /Whalers/i);
+
+const hotelPriorRows = [{
+  id: 'foreign-hotel',
+  title: OTHER_TRIP_HOTEL,
+  category: 'hotel',
+  location: { lat: 20.92, lng: -156.69, address: 'Kaanapali' },
+  source: 'prior_db',
+}];
+const hotelPrior = await readPriorPlaces(
+  { lat: 20.92, lng: -156.69 },
+  {
+    env: { DATABASE_URL: 'postgres://test' },
+    tripId: 'trip-other',
+    query: async () => hotelPriorRows,
+  },
+);
+assert.equal(hotelPrior.length, 0);
 
 console.log('test_intake_stated_lodging_customer: ok');

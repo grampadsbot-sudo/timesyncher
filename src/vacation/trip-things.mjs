@@ -1,3 +1,5 @@
+import { samePlace } from './place-search-same-place.mjs';
+
 const PLACE_SOURCES = new Set(['prior_db', 'osm', 'brave', 'tavily']);
 
 export class TripThingInsertError extends Error {
@@ -36,9 +38,34 @@ export function tripThingRow(thing) {
   };
 }
 
+function locationPoint(location = {}) {
+  const lat = Number(location?.lat);
+  const lng = Number(location?.lng);
+  return {
+    lat: Number.isFinite(lat) ? lat : null,
+    lng: Number.isFinite(lng) ? lng : null,
+  };
+}
+
 export async function insertTripThing(db, { tripId, requestId, thing }) {
   const item = tripThingRow(thing);
   if (!item) return null;
+  const normalizedTripId = String(tripId || '').trim();
+  if (normalizedTripId && item.source) {
+    const existingRows = await db`
+      select id, title, location
+      from trip_things
+      where trip_id = ${normalizedTripId}::uuid
+        and source in ('prior_db', 'osm', 'brave', 'tavily')
+    `;
+    const candidate = { title: item.title, ...locationPoint(item.location) };
+    for (const row of existingRows) {
+      const loc = row?.location && typeof row.location === 'object' ? row.location : {};
+      if (samePlace(candidate, { title: row.title, ...locationPoint(loc) })) {
+        return { ...item, source: item.source, id: String(row.id), deduped: true };
+      }
+    }
+  }
   const rows = await db`
     insert into trip_things (
       trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,

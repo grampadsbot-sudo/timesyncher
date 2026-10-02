@@ -31,7 +31,9 @@ try {
         return { ok: true, json: async () => ({ results: KAANAPALI_ON_TARGET_BRAVE }) };
       }
       if (href.includes(OPENROUTER_HOST)) {
-        return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 0.1 } } }) };
+        const raw = options.body ? JSON.parse(String(options.body)) : {};
+        const score = String(raw.state?.name || '') === 'Prior Saved Grill' ? 3.9 : 0.1;
+        return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score } } }) };
       }
       throw new Error(`unexpected ${href}`);
     },

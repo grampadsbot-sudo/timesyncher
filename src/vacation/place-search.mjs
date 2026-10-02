@@ -4,7 +4,8 @@ import {
   braveEndpoint,
   bravePoint,
   braveQueryString,
-  braveResultRows,
+  braveLocalPlaceResult,
+  bravePlaceSearchRows,
   braveTitle,
 } from './brave-place-query.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
@@ -299,15 +300,14 @@ async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
           headers: { 'X-Subscription-Token': String(env.brave).trim() },
         },
       );
-      for (const result of braveResultRows(payload)) {
+      for (const result of bravePlaceSearchRows(payload, endpoint)) {
+        if (!braveLocalPlaceResult(result)) continue;
         const point = bravePoint(result);
         const title = braveTitle(result?.title || result?.name);
         const address = braveAddress(result);
         const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
-        const hasPoint = point.lat !== null && point.lng !== null;
         if (!title) continue;
-        if (hasPoint && center && metersInsideCategory(center, point, item.category) === null) continue;
-        if (!hasPoint && !address && !String(result?.url || '').trim()) continue;
+        if (center && metersInsideCategory(center, point, item.category) === null) continue;
         places.push({
           source: 'brave',
           title,
@@ -340,6 +340,7 @@ export function selectPriorPlaces(rows = [], center) {
     const lng = finite(location.lng ?? location.longitude ?? row?.lng);
     const category = PRIOR_CATEGORIES.get(String(row?.category || '').toLowerCase()) || '';
     const title = String(row?.title || '').trim();
+    if (category === 'hotel') continue;
     if (!title || !category || lat === null || lng === null) continue;
     const meters = metersInsideCategory(center, { lat, lng }, category);
     if (meters === null) continue;
@@ -360,23 +361,26 @@ export function selectPriorPlaces(rows = [], center) {
   return places.slice(0, 40).map(({ meters, ...place }) => place);
 }
 
-async function queryPriorRows(env) {
+async function queryPriorRows(env, tripId) {
   const databaseUrl = env.DATABASE_URL || env.NEON_DATABASE_URL || '';
   if (!databaseUrl) return [];
+  const id = String(tripId || '').trim();
+  if (!id) fail('Place search prior_db refused: trip id is required.', 'missing_trip_id');
   const { sql } = await import('./db.mjs');
   const db = sql(env);
   return db`
     select id, title, category, location, source
     from trip_things
-    where source in ('prior_db', 'osm', 'brave')
+    where trip_id = ${id}::uuid
+      and source in ('prior_db', 'osm', 'brave')
     order by updated_at desc
     limit 400
   `;
 }
 
-export async function readPriorPlaces(center, { env = process.env, query } = {}) {
+export async function readPriorPlaces(center, { env = process.env, tripId, query } = {}) {
   if (finite(center?.lat) === null || finite(center?.lng) === null) return [];
-  const rows = query ? await query(center) : await queryPriorRows(env);
+  const rows = query ? await query(center) : await queryPriorRows(env, tripId);
   return selectPriorPlaces(Array.isArray(rows) ? rows : [], center);
 }
 
@@ -429,6 +433,7 @@ export async function searchPlaces({
   relevanceArea = '',
   searchAnchor = null,
   keepAreaText = false,
+  tripId = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
   priorPlaces,
@@ -489,6 +494,7 @@ export async function searchPlaces({
       osmCategoryFilter,
       searchAnchor,
       relevanceContext: { target: placeTarget, area: placeArea },
+      tripId,
       priorPlaces,
       loadPriorPlaces,
       readPriorPlaces,

@@ -80,7 +80,7 @@ export async function runCustomerChatPlaceSearch({
   tripStatedLodgingArea = '',
   lodging = '',
   lodgingPoint = null,
-  tripId = null,
+  tripId = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
