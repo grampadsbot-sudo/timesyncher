@@ -156,7 +156,7 @@ function db(strings, ...values) {
       direction: 'outbound',
       sent_at: new Date().toISOString(),
     });
-    return [];
+    return [{ id: `turn-${state.turns.length}` }];
   }
   if (/from transcript_turns/i.test(text)) return state.turns.map((turn) => ({ ...turn }));
   if (/from customers/i.test(text) && /first_name/i.test(text)) {

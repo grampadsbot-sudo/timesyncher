@@ -83,6 +83,35 @@ export async function loadCollaboratorInviteByToken(db, token, env = process.env
   return rows[0] || null;
 }
 
+function cleanInviteLookup(value, max = 180) {
+  return String(value || '').trim().slice(0, max);
+}
+
+export async function loadCollaboratorInviteForWebAccessGrant(db, grant) {
+  if (!grant) return null;
+  const metadata = grant.metadata && typeof grant.metadata === 'object' ? grant.metadata : {};
+  const directId = cleanInviteLookup(metadata.collaboratorInviteId, 80);
+  if (directId) return loadCollaboratorInviteForEmail(db, directId);
+  const tripId = cleanInviteLookup(grant.trip_id, 80);
+  const email = cleanInviteLookup(grant.email, 180).toLowerCase();
+  if (!tripId || !email || !email.includes('@')) return null;
+  const rows = await db`
+    select
+      i.*,
+      c.email as owner_email,
+      c.display_name as owner_display_name,
+      t.title as trip_title
+    from vacation_collaborator_invites i
+    join customers c on c.id = i.owner_customer_id
+    left join trips t on t.id = i.trip_id
+    where i.trip_id = ${tripId}
+      and lower(coalesce(i.metadata->>'email', '')) = ${email}
+    order by i.created_at desc
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
 export async function loadCollaboratorInviteForEmail(db, inviteId) {
   if (!inviteId) return null;
   const rows = await db`

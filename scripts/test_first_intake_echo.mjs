@@ -133,7 +133,7 @@ const ownerVoice = {
 };
 const collab = { viewerId: collabId, customerName: 'Nico Hale', seat: { displayName: 'Nico Hale' } };
 const ownerSeenByCollab = turnAuthorLabel(ownerVoice, collab, people);
-assert.equal(ownerSeenByCollab.label, 'Ada');
+assert.equal(ownerSeenByCollab.label, 'Ada Lovelace');
 assert.equal(ownerSeenByCollab.reason, '');
 const ownTurn = turnAuthorLabel({ speaker: 'customer', direction: 'inbound', authorId: collabId, authorName: 'Nico Hale' }, collab, people);
 assert.equal(ownTurn.label, 'You');
