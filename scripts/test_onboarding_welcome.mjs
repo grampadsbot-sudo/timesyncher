@@ -111,42 +111,46 @@ try {
 
   const trip = { id: 'trip-1', publicUrl: tripSiteUrl, title: tripTitle, shareToken: 'intake-trip1slug' };
   const stored = [];
+  const welcomeClaims = new Set();
+  const claimKey = (sessionId, welcomeFor, tripId) => `${sessionId}|${welcomeFor}|${tripId ?? ''}`;
   const db = async (strings, ...values) => {
     const query = strings.join(' ');
+    if (/insert into vacation_onboarding_welcomes/i.test(query)) {
+      const sessionId = values[0];
+      const welcomeFor = values[1];
+      const tripId = values[2];
+      const key = claimKey(sessionId, welcomeFor, tripId);
+      if (welcomeClaims.has(key)) return [];
+      welcomeClaims.add(key);
+      return [{ id: 'welcome-claim-1' }];
+    }
     if (/insert into transcript_turns/i.test(query)) {
       const payload = values.find((value) => value && typeof value === 'object' && value.liveTranscript);
       stored.push(payload);
-      return [];
+      return [{ id: `turn-${stored.length}` }];
     }
     if (/from customers/i.test(query)) {
       return [{ first_name: ownerFirstName, display_name: ownerFirstName }];
-    }
-    if (/select 1/i.test(query)) {
-      const tripId = values[1];
-      if (query.includes("payload->>'welcomeAudience' = 'collaborator'")) {
-        const welcomeFor = values[2];
-        const found = stored.some((row) => row.selectedTripId === tripId && row.welcomeAudience === 'collaborator' && row.welcomeFor === welcomeFor);
-        return found ? [1] : [];
-      }
-      const found = stored.some((row) => row.selectedTripId === tripId && row.welcomeAudience === 'owner');
-      return found ? [1] : [];
     }
     throw new Error(`unexpected query ${query}`);
   };
 
   await ensureOnboardingOpener(db, {
+    id: 'owner-session-1',
     customer_id: 'owner-customer',
     first_name: firstName,
     display_name: firstName,
     metadata: {},
   }, trip, stubs);
   await ensureOnboardingOpener(db, {
+    id: 'owner-session-1',
     customer_id: 'owner-customer',
     first_name: firstName,
     display_name: firstName,
     metadata: {},
   }, trip, stubs);
   await ensureOnboardingOpener(db, {
+    id: 'collab-session-1',
     customer_id: 'collab-customer',
     first_name: collabFirstName,
     display_name: collabFirstName,
@@ -175,6 +179,7 @@ try {
   const storedBeforeMiss = stored.length;
   await assert.rejects(
     () => ensureOnboardingOpener(db, {
+      id: 'owner-session-2',
       customer_id: 'owner-customer-2',
       first_name: ' ',
       display_name: '',
