@@ -6,6 +6,8 @@ const inviteJs = await readFile(new URL('../public/vacation-app-collaborator-inv
 const sendBlock = vacationApp.slice(vacationApp.indexOf('async function sendMessage'), vacationApp.indexOf('function filePayload'));
 
 assert.match(inviteJs, /tsVacationAppRequest/);
+assert.match(vacationApp, /tsVacationAppRequest missing/);
+assert.doesNotMatch(vacationApp, /tsVacationAppRequest \|\| \{\}/);
 assert.match(inviteJs, /customerSafeErrorMessage/);
 assert.match(sendBlock, /showComposerStatus/);
 assert.match(sendBlock, /failAppRequest/);
