@@ -10,7 +10,7 @@ import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs
 import { intakeExtractedThings, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
-import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
+import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -288,7 +288,12 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
 
   let produced;
   try {
-    const loadOwnerPlan = async (opts) => loadSessionOwnerReplyPlan({ ...opts, db });
+    const loadOwnerPlan = async (opts) => loadOwnerReplyPlanForTurn({
+      session: opts?.session ?? session,
+      tripId: opts?.tripId,
+      env: opts?.env ?? env,
+      db,
+    });
     if (!tripId) {
       const rules = await loadVacationAppReplyRules(env);
       produced = await produceNoTripStarterReply({
