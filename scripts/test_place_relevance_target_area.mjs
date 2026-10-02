@@ -20,9 +20,15 @@ import {
   TAVILY_DUMMY,
   TAVILY_HOST,
 } from './fixtures/place-intent-brave-fallback-fixtures.mjs';
+import { braveAddress } from '../src/vacation/brave-place-query.mjs';
+import { resolvedAreaText } from '../src/vacation/place-search-geocode.mjs';
 import {
+  KAANAPALI_GEOCODE,
   KAANAPALI_OFF_TARGET_BRAVE,
+  KAANAPALI_ON_TARGET_BRAVE,
   KAANAPALI_TACO_BRAVE_RESULTS,
+  LODGING_LOCALITY,
+  STAGING_HOTEL_BRAVE_REJECTIONS,
 } from './fixtures/place-relevance-kaanapali-brave.mjs';
 
 async function runPlaceRelevanceTargetAreaTests() {
@@ -87,6 +93,7 @@ async function runPlaceRelevanceTargetAreaTests() {
       metadata: {},
     },
     nominatimMode: 'ok',
+    omitLodging: false,
     osmMode: 'empty',
     braveMode: 'kaanapali',
     classifierMode: 'ok',
@@ -169,11 +176,17 @@ async function runPlaceRelevanceTargetAreaTests() {
       return [];
     }
     if (/from trip_things/i.test(text) && /category = 'hotel'/i.test(text)) {
+      if (state.omitLodging) return [];
       return [{
         title: 'Hyatt Regency Maui',
         category: 'hotel',
-        description: 'Kaanapali, Maui',
-        location: { lat: 20.92, lng: -156.69, address: 'Hyatt Regency Maui, Kaanapali, Maui' },
+        description: LODGING_LOCALITY,
+        location: {
+          lat: 20.92,
+          lng: -156.69,
+          address: 'Hyatt Regency Maui, Kaanapali, Maui',
+          locality: LODGING_LOCALITY,
+        },
       }];
     }
     if (/from trip_things/i.test(text)) return [];
@@ -219,7 +232,8 @@ async function runPlaceRelevanceTargetAreaTests() {
       return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 0.2 } } }) };
     }
     const name = String(jevState?.name || '').toLowerCase();
-    const score = name.includes('home depot') ? 0.5 : 3.8;
+    const offTarget = STAGING_HOTEL_BRAVE_REJECTIONS.some((row) => row.title.toLowerCase() === name);
+    const score = offTarget ? 0.5 : 3.8;
     return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score } } }) };
   }
 
@@ -230,7 +244,7 @@ async function runPlaceRelevanceTargetAreaTests() {
       if (state.nominatimMode === 'fail') {
         return { ok: false, status: 503, json: async () => ({}), text: async () => 'fail' };
       }
-      return { ok: true, json: async () => [{ lat: '20.92', lon: '-156.69', display_name: 'Kaanapali, Maui' }] };
+      return { ok: true, json: async () => [KAANAPALI_GEOCODE] };
     }
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
@@ -309,26 +323,66 @@ async function runPlaceRelevanceTargetAreaTests() {
   try {
     state.braveMode = 'kaanapali';
     state.relevanceRejectAll = false;
+    const resolvedArea = resolvedAreaText(KAANAPALI_GEOCODE, 'Kaanapali Maui');
+    assert.equal(resolvedArea, 'Kaanapali, Maui County, Hawaii, US');
     const kaanapali = await postTurn('recommend taco spots near Kaanapali Maui');
     assert.equal(kaanapali.status, 201, JSON.stringify(kaanapali.body));
-    assert.ok(state.tripThings.length >= 4);
+    assert.ok(state.tripThings.length >= 1);
     assert.ok(state.tripThings.every((row) => row.source === 'brave'));
-    const savedIds = state.tripThings.map((row) => row.metadata?.sourceRef?.id).sort();
-    assert.ok(savedIds.includes('brave-jj-tacos-whalers'));
-    assert.ok(savedIds.includes('brave-taco-zone'));
-    assert.ok(!savedIds.includes('brave-home-depot-lahaina'));
+    const savedIds = state.tripThings.map((row) => row.metadata?.sourceRef?.id);
+    assert.ok(savedIds.includes(KAANAPALI_ON_TARGET_BRAVE[0].id));
+    assert.ok(!savedIds.includes(KAANAPALI_OFF_TARGET_BRAVE.id));
     const kaanapaliPayload = state.turnPayloads.at(-1);
     assert.equal(kaanapaliPayload.placeSearch?.status, 'ok');
+    const kaanapaliBrave = kaanapaliPayload.placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(kaanapaliBrave.endpoint, 'local');
+    assert.match(kaanapaliBrave.query, /tacos/);
+    assert.match(kaanapaliBrave.query, new RegExp(resolvedArea.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.doesNotMatch(kaanapaliBrave.query, /near Kaanapali Maui$/);
+    const kaanapaliUrl = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
+    assert.equal(new URL(kaanapaliUrl).searchParams.get('q'), kaanapaliBrave.query);
     const rejections = kaanapaliPayload.placeSearch?.relevanceRejections || [];
-    assert.ok(rejections.some((row) => /home depot/i.test(row.title)), JSON.stringify(rejections));
+    for (const candidate of STAGING_HOTEL_BRAVE_REJECTIONS) {
+      const row = rejections.find((item) => item.title === candidate.title);
+      assert.ok(row, JSON.stringify(rejections));
+      assert.equal(row.address, candidate.address);
+    }
 
     const hotel = await postTurn('best tacos near our hotel');
     assert.equal(hotel.status, 201, JSON.stringify(hotel.body));
-    assert.ok(state.tripThings.length >= 4);
+    assert.ok(state.tripThings.length >= 1);
     assert.ok(state.tripThings.every((row) => row.source === 'brave'));
-    const hotelCall = state.relevanceCalls.find((row) => String(row.searchArea || '').toLowerCase().includes('hyatt')
-      || String(row.searchArea || '').toLowerCase().includes('kaanapali'));
+    const hotelPayload = state.turnPayloads.at(-1);
+    const hotelBrave = hotelPayload.placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(hotelBrave.endpoint, 'local');
+    assert.match(hotelBrave.query, new RegExp(`tacos near ${LODGING_LOCALITY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    assert.doesNotMatch(hotelBrave.query, /our hotel/i);
+    const hotelUrl = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
+    assert.equal(new URL(hotelUrl).searchParams.get('q'), hotelBrave.query);
+    const hotelCall = state.relevanceCalls.find((row) => String(row.searchArea || '').includes(LODGING_LOCALITY));
     assert.ok(hotelCall, JSON.stringify(state.relevanceCalls[0]));
+
+    assert.equal(braveAddress({ description: 'A page snippet, not a street address.', url: 'https://example.com/snippet' }), '');
+    state.omitLodging = true;
+    const savedDestination = state.trip.destination;
+    state.trip.destination = 'Kaanapali, Maui';
+    const noLodging = await postTurn('best tacos near our hotel');
+    assert.equal(noLodging.status, 201, JSON.stringify(noLodging.body));
+    const noLodgingBrave = state.turnPayloads.at(-1).placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(noLodgingBrave.query, 'tacos near Kaanapali, Maui');
+    assert.equal(noLodgingBrave.endpoint, 'local');
+    assert.doesNotMatch(noLodgingBrave.query, /our hotel/i);
+    const nominatimUrls = state.fetchCalls.filter((href) => href.includes(NOMINATIM_HOST));
+    assert.ok(nominatimUrls.length > 0);
+    for (const href of nominatimUrls) {
+      const q = new URL(href).searchParams.get('q') || '';
+      assert.equal(q, 'Kaanapali, Maui');
+      assert.doesNotMatch(q, /our hotel/i);
+    }
+    assert.ok(state.relevanceCalls.length > 0);
+    assert.ok(state.relevanceCalls.every((row) => row.searchArea === 'Kaanapali, Maui'), JSON.stringify(state.relevanceCalls[0]));
+    state.omitLodging = false;
+    state.trip.destination = savedDestination;
 
     state.relevanceJudgeMode = 'http_400';
     state.relevanceRejectAll = false;

@@ -16,6 +16,22 @@ export function providerFailureMessage(providerLog = []) {
     .join('; ');
 }
 
+export function resolvedAreaText(hit, fallback = '') {
+  const address = hit?.address && typeof hit.address === 'object' ? hit.address : null;
+  if (address) {
+    const place = ['city', 'town', 'village', 'hamlet', 'municipality']
+      .map((key) => String(address[key] || '').trim())
+      .find(Boolean) || '';
+    const county = String(address.county || '').trim();
+    const state = String(address.state || address.region || '').trim();
+    const country = String(address.country_code || '').trim().toUpperCase();
+    const parts = [place, county, state, country].filter((part, index, all) => part && all.indexOf(part) === index);
+    if (parts.length) return parts.join(', ');
+  }
+  const display = String(hit?.display_name || '').trim();
+  return display || String(fallback || '').trim();
+}
+
 async function geocodeLabel(fetchImpl, label, readJson) {
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(label)}`;
   const payload = await readJson(fetchImpl, url, { label: 'Nominatim geocode' });
@@ -23,7 +39,7 @@ async function geocodeLabel(fetchImpl, label, readJson) {
   const lat = finite(hit?.lat);
   const lng = finite(hit?.lon ?? hit?.lng);
   if (lat === null || lng === null) return null;
-  return { lat, lng, label: String(hit.display_name || label) };
+  return { lat, lng, label: resolvedAreaText(hit, label) };
 }
 
 async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
@@ -56,7 +72,7 @@ async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
   }
 }
 
-export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, destination }, providerLog, readJson, fail) {
+export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, destination, keepAreaText = false }, providerLog, readJson, fail) {
   const given = pointFrom(lodgingPoint);
   const lodgingLabel = String(lodging || '').trim();
   const destinationLabel = String(destination || '').trim();
@@ -80,7 +96,8 @@ export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, d
   if (destinationLabel) {
     const found = await tryGeocodeLabel(fetchImpl, destinationLabel, providerLog, readJson);
     if (found) {
-      return { center: { ...found, geocoded: 'destination' }, locationText: destinationLabel };
+      const locationText = keepAreaText ? destinationLabel : (found.label || destinationLabel);
+      return { center: { ...found, geocoded: 'destination' }, locationText };
     }
   }
   const locationText = lodgingLabel || destinationLabel;

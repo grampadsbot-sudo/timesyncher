@@ -39,6 +39,7 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
   }
   const searchTarget = String(target || poi.target || '').trim();
   const searchArea = String(area || poi.area || '').trim();
+  const description = String(poi.description || '').trim();
   const payload = {
     model: 'typesafe/jev-1.13',
     state: {
@@ -48,6 +49,7 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
       url: poi.url,
       category: poi.category,
       address: String(poi.address || '').trim(),
+      ...(description ? { description } : {}),
       searchTarget,
       searchArea,
     },

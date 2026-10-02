@@ -6,6 +6,7 @@ export async function runPlaceProviderPass({
   dest,
   lodging,
   lodgingPoint,
+  keepAreaText = false,
   placeQueries,
   relevanceContext,
   priorPlaces,
@@ -23,7 +24,7 @@ export async function runPlaceProviderPass({
   const providerLog = [];
   const context = await resolveSearchContext(
     fetchImpl,
-    { lodging, lodgingPoint, destination: dest },
+    { lodging, lodgingPoint, destination: dest, keepAreaText },
     providerLog,
     readJson,
     fail,
@@ -81,26 +82,35 @@ export async function runPlaceProviderPass({
 
   let brave = [];
   try {
-    brave = await queryBrave(fetchImpl, env, { center, locationText }, placeQueries);
+    const found = await queryBrave(fetchImpl, env, { center, locationText }, placeQueries);
+    brave = Array.isArray(found) ? found : (found?.places || []);
+    const query = String(found?.query || '').trim();
+    const endpoint = String(found?.endpoint || '').trim();
     providerLog.push({
       provider: 'brave',
       status: brave.length ? 'ok' : 'empty',
       ...(brave.length ? {} : { reason: 'no_results' }),
       resultCount: brave.length,
+      ...(query ? { query } : {}),
+      ...(endpoint ? { endpoint } : {}),
     });
   } catch (error) {
+    const query = String(error?.braveQuery || '').trim();
+    const endpoint = String(error?.braveEndpoint || '').trim();
     providerLog.push({
       provider: 'brave',
       status: 'error',
       reason: String(error?.message || error || 'brave failed').trim(),
       resultCount: 0,
+      ...(query ? { query } : {}),
+      ...(endpoint ? { endpoint } : {}),
     });
   }
 
   const merged = mergePlaces([prior, osm, brave]);
   const relevance = await attachRelevance(merged, fetchImpl, env, {
     ...(relevanceContext || {}),
-    area: relevanceContext?.area || locationText || dest,
+    area: locationText || relevanceContext?.area || dest,
     locationText,
   });
   const places = relevance.places;

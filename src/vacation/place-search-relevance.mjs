@@ -24,6 +24,7 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
       url: row.url || '',
       category: row.category,
       address: row.address || '',
+      description: row.description || '',
     }, { fetchImpl, apiKey, target, area });
     if (Number(jevScore) >= minimum) {
       scored.push({ ...row, jevScore: Number(jevScore) });
