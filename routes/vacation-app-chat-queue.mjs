@@ -323,6 +323,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         extractedTitle: jobFields.title,
         destinationError: jobFields.destinationError,
         titleError: jobFields.titleError,
+        hasDates: jobFields.hasDates,
         loadOwnerPlan,
       });
     }
