@@ -1,4 +1,5 @@
 import { categoryRadiusMeters, POI_RADIUS_METERS, THIN_POI_COUNT } from './keepsake-list-minimums.mjs';
+import { buildProviderEnv } from './provider-env.mjs';
 
 export { POI_RADIUS_METERS, THIN_POI_COUNT };
 
@@ -152,17 +153,12 @@ export class TavilySearchError extends Error {
   }
 }
 
-function envKeyBySuffix(env, suffix) {
-  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
-  return hit ? String(hit[1] || '').trim() : '';
-}
-
 function braveSubscriptionKey(env = process.env) {
-  return String(env?.brave || envKeyBySuffix(env, 'E_SEARCH_API_KEY') || '').trim();
+  return String(buildProviderEnv(env).brave || '').trim();
 }
 
 export function tavilyApiKey(env = process.env) {
-  return String(env?.tavily || env?.TAVILI_API_KEY || envKeyBySuffix(env, 'ILI_API_KEY') || '').trim();
+  return String(buildProviderEnv(env).tavily || '').trim();
 }
 
 function requireTavilyApiKey(apiKey) {

@@ -11,6 +11,7 @@ scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
 scripts/test_restaurant_list_tags.mjs
 scripts/test_product_gaps_staging.mjs
+scripts/test_provider_env.mjs
 scripts/test_keepsake_style2.mjs
 scripts/test_real_app_entry.mjs
 scripts/test_check_hardcoded_content.mjs
@@ -33,6 +34,7 @@ scripts/test_screenshot_journey_pdf.mjs
 scripts/test_timeline_icons.mjs
 scripts/test_travel_base_required.mjs
 scripts/test_vacation_app_shell.mjs
+scripts/test_vacation_app_provider_env_route.mjs
 scripts/test_eula_render_markdown.mjs
 scripts/test_eula_accept_onboarding.mjs
 scripts/test_eula_collaborator_name.mjs

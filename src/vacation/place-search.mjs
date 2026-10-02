@@ -1,6 +1,7 @@
 import { categoryRadiusMeters, firstPassSearchLimit, jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
+import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
 const DEDUPE_METERS = 250;
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
@@ -192,11 +193,7 @@ export function mergePlaces(groups = []) {
   return kept;
 }
 
-export function missingSearchKeys(env = {}) {
-  const missing = [];
-  if (!String(env.brave || '').trim()) missing.push(String(env.braveName || 'brave'));
-  return missing;
-}
+export { missingSearchKeys } from './provider-env.mjs';
 
 function countSources(places) {
   const counts = { prior_db: 0, osm: 0, brave: 0 };
@@ -561,13 +558,9 @@ function priorRowsFromInput(priorPlaces) {
   });
 }
 
-function tavilyKeyFrom(env = {}) {
-  return String(env.tavily || env.TAVILI_API_KEY || '').trim();
-}
-
 async function queryTavily(fetchImpl, env, queries) {
   const notes = [];
-  const key = tavilyKeyFrom(env);
+  const key = String(env.tavily || '').trim();
   for (const item of queries) {
     const found = await searchTavily(item.q, { apiKey: key, env, fetchImpl });
     for (const result of found.results) {
@@ -598,6 +591,7 @@ export async function searchPlaces({
   priorPlaces,
   loadPriorPlaces,
 } = {}) {
+  env = buildProviderEnv(env);
   const started = Date.now();
   const dest = String(destination || '').trim();
   const searchQueries = Array.isArray(queries) && queries.length ? queries : queriesFromWantedThings(wantedThings);
@@ -620,7 +614,7 @@ export async function searchPlaces({
     const missing = missingSearchKeys(env);
     if (missing.length) fail(`Place search refused to run. Missing ${missing.join(', ')}.`, 'missing_key');
   }
-  if (infoQueries.length && !tavilyKeyFrom(env)) {
+  if (infoQueries.length && !String(env.tavily || '').trim()) {
     fail(`Search refused to run. Missing ${String(env.tavilyName || 'TAVILI_API_KEY')}.`, 'missing_key');
   }
   let center = null;

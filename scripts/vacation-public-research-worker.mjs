@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { fillTripIntake, lodgingFromChat } from '../src/vacation/place-search.mjs';
+import { buildProviderEnv } from '../src/vacation/provider-env.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit } from '../src/vacation/keepsake-list-minimums.mjs';
 
 export { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit };
@@ -370,16 +371,7 @@ export async function runPublicResearch(input = {}) {
     lodging: stay.text,
     lodgingPoint: origin || undefined,
     wantedThings,
-    env: {
-      brave: sourceEnv.brave || sourceEnv.BRAVE_SEARCH_API_KEY || '',
-      tavily: sourceEnv.tavily || sourceEnv.TAVILI_API_KEY || '',
-      OPENROUTER_API_KEY: sourceEnv.OPENROUTER_API_KEY || '',
-      JEV_RELEVANCE_MINIMUM: sourceEnv.JEV_RELEVANCE_MINIMUM,
-      braveName: 'BRAVE_SEARCH_API_KEY',
-      tavilyName: 'TAVILI_API_KEY',
-      DATABASE_URL: sourceEnv.DATABASE_URL || '',
-      NEON_DATABASE_URL: sourceEnv.NEON_DATABASE_URL || '',
-    },
+    env: buildProviderEnv(sourceEnv),
     fetchImpl: input.fetchImpl,
     priorPlaces: input.priorPlaces,
     loadPriorPlaces: input.loadPriorPlaces,

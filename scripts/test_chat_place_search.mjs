@@ -33,7 +33,7 @@ assert.doesNotMatch(liveSource, /THAT_ID/);
 assert.match(sourcedPlaceRule(), /Results/);
 assert.match(routeSource, /classifyVacationAppCustomerTurn/);
 assert.match(routeSource, /intakeExtractedThings\(placeSearchTurn/);
-assert.match(routeSource, /applyChatPlaceSearchForVacationTurn/);
+assert.match(routeSource, /runVacationAppInTurnSearch/);
 assert.match(routeSource, /workerJobId:\s*jobRows\[0\]\.id/);
 assert.match(chatPlaceSearchSource, /placeSearchHandledInTurn:\s*true/);
 assert.match(routeSource, /placeSearchTurn,/);

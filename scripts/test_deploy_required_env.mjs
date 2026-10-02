@@ -24,10 +24,14 @@ function requiredBeforeFetch() {
     const config = text.match(/CHECKOUT_PRICE_CONFIG\s*=\s*\[([\s\S]*?)\]/);
     if (config) for (const match of config[1].matchAll(/['"]([A-Z0-9_]*COLLABORATOR[A-Z0-9_]*)['"]/g)) names.add(match[1]);
     for (const match of text.matchAll(new RegExp(String.raw`requiredConfigCents\(\s*(?:env\??|process\.env)\.([A-Z0-9_]*COLLABORATOR[A-Z0-9_]*)\s*,\s*['"]\1['"]`, 'g'))) names.add(match[1]);
-    const search = /(?:^|\/)(?:place-search|poi-search|db)\.mjs$/.test(rel)
+    const search = /(?:^|\/)(?:place-search|poi-search|provider-env|db)\.mjs$/.test(rel)
       || rel.endsWith('vacation-public-research-worker.mjs')
       || /fillTripIntake|searchPlaces|searchTavily|api\.tavily\.com|api\.search\.brave\.com/.test(text);
     if (!search) continue;
+    if (rel.endsWith('provider-env.mjs')) {
+      if (/\['BRAVE',\s*'SEARCH',\s*'API',\s*'KEY'\]/.test(text)) names.add('BRAVE_SEARCH_API_KEY');
+      if (/\['TAVILI',\s*'API',\s*'KEY'\]/.test(text)) names.add('TAVILI_API_KEY');
+    }
     for (const match of text.matchAll(THROW)) {
       const hit = match.slice(1).filter(Boolean);
       if (match[0].includes(' or ')) { names.add(hit[0]); alias.add(hit[1]); }
