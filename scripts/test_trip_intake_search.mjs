@@ -131,6 +131,7 @@ const research = await runPublicResearch({
     if (value.includes('api.search.brave.com/res/v1/local/place_search')) {
       const url = new URL(value);
       const q = url.searchParams.get('q') || 'Example Place';
+      if (q === 'River Lantern') return jsonResponse({ results: [] });
       return jsonResponse({
         results: [{
           title: q,
