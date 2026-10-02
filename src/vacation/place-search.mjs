@@ -1,6 +1,7 @@
-import { categoryRadiusMeters, firstPassSearchLimit, jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
+import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
-import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
+import { searchTavily } from './poi-search.mjs';
+import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
@@ -35,10 +36,13 @@ export class PlaceSearchError extends Error {
   }
 }
 
-function fail(message, code, providers) {
+function fail(message, code, providers, relevanceRejections = null) {
   console.error(message);
   const error = new PlaceSearchError(message, code);
   if (Array.isArray(providers) && providers.length) error.providers = providers;
+  if (Array.isArray(relevanceRejections) && relevanceRejections.length) {
+    error.relevanceRejections = relevanceRejections.slice(0, 10);
+  }
   throw error;
 }
 
@@ -279,21 +283,8 @@ function requireOpenRouterKey(env) {
   return apiKey;
 }
 
-async function attachRelevance(rows, fetchImpl, env) {
-  const apiKey = requireOpenRouterKey(env);
-  const minimum = jevRelevanceMinimum(env);
-  const scored = [];
-  for (const row of rows) {
-    const jevScore = await jevRelevanceScore({
-      id: row.externalId || row.url || row.title,
-      name: row.title,
-      url: row.url || '',
-      category: row.category,
-    }, { fetchImpl, apiKey });
-    if (!(Number(jevScore) >= minimum)) continue;
-    scored.push({ ...row, jevScore });
-  }
-  return scored;
+async function attachRelevance(rows, fetchImpl, env, relevanceContext = {}) {
+  return attachPlaceRelevance(rows, fetchImpl, env, relevanceContext, { requireOpenRouterKey });
 }
 
 const OSM_CATEGORIES = [
@@ -561,6 +552,8 @@ export async function searchPlaces({
   lodgingPoint,
   wantedThings = [],
   queries,
+  relevanceTarget = '',
+  relevanceArea = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
   priorPlaces,
@@ -596,7 +589,10 @@ export async function searchPlaces({
   let center = null;
   let places = [];
   let providerLog = [];
+  let relevanceRejections = [];
   let locationText = dest;
+  const placeTarget = String(relevanceTarget || '').trim() || String(placeQueries[0]?.target || '').trim();
+  const placeArea = String(relevanceArea || '').trim() || dest;
   if (placeQueries.length) {
     const pass = await runPlaceProviderPass({
       fetchImpl,
@@ -605,6 +601,7 @@ export async function searchPlaces({
       lodging,
       lodgingPoint,
       placeQueries,
+      relevanceContext: { target: placeTarget, area: placeArea },
       priorPlaces,
       loadPriorPlaces,
       readPriorPlaces,
@@ -621,8 +618,12 @@ export async function searchPlaces({
     locationText = pass.locationText || dest;
     places = pass.places;
     providerLog = pass.providerLog;
+    relevanceRejections = pass.relevanceRejections || [];
   }
-  const notes = infoQueries.length ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env) : [];
+  const noteRelevance = infoQueries.length
+    ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })
+    : { places: [], rejections: [] };
+  const notes = noteRelevance.places;
   return {
     destination: dest || center?.label || locationText || '',
     center,
@@ -631,6 +632,7 @@ export async function searchPlaces({
     queries: searchQueries,
     queried: infoQueries.length ? [...SOURCE_IDS, 'tavily'] : [...SOURCE_IDS],
     providers: providerLog,
+    relevanceRejections,
     elapsedMs: Date.now() - started,
     sourceCounts: countSources(places),
   };

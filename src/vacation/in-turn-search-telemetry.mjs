@@ -68,6 +68,7 @@ export function placeSearchTelemetry({
   turnKind = null,
   classifierModel = null,
   reason = null,
+  relevanceRejections = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -82,5 +83,8 @@ export function placeSearchTelemetry({
   if (reason) telemetry.reason = String(reason).trim();
   if (turnKind) telemetry.turnKind = String(turnKind).trim();
   if (classifierModel) telemetry.classifierModel = String(classifierModel).trim();
+  if (Array.isArray(relevanceRejections) && relevanceRejections.length) {
+    telemetry.relevanceRejections = relevanceRejections.slice(0, 10);
+  }
   return telemetry;
 }

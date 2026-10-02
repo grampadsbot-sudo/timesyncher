@@ -312,8 +312,18 @@ export async function searchPois({
   return { pois: [...database, ...brave], cache: 'miss', brave: brave.length > 0 };
 }
 
-export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '' } = {}) {
-  if (!apiKey || !fetchImpl) return 0;
+const JEV_PLACE_RELEVANCE_CRITERIA = [
+  '1 not a specific place or completely wrong kind for the target',
+  '2 poor fit for the target or clearly outside the search area',
+  '3 borderline fit',
+  '4 good fit for the target in the search area',
+  '5 excellent specific place for the target in the search area',
+];
+
+export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', target = '', area = '' } = {}) {
+  if (!apiKey || !fetchImpl) return null;
+  const searchTarget = String(target || poi.target || '').trim();
+  const searchArea = String(area || poi.area || '').trim();
   const response = await fetchImpl('https://openrouter.ai/api/alpha/decisions', {
     method: 'POST',
     headers: {
@@ -324,26 +334,42 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '' } 
     },
     body: JSON.stringify({
       model: 'typesafe/jev-1.13',
-      state: { channel: 'vacation-search', poiId: poi.id, name: poi.name, url: poi.url, category: poi.category },
+      state: {
+        channel: 'vacation-search',
+        poiId: poi.id,
+        name: poi.name,
+        url: poi.url,
+        category: poi.category,
+        address: String(poi.address || '').trim(),
+        searchTarget,
+        searchArea,
+      },
       questions: {
         relevance: {
           type: 'score',
-          instructions: 'Score this web result as a specific place for the trip. 1 is not a place. 5 is a specific place that matches the category.',
-          criteria: { 1: 'Not a specific place.', 5: 'A specific place that matches the category.' },
+          instructions: [
+            'Score whether this candidate is a specific place that fits the search target and search area.',
+            'searchTarget is the cuisine, category, or kind of place the traveler asked for (for example tacos or Mexican).',
+            'searchArea is the neighborhood, town, or anchor they named (for example their hotel area or Kaanapali).',
+            'Use address and coordinates context when present. If coordinates are missing, judge by locality text in the address.',
+            'Never require the place name to contain the target words literally.',
+            'Criterion 1 is irrelevant or not a place. Criterion 5 is an excellent match for the target in the area.',
+          ].join(' '),
+          criteria: JEV_PLACE_RELEVANCE_CRITERIA,
         },
       },
     }),
   });
-  if (!response?.ok) return 0;
+  if (!response?.ok) return null;
   const body = await response.json();
   const answer = body?.answers?.relevance || {};
   const choice = Number(answer.choice ?? answer.value);
   if (Number.isInteger(choice) && choice >= 1 && choice <= 5) return choice;
   const raw = Number(answer.score);
-  if (!Number.isFinite(raw)) return 0;
-  if (Number.isInteger(raw) && raw >= 0 && raw <= 4) return raw + 1;
-  if (raw >= 1 && raw <= 5) return raw;
-  return 0;
+  if (!Number.isFinite(raw)) return null;
+  if (raw < 1) return raw + 1;
+  if (raw <= 5) return raw;
+  return null;
 }
 
 export async function scoreWebPoisInParallel(pois, scoreOne, { concurrency = 20 } = {}) {

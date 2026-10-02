@@ -38,6 +38,7 @@ function queriesFromPlaceClassification(classification, tripDestination = '', lo
       q,
       limit: 5,
       place: true,
+      ...(target ? { target } : {}),
     }],
   };
 }
@@ -145,6 +146,8 @@ export async function runCustomerChatPlaceSearch({
       lodging,
       lodgingPoint,
       queries: plan.queries,
+      relevanceTarget: clean(classification?.target, 240),
+      relevanceArea: plan.destination,
       env: providerEnv,
       fetchImpl,
     });
@@ -162,6 +165,9 @@ export async function runCustomerChatPlaceSearch({
     console.error(`customer chat place search failed: ${message}`);
     const search = {
       providers: Array.isArray(error?.providers) ? error.providers : [],
+      ...(Array.isArray(error?.relevanceRejections) && error.relevanceRejections.length
+        ? { relevanceRejections: error.relevanceRejections }
+        : {}),
       ...(String(error?.code || '').trim() === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
     };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
@@ -215,6 +221,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       status: 'failed',
       error: chatSearch.error,
       reason: chatSearch.search?.reason || null,
+      relevanceRejections: chatSearch.search?.relevanceRejections || null,
       things: [],
       providerAttempts,
       ...classifierMeta,
@@ -238,6 +245,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     status: 'ok',
     things: chatSearch.things,
     providerAttempts,
+    relevanceRejections: chatSearch.search?.relevanceRejections?.length ? chatSearch.search.relevanceRejections : null,
     ...classifierMeta,
   });
   payload.placeSearch = placeSearch;

@@ -695,7 +695,7 @@
   {
     "file": "src/vacation/poi-search.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "poi-relevance 2e0405a419be 97894bf8cbe8",
+    "symbol_or_pattern": "poi-relevance 86dbe4e1a56e 97894bf8cbe8",
     "inventory_id": "b10ba9e3",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
