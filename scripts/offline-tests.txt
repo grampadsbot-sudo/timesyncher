@@ -69,6 +69,8 @@ scripts/test_place_relevance_target_area.mjs
 scripts/test_place_relevance_check6_lodging_thing.mjs
 scripts/test_place_search_failure_diagnostics.mjs
 scripts/test_place_search_partial_provider_error.mjs
+scripts/test_turn_stage_timings.mjs
+scripts/test_saved_thing_turn_ids.mjs
 scripts/test_place_search_named_place_brave_query.mjs
 scripts/test_place_search_target_kind_classifier.mjs
 scripts/test_place_search_dedupe_provenance.mjs
