@@ -18,7 +18,7 @@ function inferSearchCategory(text = '') {
 }
 
 function placeSearchDestinationFromClassification(classification, tripDestination = '', lodgingText = '') {
-  if (classification?.anchorIsLodging === true && lodgingText) return lodgingText;
+  if (classification?.anchorIsLodging === true) return lodgingText || clean(tripDestination, 180);
   const anchor = clean(classification?.anchor, 180);
   if (anchor) return anchor;
   return clean(tripDestination, 180);
@@ -143,8 +143,8 @@ export async function runCustomerChatPlaceSearch({
   try {
     const search = await searchImpl({
       destination: plan.destination,
-      lodging,
-      lodgingPoint,
+      lodging: classification?.anchorIsLodging === true ? lodging : '',
+      lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
       queries: plan.queries,
       relevanceTarget: clean(classification?.target, 240),
       relevanceArea: plan.destination,

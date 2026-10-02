@@ -225,7 +225,7 @@ async function runPlaceIntentRouteTests() {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST) && href.includes('local')) {
+    if (href.includes(BRAVE_HOST) && (href.includes('local') || href.includes('/web/search'))) {
       assert.equal(options.headers['X-Subscription-Token'], BRAVE_DUMMY);
       if (state.braveMode === 'fail') {
         return { ok: false, status: 503, json: async () => ({}), text: async () => 'fail' };
@@ -340,8 +340,12 @@ async function runPlaceIntentRouteTests() {
     const braveCall = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
     assert.ok(braveCall, 'Brave local search should run for best tacos near our hotel');
     const braveQ = new URL(braveCall).searchParams.get('q') || '';
-    assert.match(braveQ, /Ka La Resort|Kaanapali/i);
+    assert.match(braveQ, /tacos near Kaanapali, Maui/);
+    assert.doesNotMatch(braveQ, /our hotel/i);
     const bestPayload = state.turnPayloads.at(-1);
+    const bestBrave = bestPayload.placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(bestBrave.endpoint, 'local');
+    assert.equal(bestBrave.query, braveQ);
     assert.equal(bestPayload.placeSearch?.status, 'ok');
     assert.equal(Array.isArray(bestPayload.placeSearch?.providers), true);
     assert.ok(bestPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'ok'));
@@ -351,9 +355,12 @@ async function runPlaceIntentRouteTests() {
     state.braveMode = 'ok';
     const findNearHotel = await postTurn('Find family-friendly taco spots near our hotel in Kaanapali');
     assert.notEqual(findNearHotel.status, 502, JSON.stringify(findNearHotel.body));
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), true);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
     const findPayload = state.turnPayloads.at(-1);
     assert.equal(findPayload.placeSearch?.status, 'ok');
+    const findBrave = findPayload.placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(findBrave.endpoint, 'web');
+    assert.match(findBrave.query, /tacos near Kaanapali, Maui/);
     const nominatimRow = findPayload.placeSearch.providers.find((row) => row.provider === 'nominatim');
     assert.ok(nominatimRow && (nominatimRow.status === 'error' || nominatimRow.status === 'skipped' || nominatimRow.status === 'empty'));
     assert.ok(findPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'ok'));
@@ -363,9 +370,12 @@ async function runPlaceIntentRouteTests() {
     state.braveMode = 'ok';
     const recommend = await postTurn('recommend taco spots near Kaanapali Maui');
     assert.notEqual(recommend.status, 502, JSON.stringify(recommend.body));
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), true);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
     const recommendPayload = state.turnPayloads.at(-1);
     assert.equal(recommendPayload.placeSearch?.status, 'ok');
+    const recommendBrave = recommendPayload.placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(recommendBrave.endpoint, 'web');
+    assert.match(recommendBrave.query, /tacos near Kaanapali Maui/);
     assert.equal(Array.isArray(recommendPayload.placeSearch.providers), true);
     assert.ok(recommendPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'ok'));
 

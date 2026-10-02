@@ -1,3 +1,12 @@
+import {
+  braveAddress,
+  braveCategoryName,
+  braveEndpoint,
+  bravePoint,
+  braveQueryString,
+  braveResultRows,
+  braveTitle,
+} from './brave-place-query.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import { searchTavily } from './poi-search.mjs';
@@ -176,7 +185,9 @@ export function mergePlaces(groups = []) {
       const lng = finite(place?.lng);
       const title = String(place?.title || '').trim();
       const category = PRIOR_CATEGORIES.get(String(place?.category || '').toLowerCase()) || '';
-      if (!title || !category || !SOURCE_IDS.has(place?.source) || lat === null || lng === null) continue;
+      const hasPoint = lat !== null && lng !== null;
+      if (!title || !category || !SOURCE_IDS.has(place?.source)) continue;
+      if (!hasPoint && !String(place.address || place.url || '').trim()) continue;
       const next = {
         source: place.source,
         title,
@@ -373,85 +384,68 @@ async function queryOsm(fetchImpl, center) {
   return places;
 }
 
-function bravePoint(result) {
-  const coords = result?.coordinates;
-  if (Array.isArray(coords) && !Array.isArray(coords[0]) && coords.length >= 2) {
-    return { lat: finite(coords[0]), lng: finite(coords[1]) };
-  }
-  if (Array.isArray(coords?.[0]) && coords[0].length >= 2) {
-    return { lat: finite(coords[0][0]), lng: finite(coords[0][1]) };
-  }
-  return { lat: finite(result?.latitude), lng: finite(result?.longitude) };
-}
-
-function braveAddress(result) {
-  if (typeof result?.address === 'string' && result.address.trim()) return result.address.trim();
-  const postal = result?.postal_address || {};
-  return [postal.streetAddress, postal.addressLocality, postal.addressRegion, postal.postalCode].filter(Boolean).join(', ');
-}
-
-function braveCategoryName(result) {
-  const direct = result?.category;
-  if (typeof direct === 'string' && direct.trim()) return direct.trim();
-  if (direct && typeof direct === 'object') {
-    const name = String(direct.name || direct.label || '').trim();
-    if (name) return name;
-  }
-  const categories = Array.isArray(result?.categories) ? result.categories : [];
-  return categories.map((item) => String(item?.name || item || '').trim()).find(Boolean) || '';
-}
-
-function braveTitle(value) {
-  const raw = String(value || '').trim();
-  const cut = raw.split(/\s+[|]\s+/)[0].trim();
-  return cut || raw;
+function braveCallSummary(calls) {
+  const query = calls.map((row) => row.query).filter(Boolean).join(' | ');
+  const endpoint = [...new Set(calls.map((row) => row.endpoint).filter(Boolean))].join(' | ');
+  return { query, endpoint };
 }
 
 async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
   const places = [];
-  for (const item of queries) {
-    const anchorText = String(locationText || center?.label || '').trim();
-    const q = center
-      ? String(item.q || '').trim()
-      : [String(item.q || '').trim(), anchorText ? `near ${anchorText}` : ''].filter(Boolean).join(' ').trim();
-    const params = new URLSearchParams({
-      q: q.slice(0, 500),
-      count: String(item.limit || searchLimit(item.category)),
-    });
-    if (center) {
-      params.set('latitude', String(center.lat));
-      params.set('longitude', String(center.lng));
-      params.set('radius', String(categoryRadiusMeters(item.category)));
-    }
-    const payload = await readJson(
-      fetchImpl,
-      `https://api.search.brave.com/res/v1/local/place_search?${params}`,
-      {
-        label: 'Brave Place Search',
-        headers: { 'X-Subscription-Token': String(env.brave).trim() },
-      },
-    );
-    const results = Array.isArray(payload?.results) ? payload.results : [];
-    for (const result of results) {
-      const point = bravePoint(result);
-      const title = braveTitle(result?.title || result?.name);
-      if (!title || point.lat === null || point.lng === null) continue;
-      if (center && metersInsideCategory(center, point, item.category) === null) continue;
-      places.push({
-        source: 'brave',
-        title,
-        category: item.category,
-        lat: point.lat,
-        lng: point.lng,
-        address: braveAddress(result),
-        url: String(result?.url || ''),
-        externalId: String(result?.id || result?.url || ''),
-        ...ratingFromRecord(result),
-        ...categoryNameField(braveCategoryName(result)),
+  const calls = [];
+  const area = String(locationText || center?.label || '').trim();
+  try {
+    for (const item of queries) {
+      const query = braveQueryString(item, area, center);
+      const endpoint = braveEndpoint(center);
+      calls.push({ query, endpoint });
+      const params = new URLSearchParams({
+        q: query,
+        count: String(item.limit || searchLimit(item.category)),
       });
+      if (endpoint === 'local') {
+        params.set('latitude', String(center.lat));
+        params.set('longitude', String(center.lng));
+        params.set('radius', String(categoryRadiusMeters(item.category)));
+      }
+      const path = endpoint === 'local' ? 'local/place_search' : 'web/search';
+      const payload = await readJson(
+        fetchImpl,
+        `https://api.search.brave.com/res/v1/${path}?${params}`,
+        {
+          label: 'Brave Place Search',
+          headers: { 'X-Subscription-Token': String(env.brave).trim() },
+        },
+      );
+      for (const result of braveResultRows(payload)) {
+        const point = bravePoint(result);
+        const title = braveTitle(result?.title || result?.name);
+        const address = braveAddress(result);
+        const hasPoint = point.lat !== null && point.lng !== null;
+        if (!title) continue;
+        if (hasPoint && center && metersInsideCategory(center, point, item.category) === null) continue;
+        if (!hasPoint && !address && !String(result?.url || '').trim()) continue;
+        places.push({
+          source: 'brave',
+          title,
+          category: item.category,
+          lat: point.lat,
+          lng: point.lng,
+          address,
+          url: String(result?.url || ''),
+          externalId: String(result?.id || result?.url || ''),
+          ...ratingFromRecord(result),
+          ...categoryNameField(braveCategoryName(result)),
+        });
+      }
     }
+  } catch (error) {
+    const summary = braveCallSummary(calls);
+    error.braveQuery = summary.query;
+    error.braveEndpoint = summary.endpoint;
+    throw error;
   }
-  return places;
+  return { places, ...braveCallSummary(calls) };
 }
 
 export function selectPriorPlaces(rows = [], center) {
