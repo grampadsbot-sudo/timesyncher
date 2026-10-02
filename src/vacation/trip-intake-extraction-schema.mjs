@@ -1,3 +1,5 @@
+import { tripIntakePlaceSearchCategorySchemaEnum } from './place-search-category-keys.mjs';
+
 const TURN_KIND_TRIP_INTAKE = ['trip', 'intake'].join('_');
 
 export function tripIntakeExtractionJsonSchema() {
@@ -21,7 +23,7 @@ export function tripIntakeExtractionJsonSchema() {
           target: { type: 'string' },
           anchor: { type: 'string' },
           anchorIsLodging: { type: 'boolean' },
-          category: { type: 'string' },
+          category: { type: 'string', enum: tripIntakePlaceSearchCategorySchemaEnum() },
           targetKind: { type: 'string', enum: ['named_place', 'category', ''] },
           question: { type: 'string' },
           things: {

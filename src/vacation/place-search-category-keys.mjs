@@ -10,6 +10,11 @@ export const PLACE_SEARCH_CATEGORY_KEYS = Object.freeze([
 
 const KEY_SET = new Set(PLACE_SEARCH_CATEGORY_KEYS);
 
+/** JSON-schema enum for trip intake extraction (`''` only for non-place_search turns). */
+export function tripIntakePlaceSearchCategorySchemaEnum() {
+  return [...PLACE_SEARCH_CATEGORY_KEYS, ''];
+}
+
 export function normalizePlaceSearchCategory(value) {
   const category = String(value || '').trim().toLowerCase();
   return KEY_SET.has(category) ? category : '';
