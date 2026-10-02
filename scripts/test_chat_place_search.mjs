@@ -18,6 +18,7 @@ const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', im
 const liveSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const chatPlaceSearchSource = fs.readFileSync(new URL('../src/vacation/chat-place-search.mjs', import.meta.url), 'utf8');
+const chatPlaceWhenSource = fs.readFileSync(new URL('../src/vacation/chat-place-search-when.mjs', import.meta.url), 'utf8');
 
 assert.doesNotMatch(rulesSource, /THAT_ID/);
 assert.doesNotMatch(liveSource, /THAT_ID/);
@@ -26,7 +27,7 @@ assert.match(routeSource, /classifyVacationAppCustomerTurn/);
 assert.match(routeSource, /intakeExtractedThings\(placeSearchTurn/);
 assert.match(routeSource, /runVacationAppInTurnSearch/);
 assert.match(routeSource, /workerJobId:\s*jobRows\[0\]\.id/);
-assert.match(chatPlaceSearchSource, /placeSearchHandledInTurn:\s*true/);
+assert.match(chatPlaceWhenSource, /placeSearchHandledInTurn:\s*true/);
 assert.match(routeSource, /placeSearchTurn,/);
 
 const SCT_QUERIES = [
@@ -109,6 +110,12 @@ function mockDb() {
     const sql = strings.join(' ');
     if (/select\s+id,\s*title,\s*location/i.test(sql) && /from trip_things/i.test(sql)) {
       return [];
+    }
+    if (/select\s+start_date,\s*end_date/i.test(sql) && /from trips/i.test(sql)) {
+      return [{ start_date: '2026-03-07', end_date: '2026-03-13' }];
+    }
+    if (/select\s+destination,\s*metadata/i.test(sql) && /from trips/i.test(sql)) {
+      return [{ destination: 'Seattle', metadata: {} }];
     }
     if (sql.includes('insert into trip_things')) {
       inserts.push(values);
