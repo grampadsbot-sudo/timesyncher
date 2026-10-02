@@ -3,7 +3,7 @@ import { buildProviderEnv } from './provider-env.mjs';
 import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.mjs';
-import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail } from './place-search-anchor.mjs';
+import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail, resolvePlaceSearchRelevanceArea } from './place-search-anchor.mjs';
 import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
 import {
   inTurnPlaceSearchSoftNoResults,
@@ -20,6 +20,7 @@ import {
   syncWorkerJobAfterInTurnPlaceSearch,
 } from './chat-place-search-outcomes.mjs';
 import { insertStampedChatPlaceThings, workerInputAfterInTurnPlaceSearch } from './chat-place-search-when.mjs';
+import { maybePersistFirstIntakeLodging } from './intake-lodging-queue-persist.mjs';
 import { persistTripDestinationCenter } from './trip-destination-center.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -118,7 +119,13 @@ export async function runCustomerChatPlaceSearch({
       keepAreaText: classification?.anchorIsLodging === true && !lodging,
       queries: plan.queries,
       relevanceTarget: clean(classification?.target, 240),
-      relevanceArea: plan.destination,
+      relevanceArea: resolvePlaceSearchRelevanceArea({
+        classification,
+        lodgingText: lodging,
+        tripStatedLodgingArea,
+        tripDestination,
+        tripResolvedArea,
+      }) || plan.destination,
       searchAnchor,
       env: providerEnv,
       fetchImpl,
@@ -194,6 +201,7 @@ export async function applyChatPlaceSearchForVacationTurn({
   const providerAttempts = Array.isArray(chatSearch.search?.providers) ? chatSearch.search.providers : [];
   const classifierMeta = {
     turnKind: classification?.turnKind || 'place_search',
+    targetKind: classification?.targetKind || null,
     classifierModel: classification?.routerModel || null,
   };
   if (chatSearch.status === 'no_results') {
@@ -397,9 +405,22 @@ export async function runVacationAppInTurnSearch({
   searchImpl = searchPlaces,
 } = {}) {
   stampTurnClassifier(payload, customerLive, classification);
+  if (classification?.ok === true && workerJobContext?.firstIntake && tripId && !workerJobContext?.seat) {
+    await maybePersistFirstIntakeLodging({
+      db,
+      tripId,
+      firstIntake: true,
+      classificationOk: true,
+      seat: null,
+      wantedThings: workerJobContext.jobFields?.wantedThings || [],
+      customerTurnId: turnId,
+      extractedDestination: workerJobContext.jobFields?.destination || '',
+      env,
+    });
+  }
   if (classification?.ok !== true) {
     const reason = String(classification?.error || 'trip intake classification failed').trim();
-    const failedTelemetry = turnClassifierFailedTelemetry(reason);
+    const failedTelemetry = turnClassifierFailedTelemetry(reason, classification);
     payload.placeSearch = failedTelemetry;
     payload.webSearch = failedTelemetry;
     customerLive.placeSearch = failedTelemetry;

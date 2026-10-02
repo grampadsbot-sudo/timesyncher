@@ -34,7 +34,6 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   if (!text && attachments.length === 0) {
     throw Object.assign(new Error('Message text or an attachment is required.'), { statusCode: 400 });
   }
-
   const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
   const modality = customerModality(body);
   const seat = seatFromSession(session);
@@ -112,8 +111,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     };
   });
   const classification = intake.classification;
-  const placeSearchTurn = intake.placeSearchTurn;
-  const webResearchTurn = intake.webResearchTurn;
+  const placeSearchTurn = intake.placeSearchTurn, webResearchTurn = intake.webResearchTurn;
   if (!classification) throw new Error('vacation app queue intake classification is required');
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = tripIntakeJobKind();
@@ -244,7 +242,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       env,
       publishShare: hooks.publishIntakeShare,
       workerJobId: jobRows[0].id,
-      workerJobContext: placeSearchTurn ? {
+      workerJobContext: (placeSearchTurn || (firstIntake && tripId)) ? {
         customerId: transcriptOwnerId,
         tripId,
         requestId,
@@ -252,6 +250,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         requestText,
         payload,
         jobFields,
+        firstIntake,
+        seat,
       } : null,
       placeSearchTurn,
       webResearchTurn,
