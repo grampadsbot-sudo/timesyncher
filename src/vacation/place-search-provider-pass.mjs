@@ -15,7 +15,7 @@ export async function runPlaceProviderPass({
   tripId,
   priorPlaces,
   loadPriorPlaces,
-  readPriorPlaces,
+  readPriorPlaces = null,
   selectPriorPlaces,
   priorRowsFromInput,
   queryOsm,
@@ -40,7 +40,8 @@ export async function runPlaceProviderPass({
   if (center) {
     if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), center);
     else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
-    else prior = await readPriorPlaces(center, { env, tripId });
+    else if (readPriorPlaces) prior = await readPriorPlaces(center, { env, tripId });
+    else prior = [];
     prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
     providerLog.push({
       provider: 'prior_db',

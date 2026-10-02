@@ -59,12 +59,52 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
+const WEEKDAY_INDEX = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+};
+
+function weekdayDates(label, tripDates) {
+  const found = [];
+  const re = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/gi;
+  for (const match of String(label || '').matchAll(re)) {
+    const target = WEEKDAY_INDEX[String(match[1] || '').toLowerCase()];
+    if (target === undefined) continue;
+    for (const date of tripDates) {
+      const day = new Date(`${date}T12:00:00.000Z`).getUTCDay();
+      if (day === target) found.push(date);
+    }
+  }
+  return [...new Set(found)];
+}
+
 export function assignDates(thing, year, tripDates) {
   const whenText = [thing.customerWhen, thing.whenLabel].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
   if (!whenText) return [];
   const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
-  const unique = [...new Set(named)].filter((date) => tripDates.includes(date));
+  const weekdays = weekdayDates(whenText, tripDates);
+  const unique = [...new Set([...named, ...weekdays])].filter((date) => tripDates.includes(date));
   return unique;
+}
+
+function thingMetadata(thing = {}) {
+  return thing.metadata && typeof thing.metadata === 'object' && !Array.isArray(thing.metadata) ? thing.metadata : {};
+}
+
+export function customerStatedLodgingThing(thing = {}) {
+  const category = String(thing.category || '').toLowerCase();
+  if (category !== 'hotel' && category !== 'lodging' && category !== 'accommodation') return true;
+  const meta = thingMetadata(thing);
+  if (meta.customerStatedLodging === true) return true;
+  const source = String(meta.source || thing.source || '').toLowerCase();
+  if (source === 'customer_stated' || source === 'customer') return true;
+  if (meta.intakeSource === 'chat_extraction') return true;
+  return false;
 }
 
 function flightLikeLabel(record = {}) {
@@ -195,41 +235,15 @@ function recordInputKind(record = {}) {
   return transportKind(record);
 }
 
-function flightAirlineMissing(record = {}) {
-  const blob = [
-    record?.name,
-    record?.title,
-    record?.description,
-    ...(Array.isArray(record?.notes) ? record.notes : []),
-  ].map((part) => String(part || '')).join(' ');
-  if (!blob.trim()) return true;
-  if (/\bairline\b/i.test(blob)) return false;
-  if (/\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(blob)) return false;
-  return !/\b(?:united|delta|american|southwest|alaska|hawaiian|jetblue|frontier|spirit)\b/i.test(blob);
-}
-
-/** Missing lodging/car/flight facts only. Flight ask is preferred airline. No wording. */
+/** Missing lodging facts only. No wording. */
 export function customerInputState(records = []) {
   const present = new Set();
-  let flightNeedsAirline = false;
   for (const record of records || []) {
     const kind = recordInputKind(record);
-    if (kind === 'flight') {
-      present.add('flight');
-      if (flightAirlineMissing(record)) flightNeedsAirline = true;
-    } else if (kind === 'car' || kind === 'lodging') {
-      present.add(kind);
-    }
+    if (kind === 'lodging') present.add('lodging');
   }
-  const needsCustomerInput = [];
-  if (!present.has('lodging')) needsCustomerInput.push('lodging');
-  if (!present.has('car')) needsCustomerInput.push('car');
-  if (!present.has('flight')) needsCustomerInput.push('flight');
-  else if (flightNeedsAirline) needsCustomerInput.push('flight');
-  if (!needsCustomerInput.length) return {};
-  const state = { needsCustomerInput };
-  if (needsCustomerInput.includes('flight')) state.flightAsk = 'preferredAirline';
-  return state;
+  if (present.has('lodging')) return {};
+  return { needsCustomerInput: ['lodging'] };
 }
 
 function noteText(thing) {
@@ -285,6 +299,7 @@ export function sharedTripFromIntake({ trip, things }) {
   const assignments = {};
   const thingOverrides = {};
   for (const thing of things || []) {
+    if (!customerStatedLodgingThing(thing)) continue;
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
     const notes = noteText(thing);

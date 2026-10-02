@@ -10,6 +10,8 @@ import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs
 import { intakeExtractedThings, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
+import { blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
+import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
@@ -293,6 +295,24 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     activeWebResearchTurn = inTurnSearch.webResearchTurn;
   }
 
+  let turnActionResults = {};
+  if (tripId && !seat) {
+    turnActionResults = await runVacationAppTurnActions({
+      db,
+      session,
+      tripId,
+      requestText,
+      roster: Array.isArray(classification.roster) ? classification.roster : [],
+    });
+    payload.turnActionResults = turnActionResults;
+    customerLive.turnActionResults = turnActionResults;
+    await db`
+      update transcript_turns
+      set payload = ${payload}
+      where id = ${turnRows[0].id}
+    `;
+  }
+
   let produced;
   try {
     const loadOwnerPlan = async (opts) => loadOwnerReplyPlanForTurn({
@@ -332,6 +352,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedStart: jobFields.startDate,
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
+        turnActionResults,
       });
     }
   } catch (error) {
@@ -381,18 +402,32 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     placeSearch: customerLive.placeSearch ?? payload.placeSearch ?? null,
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
   };
-  const blockReplyIdCitation = (replyText) => blockVacationAppReplyIdCitation({
-    replyText,
-    tripId,
-    db,
-    turnId: turnRows[0].id,
-    payload,
-    customerLive,
-    base,
-    storeReplyFailure,
-  });
+  const blockReplyShipGate = async (replyText) => {
+    const actionBlocked = await blockVacationAppReplyActionClaim({
+      replyText,
+      tripId,
+      turnActionResults,
+      db,
+      turnId: turnRows[0].id,
+      payload,
+      customerLive,
+      base,
+      storeReplyFailure,
+    });
+    if (actionBlocked) return actionBlocked;
+    return blockVacationAppReplyIdCitation({
+      replyText,
+      tripId,
+      db,
+      turnId: turnRows[0].id,
+      payload,
+      customerLive,
+      base,
+      storeReplyFailure,
+    });
+  };
   if (produced.status === 'interim' && produced.pending) {
-    const interimBlocked = await blockReplyIdCitation(produced.interimReply?.text || '');
+    const interimBlocked = await blockReplyShipGate(produced.interimReply?.text || '');
     if (interimBlocked) return interimBlocked;
     const pending = {
       ...produced.pending,
@@ -401,6 +436,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       speakerName,
       collaborator: Boolean(seat),
       tripId,
+      turnActionResults,
       sessionStartedMs,
       wallStarted: started,
     };
@@ -425,7 +461,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
   }
 
-  const citationBlocked = await blockReplyIdCitation(produced.reply);
+  const citationBlocked = await blockReplyShipGate(produced.reply);
   if (citationBlocked) return citationBlocked;
 
   return persistVacationAppOutboundReply({

@@ -54,7 +54,7 @@ assert.equal(facts.end_weekday, 'Wednesday');
 assert.deepEqual(facts.gaps, ['lodging', 'plans']);
 assert.equal(
   intakeReplyBlock(STAGING_FLAGGED_DRAFT, appTextBanned, facts, [STAGING_TURN_ID]),
-  '',
+  'first_intake_reply_flagged',
 );
 
 const tavilyPlaceResults = [

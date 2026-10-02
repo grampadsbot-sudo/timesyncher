@@ -109,6 +109,7 @@ export async function runCustomerChatPlaceSearch({
   try {
     const search = await searchImpl({
       destination: plan.destination,
+      tripId,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
       keepAreaText: classification?.anchorIsLodging === true && !lodging,
@@ -116,7 +117,6 @@ export async function runCustomerChatPlaceSearch({
       relevanceTarget: clean(classification?.target, 240),
       relevanceArea: plan.destination,
       searchAnchor,
-      tripId,
       env: providerEnv,
       fetchImpl,
     });
