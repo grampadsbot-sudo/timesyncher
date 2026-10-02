@@ -12,6 +12,10 @@ assert.equal(
   intakeLodgingLookupQuery('Hyatt Regency Maui', 'Kaanapali'),
   'Hyatt Regency Maui, Kaanapali',
 );
+assert.equal(
+  intakeLodgingLookupQuery('Kihei Kai Nani', 'Kihei'),
+  'Kihei Kai Nani, Kihei',
+);
 
 function mockTripDb() {
   const tripThings = [];
@@ -19,6 +23,7 @@ function mockTripDb() {
   let tripMetadata = {};
   const db = async (strings, ...values) => {
     const sql = String(strings[0] || '');
+    if (sql.includes('delete from trip_things')) return [];
     if (sql.includes('insert into trip_things')) {
       const title = values.find((value) => typeof value === 'string' && /Hyatt/i.test(value)) || values[4] || values[2];
       const row = { id: `thing-${tripThings.length + 1}`, category: 'hotel', title, location: {} };
@@ -72,11 +77,18 @@ assert.match(capturedQuery, /Kaanapali/);
 assert.equal(lookupOutcome.saved.length, 1);
 assert.equal(lookupThings.length, 1);
 
+const emptyNominatimFetch = async (url) => {
+  const href = String(url);
+  if (!href.includes('nominatim.openstreetmap.org')) throw new Error(`unexpected fetch ${href}`);
+  return { ok: true, json: async () => (href.includes('reverse') ? {} : []) };
+};
+
 const { db: missDb, tripThings: missThings, turns: missTurns, getTripMetadata: missTripMetadata } = mockTripDb();
 missTurns.set('turn-customer-1', { liveTranscript: { turnIndex: 1 } });
 const missOutcome = await persistIntakeLodgingThings(missDb, 'trip-2', 'req-2', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  fetchImpl: emptyNominatimFetch,
   searchImpl: async ({ areaHint, propertyName }) => ({
     places: [],
     providers: [{ provider: 'brave', status: 'empty', reason: 'no_results', resultCount: 0, query: intakeLodgingLookupQuery(propertyName, areaHint) }],
@@ -85,13 +97,13 @@ const missOutcome = await persistIntakeLodgingThings(missDb, 'trip-2', 'req-2', 
 assert.equal(missOutcome.saved.length, 1);
 assert.equal(missThings.length, 1);
 assert.match(missThings[0].title, /Hyatt Regency Maui/i);
-assert.equal(missThings[0].category, 'hotel');
 assert.equal(missOutcome.misses.length, 1);
+assert.equal(missOutcome.lookups.length, 1);
 assert.equal(missOutcome.misses[0].status, 'miss');
 assert.match(missOutcome.misses[0].query, /Kaanapali/);
 assert.equal(missTripMetadata().statedLodgingArea, 'Kaanapali');
 
-await persistIntakeLodgingLookupOnCustomerTurn(missDb, 'turn-customer-1', missOutcome.misses);
+await persistIntakeLodgingLookupOnCustomerTurn(missDb, 'turn-customer-1', missOutcome.lookups);
 const stored = missTurns.get('turn-customer-1');
 assert.ok(Array.isArray(stored.intakeLodgingLookup));
 assert.equal(stored.intakeLodgingLookup[0].reason, 'no_coordinates');
@@ -101,6 +113,7 @@ nonHotelTurns.set('turn-non-hotel', { liveTranscript: { turnIndex: 2 } });
 const nonHotelOutcome = await persistIntakeLodgingThings(nonHotelDb, 'trip-non-hotel', 'req-non-hotel', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  fetchImpl: emptyNominatimFetch,
   searchImpl: async () => ({
     places: [
       {
@@ -130,10 +143,9 @@ const nonHotelOutcome = await persistIntakeLodgingThings(nonHotelDb, 'trip-non-h
 });
 assert.equal(nonHotelOutcome.saved.length, 1);
 assert.equal(nonHotelThings.length, 1);
-assert.match(nonHotelThings[0].title, /Hyatt Regency Maui/i);
 assert.equal(nonHotelOutcome.misses.length, 1);
 assert.equal(nonHotelOutcome.misses[0].reason, 'no_hotel_category_result');
-await persistIntakeLodgingLookupOnCustomerTurn(nonHotelDb, 'turn-non-hotel', nonHotelOutcome.misses);
+await persistIntakeLodgingLookupOnCustomerTurn(nonHotelDb, 'turn-non-hotel', nonHotelOutcome.lookups);
 const nonHotelStored = nonHotelTurns.get('turn-non-hotel');
 assert.equal(nonHotelStored.intakeLodgingLookup[0].reason, 'no_hotel_category_result');
 

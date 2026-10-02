@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { writeIntakeItineraryFromChat } from '../routes/vacation-itinerary.mjs';
+import { attachIntakeItineraryFromReply } from '../routes/vacation-itinerary.mjs';
 
 const INTAKE_SENTENCE = 'We are staying at Hyatt Regency Maui in Kaanapali';
 
@@ -33,6 +33,7 @@ function mockDb() {
         source: row.source || null,
       }));
     }
+    if (sql.includes('delete from trip_things')) return [];
     if (sql.includes('insert into trip_things')) {
       const viaInsertTripThing = sql.includes('source_request_id');
       const category = viaInsertTripThing ? values[2] : values[1];
@@ -67,12 +68,9 @@ const { db, tripThings } = mockDb();
 let searchCalls = 0;
 let capturedLodgingQuery = '';
 
-await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
-  { name: 'Hyatt Regency Maui', kind: 'hotel', who: '', when: '' },
-], {
+await attachIntakeItineraryFromReply(db, 'trip-hyatt', INTAKE_SENTENCE, {
   extractedDestination: 'Kaanapali Maui',
   extractedTitle: 'Maui week',
-  searchImpl: async () => ({ ok: true }),
   searchPlacesImpl: async ({ areaHint, propertyName }) => {
     searchCalls += 1;
     capturedLodgingQuery = `${propertyName || ''} ${areaHint || ''}`.trim();
@@ -92,7 +90,9 @@ await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
     };
   },
   env: { OPENROUTER_API_KEY: 'test-key', BRAVE_SEARCH_API_KEY: 'brave-key' },
-});
+}, INTAKE_SENTENCE, [
+  { name: 'Hyatt Regency Maui', kind: 'hotel', who: '', when: '' },
+]);
 
 assert.equal(searchCalls, 1, 'provider lookup runs once for named lodging');
 assert.match(capturedLodgingQuery, /Kaanapali/i);

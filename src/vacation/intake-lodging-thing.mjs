@@ -1,14 +1,25 @@
-import { insertTripThing } from './trip-things.mjs';
+import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { placeToTripThing, PlaceSearchError } from './place-search.mjs';
+import { braveAddress } from './brave-place-query.mjs';
 import { pickIntakeLodgingCandidate, intakeLodgingPickMissReason } from './intake-lodging-candidate.mjs';
+import { isLodgingProviderPlace } from './intake-lodging-category.mjs';
 import { searchIntakeLodgingPlaces } from './intake-lodging-search.mjs';
 import { placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
 import {
   intakeLodgingLookupMissDiagnostic,
+  intakeLodgingLookupOkDiagnostic,
   intakeLodgingLookupProviderFailure,
   intakeLodgingLookupQuery,
+  intakeLodgingLookupWithEvidence,
   primaryLodgingLookupProvider,
 } from './intake-lodging-lookup.mjs';
+import {
+  nominatimForwardSearch,
+  nominatimReverseGeocode,
+  nominatimLodgingPickMissReason,
+  pickNominatimLodgingCandidate,
+  trimNominatimEvidenceRow,
+} from './intake-lodging-nominatim.mjs';
 
 class IntakeLodgingResolveError extends Error {
   constructor(message, telemetry = null) {
@@ -24,22 +35,107 @@ function hasCoordinates(place) {
   return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
+function thingMetadata(thing = {}) {
+  return thing?.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+}
+
 function lodgingLookupMiss({
   name,
   query,
   reason,
   search = {},
+  addressSource = '',
+  coordsSource = '',
 }) {
   const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
-  const diagnostic = intakeLodgingLookupMissDiagnostic({
+  const diagnostic = intakeLodgingLookupWithEvidence(intakeLodgingLookupMissDiagnostic({
     propertyName: name,
     query,
     reason,
     provider: primaryLodgingLookupProvider(providerAttempts),
     providerAttempts,
-  });
+  }), search);
+  if (addressSource) diagnostic.addressSource = addressSource;
+  if (coordsSource) diagnostic.coordsSource = coordsSource;
   console.error(`intake_lodging_lookup_miss: ${diagnostic.reason} query=${diagnostic.query} provider=${diagnostic.provider}`);
-  return { ok: false, miss: diagnostic, search };
+  return { ok: false, miss: diagnostic, lookup: diagnostic, search };
+}
+
+function usableBraveAddress(picked = {}) {
+  const direct = String(picked?.address || '').trim();
+  if (direct) return direct;
+  const record = picked?.sourceRecord && typeof picked.sourceRecord === 'object' ? picked.sourceRecord : null;
+  return braveAddress(record);
+}
+
+function braveLodgingCategoryEstablished(places = []) {
+  return (Array.isArray(places) ? places : []).some((place) => hasCoordinates(place) && isLodgingProviderPlace(place));
+}
+
+function pushNominatimProvider(search, {
+  status,
+  reason = '',
+  resultCount = 0,
+  query = '',
+  rawResults = [],
+}) {
+  const providers = Array.isArray(search?.providers) ? [...search.providers] : [];
+  providers.push({
+    provider: 'nominatim',
+    status,
+    ...(reason ? { reason } : {}),
+    resultCount,
+    ...(query ? { query } : {}),
+    rawResults: rawResults.slice(0, 5),
+  });
+  search.providers = providers;
+}
+
+async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, search) {
+  const query = String(lookupQuery || '').trim();
+  try {
+    const hits = await nominatimForwardSearch(fetchImpl, query, { limit: 5 });
+    pushNominatimProvider(search, {
+      status: hits.length ? 'ok' : 'empty',
+      reason: hits.length ? '' : 'no_results',
+      resultCount: hits.length,
+      query,
+      rawResults: hits.map((row) => trimNominatimEvidenceRow(row)),
+    });
+    return hits;
+  } catch (error) {
+    pushNominatimProvider(search, {
+      status: 'error',
+      reason: String(error?.message || error || 'nominatim forward failed').trim(),
+      resultCount: 0,
+      query,
+      rawResults: [],
+    });
+    return [];
+  }
+}
+
+async function nominatimReverseWithEvidence(fetchImpl, lat, lng, search, lookupQuery) {
+  try {
+    const reversed = await nominatimReverseGeocode(fetchImpl, lat, lng);
+    pushNominatimProvider(search, {
+      status: reversed?.address ? 'ok' : 'empty',
+      reason: reversed?.address ? '' : 'no_address',
+      resultCount: reversed?.address ? 1 : 0,
+      query: `reverse:${lat},${lng}`,
+      rawResults: reversed?.hit ? [trimNominatimEvidenceRow(reversed.hit)] : [],
+    });
+    return reversed;
+  } catch (error) {
+    pushNominatimProvider(search, {
+      status: 'error',
+      reason: String(error?.message || error || 'nominatim reverse failed').trim(),
+      resultCount: 0,
+      query: `reverse:${lat},${lng}`,
+      rawResults: [],
+    });
+    return null;
+  }
 }
 
 async function resolveIntakeLodgingThing({
@@ -55,6 +151,7 @@ async function resolveIntakeLodgingThing({
   if (!name) throw new IntakeLodgingResolveError('intake lodging thing missing a name');
   const areaText = String(areaHint || destinationHint || '').trim();
   const lookupQuery = intakeLodgingLookupQuery(name, areaText);
+  const pickOptions = { propertyName: name, areaText, areaCenter: null };
   let search;
   try {
     search = await searchImpl({
@@ -83,36 +180,155 @@ async function resolveIntakeLodgingThing({
     });
     throw new IntakeLodgingResolveError(telemetry.error, telemetry);
   }
-  const places = (Array.isArray(search?.places) ? search.places : []).filter((place) => hasCoordinates(place));
-  const areaCenter = search?.center && hasCoordinates(search.center) ? search.center : null;
-  const picked = pickIntakeLodgingCandidate(places, {
+  pickOptions.areaCenter = search?.center && hasCoordinates(search.center) ? search.center : null;
+  const bravePlaces = (Array.isArray(search?.places) ? search.places : []).filter((place) => hasCoordinates(place));
+  const braveLodgingEstablished = braveLodgingCategoryEstablished(bravePlaces);
+  const requireTourismLodging = !braveLodgingEstablished;
+
+  let picked = pickIntakeLodgingCandidate(bravePlaces, pickOptions);
+  let addressSource = 'brave';
+  let coordsSource = 'brave';
+  let lat = null;
+  let lng = null;
+  let address = '';
+  let resolved = null;
+
+  if (picked) {
+    lat = Number(picked.lat);
+    lng = Number(picked.lng);
+    address = usableBraveAddress(picked);
+    if (hasCoordinates(picked) && !address) {
+      const reversed = await nominatimReverseWithEvidence(fetchImpl, lat, lng, search, lookupQuery);
+      if (reversed?.address) {
+        address = reversed.address;
+        addressSource = 'nominatim_reverse';
+      }
+    }
+    if (!hasCoordinates(picked) || !address) {
+      const hits = await nominatimForwardWithEvidence(fetchImpl, lookupQuery, search);
+      const nomPicked = pickNominatimLodgingCandidate(hits, pickOptions, { requireTourismLodging: false });
+      if (!hasCoordinates(picked) && nomPicked && hasCoordinates(nomPicked)) {
+        lat = Number(nomPicked.lat);
+        lng = Number(nomPicked.lng);
+        coordsSource = 'nominatim_search';
+        picked = { ...picked, lat, lng, externalId: nomPicked.externalId || picked.externalId };
+      }
+      if (!address && nomPicked) {
+        const nomAddress = String(nomPicked.address || '').trim();
+        if (nomAddress) {
+          address = nomAddress;
+          addressSource = 'nominatim_search';
+        }
+      }
+    }
+    if (!hasCoordinates({ lat, lng })) {
+      return lodgingLookupMiss({
+        name,
+        query: lookupQuery,
+        reason: 'no_coordinates',
+        search,
+        coordsSource,
+      });
+    }
+    if (!address) {
+      return lodgingLookupMiss({
+        name,
+        query: lookupQuery,
+        reason: 'no_address',
+        search,
+        addressSource,
+        coordsSource,
+      });
+    }
+    resolved = { ...picked, lat, lng, address };
+  } else {
+    const hits = await nominatimForwardWithEvidence(fetchImpl, lookupQuery, search);
+    const nomPicked = pickNominatimLodgingCandidate(hits, pickOptions, { requireTourismLodging });
+    if (!nomPicked) {
+      const reason = intakeLodgingPickMissReason(bravePlaces, pickOptions)
+        || nominatimLodgingPickMissReason(hits, pickOptions, { requireTourismLodging });
+      return lodgingLookupMiss({
+        name,
+        query: lookupQuery,
+        reason,
+        search,
+      });
+    }
+    address = String(nomPicked.address || '').trim();
+    lat = Number(nomPicked.lat);
+    lng = Number(nomPicked.lng);
+    addressSource = 'nominatim_search';
+    coordsSource = 'nominatim_search';
+    if (!hasCoordinates(nomPicked) || !address) {
+      return lodgingLookupMiss({
+        name,
+        query: lookupQuery,
+        reason: !hasCoordinates(nomPicked) ? 'no_coordinates' : 'no_address',
+        search,
+        addressSource,
+        coordsSource,
+      });
+    }
+    resolved = nomPicked;
+  }
+
+  const thing = placeToTripThing({ ...resolved, category: 'hotel' });
+  thing.location = {
+    ...(thing.location && typeof thing.location === 'object' ? thing.location : {}),
+    lat,
+    lng,
+    address,
+  };
+  thing.metadata = {
+    ...(thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {}),
+    addressSource,
+    coordsSource,
+  };
+  const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
+  const lookup = intakeLodgingLookupWithEvidence(intakeLodgingLookupOkDiagnostic({
     propertyName: name,
-    areaText,
-    areaCenter,
-  });
-  if (!picked) {
-    return lodgingLookupMiss({
-      name,
-      query: lookupQuery,
-      reason: intakeLodgingPickMissReason(places, {
-        propertyName: name,
-        areaText,
-        areaCenter,
-      }),
-      search,
-    });
-  }
-  const thing = placeToTripThing({ ...picked, category: 'hotel' });
-  const address = String(thing?.location?.address || thing?.description || '').trim();
-  if (!hasCoordinates(thing.location) || !address) {
-    return lodgingLookupMiss({
-      name,
-      query: lookupQuery,
-      reason: 'no_address',
-      search,
-    });
-  }
-  return { ok: true, thing, search };
+    query: lookupQuery,
+    provider: primaryLodgingLookupProvider(providerAttempts),
+    providerAttempts,
+    addressSource,
+    coordsSource,
+  }), search);
+  return { ok: true, thing, search, lookup };
+}
+
+function lodgingTitleAlreadySatisfied(thing = {}) {
+  const title = String(thing?.title || thing?.name || '').trim().toLowerCase();
+  if (!title) return false;
+  const meta = thingMetadata(thing);
+  const source = String(meta.source || thing?.source || '').toLowerCase();
+  if (source === 'customer_stated') return false;
+  if (source === 'prior_db' || source === 'osm' || source === 'brave' || source === 'tavily') return true;
+  const loc = thing?.location && typeof thing.location === 'object' ? thing.location : {};
+  const lat = Number(loc.lat);
+  const lng = Number(loc.lng);
+  const hasAddr = String(loc.address || '').trim();
+  return Number.isFinite(lat) && Number.isFinite(lng) && Boolean(hasAddr);
+}
+
+function emptyCustomerStatedLodging(thing = {}) {
+  const meta = thingMetadata(thing);
+  if (String(meta.source || thing?.source || '').toLowerCase() !== 'customer_stated') return false;
+  const loc = thing?.location && typeof thing.location === 'object' ? thing.location : {};
+  const lat = Number(loc.lat);
+  const lng = Number(loc.lng);
+  const hasAddr = String(loc.address || '').trim();
+  return !(Number.isFinite(lat) && Number.isFinite(lng) && hasAddr);
+}
+
+async function dropCustomerStatedLodging(db, tripId, title = '') {
+  const name = String(title || '').trim();
+  if (!db || !tripId || !name) return;
+  await db`
+    delete from trip_things
+    where trip_id = ${tripId}
+      and lower(title) = lower(${name})
+      and coalesce(metadata->>'source', '') = 'customer_stated'
+  `;
 }
 
 async function persistCustomerStatedLodgingThing(db, tripId, requestId, title = '') {
@@ -136,6 +352,27 @@ async function persistCustomerStatedLodgingThing(db, tripId, requestId, title = 
   return inserted;
 }
 
+async function upgradeLodgingThingInPlace(db, tripId, rowId, requestId, thing = {}) {
+  const item = tripThingRow(thing);
+  if (!item || !rowId) return null;
+  await db`
+    update trip_things
+    set category = ${item.category},
+        title = ${item.title},
+        description = ${item.description},
+        location = ${JSON.stringify(item.location)}::jsonb,
+        links = ${JSON.stringify(item.links)}::jsonb,
+        ratings = ${JSON.stringify(item.ratings)}::jsonb,
+        metadata = ${JSON.stringify(item.metadata)}::jsonb,
+        source = ${item.source},
+        source_request_id = coalesce(source_request_id, ${requestId}),
+        updated_at = now()
+    where id = ${rowId}
+      and trip_id = ${tripId}
+  `;
+  return { ...item, id: String(rowId) };
+}
+
 async function persistTripStatedLodgingArea(db, tripId, areaHint = '') {
   const area = String(areaHint || '').replace(/\s+/g, ' ').trim().slice(0, 180);
   if (!db || !tripId || !area) return;
@@ -154,14 +391,27 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
   fetchImpl = globalThis.fetch,
   searchImpl = searchIntakeLodgingPlaces,
   existingTitles = [],
+  existingThings = [],
 } = {}) {
-  const have = new Set((Array.isArray(existingTitles) ? existingTitles : []).map((title) => String(title || '').toLowerCase()));
+  const have = new Set();
+  const prior = Array.isArray(existingThings) && existingThings.length
+    ? existingThings
+    : (Array.isArray(existingTitles) ? existingTitles.map((title) => ({ title })) : []);
+  const priorByTitle = new Map();
+  for (const thing of prior) {
+    const key = String(thing?.title || thing?.name || '').trim().toLowerCase();
+    if (key) priorByTitle.set(key, thing);
+    if (lodgingTitleAlreadySatisfied(thing)) have.add(key);
+  }
   const saved = [];
   const misses = [];
+  const lookups = [];
   const resolvedArea = String(areaHint || destinationHint || '').trim();
   for (const wanted of Array.isArray(lodgingThings) ? lodgingThings : []) {
     const title = String(wanted?.title || wanted?.name || '').trim();
-    if (!title || have.has(title.toLowerCase())) continue;
+    if (!title) continue;
+    const titleKey = title.toLowerCase();
+    const priorRow = priorByTitle.get(titleKey);
     const outcome = await resolveIntakeLodgingThing({
       title,
       destinationHint,
@@ -171,28 +421,43 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       fetchImpl,
       searchImpl,
     });
+    if (outcome.lookup) lookups.push(outcome.lookup);
     if (outcome.ok !== true) {
       if (outcome.miss) misses.push(outcome.miss);
       if (resolvedArea) await persistTripStatedLodgingArea(db, tripId, resolvedArea);
-      const stated = await persistCustomerStatedLodgingThing(db, tripId, requestId, title);
-      if (stated) {
-        have.add(title.toLowerCase());
-        saved.push(stated);
+      if (!have.has(titleKey)) {
+        const stated = await persistCustomerStatedLodgingThing(db, tripId, requestId, title);
+        if (stated) {
+          have.add(titleKey);
+          saved.push(stated);
+        }
       }
       continue;
     }
-    const inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing });
+    if (have.has(titleKey)) continue;
+    let inserted = null;
+    if (priorRow?.id && emptyCustomerStatedLodging(priorRow)) {
+      inserted = await upgradeLodgingThingInPlace(db, tripId, priorRow.id, requestId, outcome.thing);
+    } else {
+      await dropCustomerStatedLodging(db, tripId, title);
+      inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing });
+    }
     if (inserted) {
-      have.add(title.toLowerCase());
+      if (outcome.lookup && inserted.id) {
+        outcome.lookup.thingId = String(inserted.id);
+        const idx = lookups.length - 1;
+        if (idx >= 0 && lookups[idx] === outcome.lookup) lookups[idx] = { ...outcome.lookup };
+      }
+      have.add(titleKey);
       saved.push(inserted);
     }
   }
-  return { saved, misses };
+  return { saved, misses, lookups };
 }
 
-export async function persistIntakeLodgingLookupOnCustomerTurn(db, turnId, misses = []) {
+export async function persistIntakeLodgingLookupOnCustomerTurn(db, turnId, lookups = []) {
   const id = String(turnId || '').trim();
-  const rows = (Array.isArray(misses) ? misses : []).filter((row) => row && typeof row === 'object');
+  const rows = (Array.isArray(lookups) ? lookups : []).filter((row) => row && typeof row === 'object');
   if (!id || !rows.length) return;
   const existing = await db`
     select payload

@@ -210,8 +210,14 @@ assert.equal(classifyCalls, 1, 'router classifier must run on every customer tur
 assert.deepEqual(blocked.classification.things, [{ name: 'El Camión', source: 'chat_extraction' }]);
 assert.equal(blocked.placeSearchTurn, true);
 assert.deepEqual(
-  intakeExtractedThings(true, { ok: true, things: [{ name: 'El Camión', source: 'chat_extraction' }] }),
+  intakeExtractedThings(true, { ok: true, things: [{ name: 'El Camión', kind: 'restaurant', source: 'chat_extraction' }] }),
   [],
+  'place_search without lodging yields empty intake things',
+);
+assert.deepEqual(
+  intakeExtractedThings(true, { ok: true, things: [{ name: 'Hyatt Regency Maui', kind: 'hotel', source: 'chat_extraction' }] }),
+  [{ name: 'Hyatt Regency Maui', kind: 'hotel', source: 'chat_extraction' }],
+  'place_search with stated lodging still routes hotel things',
 );
 
 const { db: failDb, inserts: failInserts } = mockDb();

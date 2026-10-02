@@ -9,7 +9,6 @@ export function intakeLodgingLookupQuery(propertyName, areaHint = '') {
   const area = clean(areaHint, 180);
   if (!name) return area;
   if (!area) return name;
-  if (name.toLowerCase().includes(area.toLowerCase())) return name;
   return `${name}, ${area}`.slice(0, 240);
 }
 
@@ -30,6 +29,27 @@ export function intakeLodgingLookupMissDiagnostic({
   };
 }
 
+export function intakeLodgingLookupOkDiagnostic({
+  propertyName = '',
+  query = '',
+  provider = '',
+  providerAttempts = [],
+  thingId = '',
+  addressSource = '',
+  coordsSource = '',
+} = {}) {
+  return {
+    status: 'ok',
+    property: clean(propertyName, 180),
+    query: clean(query, 500),
+    provider: clean(provider, 80),
+    thingId: clean(thingId, 80),
+    ...(addressSource ? { addressSource: clean(addressSource, 80) } : {}),
+    ...(coordsSource ? { coordsSource: clean(coordsSource, 80) } : {}),
+    providers: (Array.isArray(providerAttempts) ? providerAttempts : []).slice(0, 12),
+  };
+}
+
 export function intakeLodgingLookupProviderFailure(error, providerAttempts = []) {
   if (error instanceof PlaceSearchError && error.code === 'missing_key') return true;
   const attempts = Array.isArray(providerAttempts) ? providerAttempts : (Array.isArray(error?.providers) ? error.providers : []);
@@ -40,6 +60,17 @@ export function intakeLodgingLookupProviderFailure(error, providerAttempts = [])
   }
   if (!(error instanceof PlaceSearchError) && error) return true;
   return false;
+}
+
+export function intakeLodgingLookupWithEvidence(diagnostic = {}, search = {}) {
+  const providers = (Array.isArray(search?.providers) ? search.providers : []).map((row) => ({
+    ...row,
+    rawResults: Array.isArray(row.rawResults) ? row.rawResults : [],
+  }));
+  return {
+    ...diagnostic,
+    providers,
+  };
 }
 
 export function primaryLodgingLookupProvider(providerAttempts = []) {

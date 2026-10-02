@@ -462,6 +462,8 @@ function thingView(row) {
     category: row.category,
     title: row.title,
     description: row.description || '',
+    location: row.location && typeof row.location === 'object' ? row.location : {},
+    metadata: meta,
     source: meta.source || '',
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
@@ -482,7 +484,7 @@ async function publishIntakeShare(db, tripId) {
 async function loadTripThings(db, tripId) {
   if (!tripId) return [];
   const rows = await db`
-    select id, category, title, description, metadata
+    select id, category, title, description, metadata, location
     from trip_things
     where trip_id = ${tripId}
     order by created_at asc
@@ -492,7 +494,6 @@ async function loadTripThings(db, tripId) {
 
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch } = {}) {
   const planned = intakeActivityThings(extracted);
-  const lodgingWanted = intakeLodgingThings(extracted);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
   const span = intakeSpan(text);
@@ -551,15 +552,6 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         updated_at = now()
     where id = ${tripId}
   `;
-  if (lodgingWanted.length) {
-    await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
-      destinationHint: tripDestination || extractedDestination,
-      areaHint: extractedDestination,
-      env,
-      fetchImpl,
-      searchImpl: searchPlacesImpl,
-    });
-  }
   for (const thing of planned) {
     await db`
       insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
@@ -584,7 +576,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl });
   let current = await loadTripThings(db, tripId);
   const lodgingWanted = intakeLodgingThings(extracted);
-  const lodgingLookupMisses = [];
+  const lodgingLookups = [];
   if (lodgingWanted.length) {
     const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
       destinationHint: extractedDestination,
@@ -592,13 +584,13 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       env,
       fetchImpl,
       searchImpl: searchPlacesImpl,
-      existingTitles: current.map((item) => item.title),
+      existingThings: current,
     });
-    if (Array.isArray(lodgingOutcome?.misses)) lodgingLookupMisses.push(...lodgingOutcome.misses);
+    if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
     current = await loadTripThings(db, tripId);
   }
-  if (customerTurnId && lodgingLookupMisses.length) {
-    await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookupMisses);
+  if (customerTurnId && lodgingLookups.length) {
+    await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
   }
   const wanted = intakeActivityThings(extracted);
   if (!current.length && !wanted.length) return current;

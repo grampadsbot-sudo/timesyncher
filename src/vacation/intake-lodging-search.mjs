@@ -2,6 +2,7 @@ import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { resolveSearchContext } from './place-search-geocode.mjs';
+import { trimBraveResultEvidence } from './brave-place-query.mjs';
 import { queryBravePlaceSearch, placeSearchReadJson } from './place-search.mjs';
 
 function intakeSearchFail(message, code) {
@@ -44,12 +45,18 @@ export async function searchIntakeLodgingPlaces({
       category: 'hotel',
       q: lookupQuery,
       target: name,
+      areaHint: area || destinationHint,
+      propertyName: name,
+      intakeLodgingLookup: true,
       limit: 5,
       place: true,
     }]);
     bravePlaces = Array.isArray(found?.places) ? found.places : [];
     braveQuery = String(found?.query || lookupQuery).trim();
     braveEndpoint = String(found?.endpoint || '').trim();
+    const rawBraveResults = (Array.isArray(found?.rawResults) ? found.rawResults : [])
+      .slice(0, 5)
+      .map((row) => trimBraveResultEvidence(row));
     providerLog.push({
       provider: 'brave',
       status: bravePlaces.length ? 'ok' : 'empty',
@@ -57,6 +64,7 @@ export async function searchIntakeLodgingPlaces({
       resultCount: bravePlaces.length,
       ...(braveQuery ? { query: braveQuery } : {}),
       ...(braveEndpoint ? { endpoint: braveEndpoint } : {}),
+      rawResults: rawBraveResults,
     });
   } catch (error) {
     providerLog.push({
