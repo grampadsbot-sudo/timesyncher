@@ -592,6 +592,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const dates = String(tripRaw?.dates || '').trim();
   const roster = String(tripRaw?.roster || '').trim();
   const rule = String(tripRaw?.rule || '').trim();
+  const unscheduledDayRule = String(tripRaw?.unscheduledDayRule || tripRaw?.chatPlaceSearch?.unscheduledDayRule || '').trim();
   const customerInput = {};
   const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
@@ -655,6 +656,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     hasCustomerInput ? 'The saved trip record lists customer input that is still needed. Ask for that in your own words.' : '',
+    unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
     'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',

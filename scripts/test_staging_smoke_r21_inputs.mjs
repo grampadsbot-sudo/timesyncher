@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import { firstIntakeReplyFacts, intakeReplyBlockReasons } from '../src/vacation/first-intake-reply.mjs';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
+import { chatPlaceSearchSavedReplyFacts } from '../src/vacation/chat-place-search-when.mjs';
+import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { intakeSharedResponse } from '../src/vacation/shared-trip-handler.mjs';
@@ -61,15 +63,41 @@ const replyFacts = {
   chatPlaceSearch: {
     scheduled: [],
     unscheduled: [{ title: 'Paia Fish Market South Side', notOnADay: true }],
-    unscheduledDayRule: 'Each place in unscheduled is not on a day yet.',
+    unscheduledDayRule: 'Each place in unscheduled is not on a day. Tell the customer that for each of those places.',
   },
-  unscheduledDayRule: 'Each place in unscheduled is not on a day yet.',
+  unscheduledDayRule: 'Each place in unscheduled is not on a day. Tell the customer that for each of those places.',
 };
 const system = replyRulesSystem({}, 'Maui', false, false, 'save Paia Fish Market', { tripContext: replyFacts });
 const saved = system.slice(system.indexOf('Saved trip record:'));
 const record = JSON.parse(saved.slice('Saved trip record: '.length).split('\n')[0]);
 assert.equal(record.chatPlaceSearch.unscheduled[0].title, 'Paia Fish Market South Side');
 assert.equal(record.chatPlaceSearch.unscheduled[0].notOnADay, true);
+assert.match(system.slice(0, system.indexOf('Saved trip record:')), /Tell the customer that for each of those places/);
+
+const generated = chatPlaceSearchSavedReplyFacts([
+  { title: 'Paia Fish Market Restaurant' },
+  { title: 'Paia Fish Market South Side' },
+  { title: "Mama's Fish House" },
+], savedStart, savedEnd);
+const staged = await enrichDraftingTripContext({
+  itinerary: [
+    'Paia Fish Market Restaurant',
+    'Paia Fish Market South Side',
+    "Mama's Fish House: Saturday",
+  ],
+}, { env: {}, placeSearchReplyFacts: generated });
+assert.deepEqual(staged.itinerary, [
+  'Paia Fish Market Restaurant: not on a day',
+  'Paia Fish Market South Side: not on a day',
+  "Mama's Fish House: Saturday",
+]);
+const stagedSystem = replyRulesSystem({}, 'Maui', false, false, 'save Paia Fish Market', { tripContext: staged });
+const stagedSaved = stagedSystem.slice(stagedSystem.indexOf('Saved trip record:'));
+const stagedRecord = JSON.parse(stagedSaved.slice('Saved trip record: '.length).split('\n')[0]);
+assert.equal(stagedRecord.itinerary[1], 'Paia Fish Market South Side: not on a day');
+assert.equal(stagedRecord.chatPlaceSearch.unscheduled[1].notOnADay, true);
+assert.equal(stagedRecord.chatPlaceSearch.unscheduled.some((row) => row.title === "Mama's Fish House"), false);
+assert.match(stagedSystem.slice(0, stagedSystem.indexOf('Saved trip record:')), /Tell the customer that for each of those places/);
 
 const tripId = '285c0510-1403-4609-bee7-66ae1636134b';
 const slug = intakeShareSlug(tripId);
