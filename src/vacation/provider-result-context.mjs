@@ -38,7 +38,7 @@ function venuePhraseSourced(phrase, rows) {
 function inventedVenueMentions(text, rows) {
   if (!rows.length) return [];
   const flagged = [];
-  for (const match of String(text || '').matchAll(/\b(?:at|near|including|from|visit)\s+([\p{Lu}][\p{L}'’&-]+(?:\s+[\p{Lu}][\p{L}'’&-]+)*)/giu)) {
+  for (const match of String(text || '').matchAll(/\b(?:at|near|including|from|visit)\s+([\p{Lu}][\p{L}'’&-]+(?:\s+[\p{Lu}][\p{L}'’&-]+)*)/gu)) {
     const phrase = match[1].replace(/\s+/g, ' ').trim();
     if (!phrase || venuePhraseSourced(phrase, rows)) continue;
     flagged.push(phrase);
