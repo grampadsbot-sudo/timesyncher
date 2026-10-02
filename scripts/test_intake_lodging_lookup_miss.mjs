@@ -86,6 +86,43 @@ const stored = missTurns.get('turn-customer-1');
 assert.ok(Array.isArray(stored.intakeLodgingLookup));
 assert.equal(stored.intakeLodgingLookup[0].reason, 'no_coordinates');
 
+const { db: nonHotelDb, tripThings: nonHotelThings, turns: nonHotelTurns } = mockTripDb();
+nonHotelTurns.set('turn-non-hotel', { liveTranscript: { turnIndex: 2 } });
+const nonHotelOutcome = await persistIntakeLodgingThings(nonHotelDb, 'trip-non-hotel', 'req-non-hotel', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
+  areaHint: 'Kaanapali',
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  searchImpl: async () => ({
+    places: [
+      {
+        source: 'brave',
+        title: 'Beach Grill',
+        category: 'restaurant',
+        lat: 20.921,
+        lng: -156.691,
+        address: '1 Beach Rd',
+        externalId: 'r1',
+      },
+      {
+        source: 'brave',
+        title: 'Coastal Lookout',
+        category: 'activity',
+        lat: 20.922,
+        lng: -156.692,
+        address: 'Lookout Point',
+        externalId: 'v1',
+      },
+    ],
+    providers: [{ provider: 'brave', status: 'ok', resultCount: 2 }],
+  }),
+});
+assert.equal(nonHotelOutcome.saved.length, 0);
+assert.equal(nonHotelThings.length, 0);
+assert.equal(nonHotelOutcome.misses.length, 1);
+assert.equal(nonHotelOutcome.misses[0].reason, 'no_hotel_category_result');
+await persistIntakeLodgingLookupOnCustomerTurn(nonHotelDb, 'turn-non-hotel', nonHotelOutcome.misses);
+const nonHotelStored = nonHotelTurns.get('turn-non-hotel');
+assert.equal(nonHotelStored.intakeLodgingLookup[0].reason, 'no_hotel_category_result');
+
 let providerThrew = false;
 try {
   await persistIntakeLodgingThings(missDb, 'trip-3', 'req-3', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {

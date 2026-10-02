@@ -87,8 +87,16 @@ async function resolveIntakeLodgingThing({
     throw new IntakeLodgingResolveError(telemetry.error, telemetry);
   }
   const places = (Array.isArray(search?.places) ? search.places : []).filter((place) => hasCoordinates(place));
-  const hotel = places.find((place) => String(place?.category || '').toLowerCase() === 'hotel') || places[0];
-  if (!hotel || !hasCoordinates(hotel)) {
+  const hotel = places.find((place) => String(place?.category || '').toLowerCase() === 'hotel');
+  if (!hotel) {
+    return lodgingLookupMiss({
+      name,
+      query: lookupQuery,
+      reason: places.length ? 'no_hotel_category_result' : 'no_coordinates',
+      search,
+    });
+  }
+  if (!hasCoordinates(hotel)) {
     return lodgingLookupMiss({
       name,
       query: lookupQuery,
