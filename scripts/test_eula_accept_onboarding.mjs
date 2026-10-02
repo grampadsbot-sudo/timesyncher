@@ -125,9 +125,46 @@ try {
   const stillExpired = JSON.parse(await readFile(expiredPath, 'utf8'));
   assert.equal(stillExpired.expiresAt, expired.expiresAt);
 
-  const collaborator = await call('GET', '/accept/vacation-collaborator-invite-1');
-  assert.equal(collaborator.statusCode, 404, collaborator.body);
-  assert.equal(seen.some((call) => call.values.includes('collaborator-invite-1') || call.values.includes('vacation-collaborator-invite-1')), false);
+  const inviteId = '11111111-1111-1111-1111-111111111111';
+  const collabLookup = (strings, ...values) => {
+    const query = strings.join(' ');
+    seen.push({ query, values });
+    if (query.includes('onboarding_sessions.token') && values[0] === row.token) return [row];
+    if (query.includes('vacation_collaborator_invites') && values.includes(inviteId)) {
+      return [{
+        id: inviteId,
+        owner_customer_id: 'owner-1',
+        trip_id: null,
+        plan_code: 'telegram_collaborators_single_trip',
+        scope: 'single_trip',
+        requested_for: 'Alex',
+        status: 'pending_payment',
+        metadata: {
+          payer: 'owner',
+          email: 'alex@example.com',
+          displayName: 'Alex',
+          channel: 'vacation-app',
+          onboardingSessionId: 'owner-session-1',
+        },
+        owner_display_name: 'Ada Owner',
+        owner_email: 'owner@example.com',
+        trip_title: null,
+      }];
+    }
+    if (/insert into customers/i.test(query)) return [{ id: 'collab-customer-1' }];
+    if (/insert into onboarding_sessions/i.test(query)) return [{ id: 'collab-session-1', token: 'collab-token-1' }];
+    if (/insert into vacation_collaborators/i.test(query)) return [];
+    if (/update vacation_collaborator_invites/i.test(query)) return [{ id: inviteId }];
+    if (/from onboarding_sessions/i.test(query) && values[0] === 'collab-token-1') {
+      return [{ token: 'collab-token-1', metadata: { seat: { inviteId } } }];
+    }
+    return [];
+  };
+  useOnboardingLookup(collabLookup);
+  const collaborator = await call('GET', `/accept/vacation-collaborator-${inviteId}`);
+  assert.equal(collaborator.statusCode, 200, collaborator.body.slice(0, 200));
+  assert.match(collaborator.body, /Review & continue/);
+  assert.doesNotMatch(collaborator.body, /Acceptance session not found/);
 
   const docs = new Map();
   class FallbackStore extends VercelBlobStore {

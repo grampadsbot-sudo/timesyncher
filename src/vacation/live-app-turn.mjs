@@ -11,7 +11,7 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
-import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs'; import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
+import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs'; import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
@@ -1478,13 +1478,13 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     ...customerInputFields(saved),
   };
 }
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
-  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
+  if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, savedStart, savedEnd, turnActionResults, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
   let intent = emptyIntent();
   try {
     intent = await customerIntent(customerTurn, { env });
@@ -1505,7 +1505,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rosterError: rosterError || null,
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
-  let tripContext = applyTurnInviteReplyFacts(draftingFacts(history, customerTurn, mergedTrip), turnActionResults); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
+  let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart, savedEnd }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   tripContext.purchased_plan = String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim();
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);

@@ -11,7 +11,8 @@ import { welcomeBeforeFirstTurn } from '../.cursor/skills/verify-timesyncher-vac
 import { testPlanEnv } from './fixtures/reply-plan-test-fixtures.mjs';
 
 const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
-assert.match(api, /if \(eula\.accepted && !seatFromSession\(session\)\)/);
+assert.match(api, /if \(eula\.accepted\)/);
+assert.match(api, /await ensureOnboardingOpener\(db, session, selected \|\| null\)/);
 assert.match(api, /await ensureOnboardingOpener\(db, session, selected \|\| null\)/);
 assert.match(api, /insert into vacation_onboarding_welcomes/);
 assert.match(api, /on conflict \(onboarding_session_id, welcome_for\) do nothing/);

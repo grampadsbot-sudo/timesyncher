@@ -1,12 +1,13 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
-import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
+import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
 import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
+  loadWebAccessGrantByInviteToken,
   publicTripUrl,
   readCookie,
   requireWebEditAccess,
@@ -14,6 +15,7 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import { collaboratorEulaAcceptUrl } from '../src/vacation/collaborators.mjs';
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
@@ -57,6 +59,11 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import {
+  collaboratorSessionForAccept,
+  vacationAppEulaForCollaboratorSeat,
+} from '../src/vacation/collaborator-eula-accept.mjs';
+import { collaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
 import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
@@ -93,6 +100,15 @@ async function handleWebAccess(req, res, db, url) {
   const action = cleanText(url.searchParams.get('action'), 80);
   if (req.method === 'GET' && action === 'accept') {
     const token = cleanText(url.searchParams.get('token'), 220);
+    const pending = await loadWebAccessGrantByInviteToken(db, token, process.env);
+    const pendingMeta = pending?.metadata && typeof pending.metadata === 'object' ? pending.metadata : {};
+    const collaboratorInviteId = cleanText(pendingMeta.collaboratorInviteId, 80);
+    if (collaboratorInviteId) {
+      res.statusCode = 302;
+      res.setHeader('location', collaboratorEulaAcceptUrl({ id: collaboratorInviteId }, process.env));
+      res.setHeader('cache-control', 'no-store');
+      return res.end();
+    }
     const accepted = await acceptWebAccessInvite(db, token, process.env);
     return sendHtml(res, 200, acceptedHtml(accepted), {
       'set-cookie': webAccessCookieHeader(accepted.sessionToken, process.env),
@@ -349,7 +365,7 @@ async function welcomeInputs(db, session, trip) {
       audience: 'collaborator_no_site',
       ownerFirstName,
       collabFirstName,
-      tripTitle,
+      tripTitle: tripTitle || 'this vacation',
     };
   }
   const firstName = welcomeFirstName(session.first_name || session.display_name);
@@ -361,8 +377,7 @@ async function welcomeInputs(db, session, trip) {
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
-  const tripId = trip?.id || null;
-  if (!tripId && seat) return;
+  const tripId = trip?.id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) return;
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
@@ -710,6 +725,8 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
 }
 
 async function vacationAppEula(session, env = process.env) {
+  const seat = seatFromSession(session);
+  if (seat?.inviteId) return vacationAppEulaForCollaboratorSeat(session, seat, env);
   const status = await vacationEulaStatus(session, env);
   const accepted = Boolean(status.ok || status.status === 'accepted');
   const payload = {
@@ -733,6 +750,11 @@ async function handleVacationApp(req, res, db, url) {
 
   const session = await loadVacationAppSession(db, token);
   if (!session?.customer_id) return sendJson(res, 404, { ok: false, error: 'Vacation app session not found.' });
+  const seatForEula = seatFromSession(session);
+  if (seatForEula?.inviteId) {
+    const store = createPersistentStoreFromEnv(process.env);
+    await collaboratorSessionForAccept(store, db, collaboratorEulaSessionId({ id: seatForEula.inviteId }), process.env);
+  }
 
   if (req.method === 'GET') {
     let vacations = await loadVacationAppTrips(db, session);
@@ -742,7 +764,7 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0]
       || null;
     const eula = await vacationAppEula(session, process.env);
-    if (eula.accepted && !seatFromSession(session)) {
+    if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
     }
     const turns = await loadVacationAppTurns(db, session, selected?.id || null);
@@ -808,25 +830,37 @@ async function handleVacationApp(req, res, db, url) {
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
     if (!selected) {
-      if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+      if (!eula.accepted) {
+        return sendJson(res, 409, vacationAppErrorBody({
+          error: 'Accept the terms before sending a message.',
+          code: 'eula_not_accepted',
+          customerMessage: 'Accept the terms before you send a message.',
+        }));
+      }
       const created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
       if (!created.ok) {
-        return sendJson(res, created.statusCode || 500, {
-          ok: false,
+        return sendJson(res, created.statusCode || 500, vacationAppErrorBody({
           error: created.error,
           code: created.code || 'vacation_app_chat_failed',
-        });
+        }));
       }
       if (created.action === 'created' || created.action === 'existing') {
         vacations = created.vacations;
         selected = created.selected;
       }
     }
-    if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+    if (!eula.accepted) {
+      return sendJson(res, 409, vacationAppErrorBody({
+        error: 'Accept the terms before sending a message.',
+        code: 'eula_not_accepted',
+        customerMessage: 'Accept the terms before you send a message.',
+      }));
+    }
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
       if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
-      if (!selected?.id) {
+      const tripKey = selected?.id || seat.ownerTripId || null;
+      if (!tripKey && !seat.ownerOnboardingSessionId) {
         return sendJson(res, 409, {
           ok: false,
           error: 'No vacation is available for this session yet.',
@@ -834,7 +868,7 @@ async function handleVacationApp(req, res, db, url) {
         });
       }
       const event = collaboratorSeatJoinEvent(seat);
-      const prior = await loadVacationAppTurns(db, session, selected.id);
+      const prior = await loadVacationAppTurns(db, session, tripKey);
       if (prior.some((turn) => turn.speaker === 'system' && turn.payload?.event === 'collaborator_seat_join')) {
         return sendJson(res, 200, { ok: true, status: 'already_joined', reply: null });
       }
@@ -843,7 +877,7 @@ async function handleVacationApp(req, res, db, url) {
           customer_id, trip_id, speaker, channel, body, payload, direction, sent_at
         )
         values (
-          ${transcriptCustomerId(session)}, ${selected.id}, ${event.speaker}, ${event.channel}, ${event.body},
+          ${transcriptCustomerId(session)}, ${tripKey}, ${event.speaker}, ${event.channel}, ${event.body},
           ${event.payload}, ${event.direction}, now()
         )
       `;

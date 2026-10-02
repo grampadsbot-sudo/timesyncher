@@ -1,4 +1,3 @@
-import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
 import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
@@ -6,6 +5,10 @@ import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.mjs';
 import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail } from './place-search-anchor.mjs';
 import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
+import {
+  inTurnPlaceSearchSoftNoResults,
+  placeSearchClientError,
+} from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 import {
@@ -13,8 +16,8 @@ import {
   inTurnSearchNoResultsReturn,
   persistTurnPlaceSearchNoResults,
   syncWorkerJobAfterInTurnPlaceSearch,
-  workerInputAfterInTurnPlaceSearch,
 } from './chat-place-search-outcomes.mjs';
+import { insertStampedChatPlaceThings, workerInputAfterInTurnPlaceSearch } from './chat-place-search-when.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -160,9 +163,12 @@ export async function runCustomerChatPlaceSearch({
     const search = {
       providers: Array.isArray(error?.providers) ? error.providers : [],
       ...placeSearchDiagnosticsFromError(error),
+      ...(code ? { code } : {}),
       ...(code === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
       ...(code === 'prior_db_sole_source' ? { reason: 'prior_db_sole_source' } : {}),
       ...(code === 'relevance_judge_failed' ? { reason: 'relevance_judge_failed' } : {}),
+      ...(code === 'all_providers_failed' ? { reason: 'all_providers_failed' } : {}),
+      internalError: message,
     };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
   }
@@ -249,12 +255,12 @@ export async function applyChatPlaceSearchForVacationTurn({
     `;
     return { kind: 'failed', error: chatSearch.error, placeSearch, placeSearchTurn };
   }
-  const placeResults = [];
-  for (const thing of chatSearch.things) {
-    const inserted = await insertTripThing(db, { tripId, requestId, thing });
-    const row = inTurnPlaceResultFromTripThing(inserted);
-    if (row) placeResults.push(row);
-  }
+  const { placeResults, placeSearchReplyFacts: placeSearchSavedReplyFacts } = await insertStampedChatPlaceThings(db, {
+    tripId,
+    requestId,
+    things: chatSearch.things,
+    classification,
+  });
   const placeSearch = placeSearchTelemetry({
     status: 'ok',
     things: chatSearch.things,
@@ -273,7 +279,13 @@ export async function applyChatPlaceSearchForVacationTurn({
     set payload = ${payload}
     where id = ${turnId}
   `;
-  return { kind: 'ok', placeResults, placeSearch, placeSearchTurn };
+  return {
+    kind: 'ok',
+    placeResults,
+    placeSearch,
+    placeSearchTurn,
+    ...(placeSearchSavedReplyFacts ? { placeSearchReplyFacts: placeSearchSavedReplyFacts } : {}),
+  };
 }
 
 export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
@@ -399,6 +411,7 @@ export async function runVacationAppInTurnSearch({
   workerJobContext,
   placeSearchTurn,
   webResearchTurn,
+  searchImpl = searchPlaces,
 } = {}) {
   stampTurnClassifier(payload, customerLive, classification);
   if (classification?.ok !== true) {
@@ -440,10 +453,19 @@ export async function runVacationAppInTurnSearch({
     searchImpl: searchPlaces,
   });
   if (searchTurn.kind === 'failed') {
+    const soft = inTurnPlaceSearchSoftNoResults({
+      classification,
+      tripDestination,
+      placeSearch: searchTurn.placeSearch,
+      turnError: searchTurn.error,
+    });
+    if (soft) return { ok: true, ...soft };
     const routeStatus = placeSearchFailureRouteStatus(searchTurn.placeSearch?.reason);
-    return { ok: false, status: routeStatus, error: searchTurn.error, placeSearch: searchTurn.placeSearch };
+    return { ok: false, status: routeStatus, error: placeSearchClientError(searchTurn.placeSearch, searchTurn.error), placeSearch: searchTurn.placeSearch };
   }
-  if (searchTurn.kind === 'no_results') return inTurnSearchNoResultsReturn(searchTurn.placeSearch);
+  if (searchTurn.kind === 'no_results') {
+    return inTurnSearchNoResultsReturn(searchTurn.placeSearch, { classification, tripDestination });
+  }
   const webTurn = searchTurn.kind === 'skip'
     ? await applyChatWebResearchForVacationTurn({
       db,
@@ -467,6 +489,7 @@ export async function runVacationAppInTurnSearch({
     inTurnProviderResults,
     enforceInTurnSearch: (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0,
     webResearchTurn: webTurn.webResearchTurn,
+    ...(searchTurn.placeSearchReplyFacts ? { placeSearchReplyFacts: searchTurn.placeSearchReplyFacts } : {}),
   };
 }
 

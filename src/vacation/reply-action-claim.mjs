@@ -9,6 +9,10 @@ const JOINING_TRIP_CLAIM = /\b([A-Za-z][A-Za-z'.-]{0,40})\s+(?:is\s+)?joining(?:
 const ON_TRIP_CLAIM = /\b([A-Za-z][A-Za-z'.-]{0,40})\s+is(?:\s+now)?\s+on\s+the\s+trip\b/i;
 
 export const REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP = 'reply_action_claim_collaborator_not_on_trip';
+export const REPLY_ACTION_CLAIM_UNSCHEDULED_PLACE_DAY = 'reply_action_claim_unscheduled_place_day';
+
+const WEEKDAY_NAME = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i;
+const PLACE_DAY_SCHEDULE_CLAIM = /\b(?:added|put|placed|scheduled|slotted|booked)\b[^.!?]{0,140}\b(?:on|to|for)\b[^.!?]{0,60}(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i;
 
 class ReplyActionClaimBlockedError extends Error {
   constructor(reason, tripId) {
@@ -89,11 +93,34 @@ function collaboratorOnTripClaimReason(reply, claimContext = null) {
   return '';
 }
 
+function replyMentionsPlaceTitle(reply, title) {
+  const body = String(reply || '').toLowerCase();
+  const tokens = String(title || '').trim().toLowerCase().split(/\s+/).filter((token) => token.length > 2);
+  if (!tokens.length) return false;
+  return tokens.every((token) => body.includes(token));
+}
+
+function unscheduledPlaceDayClaimReason(reply, claimContext = null) {
+  const titles = Array.isArray(claimContext?.unscheduledChatPlaceTitles)
+    ? claimContext.unscheduledChatPlaceTitles.map((title) => String(title || '').trim()).filter(Boolean)
+    : [];
+  if (!titles.length) return '';
+  const body = String(reply || '');
+  if (!body.trim() || !WEEKDAY_NAME.test(body)) return '';
+  if (!PLACE_DAY_SCHEDULE_CLAIM.test(body)) return '';
+  for (const title of titles) {
+    if (replyMentionsPlaceTitle(body, title)) return REPLY_ACTION_CLAIM_UNSCHEDULED_PLACE_DAY;
+  }
+  return '';
+}
+
 export function replyActionClaimReason(reply, turnActionResults = null, claimContext = null) {
   if (replyClaimsCollaboratorInviteAction(reply)) {
     if (!collaboratorInviteSucceeded(turnActionResults)) return 'reply_action_claim_unbacked';
     return '';
   }
+  const unscheduledDay = unscheduledPlaceDayClaimReason(reply, claimContext);
+  if (unscheduledDay) return unscheduledDay;
   return collaboratorOnTripClaimReason(reply, claimContext);
 }
 
@@ -102,12 +129,6 @@ export function activeCollaboratorsFromParty(party) {
   return (Array.isArray(stored.collaborators) ? stored.collaborators : [])
     .map((person) => String(person?.name || '').trim())
     .filter(Boolean);
-}
-
-export function activeCollaboratorsFromDialogParty(trip) {
-  const meta = trip?.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
-  const party = meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : {};
-  return activeCollaboratorsFromParty(party);
 }
 
 export function failReplyActionClaim(reason, tripId = '') {

@@ -107,6 +107,17 @@ export function customerStatedLodgingThing(thing = {}) {
   return false;
 }
 
+export function statedLodgingLabelFromThings(things = []) {
+  for (const thing of things || []) {
+    if (!customerStatedLodgingThing(thing)) continue;
+    const kind = categoryKey(thing) || String(thing.category || '').trim().toLowerCase();
+    if (kind !== 'lodging' && kind !== 'hotel' && kind !== 'accommodation') continue;
+    const title = String(thing.title || thing.name || '').trim();
+    if (title) return title.slice(0, 240);
+  }
+  return '';
+}
+
 function flightLikeLabel(record = {}) {
   const text = [record.name, record.title, record.description, record.whenLabel]
     .map((value) => String(value || '').trim())

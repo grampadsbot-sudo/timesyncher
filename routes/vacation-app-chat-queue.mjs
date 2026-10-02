@@ -10,9 +10,11 @@ import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs
 import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
-import { activeCollaboratorsFromDialogParty, blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
+import { blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
+import { vacationAppReplyClaimContext } from '../src/vacation/chat-place-search-when.mjs';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
+import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
 
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
@@ -228,10 +230,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     }})
     returning id
   `;
-
-  let placeResults = [];
-  let enforceInTurnSearch = false;
-  let activeWebResearchTurn = webResearchTurn;
+  let placeResults = [], enforceInTurnSearch = false, activeWebResearchTurn = webResearchTurn, placeSearchReplyFacts = null;
   if (tripId) {
     const inTurnSearch = await runVacationAppInTurnSearch({
       db,
@@ -285,7 +284,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         intakeError: jobFields.intakeError,
         ok: false,
         status: inTurnSearch.status,
-        error: inTurnSearch.error,
+        error: inTurnSearch.status === 'turn_classifier_failed' ? String(inTurnSearch.error || 'classifier down') : placeSearchClientError(inTurnSearch.placeSearch, inTurnSearch.error),
         placeSearch: inTurnSearch.placeSearch,
         webSearch: inTurnSearch.webSearch,
       };
@@ -293,6 +292,10 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     placeResults = inTurnSearch.inTurnProviderResults || [];
     enforceInTurnSearch = inTurnSearch.enforceInTurnSearch;
     activeWebResearchTurn = inTurnSearch.webResearchTurn;
+    if (inTurnSearch.placeSearchReplyFacts) {
+      placeSearchReplyFacts = inTurnSearch.placeSearchReplyFacts;
+      payload.placeSearchReplyFacts = customerLive.placeSearchReplyFacts = placeSearchReplyFacts;
+    }
   }
 
   let turnActionResults = {};
@@ -330,6 +333,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         env: env,
         rules,
         loadOwnerPlan,
+        turnActionResults,
       });
     } else {
       produced = await produceLiveAppReply({
@@ -354,6 +358,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
         turnActionResults,
+        placeSearchReplyFacts,
       });
     }
   } catch (error) {
@@ -404,7 +409,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
     turnActionResults,
   };
-  const replyClaimContext = { activeCollaborators: activeCollaboratorsFromDialogParty(trip) };
+  const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts);
   const blockReplyShipGate = async (replyText) => {
     const actionBlocked = await blockVacationAppReplyActionClaim({
       replyText,

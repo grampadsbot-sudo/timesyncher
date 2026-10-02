@@ -370,9 +370,12 @@ async function runPlaceIntentRouteTests() {
     state.braveMode = 'ok';
     const recommend = await postTurn('recommend taco spots near Kaanapali Maui');
     assert.equal(recommend.status, 201);
+    assert.equal(recommend.body.ok, true);
     assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
     const recommendPayload = state.turnPayloads.at(-1);
     assert.equal(recommendPayload.placeSearch?.status, 'no_results');
+    assert.equal(recommendPayload.placeSearchReplyFacts?.placeSearch?.outcome, 'no_results');
+    assert.match(recommendPayload.placeSearchReplyFacts?.placeSearch?.detail || '', /nothing found nearby/i);
     const recommendBrave = recommendPayload.placeSearch.providers.find((row) => row.provider === 'brave');
     assert.equal(recommendBrave.endpoint, 'web');
     assert.match(recommendBrave.query, /tacos near Kaanapali Maui/);
@@ -384,8 +387,10 @@ async function runPlaceIntentRouteTests() {
     const allFail = await postTurn('recommend taco spots near Kaanapali Maui');
     assert.equal(allFail.status, 201);
     assert.equal(allFail.body.ok, true);
+    assert.doesNotMatch(String(allFail.body.reply || ''), /nominatim|prior_db|osm|brave|Place search failed/i);
     const failPayload = state.turnPayloads.at(-1);
     assert.equal(failPayload.placeSearch?.status, 'no_results');
+    assert.equal(failPayload.placeSearchReplyFacts?.placeSearch?.outcome, 'no_results');
     assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'brave' && (row.status === 'empty' || row.status === 'error')));
     assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'osm'));
     assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'prior_db'));

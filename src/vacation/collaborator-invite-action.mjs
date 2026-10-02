@@ -10,8 +10,7 @@ export function parseCollaboratorInviteTurn(text = '') {
   const email = (source.match(EMAIL_RE) || [])[0]?.toLowerCase() || '';
   if (!email) return null;
   const nameMatch = source.match(/\b(?:add|invite)\s+(?:my\s+)?([A-Za-z][A-Za-z'.-]{0,40})(?:\s*,|\s+at\s+|\s+—|\s+-|\s+email|\s+\(|$)/i);
-  const name = cleanText(nameMatch?.[1], 180) || cleanText(email.split('@')[0], 180);
-  if (!name) return null;
+  const name = cleanText(nameMatch?.[1], 180);
   return { name, email };
 }
 

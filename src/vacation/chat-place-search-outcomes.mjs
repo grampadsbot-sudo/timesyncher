@@ -1,4 +1,5 @@
 import { placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
+import { placeSearchReplyFacts } from './place-search-reply-facts.mjs';
 
 export function customerChatPlaceSearchNoResults(search) {
   return {
@@ -33,38 +34,6 @@ export async function persistTurnPlaceSearchNoResults(db, turnId, {
   return placeSearch;
 }
 
-export function workerInputAfterInTurnPlaceSearch({
-  customerId,
-  tripId,
-  requestId,
-  queuedJobType,
-  requestText,
-  payload,
-  jobFields,
-}) {
-  return {
-    customerId,
-    tripId,
-    requestId,
-    source: 'vacation-app',
-    requestType: queuedJobType,
-    requestText,
-    payload,
-    intakeEvent: jobFields.intakeEvent,
-    wantedThings: [],
-    roster: jobFields.roster,
-    rosterError: jobFields.rosterError,
-    destination: jobFields.destination,
-    hasDates: jobFields.hasDates,
-    startDate: jobFields.startDate,
-    endDate: jobFields.endDate,
-    title: jobFields.title,
-    titleError: jobFields.titleError,
-    intakeError: jobFields.intakeError,
-    placeSearchHandledInTurn: true,
-  };
-}
-
 export async function syncWorkerJobAfterInTurnPlaceSearch(db, jobId, input) {
   await db`
     update worker_jobs
@@ -73,12 +42,20 @@ export async function syncWorkerJobAfterInTurnPlaceSearch(db, jobId, input) {
   `;
 }
 
-export function inTurnSearchNoResultsReturn(placeSearch) {
+export function inTurnSearchNoResultsReturn(placeSearch, { classification = null, tripDestination = '' } = {}) {
+  const target = String(classification?.target || '').trim();
+  const area = String(classification?.anchor || tripDestination || '').trim();
   return {
     ok: true,
     inTurnProviderResults: [],
     enforceInTurnSearch: false,
     placeSearch,
     webResearchTurn: false,
+    placeSearchReplyFacts: placeSearchReplyFacts({
+      target,
+      area,
+      destination: tripDestination,
+      code: 'all_providers_failed',
+    }),
   };
 }

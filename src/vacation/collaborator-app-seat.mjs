@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { createWebEditorInvite } from './web-access.mjs';
-import { ensureVacationEulaSession, upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').trim().slice(0, max);
@@ -16,7 +16,8 @@ export function seatFromSession(session) {
   const metadata = session?.metadata && typeof session.metadata === 'object' ? session.metadata : {};
   const seat = metadata.seat;
   if (!seat || typeof seat !== 'object') return null;
-  if (!seat.ownerCustomerId || !seat.ownerTripId) return null;
+  if (!seat.ownerCustomerId) return null;
+  if (!seat.ownerTripId && !seat.ownerOnboardingSessionId) return null;
   return seat;
 }
 
@@ -25,7 +26,7 @@ export function transcriptCustomerId(session) {
 }
 
 export function collaboratorSeatJoinEvent(seat) {
-  if (!seat?.ownerCustomerId || !seat?.ownerTripId) {
+  if (!seat?.ownerCustomerId || (!seat?.ownerTripId && !seat?.ownerOnboardingSessionId)) {
     throw Object.assign(new Error('Only a collaborator seat records a join.'), { statusCode: 403 });
   }
   return {
@@ -91,7 +92,7 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
       invite,
       token,
       contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
-      acceptUrl: web?.acceptUrl || '',
+      acceptUrl: '',
       publicUrl: web?.grant?.public_url || '',
     }, env);
     opened.push({
@@ -121,10 +122,33 @@ export async function recordDialogParty(db, tripId, party) {
 }
 
 export async function joinCollaboratorAppSession(db, { invite, contact, env = process.env } = {}) {
-  if (!invite?.owner_customer_id || !invite?.trip_id) {
-    throw Object.assign(new Error('Collaborator invite is not attached to a vacation.'), { statusCode: 409 });
+  if (!invite?.owner_customer_id) {
+    throw Object.assign(new Error('Collaborator invite is missing an owner.'), { statusCode: 409 });
   }
   const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+  const ownerOnboardingSessionId = clean(metadata.onboardingSessionId, 80) || null;
+  const ownerTripId = clean(invite.trip_id, 80) || null;
+  if (!ownerTripId && !ownerOnboardingSessionId) {
+    throw Object.assign(new Error('Collaborator invite is not attached to a vacation workspace.'), { statusCode: 409 });
+  }
+  const existingToken = clean(metadata.collaboratorOnboardingToken, 120);
+  if (existingToken) {
+    const prior = await db`
+      select token, metadata
+      from onboarding_sessions
+      where token = ${existingToken}
+      limit 1
+    `;
+    if (prior[0]?.token) {
+      const priorSeat = seatFromSession(prior[0]);
+      return {
+        token: prior[0].token,
+        vacationAppUrl: vacationAppLink(prior[0].token, env),
+        displayName: priorSeat?.displayName || clean(contact?.displayName, 180),
+        payer: priorSeat?.payer || clean(metadata.payer || 'owner', 40) || 'owner',
+      };
+    }
+  }
   const displayName = clean(contact?.displayName || metadata.displayName || invite.requested_for, 180);
   const [firstName, ...rest] = displayName.split(/\s+/).filter(Boolean);
   const person = {
@@ -141,7 +165,8 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
     payer: clean(metadata.payer || 'owner', 40) || 'owner',
     displayName,
     ownerCustomerId: invite.owner_customer_id,
-    ownerTripId: invite.trip_id,
+    ownerTripId: ownerTripId,
+    ownerOnboardingSessionId,
     inviteId: invite.id,
   };
   const rows = await db`
@@ -149,24 +174,31 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
       customer_id, trip_id, token, status, current_step, telegram_deep_link, metadata, updated_at
     )
     values (
-      ${customerId}, ${invite.trip_id}, ${token}, 'purchase_confirmed',
+      ${customerId}, ${ownerTripId}, ${token}, 'purchase_confirmed',
       'post_purchase', ${null}, ${{ seat, source: 'collaborator_app_seat' }}, now()
     )
     returning *
   `;
   const session = rows[0];
-  await ensureVacationEulaSession(session, { contact: person, env });
   await db`
     insert into vacation_collaborators (
       invite_id, owner_customer_id, trip_id, display_name, plan_code, scope, status,
       metadata, accepted_at, updated_at
     )
     values (
-      ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id}, ${displayName},
+      ${invite.id}, ${invite.owner_customer_id}, ${ownerTripId}, ${displayName},
       ${invite.plan_code}, ${invite.scope}, 'active',
-      ${{ payer: seat.payer, email: person.email, channel: 'vacation-app', onboardingToken: token }},
+      ${{ payer: seat.payer, email: person.email, channel: 'vacation-app', onboardingToken: token, onboardingSessionId: ownerOnboardingSessionId }},
       now(), now()
     )
+  `;
+  await db`
+    update vacation_collaborator_invites
+    set status = 'accepted',
+      accepted_at = coalesce(accepted_at, now()),
+      updated_at = now(),
+      metadata = metadata || ${{ collaboratorOnboardingToken: token, collaboratorCustomerId: customerId }}
+    where id = ${invite.id}
   `;
   return {
     token: session.token,
