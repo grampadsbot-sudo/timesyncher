@@ -1,3 +1,5 @@
+import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
+
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
@@ -16,13 +18,70 @@ export function stripHotelBrandNameGuessing(source = '') {
   return js;
 }
 
+const TRIP_MAP_SNIPPET = tripMapInitialViewBundleSnippet();
+
+const TRIP_MAP_INJECT_NEEDLE = 'function pze({places:e=[],dayPlaces:t=[]';
+
+const MAP_CENTER_PARIS_A = 'center:r=[48.8566,2.3522]';
+const MAP_CENTER_PARIS_B = 'center:z=[48.8566,2.3522]';
+
+const TRIP_MAP_VIEW_NEEDLE = 'No=p.map_tile_url||"https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",or=[p.default_lat||48.8566,p.default_lng||2.3522],_t=p.default_zoom||10,Ua={fontFamily:';
+
+const TRIP_MAP_VIEW_PATCH = 'No=p.map_tile_url||"https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r}),[z,r]),or=tsMapIv.ok?[tsMapIv.center.lat,tsMapIv.center.lng]:[NaN,NaN],_t=tsMapIv.ok?tsMapIv.zoom:2,Ua={fontFamily:';
+
+const TRIP_MAP_LOG_NEEDLE = 'return I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
+
+const TRIP_MAP_LOG_PATCH = 'return I.useEffect(()=>{if(!tsMapIv.ok)console.error(JSON.stringify({event:"map_center_unresolved",code:tsMapIv.code||"map_center_unresolved",tripId:e}))},[tsMapIv.ok,tsMapIv.code,e]),I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
+
+const TRIP_MAP_PLAN_NEEDLE = 'Se==="plan"&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
+
+const TRIP_MAP_PLAN_PATCH = 'Se==="plan"&&!tsMapIv.ok&&n.jsx("div",{"data-map-center-unresolved":"1","data-ts-trip-map-error":"1",style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",padding:24,background:"var(--bg-primary)",color:"var(--text-muted)",fontSize:14,textAlign:"center"},children:c("trip.mapCenterUnresolved")}),Se==="plan"&&tsMapIv.ok&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
+
+const MAP_SETTINGS_DEFAULTS_NEEDLE = 'default_lat:48.8566,default_lng:2.3522,default_zoom:10';
+const MAP_SETTINGS_DEFAULTS_PATCH = 'default_lat:null,default_lng:null,default_zoom:null';
+
+const MAP_SETTINGS_FALLBACK_A = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.3522),me(e.default_zoom||10)';
+const MAP_SETTINGS_FALLBACK_B = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.3522),me(e.default_zoom||10);';
+
+export function patchTripMapInitialView(source = '') {
+  let js = String(source || '');
+  if (!js.includes(TRIP_MAP_INJECT_NEEDLE) && !js.includes('tsTripMapInitialView=')) {
+    return js;
+  }
+  if (!js.includes('tsTripMapInitialView=')) {
+    if (!js.includes(TRIP_MAP_INJECT_NEEDLE)) {
+      throw new Error('trek bundle missing pze() anchor for trip map initial view patch');
+    }
+    js = js.replace(TRIP_MAP_INJECT_NEEDLE, `${TRIP_MAP_SNIPPET}${TRIP_MAP_INJECT_NEEDLE}`);
+  }
+  if (js.includes(TRIP_MAP_VIEW_NEEDLE)) js = js.replace(TRIP_MAP_VIEW_NEEDLE, TRIP_MAP_VIEW_PATCH);
+  if (js.includes(TRIP_MAP_LOG_NEEDLE)) js = js.replace(TRIP_MAP_LOG_NEEDLE, TRIP_MAP_LOG_PATCH);
+  if (js.includes(TRIP_MAP_PLAN_NEEDLE)) js = js.replace(TRIP_MAP_PLAN_NEEDLE, TRIP_MAP_PLAN_PATCH);
+  js = js.replaceAll(MAP_CENTER_PARIS_A, 'center:r=void 0');
+  js = js.replaceAll(MAP_CENTER_PARIS_B, 'center:z=void 0');
+  js = js.replaceAll(MAP_SETTINGS_DEFAULTS_NEEDLE, MAP_SETTINGS_DEFAULTS_PATCH);
+  js = js.replaceAll(MAP_SETTINGS_FALLBACK_A, 'ee(e.default_lat??null),pe(e.default_lng??null),me(e.default_zoom??null)');
+  js = js.replaceAll(MAP_SETTINGS_FALLBACK_B, 'ee(e.default_lat??null),pe(e.default_lng??null),me(e.default_zoom??null);');
+  js = js.replaceAll('||48.8566', '??null').replaceAll('||2.3522', '??null');
+  if (js.includes('or=[p.default_lat')) {
+    throw new Error('trek bundle still uses default_lat Paris fallback for trip map center');
+  }
+  if (!js.includes('tsTripMapInitialView=')) {
+    throw new Error('trip map initial view patch did not apply');
+  }
+  if (js.includes(TRIP_MAP_VIEW_NEEDLE) && !js.includes('tsMapIv=I.useMemo')) {
+    throw new Error('trip map initial view patch did not apply');
+  }
+  return js;
+}
+
 export function applyLiveProductPatches(patched = '') {
   let js = stripHotelBrandNameGuessing(String(patched || ''));
   if (js.includes(LIST_LOGO_NEEDLE)) js = js.replace(LIST_LOGO_NEEDLE, LIST_LOGO_PATCH);
   else if (js.includes(LIST_LOGO_PATCH_NEEDLE)) js = js.replace(LIST_LOGO_PATCH_NEEDLE, LIST_LOGO_PATCH);
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
-  return js;
+  return patchTripMapInitialView(js);
 }
 
 export function patchThingDetailRatings(source = '') {

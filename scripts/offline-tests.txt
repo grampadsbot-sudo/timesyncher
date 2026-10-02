@@ -23,6 +23,9 @@ scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
+scripts/test_trip_map_initial_view.mjs
+scripts/test_trip_map_initial_view_bundle.mjs
+scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
 scripts/test_restaurant_list_tags.mjs
 scripts/test_product_gaps_staging.mjs
