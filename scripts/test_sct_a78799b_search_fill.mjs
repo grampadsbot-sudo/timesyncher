@@ -228,27 +228,26 @@ const chatNoResults = await runCustomerChatPlaceSearch({
 assert.equal(chatNoResults.status, 'no_results');
 assert.equal(chatNoResults.error, null);
 
-await assert.rejects(
-  () => searchPlaces({
-    destination: farmersPlan.destination,
-    queries: farmersPlan.queries,
-    relevanceTarget: 'Farmers market',
-    relevanceArea: farmersPlan.destination,
-    env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
-    fetchImpl: async (url) => {
-      const href = String(url);
-      if (href.includes(NOMINATIM_HOST)) {
-        return { ok: true, json: async () => [{ lat: String(KIHEI_CENTER.lat), lon: String(KIHEI_CENTER.lng), display_name: 'Kihei' }] };
-      }
-      if (href.includes(OVERPASS_HOST)) throw new Error('overpass down');
-      if (href.includes(BRAVE_HOST)) return { ok: true, json: async () => ({ results: [] }) };
-      if (href.includes(OPENROUTER_HOST)) return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
-      throw new Error(href);
-    },
-    tripId: 'trip-osm-err',
-  }),
-  (error) => error.code === 'all_providers_failed',
-);
+const osmErrBraveEmpty = await searchPlaces({
+  destination: farmersPlan.destination,
+  queries: farmersPlan.queries,
+  relevanceTarget: 'Farmers market',
+  relevanceArea: farmersPlan.destination,
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
+  fetchImpl: async (url) => {
+    const href = String(url);
+    if (href.includes(NOMINATIM_HOST)) {
+      return { ok: true, json: async () => [{ lat: String(KIHEI_CENTER.lat), lon: String(KIHEI_CENTER.lng), display_name: 'Kihei' }] };
+    }
+    if (href.includes(OVERPASS_HOST)) throw new Error('overpass down');
+    if (href.includes(BRAVE_HOST)) return { ok: true, json: async () => ({ results: [] }) };
+    if (href.includes(OPENROUTER_HOST)) return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 3.5 } } }) };
+    throw new Error(href);
+  },
+  tripId: 'trip-osm-err',
+});
+assert.equal(osmErrBraveEmpty.outcomeStatus, 'no_results');
+assert.ok(Array.isArray(osmErrBraveEmpty.providerErrors) && osmErrBraveEmpty.providerErrors.some((row) => row.provider === 'osm'));
 
 assert.equal(osmPlaceQualifiesForSave({ name: 'Hawaii 31 & 360 Junction (Kālepa Bridge)', highway: 'junction', junction: 'yes' }), false);
 assert.equal(osmPlaceQualifiesForSave({ name: 'Snorkeling Entry Point', highway: 'service', access: 'yes' }), false);

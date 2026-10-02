@@ -85,6 +85,7 @@ export function placeSearchTelemetry({
   dedupeMerges = null,
   judgeHttpStatus = null,
   judgeBodySnippet = null,
+  providerErrors = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -126,5 +127,12 @@ export function placeSearchTelemetry({
   }
   if (Number.isFinite(Number(judgeHttpStatus))) telemetry.judgeHttpStatus = Number(judgeHttpStatus);
   if (judgeBodySnippet) telemetry.judgeBodySnippet = String(judgeBodySnippet).trim().slice(0, 240);
+  if (Array.isArray(providerErrors) && providerErrors.length) {
+    telemetry.providerErrors = providerErrors.slice(0, 10).map((row) => ({
+      provider: String(row?.provider || '').trim(),
+      ...(Number.isFinite(Number(row?.httpStatus)) ? { httpStatus: Number(row.httpStatus) } : {}),
+      message: String(row?.message || row?.reason || '').trim(),
+    })).filter((row) => row.provider && row.message);
+  }
   return telemetry;
 }

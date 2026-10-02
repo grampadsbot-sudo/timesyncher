@@ -225,6 +225,10 @@ export async function applyChatPlaceSearchForVacationTurn({
       customerLive,
       providerAttempts,
       classifierMeta,
+      providerErrors: chatSearch.search?.providerErrors || null,
+      judgeInput: chatSearch.search?.judgeInput || null,
+      searchCenter: chatSearch.search?.searchCenter || null,
+      anchor: chatSearch.search?.anchor || null,
     });
     return { kind: 'no_results', error: null, placeSearch, placeSearchTurn };
   }
