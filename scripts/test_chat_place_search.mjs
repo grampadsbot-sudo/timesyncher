@@ -7,7 +7,6 @@ import {
   applyChatPlaceSearchForVacationTurn,
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
-  isCustomerPlaceSearchTurn,
   runCustomerChatPlaceSearch,
 } from '../src/vacation/chat-place-search.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
@@ -94,6 +93,23 @@ function mockPlace({ mockId, provider, category, title }) {
   };
 }
 
+function placeClassification(query) {
+  return {
+    ok: true,
+    turnKind: 'place_search',
+    target: query.turn.slice(0, 80),
+    anchor: query.destination,
+    anchorIsLodging: false,
+    routerModel: 'router-test-model',
+    things: [],
+    roster: [],
+    destination: '',
+    hasDates: false,
+    title: '',
+    error: null,
+  };
+}
+
 function mockDb() {
   const inserts = [];
   const db = async (strings, ...values) => {
@@ -107,11 +123,11 @@ function mockDb() {
 }
 
 for (const query of SCT_QUERIES) {
-  assert.equal(isCustomerPlaceSearchTurn(query.turn), true, query.name);
-
+  const classification = placeClassification(query);
   let providerSearchCalls = 0;
   const result = await runCustomerChatPlaceSearch({
-    customerTurn: query.turn,
+    placeSearchTurn: true,
+    classification,
     tripDestination: 'Seattle',
     env: { OPENROUTER_API_KEY: 'test', brave: 'brave-key' },
     searchImpl: async (options) => {
@@ -136,7 +152,8 @@ for (const query of SCT_QUERIES) {
     db,
     tripId: 'trip-sct',
     requestId: 'req-sct',
-    customerTurn: query.turn,
+    classification,
+    placeSearchTurn: true,
     tripDestination: 'Seattle',
     payload,
     customerLive,
@@ -168,11 +185,25 @@ const blocked = await classifyVacationAppCustomerTurn(
   process.env,
   async () => {
     classifyCalls += 1;
-    return { ok: true, intake: false, things: [{ name: 'El Camión', source: 'chat_extraction' }], roster: [], destination: '', hasDates: false, title: '', error: null };
+    return {
+      ok: true,
+      turnKind: 'place_search',
+      intake: false,
+      target: 'taco spots',
+      anchor: 'Pike Place',
+      anchorIsLodging: false,
+      things: [{ name: 'El Camión', source: 'chat_extraction' }],
+      roster: [],
+      destination: '',
+      hasDates: false,
+      title: '',
+      routerModel: 'router-test-model',
+      error: null,
+    };
   },
 );
-assert.equal(classifyCalls, 0, 'OpenRouter intake extraction must not run on place-search turns');
-assert.deepEqual(blocked.classification.things, []);
+assert.equal(classifyCalls, 1, 'router classifier must run on every customer turn');
+assert.deepEqual(blocked.classification.things, [{ name: 'El Camión', source: 'chat_extraction' }]);
 assert.equal(blocked.placeSearchTurn, true);
 assert.deepEqual(
   intakeExtractedThings(true, { ok: true, things: [{ name: 'El Camión', source: 'chat_extraction' }] }),
@@ -185,7 +216,8 @@ const failed = await applyChatPlaceSearchForVacationTurn({
   db: failDb,
   tripId: 'trip-fail',
   requestId: 'req-fail',
-  customerTurn: SCT_QUERIES[1].turn,
+  classification: placeClassification(SCT_QUERIES[1]),
+  placeSearchTurn: true,
   tripDestination: 'Seattle',
   payload: failPayload,
   customerLive: {},
@@ -197,14 +229,13 @@ assert.equal(failed.placeSearch.status, 'failed');
 assert.equal(Array.isArray(failed.placeSearch.providers), true);
 assert.equal(failInserts.length, 0);
 
-assert.equal(isCustomerPlaceSearchTurn('best tacos near our hotel'), true);
-
 const errorDb = mockDb();
 const errored = await applyChatPlaceSearchForVacationTurn({
   db: errorDb.db,
   tripId: 'trip-err',
   requestId: 'req-err',
-  customerTurn: SCT_QUERIES[2].turn,
+  classification: placeClassification(SCT_QUERIES[2]),
+  placeSearchTurn: true,
   tripDestination: 'Seattle',
   payload: { wantedThings: [] },
   customerLive: {},
@@ -240,7 +271,7 @@ console.log(JSON.stringify({
     'trip_things_inserted_with_provider_sourceRef',
     'wantedThings_cleared_no_chat_extraction',
     'placeResultExtra_uses_provider_ids_only',
-    'classify_skipped_on_place_search_turn',
+    'classifier_runs_on_place_search_turn',
     'empty_provider_place_search_failed_no_inserts',
     'invented_id_blocks_in_turn_reply',
     'invented_place_name_blocks_in_turn_reply',

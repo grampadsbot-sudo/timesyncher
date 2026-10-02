@@ -9,19 +9,75 @@ import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-
 import { ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
-import { isCustomerPlaceSearchTurn } from '../src/vacation/place-search-intent.mjs';
-
 const BRAVE_DUMMY = 'place-intent-brave-key-aa11';
 const TAVILY_DUMMY = 'place-intent-tavily-key-bb22';
 const OPENROUTER_DUMMY = 'place-intent-openrouter-cc33';
+const ROUTER_MODEL = 'jev-router-test-model';
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
 const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
+const TAVILY_HOST = ['api', 'tavily', 'com'].join('.');
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
 
-assert.equal(isCustomerPlaceSearchTurn('best tacos near our hotel'), true);
-assert.equal(isCustomerPlaceSearchTurn('recommend taco spots near Kaanapali Maui'), true);
+function classifierPayloadForTurn(text, state) {
+  const lower = String(text || '').toLowerCase();
+  if (state.classifierMode === 'fail') return null;
+  if (/weather|events/.test(lower)) {
+    return {
+      turnKind: 'web_research',
+      target: '',
+      anchor: '',
+      anchorIsLodging: false,
+      question: text,
+      things: [],
+      roster: [],
+      destination: '',
+      hasDates: false,
+      title: '',
+    };
+  }
+  if (/land in maui/.test(lower)) {
+    return {
+      turnKind: 'other',
+      target: '',
+      anchor: '',
+      anchorIsLodging: false,
+      question: '',
+      things: [],
+      roster: [],
+      destination: 'Maui',
+      hasDates: false,
+      title: '',
+    };
+  }
+  if (/taco|tacos/.test(lower)) {
+    return {
+      turnKind: 'place_search',
+      target: 'tacos',
+      anchor: /our hotel/.test(lower) ? 'our hotel' : 'Kaanapali Maui',
+      anchorIsLodging: /our hotel/.test(lower),
+      question: '',
+      things: [],
+      roster: [],
+      destination: '',
+      hasDates: false,
+      title: '',
+    };
+  }
+  return {
+    turnKind: 'other',
+    target: '',
+    anchor: '',
+    anchorIsLodging: false,
+    question: '',
+    things: [],
+    roster: [],
+    destination: '',
+    hasDates: false,
+    title: '',
+  };
+}
 
 async function runPlaceIntentRouteTests() {
   const storeDir = await mkdtemp(path.join(tmpdir(), 'place-intent-brave-fallback-'));
@@ -105,6 +161,7 @@ async function runPlaceIntentRouteTests() {
     lodgingCoords: true,
     nominatimMode: 'ok',
     braveMode: 'ok',
+    classifierMode: 'ok',
     tripThings: [],
     turnPayloads: [],
     fetchCalls: [],
@@ -248,11 +305,29 @@ async function runPlaceIntentRouteTests() {
         _q: params.get('q'),
       };
     }
+    if (href.includes(TAVILY_HOST)) {
+      return {
+        ok: true,
+        json: async () => ({
+          results: [{
+            title: 'Local events this weekend',
+            url: 'https://example.com/events',
+            content: 'A few community events are scheduled.',
+          }],
+        }),
+      };
+    }
     if (href.includes(OPENROUTER_HOST) && href.includes('decisions')) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const questions = raw?.questions || raw?.input?.questions || {};
       if (questions.relevance) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
+      }
+      if (questions.trip_intake) {
+        if (state.classifierMode === 'fail') {
+          return { ok: false, status: 503, json: async () => ({ error: { message: 'classifier down' } }) };
+        }
+        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
       }
       return {
         ok: true,
@@ -265,6 +340,13 @@ async function runPlaceIntentRouteTests() {
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const user = raw.messages?.find((row) => row.role === 'user')?.content || '';
+      if (String(raw.messages?.[0]?.content || '').includes('turnKind')) {
+        const payload = classifierPayloadForTurn(user, state);
+        if (!payload) {
+          return { ok: false, status: 503, json: async () => ({ error: { message: 'classifier down' } }) };
+        }
+        return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(payload) } }] }) };
+      }
       if (String(user).includes('score')) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ score: 0.95 }) } }] }) };
       }
@@ -357,6 +439,35 @@ async function runPlaceIntentRouteTests() {
     assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'osm'));
     assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'prior_db'));
 
+    state.classifierMode = 'ok';
+    state.braveMode = 'ok';
+    const weather = await postTurn('What events are happening in Kaanapali this weekend?');
+    assert.notEqual(weather.status, 502, JSON.stringify(weather.body));
+    assert.equal(state.fetchCalls.some((url) => url.includes(TAVILY_HOST)), true);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    const weatherPayload = state.turnPayloads.at(-1);
+    assert.equal(weatherPayload.webSearch?.status, 'ok');
+    assert.equal(weatherPayload.turnClassifier?.turnKind, 'web_research');
+
+    state.classifierMode = 'ok';
+    const landing = await postTurn('we land in Maui at 3pm');
+    assert.notEqual(landing.status, 502, JSON.stringify(landing.body));
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    assert.equal(state.fetchCalls.some((url) => url.includes(TAVILY_HOST)), false);
+    const landingPayload = state.turnPayloads.at(-1);
+    assert.equal(landingPayload.placeSearch, undefined);
+    assert.equal(landingPayload.turnClassifier?.turnKind, 'other');
+
+    state.classifierMode = 'fail';
+    const classifierFail = await postTurn('best tacos near our hotel');
+    assert.notEqual(classifierFail.status, 502, JSON.stringify(classifierFail.body));
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    const classifierFailPayload = state.turnPayloads.at(-1);
+    assert.equal(classifierFailPayload.placeSearch?.status, 'skipped');
+    assert.equal(classifierFailPayload.placeSearch?.reason, 'classifier_failed');
+    assert.equal(classifierFailPayload.webSearch?.status, 'skipped');
+    assert.equal(classifierFailPayload.webSearch?.reason, 'classifier_failed');
+
     return { ok: true };
   } finally {
     globalThis.fetch = originalFetch;
@@ -381,6 +492,9 @@ console.log(JSON.stringify({
     'find_near_hotel_nominatim_fail_brave_ok',
     'recommend_near_kaanapali_no_coords_brave_ok',
     'all_providers_fail_502_with_provider_telemetry',
+    'events_question_uses_tavily_not_brave',
+    'maui_landing_no_in_turn_search',
+    'classifier_failure_skips_search_telemetry',
   ],
   result,
 }));

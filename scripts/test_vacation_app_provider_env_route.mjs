@@ -269,6 +269,9 @@ async function runProviderEnvRouteTest(blobMode) {
       if (questions.relevance) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
       }
+      if (questions.trip_intake) {
+        return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
+      }
       return {
         ok: true,
         json: async () => ({
@@ -283,6 +286,22 @@ async function runProviderEnvRouteTest(blobMode) {
     if (href.includes(OPENROUTER_HOST)) {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const user = raw.messages?.find((row) => row.role === 'user')?.content || '';
+      if (String(raw.messages?.[0]?.content || '').includes('turnKind')) {
+        const turnKind = /weather/i.test(String(user)) ? 'web_research' : 'place_search';
+        const body = {
+          turnKind,
+          target: turnKind === 'place_search' ? 'taco spots' : '',
+          anchor: turnKind === 'place_search' ? 'market square' : '',
+          anchorIsLodging: false,
+          question: turnKind === 'web_research' ? String(user) : '',
+          things: [],
+          roster: [],
+          destination: '',
+          hasDates: false,
+          title: '',
+        };
+        return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(body) } }] }) };
+      }
       if (String(user).includes('score')) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ score: 0.95 }) } }] }) };
       }

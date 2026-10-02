@@ -32,11 +32,37 @@ export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
   return telemetry;
 }
 
+export function stampTurnClassifier(payload, customerLive, classification) {
+  const turnClassifier = {
+    turnKind: classification?.ok === true ? classification.turnKind : 'other',
+    classifierModel: classification?.routerModel || null,
+  };
+  payload.turnClassifier = turnClassifier;
+  customerLive.turnClassifier = turnClassifier;
+  return turnClassifier;
+}
+
+export function skippedInTurnSearchTelemetry(reason, classification) {
+  return {
+    status: 'skipped',
+    reason,
+    turnKind: classification?.turnKind || 'other',
+    classifierModel: classification?.routerModel || null,
+    providers: [],
+    results: [],
+    resultIds: [],
+    sources: [],
+  };
+}
+
 export function placeSearchTelemetry({
   status = 'ok',
   error = null,
   things = [],
   providerAttempts = [],
+  turnKind = null,
+  classifierModel = null,
+  reason = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -48,5 +74,8 @@ export function placeSearchTelemetry({
     sources: rows.map((row) => row.provider),
   };
   if (error) telemetry.error = String(error).trim();
+  if (reason) telemetry.reason = String(reason).trim();
+  if (turnKind) telemetry.turnKind = String(turnKind).trim();
+  if (classifierModel) telemetry.classifierModel = String(classifierModel).trim();
   return telemetry;
 }

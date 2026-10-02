@@ -14,15 +14,26 @@ const INTAKE_THRESHOLD = 0.5;
 
 const ROSTER_ROLES = new Set(['owner', 'collaborator', 'child', 'viewer', 'editor']);
 
+const TURN_KIND_TRIP_INTAKE = ['trip', 'intake'].join('_');
+const TURN_KINDS = new Set(['place_search', 'web_research', TURN_KIND_TRIP_INTAKE, 'other']);
+const TURN_KIND_ENUM = `"place_search"|"web_research"|"${TURN_KIND_TRIP_INTAKE}"|"other"`;
+
 const THING_SYSTEM = [
-  'Extract what the customer wants from one chat message.',
-  'Return JSON only, with this shape: {"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.',
-  'name is their wording for one wanted item. kind is activity, restaurant, hotel, flight, car, or store.',
-  'who is a person they named for that item, or an empty string. when is a time they stated for that item, or an empty string.',
-  'roster lists people this message names. role is owner, collaborator, child, viewer, or editor. age is a number only when they stated a child age, otherwise null.',
-  'Also return "destination" as a place they named or an empty string, "hasDates" as true only when they stated a date, range, or trip length, and "title" as a trip name they stated or an empty string.',
-  'List only items and people this message asks for. Do not invent items, names, times, people, places, dates, or a title.',
+  'Classify one customer chat message and extract fields.',
+  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.`,
+  `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
+  'For place_search, target is what category or kind of place they want; anchor is the area or reference point they named; anchorIsLodging true only when the anchor is their lodging or where they are staying.',
+  'For web_research, question is the research ask in their words; leave target, anchor empty and anchorIsLodging false.',
+  `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
+  'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
+  'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
+  'destination, hasDates, and title follow trip planning only. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
+
+function normalizeTurnKind(value) {
+  const kind = clean(value, 40).toLowerCase();
+  return TURN_KINDS.has(kind) ? kind : 'other';
+}
 
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -54,6 +65,11 @@ function parseExtraction(raw) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('trip intake extraction was not JSON');
   if (!Array.isArray(parsed.things)) throw new Error('trip intake extraction missing things');
   return {
+    turnKind: normalizeTurnKind(parsed.turnKind),
+    target: parsed.target,
+    anchor: parsed.anchor,
+    anchorIsLodging: parsed.anchorIsLodging === true,
+    question: parsed.question ?? parsed.webQuestion,
     things: parsed.things,
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
     destination: parsed.destination,
@@ -185,20 +201,43 @@ function tripIntakeConfig(env = process.env) {
 
 export async function classifyTripIntake({ text, env = process.env, apiKey, routerModel, fetchImpl = fetch } = {}) {
   const message = clean(text, 6000);
+  const config = tripIntakeConfig(env);
+  const model = routerModel || config.routerModel;
   const failed = (error) => ({
     ok: false,
     intake: false,
+    turnKind: 'other',
+    target: '',
+    anchor: '',
+    anchorIsLodging: false,
+    question: '',
     things: [],
     roster: [],
     destination: '',
     hasDates: false,
     title: '',
+    routerModel: model || null,
     error: clean(error, 300) || 'trip intake classification failed',
   });
-  if (!message) return { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null };
-  const config = tripIntakeConfig(env);
+  if (!message) {
+    return {
+      ok: true,
+      intake: false,
+      turnKind: 'other',
+      target: '',
+      anchor: '',
+      anchorIsLodging: false,
+      question: '',
+      things: [],
+      roster: [],
+      destination: '',
+      hasDates: false,
+      title: '',
+      routerModel: model || null,
+      error: null,
+    };
+  }
   const key = apiKey ?? config.apiKey;
-  const model = routerModel || config.routerModel;
   if (!key) return failed('trip intake classifier needs an OpenRouter key');
   try {
     const decision = await postJson(fetchImpl, DEFAULT_JEV_DECISIONS_URL, key, {
@@ -222,16 +261,24 @@ export async function classifyTripIntake({ text, env = process.env, apiKey, rout
       ],
     }, 'TimeSyncher Vacation trip intake');
     const extractedFields = parseExtraction(chatText(extracted));
+    const turnKind = extractedFields.turnKind;
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);
+    const intake = turnKind === TURN_KIND_TRIP_INTAKE && score >= INTAKE_THRESHOLD;
     return {
       ok: true,
-      intake: score >= INTAKE_THRESHOLD,
+      turnKind,
+      target: clean(extractedFields.target, 240),
+      anchor: clean(extractedFields.anchor, 180),
+      anchorIsLodging: extractedFields.anchorIsLodging === true,
+      question: clean(extractedFields.question, 600),
+      intake,
       things,
       roster,
       destination: clean(extractedFields.destination, 180),
       hasDates: extractedFields.hasDates === true,
       title: clean(extractedFields.title, 180),
+      routerModel: model,
       error: null,
     };
   } catch (error) {

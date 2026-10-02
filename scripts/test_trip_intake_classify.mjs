@@ -9,7 +9,7 @@ assert.doesNotMatch(turnSource, /function isLongIntake|function intakeFacts|add\
 assert.doesNotMatch(`${turnSource}\n${routeSource}\n${classifySource}`, /\b(?:isLongIntake|intakeFacts|postIntakeUpsellTurn|ensureNamedThings)\b/);
 assert.doesNotMatch(turnSource, /later in the week|laterFridayLabel|function whoIn|'Marcus', 'Aunt'/);
 assert.match(classifySource, /"roster"/);
-assert.doesNotMatch(classifySource, /'trip_intake'/);
+assert.match(classifySource, /turnKind/);
 assert.match(routeSource, /thingsFromIntake/);
 assert.match(routeSource, /wantedThings/);
 assert.match(routeSource, /intakeEvent/);
@@ -48,7 +48,22 @@ function mockFetch({ score, things, roster = [], destination = '', hasDates = fa
       return jsonResponse({ answers: { trip_intake: { noul: score } } });
     }
     return jsonResponse({
-      choices: [{ message: { content: chatText || JSON.stringify({ things, roster, destination, hasDates, title }) } }],
+      choices: [{
+        message: {
+          content: chatText || JSON.stringify({
+            turnKind: score >= 0.5 ? 'trip_intake' : 'other',
+            target: '',
+            anchor: '',
+            anchorIsLodging: false,
+            question: '',
+            things,
+            roster,
+            destination,
+            hasDates,
+            title,
+          }),
+        },
+      }],
     });
   };
   fetchImpl.calls = calls;
@@ -181,7 +196,11 @@ assert.match(missingKey.error, /OpenRouter key/);
 assert.deepEqual(missingKey.things, []);
 
 const blank = await classifyTripIntake({ text: '   ', env, fetchImpl: () => { throw new Error('fetch should not run'); } });
-assert.deepEqual(blank, { ok: true, intake: false, things: [], roster: [], destination: '', hasDates: false, title: '', error: null });
+assert.equal(blank.ok, true);
+assert.equal(blank.intake, false);
+assert.equal(blank.turnKind, 'other');
+assert.deepEqual(blank.things, []);
+assert.equal(blank.error, null);
 assert.doesNotMatch(routeSource, /TimeSyncher Vacation Admin Test|placeTitle/);
 assert.doesNotMatch(turnSource, /function thingPattern|placeTitle/);
 assert.match(routeSource, /resolveIntakePlace/);

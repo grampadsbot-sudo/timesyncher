@@ -4,14 +4,8 @@ import { searchTavily } from './poi-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
 import { inTurnSearchTelemetry } from './in-turn-search-telemetry.mjs';
 
-import { isCustomerPlaceSearchTurn, PLAN_INTAKE, WEB_RESEARCH } from './place-search-intent.mjs';
-
-function isCustomerWebResearchTurn(text = '') {
-  const source = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!source || source.length < 15) return false;
-  if (isCustomerPlaceSearchTurn(source)) return false;
-  if (PLAN_INTAKE.test(source)) return false;
-  return /\?/.test(source) && WEB_RESEARCH.test(source);
+function clean(value, max) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
 function webResultsToChatRows(notes = []) {
@@ -27,19 +21,22 @@ function webResultsToChatRows(notes = []) {
 
 async function runCustomerChatWebResearch({
   customerTurn = '',
+  webResearchTurn = false,
+  classification = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   tavilyImpl = searchTavily,
 } = {}) {
-  if (!isCustomerWebResearchTurn(customerTurn)) return { status: 'skip' };
+  if (!webResearchTurn) return { status: 'skip' };
   const providerEnv = buildProviderEnv(env);
   if (!providerEnv.tavily) {
     const error = `Search refused to run. Missing ${providerEnv.tavilyName}.`;
     console.error(`customer chat web research refused: ${error}`);
     return { status: 'failed', error, webResults: [], things: [] };
   }
+  const query = clean(classification?.question, 600) || clean(customerTurn, 600);
   try {
-    const found = await tavilyImpl(customerTurn, { env: providerEnv, fetchImpl });
+    const found = await tavilyImpl(query, { env: providerEnv, fetchImpl });
     const notes = (found?.results || []).map((row) => ({
       source: 'tavily',
       title: row.title,
@@ -68,6 +65,8 @@ export async function applyChatWebResearchForVacationTurn({
   tripId,
   requestId,
   customerTurn,
+  classification,
+  webResearchTurn = false,
   payload,
   customerLive,
   turnId,
@@ -75,11 +74,21 @@ export async function applyChatWebResearchForVacationTurn({
   fetchImpl = globalThis.fetch,
   tavilyImpl,
 } = {}) {
-  const webResearchTurn = isCustomerWebResearchTurn(customerTurn);
   if (!webResearchTurn) return { kind: 'skip', webResults: [], webResearchTurn: false };
-  const chatSearch = await runCustomerChatWebResearch({ customerTurn, env, fetchImpl, tavilyImpl });
+  const chatSearch = await runCustomerChatWebResearch({
+    customerTurn,
+    webResearchTurn,
+    classification,
+    env,
+    fetchImpl,
+    tavilyImpl,
+  });
+  const classifierMeta = {
+    turnKind: classification?.turnKind || 'web_research',
+    classifierModel: classification?.routerModel || null,
+  };
   if (chatSearch.status === 'failed') {
-    const webSearch = { status: 'failed', error: chatSearch.error };
+    const webSearch = { status: 'failed', error: chatSearch.error, ...classifierMeta };
     payload.webSearch = webSearch;
     customerLive.webSearch = webSearch;
     await db`
@@ -92,7 +101,10 @@ export async function applyChatWebResearchForVacationTurn({
   for (const thing of chatSearch.things) {
     await insertTripThing(db, { tripId, requestId, thing });
   }
-  const webSearch = inTurnSearchTelemetry(chatSearch.things);
+  const webSearch = {
+    ...inTurnSearchTelemetry(chatSearch.things),
+    ...classifierMeta,
+  };
   payload.webSearch = webSearch;
   customerLive.webSearch = webSearch;
   await db`
