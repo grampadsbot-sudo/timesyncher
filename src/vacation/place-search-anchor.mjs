@@ -28,7 +28,7 @@ export async function loadTripPlaceSearchContext(db, tripId) {
 }
 
 /** Area text for place search: lodging Thing, then trip destination, then resolved metadata area; else named anchor. */
-export function resolvePlaceSearchDestination({
+export function resolvePlaceSearchAreaDetail({
   classification = null,
   lodgingText = '',
   tripDestination = '',
@@ -41,13 +41,17 @@ export function resolvePlaceSearchDestination({
   const anchorIsLodging = classification?.anchorIsLodging === true;
 
   if (anchorIsLodging) {
-    if (lodging) return lodging;
-    if (destination) return destination;
-    if (resolved) return resolved;
-    return '';
+    if (lodging) return { text: lodging, source: 'lodging' };
+    if (destination) return { text: destination, source: 'destination' };
+    if (resolved) return { text: resolved, source: 'resolved_area' };
+    return { text: '', source: '' };
   }
-  if (anchor) return anchor;
-  if (destination) return destination;
-  if (resolved) return resolved;
-  return '';
+  if (anchor) return { text: anchor, source: 'named_anchor' };
+  if (destination) return { text: destination, source: 'destination' };
+  if (resolved) return { text: resolved, source: 'resolved_area' };
+  return { text: '', source: '' };
+}
+
+export function resolvePlaceSearchDestination(params = {}) {
+  return resolvePlaceSearchAreaDetail(params).text;
 }

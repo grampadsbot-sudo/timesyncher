@@ -291,6 +291,7 @@ async function runProviderEnvRouteTest(blobMode) {
         const body = {
           turnKind,
           target: turnKind === 'place_search' ? 'taco spots' : '',
+          category: turnKind === 'place_search' ? 'restaurant' : '',
           anchor: turnKind === 'place_search' ? 'market square' : '',
           anchorIsLodging: false,
           question: turnKind === 'web_research' ? String(user) : '',

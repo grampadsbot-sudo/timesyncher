@@ -15,6 +15,8 @@ import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
+import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
+import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
 
 export { PlaceSearchError };
 const DEDUPE_METERS = 250;
@@ -40,9 +42,9 @@ const PRIOR_CATEGORIES = new Map([
   ['hotel', 'hotel'],
 ]);
 
-function fail(message, code, providers, relevanceRejections = null) {
+function fail(message, code, providers, relevanceRejections = null, diagnostics = null) {
   console.error(message);
-  const error = new PlaceSearchError(message, code);
+  const error = new PlaceSearchError(message, code, diagnostics && typeof diagnostics === 'object' ? diagnostics : {});
   if (Array.isArray(providers) && providers.length) error.providers = providers;
   if (Array.isArray(relevanceRejections) && relevanceRejections.length) {
     error.relevanceRejections = relevanceRejections.slice(0, 10);
@@ -294,95 +296,20 @@ async function attachRelevance(rows, fetchImpl, env, relevanceContext = {}) {
   return attachPlaceRelevance(rows, fetchImpl, env, relevanceContext, { requireOpenRouterKey });
 }
 
-const OSM_CATEGORIES = [
-  {
-    category: 'grocery',
-    filter: '["shop"~"supermarket|grocery|convenience|greengrocer"]',
-    match: (tags) => /^(?:supermarket|grocery|convenience|greengrocer)$/.test(String(tags.shop || '')),
-    name: (tags) => String(tags.shop || '').trim(),
-  },
-  {
-    category: 'restaurant',
-    filter: '["amenity"~"restaurant|cafe|fast_food"]',
-    match: (tags) => /restaurant|cafe|fast_food/.test(String(tags.amenity || '')),
-    name: (tags) => String(tags.amenity || '').trim(),
-  },
-  {
-    category: 'store',
-    filter: '["shop"]',
-    match: (tags) => Boolean(tags.shop),
-    name: (tags) => String(tags.shop || '').trim(),
-  },
-  {
-    category: 'garden',
-    filter: '["leisure"="garden"]',
-    match: (tags) => String(tags.leisure || '') === 'garden' || String(tags.tourism || '') === 'garden',
-    name: () => 'garden',
-  },
-  {
-    category: 'activity',
-    filter: '["tourism"~"attraction|museum|gallery|viewpoint"]',
-    match: (tags) => Boolean(tags.tourism),
-    name: (tags) => String(tags.tourism || '').trim(),
-  },
-];
-
-function overpassQuery(center) {
-  const parts = [];
-  for (const entry of OSM_CATEGORIES) {
-    const around = `(around:${categoryRadiusMeters(entry.category)},${center.lat},${center.lng})`;
-    parts.push(`node${entry.filter}${around};`, `way${entry.filter}${around};`);
-  }
-  return `[out:json][timeout:25];(${parts.join('')});out center 40;`;
-}
-
 function categoryNameField(name) {
   const categoryName = String(name || '').trim();
   return categoryName ? { categoryName } : {};
 }
 
-function osmCategory(tags = {}) {
-  const found = OSM_CATEGORIES.find((entry) => entry.match(tags));
-  return found ? found.category : '';
-}
-
-function osmCategoryName(tags = {}) {
-  const found = OSM_CATEGORIES.find((entry) => entry.match(tags));
-  return found ? found.name(tags) : '';
-}
-
-async function queryOsm(fetchImpl, center) {
-  const body = `data=${encodeURIComponent(overpassQuery(center))}`;
+async function queryOsm(fetchImpl, center, categoryFilter = null) {
+  const body = `data=${encodeURIComponent(overpassQuery(center, categoryFilter))}`;
   const payload = await readJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
     label: 'OpenStreetMap Overpass',
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body,
   });
-  const elements = Array.isArray(payload?.elements) ? payload.elements : [];
-  const places = [];
-  for (const element of elements) {
-    const tags = element?.tags || {};
-    const title = String(tags.name || '').trim();
-    const category = osmCategory(tags);
-    const lat = finite(element?.lat ?? element?.center?.lat);
-    const lng = finite(element?.lon ?? element?.center?.lon);
-    if (!title || !category || lat === null || lng === null) continue;
-    if (metersInsideCategory(center, { lat, lng }, category) === null) continue;
-    places.push({
-      source: 'osm',
-      title,
-      category,
-      lat,
-      lng,
-      address: String(tags['addr:full'] || [tags['addr:street'], tags['addr:city']].filter(Boolean).join(', ')),
-      url: element.type && element.id ? `https://www.openstreetmap.org/${element.type}/${element.id}` : '',
-      externalId: element.type && element.id ? `${element.type}/${element.id}` : '',
-      ...ratingFromRecord(tags),
-      ...categoryNameField(osmCategoryName(tags)),
-    });
-  }
-  return places;
+  return placesFromOsmPayload(payload, center, { finite, metersInsideCategory, ratingFromRecord });
 }
 
 function braveCallSummary(calls) {
@@ -546,6 +473,7 @@ export async function searchPlaces({
   queries,
   relevanceTarget = '',
   relevanceArea = '',
+  searchAnchor = null,
   keepAreaText = false,
   env = process.env,
   fetchImpl = globalThis.fetch,
@@ -586,6 +514,14 @@ export async function searchPlaces({
   let locationText = dest;
   const placeTarget = String(relevanceTarget || '').trim() || String(placeQueries[0]?.target || '').trim();
   const placeArea = String(relevanceArea || '').trim() || dest;
+  for (const item of placeQueries) {
+    const raw = String(item?.category || '').trim().toLowerCase();
+    if (!raw) fail('Place search refused: classifier place category missing.', 'missing_place_category');
+    if (raw !== 'hotel' && !normalizePlaceSearchCategory(raw)) {
+      fail(`Place search refused: unknown place category ${raw}.`, 'unknown_place_category');
+    }
+  }
+  const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
   if (placeQueries.length) {
     const pass = await runPlaceProviderPass({
       fetchImpl,
@@ -595,6 +531,8 @@ export async function searchPlaces({
       lodgingPoint,
       keepAreaText,
       placeQueries,
+      osmCategoryFilter,
+      searchAnchor,
       relevanceContext: { target: placeTarget, area: placeArea },
       priorPlaces,
       loadPriorPlaces,

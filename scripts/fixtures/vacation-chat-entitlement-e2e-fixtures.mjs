@@ -255,6 +255,7 @@ function classifierExtractionBody({ title, destination, hasDates, intake, user =
     return {
       turnKind: 'place_search',
       target: 'taco spots',
+      category: 'restaurant',
       anchor: 'Pike Place',
       anchorIsLodging: false,
       question: '',

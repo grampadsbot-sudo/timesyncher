@@ -4,41 +4,12 @@ import { buildProviderEnv } from './provider-env.mjs';
 import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.mjs';
-import { loadTripPlaceSearchContext, resolvePlaceSearchDestination } from './place-search-anchor.mjs';
+import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail } from './place-search-anchor.mjs';
+import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
+import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
-}
-
-function inferSearchCategory(text = '') {
-  const lower = String(text).toLowerCase();
-  if (/\b(taco|restaurant|seafood|dinner|lunch|breakfast|brunch|coffee|cafe|food|dining|splurge|kid-?friendly)\b/.test(lower)) return 'restaurant';
-  if (/\b(toy|book\s*store|bookstore|shop|store|shopping|boutique)\b/.test(lower)) return 'store';
-  return 'activity';
-}
-
-function queriesFromPlaceClassification(classification, tripDestination = '', lodgingText = '', tripResolvedArea = '') {
-  const destination = resolvePlaceSearchDestination({
-    classification,
-    lodgingText,
-    tripDestination,
-    tripResolvedArea,
-  });
-  const target = clean(classification?.target, 240);
-  const category = inferSearchCategory(target || destination);
-  const q = target
-    ? `${target}${destination ? ` near ${destination}` : ''}`.trim().slice(0, 240)
-    : destination.slice(0, 240);
-  return {
-    destination,
-    queries: [{
-      category,
-      q,
-      limit: 5,
-      place: true,
-      ...(target ? { target } : {}),
-    }],
-  };
 }
 
 async function resolveTripIntakeForCustomerTurn({ text = '', env = process.env, classifyImpl } = {}) {
@@ -114,6 +85,12 @@ export async function runCustomerChatPlaceSearch({
 } = {}) {
   if (!placeSearchTurn) return { status: 'skip' };
   const providerEnv = buildProviderEnv(env);
+  const searchAnchor = resolvePlaceSearchAreaDetail({
+    classification,
+    lodgingText: lodging,
+    tripDestination,
+    tripResolvedArea,
+  });
   const plan = queriesFromPlaceClassification(classification, tripDestination, lodging, tripResolvedArea);
   if (!plan.destination) {
     const error = 'Place search needs a trip destination or a named area in the message.';
@@ -135,6 +112,7 @@ export async function runCustomerChatPlaceSearch({
       queries: plan.queries,
       relevanceTarget: clean(classification?.target, 240),
       relevanceArea: plan.destination,
+      searchAnchor,
       env: providerEnv,
       fetchImpl,
     });
@@ -150,17 +128,13 @@ export async function runCustomerChatPlaceSearch({
   } catch (error) {
     const message = String(error?.message || error || 'place search failed').trim();
     console.error(`customer chat place search failed: ${message}`);
+    const code = String(error?.code || '').trim();
     const search = {
       providers: Array.isArray(error?.providers) ? error.providers : [],
-      ...(Array.isArray(error?.relevanceRejections) && error.relevanceRejections.length
-        ? { relevanceRejections: error.relevanceRejections }
-        : {}),
-      ...(String(error?.code || '').trim() === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
-      ...(String(error?.code || '').trim() === 'relevance_judge_failed' ? {
-        reason: 'relevance_judge_failed',
-        judgeHttpStatus: Number.isFinite(Number(error?.judgeHttpStatus)) ? Number(error.judgeHttpStatus) : null,
-        judgeBodySnippet: String(error?.judgeBodySnippet || '').trim() || null,
-      } : {}),
+      ...placeSearchDiagnosticsFromError(error),
+      ...(code === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
+      ...(code === 'prior_db_sole_source' ? { reason: 'prior_db_sole_source' } : {}),
+      ...(code === 'relevance_judge_failed' ? { reason: 'relevance_judge_failed' } : {}),
     };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
   }
@@ -216,6 +190,10 @@ export async function applyChatPlaceSearchForVacationTurn({
       error: chatSearch.error,
       reason: chatSearch.search?.reason || null,
       relevanceRejections: chatSearch.search?.relevanceRejections || null,
+      judgeInput: chatSearch.search?.judgeInput || null,
+      searchCenter: chatSearch.search?.searchCenter || null,
+      anchor: chatSearch.search?.anchor || null,
+      survivingPriorDbTitles: chatSearch.search?.survivingPriorDbTitles || null,
       judgeHttpStatus: chatSearch.search?.judgeHttpStatus ?? null,
       judgeBodySnippet: chatSearch.search?.judgeBodySnippet ?? null,
       things: [],
