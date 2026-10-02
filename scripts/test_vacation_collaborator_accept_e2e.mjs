@@ -6,9 +6,11 @@ import path from 'node:path';
 
 import { activationStatusPersistent, loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
-import { attachSessionCollaboratorInvitesToTrip, collaboratorEulaClientKey } from '../src/vacation/collaborators.mjs';
-import { collaboratorInviteEmail } from '../src/vacation/email.mjs';
+import { attachSessionCollaboratorInvitesToTrip, collaboratorEulaAcceptUrl, collaboratorEulaClientKey } from '../src/vacation/collaborators.mjs';
+import { openCollaboratorAppSeats } from '../src/vacation/collaborator-app-seat.mjs';
+import { collaboratorInviteEmail, queueOrSendCollaboratorInviteEmail } from '../src/vacation/email.mjs';
 import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { transcriptAuthorMissingError, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 
 function sqlText(strings) {
   return strings.join(' ').replace(/\s+/g, ' ').trim();
@@ -106,15 +108,17 @@ function buildState({ withTrip = false } = {}) {
       direction: 'inbound',
     }],
     welcomes: new Set(),
+    outboundEmails: [],
     customers: {
       [ownerCustomerId]: { id: ownerCustomerId, first_name: 'Owner', display_name: 'Owner Ada', email: 'owner@example.com' },
     },
+    siteUrl: 'https://www.timesyncher.com/v/harbor-ridge-neutral',
     trips: withTrip ? [{
       id: tripId,
       customer_id: ownerCustomerId,
       title: 'Harbor Ridge Week',
       destination: 'Neutral Bay',
-      metadata: {},
+      metadata: { publicUrl: 'https://www.timesyncher.com/v/harbor-ridge-neutral', shareToken: 'harbor-ridge-neutral' },
       status: 'planning',
     }] : [],
     eulaStoreDir: null,
@@ -124,6 +128,23 @@ function buildState({ withTrip = false } = {}) {
 function dbFor(state) {
   return async (strings, ...values) => {
     const text = sqlText(strings);
+    if (/insert into vacation_collaborator_invites/i.test(text)) {
+      const id = crypto.randomUUID();
+      state.invites.push({
+        id,
+        owner_customer_id: state.ownerCustomerId,
+        trip_id: values.find((v) => v === state.tripId) || state.tripId,
+        plan_code: 'telegram_collaborators_single_trip',
+        scope: 'single_trip',
+        requested_for: values.find((v) => typeof v === 'string' && v.includes('@')) ? 'Bryn' : 'Alex',
+        status: 'pending_payment',
+        metadata: values.find((v) => v && typeof v === 'object' && v.email) || {},
+        owner_display_name: 'Owner Ada',
+        owner_email: 'owner@example.com',
+        trip_title: state.trips[0]?.title || null,
+      });
+      return [{ id, token: 'invite-token' }];
+    }
     if (/from vacation_collaborator_invites/i.test(text) && /where i\.id =/i.test(text)) {
       const id = values.find((v) => typeof v === 'string' && state.invites.some((row) => row.id === v));
       const invite = state.invites.find((row) => row.id === id);
@@ -177,7 +198,13 @@ function dbFor(state) {
       return [];
     }
     if (/insert into vacation_collaborators/i.test(text)) {
-      state.collaborators.push({ invite_id: state.inviteId, trip_id: state.tripId, owner_customer_id: state.ownerCustomerId });
+      state.collaborators.push({
+        invite_id: state.inviteId,
+        trip_id: state.tripId,
+        owner_customer_id: state.ownerCustomerId,
+        display_name: 'Alex',
+        metadata: {},
+      });
       return [];
     }
     if (/insert into vacation_onboarding_welcomes/i.test(text)) {
@@ -190,6 +217,35 @@ function dbFor(state) {
       const id = values[0];
       return state.customers[id] ? [state.customers[id]] : [];
     }
+    if (/from customers/i.test(text) && /first_name/i.test(text)) {
+      const id = values.find((v) => state.customers[v]) || state.ownerCustomerId;
+      return state.customers[id] ? [state.customers[id]] : [];
+    }
+    if (/from vacation_collaborators c/i.test(text)) {
+      return state.collaborators.map((row) => ({
+        display_name: row.display_name || 'Alex',
+        metadata: row.metadata || {},
+        invite_metadata: { collaboratorCustomerId: state.collabCustomerId },
+      }));
+    }
+    if (/from outbound_emails/i.test(text)) {
+      const inviteId = values.find((v) => typeof v === 'string' && state.invites.some((row) => row.id === v));
+      if (!inviteId) return [];
+      return state.outboundEmails.filter((row) => row.collaboratorInviteId === inviteId);
+    }
+    if (/insert into outbound_emails/i.test(text)) {
+      const meta = values.find((v) => v && typeof v === 'object' && v.collaboratorInviteId);
+      if (meta?.collaboratorInviteId) {
+        state.outboundEmails.push({
+          id: crypto.randomUUID(),
+          collaboratorInviteId: meta.collaboratorInviteId,
+          status: 'sent',
+          subject: values.find((v) => typeof v === 'string' && v.includes('invited you')),
+        });
+      }
+      return [{ id: crypto.randomUUID() }];
+    }
+    if (/update outbound_emails/i.test(text)) return [{ id: crypto.randomUUID() }];
     if (/from transcript_turns/i.test(text)) {
       const customerId = values.find((v) => v === state.ownerCustomerId) || state.ownerCustomerId;
       const tripScoped = /trip_id =/i.test(text) && !/trip_id is null/i.test(text);
@@ -360,6 +416,40 @@ async function runPreSiteFlow() {
   assert.equal(welcomeTurns.length, 1, `turns=${JSON.stringify(appPayload.turns.map((turn) => turn.body))}`);
   assert.doesNotMatch(welcomeTurns[0].body, /https?:\/\//);
   assert.equal(appPayload.turns.some((turn) => turn.body === 'Owner planning note'), true);
+  const ownerPlanning = appPayload.turns.find((turn) => turn.body === 'Owner planning note');
+  assert.equal(ownerPlanning?.authorLabel, 'Owner');
+  assert.ok(appPayload.turns.every((turn) => {
+    if (turn.speaker === 'system' || turn.direction === 'system') return true;
+    return String(turn.authorLabel || '').trim().length > 0;
+  }));
+
+  state.transcript.push({
+    customer_id: state.ownerCustomerId,
+    trip_id: null,
+    speaker: 'customer',
+    body: 'Collaborator planning note',
+    channel: 'vacation-app',
+    payload: { authorId: state.collabCustomerId, authorName: 'Alex' },
+    direction: 'inbound',
+  });
+  const ownerGet = await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.ownerToken)}`);
+  const ownerPayload = JSON.parse(ownerGet.body);
+  assert.equal(ownerGet.statusCode, 200, ownerGet.body);
+  const ownerSeesCollab = ownerPayload.turns.find((turn) => turn.body === 'Collaborator planning note');
+  assert.equal(ownerSeesCollab?.authorLabel, 'Alex');
+  const collabSeesSelf = (await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`));
+  const collabPayload2 = JSON.parse(collabSeesSelf.body);
+  assert.equal(collabPayload2.turns.find((turn) => turn.body === 'Collaborator planning note')?.authorLabel, 'You');
+  assert.equal(collabPayload2.turns.find((turn) => turn.body === 'Owner planning note')?.authorLabel, 'Owner');
+
+  const inviteAcceptUrl = collaboratorEulaAcceptUrl({ id: state.inviteId }, process.env);
+  await queueOrSendCollaboratorInviteEmail(db, {
+    invite: state.invites[0],
+    contact: { email: 'alex@example.com', displayName: 'Alex' },
+    acceptUrl: inviteAcceptUrl,
+  }, process.env);
+  assert.equal(state.outboundEmails.length, 1);
+  assert.match(state.outboundEmails[0].subject || '', /invited you/i);
 
   const secondGet = await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`);
   const secondPayload = JSON.parse(secondGet.body);
@@ -371,7 +461,7 @@ async function runPreSiteFlow() {
     customer_id: state.ownerCustomerId,
     title: 'Harbor Ridge Week',
     destination: 'Neutral Bay',
-    metadata: {},
+    metadata: { publicUrl: state.siteUrl, shareToken: 'harbor-ridge-neutral' },
     status: 'planning',
   });
   await attachSessionCollaboratorInvitesToTrip(db, {
@@ -379,6 +469,13 @@ async function runPreSiteFlow() {
     tripId: state.tripId,
     onboardingSessionId: state.ownerSessionId,
   });
+  const tripContextEmail = await queueOrSendCollaboratorInviteEmail(db, {
+    invite: state.invites[0],
+    contact: { email: 'alex@example.com', displayName: 'Alex' },
+    publicUrl: state.siteUrl,
+  }, process.env);
+  assert.equal(tripContextEmail.status, 'already_sent');
+  assert.equal(state.outboundEmails.length, 1);
   assert.equal(state.invites[0].trip_id, state.tripId);
   assert.equal(state.collaborators[0].trip_id, state.tripId);
 }
@@ -400,12 +497,35 @@ async function runPostSiteFlow() {
   const appGet = await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`);
   const appPayload = JSON.parse(appGet.body);
   const expectedPostWelcome = renderOnboardingWelcome({
-    audience: 'collaborator_no_site',
+    audience: 'collaborator',
     collabFirstName: 'Alex',
     ownerFirstName: 'Owner',
     tripTitle: 'Harbor Ridge Week',
+    tripSiteUrl: state.siteUrl,
   });
   assert.equal(appPayload.turns.filter((turn) => turn.body === expectedPostWelcome).length, 1, appGet.body.slice(0, 400));
+  assert.match(expectedPostWelcome, new RegExp(state.siteUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+  const emailsBeforePostInvite = state.outboundEmails.length;
+  const postInviteEmail = await openCollaboratorAppSeats(db, {
+    ownerCustomerId: state.ownerCustomerId,
+    tripId: state.tripId,
+    onboardingSessionId: state.ownerSessionId,
+    seats: [{ name: 'Bryn', email: 'bryn@example.com' }],
+    env: process.env,
+  });
+  assert.equal(postInviteEmail.length, 1);
+  assert.equal(state.outboundEmails.length, emailsBeforePostInvite + 1);
+  const postInviteId = state.invites[state.invites.length - 1]?.id;
+  const postAcceptUrl = collaboratorEulaAcceptUrl({ id: postInviteId }, process.env);
+  assert.match(postAcceptUrl, /\/accept\/vacation-collaborator-/);
+  const postEmail = collaboratorInviteEmail({
+    contact: { firstName: 'Bryn', email: 'bryn@example.com' },
+    invite: { id: postInviteId, trip_id: state.tripId, owner_display_name: 'Owner Ada', trip_title: 'Harbor Ridge Week' },
+    acceptUrl: postAcceptUrl,
+    publicUrl: state.siteUrl,
+  });
+  assert.match(postEmail.textBody, /\/accept\/vacation-collaborator-/);
 
   await call('POST', `/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-collaborator-${state.inviteId}`)}`, {
     acceptedByName: 'Alex',
@@ -417,9 +537,43 @@ async function runPostSiteFlow() {
   assert.equal(revisitPayload.turns.filter((turn) => turn.body === expectedPostWelcome).length, 1);
 }
 
+const badTurn = {
+  speaker: 'customer',
+  direction: 'inbound',
+  authorId: 'unknown-person',
+  authorName: '',
+};
+const missing = turnAuthorLabel(badTurn, { viewerId: 'viewer-1', customer_id: 'viewer-1' }, []);
+assert.equal(missing.reason, 'author_name_missing');
+assert.equal(transcriptAuthorMissingError(badTurn, { customer_id: 'viewer-1' }).event, 'transcript_author_missing');
+
+async function runMissingAuthorFailure() {
+  const state = buildState({ withTrip: false });
+  const db = dbFor(state);
+  useOnboardingLookup(db);
+  useVacationAppDatabase(db);
+  state.transcript.push({
+    customer_id: state.ownerCustomerId,
+    trip_id: null,
+    speaker: 'customer',
+    body: 'Unlabeled stranger turn',
+    channel: 'vacation-app',
+    payload: { authorId: '00000000-0000-0000-0000-000000000001', authorName: 'Nobody' },
+    direction: 'inbound',
+  });
+  await call('POST', `/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-collaborator-${state.inviteId}`)}`, {
+    acceptedByName: 'Alex',
+    checkboxConfirmed: true,
+  });
+  const broken = await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`);
+  assert.notEqual(broken.statusCode, 200);
+  assert.match(broken.body, /transcript_author_missing/);
+}
+
 try {
   await runPreSiteFlow();
   await runPostSiteFlow();
+  await runMissingAuthorFailure();
 } finally {
   useOnboardingLookup(null);
   useVacationAppDatabase(null);

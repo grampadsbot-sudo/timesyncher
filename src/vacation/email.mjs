@@ -335,13 +335,15 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
   const message = collaboratorInviteEmail({ contact: normalizedContact, invite: inviteForEmail, token, acceptUrl, publicUrl, env });
 
   const existing = await db`
-    select id, status
+    select id, status, subject
     from outbound_emails
     where metadata->>'collaboratorInviteId' = ${String(invite.id)}
-      and subject = ${message.subject}
+    order by sent_at desc nulls last, created_at desc nulls last
     limit 1
   `;
-  if (existing[0]?.status === 'sent') return { ok: true, status: 'already_sent', emailId: existing[0].id };
+  if (existing[0]?.status === 'sent') {
+    return { ok: true, status: 'already_sent', emailId: existing[0].id, subject: existing[0].subject };
+  }
 
   let provider = 'pending';
   let providerMessageId = null;

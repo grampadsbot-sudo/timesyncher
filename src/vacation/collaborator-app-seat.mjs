@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
-import { createWebEditorInvite } from './web-access.mjs';
+import { publicTripUrl } from './web-access.mjs';
 import { upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
@@ -76,24 +76,17 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
       },
       env,
     });
-    let web = null;
+    let publicUrl = '';
     if (resolvedTripId) {
-      web = await createWebEditorInvite(db, {
-        ownerCustomerId,
-        tripId: resolvedTripId,
-        email,
-        displayName: name,
-        role: 'web_editor',
-        metadata: { payer, channel: 'email-invite' },
-        env,
-      });
+      const trips = await db`select title, metadata from trips where id = ${resolvedTripId} limit 1`;
+      if (trips[0]) publicUrl = publicTripUrl(trips[0], env);
     }
     const sent = await queueOrSendCollaboratorInviteEmail(db, {
       invite,
       token,
       contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
       acceptUrl: '',
-      publicUrl: web?.grant?.public_url || '',
+      publicUrl,
     }, env);
     opened.push({
       name,
