@@ -1,13 +1,14 @@
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { failReplyActionClaim, replyActionClaimReason } from './reply-action-claim.mjs';
+import { replyPlaceSearchProviderLeakReason } from './place-search-reply-facts.mjs';
 
 const ID_CITATION = /\(\s*id\s*:\s*[^)]+\)/i;
 const PRODUCT_ID_LITERAL = /timesyncher_vacation_[a-z0-9_]+/i;
 
 export class ReplyIdCitationBlockedError extends Error {
   constructor(reason, tripId) {
-    super('reply_id_citation_blocked');
-    this.name = 'reply_id_citation_blocked';
+    super(reason === 'reply_place_search_provider_leak' ? 'reply_place_search_provider_leak' : 'reply_id_citation_blocked');
+    this.name = reason === 'reply_place_search_provider_leak' ? 'reply_place_search_provider_leak' : 'reply_id_citation_blocked';
     this.reason = reason;
     this.tripId = tripId;
   }
@@ -28,6 +29,8 @@ export function failReplyIdCitation(reason, tripId = '') {
 }
 
 export function assertCustomerReplyShippable(reply, tripId = '', turnActionResults = null, replyClaimContext = null) {
+  const leakReason = replyPlaceSearchProviderLeakReason(reply);
+  if (leakReason) failReplyIdCitation(leakReason, tripId);
   const reason = replyIdCitationReason(reply);
   if (reason) failReplyIdCitation(reason, tripId);
   const actionReason = replyActionClaimReason(reply, turnActionResults, replyClaimContext);
@@ -49,7 +52,7 @@ export async function blockVacationAppReplyIdCitation({
     assertCustomerReplyShippable(replyText, tripId);
     return null;
   } catch (error) {
-    if (error?.name !== 'reply_id_citation_blocked') throw error;
+    if (error?.name !== 'reply_id_citation_blocked' && error?.name !== 'reply_place_search_provider_leak') throw error;
     const replyFailure = 'reply_id_citation_blocked';
     payload.replyFailure = replyFailure;
     customerLive.replyFailure = replyFailure;

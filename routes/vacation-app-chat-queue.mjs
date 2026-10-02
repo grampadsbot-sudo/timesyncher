@@ -229,9 +229,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     returning id
   `;
 
-  let placeResults = [];
-  let enforceInTurnSearch = false;
-  let activeWebResearchTurn = webResearchTurn;
+  let placeResults = [], enforceInTurnSearch = false, activeWebResearchTurn = webResearchTurn, placeSearchReplyFacts = null;
   if (tripId) {
     const inTurnSearch = await runVacationAppInTurnSearch({
       db,
@@ -293,6 +291,10 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     placeResults = inTurnSearch.inTurnProviderResults || [];
     enforceInTurnSearch = inTurnSearch.enforceInTurnSearch;
     activeWebResearchTurn = inTurnSearch.webResearchTurn;
+    if (inTurnSearch.placeSearchReplyFacts) {
+      placeSearchReplyFacts = inTurnSearch.placeSearchReplyFacts;
+      payload.placeSearchReplyFacts = customerLive.placeSearchReplyFacts = placeSearchReplyFacts;
+    }
   }
 
   let turnActionResults = {};
@@ -330,6 +332,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         env: env,
         rules,
         loadOwnerPlan,
+        turnActionResults,
       });
     } else {
       produced = await produceLiveAppReply({
@@ -354,6 +357,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
         turnActionResults,
+        placeSearchReplyFacts,
       });
     }
   } catch (error) {

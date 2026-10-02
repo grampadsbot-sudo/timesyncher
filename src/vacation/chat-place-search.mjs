@@ -6,6 +6,9 @@ import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.mjs';
 import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail } from './place-search-anchor.mjs';
 import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
+import {
+  inTurnPlaceSearchSoftNoResults,
+} from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 function clean(value, max) {
@@ -143,9 +146,12 @@ export async function runCustomerChatPlaceSearch({
     const search = {
       providers: Array.isArray(error?.providers) ? error.providers : [],
       ...placeSearchDiagnosticsFromError(error),
+      ...(code ? { code } : {}),
       ...(code === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
       ...(code === 'prior_db_sole_source' ? { reason: 'prior_db_sole_source' } : {}),
       ...(code === 'relevance_judge_failed' ? { reason: 'relevance_judge_failed' } : {}),
+      ...(code === 'all_providers_failed' ? { reason: 'all_providers_failed' } : {}),
+      internalError: message,
     };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
   }
@@ -405,6 +411,7 @@ export async function runVacationAppInTurnSearch({
   workerJobContext,
   placeSearchTurn,
   webResearchTurn,
+  searchImpl = searchPlaces,
 } = {}) {
   stampTurnClassifier(payload, customerLive, classification);
   if (classification?.ok !== true) {
@@ -446,8 +453,14 @@ export async function runVacationAppInTurnSearch({
     searchImpl: searchPlaces,
   });
   if (searchTurn.kind === 'failed') {
+    const soft = inTurnPlaceSearchSoftNoResults({
+      classification,
+      tripDestination,
+      placeSearch: searchTurn.placeSearch,
+    });
+    if (soft) return { ok: true, ...soft };
     const routeStatus = placeSearchFailureRouteStatus(searchTurn.placeSearch?.reason);
-    return { ok: false, status: routeStatus, error: searchTurn.error, placeSearch: searchTurn.placeSearch };
+    return { ok: false, status: routeStatus, error: 'place_search_failed', placeSearch: searchTurn.placeSearch };
   }
   const webTurn = searchTurn.kind === 'skip'
     ? await applyChatWebResearchForVacationTurn({
