@@ -21,7 +21,7 @@
     },
     {
       "id": "poi-relevance",
-      "file": "src/vacation/poi-search.mjs",
+      "file": "src/vacation/place-relevance-judge.mjs",
       "anchor": "export async function jevRelevanceScore",
       "extract": "questions"
     }

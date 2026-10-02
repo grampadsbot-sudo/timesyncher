@@ -312,39 +312,7 @@ export async function searchPois({
   return { pois: [...database, ...brave], cache: 'miss', brave: brave.length > 0 };
 }
 
-export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '' } = {}) {
-  if (!apiKey || !fetchImpl) return 0;
-  const response = await fetchImpl('https://openrouter.ai/api/alpha/decisions', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
-      'HTTP-Referer': 'https://timesyncher.com',
-      'X-Title': 'TimeSyncher Vacation POI',
-    },
-    body: JSON.stringify({
-      model: 'typesafe/jev-1.13',
-      state: { channel: 'vacation-search', poiId: poi.id, name: poi.name, url: poi.url, category: poi.category },
-      questions: {
-        relevance: {
-          type: 'score',
-          instructions: 'Score this web result as a specific place for the trip. 1 is not a place. 5 is a specific place that matches the category.',
-          criteria: { 1: 'Not a specific place.', 5: 'A specific place that matches the category.' },
-        },
-      },
-    }),
-  });
-  if (!response?.ok) return 0;
-  const body = await response.json();
-  const answer = body?.answers?.relevance || {};
-  const choice = Number(answer.choice ?? answer.value);
-  if (Number.isInteger(choice) && choice >= 1 && choice <= 5) return choice;
-  const raw = Number(answer.score);
-  if (!Number.isFinite(raw)) return 0;
-  if (Number.isInteger(raw) && raw >= 0 && raw <= 4) return raw + 1;
-  if (raw >= 1 && raw <= 5) return raw;
-  return 0;
-}
+export { jevRelevanceScore, parseJevRelevanceScoreAnswer } from './place-relevance-judge.mjs';
 
 export async function scoreWebPoisInParallel(pois, scoreOne, { concurrency = 20 } = {}) {
   let cursor = 0;

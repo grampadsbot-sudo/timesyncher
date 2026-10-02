@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { classify, loadBaselineFile } from './check-hardcoded-content.mjs';
 import { cardRecords, jevCardFindings, questionsFrom, receiptMatches } from './jev-cards.mjs';
+import { parseJevRelevanceScoreAnswer } from '../src/vacation/place-relevance-judge.mjs';
 
 const THRESHOLD = 0.8;
 const KEY_NAMES = [
@@ -52,14 +53,25 @@ export function liveGaps(cwd, record) {
   return gaps;
 }
 
-function casePasses(expect, answers) {
+function scoreForEval(recordId, question, answer) {
+  if (recordId === 'poi-relevance' && question === 'relevance') {
+    try {
+      return parseJevRelevanceScoreAnswer(answer);
+    } catch {
+      return NaN;
+    }
+  }
+  return Number(answer.score ?? answer.noul ?? answer.probability ?? answer.choice ?? answer.value);
+}
+
+function casePasses(expect, answers, recordId = '') {
   for (const [question, wanted] of Object.entries(expect || {})) {
     const answer = answers && answers[question] ? answers[question] : {};
     if (typeof wanted === 'string') {
       if (String(answer.choice || '') !== wanted) return false;
       continue;
     }
-    const score = Number(answer.score ?? answer.noul ?? answer.probability ?? answer.choice ?? answer.value);
+    const score = scoreForEval(recordId, question, answer);
     if (wanted.choice && String(answer.choice || '') !== wanted.choice) return false;
     if (wanted.min != null && !(score >= wanted.min)) return false;
     if (wanted.max != null && !(score <= wanted.max)) return false;
@@ -88,7 +100,7 @@ export async function runLive(cwd, record) {
       signal: AbortSignal.timeout(20000),
     });
     const body = await response.json().catch(() => ({}));
-    if (response.ok && casePasses(row.expect, body.answers || {})) passedCases += 1;
+    if (response.ok && casePasses(row.expect, body.answers || {}, record.id)) passedCases += 1;
   }
   const score = passedCases / rows.length;
   const passed = score >= THRESHOLD;

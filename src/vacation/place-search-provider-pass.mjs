@@ -7,6 +7,7 @@ export async function runPlaceProviderPass({
   lodging,
   lodgingPoint,
   placeQueries,
+  relevanceContext,
   priorPlaces,
   loadPriorPlaces,
   readPriorPlaces,
@@ -97,7 +98,13 @@ export async function runPlaceProviderPass({
   }
 
   const merged = mergePlaces([prior, osm, brave]);
-  const places = await attachRelevance(merged, fetchImpl, env);
+  const relevance = await attachRelevance(merged, fetchImpl, env, {
+    ...(relevanceContext || {}),
+    area: relevanceContext?.area || locationText || dest,
+    locationText,
+  });
+  const places = relevance.places;
+  const relevanceRejections = relevance.rejections;
   const liveMerged = merged.filter((place) => place.source !== 'prior_db');
   const liveCount = places.filter((place) => place.source !== 'prior_db').length;
   if (!liveCount) {
@@ -112,11 +119,11 @@ export async function runPlaceProviderPass({
         if (rejected > 0) row.relevanceRejected = rejected;
       }
       const message = `Place search relevance rejected all live provider results. ${providerFailureMessage(providerLog)}`;
-      fail(message, 'relevance_rejected_all', providerLog);
+      fail(message, 'relevance_rejected_all', providerLog, relevanceRejections);
     }
     const message = `Place search failed: ${providerFailureMessage(providerLog)}`;
     fail(message, 'all_providers_failed', providerLog);
   }
 
-  return { center, locationText, places, providerLog };
+  return { center, locationText, places, providerLog, relevanceRejections };
 }
