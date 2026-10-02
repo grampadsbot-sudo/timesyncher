@@ -481,6 +481,9 @@ export async function searchPlaces({
     }
   }
   const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
+  async function readPriorPlacesForTrip(center, { env: providerEnv }) {
+    return readPriorPlaces(center, { env: providerEnv, tripId });
+  }
   if (placeQueries.length) {
     const pass = await runPlaceProviderPass({
       fetchImpl,
@@ -495,7 +498,7 @@ export async function searchPlaces({
       relevanceContext: { target: placeTarget, area: placeArea },
       priorPlaces,
       loadPriorPlaces,
-      readPriorPlaces: (center, { env: providerEnv }) => readPriorPlaces(center, { env: providerEnv, tripId }),
+      readPriorPlaces: readPriorPlacesForTrip,
       selectPriorPlaces,
       priorRowsFromInput,
       queryOsm,

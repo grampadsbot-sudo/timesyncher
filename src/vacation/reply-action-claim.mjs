@@ -3,7 +3,7 @@ const INVITE_SENT_CLAIM = /\bsent\s+(?:the\s+)?invite\b/i;
 const SHARED_WITH_CLAIM = /\bshared\s+(?:this\s+)?(?:trip|itinerary|plan|site)\s+with\b/i;
 const ADDED_COLLABORATOR_CLAIM = /\badded\s+.{1,120}\s+as\s+(?:a\s+)?collaborator\b/i;
 
-export class ReplyActionClaimBlockedError extends Error {
+class ReplyActionClaimBlockedError extends Error {
   constructor(reason, tripId) {
     super('reply_action_claim_blocked');
     this.name = 'reply_action_claim_blocked';
@@ -20,7 +20,7 @@ function collaboratorInviteSucceeded(turnActionResults) {
   return action === 'collaborator_invite_sent' || action.endsWith('_invite_sent');
 }
 
-export function replyClaimsCollaboratorInviteAction(reply) {
+function replyClaimsCollaboratorInviteAction(reply) {
   const body = String(reply || '');
   if (!body.trim()) return false;
   if (INVITE_SUCCESS_CLAIM.test(body) && /\bcollaborator\b/i.test(body)) return true;

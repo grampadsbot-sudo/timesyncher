@@ -4,7 +4,7 @@ function clean(value, max = 180) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-export function collaboratorInviteRequested(requestText = '') {
+function collaboratorInviteRequested(requestText = '') {
   const text = String(requestText || '');
   if (!text.trim()) return false;
   if (/\bas a collaborator\b/i.test(text)) return true;
@@ -13,7 +13,7 @@ export function collaboratorInviteRequested(requestText = '') {
   return false;
 }
 
-export function inviteContactsFromTurn(requestText = '', roster = []) {
+function inviteContactsFromTurn(requestText = '', roster = []) {
   const emails = [...String(requestText).matchAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)]
     .map((match) => clean(match[0], 180).toLowerCase())
     .filter(Boolean);
