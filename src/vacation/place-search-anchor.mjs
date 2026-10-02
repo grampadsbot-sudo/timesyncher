@@ -11,8 +11,13 @@ function cleanSql(value, max = 180) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function tripStatedLodgingAreaFromMetadata(metadata = {}) {
+  const meta = metadata && typeof metadata === 'object' ? metadata : {};
+  return clean(meta.statedLodgingArea || meta.statedLodgingAreaHint, 180);
+}
+
 export async function loadTripPlaceSearchContext(db, tripId) {
-  if (!db || !tripId) return { tripDestination: '', tripResolvedArea: '' };
+  if (!db || !tripId) return { tripDestination: '', tripResolvedArea: '', tripStatedLodgingArea: '' };
   const rows = await db`
     select destination, metadata
     from trips
@@ -24,17 +29,20 @@ export async function loadTripPlaceSearchContext(db, tripId) {
   return {
     tripDestination: cleanSql(row.destination, 180),
     tripResolvedArea: tripResolvedAreaFromMetadata(meta),
+    tripStatedLodgingArea: tripStatedLodgingAreaFromMetadata(meta),
   };
 }
 
-/** Area text for place search: lodging Thing, then trip destination, then resolved metadata area; else named anchor. */
+/** Area text for place search: lodging Thing, stated lodging area, trip destination, resolved metadata area; else named anchor. */
 export function resolvePlaceSearchAreaDetail({
   classification = null,
   lodgingText = '',
+  tripStatedLodgingArea = '',
   tripDestination = '',
   tripResolvedArea = '',
 } = {}) {
   const lodging = clean(lodgingText, 180);
+  const statedLodgingArea = clean(tripStatedLodgingArea, 180);
   const destination = clean(tripDestination, 180);
   const resolved = clean(tripResolvedArea, 180);
   const anchor = clean(classification?.anchor, 180);
@@ -42,6 +50,7 @@ export function resolvePlaceSearchAreaDetail({
 
   if (anchorIsLodging) {
     if (lodging) return { text: lodging, source: 'lodging' };
+    if (statedLodgingArea) return { text: statedLodgingArea, source: 'stated_lodging_area' };
     if (destination) return { text: destination, source: 'destination' };
     if (resolved) return { text: resolved, source: 'resolved_area' };
     return { text: '', source: '' };

@@ -17,9 +17,10 @@ import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
+import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
+import { distanceMeters, samePlace } from './place-search-same-place.mjs';
 
 export { PlaceSearchError };
-const DEDUPE_METERS = 250;
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
 const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
 const PLACE_STOP = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|for|with|between|around|starting|leaving|ending|ended|ends|through|until|next|this|morning|afternoon|evening|please|and|or';
@@ -156,57 +157,10 @@ function metersInsideCategory(center, point, category) {
   return meters;
 }
 
-export function distanceMeters(origin, point) {
-  const lat1 = finite(origin?.lat);
-  const lng1 = finite(origin?.lng);
-  const lat2 = finite(point?.lat);
-  const lng2 = finite(point?.lng);
-  if (lat1 === null || lng1 === null || lat2 === null || lng2 === null) return null;
-  const toRad = (deg) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2
-    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+export { distanceMeters, samePlace } from './place-search-same-place.mjs';
 
-export function samePlace(left, right) {
-  const leftName = normalizeName(left?.title);
-  const rightName = normalizeName(right?.title);
-  if (!leftName || leftName !== rightName) return false;
-  const meters = distanceMeters(left, right);
-  if (meters === null) return true;
-  return meters <= DEDUPE_METERS;
-}
-
-export function mergePlaces(groups = []) {
-  const kept = [];
-  for (const group of groups) {
-    for (const place of group || []) {
-      const lat = finite(place?.lat);
-      const lng = finite(place?.lng);
-      const title = String(place?.title || '').trim();
-      const category = PRIOR_CATEGORIES.get(String(place?.category || '').toLowerCase()) || '';
-      const hasPoint = lat !== null && lng !== null;
-      if (!title || !category || !SOURCE_IDS.has(place?.source)) continue;
-      if (!hasPoint && !String(place.address || place.url || '').trim()) continue;
-      const next = {
-        source: place.source,
-        title,
-        category,
-        lat,
-        lng,
-        address: String(place.address || ''),
-        url: String(place.url || ''),
-        externalId: String(place.externalId || ''),
-        ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
-        ...(String(place.description || '').trim() ? { description: String(place.description).trim() } : {}),
-      };
-      if (kept.some((item) => samePlace(item, next))) continue;
-      kept.push(next);
-    }
-  }
-  return kept;
+export function mergePlaces(groups = [], options = {}) {
+  return mergePlaceRows(groups, options, samePlace);
 }
 
 export { missingSearchKeys } from './provider-env.mjs';
@@ -511,6 +465,7 @@ export async function searchPlaces({
   let places = [];
   let providerLog = [];
   let relevanceRejections = [];
+  let placeSearchDiagnostics = {};
   let locationText = dest;
   const placeTarget = String(relevanceTarget || '').trim() || String(placeQueries[0]?.target || '').trim();
   const placeArea = String(relevanceArea || '').trim() || dest;
@@ -551,6 +506,12 @@ export async function searchPlaces({
     places = pass.places;
     providerLog = pass.providerLog;
     relevanceRejections = pass.relevanceRejections || [];
+    placeSearchDiagnostics = {
+      judgeInput: pass.judgeInput,
+      searchCenter: pass.searchCenter,
+      anchor: pass.anchor,
+      ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
+    };
   }
   const noteRelevance = infoQueries.length
     ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })
@@ -565,6 +526,7 @@ export async function searchPlaces({
     queried: infoQueries.length ? [...SOURCE_IDS, 'tavily'] : [...SOURCE_IDS],
     providers: providerLog,
     relevanceRejections,
+    ...placeSearchDiagnostics,
     elapsedMs: Date.now() - started,
     sourceCounts: countSources(places),
   };

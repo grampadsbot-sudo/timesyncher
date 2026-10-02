@@ -117,6 +117,17 @@ async function resolveIntakeLodgingThing({
   return { ok: true, thing, search };
 }
 
+async function persistTripStatedLodgingArea(db, tripId, areaHint = '') {
+  const area = String(areaHint || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  if (!db || !tripId || !area) return;
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ statedLodgingArea: area }},
+        updated_at = now()
+    where id = ${tripId}
+  `;
+}
+
 export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingThings, {
   destinationHint = '',
   areaHint = '',
@@ -142,6 +153,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
     });
     if (outcome.ok !== true) {
       if (outcome.miss) misses.push(outcome.miss);
+      if (resolvedArea) await persistTripStatedLodgingArea(db, tripId, resolvedArea);
       continue;
     }
     const inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing });

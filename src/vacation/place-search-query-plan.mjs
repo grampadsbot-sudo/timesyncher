@@ -5,10 +5,11 @@ function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-export function queriesFromPlaceClassification(classification, tripDestination = '', lodgingText = '', tripResolvedArea = '') {
+export function queriesFromPlaceClassification(classification, tripDestination = '', lodgingText = '', tripResolvedArea = '', tripStatedLodgingArea = '') {
   const destination = resolvePlaceSearchDestination({
     classification,
     lodgingText,
+    tripStatedLodgingArea,
     tripDestination,
     tripResolvedArea,
   });

@@ -16,6 +16,7 @@ assert.equal(
 function mockTripDb() {
   const tripThings = [];
   const turns = new Map();
+  let tripMetadata = {};
   const db = async (strings, ...values) => {
     const sql = String(strings[0] || '');
     if (sql.includes('insert into trip_things')) {
@@ -34,9 +35,14 @@ function mockTripDb() {
       turns.set(turnId, payload);
       return [];
     }
+    if (sql.includes('update trips') && sql.includes('metadata')) {
+      const patch = values.find((value) => value && typeof value === 'object' && !Array.isArray(value));
+      tripMetadata = { ...tripMetadata, ...patch };
+      return [];
+    }
     return [];
   };
-  return { db, tripThings, turns };
+  return { db, tripThings, turns, getTripMetadata: () => tripMetadata };
 }
 
 let capturedQuery = '';
@@ -65,7 +71,7 @@ assert.match(capturedQuery, /Kaanapali/);
 assert.equal(lookupOutcome.saved.length, 1);
 assert.equal(lookupThings.length, 1);
 
-const { db: missDb, tripThings: missThings, turns: missTurns } = mockTripDb();
+const { db: missDb, tripThings: missThings, turns: missTurns, getTripMetadata: missTripMetadata } = mockTripDb();
 missTurns.set('turn-customer-1', { liveTranscript: { turnIndex: 1 } });
 const missOutcome = await persistIntakeLodgingThings(missDb, 'trip-2', 'req-2', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
   areaHint: 'Kaanapali',
@@ -80,6 +86,7 @@ assert.equal(missThings.length, 0);
 assert.equal(missOutcome.misses.length, 1);
 assert.equal(missOutcome.misses[0].status, 'miss');
 assert.match(missOutcome.misses[0].query, /Kaanapali/);
+assert.equal(missTripMetadata().statedLodgingArea, 'Kaanapali');
 
 await persistIntakeLodgingLookupOnCustomerTurn(missDb, 'turn-customer-1', missOutcome.misses);
 const stored = missTurns.get('turn-customer-1');

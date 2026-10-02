@@ -20,6 +20,7 @@ export function buildPlaceSearchFailureDiagnostics({
   anchor = null,
   relevanceRejections = [],
   survivingPriorDbTitles = [],
+  dedupeMerges = [],
 } = {}) {
   const lat = finite(center?.lat);
   const lng = finite(center?.lng);
@@ -38,6 +39,8 @@ export function buildPlaceSearchFailureDiagnostics({
   };
   if (lat !== null && lng !== null) diagnostics.searchCenter = { lat, lng };
   if (anchorText) diagnostics.anchor = { text: anchorText, source: anchorSource || 'unknown' };
+  const merges = (Array.isArray(dedupeMerges) ? dedupeMerges : []).slice(0, 20);
+  if (merges.length) diagnostics.dedupeMerges = merges;
   return diagnostics;
 }
 
@@ -50,6 +53,7 @@ export function placeSearchDiagnosticsFromError(error) {
     'searchCenter',
     'anchor',
     'survivingPriorDbTitles',
+    'dedupeMerges',
     'judgeHttpStatus',
     'judgeBodySnippet',
   ]) {
