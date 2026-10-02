@@ -15,7 +15,6 @@ import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlemen
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
-  if (trip) await hooks.ensureOnboardingOpener(db, session, trip);
   const started = Date.now();
   const text = cleanText(intake.requestText || body.text || body.message, 12000);
   const attachments = Array.isArray(body.attachments)
