@@ -8,13 +8,17 @@ const classification = {
   ok: true,
   turnKind: 'place_search',
   targetKind: 'named_place',
+  category: 'restaurant',
   routerModel: 'test/model',
 };
 
 const stamped = stampTurnClassifier(payload, customerLive, classification);
 assert.equal(stamped.targetKind, 'named_place');
+assert.equal(stamped.category, 'restaurant');
 assert.equal(payload.turnClassifier.targetKind, 'named_place');
+assert.equal(payload.turnClassifier.category, 'restaurant');
 assert.equal(customerLive.turnClassifier.targetKind, 'named_place');
+assert.equal(customerLive.turnClassifier.category, 'restaurant');
 
 const failedPayload = {};
 const failedLive = {};

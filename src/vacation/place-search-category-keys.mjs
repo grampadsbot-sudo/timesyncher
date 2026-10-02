@@ -27,3 +27,13 @@ export function intakePlaceSearchCategoryError(extractedFields = {}) {
   if (!normalizePlaceSearchCategory(raw)) return 'trip intake place_search extraction category unknown';
   return '';
 }
+
+/** Live queue / in-turn search: normalized category required on ok place_search classifications. */
+export function placeSearchTurnClassificationError(classification = {}) {
+  if (classification?.ok !== true) return '';
+  if (String(classification.turnKind || '').trim().toLowerCase() !== 'place_search') return '';
+  if (!normalizePlaceSearchCategory(classification.category)) {
+    return 'trip intake place_search classification category missing';
+  }
+  return '';
+}
