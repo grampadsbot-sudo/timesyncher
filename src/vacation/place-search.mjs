@@ -10,7 +10,6 @@ import {
   braveTitle,
 } from './brave-place-query.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
-import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
@@ -140,7 +139,6 @@ export function queriesFromWantedThings(wantedThings = []) {
     if (!name || name.length < 2 || NOT_A_PLACE.test(name)) continue;
     const kind = String(thing?.kind || thing?.category || '').trim().toLowerCase();
     const place = PLACE_KINDS.has(kind);
-    if (place && !intakeThingHasProperName(name)) continue;
     const category = place ? kind : (kind || 'decision');
     const key = `${category}:${normalizeName(name)}`;
     if (seen.has(key)) continue;
