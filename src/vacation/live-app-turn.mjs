@@ -13,7 +13,7 @@ import { activityCommits, customerIntent, emptyIntent } from './customer-intent.
 import { customerInputState } from './intake-shared-trip.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
-import { produceFirstIntakeReply } from './first-intake-reply.mjs';
+import { produceFirstIntakeReply, produceNoTripStarterReply } from './first-intake-reply.mjs';
 import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
@@ -1505,18 +1505,8 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, loadOwnerPlan = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
+  if (!String(session?.trip_id || session?.tripId || '').trim()) return produceNoTripStarterReply({ customerTurn, session, env, rules, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
   const memory = memoryTurns(history);
-  const tripId = String(session?.trip_id || session?.tripId || '').trim();
-  if (!tripId) {
-    const { produceNoTripStarterReply } = await import('./first-intake-reply.mjs');
-    return produceNoTripStarterReply({
-      customerTurn,
-      session,
-      env,
-      rules,
-      ...(loadOwnerPlan ? { loadOwnerPlan } : {}),
-    });
-  }
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
   if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
