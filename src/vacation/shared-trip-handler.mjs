@@ -74,7 +74,7 @@ export async function intakeSharedResponse(shareToken, db = null) {
   const trip = rows[0];
   if (!trip || intakeShareSlug(trip.id) !== shareToken) return null;
   const things = await db`
-    select id, category, title, description, metadata, ratings, location, source
+    select id, category, title, description, metadata, ratings, location, source, starts_at
     from trip_things
     where trip_id = ${trip.id}
     order by created_at asc

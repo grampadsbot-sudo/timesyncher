@@ -1,4 +1,6 @@
 import { assignDatesScheduling } from './intake-shared-trip.mjs';
+import { scheduleChatThing } from './chat-thing-schedule.mjs';
+import { tripIsoDay } from './intake-weekday-dates.mjs';
 import { activeCollaboratorsFromParty, partyNamesFromDialogParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
 
@@ -7,12 +9,7 @@ function clean(value, max = 180) {
 }
 
 function isoDay(value) {
-  if (!value) return '';
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : '';
+  return tripIsoDay(value);
 }
 
 function addDays(iso, count) {
@@ -93,6 +90,7 @@ export function chatPlaceSearchSavedReplyFacts(savedThings = [], tripStart = '',
     if (!dates.length) {
       unscheduled.push({
         title,
+        notOnADay: true,
         ...(whenLabel ? { whenLabel } : {}),
         ...(weekdayAmbiguous ? { weekdayAmbiguous: true, candidateDates } : {}),
       });
@@ -103,6 +101,9 @@ export function chatPlaceSearchSavedReplyFacts(savedThings = [], tripStart = '',
   if (unscheduled.some((row) => row.weekdayAmbiguous)) {
     chatPlaceSearch.weekdayAmbiguityRule =
       'Some saved places name a weekday that matches more than one trip day; use candidateDates and ask which day before scheduling.';
+  }
+  if (unscheduled.some((row) => row.notOnADay === true && !row.weekdayAmbiguous)) {
+    chatPlaceSearch.unscheduledDayRule = 'Each place in unscheduled is not on a day yet.';
   }
   return { chatPlaceSearch };
 }
@@ -188,15 +189,18 @@ export async function insertStampedChatPlaceThings(db, { tripId, requestId, thin
   for (const thing of Array.isArray(things) ? things : []) {
     const stamped = stampChatSavedPlaceThing(thing, classification);
     const meta = stamped?.metadata && typeof stamped.metadata === 'object' ? stamped.metadata : {};
-    const year = tripStart ? Number(String(tripStart).slice(0, 4)) : null;
-    const tripDates = eachDate(isoDay(tripStart), isoDay(tripEnd) || isoDay(tripStart));
-    const { dates } = assignDatesScheduling({
-      whenLabel: meta.whenLabel || '',
-      customerWhen: meta.customerWhen || '',
-    }, year, tripDates);
-    const scheduledThing = dates.length === 1
-      ? { ...stamped, starts_at: `${dates[0]}T12:00:00.000Z` }
-      : stamped;
+    const scheduled = scheduleChatThing(stamped, { start_date: tripStart, end_date: tripEnd });
+    const scheduledThing = {
+      ...stamped,
+      starts_at: scheduled.starts_at,
+      metadata: {
+        ...meta,
+        whenLabel: scheduled.whenLabel || meta.whenLabel || '',
+        customerWhen: scheduled.customerWhen || meta.customerWhen || '',
+        askWhichDay: scheduled.askWhichDay === true,
+        ...(scheduled.candidateDates.length ? { candidateDates: scheduled.candidateDates } : {}),
+      },
+    };
     const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
     savedForFacts.push({
       title: inserted?.title || stamped.title,

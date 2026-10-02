@@ -1,6 +1,9 @@
 import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { applyPlaceSearchReplyFacts } from './place-search-reply-facts.mjs';
 import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
+import { chatPlaceSearchSavedReplyFacts } from './chat-place-search-when.mjs';
+import { applyInTurnCitablePlaces } from './provider-result-context.mjs';
+import { tripIsoDay } from './intake-weekday-dates.mjs';
 import {
   applyPendingInviteReplyFacts,
   loadPendingCollaboratorInvites,
@@ -8,8 +11,7 @@ import {
 } from './roster-pending-invite-reply-facts.mjs';
 
 function isoDay(value) {
-  const match = String(value ?? '').match(/\d{4}-\d{2}-\d{2}/);
-  return match ? match[0] : '';
+  return tripIsoDay(value);
 }
 
 export function applySavedJobDatesToReplyFacts(facts, { savedStart = '', savedEnd = '' } = {}) {
@@ -28,6 +30,22 @@ export function applySavedJobDatesToReplyFacts(facts, { savedStart = '', savedEn
   return out;
 }
 
+function chatExtractionReplyFacts(wantedThings, tripStart, tripEnd) {
+  const rows = (Array.isArray(wantedThings) ? wantedThings : []).flatMap((thing) => {
+    const title = String(thing?.title || thing?.name || '').trim();
+    if (!title) return [];
+    const source = String(thing?.source || '').trim();
+    if (source && source !== 'chat_extraction') return [];
+    return [{
+      title,
+      whenLabel: String(thing?.whenLabel || thing?.when || '').trim(),
+      customerWhen: String(thing?.customerWhen || '').trim(),
+    }];
+  });
+  if (!rows.length) return null;
+  return chatPlaceSearchSavedReplyFacts(rows, tripStart, tripEnd);
+}
+
 export async function enrichDraftingTripContext(tripContext, {
   things = [],
   session = null,
@@ -36,10 +54,18 @@ export async function enrichDraftingTripContext(tripContext, {
   placeSearchReplyFacts = null,
   savedStart = '',
   savedEnd = '',
+  wantedThings = null,
+  inTurnPlaceResults = null,
 } = {}) {
   let ctx = applySavedJobDatesToReplyFacts(tripContext, { savedStart, savedEnd });
   ctx = applyTurnInviteReplyFacts(ctx, turnActionResults);
   ctx = applyPlaceSearchReplyFacts(ctx, placeSearchReplyFacts);
+  if (!ctx.chatPlaceSearch) {
+    ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
+  }
+  const unscheduledRule = String(ctx.chatPlaceSearch?.unscheduledDayRule || '').trim();
+  if (unscheduledRule) ctx = { ...ctx, unscheduledDayRule: unscheduledRule };
+  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
   if (!ctx.lodging) {
     const label = statedLodgingLabelFromThings(things);
     if (label) ctx.lodging = label;

@@ -10,7 +10,7 @@ import {
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
-import { customerInputState } from './intake-shared-trip.mjs';
+import { customerInputState, tripIsoDay } from './intake-shared-trip.mjs';
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs'; import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
@@ -829,8 +829,8 @@ function commitsDay(sentence) {
 }
 
 function spanFromIso(startIso, endIso) {
-  const start = String(startIso || '').slice(0, 10);
-  const end = String(endIso || start).slice(0, 10);
+  const start = tripIsoDay(startIso);
+  const end = tripIsoDay(endIso) || start;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) return null;
   const startDate = new Date(`${start}T00:00:00Z`);
   const endDate = new Date(`${end}T00:00:00Z`);
@@ -1505,7 +1505,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rosterError: rosterError || null,
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
-  let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart, savedEnd }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
+  let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end, wantedThings, inTurnPlaceResults: inTurnProviderResults }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   const upsellMode = upsellModeForTurn(intakeTurn, history, intent);
   const commerce = liveReplyCommerceGate({
     session,

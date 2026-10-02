@@ -15,6 +15,69 @@ function textMentionsPhrase(text, phrase) {
   return new RegExp(`(^|[^\\p{L}\\p{N}])${esc}([^\\p{L}\\p{N}]|$)`, 'iu').test(String(text || ''));
 }
 
+function normalizePlaceTitle(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().replace(/\.+$/g, '').trim();
+}
+
+function placeTitle(row) {
+  if (typeof row === 'string') return normalizePlaceTitle(row.split(':')[0]);
+  return normalizePlaceTitle(row?.title || row?.name || '');
+}
+
+function rejectedOrPriorRow(row) {
+  if (!row || typeof row !== 'object') return false;
+  if (row.rejected === true || row.relevanceRejected === true || row.notCitableAsResult === true) return true;
+  const source = String(row.source || row.sourceRef?.source || '').trim().toLowerCase();
+  return source === 'prior_db';
+}
+
+export function citablePlaceTitles(inTurnResults = []) {
+  const titles = [];
+  const seen = new Set();
+  for (const row of Array.isArray(inTurnResults) ? inTurnResults : []) {
+    if (rejectedOrPriorRow(row)) continue;
+    const title = placeTitle(row);
+    const key = title.toLowerCase();
+    if (!title || seen.has(key)) continue;
+    seen.add(key);
+    titles.push(title);
+  }
+  return titles;
+}
+
+export function applyInTurnCitablePlaces(facts, inTurnResults) {
+  if (!facts || typeof facts !== 'object') return facts;
+  if (!Array.isArray(inTurnResults) || !inTurnResults.length) return facts;
+  const citablePlaces = citablePlaceTitles(inTurnResults);
+  const citableKeys = new Set(citablePlaces.map((title) => title.toLowerCase()));
+  const notCitableAsResult = [];
+  const remember = (row) => {
+    const title = placeTitle(row);
+    const key = title.toLowerCase();
+    if (!title || citableKeys.has(key)) return;
+    if (notCitableAsResult.some((item) => item.toLowerCase() === key)) return;
+    notCitableAsResult.push(title);
+  };
+  for (const item of facts.itinerary || []) remember(item);
+  for (const item of facts.survivingPriorDbTitles || []) remember(item);
+  for (const item of facts.relevanceRejections || []) remember(item);
+  for (const item of facts.priorPlaces || []) remember(item);
+  const itinerary = (Array.isArray(facts.itinerary) ? facts.itinerary : []).flatMap((item) => {
+    const title = placeTitle(item);
+    if (!title || !citableKeys.has(title.toLowerCase())) return [];
+    return [typeof item === 'string' ? item : title];
+  });
+  const replyFacts = { ...facts, itinerary, citablePlaces };
+  delete replyFacts.survivingPriorDbTitles;
+  delete replyFacts.relevanceRejections;
+  delete replyFacts.priorPlaces;
+  if (notCitableAsResult.length) {
+    replyFacts.notCitableAsResult = notCitableAsResult;
+    replyFacts.notCitableAsResultRule = 'notCitableAsResult places are not results from this turn. Cite only citablePlaces.';
+  }
+  return replyFacts;
+}
+
 function inTurnPlaceRows(sources) {
   return (Array.isArray(sources) ? sources : []).flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
@@ -55,7 +118,8 @@ export function placeResultExtra(sources) {
   const items = Array.isArray(sources) ? sources : [];
   const parts = items.flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
-    const name = String(item.name ?? item.title ?? '').trim();
+    if (rejectedOrPriorRow(item)) return [];
+    const name = normalizePlaceTitle(item.name ?? item.title ?? '');
     return name ? [name] : [];
   });
   if (!parts.length) return '';
