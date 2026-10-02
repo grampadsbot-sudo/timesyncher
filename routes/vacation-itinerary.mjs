@@ -446,6 +446,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   if (!onboardingSessionId) return;
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
+  const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
   const claimed = await db`
     insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)
@@ -455,7 +456,6 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   `;
   if (!claimed.length) return;
   const inputs = await welcomeInputs(db, session, welcomeTrip);
-  const welcomeAudience = inputs.audience || (seat ? 'collaborator' : 'owner');
   const missing = missingWelcomeFields(inputs);
   const started = Date.now();
   let text;
