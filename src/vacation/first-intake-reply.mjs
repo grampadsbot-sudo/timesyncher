@@ -1,6 +1,7 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
+import { intakeDatesFromCustomerSaid } from './first-intake-dates.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAY_WORD = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g;
@@ -16,38 +17,6 @@ function isoDay(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
   const match = String(value ?? '').match(/\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : '';
-}
-
-const MONTH_BY_NAME = new Map([
-  ['jan', 1], ['january', 1], ['feb', 2], ['february', 2], ['mar', 3], ['march', 3],
-  ['apr', 4], ['april', 4], ['may', 5], ['jun', 6], ['june', 6], ['jul', 7], ['july', 7],
-  ['aug', 8], ['august', 8], ['sep', 9], ['sept', 9], ['september', 9], ['oct', 10], ['october', 10],
-  ['nov', 11], ['november', 11], ['dec', 12], ['december', 12],
-]);
-
-function monthFromName(token) {
-  const key = String(token || '').toLowerCase().replace(/\./g, '').trim();
-  return MONTH_BY_NAME.get(key) || MONTH_BY_NAME.get(key.slice(0, 3)) || 0;
-}
-
-function isoFromParts(year, month, day) {
-  if (!Number.isFinite(year) || month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) return '';
-  const monthText = String(month).padStart(2, '0');
-  const dayText = String(day).padStart(2, '0');
-  return `${year}-${monthText}-${dayText}`;
-}
-
-export function intakeDatesFromCustomerSaid(said) {
-  const text = String(said || '');
-  const range = text.match(/\b([A-Za-z]{3,9})\.?\s+(\d{1,2})\s*[-–]\s*(\d{1,2})(?:,?\s*(20\d{2}))?\b/);
-  if (!range) return { start: '', end: '' };
-  const month = monthFromName(range[1]);
-  const year = Number(range[4] || (text.match(/\b(20\d{2})\b/) || [])[1]);
-  if (!month || !Number.isFinite(year)) return { start: '', end: '' };
-  const start = isoFromParts(year, month, Number(range[2]));
-  const end = isoFromParts(year, month, Number(range[3]));
-  if (!start || !end) return { start: '', end: '' };
-  return { start, end };
 }
 
 function daysFromCivil(year, month, day) {
@@ -328,12 +297,9 @@ export function firstIntakeReplyFacts({
   if (!named) gaps.push('who');
   if (!stay) gaps.push('lodging');
   if (!planItems.length) gaps.push('plans');
-  const substantiveShort = !voiceNote && !question && named && where && (Boolean(when) || nights != null || hasDates === true);
-  const planReply = voiceNote || substantiveShort;
-  const facts = {
-    shape: planReply ? 'voice-note' : question ? 'question' : 'gaps',
-    customer_said: said || null,
-  };
+  const planReply = voiceNote || (!question && named && where && (Boolean(when) || nights != null || hasDates === true));
+  const facts = { shape: planReply ? 'voice-note' : question ? 'question' : 'gaps',
+    customer_said: said || null };
   const title = intakeFactText(tripTitle, 180);
   const name = namedPerson(customerName, hidden);
   if (name) facts.customer_name = name;
@@ -350,10 +316,7 @@ export function firstIntakeReplyFacts({
   if (when) facts.when = when;
   if (who.length) facts.who = who;
   if (stay) facts.lodging = stay;
-  if (planItems.length) {
-    facts.activities = planItems;
-    facts.plans = planItems;
-  }
+  if (planItems.length) { facts.activities = planItems; facts.plans = planItems; }
   if (question) {
     if (asksViewWithoutSignIn(said)) facts.view_without_sign_in = VIEW_WITHOUT_SIGN_IN;
     if (/\b(?:he|she|they|him|her|them|someone|somebody)\b/i.test(said)) facts.missing_name = true;

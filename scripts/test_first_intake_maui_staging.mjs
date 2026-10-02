@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import {
-  firstIntakeReplyFacts,
-  intakeDatesFromCustomerSaid,
-  intakeReplyBlock,
-} from '../src/vacation/first-intake-reply.mjs';
+import { intakeDatesFromCustomerSaid } from '../src/vacation/first-intake-dates.mjs';
+import { firstIntakeReplyFacts, intakeReplyBlock } from '../src/vacation/first-intake-reply.mjs';
 import { appTextBanned } from '../src/vacation/live-app-turn.mjs';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
 import { replyPlanFactsFromEntitlementRow } from '../src/vacation/reply-plan-entitlement.mjs';
