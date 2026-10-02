@@ -459,7 +459,7 @@ function normalizeDecisions(body) {
 }
 
 export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI' } = {}) {
-  return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload) });
+  return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(20000) });
 }
 
 export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {
@@ -495,14 +495,18 @@ export async function jevPrecall({ customerTurn, stage, gate, screen, session, e
     };
   }
   try {
-    const response = decisions && key
-      ? await postJevDecisions({ payload, apiKey: key, fetchImpl: fetch, title: 'TimeSyncher Vacation App Jev' })
-      : await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(20000),
-      });
+    const headers = {
+      'content-type': 'application/json',
+      accept: 'application/json',
+      ...(decisions && key ? { authorization: `Bearer ${key}` } : {}),
+      ...(decisions ? { 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': 'TimeSyncher Vacation App Jev' } : {}),
+    };
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
+    });
     const body = await response.json().catch(() => ({}));
     const via = decisions ? 'openrouter-decisions' : 'http-jev';
     if (!response.ok || body.ok === false) {
