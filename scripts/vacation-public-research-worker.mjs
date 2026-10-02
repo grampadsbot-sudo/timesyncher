@@ -366,11 +366,15 @@ export async function runPublicResearch(input = {}) {
     lng: origin?.lng,
   });
   const sourceEnv = input.env || process.env;
+  const job = input.job && typeof input.job === 'object' ? input.job : {};
+  const jobInput = job.input && typeof job.input === 'object' ? job.input : {};
+  const tripId = text(input.tripId || input.trip_id || jobInput.tripId || jobInput.trip_id || job.tripId || job.trip_id || artifacts.tripId || artifacts.trip_id, 80);
   const intake = await fillTripIntake({
     destination: artifacts.destination || '',
     lodging: stay.text,
     lodgingPoint: origin || undefined,
     wantedThings,
+    tripId,
     env: buildProviderEnv(sourceEnv),
     fetchImpl: input.fetchImpl,
     priorPlaces: input.priorPlaces,

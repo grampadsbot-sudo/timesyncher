@@ -44,7 +44,7 @@ async function resolveIntakeLodgingThing({
   title = '',
   destinationHint = '',
   areaHint = '',
-  tripId = null,
+  tripId = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,

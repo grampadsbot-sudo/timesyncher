@@ -18,10 +18,29 @@ export function braveQueryString(item, resolvedArea, center) {
   return text.replace(/\s+/g, ' ').trim().slice(0, 500);
 }
 
-export function braveResultRows(payload) {
-  const localRows = Array.isArray(payload?.results) ? payload.results : [];
-  if (localRows.length) return localRows;
-  return Array.isArray(payload?.web?.results) ? payload.web.results : [];
+export function bravePlaceSearchRows(payload, endpoint) {
+  if (endpoint !== 'local') return [];
+  return Array.isArray(payload?.results) ? payload.results : [];
+}
+
+function identifierLooksLikeHttpUrl(value) {
+  const id = String(value || '').trim();
+  if (!id) return false;
+  try {
+    const parsed = new URL(id);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export function braveLocalPlaceResult(result) {
+  const point = bravePoint(result);
+  if (point.lat === null || point.lng === null) return false;
+  if (point.lat === 0 && point.lng === 0) return false;
+  const id = String(result?.id || '').trim();
+  if (identifierLooksLikeHttpUrl(id)) return false;
+  return true;
 }
 
 export function bravePoint(result) {

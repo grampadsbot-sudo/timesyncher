@@ -57,6 +57,7 @@ scripts/test_place_relevance_check6_lodging_thing.mjs
 scripts/test_place_search_failure_diagnostics.mjs
 scripts/test_place_search_dedupe_provenance.mjs
 scripts/test_place_search_osm_restaurant_scope.mjs
+scripts/test_place_search_prior_trip_scope.mjs
 scripts/test_place_search_classifier_category.mjs
 scripts/test_intake_hyatt_staging_classifier_e2e.mjs
 scripts/test_eula_render_markdown.mjs

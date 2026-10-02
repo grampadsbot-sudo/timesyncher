@@ -186,8 +186,15 @@ assert.equal(research.things.every((thing) => thing.source), true);
 const inserts = [];
 let tripThingInsertSeq = 0;
 const db = async (strings, ...values) => {
-  inserts.push({ sql: strings.join(' '), values });
-  return [{ id: `trip-thing-${++tripThingInsertSeq}` }];
+  const sql = strings.join(' ');
+  if (/select\s+id,\s*title,\s*location/i.test(sql) && /from trip_things/i.test(sql)) {
+    return [];
+  }
+  if (/insert into trip_things/i.test(sql)) {
+    inserts.push({ sql, values });
+    return [{ id: `trip-thing-${++tripThingInsertSeq}` }];
+  }
+  throw new Error(`unexpected trip_things db query: ${sql}`);
 };
 for (const thing of research.things) {
   const written = await insertTripThing(db, { tripId: 'trip-1', requestId: 'request-1', thing });

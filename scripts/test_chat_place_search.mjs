@@ -106,7 +106,10 @@ function placeClassification(query) {
 function mockDb() {
   const inserts = [];
   const db = async (strings, ...values) => {
-    const sql = String(strings[0] || '');
+    const sql = strings.join(' ');
+    if (/select\s+id,\s*title,\s*location/i.test(sql) && /from trip_things/i.test(sql)) {
+      return [];
+    }
     if (sql.includes('insert into trip_things')) {
       inserts.push(values);
       return [{ id: `trip-thing-${inserts.length}` }];

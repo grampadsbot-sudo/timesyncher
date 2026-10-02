@@ -14,10 +14,6 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
   const scored = [];
   const rejections = [];
   for (const row of rows) {
-    if (row.source === 'prior_db') {
-      scored.push({ ...row, jevScore: 5 });
-      continue;
-    }
     const jevScore = await jevRelevanceScore({
       id: row.externalId || row.url || row.title,
       name: row.title,

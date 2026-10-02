@@ -310,17 +310,19 @@ const written = await insertTripThing(db, {
   thing: fill.things.find((thing) => thing.title === 'City Museum'),
 });
 assert.equal(written.source, 'osm');
-assert.match(inserts[0].sql, /insert into trip_things/);
-assert.match(inserts[0].sql, /\bsource\b/);
-assert.equal(inserts[0].values.at(-1), 'osm');
-assert.equal(inserts[0].values.includes('City Museum'), true);
+const museumInsert = inserts.find((row) => /insert into trip_things/i.test(row.sql));
+assert.ok(museumInsert);
+assert.match(museumInsert.sql, /\bsource\b/);
+assert.equal(museumInsert.values.at(-1), 'osm');
+assert.equal(museumInsert.values.includes('City Museum'), true);
 const note = await insertTripThing(db, {
   tripId: 'trip-1',
   requestId: 'request-1',
   thing: { title: 'Planning brief', category: 'note', metadata: { source: 'product-gbrain-dispatch' } },
 });
 assert.equal(note.source, null);
-assert.equal(inserts[1].values.at(-1), null);
+const noteInsert = inserts.filter((row) => /insert into trip_things/i.test(row.sql)).at(-1);
+assert.equal(noteInsert.values.at(-1), null);
 
 assert.equal(destinationFromChat('Plan a trip to Lisbon next April'), 'Lisbon');
 assert.equal(destinationFromChat('Create a new 4-night staycation on the Las Vegas Strip ending Monday morning'), 'Las Vegas Strip');
