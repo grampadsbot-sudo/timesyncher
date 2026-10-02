@@ -2,6 +2,8 @@ const INVITE_SUCCESS_CLAIM = /\b(?:i(?:'|')ve|i have|we(?:'|')ve|we have)\s+(?:a
 const INVITE_SENT_CLAIM = /\bsent\s+(?:the\s+)?invite\b/i;
 const SHARED_WITH_CLAIM = /\bshared\s+(?:this\s+)?(?:trip|itinerary|plan|site)\s+with\b/i;
 const ADDED_COLLABORATOR_CLAIM = /\badded\s+.{1,120}\s+as\s+(?:a\s+)?collaborator\b/i;
+const FUTURE_ADD_COLLABORATOR_CLAIM = /\b(?:i(?:'|')ll|i will|we(?:'|')ll|we will|i(?:'|')m going to)\b[^.!?]{0,120}\badd\b[^.!?]{0,120}\b(?:as\s+(?:a\s+)?)?collaborator\b/i;
+const GO_AHEAD_ADD_COLLABORATOR_CLAIM = /\bgo ahead and add\b[^.!?]{0,120}\b(?:as\s+(?:a\s+)?)?collaborator\b/i;
 const VIEW_ACCESS_CLAIM = /\b(?:can now view|can view (?:the|this)|now have access|will see (?:the|this|these|your))\b/i;
 const THEY_VIEW_CLAIM = /\bthey can (?:now )?view\b/i;
 const WELCOME_NAME_CLAIM = /\bwelcome,?\s+([A-Za-z][A-Za-z'.-]{0,40})\b/i;
@@ -34,6 +36,8 @@ function replyClaimsCollaboratorInviteAction(reply) {
   if (!body.trim()) return false;
   if (INVITE_SUCCESS_CLAIM.test(body) && /\bcollaborator\b/i.test(body)) return true;
   if (ADDED_COLLABORATOR_CLAIM.test(body)) return true;
+  if (FUTURE_ADD_COLLABORATOR_CLAIM.test(body)) return true;
+  if (GO_AHEAD_ADD_COLLABORATOR_CLAIM.test(body)) return true;
   if (INVITE_SENT_CLAIM.test(body) && /\bcollaborator\b/i.test(body)) return true;
   if (SHARED_WITH_CLAIM.test(body)) return true;
   if (INVITE_SUCCESS_CLAIM.test(body) && /\b(?:wife|husband|spouse|partner)\b/i.test(body)) return true;

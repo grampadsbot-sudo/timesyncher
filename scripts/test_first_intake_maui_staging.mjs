@@ -51,7 +51,9 @@ assert.equal(facts.start, CLASSIFIER_START);
 assert.equal(facts.end, CLASSIFIER_END);
 assert.equal(facts.weekday, 'Wednesday');
 assert.equal(facts.end_weekday, 'Wednesday');
-assert.deepEqual(facts.gaps, ['lodging', 'plans']);
+assert.equal(facts.invite_contact_needed, true);
+assert.equal(facts.collaborators, undefined);
+assert.deepEqual(facts.gaps, ['invite_contact', 'lodging', 'plans']);
 assert.equal(
   intakeReplyBlock(STAGING_FLAGGED_DRAFT, appTextBanned, facts, [STAGING_TURN_ID]),
   'first_intake_reply_flagged',
