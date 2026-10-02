@@ -18,6 +18,9 @@ function createDb(state) {
   const claimKey = `${onboardingSessionId}|${welcomeFor}`;
   return async (strings, ...values) => {
     const text = sqlText(strings);
+    if (/from vacation_onboarding_welcomes/i.test(text) && /where onboarding_session_id =/i.test(text)) {
+      return state.claimed.has(claimKey) ? [{ id: '78f9aaf4-589b-4aed-8ba0-50a969e5adb3' }] : [];
+    }
     if (/insert into vacation_onboarding_welcomes/i.test(text)) {
       if (state.claimed.has(claimKey)) return [];
       state.claimed.add(claimKey);

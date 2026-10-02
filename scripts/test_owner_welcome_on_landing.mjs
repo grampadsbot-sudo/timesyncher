@@ -43,6 +43,12 @@ function createWelcomeDb(state) {
   const claimKey = (sessionId, welcomeFor) => `${sessionId}|${welcomeFor}`;
   return async (strings, ...values) => {
     const text = sqlText(strings);
+    if (/from vacation_onboarding_welcomes/i.test(text) && /where onboarding_session_id =/i.test(text)) {
+      const sessionId = values[0];
+      const welcomeFor = values[1];
+      const key = claimKey(sessionId, welcomeFor);
+      return state.welcomeClaims.has(key) ? [{ id: 'welcome-claim-prior' }] : [];
+    }
     if (/insert into vacation_onboarding_welcomes/i.test(text)) {
       const sessionId = values[0];
       const welcomeFor = values[1];

@@ -498,6 +498,14 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
+  if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+  const priorClaims = await db`
+    select id
+    from vacation_onboarding_welcomes
+    where onboarding_session_id = ${onboardingSessionId}
+      and welcome_for = ${welcomeFor}
+    limit 1
+  `;
   const claimed = await db`
     insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)
     values (${onboardingSessionId}, ${welcomeFor}, ${tripId})
@@ -505,8 +513,8 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     returning id
   `;
   if (!claimed.length) {
-    const exists = await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience });
-    if (exists) return;
+    if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+    if (!priorClaims.length) return;
     console.error(JSON.stringify({
       event: 'onboarding_welcome_claim_without_turn',
       onboardingSessionId: String(onboardingSessionId),
