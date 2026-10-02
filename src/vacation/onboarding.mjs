@@ -9,7 +9,7 @@ import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-stor
 import { CheckoutConfigError, checkoutCurrency, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
 import { intakeShareSlug } from './intake-shared-trip.mjs';
 import { tripSiteUrlFailure } from './trip-site-url-failure.mjs';
-import { sharedTripWebsiteUrl } from './web-access.mjs';
+import { sharedTripWebsiteUrl, websiteTripBase } from './web-access.mjs';
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
@@ -190,6 +190,11 @@ export async function assignTripSiteUrlWhenThingsPresent(db, tripId, env = proce
   const rows = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (!Number(rows[0]?.n)) return null;
   if (!intakeShareSlug(tripId)) return null;
+  try {
+    websiteTripBase(env);
+  } catch {
+    return null;
+  }
   return assignTripSiteUrl(db, tripId, env);
 }
 
