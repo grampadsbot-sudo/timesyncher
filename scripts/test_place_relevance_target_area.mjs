@@ -341,6 +341,11 @@ async function runPlaceRelevanceTargetAreaTests() {
     assert.doesNotMatch(kaanapaliBrave.query, /near Kaanapali Maui$/);
     const kaanapaliUrl = state.fetchCalls.find((url) => url.includes(BRAVE_HOST) && url.includes('local'));
     assert.equal(new URL(kaanapaliUrl).searchParams.get('q'), kaanapaliBrave.query);
+    assert.ok(
+      state.relevanceCalls.length > 0
+      && state.relevanceCalls.every((row) => row.searchArea === 'Kaanapali Maui'),
+      `relevance judge must use classifier anchor, not geocoded zip label: ${JSON.stringify(state.relevanceCalls[0])}`,
+    );
     const rejections = kaanapaliPayload.placeSearch?.relevanceRejections || [];
     for (const candidate of STAGING_HOTEL_BRAVE_REJECTIONS) {
       const row = rejections.find((item) => item.title === candidate.title);

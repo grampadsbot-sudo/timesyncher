@@ -108,9 +108,10 @@ export async function runPlaceProviderPass({
   }
 
   const merged = mergePlaces([prior, osm, brave]);
+  const namedArea = String(relevanceContext?.area || '').trim();
   const relevance = await attachRelevance(merged, fetchImpl, env, {
     ...(relevanceContext || {}),
-    area: locationText || relevanceContext?.area || dest,
+    area: namedArea || locationText || dest,
     locationText,
   });
   const places = relevance.places;
