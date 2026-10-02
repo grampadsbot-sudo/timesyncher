@@ -2,7 +2,7 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
+import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
@@ -32,9 +32,9 @@ import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
-  applyChatPlaceSearchForVacationTurn,
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
+  runVacationAppInTurnSearch,
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
@@ -474,7 +474,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
       intake: live.intake === true,
     };
   });
-  const { classification, placeSearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
+  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = 'trip_intake';
   const jobFields = tripIntakeJobFields({
@@ -516,13 +516,21 @@ async function queueVacationAppTurn(db, session, trip, body) {
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
-  const turnTag = await classifyTurnWithModel({
-    text: requestText,
-    speaker: 'customer',
-    direction: 'inbound',
-    channel: 'vacation-app',
-    payload,
-  });
+  const turnTag = placeSearchTurn || webResearchTurn
+    ? classifyTurn({
+      text: requestText,
+      speaker: 'customer',
+      direction: 'inbound',
+      channel: 'vacation-app',
+      payload,
+    })
+    : await classifyTurnWithModel({
+      text: requestText,
+      speaker: 'customer',
+      direction: 'inbound',
+      channel: 'vacation-app',
+      payload,
+    });
   const requestRows = await db`
     insert into vacation_requests (
       customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
@@ -578,7 +586,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     returning id
   `;
 
-  const searchTurn = await applyChatPlaceSearchForVacationTurn({
+  const inTurnSearch = await runVacationAppInTurnSearch({
     db,
     tripId,
     requestId,
@@ -599,9 +607,10 @@ async function queueVacationAppTurn(db, session, trip, body) {
       payload,
       jobFields,
     } : null,
+    placeSearchTurn,
+    webResearchTurn,
   });
-  const placeResults = searchTurn.placeResults || [];
-  if (searchTurn.kind === 'failed') {
+  if (!inTurnSearch.ok) {
     const failedLatency = Date.now() - started;
     return {
       requestId,
@@ -625,11 +634,14 @@ async function queueVacationAppTurn(db, session, trip, body) {
       titleError: jobFields.titleError,
       intakeError: jobFields.intakeError,
       ok: false,
-      status: 'place_search_failed',
-      error: searchTurn.error,
-      placeSearch: searchTurn.placeSearch,
+      status: inTurnSearch.status,
+      error: inTurnSearch.error,
+      placeSearch: inTurnSearch.placeSearch,
+      webSearch: inTurnSearch.webSearch,
     };
   }
+  const inTurnProviderResults = inTurnSearch.inTurnProviderResults;
+  const enforceInTurnSearch = inTurnSearch.enforceInTurnSearch;
 
   let produced;
   try {
@@ -638,12 +650,13 @@ async function queueVacationAppTurn(db, session, trip, body) {
       session: { ...session, trip_id: tripId },
       priorTurns,
       tripTitle: trip?.title || '',
-      placeResults,
-      placeSearchTurn,
+      placeResults: inTurnProviderResults,
+      placeSearchTurn: enforceInTurnSearch,
+      webResearchTurn: inTurnSearch.webResearchTurn,
       env: process.env,
       seatDollars: configuredSeatDollars(process.env),
       intake: classification.ok === true && classification.intake === true,
-      wantedThings: intakeExtractedThings(placeSearchTurn, classification),
+      wantedThings: intakeExtractedThings(placeSearchTurn, classification, webResearchTurn),
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
       extractedDestination: jobFields.destination,

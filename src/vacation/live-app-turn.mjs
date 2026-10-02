@@ -1502,7 +1502,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, loadOwnerPlan = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, loadOwnerPlan = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1519,7 +1519,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env);
   const inTurnProviderResults = placeSearchTurn === true ? (Array.isArray(placeResults) ? placeResults : []) : [];
-  const enforceInTurnPlaces = placeSearchTurn === true && inTurnProviderResults.length > 0;
+  const enforceInTurnPlaces = (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0;
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
   const modelPlaceSources = enforceInTurnPlaces ? inTurnProviderResults : citedPlaces;
   const rosterList = Array.isArray(roster) ? roster : [];
