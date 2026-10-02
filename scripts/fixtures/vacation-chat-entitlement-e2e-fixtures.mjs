@@ -207,7 +207,7 @@ export function dbFor(state) {
       return [{ id: 'req-e2e', received_at: new Date(), queued_at: new Date() }];
     }
     if (/insert into vacation_onboarding_welcomes/i.test(text)) {
-      const key = `${values[0]}|${values[1]}|${values[2] ?? ''}`;
+      const key = `${values[0]}|${values[1]}`;
       if (state.welcomeClaims.has(key)) return [];
       state.welcomeClaims.add(key);
       return [{ id: 'welcome-claim-e2e' }];

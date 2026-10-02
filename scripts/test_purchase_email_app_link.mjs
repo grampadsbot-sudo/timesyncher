@@ -139,7 +139,7 @@ function db(strings, ...values) {
   }
   if (/select 1\s+from transcript_turns/i.test(text)) return state.turns.length ? [1] : [];
   if (/insert into vacation_onboarding_welcomes/i.test(text)) {
-    const key = `${values[0]}|${values[1]}|${values[2] ?? ''}`;
+    const key = `${values[0]}|${values[1]}`;
     if (state.welcomeClaims.has(key)) return [];
     state.welcomeClaims.add(key);
     return [{ id: 'welcome-claim-1' }];

@@ -14,7 +14,7 @@ const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.me
 assert.match(api, /if \(eula\.accepted && !seatFromSession\(session\)\)/);
 assert.match(api, /await ensureOnboardingOpener\(db, session, selected \|\| null\)/);
 assert.match(api, /insert into vacation_onboarding_welcomes/);
-assert.match(api, /on conflict do nothing/);
+assert.match(api, /on conflict \(onboarding_session_id, welcome_for\) do nothing/);
 assert.doesNotMatch(api, /ensureOwnerShellTrip/);
 
 const templates = JSON.parse(await readFile(new URL('../content/onboarding-welcome.json', import.meta.url), 'utf8'));
@@ -39,14 +39,13 @@ function sqlText(strings) {
 }
 
 function createWelcomeDb(state) {
-  const claimKey = (sessionId, welcomeFor, tripId) => `${sessionId}|${welcomeFor}|${tripId ?? ''}`;
+  const claimKey = (sessionId, welcomeFor) => `${sessionId}|${welcomeFor}`;
   return async (strings, ...values) => {
     const text = sqlText(strings);
     if (/insert into vacation_onboarding_welcomes/i.test(text)) {
       const sessionId = values[0];
       const welcomeFor = values[1];
-      const tripId = values[2];
-      const key = claimKey(sessionId, welcomeFor, tripId);
+      const key = claimKey(sessionId, welcomeFor);
       if (state.welcomeClaims.has(key)) return [];
       state.welcomeClaims.add(key);
       return [{ id: 'welcome-claim-1' }];
@@ -79,6 +78,7 @@ function createWelcomeDb(state) {
     if (/insert into worker_jobs/i.test(text)) return [{ id: 'job-1' }];
     if (/update transcript_turns/i.test(text)) return [];
     if (/update worker_jobs/i.test(text)) return [];
+    if (/update trips/i.test(text)) return [];
     if (/from entitlements/i.test(text)) {
       return [{
         plan: 'single',
@@ -207,6 +207,46 @@ try {
   const turn = await queueVacationAppTurnForTests(db, session, null, { text: 'hi' });
   assert.equal(turn.ok, true);
   assert.match(turn.reply || '', /\?/);
+
+  const TRIP_ID = '01234567-89ab-4cde-8f01-23456789abcd';
+  const tripLifecycleState = {
+    welcomeClaims: new Set(),
+    welcomeTurns: [],
+    transcriptTurns: [],
+    logs: [],
+  };
+  const tripLifecycleDb = createWelcomeDb(tripLifecycleState);
+  const lifecycleSession = {
+    id: 'session-trip-lifecycle',
+    customer_id: 'owner-lifecycle',
+    trip_id: null,
+    order_id: 'order-lifecycle',
+    first_name: firstName,
+    display_name: firstName,
+    metadata: {},
+  };
+  const lifecycleTrip = {
+    id: TRIP_ID,
+    title: 'Harbor week',
+    publicUrl: '',
+    shareToken: '',
+  };
+  const lifecycleLog = [];
+  console.log = (...args) => {
+    lifecycleLog.push(args.map((item) => String(item)).join(' '));
+  };
+  useVacationAppDatabase(tripLifecycleDb);
+  await ensureOnboardingOpener(tripLifecycleDb, lifecycleSession, null, {});
+  await queueVacationAppTurnForTests(tripLifecycleDb, lifecycleSession, null, { text: 'hi' });
+  lifecycleSession.trip_id = TRIP_ID;
+  await ensureOnboardingOpener(tripLifecycleDb, lifecycleSession, lifecycleTrip, {});
+  await queueVacationAppTurnForTests(tripLifecycleDb, lifecycleSession, lifecycleTrip, { text: 'hi' });
+  assert.equal(tripLifecycleState.welcomeTurns.length, 1);
+  const lifecycleCanned = lifecycleLog
+    .map((line) => JSON.parse(line))
+    .filter((row) => row.event === 'canned_welcome');
+  assert.equal(lifecycleCanned.length, 1);
+
   globalThis.fetch = originalFetch;
   for (const key of Object.keys(fixtureEnv)) {
     if (savedEnv[key] === undefined) delete process.env[key];

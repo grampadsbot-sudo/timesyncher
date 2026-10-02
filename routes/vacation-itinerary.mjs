@@ -371,7 +371,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const claimed = await db`
     insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)
     values (${onboardingSessionId}, ${welcomeFor}, ${tripId})
-    on conflict do nothing
+    on conflict (onboarding_session_id, welcome_for) do nothing
     returning id
   `;
   if (!claimed.length) return;

@@ -112,14 +112,13 @@ try {
   const trip = { id: 'trip-1', publicUrl: tripSiteUrl, title: tripTitle, shareToken: 'intake-trip1slug' };
   const stored = [];
   const welcomeClaims = new Set();
-  const claimKey = (sessionId, welcomeFor, tripId) => `${sessionId}|${welcomeFor}|${tripId ?? ''}`;
+  const claimKey = (sessionId, welcomeFor) => `${sessionId}|${welcomeFor}`;
   const db = async (strings, ...values) => {
     const query = strings.join(' ');
     if (/insert into vacation_onboarding_welcomes/i.test(query)) {
       const sessionId = values[0];
       const welcomeFor = values[1];
-      const tripId = values[2];
-      const key = claimKey(sessionId, welcomeFor, tripId);
+      const key = claimKey(sessionId, welcomeFor);
       if (welcomeClaims.has(key)) return [];
       welcomeClaims.add(key);
       return [{ id: 'welcome-claim-1' }];

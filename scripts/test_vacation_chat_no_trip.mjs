@@ -67,7 +67,7 @@ const state = {
 function db(strings, ...values) {
   const text = sqlText(strings);
   if (/insert into vacation_onboarding_welcomes/i.test(text)) {
-    const key = `${values[0]}|${values[1]}|${values[2] ?? ''}`;
+    const key = `${values[0]}|${values[1]}`;
     if (welcomeClaims.has(key)) return [];
     welcomeClaims.add(key);
     return [{ id: 'welcome-claim-1' }];
