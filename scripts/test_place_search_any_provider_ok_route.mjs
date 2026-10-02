@@ -94,6 +94,7 @@ async function runAnyProviderOkRouteTests() {
     osmMode: 'fail',
     braveMode: 'triple',
     classifierMode: 'ok',
+    relevanceMode: 'accept',
     tripThings: [],
     turnPayloads: [],
     fetchCalls: [],
@@ -256,6 +257,9 @@ async function runAnyProviderOkRouteTests() {
       const raw = options.body ? JSON.parse(String(options.body)) : {};
       const questions = raw?.questions || raw?.input?.questions || {};
       if (questions.relevance) {
+        if (state.relevanceMode === 'reject') {
+          return { ok: true, json: async () => ({ answers: { relevance: { choice: 1 } } }) };
+        }
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
       }
       if (questions.trip_intake) {
@@ -335,6 +339,23 @@ async function runAnyProviderOkRouteTests() {
     assert.equal(braveRow?.status, 'ok');
     assert.equal(Number(braveRow?.resultCount), 3);
 
+    state.relevanceMode = 'reject';
+    state.braveMode = 'triple';
+    state.nominatimMode = 'fail';
+    state.osmMode = 'fail';
+    const relevanceRejected = await postTurn('best tacos near our hotel');
+    assert.equal(relevanceRejected.status, 502, JSON.stringify(relevanceRejected.body));
+    assert.equal(relevanceRejected.body.ok, false);
+    assert.equal(relevanceRejected.body.status, 'place_search_no_relevant_results');
+    assert.equal(state.tripThings.length, 0);
+    const relevancePayload = state.turnPayloads.at(-1);
+    assert.equal(relevancePayload.placeSearch?.status, 'failed');
+    assert.equal(relevancePayload.placeSearch?.reason, 'relevance_rejected_all');
+    const braveRejected = relevancePayload.placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(braveRejected?.status, 'ok');
+    assert.equal(Number(braveRejected?.relevanceRejected), 3);
+
+    state.relevanceMode = 'accept';
     state.braveMode = 'empty';
     state.nominatimMode = 'fail';
     state.osmMode = 'fail';
@@ -369,6 +390,7 @@ console.log(JSON.stringify({
   checked: 'place-search-any-provider-ok-route',
   tests: [
     'nominatim_osm_fail_brave_three_results_201',
+    'relevance_rejects_all_brave_results_loud_fail',
     'all_providers_fail_502_with_telemetry',
   ],
   result,

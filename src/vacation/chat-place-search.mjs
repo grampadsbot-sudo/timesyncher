@@ -103,7 +103,7 @@ function finishCustomerChatPlaceSearch({ places = [], search = {}, errorMessage 
   const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
   const normalizedPlaces = Array.isArray(places) ? places : [];
   const things = normalizedPlaces.map((place) => placeToTripThing(place));
-  const status = placeSearchStatusFromProviderAttempts(providerAttempts, things);
+  const status = placeSearchStatusFromProviderAttempts(things);
   if (status === 'failed') {
     const error = String(
       errorMessage || `Place search returned no results for ${search?.destination || 'the requested area'}.`,
@@ -160,7 +160,10 @@ export async function runCustomerChatPlaceSearch({
   } catch (error) {
     const message = String(error?.message || error || 'place search failed').trim();
     console.error(`customer chat place search failed: ${message}`);
-    const search = { providers: Array.isArray(error?.providers) ? error.providers : [] };
+    const search = {
+      providers: Array.isArray(error?.providers) ? error.providers : [],
+      ...(String(error?.code || '').trim() === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
+    };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
   }
 }
@@ -206,11 +209,12 @@ export async function applyChatPlaceSearchForVacationTurn({
     turnKind: classification?.turnKind || 'place_search',
     classifierModel: classification?.routerModel || null,
   };
-  const outcomeStatus = placeSearchStatusFromProviderAttempts(providerAttempts, chatSearch.things);
+  const outcomeStatus = placeSearchStatusFromProviderAttempts(chatSearch.things);
   if (outcomeStatus === 'failed') {
     const placeSearch = placeSearchTelemetry({
       status: 'failed',
       error: chatSearch.error,
+      reason: chatSearch.search?.reason || null,
       things: [],
       providerAttempts,
       ...classifierMeta,
@@ -441,7 +445,10 @@ export async function runVacationAppInTurnSearch({
     searchImpl: searchPlaces,
   });
   if (searchTurn.kind === 'failed') {
-    return { ok: false, status: 'place_search_failed', error: searchTurn.error, placeSearch: searchTurn.placeSearch };
+    const routeStatus = searchTurn.placeSearch?.reason === 'relevance_rejected_all'
+      ? 'place_search_no_relevant_results'
+      : 'place_search_failed';
+    return { ok: false, status: routeStatus, error: searchTurn.error, placeSearch: searchTurn.placeSearch };
   }
   const webTurn = searchTurn.kind === 'skip'
     ? await applyChatWebResearchForVacationTurn({

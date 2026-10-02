@@ -97,23 +97,25 @@ export async function runPlaceProviderPass({
   }
 
   const merged = mergePlaces([prior, osm, brave]);
-  let places = await attachRelevance(merged, fetchImpl, env);
-  let liveCount = places.filter((place) => place.source !== 'prior_db').length;
-  const anyProviderResults = providerLog.some(
-    (row) => row.status === 'ok' && Number(row.resultCount) > 0,
-  );
-  if (!liveCount && anyProviderResults) {
-    const fallback = merged.filter((place) => place.source !== 'prior_db');
-    if (fallback.length) {
-      places = fallback;
-      liveCount = fallback.length;
-    }
-  }
+  const places = await attachRelevance(merged, fetchImpl, env);
+  const liveMerged = merged.filter((place) => place.source !== 'prior_db');
+  const liveCount = places.filter((place) => place.source !== 'prior_db').length;
   if (!liveCount) {
-    const message = places.length
-      ? `Saved places are not a sole source. ${providerFailureMessage(providerLog)}`
-      : `Place search failed: ${providerFailureMessage(providerLog)}`;
-    fail(message, places.length ? 'prior_db_sole_source' : 'all_providers_failed', providerLog);
+    if (places.length) {
+      const message = `Saved places are not a sole source. ${providerFailureMessage(providerLog)}`;
+      fail(message, 'prior_db_sole_source', providerLog);
+    }
+    if (liveMerged.length) {
+      for (const row of providerLog) {
+        if (row.provider === 'prior_db') continue;
+        const rejected = liveMerged.filter((place) => place.source === row.provider).length;
+        if (rejected > 0) row.relevanceRejected = rejected;
+      }
+      const message = `Place search relevance rejected all live provider results. ${providerFailureMessage(providerLog)}`;
+      fail(message, 'relevance_rejected_all', providerLog);
+    }
+    const message = `Place search failed: ${providerFailureMessage(providerLog)}`;
+    fail(message, 'all_providers_failed', providerLog);
   }
 
   return { center, locationText, places, providerLog };

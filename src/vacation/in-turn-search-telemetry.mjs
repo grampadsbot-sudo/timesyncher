@@ -15,15 +15,13 @@ function normalizeProviderAttempts(attempts = []) {
     const entry = { provider, status };
     if (row.reason) entry.reason = String(row.reason).trim();
     if (Number.isFinite(Number(row.resultCount))) entry.resultCount = Number(row.resultCount);
+    if (Number.isFinite(Number(row.relevanceRejected))) entry.relevanceRejected = Number(row.relevanceRejected);
     return entry;
   }).filter(Boolean);
 }
 
-export function placeSearchStatusFromProviderAttempts(providerAttempts = [], things = []) {
-  if (Array.isArray(things) && things.length > 0) return 'ok';
-  const providers = normalizeProviderAttempts(providerAttempts);
-  const anyResults = providers.some((row) => row.status === 'ok' && Number(row.resultCount) > 0);
-  return anyResults ? 'ok' : 'failed';
+export function placeSearchStatusFromProviderAttempts(things = []) {
+  return Array.isArray(things) && things.length > 0 ? 'ok' : 'failed';
 }
 
 export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
