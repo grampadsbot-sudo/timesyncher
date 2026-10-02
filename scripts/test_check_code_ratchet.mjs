@@ -340,7 +340,7 @@ assert.match(repoRun.stdout, /RULE\tNO-WORKAROUND-COMMENTS\treport=0\tfail=0\t/)
 assert.match(repoRun.stdout, /RULE\tFILE-SIZE-500\treport=\d+\tfail=0\t/);
 assert.match(repoRun.stdout, /RULE\tTEST-TRIP-LITERALS\treport=\d+\tfail=0\t/);
 assert.match(repoRun.stdout, /RULE\tDEAD-CODE\treport=\d+\tfail=0\t/);
-assert.match(repoRun.stdout, /REPORT\tMODEL-CLIENT-ONLY\tsrc\/vacation\/poi-search\.mjs:\d+\topenrouter\.ai/);
+assert.match(repoRun.stdout, /REPORT\tMODEL-CLIENT-ONLY\tsrc\/vacation\/customer-intent\.mjs:\d+\topenrouter\.ai/);
 assert.match(repoRun.stdout, /REPORT\tSEARCH-MODULE-ONLY\tscripts\/trek-itinerary-edit\.mjs:\d+\tnominatim/);
 assert.match(repoRun.stdout, /REPORT\tNO-EMPTY-CATCH\tsrc\/vacation\/web-access\.mjs:\d+\tempty-catch/);
 assert.match(repoRun.stdout, /REPORT\tNO-FLOATING-PROMISE\tscripts\/void-stale-build\.mjs:\d+\tmain/);
