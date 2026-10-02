@@ -3,6 +3,7 @@ import { appTextBanned } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { failReplyPlanEntitlement, loadSessionOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { firstIntakeReplyLeak, intakeCustomerName } from './first-intake-reply.mjs';
+import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 
 const FIRST_INTAKE_TONE = [
   'Address the customer in the second person. Use customer_name when it is present, copied verbatim. Do not use a customer id, a session id, or a trip id. Do not speak about the customer in the third person.',
@@ -15,7 +16,7 @@ const FIRST_INTAKE_TONE = [
 export const NO_TRIP_STARTER_INSTRUCTION = [
   'You are writing a reply in the TimeSyncher vacation app before a vacation record exists yet. Write it in your own words. Do not copy this instruction back.',
   'The customer has not given enough detail to start a vacation yet. Ask only for what is still missing to begin planning: where they are going and when.',
-  'Use exactly one question. Do not ask about collaborators, seats, plans, or pricing.',
+  'Use exactly one question.',
   'Do not mention a trip link, shared site, or URL. Do not include /shared/ or any website link.',
   'Do not invent a place, date, lodging, activity, or name.',
   FIRST_INTAKE_TONE,
@@ -30,7 +31,7 @@ function questionCount(reply) {
   return (String(reply || '').match(/\?/g) || []).length;
 }
 
-function noTripStarterFacts({ customerTurn = '', session = null, ownerPlan = null } = {}) {
+function noTripStarterFacts({ customerTurn = '', session = null, ownerPlan = null, turnActionResults = null } = {}) {
   const facts = {
     shape: 'no-trip',
     customer_said: intakeFactText(customerTurn, 1200),
@@ -48,7 +49,7 @@ function noTripStarterFacts({ customerTurn = '', session = null, ownerPlan = nul
     order_bump_owned: ownerPlan.order_bump_owned === true,
   };
   if (!facts.plan.plan_id || !facts.plan.plan_name) failReplyPlanEntitlement('owner_plan_incomplete', '');
-  return facts;
+  return applyTurnInviteReplyFacts(facts, turnActionResults);
 }
 
 export function noTripReplyBlock(reply, banned = appTextBanned, facts = {}) {
@@ -68,6 +69,7 @@ export async function produceNoTripStarterReply({
   env = process.env,
   rules = null,
   loadOwnerPlan = loadSessionOwnerReplyPlan,
+  turnActionResults = null,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -86,7 +88,7 @@ export async function produceNoTripStarterReply({
   }
   jev.jevBeforeModel = true;
   const ownerPlan = await loadOwnerPlan({ session, env });
-  const facts = noTripStarterFacts({ customerTurn, session, ownerPlan });
+  const facts = noTripStarterFacts({ customerTurn, session, ownerPlan, turnActionResults });
   const prompt = `${NO_TRIP_STARTER_INSTRUCTION}\n\nStarter facts: ${JSON.stringify(facts)}`;
   let model = null;
   let reply = '';
@@ -126,6 +128,6 @@ export async function produceNoTripStarterReply({
         || 'no trip starter reply model returned no reply',
     };
   }
-  assertCustomerReplyShippable(reply, '');
+  assertCustomerReplyShippable(reply, '', turnActionResults);
   return { reply, rules, jev, model, reason: null };
 }

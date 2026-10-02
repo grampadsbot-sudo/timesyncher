@@ -42,8 +42,7 @@ assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /unlimited\s+\S*\s*vacations
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Offer to add each person in collaborators/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /already have access/);
-assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /two or three gap questions/);
-assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /who is coming/);
+assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /second person/);
 
 const said = 'Bristol and Calvin are coming to the coast for the dates in the facts. We have a house and a swim planned. '.repeat(3);
