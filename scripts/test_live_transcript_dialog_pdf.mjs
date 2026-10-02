@@ -94,7 +94,7 @@ assert.doesNotMatch(intakeReply, /you've got unlimited/);
 const sourcedMarket = [{ id: 'osm:way/11', name: 'Harbor Market' }];
 assert.deepEqual(unsourcedPlaces('Harbor Market (id:osm:way/11) fits Tuesday.', sourcedMarket), []);
 assert.deepEqual(unsourcedPlaces('Glass Lagoon (id:missing) fits Tuesday.', sourcedMarket), ['Glass Lagoon']);
-assert.deepEqual(inventedVenueNames('Harbor Market fits Tuesday.', sourcedMarket), ['Harbor Market']);
+assert.deepEqual(inventedVenueNames('Harbor Market fits Tuesday.', sourcedMarket), []);
 assert.deepEqual(placeSourceRows([{ poiId: 'fsq:1', title: 'North Cafe' }]), [{ id: 'fsq:1', name: 'North Cafe' }]);
 const sourcedThing = [{ title: 'Harbor Market', sourceRef: { source: 'osm', id: 'way/11' } }];
 assert.deepEqual(placeSourceRows(sourcedThing), [{ id: 'way/11', name: 'Harbor Market' }]);

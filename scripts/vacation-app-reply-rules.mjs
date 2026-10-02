@@ -575,10 +575,7 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
-export function sourcedPlaceRule(includeIdCitation = false) {
-  if (includeIdCitation) {
-    return 'Name a place only when this turn lists it under Results. Cite that row\'s exact id as (id:<id>). Never invent a place name or id.';
-  }
+export function sourcedPlaceRule() {
   return 'Name a place only when this turn lists it under Results. Never invent a place name or id.';
 }
 
@@ -628,7 +625,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
-    sourcedPlaceRule(context.resultsNeedInternalPlaceIds === true),
+    sourcedPlaceRule(),
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
@@ -829,7 +826,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, resultsNeedInternalPlaceIds = false }) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -855,7 +852,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planLine,
     seatDollars,
     seat,
-    planOwned, intakeReplyTurn, replyFacts, resultsNeedInternalPlaceIds,
+    planOwned, intakeReplyTurn, replyFacts,
   });
 }
 
@@ -885,7 +882,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, resultsNeedInternalPlaceIds = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -917,7 +914,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         messages: [
           {
             role: 'system',
-            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '', resultsNeedInternalPlaceIds: resultsNeedInternalPlaceIds === true })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
+            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '' })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
           },
           { role: 'user', content: userContent },
         ],
