@@ -131,6 +131,7 @@ function extractionJson(overrides = {}) {
     target: '',
     anchor: '',
     anchorIsLodging: false,
+    category: '',
     question: '',
     things: [],
     roster: [],
