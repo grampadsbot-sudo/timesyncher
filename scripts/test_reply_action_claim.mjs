@@ -4,11 +4,13 @@ import { assertCustomerReplyShippable } from '../src/vacation/reply-id-citation.
 import { failReplyActionClaim, replyActionClaimReason } from '../src/vacation/reply-action-claim.mjs';
 
 const claim = "I've added Kim Brooks as a collaborator for the trip.";
+const futureClaim = "I'll go ahead and add your wife as a collaborator on the trip.";
 const failure = "I couldn't send the invite to Kim yet — you can add her from Settings when you're ready.";
 const successFacts = { invite: { ok: true, code: 'collaborator_invite_sent', inviteeEmail: 'kim@example.com' } };
 const viewClaim = 'Kim will see these on the trip site once she accepts.';
 
 assert.equal(replyActionClaimReason(claim, null), 'reply_action_claim_unbacked');
+assert.equal(replyActionClaimReason(futureClaim, null), 'reply_action_claim_unbacked');
 assert.equal(replyActionClaimReason(claim, { invite: { ok: false, code: 'send_failed', inviteeEmail: 'kim@example.com' } }), 'reply_action_claim_unbacked');
 assert.equal(replyActionClaimReason(claim, successFacts), '');
 assert.equal(replyActionClaimReason(failure, null), '');

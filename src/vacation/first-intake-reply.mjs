@@ -1,11 +1,8 @@
-import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
-import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
-import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
-import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 
+export { produceFirstIntakeReply } from './first-intake-reply-produce.mjs';
 export { firstIntakeReplyLeak, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -16,7 +13,7 @@ function sessionFirstName(session) {
   return String(session?.display_name || session?.displayName || session?.customerName || '').trim();
 }
 
-function isoDay(value) {
+export function isoDay(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
   const match = String(value ?? '').match(/\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : '';
@@ -96,8 +93,9 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
   'You are writing the first reply after the customer\'s intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Do all of the following in this one message, in order:',
   '1. Confirm the itinerary is being built. Reflect where, the dates, the end date, the number of nights, who is coming, lodging, and the planned activities, when those are in customer_said or the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, an activity, a weekday, or a name.',
-  '2. Offer to add each person in collaborators, as a statement, not a question. Do not say they are already collaborators or that they already have access. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
-  '3. End with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
+  '2. When collaborators is present, those people already have contact on file; you may say they can be invited when the customer is ready — never that you added, invited, sent, or will add them on this turn unless turnInvite says the invite was emailed. Do not say they are already collaborators or that they already have access. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
+  '3. When invite_contact_needed is true, do not mention adding or inviting anyone. End with exactly one question asking for their name and email so you can invite them.',
+  '4. Otherwise end with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');
 
@@ -120,7 +118,7 @@ export const FIRST_INTAKE_QUESTION_INSTRUCTION = [
   FIRST_INTAKE_TONE,
 ].join('\n');
 
-function intakeFactText(value, max = 240) {
+export function intakeFactText(value, max = 240) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   return text ? text.slice(0, max) : '';
 }
@@ -148,6 +146,26 @@ function namedPerson(value, ids = []) {
   return name;
 }
 
+function personContact(person) {
+  return intakeFactText(person?.email || person?.contact || person?.phone, 120);
+}
+
+function rosterContactForName(roster, name) {
+  const target = String(name || '').trim().toLowerCase();
+  if (!target) return '';
+  for (const person of Array.isArray(roster) ? roster : []) {
+    const rosterName = namedPerson(person?.name, []);
+    if (!rosterName || rosterName.toLowerCase() !== target) continue;
+    return personContact(person);
+  }
+  return '';
+}
+
+function collaboratorMayBeOffered(name, roster) {
+  const contact = rosterContactForName(roster, name);
+  return Boolean(contact);
+}
+
 function samePersonName(left, right) {
   const normalize = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
   const a = normalize(left);
@@ -159,7 +177,7 @@ function samePersonName(left, right) {
   return aFirst.length >= 2 && bFirst.length >= 2 && aFirst === bFirst;
 }
 
-function hiddenIds(session = {}, extra = []) {
+export function hiddenIds(session = {}, extra = []) {
   const ids = [];
   for (const value of [session.customer_id, session.customerId, session.id, session.token, session.trip_id, session.tripId, session.session_id, session.sessionId, ...extra]) {
     const text = String(value || '').trim();
@@ -250,6 +268,7 @@ export function firstIntakeReplyFacts({
   const plans = [];
   const mentioned = [];
   const offer = [];
+  let inviteContactNeeded = false;
   const childNames = new Set();
   for (const person of Array.isArray(roster) ? roster : []) {
     const name = namedPerson(person?.name, hidden);
@@ -265,7 +284,10 @@ export function firstIntakeReplyFacts({
     const when = intakeFactText(thing?.when || thing?.whenLabel || thing?.customerWhen, 180);
     if (person) {
       mentioned.push(person);
-      if (!childNames.has(person.toLowerCase())) offer.push(person);
+      if (!childNames.has(person.toLowerCase())) {
+        if (collaboratorMayBeOffered(person, roster)) offer.push(person);
+        else inviteContactNeeded = true;
+      }
     }
     if (!label) continue;
     const line = when ? `${label} (${when})` : label;
@@ -275,13 +297,12 @@ export function firstIntakeReplyFacts({
   for (const person of Array.isArray(roster) ? roster : []) {
     const name = namedPerson(person?.name, hidden);
     const role = intakeFactText(person?.role, 40).toLowerCase();
-    const contact = intakeFactText(person?.email || person?.contact || person?.phone, 120);
+    const contact = personContact(person);
     if (!name || role === 'viewer' || role === 'editor' || role === 'child') continue;
     if (role === 'owner' && customer && samePersonName(name, customer)) continue;
-    if (role === 'collaborator' || role === 'owner' || contact || role === '') {
-      mentioned.push(name);
-      offer.push(name);
-    }
+    mentioned.push(name);
+    if (contact) offer.push(name);
+    else if (role === 'collaborator' || role === '' || role === 'owner') inviteContactNeeded = true;
   }
   const who = uniqueFactNames(mentioned);
   const collaborators = uniqueFactNames(offer);
@@ -332,6 +353,11 @@ export function firstIntakeReplyFacts({
   }
   facts.gaps = gaps;
   if (!planReply) return scrubFacts(facts, hidden);
+  if (inviteContactNeeded) {
+    facts.invite_contact_needed = true;
+    if (!gaps.includes('invite_contact')) gaps.unshift('invite_contact');
+    facts.gaps = gaps;
+  }
   if (collaborators.length) facts.collaborators = collaborators;
   if (isCollaboratorAppSeat(session)) return scrubFacts(facts, hidden);
   if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', tripId);
@@ -359,119 +385,3 @@ export function firstIntakeReplyPrompt(input = {}) {
       : FIRST_INTAKE_GAP_INSTRUCTION;
   return `${instruction}\n\nIntake facts: ${JSON.stringify(facts)}`;
 }
-
-export async function produceFirstIntakeReply({
-  customerTurn = '',
-  session = null,
-  tripTitle = '',
-  env = process.env,
-  rules = null,
-  wantedThings = [],
-  roster = null,
-  extractedDestination = '',
-  savedStart = '',
-  savedEnd = '',
-  loadOwnerPlan = loadTripOwnerReplyPlan,
-  turnActionResults = null,
-} = {}) {
-  if (!rules?.ok) {
-    return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
-  }
-  const jevStarted = Date.now();
-  const jev = await jevPrecall({
-    customerTurn,
-    stage: 'vacation_conversation',
-    screen: 'vacation-app',
-    session: { seed_id: session?.token || null },
-    env,
-  });
-  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
-  if (!jev?.jevRan) {
-    return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
-  }
-  jev.jevBeforeModel = true;
-  const saved = await loadSavedTripRecord(session, env);
-  const tripStart = String(savedStart || saved?.start || '').trim();
-  const tripEnd = String(savedEnd || saved?.end || '').trim();
-  const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
-  const ownerPlan = saved?.ownerPlan
-    || (tripId ? await loadOwnerPlan({ tripId, env }) : null);
-  const ids = hiddenIds(session, [saved?.id, saved?.tripId, saved?.trip_id, tripId]);
-  const factInput = {
-    customerTurn,
-    tripTitle,
-    wantedThings,
-    roster,
-    extractedDestination: intakeFactText(extractedDestination, 180) || intakeFactText(saved?.destination, 180),
-    savedStart: tripStart,
-    savedEnd: tripEnd,
-    savedDates: isoDay(tripStart) && isoDay(tripEnd) ? `${isoDay(tripStart)} to ${isoDay(tripEnd)}` : '',
-    planOwned: saved?.planOwned === true || ownerPlan?.order_bump_owned === true,
-    ownerPlan,
-    tripId,
-    customerName: intakeCustomerName(session),
-    session,
-    ids,
-  };
-  const facts = applyTurnInviteReplyFacts(firstIntakeReplyFacts(factInput), turnActionResults);
-  const prompt = `${facts.shape === 'voice-note'
-    ? FIRST_INTAKE_VOICE_INSTRUCTION
-    : facts.shape === 'question'
-      ? FIRST_INTAKE_QUESTION_INSTRUCTION
-      : FIRST_INTAKE_GAP_INSTRUCTION}\n\nIntake facts: ${JSON.stringify(facts)}`;
-  let model = null;
-  let reply = '';
-  let block = '';
-  for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
-    const genStarted = Date.now();
-    model = await callTieredModel({
-      rules,
-      jev,
-      customerTurn,
-      stage: 'vacation_conversation',
-      screen: 'vacation-app',
-      destination: facts.where || '',
-      memory: [],
-      upsell: facts.shape === 'voice-note' ? 'allow-once' : 'forbidden',
-      postIntake: true,
-      intakeReplyTurn: true,
-      replyFacts: facts,
-      env,
-      systemExtra: prompt,
-    });
-    if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
-    reply = model?.called && model.text ? String(model.text).trim() : '';
-    block = intakeReplyBlock(reply, appTextBanned, facts, ids);
-    if (block) reply = '';
-  }
-  if (!reply) {
-    const visible = model?.called && model.text ? String(model.text).trim() : '';
-    const blockedReasons = visible ? intakeReplyBlockReasons(visible, appTextBanned, facts, ids) : [];
-    const fallbackReason = model?.reason || 'first intake reply model returned no reply';
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      reason: (visible && intakeReplyBlock(visible, appTextBanned, facts, ids)) || fallbackReason,
-      blockedDraft: visible || '',
-      blockedReasons: blockedReasons.length ? blockedReasons : (visible ? [fallbackReason] : [fallbackReason]),
-    };
-  }
-  try {
-    assertCustomerReplyShippable(reply, tripId);
-  } catch (error) {
-    if (error?.name !== 'reply_id_citation_blocked') throw error;
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      reason: 'reply_id_citation_blocked',
-      blockedDraft: reply,
-      blockedReasons: [String(error.reason || 'reply_id_citation_blocked')],
-    };
-  }
-  return { reply, rules, jev, model, reason: null };
-}
-

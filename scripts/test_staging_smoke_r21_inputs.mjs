@@ -34,7 +34,10 @@ const collaboratorFacts = firstIntakeReplyFacts(intakeInput(collaboratorRoster))
 assert.equal(ownerFacts.shape, 'voice-note');
 assert.equal(collaboratorFacts.shape, 'voice-note');
 assert.deepEqual(ownerFacts.who, ['wife']);
-assert.deepEqual(ownerFacts.collaborators, collaboratorFacts.collaborators);
+assert.equal(ownerFacts.collaborators, undefined);
+assert.equal(collaboratorFacts.collaborators, undefined);
+assert.equal(ownerFacts.invite_contact_needed, true);
+assert.equal(collaboratorFacts.invite_contact_needed, true);
 assert.deepEqual(ownerFacts.gaps, collaboratorFacts.gaps);
 const oneQuestion = 'I am building your Maui trip from Wednesday, March 10 to Wednesday, March 17, 2027, seven nights with your wife. I can add your wife. Where are you staying?';
 assert.deepEqual(intakeReplyBlockReasons(oneQuestion, () => '', ownerFacts, []), []);
