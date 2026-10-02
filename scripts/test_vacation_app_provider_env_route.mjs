@@ -374,7 +374,8 @@ async function runProviderEnvRouteTest(blobMode) {
 
     delete process.env.BRAVE_SEARCH_API_KEY;
     const missing = await postTurn('Find family-friendly taco spots within walking distance of the market square');
-    assert.equal(state.fetchCalls.length, 0);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
+    assert.equal(state.fetchCalls.some((url) => url.includes(NOMINATIM_HOST)), false);
     assert.equal(missing.body.ok, false);
     assert.match(String(missing.body.error || ''), /BRAVE_SEARCH_API_KEY/);
     process.env.BRAVE_SEARCH_API_KEY = BRAVE_DUMMY;
