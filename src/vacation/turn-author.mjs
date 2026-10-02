@@ -47,7 +47,9 @@ export function transcriptAuthorMissingError(turn = {}, session = {}, tripId = n
 }
 
 function rosterName(person) {
-  return firstToken(person?.firstName) || firstToken(person?.displayName);
+  const displayName = String(person?.displayName || '').trim();
+  if (displayName) return displayName;
+  return firstToken(person?.firstName);
 }
 
 function findAuthor(turn, people) {

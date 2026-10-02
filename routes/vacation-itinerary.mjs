@@ -15,7 +15,8 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
-import { collaboratorEulaAcceptUrl } from '../src/vacation/collaborators.mjs';
+import { collaboratorWelcomeTurnExists } from '../src/vacation/collaborator-welcome.mjs';
+import { collaboratorEulaAcceptUrl, loadCollaboratorInviteForWebAccessGrant } from '../src/vacation/collaborators.mjs';
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
@@ -101,13 +102,28 @@ async function handleWebAccess(req, res, db, url) {
   if (req.method === 'GET' && action === 'accept') {
     const token = cleanText(url.searchParams.get('token'), 220);
     const pending = await loadWebAccessGrantByInviteToken(db, token, process.env);
-    const pendingMeta = pending?.metadata && typeof pending.metadata === 'object' ? pending.metadata : {};
-    const collaboratorInviteId = cleanText(pendingMeta.collaboratorInviteId, 80);
-    if (collaboratorInviteId) {
+    if (!pending) {
+      return sendJson(res, 404, { ok: false, code: 'web_access_grant_missing', error: 'Website editor invite is invalid or expired.' });
+    }
+    const resolvedInvite = await loadCollaboratorInviteForWebAccessGrant(db, pending);
+    if (resolvedInvite?.id) {
       res.statusCode = 302;
-      res.setHeader('location', collaboratorEulaAcceptUrl({ id: collaboratorInviteId }, process.env));
+      res.setHeader('location', collaboratorEulaAcceptUrl({ id: resolvedInvite.id }, process.env));
       res.setHeader('cache-control', 'no-store');
       return res.end();
+    }
+    if (cleanText(pending.role, 80) === 'telegram_collaborator') {
+      console.error(JSON.stringify({
+        event: 'collaborator_web_access_invite_unresolved',
+        grantId: String(pending.id || ''),
+        tripId: String(pending.trip_id || ''),
+        email: String(pending.email || ''),
+      }));
+      return sendJson(res, 409, {
+        ok: false,
+        code: 'collaborator_web_access_invite_unresolved',
+        error: 'Collaborator invite could not be resolved for this website access grant.',
+      });
     }
     const accepted = await acceptWebAccessInvite(db, token, process.env);
     return sendHtml(res, 200, acceptedHtml(accepted), {
@@ -443,7 +459,12 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
   const tripId = trip?.id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
-  if (!onboardingSessionId) return;
+  if (!onboardingSessionId) {
+    if (seat) {
+      throw onboardingWelcomeFailure('collaborator onboarding session id missing for welcome', tripId);
+    }
+    return;
+  }
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
@@ -496,16 +517,17 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     )
     returning id
   `;
-  if (inserted.length) {
-    console.log(JSON.stringify({
-      event: 'canned_welcome',
-      customerId: String(customerId || ''),
-      tripId: tripId ? String(tripId) : null,
-      welcomeAudience,
-      welcomeFor,
-      telemetry: live.telemetry,
-    }));
+  if (!inserted.length) {
+    throw onboardingWelcomeFailure('onboarding welcome transcript insert failed', tripId);
   }
+  console.log(JSON.stringify({
+    event: 'canned_welcome',
+    customerId: String(customerId || ''),
+    tripId: tripId ? String(tripId) : null,
+    welcomeAudience,
+    welcomeFor,
+    telemetry: live.telemetry,
+  }));
 }
 
 function queueVacationAppHooks() {
@@ -830,6 +852,12 @@ async function handleVacationApp(req, res, db, url) {
     const eula = await vacationAppEula(session, process.env);
     if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
+      if (seatFromSession(session)) {
+        const welcomed = await collaboratorWelcomeTurnExists(db, session, selected || null);
+        if (!welcomed) {
+          throw onboardingWelcomeFailure('collaborator onboarding welcome missing after app load', selected?.id || null);
+        }
+      }
     }
     const turns = await loadVacationAppTurns(db, session, selected?.id || null);
     if (selected) await publishIntakeShare(db, selected.id);
@@ -1001,10 +1029,10 @@ export default async function handler(req, res) {
     if (url.searchParams.get('mediaBind') === '1' || url.pathname.endsWith('/bind-thing-media')) {
       return await bindThingMediaHandler(req, res);
     }
-    const db = sql(process.env);
     if (url.searchParams.get('webAccess') === '1' || url.pathname.endsWith('/vacation-web-access')) {
-      return await handleWebAccess(req, res, db, url);
+      return await handleWebAccess(req, res, openVacationAppDb(), url);
     }
+    const db = sql(process.env);
 
     if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
     const token = cleanText(url.searchParams.get('session') || url.searchParams.get('token'), 160);

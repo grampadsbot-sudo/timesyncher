@@ -11,8 +11,11 @@ import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs'
 import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { collaboratorSessionForAccept } from '../src/vacation/collaborator-eula-accept.mjs';
+import { ensureCollaboratorWelcomeAfterEulaAccept } from '../src/vacation/collaborator-welcome.mjs';
 import { isCollaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
+import { welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { ensureVacationEulaSession, getSessionByToken } from '../src/vacation/onboarding.mjs';
+import { ensureOnboardingOpener } from './vacation-itinerary.mjs';
 
 let onboardingLookup = null;
 
@@ -32,17 +35,17 @@ function ownerOnboardingToken(sessionId) {
 }
 
 async function sessionForAccept(store, sessionId) {
-  const loaded = await loadSessionPersistent(store, sessionId);
-  if (loaded) return loaded;
   if (isCollaboratorEulaSessionId(sessionId)) {
     let db;
     try {
       db = onboardingDatabase();
     } catch {
-      return null;
+      return loadSessionPersistent(store, sessionId);
     }
     return collaboratorSessionForAccept(store, db, sessionId, process.env);
   }
+  const loaded = await loadSessionPersistent(store, sessionId);
+  if (loaded) return loaded;
   const token = ownerOnboardingToken(sessionId);
   if (!token) return null;
   let db;
@@ -123,6 +126,10 @@ export default async function handler(req, res) {
         ipAddress: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
         userAgent: req.headers['user-agent'] || '',
       });
+      if (isCollaboratorEulaSessionId(sessionId)) {
+        const db = onboardingDatabase();
+        await ensureCollaboratorWelcomeAfterEulaAccept(db, sessionId, ensureOnboardingOpener, process.env);
+      }
       const redirect = String(session?.google?.returnUrl || '').trim();
       return send(res, 201, {
         ok: true,
@@ -141,6 +148,8 @@ export default async function handler(req, res) {
     }
     return send(res, 404, { ok: false, error: 'unknown action' });
   } catch (error) {
-    return send(res, 400, { ok: false, error: error.message });
+    const welcome = welcomeFailureBody(error);
+    if (welcome) return send(res, error.statusCode || 502, welcome);
+    return send(res, error.statusCode || 400, { ok: false, error: error.message });
   }
 }
