@@ -3,6 +3,7 @@ import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import { jevRelevanceScore, searchTavily } from './poi-search.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
+import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 const DEDUPE_METERS = 250;
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
 const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
@@ -34,9 +35,11 @@ export class PlaceSearchError extends Error {
   }
 }
 
-function fail(message, code) {
+function fail(message, code, providers) {
   console.error(message);
-  throw new PlaceSearchError(message, code);
+  const error = new PlaceSearchError(message, code);
+  if (Array.isArray(providers) && providers.length) error.providers = providers;
+  throw error;
 }
 
 function finite(value) {
@@ -232,40 +235,6 @@ async function readJson(fetchImpl, url, { headers, method, body, label }) {
   }
 }
 
-async function geocodeLabel(fetchImpl, label) {
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(label)}`;
-  const payload = await readJson(fetchImpl, url, { label: 'Nominatim geocode' });
-  const hit = Array.isArray(payload) ? payload[0] : null;
-  const lat = finite(hit?.lat);
-  const lng = finite(hit?.lon ?? hit?.lng);
-  if (lat === null || lng === null) return null;
-  return { lat, lng, label: String(hit.display_name || label) };
-}
-
-function pointFrom(value) {
-  const lat = finite(value?.lat ?? value?.latitude);
-  const lng = finite(value?.lng ?? value?.longitude);
-  if (lat === null || lng === null) return null;
-  return { lat, lng, label: String(value.label || value.address || '') };
-}
-
-async function resolveCenter(fetchImpl, { lodging, lodgingPoint, destination }) {
-  const given = pointFrom(lodgingPoint);
-  if (given) return { ...given, geocoded: 'lodging' };
-  const lodgingLabel = String(lodging || '').trim();
-  const destinationLabel = String(destination || '').trim();
-  if (lodgingLabel) {
-    const found = await geocodeLabel(fetchImpl, lodgingLabel);
-    if (found) return { ...found, geocoded: 'lodging' };
-    console.error(`Nominatim returned no coordinates for lodging "${lodgingLabel}".`);
-    if (!destinationLabel) fail(`Nominatim returned no coordinates for lodging "${lodgingLabel}".`, 'geocode_failed');
-  }
-  if (!destinationLabel) fail('Place search needs a destination.', 'missing_destination');
-  const found = await geocodeLabel(fetchImpl, destinationLabel);
-  if (!found) fail(`Nominatim returned no coordinates for destination "${destinationLabel}".`, 'geocode_failed');
-  return { ...found, geocoded: 'destination' };
-}
-
 function presentNumber(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value.trim()))) return Number(value.trim());
@@ -452,16 +421,22 @@ function braveTitle(value) {
   return cut || raw;
 }
 
-async function queryBrave(fetchImpl, env, center, queries) {
+async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
   const places = [];
   for (const item of queries) {
+    const anchorText = String(locationText || center?.label || '').trim();
+    const q = center
+      ? String(item.q || '').trim()
+      : [String(item.q || '').trim(), anchorText ? `near ${anchorText}` : ''].filter(Boolean).join(' ').trim();
     const params = new URLSearchParams({
-      q: item.q,
-      latitude: String(center.lat),
-      longitude: String(center.lng),
-      radius: String(categoryRadiusMeters(item.category)),
+      q: q.slice(0, 500),
       count: String(item.limit || searchLimit(item.category)),
     });
+    if (center) {
+      params.set('latitude', String(center.lat));
+      params.set('longitude', String(center.lng));
+      params.set('radius', String(categoryRadiusMeters(item.category)));
+    }
     const payload = await readJson(
       fetchImpl,
       `https://api.search.brave.com/res/v1/local/place_search?${params}`,
@@ -475,7 +450,7 @@ async function queryBrave(fetchImpl, env, center, queries) {
       const point = bravePoint(result);
       const title = braveTitle(result?.title || result?.name);
       if (!title || point.lat === null || point.lng === null) continue;
-      if (metersInsideCategory(center, point, item.category) === null) continue;
+      if (center && metersInsideCategory(center, point, item.category) === null) continue;
       places.push({
         source: 'brave',
         title,
@@ -605,6 +580,7 @@ export async function searchPlaces({
       notes: [],
       queries: [],
       queried: [],
+      providers: [],
       elapsedMs: Date.now() - started,
       sourceCounts: countSources([]),
     };
@@ -619,34 +595,42 @@ export async function searchPlaces({
   }
   let center = null;
   let places = [];
+  let providerLog = [];
+  let locationText = dest;
   if (placeQueries.length) {
-    center = await resolveCenter(fetchImpl, { lodging, lodgingPoint, destination: dest });
-    let prior = [];
-    if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), center);
-    else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
-    else prior = await readPriorPlaces(center, { env });
-    prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
-    const osm = await queryOsm(fetchImpl, center);
-    const brave = await queryBrave(fetchImpl, env, center, placeQueries);
-    places = await attachRelevance(mergePlaces([prior, osm, brave]), fetchImpl, env);
-    const liveCount = places.filter((place) => place.source !== 'prior_db').length;
-    if (!liveCount) {
-      fail(
-        places.length
-          ? 'Saved places are not a sole source. OpenStreetMap and Brave Place Search returned no places.'
-          : `Place search returned no places for ${dest || lodging || center.label}.`,
-        places.length ? 'prior_db_sole_source' : 'empty',
-      );
-    }
+    const pass = await runPlaceProviderPass({
+      fetchImpl,
+      env,
+      dest,
+      lodging,
+      lodgingPoint,
+      placeQueries,
+      priorPlaces,
+      loadPriorPlaces,
+      readPriorPlaces,
+      selectPriorPlaces,
+      priorRowsFromInput,
+      queryOsm,
+      queryBrave,
+      mergePlaces,
+      attachRelevance,
+      readJson,
+      fail,
+    });
+    center = pass.center;
+    locationText = pass.locationText || dest;
+    places = pass.places;
+    providerLog = pass.providerLog;
   }
   const notes = infoQueries.length ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env) : [];
   return {
-    destination: dest || center?.label || '',
+    destination: dest || center?.label || locationText || '',
     center,
     places,
     notes,
     queries: searchQueries,
     queried: infoQueries.length ? [...SOURCE_IDS, 'tavily'] : [...SOURCE_IDS],
+    providers: providerLog,
     elapsedMs: Date.now() - started,
     sourceCounts: countSources(places),
   };

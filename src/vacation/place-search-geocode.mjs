@@ -1,0 +1,89 @@
+function finite(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function pointFrom(value) {
+  const lat = finite(value?.lat ?? value?.latitude);
+  const lng = finite(value?.lng ?? value?.longitude);
+  if (lat === null || lng === null) return null;
+  return { lat, lng, label: String(value.label || value.address || '') };
+}
+
+export function providerFailureMessage(providerLog = []) {
+  return providerLog
+    .map((row) => `${row.provider}: ${row.reason || row.status}`)
+    .join('; ');
+}
+
+async function geocodeLabel(fetchImpl, label, readJson) {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(label)}`;
+  const payload = await readJson(fetchImpl, url, { label: 'Nominatim geocode' });
+  const hit = Array.isArray(payload) ? payload[0] : null;
+  const lat = finite(hit?.lat);
+  const lng = finite(hit?.lon ?? hit?.lng);
+  if (lat === null || lng === null) return null;
+  return { lat, lng, label: String(hit.display_name || label) };
+}
+
+async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
+  const trimmed = String(label || '').trim();
+  if (!trimmed) {
+    providerLog.push({ provider: 'nominatim', status: 'skipped', reason: 'no_label', resultCount: 0 });
+    return null;
+  }
+  try {
+    const found = await geocodeLabel(fetchImpl, trimmed, readJson);
+    if (!found) {
+      providerLog.push({
+        provider: 'nominatim',
+        status: 'empty',
+        reason: `no coordinates for ${trimmed}`,
+        resultCount: 0,
+      });
+      return null;
+    }
+    providerLog.push({ provider: 'nominatim', status: 'ok', resultCount: 1 });
+    return found;
+  } catch (error) {
+    providerLog.push({
+      provider: 'nominatim',
+      status: 'error',
+      reason: String(error?.message || error || 'geocode failed').trim(),
+      resultCount: 0,
+    });
+    return null;
+  }
+}
+
+export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, destination }, providerLog, readJson, fail) {
+  const given = pointFrom(lodgingPoint);
+  const lodgingLabel = String(lodging || '').trim();
+  const destinationLabel = String(destination || '').trim();
+  if (given) {
+    providerLog.push({ provider: 'nominatim', status: 'skipped', reason: 'lodging_coordinates', resultCount: 0 });
+    return {
+      center: { ...given, geocoded: 'lodging' },
+      locationText: lodgingLabel || destinationLabel || given.label || '',
+    };
+  }
+  if (lodgingLabel) {
+    const found = await tryGeocodeLabel(fetchImpl, lodgingLabel, providerLog, readJson);
+    if (found) {
+      return { center: { ...found, geocoded: 'lodging' }, locationText: lodgingLabel };
+    }
+    console.error(`Nominatim returned no coordinates for lodging "${lodgingLabel}".`);
+  }
+  if (!destinationLabel && !lodgingLabel) {
+    fail('Place search needs a destination.', 'missing_destination');
+  }
+  if (destinationLabel) {
+    const found = await tryGeocodeLabel(fetchImpl, destinationLabel, providerLog, readJson);
+    if (found) {
+      return { center: { ...found, geocoded: 'destination' }, locationText: destinationLabel };
+    }
+  }
+  const locationText = lodgingLabel || destinationLabel;
+  if (!locationText) fail('Place search needs a destination.', 'missing_destination');
+  return { center: null, locationText };
+}

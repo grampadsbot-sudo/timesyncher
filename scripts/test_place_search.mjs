@@ -242,7 +242,7 @@ await assert.rejects(
     priorPlaces: [],
   }),
   (error) => {
-    assert.equal(error.code, 'empty');
+    assert.equal(error.code, 'all_providers_failed');
     return true;
   },
 );
@@ -256,17 +256,18 @@ await assert.rejects(
     priorPlaces: [],
     fetchImpl: async (url) => {
       recordHost(url, geocodeCalls);
-      return jsonResponse([]);
+      const value = String(url);
+      return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value.includes('api.search.brave.com') ? { results: [] } : []);
     },
   }),
   (error) => {
-    assert.equal(error.code, 'geocode_failed');
-    assert.match(error.message, /Nowhereville/);
+    assert.equal(error.code, 'all_providers_failed');
+    assert.match(error.message, /Nowhereville|nominatim|brave/i);
+    assert.ok(Array.isArray(error.providers));
     return true;
   },
 );
-assert.deepEqual(geocodeCalls, ['nominatim.openstreetmap.org']);
-
+assert.ok(geocodeCalls.includes('nominatim.openstreetmap.org') && geocodeCalls.includes('api.search.brave.com'));
 const fill = await fillTripIntake({
   destination: 'Lisbon',
   wantedThings: PLACE_WANTED,
@@ -414,7 +415,7 @@ await assert.rejects(
       throw new Error(`unexpected search ${value}`);
     },
   }),
-  (error) => error.code === 'empty',
+  (error) => error.code === 'all_providers_failed',
 );
 assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
 assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:Louise Cafe', 'brave:Paper Shop', 'brave:River Walk']);

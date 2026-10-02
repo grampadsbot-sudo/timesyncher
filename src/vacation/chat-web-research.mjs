@@ -4,15 +4,12 @@ import { searchTavily } from './poi-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
 import { inTurnSearchTelemetry } from './in-turn-search-telemetry.mjs';
 
-const WEB_RESEARCH = /\b(weather|forecast|temperature|rain|snow|humid|events?\b|this weekend|what'?s on|happening at|usually like|climate)\b/i;
-const PLAN_INTAKE = /\b(plan a|planning a|we(?:'re| are) going for|who is going|our trip to|week in|days in)\b/i;
-const PLACE_SEARCH_HINT = /\b(find|search(?:\s+for)?|look(?:ing)?\s+for|suggest|recommend|show me)\b/i;
-const PLACE_SEARCH_NOUN = /\b(restaurant|taco|seafood|coffee|cafe|shop|store|bookstore|book\s+store|toy|things to do|museum|ferry|ferries|train|trains|monorail|attraction|dinner|splurge|kid-?friendly|pike place|downtown|water view|walking distance|7\s*year\s*old)\b/i;
+import { isCustomerPlaceSearchTurn, PLAN_INTAKE, WEB_RESEARCH } from './place-search-intent.mjs';
 
 function isCustomerWebResearchTurn(text = '') {
   const source = String(text || '').replace(/\s+/g, ' ').trim();
   if (!source || source.length < 15) return false;
-  if (PLACE_SEARCH_HINT.test(source) && PLACE_SEARCH_NOUN.test(source)) return false;
+  if (isCustomerPlaceSearchTurn(source)) return false;
   if (PLAN_INTAKE.test(source)) return false;
   return /\?/.test(source) && WEB_RESEARCH.test(source);
 }

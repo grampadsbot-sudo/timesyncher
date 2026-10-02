@@ -1,12 +1,15 @@
 import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
-import { inTurnSearchTelemetry } from './in-turn-search-telemetry.mjs';
+import { inTurnSearchTelemetry, placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
-
-const SEARCH_VERB = /\b(find|search(?:\s+for)?|look(?:ing)?\s+for|suggest|recommend|show me)\b/i;
-const PLAN_INTAKE = /\b(plan a|planning a|we(?:'re| are) going for|who is going|our trip to|week in|days in)\b/i;
-const WEB_RESEARCH = /\b(weather|forecast|temperature|rain|snow|humid|events?\b|this weekend|what'?s on|happening at|usually like|climate)\b/i;
+import {
+  isCustomerPlaceSearchTurn,
+  lodgingAnchorFromThing,
+  resolvePlaceSearchAnchorText,
+  PLAN_INTAKE,
+  WEB_RESEARCH,
+} from './place-search-intent.mjs';
 
 function inferSearchCategory(text = '') {
   const lower = String(text).toLowerCase();
@@ -15,22 +18,18 @@ function inferSearchCategory(text = '') {
   return 'activity';
 }
 
-function searchAnchorFromTurn(text = '', tripDestination = '') {
+function searchAnchorFromTurn(text = '', tripDestination = '', lodgingText = '') {
   const source = String(text || '').replace(/\s+/g, ' ').trim();
   const near = source.match(/\b(?:near|around|within(?:\s+walking\s+distance\s+of)?|close to|by)\s+(.+?)(?:[,.!?]|$)/i);
-  if (near?.[1]) return near[1].trim().slice(0, 180);
+  if (near?.[1]) {
+    return resolvePlaceSearchAnchorText(near[1], lodgingText, tripDestination);
+  }
   const inCity = source.match(/\b(?:in|for)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})\b/);
-  if (inCity?.[1]) return inCity[1].trim().slice(0, 180);
+  if (inCity?.[1]) return resolvePlaceSearchAnchorText(inCity[1], lodgingText, tripDestination);
   return String(tripDestination || '').trim().slice(0, 180);
 }
 
-export function isCustomerPlaceSearchTurn(text = '') {
-  const source = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!source || source.length < 12) return false;
-  if (PLAN_INTAKE.test(source)) return false;
-  if (!SEARCH_VERB.test(source)) return false;
-  return /\b(restaurant|taco|seafood|coffee|cafe|shop|store|bookstore|book\s+store|toy|things to do|museum|ferry|ferries|train|trains|monorail|attraction|dinner|splurge|kid-?friendly|pike place|downtown|water view|walking distance|7\s*year\s*old)\b/i.test(source);
-}
+export { isCustomerPlaceSearchTurn };
 
 function emptyTripIntakeClassification() {
   return {
@@ -71,15 +70,30 @@ export function intakeExtractedThings(placeSearchTurn, classification, webResear
   return classification?.ok === true ? classification.things : [];
 }
 
-function queriesFromCustomerSearchTurn(customerTurn = '', tripDestination = '') {
+function customerPlaceQueryText(customerTurn = '', tripDestination = '', lodgingText = '') {
+  const text = String(customerTurn || '').replace(/\s+/g, ' ').trim();
+  const destination = searchAnchorFromTurn(text, tripDestination, lodgingText);
+  if (!destination) return text.slice(0, 240);
+  const replaced = text.replace(
+    /\b(?:near|around|within(?:\s+walking\s+distance\s+of)?|close to|by)\s+(?:our|my)\s+(?:hotel|place|lodging|accommodation|stay)(?:\s+(?:in|at)\s+[^,.!?]+)?/i,
+    (match) => match.replace(/\b(?:our|my)\s+(?:hotel|place|lodging|accommodation|stay)(?:\s+(?:in|at)\s+[^,.!?]+)?/i, destination),
+  );
+  if (replaced !== text) return replaced.slice(0, 240);
+  if (!text.toLowerCase().includes(destination.toLowerCase())) {
+    return `${text} near ${destination}`.slice(0, 240);
+  }
+  return text.slice(0, 240);
+}
+
+function queriesFromCustomerSearchTurn(customerTurn = '', tripDestination = '', lodgingText = '') {
   const text = String(customerTurn || '').replace(/\s+/g, ' ').trim();
   const category = inferSearchCategory(text);
-  const destination = searchAnchorFromTurn(text, tripDestination);
+  const destination = searchAnchorFromTurn(text, tripDestination, lodgingText);
   return {
     destination,
     queries: [{
       category,
-      q: text.slice(0, 240),
+      q: customerPlaceQueryText(text, tripDestination, lodgingText),
       limit: 5,
       place: true,
     }],
@@ -97,26 +111,47 @@ function placesToChatResultRows(places = []) {
   });
 }
 
+async function loadTripLodgingThing(db, tripId) {
+  if (!db || !tripId) return null;
+  const rows = await db`
+    select title, category, location, description
+    from trip_things
+    where trip_id = ${tripId}
+      and category = 'hotel'
+    order by created_at desc
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
 export async function runCustomerChatPlaceSearch({
   customerTurn = '',
   tripDestination = '',
   lodging = '',
+  lodgingPoint = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
 } = {}) {
   if (!isCustomerPlaceSearchTurn(customerTurn)) return { status: 'skip' };
   const providerEnv = buildProviderEnv(env);
-  const plan = queriesFromCustomerSearchTurn(customerTurn, tripDestination);
+  const plan = queriesFromCustomerSearchTurn(customerTurn, tripDestination, lodging);
   if (!plan.destination) {
     const error = 'Place search needs a trip destination or a named area in the message.';
     console.error(`customer chat place search refused: ${error}`);
-    return { status: 'failed', error, placeResults: [], things: [] };
+    return {
+      status: 'failed',
+      error,
+      placeResults: [],
+      things: [],
+      search: { providers: [{ provider: 'nominatim', status: 'error', reason: error, resultCount: 0 }] },
+    };
   }
   try {
     const search = await searchImpl({
       destination: plan.destination,
       lodging,
+      lodgingPoint,
       queries: plan.queries,
       env: providerEnv,
       fetchImpl,
@@ -133,7 +168,8 @@ export async function runCustomerChatPlaceSearch({
   } catch (error) {
     const message = String(error?.message || error || 'place search failed').trim();
     console.error(`customer chat place search failed: ${message}`);
-    return { status: 'failed', error: message, placeResults: [], things: [] };
+    const search = { providers: Array.isArray(error?.providers) ? error.providers : [] };
+    return { status: 'failed', error: message, placeResults: [], things: [], search };
   }
 }
 
@@ -161,10 +197,27 @@ export async function applyChatPlaceSearchForVacationTurn({
       await syncWorkerJobAfterInTurnPlaceSearch(db, workerJobId, workerInputAfterInTurnPlaceSearch(workerJobContext));
     }
   }
-  const chatSearch = await runCustomerChatPlaceSearch({ customerTurn, tripDestination, env: buildProviderEnv(env), searchImpl });
+  const lodgingThing = await loadTripLodgingThing(db, tripId);
+  const lodgingAnchor = lodgingAnchorFromThing(lodgingThing);
+  const lodgingText = lodgingAnchor.text;
+  const lodgingPoint = lodgingAnchor.point;
+  const chatSearch = await runCustomerChatPlaceSearch({
+    customerTurn,
+    tripDestination,
+    lodging: lodgingText,
+    lodgingPoint,
+    env: buildProviderEnv(env),
+    searchImpl,
+  });
   if (chatSearch.status === 'skip') return { kind: 'skip', placeResults: [], placeSearchTurn };
+  const providerAttempts = Array.isArray(chatSearch.search?.providers) ? chatSearch.search.providers : [];
   if (chatSearch.status === 'failed') {
-    const placeSearch = { status: 'failed', error: chatSearch.error };
+    const placeSearch = placeSearchTelemetry({
+      status: 'failed',
+      error: chatSearch.error,
+      things: [],
+      providerAttempts,
+    });
     payload.placeSearch = placeSearch;
     customerLive.placeSearch = placeSearch;
     await db`
@@ -177,7 +230,11 @@ export async function applyChatPlaceSearchForVacationTurn({
   for (const thing of chatSearch.things) {
     await insertTripThing(db, { tripId, requestId, thing });
   }
-  const placeSearch = inTurnSearchTelemetry(chatSearch.things);
+  const placeSearch = placeSearchTelemetry({
+    status: 'ok',
+    things: chatSearch.things,
+    providerAttempts,
+  });
   payload.placeSearch = placeSearch;
   customerLive.placeSearch = placeSearch;
   if (chatSearch.things.length && publishShare) await publishShare(db, tripId);

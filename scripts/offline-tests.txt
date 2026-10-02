@@ -40,6 +40,7 @@ scripts/test_timeline_icons.mjs
 scripts/test_travel_base_required.mjs
 scripts/test_vacation_app_shell.mjs
 scripts/test_vacation_app_provider_env_route.mjs
+scripts/test_place_intent_brave_fallback_route.mjs
 scripts/test_eula_render_markdown.mjs
 scripts/test_eula_accept_onboarding.mjs
 scripts/test_eula_collaborator_name.mjs

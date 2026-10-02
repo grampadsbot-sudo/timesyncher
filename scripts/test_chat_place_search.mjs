@@ -49,7 +49,7 @@ const SCT_QUERIES = [
   },
   {
     name: 'seafood_water_view_splurge',
-    turn: 'Search for a seafood restaurant with a water view for a splurge dinner Saturday',
+    turn: 'Search for a seafood restaurant with a water view for a splurge dinner in Seattle on Saturday',
     mockId: 'brave-anthonys-pier-66',
     provider: 'brave',
     category: 'restaurant',
@@ -194,7 +194,10 @@ const failed = await applyChatPlaceSearchForVacationTurn({
 });
 assert.equal(failed.kind, 'failed');
 assert.equal(failed.placeSearch.status, 'failed');
+assert.equal(Array.isArray(failed.placeSearch.providers), true);
 assert.equal(failInserts.length, 0);
+
+assert.equal(isCustomerPlaceSearchTurn('best tacos near our hotel'), true);
 
 const errorDb = mockDb();
 const errored = await applyChatPlaceSearchForVacationTurn({
