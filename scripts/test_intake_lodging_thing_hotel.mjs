@@ -73,9 +73,9 @@ await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
   extractedDestination: 'Kaanapali Maui',
   extractedTitle: 'Maui week',
   searchImpl: async () => ({ ok: true }),
-  searchPlacesImpl: async ({ queries }) => {
+  searchPlacesImpl: async ({ areaHint, propertyName }) => {
     searchCalls += 1;
-    capturedLodgingQuery = String(queries?.[0]?.q || '');
+    capturedLodgingQuery = `${propertyName || ''} ${areaHint || ''}`.trim();
     return {
       places: [{
         source: 'brave',
@@ -83,10 +83,11 @@ await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
         category: 'hotel',
         lat: 20.92,
         lng: -156.69,
-        address: '200 Nohea Kai Dr, Lahaina, HI 96761',
+        address: '200 Nohea Kai Dr, Kaanapali, Lahaina, HI 96761',
         url: 'https://example.com/hyatt',
         externalId: 'brave-hyatt-1',
       }],
+      center: { lat: 20.92, lng: -156.69 },
       providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
     };
   },
