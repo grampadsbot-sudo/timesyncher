@@ -21,7 +21,10 @@ export function intakeTripReadyForCreation(jobFields = {}) {
 }
 
 export async function classifyVacationChatIntake(requestText, env = process.env) {
-  const { classification } = await classifyVacationAppCustomerTurn(requestText, env, classifyTripIntake);
+  const { classification } = await classifyVacationAppCustomerTurn(requestText, env, (opts) => classifyTripIntake({
+    ...opts,
+    requireExtractedTripDates: true,
+  }));
   const jobFields = tripIntakeJobFields({
     requestText,
     receivedAt: new Date().toISOString(),

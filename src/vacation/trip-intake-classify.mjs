@@ -18,6 +18,8 @@ const TURN_KIND_TRIP_INTAKE = ['trip', 'intake'].join('_');
 const TURN_KINDS = new Set(['place_search', 'web_research', TURN_KIND_TRIP_INTAKE, 'other']);
 const TURN_KIND_ENUM = `"place_search"|"web_research"|"${TURN_KIND_TRIP_INTAKE}"|"other"`;
 
+export const TRIP_INTAKE_HAS_DATES_PROMPT = 'hasDates is true only when the customer stated calendar trip dates (a month and day or a full date range). Clock times, arrival or departure times of day, relative logistics, and durations without a calendar date make hasDates false.';
+
 const THING_SYSTEM = [
   'Classify one customer chat message and extract fields.',
   `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
@@ -27,7 +29,8 @@ const THING_SYSTEM = [
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
   'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
-  'destination, hasDates, title, startDate, and endDate follow trip planning only. When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
+  TRIP_INTAKE_HAS_DATES_PROMPT,
+  'When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
 
 export function intakeExtractionDatesError(extractedFields = {}) {
@@ -233,7 +236,14 @@ function tripIntakeConfig(env = process.env) {
   };
 }
 
-export async function classifyTripIntake({ text, env = process.env, apiKey, routerModel, fetchImpl = fetch } = {}) {
+export async function classifyTripIntake({
+  text,
+  env = process.env,
+  apiKey,
+  routerModel,
+  fetchImpl = fetch,
+  requireExtractedTripDates = false,
+} = {}) {
   const message = clean(text, 6000);
   const config = tripIntakeConfig(env);
   const model = routerModel || config.routerModel;
@@ -295,12 +305,14 @@ export async function classifyTripIntake({ text, env = process.env, apiKey, rout
       ],
     }, 'TimeSyncher Vacation trip intake');
     const extractedFields = parseExtraction(chatText(extracted));
-    const datesError = intakeExtractionDatesError(extractedFields);
-    if (datesError) return failed(datesError);
     const turnKind = extractedFields.turnKind;
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);
     const intake = turnKind === TURN_KIND_TRIP_INTAKE && score >= INTAKE_THRESHOLD;
+    if (requireExtractedTripDates && intake) {
+      const datesError = intakeExtractionDatesError(extractedFields);
+      if (datesError) return failed(datesError);
+    }
     return {
       ok: true,
       turnKind,

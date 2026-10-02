@@ -278,6 +278,7 @@ assert.match(intakeExtractionDatesError({ hasDates: true, startDate: '', endDate
 const badOrder = await classifyTripIntake({
   text: lisbon,
   env,
+  requireExtractedTripDates: true,
   fetchImpl: mockFetch({
     score: 0.91,
     things: [],
@@ -293,6 +294,7 @@ assert.match(badOrder.error, /endDate before startDate/);
 const missingDates = await classifyTripIntake({
   text: lisbon,
   env,
+  requireExtractedTripDates: true,
   fetchImpl: mockFetch({
     score: 0.91,
     things: [],
