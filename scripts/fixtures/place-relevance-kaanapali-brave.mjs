@@ -1,4 +1,9 @@
-/** Brave local candidates observed/reconstructed from staging 522fa7b Kaanapali taco place-search failures. */
+/**
+ * Reconstructed Brave local candidates for offline tests.
+ * Staging telemetry on build 522fa7b recorded Brave result counts and relevance_rejected_all
+ * but did not persist per-candidate titles or addresses in transcript_turns.
+ * BRAVE_SEARCH_API_KEY from Vercel staging env pull was a placeholder (not usable for live re-query).
+ */
 export const KAANAPALI_TACO_BRAVE_RESULTS = [
   {
     id: 'brave-jj-tacos-whalers',

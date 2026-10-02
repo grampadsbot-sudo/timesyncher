@@ -1,12 +1,9 @@
 import { jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
-import { jevRelevanceScore } from './poi-search.mjs';
+import { jevRelevanceScore } from './place-relevance-judge.mjs';
 
 function relevanceRejectionReason(jevScore, minimum) {
-  if (jevScore === null) return 'relevance_judge_unavailable';
   const score = Number(jevScore);
-  if (!Number.isFinite(score)) return 'relevance_judge_unavailable';
-  if (score < minimum) return `relevance_below_minimum_${score.toFixed(2)}`;
-  return 'relevance_rejected';
+  return `relevance_below_minimum_${score.toFixed(2)}`;
 }
 
 export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContext = {}, { requireOpenRouterKey } = {}) {

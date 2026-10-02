@@ -24,6 +24,13 @@ export function placeSearchStatusFromProviderAttempts(things = []) {
   return Array.isArray(things) && things.length > 0 ? 'ok' : 'failed';
 }
 
+export function placeSearchFailureRouteStatus(reason = '') {
+  const value = String(reason || '').trim();
+  if (value === 'relevance_rejected_all') return 'place_search_no_relevant_results';
+  if (value === 'relevance_judge_failed') return 'relevance_judge_failed';
+  return 'place_search_failed';
+}
+
 export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -69,6 +76,8 @@ export function placeSearchTelemetry({
   classifierModel = null,
   reason = null,
   relevanceRejections = null,
+  judgeHttpStatus = null,
+  judgeBodySnippet = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -86,5 +95,7 @@ export function placeSearchTelemetry({
   if (Array.isArray(relevanceRejections) && relevanceRejections.length) {
     telemetry.relevanceRejections = relevanceRejections.slice(0, 10);
   }
+  if (Number.isFinite(Number(judgeHttpStatus))) telemetry.judgeHttpStatus = Number(judgeHttpStatus);
+  if (judgeBodySnippet) telemetry.judgeBodySnippet = String(judgeBodySnippet).trim().slice(0, 240);
   return telemetry;
 }

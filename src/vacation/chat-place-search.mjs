@@ -1,7 +1,7 @@
 import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
-import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
+import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { lodgingAnchorFromThing } from './lodging-anchor.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
@@ -169,6 +169,11 @@ export async function runCustomerChatPlaceSearch({
         ? { relevanceRejections: error.relevanceRejections }
         : {}),
       ...(String(error?.code || '').trim() === 'relevance_rejected_all' ? { reason: 'relevance_rejected_all' } : {}),
+      ...(String(error?.code || '').trim() === 'relevance_judge_failed' ? {
+        reason: 'relevance_judge_failed',
+        judgeHttpStatus: Number.isFinite(Number(error?.judgeHttpStatus)) ? Number(error.judgeHttpStatus) : null,
+        judgeBodySnippet: String(error?.judgeBodySnippet || '').trim() || null,
+      } : {}),
     };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
   }
@@ -222,6 +227,8 @@ export async function applyChatPlaceSearchForVacationTurn({
       error: chatSearch.error,
       reason: chatSearch.search?.reason || null,
       relevanceRejections: chatSearch.search?.relevanceRejections || null,
+      judgeHttpStatus: chatSearch.search?.judgeHttpStatus ?? null,
+      judgeBodySnippet: chatSearch.search?.judgeBodySnippet ?? null,
       things: [],
       providerAttempts,
       ...classifierMeta,
@@ -453,9 +460,7 @@ export async function runVacationAppInTurnSearch({
     searchImpl: searchPlaces,
   });
   if (searchTurn.kind === 'failed') {
-    const routeStatus = searchTurn.placeSearch?.reason === 'relevance_rejected_all'
-      ? 'place_search_no_relevant_results'
-      : 'place_search_failed';
+    const routeStatus = placeSearchFailureRouteStatus(searchTurn.placeSearch?.reason);
     return { ok: false, status: routeStatus, error: searchTurn.error, placeSearch: searchTurn.placeSearch };
   }
   const webTurn = searchTurn.kind === 'skip'

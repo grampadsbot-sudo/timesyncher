@@ -92,6 +92,7 @@ async function runPlaceRelevanceTargetAreaTests() {
     classifierMode: 'ok',
     relevanceMode: 'targeted',
     relevanceRejectAll: false,
+    relevanceJudgeMode: null,
     tripThings: [],
     turnPayloads: [],
     relevanceCalls: [],
@@ -205,11 +206,21 @@ async function runPlaceRelevanceTargetAreaTests() {
   const onboarding = { token: sessionToken };
   const originalFetch = globalThis.fetch;
 
-  function relevanceChoice(jevState) {
-    if (state.relevanceRejectAll) return 1;
+  function relevanceResponse(jevState) {
+    if (state.relevanceJudgeMode === 'http_400') {
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({ error: { message: 'criteria must be array' } }),
+        text: async () => '{"error":{"message":"criteria must be array"}}',
+      };
+    }
+    if (state.relevanceRejectAll) {
+      return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 0.2 } } }) };
+    }
     const name = String(jevState?.name || '').toLowerCase();
-    if (name.includes('home depot')) return 1;
-    return 5;
+    const score = name.includes('home depot') ? 0.5 : 3.8;
+    return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score } } }) };
   }
 
   globalThis.fetch = async (url, options = {}) => {
@@ -243,8 +254,7 @@ async function runPlaceRelevanceTargetAreaTests() {
         assert.ok(Array.isArray(questions.relevance.criteria), 'relevance criteria must be a Jev array');
         assert.ok(String(jevState.searchTarget || '').length > 0, 'searchTarget must be passed to relevance judge');
         assert.ok(String(jevState.searchArea || '').length > 0, 'searchArea must be passed to relevance judge');
-        const choice = relevanceChoice(jevState);
-        return { ok: true, json: async () => ({ answers: { relevance: { choice } } }) };
+        return relevanceResponse(jevState);
       }
       if (questions.trip_intake) {
         return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
@@ -320,6 +330,19 @@ async function runPlaceRelevanceTargetAreaTests() {
       || String(row.searchArea || '').toLowerCase().includes('kaanapali'));
     assert.ok(hotelCall, JSON.stringify(state.relevanceCalls[0]));
 
+    state.relevanceJudgeMode = 'http_400';
+    state.relevanceRejectAll = false;
+    state.braveMode = 'kaanapali';
+    const judgeFail = await postTurn('recommend taco spots near Kaanapali Maui');
+    assert.equal(judgeFail.status, 502, JSON.stringify(judgeFail.body));
+    assert.equal(judgeFail.body.status, 'relevance_judge_failed');
+    assert.equal(state.tripThings.length, 0);
+    const judgePayload = state.turnPayloads.at(-1);
+    assert.equal(judgePayload.placeSearch?.reason, 'relevance_judge_failed');
+    assert.equal(judgePayload.placeSearch?.judgeHttpStatus, 400);
+    assert.match(String(judgePayload.placeSearch?.judgeBodySnippet || ''), /criteria/i);
+
+    state.relevanceJudgeMode = null;
     state.relevanceRejectAll = true;
     state.braveMode = 'kaanapali';
     const loudFail = await postTurn('best tacos near our hotel');

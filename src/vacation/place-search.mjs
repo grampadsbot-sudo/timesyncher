@@ -5,6 +5,9 @@ import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
+import { PlaceSearchError } from './place-search-error.mjs';
+
+export { PlaceSearchError };
 const DEDUPE_METERS = 250;
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
 const PLACE_KINDS = new Set(['grocery', 'restaurant', 'store', 'garden', 'activity', 'hotel']);
@@ -27,14 +30,6 @@ const PRIOR_CATEGORIES = new Map([
   ['event', 'activity'],
   ['hotel', 'hotel'],
 ]);
-
-export class PlaceSearchError extends Error {
-  constructor(message, code) {
-    super(message);
-    this.name = 'PlaceSearchError';
-    this.code = code;
-  }
-}
 
 function fail(message, code, providers, relevanceRejections = null) {
   console.error(message);

@@ -312,70 +312,7 @@ export async function searchPois({
   return { pois: [...database, ...brave], cache: 'miss', brave: brave.length > 0 };
 }
 
-function poiRelevanceQuestionsForDecisions(questions) {
-  const relevance = questions?.relevance;
-  if (!relevance || typeof relevance !== 'object') return questions;
-  const criteria = relevance.criteria;
-  const criteriaList = Array.isArray(criteria)
-    ? criteria
-    : [
-      `1 ${String(criteria?.[1] || criteria?.['1'] || 'Not a specific place.')}`,
-      '2 poor fit for the search target or area',
-      '3 borderline fit',
-      '4 good fit for the search target in the search area',
-      `5 ${String(criteria?.[5] || criteria?.['5'] || 'A specific place that matches the category.')}`,
-    ];
-  const extra = 'Judge using searchTarget and searchArea in state. Never require the place name to contain the target words literally. If coordinates are missing, use locality text in address.';
-  const instructions = `${String(relevance.instructions || '').trim()} ${extra}`.trim();
-  return { ...questions, relevance: { ...relevance, instructions, criteria: criteriaList } };
-}
-
-export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', target = '', area = '' } = {}) {
-  if (!apiKey || !fetchImpl) return null;
-  const searchTarget = String(target || poi.target || '').trim();
-  const searchArea = String(area || poi.area || '').trim();
-  const payload = {
-    model: 'typesafe/jev-1.13',
-    state: {
-      channel: 'vacation-search',
-      poiId: poi.id,
-      name: poi.name,
-      url: poi.url,
-      category: poi.category,
-      address: String(poi.address || '').trim(),
-      searchTarget,
-      searchArea,
-    },
-    questions: {
-      relevance: {
-        type: 'score',
-        instructions: 'Score this web result as a specific place for the trip. 1 is not a place. 5 is a specific place that matches the category.',
-        criteria: { 1: 'Not a specific place.', 5: 'A specific place that matches the category.' },
-      },
-    },
-  };
-  payload.questions = poiRelevanceQuestionsForDecisions(payload.questions);
-  const response = await fetchImpl('https://openrouter.ai/api/alpha/decisions', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
-      'HTTP-Referer': 'https://timesyncher.com',
-      'X-Title': 'TimeSyncher Vacation POI',
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!response?.ok) return null;
-  const body = await response.json();
-  const answer = body?.answers?.relevance || {};
-  const choice = Number(answer.choice ?? answer.value);
-  if (Number.isInteger(choice) && choice >= 1 && choice <= 5) return choice;
-  const raw = Number(answer.score);
-  if (!Number.isFinite(raw)) return null;
-  if (raw < 1) return raw + 1;
-  if (raw <= 5) return raw;
-  return null;
-}
+export { jevRelevanceScore, parseJevRelevanceScoreAnswer } from './place-relevance-judge.mjs';
 
 export async function scoreWebPoisInParallel(pois, scoreOne, { concurrency = 20 } = {}) {
   let cursor = 0;
