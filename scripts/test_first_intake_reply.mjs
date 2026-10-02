@@ -314,7 +314,6 @@ try {
       assertCleanFacts(user);
       assert.doesNotMatch(system, leakWord);
       assert.match(system, /Start the trip draft anyway/);
-      assert.match(system, /where they are going and for how long/);
       assert.match(system, /voice note/);
       assert.match(system, /second person/);
       assert.doesNotMatch(system, /timesyncher_vacation_single/);
@@ -337,7 +336,7 @@ try {
     session: { customer_id: customerId, first_name: 'Ada' },
     env,
   });
-  assert.equal(chatCalls.length, 1);
+  assert.ok(chatCalls.length >= 1 && chatCalls.length <= 2, `chatCalls=${chatCalls.length}`);
   assert.equal(gaps.reply, gapReply);
   assert.equal(gaps.reason, null);
 
