@@ -35,6 +35,7 @@ export function classifierPayloadForTurn(text, state) {
       turnKind: 'place_search',
       ...emptyFields,
       target: 'tacos',
+      category: 'restaurant',
       anchor: /our hotel/.test(lower) ? 'our hotel' : 'Kaanapali Maui',
       anchorIsLodging: /our hotel/.test(lower),
     };

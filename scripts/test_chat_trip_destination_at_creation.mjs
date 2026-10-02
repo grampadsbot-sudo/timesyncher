@@ -184,6 +184,7 @@ function intakeFetchMock({ failIntakeReply = false, placeSearch = false } = {}) 
               content: JSON.stringify({
                 turnKind: 'place_search',
                 target: 'kid-friendly taco spots',
+                category: 'restaurant',
                 anchor: '',
                 anchorIsLodging: false,
                 question: '',
@@ -341,6 +342,7 @@ try {
       ok: true,
       turnKind: 'place_search',
       target: 'kid-friendly taco spots',
+      category: 'restaurant',
       anchor: '',
       anchorIsLodging: false,
     },

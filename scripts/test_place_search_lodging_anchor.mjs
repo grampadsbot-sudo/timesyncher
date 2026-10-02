@@ -7,6 +7,7 @@ const lodgingClassification = {
   ok: true,
   turnKind: 'place_search',
   target: 'tacos',
+  category: 'restaurant',
   anchor: 'our hotel',
   anchorIsLodging: true,
 };

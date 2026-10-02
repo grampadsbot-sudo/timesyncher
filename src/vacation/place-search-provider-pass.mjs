@@ -57,9 +57,12 @@ export async function runPlaceProviderPass({
   }
 
   let osm = [];
-  if (center) {
+  const osmFilter = Array.isArray(osmCategoryFilter)
+    ? [...new Set(osmCategoryFilter.map((c) => String(c || '').trim().toLowerCase()).filter(Boolean))]
+    : [];
+  if (center && osmFilter.length) {
     try {
-      osm = await queryOsm(fetchImpl, center, osmCategoryFilter);
+      osm = await queryOsm(fetchImpl, center, osmFilter);
       providerLog.push({
         provider: 'osm',
         status: osm.length ? 'ok' : 'empty',
@@ -74,6 +77,13 @@ export async function runPlaceProviderPass({
         resultCount: 0,
       });
     }
+  } else if (center) {
+    providerLog.push({
+      provider: 'osm',
+      status: 'skipped',
+      reason: 'no_osm_category',
+      resultCount: 0,
+    });
   } else {
     providerLog.push({
       provider: 'osm',

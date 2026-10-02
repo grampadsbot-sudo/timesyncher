@@ -67,6 +67,7 @@ function mockFetch({ score, things, roster = [], destination = '', hasDates = fa
             target: '',
             anchor: '',
             anchorIsLodging: false,
+            category: '',
             question: '',
             things,
             roster,
@@ -262,6 +263,7 @@ assert.match(unnamed.titleError, /classifier down/);
 
 assert.match(classifySource, /anchorIsLodging true when that reference is their hotel/);
 assert.match(classifySource, /exactly one things entry with kind hotel/);
+assert.match(classifySource, /category is required and must be exactly one of/);
 
 const hyattStaging = await classifyTripIntake({
   text: STAGING_HYATT_INTAKE_SENTENCE,

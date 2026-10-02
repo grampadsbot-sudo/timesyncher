@@ -71,6 +71,7 @@ const classification = {
   ok: true,
   turnKind: 'place_search',
   target: 'taco spots',
+  category: 'restaurant',
   anchor: 'Kaanapali Maui',
   anchorIsLodging: false,
 };
@@ -156,6 +157,7 @@ const lodgingClassification = {
   ok: true,
   turnKind: 'place_search',
   target: 'tacos',
+  category: 'restaurant',
   anchor: 'our hotel',
   anchorIsLodging: true,
 };

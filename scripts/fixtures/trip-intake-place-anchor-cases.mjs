@@ -6,6 +6,7 @@ export const TRIP_INTAKE_PLACE_ANCHOR_CASES = [
     extraction: {
       turnKind: 'place_search',
       target: 'tacos',
+      category: 'restaurant',
       anchor: 'our hotel',
       anchorIsLodging: true,
       question: '',
@@ -23,6 +24,7 @@ export const TRIP_INTAKE_PLACE_ANCHOR_CASES = [
     extraction: {
       turnKind: 'place_search',
       target: 'tacos',
+      category: 'restaurant',
       anchor: 'Kaanapali',
       anchorIsLodging: false,
       question: '',
