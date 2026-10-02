@@ -1,4 +1,4 @@
-import { collaboratorEulaAcceptUrl } from './collaborators.mjs';
+import { collaboratorEulaAcceptUrl, loadCollaboratorInviteForEmail } from './collaborators.mjs';
 import { vacationAppLink } from './onboarding.mjs';
 import { publicTripUrl, webAccessAcceptUrl } from './web-access.mjs';
 
@@ -299,15 +299,21 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
     const trips = await db`select title, metadata from trips where id = ${invite.trip_id} limit 1`;
     trip = trips[0] || null;
   }
-  const targets = collaboratorInviteTargets({ acceptUrl, publicUrl, invite, trip, env });
+  const inviteForEmail = invite?.id && db
+    ? await loadCollaboratorInviteForEmail(db, invite.id)
+    : invite;
+  if (!inviteForEmail) {
+    throw Object.assign(new Error('Collaborator invite not found for email.'), { statusCode: 404 });
+  }
+  const targets = collaboratorInviteTargets({ acceptUrl, publicUrl, invite: inviteForEmail, trip, env });
   acceptUrl = targets.acceptUrl;
   publicUrl = targets.publicUrl;
   const normalizedContact = {
     ...contact,
     email: to,
-    displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' ') || invite?.requested_for, 180),
+    displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' ') || inviteForEmail?.requested_for, 180),
   };
-  const message = collaboratorInviteEmail({ contact: normalizedContact, invite, token, acceptUrl, publicUrl, env });
+  const message = collaboratorInviteEmail({ contact: normalizedContact, invite: inviteForEmail, token, acceptUrl, publicUrl, env });
 
   const existing = await db`
     select id, status
