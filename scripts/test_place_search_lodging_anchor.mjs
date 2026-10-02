@@ -31,18 +31,31 @@ assert.equal(
     tripResolvedArea: 'Resolved Kaanapali',
   }),
   'Kaanapali Maui',
-  'trip destination is second',
+  'trip destination is third when stated lodging area absent',
 );
 
 assert.equal(
   resolvePlaceSearchDestination({
     classification: lodgingClassification,
     lodgingText: '',
+    tripStatedLodgingArea: 'Kaanapali',
+    tripDestination: 'Maui',
+    tripResolvedArea: 'Resolved Kaanapali',
+  }),
+  'Kaanapali',
+  'stated lodging area wins over trip destination',
+);
+
+assert.equal(
+  resolvePlaceSearchDestination({
+    classification: lodgingClassification,
+    lodgingText: '',
+    tripStatedLodgingArea: '',
     tripDestination: '',
     tripResolvedArea: 'Resolved Kaanapali',
   }),
   'Resolved Kaanapali',
-  'trip resolved area is third',
+  'trip resolved area is fourth',
 );
 
 assert.equal(
@@ -122,6 +135,37 @@ const lodgingNoThing = await runCustomerChatPlaceSearch({
 });
 assert.equal(fallbackCalls, 1);
 assert.equal(lodgingNoThing.status, 'ok');
+
+let statedAreaCalls = 0;
+const statedAreaSearch = await runCustomerChatPlaceSearch({
+  placeSearchTurn: true,
+  classification: lodgingClassification,
+  tripDestination: 'Maui',
+  tripStatedLodgingArea: 'Kaanapali',
+  lodging: '',
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  searchImpl: async (options) => {
+    statedAreaCalls += 1;
+    assert.match(options.destination, /Kaanapali/);
+    assert.doesNotMatch(String(options.destination), /^Maui$/);
+    return {
+      places: [{
+        source: 'brave',
+        title: 'Taco Cart',
+        category: 'restaurant',
+        lat: 20.921,
+        lng: -156.691,
+        address: 'Kaanapali, HI',
+        externalId: 'brave-taco-stated',
+      }],
+      providers: [{ provider: 'brave', status: 'ok', resultCount: 1, query: 'tacos near Kaanapali' }],
+      judgeInput: { target: 'tacos', area: 'Kaanapali' },
+      anchor: { text: 'Kaanapali', source: 'stated_lodging_area' },
+    };
+  },
+});
+assert.equal(statedAreaCalls, 1);
+assert.equal(statedAreaSearch.status, 'ok');
 
 const failed = await runCustomerChatPlaceSearch({
   placeSearchTurn: true,

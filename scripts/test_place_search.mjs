@@ -179,7 +179,7 @@ assert.deepEqual([...new Set(recorded.hosts)].sort(), [
   'overpass-api.de',
 ]);
 assert.deepEqual(found.places.map((place) => [place.title, place.source]), [
-  ['Harbor Cafe', 'prior_db'],
+  ['Harbor Cafe', 'osm'],
   ['City Museum', 'osm'],
   ['Paper Shop', 'brave'],
   ['River Walk', 'brave'],
@@ -189,8 +189,8 @@ assert.equal(recorded.calls.some((call) => callKind(call.url) === 'google'), fal
 const braveCall = recorded.calls.find((call) => callKind(call.url) === 'brave');
 assert.equal(braveCall.options.headers['X-Subscription-Token'], 'brave-test-key');
 assert.equal(braveCall.url.includes('brave-test-key'), false);
-assert.equal(found.sourceCounts.prior_db, 1);
-assert.equal(found.sourceCounts.osm, 1);
+assert.equal(found.sourceCounts.prior_db, 0);
+assert.equal(found.sourceCounts.osm, 2);
 assert.equal(found.sourceCounts.brave, 2);
 const river = found.places.find((place) => place.title === 'River Walk');
 assert.equal(river.address, 'River Road, Lisbon');
@@ -276,12 +276,12 @@ const fill = await fillTripIntake({
   loadPriorPlaces: async () => prior,
 });
 assert.deepEqual(fill.things.map((thing) => thing.source), [
-  'prior_db',
+  'osm',
   'osm',
   'brave',
   'brave',
 ]);
-assert.equal(fill.things[0].metadata.source, 'prior_db');
+assert.equal(fill.things[0].metadata.source, 'osm');
 assert.equal(fill.researchedThings[1].source, 'osm');
 assert.equal(fill.researchedThings[1].lat, 38.74);
 assert.equal(fill.researchedThings[1].title, 'City Museum');

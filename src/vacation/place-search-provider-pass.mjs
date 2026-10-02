@@ -120,7 +120,8 @@ export async function runPlaceProviderPass({
     });
   }
 
-  const merged = mergePlaces([prior, osm, brave]);
+  const dedupeMerges = [];
+  const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
   const namedArea = String(relevanceContext?.area || '').trim();
   const judgeArea = namedArea || locationText || dest;
   const judgeTarget = String(relevanceContext?.target || '').trim();
@@ -131,6 +132,7 @@ export async function runPlaceProviderPass({
     anchor: searchAnchor,
     relevanceRejections: rejections,
     survivingPriorDbTitles,
+    dedupeMerges,
   });
   let relevance;
   try {
@@ -183,5 +185,12 @@ export async function runPlaceProviderPass({
     fail(message, 'all_providers_failed', providerLog, null, diagnosticsBase());
   }
 
-  return { center, locationText, places, providerLog, relevanceRejections };
+  return {
+    center,
+    locationText,
+    places,
+    providerLog,
+    relevanceRejections,
+    ...diagnosticsBase(relevanceRejections),
+  };
 }

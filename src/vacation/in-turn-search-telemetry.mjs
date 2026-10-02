@@ -82,6 +82,7 @@ export function placeSearchTelemetry({
   searchCenter = null,
   anchor = null,
   survivingPriorDbTitles = null,
+  dedupeMerges = null,
   judgeHttpStatus = null,
   judgeBodySnippet = null,
 } = {}) {
@@ -119,6 +120,9 @@ export function placeSearchTelemetry({
   }
   if (Array.isArray(survivingPriorDbTitles) && survivingPriorDbTitles.length) {
     telemetry.survivingPriorDbTitles = survivingPriorDbTitles.slice(0, 20);
+  }
+  if (Array.isArray(dedupeMerges) && dedupeMerges.length) {
+    telemetry.dedupeMerges = dedupeMerges.slice(0, 20);
   }
   if (Number.isFinite(Number(judgeHttpStatus))) telemetry.judgeHttpStatus = Number(judgeHttpStatus);
   if (judgeBodySnippet) telemetry.judgeBodySnippet = String(judgeBodySnippet).trim().slice(0, 240);

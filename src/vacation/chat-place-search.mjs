@@ -77,6 +77,7 @@ export async function runCustomerChatPlaceSearch({
   classification = null,
   tripDestination = '',
   tripResolvedArea = '',
+  tripStatedLodgingArea = '',
   lodging = '',
   lodgingPoint = null,
   env = process.env,
@@ -88,10 +89,11 @@ export async function runCustomerChatPlaceSearch({
   const searchAnchor = resolvePlaceSearchAreaDetail({
     classification,
     lodgingText: lodging,
+    tripStatedLodgingArea,
     tripDestination,
     tripResolvedArea,
   });
-  const plan = queriesFromPlaceClassification(classification, tripDestination, lodging, tripResolvedArea);
+  const plan = queriesFromPlaceClassification(classification, tripDestination, lodging, tripResolvedArea, tripStatedLodgingArea);
   if (!plan.destination) {
     const error = 'Place search needs a trip destination or a named area in the message.';
     console.error(`customer chat place search refused: ${error}`);
@@ -172,6 +174,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     classification,
     tripDestination: tripPlaceContext.tripDestination || tripDestination,
     tripResolvedArea: tripPlaceContext.tripResolvedArea,
+    tripStatedLodgingArea: tripPlaceContext.tripStatedLodgingArea,
     lodging: lodgingAnchor.text,
     lodgingPoint: lodgingAnchor.point,
     env: buildProviderEnv(env),
@@ -194,6 +197,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       searchCenter: chatSearch.search?.searchCenter || null,
       anchor: chatSearch.search?.anchor || null,
       survivingPriorDbTitles: chatSearch.search?.survivingPriorDbTitles || null,
+      dedupeMerges: chatSearch.search?.dedupeMerges || null,
       judgeHttpStatus: chatSearch.search?.judgeHttpStatus ?? null,
       judgeBodySnippet: chatSearch.search?.judgeBodySnippet ?? null,
       things: [],
@@ -220,6 +224,9 @@ export async function applyChatPlaceSearchForVacationTurn({
     things: chatSearch.things,
     providerAttempts,
     relevanceRejections: chatSearch.search?.relevanceRejections?.length ? chatSearch.search.relevanceRejections : null,
+    judgeInput: chatSearch.search?.judgeInput || null,
+    searchCenter: chatSearch.search?.searchCenter || null,
+    anchor: chatSearch.search?.anchor || null,
     ...classifierMeta,
   });
   payload.placeSearch = placeSearch;
