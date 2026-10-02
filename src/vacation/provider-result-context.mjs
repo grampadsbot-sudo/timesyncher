@@ -98,12 +98,34 @@ function venuePhraseSourced(phrase, rows) {
   return false;
 }
 
+function parsedDayMatches(candidate, day) {
+  const parsed = Date.parse(candidate);
+  if (Number.isNaN(parsed)) return false;
+  return new Date(parsed).getDate() === day;
+}
+
+function phraseParsesAsDate(text, matchIndex, phrase) {
+  const after = String(text || '').slice(matchIndex + phrase.length);
+  const dayLead = after.match(/^\s*,?\s*(\d{1,2})(?:st|nd|rd|th)?\b/);
+  if (dayLead) {
+    const rest = after.slice(dayLead.index + dayLead[0].length);
+    const year = rest.match(/^\s*,\s*(\d{4})\b/);
+    const candidate = `${phrase} ${dayLead[1]}${year ? `, ${year[1]}` : ''}`;
+    if (parsedDayMatches(candidate, Number(dayLead[1]))) return true;
+  }
+  const monthLead = after.match(/^\s*,\s*([\p{Lu}][\p{L}'’.-]+)\s+(\d{1,2})(?:st|nd|rd|th)?\b/u);
+  if (!monthLead) return false;
+  return parsedDayMatches(`${phrase}, ${monthLead[1]} ${monthLead[2]}`, Number(monthLead[2]));
+}
+
 function inventedVenueMentions(text, rows) {
   if (!rows.length) return [];
   const flagged = [];
-  for (const match of String(text || '').matchAll(/\b(?:at|near|including|from|visit)\s+([\p{Lu}][\p{L}'’&-]+(?:\s+[\p{Lu}][\p{L}'’&-]+)*)/gu)) {
+  const body = String(text || '');
+  for (const match of body.matchAll(/\b(?:at|near|including|from|visit)\s+([\p{Lu}][\p{L}'’&-]+(?:\s+[\p{Lu}][\p{L}'’&-]+)*)/gu)) {
     const phrase = match[1].replace(/\s+/g, ' ').trim();
-    if (!phrase || venuePhraseSourced(phrase, rows)) continue;
+    const phraseStart = match.index + match[0].lastIndexOf(phrase);
+    if (!phrase || venuePhraseSourced(phrase, rows) || phraseParsesAsDate(body, phraseStart, phrase)) continue;
     flagged.push(phrase);
   }
   return flagged;
