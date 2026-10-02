@@ -25,6 +25,16 @@ export function cleanText(value, max = 1000) {
   return String(value || '').trim().slice(0, max);
 }
 
+export function vacationAppErrorBody({ error, code, customerMessage } = {}) {
+  const message = cleanText(customerMessage, 280);
+  return {
+    ok: false,
+    error: cleanText(error, 500) || 'Request failed.',
+    code: cleanText(code, 80) || undefined,
+    customerMessage: message || 'We could not complete that. Please try again.',
+  };
+}
+
 export function headerValue(req, name) {
   const value = req.headers[name.toLowerCase()] || req.headers[name];
   return Array.isArray(value) ? value[0] : value;

@@ -11,6 +11,7 @@ scripts/test_intake_lodging_lookup_miss.mjs
 scripts/test_intake_lodging_category_accept.mjs
 scripts/test_place_search_lodging_anchor.mjs
 scripts/test_vacation_app_interim_place_search.mjs
+scripts/test_vacation_app_client_errors.mjs
 scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs
@@ -63,6 +64,7 @@ scripts/test_place_search_classifier_category.mjs
 scripts/test_intake_hyatt_staging_classifier_e2e.mjs
 scripts/test_eula_render_markdown.mjs
 scripts/test_eula_accept_onboarding.mjs
+scripts/test_vacation_collaborator_accept_e2e.mjs
 scripts/test_eula_collaborator_name.mjs
 scripts/test_post_purchase_eula_open_app.mjs
 scripts/test_purchase_launch_routes.mjs

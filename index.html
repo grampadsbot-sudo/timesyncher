@@ -354,7 +354,7 @@
               <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
                 <div class="order-summary" aria-label="Order summary">
                   <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
-                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">unlimited</span><strong id="unlimitedPrice"></strong></div>
+                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName"></span><strong id="unlimitedPrice"></strong></div>
                   <div class="summary-row" id="photoRow" hidden><span id="photoName">owner_media</span><strong id="photoPrice"></strong></div>
                   <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>
                   <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
@@ -364,7 +364,7 @@
                 <div class="bump">
                   <label>
                     <input type="checkbox" id="orderBump" />
-                    <span><b id="bumpTitle">unlimited</b><span id="bumpDescription"></span></span>
+                    <span><b id="bumpTitle"></b><span id="bumpDescription"></span></span>
                   </label>
                 </div>
 
@@ -649,10 +649,10 @@
       const unlimited = config.products?.unlimited || {};
       singleName.textContent = single.name || 'single';
       singlePrice.textContent = money(pricedCents(single.amount, 'TIMESYNCHER_BASE_PRICE_CENTS'));
-      unlimitedName.textContent = unlimited.name || 'unlimited';
+      unlimitedName.textContent = unlimited.name || '';
       unlimitedPrice.textContent = '+' + money(pricedCents(unlimited.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'));
       bumpRow.hidden = !bump.checked;
-      bumpTitle.textContent = unlimited.name || 'unlimited';
+      bumpTitle.textContent = unlimited.name || '';
       bumpDescription.textContent = unlimited.description || '';
       syncPhotoCopy();
       updateTotal();

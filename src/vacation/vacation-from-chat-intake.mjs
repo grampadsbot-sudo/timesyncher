@@ -9,8 +9,9 @@ import {
   preflightAttachOwnerEntitlementForChatTrip,
 } from './chat-trip-entitlement-attach.mjs';
 import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
-import { attachSessionCollaboratorInvitesToTrip } from './collaborators.mjs';
-import { createWebEditorInvite } from './web-access.mjs';
+import { attachSessionCollaboratorInvitesToTrip, loadCollaboratorInviteForEmail } from './collaborators.mjs';
+import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
+import { createWebEditorInvite, publicTripUrl } from './web-access.mjs';
 
 export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
@@ -155,31 +156,62 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     tripId,
     onboardingSessionId: session.id,
   });
+  const vacationsAfterAttach = await loadTrips(db, session);
+  const tripForInvites = vacationsAfterAttach.find((trip) => trip.id === tripId) || null;
+  let tripPublicUrl = '';
+  if (tripForInvites) {
+    try {
+      tripPublicUrl = publicTripUrl(tripForInvites, env);
+    } catch (error) {
+      console.warn(JSON.stringify({
+        event: 'collaborator_invite_trip_public_url_skipped',
+        tripId: String(tripId || ''),
+        message: String(error?.message || error || ''),
+      }));
+    }
+  }
   for (const invite of attachedInvites) {
     const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
-    if (!metadata.deferredWebEditor) continue;
     const email = String(metadata.email || '').trim().toLowerCase();
     const displayName = String(metadata.displayName || invite.requested_for || '').trim();
     if (!email) continue;
+    if (metadata.deferredWebEditor) {
+      try {
+        await createWebEditorInvite(db, {
+          ownerCustomerId: session.customer_id,
+          tripId,
+          email,
+          displayName,
+          role: 'web_editor',
+          metadata: { payer: metadata.payer || 'owner', channel: 'email-invite', collaboratorInviteId: invite.id },
+        });
+      } catch (error) {
+        console.warn(JSON.stringify({
+          event: 'deferred_web_editor_attach_skipped',
+          tripId: String(tripId || ''),
+          inviteId: String(invite.id || ''),
+          message: String(error?.message || error || ''),
+        }));
+      }
+    }
     try {
-      await createWebEditorInvite(db, {
-        ownerCustomerId: session.customer_id,
-        tripId,
-        email,
-        displayName,
-        role: 'web_editor',
-        metadata: { payer: metadata.payer || 'owner', channel: 'email-invite', collaboratorInviteId: invite.id },
-      });
+      const inviteForEmail = await loadCollaboratorInviteForEmail(db, invite.id);
+      if (!inviteForEmail) continue;
+      await queueOrSendCollaboratorInviteEmail(db, {
+        invite: inviteForEmail,
+        contact: { email, displayName },
+        publicUrl: tripPublicUrl,
+      }, env);
     } catch (error) {
       console.warn(JSON.stringify({
-        event: 'deferred_web_editor_attach_skipped',
+        event: 'collaborator_invite_trip_attach_email_skipped',
         tripId: String(tripId || ''),
         inviteId: String(invite.id || ''),
         message: String(error?.message || error || ''),
       }));
     }
   }
-  const vacations = await loadTrips(db, session);
+  const vacations = vacationsAfterAttach;
   const selected = vacations.find((trip) => trip.id === tripId) || vacations[0] || null;
   if (!selected) {
     return {

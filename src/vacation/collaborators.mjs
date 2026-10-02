@@ -51,6 +51,16 @@ export function collaboratorEulaSessionId(invite) {
   return `vacation-collaborator-${invite.id}`;
 }
 
+export function isCollaboratorEulaSessionId(sessionId) {
+  return String(sessionId || '').startsWith('vacation-collaborator-');
+}
+
+export function collaboratorInviteIdFromEulaSession(sessionId) {
+  const id = String(sessionId || '');
+  if (!isCollaboratorEulaSessionId(id)) return '';
+  return id.slice('vacation-collaborator-'.length);
+}
+
 export function collaboratorEulaClientKey(invite) {
   return `vacation-collaborator:${invite.id}`;
 }
@@ -176,5 +186,31 @@ export async function attachSessionCollaboratorInvitesToTrip(db, { ownerCustomer
       and metadata->>'onboardingSessionId' = ${sessionId}
     returning *
   `;
+  for (const invite of rows) {
+    const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+    const token = String(metadata.collaboratorOnboardingToken || '').trim();
+    await db`
+      update vacation_collaborators
+      set trip_id = ${normalizedTripId},
+        updated_at = now(),
+        metadata = metadata || ${{ onboardingSessionId: sessionId }}
+      where invite_id = ${invite.id}
+        and trip_id is null
+    `;
+    if (token) {
+      await db`
+        update onboarding_sessions
+        set trip_id = ${normalizedTripId},
+          metadata = jsonb_set(
+            jsonb_set(coalesce(metadata, '{}'::jsonb), '{seat,ownerTripId}', to_jsonb(${normalizedTripId}::text), true),
+            '{seat,ownerOnboardingSessionId}',
+            to_jsonb(${sessionId}::text),
+            true
+          ),
+          updated_at = now()
+        where token = ${token}
+      `;
+    }
+  }
   return rows;
 }

@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import handler from '../api/[...route].mjs';
+import { requestPathToRel, resolveServedStaticPath, staticContentType } from './test-static-served-path.mjs';
 import { useOnboardingLookup } from '../routes/eula.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
@@ -169,14 +170,6 @@ globalThis.fetch = async (url, init) => {
   return originalFetch(url, init);
 };
 
-function contentType(file) {
-  if (file.endsWith('.mjs') || file.endsWith('.js')) return 'application/javascript; charset=utf-8';
-  if (file.endsWith('.html')) return 'text/html; charset=utf-8';
-  if (file.endsWith('.css')) return 'text/css; charset=utf-8';
-  if (file.endsWith('.png')) return 'image/png';
-  return 'application/octet-stream';
-}
-
 async function removeChromeProfile(profile) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
@@ -290,13 +283,12 @@ const server = createServer(async (req, res) => {
       await handler(req, res);
       return;
     }
-    const rel = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname).replace(/^\//, '');
-    const filePath = path.join(root, rel);
-    const info = await stat(filePath);
-    if (!info.isFile()) throw new Error('not a file');
+    const rel = requestPathToRel(url.pathname);
+    const filePath = await resolveServedStaticPath(root, rel);
+    if (!filePath) throw new Error('not a file');
     const body = await readFile(filePath);
     res.statusCode = 200;
-    res.setHeader('content-type', contentType(filePath));
+    res.setHeader('content-type', staticContentType(filePath));
     res.end(body);
   } catch (error) {
     if (!res.headersSent && !res.writableEnded) {
@@ -306,6 +298,9 @@ const server = createServer(async (req, res) => {
     }
   }
 });
+
+const helperPath = await resolveServedStaticPath(root, 'vacation-app-collaborator-invite.js');
+assert.ok(helperPath && helperPath.includes(`${path.sep}public${path.sep}`), 'public collaborator invite script must resolve for static tests');
 
 try {
   const onboarding = await buildOnboardingFromCoupon({

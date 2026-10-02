@@ -66,6 +66,17 @@ const inviteDb = async (strings, ...values) => {
     }];
   }
   if (/insert into vacation_web_access_grants/i.test(sql)) throw new Error('web grant should not run pre-trip');
+  if (/from vacation_collaborator_invites i/i.test(sql) && /where i\.id/i.test(sql)) {
+    return [{
+      id: 'invite-pre-trip',
+      owner_customer_id: 'owner-1',
+      trip_id: null,
+      requested_for: 'Alex',
+      owner_display_name: 'Owner',
+      owner_email: 'owner@example.com',
+      metadata: { onboardingSessionId: 'session-1' },
+    }];
+  }
   if (/from outbound_emails/i.test(sql)) return [];
   if (/insert into outbound_emails/i.test(sql)) return [{ id: 'email-1' }];
   if (/from trips/i.test(sql)) return [];
