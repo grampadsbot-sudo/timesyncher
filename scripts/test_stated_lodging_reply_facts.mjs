@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
+import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
 import { statedLodgingLabelFromThings } from '../src/vacation/intake-shared-trip.mjs';
 
 const KIHEI = 'Kihei Kai Nani';
