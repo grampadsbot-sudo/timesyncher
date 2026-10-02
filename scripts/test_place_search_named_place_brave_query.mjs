@@ -35,6 +35,7 @@ const classification = {
   turnKind: 'place_search',
   target: 'Paia Fish Market',
   category: 'restaurant',
+  targetKind: 'named_place',
   anchor: 'Maui',
 };
 const plan = queriesFromPlaceClassification(classification, 'Maui', '', '', '');
@@ -92,6 +93,7 @@ const d2Classification = {
   turnKind: 'place_search',
   target: 'Paia Fish Market',
   category: 'restaurant',
+  targetKind: 'named_place',
   anchor: 'Kihei',
   anchorIsLodging: true,
 };
@@ -140,12 +142,14 @@ assert.ok(placeToTripThing(d2Search.places[0])?.title === 'Paia Fish Market');
 const categoryPlan = queriesFromPlaceClassification({
   ok: true,
   turnKind: 'place_search',
-  target: 'tacos',
+  target: 'Tacos',
   category: 'restaurant',
+  targetKind: 'category',
   anchor: 'our hotel',
   anchorIsLodging: true,
 }, 'Maui', 'Kihei Kai Nani', '', 'Kihei');
 assert.match(categoryPlan.queries[0].q, /near Kihei/i);
+assert.equal(categoryPlan.queries[0].targetKind, 'category');
 
 const kaanapaliBrave = [{
   id: 'loc-kaanapali-taco',
@@ -159,7 +163,7 @@ const kaanapaliBrave = [{
 const categorySearch = await searchPlaces({
   destination: categoryPlan.destination,
   queries: categoryPlan.queries,
-  relevanceTarget: 'tacos',
+  relevanceTarget: 'Tacos',
   relevanceArea: categoryPlan.destination,
   searchAnchor: { text: 'Kihei', source: 'lodging' },
   env,

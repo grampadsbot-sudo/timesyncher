@@ -14,7 +14,7 @@ let caught = null;
 try {
   await searchPlaces({
     destination: 'Kaanapali Maui',
-    queries: [{ category: 'restaurant', q: 'taco spots near Kaanapali Maui', limit: 5, place: true, target: 'taco spots' }],
+    queries: [{ category: 'restaurant', q: 'taco spots near Kaanapali Maui', limit: 5, place: true, targetKind: 'category', target: 'taco spots' }],
     relevanceTarget: 'taco spots',
     relevanceArea: 'Kaanapali Maui',
     searchAnchor: { text: 'Kaanapali Maui', source: 'named_anchor' },

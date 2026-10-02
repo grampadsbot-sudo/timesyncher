@@ -13,6 +13,7 @@ const emptyFields = {
   target: '',
   anchor: '',
   anchorIsLodging: false,
+  targetKind: '',
   question: '',
   things: [],
   roster: [],
@@ -38,6 +39,7 @@ export function classifierPayloadForTurn(text, state) {
       ...emptyFields,
       target: 'tacos',
       category: 'restaurant',
+      targetKind: 'category',
       anchor: /our hotel/.test(lower) ? 'our hotel' : 'Kaanapali Maui',
       anchorIsLodging: /our hotel/.test(lower),
     };

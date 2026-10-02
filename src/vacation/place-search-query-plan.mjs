@@ -1,7 +1,7 @@
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { resolvePlaceSearchDestination } from './place-search-anchor.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
-import { intakeThingHasProperName } from './intake-thing-name.mjs';
+import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -17,10 +17,12 @@ export function queriesFromPlaceClassification(classification, tripDestination =
   });
   const tripDest = clean(tripDestination, 180) || clean(tripResolvedArea, 180);
   const target = clean(classification?.target, 240);
-  const destination = intakeThingHasProperName(target) ? (tripDest || lodgingArea) : lodgingArea;
+  const targetKind = normalizePlaceSearchTargetKind(classification?.targetKind);
+  const namedPlace = targetKind === 'named_place';
+  const destination = namedPlace ? (tripDest || lodgingArea) : lodgingArea;
   const category = normalizePlaceSearchCategory(classification?.category);
   const q = target
-    ? (intakeThingHasProperName(target)
+    ? (namedPlace
       ? intakeLodgingLookupQuery(target, destination)
       : `${target}${destination ? ` near ${destination}` : ''}`.trim())
       .slice(0, 240)
@@ -32,6 +34,7 @@ export function queriesFromPlaceClassification(classification, tripDestination =
       q,
       limit: 5,
       place: true,
+      targetKind,
       ...(target ? { target } : {}),
     }],
   };

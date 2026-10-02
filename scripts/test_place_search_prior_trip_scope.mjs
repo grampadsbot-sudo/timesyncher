@@ -64,7 +64,7 @@ let judgedPrior = false;
 const scopedSearch = await searchPlaces({
   destination: 'Kihei Maui',
   tripId: TRIP_B,
-  queries: [{ category: 'restaurant', q: 'dinner Kihei', limit: 5, place: true, target: 'dinner' }],
+  queries: [{ category: 'restaurant', q: 'dinner Kihei', limit: 5, place: true, targetKind: 'category', target: 'dinner' }],
   relevanceTarget: 'dinner',
   relevanceArea: 'Kihei Maui',
   env,

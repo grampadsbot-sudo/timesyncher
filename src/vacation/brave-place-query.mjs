@@ -1,5 +1,4 @@
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
-import { intakeThingHasProperName } from './intake-thing-name.mjs';
 
 function finite(value) {
   const number = Number(value);
@@ -19,7 +18,7 @@ export function braveQueryString(item, resolvedArea, center, compactLocality = '
   if (item?.intakeLodgingLookup === true && named) {
     return named.replace(/\s+/g, ' ').trim().slice(0, 500);
   }
-  if (target && intakeThingHasProperName(target)) {
+  if (item?.targetKind === 'named_place' && target) {
     return intakeLodgingLookupQuery(target, locality).slice(0, 500);
   }
   let text = named || target || area;

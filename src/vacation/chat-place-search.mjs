@@ -92,7 +92,6 @@ export async function runCustomerChatPlaceSearch({
   });
   const plan = queriesFromPlaceClassification(classification, tripDestination, lodging, tripResolvedArea, tripStatedLodgingArea);
   const geocodeDestination = chatPlaceSearchGeocodeDestination({
-    classification,
     planQueries: plan.queries,
     tripDestination,
     tripResolvedArea,

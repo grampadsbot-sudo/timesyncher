@@ -28,7 +28,7 @@ const env = { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DAT
 
 const search = await searchPlaces({
   destination: 'Maui',
-  queries: [{ category: 'restaurant', q: 'tacos near Maui', limit: 5, place: true, target: 'tacos' }],
+  queries: [{ category: 'restaurant', q: 'tacos near Maui', limit: 5, place: true, targetKind: 'category', target: 'tacos' }],
   relevanceTarget: 'tacos',
   relevanceArea: 'Maui',
   searchAnchor: { text: 'Maui', source: 'destination' },

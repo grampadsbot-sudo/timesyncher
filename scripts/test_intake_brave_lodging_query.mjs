@@ -28,6 +28,7 @@ assert.equal(
     category: 'hotel',
     q: lookupQuery,
     target: 'Hyatt Regency Maui',
+    targetKind: 'named_place',
   }, 'Kaanapali, Maui County, Hawaii, United States', center, 'Kaanapali'),
   lookupQuery,
 );

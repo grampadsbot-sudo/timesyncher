@@ -18,6 +18,7 @@ import { writeRatings } from './write-ratings.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
+import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
 import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
 import { distanceMeters, samePlace } from './place-search-same-place.mjs';
@@ -149,6 +150,7 @@ export function queriesFromWantedThings(wantedThings = []) {
       q: name,
       limit: place ? searchLimit(category) : 5,
       place,
+      ...(place ? { target: name, targetKind: 'named_place' } : {}),
     });
   }
   return found;
@@ -548,6 +550,8 @@ export async function searchPlaces({
     if (raw !== 'hotel' && !normalizePlaceSearchCategory(raw)) {
       fail(`Place search refused: unknown place category ${raw}.`, 'unknown_place_category');
     }
+    const targetKind = normalizePlaceSearchTargetKind(item?.targetKind);
+    if (!targetKind) fail('Place search refused: classifier place targetKind missing.', 'missing_place_target_kind');
   }
   const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
   if (placeQueries.length) {

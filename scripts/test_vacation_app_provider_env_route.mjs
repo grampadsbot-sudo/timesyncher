@@ -292,6 +292,7 @@ async function runProviderEnvRouteTest(blobMode) {
           turnKind,
           target: turnKind === 'place_search' ? 'taco spots' : '',
           category: turnKind === 'place_search' ? 'restaurant' : '',
+          targetKind: turnKind === 'place_search' ? 'category' : '',
           anchor: turnKind === 'place_search' ? 'market square' : '',
           anchorIsLodging: false,
           question: turnKind === 'web_research' ? String(user) : '',

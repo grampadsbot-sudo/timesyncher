@@ -10,7 +10,7 @@ export function tripIntakeExtractionJsonSchema() {
         type: 'object',
         additionalProperties: false,
         required: [
-          'turnKind', 'target', 'anchor', 'anchorIsLodging', 'category', 'question', 'things', 'roster',
+          'turnKind', 'target', 'anchor', 'anchorIsLodging', 'category', 'targetKind', 'question', 'things', 'roster',
           'inviteeName', 'inviteeEmail', 'destination', 'hasDates', 'startDate', 'endDate', 'title',
         ],
         properties: {
@@ -22,6 +22,7 @@ export function tripIntakeExtractionJsonSchema() {
           anchor: { type: 'string' },
           anchorIsLodging: { type: 'boolean' },
           category: { type: 'string' },
+          targetKind: { type: 'string', enum: ['named_place', 'category', ''] },
           question: { type: 'string' },
           things: {
             type: 'array',

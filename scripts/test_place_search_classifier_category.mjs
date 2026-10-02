@@ -33,6 +33,7 @@ const tacoPlan = queriesFromPlaceClassification({
   category: 'restaurant',
   anchor: 'Kaanapali Maui',
   anchorIsLodging: false,
+  targetKind: 'category',
 }, 'Maui', '', '');
 assert.equal(tacoPlan.queries[0].category, 'restaurant');
 
@@ -72,6 +73,7 @@ const activityPlan = queriesFromPlaceClassification({
   category: 'activity',
   anchor: 'Molokini',
   anchorIsLodging: false,
+  targetKind: 'category',
 }, 'Maui', '', '');
 const activityFetch = async (url, options = {}) => {
   const href = String(url);
@@ -110,6 +112,7 @@ const missingCategory = await classifyTripIntake({
     anchor: 'Kaanapali',
     anchorIsLodging: false,
     category: '',
+    targetKind: '',
     question: '',
     things: [],
     roster: [],
@@ -132,6 +135,7 @@ const unknownCategory = await classifyTripIntake({
     anchor: 'Kaanapali',
     anchorIsLodging: false,
     category: 'museum',
+    targetKind: 'category',
     question: '',
     things: [],
     roster: [],
@@ -158,6 +162,7 @@ const tacosNearHotel = await classifyTripIntake({
     anchor: 'our hotel',
     anchorIsLodging: true,
     category: 'restaurant',
+    targetKind: 'category',
     question: '',
     things: [],
     roster: [],

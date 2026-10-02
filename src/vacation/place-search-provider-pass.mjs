@@ -7,7 +7,7 @@ import {
   filterPlacesWithinRadius,
   radiusMetersForAnchorScope,
 } from './place-search-radius-filter.mjs';
-import { namedPlaceSearchTarget } from './place-search-named-target.mjs';
+import { namedPlaceLookupFromQueries } from './place-search-named-target.mjs';
 
 function providerRowIsError(row = {}) {
   return String(row?.status || '').trim().toLowerCase() === 'error';
@@ -153,8 +153,7 @@ export async function runPlaceProviderPass({
   );
   const center = context.center;
   const locationText = context.locationText || dest;
-  const judgeTarget = String(relevanceContext?.target || '').trim();
-  const namedPlaceLookup = namedPlaceSearchTarget(judgeTarget, placeQueries);
+  const namedPlaceLookup = namedPlaceLookupFromQueries(placeQueries);
   const braveCompactLocality = resolveBraveCompactLocality({
     namedPlaceLookup,
     searchAnchor,
@@ -314,6 +313,7 @@ export async function runPlaceProviderPass({
   const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
   const namedArea = String(relevanceContext?.area || '').trim();
   const judgeArea = namedArea || locationText || dest;
+  const judgeTarget = String(relevanceContext?.target || '').trim();
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({
