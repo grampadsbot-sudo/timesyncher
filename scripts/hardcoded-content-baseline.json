@@ -422,13 +422,6 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "reply-model-tier 57b461033e4b b315270d9a18",
-    "inventory_id": "3503389f",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "scripts/vacation-app-reply-rules.mjs",
-    "rule": "JEV-CARD-EVAL",
     "symbol_or_pattern": "reply-quality 1fbacc9ddb4e 4a91bfef0c70",
     "inventory_id": "d329f58a",
     "note": "removed by Search Eng / Reply Eng deletion PR"
