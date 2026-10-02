@@ -30,7 +30,7 @@ function placeResultProviderRows(providerLog = []) {
     .filter((row) => PLACE_RESULT_PROVIDERS.has(String(row?.provider || '').trim()));
 }
 
-export function providerErrorsFromProviderLog(providerLog = []) {
+function providerErrorsFromProviderLog(providerLog = []) {
   return placeResultProviderRows(providerLog)
     .filter((row) => providerRowIsError(row))
     .map((row) => {
@@ -45,11 +45,11 @@ export function providerErrorsFromProviderLog(providerLog = []) {
     });
 }
 
-export function placeResultProvidersAnswered(providerLog = []) {
+function placeResultProvidersAnswered(providerLog = []) {
   return placeResultProviderRows(providerLog).filter((row) => providerRowRan(row) && providerRowAnswered(row));
 }
 
-export function everyPlaceResultProviderErrored(providerLog = []) {
+function everyPlaceResultProviderErrored(providerLog = []) {
   const ran = placeResultProviderRows(providerLog).filter((row) => providerRowRan(row));
   return ran.length > 0 && ran.every((row) => providerRowIsError(row));
 }
