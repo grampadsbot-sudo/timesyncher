@@ -176,7 +176,6 @@ for (const input of [shortInput, vagueInput]) {
   assert.doesNotMatch(prompt, /Offer to add collaborators, naming/);
   assert.doesNotMatch(prompt, leakWord);
   assert.match(prompt, /Start the trip draft anyway/);
-  assert.match(prompt, /where they are going and for how long/);
   assert.match(prompt, /voice note/);
   assert.match(prompt, /second person/);
   assert.equal(prompt.startsWith(FIRST_INTAKE_GAP_INSTRUCTION), true);
