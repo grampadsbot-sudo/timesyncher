@@ -1,4 +1,6 @@
-import { assignDatesScheduling as scheduleThingDates } from './intake-weekday-dates.mjs';
+import { assignDatesScheduling as scheduleThingDates, tripIsoDay } from './intake-weekday-dates.mjs';
+
+export { tripIsoDay };
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
@@ -26,12 +28,7 @@ function intId(seed) {
 }
 
 function isoDate(value) {
-  if (!value) return '';
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : '';
+  return tripIsoDay(value);
 }
 
 function addDays(iso, count) {
@@ -60,8 +57,24 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
+function schedulingRecord(thing = {}) {
+  const meta = thing.metadata && typeof thing.metadata === 'object' && !Array.isArray(thing.metadata) ? thing.metadata : {};
+  return {
+    whenLabel: String(thing.whenLabel || thing.when || meta.whenLabel || '').trim(),
+    customerWhen: String(thing.customerWhen || meta.customerWhen || '').trim(),
+    starts_at: thing.starts_at || thing.startsAt || meta.starts_at || null,
+  };
+}
+
 export function assignDatesScheduling(thing, year, tripDates) {
-  return scheduleThingDates(thing, year, tripDates, namedDates);
+  const record = schedulingRecord(thing);
+  const scheduled = scheduleThingDates(record, year, tripDates, namedDates);
+  if (scheduled.dates.length || scheduled.weekdayAmbiguous) return scheduled;
+  const stamped = tripIsoDay(record.starts_at);
+  if (stamped && Array.isArray(tripDates) && tripDates.includes(stamped)) {
+    return { dates: [stamped], weekdayAmbiguous: false, candidateDates: [] };
+  }
+  return scheduled;
 }
 
 export function assignDates(thing, year, tripDates) {
@@ -254,6 +267,7 @@ export function thingRecordFromTripRow(row = {}) {
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
+    starts_at: row.starts_at || row.startsAt || null,
     notes: Array.isArray(meta.notes) ? meta.notes : [],
     collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
     ratings,

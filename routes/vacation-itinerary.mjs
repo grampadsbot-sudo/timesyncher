@@ -68,6 +68,7 @@ import { collaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
 import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
+import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 
 let vacationAppDatabase = null;
 
@@ -555,6 +556,20 @@ async function queueVacationAppTurn(db, session, trip, body) {
   });
 }
 
+function chatSaveMetadata(thing, scheduled) {
+  const meta = {
+    source: thing.source || 'chat_extraction',
+    who: thing.who || '',
+    whenLabel: scheduled.whenLabel || thing.whenLabel || '',
+    customerWhen: scheduled.customerWhen || thing.customerWhen || '',
+    askWhichDay: scheduled.askWhichDay === true,
+    notes: thing.notes || [],
+    collaboratorNotes: thing.collaboratorNotes || [],
+  };
+  if (scheduled.candidateDates?.length) meta.candidateDates = scheduled.candidateDates;
+  return meta;
+}
+
 function thingView(row) {
   const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   const notes = Array.isArray(meta.notes) ? meta.notes : [];
@@ -676,20 +691,26 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         updated_at = now()
     where id = ${tripId}
   `;
+  const datedRows = await db`
+    select start_date, end_date
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const tripDatesRow = {
+    start_date: datedRows[0]?.start_date || span?.start || null,
+    end_date: datedRows[0]?.end_date || span?.end || null,
+  };
   for (const thing of planned) {
+    const scheduled = scheduleChatThing(thing, tripDatesRow);
+    const metadata = chatSaveMetadata(thing, scheduled);
     await db`
-      insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
+      insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
       values (
         ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
-        'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-          source: thing.source || 'chat_extraction',
-          who: thing.who || '',
-          whenLabel: thing.whenLabel || '',
-          customerWhen: '',
-          askWhichDay: thing.askWhichDay === true,
-          notes: thing.notes || [],
-          collaboratorNotes: [],
-        }}
+        'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb,
+        ${{ ...metadata, source: metadata.source }},
+        ${scheduled.starts_at}
       )
     `;
   }
@@ -757,6 +778,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
+  const tripDatesRow = { start_date: start, end_date: end };
   let next = mergeWantedThings(current, wanted);
   let commits = null;
   try {
@@ -766,23 +788,35 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   }
   next = applyCustomerNotes(next, text, { collaborator, speakerName, commits });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
+  next = next.map((thing) => {
+    const scheduled = scheduleChatThing(thing, tripDatesRow);
+    return {
+      ...thing,
+      whenLabel: scheduled.whenLabel || thing.whenLabel || '',
+      customerWhen: scheduled.customerWhen || thing.customerWhen || '',
+      askWhichDay: scheduled.askWhichDay === true,
+      candidateDates: scheduled.candidateDates,
+      starts_at: scheduled.starts_at,
+    };
+  });
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
       if (current.some((item) => item.title === thing.title)) continue;
+      const metadata = chatSaveMetadata(thing, {
+        whenLabel: thing.whenLabel,
+        customerWhen: thing.customerWhen,
+        askWhichDay: thing.askWhichDay === true,
+        candidateDates: thing.candidateDates,
+        starts_at: thing.starts_at,
+      });
       await db`
-        insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
+        insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
         values (
           ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
-          'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-            source: thing.source || 'customer-turn',
-            who: thing.who || '',
-            whenLabel: thing.whenLabel || '',
-            customerWhen: thing.customerWhen || '',
-            askWhichDay: thing.askWhichDay === true,
-            notes: thing.notes || [],
-            collaboratorNotes: thing.collaboratorNotes || [],
-          }}
+          'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb,
+          ${{ ...metadata, source: metadata.source }},
+          ${thing.starts_at || null}
         )
       `;
       continue;
@@ -795,11 +829,13 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     await db`
       update trip_things
       set description = '',
+          starts_at = ${thing.starts_at || null},
           metadata = coalesce(metadata, '{}'::jsonb) || ${{
             who: thing.who || '',
             whenLabel: thing.whenLabel || prior.whenLabel || '',
             customerWhen: thing.customerWhen || '',
             askWhichDay: thing.askWhichDay === true,
+            ...(thing.candidateDates?.length ? { candidateDates: thing.candidateDates } : {}),
             notes: thing.notes || [],
             collaboratorNotes: thing.collaboratorNotes || [],
           }},

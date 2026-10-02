@@ -29,7 +29,7 @@ export const TRIP_INTAKE_HAS_DATES_PROMPT = 'hasDates is true only when the cust
 
 export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'Classify one customer chat message and extract fields.',
-  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"targetKind":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"inviteeName":string,"inviteeEmail":string,"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
+  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"targetKind":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":null}],"inviteeName":string,"inviteeEmail":string,"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
   'In that JSON, target is the customer specific place wording for their ask (for example tacos, taco spots, or snorkeling); category is separate and only scopes map or OSM place-type filters.',
   `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
   'For place_search, target must be their specific ask in their words (never the category label); anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
@@ -49,10 +49,39 @@ const THING_SYSTEM = TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT;
 
 export { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
 
+const EXTRACTION_THING_SLOTS = 8;
+const EXTRACTION_ROSTER_SLOTS = 6;
+
+export function tripIntakeExtractionMaxTokens(schema = tripIntakeExtractionJsonSchema()) {
+  const root = schema?.json_schema?.schema || {};
+  const required = Array.isArray(root.required) ? root.required : [];
+  const thingRequired = root.properties?.things?.items?.required || [];
+  const rosterRequired = root.properties?.roster?.items?.required || [];
+  const sample = {};
+  for (const key of required) {
+    const property = root.properties?.[key] || {};
+    if (property.type === 'array') sample[key] = [];
+    else if (property.type === 'boolean') sample[key] = false;
+    else sample[key] = '';
+  }
+  sample.things = Array.from({ length: EXTRACTION_THING_SLOTS }, () => {
+    const item = {};
+    for (const key of thingRequired) item[key] = 'named place saturday dinner';
+    return item;
+  });
+  sample.roster = Array.from({ length: EXTRACTION_ROSTER_SLOTS }, () => {
+    const item = {};
+    for (const key of rosterRequired) item[key] = key === 'age' ? 8 : 'named person';
+    return item;
+  });
+  return Math.max(2048, Math.ceil(JSON.stringify(sample).length / 3));
+}
+
 export function tripIntakeExtractionChatRequest({ message, model }) {
   return {
     model,
     temperature: 0,
+    max_tokens: tripIntakeExtractionMaxTokens(),
     provider: { require_parameters: true },
     response_format: tripIntakeExtractionJsonSchema(),
     messages: [
