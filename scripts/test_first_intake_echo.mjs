@@ -39,7 +39,8 @@ assert.equal(whenRelativeToToday('2032-09-23', today), false);
 assert.equal(whenRelativeToToday('2027-09-01', today), true);
 assert.equal(plans.timesyncher_vacation_single.plan_id, 'timesyncher_vacation_single');
 assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /unlimited\s+\S*\s*vacations?/i);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Offer to add each person in collaborators/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /When collaborators is present/);
+assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /invite_contact_needed/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /already have access/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
@@ -52,8 +53,8 @@ const facts = firstIntakeReplyFacts({
   extractedDestination: 'the coast',
   wantedThings: [{ name: 'swim', kind: 'activity', who: 'Bristol' }],
   roster: [
-    { name: 'Bristol', role: 'collaborator' },
-    { name: 'Calvin', role: 'collaborator' },
+    { name: 'Bristol', role: 'collaborator', email: 'bristol@example.com' },
+    { name: 'Calvin', role: 'collaborator', email: 'calvin@example.com' },
   ],
   savedStart: '2032-09-23',
   savedEnd: '2032-09-30',
