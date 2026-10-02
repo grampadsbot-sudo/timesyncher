@@ -27,7 +27,7 @@ function intakeLodgingNameMatches(statedName, placeTitle) {
   const title = normalizePlaceName(placeTitle);
   if (!stated || !title) return false;
   if (stated === title) return true;
-  if (title.includes(stated) || stated.includes(title)) return true;
+  if (title.includes(stated)) return true;
   const tokens = significantNameTokens(statedName);
   if (!tokens.length) return false;
   const titleTokens = new Set(title.split(/\s+/).filter(Boolean));

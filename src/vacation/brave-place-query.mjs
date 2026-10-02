@@ -81,7 +81,6 @@ export function braveProviderCategories(result) {
   const categories = Array.isArray(result?.categories) ? result.categories : [];
   for (const item of categories) push(typeof item === 'string' ? item : item?.name);
   push(result?.icon_category);
-  push(result?.description);
   return [...new Set(tags.filter(Boolean))];
 }
 

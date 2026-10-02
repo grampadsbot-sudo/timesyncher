@@ -11,6 +11,7 @@ import {
   braveProviderCategories,
   braveTitle,
 } from '../src/vacation/brave-place-query.mjs';
+import { isLodgingProviderPlace } from '../src/vacation/intake-lodging-category.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
@@ -71,6 +72,20 @@ assert.equal(hyattPlaces.length, 1);
 assert.equal(kiheiPlaces.length, 1);
 assert.ok(hyattPlaces[0].providerCategories.some((tag) => /resort/i.test(tag)));
 assert.ok(kiheiPlaces[0].providerCategories.some((tag) => /condominium|vacation rental/i.test(tag)));
+assert.equal(
+  isLodgingProviderPlace({
+    source: 'brave',
+    title: 'Beach Grill',
+    category: 'restaurant',
+    categoryName: 'Restaurant',
+    providerCategories: braveProviderCategories({
+      title: 'Beach Grill',
+      categories: ['Restaurant'],
+      description: 'Casual dining inside the Hyatt hotel',
+    }),
+  }),
+  false,
+);
 
 const { db: hyattDb, tripThings: hyattThings } = mockTripDb();
 const hyattOutcome = await persistIntakeLodgingThings(hyattDb, 'trip-hyatt', 'req-hyatt', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
@@ -137,5 +152,32 @@ assert.equal(missThings.filter((row) => /Honolulu/i.test(row.location?.address |
 assert.equal(wrongAreaOutcome.misses.length, 1);
 assert.equal(wrongAreaOutcome.misses[0].status, 'miss');
 assert.equal(wrongAreaOutcome.misses[0].reason, 'no_structural_area_match');
+
+const { db: shortTitleDb, tripThings: shortTitleThings } = mockTripDb();
+const shortTitleOutcome = await persistIntakeLodgingThings(shortTitleDb, 'trip-short', 'req-short', [{ title: 'Hyatt Regency Maui', category: 'hotel' }], {
+  areaHint: 'Kaanapali',
+  destinationHint: 'Maui',
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  searchImpl: async () => ({
+    places: [{
+      source: 'brave',
+      title: 'Hyatt',
+      category: 'hotel',
+      categoryName: 'Hotel',
+      providerCategories: ['Hotel'],
+      lat: 20.92,
+      lng: -156.69,
+      address: '200 Nohea Kai Dr, Kaanapali, HI',
+      externalId: 'fixture-short-hyatt-title',
+    }],
+    center: { lat: 20.92, lng: -156.69 },
+    providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
+  }),
+});
+assert.equal(shortTitleOutcome.misses.length, 1);
+assert.equal(shortTitleOutcome.misses[0].reason, 'no_structural_name_match');
+assert.equal(shortTitleThings.filter((row) => row.title === 'Hyatt').length, 0);
+assert.equal(shortTitleOutcome.saved.length, 1);
+assert.match(shortTitleOutcome.saved[0].title, /Hyatt Regency Maui/i);
 
 console.log('test_intake_lodging_category_accept: ok');
