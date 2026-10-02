@@ -471,11 +471,6 @@ export function savedThingPlaceResults(savedTrip) {
   });
 }
 
-function spokenPlace(text, index) {
-  const before = String(text || '').slice(Math.max(0, index - 80), index);
-  return (before.match(/([\p{Lu}][\p{L}\p{M}'’.-]*(?:\s+[\p{Lu}][\p{L}\p{M}'’.-]*)*)\s*$/u) || [])[1] || '';
-}
-
 export function unsourcedPlaces(reply, sources) {
   return unsourcedAgainstInTurnResults(reply, sources);
 }

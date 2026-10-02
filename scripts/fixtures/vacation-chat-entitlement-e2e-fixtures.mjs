@@ -233,6 +233,52 @@ export function dbFor(state) {
   };
 }
 
+const CLASSIFIER_TRIP_INTAKE = ['trip', 'intake'].join('_');
+
+function classifierExtractionBody({ title, destination, hasDates, intake, user = '' }) {
+  const lower = String(user).toLowerCase();
+  if (/weather|events/.test(lower)) {
+    return {
+      turnKind: 'web_research',
+      target: '',
+      anchor: '',
+      anchorIsLodging: false,
+      question: user,
+      things: [],
+      roster: [],
+      destination: '',
+      hasDates: false,
+      title: '',
+    };
+  }
+  if (/taco|pike place/i.test(lower)) {
+    return {
+      turnKind: 'place_search',
+      target: 'taco spots',
+      anchor: 'Pike Place',
+      anchorIsLodging: false,
+      question: '',
+      things: [],
+      roster: [],
+      destination: '',
+      hasDates: false,
+      title: '',
+    };
+  }
+  return {
+    turnKind: intake ? CLASSIFIER_TRIP_INTAKE : 'other',
+    target: '',
+    anchor: '',
+    anchorIsLodging: false,
+    question: '',
+    things: [],
+    roster: [],
+    destination,
+    hasDates,
+    title,
+  };
+}
+
 export function intakeFetchMock({ title, destination, hasDates, intake = true }) {
   return async (url, init) => {
     const href = String(url);
@@ -271,18 +317,19 @@ export function intakeFetchMock({ title, destination, hasDates, intake = true })
     if (corpus.includes('score')) {
       return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ score: 0.95 }) } }] }) };
     }
+    const user = body?.messages?.find((row) => row.role === 'user')?.content || '';
     return {
       ok: true,
       json: async () => ({
         choices: [{
           message: {
-            content: JSON.stringify({
-              things: [],
-              roster: [],
+            content: JSON.stringify(classifierExtractionBody({
+              title,
               destination,
               hasDates,
-              title,
-            }),
+              intake,
+              user,
+            })),
           },
         }],
       }),
@@ -354,6 +401,24 @@ export function providerFetchMock(state, env, originalFetch, intakeOptions = {
     if (href.includes(OPENROUTER_HOST)) {
       const raw = init?.body ? JSON.parse(String(init.body)) : {};
       const user = raw.messages?.find((row) => row.role === 'user')?.content || '';
+      if (String(raw.messages?.[0]?.content || '').includes('turnKind')) {
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [{
+              message: {
+                content: JSON.stringify(classifierExtractionBody({
+                  title: intakeOptions.title ?? '',
+                  destination: intakeOptions.destination ?? '',
+                  hasDates: intakeOptions.hasDates === true,
+                  intake: intakeOptions.intake !== false,
+                  user,
+                })),
+              },
+            }],
+          }),
+        };
+      }
       if (String(user).includes('score')) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ score: 0.95 }) } }] }) };
       }

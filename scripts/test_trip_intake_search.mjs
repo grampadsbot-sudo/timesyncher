@@ -47,7 +47,20 @@ const classification = await classifyTripIntake({
     if (String(url).includes('/decisions')) {
       return jsonResponse({ answers: { trip_intake: { noul: 0.91 } } });
     }
-    return jsonResponse({ choices: [{ message: { content: JSON.stringify({ things: extracted }) } }] });
+    return jsonResponse({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            turnKind: 'trip_intake',
+            target: '',
+            anchor: '',
+            anchorIsLodging: false,
+            question: '',
+            things: extracted,
+          }),
+        },
+      }],
+    });
   },
 });
 assert.equal(classification.ok, true);

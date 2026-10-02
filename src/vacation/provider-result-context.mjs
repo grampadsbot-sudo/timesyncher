@@ -3,6 +3,8 @@ function providerResultNeedsIdCitation(sourceRef) {
   const id = String(sourceRef?.id || '').trim();
   if (source === 'tavily') return false;
   if (/^https?:\/\//i.test(id)) return false;
+  if (source === 'brave' || source === 'osm' || source === 'prior_db') return false;
+  if (source === 'trip_thing') return Boolean(id);
   return true;
 }
 

@@ -13,7 +13,7 @@ import { growthFails, pruneBaseline } from './baseline-subset.mjs';
 // import() and export * mark every export of that module used. A static import { name } marks only that name.
 
 export const MODEL_CLIENT = 'scripts/vacation-app-reply-rules.mjs';
-export const SEARCH_MODULES = ['src/vacation/poi-search.mjs'];
+export const SEARCH_MODULES = ['src/vacation/poi-search.mjs', 'src/vacation/place-search-geocode.mjs'];
 export const SPLIT_BY_FEATURE = 'src/vacation/live-app-turn.mjs';
 export const BASELINE_REL = 'scripts/code-ratchet-baseline.json';
 export const BASELINE_NOTE = 'existing; ratchet only shrinks';

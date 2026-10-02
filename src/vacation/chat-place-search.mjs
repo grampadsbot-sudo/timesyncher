@@ -1,12 +1,14 @@
 import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
-import { inTurnSearchTelemetry } from './in-turn-search-telemetry.mjs';
+import { placeSearchTelemetry, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
+import { lodgingAnchorFromThing } from './lodging-anchor.mjs';
+import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 
-const SEARCH_VERB = /\b(find|search(?:\s+for)?|look(?:ing)?\s+for|suggest|recommend|show me)\b/i;
-const PLAN_INTAKE = /\b(plan a|planning a|we(?:'re| are) going for|who is going|our trip to|week in|days in)\b/i;
-const WEB_RESEARCH = /\b(weather|forecast|temperature|rain|snow|humid|events?\b|this weekend|what'?s on|happening at|usually like|climate)\b/i;
+function clean(value, max) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
 
 function inferSearchCategory(text = '') {
   const lower = String(text).toLowerCase();
@@ -15,51 +17,41 @@ function inferSearchCategory(text = '') {
   return 'activity';
 }
 
-function searchAnchorFromTurn(text = '', tripDestination = '') {
-  const source = String(text || '').replace(/\s+/g, ' ').trim();
-  const near = source.match(/\b(?:near|around|within(?:\s+walking\s+distance\s+of)?|close to|by)\s+(.+?)(?:[,.!?]|$)/i);
-  if (near?.[1]) return near[1].trim().slice(0, 180);
-  const inCity = source.match(/\b(?:in|for)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})\b/);
-  if (inCity?.[1]) return inCity[1].trim().slice(0, 180);
-  return String(tripDestination || '').trim().slice(0, 180);
+function placeSearchDestinationFromClassification(classification, tripDestination = '', lodgingText = '') {
+  if (classification?.anchorIsLodging === true && lodgingText) return lodgingText;
+  const anchor = clean(classification?.anchor, 180);
+  if (anchor) return anchor;
+  return clean(tripDestination, 180);
 }
 
-export function isCustomerPlaceSearchTurn(text = '') {
-  const source = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!source || source.length < 12) return false;
-  if (PLAN_INTAKE.test(source)) return false;
-  if (!SEARCH_VERB.test(source)) return false;
-  return /\b(restaurant|taco|seafood|coffee|cafe|shop|store|bookstore|book\s+store|toy|things to do|museum|ferry|ferries|train|trains|monorail|attraction|dinner|splurge|kid-?friendly|pike place|downtown|water view|walking distance|7\s*year\s*old)\b/i.test(source);
-}
-
-function emptyTripIntakeClassification() {
+function queriesFromPlaceClassification(classification, tripDestination = '', lodgingText = '') {
+  const destination = placeSearchDestinationFromClassification(classification, tripDestination, lodgingText);
+  const target = clean(classification?.target, 240);
+  const category = inferSearchCategory(target || destination);
+  const q = target
+    ? `${target}${destination ? ` near ${destination}` : ''}`.trim().slice(0, 240)
+    : destination.slice(0, 240);
   return {
-    ok: true,
-    intake: false,
-    things: [],
-    roster: [],
-    destination: '',
-    hasDates: false,
-    title: '',
-    error: null,
+    destination,
+    queries: [{
+      category,
+      q,
+      limit: 5,
+      place: true,
+    }],
   };
 }
 
-function isCustomerWebResearchTurn(text = '') {
-  const source = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!source || source.length < 15) return false;
-  if (isCustomerPlaceSearchTurn(source)) return false;
-  if (PLAN_INTAKE.test(source)) return false;
-  return /\?/.test(source) && WEB_RESEARCH.test(source);
-}
-
 async function resolveTripIntakeForCustomerTurn({ text = '', env = process.env, classifyImpl } = {}) {
-  const placeSearchTurn = isCustomerPlaceSearchTurn(text);
-  const webResearchTurn = !placeSearchTurn && isCustomerWebResearchTurn(text);
-  const classification = placeSearchTurn || webResearchTurn
-    ? emptyTripIntakeClassification()
-    : await classifyImpl({ text, env });
-  return { classification, placeSearchTurn, webResearchTurn };
+  const classification = await classifyImpl({ text, env });
+  const turnKind = classification?.ok === true ? classification.turnKind : null;
+  return {
+    classification,
+    placeSearchTurn: turnKind === 'place_search',
+    webResearchTurn: turnKind === 'web_research',
+    turnKind,
+    classifierModel: classification?.routerModel || null,
+  };
 }
 
 export async function classifyVacationAppCustomerTurn(requestText, env, classifyImpl) {
@@ -71,52 +63,71 @@ export function intakeExtractedThings(placeSearchTurn, classification, webResear
   return classification?.ok === true ? classification.things : [];
 }
 
-function queriesFromCustomerSearchTurn(customerTurn = '', tripDestination = '') {
-  const text = String(customerTurn || '').replace(/\s+/g, ' ').trim();
-  const category = inferSearchCategory(text);
-  const destination = searchAnchorFromTurn(text, tripDestination);
-  return {
-    destination,
-    queries: [{
-      category,
-      q: text.slice(0, 240),
-      limit: 5,
-      place: true,
-    }],
-  };
-}
-
 function placesToChatResultRows(places = []) {
   return (Array.isArray(places) ? places : []).flatMap((place) => {
     const thing = placeToTripThing(place);
-    const sourceRef = thing?.metadata?.sourceRef;
-    const id = String(sourceRef?.id || '').trim();
     const name = String(thing?.title || '').trim();
-    if (!id || !name) return [];
-    return [{ name, title: name, sourceRef: { source: String(sourceRef.source || thing.source || ''), id } }];
+    if (!name) return [];
+    const providerRef = thing?.metadata?.sourceRef;
+    const providerId = String(providerRef?.id || '').trim();
+    if (!providerId) return [];
+    return [{
+      name,
+      title: name,
+      sourceRef: { source: String(providerRef.source || thing.source || ''), id: providerId },
+    }];
   });
 }
 
+function inTurnPlaceResultFromTripThing(inserted) {
+  const name = String(inserted?.title || '').trim();
+  const id = String(inserted?.id || '').trim();
+  if (!name || !id) return null;
+  return { name, title: name, sourceRef: { source: 'trip_thing', id } };
+}
+
+async function loadTripLodgingThing(db, tripId) {
+  if (!db || !tripId) return null;
+  const rows = await db`
+    select title, category, location, description
+    from trip_things
+    where trip_id = ${tripId}
+      and category = 'hotel'
+    order by created_at desc
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
 export async function runCustomerChatPlaceSearch({
-  customerTurn = '',
+  placeSearchTurn = false,
+  classification = null,
   tripDestination = '',
   lodging = '',
+  lodgingPoint = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
 } = {}) {
-  if (!isCustomerPlaceSearchTurn(customerTurn)) return { status: 'skip' };
+  if (!placeSearchTurn) return { status: 'skip' };
   const providerEnv = buildProviderEnv(env);
-  const plan = queriesFromCustomerSearchTurn(customerTurn, tripDestination);
+  const plan = queriesFromPlaceClassification(classification, tripDestination, lodging);
   if (!plan.destination) {
     const error = 'Place search needs a trip destination or a named area in the message.';
     console.error(`customer chat place search refused: ${error}`);
-    return { status: 'failed', error, placeResults: [], things: [] };
+    return {
+      status: 'failed',
+      error,
+      placeResults: [],
+      things: [],
+      search: { providers: [{ provider: 'nominatim', status: 'error', reason: error, resultCount: 0 }] },
+    };
   }
   try {
     const search = await searchImpl({
       destination: plan.destination,
       lodging,
+      lodgingPoint,
       queries: plan.queries,
       env: providerEnv,
       fetchImpl,
@@ -133,7 +144,8 @@ export async function runCustomerChatPlaceSearch({
   } catch (error) {
     const message = String(error?.message || error || 'place search failed').trim();
     console.error(`customer chat place search failed: ${message}`);
-    return { status: 'failed', error: message, placeResults: [], things: [] };
+    const search = { providers: Array.isArray(error?.providers) ? error.providers : [] };
+    return { status: 'failed', error: message, placeResults: [], things: [], search };
   }
 }
 
@@ -141,7 +153,8 @@ export async function applyChatPlaceSearchForVacationTurn({
   db,
   tripId,
   requestId,
-  customerTurn,
+  classification,
+  placeSearchTurn = false,
   tripDestination,
   payload,
   customerLive,
@@ -152,7 +165,6 @@ export async function applyChatPlaceSearchForVacationTurn({
   workerJobId = null,
   workerJobContext = null,
 } = {}) {
-  const placeSearchTurn = isCustomerPlaceSearchTurn(customerTurn);
   if (placeSearchTurn) {
     payload.wantedThings = [];
     payload.placeSearchTurn = true;
@@ -161,10 +173,31 @@ export async function applyChatPlaceSearchForVacationTurn({
       await syncWorkerJobAfterInTurnPlaceSearch(db, workerJobId, workerInputAfterInTurnPlaceSearch(workerJobContext));
     }
   }
-  const chatSearch = await runCustomerChatPlaceSearch({ customerTurn, tripDestination, env: buildProviderEnv(env), searchImpl });
+  const lodgingThing = await loadTripLodgingThing(db, tripId);
+  const lodgingAnchor = lodgingAnchorFromThing(lodgingThing);
+  const chatSearch = await runCustomerChatPlaceSearch({
+    placeSearchTurn,
+    classification,
+    tripDestination,
+    lodging: lodgingAnchor.text,
+    lodgingPoint: lodgingAnchor.point,
+    env: buildProviderEnv(env),
+    searchImpl,
+  });
   if (chatSearch.status === 'skip') return { kind: 'skip', placeResults: [], placeSearchTurn };
+  const providerAttempts = Array.isArray(chatSearch.search?.providers) ? chatSearch.search.providers : [];
+  const classifierMeta = {
+    turnKind: classification?.turnKind || 'place_search',
+    classifierModel: classification?.routerModel || null,
+  };
   if (chatSearch.status === 'failed') {
-    const placeSearch = { status: 'failed', error: chatSearch.error };
+    const placeSearch = placeSearchTelemetry({
+      status: 'failed',
+      error: chatSearch.error,
+      things: [],
+      providerAttempts,
+      ...classifierMeta,
+    });
     payload.placeSearch = placeSearch;
     customerLive.placeSearch = placeSearch;
     await db`
@@ -174,10 +207,18 @@ export async function applyChatPlaceSearchForVacationTurn({
     `;
     return { kind: 'failed', error: chatSearch.error, placeSearch, placeSearchTurn };
   }
+  const placeResults = [];
   for (const thing of chatSearch.things) {
-    await insertTripThing(db, { tripId, requestId, thing });
+    const inserted = await insertTripThing(db, { tripId, requestId, thing });
+    const row = inTurnPlaceResultFromTripThing(inserted);
+    if (row) placeResults.push(row);
   }
-  const placeSearch = inTurnSearchTelemetry(chatSearch.things);
+  const placeSearch = placeSearchTelemetry({
+    status: 'ok',
+    things: chatSearch.things,
+    providerAttempts,
+    ...classifierMeta,
+  });
   payload.placeSearch = placeSearch;
   customerLive.placeSearch = placeSearch;
   if (chatSearch.things.length && publishShare) await publishShare(db, tripId);
@@ -186,10 +227,8 @@ export async function applyChatPlaceSearchForVacationTurn({
     set payload = ${payload}
     where id = ${turnId}
   `;
-  return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
+  return { kind: 'ok', placeResults, placeSearch, placeSearchTurn };
 }
-
-import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 
 export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
   const sources = Array.isArray(inTurnPlaceResults) ? inTurnPlaceResults : [];
@@ -334,6 +373,7 @@ export async function runVacationAppInTurnSearch({
   requestId,
   customerTurn,
   tripDestination,
+  classification,
   payload,
   customerLive,
   turnId,
@@ -344,12 +384,35 @@ export async function runVacationAppInTurnSearch({
   placeSearchTurn,
   webResearchTurn,
 } = {}) {
+  stampTurnClassifier(payload, customerLive, classification);
+  if (classification?.ok !== true) {
+    const reason = String(classification?.error || 'trip intake classification failed').trim();
+    const failedTelemetry = turnClassifierFailedTelemetry(reason);
+    payload.placeSearch = failedTelemetry;
+    payload.webSearch = failedTelemetry;
+    customerLive.placeSearch = failedTelemetry;
+    customerLive.webSearch = failedTelemetry;
+    await db`
+      update transcript_turns
+      set payload = ${payload}
+      where id = ${turnId}
+    `;
+    return {
+      ok: false,
+      status: 'turn_classifier_failed',
+      error: reason,
+      placeSearch: failedTelemetry,
+      webSearch: failedTelemetry,
+    };
+  }
+
   const providerEnv = buildProviderEnv(env);
   const searchTurn = await applyChatPlaceSearchForVacationTurn({
     db,
     tripId,
     requestId,
-    customerTurn,
+    classification,
+    placeSearchTurn,
     tripDestination,
     payload,
     customerLive,
@@ -369,6 +432,8 @@ export async function runVacationAppInTurnSearch({
       tripId,
       requestId,
       customerTurn,
+      classification,
+      webResearchTurn,
       payload,
       customerLive,
       turnId,

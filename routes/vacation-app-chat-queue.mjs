@@ -233,6 +233,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       requestId,
       customerTurn: requestText,
       tripDestination: cleanText(trip?.destination || '', 180),
+      classification,
       payload,
       customerLive,
       turnId: turnRows[0].id,
