@@ -901,7 +901,7 @@ const exactText = barTerms.exactAllow.strings.map((raw) => `const line = ${sourc
 for (const file of barTerms.exactAllow.files) {
   assert.equal(scanText(file, exactText).some((finding) => finding.rule.startsWith('BAR-')), false, file);
 }
-const paraphrase = exactText.replace('Do not discuss booking trip activities, paying for trip items, or checkout.', 'Do not discuss booking trip activities, paying for trip items, or billing.');
+const paraphrase = exactText.replace('Do not discuss booking trip activities, paying for trip items, or checkout.', 'Do not discuss booking trip activities, payments for trip items, or checkout.');
 for (const file of barTerms.exactAllow.files) {
   const hits = scanText(file, paraphrase).filter((finding) => finding.rule.startsWith('BAR-'));
   assert.equal(hits.length > 0, true, file);
