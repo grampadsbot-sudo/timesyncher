@@ -390,25 +390,24 @@ assert.deepEqual([...new Set(lodgingHosts)].sort(), [
 
 const braveCalls = [];
 const emptyHosts = [];
-await assert.rejects(
-  () => searchPlaces({
-    destination: 'Lisbon',
-    wantedThings: PLACE_WANTED,
-    env: placeEnv(),
-    priorPlaces: [],
-    fetchImpl: async (url) => {
-      const value = String(url);
-      recordHost(url, emptyHosts);
-      if (isOpenRouter(value)) return jevOk(5);
-      braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
-      if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
-      if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
-      if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
-      throw new Error(`unexpected search ${value}`);
-    },
-  }),
-  (error) => error.code === 'all_providers_failed',
-);
+const emptyLiveSearch = await searchPlaces({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  priorPlaces: [],
+  fetchImpl: async (url) => {
+    const value = String(url);
+    recordHost(url, emptyHosts);
+    if (isOpenRouter(value)) return jevOk(5);
+    braveCalls.push(`${callKind(value)}:${new URL(value).searchParams.get('q') || ''}`);
+    if (value.includes('nominatim')) return jsonResponse([{ lat: '38.7223', lon: '-9.1393', display_name: 'Lisbon' }]);
+    if (value.includes('overpass-api.de')) return jsonResponse({ elements: [] });
+    if (value.includes('api.search.brave.com')) return jsonResponse({ results: [] });
+    throw new Error(`unexpected search ${value}`);
+  },
+});
+assert.equal(emptyLiveSearch.outcomeStatus, 'no_results');
+assert.equal(emptyLiveSearch.places.length, 0);
 assert.equal(braveCalls.filter((entry) => entry.startsWith('brave:')).length, 3);
 assert.deepEqual(braveCalls.filter((entry) => entry.startsWith('brave:')), ['brave:Louise Cafe', 'brave:Paper Shop', 'brave:River Walk']);
 assert.deepEqual([...new Set(emptyHosts)].sort(), [
