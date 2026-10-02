@@ -11,6 +11,7 @@ import {
   intakePlaceSearchCategoryError,
   normalizePlaceSearchCategory,
 } from './place-search-category-keys.mjs';
+import { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
 
 export { intakeThingHasProperName } from './intake-thing-name.mjs';
 
@@ -27,7 +28,7 @@ export const TRIP_INTAKE_HAS_DATES_PROMPT = 'hasDates is true only when the cust
 
 export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'Classify one customer chat message and extract fields.',
-  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
+  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"inviteeName":string,"inviteeEmail":string,"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
   'In that JSON, target is the customer specific place wording for their ask (for example tacos, taco spots, or snorkeling); category is separate and only scopes map or OSM place-type filters.',
   `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
   'For place_search, target must be their specific ask in their words (never the category label); anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
@@ -37,84 +38,14 @@ export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
   'things must be proper names only (a named hotel, restaurant, store, or venue), never generic categories like taco spots or mid-range options.',
   `For ${TURN_KIND_TRIP_INTAKE}, when they state a named lodging property where they will stay (hotel, resort, inn, condo, rental, or similar), include exactly one things entry with kind hotel and name set to that property name; when they also name the neighborhood or area for the stay, set destination to that area.`,
-  'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
+  'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age; inviteeName and inviteeEmail only when they ask to add or invite a collaborator with that person email.',
   TRIP_INTAKE_HAS_DATES_PROMPT,
   'When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
 
 const THING_SYSTEM = TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT;
 
-export function tripIntakeExtractionJsonSchema() {
-  return {
-    type: 'json_schema',
-    json_schema: {
-      name: 'trip_intake_extraction',
-      strict: true,
-      schema: {
-        type: 'object',
-        additionalProperties: false,
-        required: [
-          'turnKind',
-          'target',
-          'anchor',
-          'anchorIsLodging',
-          'category',
-          'question',
-          'things',
-          'roster',
-          'destination',
-          'hasDates',
-          'startDate',
-          'endDate',
-          'title',
-        ],
-        properties: {
-          turnKind: {
-            type: 'string',
-            enum: ['place_search', 'web_research', TURN_KIND_TRIP_INTAKE, 'other'],
-          },
-          target: { type: 'string' },
-          anchor: { type: 'string' },
-          anchorIsLodging: { type: 'boolean' },
-          category: { type: 'string' },
-          question: { type: 'string' },
-          things: {
-            type: 'array',
-            items: {
-              type: 'object',
-              additionalProperties: false,
-              required: ['name', 'kind', 'who', 'when'],
-              properties: {
-                name: { type: 'string' },
-                kind: { type: 'string' },
-                who: { type: 'string' },
-                when: { type: 'string' },
-              },
-            },
-          },
-          roster: {
-            type: 'array',
-            items: {
-              type: 'object',
-              additionalProperties: false,
-              required: ['name', 'role', 'age'],
-              properties: {
-                name: { type: 'string' },
-                role: { type: 'string' },
-                age: { type: ['number', 'null'] },
-              },
-            },
-          },
-          destination: { type: 'string' },
-          hasDates: { type: 'boolean' },
-          startDate: { type: 'string' },
-          endDate: { type: 'string' },
-          title: { type: 'string' },
-        },
-      },
-    },
-  };
-}
+export { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
 
 export function tripIntakeExtractionChatRequest({ message, model }) {
   return {
@@ -192,6 +123,8 @@ function parseExtraction(raw) {
     question: parsed.question ?? parsed.webQuestion,
     things: parsed.things,
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
+    inviteeName: parsed.inviteeName,
+    inviteeEmail: parsed.inviteeEmail,
     destination: parsed.destination,
     hasDates: parsed.hasDates === true,
     startDate: parsed.startDate,
@@ -362,6 +295,8 @@ export async function classifyTripIntake({
     question: '',
     things: [],
     roster: [],
+    inviteeName: '',
+    inviteeEmail: '',
     destination: '',
     hasDates: false,
     title: '',
@@ -380,6 +315,8 @@ export async function classifyTripIntake({
       question: '',
       things: [],
       roster: [],
+      inviteeName: '',
+      inviteeEmail: '',
       destination: '',
       hasDates: false,
       title: '',
@@ -432,6 +369,8 @@ export async function classifyTripIntake({
       intake,
       things,
       roster,
+      inviteeName: clean(extractedFields.inviteeName, 180),
+      inviteeEmail: clean(extractedFields.inviteeEmail, 180).toLowerCase(),
       destination: clean(extractedFields.destination, 180),
       hasDates: extractedFields.hasDates === true,
       startDate: isoDay(extractedFields.startDate),

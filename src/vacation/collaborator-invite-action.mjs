@@ -14,7 +14,18 @@ export function parseCollaboratorInviteTurn(text = '') {
   return { name, email };
 }
 
-export function shouldRunCollaboratorInviteFromChat(text = '') {
+export function collaboratorInviteFromClassification(classification) {
+  if (!classification || typeof classification !== 'object') return null;
+  const inviteeEmail = cleanText(classification.inviteeEmail, 180).toLowerCase();
+  if (!inviteeEmail || !inviteeEmail.includes('@')) return null;
+  return {
+    name: cleanText(classification.inviteeName, 180),
+    email: inviteeEmail,
+  };
+}
+
+export function shouldRunCollaboratorInviteFromChat(text = '', classification = null) {
+  if (collaboratorInviteFromClassification(classification)) return true;
   const parsed = parseCollaboratorInviteTurn(text);
   if (!parsed) return false;
   return isCollaboratorInviteRequest(text) || /\b(add|invite)\b/i.test(text);

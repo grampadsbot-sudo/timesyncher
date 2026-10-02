@@ -15,7 +15,6 @@ import { vacationAppReplyClaimContext } from '../src/vacation/chat-place-search-
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
-
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -305,6 +304,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       session,
       tripId,
       requestText,
+      classification,
       roster: Array.isArray(classification.roster) ? classification.roster : [],
       env,
     });

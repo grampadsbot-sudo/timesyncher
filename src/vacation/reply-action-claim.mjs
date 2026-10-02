@@ -5,7 +5,10 @@ const ADDED_COLLABORATOR_CLAIM = /\badded\s+.{1,120}\s+as\s+(?:a\s+)?collaborato
 const VIEW_ACCESS_CLAIM = /\b(?:can now view|can view (?:the|this)|now have access|will see (?:the|this|these|your))\b/i;
 const THEY_VIEW_CLAIM = /\bthey can (?:now )?view\b/i;
 const WELCOME_NAME_CLAIM = /\bwelcome,?\s+([A-Za-z][A-Za-z'.-]{0,40})\b/i;
+const WELCOME_NOT_A_NAME = new Set(['aboard', 'back', 'home', 'to', 'everyone', 'all', 'there']);
 const JOINING_TRIP_CLAIM = /\b([A-Za-z][A-Za-z'.-]{0,40})\s+(?:is\s+)?joining(?:\s+the)?\s+trip\b/i;
+const JOINED_TRIP_CLAIM = /\b([A-Za-z][A-Za-z'.-]{0,40})\s+has\s+joined(?:\s+the)?\s+trip\b/i;
+const JOINED_TRIP_SHORT_CLAIM = /\b([A-Za-z][A-Za-z'.-]{0,40})\s+joined(?:\s+the)?\s+trip\b/i;
 const ON_TRIP_CLAIM = /\b([A-Za-z][A-Za-z'.-]{0,40})\s+is(?:\s+now)?\s+on\s+the\s+trip\b/i;
 
 export const REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP = 'reply_action_claim_collaborator_not_on_trip';
@@ -58,12 +61,26 @@ function collaboratorIsActive(name, activeCollaborators) {
   return false;
 }
 
+function claimedCollaboratorNameFromMatch(pattern, match) {
+  const raw = String(match?.[1] || '').trim();
+  if (!raw) return '';
+  if (pattern === WELCOME_NAME_CLAIM && WELCOME_NOT_A_NAME.has(raw.toLowerCase())) return '';
+  return raw;
+}
+
 function claimedCollaboratorNames(reply) {
   const body = String(reply || '');
   const names = [];
-  for (const pattern of [WELCOME_NAME_CLAIM, JOINING_TRIP_CLAIM, ON_TRIP_CLAIM]) {
+  for (const pattern of [
+    WELCOME_NAME_CLAIM,
+    JOINING_TRIP_CLAIM,
+    JOINED_TRIP_CLAIM,
+    JOINED_TRIP_SHORT_CLAIM,
+    ON_TRIP_CLAIM,
+  ]) {
     const match = body.match(pattern);
-    if (match?.[1]) names.push(match[1]);
+    const name = claimedCollaboratorNameFromMatch(pattern, match);
+    if (name) names.push(name);
   }
   return names;
 }

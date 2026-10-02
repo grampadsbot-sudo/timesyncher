@@ -19,6 +19,8 @@ const emptyFields = {
   destination: '',
   hasDates: false,
   title: '',
+  inviteeName: '',
+  inviteeEmail: '',
 };
 
 export function classifierPayloadForTurn(text, state) {

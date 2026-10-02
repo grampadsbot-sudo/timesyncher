@@ -1,4 +1,4 @@
-import { assignDates } from './intake-shared-trip.mjs';
+import { assignDatesScheduling } from './intake-shared-trip.mjs';
 import { activeCollaboratorsFromParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
 
@@ -88,9 +88,13 @@ export function chatPlaceSearchSavedReplyFacts(savedThings = [], tripStart = '',
       whenLabel: clean(item?.whenLabel, 180),
       customerWhen: clean(item?.customerWhen, 180),
     };
-    const dates = assignDates(record, year, tripDates);
-    if (!dates.length) unscheduled.push({ title });
-    else scheduled.push({ title, dates });
+    const { dates, weekdayAmbiguous, candidateDates } = assignDatesScheduling(record, year, tripDates);
+    if (!dates.length) {
+      unscheduled.push({
+        title,
+        ...(weekdayAmbiguous ? { weekdayAmbiguous: true, candidateDates } : {}),
+      });
+    } else scheduled.push({ title, dates });
   }
   if (!unscheduled.length && !scheduled.length) return null;
   return { chatPlaceSearch: { unscheduled, scheduled } };
@@ -164,8 +168,17 @@ export async function insertStampedChatPlaceThings(db, { tripId, requestId, thin
   const savedForFacts = [];
   for (const thing of Array.isArray(things) ? things : []) {
     const stamped = stampChatSavedPlaceThing(thing, classification);
-    const inserted = await insertTripThing(db, { tripId, requestId, thing: stamped });
     const meta = stamped?.metadata && typeof stamped.metadata === 'object' ? stamped.metadata : {};
+    const year = tripStart ? Number(String(tripStart).slice(0, 4)) : null;
+    const tripDates = eachDate(isoDay(tripStart), isoDay(tripEnd) || isoDay(tripStart));
+    const { dates } = assignDatesScheduling({
+      whenLabel: meta.whenLabel || '',
+      customerWhen: meta.customerWhen || '',
+    }, year, tripDates);
+    const scheduledThing = dates.length === 1
+      ? { ...stamped, starts_at: `${dates[0]}T12:00:00.000Z` }
+      : stamped;
+    const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
     savedForFacts.push({
       title: inserted?.title || stamped.title,
       whenLabel: meta.whenLabel || '',

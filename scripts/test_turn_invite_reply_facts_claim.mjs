@@ -34,6 +34,10 @@ assert.equal(
 const activeContext = { activeCollaborators: ['Kim Brooks'] };
 assert.equal(replyActionClaimReason('welcome, Kim!', inviteOk, activeContext), '');
 assert.equal(replyActionClaimReason('Kim is on the trip now.', inviteOk, activeContext), '');
+assert.equal(
+  replyActionClaimReason('Kim has joined the trip.', inviteOk, pendingContext),
+  REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP,
+);
 
 const inviteFailed = { invite: { ok: false, code: 'send_failed', inviteeEmail: 'kim@example.com' } };
 const failedFacts = turnInviteReplyFacts(inviteFailed);

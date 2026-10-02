@@ -4,12 +4,14 @@ import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-act
 
 const session = { id: 'session-1', customer_id: 'owner-1' };
 const requestText = 'Please add Alex, alex@example.com to the trip.';
+const classification = { inviteeName: 'Alex', inviteeEmail: 'alex@example.com' };
 
 const success = await runVacationAppTurnActions({
   db: {},
   session,
   tripId: 'trip-1',
   requestText,
+  classification,
   openSeats: async () => [{ name: 'Alex', email: 'alex@example.com', emailStatus: 'sent' }],
 });
 assert.deepEqual(success.invite, {
@@ -23,6 +25,7 @@ const sendFailed = await runVacationAppTurnActions({
   session,
   tripId: 'trip-1',
   requestText,
+  classification,
   openSeats: async () => {
     throw new Error('resend unavailable');
   },

@@ -1,3 +1,4 @@
+import { assignDatesScheduling as scheduleThingDates } from './intake-weekday-dates.mjs';
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
@@ -59,37 +60,12 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
-const WEEKDAY_INDEX = {
-  sunday: 0,
-  monday: 1,
-  tuesday: 2,
-  wednesday: 3,
-  thursday: 4,
-  friday: 5,
-  saturday: 6,
-};
-
-function weekdayDates(label, tripDates) {
-  const found = [];
-  const re = /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/gi;
-  for (const match of String(label || '').matchAll(re)) {
-    const target = WEEKDAY_INDEX[String(match[1] || '').toLowerCase()];
-    if (target === undefined) continue;
-    for (const date of tripDates) {
-      const day = new Date(`${date}T12:00:00.000Z`).getUTCDay();
-      if (day === target) found.push(date);
-    }
-  }
-  return [...new Set(found)];
+export function assignDatesScheduling(thing, year, tripDates) {
+  return scheduleThingDates(thing, year, tripDates, namedDates);
 }
 
 export function assignDates(thing, year, tripDates) {
-  const whenText = [thing.customerWhen, thing.whenLabel].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
-  if (!whenText) return [];
-  const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
-  const weekdays = weekdayDates(whenText, tripDates);
-  const unique = [...new Set([...named, ...weekdays])].filter((date) => tripDates.includes(date));
-  return unique;
+  return assignDatesScheduling(thing, year, tripDates).dates;
 }
 
 function thingMetadata(thing = {}) {
