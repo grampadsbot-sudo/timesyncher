@@ -432,7 +432,11 @@ async function queueVacationAppTurn(db, session, trip, body) {
   if (trip) await ensureOnboardingOpener(db, session, trip);
   // insert into transcript_turns
   const requestText = cleanText(body.text || body.message, 12000);
-  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
+  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(
+    requestText,
+    process.env,
+    (opts) => classifyTripIntake({ ...opts, requireExtractedTripDates: false }),
+  );
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
     requestText,
     classification,

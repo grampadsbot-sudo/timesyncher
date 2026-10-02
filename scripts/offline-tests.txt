@@ -26,6 +26,7 @@ scripts/test_coupon_purchase_no_trip.mjs
 scripts/test_vacation_chat_no_trip.mjs
 scripts/test_chat_trip_entitlement_attach.mjs
 scripts/test_chat_trip_destination_at_creation.mjs
+scripts/test_trip_intake_hasdates_scope.mjs
 scripts/test_vacation_chat_entitlement_e2e.mjs
 scripts/test_no_app_config_in_served_bundles.mjs
 scripts/test_vacation_pricing.mjs
