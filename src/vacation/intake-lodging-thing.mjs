@@ -47,6 +47,7 @@ async function resolveIntakeLodgingThing({
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
+  tripId = '',
 } = {}) {
   const name = String(title || '').trim();
   if (!name) throw new IntakeLodgingResolveError('intake lodging thing missing a name');
@@ -65,6 +66,7 @@ async function resolveIntakeLodgingThing({
       }],
       relevanceTarget: name,
       relevanceArea: geocodeDestination,
+      tripId,
       env,
       fetchImpl,
     });
@@ -147,6 +149,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       title,
       destinationHint,
       areaHint: resolvedArea,
+      tripId,
       env,
       fetchImpl,
       searchImpl,

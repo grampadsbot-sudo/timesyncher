@@ -80,6 +80,7 @@ export async function runCustomerChatPlaceSearch({
   tripStatedLodgingArea = '',
   lodging = '',
   lodgingPoint = null,
+  tripId = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
@@ -115,6 +116,7 @@ export async function runCustomerChatPlaceSearch({
       relevanceTarget: clean(classification?.target, 240),
       relevanceArea: plan.destination,
       searchAnchor,
+      tripId,
       env: providerEnv,
       fetchImpl,
     });
@@ -177,6 +179,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     tripStatedLodgingArea: tripPlaceContext.tripStatedLodgingArea,
     lodging: lodgingAnchor.text,
     lodgingPoint: lodgingAnchor.point,
+    tripId,
     env: buildProviderEnv(env),
     searchImpl,
   });

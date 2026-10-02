@@ -12,6 +12,7 @@ export async function runPlaceProviderPass({
   osmCategoryFilter = null,
   searchAnchor = null,
   relevanceContext,
+  tripId,
   priorPlaces,
   loadPriorPlaces,
   readPriorPlaces,
@@ -39,7 +40,7 @@ export async function runPlaceProviderPass({
   if (center) {
     if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), center);
     else if (loadPriorPlaces) prior = await loadPriorPlaces(center);
-    else prior = await readPriorPlaces(center, { env });
+    else prior = await readPriorPlaces(center, { env, tripId });
     prior = (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' }));
     providerLog.push({
       provider: 'prior_db',

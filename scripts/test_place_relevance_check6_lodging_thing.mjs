@@ -22,6 +22,7 @@ const ZIP_LOCATION_TEXT = 'Kaanapali, Maui County, Hawaii, 96761, United States'
 
 function relevanceScoreForName(name) {
   const lower = String(name || '').toLowerCase();
+  if (lower.includes('saved maui grill')) return 3.9;
   if (lower.includes('taco borracho') || lower.includes('whalers village')) return 3.9;
   if (STAGING_HOTEL_BRAVE_REJECTIONS.some((row) => row.title.toLowerCase() === lower)) return 0.4;
   return 2.0;
