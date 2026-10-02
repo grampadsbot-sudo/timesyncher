@@ -23,7 +23,9 @@ function loadFixture(name) {
 
 function bravePlacesFromFixture(fixture, category = 'hotel') {
   const rows = [];
-  for (const result of bravePlaceSearchRows(fixture, 'local')) {
+  const braveRows = bravePlaceSearchRows(fixture, 'local');
+  for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
+    const result = braveRows[providerRank];
     if (!braveLocalPlaceResult(result)) continue;
     const point = bravePoint(result);
     const title = braveTitle(result?.title || result?.name);
@@ -41,6 +43,8 @@ function bravePlacesFromFixture(fixture, category = 'hotel') {
       externalId: String(result?.id || result?.url || ''),
       categoryName: braveCategoryName(result),
       providerCategories,
+      providerRank,
+      sourceRecord: result,
     });
   }
   return rows;
@@ -150,7 +154,16 @@ const wrongAreaOutcome = await persistIntakeLodgingThings(missDb, 'trip-miss', '
       title: 'Kihei Kai Nani Resort',
       category: 'activity',
       categoryName: 'Condominium',
-      providerCategories: ['Condominium', 'Vacation rental'],
+      providerCategories: ['lodging', 'Condominium', 'Vacation rental'],
+      providerRank: 0,
+      sourceRecord: {
+        id: 'fixture-wrong-area',
+        title: 'Kihei Kai Nani Resort',
+        categories: [],
+        icon_category: 'lodging',
+        coordinates: [21.2793, -157.8293],
+        postal_address: { displayAddress: '2552 Kalakaua Ave, Honolulu, HI 96815' },
+      },
       lat: 21.2793,
       lng: -157.8293,
       address: '2552 Kalakaua Ave, Honolulu, HI 96815',
@@ -176,14 +189,23 @@ const shortTitleOutcome = await persistIntakeLodgingThings(shortTitleDb, 'trip-s
   searchImpl: async () => ({
     places: [{
       source: 'brave',
-      title: 'Hyatt',
+      title: 'Coastal Lookout Point',
       category: 'hotel',
       categoryName: 'Hotel',
-      providerCategories: ['Hotel'],
+      providerCategories: ['lodging', 'Hotel'],
+      providerRank: 0,
+      sourceRecord: {
+        id: 'fixture-unrelated-lodging-title',
+        title: 'Coastal Lookout Point',
+        icon_category: 'lodging',
+        categories: ['lodging'],
+        coordinates: [20.92, -156.69],
+        postal_address: { displayAddress: '200 Nohea Kai Dr, Kaanapali, HI' },
+      },
       lat: 20.92,
       lng: -156.69,
       address: '200 Nohea Kai Dr, Kaanapali, HI',
-      externalId: 'fixture-short-hyatt-title',
+      externalId: 'fixture-unrelated-lodging-title',
     }],
     center: { lat: 20.92, lng: -156.69 },
     providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
@@ -191,7 +213,7 @@ const shortTitleOutcome = await persistIntakeLodgingThings(shortTitleDb, 'trip-s
 });
 assert.equal(shortTitleOutcome.misses.length, 1);
 assert.equal(shortTitleOutcome.misses[0].reason, 'no_structural_name_match');
-assert.equal(shortTitleThings.filter((row) => row.title === 'Hyatt').length, 0);
+assert.equal(shortTitleThings.filter((row) => row.title === 'Coastal Lookout Point').length, 0);
 assert.equal(shortTitleOutcome.saved.length, 1);
 assert.match(shortTitleOutcome.saved[0].title, /Hyatt Regency Maui/i);
 

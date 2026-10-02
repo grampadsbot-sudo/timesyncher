@@ -2,7 +2,7 @@ import { categoryRadiusMeters } from './keepsake-list-minimums.mjs';
 import { isLodgingProviderPlace } from './intake-lodging-category.mjs';
 import { distanceMeters } from './place-search-same-place.mjs';
 
-function normalizePlaceName(value) {
+export function normalizePlaceName(value) {
   return String(value || '')
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -12,26 +12,31 @@ function normalizePlaceName(value) {
     .trim();
 }
 
+function nameTokens(value) {
+  return normalizePlaceName(value).split(/\s+/).filter((token) => token.length >= 2);
+}
+
+export function intakeLodgingNameSimilarity(statedName, placeTitle) {
+  const left = new Set(nameTokens(statedName));
+  const right = new Set(nameTokens(placeTitle));
+  if (!left.size || !right.size) return 0;
+  let intersection = 0;
+  for (const token of left) {
+    if (right.has(token)) intersection += 1;
+  }
+  const union = new Set([...left, ...right]).size;
+  if (!union) return 0;
+  return intersection / union;
+}
+
 function hasCoordinates(point) {
   const lat = Number(point?.lat);
   const lng = Number(point?.lng);
   return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
-function significantNameTokens(name) {
-  return normalizePlaceName(name).split(/\s+/).filter((token) => token.length >= 2);
-}
-
-function intakeLodgingNameMatches(statedName, placeTitle) {
-  const stated = normalizePlaceName(statedName);
-  const title = normalizePlaceName(placeTitle);
-  if (!stated || !title) return false;
-  if (stated === title) return true;
-  if (title.includes(stated)) return true;
-  const tokens = significantNameTokens(statedName);
-  if (!tokens.length) return false;
-  const titleTokens = new Set(title.split(/\s+/).filter(Boolean));
-  return tokens.every((token) => titleTokens.has(token));
+function intakeLodgingNameMatches(propertyName, placeTitle) {
+  return intakeLodgingNameSimilarity(propertyName, placeTitle) > 0;
 }
 
 function intakeLodgingAreaMatches(place, { areaCenter = null, areaText = '' } = {}) {
@@ -51,29 +56,84 @@ function intakeLodgingAreaMatches(place, { areaCenter = null, areaText = '' } = 
   return !hasCenter;
 }
 
-function distanceToArea(place, areaCenter) {
-  if (!hasCoordinates(areaCenter) || !hasCoordinates(place)) return Number.POSITIVE_INFINITY;
-  return distanceMeters(areaCenter, place) ?? Number.POSITIVE_INFINITY;
+function providerRank(place) {
+  const rank = Number(place?.providerRank);
+  return Number.isFinite(rank) ? rank : Number.POSITIVE_INFINITY;
 }
 
-export function pickIntakeLodgingCandidate(places = [], {
+function rankingRow(place, { similarityScore, providerRank: rank, outcome }) {
+  return {
+    title: String(place?.title || '').trim(),
+    externalId: String(place?.externalId || '').trim(),
+    similarityScore: Number(similarityScore),
+    providerRank: rank,
+    outcome: String(outcome || '').trim(),
+  };
+}
+
+export function rankIntakeLodgingCandidates(places = [], {
   propertyName = '',
   areaText = '',
   areaCenter = null,
 } = {}) {
   const rows = (Array.isArray(places) ? places : []).filter((place) => hasCoordinates(place));
-  const lodging = rows.filter((place) => isLodgingProviderPlace(place));
-  if (!lodging.length) return null;
-  const named = lodging.filter((place) => intakeLodgingNameMatches(propertyName, place.title));
-  if (!named.length) return null;
-  const inArea = named.filter((place) => intakeLodgingAreaMatches(place, { areaCenter, areaText }));
-  if (!inArea.length) return null;
+  const rejected = [];
+  const lodging = [];
+  for (const place of rows) {
+    if (isLodgingProviderPlace(place)) lodging.push(place);
+    else rejected.push(rankingRow(place, { similarityScore: 0, providerRank: providerRank(place), outcome: 'rejected_lodging_tag' }));
+  }
+  if (!lodging.length) {
+    return { picked: null, pickRanking: { winner: null, runnersUp: rejected } };
+  }
+  const named = [];
+  for (const place of lodging) {
+    const similarityScore = intakeLodgingNameSimilarity(propertyName, place.title);
+    if (similarityScore > 0) named.push({ place, similarityScore });
+    else rejected.push(rankingRow(place, { similarityScore: 0, providerRank: providerRank(place), outcome: 'rejected_name_similarity' }));
+  }
+  if (!named.length) {
+    return { picked: null, pickRanking: { winner: null, runnersUp: rejected } };
+  }
+  const inArea = [];
+  for (const row of named) {
+    if (intakeLodgingAreaMatches(row.place, { areaCenter, areaText })) inArea.push(row);
+    else rejected.push(rankingRow(row.place, { similarityScore: row.similarityScore, providerRank: providerRank(row.place), outcome: 'rejected_area' }));
+  }
+  if (!inArea.length) {
+    return { picked: null, pickRanking: { winner: null, runnersUp: rejected } };
+  }
   inArea.sort((left, right) => {
-    const delta = distanceToArea(left, areaCenter) - distanceToArea(right, areaCenter);
-    if (delta !== 0) return delta;
-    return String(left.title || '').localeCompare(String(right.title || ''));
+    const scoreDelta = right.similarityScore - left.similarityScore;
+    if (scoreDelta !== 0) return scoreDelta;
+    return providerRank(left.place) - providerRank(right.place);
   });
-  return inArea[0];
+  const winnerRow = inArea[0];
+  const winner = winnerRow.place;
+  const runnersUp = [
+    rankingRow(winner, {
+      similarityScore: winnerRow.similarityScore,
+      providerRank: providerRank(winner),
+      outcome: 'won',
+    }),
+    ...inArea.slice(1).map((row) => rankingRow(row.place, {
+      similarityScore: row.similarityScore,
+      providerRank: providerRank(row.place),
+      outcome: 'lost_rank',
+    })),
+    ...rejected,
+  ];
+  return {
+    picked: winner,
+    pickRanking: {
+      winner: runnersUp[0],
+      runnersUp: runnersUp.slice(1),
+    },
+  };
+}
+
+export function pickIntakeLodgingCandidate(places = [], options = {}) {
+  return rankIntakeLodgingCandidates(places, options).picked;
 }
 
 export function intakeLodgingPickMissReason(places = [], {

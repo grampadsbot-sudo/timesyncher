@@ -303,7 +303,8 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
       );
       const braveRows = bravePlaceSearchRows(payload, endpoint);
       const rawBraveResults = braveRows.slice(0, 5);
-      for (const result of braveRows) {
+      for (let providerRank = 0; providerRank < braveRows.length; providerRank += 1) {
+        const result = braveRows[providerRank];
         if (!braveLocalPlaceResult(result)) continue;
         const point = bravePoint(result);
         const title = braveTitle(result?.title || result?.name);
@@ -321,6 +322,7 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
           address,
           url: String(result?.url || ''),
           externalId: String(result?.id || result?.url || ''),
+          providerRank,
           sourceRecord: result,
           ...(description ? { description } : {}),
           ...ratingFromRecord(result),

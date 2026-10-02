@@ -1,0 +1,7 @@
+{
+  "results": [
+    {"id":"loc4P7XYB7FWW42EAOOONXBD3DTDYBDQ7XNTOVP2GWA=","title":"Kīhei Kai Nani Rentals","address":null,"location":null,"categories":[],"coordinates":[20.7176359,-156.44503899999998],"icon_category":"lodging","postal_address":{"type":"PostalAddress","displayAddress":"2495 S Kihei Rd #204, Kihei, HI 96753"}},
+    {"id":"loc4HPLZYKFOW42EBQ5DIOLDXDTDYDGYG3CTOVP2GWA=","title":"Kihei Kai Nani Condo","address":null,"location":null,"categories":[],"coordinates":[20.717501199999997,-156.44477379999998],"icon_category":"lodging","postal_address":{"type":"PostalAddress","displayAddress":"2495 S Kihei Rd, Kihei, HI 96753"}},
+    {"id":"loc42NZFN6V7XE2EAZBIQKJURDTDYDL3Q46AAAAAAAA=","title":"Awesome Vacation Kīhei Rentals at Maui Vista And Kīhei Kai Nani","address":null,"location":null,"categories":[],"coordinates":[20.7255856,-156.4463594],"icon_category":"lodging","postal_address":{"type":"PostalAddress","displayAddress":"2191 S Kihei Rd, Kihei, HI 96753"}}
+  ]
+}
