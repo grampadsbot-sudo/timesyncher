@@ -1,5 +1,5 @@
 import { cleanText } from '../src/vacation/http.mjs';
-import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
+import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { customerModality, jevStamp, liveTurnRecord, firstMarkedIntake, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { produceNoTripStarterReply } from '../src/vacation/no-trip-starter-reply.mjs';
@@ -7,7 +7,7 @@ import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.m
 import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
-import { applyChatPlaceSearchForVacationTurn, intakeExtractedThings } from '../src/vacation/chat-place-search.mjs';
+import { intakeExtractedThings, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
@@ -110,6 +110,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   });
   const classification = intake.classification;
   const placeSearchTurn = intake.placeSearchTurn;
+  const webResearchTurn = intake.webResearchTurn;
   if (!classification) throw new Error('vacation app queue intake classification is required');
   const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
   const queuedJobType = tripIntakeJobKind();
@@ -152,13 +153,21 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
   };
-  const turnTag = await classifyTurnWithModel({
-    text: requestText,
-    speaker: 'customer',
-    direction: 'inbound',
-    channel: 'vacation-app',
-    payload,
-  });
+  const turnTag = (tripId && (placeSearchTurn || webResearchTurn))
+    ? classifyTurn({
+      text: requestText,
+      speaker: 'customer',
+      direction: 'inbound',
+      channel: 'vacation-app',
+      payload,
+    })
+    : await classifyTurnWithModel({
+      text: requestText,
+      speaker: 'customer',
+      direction: 'inbound',
+      channel: 'vacation-app',
+      payload,
+    });
   const requestRows = await db`
     insert into vacation_requests (
       customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
@@ -214,57 +223,67 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     returning id
   `;
 
-  const searchTurn = await applyChatPlaceSearchForVacationTurn({
-    db,
-    tripId,
-    requestId,
-    customerTurn: requestText,
-    tripDestination: cleanText(trip?.destination || '', 180),
-    payload,
-    customerLive,
-    turnId: turnRows[0].id,
-    env: env,
-    publishShare: hooks.publishIntakeShare,
-    workerJobId: jobRows[0].id,
-    workerJobContext: placeSearchTurn ? {
-      customerId: transcriptOwnerId,
+  let placeResults = [];
+  let enforceInTurnSearch = false;
+  let activeWebResearchTurn = webResearchTurn;
+  if (tripId) {
+    const inTurnSearch = await runVacationAppInTurnSearch({
+      db,
       tripId,
       requestId,
-      queuedJobType,
-      requestText,
+      customerTurn: requestText,
+      tripDestination: cleanText(trip?.destination || '', 180),
       payload,
-      jobFields,
-    } : null,
-  });
-  const placeResults = searchTurn.placeResults || [];
-  if (searchTurn.kind === 'failed') {
-    const failedLatency = Date.now() - started;
-    return {
-      requestId,
-      jobId: jobRows[0].id,
-      receivedAt: requestRows[0].received_at,
-      queuedAt: requestRows[0].queued_at,
-      turnTag,
-      modality,
-      turnIndex: customerTurnIndex,
-      latencyMs: failedLatency,
-      sessionE2eMs: sessionE2eMs(),
-      jev: customerLive.jev,
-      reply: null,
-      intakeEvent: jobFields.intakeEvent,
-      wantedThings: jobFields.wantedThings,
-      roster: jobFields.roster,
-      rosterError: jobFields.rosterError,
-      destination: jobFields.destination,
-      hasDates: jobFields.hasDates,
-      title: jobFields.title,
-      titleError: jobFields.titleError,
-      intakeError: jobFields.intakeError,
-      ok: false,
-      status: 'place_search_failed',
-      error: searchTurn.error,
-      placeSearch: searchTurn.placeSearch,
-    };
+      customerLive,
+      turnId: turnRows[0].id,
+      env,
+      publishShare: hooks.publishIntakeShare,
+      workerJobId: jobRows[0].id,
+      workerJobContext: placeSearchTurn ? {
+        customerId: transcriptOwnerId,
+        tripId,
+        requestId,
+        queuedJobType,
+        requestText,
+        payload,
+        jobFields,
+      } : null,
+      placeSearchTurn,
+      webResearchTurn,
+    });
+    if (!inTurnSearch.ok) {
+      const failedLatency = Date.now() - started;
+      return {
+        requestId,
+        jobId: jobRows[0].id,
+        receivedAt: requestRows[0].received_at,
+        queuedAt: requestRows[0].queued_at,
+        turnTag,
+        modality,
+        turnIndex: customerTurnIndex,
+        latencyMs: failedLatency,
+        sessionE2eMs: sessionE2eMs(),
+        jev: customerLive.jev,
+        reply: null,
+        intakeEvent: jobFields.intakeEvent,
+        wantedThings: jobFields.wantedThings,
+        roster: jobFields.roster,
+        rosterError: jobFields.rosterError,
+        destination: jobFields.destination,
+        hasDates: jobFields.hasDates,
+        title: jobFields.title,
+        titleError: jobFields.titleError,
+        intakeError: jobFields.intakeError,
+        ok: false,
+        status: inTurnSearch.status,
+        error: inTurnSearch.error,
+        placeSearch: inTurnSearch.placeSearch,
+        webSearch: inTurnSearch.webSearch,
+      };
+    }
+    placeResults = inTurnSearch.inTurnProviderResults || [];
+    enforceInTurnSearch = inTurnSearch.enforceInTurnSearch;
+    activeWebResearchTurn = inTurnSearch.webResearchTurn;
   }
 
   let produced;
@@ -286,11 +305,12 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         priorTurns,
         tripTitle: trip?.title || '',
         placeResults,
-        placeSearchTurn,
+        placeSearchTurn: enforceInTurnSearch,
+        webResearchTurn: activeWebResearchTurn,
         env: env,
         seatDollars: configuredSeatDollars(env),
         intake: classification.ok === true && classification.intake === true,
-        wantedThings: intakeExtractedThings(placeSearchTurn, classification),
+        wantedThings: intakeExtractedThings(placeSearchTurn, classification, webResearchTurn),
         roster: Array.isArray(classification.roster) ? classification.roster : [],
         rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
         extractedDestination: jobFields.destination,

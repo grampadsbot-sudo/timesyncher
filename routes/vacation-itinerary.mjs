@@ -2,7 +2,7 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
+import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
@@ -28,16 +28,16 @@ import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mj
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
-// Live queue turn (see vacation-app-chat-queue.mjs): authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
+// Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
-  applyChatPlaceSearchForVacationTurn,
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
+  runVacationAppInTurnSearch,
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
@@ -416,11 +416,12 @@ async function queueVacationAppTurn(db, session, trip, body) {
   if (trip) await ensureOnboardingOpener(db, session, trip);
   // insert into transcript_turns
   const requestText = cleanText(body.text || body.message, 12000);
-  const { classification, placeSearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
+  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
     requestText,
     classification,
     placeSearchTurn,
+    webResearchTurn,
   });
 }
 
