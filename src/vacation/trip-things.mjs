@@ -1,3 +1,4 @@
+import { assignTripSiteUrlWhenThingsPresent } from './onboarding.mjs';
 import { samePlace } from './place-search-same-place.mjs';
 
 const PLACE_SOURCES = new Set(['prior_db', 'osm', 'brave', 'tavily']);
@@ -47,7 +48,7 @@ function locationPoint(location = {}) {
   };
 }
 
-export async function insertTripThing(db, { tripId, requestId, thing }) {
+export async function insertTripThing(db, { tripId, requestId, thing, env = process.env }) {
   const item = tripThingRow(thing);
   if (!item) return null;
   const normalizedTripId = String(tripId || '').trim();
@@ -87,5 +88,6 @@ export async function insertTripThing(db, { tripId, requestId, thing }) {
   if (!id) {
     throw new TripThingInsertError(`insertTripThing returned no row for title "${item.title}"`);
   }
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   return { ...item, source: item.source, id };
 }

@@ -161,9 +161,10 @@ async function ensureOrder(db, customerId, tripId, entitlementId, order) {
 export async function assignTripSiteUrl(db, tripId, env = process.env) {
   const publicSlug = intakeShareSlug(tripId);
   if (!publicSlug) throw tripSiteUrlFailure('onboarding trip site url missing slug', tripId);
+  const publicUrl = sharedTripWebsiteUrl(publicSlug, env);
   const updated = await db`
     update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true, publicUrl }},
       updated_at = now()
     where id = ${tripId}
       and coalesce(metadata->>'sharedToken', '') = ''
@@ -173,7 +174,7 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
     returning metadata->>'publicSlug' as public_slug
   `;
   const stored = String(updated[0]?.public_slug || '').trim();
-  if (stored === publicSlug) return { publicSlug, publicUrl: sharedTripWebsiteUrl(publicSlug, env) };
+  if (stored === publicSlug) return { publicSlug, publicUrl };
   const existing = await db`
     select metadata->>'publicSlug' as public_slug
     from trips
@@ -181,8 +182,15 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
     limit 1
   `;
   const prior = String(existing[0]?.public_slug || '').trim();
-  if (prior === publicSlug) return { publicSlug, publicUrl: sharedTripWebsiteUrl(publicSlug, env) };
+  if (prior === publicSlug) return { publicSlug, publicUrl };
   throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
+}
+
+export async function assignTripSiteUrlWhenThingsPresent(db, tripId, env = process.env) {
+  const rows = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
+  if (!Number(rows[0]?.n)) return null;
+  if (!intakeShareSlug(tripId)) return null;
+  return assignTripSiteUrl(db, tripId, env);
 }
 
 function couponPriceKey(plan) {

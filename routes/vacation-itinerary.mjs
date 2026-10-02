@@ -24,7 +24,7 @@ import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
-import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrl, assignTripSiteUrlWhenThingsPresent, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
@@ -433,7 +433,7 @@ async function welcomeInputs(db, session, trip) {
     const owner = owners[0] || {};
     const collabFirstName = welcomeFirstName(session.first_name || seat.displayName || session.display_name);
     const ownerFirstName = welcomeFirstName(owner.first_name || owner.display_name);
-    if (hasSite) {
+    if (hasSite && tripSiteUrl) {
       return {
         audience: 'collaborator',
         ownerFirstName,
@@ -450,10 +450,38 @@ async function welcomeInputs(db, session, trip) {
     };
   }
   const firstName = welcomeFirstName(session.first_name || session.display_name);
-  if (hasSite) {
+  if (hasSite && tripSiteUrl) {
     return { audience: 'owner', firstName, tripSiteUrl };
   }
   return { audience: 'owner_no_site', firstName };
+}
+
+async function onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience }) {
+  if (!customerId || !welcomeAudience) return false;
+  const rows = tripId
+    ? await db`
+      select id
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id = ${tripId}
+        and channel in ('vacation-app', 'vacation_app')
+        and speaker = 'app'
+        and direction = 'outbound'
+        and payload->>'welcomeAudience' = ${welcomeAudience}
+      limit 1
+    `
+    : await db`
+      select id
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id is null
+        and channel in ('vacation-app', 'vacation_app')
+        and speaker = 'app'
+        and direction = 'outbound'
+        and payload->>'welcomeAudience' = ${welcomeAudience}
+      limit 1
+    `;
+  return rows.length > 0;
 }
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
@@ -476,7 +504,17 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     on conflict (onboarding_session_id, welcome_for) do nothing
     returning id
   `;
-  if (!claimed.length) return;
+  if (!claimed.length) {
+    const exists = await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience });
+    if (exists) return;
+    console.error(JSON.stringify({
+      event: 'onboarding_welcome_claim_without_turn',
+      onboardingSessionId: String(onboardingSessionId),
+      welcomeFor: String(welcomeFor),
+      tripId: tripId ? String(tripId) : null,
+      welcomeAudience,
+    }));
+  }
   const inputs = await welcomeInputs(db, session, welcomeTrip);
   const missing = missingWelcomeFields(inputs);
   const started = Date.now();
@@ -733,6 +771,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
       );
     }
   }
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   return loadTripThings(db, tripId);
 }
 
@@ -843,6 +882,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       where id = ${thing.id}
     `;
   }
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   return loadTripThings(db, tripId);
 }
 
