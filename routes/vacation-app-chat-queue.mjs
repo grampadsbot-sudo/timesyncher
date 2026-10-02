@@ -10,7 +10,8 @@ import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs
 import { intakeExtractedThings, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
-import { activeCollaboratorsFromDialogParty, blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
+import { blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
+import { vacationAppReplyClaimContext } from '../src/vacation/chat-place-search-when.mjs';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
@@ -229,7 +230,6 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     }})
     returning id
   `;
-
   let placeResults = [], enforceInTurnSearch = false, activeWebResearchTurn = webResearchTurn, placeSearchReplyFacts = null;
   if (tripId) {
     const inTurnSearch = await runVacationAppInTurnSearch({
@@ -409,7 +409,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
     turnActionResults,
   };
-  const replyClaimContext = { activeCollaborators: activeCollaboratorsFromDialogParty(trip) };
+  const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts);
   const blockReplyShipGate = async (replyText) => {
     const actionBlocked = await blockVacationAppReplyActionClaim({
       replyText,

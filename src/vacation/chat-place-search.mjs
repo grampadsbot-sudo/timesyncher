@@ -1,4 +1,3 @@
-import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
 import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
@@ -12,6 +11,7 @@ import {
 } from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
+import { insertStampedChatPlaceThings, workerInputAfterInTurnPlaceSearch } from './chat-place-search-when.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -230,12 +230,12 @@ export async function applyChatPlaceSearchForVacationTurn({
     `;
     return { kind: 'failed', error: chatSearch.error, placeSearch, placeSearchTurn };
   }
-  const placeResults = [];
-  for (const thing of chatSearch.things) {
-    const inserted = await insertTripThing(db, { tripId, requestId, thing });
-    const row = inTurnPlaceResultFromTripThing(inserted);
-    if (row) placeResults.push(row);
-  }
+  const { placeResults, placeSearchReplyFacts: placeSearchSavedReplyFacts } = await insertStampedChatPlaceThings(db, {
+    tripId,
+    requestId,
+    things: chatSearch.things,
+    classification,
+  });
   const placeSearch = placeSearchTelemetry({
     status: 'ok',
     things: chatSearch.things,
@@ -254,7 +254,13 @@ export async function applyChatPlaceSearchForVacationTurn({
     set payload = ${payload}
     where id = ${turnId}
   `;
-  return { kind: 'ok', placeResults, placeSearch, placeSearchTurn };
+  return {
+    kind: 'ok',
+    placeResults,
+    placeSearch,
+    placeSearchTurn,
+    ...(placeSearchSavedReplyFacts ? { placeSearchReplyFacts: placeSearchSavedReplyFacts } : {}),
+  };
 }
 
 export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
@@ -280,38 +286,6 @@ export function blockInTurnPlaceReply(reply, enforceInTurnPlaces, inTurnPlaceRes
     reason: violation.error,
     invented: violation.invented,
     ...carry,
-  };
-}
-
-function workerInputAfterInTurnPlaceSearch({
-  customerId,
-  tripId,
-  requestId,
-  queuedJobType,
-  requestText,
-  payload,
-  jobFields,
-}) {
-  return {
-    customerId,
-    tripId,
-    requestId,
-    source: 'vacation-app',
-    requestType: queuedJobType,
-    requestText,
-    payload,
-    intakeEvent: jobFields.intakeEvent,
-    wantedThings: [],
-    roster: jobFields.roster,
-    rosterError: jobFields.rosterError,
-    destination: jobFields.destination,
-    hasDates: jobFields.hasDates,
-    startDate: jobFields.startDate,
-    endDate: jobFields.endDate,
-    title: jobFields.title,
-    titleError: jobFields.titleError,
-    intakeError: jobFields.intakeError,
-    placeSearchHandledInTurn: true,
   };
 }
 
@@ -487,6 +461,7 @@ export async function runVacationAppInTurnSearch({
     inTurnProviderResults,
     enforceInTurnSearch: (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0,
     webResearchTurn: webTurn.webResearchTurn,
+    ...(searchTurn.placeSearchReplyFacts ? { placeSearchReplyFacts: searchTurn.placeSearchReplyFacts } : {}),
   };
 }
 
