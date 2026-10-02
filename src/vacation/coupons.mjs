@@ -93,10 +93,27 @@ export async function listCoupons(db, limit = 100) {
   return rows.map(publicCoupon);
 }
 
+export async function lookupCoupon(db, code, env = process.env) {
+  const normalized = normalizeCouponCode(code);
+  if (!normalized) throw Object.assign(new Error('Coupon code is required.'), { statusCode: 400 });
+  const rows = await db`
+    select id, code_hint, label, max_redemptions, redemption_count, status, expires_at, metadata
+    from checkout_coupons
+    where code_hash = ${couponHash(normalized, env)}
+      and status = 'active'
+      and redemption_count < max_redemptions
+      and (expires_at is null or expires_at > now())
+    limit 1
+  `;
+  if (!rows[0]) throw Object.assign(new Error('Coupon is invalid, expired, disabled, or already used.'), { statusCode: 400 });
+  return publicCoupon(rows[0]);
+}
+
 export async function consumeCoupon(db, code, { email, plan, originalAmountCents, metadata = {} } = {}, env = process.env) {
   const normalized = normalizeCouponCode(code);
   if (!normalized) throw Object.assign(new Error('Coupon code is required.'), { statusCode: 400 });
   const original = requiredOriginalCents(originalAmountCents, plan);
+  await lookupCoupon(db, normalized, env);
   const rows = await db`
     update checkout_coupons
     set redemption_count = redemption_count + 1, updated_at = now()

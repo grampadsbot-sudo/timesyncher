@@ -292,16 +292,20 @@
           const bar = document.createElement('div');
           bar.dataset.tsGuestNav = '1';
           bar.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:40;display:flex;gap:8px;';
+          const guestButtonStyle = 'font:inherit;font-size:13px;font-weight:600;line-height:1.2;padding:10px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#111827;box-shadow:0 8px 24px rgba(15,23,42,0.12);cursor:pointer;';
           const navButton = document.createElement('button');
           navButton.type = 'button';
           navButton.textContent = 'Open navigation';
           navButton.setAttribute('aria-label', 'Open navigation');
+          navButton.style.cssText = guestButtonStyle;
           const settingsButton = document.createElement('button');
           settingsButton.type = 'button';
           settingsButton.textContent = 'Settings';
+          settingsButton.style.cssText = guestButtonStyle;
           const panel = document.createElement('div');
           panel.hidden = true;
-          panel.style.cssText = 'position:fixed;right:12px;bottom:56px;z-index:40;background:#fff;color:#111;border:1px solid #d1d5db;border-radius:12px;padding:12px;width:240px;';
+          panel.style.cssText = 'position:fixed;right:12px;bottom:56px;z-index:40;background:#fff;color:#111;border:1px solid #d1d5db;border-radius:12px;padding:12px;width:240px;box-shadow:0 18px 45px rgba(15,23,42,0.18);display:flex;flex-direction:column;gap:8px;';
+          const panelButtonStyle = 'font:inherit;font-size:13px;font-weight:600;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#f8fafc;color:#111827;cursor:pointer;width:100%;';
           function clickTab(label) {
             const button = [...document.querySelectorAll('button')].find((node) => (node.innerText || '').replace(/\s+/g, ' ').trim() === label);
             if (button) button.click();
@@ -314,6 +318,7 @@
             close.type = 'button';
             close.textContent = open ? 'Close navigation' : 'Open navigation';
             close.setAttribute('aria-label', close.textContent);
+            close.style.cssText = panelButtonStyle;
             close.addEventListener('click', () => {
               panel.hidden = true;
               navButton.textContent = 'Open navigation';
@@ -324,6 +329,7 @@
               const item = document.createElement('button');
               item.type = 'button';
               item.textContent = label;
+              item.style.cssText = panelButtonStyle;
               item.addEventListener('click', () => clickTab(label));
               panel.appendChild(item);
             });
@@ -337,10 +343,18 @@
               const item = document.createElement('button');
               item.type = 'button';
               item.textContent = label;
+              item.style.cssText = panelButtonStyle;
               item.addEventListener('click', async () => {
                 if (label === 'Copy link') {
                   try { await navigator.clipboard.writeText(location.href); } catch {}
                   item.textContent = 'Copy link';
+                }
+                if (label === 'Invite') {
+                  if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'timesyncher-open-collaborator-invite' }, window.location.origin);
+                  } else if (window.tsOpenCollaboratorInvite) {
+                    window.tsOpenCollaboratorInvite();
+                  }
                 }
                 if (label === 'Weather') {
                   const day = [...document.querySelectorAll('button')].find((node) => (node.innerText || '').trim() === 'Day 1');

@@ -48,9 +48,11 @@ export function collaboratorSeatJoinEvent(seat) {
   };
 }
 
-export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, seats } = {}) {
-  if (!ownerCustomerId || !tripId) {
-    throw Object.assign(new Error('Owner session is missing a vacation.'), { statusCode: 409 });
+export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, onboardingSessionId = '', seats, env = process.env } = {}) {
+  const resolvedTripId = clean(tripId, 80) || null;
+  const sessionId = clean(onboardingSessionId, 80) || null;
+  if (!ownerCustomerId || (!resolvedTripId && !sessionId)) {
+    throw Object.assign(new Error('Owner session is missing a vacation workspace.'), { statusCode: 409 });
   }
   const opened = [];
   for (const raw of Array.isArray(seats) ? seats : []) {
@@ -60,26 +62,38 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, se
     if (!name || !email) continue;
     const { invite, token } = await createCollaboratorInvite(db, {
       ownerCustomerId,
-      tripId,
+      tripId: resolvedTripId,
       planCode: 'telegram_collaborators_single_trip',
       requestedFor: name,
-      metadata: { payer, email, displayName: name, channel: 'vacation-app' },
+      metadata: {
+        payer,
+        email,
+        displayName: name,
+        channel: 'vacation-app',
+        onboardingSessionId: sessionId,
+        deferredWebEditor: !resolvedTripId,
+      },
+      env,
     });
-    const web = await createWebEditorInvite(db, {
-      ownerCustomerId,
-      tripId,
-      email,
-      displayName: name,
-      role: 'web_editor',
-      metadata: { payer, channel: 'email-invite' },
-    });
+    let web = null;
+    if (resolvedTripId) {
+      web = await createWebEditorInvite(db, {
+        ownerCustomerId,
+        tripId: resolvedTripId,
+        email,
+        displayName: name,
+        role: 'web_editor',
+        metadata: { payer, channel: 'email-invite' },
+        env,
+      });
+    }
     const sent = await queueOrSendCollaboratorInviteEmail(db, {
       invite,
       token,
       contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
-      acceptUrl: web.acceptUrl,
-      publicUrl: web.grant?.public_url || '',
-    });
+      acceptUrl: web?.acceptUrl || '',
+      publicUrl: web?.grant?.public_url || '',
+    }, env);
     opened.push({
       name,
       email,

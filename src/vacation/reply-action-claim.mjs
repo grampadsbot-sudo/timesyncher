@@ -14,20 +14,8 @@ class ReplyActionClaimBlockedError extends Error {
   }
 }
 
-function inviteResultRow(turnActionResults) {
-  const invite = turnActionResults?.invite;
-  if (invite && typeof invite === 'object') return invite;
-  const legacy = turnActionResults?.collaboratorInvite;
-  if (legacy && typeof legacy === 'object') return legacy;
-  return null;
-}
-
 function collaboratorInviteSucceeded(turnActionResults) {
-  const row = inviteResultRow(turnActionResults);
-  if (!row) return false;
-  if (row.ok === true) return true;
-  const action = String(row.action || row.code || '').trim();
-  return action === 'collaborator_invite_sent' || action.endsWith('_invite_sent');
+  return turnActionResults?.invite?.ok === true;
 }
 
 function replyClaimsCollaboratorInviteAction(reply) {

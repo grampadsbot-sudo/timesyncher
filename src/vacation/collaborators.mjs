@@ -138,20 +138,43 @@ export async function countActiveCollaborators(db, ownerCustomerId, tripId = '')
 }
 
 export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {}, env = process.env }) {
-  if (!tripId) {
-    throw Object.assign(new Error('tripId is required. The owner invites a collaborator to each vacation separately.'), { statusCode: 400 });
+  const normalizedTripId = String(tripId || '').trim() || null;
+  const onboardingSessionId = String(metadata?.onboardingSessionId || '').trim() || null;
+  if (!normalizedTripId && !onboardingSessionId) {
+    throw Object.assign(new Error('tripId or onboardingSessionId is required for a collaborator invite.'), { statusCode: 400 });
   }
   const plan = collaboratorPlan(planCode || 'single_trip', env);
   const token = collaboratorToken();
+  const inviteMetadata = {
+    ...(metadata && typeof metadata === 'object' ? metadata : {}),
+    ...(onboardingSessionId ? { onboardingSessionId } : {}),
+  };
   const rows = await db`
     insert into vacation_collaborator_invites (
       owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata
     )
     values (
-      ${ownerCustomerId}, ${tripId}, ${plan.code}, ${plan.scope},
-      ${requestedFor || null}, 'pending_payment', ${hashToken(token, env)}, ${metadata}
+      ${ownerCustomerId}, ${normalizedTripId}, ${plan.code}, ${plan.scope},
+      ${requestedFor || null}, 'pending_payment', ${hashToken(token, env)}, ${inviteMetadata}
     )
     returning *
   `;
   return { invite: rows[0], token };
+}
+
+export async function attachSessionCollaboratorInvitesToTrip(db, { ownerCustomerId, tripId, onboardingSessionId } = {}) {
+  const ownerId = String(ownerCustomerId || '').trim();
+  const normalizedTripId = String(tripId || '').trim();
+  const sessionId = String(onboardingSessionId || '').trim();
+  if (!ownerId || !normalizedTripId || !sessionId) return [];
+  const rows = await db`
+    update vacation_collaborator_invites
+    set trip_id = ${normalizedTripId},
+      updated_at = now()
+    where owner_customer_id = ${ownerId}
+      and trip_id is null
+      and metadata->>'onboardingSessionId' = ${sessionId}
+    returning *
+  `;
+  return rows;
 }

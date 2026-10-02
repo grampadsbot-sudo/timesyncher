@@ -15,6 +15,7 @@ scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
+scripts/test_trip_site_no_hotel_brand_list.mjs
 scripts/test_restaurant_list_tags.mjs
 scripts/test_product_gaps_staging.mjs
 scripts/test_provider_env.mjs
@@ -24,6 +25,7 @@ scripts/test_check_hardcoded_content.mjs
 scripts/test_check-no-hardcoded-product-cosmetic.mjs
 scripts/test_no_hardcoded_product_content.mjs
 scripts/test_deploy_required_env.mjs
+scripts/test_checkout_coupon_zero_confirm.mjs
 scripts/test_checkout_coupons.mjs
 scripts/test_coupon_purchase_no_trip.mjs
 scripts/test_vacation_chat_no_trip.mjs
@@ -71,6 +73,8 @@ scripts/test_shared_trek_link_routing.mjs
 scripts/test_served_canned_needles.mjs
 scripts/test_vacation_selector_dropdown.mjs
 scripts/test_vacation_collaborators.mjs
+scripts/test_vacation_collaborator_invite_flow.mjs
+scripts/test_vacation_app_turn_actions_invite.mjs
 scripts/test_vacation_web_access.mjs
 scripts/test_welcome_after_intake_database.mjs
 scripts/test_void_stale_build.mjs
@@ -81,6 +85,7 @@ scripts/test_g2d_jev_score_rewrite.mjs
 scripts/test_rewrite_ships_tier_draft.mjs
 scripts/test_g3a_canned_dialog.mjs
 scripts/test_onboarding_welcome.mjs
+scripts/test_owner_welcome_on_landing.mjs
 scripts/test_reply_plan_entitlement.mjs
 scripts/test_reply_id_citation_weather.mjs
 scripts/test_reply_action_claim.mjs
