@@ -56,6 +56,11 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import {
+  collaboratorSessionForAccept,
+  vacationAppEulaForCollaboratorSeat,
+} from '../src/vacation/collaborator-eula-accept.mjs';
+import { collaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
 import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
@@ -348,7 +353,7 @@ async function welcomeInputs(db, session, trip) {
       audience: 'collaborator_no_site',
       ownerFirstName,
       collabFirstName,
-      tripTitle,
+      tripTitle: tripTitle || 'this vacation',
     };
   }
   const firstName = welcomeFirstName(session.first_name || session.display_name);
@@ -360,8 +365,7 @@ async function welcomeInputs(db, session, trip) {
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
-  const tripId = trip?.id || null;
-  if (!tripId && seat) return;
+  const tripId = trip?.id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) return;
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
@@ -658,6 +662,8 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
 }
 
 async function vacationAppEula(session, env = process.env) {
+  const seat = seatFromSession(session);
+  if (seat?.inviteId) return vacationAppEulaForCollaboratorSeat(session, seat, env);
   const status = await vacationEulaStatus(session, env);
   const accepted = Boolean(status.ok || status.status === 'accepted');
   const payload = {
@@ -681,6 +687,11 @@ async function handleVacationApp(req, res, db, url) {
 
   const session = await loadVacationAppSession(db, token);
   if (!session?.customer_id) return sendJson(res, 404, { ok: false, error: 'Vacation app session not found.' });
+  const seatForEula = seatFromSession(session);
+  if (seatForEula?.inviteId) {
+    const store = createPersistentStoreFromEnv(process.env);
+    await collaboratorSessionForAccept(store, db, collaboratorEulaSessionId({ id: seatForEula.inviteId }), process.env);
+  }
 
   if (req.method === 'GET') {
     let vacations = await loadVacationAppTrips(db, session);
@@ -690,7 +701,7 @@ async function handleVacationApp(req, res, db, url) {
       || vacations[0]
       || null;
     const eula = await vacationAppEula(session, process.env);
-    if (eula.accepted && !seatFromSession(session)) {
+    if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
     }
     const turns = await loadVacationAppTurns(db, session, selected?.id || null);
@@ -774,7 +785,8 @@ async function handleVacationApp(req, res, db, url) {
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
       if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
-      if (!selected?.id) {
+      const tripKey = selected?.id || seat.ownerTripId || null;
+      if (!tripKey && !seat.ownerOnboardingSessionId) {
         return sendJson(res, 409, {
           ok: false,
           error: 'No vacation is available for this session yet.',
@@ -782,7 +794,7 @@ async function handleVacationApp(req, res, db, url) {
         });
       }
       const event = collaboratorSeatJoinEvent(seat);
-      const prior = await loadVacationAppTurns(db, session, selected.id);
+      const prior = await loadVacationAppTurns(db, session, tripKey);
       if (prior.some((turn) => turn.speaker === 'system' && turn.payload?.event === 'collaborator_seat_join')) {
         return sendJson(res, 200, { ok: true, status: 'already_joined', reply: null });
       }
@@ -791,7 +803,7 @@ async function handleVacationApp(req, res, db, url) {
           customer_id, trip_id, speaker, channel, body, payload, direction, sent_at
         )
         values (
-          ${transcriptCustomerId(session)}, ${selected.id}, ${event.speaker}, ${event.channel}, ${event.body},
+          ${transcriptCustomerId(session)}, ${tripKey}, ${event.speaker}, ${event.channel}, ${event.body},
           ${event.payload}, ${event.direction}, now()
         )
       `;

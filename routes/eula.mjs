@@ -10,6 +10,8 @@ import {
 import { renderAcceptPage } from '../src/onboarding/eula-accept-page-render.mjs';
 import { handleOpenClawControl } from '../src/openclaw/control-handler.mjs';
 import { sql } from '../src/vacation/db.mjs';
+import { collaboratorSessionForAccept } from '../src/vacation/collaborator-eula-accept.mjs';
+import { isCollaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
 import { ensureVacationEulaSession, getSessionByToken } from '../src/vacation/onboarding.mjs';
 
 let onboardingLookup = null;
@@ -32,6 +34,15 @@ function ownerOnboardingToken(sessionId) {
 async function sessionForAccept(store, sessionId) {
   const loaded = await loadSessionPersistent(store, sessionId);
   if (loaded) return loaded;
+  if (isCollaboratorEulaSessionId(sessionId)) {
+    let db;
+    try {
+      db = onboardingDatabase();
+    } catch {
+      return null;
+    }
+    return collaboratorSessionForAccept(store, db, sessionId, process.env);
+  }
   const token = ownerOnboardingToken(sessionId);
   if (!token) return null;
   let db;
@@ -93,19 +104,31 @@ export default async function handler(req, res) {
     if (req.method === 'GET' && action === 'accept-page') {
       const session = await sessionForAccept(store, url.searchParams.get('sessionId'));
       if (!session || session.unavailableReason) return send(res, 404, 'Acceptance session not found or unavailable', 'text/plain');
+      const redirect = String(session.google?.returnUrl || '').trim();
+      if (session.status === 'accepted' && redirect) {
+        res.statusCode = 302;
+        res.setHeader('location', redirect);
+        res.setHeader('cache-control', 'no-store');
+        return res.end();
+      }
       return send(res, 200, renderAcceptPage(session), 'text/html');
     }
     if (req.method === 'POST' && action === 'accept') {
       const body = await readBody(req);
       const sessionId = url.searchParams.get('sessionId');
-      await sessionForAccept(store, sessionId);
+      const session = await sessionForAccept(store, sessionId);
       const result = await acceptEulaPersistent(store, sessionId, {
         acceptedByName: body.acceptedByName,
         checkboxConfirmed: body.checkboxConfirmed,
         ipAddress: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
         userAgent: req.headers['user-agent'] || '',
       });
-      return send(res, 201, { ok: true, receiptSha256: result.receipt.receiptSha256 });
+      const redirect = String(session?.google?.returnUrl || '').trim();
+      return send(res, 201, {
+        ok: true,
+        receiptSha256: result.receipt.receiptSha256,
+        redirectUrl: redirect || null,
+      });
     }
     if (req.method === 'GET' && action === 'receipt') {
       const receipt = await store.getJson(receiptKey(url.searchParams.get('sessionId')));

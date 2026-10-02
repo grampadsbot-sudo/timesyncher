@@ -49,12 +49,14 @@ assert.equal(
 const email = buildCollaboratorInviteEmail({
   contact: { firstName: 'Kim', email: 'kim@example.com' },
   invite: {
+    id: 'invite-1',
+    trip_id: 'trip-1',
     requested_for: 'Kim',
     owner_display_name: 'Craig',
     trip_title: 'Caldwell vacation',
   },
   token: 'invite-token',
-  acceptUrl: 'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=invite-token',
+  acceptUrl: 'https://vacation-staging.timesyncher.com/accept/vacation-collaborator-invite-1',
   publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-example/',
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
@@ -62,12 +64,12 @@ assert.match(email.subject, /Craig invited you to edit Caldwell vacation/);
 assert.match(email.textBody, /View access/);
 assert.match(email.textBody, /Edit access/);
 assert.match(email.textBody, /approved email invite/);
-assert.match(email.textBody, /vacation-web-access\?action=accept/);
+assert.match(email.textBody, /\/accept\/vacation-collaborator-invite-1/);
 assert.doesNotMatch(email.textBody, /t\.me/);
 assert.doesNotMatch(email.htmlBody, /Telegram/);
 assert.match(email.htmlBody, /Open the approved email invite/);
 assert.match(email.htmlBody, /word-break:break-all/);
-assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/api\/vacation-web-access\?action=accept&token=invite-token</);
+assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/accept\/vacation-collaborator-invite-1</);
 assert.match(email.htmlBody, />https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-example\/</);
 const filled = collaboratorInviteTargets({
   invite: { id: 'invite-1' },

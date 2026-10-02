@@ -72,17 +72,42 @@ export function purchaseEmail({ contact, sessionToken = '', token = '', tripId =
   return { subject, textBody, htmlBody, launchUrl };
 }
 
+function collaboratorInviteOwnerLabel(invite) {
+  const ownerName = cleanText(invite?.owner_display_name, 160);
+  if (ownerName) return { owner: ownerName, ownerNameMissing: false };
+  const ownerEmail = cleanText(invite?.owner_email, 160).toLowerCase();
+  if (!ownerEmail) {
+    throw Object.assign(new Error('Collaborator invite is missing owner identity.'), { statusCode: 500 });
+  }
+  return { owner: ownerEmail, ownerNameMissing: true };
+}
+
 export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = '', publicUrl = '', env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || invite?.requested_for || 'there', 80) || 'there';
-  const owner = cleanText(invite?.owner_display_name || invite?.owner_email || 'the vacation owner', 160);
-  const tripTitle = cleanText(invite?.trip_title || 'this TimeSyncher Vacation', 180);
+  const { owner, ownerNameMissing } = collaboratorInviteOwnerLabel(invite);
+  if (ownerNameMissing) {
+    console.log(JSON.stringify({
+      event: 'invite_email_owner_name_missing',
+      inviteId: String(invite?.id || ''),
+      ownerEmail: owner,
+    }));
+  }
+  const tripTitle = cleanText(invite?.trip_title, 180);
+  const hasTrip = Boolean(invite?.trip_id && tripTitle);
   const link = cleanText(acceptUrl, 600);
   const site = cleanText(publicUrl, 600);
-  const subject = `${owner} invited you to edit ${tripTitle}`;
+  const subject = hasTrip ? `${owner} invited you to edit ${tripTitle}` : `${owner} invited you to a TimeSyncher Vacation`;
+  const inviteLead = hasTrip
+    ? `${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vacation website.`
+    : `${owner} approved this email address to join a TimeSyncher Vacation chat.`;
+  const htmlLead = hasTrip
+    ? `${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.`
+    : `${owner} approved this email address to join a <strong>TimeSyncher Vacation</strong> chat.`;
+  const htmlTitle = hasTrip ? `You can edit ${tripTitle}` : 'You can join this vacation chat';
   const textBody = [
     `Hi ${name},`,
     '',
-    `${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vacation website.`,
+    inviteLead,
     '',
     'View access lets you see the days. Edit access lets you add notes after this email invite is approved.',
     'You join from this email, accept the terms, and then the vacation opens.',
@@ -97,9 +122,9 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
   const htmlBody = `<!doctype html>
 <html><body style="margin:0;background:#050505;color:#fffaf0;font-family:Arial,sans-serif">
   <div style="max-width:640px;margin:0 auto;padding:28px">
-    <h1 style="color:#f5d37b">You can edit ${tripTitle}</h1>
+    <h1 style="color:#f5d37b">${htmlTitle}</h1>
     <p>Hi ${name},</p>
-    <p>${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.</p>
+    <p>${htmlLead}</p>
     <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. You join from this email, accept the terms, and then the vacation opens.</p>
     ${link ? `<p><a href="${link}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the approved email invite</a></p>` : ''}
     ${link ? `<p><a href="${link}" style="color:#f5d37b;word-break:break-all">${link}</a></p>` : ''}
