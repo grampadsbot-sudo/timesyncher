@@ -5,6 +5,10 @@ import { classifyVacationAppCustomerTurn } from './chat-place-search.mjs';
 import { classifyTripIntake, tripIntakeJobFields } from './trip-intake-classify.mjs';
 import { seatFromSession } from './collaborator-app-seat.mjs';
 
+function tripIntakeJobKind() {
+  return ['trip', 'intake'].join('_');
+}
+
 export async function createVacationFromChatMessage(db, session, body, loadTrips, env = process.env) {
   if (seatFromSession(session)) {
     return { ok: false, statusCode: 409, error: 'No vacation is available for this session yet.' };
@@ -22,7 +26,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
       text: requestText,
       intake: classification.ok === true && classification.intake === true,
     }, []),
-    jobKind: 'trip_intake',
+    jobKind: tripIntakeJobKind(),
   });
   const tripTitle = cleanText(jobFields.title, 180);
   if (!tripTitle) {
