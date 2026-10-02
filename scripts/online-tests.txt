@@ -2,4 +2,5 @@
 scripts/test_openclaw_control.mjs network: listens on 127.0.0.1 and fetch()es that server; ENETUNREACH with the network namespace down
 scripts/test_keepsake_layout_routes.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_shared_trip_spa_console.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_coupon_intake_shared_trip_chrome.mjs browser: coupon purchase, chat intake, publish, and shared trip Chrome render
 scripts/test_build_stamp_viewport.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install

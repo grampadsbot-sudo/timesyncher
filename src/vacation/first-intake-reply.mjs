@@ -491,7 +491,7 @@ export function intakeReplyBlock(reply, banned = appTextBanned, facts = {}, ids 
   const questions = questionCount(text);
   if (facts?.shape === 'gaps') {
     if (questions < 2 || questions > 3) return 'first_intake_reply_flagged';
-  } else if (questions !== 1) return 'first_intake_reply_flagged';
+  } else if (facts?.shape !== 'no-trip' && questions !== 1) return 'first_intake_reply_flagged';
   return '';
 }
 

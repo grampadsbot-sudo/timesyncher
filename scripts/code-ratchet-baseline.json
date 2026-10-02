@@ -1255,12 +1255,6 @@
   },
   {
     "rule": "DEAD-CODE",
-    "file": "src/vacation/onboarding.mjs",
-    "symbol": "export:eulaSessionIdForOnboarding",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
     "file": "src/vacation/pdf-qr-svg-handler.mjs",
     "symbol": "export:qrPayloadFromUrl",
     "note": "existing; ratchet only shrinks"
@@ -1268,19 +1262,7 @@
   {
     "rule": "DEAD-CODE",
     "file": "src/vacation/place-search.mjs",
-    "symbol": "export:missingSearchKeys",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/place-search.mjs",
     "symbol": "export:noteToResearchCandidate",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/place-search.mjs",
-    "symbol": "export:noteToTripThing",
     "note": "existing; ratchet only shrinks"
   },
   {
@@ -1329,12 +1311,6 @@
     "rule": "DEAD-CODE",
     "file": "src/vacation/poi-search.mjs",
     "symbol": "export:geohash",
-    "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "DEAD-CODE",
-    "file": "src/vacation/poi-search.mjs",
-    "symbol": "export:tavilyApiKey",
     "note": "existing; ratchet only shrinks"
   },
   {

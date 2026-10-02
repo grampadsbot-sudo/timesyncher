@@ -334,6 +334,19 @@ export function sharedTripFromIntake({ trip, things }) {
       assignments[key] = rows;
     }
   }
+  const categoryRegistry = new Map();
+  for (const place of places) {
+    const name = String(place.category_name || '').trim() || 'Place';
+    const icon = String(place.category_icon || '').trim();
+    const key = `${name}\0${icon}`;
+    if (!categoryRegistry.has(key)) {
+      categoryRegistry.set(key, { id: intId(`category:${trip.id}:${name}:${icon}`), name, icon });
+    }
+    const category = categoryRegistry.get(key);
+    place.category_id = category.id;
+    place.category = { id: category.id, name: category.name, icon: category.icon };
+  }
+  const categories = [...categoryRegistry.values()];
   const destination = customerPlaceName(trip?.destination);
   const planned = Boolean(destination || start || end || (things || []).length);
   const rawTitle = String(trip?.title || '').trim();
@@ -351,7 +364,7 @@ export function sharedTripFromIntake({ trip, things }) {
     assignments,
     dayNotes: {},
     places,
-    categories: [],
+    categories,
     permissions: {
       share_map: true,
       share_bookings: true,

@@ -94,9 +94,9 @@ export async function upsertCustomer(db, contact, metadata = {}) {
   return rows[0].id;
 }
 
-async function ensureTrip(db, customerId, metadata) {
+export async function ensureTrip(db, customerId, metadata) {
   const title = cleanText(metadata.trip_title, 180);
-  if (!title) throw new Error('trip title is required for onboarding purchase');
+  if (!title) throw new Error('trip title is required to create a vacation');
   const vacationDate = cleanText(metadata.vacation_date, 40);
   const rows = await db`
     insert into trips (customer_id, title, start_date, preferences, status, metadata)
@@ -205,7 +205,7 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' '), 180) || cleanText(contact?.email, 180) || null,
   };
   const customerId = await upsertCustomer(db, cleanContact, orderMetadata);
-  const tripId = await ensureTrip(db, customerId, orderMetadata);
+  const tripId = null;
   const order = {
     stripeCustomerId: null,
     stripeSubscriptionId: null,
@@ -419,7 +419,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     stripeCustomerId: order.stripeCustomerId,
     ...metadata,
   });
-  const tripId = await ensureTrip(db, customerId, metadata);
+  const tripId = null;
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);

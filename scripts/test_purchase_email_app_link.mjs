@@ -8,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 import handler from '../api/[...route].mjs';
 import { useOnboardingLookup } from '../routes/eula.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
-import { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
+import { useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { assignTripSiteUrl, buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
+import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const storeDir = await mkdtemp(path.join(tmpdir(), 'purchase-app-link-'));
@@ -305,30 +305,21 @@ try {
     db,
     contact: { email: 'ada.zero@example.com', firstName: 'Ada', lastName: 'Zero' },
     plan: 'single',
-    amountCents: 0,
-    metadata: { couponCheckout: true, trip_title: 'Sample trip' },
+    amountCents: 3700,
+    metadata: { couponCheckout: true },
     env: fixtureEnv,
   });
-  const shareSite = await assignTripSiteUrl(db, onboarding.tripId, process.env);
-  onboarding.publicSlug = shareSite.publicSlug;
-  onboarding.publicUrl = shareSite.publicUrl;
+  assert.equal(onboarding.tripId, null);
   assert.equal(onboarding.contact.firstName, 'Ada');
-  assert.equal(state.trip.destination, null);
-  assert.equal(state.trip.start_date, null);
+  assert.equal(state.trip, null);
   const sent = await queueOrSendPurchaseEmail(db, onboarding, fixtureEnv);
   assert.equal(sent.status, 'sent');
   const launchUrl = new URL(onboarding.vacationAppUrl);
   assert.equal(launchUrl.origin + launchUrl.pathname, `${site}/vacation-app.html`);
   assert.equal(launchUrl.searchParams.get('session'), onboarding.token);
   assert.equal(launchUrl.href.includes('/shared/intake-'), false);
-  assert.equal(onboarding.publicSlug, shareSite.publicSlug);
-  assert.equal(onboarding.publicUrl, shareSite.publicUrl);
-  assert.equal(shareSite.publicSlug.startsWith('intake-'), true);
-
-  const migrated = await intakeSharedResponse(shareSite.publicSlug, db);
-  assert.equal(Boolean(migrated?.trip), true);
-  assert.equal(migrated.error, undefined);
-  assert.deepEqual(migrated.places, []);
+  assert.equal(onboarding.publicSlug, '');
+  assert.equal(onboarding.publicUrl, '');
 
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
@@ -366,9 +357,13 @@ try {
   const afterBody = await after.json();
   assert.equal(after.status, 200, JSON.stringify(afterBody));
   assert.equal(afterBody.eula.accepted, true);
-  assert.equal(afterBody.vacations.length, 1);
-  assert.equal(afterBody.vacations[0].destination, '');
-  assert.equal(afterBody.vacations[0].startDate, null);
+  assert.equal(afterBody.vacations.length, 0);
+
+  const onboardingGet = await fetch(`${origin}/api/onboarding-session?session=${encodeURIComponent(onboarding.token)}`);
+  const onboardingBody = await onboardingGet.json();
+  assert.equal(onboardingGet.status, 200, JSON.stringify(onboardingBody));
+  assert.equal(onboardingBody.ok, true);
+  assert.match(onboardingBody.session?.vacationAppUrl || '', /vacation-app\.html\?session=/);
 
   const chat = visible(await dumpDom(`${origin}${appPath}`));
   assert.match(chat, /class="workspace chat-only"/);

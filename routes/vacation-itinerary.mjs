@@ -22,10 +22,13 @@ import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
+// Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
@@ -39,6 +42,7 @@ import {
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
+import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 
 let vacationAppDatabase = null;
 
@@ -399,382 +403,25 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   `;
 }
 
-async function queueVacationAppTurn(db, session, trip, body) {
-  const tripId = trip.id;
-  await ensureOnboardingOpener(db, session, trip);
-  const started = Date.now();
-  const text = cleanText(body.text || body.message, 12000);
-  const attachments = Array.isArray(body.attachments)
-    ? body.attachments.slice(0, 20).map((item) => ({
-      name: cleanText(item?.name, 240),
-      type: cleanText(item?.type, 160),
-      size: Number.parseInt(item?.size || '0', 10) || 0,
-      lastModified: Number.parseInt(item?.lastModified || '0', 10) || null,
-      inline: Boolean(item?.inline),
-      contentDataUrl: cleanText(item?.contentDataUrl, 3_000_000) || null,
-      note: cleanText(item?.note, 240) || null,
-    }))
-    : [];
-  if (!text && attachments.length === 0) {
-    throw Object.assign(new Error('Message text or an attachment is required.'), { statusCode: 400 });
-  }
-
-  const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
-  const modality = customerModality(body);
-  const seat = seatFromSession(session);
-  if (!seat) {
-    const holder = [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
-    if (holder) {
-      await db`
-        update trips
-        set metadata = jsonb_set(
-          coalesce(metadata, '{}'::jsonb),
-          '{dialogParty,primary}',
-          ${JSON.stringify({ name: holder, role: 'Owner' })}::jsonb,
-          true
-        ),
-          updated_at = now()
-        where id = ${tripId}
-          and coalesce(metadata#>>'{dialogParty,primary,name}', '') = ''
-      `;
-    }
-  }
-  const transcriptOwnerId = transcriptCustomerId(session);
-  const speakerName = seat?.displayName || [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
-  const prior = await db`
-    select count(*)::int as n,
-      min(coalesce(received_at, created_at)) as started_at
-    from transcript_turns
-    where customer_id = ${transcriptOwnerId}
-      and trip_id = ${tripId}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-  `;
-  const priorCount = Number(prior[0]?.n || 0);
-  const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
-  const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
-  const customerTurnIndex = priorCount + 1;
-  const receivedAt = new Date().toISOString();
-  const memoryRows = await db`
-    select speaker, body, payload
-    from transcript_turns
-    where customer_id = ${transcriptOwnerId}
-      and trip_id = ${tripId}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-    order by coalesce(received_at, sent_at, created_at) desc
-    limit 120
-  `;
-  const priorTurns = [...memoryRows].reverse().map((row) => {
-    const stored = row.payload && typeof row.payload === 'object' ? row.payload : {};
-    const live = stored.liveTranscript && typeof stored.liveTranscript === 'object' ? stored.liveTranscript : {};
-    return {
-      role: row.speaker === 'app' ? 'app' : 'customer',
-      text: row.body || '',
-      intake: live.intake === true,
-    };
-  });
-  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
-  const firstIntake = firstMarkedIntake({ text: requestText, intake: classification.ok === true && classification.intake === true }, priorTurns);
-  const queuedJobType = 'trip_intake';
-  const jobFields = tripIntakeJobFields({
-    requestText,
-    receivedAt,
-    classification,
-    firstIntake,
-    jobKind: queuedJobType,
-  });
-  const customerLive = liveTurnRecord({
-    turnIndex: customerTurnIndex,
-    role: 'customer',
-    modality,
-    text: requestText,
-    at: receivedAt,
-    latencyMs: Date.now() - started,
-    sessionE2eMs: sessionE2eMs(),
-    jev: { jevRan: false, error: 'classify_pending' },
-    speakerName,
-    intake: classification.ok === true && classification.intake === true,
-  });
-  const payload = {
-    source: 'vacation_app',
-    surface: 'vacation-app',
-    attachments,
-    voiceMode: modality === 'voice',
-    browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
-    selectedTripId: tripId,
-    liveTranscript: customerLive,
-    authorName: speakerName,
-    authorId: session.customer_id || null,
-    intakeEvent: jobFields.intakeEvent,
-    wantedThings: jobFields.wantedThings,
-    roster: jobFields.roster,
-    rosterError: jobFields.rosterError,
-    destination: jobFields.destination,
-    hasDates: jobFields.hasDates,
-    title: jobFields.title,
-    titleError: jobFields.titleError,
-    intakeError: jobFields.intakeError,
+function queueVacationAppHooks() {
+  return {
+    ensureOnboardingOpener,
+    publishIntakeShare,
+    recordCustomerThingNotes,
+    vacationAppTripSummary,
   };
-  const turnTag = placeSearchTurn || webResearchTurn
-    ? classifyTurn({
-      text: requestText,
-      speaker: 'customer',
-      direction: 'inbound',
-      channel: 'vacation-app',
-      payload,
-    })
-    : await classifyTurnWithModel({
-      text: requestText,
-      speaker: 'customer',
-      direction: 'inbound',
-      channel: 'vacation-app',
-      payload,
-    });
-  const requestRows = await db`
-    insert into vacation_requests (
-      customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
-      status, queued_at
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, 'vacation-app', ${queuedJobType}, ${requestText},
-      ${{ turnTag }}, ${payload}, 'queued', now()
-    )
-    returning id, received_at, queued_at
-  `;
-  const requestId = requestRows[0].id;
-  const intakeLatency = Date.now() - started;
-  const turnRows = await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      received_at, response_latency_ms,
-      turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
-      now(), ${intakeLatency},
-      ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
-    )
-    returning id
-  `;
-  await db`
-    insert into vacation_request_events (request_id, event_type, actor, details)
-    values
-      (${requestId}, 'received', 'customer', ${payload}),
-      (${requestId}, 'queued', 'system', ${{ surface: 'vacation-app', turnTag }})
-  `;
-  const jobRows = await db`
-    insert into worker_jobs (request_id, trip_id, job_type, input)
-    values (${requestId}, ${tripId}, ${queuedJobType}, ${{
-      customerId: transcriptOwnerId,
-      tripId,
-      requestId,
-      source: 'vacation-app',
-      requestType: queuedJobType,
-      requestText,
-      payload,
-      intakeEvent: jobFields.intakeEvent,
-      wantedThings: jobFields.wantedThings,
-      roster: jobFields.roster,
-      rosterError: jobFields.rosterError,
-      destination: jobFields.destination,
-      hasDates: jobFields.hasDates,
-      title: jobFields.title,
-      titleError: jobFields.titleError,
-      intakeError: jobFields.intakeError,
-    }})
-    returning id
-  `;
+}
 
-  const inTurnSearch = await runVacationAppInTurnSearch({
-    db,
-    tripId,
-    requestId,
-    customerTurn: requestText,
-    tripDestination: cleanText(trip?.destination || '', 180),
-    payload,
-    customerLive,
-    turnId: turnRows[0].id,
-    env: process.env,
-    publishShare: publishIntakeShare,
-    workerJobId: jobRows[0].id,
-    workerJobContext: placeSearchTurn ? {
-      customerId: transcriptOwnerId,
-      tripId,
-      requestId,
-      queuedJobType,
-      requestText,
-      payload,
-      jobFields,
-    } : null,
+async function queueVacationAppTurn(db, session, trip, body) {
+  if (trip) await ensureOnboardingOpener(db, session, trip);
+  // insert into transcript_turns
+  const requestText = cleanText(body.text || body.message, 12000);
+  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(requestText, process.env, classifyTripIntake);
+  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
+    requestText,
+    classification,
     placeSearchTurn,
     webResearchTurn,
-  });
-  if (!inTurnSearch.ok) {
-    const failedLatency = Date.now() - started;
-    return {
-      requestId,
-      jobId: jobRows[0].id,
-      receivedAt: requestRows[0].received_at,
-      queuedAt: requestRows[0].queued_at,
-      turnTag,
-      modality,
-      turnIndex: customerTurnIndex,
-      latencyMs: failedLatency,
-      sessionE2eMs: sessionE2eMs(),
-      jev: customerLive.jev,
-      reply: null,
-      intakeEvent: jobFields.intakeEvent,
-      wantedThings: jobFields.wantedThings,
-      roster: jobFields.roster,
-      rosterError: jobFields.rosterError,
-      destination: jobFields.destination,
-      hasDates: jobFields.hasDates,
-      title: jobFields.title,
-      titleError: jobFields.titleError,
-      intakeError: jobFields.intakeError,
-      ok: false,
-      status: inTurnSearch.status,
-      error: inTurnSearch.error,
-      placeSearch: inTurnSearch.placeSearch,
-      webSearch: inTurnSearch.webSearch,
-    };
-  }
-  const inTurnProviderResults = inTurnSearch.inTurnProviderResults;
-  const enforceInTurnSearch = inTurnSearch.enforceInTurnSearch;
-
-  let produced;
-  try {
-    produced = await produceLiveAppReply({
-      customerTurn: requestText,
-      session: { ...session, trip_id: tripId },
-      priorTurns,
-      tripTitle: trip?.title || '',
-      placeResults: inTurnProviderResults,
-      placeSearchTurn: enforceInTurnSearch,
-      webResearchTurn: inTurnSearch.webResearchTurn,
-      env: process.env,
-      seatDollars: configuredSeatDollars(process.env),
-      intake: classification.ok === true && classification.intake === true,
-      wantedThings: intakeExtractedThings(placeSearchTurn, classification, webResearchTurn),
-      roster: Array.isArray(classification.roster) ? classification.roster : [],
-      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
-      extractedDestination: jobFields.destination,
-      extractedTitle: jobFields.title,
-      destinationError: jobFields.destinationError,
-      titleError: jobFields.titleError,
-    });
-  } catch (error) {
-    produced = {
-      reply: null,
-      rules: null,
-      jev: { jevRan: false, error: error?.message || 'live dispatcher failed' },
-      model: null,
-      reason: error?.message || 'live dispatcher failed',
-    };
-  }
-  customerLive.jev = jevStamp(produced.jev);
-  customerLive.rules = produced.rules
-    ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
-    : null;
-  payload.liveTranscript = customerLive;
-  await db`
-    update transcript_turns
-    set payload = ${payload}
-    where id = ${turnRows[0].id}
-  `;
-
-  const exchangeLatency = Date.now() - started;
-  const base = {
-    requestId,
-    jobId: jobRows[0].id,
-    receivedAt: requestRows[0].received_at,
-    queuedAt: requestRows[0].queued_at,
-    turnTag,
-    modality,
-    turnIndex: customerTurnIndex,
-    latencyMs: exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    jev: customerLive.jev,
-    reply: null,
-    intakeEvent: jobFields.intakeEvent,
-    wantedThings: jobFields.wantedThings,
-    roster: jobFields.roster,
-    rosterError: jobFields.rosterError,
-    destination: jobFields.destination,
-    hasDates: jobFields.hasDates,
-    title: jobFields.title,
-    titleError: jobFields.titleError,
-    intakeError: jobFields.intakeError,
-  };
-  const blockReplyIdCitation = (replyText) => blockVacationAppReplyIdCitation({
-    replyText,
-    tripId,
-    db,
-    turnId: turnRows[0].id,
-    payload,
-    customerLive,
-    base,
-    storeReplyFailure,
-  });
-  if (produced.status === 'interim' && produced.pending) {
-    const interimBlocked = await blockReplyIdCitation(produced.interimReply?.text || '');
-    if (interimBlocked) return interimBlocked;
-    const pending = {
-      ...produced.pending,
-      customerTurnIndex,
-      requestId,
-      speakerName,
-      collaborator: Boolean(seat),
-      tripId,
-      sessionStartedMs,
-      wallStarted: started,
-    };
-    await db`
-      update onboarding_sessions
-      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ pendingRewrite: pending }},
-        updated_at = now()
-      where id = ${session.id}
-    `;
-    return {
-      ...base,
-      ok: true,
-      status: 'interim',
-      interimReply: produced.interimReply,
-      reply: produced.interimReply?.text || '',
-      error: null,
-    };
-  }
-  if (!produced.reply) {
-    const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
-    await storeReplyFailure(db, turnRows[0].id, payload);
-    return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
-  }
-
-  const citationBlocked = await blockReplyIdCitation(produced.reply);
-  if (citationBlocked) return citationBlocked;
-
-  return persistVacationAppOutboundReply({
-    db,
-    transcriptOwnerId,
-    tripId,
-    requestId,
-    jobId: jobRows[0].id,
-    produced,
-    base,
-    exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    customerTurnIndex,
-    speakerName,
-    seat,
-    classification,
-    jobFields,
-    firstIntake,
-    requestText,
-    intakeThings: intakeExtractedThings(placeSearchTurn, classification),
-    recordCustomerThingNotes,
-    publishIntakeShare,
-    vacationAppTripSummary,
   });
 }
 
@@ -1051,17 +698,38 @@ async function handleVacationApp(req, res, db, url) {
       const party = await recordDialogParty(db, session.trip_id, body.party);
       return sendJson(res, 200, { ok: true, party });
     }
-    const vacations = await loadVacationAppTrips(db, session);
+    let vacations = await loadVacationAppTrips(db, session);
+    const eula = await vacationAppEula(session, process.env);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
-    const selected = vacations.find((trip) => trip.id === requestedTripId)
+    let selected = vacations.find((trip) => trip.id === requestedTripId)
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
-    if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
-    const eula = await vacationAppEula(session, process.env);
+    if (!selected) {
+      if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+      const created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
+      if (!created.ok) {
+        return sendJson(res, created.statusCode || 500, {
+          ok: false,
+          error: created.error,
+          code: created.code || 'vacation_app_chat_failed',
+        });
+      }
+      if (created.action === 'created' || created.action === 'existing') {
+        vacations = created.vacations;
+        selected = created.selected;
+      }
+    }
     if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
       if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
+      if (!selected?.id) {
+        return sendJson(res, 409, {
+          ok: false,
+          error: 'No vacation is available for this session yet.',
+          code: 'vacation_app_trip_missing',
+        });
+      }
       const event = collaboratorSeatJoinEvent(seat);
       const prior = await loadVacationAppTurns(db, session, selected.id);
       if (prior.some((turn) => turn.speaker === 'system' && turn.payload?.event === 'collaborator_seat_join')) {
@@ -1079,7 +747,8 @@ async function handleVacationApp(req, res, db, url) {
       return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
     const queued = await queueVacationAppTurn(db, session, selected, body);
-    return sendJson(res, queued.ok ? 201 : 502, {
+    const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
+    return sendJson(res, postStatus, {
       trip: selected,
       ...queued,
     });
@@ -1092,6 +761,22 @@ function isStagingHost(req) {
   const host = String(req.headers.host || '').toLowerCase();
   return host.includes('vacation-staging.timesyncher.com')
     || host.includes('timesyncher-vacation-staging');
+}
+
+export async function attachIntakeItineraryFromReply(db, tripId, requestText, options, intakeText, extracted) {
+  return recordCustomerThingNotes(db, tripId, requestText, options, intakeText, extracted);
+}
+
+export async function writeIntakeItineraryFromChat(db, tripId, intakeText, extracted, options = {}) {
+  return ensureIntakeItinerary(db, tripId, intakeText, extracted, options);
+}
+
+export async function publishTripIntakeShare(db, tripId) {
+  return publishIntakeShare(db, tripId);
+}
+
+export async function queueVacationAppTurnForTests(db, session, trip, body) {
+  return queueVacationAppTurn(db, session, trip, body);
 }
 
 export default async function handler(req, res) {
