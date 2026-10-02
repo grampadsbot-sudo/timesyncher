@@ -89,6 +89,7 @@ scripts/test_owner_welcome_on_landing.mjs
 scripts/test_reply_plan_entitlement.mjs
 scripts/test_reply_id_citation_weather.mjs
 scripts/test_reply_action_claim.mjs
+scripts/test_turn_invite_reply_facts_claim.mjs
 scripts/test_assign_dates_weekday.mjs
 scripts/test_shared_trip_stated_lodging_only.mjs
 scripts/test_intake_stated_lodging_customer.mjs
