@@ -1505,7 +1505,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     rosterError: rosterError || null,
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
-  let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
+  let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart, savedEnd }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   tripContext.purchased_plan = String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim();
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);

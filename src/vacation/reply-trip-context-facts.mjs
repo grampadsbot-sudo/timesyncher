@@ -7,14 +7,38 @@ import {
   pendingInviteReplyFacts,
 } from './roster-pending-invite-reply-facts.mjs';
 
+function isoDay(value) {
+  const match = String(value ?? '').match(/\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : '';
+}
+
+export function applySavedJobDatesToReplyFacts(facts, { savedStart = '', savedEnd = '' } = {}) {
+  if (!facts || typeof facts !== 'object') return facts;
+  const start = isoDay(savedStart);
+  const end = isoDay(savedEnd);
+  if (!start && !end) return facts;
+  const out = { ...facts };
+  if (start) out.start = start;
+  if (end) out.end = end;
+  const when = [start, end].filter(Boolean).join(' to ');
+  if (when) out.when = when;
+  if (when && !String(out.dates || '').trim()) {
+    out.dates = `Saved trip dates: ${when}.`;
+  }
+  return out;
+}
+
 export async function enrichDraftingTripContext(tripContext, {
   things = [],
   session = null,
   env = process.env,
   turnActionResults = null,
   placeSearchReplyFacts = null,
+  savedStart = '',
+  savedEnd = '',
 } = {}) {
-  let ctx = applyTurnInviteReplyFacts(tripContext, turnActionResults);
+  let ctx = applySavedJobDatesToReplyFacts(tripContext, { savedStart, savedEnd });
+  ctx = applyTurnInviteReplyFacts(ctx, turnActionResults);
   ctx = applyPlaceSearchReplyFacts(ctx, placeSearchReplyFacts);
   if (!ctx.lodging) {
     const label = statedLodgingLabelFromThings(things);

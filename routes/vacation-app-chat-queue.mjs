@@ -284,7 +284,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         intakeError: jobFields.intakeError,
         ok: false,
         status: inTurnSearch.status,
-        error: placeSearchClientError(inTurnSearch.placeSearch, inTurnSearch.error),
+        error: inTurnSearch.status === 'turn_classifier_failed' ? String(inTurnSearch.error || 'classifier down') : placeSearchClientError(inTurnSearch.placeSearch, inTurnSearch.error),
         placeSearch: inTurnSearch.placeSearch,
         webSearch: inTurnSearch.webSearch,
       };

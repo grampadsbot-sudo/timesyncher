@@ -56,7 +56,6 @@ assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /unlimited/i);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /Never ask a second question/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
-assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /where they are going and for how long/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /voice note/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /second person/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Do not offer to add collaborators/);

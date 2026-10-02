@@ -103,7 +103,6 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
 export const FIRST_INTAKE_GAP_INSTRUCTION = [
   'You are writing the first reply after a short or vague intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Start the trip draft anyway, as a short draft.',
-  'Then ask two or three gap questions, including where they are going and for how long, and who is coming.',
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
   'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',
