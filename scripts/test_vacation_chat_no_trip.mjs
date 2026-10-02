@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import {
+  classifyVacationChatIntake,
   createVacationFromChatMessage,
   intakeTripReadyForCreation,
 } from '../src/vacation/vacation-from-chat-intake.mjs';
+import { NO_TRIP_STARTER_INSTRUCTION, noTripReplyBlock } from '../src/vacation/first-intake-reply.mjs';
 import {
   queueVacationAppTurnForTests,
   useVacationAppDatabase,
@@ -168,6 +170,9 @@ function intakeFetchMock({ title, things, destination, hasDates, intake = true }
 
 useVacationAppDatabase(db);
 
+assert.ok(NO_TRIP_STARTER_INSTRUCTION.includes('where'));
+assert.equal(noTripReplyBlock('See /shared/foo', () => '', { shape: 'no-trip' }), 'no_trip_reply_shared_link');
+
 try {
   globalThis.fetch = intakeFetchMock({ title: '', things: [], destination: '', hasDates: false, intake: false });
 
@@ -210,6 +215,11 @@ try {
     }),
     true,
   );
+  const classified = await classifyVacationChatIntake(
+    'We are planning Harbor Ridge Week in Neutral Bay from October 7 to October 9, 2026.',
+    process.env,
+  );
+  assert.equal(classified.classification.ok, true);
 
   globalThis.fetch = intakeFetchMock({
     title: 'Harbor Ridge Week',

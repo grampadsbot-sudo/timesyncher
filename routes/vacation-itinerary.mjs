@@ -27,6 +27,8 @@ import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/we
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { produceNoTripStarterReply } from '../src/vacation/first-intake-reply.mjs';
+import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.mjs';
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
@@ -656,25 +658,37 @@ async function queueVacationAppTurn(db, session, trip, body) {
 
   let produced;
   try {
-    produced = await produceLiveAppReply({
-      customerTurn: requestText,
-      session: { ...session, trip_id: tripId },
-      priorTurns,
-      tripTitle: trip?.title || '',
-      placeResults,
-      placeSearchTurn,
-      env: process.env,
-      seatDollars: configuredSeatDollars(process.env),
-      intake: classification.ok === true && classification.intake === true,
-      wantedThings: intakeExtractedThings(placeSearchTurn, classification),
-      roster: Array.isArray(classification.roster) ? classification.roster : [],
-      rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
-      extractedDestination: jobFields.destination,
-      extractedTitle: jobFields.title,
-      destinationError: jobFields.destinationError,
-      titleError: jobFields.titleError,
-      loadOwnerPlan: async (opts) => loadSessionOwnerReplyPlan({ ...opts, db }),
-    });
+    const loadOwnerPlan = async (opts) => loadSessionOwnerReplyPlan({ ...opts, db });
+    if (!tripId) {
+      const rules = await loadVacationAppReplyRules(process.env);
+      produced = await produceNoTripStarterReply({
+        customerTurn: requestText,
+        session,
+        env: process.env,
+        rules,
+        loadOwnerPlan,
+      });
+    } else {
+      produced = await produceLiveAppReply({
+        customerTurn: requestText,
+        session: { ...session, trip_id: tripId },
+        priorTurns,
+        tripTitle: trip?.title || '',
+        placeResults,
+        placeSearchTurn,
+        env: process.env,
+        seatDollars: configuredSeatDollars(process.env),
+        intake: classification.ok === true && classification.intake === true,
+        wantedThings: intakeExtractedThings(placeSearchTurn, classification),
+        roster: Array.isArray(classification.roster) ? classification.roster : [],
+        rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),
+        extractedDestination: jobFields.destination,
+        extractedTitle: jobFields.title,
+        destinationError: jobFields.destinationError,
+        titleError: jobFields.titleError,
+        loadOwnerPlan,
+      });
+    }
   } catch (error) {
     produced = {
       reply: null,

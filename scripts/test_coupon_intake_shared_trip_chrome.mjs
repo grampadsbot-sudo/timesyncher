@@ -11,6 +11,7 @@ import { createVacationFromChatMessage } from '../src/vacation/vacation-from-cha
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 import {
+  attachIntakeItineraryFromReply,
   publishTripIntakeShare,
   writeIntakeItineraryFromChat,
 } from '../routes/vacation-itinerary.mjs';
@@ -293,6 +294,8 @@ const originalFetch = globalThis.fetch;
 let browser = null;
 let app = null;
 
+assert.equal(typeof attachIntakeItineraryFromReply, 'function');
+
 try {
   const onboarding = await buildOnboardingFromCoupon({
     db,
@@ -454,11 +457,15 @@ try {
 
   console.log('coupon intake shared trip chrome passed');
 } finally {
-  if (browser) await browser.close().catch(() => {});
-  if (app) await app.close().catch(() => {});
+  if (browser) await browser.close();
+  if (app) await app.close();
   useSharedTripDatabase(null);
   globalThis.fetch = originalFetch;
-  await rm(storeDir, { recursive: true, force: true }).catch(() => {});
+  try {
+    await rm(storeDir, { recursive: true, force: true });
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
   for (const [key, value] of Object.entries(savedEnv)) {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
