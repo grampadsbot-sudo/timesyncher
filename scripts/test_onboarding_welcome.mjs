@@ -128,6 +128,11 @@ try {
       stored.push(payload);
       return [{ id: `turn-${stored.length}` }];
     }
+    if (/from transcript_turns/i.test(query) && /welcomeAudience/i.test(query)) {
+      const audience = values.find((value) => value === 'owner' || value === 'collaborator');
+      const rows = stored.filter((payload) => payload?.welcomeAudience === audience);
+      return rows.length ? [{ id: 'welcome-turn-existing' }] : [];
+    }
     if (/from customers/i.test(query)) {
       return [{ first_name: ownerFirstName, display_name: ownerFirstName }];
     }

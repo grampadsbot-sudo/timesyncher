@@ -61,6 +61,11 @@ function createWelcomeDb(state) {
       return [{ id: state.transcriptTurns.at(-1).id }];
     }
     if (/from customers/i.test(text)) return [{ first_name: firstName, display_name: firstName }];
+    if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) {
+      const audience = values.find((value) => value === 'owner' || value === 'collaborator');
+      const rows = state.welcomeTurns.filter((payload) => payload?.welcomeAudience === audience);
+      return rows.length ? [{ id: 'welcome-turn-existing' }] : [];
+    }
     if (/from transcript_turns/i.test(text) && /count\(\*\)/i.test(text)) {
       const welcomeCount = state.welcomeTurns.length;
       return [{ n: welcomeCount + state.transcriptTurns.length, started_at: new Date().toISOString() }];
