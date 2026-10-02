@@ -19,6 +19,13 @@ function normalizeProviderAttempts(attempts = []) {
   }).filter(Boolean);
 }
 
+export function placeSearchStatusFromProviderAttempts(providerAttempts = [], things = []) {
+  if (Array.isArray(things) && things.length > 0) return 'ok';
+  const providers = normalizeProviderAttempts(providerAttempts);
+  const anyResults = providers.some((row) => row.status === 'ok' && Number(row.resultCount) > 0);
+  return anyResults ? 'ok' : 'failed';
+}
+
 export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);

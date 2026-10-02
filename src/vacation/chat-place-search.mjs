@@ -1,7 +1,7 @@
 import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
-import { placeSearchTelemetry, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
+import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { lodgingAnchorFromThing } from './lodging-anchor.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
@@ -99,6 +99,22 @@ async function loadTripLodgingThing(db, tripId) {
   return rows[0] || null;
 }
 
+function finishCustomerChatPlaceSearch({ places = [], search = {}, errorMessage = null } = {}) {
+  const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
+  const normalizedPlaces = Array.isArray(places) ? places : [];
+  const things = normalizedPlaces.map((place) => placeToTripThing(place));
+  const status = placeSearchStatusFromProviderAttempts(providerAttempts, things);
+  if (status === 'failed') {
+    const error = String(
+      errorMessage || `Place search returned no results for ${search?.destination || 'the requested area'}.`,
+    ).trim();
+    console.error(`customer chat place search failed: ${error}`);
+    return { status: 'failed', error, placeResults: [], things: [], search };
+  }
+  const placeResults = placesToChatResultRows(normalizedPlaces);
+  return { status: 'ok', error: null, places: normalizedPlaces, things, placeResults, search };
+}
+
 export async function runCustomerChatPlaceSearch({
   placeSearchTurn = false,
   classification = null,
@@ -134,18 +150,18 @@ export async function runCustomerChatPlaceSearch({
     });
     const places = Array.isArray(search?.places) ? search.places : [];
     if (!places.length) {
-      const error = `Place search returned no results for ${plan.destination}.`;
-      console.error(`customer chat place search failed: ${error}`);
-      return { status: 'failed', error, placeResults: [], things: [], search };
+      return finishCustomerChatPlaceSearch({
+        places: [],
+        search,
+        errorMessage: `Place search returned no results for ${plan.destination}.`,
+      });
     }
-    const things = places.map((place) => placeToTripThing(place));
-    const placeResults = placesToChatResultRows(places);
-    return { status: 'ok', error: null, places, things, placeResults, search };
+    return finishCustomerChatPlaceSearch({ places, search });
   } catch (error) {
     const message = String(error?.message || error || 'place search failed').trim();
     console.error(`customer chat place search failed: ${message}`);
     const search = { providers: Array.isArray(error?.providers) ? error.providers : [] };
-    return { status: 'failed', error: message, placeResults: [], things: [], search };
+    return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });
   }
 }
 
@@ -190,7 +206,8 @@ export async function applyChatPlaceSearchForVacationTurn({
     turnKind: classification?.turnKind || 'place_search',
     classifierModel: classification?.routerModel || null,
   };
-  if (chatSearch.status === 'failed') {
+  const outcomeStatus = placeSearchStatusFromProviderAttempts(providerAttempts, chatSearch.things);
+  if (outcomeStatus === 'failed') {
     const placeSearch = placeSearchTelemetry({
       status: 'failed',
       error: chatSearch.error,

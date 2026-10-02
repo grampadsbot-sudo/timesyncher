@@ -96,8 +96,19 @@ export async function runPlaceProviderPass({
     });
   }
 
-  const places = await attachRelevance(mergePlaces([prior, osm, brave]), fetchImpl, env);
-  const liveCount = places.filter((place) => place.source !== 'prior_db').length;
+  const merged = mergePlaces([prior, osm, brave]);
+  let places = await attachRelevance(merged, fetchImpl, env);
+  let liveCount = places.filter((place) => place.source !== 'prior_db').length;
+  const anyProviderResults = providerLog.some(
+    (row) => row.status === 'ok' && Number(row.resultCount) > 0,
+  );
+  if (!liveCount && anyProviderResults) {
+    const fallback = merged.filter((place) => place.source !== 'prior_db');
+    if (fallback.length) {
+      places = fallback;
+      liveCount = fallback.length;
+    }
+  }
   if (!liveCount) {
     const message = places.length
       ? `Saved places are not a sole source. ${providerFailureMessage(providerLog)}`

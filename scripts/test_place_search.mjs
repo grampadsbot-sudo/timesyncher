@@ -302,11 +302,8 @@ const fromQuery = await readPriorPlaces(CENTER, {
   ],
 });
 assert.deepEqual(fromQuery.map((place) => place.title), ['Harbor Cafe']);
-
 const inserts = [];
-const db = async (strings, ...values) => {
-  inserts.push({ sql: strings.join(' '), values });
-};
+const db = async (strings, ...values) => { inserts.push({ sql: strings.join(' '), values }); return [{ id: 'trip-thing-1' }]; };
 const written = await insertTripThing(db, {
   tripId: 'trip-1',
   requestId: 'request-1',
