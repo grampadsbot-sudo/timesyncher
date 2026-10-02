@@ -703,12 +703,13 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   };
   for (const thing of planned) {
     const scheduled = scheduleChatThing(thing, tripDatesRow);
+    const metadata = chatSaveMetadata(thing, scheduled);
     await db`
       insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
       values (
         ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
         'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb,
-        ${chatSaveMetadata(thing, scheduled)},
+        ${{ ...metadata, source: metadata.source }},
         ${scheduled.starts_at}
       )
     `;
@@ -802,18 +803,19 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
       if (current.some((item) => item.title === thing.title)) continue;
+      const metadata = chatSaveMetadata(thing, {
+        whenLabel: thing.whenLabel,
+        customerWhen: thing.customerWhen,
+        askWhichDay: thing.askWhichDay === true,
+        candidateDates: thing.candidateDates,
+        starts_at: thing.starts_at,
+      });
       await db`
         insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
         values (
           ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
           'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb,
-          ${chatSaveMetadata(thing, {
-            whenLabel: thing.whenLabel,
-            customerWhen: thing.customerWhen,
-            askWhichDay: thing.askWhichDay === true,
-            candidateDates: thing.candidateDates,
-            starts_at: thing.starts_at,
-          })},
+          ${{ ...metadata, source: metadata.source }},
           ${thing.starts_at || null}
         )
       `;
