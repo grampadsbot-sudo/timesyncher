@@ -307,12 +307,11 @@
 
     couponCode.addEventListener('input', updateSummary);
     loadOwnerContact();
-    fetch('/api/checkout-config')
+    fetch('/api/checkout-products')
       .then(async (response) => {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
-          const missing = data.checkout?.missing?.[0];
-          const raw = missing ? `checkout config missing: ${missing}` : (data.error || 'checkout config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
+          const raw = data.error || 'checkout products unavailable';
           console.error(raw);
           throw new Error(PRICING_UNAVAILABLE);
         }

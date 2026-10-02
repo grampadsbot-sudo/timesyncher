@@ -221,8 +221,14 @@ const notFoundUrls = [];
 try {
   const page = await browser.newPage();
   await page.setRequestInterception(true);
+  const blockedApi = [];
   page.on('request', (request) => {
     const url = request.url();
+    if (url.includes('/api/auth/app-config') || url.includes('/auth/app-config')) {
+      blockedApi.push(url);
+      request.abort('blockedbyclient');
+      return;
+    }
     if (url.startsWith(app.origin) || url.startsWith('data:') || url.startsWith('blob:')) {
       request.continue();
       return;
@@ -257,6 +263,7 @@ try {
     return !text && !visible;
   });
   assert.equal(blankRoot, false, 'shared trip SPA root must render content');
+  assert.equal(blockedApi.length, 0, `app-config requests: ${blockedApi.join(', ')}`);
   assert.equal(consoleErrors.length, 0, `console errors: ${consoleErrors.join(' | ')} (404 urls: ${notFoundUrls.join(', ')})`);
   assert.equal(pageErrors.length, 0, `page errors: ${pageErrors.join(' | ')}`);
 } finally {

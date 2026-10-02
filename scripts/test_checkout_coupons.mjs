@@ -37,6 +37,8 @@ assert(!addOnsCheckoutHtml.includes('<strong>$49</strong>'));
 assert(!addOnsCheckoutHtml.includes('<strong>$73</strong>'));
 assert(!addOnsCheckoutHtml.includes('Up to 3 active Telegram collaborators'));
 assert(ownerMediaCheckoutHtml.includes('Owner media add-ons'));
+assert(ownerMediaCheckoutHtml.includes("fetch('/api/checkout-products')"));
+assert.doesNotMatch(ownerMediaCheckoutHtml, /loadOwnerContact\(\)[\s\S]{0,400}fetch\('\/api\/checkout-config'\)/);
 assert(ownerMediaCheckoutHtml.includes('This checkout is separate from collaborator access.'));
 assert(ownerMediaCheckoutHtml.includes("params.get('session') || params.get('token')"));
 assert(ownerMediaCheckoutHtml.includes('/api/onboarding-session?session='));

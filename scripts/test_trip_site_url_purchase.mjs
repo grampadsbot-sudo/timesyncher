@@ -135,14 +135,15 @@ try {
         first_name: 'Ada',
         last_name: 'Lee',
         plan: 'single',
-        trip_title: 'Sample trip',
       },
     },
     env,
   });
   assertNoPurchaseSlug(paidDb.calls);
+  assert.equal(paid.tripId, null);
   assert.equal(paid.publicUrl, '');
   assert.equal(paid.publicSlug, '');
+  assert.equal(paidDb.calls.some((call) => /insert into trips/i.test(call.text)), false);
 
   const couponDb = mockDb();
   const coupon = await buildOnboardingFromCoupon({
@@ -150,11 +151,13 @@ try {
     contact: { email: 'ada@example.com', firstName: 'Ada', lastName: 'Lee' },
     plan: 'single',
     amountCents: 3700,
-    metadata: { trip_title: 'Sample trip' },
+    metadata: { source: 'coupon_checkout' },
     env,
   });
   assertNoPurchaseSlug(couponDb.calls);
+  assert.equal(coupon.tripId, null);
   assert.equal(coupon.publicSlug, '');
+  assert.equal(couponDb.calls.some((call) => /insert into trips/i.test(call.text)), false);
 
   const collabDb = mockDb();
   await joinCollaboratorAppSession(collabDb, {
