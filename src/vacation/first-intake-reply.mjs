@@ -3,6 +3,7 @@ import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
+import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 
 export { firstIntakeReplyLeak, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
@@ -227,6 +228,7 @@ export function firstIntakeReplyFacts({
   ownerPlan = null,
   tripId = '',
   customerName = '',
+  session = null,
   ids = [],
   today = '',
 } = {}) {
@@ -318,6 +320,7 @@ export function firstIntakeReplyFacts({
   facts.gaps = gaps;
   if (!planReply) return scrubFacts(facts, hidden);
   if (collaborators.length) facts.collaborators = collaborators;
+  if (isCollaboratorAppSeat(session)) return scrubFacts(facts, hidden);
   if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', tripId);
   const purchasedPlan = String(ownerPlan.checkout_plan || '').trim();
   const plan = {
@@ -394,6 +397,7 @@ export async function produceFirstIntakeReply({
     ownerPlan,
     tripId,
     customerName: intakeCustomerName(session),
+    session,
     ids,
   };
   const facts = applyTurnInviteReplyFacts(firstIntakeReplyFacts(factInput), turnActionResults);

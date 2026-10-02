@@ -21,6 +21,10 @@ export function seatFromSession(session) {
   return seat;
 }
 
+export function isCollaboratorAppSeat(session) {
+  return Boolean(seatFromSession(session));
+}
+
 export function transcriptCustomerId(session) {
   return seatFromSession(session)?.ownerCustomerId || session?.customer_id || null;
 }
@@ -198,5 +202,52 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
     vacationAppUrl: vacationAppLink(session.token, env),
     displayName,
     payer: seat.payer,
+  };
+}
+
+export function liveReplyCommerceGate({
+  session,
+  suppliedSeatDollars,
+  customerTurn,
+  intent,
+  mergedTrip,
+  upsellMode,
+  asksPriceFn,
+  payerLineFn,
+}) {
+  if (!isCollaboratorAppSeat(session)) {
+    const seatDollars = Number(suppliedSeatDollars);
+    const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
+    const payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
+      .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
+      .filter((row) => row.name && row.payer);
+    const extractedSeats = Array.isArray(intent?.seats) && intent.seats.some((seat) => seat?.name && seat?.payer)
+      ? intent.seats
+      : payerRows;
+    const planLine = asksPriceFn(customerTurn, intent) && pricedSeat
+      ? payerLineFn(customerTurn, pricedSeat, extractedSeats)
+      : '';
+    return {
+      upsell: upsellMode,
+      seatDollars,
+      pricedSeat,
+      payerRows,
+      planLine,
+      planTable: planLine ? { dollars_per_collaborator_seat: pricedSeat, payer_line: planLine } : null,
+      purchasedPlan: String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim(),
+      planOwned: mergedTrip.planOwned === true,
+      collaboratorSeat: false,
+    };
+  }
+  return {
+    upsell: 'forbidden',
+    seatDollars: null,
+    pricedSeat: null,
+    payerRows: [],
+    planLine: '',
+    planTable: null,
+    purchasedPlan: '',
+    planOwned: false,
+    collaboratorSeat: true,
   };
 }

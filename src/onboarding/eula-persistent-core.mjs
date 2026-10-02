@@ -154,3 +154,12 @@ export function loadDefaultEulaText(env = process.env) {
   const collaboratorName = eulaCollaboratorPlanName(env);
   return String(text).replace(/\{\{TIMESYNCHER_COLLABORATOR_NAME\}\}/g, collaboratorName);
 }
+
+const COLLABORATOR_EULA_SECTION_11 = `## 11. Collaborator access
+
+You are joining a vacation through an owner invitation. You are not purchasing a TimeSyncher plan in this flow. TimeSyncher planning help here is advisory-only.`;
+
+export function loadCollaboratorAppSeatEulaText(env = process.env) {
+  const ownerTerms = loadDefaultEulaText(env);
+  return String(ownerTerms).replace(/\n## 11\. Checkout plans[\s\S]*$/m, `\n${COLLABORATOR_EULA_SECTION_11}\n`);
+}

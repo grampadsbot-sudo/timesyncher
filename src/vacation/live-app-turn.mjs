@@ -20,6 +20,7 @@ import {
   placeResultExtra,
   unsourcedAgainstInTurnResults,
 } from './provider-result-context.mjs';
+import { liveReplyCommerceGate } from './collaborator-app-seat.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -1492,9 +1493,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     intent = { ...emptyIntent(), error: String(error?.message || error) };
   }
   if (turnActionResults && typeof turnActionResults === 'object') intent.turnActionResults = turnActionResults;
-  const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
-  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env);
+  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env, session);
   const inTurnProviderResults = placeSearchTurn === true ? (Array.isArray(placeResults) ? placeResults : []) : [];
   const enforceInTurnPlaces = (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0;
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
@@ -1506,29 +1506,30 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
   let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart, savedEnd }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
-  tripContext.purchased_plan = String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim();
+  const upsellMode = upsellModeForTurn(intakeTurn, history, intent);
+  const commerce = liveReplyCommerceGate({
+    session,
+    suppliedSeatDollars,
+    customerTurn,
+    intent,
+    mergedTrip,
+    upsellMode,
+    asksPriceFn: customerAsksPrice,
+    payerLineFn: payerLineFromDollars,
+  });
+  const upsell = commerce.upsell;
+  tripContext.purchased_plan = commerce.purchasedPlan;
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
   tripFacts.customerTurn = String(customerTurn || '');
-  const seatDollars = Number(suppliedSeatDollars);
-  const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
-  tripFacts.seatDollars = pricedSeat;
-  tripFacts.payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
-    .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
-    .filter((row) => row.name && row.payer);
-  const extractedSeats = Array.isArray(intent?.seats) && intent.seats.some((seat) => seat?.name && seat?.payer)
-    ? intent.seats
-    : tripFacts.payerRows;
-  const planLine = customerAsksPrice(customerTurn, intent) && pricedSeat
-    ? payerLineFromDollars(customerTurn, pricedSeat, extractedSeats)
-    : '';
-  const planTable = planLine
-    ? {
-      dollars_per_collaborator_seat: pricedSeat,
-      payer_line: planLine,
-    }
-    : null;
+  if (commerce.collaboratorSeat) tripFacts.collaboratorSeat = true;
+  tripFacts.seatDollars = commerce.pricedSeat;
+  tripFacts.payerRows = commerce.payerRows;
+  const planLine = commerce.planLine;
+  const planTable = commerce.planTable;
+  const seatDollars = commerce.seatDollars;
+  const pricedSeat = commerce.pricedSeat;
   const jevStarted = Date.now();
   let jev = null;
   for (let jevAttempt = 0; jevAttempt < 2 && !jev?.jevRan; jevAttempt += 1) {
@@ -1594,7 +1595,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     planLine,
     seatDollars,
     seat,
-    planOwned: mergedTrip.planOwned === true,
+    planOwned: commerce.planOwned,
     systemExtra: draftExtra,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
@@ -1604,9 +1605,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (rewriteBreaksUpsell(reply, upsell, customerTurn, intent)) {
-    const nudge = customerAsksPrice(customerTurn, intent)
-      ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.`
-      : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
+    const nudge = commerce.collaboratorSeat ? `${customerTurn}\n\nAnswer the travel question only. Stay on itinerary and dates; omit billing and product access topics.` : customerAsksPrice(customerTurn, intent) ? `${customerTurn}\n\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.` : `${customerTurn}\n\nDo not welcome collaborators. Do not mention price or access. Answer the day only.`;
     model = await callTieredModel(modelArgs(nudge, 'forbidden'));
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
@@ -1802,6 +1801,7 @@ function interimFacts(customerTurn, destination) {
 }
 
 export function upsellFactsForTurn(customerTurn, facts = {}, intake = false, intent = null) {
+  if (facts.collaboratorSeat === true) return null;
   const marked = intake === true || turnMarkedIntake(customerTurn);
   const ask = customerTurnText(customerTurn);
   const price = customerAsksPrice(ask, intent);
