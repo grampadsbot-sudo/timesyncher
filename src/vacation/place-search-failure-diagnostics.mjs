@@ -22,6 +22,7 @@ export function buildPlaceSearchFailureDiagnostics({
   relevanceRejections = [],
   survivingPriorDbTitles = [],
   dedupeMerges = [],
+  providerErrors = [],
 } = {}) {
   const lat = finite(center?.lat);
   const lng = finite(center?.lng);
@@ -44,6 +45,12 @@ export function buildPlaceSearchFailureDiagnostics({
   if (Number.isFinite(rejected) && rejected > 0) diagnostics.anchorRadiusRejected = rejected;
   const merges = (Array.isArray(dedupeMerges) ? dedupeMerges : []).slice(0, 20);
   if (merges.length) diagnostics.dedupeMerges = merges;
+  const errors = (Array.isArray(providerErrors) ? providerErrors : []).slice(0, 10).map((row) => ({
+    provider: String(row?.provider || '').trim(),
+    ...(Number.isFinite(Number(row?.httpStatus)) ? { httpStatus: Number(row.httpStatus) } : {}),
+    message: String(row?.message || row?.reason || '').trim(),
+  })).filter((row) => row.provider && row.message);
+  if (errors.length) diagnostics.providerErrors = errors;
   return diagnostics;
 }
 
@@ -60,6 +67,7 @@ export function placeSearchDiagnosticsFromError(error) {
     'anchorRadiusRejected',
     'judgeHttpStatus',
     'judgeBodySnippet',
+    'providerErrors',
   ]) {
     if (error[key] !== undefined) picked[key] = error[key];
   }

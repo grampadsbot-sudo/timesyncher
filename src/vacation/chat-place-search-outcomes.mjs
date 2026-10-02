@@ -16,12 +16,20 @@ export async function persistTurnPlaceSearchNoResults(db, turnId, {
   customerLive,
   providerAttempts = [],
   classifierMeta = {},
+  providerErrors = null,
+  judgeInput = null,
+  searchCenter = null,
+  anchor = null,
 } = {}) {
   const placeSearch = placeSearchTelemetry({
     status: 'no_results',
     error: null,
     things: [],
     providerAttempts,
+    providerErrors,
+    judgeInput,
+    searchCenter,
+    anchor,
     ...classifierMeta,
   });
   payload.placeSearch = placeSearch;

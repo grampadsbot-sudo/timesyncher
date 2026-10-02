@@ -553,6 +553,7 @@ export async function searchPlaces({
       anchor: pass.anchor,
       ...(Number(pass.anchorRadiusRejected) > 0 ? { anchorRadiusRejected: pass.anchorRadiusRejected } : {}),
       ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
+      ...(Array.isArray(pass.providerErrors) && pass.providerErrors.length ? { providerErrors: pass.providerErrors } : {}),
     };
     if (pass.status === 'no_results') {
       return {

@@ -354,10 +354,11 @@ async function runPlaceIntentRouteTests() {
     state.nominatimMode = 'fail';
     state.braveMode = 'ok';
     const findNearHotel = await postTurn('Find family-friendly taco spots near our hotel in Kaanapali');
-    assert.equal(findNearHotel.status, 502);
+    assert.equal(findNearHotel.status, 201);
+    assert.equal(findNearHotel.body.ok, true);
     assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
     const findPayload = state.turnPayloads.at(-1);
-    assert.equal(findPayload.placeSearch?.status, 'failed');
+    assert.equal(findPayload.placeSearch?.status, 'no_results');
     const findBrave = findPayload.placeSearch.providers.find((row) => row.provider === 'brave');
     assert.equal(findBrave.endpoint, 'web');
     assert.match(findBrave.query, /tacos near Kaanapali, Maui/);
@@ -456,7 +457,7 @@ console.log(JSON.stringify({
     'best_tacos_near_our_hotel_brave_lodging_anchor',
     'find_near_hotel_nominatim_fail_brave_web_not_places',
     'recommend_near_kaanapali_no_coords_brave_web_not_places',
-    'all_providers_fail_502_with_provider_telemetry',
+    'all_providers_empty_no_results_with_provider_telemetry',
     'events_question_uses_tavily_not_brave',
     'maui_landing_no_in_turn_search',
     'classifier_failure_loud_fail_no_provider_fetch',

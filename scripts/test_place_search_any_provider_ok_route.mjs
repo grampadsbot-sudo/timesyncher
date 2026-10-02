@@ -359,15 +359,36 @@ async function runAnyProviderOkRouteTests() {
     state.braveMode = 'empty';
     state.nominatimMode = 'fail';
     state.osmMode = 'fail';
-    const allFail = await postTurn('best tacos near our hotel');
+    const osmFailBraveEmpty = await postTurn('best tacos near our hotel');
+    assert.equal(osmFailBraveEmpty.status, 201, JSON.stringify(osmFailBraveEmpty.body));
+    assert.equal(osmFailBraveEmpty.body.ok, true);
+    const partialPayload = state.turnPayloads.at(-1);
+    assert.equal(partialPayload.placeSearch?.status, 'no_results');
+    assert.ok(partialPayload.placeSearch.providers.some((row) => row.provider === 'osm' && row.status === 'error'));
+    assert.ok(partialPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'empty'));
+    assert.ok(Array.isArray(partialPayload.placeSearch.providerErrors) && partialPayload.placeSearch.providerErrors.some((row) => row.provider === 'osm'));
+
+    state.braveMode = 'fail';
+    const liveProvidersFail = await postTurn('best tacos near our hotel');
+    assert.equal(liveProvidersFail.status, 201, JSON.stringify(liveProvidersFail.body));
+    assert.equal(liveProvidersFail.body.ok, true);
+    const liveFailPayload = state.turnPayloads.at(-1);
+    assert.equal(liveFailPayload.placeSearch?.status, 'no_results');
+    assert.ok(liveFailPayload.placeSearch.providers.some((row) => row.provider === 'osm' && row.status === 'error'));
+    assert.ok(liveFailPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'error'));
+    assert.ok(Array.isArray(liveFailPayload.placeSearch.providerErrors) && liveFailPayload.placeSearch.providerErrors.length >= 2);
+
+    state.lodgingCoords = false;
+    state.seededLodging = false;
+    state.braveMode = 'fail';
+    state.osmMode = 'fail';
+    state.nominatimMode = 'fail';
+    const allFail = await postTurn('best tacos near Kaanapali');
     assert.equal(allFail.status, 502);
     assert.equal(allFail.body.ok, false);
     assert.match(String(allFail.body.error || allFail.body.status || ''), /place_search_failed|Place search failed/i);
     const failPayload = state.turnPayloads.at(-1);
     assert.equal(failPayload.placeSearch?.status, 'failed');
-    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'nominatim' && (row.status === 'error' || row.status === 'skipped')));
-    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'osm' && (row.status === 'error' || row.status === 'skipped')));
-    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'brave' && (row.status === 'empty' || row.status === 'error')));
 
     return { ok: true };
   } finally {
@@ -391,7 +412,9 @@ console.log(JSON.stringify({
   tests: [
     'nominatim_osm_fail_brave_three_results_201',
     'relevance_rejects_all_brave_results_loud_fail',
-    'all_providers_fail_502_with_telemetry',
+    'osm_fail_brave_empty_no_results_with_provider_errors',
+    'osm_and_brave_error_prior_empty_no_results',
+    'only_brave_runs_and_errors_502',
   ],
   result,
 }));

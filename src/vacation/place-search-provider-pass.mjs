@@ -10,6 +10,50 @@ function providerRowIsHit(row = {}) {
   return String(row?.status || '').trim().toLowerCase() === 'ok';
 }
 
+function providerRowRan(row = {}) {
+  const status = String(row?.status || '').trim().toLowerCase();
+  return status !== 'skipped';
+}
+
+function providerRowAnswered(row = {}) {
+  const status = String(row?.status || '').trim().toLowerCase();
+  return status === 'ok' || status === 'empty';
+}
+
+function httpStatusFromReason(reason) {
+  const match = String(reason || '').match(/HTTP\s+(\d{3})/i);
+  return match ? Number(match[1]) : null;
+}
+
+function placeResultProviderRows(providerLog = []) {
+  return (Array.isArray(providerLog) ? providerLog : [])
+    .filter((row) => PLACE_RESULT_PROVIDERS.has(String(row?.provider || '').trim()));
+}
+
+function providerErrorsFromProviderLog(providerLog = []) {
+  return placeResultProviderRows(providerLog)
+    .filter((row) => providerRowIsError(row))
+    .map((row) => {
+      const httpStatus = Number.isFinite(Number(row?.httpStatus))
+        ? Number(row.httpStatus)
+        : httpStatusFromReason(row?.reason);
+      return {
+        provider: String(row.provider || '').trim(),
+        ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
+        message: String(row?.reason || row?.status || 'error').trim(),
+      };
+    });
+}
+
+function placeResultProvidersAnswered(providerLog = []) {
+  return placeResultProviderRows(providerLog).filter((row) => providerRowRan(row) && providerRowAnswered(row));
+}
+
+function everyPlaceResultProviderErrored(providerLog = []) {
+  const ran = placeResultProviderRows(providerLog).filter((row) => providerRowRan(row));
+  return ran.length > 0 && ran.every((row) => providerRowIsError(row));
+}
+
 const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
 
 /** All place-result providers finished without errors and none returned live rows. */
@@ -115,10 +159,14 @@ export async function runPlaceProviderPass({
         resultCount: osm.length,
       });
     } catch (error) {
+      const reason = String(error?.message || error || 'osm failed').trim();
+      const httpStatus = httpStatusFromReason(reason);
+      console.error(`place search provider osm failed: ${reason}`);
       providerLog.push({
         provider: 'osm',
         status: 'error',
-        reason: String(error?.message || error || 'osm failed').trim(),
+        reason,
+        ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
         resultCount: 0,
       });
     }
@@ -156,12 +204,16 @@ export async function runPlaceProviderPass({
       ...(endpoint ? { endpoint } : {}),
     });
   } catch (error) {
+    const reason = String(error?.message || error || 'brave failed').trim();
+    const httpStatus = httpStatusFromReason(reason);
     const query = String(error?.braveQuery || '').trim();
     const endpoint = String(error?.braveEndpoint || '').trim();
+    console.error(`place search provider brave failed: ${reason}`);
     providerLog.push({
       provider: 'brave',
       status: 'error',
-      reason: String(error?.message || error || 'brave failed').trim(),
+      reason,
+      ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
       resultCount: 0,
       ...(query ? { query } : {}),
       ...(endpoint ? { endpoint } : {}),
@@ -173,16 +225,20 @@ export async function runPlaceProviderPass({
   const namedArea = String(relevanceContext?.area || '').trim();
   const judgeArea = namedArea || locationText || dest;
   const judgeTarget = String(relevanceContext?.target || '').trim();
-  const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => buildPlaceSearchFailureDiagnostics({
-    center,
-    judgeTarget,
-    judgeArea,
-    anchor: searchAnchor,
-    anchorRadiusRejected,
-    relevanceRejections: rejections,
-    survivingPriorDbTitles,
-    dedupeMerges,
-  });
+  const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
+    const providerErrors = providerErrorsFromProviderLog(providerLog);
+    return buildPlaceSearchFailureDiagnostics({
+      center,
+      judgeTarget,
+      judgeArea,
+      anchor: searchAnchor,
+      anchorRadiusRejected,
+      relevanceRejections: rejections,
+      survivingPriorDbTitles,
+      dedupeMerges,
+      ...(providerErrors.length ? { providerErrors } : {}),
+    });
+  };
   let relevance;
   try {
     relevance = await attachRelevance(merged, fetchImpl, env, {
@@ -233,7 +289,19 @@ export async function runPlaceProviderPass({
     const nominatimErrored = providerLog.some(
       (row) => String(row?.provider || '').trim() === 'nominatim' && providerRowIsError(row),
     );
+    const answeredProviders = placeResultProvidersAnswered(providerLog);
     if (placeSearchProvidersAllEmpty(providerLog) && !nominatimErrored) {
+      return {
+        status: 'no_results',
+        center,
+        locationText,
+        places: [],
+        providerLog,
+        relevanceRejections: [],
+        ...diagnosticsBase(),
+      };
+    }
+    if (answeredProviders.length && !everyPlaceResultProviderErrored(providerLog)) {
       return {
         status: 'no_results',
         center,
