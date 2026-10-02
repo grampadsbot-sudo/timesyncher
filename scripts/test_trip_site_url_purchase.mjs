@@ -227,6 +227,8 @@ try {
 
   const mockWelcomeDb = async (strings, ...values) => {
     const text = sqlText(strings);
+    if (/from vacation_onboarding_welcomes/i.test(text) && /where onboarding_session_id =/i.test(text)) return [];
+    if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) return [];
     if (/insert into vacation_onboarding_welcomes/i.test(text)) return [{ id: 'welcome-claim-1' }];
     if (/from customers/i.test(text)) return [{ first_name: 'Ada', display_name: 'Ada' }];
     if (/insert into transcript_turns/i.test(text)) return [{ id: 'turn-1' }];
