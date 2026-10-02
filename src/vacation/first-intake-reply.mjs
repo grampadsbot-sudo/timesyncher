@@ -361,6 +361,8 @@ export async function produceFirstIntakeReply({
   wantedThings = [],
   roster = null,
   extractedDestination = '',
+  savedStart = '',
+  savedEnd = '',
   loadOwnerPlan = loadTripOwnerReplyPlan,
 } = {}) {
   if (!rules?.ok) {
@@ -380,8 +382,8 @@ export async function produceFirstIntakeReply({
   }
   jev.jevBeforeModel = true;
   const saved = await loadSavedTripRecord(session, env);
-  const savedStart = saved?.start || '';
-  const savedEnd = saved?.end || '';
+  const tripStart = String(savedStart || saved?.start || '').trim();
+  const tripEnd = String(savedEnd || saved?.end || '').trim();
   const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
   const ownerPlan = saved?.ownerPlan
     || (tripId ? await loadOwnerPlan({ tripId, env }) : null);
@@ -392,9 +394,9 @@ export async function produceFirstIntakeReply({
     wantedThings,
     roster,
     extractedDestination: intakeFactText(extractedDestination, 180) || intakeFactText(saved?.destination, 180),
-    savedStart,
-    savedEnd,
-    savedDates: isoDay(savedStart) && isoDay(savedEnd) ? `${isoDay(savedStart)} to ${isoDay(savedEnd)}` : '',
+    savedStart: tripStart,
+    savedEnd: tripEnd,
+    savedDates: isoDay(tripStart) && isoDay(tripEnd) ? `${isoDay(tripStart)} to ${isoDay(tripEnd)}` : '',
     planOwned: saved?.planOwned === true || ownerPlan?.order_bump_owned === true,
     ownerPlan,
     tripId,

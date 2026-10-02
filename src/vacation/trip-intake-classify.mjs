@@ -20,15 +20,35 @@ const TURN_KIND_ENUM = `"place_search"|"web_research"|"${TURN_KIND_TRIP_INTAKE}"
 
 const THING_SYSTEM = [
   'Classify one customer chat message and extract fields.',
-  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.`,
+  `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
   `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
   'For place_search, target is what category or kind of place they want; anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
   'For web_research, question is the research ask in their words; leave target, anchor empty and anchorIsLodging false.',
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
   'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
-  'destination, hasDates, and title follow trip planning only. Do not invent items, names, times, people, places, dates, or titles.',
+  'destination, hasDates, title, startDate, and endDate follow trip planning only. When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
+
+export function intakeExtractionDatesError(extractedFields = {}) {
+  if (extractedFields.hasDates !== true) return '';
+  const start = isoDay(extractedFields.startDate);
+  const end = isoDay(extractedFields.endDate);
+  if (!start || !end) return 'trip intake extraction dates required when hasDates is true';
+  if (end < start) return 'trip intake extraction endDate before startDate';
+  return '';
+}
+
+function isoDay(value) {
+  const match = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return '';
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day) return '';
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
 
 function normalizeTurnKind(value) {
   const kind = clean(value, 40).toLowerCase();
@@ -74,6 +94,8 @@ function parseExtraction(raw) {
     roster: Array.isArray(parsed.roster) ? parsed.roster : [],
     destination: parsed.destination,
     hasDates: parsed.hasDates === true,
+    startDate: parsed.startDate,
+    endDate: parsed.endDate,
     title: parsed.title,
   };
 }
@@ -181,6 +203,8 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
   const destination = ok ? clean(classification.destination, 180) : '';
   const title = ok ? clean(classification.title, 180) : '';
   const hasDates = ok && classification.hasDates === true;
+  const startDate = ok ? isoDay(classification.startDate) : '';
+  const endDate = ok ? isoDay(classification.endDate) : '';
   return {
     intakeEvent: intake ? {
       kind: jobKind,
@@ -193,6 +217,8 @@ export function tripIntakeJobFields({ requestText, receivedAt, classification, f
     rosterError: ok ? null : clean(classification?.error || 'trip intake classification failed', 300),
     destination,
     hasDates,
+    startDate,
+    endDate,
     title,
     destinationError: ok ? (destination ? null : 'trip place was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
     titleError: ok ? (title ? null : 'trip title was not in the extraction') : clean(classification?.error || 'trip intake classification failed', 300),
@@ -269,6 +295,8 @@ export async function classifyTripIntake({ text, env = process.env, apiKey, rout
       ],
     }, 'TimeSyncher Vacation trip intake');
     const extractedFields = parseExtraction(chatText(extracted));
+    const datesError = intakeExtractionDatesError(extractedFields);
+    if (datesError) return failed(datesError);
     const turnKind = extractedFields.turnKind;
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);
@@ -285,6 +313,8 @@ export async function classifyTripIntake({ text, env = process.env, apiKey, rout
       roster,
       destination: clean(extractedFields.destination, 180),
       hasDates: extractedFields.hasDates === true,
+      startDate: isoDay(extractedFields.startDate),
+      endDate: isoDay(extractedFields.endDate),
       title: clean(extractedFields.title, 180),
       routerModel: model,
       error: null,

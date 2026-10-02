@@ -6,7 +6,6 @@ import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.mjs';
 import { loadTripPlaceSearchContext, resolvePlaceSearchDestination } from './place-search-anchor.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
-
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -305,6 +304,8 @@ function workerInputAfterInTurnPlaceSearch({
     rosterError: jobFields.rosterError,
     destination: jobFields.destination,
     hasDates: jobFields.hasDates,
+    startDate: jobFields.startDate,
+    endDate: jobFields.endDate,
     title: jobFields.title,
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
