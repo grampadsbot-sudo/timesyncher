@@ -9,14 +9,14 @@ function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
 }
 
-export async function createVacationFromChatMessage(db, session, body, loadTrips, env = process.env) {
-  if (seatFromSession(session)) {
-    return { ok: false, statusCode: 409, error: 'No vacation is available for this session yet.' };
-  }
-  const requestText = cleanText(body.text || body.message, 12000);
-  if (!requestText) {
-    return { ok: false, statusCode: 409, error: 'No vacation is available for this session yet.' };
-  }
+export function intakeTripReadyForCreation(jobFields = {}) {
+  const title = cleanText(jobFields.title, 180);
+  const destination = cleanText(jobFields.destination, 180);
+  const hasDates = jobFields.hasDates === true;
+  return Boolean(title && destination && hasDates);
+}
+
+export async function classifyVacationChatIntake(requestText, env = process.env) {
   const { classification } = await classifyVacationAppCustomerTurn(requestText, env, classifyTripIntake);
   const jobFields = tripIntakeJobFields({
     requestText,
@@ -28,12 +28,60 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     }, []),
     jobKind: tripIntakeJobKind(),
   });
-  const tripTitle = cleanText(jobFields.title, 180);
-  if (!tripTitle) {
-    return { ok: false, statusCode: 409, error: 'No vacation is available for this session yet.' };
+  return { classification, jobFields };
+}
+
+export async function createVacationFromChatMessage(db, session, body, loadTrips, env = process.env) {
+  if (seatFromSession(session)) {
+    return {
+      ok: false,
+      statusCode: 409,
+      error: 'No vacation is available for this session yet.',
+      code: 'vacation_app_collaborator_seat_without_trip',
+    };
+  }
+  const requestText = cleanText(body.text || body.message, 12000);
+  if (!requestText) {
+    return {
+      ok: false,
+      statusCode: 400,
+      error: 'Message text is required.',
+      code: 'vacation_app_message_required',
+    };
+  }
+  const { classification, jobFields } = await classifyVacationChatIntake(requestText, env);
+  if (classification.ok !== true) {
+    return {
+      ok: false,
+      statusCode: 502,
+      error: jobFields.intakeError || 'trip intake classification failed',
+      code: 'trip_intake_classification_failed',
+    };
+  }
+  if (session.trip_id) {
+    const vacations = await loadTrips(db, session);
+    const selected = vacations.find((trip) => trip.id === session.trip_id) || vacations[0] || null;
+    if (!selected) {
+      return {
+        ok: false,
+        statusCode: 500,
+        error: 'Unable to load the linked vacation.',
+        code: 'vacation_app_trip_load_failed',
+      };
+    }
+    return {
+      ok: true,
+      action: 'existing',
+      vacations,
+      selected,
+      tripId: session.trip_id,
+    };
+  }
+  if (!intakeTripReadyForCreation(jobFields)) {
+    return { ok: true, action: 'queue_without_trip', jobFields, classification };
   }
   const tripId = await ensureTrip(db, session.customer_id, {
-    trip_title: tripTitle,
+    trip_title: cleanText(jobFields.title, 180),
     source: 'vacation_app_chat',
     onboarding_session_id: session.id,
   });
@@ -41,12 +89,26 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     update onboarding_sessions
     set trip_id = ${tripId}, updated_at = now()
     where id = ${session.id}
+      and trip_id is null
   `;
   session.trip_id = tripId;
   const vacations = await loadTrips(db, session);
   const selected = vacations.find((trip) => trip.id === tripId) || vacations[0] || null;
   if (!selected) {
-    return { ok: false, statusCode: 500, error: 'Unable to load the new vacation.' };
+    return {
+      ok: false,
+      statusCode: 500,
+      error: 'Unable to load the new vacation.',
+      code: 'vacation_app_trip_load_failed',
+    };
   }
-  return { ok: true, vacations, selected, tripId };
+  return {
+    ok: true,
+    action: 'created',
+    vacations,
+    selected,
+    tripId,
+    jobFields,
+    classification,
+  };
 }

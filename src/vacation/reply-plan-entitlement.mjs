@@ -49,9 +49,49 @@ export function replyPlanFactsFromEntitlementRow(row, env = process.env, tripId 
   };
 }
 
-export async function savedTripWithOwnerPlan(saved, tripId, env = process.env) {
+export async function loadSessionOwnerReplyPlan({ session, env = process.env, db = null } = {}) {
+  const orderId = String(session?.order_id || '').trim();
+  const customerId = String(session?.customer_id || '').trim();
+  if (!orderId && !customerId) failReplyPlanEntitlement('session_purchase_missing', '');
+  const database = db || (await import('./db.mjs')).sql(env);
+  const rows = orderId
+    ? await database`
+      select e.plan, e.status, e.metadata
+      from entitlements e
+      inner join paid_orders po on po.entitlement_id = e.id
+      where po.id = ${orderId}
+        and e.status = 'active'
+      order by e.updated_at desc
+      limit 1
+    `
+    : await database`
+      select e.plan, e.status, e.metadata
+      from entitlements e
+      where e.customer_id = ${customerId}
+        and e.status = 'active'
+        and e.trip_id is null
+      order by e.updated_at desc
+      limit 1
+    `;
+  return replyPlanFactsFromEntitlementRow(rows[0], env, String(session?.trip_id || '').trim());
+}
+
+export async function savedTripWithOwnerPlan(saved, tripId, env = process.env, session = null) {
   const id = String(tripId || '').trim();
-  if (!saved || !id || !env?.DATABASE_URL) return saved;
+  if (!id) {
+    const orderId = String(session?.order_id || '').trim();
+    const customerId = String(session?.customer_id || '').trim();
+    if (!orderId && !customerId) return saved;
+    const ownerPlan = await loadSessionOwnerReplyPlan({ session, env });
+    const base = saved && typeof saved === 'object' ? saved : {};
+    return {
+      ...base,
+      ownerPlan,
+      purchased_plan: ownerPlan.checkout_plan,
+      planOwned: ownerPlan.checkout_plan === 'unlimited',
+    };
+  }
+  if (!saved || !env?.DATABASE_URL) return saved;
   const ownerPlan = await loadTripOwnerReplyPlan({ tripId: id, env });
   return {
     ...saved,

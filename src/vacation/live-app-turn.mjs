@@ -1506,6 +1506,17 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
+  const tripId = String(session?.trip_id || session?.tripId || '').trim();
+  if (!tripId) {
+    const { produceNoTripStarterReply } = await import('./first-intake-reply.mjs');
+    return produceNoTripStarterReply({
+      customerTurn,
+      session,
+      env,
+      rules,
+      ...(loadOwnerPlan ? { loadOwnerPlan } : {}),
+    });
+  }
   const intakeTurn = { text: customerTurn, intake: intake === true };
   const postIntake = firstMarkedIntake(intakeTurn, history);
   if (postIntake) return produceFirstIntakeReply({ customerTurn, session, tripTitle, env, rules, wantedThings, roster, extractedDestination, ...(loadOwnerPlan ? { loadOwnerPlan } : {}) });
@@ -1517,7 +1528,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
-  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env);
+  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env, session);
   const inTurnProviderResults = placeSearchTurn === true ? (Array.isArray(placeResults) ? placeResults : []) : [];
   const enforceInTurnPlaces = placeSearchTurn === true && inTurnProviderResults.length > 0;
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];

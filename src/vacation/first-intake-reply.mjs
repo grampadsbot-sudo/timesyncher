@@ -1,7 +1,7 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
-import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
+import { failReplyPlanEntitlement, loadSessionOwnerReplyPlan, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAY_WORD = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g;
 const INVENTED_PARTY = /\balready (?:a |your )?collaborator\b|\balready (?:has|have) access\b|\bjust you and (?:him|her|them)\b/i;
@@ -106,6 +106,15 @@ export const FIRST_INTAKE_GAP_INSTRUCTION = [
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
   'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',
+  FIRST_INTAKE_TONE,
+].join('\n');
+
+export const NO_TRIP_STARTER_INSTRUCTION = [
+  'You are writing a reply in the TimeSyncher vacation app before a vacation record exists yet. Write it in your own words. Do not copy this instruction back.',
+  'The customer has not given enough detail to start a vacation yet. Ask only for what is still missing to begin planning: where they are going and when.',
+  'Use exactly one question. Do not ask about collaborators, seats, plans, or pricing.',
+  'Do not mention a trip link, shared site, or URL. Do not include /shared/ or any website link.',
+  'Do not invent a place, date, lodging, activity, or name.',
   FIRST_INTAKE_TONE,
 ].join('\n');
 
@@ -352,6 +361,106 @@ export function firstIntakeReplyPrompt(input = {}) {
   return `${instruction}\n\nIntake facts: ${JSON.stringify(facts)}`;
 }
 
+function noTripStarterFacts({ customerTurn = '', session = null, ownerPlan = null } = {}) {
+  const facts = {
+    shape: 'no-trip',
+    customer_said: intakeFactText(customerTurn, 1200),
+    customer_name: intakeCustomerName(session),
+    missing_where: true,
+    missing_when: true,
+    gaps: ['where', 'when'],
+  };
+  if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', '');
+  facts.plan = {
+    purchased_plan: String(ownerPlan.checkout_plan || '').trim(),
+    plan_id: String(ownerPlan.plan_id || '').trim(),
+    plan_name: String(ownerPlan.plan_name || '').trim(),
+    plan_owned: true,
+    order_bump_owned: ownerPlan.order_bump_owned === true,
+  };
+  if (!facts.plan.plan_id || !facts.plan.plan_name) failReplyPlanEntitlement('owner_plan_incomplete', '');
+  return facts;
+}
+
+export function noTripReplyBlock(reply, banned = appTextBanned, facts = {}) {
+  const reason = banned(reply);
+  if (reason && reason !== 'app reply text is empty') return reason;
+  const text = String(reply || '').trim();
+  if (!text) return '';
+  if (/\/shared\//i.test(text)) return 'no_trip_reply_shared_link';
+  if (firstIntakeReplyLeak(text)) return 'no_trip_reply_flagged';
+  if (facts.shape === 'no-trip' && questionCount(text) !== 1) return 'no_trip_reply_flagged';
+  return '';
+}
+
+export async function produceNoTripStarterReply({
+  customerTurn = '',
+  session = null,
+  env = process.env,
+  rules = null,
+  loadOwnerPlan = loadSessionOwnerReplyPlan,
+} = {}) {
+  if (!rules?.ok) {
+    return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
+  }
+  const jevStarted = Date.now();
+  const jev = await jevPrecall({
+    customerTurn,
+    stage: 'vacation_conversation',
+    screen: 'vacation-app',
+    session: { seed_id: session?.token || null },
+    env,
+  });
+  if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
+  if (!jev?.jevRan) {
+    return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
+  }
+  jev.jevBeforeModel = true;
+  const ownerPlan = await loadOwnerPlan({ session, env });
+  const facts = noTripStarterFacts({ customerTurn, session, ownerPlan });
+  const prompt = `${NO_TRIP_STARTER_INSTRUCTION}\n\nStarter facts: ${JSON.stringify(facts)}`;
+  let model = null;
+  let reply = '';
+  let block = '';
+  for (let attempt = 0; attempt < 2 && !reply; attempt += 1) {
+    const genStarted = Date.now();
+    model = await callTieredModel({
+      rules,
+      jev,
+      customerTurn,
+      stage: 'vacation_conversation',
+      screen: 'vacation-app',
+      destination: '',
+      memory: [],
+      upsell: 'forbidden',
+      postIntake: false,
+      intakeReplyTurn: true,
+      replyFacts: facts,
+      env,
+      systemExtra: prompt,
+    });
+    if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
+    reply = model?.called && model.text ? String(model.text).trim() : '';
+    block = noTripReplyBlock(reply, appTextBanned, facts);
+    if (block) reply = '';
+  }
+  if (!reply) {
+    const visible = model?.called && model.text ? String(model.text).trim() : '';
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: (visible && noTripReplyBlock(visible, appTextBanned, facts))
+        || block
+        || model?.reason
+        || 'no trip starter reply model returned no reply',
+    };
+  }
+  assertCustomerReplyShippable(reply, '');
+  return { reply, rules, jev, model, reason: null };
+}
+
 export async function produceFirstIntakeReply({
   customerTurn = '',
   session = null,
@@ -491,7 +600,7 @@ export function intakeReplyBlock(reply, banned = appTextBanned, facts = {}, ids 
   const questions = questionCount(text);
   if (facts?.shape === 'gaps') {
     if (questions < 2 || questions > 3) return 'first_intake_reply_flagged';
-  } else if (questions !== 1) return 'first_intake_reply_flagged';
+  } else if (facts?.shape !== 'no-trip' && questions !== 1) return 'first_intake_reply_flagged';
   return '';
 }
 
