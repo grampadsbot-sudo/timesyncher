@@ -49,6 +49,6 @@ export async function insertTripThing(db, { tripId, requestId, thing }) {
     )
     returning id
   `;
-  const id = rows[0]?.id ? String(rows[0].id) : null;
+  const id = rows?.[0]?.id ? String(rows[0].id) : null;
   return { ...item, source: item.source, id };
 }

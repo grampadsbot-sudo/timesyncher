@@ -408,10 +408,10 @@ export function providerFetchMock(state, env, originalFetch, intakeOptions = {
             choices: [{
               message: {
                 content: JSON.stringify(classifierExtractionBody({
-                  title: TRIP_TITLE,
-                  destination: DESTINATION,
-                  hasDates: true,
-                  intake: true,
+                  title: intakeOptions.title ?? '',
+                  destination: intakeOptions.destination ?? '',
+                  hasDates: intakeOptions.hasDates === true,
+                  intake: intakeOptions.intake !== false,
                   user,
                 })),
               },
