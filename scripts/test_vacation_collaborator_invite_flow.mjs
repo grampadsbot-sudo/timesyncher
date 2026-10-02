@@ -17,8 +17,12 @@ const queue = await readFile(new URL('../routes/vacation-app-chat-queue.mjs', im
 
 assert.match(inviteJs, /action:\s*'collaborator-invite'/);
 assert.doesNotMatch(inviteJs, /No vacation workspace is available yet/);
-assert.match(vacationApp, /timesyncher-open-collaborator-invite/);
+assert.match(`${vacationApp}\n${inviteJs}`, /timesyncher-open-collaborator-invite/);
 assert.match(vacationApp, /collaboratorInviteDialog/);
+assert.match(vacationApp, /collaboratorInviteOpen/);
+assert.match(vacationApp, /join this vacation chat/);
+assert.doesNotMatch(vacationApp, /!hasSite\s*&&\s*!state\.session\?\.seat/);
+assert.match(vacationApp, /!state\.session\?\.seat/);
 assert.match(sharedApp, /timesyncher-open-collaborator-invite/);
 assert.match(api, /inviteResult/);
 assert.match(api, /runCollaboratorInviteAction/);

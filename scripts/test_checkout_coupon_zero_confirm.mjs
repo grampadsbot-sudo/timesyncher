@@ -6,12 +6,15 @@ import { lookupCoupon } from '../src/vacation/coupons.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
 
 const orderTest = await readFile(new URL('../order-test.html', import.meta.url), 'utf8');
-assert.match(orderTest, /action:\s*'validate_coupon'/);
-assert.match(orderTest, /completeZeroPurchaseBtn/);
-assert.match(orderTest, /couponQuote\.amountCents/);
-assert.doesNotMatch(orderTest, /Complete \$0 purchase/);
-assert.match(orderTest, /couponQuote/);
-assert.doesNotMatch(orderTest, /hasCoupon\(\)[\s\S]{0,1200}window\.location\.href/);
+const orderCouponJs = await readFile(new URL('../public/order-test-coupon-checkout.js', import.meta.url), 'utf8');
+const orderCheckout = `${orderTest}\n${orderCouponJs}`;
+assert.match(orderTest, /order-test-coupon-checkout\.js/);
+assert.match(orderCheckout, /action:\s*'validate_coupon'/);
+assert.match(orderCheckout, /completeZeroPurchaseBtn/);
+assert.match(orderCheckout, /couponQuote\.amountCents/);
+assert.doesNotMatch(orderCheckout, /Complete \$0 purchase/);
+assert.match(orderCheckout, /couponQuote/);
+assert.doesNotMatch(orderCheckout, /hasCoupon\(\)[\s\S]{0,1200}window\.location\.href/);
 
 const coupon = {
   id: 'coupon-1',
@@ -83,8 +86,8 @@ assert.deepEqual(checkoutChargeDisplay({ amountCents: 3700, coupon: true }), {
   waivedCents: 3700,
 });
 
-assert.match(orderTest, /completeZeroPurchaseBtn[\s\S]{0,2500}couponQuote\.amountCents/);
-assert.doesNotMatch(orderTest, /completeZeroPurchaseBtn[\s\S]{0,800}window\.location\.href[\s\S]{0,400}applyCouponBtn/);
+assert.match(orderCheckout, /completeZeroPurchaseBtn[\s\S]{0,2500}amountCents/);
+assert.doesNotMatch(orderCheckout, /completeZeroPurchaseBtn[\s\S]{0,800}window\.location\.href[\s\S]{0,400}applyCouponBtn/);
 
 useVacationDatabase(null);
 console.log('checkout coupon zero confirm passed');

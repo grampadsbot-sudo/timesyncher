@@ -6,22 +6,24 @@ const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.
 const BN_CHAIN_NEEDLE = 'bn=G=>It(G)==="flight",Zi=G=>It(G)==="hotel",Mi=G=>It(G)==="car"';
 const BN_CHAIN_PATCH = 'bn=G=>{const c=It(G);if(c==="flight")return!0;if(c!=="transport"&&c!=="other")return!1;const s=String(G?.name||G?.title||G?.category_name||G?.category?.name||"").trim();return/(^|\\s)flight\\b/i.test(s)||/\\b[A-Z]{3}\\s*(?:→|->|to|-)\\s*[A-Z]{3}\\b/.test(s)},Zi=G=>{const c=It(G);if(c==="hotel")return!0;const s=String(G?.name||G?.title||G?.category_name||G?.category?.name||"").toLowerCase();return/\\b(hotel|lodging|stay|resort|inn|motel|accommodation)\\b/.test(s)},Mi=G=>{const c=It(G);if(c==="car")return!0;return/\\b(car rental|rental car)\\b/i.test(String(G?.name||G?.title||""))}';
 
-const HOTEL_BRAND_EMOJI_NEEDLE = ':/hotel|lodging|accommodation|marriott|hyatt|hilton|sheraton|motto|pod|romer|lucerne|wallace|beacon|arthouse|empire|manhattan club|towneplace|belleclaire|park central/.test(c)?"🧳":';
-const HOTEL_BRAND_CATEGORY_NEEDLE = ':/hotel|marriott|hyatt|hilton|sheraton|motto|pod|romer|lucerne|wallace|beacon|arthouse|empire|manhattan club|towneplace|belleclaire/i.test(Re)?"hotel":';
-
 const REST_ALL_TAGS_NEEDLE = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[ci.length>0&&n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
 const REST_ALL_TAGS_PATCH = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
 
 const LOGO_SELECTOR_NEEDLE = 'children:["Type",n.jsx("select",{value:It(Dt),onChange:G=>Xa(Dt,"category",G.target.value),style:he,children:Fa.map(G=>n.jsx("option",{value:G,children:Jn(G)},G))})]})]}),n.jsxs("div",{style:{display:"grid",gridTemplateColumns:zi(Dt)?';
 const LOGO_SELECTOR_PATCH = 'children:["Type",n.jsx("select",{value:It(Dt),onChange:G=>Xa(Dt,"category",G.target.value),style:he,children:Fa.map(G=>n.jsx("option",{value:G,children:Jn(G)},G))})]})]}),n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(220px, 1fr) 160px",gap:8,alignItems:"end"},children:[n.jsxs("label",{style:Hn,children:["Logo URL",n.jsx("input",{value:String(ha(Dt).logoUrl||""),onChange:G=>Xa(Dt,"logoUrl",G.target.value),placeholder:"https://…",style:De})]}),fo(Dt).filter(Oo=>Oo&&Oo.kind!=="video").length>0&&n.jsxs("label",{style:Hn,children:["Logo from media",n.jsx("select",{value:String(ha(Dt).logoUrl||""),onChange:G=>Xa(Dt,"logoUrl",G.target.value),style:he,children:[n.jsx("option",{value:"",children:"None"},""),...fo(Dt).filter(Oo=>Oo&&Oo.kind!=="video").map(Oo=>n.jsx("option",{value:String(Oo.url||Oo.public_url||Oo.thumbnailUrl||""),children:String(Oo.originalName||Oo.caption||"Photo")},String(Oo.id||Oo.url)))]})]})]}),n.jsxs("div",{style:{display:"grid",gridTemplateColumns:zi(Dt)?';
 
+export function stripHotelBrandNameGuessing(source = '') {
+  let js = String(source || '');
+  js = js.replace(/:\/hotel\|[^"]+\.test\(c\)\?"🧳":/g, ':/hotel|lodging|accommodation/.test(c)?"🧳":');
+  js = js.replace(/:\/hotel\|[^"]+i\.test\(Re\)\?"hotel":/g, ':/hotel|lodging|accommodation/i.test(Re)?"hotel":');
+  return js;
+}
+
 export function applyLiveProductPatches(patched = '') {
-  let js = String(patched || '');
+  let js = stripHotelBrandNameGuessing(String(patched || ''));
   if (js.includes(LIST_LOGO_NEEDLE)) js = js.replace(LIST_LOGO_NEEDLE, LIST_LOGO_PATCH);
   else if (js.includes(LIST_LOGO_PATCH_NEEDLE)) js = js.replace(LIST_LOGO_PATCH_NEEDLE, LIST_LOGO_PATCH);
   if (js.includes(BN_CHAIN_NEEDLE)) js = js.replace(BN_CHAIN_NEEDLE, BN_CHAIN_PATCH);
-  if (js.includes(HOTEL_BRAND_EMOJI_NEEDLE)) js = js.replace(HOTEL_BRAND_EMOJI_NEEDLE, ':');
-  if (js.includes(HOTEL_BRAND_CATEGORY_NEEDLE)) js = js.replace(HOTEL_BRAND_CATEGORY_NEEDLE, ':');
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
   return js;

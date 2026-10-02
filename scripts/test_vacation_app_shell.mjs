@@ -130,7 +130,8 @@ assert.doesNotMatch(`${confirmed.launchUrl}\n${confirmed.textBody}\n${confirmed.
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);
 
 const orderTest = await readFile(new URL('../order-test.html', import.meta.url), 'utf8');
-assert.match(orderTest, /\/api\/checkout-coupon/);
+const orderCouponJs = await readFile(new URL('../public/order-test-coupon-checkout.js', import.meta.url), 'utf8');
+assert.match(`${orderTest}\n${orderCouponJs}`, /\/api\/checkout-coupon/);
 assert.doesNotMatch(orderTest, /fetch\('\/api\/create-payment-intent'[\s\S]{0,400}Redeeming coupon/);
 
 console.log('vacation app shell regression passed');

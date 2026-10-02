@@ -1511,8 +1511,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
-  tripFacts.customerTurn = String(customerTurn || '');
-  if (inviteResult && typeof inviteResult === 'object') tripFacts.inviteResult = inviteResult;
+  tripFacts.customerTurn = String(customerTurn || ''); if (inviteResult && typeof inviteResult === 'object') tripFacts.inviteResult = inviteResult;
   const seatDollars = Number(suppliedSeatDollars);
   const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
   tripFacts.seatDollars = pricedSeat;

@@ -1,4 +1,10 @@
 window.tsBindCollaboratorInvite = function bindCollaboratorInviteForm({ sessionToken, safe, currentTrip, getMessagesEl }) {
+  if (!document.getElementById('ts-collaborator-invite-css')) {
+    const style = document.createElement('style');
+    style.id = 'ts-collaborator-invite-css';
+    style.textContent = '.collaborator-invite-dialog{border:1px solid var(--line);border-radius:12px;padding:0;max-width:420px}.collaborator-invite-open{margin:0 clamp(12px,3vw,24px) 12px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:700}.collaborator-invite .button-row{display:flex;gap:8px}';
+    document.head.appendChild(style);
+  }
   const form = document.getElementById('collaboratorInviteForm');
   if (!form) return;
 
@@ -39,6 +45,11 @@ window.tsBindCollaboratorInvite = function bindCollaboratorInviteForm({ sessionT
   }
 
   form.addEventListener('submit', submitInvite);
+  document.getElementById('collaboratorInviteOpen')?.addEventListener('click', () => window.tsOpenCollaboratorInvite?.());
+  document.getElementById('collaboratorInviteCancel')?.addEventListener('click', () => document.getElementById('collaboratorInviteDialog')?.close());
+  window.addEventListener('message', (event) => {
+    if (event?.data?.type === 'timesyncher-open-collaborator-invite') window.tsOpenCollaboratorInvite?.();
+  });
 
   window.tsOpenCollaboratorInvite = function openCollaboratorInvite() {
     if (dialog && typeof dialog.showModal === 'function') {

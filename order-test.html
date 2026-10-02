@@ -237,6 +237,7 @@
     <a href="/">Back to TimeSyncher.com</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a>
   </footer>
   <script src="/checkout-price-client.js"></script>
+  <script src="/order-test-coupon-checkout.js"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     const step1 = document.getElementById('step1');
@@ -279,6 +280,7 @@
     let stripeConfigPromise;
     let paymentRequestId = 0;
     let couponQuote = null;
+    const couponCheckout = {};
 
     function money(cents) {
       return '$' + (cents / 100).toFixed(0);
@@ -389,10 +391,7 @@
         waivedRow.hidden = charge.waivedCents <= 0;
         waivedAmount.textContent = charge.waivedCents ? money(charge.waivedCents) : '';
         total.textContent = money(charge.totalCents);
-        const couponMode = hasCouponDraft();
-        payBtn.hidden = couponMode;
-        applyCouponBtn.hidden = !couponMode || Boolean(couponQuote);
-        completeZeroPurchaseBtn.hidden = !couponQuote;
+        couponCheckout.syncCouponPaymentUi?.();
       } catch (error) {
         waivedRow.hidden = true;
         total.textContent = '';
@@ -422,9 +421,7 @@
         if (paymentElement) paymentElement.unmount();
         paymentElementMount.innerHTML = '<div class="stripe-loading">Coupon checkout skips Stripe. Apply the coupon to review the order total, then complete the purchase.</div>';
         paymentReady = false;
-        payBtn.hidden = true;
-        applyCouponBtn.hidden = Boolean(couponQuote);
-        completeZeroPurchaseBtn.hidden = !couponQuote;
+        couponCheckout.syncCouponPaymentUi?.();
         updateTotal();
         return true;
       }
@@ -536,60 +533,12 @@
       paymentReady = false;
       if (!step2.classList.contains('hidden')) await preparePaymentElement();
     });
-    applyCouponBtn.addEventListener('click', async () => {
-      if (!form.reportValidity()) return;
-      applyCouponBtn.disabled = true;
-      hideStatus();
-      try {
-        const response = await fetch('/api/checkout-coupon', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            ...formData(),
-            action: 'validate_coupon',
-            orderBump: bump.checked,
-            photoMemories: photoMemories.checked,
-          }),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be applied.');
-        couponQuote = data.order;
-        completeZeroPurchaseBtn.textContent = `Complete ${money(couponQuote.amountCents)} purchase`; setStatus(`Coupon applied. Review the order summary, then complete your ${money(couponQuote.amountCents)} purchase.`, false);
-        updateTotal();
-        await preparePaymentElement();
-      } catch (error) {
-        couponQuote = null;
-        setStatus(error.message || 'Coupon could not be applied.', true);
-        updateTotal();
-      } finally {
-        applyCouponBtn.disabled = false;
-      }
-    });
-    completeZeroPurchaseBtn.addEventListener('click', async () => {
-      if (!couponQuote) return;
-      if (!form.reportValidity()) return;
-      completeZeroPurchaseBtn.disabled = true;
-      completeZeroPurchaseBtn.textContent = 'Completing purchase...';
-      hideStatus();
-      try {
-        const response = await fetch('/api/checkout-coupon', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be redeemed.');
-        setStatus('Coupon redeemed. Opening your TimeSyncher onboarding...', false);
-        const nextUrl = data.session?.onboardingUrl
-          || (data.session?.token ? `/order-success.html?session=${encodeURIComponent(data.session.token)}` : '')
-          || data.onboarding?.onboardingUrl
-          || '/order-success.html';
-        window.location.href = nextUrl;
-      } catch (error) {
-        setStatus(error.message || 'Coupon could not be redeemed.', true);
-        completeZeroPurchaseBtn.disabled = false;
-        completeZeroPurchaseBtn.textContent = `Complete ${money(couponQuote.amountCents)} purchase`;
-      }
+    window.tsBindOrderTestCouponCheckout({
+      form, bump, photoMemories, couponCode, payBtn, applyCouponBtn, completeZeroPurchaseBtn,
+      formData, money, setStatus, hideStatus, preparePaymentElement, hasCouponDraft, updateTotal, couponCheckout,
+      getCouponQuote: () => couponQuote,
+      setCouponQuote: (order) => { couponQuote = order; },
+      clearCouponQuote: () => { couponQuote = null; },
     });
     payBtn.addEventListener('click', async () => {
       if (hasCouponDraft()) return;
