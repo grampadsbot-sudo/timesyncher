@@ -57,12 +57,12 @@ assert.equal(state.turns.length, 1);
 assert.equal(state.turns[0].welcomeAudience, 'owner');
 assert.equal(state.turns[0].selectedTripId, null);
 assert.equal(state.turns[0].liveTranscript.text, welcomeText);
-assert.equal(state.turns[0].liveTranscript.telemetry.kind, 'canned_welcome');
+assert.equal(state.turns[0].liveTranscript.jev.reason, 'fixed_onboarding_opener');
 
 const cannedLog = state.logs.map((line) => JSON.parse(line)).find((row) => row.event === 'canned_welcome');
 assert.ok(cannedLog);
 assert.equal(cannedLog.tripId, null);
-assert.equal(cannedLog.telemetry.kind, 'canned_welcome');
+assert.equal(cannedLog.welcomeAudience, 'owner');
 
 const turns = [{ speaker: 'app', body: welcomeText, at: '2026-10-01T00:00:00.000Z' }];
 const order = welcomeBeforeFirstTurn(turns);

@@ -8,3 +8,15 @@ export function appReplyTelemetry(record = {}) {
     generationMs: Number.isFinite(generation) ? generation : null,
   };
 }
+
+export function logVacationAppReplyTelemetry(liveTranscript = {}) {
+  const telemetry = appReplyTelemetry(liveTranscript);
+  const jev = liveTranscript.jev && typeof liveTranscript.jev === 'object' ? liveTranscript.jev : {};
+  console.log(JSON.stringify({
+    event: 'vacation_app_reply_telemetry',
+    ...telemetry,
+    jevRan: jev.jevRan === true,
+    ...(jev.jevRan === false ? { reason: jev.reason || null } : {}),
+  }));
+  return telemetry;
+}

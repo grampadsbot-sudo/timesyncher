@@ -3,9 +3,6 @@ export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
 const LIST_LOGO_PATCH_NEEDLE = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"");if(raw&&!/^data:image\\/svg\\+xml/i.test(raw))return raw;return ""}';
 
-const BN_CHAIN_NEEDLE = 'bn=G=>It(G)==="flight",Zi=G=>It(G)==="hotel",Mi=G=>It(G)==="car"';
-const BN_CHAIN_PATCH = 'bn=G=>{const c=It(G);if(c==="flight")return!0;if(c!=="transport"&&c!=="other")return!1;const s=String(G?.name||G?.title||G?.category_name||G?.category?.name||"").trim();return/(^|\\s)flight\\b/i.test(s)||/\\b[A-Z]{3}\\s*(?:→|->|to|-)\\s*[A-Z]{3}\\b/.test(s)},Zi=G=>{const c=It(G);if(c==="hotel")return!0;const s=String(G?.name||G?.title||G?.category_name||G?.category?.name||"").toLowerCase();return/\\b(hotel|lodging|stay|resort|inn|motel|accommodation)\\b/.test(s)},Mi=G=>{const c=It(G);if(c==="car")return!0;return/\\b(car rental|rental car)\\b/i.test(String(G?.name||G?.title||""))}';
-
 const REST_ALL_TAGS_NEEDLE = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[ci.length>0&&n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
 const REST_ALL_TAGS_PATCH = 'q==="restaurants"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsx("button",{onClick:()=>qt([])';
 
@@ -23,7 +20,6 @@ export function applyLiveProductPatches(patched = '') {
   let js = stripHotelBrandNameGuessing(String(patched || ''));
   if (js.includes(LIST_LOGO_NEEDLE)) js = js.replace(LIST_LOGO_NEEDLE, LIST_LOGO_PATCH);
   else if (js.includes(LIST_LOGO_PATCH_NEEDLE)) js = js.replace(LIST_LOGO_PATCH_NEEDLE, LIST_LOGO_PATCH);
-  if (js.includes(BN_CHAIN_NEEDLE)) js = js.replace(BN_CHAIN_NEEDLE, BN_CHAIN_PATCH);
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
   return js;

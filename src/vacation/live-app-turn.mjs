@@ -11,6 +11,7 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { customerInputState } from './intake-shared-trip.mjs';
+import { replyActionClaimReason } from './reply-action-claim.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
@@ -1065,11 +1066,7 @@ export function completeRosterParty(doc) {
       party.editors.push({ name });
       rememberRoster(sources, `editors.${name}`, 'editor', 'chat_extraction');
     } else if (role === 'collaborator') {
-      if (party.primary?.name && samePerson(name, party.primary.name)) continue;
-      if (party.collaborators.some((item) => samePerson(name, item.name))) continue;
-      const payer = String(person?.payer || '').trim();
-      party.collaborators.push({ name, payer });
-      rememberRoster(sources, `collaborators.${name}`, payer, 'chat_extraction');
+      continue;
     } else {
       unplaced = true;
     }
@@ -1351,12 +1348,14 @@ export function hardQualityFlags(reply, customerTurn, corpus, sources, intent) {
     ? intent
     : (sources && !Array.isArray(sources) && typeof sources === 'object' ? sources : null);
   const placeSources = Array.isArray(sources) ? sources : (Array.isArray(corpus) ? corpus : []);
+  const unbackedInviteClaim = replyActionClaimReason(body, intentArg?.turnActionResults) !== '';
   return {
     split: item34BanHit(body),
     invented: unsourcedPlaces(body, placeSources),
     missingPrice: customerAsksPrice(ask, intentArg) && !priceAnswered(body, { text: ask, seats: intentArg?.seats }),
     missingAccess: customerAsksAccessChoice(ask, intentArg) && !(/\bview access\b/i.test(body) && /\bedit access\b/i.test(body)),
     missingCollaborators: turnMarkedIntake(customerTurn) && !/\bcollaborat/i.test(body),
+    unbackedInviteClaim,
   };
 }
 
@@ -1370,7 +1369,7 @@ export function correctFalsePriceMiss(quality, reply, customerTurn, intent) {
 }
 
 export function dockQuality(quality, flags) {
-  const rule = Boolean(flags?.invented?.length || flags?.split || flags?.missingPrice || flags?.missingAccess || flags?.missingCollaborators);
+  const rule = Boolean(flags?.invented?.length || flags?.split || flags?.missingPrice || flags?.missingAccess || flags?.missingCollaborators || flags?.unbackedInviteClaim);
   const score = rule ? Math.min(Number(quality?.score) || 1, 3) : Number(quality?.score);
   return {
     ...quality,
@@ -1480,7 +1479,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
   };
 }
 
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, inviteResult = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1493,6 +1492,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   } catch (error) {
     intent = { ...emptyIntent(), error: String(error?.message || error) };
   }
+  if (turnActionResults && typeof turnActionResults === 'object') intent.turnActionResults = turnActionResults;
   const upsell = upsellModeForTurn(intakeTurn, history, intent);
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
   const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env);
@@ -1511,7 +1511,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   if (mergedTrip?.rule) tripContext.rule = String(mergedTrip.rule);
   const seat = joiningSeatRecord(session);
   const tripFacts = savedTripFacts(mergedTrip);
-  tripFacts.customerTurn = String(customerTurn || ''); if (inviteResult && typeof inviteResult === 'object') tripFacts.inviteResult = inviteResult;
+  tripFacts.customerTurn = String(customerTurn || '');
   const seatDollars = Number(suppliedSeatDollars);
   const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
   tripFacts.seatDollars = pricedSeat;

@@ -627,7 +627,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
-    'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     'Do not say seat to the customer; say collaborator or person joining instead.',
     'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',

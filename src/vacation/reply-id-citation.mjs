@@ -1,4 +1,5 @@
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
+import { failReplyActionClaim, replyActionClaimReason } from './reply-action-claim.mjs';
 
 const ID_CITATION = /\(\s*id\s*:\s*[^)]+\)/i;
 const PRODUCT_ID_LITERAL = /timesyncher_vacation_[a-z0-9_]+/i;
@@ -26,9 +27,11 @@ export function failReplyIdCitation(reason, tripId = '') {
   throw new ReplyIdCitationBlockedError(reason, id);
 }
 
-export function assertCustomerReplyShippable(reply, tripId = '') {
+export function assertCustomerReplyShippable(reply, tripId = '', turnActionResults = null) {
   const reason = replyIdCitationReason(reply);
   if (reason) failReplyIdCitation(reason, tripId);
+  const actionReason = replyActionClaimReason(reply, turnActionResults);
+  if (actionReason) failReplyActionClaim(actionReason, tripId);
   return reply;
 }
 

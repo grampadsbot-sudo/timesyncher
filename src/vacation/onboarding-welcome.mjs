@@ -64,12 +64,10 @@ export function cannedWelcomeLiveTurn({ text, at, latencyMs = null, sessionE2eMs
     at: at || null,
     latencyMs,
     sessionE2eMs,
-    telemetry: {
-      kind: 'canned_welcome',
-      tier: 'n/a',
-      model: 'n/a',
-      jevRan: false,
-      reason: 'fixed_onboarding_opener',
-    },
+    jevLatencyMs: null,
+    tier: null,
+    modelId: null,
+    generationMs: null,
+    jev: { jevRan: false, reason: 'fixed_onboarding_opener' },
   };
 }

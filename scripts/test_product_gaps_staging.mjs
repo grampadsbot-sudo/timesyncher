@@ -12,7 +12,6 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 const js = renderServedTrekBundle(raw.toString('utf8'));
 
-assert.match(js, /bn=G=>\{const c=It\(G\)/);
 assert.ok(js.includes('ts-thing-media\\/'));
 assert.match(js, /children:\["Logo URL"/);
 assert.match(js, /children:\["Logo from media"/);

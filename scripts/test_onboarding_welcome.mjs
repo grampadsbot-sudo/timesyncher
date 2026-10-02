@@ -101,19 +101,13 @@ try {
     latencyMs: 1,
     sessionE2eMs: 1,
   });
-  assert.deepEqual(live.telemetry, {
-    kind: 'canned_welcome',
-    tier: 'n/a',
-    model: 'n/a',
-    jevRan: false,
-    reason: 'fixed_onboarding_opener',
-  });
+  assert.equal(live.jevLatencyMs, null);
+  assert.equal(live.tier, null);
+  assert.equal(live.modelId, null);
+  assert.equal(live.generationMs, null);
+  assert.deepEqual(live.jev, { jevRan: false, reason: 'fixed_onboarding_opener' });
   assert.doesNotMatch(templates.owner_no_site, /\{tripSiteUrl\}/);
   assert.doesNotMatch(templates.collaborator_no_site, /\{tripSiteUrl\}/);
-  assert.equal(Object.hasOwn(live, 'jevLatencyMs'), false);
-  assert.equal(Object.hasOwn(live, 'generationMs'), false);
-  assert.equal(JSON.stringify(live).includes('jevLatencyMs'), false);
-  assert.equal(JSON.stringify(live).includes('generationMs'), false);
 
   const trip = { id: 'trip-1', publicUrl: tripSiteUrl, title: tripTitle, shareToken: 'intake-trip1slug' };
   const stored = [];
@@ -169,26 +163,14 @@ try {
   assert.equal(stored[0].welcomeAudience, 'owner');
   assert.equal(stored[0].welcomeFor, 'owner');
   assert.equal(stored[0].liveTranscript.text, owner.text);
-  assert.deepEqual(stored[0].liveTranscript.telemetry, {
-    kind: 'canned_welcome',
-    tier: 'n/a',
-    model: 'n/a',
-    jevRan: false,
-    reason: 'fixed_onboarding_opener',
-  });
-  assert.equal(Object.hasOwn(stored[0].liveTranscript, 'jevLatencyMs'), false);
-  assert.equal(Object.hasOwn(stored[0].liveTranscript, 'generationMs'), false);
+  assert.equal(stored[0].liveTranscript.jevLatencyMs, null);
+  assert.equal(stored[0].liveTranscript.generationMs, null);
+  assert.deepEqual(stored[0].liveTranscript.jev, { jevRan: false, reason: 'fixed_onboarding_opener' });
   assert.equal(stored[1].welcomeAudience, 'collaborator');
   assert.equal(stored[1].welcomeFor, 'collab-customer');
   assert.equal(stored[1].liveTranscript.text, collaborator.text);
   assert.notEqual(stored[1].liveTranscript.text, stored[0].liveTranscript.text);
-  assert.deepEqual(stored[1].liveTranscript.telemetry, {
-    kind: 'canned_welcome',
-    tier: 'n/a',
-    model: 'n/a',
-    jevRan: false,
-    reason: 'fixed_onboarding_opener',
-  });
+  assert.deepEqual(stored[1].liveTranscript.jev, { jevRan: false, reason: 'fixed_onboarding_opener' });
 
   const storedBeforeMiss = stored.length;
   await assert.rejects(

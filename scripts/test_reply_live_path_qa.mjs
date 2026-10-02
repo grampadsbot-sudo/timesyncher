@@ -43,11 +43,9 @@ assert.equal(telemetry.modelId, tiers[3]);
 assert.equal(telemetry.generationMs, 480);
 
 const welcome = cannedWelcomeLiveTurn({ text: 'Welcome, Ada!', latencyMs: 1, sessionE2eMs: 1 });
-assert.equal(welcome.telemetry.kind, 'canned_welcome');
-assert.equal(welcome.telemetry.tier, 'n/a');
-assert.equal(welcome.telemetry.model, 'n/a');
-assert.equal(welcome.telemetry.jevRan, false);
-assert.equal(welcome.telemetry.reason, 'fixed_onboarding_opener');
+assert.equal(welcome.jevLatencyMs, null);
+assert.equal(welcome.generationMs, null);
+assert.deepEqual(welcome.jev, { jevRan: false, reason: 'fixed_onboarding_opener' });
 
 const system = replyRulesSystem({}, '', 'forbidden', false, 'hello', { purchasedPlan: 'single' });
 assert.match(system, /"purchased_plan":"single"/);
@@ -59,6 +57,7 @@ const party = completeRosterParty({
   ],
 });
 assert.ok(party.preference_subjects.some((kid) => kid.name === 'Sam'));
+assert.equal(party.collaborators.some((person) => person.name === 'Nico'), false);
 
 let shipped = null;
 const requestId = 'req-duplicate-test';
@@ -97,6 +96,7 @@ const itinerary = await readFile(new URL('../routes/vacation-itinerary.mjs', imp
 const replyShip = await readFile(new URL('../src/vacation/reply-ship.mjs', import.meta.url), 'utf8');
 assert.match(itinerary, /persistVacationAppOutboundReply\(/);
 assert.match(replyShip, /outboundAppReplyForRequest\(db, requestId\)/);
+assert.match(replyShip, /logVacationAppReplyTelemetry\(appLive\)/);
 assert.match(replyShip, /duplicateSuppressed: true/);
 assert.match(replyShip, /markWorkerJobLiveHandled\(db, jobId\)/);
 

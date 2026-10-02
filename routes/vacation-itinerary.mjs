@@ -31,7 +31,7 @@ import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-
 // Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
-import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
+import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import {
   applyLiveAppReplyFailureToPayload,
   commitShippedRewrite,
@@ -56,7 +56,7 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
-import { maybeRunCollaboratorInviteFromChat, runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
+import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 
@@ -420,6 +420,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     latencyMs: elapsed,
     sessionE2eMs: elapsed,
   });
+  logVacationAppReplyTelemetry(live);
   const payload = {
     source: 'vacation_app',
     surface: 'vacation-app',
@@ -493,7 +494,6 @@ function queueVacationAppHooks() {
 async function queueVacationAppTurn(db, session, trip, body) {
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const requestText = cleanText(body.text || body.message, 12000);
-  const inviteResult = await maybeRunCollaboratorInviteFromChat(db, session, trip, requestText, process.env);
   const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(
     requestText,
     process.env,
@@ -504,7 +504,6 @@ async function queueVacationAppTurn(db, session, trip, body) {
     classification,
     placeSearchTurn,
     webResearchTurn,
-    inviteResult,
   });
 }
 

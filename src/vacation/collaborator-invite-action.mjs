@@ -69,27 +69,3 @@ export async function runCollaboratorInviteAction(db, {
   };
 }
 
-export async function maybeRunCollaboratorInviteFromChat(db, session, trip, text, env = process.env) {
-  if (!shouldRunCollaboratorInviteFromChat(text)) return null;
-  const parsed = parseCollaboratorInviteTurn(text);
-  if (!parsed) return null;
-  const scope = resolveInviteScope(session, trip);
-  try {
-    return await runCollaboratorInviteAction(db, {
-      session,
-      tripId: scope.tripId,
-      name: parsed.name,
-      email: parsed.email,
-      env,
-    });
-  } catch (error) {
-    return {
-      ok: false,
-      code: error.code || 'collaborator_invite_failed',
-      inviteeEmail: parsed.email,
-      inviteeName: parsed.name,
-      error: error.message || 'Collaborator invite failed.',
-      statusCode: error.statusCode || 502,
-    };
-  }
-}

@@ -72,6 +72,7 @@ scripts/test_served_canned_needles.mjs
 scripts/test_vacation_selector_dropdown.mjs
 scripts/test_vacation_collaborators.mjs
 scripts/test_vacation_collaborator_invite_flow.mjs
+scripts/test_vacation_app_turn_actions_invite.mjs
 scripts/test_vacation_web_access.mjs
 scripts/test_welcome_after_intake_database.mjs
 scripts/test_void_stale_build.mjs
@@ -85,6 +86,11 @@ scripts/test_onboarding_welcome.mjs
 scripts/test_owner_welcome_on_landing.mjs
 scripts/test_reply_plan_entitlement.mjs
 scripts/test_reply_id_citation_weather.mjs
+scripts/test_reply_action_claim.mjs
+scripts/test_assign_dates_weekday.mjs
+scripts/test_shared_trip_stated_lodging_only.mjs
+scripts/test_intake_stated_lodging_customer.mjs
+scripts/test_first_intake_no_consent_policy.mjs
 scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs
 scripts/test_first_intake_echo.mjs

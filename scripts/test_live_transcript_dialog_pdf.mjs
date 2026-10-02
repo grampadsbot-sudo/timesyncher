@@ -539,8 +539,8 @@ const unnamedKids = completeRosterParty({
 assert.equal(unnamedKids.preference_subjects.length, 0);
 assert.deepEqual(unnamedKids.viewers, []);
 assert.deepEqual(unnamedKids.editors, []);
-assert.equal(unnamedKids.collaborators.map((person) => person.name).join(', '), 'Kimberly');
-assert.equal(unnamedKids.sources.some((item) => item.source === 'chat_extraction'), true);
+assert.deepEqual(unnamedKids.collaborators, []);
+assert.equal(unnamedKids.sources.some((item) => String(item.field || '').startsWith('collaborators.')), false);
 const wantsNotRoster = completeRosterParty({
   customerName: 'Craig',
   turns: [{ role: 'customer', text: 'Kimberly wants gardens.' }],
@@ -564,8 +564,7 @@ const parsedParty = completeRosterParty({
   turns: [{ role: 'customer', text: 'Kids are Torren who is eight, Peyton who is six, Keegan who is four, and Fallon who is two. Marcus Chen can look, and Aunt Jean can edit notes.' }],
 });
 assert.deepEqual(parsedParty.preference_subjects, []);
-assert.equal(parsedParty.collaborators.find((person) => /Kimberly/.test(person.name)).payer, 'owner');
-assert.equal(parsedParty.collaborators.find((person) => /Tyler/.test(person.name)).payer, 'tyler');
+assert.deepEqual(parsedParty.collaborators, []);
 assert.deepEqual(parsedParty.viewers, []);
 assert.deepEqual(parsedParty.editors, []);
 assert.equal(parsedParty.sources.some((item) => String(item.source).startsWith('customer:')), false);

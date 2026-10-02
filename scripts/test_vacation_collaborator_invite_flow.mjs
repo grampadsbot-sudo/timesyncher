@@ -26,7 +26,8 @@ assert.match(vacationApp, /!state\.session\?\.seat/);
 assert.match(sharedApp, /timesyncher-open-collaborator-invite/);
 assert.match(api, /inviteResult/);
 assert.match(api, /runCollaboratorInviteAction/);
-assert.match(queue, /inviteResult: intake\.inviteResult/);
+assert.match(queue, /runVacationAppTurnActions/);
+assert.match(queue, /turnActionResults/);
 
 const parsed = parseCollaboratorInviteTurn('Please add Alex, alex@example.com to the trip.');
 assert.equal(parsed.email, 'alex@example.com');
@@ -47,7 +48,10 @@ assert.equal(collabWelcome, templates.collaborator_no_site
 assert.doesNotMatch(collabWelcome, /https?:\/\//);
 
 const live = await readFile(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
-assert.match(live, /tripFacts\.inviteResult = inviteResult/);
+const turnActions = await readFile(new URL('../src/vacation/vacation-app-turn-actions.mjs', import.meta.url), 'utf8');
+assert.match(live, /turnActionResults/);
+assert.doesNotMatch(live, /tripFacts\.inviteResult/);
+assert.match(turnActions, /results\.invite = inviteRow\(true/);
 
 const inviteCalls = [];
 const inviteDb = async (strings, ...values) => {

@@ -14,27 +14,23 @@ assert.doesNotMatch(liveSource, cannedQuestion);
 
 const carried = draftingFacts([], 'Friday.', {
   things: [{ title: 'Swim' }],
-  needsCustomerInput: ['lodging', 'car', 'flight'],
-  flightAsk: 'preferredAirline',
+  needsCustomerInput: ['lodging'],
 });
-assert.deepEqual(carried.needsCustomerInput, ['lodging', 'car', 'flight']);
-assert.equal(carried.flightAsk, 'preferredAirline');
+assert.deepEqual(carried.needsCustomerInput, ['lodging']);
 const absent = draftingFacts([], 'Friday.', { things: [{ title: 'Swim' }] });
-assert.deepEqual(absent.needsCustomerInput, ['lodging', 'car', 'flight']);
-assert.equal(absent.flightAsk, 'preferredAirline');
+assert.deepEqual(absent.needsCustomerInput, ['lodging']);
 
 const inputContext = {
   itinerary: ['Swim: Monday'],
   dates: 'Saved trip dates: Fri through Sun.',
   roster: 'Traveling: Ada.',
-  needsCustomerInput: ['lodging', 'car', 'flight'],
-  flightAsk: 'preferredAirline',
+  needsCustomerInput: ['lodging'],
 };
 const withInput = replyRulesSystem({}, '', 'forbidden', false, 'We arrive Friday.', { tripContext: inputContext });
-assert.match(withInput, /"needsCustomerInput":\["lodging","car","flight"\]/);
-assert.match(withInput, /"flightAsk":"preferredAirline"/);
+assert.match(withInput, /"needsCustomerInput":\["lodging"\]/);
 assert.match(withInput, /Ask for that in your own words/);
 assert.doesNotMatch(withInput, cannedQuestion);
+assert.doesNotMatch(withInput, /flightAsk/);
 
 const withoutInput = replyRulesSystem({}, '', 'forbidden', false, 'We arrive Friday.', {
   tripContext: { itinerary: ['Swim: Monday'], dates: '', roster: '', rule: '' },
@@ -75,10 +71,8 @@ try {
   assert.equal(asked.responseModel, MODEL);
   const system = calls[0].body.messages.find((message) => message.role === 'system').content;
   const user = calls[0].body.messages.find((message) => message.role === 'user').content;
-  assert.match(system, /"needsCustomerInput":\["lodging","car","flight"\]/);
-  assert.match(system, /"flightAsk":"preferredAirline"/);
-  assert.match(user, /"needsCustomerInput":\["lodging","car","flight"\]/);
-  assert.match(user, /"flightAsk":"preferredAirline"/);
+  assert.match(system, /"needsCustomerInput":\["lodging"\]/);
+  assert.match(user, /"needsCustomerInput":\["lodging"\]/);
   assert.doesNotMatch(system, cannedQuestion);
   assert.doesNotMatch(user, cannedQuestion);
   assert.equal(calls[0].body.model, MODEL);

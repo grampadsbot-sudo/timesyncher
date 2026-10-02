@@ -80,6 +80,7 @@ export async function runCustomerChatPlaceSearch({
   tripStatedLodgingArea = '',
   lodging = '',
   lodgingPoint = null,
+  tripId = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
@@ -108,6 +109,7 @@ export async function runCustomerChatPlaceSearch({
   try {
     const search = await searchImpl({
       destination: plan.destination,
+      tripId,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
       keepAreaText: classification?.anchorIsLodging === true && !lodging,
@@ -177,6 +179,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     tripStatedLodgingArea: tripPlaceContext.tripStatedLodgingArea,
     lodging: lodgingAnchor.text,
     lodgingPoint: lodgingAnchor.point,
+    tripId,
     env: buildProviderEnv(env),
     searchImpl,
   });
