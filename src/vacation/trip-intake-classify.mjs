@@ -27,7 +27,7 @@ const THING_SYSTEM = [
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
   'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
-  'destination, hasDates, title, startDate, and endDate follow trip planning only. When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve stated ranges (for example March 10-17 2027) into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
+  'destination, hasDates, title, startDate, and endDate follow trip planning only. When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
 
 export function intakeExtractionDatesError(extractedFields = {}) {
