@@ -24,6 +24,7 @@ import {
   pickNominatimLodgingCandidate,
   trimNominatimEvidenceRow,
 } from './intake-lodging-nominatim.mjs';
+import { intakeLodgingWanted } from './trip-intake-classify.mjs';
 
 class IntakeLodgingResolveError extends Error {
   constructor(message, telemetry = null) {

@@ -316,26 +316,33 @@ export async function classifyTripIntake({
   const message = clean(text, 6000);
   const config = tripIntakeConfig(env);
   const model = routerModel || config.routerModel;
-  const failed = (error) => ({
-    ok: false,
-    intake: false,
-    turnKind: null,
-    target: '',
-    anchor: '',
-    anchorIsLodging: false,
-    category: '',
-    targetKind: '',
-    question: '',
-    things: [],
-    roster: [],
-    inviteeName: '',
-    inviteeEmail: '',
-    destination: '',
-    hasDates: false,
-    title: '',
-    routerModel: model || null,
-    error: clean(error, 300) || 'trip intake classification failed',
-  });
+  const failed = (error, extractedFields = null) => {
+    const categoryRaw = extractedFields ? String(extractedFields.category ?? '').trim() : '';
+    const targetKindRaw = extractedFields ? String(extractedFields.targetKind ?? '').trim() : '';
+    const turnKind = extractedFields ? String(extractedFields.turnKind || '').trim() : '';
+    return {
+      ok: false,
+      intake: false,
+      turnKind: turnKind || null,
+      target: extractedFields ? clean(extractedFields.target, 240) : '',
+      anchor: extractedFields ? clean(extractedFields.anchor, 180) : '',
+      anchorIsLodging: extractedFields?.anchorIsLodging === true,
+      category: categoryRaw ? normalizePlaceSearchCategory(categoryRaw) : '',
+      targetKind: targetKindRaw ? normalizePlaceSearchTargetKind(targetKindRaw) : '',
+      ...(categoryRaw ? { categoryRaw } : {}),
+      ...(targetKindRaw ? { targetKindRaw } : {}),
+      question: extractedFields ? clean(extractedFields.question, 600) : '',
+      things: [],
+      roster: [],
+      inviteeName: '',
+      inviteeEmail: '',
+      destination: extractedFields ? clean(extractedFields.destination, 180) : '',
+      hasDates: extractedFields?.hasDates === true,
+      title: extractedFields ? clean(extractedFields.title, 180) : '',
+      routerModel: model || null,
+      error: clean(error, 300) || 'trip intake classification failed',
+    };
+  };
   if (!message) {
     return {
       ok: true,
@@ -383,9 +390,9 @@ export async function classifyTripIntake({
     );
     const extractedFields = parseExtraction(chatText(extracted));
     const categoryError = intakePlaceSearchCategoryError(extractedFields);
-    if (categoryError) return failed(categoryError);
+    if (categoryError) return failed(categoryError, extractedFields);
     const targetKindError = intakePlaceSearchTargetKindError(extractedFields);
-    if (targetKindError) return failed(targetKindError);
+    if (targetKindError) return failed(targetKindError, extractedFields);
     const turnKind = extractedFields.turnKind;
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);
