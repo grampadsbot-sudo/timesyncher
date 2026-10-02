@@ -140,6 +140,8 @@ scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs
 scripts/test_place_search.mjs
 scripts/test_trip_things_insert.mjs
+scripts/test_trip_things_site_url_hook.mjs
+scripts/test_welcome_claim_without_turn.mjs
 scripts/test_place_category_radius.mjs
 scripts/test_ratings_source.mjs
 scripts/test_seat_price_data.mjs

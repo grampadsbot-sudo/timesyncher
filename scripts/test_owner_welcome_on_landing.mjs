@@ -43,6 +43,12 @@ function createWelcomeDb(state) {
   const claimKey = (sessionId, welcomeFor) => `${sessionId}|${welcomeFor}`;
   return async (strings, ...values) => {
     const text = sqlText(strings);
+    if (/from vacation_onboarding_welcomes/i.test(text) && /where onboarding_session_id =/i.test(text)) {
+      const sessionId = values[0];
+      const welcomeFor = values[1];
+      const key = claimKey(sessionId, welcomeFor);
+      return state.welcomeClaims.has(key) ? [{ id: 'welcome-claim-prior' }] : [];
+    }
     if (/insert into vacation_onboarding_welcomes/i.test(text)) {
       const sessionId = values[0];
       const welcomeFor = values[1];
@@ -61,6 +67,11 @@ function createWelcomeDb(state) {
       return [{ id: state.transcriptTurns.at(-1).id }];
     }
     if (/from customers/i.test(text)) return [{ first_name: firstName, display_name: firstName }];
+    if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) {
+      const audience = values.find((value) => value === 'owner' || value === 'collaborator');
+      const rows = state.welcomeTurns.filter((payload) => payload?.welcomeAudience === audience);
+      return rows.length ? [{ id: 'welcome-turn-existing' }] : [];
+    }
     if (/from transcript_turns/i.test(text) && /count\(\*\)/i.test(text)) {
       const welcomeCount = state.welcomeTurns.length;
       return [{ n: welcomeCount + state.transcriptTurns.length, started_at: new Date().toISOString() }];

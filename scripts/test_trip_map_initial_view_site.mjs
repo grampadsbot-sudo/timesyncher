@@ -17,5 +17,6 @@ assert.match(js, /tsTripMapInitialView=/);
 assert.match(js, /tsMapIv=I\.useMemo\(\(\)=>tsTripMapInitialView\(\{places:z,trip:r\}\)/);
 assert.match(js, /data-map-center-unresolved/);
 assert.match(js, /map_center_unresolved/);
+assert.match(js, /map_mount_failed/);
 
 console.log('trip map initial view site wiring tests passed');

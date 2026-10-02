@@ -31,7 +31,7 @@ const TRIP_MAP_VIEW_PATCH = 'No=p.map_tile_url||"https://{s}.basemaps.cartocdn.c
 
 const TRIP_MAP_LOG_NEEDLE = 'return I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
 
-const TRIP_MAP_LOG_PATCH = 'return I.useEffect(()=>{if(!tsMapIv.ok)console.error(JSON.stringify({event:"map_center_unresolved",code:tsMapIv.code||"map_center_unresolved",tripId:e}))},[tsMapIv.ok,tsMapIv.code,e]),I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
+const TRIP_MAP_LOG_PATCH = 'return I.useEffect(()=>{if(!tsMapIv.ok)console.error(JSON.stringify({event:"map_center_unresolved",code:tsMapIv.code||"map_center_unresolved",tripId:e}))},[tsMapIv.ok,tsMapIv.code,e]),I.useEffect(()=>{if(tsMapIv.ok&&jn){const lt=setTimeout(()=>{if(!document.querySelector(".leaflet-container,.mapboxgl-map"))console.error(JSON.stringify({event:"map_mount_failed",code:"map_mount_failed",tripId:e}))},3000);return()=>clearTimeout(lt)}},[tsMapIv.ok,jn,e]),I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
 
 const TRIP_MAP_PLAN_NEEDLE = 'Se==="plan"&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
 
@@ -55,7 +55,13 @@ export function patchTripMapInitialView(source = '') {
     js = js.replace(TRIP_MAP_INJECT_NEEDLE, `${TRIP_MAP_SNIPPET}${TRIP_MAP_INJECT_NEEDLE}`);
   }
   if (js.includes(TRIP_MAP_VIEW_NEEDLE)) js = js.replace(TRIP_MAP_VIEW_NEEDLE, TRIP_MAP_VIEW_PATCH);
+  else if (js.includes('tsMapIv=I.useMemo') && !js.includes('tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r})')) {
+    throw new Error('trip map initial view patch did not apply (view needle missing)');
+  }
   if (js.includes(TRIP_MAP_LOG_NEEDLE)) js = js.replace(TRIP_MAP_LOG_NEEDLE, TRIP_MAP_LOG_PATCH);
+  else if (js.includes('tsMapIv=I.useMemo') && !js.includes('map_mount_failed')) {
+    throw new Error('trip map mount guard patch did not apply (log needle missing)');
+  }
   if (js.includes(TRIP_MAP_PLAN_NEEDLE)) js = js.replace(TRIP_MAP_PLAN_NEEDLE, TRIP_MAP_PLAN_PATCH);
   js = js.replaceAll(MAP_CENTER_PARIS_A, 'center:r=void 0');
   js = js.replaceAll(MAP_CENTER_PARIS_B, 'center:z=void 0');
@@ -69,8 +75,11 @@ export function patchTripMapInitialView(source = '') {
   if (!js.includes('tsTripMapInitialView=')) {
     throw new Error('trip map initial view patch did not apply');
   }
-  if (js.includes(TRIP_MAP_VIEW_NEEDLE) && !js.includes('tsMapIv=I.useMemo')) {
+  if (!js.includes('tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r})')) {
     throw new Error('trip map initial view patch did not apply');
+  }
+  if (!js.includes('map_mount_failed')) {
+    throw new Error('trip map mount guard patch did not apply');
   }
   return js;
 }

@@ -139,6 +139,15 @@ function db(strings, ...values) {
     return state.trip ? [{ ...state.trip, current: true }] : [];
   }
   if (/select 1\s+from transcript_turns/i.test(text)) return state.turns.length ? [1] : [];
+  if (/from vacation_onboarding_welcomes/i.test(text) && /where onboarding_session_id =/i.test(text)) {
+    const key = `${values[0]}|${values[1]}`;
+    return state.welcomeClaims.has(key) ? [{ id: 'welcome-claim-prior' }] : [];
+  }
+  if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) {
+    const audience = values.find((value) => value === 'owner' || value === 'collaborator');
+    const rows = state.turns.filter((turn) => turn.payload?.welcomeAudience === audience);
+    return rows.length ? [{ id: 'welcome-turn' }] : [];
+  }
   if (/insert into vacation_onboarding_welcomes/i.test(text)) {
     const key = `${values[0]}|${values[1]}`;
     if (state.welcomeClaims.has(key)) return [];
@@ -306,8 +315,8 @@ const server = createServer(async (req, res) => {
   }
 });
 
-const helperPath = await resolveServedStaticPath(root, 'vacation-app-collaborator-invite.js');
-assert.ok(helperPath && helperPath.includes(`${path.sep}public${path.sep}`), 'public collaborator invite script must resolve for static tests');
+const helperPath = await resolveServedStaticPath(root, 'vacation-app-request.js');
+assert.ok(helperPath && helperPath.includes(`${path.sep}public${path.sep}`), 'public vacation app request script must resolve for static tests');
 
 try {
   const onboarding = await buildOnboardingFromCoupon({

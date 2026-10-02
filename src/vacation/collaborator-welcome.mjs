@@ -48,16 +48,6 @@ export async function collaboratorWelcomeTurnExists(db, session, trip) {
   const customerId = transcriptCustomerId(session);
   if (!customerId) return false;
   const welcomeFor = String(session.customer_id || '');
-  if (session?.id && welcomeFor) {
-    const claims = await db`
-      select id
-      from vacation_onboarding_welcomes
-      where onboarding_session_id = ${session.id}
-        and welcome_for = ${welcomeFor}
-      limit 1
-    `;
-    if (!claims.length) return false;
-  }
   const tripId = trip?.id || seat.ownerTripId || null;
   const rows = tripId
     ? await db`
@@ -82,7 +72,18 @@ export async function collaboratorWelcomeTurnExists(db, session, trip) {
         and payload->>'welcomeAudience' = 'collaborator'
       limit 1
     `;
-  return rows.length > 0;
+  if (rows.length > 0) return true;
+  if (session?.id && welcomeFor) {
+    const claims = await db`
+      select id
+      from vacation_onboarding_welcomes
+      where onboarding_session_id = ${session.id}
+        and welcome_for = ${welcomeFor}
+      limit 1
+    `;
+    if (claims.length) return false;
+  }
+  return false;
 }
 
 export async function ensureCollaboratorWelcomeAfterEulaAccept(db, sessionId, ensureOpener, env = process.env) {

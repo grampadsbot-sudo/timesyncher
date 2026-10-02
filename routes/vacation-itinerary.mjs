@@ -25,6 +25,7 @@ import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrlWhenThingsPresent } from '../src/vacation/trip-site-url-after-insert.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
@@ -433,7 +434,7 @@ async function welcomeInputs(db, session, trip) {
     const owner = owners[0] || {};
     const collabFirstName = welcomeFirstName(session.first_name || seat.displayName || session.display_name);
     const ownerFirstName = welcomeFirstName(owner.first_name || owner.display_name);
-    if (hasSite) {
+    if (hasSite && tripSiteUrl) {
       return {
         audience: 'collaborator',
         ownerFirstName,
@@ -450,10 +451,38 @@ async function welcomeInputs(db, session, trip) {
     };
   }
   const firstName = welcomeFirstName(session.first_name || session.display_name);
-  if (hasSite) {
+  if (hasSite && tripSiteUrl) {
     return { audience: 'owner', firstName, tripSiteUrl };
   }
   return { audience: 'owner_no_site', firstName };
+}
+
+async function onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience }) {
+  if (!customerId || !welcomeAudience) return false;
+  const rows = tripId
+    ? await db`
+      select id
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id = ${tripId}
+        and channel in ('vacation-app', 'vacation_app')
+        and speaker = 'app'
+        and direction = 'outbound'
+        and payload->>'welcomeAudience' = ${welcomeAudience}
+      limit 1
+    `
+    : await db`
+      select id
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id is null
+        and channel in ('vacation-app', 'vacation_app')
+        and speaker = 'app'
+        and direction = 'outbound'
+        and payload->>'welcomeAudience' = ${welcomeAudience}
+      limit 1
+    `;
+  return rows.length > 0;
 }
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
@@ -470,13 +499,31 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
+  if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+  const priorClaims = await db`
+    select id
+    from vacation_onboarding_welcomes
+    where onboarding_session_id = ${onboardingSessionId}
+      and welcome_for = ${welcomeFor}
+    limit 1
+  `;
   const claimed = await db`
     insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)
     values (${onboardingSessionId}, ${welcomeFor}, ${tripId})
     on conflict (onboarding_session_id, welcome_for) do nothing
     returning id
   `;
-  if (!claimed.length) return;
+  if (!claimed.length) {
+    if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+    if (!priorClaims.length) return;
+    console.error(JSON.stringify({
+      event: 'onboarding_welcome_claim_without_turn',
+      onboardingSessionId: String(onboardingSessionId),
+      welcomeFor: String(welcomeFor),
+      tripId: tripId ? String(tripId) : null,
+      welcomeAudience,
+    }));
+  }
   const inputs = await welcomeInputs(db, session, welcomeTrip);
   const missing = missingWelcomeFields(inputs);
   const started = Date.now();
@@ -735,6 +782,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
       );
     }
   }
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   return loadTripThings(db, tripId);
 }
 
@@ -850,6 +898,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     `;
     if (updated[0]?.id) savedThingIds.push(updated[0].id);
   }
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   const itinerary = await loadTripThings(db, tripId);
   itinerary.savedThingIds = savedThingIds;
   return itinerary;

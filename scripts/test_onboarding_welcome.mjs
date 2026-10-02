@@ -115,6 +115,12 @@ try {
   const claimKey = (sessionId, welcomeFor) => `${sessionId}|${welcomeFor}`;
   const db = async (strings, ...values) => {
     const query = strings.join(' ');
+    if (/from vacation_onboarding_welcomes/i.test(query) && /where onboarding_session_id =/i.test(query)) {
+      const sessionId = values[0];
+      const welcomeFor = values[1];
+      const key = claimKey(sessionId, welcomeFor);
+      return welcomeClaims.has(key) ? [{ id: 'welcome-claim-prior' }] : [];
+    }
     if (/insert into vacation_onboarding_welcomes/i.test(query)) {
       const sessionId = values[0];
       const welcomeFor = values[1];
@@ -127,6 +133,13 @@ try {
       const payload = values.find((value) => value && typeof value === 'object' && value.liveTranscript);
       stored.push(payload);
       return [{ id: `turn-${stored.length}` }];
+    }
+    if (/from transcript_turns/i.test(query) && /welcomeAudience/i.test(query)) {
+      const audience = values.find((value) => value === 'owner' || value === 'collaborator');
+      const tripId = values.find((value) => typeof value === 'string' && value.startsWith('trip-'));
+      const rows = stored.filter((payload) => payload?.welcomeAudience === audience
+        && (!tripId || payload?.selectedTripId === tripId));
+      return rows.length ? [{ id: 'welcome-turn-existing' }] : [];
     }
     if (/from customers/i.test(query)) {
       return [{ first_name: ownerFirstName, display_name: ownerFirstName }];
