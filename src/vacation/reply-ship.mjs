@@ -1,6 +1,7 @@
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
 import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry } from './reply-telemetry.mjs';
+import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 
 export async function outboundAppReplyForRequest(db, requestId) {
@@ -50,10 +51,13 @@ function liveAppReplyFailureOutcome(produced = {}) {
   };
 }
 
+export { attachBlockedFirstIntakeDraft, vacationAppTurnPayloadForClient } from './blocked-turn-payload.mjs';
+
 export function applyLiveAppReplyFailureToPayload(payload, customerLive, produced = {}) {
   const failure = liveAppReplyFailureOutcome(produced);
   payload.replyFailure = failure.replyFailure;
   customerLive.replyFailure = failure.replyFailure;
+  attachBlockedFirstIntakeDraft(payload, produced);
   if (produced.status === 'unsourced_place') {
     const record = {
       status: produced.status,

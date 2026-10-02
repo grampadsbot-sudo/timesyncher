@@ -71,6 +71,7 @@ scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs
 scripts/test_first_intake_echo.mjs
 scripts/test_first_intake_maui_staging.mjs
+scripts/test_first_intake_blocked_draft.mjs
 scripts/test_trip_site_url_purchase.mjs
 scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs

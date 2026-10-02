@@ -32,7 +32,7 @@ import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
-import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { applyLiveAppReplyFailureToPayload, commitShippedRewrite, markWorkerJobLiveHandled, persistVacationAppOutboundReply, storeReplyFailure, vacationAppTurnPayloadForClient } from '../src/vacation/reply-ship.mjs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import {
   classifyVacationAppCustomerTurn,
@@ -260,15 +260,16 @@ async function loadVacationAppTurns(db, session, tripId) {
   `;
   return rows.reverse().map((row) => {
     const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
-    const live = payload.liveTranscript && typeof payload.liveTranscript === 'object' ? payload.liveTranscript : {};
+    const clientPayload = vacationAppTurnPayloadForClient(payload);
+    const live = clientPayload.liveTranscript && typeof clientPayload.liveTranscript === 'object' ? clientPayload.liveTranscript : {};
     const turn = {
       speaker: row.speaker || 'customer',
       body: row.body || '',
       channel: row.channel || '',
       direction: row.direction || '',
-      payload,
-      authorName: String(payload.authorName || live.speakerName || ''),
-      authorId: String(payload.authorId || ''),
+      payload: clientPayload,
+      authorName: String(clientPayload.authorName || live.speakerName || ''),
+      authorId: String(clientPayload.authorId || ''),
       at: row.received_at || row.sent_at || row.created_at || null,
     };
     const named = turnAuthorLabel(turn, session, people);

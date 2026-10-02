@@ -3,9 +3,11 @@ import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { intakeDatesFromCustomerSaid } from './first-intake-dates.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
+import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
+
+export { firstIntakeReplyLeak, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
+
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const WEEKDAY_WORD = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g;
-const INVENTED_PARTY = /\balready (?:a |your )?collaborator\b|\balready (?:has|have) access\b|\bjust you and (?:him|her|them)\b/i;
 
 function sessionFirstName(session) {
   const first = String(session?.first_name || session?.firstName || '').trim();
@@ -80,8 +82,6 @@ function civilToday(nowMs = Date.now()) {
 }
 
 export const VIEW_WITHOUT_SIGN_IN = 'anyone with the trip link can view plans and photos without signing in';
-
-const FIRST_INTAKE_LEAK = /\b(?:tier|route|model|jev)\b/i;
 
 const FIRST_INTAKE_TONE = [
   'Address the customer in the second person. Use customer_name when it is present, copied verbatim. Do not use a customer id, a session id, or a trip id. Do not speak about the customer in the third person.',
@@ -199,10 +199,6 @@ function isDirectQuestion(said) {
 
 function asksViewWithoutSignIn(said) {
   return /\bview(?:ing)?\b/i.test(said) && /\b(?:sign(?:ing)?[\s-]?in|log(?:ging)?[\s-]?in)\b/i.test(said);
-}
-
-export function firstIntakeReplyLeak(reply) {
-  return FIRST_INTAKE_LEAK.test(String(reply || ''));
 }
 
 function uniqueFactNames(list, max = 80) {
@@ -431,68 +427,32 @@ export async function produceFirstIntakeReply({
   }
   if (!reply) {
     const visible = model?.called && model.text ? String(model.text).trim() : '';
+    const blockedReasons = visible ? intakeReplyBlockReasons(visible, appTextBanned, facts, ids) : [];
+    const fallbackReason = model?.reason || 'first intake reply model returned no reply';
     return {
       reply: null,
       rules,
       jev,
       model,
-      reason: (visible && intakeReplyBlock(visible, appTextBanned, facts, ids)) || model?.reason || 'first intake reply model returned no reply',
+      reason: (visible && intakeReplyBlock(visible, appTextBanned, facts, ids)) || fallbackReason,
+      blockedDraft: visible || '',
+      blockedReasons: blockedReasons.length ? blockedReasons : (visible ? [fallbackReason] : [fallbackReason]),
     };
   }
-  assertCustomerReplyShippable(reply, tripId);
+  try {
+    assertCustomerReplyShippable(reply, tripId);
+  } catch (error) {
+    if (error?.name !== 'reply_id_citation_blocked') throw error;
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: 'reply_id_citation_blocked',
+      blockedDraft: reply,
+      blockedReasons: [String(error.reason || 'reply_id_citation_blocked')],
+    };
+  }
   return { reply, rules, jev, model, reason: null };
-}
-
-function questionCount(reply) {
-  return (String(reply || '').match(/\?/g) || []).length;
-}
-
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function shortenedName(reply, names) {
-  const text = String(reply || '');
-  for (const name of names) {
-    const full = String(name || '').trim();
-    if (full.length < 4 || text.includes(full)) continue;
-    for (let length = 3; length < full.length; length += 1) {
-      const prefix = full.slice(0, length).trim();
-      if (prefix.length < 3) continue;
-      if (new RegExp(`\\b${escapeRegExp(prefix)}\\b`).test(text)) return full;
-    }
-  }
-  return '';
-}
-
-function relativeMonthPhrase(text) {
-  const match = /\bnext\s+([A-Za-z]{4,})\b/i.exec(String(text || ''));
-  if (!match) return false;
-  const word = match[1];
-  if (word[0] !== word[0].toUpperCase()) return false;
-  return !WEEKDAYS.some((day) => day.toLowerCase() === word.toLowerCase());
-}
-
-export function intakeReplyBlock(reply, banned = appTextBanned, facts = {}, ids = []) {
-  const reason = banned(reply);
-  if (reason && reason !== 'app reply text is empty') return reason;
-  const text = String(reply || '').trim();
-  if (!text) return '';
-  if (firstIntakeReplyLeak(text)) return 'first_intake_reply_flagged';
-  for (const id of ids || []) if (id && text.includes(id)) return 'first_intake_reply_flagged';
-  if (INVENTED_PARTY.test(text)) return 'first_intake_reply_flagged';
-  const allowedDays = new Set([facts?.weekday, facts?.end_weekday].filter(Boolean));
-  for (const day of String(facts?.customer_said || '').match(WEEKDAY_WORD) || []) allowedDays.add(day);
-  for (const day of text.match(WEEKDAY_WORD) || []) {
-    if (!allowedDays.has(day)) return 'first_intake_reply_flagged';
-  }
-  if (facts?.when_relative !== true && relativeMonthPhrase(text)) return 'first_intake_reply_flagged';
-  const names = [...(facts?.who || []), ...(facts?.collaborators || []), facts?.customer_name].filter(Boolean);
-  if (shortenedName(text, names)) return 'first_intake_reply_flagged';
-  const questions = questionCount(text);
-  if (facts?.shape === 'gaps') {
-    if (questions < 2 || questions > 3) return 'first_intake_reply_flagged';
-  } else if (facts?.shape !== 'no-trip' && questions !== 1) return 'first_intake_reply_flagged';
-  return '';
 }
 
