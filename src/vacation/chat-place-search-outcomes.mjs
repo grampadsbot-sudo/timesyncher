@@ -1,5 +1,6 @@
 import { placeSearchTelemetry } from './in-turn-search-telemetry.mjs';
 import { placeSearchReplyFacts } from './place-search-reply-facts.mjs';
+import { pickPlaceSearchDiagnostics } from './place-search-diagnostics-pick.mjs';
 
 export function customerChatPlaceSearchNoResults(search) {
   return {
@@ -16,21 +17,31 @@ export async function persistTurnPlaceSearchNoResults(db, turnId, {
   customerLive,
   providerAttempts = [],
   classifierMeta = {},
+  search = null,
   providerErrors = null,
   judgeInput = null,
   searchCenter = null,
   anchor = null,
 } = {}) {
+  const diagnostics = pickPlaceSearchDiagnostics(search);
   const placeSearch = placeSearchTelemetry({
     status: 'no_results',
     error: null,
     things: [],
     providerAttempts,
-    providerErrors,
-    judgeInput,
-    searchCenter,
-    anchor,
+    providerErrors: providerErrors ?? diagnostics.providerErrors ?? null,
+    judgeInput: judgeInput ?? diagnostics.judgeInput ?? null,
+    searchCenter: searchCenter ?? diagnostics.searchCenter ?? null,
+    anchor: anchor ?? diagnostics.anchor ?? null,
+    braveLookups: diagnostics.braveLookups ?? null,
+    anchorRadiusPolicy: diagnostics.anchorRadiusPolicy ?? null,
+    anchorRadiusRejections: diagnostics.anchorRadiusRejections ?? null,
+    relevanceRejections: diagnostics.relevanceRejections ?? null,
+    dedupeMerges: diagnostics.dedupeMerges ?? null,
     ...classifierMeta,
+    ...(Number(diagnostics.anchorRadiusRejected) > 0
+      ? { anchorRadiusRejected: diagnostics.anchorRadiusRejected }
+      : {}),
   });
   payload.placeSearch = placeSearch;
   customerLive.placeSearch = placeSearch;

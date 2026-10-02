@@ -21,6 +21,11 @@ import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
 import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
 import { distanceMeters, samePlace } from './place-search-same-place.mjs';
+import {
+  ANCHOR_RADIUS_SCOPE_DESTINATION,
+  ANCHOR_RADIUS_SCOPE_LODGING,
+  radiusMetersForAnchorScope,
+} from './place-search-radius-filter.mjs';
 
 export { PlaceSearchError };
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
@@ -290,10 +295,19 @@ function braveCallSummary(calls) {
   return { query, endpoint };
 }
 
-export async function queryBravePlaceSearch(fetchImpl, env, { center, locationText, compactLocality = '' }, queries) {
+export async function queryBravePlaceSearch(fetchImpl, env, {
+  center,
+  locationText,
+  compactLocality = '',
+  namedPlaceLookup = false,
+}, queries) {
   const places = [];
   const calls = [];
   let anchorRadiusRejected = 0;
+  const anchorRadiusRejections = [];
+  const braveRadiusScope = namedPlaceLookup
+    ? ANCHOR_RADIUS_SCOPE_DESTINATION
+    : ANCHOR_RADIUS_SCOPE_LODGING;
   const area = String(locationText || center?.label || '').trim();
   const locality = String(compactLocality || center?.compactLocality || '').trim();
   try {
@@ -329,8 +343,20 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
         const address = braveAddress(result);
         const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
         if (!title) continue;
-        if (center && metersInsideCategory(center, point, item.category) === null) {
+        const limitMeters = radiusMetersForAnchorScope(item.category, braveRadiusScope);
+        const meters = center ? distanceMeters(center, point) : null;
+        if (center && (meters === null || meters > limitMeters)) {
           anchorRadiusRejected += 1;
+          anchorRadiusRejections.push({
+            title,
+            source: 'brave',
+            lat: point.lat,
+            lng: point.lng,
+            meters,
+            limitMeters,
+            scope: braveRadiusScope,
+            reason: 'outside_radius',
+          });
           continue;
         }
         const providerCategories = braveProviderCategories(result);
@@ -369,6 +395,7 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
     rawResults,
     ...(braveLookups.length ? { braveLookups } : {}),
     ...(anchorRadiusRejected > 0 ? { anchorRadiusRejected } : {}),
+    ...(anchorRadiusRejections.length ? { anchorRadiusRejections } : {}),
     ...braveCallSummary(calls),
   };
 }
@@ -561,6 +588,10 @@ export async function searchPlaces({
       ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
       ...(Array.isArray(pass.providerErrors) && pass.providerErrors.length ? { providerErrors: pass.providerErrors } : {}),
       ...(Array.isArray(pass.braveLookups) && pass.braveLookups.length ? { braveLookups: pass.braveLookups } : {}),
+      ...(pass.anchorRadiusPolicy ? { anchorRadiusPolicy: pass.anchorRadiusPolicy } : {}),
+      ...(Array.isArray(pass.anchorRadiusRejections) && pass.anchorRadiusRejections.length
+        ? { anchorRadiusRejections: pass.anchorRadiusRejections }
+        : {}),
     };
     if (pass.status === 'no_results') {
       return {

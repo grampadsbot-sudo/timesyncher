@@ -1,6 +1,13 @@
 import { providerFailureMessage, resolveSearchContext, tryGeocodeLabel } from './place-search-geocode.mjs';
 import { buildPlaceSearchFailureDiagnostics } from './place-search-failure-diagnostics.mjs';
-import { anchorRadiusCenter, filterPlacesWithinRadius } from './place-search-radius-filter.mjs';
+import {
+  ANCHOR_RADIUS_SCOPE_DESTINATION,
+  ANCHOR_RADIUS_SCOPE_LODGING,
+  anchorRadiusCenter,
+  filterPlacesWithinRadius,
+  radiusMetersForAnchorScope,
+} from './place-search-radius-filter.mjs';
+import { namedPlaceSearchTarget } from './place-search-named-target.mjs';
 
 function providerRowIsError(row = {}) {
   return String(row?.status || '').trim().toLowerCase() === 'error';
@@ -56,7 +63,22 @@ function everyPlaceResultProviderErrored(providerLog = []) {
 
 const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
 
-function resolveBraveCompactLocality({ searchAnchor, context, relevanceContext, dest }) {
+function resolveBraveCompactLocality({
+  namedPlaceLookup,
+  searchAnchor,
+  context,
+  relevanceContext,
+  dest,
+}) {
+  if (namedPlaceLookup) {
+    const fromContext = String(context?.compactLocality || context?.center?.compactLocality || '').trim();
+    if (fromContext) return fromContext;
+    const fromRelevance = String(relevanceContext?.area || '').trim();
+    if (fromRelevance && !fromRelevance.includes(',')) return fromRelevance;
+    const tripDest = String(dest || '').trim();
+    if (tripDest && !tripDest.includes(',')) return tripDest;
+    return fromRelevance || tripDest;
+  }
   const anchor = String(searchAnchor?.text || '').trim();
   if (anchor) return anchor;
   const fromContext = String(context?.compactLocality || context?.center?.compactLocality || '').trim();
@@ -66,6 +88,22 @@ function resolveBraveCompactLocality({ searchAnchor, context, relevanceContext, 
   const tripDest = String(dest || '').trim();
   if (tripDest && !tripDest.includes(',')) return tripDest;
   return fromRelevance || tripDest;
+}
+
+function anchorRadiusPolicySnapshot(radiusCenter, scope, categoryFallback = 'restaurant') {
+  if (!radiusCenter) return null;
+  const lat = Number(radiusCenter.lat);
+  const lng = Number(radiusCenter.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return {
+    scope,
+    center: {
+      lat,
+      lng,
+      ...(radiusCenter.label ? { label: String(radiusCenter.label).trim() } : {}),
+    },
+    radiusMeters: radiusMetersForAnchorScope(categoryFallback, scope),
+  };
 }
 
 /** All place-result providers finished without errors and none returned live rows. */
@@ -115,7 +153,10 @@ export async function runPlaceProviderPass({
   );
   const center = context.center;
   const locationText = context.locationText || dest;
+  const judgeTarget = String(relevanceContext?.target || '').trim();
+  const namedPlaceLookup = namedPlaceSearchTarget(judgeTarget, placeQueries);
   const braveCompactLocality = resolveBraveCompactLocality({
+    namedPlaceLookup,
     searchAnchor,
     context,
     relevanceContext,
@@ -124,19 +165,35 @@ export async function runPlaceProviderPass({
   let braveLookups = [];
   const anchorText = String(searchAnchor?.text || '').trim();
   let anchorGeocode = null;
-  if (anchorText) {
+  if (anchorText && !namedPlaceLookup) {
     anchorGeocode = await tryGeocodeLabel(fetchImpl, anchorText, providerLog, readJson);
   }
-  const radiusCenter = anchorRadiusCenter(anchorGeocode, center);
-  const queryCenter = radiusCenter || center;
+  const lodgingRadiusCenter = namedPlaceLookup ? null : anchorRadiusCenter(anchorGeocode, null);
+  const destinationRadiusCenter = anchorRadiusCenter(null, center);
+  const radiusScope = namedPlaceLookup ? ANCHOR_RADIUS_SCOPE_DESTINATION : ANCHOR_RADIUS_SCOPE_LODGING;
+  const radiusCenter = namedPlaceLookup
+    ? destinationRadiusCenter
+    : (lodgingRadiusCenter || destinationRadiusCenter);
+  const queryCenter = namedPlaceLookup
+    ? destinationRadiusCenter
+    : (lodgingRadiusCenter || destinationRadiusCenter);
+  const primaryCategory = String(placeQueries?.[0]?.category || 'restaurant').trim().toLowerCase();
+  const anchorRadiusPolicy = anchorRadiusPolicySnapshot(radiusCenter, radiusScope, primaryCategory);
   let anchorRadiusRejected = 0;
+  const anchorRadiusRejections = [];
 
   function dropOutsideAnchorRadius(places, categoryFallback = '') {
     if (!radiusCenter) return Array.isArray(places) ? places : [];
-    const filtered = filterPlacesWithinRadius(places, radiusCenter, (place) => (
-      String(place?.category || categoryFallback || '').trim().toLowerCase()
-    ));
+    const filtered = filterPlacesWithinRadius(
+      places,
+      radiusCenter,
+      (place) => String(place?.category || categoryFallback || '').trim().toLowerCase(),
+      radiusScope,
+    );
     anchorRadiusRejected += filtered.rejected;
+    if (Array.isArray(filtered.rejections) && filtered.rejections.length) {
+      anchorRadiusRejections.push(...filtered.rejections);
+    }
     return filtered.places;
   }
 
@@ -211,9 +268,13 @@ export async function runPlaceProviderPass({
       center: queryCenter,
       locationText,
       compactLocality: braveCompactLocality,
+      namedPlaceLookup,
     }, placeQueries);
     if (Number(found?.anchorRadiusRejected) > 0) {
       anchorRadiusRejected += Number(found.anchorRadiusRejected);
+    }
+    if (Array.isArray(found?.anchorRadiusRejections) && found.anchorRadiusRejections.length) {
+      anchorRadiusRejections.push(...found.anchorRadiusRejections);
     }
     brave = dropOutsideAnchorRadius(Array.isArray(found) ? found : (found?.places || []));
     const query = String(found?.query || '').trim();
@@ -253,7 +314,6 @@ export async function runPlaceProviderPass({
   const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
   const namedArea = String(relevanceContext?.area || '').trim();
   const judgeArea = namedArea || locationText || dest;
-  const judgeTarget = String(relevanceContext?.target || '').trim();
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({
@@ -262,6 +322,8 @@ export async function runPlaceProviderPass({
       judgeArea,
       anchor: searchAnchor,
       anchorRadiusRejected,
+      anchorRadiusPolicy,
+      anchorRadiusRejections,
       relevanceRejections: rejections,
       survivingPriorDbTitles,
       dedupeMerges,

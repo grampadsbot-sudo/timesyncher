@@ -8,14 +8,16 @@ function clean(value, max) {
 }
 
 export function queriesFromPlaceClassification(classification, tripDestination = '', lodgingText = '', tripResolvedArea = '', tripStatedLodgingArea = '') {
-  const destination = resolvePlaceSearchDestination({
+  const lodgingArea = resolvePlaceSearchDestination({
     classification,
     lodgingText,
     tripStatedLodgingArea,
     tripDestination,
     tripResolvedArea,
   });
+  const tripDest = clean(tripDestination, 180) || clean(tripResolvedArea, 180);
   const target = clean(classification?.target, 240);
+  const destination = intakeThingHasProperName(target) ? (tripDest || lodgingArea) : lodgingArea;
   const category = normalizePlaceSearchCategory(classification?.category);
   const q = target
     ? (intakeThingHasProperName(target)

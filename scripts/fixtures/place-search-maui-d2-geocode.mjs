@@ -11,11 +11,23 @@ export const MAUI_D2_GEOCODE = {
   },
 };
 
+export const KIHEI_LODGING_GEOCODE = {
+  lat: '20.763395',
+  lon: '-156.4463997',
+  display_name: 'Kihei, Maui County, Hawaii, United States',
+  address: {
+    town: 'Kihei',
+    county: 'Maui County',
+    state: 'Hawaii',
+    country_code: 'us',
+  },
+};
+
 export const PAIA_FISH_MARKET_BRAVE = [{
   id: 'loc-paia-fish-market',
   title: 'Paia Fish Market',
-  latitude: 20.81,
-  longitude: -156.32,
+  latitude: 20.915,
+  longitude: -156.381,
   categories: ['restaurant'],
   postal_address: {
     displayAddress: '300 Baldwin Ave, Paia, HI 96779',

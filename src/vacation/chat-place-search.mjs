@@ -10,6 +10,7 @@ import {
   placeSearchClientError,
 } from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
+import { namedPlaceSearchTarget } from './place-search-named-target.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 import {
   customerChatPlaceSearchNoResults,
@@ -121,7 +122,11 @@ export async function runCustomerChatPlaceSearch({
     tripResolvedArea,
   });
   const plan = queriesFromPlaceClassification(classification, tripDestination, lodging, tripResolvedArea, tripStatedLodgingArea);
-  if (!plan.destination) {
+  const namedPlaceLookup = namedPlaceSearchTarget(clean(classification?.target, 240), plan.queries);
+  const geocodeDestination = namedPlaceLookup
+    ? (clean(tripDestination, 180) || clean(tripResolvedArea, 180) || plan.destination)
+    : plan.destination;
+  if (!plan.destination && !geocodeDestination) {
     const error = 'Place search needs a trip destination or a named area in the message.';
     console.error(`customer chat place search refused: ${error}`);
     return {
@@ -134,7 +139,7 @@ export async function runCustomerChatPlaceSearch({
   }
   try {
     const search = await searchImpl({
-      destination: plan.destination,
+      destination: geocodeDestination,
       tripId,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
@@ -225,10 +230,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       customerLive,
       providerAttempts,
       classifierMeta,
-      providerErrors: chatSearch.search?.providerErrors || null,
-      judgeInput: chatSearch.search?.judgeInput || null,
-      searchCenter: chatSearch.search?.searchCenter || null,
-      anchor: chatSearch.search?.anchor || null,
+      search: chatSearch.search,
     });
     return { kind: 'no_results', error: null, placeSearch, placeSearchTurn };
   }

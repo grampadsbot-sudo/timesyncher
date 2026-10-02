@@ -24,6 +24,8 @@ export function buildPlaceSearchFailureDiagnostics({
   dedupeMerges = [],
   providerErrors = [],
   braveLookups = [],
+  anchorRadiusPolicy = null,
+  anchorRadiusRejections = [],
 } = {}) {
   const lat = finite(center?.lat);
   const lng = finite(center?.lng);
@@ -57,6 +59,41 @@ export function buildPlaceSearchFailureDiagnostics({
     endpoint: String(row?.endpoint || '').trim().slice(0, 40),
   })).filter((row) => row.query && row.endpoint);
   if (lookups.length) diagnostics.braveLookups = lookups;
+  if (anchorRadiusPolicy && typeof anchorRadiusPolicy === 'object') {
+    const policyLat = finite(anchorRadiusPolicy?.center?.lat);
+    const policyLng = finite(anchorRadiusPolicy?.center?.lng);
+    diagnostics.anchorRadiusPolicy = {
+      scope: String(anchorRadiusPolicy.scope || '').trim(),
+      ...(Number.isFinite(Number(anchorRadiusPolicy.radiusMeters))
+        ? { radiusMeters: Number(anchorRadiusPolicy.radiusMeters) }
+        : {}),
+      ...(policyLat !== null && policyLng !== null
+        ? {
+          center: {
+            lat: policyLat,
+            lng: policyLng,
+            ...(anchorRadiusPolicy.center?.label
+              ? { label: String(anchorRadiusPolicy.center.label).trim() }
+              : {}),
+          },
+        }
+        : {}),
+    };
+  }
+  const radiusRejections = (Array.isArray(anchorRadiusRejections) ? anchorRadiusRejections : [])
+    .slice(0, 20)
+    .map((row) => ({
+      title: String(row?.title || '').trim(),
+      source: String(row?.source || '').trim(),
+      ...(Number.isFinite(Number(row?.lat)) ? { lat: Number(row.lat) } : {}),
+      ...(Number.isFinite(Number(row?.lng)) ? { lng: Number(row.lng) } : {}),
+      ...(Number.isFinite(Number(row?.meters)) ? { meters: Number(row.meters) } : {}),
+      ...(Number.isFinite(Number(row?.limitMeters)) ? { limitMeters: Number(row.limitMeters) } : {}),
+      scope: String(row?.scope || '').trim(),
+      reason: String(row?.reason || '').trim(),
+    }))
+    .filter((row) => row.title || row.reason);
+  if (radiusRejections.length) diagnostics.anchorRadiusRejections = radiusRejections;
   return diagnostics;
 }
 
@@ -75,6 +112,8 @@ export function placeSearchDiagnosticsFromError(error) {
     'judgeBodySnippet',
     'providerErrors',
     'braveLookups',
+    'anchorRadiusPolicy',
+    'anchorRadiusRejections',
   ]) {
     if (error[key] !== undefined) picked[key] = error[key];
   }
