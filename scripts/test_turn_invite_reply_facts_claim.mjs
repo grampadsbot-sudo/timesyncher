@@ -21,7 +21,7 @@ assert.equal(tripContext.turnInvite.inviteeEmail, 'kim@example.com');
 const emailedReply = 'I emailed the invite to kim@example.com so she can accept and join.';
 assert.equal(replyActionClaimReason(emailedReply, inviteOk, { activeCollaborators: [] }), '');
 
-const pendingContext = { activeCollaborators: [] };
+const pendingContext = { activeCollaborators: [], pendingInviteeNames: ['Kim'] };
 assert.equal(
   replyActionClaimReason('welcome, Kim!', inviteOk, pendingContext),
   REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP,

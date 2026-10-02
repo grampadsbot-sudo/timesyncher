@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import {
-  parseCollaboratorInviteTurn,
   runCollaboratorInviteAction,
   shouldRunCollaboratorInviteFromChat,
 } from '../src/vacation/collaborator-invite-action.mjs';
@@ -29,10 +28,9 @@ assert.match(api, /runCollaboratorInviteAction/);
 assert.match(queue, /runVacationAppTurnActions/);
 assert.match(queue, /turnActionResults/);
 
-const parsed = parseCollaboratorInviteTurn('Please add Alex, alex@example.com to the trip.');
-assert.equal(parsed.email, 'alex@example.com');
-assert.equal(parsed.name, 'Alex');
-assert.equal(shouldRunCollaboratorInviteFromChat('Please add Alex, alex@example.com to the trip.'), true);
+const classification = { inviteeName: 'Alex', inviteeEmail: 'alex@example.com' };
+assert.equal(shouldRunCollaboratorInviteFromChat(classification), true);
+assert.equal(shouldRunCollaboratorInviteFromChat(null), false);
 
 const templates = JSON.parse(await readFile(new URL('../content/onboarding-welcome.json', import.meta.url), 'utf8'));
 const collabWelcome = renderOnboardingWelcome({

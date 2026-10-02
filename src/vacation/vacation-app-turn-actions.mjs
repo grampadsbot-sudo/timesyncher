@@ -6,8 +6,13 @@ import {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
-function inviteRow(ok, code, inviteeEmail) {
-  return { ok: Boolean(ok), code: String(code || ''), inviteeEmail: inviteeEmail ? String(inviteeEmail).toLowerCase() : null };
+function inviteRow(ok, code, inviteeEmail, inviteeName = '') {
+  return {
+    ok: Boolean(ok),
+    code: String(code || ''),
+    inviteeEmail: inviteeEmail ? String(inviteeEmail).toLowerCase() : null,
+    inviteeName: inviteeName ? String(inviteeName) : null,
+  };
 }
 
 function emailSendSucceeded(status) {
@@ -39,7 +44,7 @@ export async function runVacationAppTurnActions({
 } = {}) {
   const results = {};
   if (!db || !session?.customer_id || seatFromSession(session)) return results;
-  if (!shouldRunCollaboratorInviteFromChat(requestText, classification)) return results;
+  if (!shouldRunCollaboratorInviteFromChat(classification)) return results;
 
   const fromClassifier = collaboratorInviteFromClassification(classification);
   const inviteeEmail = fromClassifier?.email ? String(fromClassifier.email).toLowerCase() : null;
@@ -77,7 +82,7 @@ export async function runVacationAppTurnActions({
       results.invite = inviteRow(false, 'send_failed', inviteeEmail);
       return results;
     }
-    results.invite = inviteRow(true, 'collaborator_invite_sent', inviteeEmail);
+    results.invite = inviteRow(true, 'collaborator_invite_sent', inviteeEmail, inviteeName);
   } catch (error) {
     results.invite = mapInviteError(error, inviteeEmail);
   }

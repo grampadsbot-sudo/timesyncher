@@ -1,5 +1,5 @@
 import { assignDatesScheduling } from './intake-shared-trip.mjs';
-import { activeCollaboratorsFromParty } from './reply-action-claim.mjs';
+import { activeCollaboratorsFromParty, partyNamesFromDialogParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
 
 function clean(value, max = 180) {
@@ -88,24 +88,43 @@ export function chatPlaceSearchSavedReplyFacts(savedThings = [], tripStart = '',
       whenLabel: clean(item?.whenLabel, 180),
       customerWhen: clean(item?.customerWhen, 180),
     };
+    const whenLabel = clean(item?.whenLabel, 180) || clean(item?.customerWhen, 180);
     const { dates, weekdayAmbiguous, candidateDates } = assignDatesScheduling(record, year, tripDates);
     if (!dates.length) {
       unscheduled.push({
         title,
+        ...(whenLabel ? { whenLabel } : {}),
         ...(weekdayAmbiguous ? { weekdayAmbiguous: true, candidateDates } : {}),
       });
     } else scheduled.push({ title, dates });
   }
   if (!unscheduled.length && !scheduled.length) return null;
-  return { chatPlaceSearch: { unscheduled, scheduled } };
+  const chatPlaceSearch = { unscheduled, scheduled };
+  if (unscheduled.some((row) => row.weekdayAmbiguous)) {
+    chatPlaceSearch.weekdayAmbiguityRule =
+      'Some saved places name a weekday that matches more than one trip day; use candidateDates and ask which day before scheduling.';
+  }
+  return { chatPlaceSearch };
 }
 
-export function vacationAppReplyClaimContext(trip, placeSearchReplyFacts) {
+export function vacationAppReplyClaimContext(trip, placeSearchReplyFacts, {
+  roster = [],
+  turnActionResults = null,
+} = {}) {
   const meta = trip?.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
   const party = meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : {};
   const unscheduledChatPlaceTitles = unscheduledChatPlaceTitlesFromReplyFacts(placeSearchReplyFacts);
+  const rosterMemberNames = (Array.isArray(roster) ? roster : [])
+    .map((person) => String(person?.name || '').trim())
+    .filter(Boolean);
+  const turnInviteeNames = [];
+  const inviteName = String(turnActionResults?.invite?.inviteeName || '').trim();
+  if (inviteName) turnInviteeNames.push(inviteName);
   return {
     activeCollaborators: activeCollaboratorsFromParty(party),
+    rosterMemberNames: [...new Set([...rosterMemberNames, ...partyNamesFromDialogParty(party)])],
+    turnInviteeNames,
+    dialogParty: party,
     ...(unscheduledChatPlaceTitles.length ? { unscheduledChatPlaceTitles } : {}),
   };
 }

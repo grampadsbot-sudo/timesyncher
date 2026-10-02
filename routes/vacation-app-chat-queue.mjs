@@ -409,7 +409,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
     turnActionResults,
   };
-  const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts);
+  const replyClaimContext = vacationAppReplyClaimContext(trip, placeSearchReplyFacts, { roster: classification.roster, turnActionResults });
   const blockReplyShipGate = async (replyText) => {
     const actionBlocked = await blockVacationAppReplyActionClaim({
       replyText,

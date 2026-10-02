@@ -20,6 +20,7 @@ assert.deepEqual(success.invite, {
   ok: true,
   code: 'collaborator_invite_sent',
   inviteeEmail: 'kim.rivera.sct@agentmail.to',
+  inviteeName: 'Kim',
 });
 
 const missingName = await runVacationAppTurnActions({

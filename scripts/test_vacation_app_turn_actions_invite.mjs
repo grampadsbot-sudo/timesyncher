@@ -18,6 +18,7 @@ assert.deepEqual(success.invite, {
   ok: true,
   code: 'collaborator_invite_sent',
   inviteeEmail: 'alex@example.com',
+  inviteeName: 'Alex',
 });
 
 const sendFailed = await runVacationAppTurnActions({

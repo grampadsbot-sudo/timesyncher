@@ -38,7 +38,8 @@ export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
   'things must be proper names only (a named hotel, restaurant, store, or venue), never generic categories like taco spots or mid-range options.',
   `For ${TURN_KIND_TRIP_INTAKE}, when they state a named lodging property where they will stay (hotel, resort, inn, condo, rental, or similar), include exactly one things entry with kind hotel and name set to that property name; when they also name the neighborhood or area for the stay, set destination to that area.`,
-  'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age; inviteeName and inviteeEmail only when they ask to add or invite a collaborator with that person email.',
+  'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
+  'inviteeName and inviteeEmail are filled only when the customer asks to add or invite a person to the trip, with that person name and email as they wrote them; otherwise leave both empty.',
   TRIP_INTAKE_HAS_DATES_PROMPT,
   'When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
