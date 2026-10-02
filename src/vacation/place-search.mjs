@@ -3,6 +3,7 @@ import {
   braveCategoryName,
   braveEndpoint,
   bravePoint,
+  braveProviderCategories,
   braveQueryString,
   braveLocalPlaceResult,
   bravePlaceSearchRows,
@@ -172,7 +173,7 @@ function countSources(places) {
   return counts;
 }
 
-async function readJson(fetchImpl, url, { headers, method, body, label }) {
+export async function placeSearchReadJson(fetchImpl, url, { headers, method, body, label }) {
   let response;
   try {
     response = await fetchImpl(url, {
@@ -258,7 +259,7 @@ function categoryNameField(name) {
 
 async function queryOsm(fetchImpl, center, categoryFilter = null) {
   const body = `data=${encodeURIComponent(overpassQuery(center, categoryFilter))}`;
-  const payload = await readJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
+  const payload = await placeSearchReadJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
     label: 'OpenStreetMap Overpass',
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -273,7 +274,7 @@ function braveCallSummary(calls) {
   return { query, endpoint };
 }
 
-async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
+export async function queryBravePlaceSearch(fetchImpl, env, { center, locationText }, queries) {
   const places = [];
   const calls = [];
   const area = String(locationText || center?.label || '').trim();
@@ -292,7 +293,7 @@ async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
         params.set('radius', String(categoryRadiusMeters(item.category)));
       }
       const path = endpoint === 'local' ? 'local/place_search' : 'web/search';
-      const payload = await readJson(
+      const payload = await placeSearchReadJson(
         fetchImpl,
         `https://api.search.brave.com/res/v1/${path}?${params}`,
         {
@@ -308,6 +309,7 @@ async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
         const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
         if (!title) continue;
         if (center && metersInsideCategory(center, point, item.category) === null) continue;
+        const providerCategories = braveProviderCategories(result);
         places.push({
           source: 'brave',
           title,
@@ -320,6 +322,7 @@ async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
           ...(description ? { description } : {}),
           ...ratingFromRecord(result),
           ...categoryNameField(braveCategoryName(result)),
+          ...(providerCategories.length ? { providerCategories } : {}),
         });
       }
     }
@@ -501,10 +504,10 @@ export async function searchPlaces({
       selectPriorPlaces,
       priorRowsFromInput,
       queryOsm,
-      queryBrave,
+      queryBrave: queryBravePlaceSearch,
       mergePlaces,
       attachRelevance,
-      readJson,
+      readJson: placeSearchReadJson,
       fail,
     });
     center = pass.center;
