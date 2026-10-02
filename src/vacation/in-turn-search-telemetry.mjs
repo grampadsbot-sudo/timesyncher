@@ -48,18 +48,30 @@ export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
 
 export function stampTurnClassifier(payload, customerLive, classification) {
   const turnClassifier = {
-    turnKind: classification?.ok === true ? classification.turnKind : null,
+    turnKind: classification?.ok === true ? classification.turnKind : (classification?.turnKind || null),
+    targetKind: classification?.ok === true
+      ? (classification.targetKind || null)
+      : (classification?.targetKind || classification?.targetKindRaw || null),
     classifierModel: classification?.routerModel || null,
+    ...(classification?.categoryRaw ? { categoryRaw: String(classification.categoryRaw).trim() } : {}),
+    ...(classification?.targetKindRaw && !classification?.targetKind
+      ? { targetKindRaw: String(classification.targetKindRaw).trim() }
+      : {}),
   };
   payload.turnClassifier = turnClassifier;
   customerLive.turnClassifier = turnClassifier;
   return turnClassifier;
 }
 
-export function turnClassifierFailedTelemetry(reason) {
+export function turnClassifierFailedTelemetry(reason, classification = null) {
   const detail = String(reason || 'trip intake classification failed').trim();
   return {
-    turnKind: null,
+    turnKind: classification?.turnKind || null,
+    targetKind: classification?.targetKind || classification?.targetKindRaw || null,
+    ...(classification?.categoryRaw ? { categoryRaw: String(classification.categoryRaw).trim() } : {}),
+    ...(classification?.targetKindRaw && !classification?.targetKind
+      ? { targetKindRaw: String(classification.targetKindRaw).trim() }
+      : {}),
     error: 'turn_classifier_failed',
     reason: detail,
     providers: [],
