@@ -1,6 +1,6 @@
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
-import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
+import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts, placeSearchFailureRouteStatus, stampTurnClassifier, turnClassifierFailedTelemetry, failTurnClassifierCategoryGate } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.mjs';
 import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail, resolvePlaceSearchRelevanceArea } from './place-search-anchor.mjs';
@@ -22,6 +22,7 @@ import {
 import { insertStampedChatPlaceThings, workerInputAfterInTurnPlaceSearch } from './chat-place-search-when.mjs';
 import { maybePersistFirstIntakeLodging } from './intake-lodging-queue-persist.mjs';
 import { persistTripDestinationCenter } from './trip-destination-center.mjs';
+export { buildLiveAppRewritePending } from './chat-place-search-reply-pending.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -305,87 +306,6 @@ export function blockInTurnPlaceReply(reply, enforceInTurnPlaces, inTurnPlaceRes
   };
 }
 
-export function buildLiveAppRewritePending({
-  customerTurn,
-  originalDraft,
-  draftModel,
-  quality,
-  jevNote,
-  jev,
-  upsell,
-  postIntake,
-  intake,
-  wantedThings,
-  rosterList,
-  rosterError,
-  extractedDestination,
-  extractedTitle,
-  destinationError,
-  titleError,
-  destination,
-  corpus,
-  modelPlaceSources,
-  inTurnProviderResults,
-  enforceInTurnPlaces,
-  tripContext,
-  tripFacts,
-  planTable,
-  planLine,
-  intent,
-  seatDollars,
-  seat,
-  model,
-  failureReason,
-  draftLatencyMs,
-  draftQualityMs,
-}) {
-  return {
-    customerTurn,
-    draft: originalDraft,
-    draftModel,
-    draftScore: quality.score,
-    jevNote,
-    quality,
-    jev,
-    upsell,
-    postIntake,
-    intake: intake === true,
-    wantedThings: Array.isArray(wantedThings) ? wantedThings : [],
-    roster: rosterList,
-    rosterError: rosterError || null,
-    extractedDestination: String(extractedDestination || ''),
-    extractedTitle: String(extractedTitle || ''),
-    destinationError: destinationError || null,
-    titleError: titleError || null,
-    destination,
-    corpus,
-    placeResults: modelPlaceSources,
-    inTurnPlaceResults: inTurnProviderResults,
-    enforceInTurnPlaces,
-    tripContext,
-    tripFacts,
-    planTable,
-    planLine,
-    intent,
-    seatDollars,
-    seat,
-    rawModelText: model?.text == null ? null : String(model.text),
-    failureReason,
-    interimReply: { text: null, model: null, ms: null },
-    draftLatencyMs,
-    qualityJevMs: draftQualityMs,
-    model: {
-      called: Boolean(model?.called),
-      via: model?.via || null,
-      responseModel: model?.responseModel || null,
-      modelTier: model?.modelTier ?? null,
-      genLatencyMs: draftLatencyMs,
-      maxTokens: model?.maxTokens ?? null,
-      beats: model?.beats || null,
-    },
-  };
-}
-
 export async function runVacationAppInTurnSearch({
   db,
   tripId,
@@ -405,6 +325,14 @@ export async function runVacationAppInTurnSearch({
   searchImpl = searchPlaces,
 } = {}) {
   stampTurnClassifier(payload, customerLive, classification);
+  const categoryGateFailure = await failTurnClassifierCategoryGate({
+    db,
+    turnId,
+    payload,
+    customerLive,
+    classification,
+  });
+  if (categoryGateFailure) return categoryGateFailure;
   if (classification?.ok === true && workerJobContext?.firstIntake && tripId && !workerJobContext?.seat) {
     await maybePersistFirstIntakeLodging({
       db,

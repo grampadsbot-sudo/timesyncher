@@ -1,3 +1,5 @@
+import { normalizePlaceSearchCategory, placeSearchTurnClassificationError } from './place-search-category-keys.mjs';
+
 function resultRowsFromThings(things = []) {
   return (Array.isArray(things) ? things : []).flatMap((thing) => {
     const provider = String(thing?.source || thing?.metadata?.source || '').trim();
@@ -47,12 +49,17 @@ export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
 }
 
 export function stampTurnClassifier(payload, customerLive, classification) {
+  const turnKind = classification?.ok === true ? classification.turnKind : (classification?.turnKind || null);
+  const normalizedCategory = normalizePlaceSearchCategory(classification?.category);
   const turnClassifier = {
-    turnKind: classification?.ok === true ? classification.turnKind : (classification?.turnKind || null),
+    turnKind,
     targetKind: classification?.ok === true
       ? (classification.targetKind || null)
       : (classification?.targetKind || classification?.targetKindRaw || null),
     classifierModel: classification?.routerModel || null,
+    ...(String(turnKind || '').trim().toLowerCase() === 'place_search'
+      ? { category: normalizedCategory || null }
+      : {}),
     ...(classification?.categoryRaw ? { categoryRaw: String(classification.categoryRaw).trim() } : {}),
     ...(classification?.targetKindRaw && !classification?.targetKind
       ? { targetKindRaw: String(classification.targetKindRaw).trim() }
@@ -63,11 +70,46 @@ export function stampTurnClassifier(payload, customerLive, classification) {
   return turnClassifier;
 }
 
+export async function failTurnClassifierCategoryGate({
+  db,
+  turnId,
+  payload,
+  customerLive,
+  classification,
+} = {}) {
+  const error = placeSearchTurnClassificationError(classification);
+  if (!error) return null;
+  const failedTelemetry = turnClassifierFailedTelemetry(error, classification);
+  payload.placeSearch = failedTelemetry;
+  payload.webSearch = failedTelemetry;
+  customerLive.placeSearch = failedTelemetry;
+  customerLive.webSearch = failedTelemetry;
+  if (db && turnId) {
+    await db`
+      update transcript_turns
+      set payload = ${payload}
+      where id = ${turnId}
+    `;
+  }
+  return {
+    ok: false,
+    status: 'turn_classifier_failed',
+    error,
+    placeSearch: failedTelemetry,
+    webSearch: failedTelemetry,
+  };
+}
+
 export function turnClassifierFailedTelemetry(reason, classification = null) {
   const detail = String(reason || 'trip intake classification failed').trim();
+  const turnKind = classification?.turnKind || null;
+  const normalizedCategory = normalizePlaceSearchCategory(classification?.category);
   return {
-    turnKind: classification?.turnKind || null,
+    turnKind,
     targetKind: classification?.targetKind || classification?.targetKindRaw || null,
+    ...(String(turnKind || '').trim().toLowerCase() === 'place_search'
+      ? { category: normalizedCategory || null }
+      : {}),
     ...(classification?.categoryRaw ? { categoryRaw: String(classification.categoryRaw).trim() } : {}),
     ...(classification?.targetKindRaw && !classification?.targetKind
       ? { targetKindRaw: String(classification.targetKindRaw).trim() }
