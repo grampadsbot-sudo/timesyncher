@@ -95,6 +95,9 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
   }
   const tripId = await ensureTrip(db, session.customer_id, {
     trip_title: cleanText(jobFields.title, 180),
+    destination: cleanText(jobFields.destination, 180),
+    start_date: cleanText(jobFields.startDate, 40) || null,
+    end_date: cleanText(jobFields.endDate, 40) || null,
     source: 'vacation_app_chat',
     onboarding_session_id: session.id,
   });

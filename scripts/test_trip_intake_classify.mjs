@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { classifyTripIntake, intakeExtractionDatesError, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
@@ -37,7 +37,7 @@ function jsonResponse(body, ok = true, status = 200) {
   return { ok, status, json: async () => body };
 }
 
-function mockFetch({ score, things, roster = [], destination = '', hasDates = false, title = '', failOn, chatText }) {
+function mockFetch({ score, things, roster = [], destination = '', hasDates = false, startDate = '2032-09-23', endDate = '2032-09-30', title = '', failOn, chatText }) {
   const calls = [];
   const fetchImpl = async (url) => {
     calls.push(String(url));
@@ -60,6 +60,8 @@ function mockFetch({ score, things, roster = [], destination = '', hasDates = fa
             roster,
             destination,
             hasDates,
+            startDate: hasDates ? startDate : '',
+            endDate: hasDates ? endDate : '',
             title,
           }),
         },
@@ -245,5 +247,38 @@ assert.equal(unnamed.destination, '');
 assert.equal(unnamed.title, '');
 assert.match(unnamed.destinationError, /classifier down/);
 assert.match(unnamed.titleError, /classifier down/);
+
+assert.equal(intakeExtractionDatesError({ hasDates: false }), '');
+assert.match(intakeExtractionDatesError({ hasDates: true, startDate: '', endDate: '' }), /required/);
+const badOrder = await classifyTripIntake({
+  text: lisbon,
+  env,
+  fetchImpl: mockFetch({
+    score: 0.91,
+    things: [],
+    destination: 'Lisbon',
+    hasDates: true,
+    startDate: '2032-09-30',
+    endDate: '2032-09-23',
+    title: 'Lisbon week',
+  }),
+});
+assert.equal(badOrder.ok, false);
+assert.match(badOrder.error, /endDate before startDate/);
+const missingDates = await classifyTripIntake({
+  text: lisbon,
+  env,
+  fetchImpl: mockFetch({
+    score: 0.91,
+    things: [],
+    destination: 'Lisbon',
+    hasDates: true,
+    startDate: '',
+    endDate: '',
+    title: 'Lisbon week',
+  }),
+});
+assert.equal(missingDates.ok, false);
+assert.match(missingDates.error, /dates required/);
 
 process.stdout.write('trip intake classify tests passed\n');

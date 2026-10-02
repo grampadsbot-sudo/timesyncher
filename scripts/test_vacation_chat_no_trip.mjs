@@ -68,12 +68,12 @@ function db(strings, ...values) {
     state.tripCount += 1;
     const row = {
       id: TRIP_ID,
-      title: values.find((v) => typeof v === 'string' && v.length > 3 && v !== CUSTOMER_ID) || 'trip',
-      destination: '',
-      start_date: null,
-      end_date: null,
+      title: typeof values[1] === 'string' ? values[1] : 'trip',
+      destination: typeof values[2] === 'string' ? values[2] : '',
+      start_date: values[3] || null,
+      end_date: values[4] || null,
       status: 'onboarding',
-      metadata: {},
+      metadata: values[values.length - 1] && typeof values[values.length - 1] === 'object' ? values[values.length - 1] : {},
     };
     state.trips.push(row);
     return [{ id: TRIP_ID }];
@@ -160,7 +160,7 @@ function db(strings, ...values) {
 }
 
 const originalFetch = globalThis.fetch;
-function intakeFetchMock({ title, things, destination, hasDates, intake = true }) {
+function intakeFetchMock({ title, things, destination, hasDates, startDate = '2026-10-07', endDate = '2026-10-09', intake = true }) {
   return async (url, init) => {
     const href = String(url);
     if (href.includes('app-config')) throw new Error(`unexpected app-config fetch: ${href}`);
@@ -206,6 +206,8 @@ function intakeFetchMock({ title, things, destination, hasDates, intake = true }
               roster: [],
               destination,
               hasDates,
+              startDate: hasDates ? startDate : '',
+              endDate: hasDates ? endDate : '',
               title,
             }),
           },
