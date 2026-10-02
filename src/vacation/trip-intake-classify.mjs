@@ -279,6 +279,13 @@ export function intakeLodgingThings(extracted) {
   return thingsFromIntake(extracted).filter((thing) => thing.category === 'hotel');
 }
 
+/** Merge classifier things with job wantedThings when the live queue passes only one shape. */
+export function intakeLodgingWanted(extracted = [], fallbackWanted = []) {
+  const primary = intakeLodgingThings(extracted);
+  if (primary.length) return primary;
+  return intakeLodgingThings(fallbackWanted);
+}
+
 export function intakeActivityThings(extracted) {
   return thingsFromIntake(extracted).filter((thing) => thing.category !== 'hotel');
 }

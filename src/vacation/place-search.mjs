@@ -229,12 +229,26 @@ function sourceRefFor(place) {
 }
 
 function sourceRecordFor(place) {
+  const embedded = place?.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null;
+  if (embedded && (embedded.id || embedded.icon_category || embedded.categories || embedded.class || embedded.type || embedded.osm_tags)) {
+    return {
+      ...embedded,
+      source: String(place.source || embedded.source || '').trim(),
+      url: String(place.url || embedded.url || '').trim(),
+    };
+  }
   return {
     source: place.source,
     url: place.url || '',
     ...(place.rating != null ? { rating: place.rating } : {}),
     ...(place.ratingCount != null ? { count: place.ratingCount } : {}),
     ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
+    ...(Array.isArray(place.providerCategories) && place.providerCategories.length
+      ? { providerCategories: place.providerCategories }
+      : {}),
+    ...(place.nominatimClass ? { class: place.nominatimClass } : {}),
+    ...(place.nominatimType ? { type: place.nominatimType } : {}),
+    ...(place.nominatimTourism ? { tourism: place.nominatimTourism } : {}),
   };
 }
 
@@ -528,6 +542,22 @@ export async function searchPlaces({
       anchor: pass.anchor,
       ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
     };
+    if (pass.status === 'no_results') {
+      return {
+        destination: dest || center?.label || locationText || '',
+        center,
+        places: [],
+        notes: [],
+        queries: searchQueries,
+        queried: [...SOURCE_IDS],
+        providers: providerLog,
+        relevanceRejections: [],
+        outcomeStatus: 'no_results',
+        ...placeSearchDiagnostics,
+        elapsedMs: Date.now() - started,
+        sourceCounts: countSources([]),
+      };
+    }
   }
   const noteRelevance = infoQueries.length
     ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })

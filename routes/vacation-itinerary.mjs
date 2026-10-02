@@ -45,6 +45,7 @@ import {
   classifyTripIntake,
   intakeActivityThings,
   intakeLodgingThings,
+  intakeLodgingWanted,
   mergeWantedThings,
   resolveIntakePlace,
   tripIntakeJobFields,
@@ -492,10 +493,27 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch } = {}) {
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}) {
   const planned = intakeActivityThings(extracted);
+  const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
-  if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
+  if (Number(existing[0]?.n) > 0) {
+    if (lodgingWanted.length) {
+      const current = await loadTripThings(db, tripId);
+      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+        destinationHint: extractedDestination,
+        areaHint: extractedDestination,
+        env,
+        fetchImpl,
+        searchImpl: searchPlacesImpl,
+        existingThings: current,
+      });
+      if (customerTurnId && Array.isArray(lodgingOutcome?.lookups) && lodgingOutcome.lookups.length) {
+        await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups);
+      }
+    }
+    return loadTripThings(db, tripId);
+  }
   const span = intakeSpan(text);
   const priorRows = await db`select destination, metadata from trips where id = ${tripId} limit 1`;
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
@@ -569,15 +587,8 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
       )
     `;
   }
-  return loadTripThings(db, tripId);
-}
-
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null } = {}, intakeText = '', extracted = []) {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl });
-  let current = await loadTripThings(db, tripId);
-  const lodgingWanted = intakeLodgingThings(extracted);
-  const lodgingLookups = [];
   if (lodgingWanted.length) {
+    const current = await loadTripThings(db, tripId);
     const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
       destinationHint: extractedDestination,
       areaHint: extractedDestination,
@@ -586,11 +597,39 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       searchImpl: searchPlacesImpl,
       existingThings: current,
     });
-    if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
-    current = await loadTripThings(db, tripId);
+    if (customerTurnId && Array.isArray(lodgingOutcome?.lookups) && lodgingOutcome.lookups.length) {
+      await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups);
+    }
   }
-  if (customerTurnId && lodgingLookups.length) {
-    await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
+  return loadTripThings(db, tripId);
+}
+
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}, intakeText = '', extracted = []) {
+  if (intakeText) {
+    await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
+      roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError,
+      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings,
+    });
+  }
+  let current = await loadTripThings(db, tripId);
+  const lodgingLookups = [];
+  if (!intakeText) {
+    const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+    if (lodgingWanted.length) {
+      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+        destinationHint: extractedDestination,
+        areaHint: extractedDestination,
+        env,
+        fetchImpl,
+        searchImpl: searchPlacesImpl,
+        existingThings: current,
+      });
+      if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
+      current = await loadTripThings(db, tripId);
+    }
+    if (customerTurnId && lodgingLookups.length) {
+      await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
+    }
   }
   const wanted = intakeActivityThings(extracted);
   if (!current.length && !wanted.length) return current;

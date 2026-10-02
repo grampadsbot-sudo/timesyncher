@@ -120,3 +120,4 @@ scripts/test_checkout_products_live_gate.mjs
 scripts/test_trip_intake_search.mjs
 scripts/test_trip_literal_ban_g2a.mjs
 scripts/test_keepsake_order_buy_link.mjs
+scripts/test_sct_a78799b_search_fill.mjs

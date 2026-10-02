@@ -233,19 +233,17 @@ await assert.rejects(
     return true;
   },
 );
-await assert.rejects(
-  () => searchPlaces({
-    destination: 'Lisbon',
-    wantedThings: PLACE_WANTED,
-    env: placeEnv(),
-    fetchImpl: emptyLive.fetchImpl,
-    priorPlaces: [],
-  }),
-  (error) => {
-    assert.equal(error.code, 'all_providers_failed');
-    return true;
-  },
-);
+const allEmpty = await searchPlaces({
+  destination: 'Lisbon',
+  wantedThings: PLACE_WANTED,
+  env: placeEnv(),
+  fetchImpl: emptyLive.fetchImpl,
+  priorPlaces: [],
+});
+assert.equal(allEmpty.outcomeStatus, 'no_results');
+assert.equal(allEmpty.places.length, 0);
+assert.ok(Array.isArray(allEmpty.providers));
+assert.ok(allEmpty.providers.every((row) => row.status === 'empty' || row.status === 'skipped'));
 
 const geocodeCalls = [];
 await assert.rejects(

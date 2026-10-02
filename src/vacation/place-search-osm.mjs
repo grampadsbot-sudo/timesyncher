@@ -10,6 +10,12 @@ const OSM_CATEGORIES = [
     name: (tags) => String(tags.shop || '').trim(),
   },
   {
+    category: 'grocery',
+    filter: '["amenity"="marketplace"]',
+    match: (tags) => String(tags.amenity || '').trim().toLowerCase() === 'marketplace',
+    name: (tags) => String(tags.amenity || '').trim(),
+  },
+  {
     category: 'restaurant',
     filter: '["amenity"~"restaurant|cafe|fast_food"]',
     match: (tags) => /restaurant|cafe|fast_food/.test(String(tags.amenity || '')),
@@ -80,11 +86,40 @@ function osmCategoryName(tags = {}) {
   return found ? found.name(tags) : '';
 }
 
+const OSM_POI_ROOT_KEYS = ['amenity', 'shop', 'tourism', 'leisure', 'natural'];
+
+function osmHasBusinessPoiTag(tags = {}) {
+  for (const key of OSM_POI_ROOT_KEYS) {
+    const value = String(tags[key] || '').trim();
+    if (!value) continue;
+    if (key === 'leisure' && value.toLowerCase() === 'slipway') continue;
+    return true;
+  }
+  return false;
+}
+
+/** Structural gate: only named OSM POIs, not highways, junctions, or generic access features. */
+export function osmPlaceQualifiesForSave(tags = {}) {
+  const title = String(tags.name || '').trim();
+  if (!title) return false;
+  if (String(tags.highway || '').trim()) return false;
+  if (String(tags.junction || '').trim()) return false;
+  if (String(tags.crossing || '').trim()) return false;
+  if (String(tags.leisure || '').trim().toLowerCase() === 'slipway') return false;
+  if (String(tags.bridge || '').trim() && !osmHasBusinessPoiTag(tags)) return false;
+  const entrance = String(tags.entrance || '').trim();
+  if (entrance && !osmHasBusinessPoiTag(tags)) return false;
+  const access = String(tags.access || '').trim();
+  if (access && !osmHasBusinessPoiTag(tags)) return false;
+  return osmHasBusinessPoiTag(tags);
+}
+
 export function placesFromOsmPayload(payload, center, { finite, metersInsideCategory, ratingFromRecord }) {
   const elements = Array.isArray(payload?.elements) ? payload.elements : [];
   const places = [];
   for (const element of elements) {
     const tags = element?.tags || {};
+    if (!osmPlaceQualifiesForSave(tags)) continue;
     const title = String(tags.name || '').trim();
     const category = osmCategory(tags);
     const lat = finite(element?.lat ?? element?.center?.lat);

@@ -8,6 +8,13 @@ import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail } from './plac
 import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
+import {
+  customerChatPlaceSearchNoResults,
+  inTurnSearchNoResultsReturn,
+  persistTurnPlaceSearchNoResults,
+  syncWorkerJobAfterInTurnPlaceSearch,
+  workerInputAfterInTurnPlaceSearch,
+} from './chat-place-search-outcomes.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -128,6 +135,7 @@ export async function runCustomerChatPlaceSearch({
       fetchImpl,
     });
     const places = Array.isArray(search?.places) ? search.places : [];
+    if (search?.outcomeStatus === 'no_results') return customerChatPlaceSearchNoResults(search);
     if (!places.length) {
       return finishCustomerChatPlaceSearch({
         places: [],
@@ -196,6 +204,15 @@ export async function applyChatPlaceSearchForVacationTurn({
     turnKind: classification?.turnKind || 'place_search',
     classifierModel: classification?.routerModel || null,
   };
+  if (chatSearch.status === 'no_results') {
+    const placeSearch = await persistTurnPlaceSearchNoResults(db, turnId, {
+      payload,
+      customerLive,
+      providerAttempts,
+      classifierMeta,
+    });
+    return { kind: 'no_results', error: null, placeSearch, placeSearchTurn };
+  }
   const outcomeStatus = placeSearchStatusFromProviderAttempts(chatSearch.things);
   if (outcomeStatus === 'failed') {
     const placeSearch = placeSearchTelemetry({
@@ -273,38 +290,6 @@ export function blockInTurnPlaceReply(reply, enforceInTurnPlaces, inTurnPlaceRes
     reason: violation.error,
     invented: violation.invented,
     ...carry,
-  };
-}
-
-function workerInputAfterInTurnPlaceSearch({
-  customerId,
-  tripId,
-  requestId,
-  queuedJobType,
-  requestText,
-  payload,
-  jobFields,
-}) {
-  return {
-    customerId,
-    tripId,
-    requestId,
-    source: 'vacation-app',
-    requestType: queuedJobType,
-    requestText,
-    payload,
-    intakeEvent: jobFields.intakeEvent,
-    wantedThings: [],
-    roster: jobFields.roster,
-    rosterError: jobFields.rosterError,
-    destination: jobFields.destination,
-    hasDates: jobFields.hasDates,
-    startDate: jobFields.startDate,
-    endDate: jobFields.endDate,
-    title: jobFields.title,
-    titleError: jobFields.titleError,
-    intakeError: jobFields.intakeError,
-    placeSearchHandledInTurn: true,
   };
 }
 
@@ -449,6 +434,7 @@ export async function runVacationAppInTurnSearch({
     const routeStatus = placeSearchFailureRouteStatus(searchTurn.placeSearch?.reason);
     return { ok: false, status: routeStatus, error: searchTurn.error, placeSearch: searchTurn.placeSearch };
   }
+  if (searchTurn.kind === 'no_results') return inTurnSearchNoResultsReturn(searchTurn.placeSearch);
   const webTurn = searchTurn.kind === 'skip'
     ? await applyChatWebResearchForVacationTurn({
       db,
@@ -475,10 +461,3 @@ export async function runVacationAppInTurnSearch({
   };
 }
 
-async function syncWorkerJobAfterInTurnPlaceSearch(db, jobId, input) {
-  await db`
-    update worker_jobs
-    set input = ${input}
-    where id = ${jobId}
-  `;
-}

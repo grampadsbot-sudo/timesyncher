@@ -138,6 +138,7 @@ export async function persistVacationAppOutboundReply({
       destinationError: jobFields.destinationError,
       titleError: jobFields.titleError,
       customerTurnId,
+      wantedThings: Array.isArray(jobFields.wantedThings) ? jobFields.wantedThings : [],
     },
     firstIntake ? requestText : '',
     intakeThings,

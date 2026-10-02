@@ -1,6 +1,29 @@
 import { providerFailureMessage, resolveSearchContext } from './place-search-geocode.mjs';
 import { buildPlaceSearchFailureDiagnostics } from './place-search-failure-diagnostics.mjs';
 
+function providerRowIsError(row = {}) {
+  return String(row?.status || '').trim().toLowerCase() === 'error';
+}
+
+function providerRowIsHit(row = {}) {
+  return String(row?.status || '').trim().toLowerCase() === 'ok';
+}
+
+const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
+
+/** All place-result providers finished without errors and none returned live rows. */
+export function placeSearchProvidersAllEmpty(providerLog = []) {
+  const rows = (Array.isArray(providerLog) ? providerLog : [])
+    .filter((row) => PLACE_RESULT_PROVIDERS.has(String(row?.provider || '').trim()));
+  if (!rows.length) return false;
+  if (rows.some(providerRowIsError)) return false;
+  if (rows.some(providerRowIsHit)) return false;
+  return rows.every((row) => {
+    const status = String(row?.status || '').trim().toLowerCase();
+    return status === 'empty' || status === 'skipped';
+  });
+}
+
 export async function runPlaceProviderPass({
   fetchImpl,
   env,
@@ -183,11 +206,23 @@ export async function runPlaceProviderPass({
       const message = `Place search relevance rejected all live provider results. ${providerFailureMessage(providerLog)}`;
       fail(message, 'relevance_rejected_all', providerLog, relevanceRejections, diagnosticsBase(relevanceRejections));
     }
+    if (placeSearchProvidersAllEmpty(providerLog)) {
+      return {
+        status: 'no_results',
+        center,
+        locationText,
+        places: [],
+        providerLog,
+        relevanceRejections: [],
+        ...diagnosticsBase(),
+      };
+    }
     const message = `Place search failed: ${providerFailureMessage(providerLog)}`;
     fail(message, 'all_providers_failed', providerLog, null, diagnosticsBase());
   }
 
   return {
+    status: 'ok',
     center,
     locationText,
     places,
