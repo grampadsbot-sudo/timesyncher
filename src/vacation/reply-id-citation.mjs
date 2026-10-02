@@ -1,3 +1,5 @@
+import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
+
 const ID_CITATION = /\(\s*id\s*:\s*[^)]+\)/i;
 const PRODUCT_ID_LITERAL = /timesyncher_vacation_[a-z0-9_]+/i;
 
@@ -48,6 +50,11 @@ export async function blockVacationAppReplyIdCitation({
     const replyFailure = 'reply_id_citation_blocked';
     payload.replyFailure = replyFailure;
     customerLive.replyFailure = replyFailure;
+    attachBlockedFirstIntakeDraft(payload, {
+      blockedDraft: String(replyText || '').trim(),
+      blockedReasons: [String(error.reason || replyFailure)],
+      reason: replyFailure,
+    });
     await storeReplyFailure(db, turnId, payload);
     return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
   }
