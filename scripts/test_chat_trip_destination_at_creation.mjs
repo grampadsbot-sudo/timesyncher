@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
-import { classifyTripIntake } from '../src/vacation/trip-intake-classify.mjs';
+import { createVacationFromChatMessage, classifyVacationChatIntake } from '../src/vacation/vacation-from-chat-intake.mjs';
+import { classifyTripIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { firstIntakeReplyFacts } from '../src/vacation/first-intake-reply.mjs';
 import { runCustomerChatPlaceSearch } from '../src/vacation/chat-place-search.mjs';
 import {
   queueVacationAppTurnForTests,
@@ -214,36 +215,67 @@ useVacationAppDatabase(db);
 try {
   globalThis.fetch = intakeFetchMock();
 
-  const hasDatesOnlyFetch = async (url, init) => {
+  const missingDatesFetch = async (url, init) => {
     const href = String(url);
-    const body = init?.body ? JSON.parse(String(init.body)) : {};
     if (href.includes('/decisions')) {
       return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.92 } } }) };
     }
     return {
       ok: true,
       json: async () => ({
+        choices: [{ message: { content: tripIntakeExtraction({ startDate: '', endDate: '' }) } }],
+      }),
+    };
+  };
+  const missingDatesClass = await classifyTripIntake({
+    text: CREATE_TEXT,
+    env: process.env,
+    fetchImpl: missingDatesFetch,
+  });
+  assert.equal(missingDatesClass.ok, false);
+  assert.match(missingDatesClass.error, /dates required/);
+
+  state.tripCount = 0;
+  state.trips = [];
+  state.session.trip_id = null;
+  state.entitlement.trip_id = null;
+  globalThis.fetch = missingDatesFetch;
+  const failedCreate = await createVacationFromChatMessage(
+    db,
+    state.session,
+    { text: CREATE_TEXT },
+    async () => [],
+    process.env,
+  );
+  assert.equal(failedCreate.ok, false);
+  assert.equal(failedCreate.code, 'trip_intake_classification_failed');
+  assert.equal(state.tripCount, 0);
+
+  const noDatesFetch = async (url, init) => {
+    const href = String(url);
+    if (href.includes('/decisions')) {
+      return { ok: true, json: async () => ({ answers: { trip_intake: { noul: 0.1 } } }) };
+    }
+    return {
+      ok: true,
+      json: async () => ({
         choices: [{
           message: {
-            content: tripIntakeExtraction({
-              startDate: '',
-              endDate: '',
-            }),
+            content: tripIntakeExtraction({ hasDates: false, startDate: '', endDate: '' }),
           },
         }],
       }),
     };
   };
-  const hasDatesOnly = await classifyTripIntake({
-    text: CREATE_TEXT,
+  const noDatesClass = await classifyTripIntake({
+    text: 'Hello',
     env: process.env,
-    fetchImpl: hasDatesOnlyFetch,
+    fetchImpl: noDatesFetch,
   });
-  assert.equal(hasDatesOnly.ok, true);
-  assert.equal(hasDatesOnly.hasDates, true);
-  assert.equal(hasDatesOnly.startDate, '');
-  assert.equal(hasDatesOnly.endDate, '');
-  assert.equal(hasDatesOnly.destination, TRIP_DESTINATION);
+  assert.equal(noDatesClass.ok, true);
+  assert.equal(noDatesClass.hasDates, false);
+  assert.equal(noDatesClass.startDate, '');
+  assert.equal(noDatesClass.endDate, '');
 
   globalThis.fetch = intakeFetchMock();
 
@@ -273,6 +305,26 @@ try {
   assert.equal(state.trips[0].destination, TRIP_DESTINATION);
   assert.equal(state.trips[0].start_date, TRIP_START);
   assert.equal(state.trips[0].end_date, TRIP_END);
+
+  const { classification, jobFields } = await classifyVacationChatIntake(CREATE_TEXT, process.env);
+  assert.equal(jobFields.startDate, TRIP_START);
+  assert.equal(jobFields.endDate, TRIP_END);
+  const intakeFacts = firstIntakeReplyFacts({
+    customerTurn: CREATE_TEXT,
+    tripTitle: jobFields.title,
+    extractedDestination: jobFields.destination,
+    savedStart: jobFields.startDate,
+    savedEnd: jobFields.endDate,
+    ownerPlan: {
+      checkout_plan: 'single',
+      plan_id: 'timesyncher_vacation_single',
+      plan_name: 'Single vacation',
+    },
+    tripId: TRIP_ID,
+  });
+  assert.equal(intakeFacts.start, TRIP_START);
+  assert.equal(intakeFacts.end, TRIP_END);
+  assert.equal(classification.startDate, TRIP_START);
 
   globalThis.fetch = intakeFetchMock({ failIntakeReply: true });
   const trip = (await loadTrips())[0];
@@ -313,16 +365,7 @@ try {
   assert.equal(taco.status, 'ok');
   assert.equal(state.placeSearchCalls[0]?.destination, TRIP_DESTINATION);
 
-  console.log(JSON.stringify({
-    ok: true,
-    checked: 'chat-trip-destination-at-creation',
-    classifierHasDatesOnly: {
-      hasDates: hasDatesOnly.hasDates,
-      startDate: hasDatesOnly.startDate,
-      endDate: hasDatesOnly.endDate,
-      destination: hasDatesOnly.destination,
-    },
-  }));
+  console.log(JSON.stringify({ ok: true, checked: 'chat-trip-destination-at-creation' }));
 } finally {
   globalThis.fetch = originalFetch;
   useVacationAppDatabase(null);

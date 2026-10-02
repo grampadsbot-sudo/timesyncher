@@ -27,8 +27,17 @@ const THING_SYSTEM = [
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
   'roster lists people named; role is owner, collaborator, child, viewer, or editor; age is a number only when they stated a child age.',
-  'destination, hasDates, title, startDate, and endDate follow trip planning only. startDate and endDate are YYYY-MM-DD only when the customer gave exact calendar dates; otherwise leave them empty. Do not invent items, names, times, people, places, dates, or titles.',
+  'destination, hasDates, title, startDate, and endDate follow trip planning only. When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve stated ranges (for example March 10-17 2027) into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
+
+export function intakeExtractionDatesError(extractedFields = {}) {
+  if (extractedFields.hasDates !== true) return '';
+  const start = isoDay(extractedFields.startDate);
+  const end = isoDay(extractedFields.endDate);
+  if (!start || !end) return 'trip intake extraction dates required when hasDates is true';
+  if (end < start) return 'trip intake extraction endDate before startDate';
+  return '';
+}
 
 function isoDay(value) {
   const match = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -278,6 +287,8 @@ export async function classifyTripIntake({ text, env = process.env, apiKey, rout
       ],
     }, 'TimeSyncher Vacation trip intake');
     const extractedFields = parseExtraction(chatText(extracted));
+    const datesError = intakeExtractionDatesError(extractedFields);
+    if (datesError) return failed(datesError);
     const turnKind = extractedFields.turnKind;
     const things = cleanThings(extractedFields.things);
     const roster = cleanRoster(extractedFields.roster);

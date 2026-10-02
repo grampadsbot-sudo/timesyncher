@@ -160,7 +160,7 @@ function db(strings, ...values) {
 }
 
 const originalFetch = globalThis.fetch;
-function intakeFetchMock({ title, things, destination, hasDates, intake = true }) {
+function intakeFetchMock({ title, things, destination, hasDates, startDate = '2026-10-07', endDate = '2026-10-09', intake = true }) {
   return async (url, init) => {
     const href = String(url);
     if (href.includes('app-config')) throw new Error(`unexpected app-config fetch: ${href}`);
@@ -206,6 +206,8 @@ function intakeFetchMock({ title, things, destination, hasDates, intake = true }
               roster: [],
               destination,
               hasDates,
+              startDate: hasDates ? startDate : '',
+              endDate: hasDates ? endDate : '',
               title,
             }),
           },

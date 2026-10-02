@@ -275,6 +275,8 @@ function classifierExtractionBody({ title, destination, hasDates, intake, user =
     roster: [],
     destination,
     hasDates,
+    startDate: hasDates ? '2026-10-07' : '',
+    endDate: hasDates ? '2026-10-09' : '',
     title,
   };
 }
