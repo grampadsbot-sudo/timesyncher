@@ -4,6 +4,10 @@ import { firstMarkedIntake } from './live-app-turn.mjs';
 import { classifyVacationAppCustomerTurn } from './chat-place-search.mjs';
 import { classifyTripIntake, tripIntakeJobFields } from './trip-intake-classify.mjs';
 import { seatFromSession } from './collaborator-app-seat.mjs';
+import {
+  attachPurchasedEntitlementToChatTrip,
+  preflightAttachOwnerEntitlementForChatTrip,
+} from './chat-trip-entitlement-attach.mjs';
 
 export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
@@ -80,11 +84,30 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
   if (!intakeTripReadyForCreation(jobFields)) {
     return { ok: true, action: 'queue_without_trip', jobFields, classification };
   }
+  const preflight = await preflightAttachOwnerEntitlementForChatTrip(db, session);
+  if (!preflight.ok) {
+    return {
+      ok: false,
+      statusCode: preflight.statusCode || 502,
+      error: preflight.error,
+      code: preflight.code || 'vacation_app_owner_entitlement_missing',
+    };
+  }
   const tripId = await ensureTrip(db, session.customer_id, {
     trip_title: cleanText(jobFields.title, 180),
     source: 'vacation_app_chat',
     onboarding_session_id: session.id,
   });
+  const attached = await attachPurchasedEntitlementToChatTrip(db, session, tripId);
+  if (!attached.ok) {
+    await db`delete from trips where id = ${tripId}`;
+    return {
+      ok: false,
+      statusCode: attached.statusCode || 502,
+      error: attached.error,
+      code: attached.code || 'vacation_app_owner_entitlement_attach_failed',
+    };
+  }
   await db`
     update onboarding_sessions
     set trip_id = ${tripId}, updated_at = now()

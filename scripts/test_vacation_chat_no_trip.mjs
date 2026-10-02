@@ -39,6 +39,17 @@ const state = {
   vacationRequestCount: 0,
   transcriptTurns: [],
   workerJobs: [],
+  entitlement: {
+    id: 'ent-no-trip-test',
+    customer_id: CUSTOMER_ID,
+    trip_id: null,
+    plan: 'single',
+    status: 'active',
+    metadata: { product: 'timesyncher_vacation_single' },
+    stripe_customer_id: null,
+    stripe_subscription_id: null,
+    stripe_payment_intent_id: null,
+  },
   session: {
     id: 'session-1',
     token: 'tok-no-trip-test',
@@ -72,8 +83,44 @@ function db(strings, ...values) {
     if (tripId === TRIP_ID || values.includes(TRIP_ID)) state.session.trip_id = TRIP_ID;
     return [];
   }
+  if (/delete from trips/i.test(text)) {
+    state.trips = state.trips.filter((trip) => trip.id !== values.find((v) => v === TRIP_ID));
+    state.tripCount = state.trips.length;
+    return [];
+  }
+  if (/update entitlements/i.test(text) && /trip_id/i.test(text)) {
+    const tripId = values.find((v) => v === TRIP_ID) || values.find((v) => typeof v === 'string' && v.includes('-'));
+    if (tripId) state.entitlement.trip_id = tripId;
+    return [{ id: state.entitlement.id }];
+  }
+  if (/insert into entitlements/i.test(text)) {
+    const tripId = values.find((v) => v === TRIP_ID);
+    const row = { ...state.entitlement, id: 'ent-unlimited-sibling', trip_id: tripId || null };
+    return [{ id: row.id }];
+  }
+  if (/from entitlements e/i.test(text) && /paid_orders/i.test(text)) {
+    return [{ ...state.entitlement }];
+  }
+  if (/from entitlements e/i.test(text) && /trip_id is null/i.test(text)) {
+    return state.entitlement.trip_id ? [] : [{ ...state.entitlement }];
+  }
+  if (/from entitlements e/i.test(text) && /e\.trip_id = \$\{/i.test(text)) {
+    const tripId = values.find((v) => v === TRIP_ID);
+    if (state.entitlement.trip_id === tripId) {
+      return [{
+        plan: state.entitlement.plan,
+        status: state.entitlement.status,
+        metadata: state.entitlement.metadata,
+      }];
+    }
+    return [];
+  }
   if (/from entitlements/i.test(text)) {
-    return [{ plan: 'single', status: 'active', metadata: { product: 'timesyncher_vacation_single' } }];
+    return [{
+      plan: state.entitlement.plan,
+      status: state.entitlement.status,
+      metadata: state.entitlement.metadata,
+    }];
   }
   if (/insert into vacation_requests/i.test(text)) {
     state.vacationRequestCount += 1;
@@ -254,6 +301,7 @@ try {
   assert.equal(created.action, 'created');
   assert.equal(state.tripCount, 1);
   assert.equal(state.session.trip_id, TRIP_ID);
+  assert.equal(state.entitlement.trip_id, TRIP_ID);
 
   globalThis.fetch = intakeFetchMock({
     title: '',

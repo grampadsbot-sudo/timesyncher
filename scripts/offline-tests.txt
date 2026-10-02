@@ -21,6 +21,8 @@ scripts/test_deploy_required_env.mjs
 scripts/test_checkout_coupons.mjs
 scripts/test_coupon_purchase_no_trip.mjs
 scripts/test_vacation_chat_no_trip.mjs
+scripts/test_chat_trip_entitlement_attach.mjs
+scripts/test_vacation_chat_entitlement_e2e.mjs
 scripts/test_no_app_config_in_served_bundles.mjs
 scripts/test_vacation_pricing.mjs
 scripts/test_mint_checkout_coupons.mjs
