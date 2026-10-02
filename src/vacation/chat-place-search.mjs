@@ -189,41 +189,7 @@ export async function applyChatPlaceSearchForVacationTurn({
   return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
 }
 
-function inTurnPlaceRows(sources) {
-  return (Array.isArray(sources) ? sources : []).flatMap((item) => {
-    if (!item || typeof item !== 'object') return [];
-    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
-    const id = String(ref?.id ?? item.id ?? '').trim();
-    const name = String(item.name ?? item.title ?? '').trim();
-    return id && name ? [{ id, name }] : [];
-  });
-}
-
-function spokenPlaceName(text, index) {
-  const before = String(text || '').slice(Math.max(0, index - 80), index);
-  return (before.match(/([\p{Lu}][\p{L}\p{M}'’.-]*(?:\s+[\p{Lu}][\p{L}\p{M}'’.-]*)*)\s*$/u) || [])[1] || '';
-}
-
-function unsourcedAgainstInTurnResults(reply, sources) {
-  const text = String(reply || '');
-  const rows = inTurnPlaceRows(sources);
-  const byId = new Map(rows.map((row) => [row.id, row]));
-  const flagged = [];
-  const cited = new Set();
-  for (const match of text.matchAll(/\(id:([^)\s]+)\)/g)) {
-    const id = match[1];
-    cited.add(id);
-    const row = byId.get(id);
-    const spoken = spokenPlaceName(text, match.index);
-    if (!row) flagged.push(spoken || id);
-    else if (spoken && spoken.toLowerCase() !== row.name.toLowerCase()) flagged.push(spoken);
-  }
-  for (const row of rows) {
-    const named = new RegExp(`(^|[^\\p{L}\\p{N}])${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
-    if (named && !cited.has(row.id)) flagged.push(row.name);
-  }
-  return [...new Set(flagged)];
-}
+import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 
 export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
   const sources = Array.isArray(inTurnPlaceResults) ? inTurnPlaceResults : [];
