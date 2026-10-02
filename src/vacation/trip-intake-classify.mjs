@@ -44,6 +44,91 @@ export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
 
 const THING_SYSTEM = TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT;
 
+export function tripIntakeExtractionJsonSchema() {
+  return {
+    type: 'json_schema',
+    json_schema: {
+      name: 'trip_intake_extraction',
+      strict: true,
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        required: [
+          'turnKind',
+          'target',
+          'anchor',
+          'anchorIsLodging',
+          'category',
+          'question',
+          'things',
+          'roster',
+          'destination',
+          'hasDates',
+          'startDate',
+          'endDate',
+          'title',
+        ],
+        properties: {
+          turnKind: {
+            type: 'string',
+            enum: ['place_search', 'web_research', TURN_KIND_TRIP_INTAKE, 'other'],
+          },
+          target: { type: 'string' },
+          anchor: { type: 'string' },
+          anchorIsLodging: { type: 'boolean' },
+          category: { type: 'string' },
+          question: { type: 'string' },
+          things: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['name', 'kind', 'who', 'when'],
+              properties: {
+                name: { type: 'string' },
+                kind: { type: 'string' },
+                who: { type: 'string' },
+                when: { type: 'string' },
+              },
+            },
+          },
+          roster: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['name', 'role', 'age'],
+              properties: {
+                name: { type: 'string' },
+                role: { type: 'string' },
+                age: { type: ['number', 'null'] },
+              },
+            },
+          },
+          destination: { type: 'string' },
+          hasDates: { type: 'boolean' },
+          startDate: { type: 'string' },
+          endDate: { type: 'string' },
+          title: { type: 'string' },
+        },
+      },
+    },
+  };
+}
+
+export function tripIntakeExtractionChatRequest({ message, model }) {
+  return {
+    model,
+    temperature: 0,
+    provider: { require_parameters: true },
+    response_format: tripIntakeExtractionJsonSchema(),
+    messages: [
+      { role: 'system', content: THING_SYSTEM },
+      { role: 'user', content: clean(message, 6000) },
+    ],
+  };
+}
+
 export function intakeExtractionDatesError(extractedFields = {}) {
   if (extractedFields.hasDates !== true) return '';
   const start = isoDay(extractedFields.startDate);
@@ -310,14 +395,14 @@ export async function classifyTripIntake({
     }, 'TimeSyncher Vacation trip intake');
     const score = decisionScore(decision?.answers?.trip_intake);
     if (score == null) return failed('trip intake classifier returned no decision');
-    const extracted = await postJson(fetchImpl, OPENROUTER_CHAT_COMPLETIONS_URL, key, {
-      model: bakeoffTierModels()[1],
-      temperature: 0,
-      messages: [
-        { role: 'system', content: THING_SYSTEM },
-        { role: 'user', content: message },
-      ],
-    }, 'TimeSyncher Vacation trip intake');
+    const extractionModel = bakeoffTierModels()[1];
+    const extracted = await postJson(
+      fetchImpl,
+      OPENROUTER_CHAT_COMPLETIONS_URL,
+      key,
+      tripIntakeExtractionChatRequest({ message, model: extractionModel }),
+      'TimeSyncher Vacation trip intake',
+    );
     const extractedFields = parseExtraction(chatText(extracted));
     const categoryError = intakePlaceSearchCategoryError(extractedFields);
     if (categoryError) return failed(categoryError);
