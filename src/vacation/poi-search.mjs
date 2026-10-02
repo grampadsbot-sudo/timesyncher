@@ -152,8 +152,17 @@ export class TavilySearchError extends Error {
   }
 }
 
+function envKeyBySuffix(env, suffix) {
+  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
+  return hit ? String(hit[1] || '').trim() : '';
+}
+
+export function braveSubscriptionKey(env = process.env) {
+  return String(env?.brave || envKeyBySuffix(env, 'E_SEARCH_API_KEY') || '').trim();
+}
+
 export function tavilyApiKey(env = process.env) {
-  return String(env?.TAVILI_API_KEY || '').trim();
+  return String(env?.tavily || env?.TAVILI_API_KEY || envKeyBySuffix(env, 'ILI_API_KEY') || '').trim();
 }
 
 function requireTavilyApiKey(apiKey) {
@@ -385,13 +394,8 @@ function probeSuccessShape(provider, httpStatus, results) {
   return { provider, httpStatus: Number(httpStatus) || 0, resultCount: rows.length, firstTitle };
 }
 
-function envKeyBySuffix(env, suffix) {
-  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
-  return hit ? String(hit[1] || '').trim() : '';
-}
-
 async function probeBraveProvider(env, fetchImpl) {
-  const key = String(env.brave || envKeyBySuffix(env, 'E_SEARCH_API_KEY') || '').trim();
+  const key = braveSubscriptionKey(env);
   if (!key) return probeMissingKey('brave');
   const params = new URLSearchParams({
     q: PROBE_QUERY,
@@ -418,7 +422,7 @@ async function probeBraveProvider(env, fetchImpl) {
 }
 
 async function probeTavilyProvider(env, fetchImpl) {
-  const key = String(env.tavily || envKeyBySuffix(env, 'ILI_API_KEY') || '').trim();
+  const key = tavilyApiKey(env);
   if (!key) return probeMissingKey('tavily');
   const response = await fetchImpl(TAVILY_SEARCH_URL, {
     method: 'POST',
