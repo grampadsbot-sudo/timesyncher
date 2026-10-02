@@ -339,7 +339,7 @@
           settingsButton.addEventListener('click', () => {
             panel.hidden = false;
             panel.innerHTML = '';
-            ['Mapbox', 'Google Maps', 'Weather', 'Invite', 'Copy link'].forEach((label) => {
+            ['Mapbox', 'Google Maps', 'Weather', 'Copy link'].forEach((label) => {
               const item = document.createElement('button');
               item.type = 'button';
               item.textContent = label;
@@ -348,13 +348,6 @@
                 if (label === 'Copy link') {
                   try { await navigator.clipboard.writeText(location.href); } catch {}
                   item.textContent = 'Copy link';
-                }
-                if (label === 'Invite') {
-                  if (window.parent && window.parent !== window) {
-                    window.parent.postMessage({ type: 'timesyncher-open-collaborator-invite' }, window.location.origin);
-                  } else if (window.tsOpenCollaboratorInvite) {
-                    window.tsOpenCollaboratorInvite();
-                  }
                 }
                 if (label === 'Weather') {
                   const day = [...document.querySelectorAll('button')].find((node) => (node.innerText || '').trim() === 'Day 1');

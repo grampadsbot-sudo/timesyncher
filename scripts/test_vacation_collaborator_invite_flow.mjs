@@ -8,21 +8,18 @@ import {
 import { createCollaboratorInvite } from '../src/vacation/collaborators.mjs';
 import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 
-const inviteJs = await readFile(new URL('../public/vacation-app-collaborator-invite.js', import.meta.url), 'utf8');
 const vacationApp = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
 const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const queue = await readFile(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 
-assert.match(inviteJs, /action:\s*'collaborator-invite'/);
-assert.doesNotMatch(inviteJs, /No vacation workspace is available yet/);
-assert.match(`${vacationApp}\n${inviteJs}`, /timesyncher-open-collaborator-invite/);
-assert.match(vacationApp, /collaboratorInviteDialog/);
-assert.match(vacationApp, /collaboratorInviteOpen/);
-assert.match(vacationApp, /join this vacation chat/);
-assert.doesNotMatch(vacationApp, /!hasSite\s*&&\s*!state\.session\?\.seat/);
-assert.match(vacationApp, /!state\.session\?\.seat/);
-assert.match(sharedApp, /timesyncher-open-collaborator-invite/);
+assert.doesNotMatch(vacationApp, /collaboratorInviteDialog/);
+assert.doesNotMatch(vacationApp, /collaboratorInviteOpen/);
+assert.doesNotMatch(vacationApp, /collaborator-invite-open/);
+assert.doesNotMatch(vacationApp, /tsBindCollaboratorInvite/);
+assert.doesNotMatch(vacationApp, /timesyncher-open-collaborator-invite/);
+assert.doesNotMatch(sharedApp, /timesyncher-open-collaborator-invite/);
+assert.doesNotMatch(sharedApp, /'Invite'/);
 assert.match(api, /inviteResult/);
 assert.match(api, /runCollaboratorInviteAction/);
 assert.match(queue, /runVacationAppTurnActions/);
@@ -102,4 +99,3 @@ await assert.rejects(
 );
 
 console.log('vacation collaborator invite flow passed');
-

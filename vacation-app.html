@@ -242,9 +242,6 @@
     .thing-notes, .collaborator-notes { margin: 12px 0; padding: 0; }
     .collaborator-notes { border-top: 1px solid var(--line); padding-top: 12px; }
     .collaborator-notes h2 { margin: 0 0 8px; font-size: 16px; }
-    .collaborator-invite { margin: 0 clamp(12px, 3vw, 24px) 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; display: grid; gap: 8px; }
-    .collaborator-invite label { display: grid; gap: 4px; font-size: 13px; }
-    .collaborator-invite input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
     .messages {
       min-height: 0;
       overflow: auto;
@@ -457,7 +454,7 @@
 </head>
 <body>
   <div id="root"></div>
-  <script src="/vacation-app-collaborator-invite.js"></script>
+  <script src="/vacation-app-request.js"></script>
   <script type="module">
     import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
     const root = document.getElementById('root');
@@ -465,7 +462,7 @@
     let sessionToken = params.get('session') || params.get('token') || ((eula) => eula.startsWith('vacation-') && !eula.startsWith('vacation-collaborator-') ? eula.slice('vacation-'.length) : '')(params.get('eulaSession') || '') || localStorage.getItem('tsVacationAppSession') || '';
     let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-    if (!window.tsVacationAppRequest?.failAppRequest) { const m = 'vacation-app-collaborator-invite.js did not load (tsVacationAppRequest missing).'; console.error(m); throw new Error(m); }
+    if (!window.tsVacationAppRequest?.failAppRequest) { const m = 'vacation-app-request.js did not load (tsVacationAppRequest missing).'; console.error(m); throw new Error(m); }
     const { customerSafeErrorMessage, showComposerStatus, failAppRequest } = window.tsVacationAppRequest;
     const chatText = (value) => safe(String(value || '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2'));
     const icon = {
@@ -642,8 +639,7 @@
           return `<article class="bubble ${user ? 'user' : ''}"><small>${safe(String(turn.authorLabel).trim())}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
         }).join('')
         : '';
-      const inviteCopy = hasSite ? 'Invite a collaborator by email to join this vacation chat.' : 'Invite a collaborator by email before the trip site is ready.';
-      const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div>${!state.session?.seat ? `<dialog class="collaborator-invite-dialog" id="collaboratorInviteDialog" aria-label="Invite collaborator"><form class="collaborator-invite" id="collaboratorInviteForm" method="dialog"><p>${safe(inviteCopy)}</p><label>Name<input name="name" type="text" required autocomplete="name"></label><label>Email<input name="email" type="email" required autocomplete="email"></label><div class="button-row"><button type="submit">Send invite</button><button type="button" id="collaboratorInviteCancel">Cancel</button></div><div class="error" id="collaboratorInviteError" hidden></div></form></dialog><button type="button" class="collaborator-invite-open" id="collaboratorInviteOpen">Invite collaborator</button>` : ''}<form class="composer" id="composer">
+      const onboardingPane = `<div class="messages" id="messages" data-screen="onboarding">${turnMarkup}</div><form class="composer" id="composer">
               <p id="composerStatus" role="status" aria-live="polite" hidden style="margin:0 0 8px;color:var(--danger);font-weight:750;font-size:14px"></p>
               <div class="attachment-row" id="attachmentRow"></div>
               <div class="compose-grid">
@@ -702,7 +698,6 @@
       });
       bindVoice();
       document.getElementById('composer').addEventListener('submit', sendMessage);
-      if (window.tsBindCollaboratorInvite) window.tsBindCollaboratorInvite({ sessionToken, safe, currentTrip: () => state.vacations.find((trip) => trip.id === state.currentTripId) || state.vacations.find((trip) => trip.id === state.session?.currentTripId) || state.vacations[0] || null, getMessagesEl: () => document.getElementById('messages') });
     }
 
     function renderAttachments() {

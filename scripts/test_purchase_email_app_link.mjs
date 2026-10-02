@@ -315,8 +315,8 @@ const server = createServer(async (req, res) => {
   }
 });
 
-const helperPath = await resolveServedStaticPath(root, 'vacation-app-collaborator-invite.js');
-assert.ok(helperPath && helperPath.includes(`${path.sep}public${path.sep}`), 'public collaborator invite script must resolve for static tests');
+const helperPath = await resolveServedStaticPath(root, 'vacation-app-request.js');
+assert.ok(helperPath && helperPath.includes(`${path.sep}public${path.sep}`), 'public vacation app request script must resolve for static tests');
 
 try {
   const onboarding = await buildOnboardingFromCoupon({
