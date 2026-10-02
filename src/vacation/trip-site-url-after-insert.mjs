@@ -9,12 +9,13 @@ export async function assignTripSiteUrlWhenThingsPresent(db, tripId, env = proce
     if (!intakeShareSlug(tripId)) return null;
     try {
       websiteTripBase(env);
-    } catch {
-      return null;
+    } catch (error) {
+      if (String(error?.message || '').includes('TIMESYNCHER_TRAVEL_BASE_URL is missing')) return null;
+      throw error;
     }
     return await assignTripSiteUrl(db, tripId, env);
   } catch (error) {
     if (error?.code === 'onboarding_trip_site_url_failed') throw error;
-    return null;
+    throw error;
   }
 }

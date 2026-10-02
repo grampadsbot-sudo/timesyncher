@@ -120,6 +120,9 @@ export default async function handler(req, res) {
       const body = await readBody(req);
       const sessionId = url.searchParams.get('sessionId');
       const session = await sessionForAccept(store, sessionId);
+      if (isCollaboratorEulaSessionId(sessionId) && !session) {
+        throw Object.assign(new Error('Collaborator EULA session could not be loaded.'), { statusCode: 409 });
+      }
       const result = await acceptEulaPersistent(store, sessionId, {
         acceptedByName: body.acceptedByName,
         checkboxConfirmed: body.checkboxConfirmed,

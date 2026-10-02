@@ -255,6 +255,16 @@ function noteText(thing) {
   ].map((note) => String(note || '').trim()).filter(Boolean).join('\n');
 }
 
+export function budgetPriceFromThing(thing = {}) {
+  const direct = thing?.total_price ?? thing?.price;
+  if (direct !== null && direct !== undefined && direct !== '' && Number.isFinite(Number(direct))) {
+    return Number(direct);
+  }
+  const cents = thing?.cost_estimate_cents ?? thing?.costEstimateCents;
+  if (Number.isInteger(cents) && cents >= 0) return cents / 100;
+  return null;
+}
+
 export function thingRecordFromTripRow(row = {}) {
   const meta = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {};
   const ratings = row.ratings && typeof row.ratings === 'object' && !Array.isArray(row.ratings) ? row.ratings : null;
@@ -281,6 +291,7 @@ export function thingRecordFromTripRow(row = {}) {
     lng: location.lng,
     address: location.address || '',
     sourceRef,
+    cost_estimate_cents: Number.isInteger(row.cost_estimate_cents) ? row.cost_estimate_cents : null,
   };
 }
 
@@ -390,17 +401,12 @@ export function sharedTripFromIntake({ trip, things }) {
       share_map: true,
       share_bookings: true,
       share_packing: false,
-      share_budget: (things || []).some((thing) => {
-        const value = thing?.total_price ?? thing?.price;
-        return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
-      }),
+      share_budget: (things || []).length > 0 && planned,
       share_collab: false,
     },
     budget: (things || []).flatMap((thing, index) => {
-      const value = thing?.total_price ?? thing?.price;
-      if (value === null || value === undefined || value === '') return [];
-      const amount = Number(value);
-      if (!Number.isFinite(amount)) return [];
+      const amount = budgetPriceFromThing(thing);
+      if (amount === null) return [];
       return [{
         id: intId(`${trip.id}:budget:${thing.id || thing.title || index}`),
         trip_id: intId(trip.id),

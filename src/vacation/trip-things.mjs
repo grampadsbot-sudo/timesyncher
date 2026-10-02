@@ -48,6 +48,36 @@ function locationPoint(location = {}) {
   };
 }
 
+export async function insertIntakeTripThingRow(
+  db,
+  {
+    tripId,
+    category,
+    title,
+    description = '',
+    metadata = {},
+    startsAt = null,
+    env = process.env,
+  },
+) {
+  const written = await insertTripThing(db, {
+    tripId,
+    requestId: null,
+    thing: {
+      category,
+      title,
+      description,
+      metadata: { ...metadata, source: metadata?.source || 'chat_extraction' },
+      starts_at: startsAt,
+    },
+    env,
+  });
+  if (!written?.id) {
+    throw new TripThingInsertError(`insertIntakeTripThingRow returned no row for title "${String(title || '').trim()}"`);
+  }
+  return written.id;
+}
+
 export async function insertTripThing(db, { tripId, requestId, thing, env = process.env }) {
   const item = tripThingRow(thing);
   if (!item) return null;

@@ -67,9 +67,20 @@ function createWelcomeDb(state) {
       return [{ id: state.transcriptTurns.at(-1).id }];
     }
     if (/from customers/i.test(text)) return [{ first_name: firstName, display_name: firstName }];
+    if (/update vacation_onboarding_welcomes/i.test(text) && /set trip_id =/i.test(text)) {
+      return [];
+    }
+    if (/update transcript_turns/i.test(text) && /set trip_id =/i.test(text)) {
+      return [];
+    }
     if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) {
       const audience = values.find((value) => value === 'owner' || value === 'collaborator');
-      const rows = state.welcomeTurns.filter((payload) => payload?.welcomeAudience === audience);
+      const tripId = values.find((value) => typeof value === 'string' && value.length === 36);
+      const rows = state.welcomeTurns.filter((payload) => {
+        if (payload?.welcomeAudience !== audience) return false;
+        if (!tripId) return payload?.selectedTripId === null;
+        return payload?.selectedTripId === tripId || payload?.selectedTripId === null;
+      });
       return rows.length ? [{ id: 'welcome-turn-existing' }] : [];
     }
     if (/from transcript_turns/i.test(text) && /count\(\*\)/i.test(text)) {
