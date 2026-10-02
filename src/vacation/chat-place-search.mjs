@@ -145,6 +145,7 @@ export async function runCustomerChatPlaceSearch({
       destination: plan.destination,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
+      keepAreaText: classification?.anchorIsLodging === true && !lodging,
       queries: plan.queries,
       relevanceTarget: clean(classification?.target, 240),
       relevanceArea: plan.destination,

@@ -6,6 +6,7 @@ export async function runPlaceProviderPass({
   dest,
   lodging,
   lodgingPoint,
+  keepAreaText = false,
   placeQueries,
   relevanceContext,
   priorPlaces,
@@ -23,7 +24,7 @@ export async function runPlaceProviderPass({
   const providerLog = [];
   const context = await resolveSearchContext(
     fetchImpl,
-    { lodging, lodgingPoint, destination: dest },
+    { lodging, lodgingPoint, destination: dest, keepAreaText },
     providerLog,
     readJson,
     fail,

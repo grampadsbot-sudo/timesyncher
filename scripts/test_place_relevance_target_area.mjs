@@ -20,6 +20,7 @@ import {
   TAVILY_DUMMY,
   TAVILY_HOST,
 } from './fixtures/place-intent-brave-fallback-fixtures.mjs';
+import { braveAddress } from '../src/vacation/brave-place-query.mjs';
 import { resolvedAreaText } from '../src/vacation/place-search-geocode.mjs';
 import {
   KAANAPALI_GEOCODE,
@@ -92,6 +93,7 @@ async function runPlaceRelevanceTargetAreaTests() {
       metadata: {},
     },
     nominatimMode: 'ok',
+    omitLodging: false,
     osmMode: 'empty',
     braveMode: 'kaanapali',
     classifierMode: 'ok',
@@ -174,6 +176,7 @@ async function runPlaceRelevanceTargetAreaTests() {
       return [];
     }
     if (/from trip_things/i.test(text) && /category = 'hotel'/i.test(text)) {
+      if (state.omitLodging) return [];
       return [{
         title: 'Hyatt Regency Maui',
         category: 'hotel',
@@ -358,6 +361,28 @@ async function runPlaceRelevanceTargetAreaTests() {
     assert.equal(new URL(hotelUrl).searchParams.get('q'), hotelBrave.query);
     const hotelCall = state.relevanceCalls.find((row) => String(row.searchArea || '').includes(LODGING_LOCALITY));
     assert.ok(hotelCall, JSON.stringify(state.relevanceCalls[0]));
+
+    assert.equal(braveAddress({ description: 'A page snippet, not a street address.', url: 'https://example.com/snippet' }), '');
+    state.omitLodging = true;
+    const savedDestination = state.trip.destination;
+    state.trip.destination = 'Kaanapali, Maui';
+    const noLodging = await postTurn('best tacos near our hotel');
+    assert.equal(noLodging.status, 201, JSON.stringify(noLodging.body));
+    const noLodgingBrave = state.turnPayloads.at(-1).placeSearch.providers.find((row) => row.provider === 'brave');
+    assert.equal(noLodgingBrave.query, 'tacos near Kaanapali, Maui');
+    assert.equal(noLodgingBrave.endpoint, 'local');
+    assert.doesNotMatch(noLodgingBrave.query, /our hotel/i);
+    const nominatimUrls = state.fetchCalls.filter((href) => href.includes(NOMINATIM_HOST));
+    assert.ok(nominatimUrls.length > 0);
+    for (const href of nominatimUrls) {
+      const q = new URL(href).searchParams.get('q') || '';
+      assert.equal(q, 'Kaanapali, Maui');
+      assert.doesNotMatch(q, /our hotel/i);
+    }
+    assert.ok(state.relevanceCalls.length > 0);
+    assert.ok(state.relevanceCalls.every((row) => row.searchArea === 'Kaanapali, Maui'), JSON.stringify(state.relevanceCalls[0]));
+    state.omitLodging = false;
+    state.trip.destination = savedDestination;
 
     state.relevanceJudgeMode = 'http_400';
     state.relevanceRejectAll = false;

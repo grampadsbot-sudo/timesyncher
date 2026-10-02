@@ -72,7 +72,7 @@ async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
   }
 }
 
-export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, destination }, providerLog, readJson, fail) {
+export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, destination, keepAreaText = false }, providerLog, readJson, fail) {
   const given = pointFrom(lodgingPoint);
   const lodgingLabel = String(lodging || '').trim();
   const destinationLabel = String(destination || '').trim();
@@ -96,7 +96,8 @@ export async function resolveSearchContext(fetchImpl, { lodging, lodgingPoint, d
   if (destinationLabel) {
     const found = await tryGeocodeLabel(fetchImpl, destinationLabel, providerLog, readJson);
     if (found) {
-      return { center: { ...found, geocoded: 'destination' }, locationText: found.label || destinationLabel };
+      const locationText = keepAreaText ? destinationLabel : (found.label || destinationLabel);
+      return { center: { ...found, geocoded: 'destination' }, locationText };
     }
   }
   const locationText = lodgingLabel || destinationLabel;

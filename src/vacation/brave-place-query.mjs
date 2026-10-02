@@ -38,8 +38,7 @@ export function bravePoint(result) {
 export function braveAddress(result) {
   if (typeof result?.address === 'string' && result.address.trim()) return result.address.trim();
   const postal = result?.postal_address || {};
-  const postalText = [postal.streetAddress, postal.addressLocality, postal.addressRegion, postal.postalCode].filter(Boolean).join(', ');
-  return postalText || String(result?.description || '').trim();
+  return [postal.streetAddress, postal.addressLocality, postal.addressRegion, postal.postalCode].filter(Boolean).join(', ');
 }
 
 export function braveCategoryName(result) {

@@ -198,6 +198,7 @@ export function mergePlaces(groups = []) {
         url: String(place.url || ''),
         externalId: String(place.externalId || ''),
         ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
+        ...(String(place.description || '').trim() ? { description: String(place.description).trim() } : {}),
       };
       if (kept.some((item) => samePlace(item, next))) continue;
       kept.push(next);
@@ -421,6 +422,7 @@ async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
         const point = bravePoint(result);
         const title = braveTitle(result?.title || result?.name);
         const address = braveAddress(result);
+        const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
         const hasPoint = point.lat !== null && point.lng !== null;
         if (!title) continue;
         if (hasPoint && center && metersInsideCategory(center, point, item.category) === null) continue;
@@ -434,6 +436,7 @@ async function queryBrave(fetchImpl, env, { center, locationText }, queries) {
           address,
           url: String(result?.url || ''),
           externalId: String(result?.id || result?.url || ''),
+          ...(description ? { description } : {}),
           ...ratingFromRecord(result),
           ...categoryNameField(braveCategoryName(result)),
         });
@@ -543,6 +546,7 @@ export async function searchPlaces({
   queries,
   relevanceTarget = '',
   relevanceArea = '',
+  keepAreaText = false,
   env = process.env,
   fetchImpl = globalThis.fetch,
   priorPlaces,
@@ -589,6 +593,7 @@ export async function searchPlaces({
       dest,
       lodging,
       lodgingPoint,
+      keepAreaText,
       placeQueries,
       relevanceContext: { target: placeTarget, area: placeArea },
       priorPlaces,
