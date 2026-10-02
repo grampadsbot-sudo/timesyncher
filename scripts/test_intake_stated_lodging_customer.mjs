@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import { readPriorPlaces } from '../src/vacation/place-search.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 const KIHEI = 'Kihei Kai Nani';
 const OTHER_TRIP_HOTEL = 'Hyatt Regency Maui Resort & Spa';
@@ -35,7 +36,7 @@ function mockTripDb(tripId) {
 const { db, tripThings } = mockTripDb('trip-kihei');
 const emptyNominatimFetch = async (url) => {
   const href = String(url);
-  if (!href.includes('nominatim.openstreetmap.org')) throw new Error(`unexpected fetch ${href}`);
+  if (!urlIsNominatim(href)) throw new Error(`unexpected fetch ${href}`);
   return { ok: true, json: async () => [] };
 };
 

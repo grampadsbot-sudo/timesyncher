@@ -13,6 +13,7 @@ import {
 } from '../src/vacation/brave-place-query.mjs';
 import { isLodgingProviderPlace } from '../src/vacation/intake-lodging-category.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
 
@@ -133,7 +134,7 @@ assert.equal(kiheiThings.filter((row) => row.category !== 'hotel').length, 0);
 
 const emptyNominatimFetch = async (url) => {
   const href = String(url);
-  if (!href.includes('nominatim.openstreetmap.org')) throw new Error(`unexpected fetch ${href}`);
+  if (!urlIsNominatim(href)) throw new Error(`unexpected fetch ${href}`);
   return { ok: true, json: async () => [] };
 };
 

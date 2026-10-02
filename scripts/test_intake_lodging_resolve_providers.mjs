@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { braveAddress, bravePlaceSearchRows, bravePoint, braveTitle, trimBraveResultEvidence } from '../src/vacation/brave-place-query.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
 const HYATT_LAT = 20.9124823;
@@ -18,7 +19,7 @@ function loadFixture(name) {
 function nominatimFetch(handler) {
   return async (url, options) => {
     const href = String(url);
-    if (href.includes('nominatim.openstreetmap.org')) return handler(href, options);
+    if (urlIsNominatim(href)) return handler(href, options);
     throw new Error(`unexpected fetch ${href}`);
   };
 }

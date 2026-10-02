@@ -32,6 +32,31 @@ export function resolvedAreaText(hit, fallback = '') {
   return display || String(fallback || '').trim();
 }
 
+export async function nominatimForwardSearch(fetchImpl, query, readJson, { limit = 5 } = {}) {
+  const q = String(query || '').trim();
+  if (!q) return [];
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=${Math.min(Math.max(limit, 1), 10)}&q=${encodeURIComponent(q)}`;
+  const payload = await readJson(fetchImpl, url, { label: 'Nominatim forward' });
+  return (Array.isArray(payload) ? payload : []).slice(0, limit);
+}
+
+export async function nominatimReverseGeocode(fetchImpl, lat, lng, readJson) {
+  const pointLat = finite(lat);
+  const pointLng = finite(lng);
+  if (pointLat === null || pointLng === null) return null;
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pointLat}&lon=${pointLng}`;
+  const payload = await readJson(fetchImpl, url, { label: 'Nominatim reverse' });
+  if (!payload || typeof payload !== 'object') return null;
+  const address = String(payload.display_name || '').trim();
+  if (!address) return null;
+  return {
+    address,
+    hit: payload,
+    lat: finite(payload.lat) ?? pointLat,
+    lng: finite(payload.lon ?? payload.lng) ?? pointLng,
+  };
+}
+
 async function geocodeLabel(fetchImpl, label, readJson) {
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(label)}`;
   const payload = await readJson(fetchImpl, url, { label: 'Nominatim geocode' });

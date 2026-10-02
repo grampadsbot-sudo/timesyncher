@@ -13,6 +13,7 @@ import {
   braveTitle,
 } from '../src/vacation/brave-place-query.mjs';
 import { intakeLodgingLookupQuery } from '../src/vacation/intake-lodging-lookup.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
 const KAANAPALI_CENTER = { lat: 20.9250419, lng: -156.6899009 };
@@ -177,7 +178,7 @@ missTurns.set('turn-miss', { liveTranscript: { turnIndex: 2 } });
 
 const emptyNominatimFetch = async (url) => {
   const href = String(url);
-  if (!href.includes('nominatim.openstreetmap.org')) throw new Error(`unexpected fetch ${href}`);
+  if (!urlIsNominatim(href)) throw new Error(`unexpected fetch ${href}`);
   return { ok: true, json: async () => [] };
 };
 

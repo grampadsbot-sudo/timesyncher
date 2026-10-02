@@ -1,5 +1,9 @@
 import { placeSearchReadJson } from './place-search.mjs';
 import {
+  nominatimForwardSearch as nominatimForwardSearchGeocode,
+  nominatimReverseGeocode as nominatimReverseGeocodeGeocode,
+} from './place-search-geocode.mjs';
+import {
   pickIntakeLodgingCandidate,
   intakeLodgingPickMissReason,
 } from './intake-lodging-candidate.mjs';
@@ -23,7 +27,7 @@ function nominatimTags(hit = {}) {
   };
 }
 
-export function nominatimHitToPlace(hit = {}) {
+function nominatimHitToPlace(hit = {}) {
   const lat = finite(hit?.lat);
   const lng = finite(hit?.lon ?? hit?.lng);
   const tags = nominatimTags(hit);
@@ -64,29 +68,12 @@ export function trimNominatimEvidenceRow(hit = {}) {
   };
 }
 
-export async function nominatimForwardSearch(fetchImpl, query, { limit = 5 } = {}) {
-  const q = String(query || '').trim();
-  if (!q) return [];
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=${Math.min(Math.max(limit, 1), 10)}&q=${encodeURIComponent(q)}`;
-  const payload = await placeSearchReadJson(fetchImpl, url, { label: 'Nominatim forward' });
-  return (Array.isArray(payload) ? payload : []).slice(0, limit);
+export async function nominatimForwardSearch(fetchImpl, query, options = {}) {
+  return nominatimForwardSearchGeocode(fetchImpl, query, placeSearchReadJson, options);
 }
 
 export async function nominatimReverseGeocode(fetchImpl, lat, lng) {
-  const pointLat = finite(lat);
-  const pointLng = finite(lng);
-  if (pointLat === null || pointLng === null) return null;
-  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pointLat}&lon=${pointLng}`;
-  const payload = await placeSearchReadJson(fetchImpl, url, { label: 'Nominatim reverse' });
-  if (!payload || typeof payload !== 'object') return null;
-  const address = String(payload.display_name || '').trim();
-  if (!address) return null;
-  return {
-    address,
-    hit: payload,
-    lat: finite(payload.lat) ?? pointLat,
-    lng: finite(payload.lon ?? payload.lng) ?? pointLng,
-  };
+  return nominatimReverseGeocodeGeocode(fetchImpl, lat, lng, placeSearchReadJson);
 }
 
 export function pickNominatimLodgingCandidate(hits = [], options = {}, { requireTourismLodging = false } = {}) {

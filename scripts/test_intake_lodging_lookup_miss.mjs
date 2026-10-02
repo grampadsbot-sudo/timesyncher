@@ -7,6 +7,7 @@ import {
 } from '../src/vacation/intake-lodging-thing.mjs';
 import { intakeLodgingLookupQuery } from '../src/vacation/intake-lodging-lookup.mjs';
 import { PlaceSearchError } from '../src/vacation/place-search.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 assert.equal(
   intakeLodgingLookupQuery('Hyatt Regency Maui', 'Kaanapali'),
@@ -79,7 +80,7 @@ assert.equal(lookupThings.length, 1);
 
 const emptyNominatimFetch = async (url) => {
   const href = String(url);
-  if (!href.includes('nominatim.openstreetmap.org')) throw new Error(`unexpected fetch ${href}`);
+  if (!urlIsNominatim(href)) throw new Error(`unexpected fetch ${href}`);
   return { ok: true, json: async () => (href.includes('reverse') ? {} : []) };
 };
 
