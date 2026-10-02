@@ -436,6 +436,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     const pending = {
       ...produced.pending,
       customerTurnIndex,
+      customerTurnId: turnRows[0].id,
       requestId,
       speakerName,
       collaborator: Boolean(seat),

@@ -28,8 +28,15 @@ export async function classifyVacationAppCustomerTurn(requestText, env, classify
   return resolveTripIntakeForCustomerTurn({ text: requestText, env, classifyImpl });
 }
 
+function intakeLodgingFromClassification(classification) {
+  const things = classification?.ok === true && Array.isArray(classification.things) ? classification.things : [];
+  const lodging = things.filter((thing) => String(thing?.kind || '').toLowerCase() === 'hotel');
+  return lodging.length ? lodging : [];
+}
+
 export function intakeExtractedThings(placeSearchTurn, classification, webResearchTurn = false) {
-  if (placeSearchTurn || webResearchTurn) return [];
+  if (webResearchTurn) return [];
+  if (placeSearchTurn) return intakeLodgingFromClassification(classification);
   return classification?.ok === true ? classification.things : [];
 }
 

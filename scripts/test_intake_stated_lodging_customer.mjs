@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import { readPriorPlaces } from '../src/vacation/place-search.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 const KIHEI = 'Kihei Kai Nani';
 const OTHER_TRIP_HOTEL = 'Hyatt Regency Maui Resort & Spa';
@@ -13,6 +14,7 @@ function mockTripDb(tripId) {
     if (/select\s+id,\s*title,\s*location/i.test(sql) && /from trip_things/i.test(sql)) {
       return [];
     }
+    if (sql.includes('delete from trip_things')) return [];
     if (sql.includes('insert into trip_things')) {
       const categoryIndex = values.findIndex((value) => value === 'hotel');
       const title = categoryIndex >= 0 ? values[categoryIndex + 2] : values[4];
@@ -32,17 +34,24 @@ function mockTripDb(tripId) {
 }
 
 const { db, tripThings } = mockTripDb('trip-kihei');
+const emptyNominatimFetch = async (url) => {
+  const href = String(url);
+  if (!urlIsNominatim(href)) throw new Error(`unexpected fetch ${href}`);
+  return { ok: true, json: async () => [] };
+};
+
 const missOutcome = await persistIntakeLodgingThings(db, 'trip-kihei', 'req-kihei', [{ title: KIHEI, category: 'hotel' }], {
   areaHint: 'Kihei',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  fetchImpl: emptyNominatimFetch,
   searchImpl: async () => ({
     places: [],
     providers: [{ provider: 'brave', status: 'empty', reason: 'no_results', resultCount: 0 }],
   }),
 });
 assert.equal(missOutcome.saved.length, 1);
-assert.match(missOutcome.saved[0].title, /Kihei Kai Nani/i);
-assert.equal(missOutcome.saved[0].category, 'hotel');
+assert.equal(missOutcome.misses.length, 1);
+assert.equal(tripThings.filter((row) => row.category === 'hotel').length, 1);
 assert.equal(tripThings.filter((row) => /Hyatt/i.test(row.title)).length, 0);
 
 const foreignActivityRows = [{

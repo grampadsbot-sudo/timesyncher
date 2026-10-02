@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { writeIntakeItineraryFromChat } from '../routes/vacation-itinerary.mjs';
+import { attachIntakeItineraryFromReply } from '../routes/vacation-itinerary.mjs';
 import {
   STAGING_HYATT_INTAKE_EXTRACTION,
   STAGING_HYATT_INTAKE_SENTENCE,
@@ -33,6 +33,7 @@ function mockDb() {
         source: row.source || null,
       }));
     }
+    if (sql.includes('delete from trip_things')) return [];
     if (sql.includes('insert into trip_things')) {
       const viaInsertTripThing = sql.includes('source_request_id');
       const category = viaInsertTripThing ? values[2] : values[1];
@@ -64,10 +65,9 @@ function mockDb() {
 }
 
 const { db, tripThings } = mockDb();
-await writeIntakeItineraryFromChat(db, 'trip-hyatt-staging', STAGING_HYATT_INTAKE_SENTENCE, STAGING_HYATT_INTAKE_EXTRACTION.things, {
+await attachIntakeItineraryFromReply(db, 'trip-hyatt-staging', STAGING_HYATT_INTAKE_SENTENCE, {
   extractedDestination: STAGING_HYATT_INTAKE_EXTRACTION.destination,
   extractedTitle: 'Maui stay',
-  searchImpl: async () => ({ ok: true }),
   searchPlacesImpl: async () => ({
     places: [{
       source: 'brave',
@@ -83,7 +83,7 @@ await writeIntakeItineraryFromChat(db, 'trip-hyatt-staging', STAGING_HYATT_INTAK
     providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
   }),
   env: { OPENROUTER_API_KEY: 'test-key', BRAVE_SEARCH_API_KEY: 'brave-key' },
-});
+}, STAGING_HYATT_INTAKE_SENTENCE, STAGING_HYATT_INTAKE_EXTRACTION.things);
 
 const rows = tripThings.map(thingView);
 const hotels = rows.filter((row) => row.category === 'hotel');

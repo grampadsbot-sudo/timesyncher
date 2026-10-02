@@ -209,6 +209,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       extractedTitle: pending.extractedTitle || '',
       destinationError: pending.destinationError || null,
       titleError: pending.titleError || null,
+      customerTurnId: pending.customerTurnId || null,
     },
     pending.postIntake === true ? pending.customerTurn : '',
     pending.wantedThings || [],

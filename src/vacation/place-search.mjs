@@ -301,7 +301,9 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
           headers: { 'X-Subscription-Token': String(env.brave).trim() },
         },
       );
-      for (const result of bravePlaceSearchRows(payload, endpoint)) {
+      const braveRows = bravePlaceSearchRows(payload, endpoint);
+      const rawBraveResults = braveRows.slice(0, 5);
+      for (const result of braveRows) {
         if (!braveLocalPlaceResult(result)) continue;
         const point = bravePoint(result);
         const title = braveTitle(result?.title || result?.name);
@@ -319,12 +321,14 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
           address,
           url: String(result?.url || ''),
           externalId: String(result?.id || result?.url || ''),
+          sourceRecord: result,
           ...(description ? { description } : {}),
           ...ratingFromRecord(result),
           ...categoryNameField(braveCategoryName(result)),
           ...(providerCategories.length ? { providerCategories } : {}),
         });
       }
+      calls[calls.length - 1].rawResults = rawBraveResults;
     }
   } catch (error) {
     const summary = braveCallSummary(calls);
@@ -332,7 +336,8 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
     error.braveEndpoint = summary.endpoint;
     throw error;
   }
-  return { places, ...braveCallSummary(calls) };
+  const rawResults = calls.flatMap((row) => (Array.isArray(row.rawResults) ? row.rawResults : [])).slice(0, 5);
+  return { places, rawResults, ...braveCallSummary(calls) };
 }
 
 export function selectPriorPlaces(rows = [], center) {

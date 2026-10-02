@@ -13,6 +13,7 @@ import {
 } from '../src/vacation/brave-place-query.mjs';
 import { isLodgingProviderPlace } from '../src/vacation/intake-lodging-category.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
 
@@ -49,6 +50,12 @@ function mockTripDb() {
   const tripThings = [];
   const db = async (strings, ...values) => {
     const sql = String(strings[0] || '');
+    if (sql.includes('delete from trip_things')) {
+      const title = values.find((value) => typeof value === 'string' && value.length > 3);
+      const idx = tripThings.findIndex((row) => row.title === title && row.metadata?.source === 'customer_stated');
+      if (idx >= 0) tripThings.splice(idx, 1);
+      return [];
+    }
     if (sql.includes('insert into trip_things')) {
       const viaInsertTripThing = sql.includes('source_request_id');
       const category = viaInsertTripThing ? values[2] : values[1];
@@ -125,11 +132,18 @@ assert.match(kiheiThings[0].title, /Kihei Kai Nani/i);
 assert.equal(kiheiThings[0].location.address, kiheiPlaces[0].address);
 assert.equal(kiheiThings.filter((row) => row.category !== 'hotel').length, 0);
 
+const emptyNominatimFetch = async (url) => {
+  const href = String(url);
+  if (!urlIsNominatim(href)) throw new Error(`unexpected fetch ${href}`);
+  return { ok: true, json: async () => [] };
+};
+
 const { db: missDb, tripThings: missThings } = mockTripDb();
 const wrongAreaOutcome = await persistIntakeLodgingThings(missDb, 'trip-miss', 'req-miss', [{ title: 'Kihei Kai Nani', category: 'hotel' }], {
   areaHint: 'Kihei',
   destinationHint: 'Maui',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  fetchImpl: emptyNominatimFetch,
   searchImpl: async () => ({
     places: [{
       source: 'brave',
@@ -147,7 +161,7 @@ const wrongAreaOutcome = await persistIntakeLodgingThings(missDb, 'trip-miss', '
   }),
 });
 assert.equal(wrongAreaOutcome.saved.length, 1);
-assert.match(wrongAreaOutcome.saved[0].title, /Kihei Kai Nani/i);
+assert.equal(missThings.filter((row) => row.category === 'hotel').length, 1);
 assert.equal(missThings.filter((row) => /Honolulu/i.test(row.location?.address || '')).length, 0);
 assert.equal(wrongAreaOutcome.misses.length, 1);
 assert.equal(wrongAreaOutcome.misses[0].status, 'miss');
@@ -158,6 +172,7 @@ const shortTitleOutcome = await persistIntakeLodgingThings(shortTitleDb, 'trip-s
   areaHint: 'Kaanapali',
   destinationHint: 'Maui',
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  fetchImpl: emptyNominatimFetch,
   searchImpl: async () => ({
     places: [{
       source: 'brave',
