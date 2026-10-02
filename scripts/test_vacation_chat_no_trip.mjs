@@ -4,7 +4,7 @@ import {
   createVacationFromChatMessage,
   intakeTripReadyForCreation,
 } from '../src/vacation/vacation-from-chat-intake.mjs';
-import { NO_TRIP_STARTER_INSTRUCTION, noTripReplyBlock } from '../src/vacation/first-intake-reply.mjs';
+import { NO_TRIP_STARTER_INSTRUCTION, noTripReplyBlock } from '../src/vacation/no-trip-starter-reply.mjs';
 import {
   queueVacationAppTurnForTests,
   useVacationAppDatabase,
