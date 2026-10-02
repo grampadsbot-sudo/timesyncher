@@ -40,7 +40,7 @@ import {
   storeReplyFailure,
   vacationAppTurnPayloadForClient,
 } from '../src/vacation/reply-ship.mjs';
-import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import {
   classifyTripIntake,
   intakeActivityThings,
@@ -546,6 +546,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   if (lodgingWanted.length) {
     await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
       destinationHint: tripDestination || extractedDestination,
+      areaHint: extractedDestination,
       env,
       fetchImpl,
       searchImpl: searchPlacesImpl,
@@ -571,19 +572,25 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch } = {}, intakeText = '', extracted = []) {
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null } = {}, intakeText = '', extracted = []) {
   if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText, extracted, { roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl });
   let current = await loadTripThings(db, tripId);
   const lodgingWanted = intakeLodgingThings(extracted);
+  const lodgingLookupMisses = [];
   if (lodgingWanted.length) {
-    await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+    const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
       destinationHint: extractedDestination,
+      areaHint: extractedDestination,
       env,
       fetchImpl,
       searchImpl: searchPlacesImpl,
       existingTitles: current.map((item) => item.title),
     });
+    if (Array.isArray(lodgingOutcome?.misses)) lodgingLookupMisses.push(...lodgingOutcome.misses);
     current = await loadTripThings(db, tripId);
+  }
+  if (customerTurnId && lodgingLookupMisses.length) {
+    await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookupMisses);
   }
   const wanted = intakeActivityThings(extracted);
   if (!current.length && !wanted.length) return current;

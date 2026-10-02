@@ -65,6 +65,7 @@ function mockDb() {
 
 const { db, tripThings } = mockDb();
 let searchCalls = 0;
+let capturedLodgingQuery = '';
 
 await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
   { name: 'Hyatt Regency Maui', kind: 'hotel', who: '', when: '' },
@@ -72,8 +73,9 @@ await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
   extractedDestination: 'Kaanapali Maui',
   extractedTitle: 'Maui week',
   searchImpl: async () => ({ ok: true }),
-  searchPlacesImpl: async () => {
+  searchPlacesImpl: async ({ queries }) => {
     searchCalls += 1;
+    capturedLodgingQuery = String(queries?.[0]?.q || '');
     return {
       places: [{
         source: 'brave',
@@ -92,6 +94,7 @@ await writeIntakeItineraryFromChat(db, 'trip-hyatt', INTAKE_SENTENCE, [
 });
 
 assert.equal(searchCalls, 1, 'provider lookup runs once for named lodging');
+assert.match(capturedLodgingQuery, /Kaanapali/i);
 const rows = tripThings.map(thingView);
 const hotels = rows.filter((row) => row.category === 'hotel');
 const activities = rows.filter((row) => row.category === 'activity');
