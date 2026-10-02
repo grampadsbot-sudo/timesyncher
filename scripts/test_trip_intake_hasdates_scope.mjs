@@ -148,6 +148,8 @@ function extractionJson(overrides = {}) {
     startDate: '',
     endDate: '',
     title: '',
+    inviteeName: '',
+    inviteeEmail: '',
     ...overrides,
   });
 }

@@ -1,5 +1,5 @@
-import { assignDates } from './intake-shared-trip.mjs';
-import { activeCollaboratorsFromParty } from './reply-action-claim.mjs';
+import { assignDatesScheduling } from './intake-shared-trip.mjs';
+import { activeCollaboratorsFromParty, partyNamesFromDialogParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
 
 function clean(value, max = 180) {
@@ -88,20 +88,43 @@ export function chatPlaceSearchSavedReplyFacts(savedThings = [], tripStart = '',
       whenLabel: clean(item?.whenLabel, 180),
       customerWhen: clean(item?.customerWhen, 180),
     };
-    const dates = assignDates(record, year, tripDates);
-    if (!dates.length) unscheduled.push({ title });
-    else scheduled.push({ title, dates });
+    const whenLabel = clean(item?.whenLabel, 180) || clean(item?.customerWhen, 180);
+    const { dates, weekdayAmbiguous, candidateDates } = assignDatesScheduling(record, year, tripDates);
+    if (!dates.length) {
+      unscheduled.push({
+        title,
+        ...(whenLabel ? { whenLabel } : {}),
+        ...(weekdayAmbiguous ? { weekdayAmbiguous: true, candidateDates } : {}),
+      });
+    } else scheduled.push({ title, dates });
   }
   if (!unscheduled.length && !scheduled.length) return null;
-  return { chatPlaceSearch: { unscheduled, scheduled } };
+  const chatPlaceSearch = { unscheduled, scheduled };
+  if (unscheduled.some((row) => row.weekdayAmbiguous)) {
+    chatPlaceSearch.weekdayAmbiguityRule =
+      'Some saved places name a weekday that matches more than one trip day; use candidateDates and ask which day before scheduling.';
+  }
+  return { chatPlaceSearch };
 }
 
-export function vacationAppReplyClaimContext(trip, placeSearchReplyFacts) {
+export function vacationAppReplyClaimContext(trip, placeSearchReplyFacts, {
+  roster = [],
+  turnActionResults = null,
+} = {}) {
   const meta = trip?.metadata && typeof trip.metadata === 'object' ? trip.metadata : {};
   const party = meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : {};
   const unscheduledChatPlaceTitles = unscheduledChatPlaceTitlesFromReplyFacts(placeSearchReplyFacts);
+  const rosterMemberNames = (Array.isArray(roster) ? roster : [])
+    .map((person) => String(person?.name || '').trim())
+    .filter(Boolean);
+  const turnInviteeNames = [];
+  const inviteName = String(turnActionResults?.invite?.inviteeName || '').trim();
+  if (inviteName) turnInviteeNames.push(inviteName);
   return {
     activeCollaborators: activeCollaboratorsFromParty(party),
+    rosterMemberNames: [...new Set([...rosterMemberNames, ...partyNamesFromDialogParty(party)])],
+    turnInviteeNames,
+    dialogParty: party,
     ...(unscheduledChatPlaceTitles.length ? { unscheduledChatPlaceTitles } : {}),
   };
 }
@@ -164,8 +187,17 @@ export async function insertStampedChatPlaceThings(db, { tripId, requestId, thin
   const savedForFacts = [];
   for (const thing of Array.isArray(things) ? things : []) {
     const stamped = stampChatSavedPlaceThing(thing, classification);
-    const inserted = await insertTripThing(db, { tripId, requestId, thing: stamped });
     const meta = stamped?.metadata && typeof stamped.metadata === 'object' ? stamped.metadata : {};
+    const year = tripStart ? Number(String(tripStart).slice(0, 4)) : null;
+    const tripDates = eachDate(isoDay(tripStart), isoDay(tripEnd) || isoDay(tripStart));
+    const { dates } = assignDatesScheduling({
+      whenLabel: meta.whenLabel || '',
+      customerWhen: meta.customerWhen || '',
+    }, year, tripDates);
+    const scheduledThing = dates.length === 1
+      ? { ...stamped, starts_at: `${dates[0]}T12:00:00.000Z` }
+      : stamped;
+    const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
     savedForFacts.push({
       title: inserted?.title || stamped.title,
       whenLabel: meta.whenLabel || '',

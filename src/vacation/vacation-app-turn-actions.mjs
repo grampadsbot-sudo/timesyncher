@@ -1,13 +1,18 @@
 import { openCollaboratorAppSeats, seatFromSession } from './collaborator-app-seat.mjs';
 import {
-  parseCollaboratorInviteTurn,
+  collaboratorInviteFromClassification,
   shouldRunCollaboratorInviteFromChat,
 } from './collaborator-invite-action.mjs';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
-function inviteRow(ok, code, inviteeEmail) {
-  return { ok: Boolean(ok), code: String(code || ''), inviteeEmail: inviteeEmail ? String(inviteeEmail).toLowerCase() : null };
+function inviteRow(ok, code, inviteeEmail, inviteeName = '') {
+  return {
+    ok: Boolean(ok),
+    code: String(code || ''),
+    inviteeEmail: inviteeEmail ? String(inviteeEmail).toLowerCase() : null,
+    inviteeName: inviteeName ? String(inviteeName) : null,
+  };
 }
 
 function emailSendSucceeded(status) {
@@ -32,16 +37,17 @@ export async function runVacationAppTurnActions({
   session,
   tripId,
   requestText,
+  classification = null,
   roster = [],
   env = process.env,
   openSeats = openCollaboratorAppSeats,
 } = {}) {
   const results = {};
   if (!db || !session?.customer_id || seatFromSession(session)) return results;
-  if (!shouldRunCollaboratorInviteFromChat(requestText)) return results;
+  if (!shouldRunCollaboratorInviteFromChat(classification)) return results;
 
-  const parsed = parseCollaboratorInviteTurn(requestText);
-  const inviteeEmail = parsed?.email ? String(parsed.email).toLowerCase() : null;
+  const fromClassifier = collaboratorInviteFromClassification(classification);
+  const inviteeEmail = fromClassifier?.email ? String(fromClassifier.email).toLowerCase() : null;
   if (!inviteeEmail) {
     results.invite = inviteRow(false, 'missing_email', null);
     return results;
@@ -50,9 +56,9 @@ export async function runVacationAppTurnActions({
     results.invite = inviteRow(false, 'invalid_email', inviteeEmail);
     return results;
   }
-  const inviteeName = parsed?.name || '';
+  const inviteeName = fromClassifier?.name ? String(fromClassifier.name).trim() : '';
   if (!inviteeName) {
-    results.invite = inviteRow(false, 'missing_email', inviteeEmail);
+    results.invite = inviteRow(false, 'missing_invitee_name', inviteeEmail);
     return results;
   }
 
@@ -76,7 +82,7 @@ export async function runVacationAppTurnActions({
       results.invite = inviteRow(false, 'send_failed', inviteeEmail);
       return results;
     }
-    results.invite = inviteRow(true, 'collaborator_invite_sent', inviteeEmail);
+    results.invite = inviteRow(true, 'collaborator_invite_sent', inviteeEmail, inviteeName);
   } catch (error) {
     results.invite = mapInviteError(error, inviteeEmail);
   }
