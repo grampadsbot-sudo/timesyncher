@@ -81,6 +81,9 @@ scripts/test_g3a_canned_dialog.mjs
 scripts/test_onboarding_welcome.mjs
 scripts/test_reply_plan_entitlement.mjs
 scripts/test_reply_id_citation_weather.mjs
+scripts/test_reply_action_claim.mjs
+scripts/test_intake_stated_lodging_customer.mjs
+scripts/test_first_intake_no_consent_policy.mjs
 scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs
 scripts/test_first_intake_echo.mjs

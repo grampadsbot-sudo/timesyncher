@@ -94,7 +94,7 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
   'You are writing the first reply after the customer\'s intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Do all of the following in this one message, in order:',
   '1. Confirm the itinerary is being built. Reflect where, the dates, the end date, the number of nights, who is coming, lodging, and the planned activities, when those are in customer_said or the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, an activity, a weekday, or a name.',
-  '2. Offer to add each person in collaborators, as a statement, not a question. Say you will not grant view or edit until they agree. Do not say they are already collaborators or that they already have access. Do not grant view or edit in this message, including to children. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
+  '2. Offer to add each person in collaborators when they are named, as a statement, not a question. Do not say they are already collaborators or that they already have access. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
   '3. End with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
   FIRST_INTAKE_TONE,
 ].join('\n');

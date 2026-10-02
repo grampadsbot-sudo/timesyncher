@@ -81,7 +81,7 @@ assert.equal(intakeReplyBlock('I can add Bristol and Calvin. What about the flig
 assert.equal(intakeReplyBlock(`${tripId} is all set. What time do you land?`, () => '', facts, [tripId]), 'first_intake_reply_flagged');
 assert.equal(intakeReplyBlock('Calvin already has access. What time do you land?', () => '', facts, []), 'first_intake_reply_flagged');
 assert.equal(intakeReplyBlock('It is just you and him. What time do you land?', () => '', facts, []), 'first_intake_reply_flagged');
-assert.equal(intakeReplyBlock('I can add Bristol and Calvin, and I will not grant access until you agree. The plan id is timesyncher_vacation_single. What time do you land?', () => '', facts, [tripId]), '');
+assert.equal(intakeReplyBlock('I can add Bristol and Calvin, and I will not grant access until you agree. The plan id is timesyncher_vacation_single. What time do you land?', () => '', facts, [tripId]), 'first_intake_reply_flagged');
 
 const gaps = firstIntakeReplyFacts({
   customerTurn: 'Maybe a trip sometime.',
