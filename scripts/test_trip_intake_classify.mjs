@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { classifyTripIntake, mergeWantedThings, resolveIntakePlace, thingsFromIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
+import { TRIP_INTAKE_PLACE_ANCHOR_CASES } from './fixtures/trip-intake-place-anchor-cases.mjs';
 
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
@@ -245,5 +246,22 @@ assert.equal(unnamed.destination, '');
 assert.equal(unnamed.title, '');
 assert.match(unnamed.destinationError, /classifier down/);
 assert.match(unnamed.titleError, /classifier down/);
+
+assert.match(classifySource, /anchorIsLodging true when that reference is their hotel/);
+
+for (const caseRow of TRIP_INTAKE_PLACE_ANCHOR_CASES) {
+  const classified = await classifyTripIntake({
+    text: caseRow.text,
+    env,
+    fetchImpl: mockFetch({
+      score: 0.1,
+      things: [],
+      chatText: JSON.stringify(caseRow.extraction),
+    }),
+  });
+  assert.equal(classified.ok, true, caseRow.name);
+  assert.equal(classified.turnKind, 'place_search', caseRow.name);
+  assert.equal(classified.anchorIsLodging, caseRow.expectAnchorIsLodging, caseRow.name);
+}
 
 process.stdout.write('trip intake classify tests passed\n');

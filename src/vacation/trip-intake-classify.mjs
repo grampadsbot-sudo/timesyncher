@@ -22,7 +22,7 @@ const THING_SYSTEM = [
   'Classify one customer chat message and extract fields.',
   `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"title":string}.`,
   `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
-  'For place_search, target is what category or kind of place they want; anchor is the area or reference point they named; anchorIsLodging true only when the anchor is their lodging or where they are staying.',
+  'For place_search, target is what category or kind of place they want; anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
   'For web_research, question is the research ask in their words; leave target, anchor empty and anchorIsLodging false.',
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',

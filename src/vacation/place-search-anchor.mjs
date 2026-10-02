@@ -7,10 +7,6 @@ function tripResolvedAreaFromMetadata(metadata = {}) {
   return clean(meta.resolvedArea || meta.resolvedDestination || meta.destinationArea, 180);
 }
 
-function isLodgingPronounAnchor(anchor = '') {
-  return /\bour hotel\b/i.test(String(anchor || ''));
-}
-
 function cleanSql(value, max = 180) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -31,7 +27,7 @@ export async function loadTripPlaceSearchContext(db, tripId) {
   };
 }
 
-/** Area text for place search: lodging Thing, then trip destination, then resolved area. Never "our hotel". */
+/** Area text for place search: lodging Thing, then trip destination, then resolved metadata area; else named anchor. */
 export function resolvePlaceSearchDestination({
   classification = null,
   lodgingText = '',
@@ -42,7 +38,7 @@ export function resolvePlaceSearchDestination({
   const destination = clean(tripDestination, 180);
   const resolved = clean(tripResolvedArea, 180);
   const anchor = clean(classification?.anchor, 180);
-  const anchorIsLodging = classification?.anchorIsLodging === true || isLodgingPronounAnchor(anchor);
+  const anchorIsLodging = classification?.anchorIsLodging === true;
 
   if (anchorIsLodging) {
     if (lodging) return lodging;
@@ -50,7 +46,7 @@ export function resolvePlaceSearchDestination({
     if (resolved) return resolved;
     return '';
   }
-  if (anchor && !isLodgingPronounAnchor(anchor)) return anchor;
+  if (anchor) return anchor;
   if (destination) return destination;
   if (resolved) return resolved;
   return '';

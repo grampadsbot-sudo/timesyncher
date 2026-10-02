@@ -84,6 +84,44 @@ const ok = await runCustomerChatPlaceSearch({
 assert.equal(braveCalls, 1);
 assert.equal(ok.status, 'ok');
 
+assert.equal(
+  resolvePlaceSearchDestination({
+    classification: { anchorIsLodging: false, anchor: 'Kaanapali Maui' },
+    tripDestination: 'Maui',
+    tripResolvedArea: '',
+  }),
+  'Kaanapali Maui',
+  'anchorIsLodging false uses named area',
+);
+
+let fallbackCalls = 0;
+const lodgingNoThing = await runCustomerChatPlaceSearch({
+  placeSearchTurn: true,
+  classification: lodgingClassification,
+  tripDestination: 'Kaanapali Maui',
+  lodging: '',
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  searchImpl: async (options) => {
+    fallbackCalls += 1;
+    assert.doesNotMatch(options.destination, /our hotel/i);
+    assert.equal(options.destination, 'Kaanapali Maui');
+    return {
+      places: [{
+        source: 'brave',
+        title: 'Taco Cart',
+        category: 'restaurant',
+        lat: 20.921,
+        lng: -156.691,
+        address: 'Kaanapali, HI',
+        externalId: 'brave-taco-2',
+      }],
+      providers: [{ provider: 'brave', status: 'ok', resultCount: 1 }],
+    };
+  },
+});
+assert.equal(fallbackCalls, 1);
+assert.equal(lodgingNoThing.status, 'ok');
+
 const failed = await runCustomerChatPlaceSearch({
   placeSearchTurn: true,
   classification: lodgingClassification,
