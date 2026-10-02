@@ -14,6 +14,55 @@ function isoDay(value) {
   return tripIsoDay(value);
 }
 
+function itineraryTitle(line) {
+  return String(line || '').split(':')[0].replace(/\s+/g, ' ').trim();
+}
+
+function itineraryHasStatus(line) {
+  const text = String(line || '');
+  const colon = text.indexOf(':');
+  return colon >= 0 && text.slice(colon + 1).trim().length > 0;
+}
+
+function applyUnscheduledDayStatus(ctx) {
+  if (!ctx || typeof ctx !== 'object' || !Array.isArray(ctx.itinerary)) return ctx;
+  const search = ctx.chatPlaceSearch;
+  const rows = Array.isArray(search?.unscheduled) ? search.unscheduled : [];
+  if (!rows.length) return ctx;
+  const hasStatus = new Set();
+  for (const item of ctx.itinerary) {
+    if (typeof item !== 'string' || !itineraryHasStatus(item)) continue;
+    const title = itineraryTitle(item).toLowerCase();
+    if (title) hasStatus.add(title);
+  }
+  const unscheduled = rows.filter((row) => {
+    if (row?.weekdayAmbiguous === true) return true;
+    if (row?.notOnADay !== true) return true;
+    const title = String(row?.title || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    return !title || !hasStatus.has(title);
+  });
+  let changed = unscheduled.length !== rows.length;
+  const itinerary = ctx.itinerary.map((item) => {
+    if (typeof item !== 'string' || itineraryHasStatus(item)) return item;
+    const title = itineraryTitle(item);
+    const key = title.toLowerCase();
+    if (!title || hasStatus.has(key)) return item;
+    const row = unscheduled.find((entry) => String(entry?.title || '').replace(/\s+/g, ' ').trim().toLowerCase() === key);
+    if (!row || row.notOnADay !== true || row.weekdayAmbiguous === true) return item;
+    changed = true;
+    return `${title}: not on a day`;
+  });
+  if (!changed) return ctx;
+  const chatPlaceSearch = { ...search, unscheduled };
+  const stillOpen = unscheduled.some((row) => row?.notOnADay === true && row?.weekdayAmbiguous !== true);
+  if (stillOpen) chatPlaceSearch.unscheduledDayRule = search.unscheduledDayRule || ctx.unscheduledDayRule;
+  else delete chatPlaceSearch.unscheduledDayRule;
+  const next = { ...ctx, itinerary, chatPlaceSearch };
+  if (stillOpen) next.unscheduledDayRule = chatPlaceSearch.unscheduledDayRule;
+  else delete next.unscheduledDayRule;
+  return next;
+}
+
 export function applySavedJobDatesToReplyFacts(facts, { savedStart = '', savedEnd = '' } = {}) {
   if (!facts || typeof facts !== 'object') return facts;
   const start = isoDay(savedStart);
@@ -70,7 +119,7 @@ export async function enrichDraftingTripContext(tripContext, {
     const label = statedLodgingLabelFromThings(things);
     if (label) ctx.lodging = label;
   }
-  if (!env?.DATABASE_URL || !session?.customer_id) return ctx;
+  if (!env?.DATABASE_URL || !session?.customer_id) return applyUnscheduledDayStatus(ctx);
   try {
     const { sql } = await import('./db.mjs');
     const db = sql(env);
@@ -86,8 +135,8 @@ export async function enrichDraftingTripContext(tripContext, {
       tripId,
       onboardingSessionId: session?.id || '',
     });
-    return applyPendingInviteReplyFacts(ctx, pendingInviteReplyFacts(pendingRows));
+    return applyUnscheduledDayStatus(applyPendingInviteReplyFacts(ctx, pendingInviteReplyFacts(pendingRows)));
   } catch {
-    return ctx;
+    return applyUnscheduledDayStatus(ctx);
   }
 }

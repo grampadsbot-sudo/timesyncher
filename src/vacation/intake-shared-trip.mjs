@@ -22,7 +22,7 @@ export function intakeShareSlug(tripId) {
   return `intake-${hex}`;
 }
 
-function intId(seed) {
+export function intId(seed) {
   let hash = 2166136261;
   for (const char of String(seed)) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
   return (hash >>> 0) % 900000000 + 1000;

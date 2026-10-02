@@ -590,6 +590,7 @@ function queueVacationAppHooks() {
 async function queueVacationAppTurn(db, session, trip, body) {
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
   const requestText = cleanText(body.text || body.message, 12000);
+  const classifyStarted = Date.now();
   const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(
     requestText,
     process.env,
@@ -600,6 +601,7 @@ async function queueVacationAppTurn(db, session, trip, body) {
     classification,
     placeSearchTurn,
     webResearchTurn,
+    classifierMs: Date.now() - classifyStarted,
   });
 }
 
@@ -847,6 +849,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
       starts_at: scheduled.starts_at,
     };
   });
+  const savedThingIds = [];
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
@@ -858,7 +861,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         candidateDates: thing.candidateDates,
         starts_at: thing.starts_at,
       });
-      await db`
+      const inserted = await db`
         insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
         values (
           ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
@@ -866,7 +869,9 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
           ${{ ...metadata, source: metadata.source }},
           ${thing.starts_at || null}
         )
+        returning id
       `;
+      if (inserted[0]?.id) savedThingIds.push(inserted[0].id);
       continue;
     }
     if (JSON.stringify({
@@ -874,7 +879,7 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     }) === JSON.stringify({
       notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who, askWhichDay: thing.askWhichDay === true,
     })) continue;
-    await db`
+    const updated = await db`
       update trip_things
       set description = '',
           starts_at = ${thing.starts_at || null},
@@ -889,10 +894,14 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
           }},
           updated_at = now()
       where id = ${thing.id}
+      returning id
     `;
+    if (updated[0]?.id) savedThingIds.push(updated[0].id);
   }
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
-  return loadTripThings(db, tripId);
+  const itinerary = await loadTripThings(db, tripId);
+  itinerary.savedThingIds = savedThingIds;
+  return itinerary;
 }
 
 async function vacationAppEula(session, env = process.env) {
