@@ -1,4 +1,4 @@
-import { assignTripSiteUrlWhenThingsPresent } from './onboarding.mjs';
+import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { samePlace } from './place-search-same-place.mjs';
 
 const PLACE_SOURCES = new Set(['prior_db', 'osm', 'brave', 'tavily']);

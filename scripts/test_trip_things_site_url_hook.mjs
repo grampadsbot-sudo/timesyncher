@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
+import { assignTripSiteUrlWhenThingsPresent } from '../src/vacation/trip-site-url-after-insert.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
 const tripId = '716d3a1f-60be-4bca-8993-dbe8bcb3196a';
