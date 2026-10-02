@@ -15,6 +15,9 @@ import {
 import { queriesFromPlaceClassification } from '../src/vacation/place-search-query-plan.mjs';
 import { placeSearchProvidersAllEmpty } from '../src/vacation/place-search-provider-pass.mjs';
 import { overpassQuery, osmPlaceQualifiesForSave, placesFromOsmPayload } from '../src/vacation/place-search-osm.mjs';
+import { osmAppCategoryFromTags, osmProviderCategoryNameFromTags } from '../src/vacation/place-search-osm-tag-map.mjs';
+import { intakeThingsForPersistence } from '../src/vacation/chat-place-search.mjs';
+import { buildIntakeLodgingOutcome } from '../src/vacation/intake-lodging-turn-outcome.mjs';
 import { placeToTripThing, searchPlaces } from '../src/vacation/place-search.mjs';
 import { runCustomerChatPlaceSearch } from '../src/vacation/chat-place-search.mjs';
 import { intakeLodgingLookupQuery } from '../src/vacation/intake-lodging-lookup.mjs';
@@ -164,15 +167,18 @@ const farmersPlan = queriesFromPlaceClassification({
   ok: true,
   turnKind: 'place_search',
   target: 'Farmers market',
-  category: 'grocery',
+  category: 'market',
   anchor: 'Kihei',
   anchorIsLodging: false,
 }, 'Kihei', '', '', '');
+assert.equal(farmersPlan.queries[0].category, 'market');
 assert.match(farmersPlan.queries[0].q, /Farmers market/i);
 assert.match(farmersPlan.queries[0].q, /Kihei/i);
 
-const overpassGrocery = overpassQuery(KIHEI_CENTER, ['grocery']);
-assert.match(overpassGrocery, /amenity"="marketplace"/);
+const overpassMarket = overpassQuery(KIHEI_CENTER, ['market']);
+assert.match(overpassMarket, /amenity"="marketplace"/);
+assert.match(overpassMarket, /shop"="farm"/);
+assert.doesNotMatch(overpassMarket, /supermarket\|grocery/);
 
 let braveFarmersQuery = '';
 const farmersFetch = async (url, options = {}) => {
@@ -211,7 +217,7 @@ const chatNoResults = await runCustomerChatPlaceSearch({
     ok: true,
     turnKind: 'place_search',
     target: 'Farmers market',
-    category: 'grocery',
+    category: 'market',
     anchor: 'Kihei',
     anchorIsLodging: false,
   },
@@ -260,6 +266,99 @@ const osmRows = placesFromOsmPayload({
 });
 assert.equal(osmRows.length, 1);
 assert.match(osmRows[0].title, /Farmers Market/);
+assert.equal(osmRows[0].category, 'market');
+
+assert.equal(osmAppCategoryFromTags({ amenity: 'cafe', name: 'Lava Java' }), 'restaurant');
+assert.equal(osmProviderCategoryNameFromTags({ amenity: 'cafe' }), 'Cafe');
+const cafeRow = placesFromOsmPayload({
+  elements: [{ type: 'node', id: 9, lat: 20.76, lon: -156.45, tags: { name: 'Lava Java', amenity: 'cafe' } }],
+}, KIHEI_CENTER, {
+  finite: (v) => (Number.isFinite(Number(v)) ? Number(v) : null),
+  metersInsideCategory: () => 100,
+  ratingFromRecord: () => ({}),
+});
+assert.equal(cafeRow[0].category, 'restaurant');
+assert.equal(cafeRow[0].categoryName, 'Cafe');
+
+assert.equal(osmPlaceQualifiesForSave({ name: 'Scenic Overlook', tourism: 'information' }), true);
+assert.equal(osmAppCategoryFromTags({ name: 'Scenic Overlook', tourism: 'information' }), '');
+const activityOnly = placesFromOsmPayload({
+  elements: [
+    { type: 'node', id: 10, lat: 20.76, lon: -156.45, tags: { name: 'Scenic Overlook', tourism: 'information' } },
+    { type: 'node', id: 11, lat: 20.76, lon: -156.45, tags: { name: 'Black Rock', tourism: 'attraction' } },
+  ],
+}, KIHEI_CENTER, {
+  finite: (v) => (Number.isFinite(Number(v)) ? Number(v) : null),
+  metersInsideCategory: () => 100,
+  ratingFromRecord: () => ({}),
+});
+assert.equal(activityOnly.length, 1);
+assert.equal(activityOnly[0].title, 'Black Rock');
+
+assert.deepEqual(
+  intakeThingsForPersistence(false, { ok: true, things: [] }, false, creationThings),
+  creationThings,
+  'firstIntake ship uses wantedThings when classifier things empty',
+);
+
+const lodgingMissOutcome = buildIntakeLodgingOutcome({
+  saved: [],
+  misses: [{ propertyName: 'Kihei Kai Nani', query: 'Kihei Kai Nani, Kihei', reason: 'no_results' }],
+  lookups: [],
+});
+assert.equal(lodgingMissOutcome.status, 'miss');
+assert.equal(lodgingMissOutcome.misses[0].reason, 'no_results');
+
+const KAANAPALI = { lat: 20.941, lng: -156.694 };
+const blackRockFetch = async (url) => {
+  const href = String(url);
+  if (href.includes(NOMINATIM_HOST)) {
+    if (href.includes('Black')) {
+      return { ok: true, json: async () => [{ lat: String(KAANAPALI.lat), lon: String(KAANAPALI.lng), display_name: 'Black Rock, Kaanapali' }] };
+    }
+    return { ok: true, json: async () => [{ lat: String(KIHEI_CENTER.lat), lon: String(KIHEI_CENTER.lng), display_name: 'Kihei, Maui' }] };
+  }
+  if (href.includes(BRAVE_HOST)) {
+    return {
+      ok: true,
+      json: async () => ({
+        results: [{
+          id: 'black-rock',
+          title: 'Black Rock',
+          lat: KAANAPALI.lat,
+          lng: KAANAPALI.lng,
+          address: { street: 'Kaanapali Pkwy' },
+          icon_category: 'attraction',
+        }],
+      }),
+    };
+  }
+  if (href.includes(OVERPASS_HOST)) return { ok: true, json: async () => ({ elements: [] }) };
+  if (href.includes(OPENROUTER_HOST)) {
+    return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 4 } } }) };
+  }
+  throw new Error(href);
+};
+
+const anchorSearch = await searchPlaces({
+  destination: 'Kihei',
+  queries: [{
+    category: 'restaurant',
+    q: 'cafe near Kihei',
+    limit: 5,
+    place: true,
+    target: 'cafe',
+  }],
+  relevanceTarget: 'cafe',
+  relevanceArea: 'Kihei',
+  searchAnchor: { text: 'Kihei', source: 'named_anchor' },
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
+  fetchImpl: blackRockFetch,
+  tripId: 'trip-anchor',
+});
+assert.equal(anchorSearch.places.length, 0);
+assert.equal(anchorSearch.outcomeStatus, 'no_results');
+assert.ok(Number(anchorSearch.anchorRadiusRejected) >= 1, 'Black Rock outside Kihei anchor radius is dropped');
 
 const braveLodgingThing = placeToTripThing({
   source: 'brave',

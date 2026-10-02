@@ -47,6 +47,15 @@ export function intakeExtractedThings(placeSearchTurn, classification, webResear
   return classification?.ok === true ? classification.things : [];
 }
 
+/** Trip intake ship path: classifier things, else job wantedThings (firstIntake queue). */
+export function intakeThingsForPersistence(placeSearchTurn, classification, webResearchTurn = false, wantedThings = []) {
+  if (webResearchTurn) return [];
+  if (placeSearchTurn) return intakeLodgingFromClassification(classification);
+  const things = classification?.ok === true && Array.isArray(classification.things) ? classification.things : [];
+  if (things.length) return things;
+  return Array.isArray(wantedThings) ? wantedThings : [];
+}
+
 function placesToChatResultRows(places = []) {
   return (Array.isArray(places) ? places : []).flatMap((place) => {
     const thing = placeToTripThing(place);

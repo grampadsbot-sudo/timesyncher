@@ -4,6 +4,8 @@ const MERGE_SOURCE_ORDER = ['brave', 'osm', 'prior_db'];
 const PRIOR_CATEGORIES = new Map([
   ['grocery', 'grocery'],
   ['groceries', 'grocery'],
+  ['market', 'market'],
+  ['farmers_market', 'market'],
   ['restaurant', 'restaurant'],
   ['food', 'restaurant'],
   ['dining', 'restaurant'],

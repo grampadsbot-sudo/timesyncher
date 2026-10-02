@@ -508,8 +508,13 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         searchImpl: searchPlacesImpl,
         existingThings: current,
       });
-      if (customerTurnId && Array.isArray(lodgingOutcome?.lookups) && lodgingOutcome.lookups.length) {
-        await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups);
+      if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
+        await persistIntakeLodgingLookupOnCustomerTurn(
+          db,
+          customerTurnId,
+          lodgingOutcome.lookups || [],
+          lodgingOutcome.lodgingOutcome || null,
+        );
       }
     }
     return loadTripThings(db, tripId);
@@ -597,8 +602,13 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
       searchImpl: searchPlacesImpl,
       existingThings: current,
     });
-    if (customerTurnId && Array.isArray(lodgingOutcome?.lookups) && lodgingOutcome.lookups.length) {
-      await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups);
+    if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
+      await persistIntakeLodgingLookupOnCustomerTurn(
+        db,
+        customerTurnId,
+        lodgingOutcome.lookups || [],
+        lodgingOutcome.lodgingOutcome || null,
+      );
     }
   }
   return loadTripThings(db, tripId);
@@ -625,6 +635,9 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         existingThings: current,
       });
       if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
+      if (lodgingOutcome?.lodgingOutcome) {
+        await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups || [], lodgingOutcome.lodgingOutcome);
+      }
       current = await loadTripThings(db, tripId);
     }
     if (customerTurnId && lodgingLookups.length) {

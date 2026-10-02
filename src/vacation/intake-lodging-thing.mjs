@@ -16,6 +16,7 @@ import {
   intakeLodgingLookupWithEvidence,
   primaryLodgingLookupProvider,
 } from './intake-lodging-lookup.mjs';
+import { buildIntakeLodgingOutcome } from './intake-lodging-turn-outcome.mjs';
 import {
   nominatimForwardSearch,
   nominatimReverseGeocode,
@@ -458,13 +459,15 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       saved.push(inserted);
     }
   }
-  return { saved, misses, lookups };
+  const lodgingOutcome = buildIntakeLodgingOutcome({ saved, misses, lookups });
+  return { saved, misses, lookups, lodgingOutcome };
 }
 
-export async function persistIntakeLodgingLookupOnCustomerTurn(db, turnId, lookups = []) {
+export async function persistIntakeLodgingLookupOnCustomerTurn(db, turnId, lookups = [], lodgingOutcome = null) {
   const id = String(turnId || '').trim();
   const rows = (Array.isArray(lookups) ? lookups : []).filter((row) => row && typeof row === 'object');
-  if (!id || !rows.length) return;
+  const outcome = lodgingOutcome && typeof lodgingOutcome === 'object' ? lodgingOutcome : null;
+  if (!id || (!rows.length && !outcome)) return;
   const existing = await db`
     select payload
     from transcript_turns
@@ -472,9 +475,14 @@ export async function persistIntakeLodgingLookupOnCustomerTurn(db, turnId, looku
     limit 1
   `;
   const payload = existing[0]?.payload && typeof existing[0].payload === 'object' ? { ...existing[0].payload } : {};
-  payload.intakeLodgingLookup = rows;
+  if (rows.length) payload.intakeLodgingLookup = rows;
+  if (outcome) payload.lodgingOutcome = outcome;
   const live = payload.liveTranscript && typeof payload.liveTranscript === 'object'
-    ? { ...payload.liveTranscript, intakeLodgingLookup: rows }
+    ? {
+      ...payload.liveTranscript,
+      ...(rows.length ? { intakeLodgingLookup: rows } : {}),
+      ...(outcome ? { lodgingOutcome: outcome } : {}),
+    }
     : payload.liveTranscript;
   if (live) payload.liveTranscript = live;
   await db`

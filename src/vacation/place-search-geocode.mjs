@@ -67,7 +67,7 @@ async function geocodeLabel(fetchImpl, label, readJson) {
   return { lat, lng, label: resolvedAreaText(hit, label) };
 }
 
-async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
+export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson) {
   const trimmed = String(label || '').trim();
   if (!trimmed) {
     providerLog.push({ provider: 'nominatim', status: 'skipped', reason: 'no_label', resultCount: 0 });

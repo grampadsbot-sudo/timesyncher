@@ -12,6 +12,7 @@ const EARTH_METERS = 6371000;
 const CATEGORIES = Object.keys(POI_RADIUS_METERS);
 const OSM_FILTER = {
   grocery: '["shop"~"supermarket|grocery|convenience|greengrocer"]',
+  market: '["amenity"="marketplace"]',
   restaurant: '["amenity"~"restaurant|cafe|fast_food"]',
   store: '["shop"]',
   garden: '["leisure"="garden"]',
@@ -19,6 +20,7 @@ const OSM_FILTER = {
 };
 const OSM_TAGS = {
   grocery: { shop: 'supermarket' },
+  market: { amenity: 'marketplace' },
   restaurant: { amenity: 'restaurant' },
   store: { shop: 'books' },
   garden: { leisure: 'garden' },
@@ -39,7 +41,8 @@ function jsonResponse(body, status = 200) {
   };
 }
 
-assert.deepEqual(CATEGORIES, ['grocery', 'restaurant', 'store', 'garden', 'activity']);
+assert.deepEqual(CATEGORIES, ['grocery', 'market', 'restaurant', 'store', 'garden', 'activity']);
+assert.equal(categoryRadiusMeters('market'), 8000);
 assert.equal(DEFAULT_CATEGORY_RADIUS_KEY, 'activity');
 assert.equal(categoryRadiusMeters('grocery'), 8000);
 assert.equal(categoryRadiusMeters('groceries'), 8000);
@@ -51,11 +54,13 @@ assert.equal(categoryRadiusMeters('hotel'), POI_RADIUS_METERS[DEFAULT_CATEGORY_R
 assert.equal(categoryRadiusMeters('unknown-kind'), POI_RADIUS_METERS[DEFAULT_CATEGORY_RADIUS_KEY]);
 
 const bands = {};
-for (const category of CATEGORIES) {
+for (let index = 0; index < CATEGORIES.length; index += 1) {
+  const category = CATEGORIES[index];
   const radius = categoryRadiusMeters(category);
   assert.equal(radius, POI_RADIUS_METERS[category]);
-  const inside = pointNorth(radius - 50);
-  const outside = pointNorth(radius + 50);
+  const separation = index * 15;
+  const inside = pointNorth(radius - 50 - separation);
+  const outside = pointNorth(radius + 50 + separation);
   assert.ok(distanceMeters(CENTER, inside) <= radius);
   assert.ok(distanceMeters(CENTER, outside) > radius);
   assert.ok(distanceMeters(CENTER, outside) < radius + 200);
