@@ -428,7 +428,6 @@ export function qualityFailureReason(quality, flags) {
   if (flags?.split) parts.push('banned payment word');
   if (flags?.invented?.length) parts.push(`invented place: ${flags.invented.join(', ')}`);
   if (flags?.missingAccess) parts.push('missing view access and edit access');
-  if (flags?.unbackedInviteClaim) parts.push('unbacked invite or access claim');
   const focus = String(quality?.jevFocus || '').trim();
   if (focus && focus !== 'keep') parts.push(`jev fix_focus ${focus}`);
   const accuracy = Array.isArray(quality?.accuracyErrors) ? quality.accuracyErrors : [];
