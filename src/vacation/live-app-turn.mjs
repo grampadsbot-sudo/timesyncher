@@ -17,7 +17,6 @@ import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
 import {
   placeResultExtra,
-  resultsNeedInternalPlaceIds,
   unsourcedAgainstInTurnResults,
 } from './provider-result-context.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
@@ -1573,7 +1572,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const destination = resolvedDestination.destination;
   const genStarted = Date.now();
   const speaker = String(tripFacts.addressedTo || '').trim();
-  const needPlaceIdCitation = resultsNeedInternalPlaceIds(modelPlaceSources);
   const draftExtra = [
     tripContext.roster || '',
     'When you list who is coming, name every traveler in the saved roster. Do not add a name that is not in that roster.',
@@ -1598,7 +1596,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     seatDollars,
     seat,
     planOwned: mergedTrip.planOwned === true,
-    resultsNeedInternalPlaceIds: needPlaceIdCitation,
     systemExtra: draftExtra,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
@@ -1946,13 +1943,10 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       planLine: pending?.planLine || '',
       seatDollars: pending?.seatDollars ?? null,
       seat: pending?.seat || null,
-      resultsNeedInternalPlaceIds: resultsNeedInternalPlaceIds(pending?.placeResults),
       systemExtra: [
         request.systemExtra,
         'Keep the days already on the saved trip.',
-        ...(resultsNeedInternalPlaceIds(pending?.placeResults)
-          ? ['When you name a place from Results, cite its exact id as (id:<id>). Never invent a place or id.']
-          : ['Never invent a place or id.']),
+        'Never invent a place or id.',
         'Do not copy the draft and do not put a lead line in front of it. Do not insert a sentence the draft did not earn. Do not repeat a paragraph. The account holder stays the account holder. Do not call a joining collaborator the account holder. Keep only people the customer already named in chat. Never invent people. If the customer stated a party size, do not list more people than that size. Ask the customer for anything they haven\'t said. Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else. Do not say an activity is saved, now set, or on the list unless it is already saved. Do not say we have corrected that or I have corrected that. Do not call a saved preference rule locked and do not rename it. If you add or remove a person or a saved claim, the WHAT_I_CHANGED sentence must name it.',
         [pending?.tripContext?.roster && `Saved roster: ${pending.tripContext.roster}`, pending?.tripFacts?.rule && `Saved preference rule: ${pending.tripFacts.rule}`].filter(Boolean).join(' '),
         'Use the saved trip dates. Do not shorten the trip. Do not call a day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end.',

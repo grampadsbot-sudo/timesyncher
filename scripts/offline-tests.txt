@@ -5,6 +5,7 @@ scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_chat_place_search.mjs
+scripts/test_place_search_reply_no_internal_ids.mjs
 scripts/test_intake_lodging_thing_hotel.mjs
 scripts/test_place_search_lodging_anchor.mjs
 scripts/test_vacation_app_interim_place_search.mjs

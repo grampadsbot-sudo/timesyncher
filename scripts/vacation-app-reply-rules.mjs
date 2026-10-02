@@ -575,10 +575,7 @@ function chatReplyText(content) {
   return text(content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join(''), 3500);
 }
 
-export function sourcedPlaceRule(includeIdCitation = false) {
-  if (includeIdCitation) {
-    return 'Name a place only when this turn lists it under Results. Cite that row\'s exact id as (id:<id>). Never invent a place name or id.';
-  }
+export function sourcedPlaceRule() {
   return 'Name a place only when this turn lists it under Results. Never invent a place name or id.';
 }
 
@@ -628,7 +625,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     lock
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
-    sourcedPlaceRule(context.resultsNeedInternalPlaceIds === true),
+    sourcedPlaceRule(),
     `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
     'Do not mention reservations, payments, or checkout.',
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
@@ -729,15 +726,15 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
     questions: {
       overall_quality: {
         type: 'score',
-        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
+        instructions: 'Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that is not in Results or the itinerary state, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place name that matches Results or the itinerary state is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.',
         criteria: ['1 weak or off-brief', '2 thin', '3 adequate', '4 strong', '5 excellent'],
       },
       disposition: {
         type: 'choice',
         instructions: 'Choose keep or rewrite. Return the choice only.',
         criteria: {
-          keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or cited as (id:...).',
-          rewrite: 'Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.',
+          keep: 'The draft should stand. It answers this turn, and every place it names is in the itinerary state or Results.',
+          rewrite: 'Replace the draft. It misses this turn, names a place not in Results or the itinerary state, skips the price, or uses a banned payment word.',
         },
       },
       fix_focus: {
@@ -745,7 +742,7 @@ export async function jevQualityRewrite({ customerTurn, draft, tripContext = nul
         instructions: 'Jev scores only. Pick one focus label. Do not write a note or a replacement reply.',
         criteria: {
           missing_price: 'Name each seat, the plan dollar amount, and who pays.',
-          unnamed_place: 'Take out the place that has no search-result id. A place cited as (id:...) stays.',
+          unnamed_place: 'Take out the place that is not in Results or the itinerary state.',
           payment_wording: 'Name each seat and who pays without a banned payment word.',
           misses_ask: 'Answer the ask and keep the days already named.',
           keep: 'Keep the draft. It answers without adding a place.',
@@ -829,7 +826,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, resultsNeedInternalPlaceIds = false }) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -855,7 +852,7 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planLine,
     seatDollars,
     seat,
-    planOwned, intakeReplyTurn, replyFacts, resultsNeedInternalPlaceIds,
+    planOwned, intakeReplyTurn, replyFacts,
   });
 }
 
@@ -885,7 +882,7 @@ async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, scree
   }
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, resultsNeedInternalPlaceIds = false }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -917,7 +914,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         messages: [
           {
             role: 'system',
-            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '', resultsNeedInternalPlaceIds: resultsNeedInternalPlaceIds === true })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
+            content: intakeReplyTurn ? String(systemExtra || '') : `${replyRulesSystem(rules, destination, upsell, postIntake, customerTurn, { tripContext, planLine, seatDollars, seat, planOwned, purchasedPlan: tripContext?.purchased_plan || '' })}${systemExtra ? `\n\n${systemExtra}` : ''}`,
           },
           { role: 'user', content: userContent },
         ],
