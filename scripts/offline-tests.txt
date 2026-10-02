@@ -50,6 +50,9 @@ scripts/test_place_intent_brave_fallback_route.mjs
 scripts/test_place_search_any_provider_ok_route.mjs
 scripts/test_place_relevance_target_area.mjs
 scripts/test_place_relevance_check6_lodging_thing.mjs
+scripts/test_place_search_failure_diagnostics.mjs
+scripts/test_place_search_osm_restaurant_scope.mjs
+scripts/test_intake_hyatt_staging_classifier_e2e.mjs
 scripts/test_eula_render_markdown.mjs
 scripts/test_eula_accept_onboarding.mjs
 scripts/test_eula_collaborator_name.mjs

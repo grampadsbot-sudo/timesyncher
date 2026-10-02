@@ -40,9 +40,9 @@ const PRIOR_CATEGORIES = new Map([
   ['hotel', 'hotel'],
 ]);
 
-function fail(message, code, providers, relevanceRejections = null) {
+function fail(message, code, providers, relevanceRejections = null, diagnostics = null) {
   console.error(message);
-  const error = new PlaceSearchError(message, code);
+  const error = new PlaceSearchError(message, code, diagnostics && typeof diagnostics === 'object' ? diagnostics : {});
   if (Array.isArray(providers) && providers.length) error.providers = providers;
   if (Array.isArray(relevanceRejections) && relevanceRejections.length) {
     error.relevanceRejections = relevanceRejections.slice(0, 10);
@@ -327,9 +327,16 @@ const OSM_CATEGORIES = [
   },
 ];
 
-function overpassQuery(center) {
+function osmCategoriesForPlaceSearch(categoryFilter = null) {
+  const wanted = Array.isArray(categoryFilter) ? categoryFilter.map((c) => String(c || '').toLowerCase()).filter(Boolean) : [];
+  if (!wanted.length) return OSM_CATEGORIES;
+  const filtered = OSM_CATEGORIES.filter((entry) => wanted.includes(entry.category));
+  return filtered.length ? filtered : OSM_CATEGORIES;
+}
+
+function overpassQuery(center, categoryFilter = null) {
   const parts = [];
-  for (const entry of OSM_CATEGORIES) {
+  for (const entry of osmCategoriesForPlaceSearch(categoryFilter)) {
     const around = `(around:${categoryRadiusMeters(entry.category)},${center.lat},${center.lng})`;
     parts.push(`node${entry.filter}${around};`, `way${entry.filter}${around};`);
   }
@@ -351,8 +358,8 @@ function osmCategoryName(tags = {}) {
   return found ? found.name(tags) : '';
 }
 
-async function queryOsm(fetchImpl, center) {
-  const body = `data=${encodeURIComponent(overpassQuery(center))}`;
+async function queryOsm(fetchImpl, center, categoryFilter = null) {
+  const body = `data=${encodeURIComponent(overpassQuery(center, categoryFilter))}`;
   const payload = await readJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
     label: 'OpenStreetMap Overpass',
     method: 'POST',
@@ -546,6 +553,7 @@ export async function searchPlaces({
   queries,
   relevanceTarget = '',
   relevanceArea = '',
+  searchAnchor = null,
   keepAreaText = false,
   env = process.env,
   fetchImpl = globalThis.fetch,
@@ -586,6 +594,7 @@ export async function searchPlaces({
   let locationText = dest;
   const placeTarget = String(relevanceTarget || '').trim() || String(placeQueries[0]?.target || '').trim();
   const placeArea = String(relevanceArea || '').trim() || dest;
+  const osmCategoryFilter = [...new Set(placeQueries.map((item) => String(item?.category || '').toLowerCase()).filter(Boolean))];
   if (placeQueries.length) {
     const pass = await runPlaceProviderPass({
       fetchImpl,
@@ -595,6 +604,8 @@ export async function searchPlaces({
       lodgingPoint,
       keepAreaText,
       placeQueries,
+      osmCategoryFilter,
+      searchAnchor,
       relevanceContext: { target: placeTarget, area: placeArea },
       priorPlaces,
       loadPriorPlaces,

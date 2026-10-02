@@ -78,6 +78,10 @@ export function placeSearchTelemetry({
   classifierModel = null,
   reason = null,
   relevanceRejections = null,
+  judgeInput = null,
+  searchCenter = null,
+  anchor = null,
+  survivingPriorDbTitles = null,
   judgeHttpStatus = null,
   judgeBodySnippet = null,
 } = {}) {
@@ -96,6 +100,25 @@ export function placeSearchTelemetry({
   if (classifierModel) telemetry.classifierModel = String(classifierModel).trim();
   if (Array.isArray(relevanceRejections) && relevanceRejections.length) {
     telemetry.relevanceRejections = relevanceRejections.slice(0, 10);
+  }
+  if (judgeInput && typeof judgeInput === 'object') {
+    telemetry.judgeInput = {
+      target: String(judgeInput.target || '').trim(),
+      area: String(judgeInput.area || '').trim(),
+    };
+  }
+  if (searchCenter && typeof searchCenter === 'object') {
+    const lat = Number(searchCenter.lat);
+    const lng = Number(searchCenter.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) telemetry.searchCenter = { lat, lng };
+  }
+  if (anchor && typeof anchor === 'object') {
+    const text = String(anchor.text || '').trim();
+    const source = String(anchor.source || '').trim();
+    if (text) telemetry.anchor = { text, ...(source ? { source } : {}) };
+  }
+  if (Array.isArray(survivingPriorDbTitles) && survivingPriorDbTitles.length) {
+    telemetry.survivingPriorDbTitles = survivingPriorDbTitles.slice(0, 20);
   }
   if (Number.isFinite(Number(judgeHttpStatus))) telemetry.judgeHttpStatus = Number(judgeHttpStatus);
   if (judgeBodySnippet) telemetry.judgeBodySnippet = String(judgeBodySnippet).trim().slice(0, 240);

@@ -9,6 +9,10 @@ import {
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
 import { TRIP_INTAKE_PLACE_ANCHOR_CASES } from './fixtures/trip-intake-place-anchor-cases.mjs';
+import {
+  STAGING_HYATT_INTAKE_EXTRACTION,
+  STAGING_HYATT_INTAKE_SENTENCE,
+} from './fixtures/trip-intake-hyatt-staging.mjs';
 
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
@@ -257,6 +261,23 @@ assert.match(unnamed.destinationError, /classifier down/);
 assert.match(unnamed.titleError, /classifier down/);
 
 assert.match(classifySource, /anchorIsLodging true when that reference is their hotel/);
+assert.match(classifySource, /exactly one things entry with kind hotel/);
+
+const hyattStaging = await classifyTripIntake({
+  text: STAGING_HYATT_INTAKE_SENTENCE,
+  env,
+  fetchImpl: mockFetch({
+    score: 0.91,
+    things: STAGING_HYATT_INTAKE_EXTRACTION.things,
+    destination: STAGING_HYATT_INTAKE_EXTRACTION.destination,
+    chatText: JSON.stringify(STAGING_HYATT_INTAKE_EXTRACTION),
+  }),
+});
+assert.equal(hyattStaging.ok, true);
+assert.equal(hyattStaging.turnKind, 'trip_intake');
+assert.equal(hyattStaging.things.length, 1);
+assert.equal(hyattStaging.things[0].name, 'Hyatt Regency Maui');
+assert.equal(hyattStaging.things[0].kind, 'hotel');
 
 for (const caseRow of TRIP_INTAKE_PLACE_ANCHOR_CASES) {
   const classified = await classifyTripIntake({

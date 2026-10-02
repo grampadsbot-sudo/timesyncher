@@ -34,6 +34,8 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
       rejections.push({
         title: String(row.title || '').trim(),
         address: String(row.address || '').trim(),
+        source: String(row.source || '').trim(),
+        score: Number(jevScore),
         reason: relevanceRejectionReason(jevScore, minimum),
       });
     }
