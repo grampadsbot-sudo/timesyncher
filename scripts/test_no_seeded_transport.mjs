@@ -25,15 +25,14 @@ function present(things, destination = 'KOA') {
 const empty = present([]);
 assert.deepEqual(empty.places, []);
 assert.equal(Object.hasOwn(empty, 'carOfferPool'), false);
-assert.deepEqual(empty.needsCustomerInput, ['lodging', 'car', 'flight']);
-assert.equal(empty.flightAsk, 'preferredAirline');
+assert.deepEqual(empty.needsCustomerInput, ['lodging']);
 assert.equal(empty.places.some((place) => /car|flight/i.test(String(place.category_name || ''))), false);
 assert.equal(JSON.stringify(empty).includes('SpeediShuttle'), false);
 assert.equal(empty.places.some((place) => place.airline || place.airport), false);
 
 const named = present([
   { id: 'swim', category: 'activity', title: 'Swim', whenLabel: 'later in the week', customerWhen: '', notes: [], collaboratorNotes: [] },
-  { id: 'house', category: 'hotel', title: 'Kailua-Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
+  { id: 'house', category: 'hotel', title: 'Kailua-Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [], metadata: { customerStatedLodging: true } },
 ]);
 assert.deepEqual(named.places.map((place) => place.name), ['Swim', 'Kailua-Kona house']);
 for (const place of named.places) {
@@ -42,9 +41,8 @@ for (const place of named.places) {
   assert.equal(Object.hasOwn(named.thingOverrides[`place:${place.id}`], 'lat'), false);
 }
 assert.equal(named.places.some((place) => /car|flight/i.test(String(place.category_name || ''))), false);
-assert.deepEqual(named.needsCustomerInput, ['car', 'flight']);
-assert.deepEqual(present([{ id: 'house', category: 'hotel', title: 'Kailua-Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] }]).needsCustomerInput, ['car', 'flight']);
-assert.equal(named.flightAsk, 'preferredAirline');
+assert.equal(Object.hasOwn(named, 'needsCustomerInput'), false);
+assert.equal(Object.hasOwn(present([{ id: 'house', category: 'hotel', title: 'Kailua-Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [], metadata: { customerStatedLodging: true } }]), 'needsCustomerInput'), false);
 const house = named.places.find((place) => place.name === 'Kailua-Kona house');
 const swim = named.places.find((place) => place.name === 'Swim');
 assert.equal(swim.category_name, 'activity');
@@ -80,8 +78,7 @@ assert.equal(blank.places[0].category.icon, '');
 const withCar = present([
   { id: 'car', category: 'car', title: 'Saved rental', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
 ]);
-assert.deepEqual(withCar.needsCustomerInput, ['lodging', 'flight']);
-assert.equal(withCar.flightAsk, 'preferredAirline');
+assert.deepEqual(withCar.needsCustomerInput, ['lodging']);
 assert.equal(withCar.places[0].category_name, 'Car');
 assert.equal(withCar.places[0].name, 'Saved rental');
 assert.equal(withCar.places[0].airline, undefined);
@@ -90,14 +87,12 @@ assert.equal(withCar.places[0].airport, undefined);
 const withFlight = present([
   { id: 'flight', category: 'flight', title: 'Saved flight', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
 ]);
-assert.deepEqual(withFlight.needsCustomerInput, ['lodging', 'car', 'flight']);
-assert.equal(withFlight.flightAsk, 'preferredAirline');
+assert.deepEqual(withFlight.needsCustomerInput, ['lodging']);
 
 const withFlightAirline = present([
   { id: 'flight', category: 'flight', title: 'United KOA arrival', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
 ]);
-assert.deepEqual(withFlightAirline.needsCustomerInput, ['lodging', 'car']);
-assert.equal(Object.hasOwn(withFlightAirline, 'flightAsk'), false);
+assert.deepEqual(withFlightAirline.needsCustomerInput, ['lodging']);
 assert.equal(withFlight.places[0].category_name, 'Flight');
 assert.equal(withFlight.places[0].airline, undefined);
 assert.equal(withFlight.places[0].airport, undefined);
@@ -106,15 +101,13 @@ assert.doesNotMatch(withFlight.places[0].name, /KOA|Kona|Hawaiian|United/);
 const both = present([
   { id: 'car', category: 'car', title: 'Saved rental', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
   { id: 'flight', category: 'flight', title: 'United KOA arrival', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
-  { id: 'house', category: 'hotel', title: 'Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [] },
+  { id: 'house', category: 'hotel', title: 'Kona house', whenLabel: '', customerWhen: '', notes: [], collaboratorNotes: [], metadata: { customerStatedLodging: true } },
 ]);
 assert.equal(Object.hasOwn(both, 'needsCustomerInput'), false);
-assert.equal(Object.hasOwn(both, 'flightAsk'), false);
 assert.deepEqual(both.places.map((place) => place.category_name), ['Car', 'Flight', 'Hotel']);
 
 const cleared = applyThingPresentation({
-  needsCustomerInput: ['lodging', 'car', 'flight'],
-  flightAsk: 'preferredAirline',
+  needsCustomerInput: ['lodging'],
   places: [
     { id: 1, name: 'United KOA', category_name: 'Flight' },
     { id: 2, name: 'Saved rental', category_name: 'Car' },
@@ -123,22 +116,19 @@ const cleared = applyThingPresentation({
   thingOverrides: {},
 });
 assert.equal(Object.hasOwn(cleared, 'needsCustomerInput'), false);
-assert.equal(Object.hasOwn(cleared, 'flightAsk'), false);
 
 const replyFacts = draftingFacts([], 'Friday April 3.', {
   things: [{ title: 'Swim', category: 'activity' }],
 });
-assert.deepEqual(replyFacts.needsCustomerInput, ['lodging', 'car', 'flight']);
-assert.equal(replyFacts.flightAsk, 'preferredAirline');
+assert.deepEqual(replyFacts.needsCustomerInput, ['lodging']);
 const coveredFacts = draftingFacts([], 'Friday April 3.', {
   things: [
-    { title: 'Kona house', category: 'hotel' },
+    { title: 'Kona house', category: 'hotel', metadata: { customerStatedLodging: true } },
     { title: 'Saved rental', category: 'car' },
     { title: 'United KOA', category: 'flight' },
   ],
 });
 assert.equal(Object.hasOwn(coveredFacts, 'needsCustomerInput'), false);
-assert.equal(Object.hasOwn(coveredFacts, 'flightAsk'), false);
 
 const located = applyThingPresentation({
   trip: { id: tripId, title: 'Trip', destination: 'KOA', start_date: '2026-04-03' },

@@ -89,6 +89,13 @@ assert.deepEqual(fromExtraction.sources.map((item) => [item.field, item.value, i
 ]);
 assert.equal(fromExtraction.preference_subjects.some((kid) => kid.age === 7), false);
 
+const kimParty = completeRosterParty({
+  turns: [{ role: 'customer', text: 'Please add Kim Brooks as a collaborator.' }],
+  roster: [{ name: 'Kim Brooks', role: 'collaborator', payer: 'owner' }],
+});
+assert.deepEqual(kimParty.collaborators, []);
+assert.equal(kimParty.sources.some((item) => item.source === 'chat_extraction' && String(item.field).startsWith('collaborators.')), false);
+
 const missing = await classifyTripIntake({
   text: sentence,
   env,

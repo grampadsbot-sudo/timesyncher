@@ -44,6 +44,7 @@ async function resolveIntakeLodgingThing({
   title = '',
   destinationHint = '',
   areaHint = '',
+  tripId = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
@@ -56,6 +57,7 @@ async function resolveIntakeLodgingThing({
   try {
     search = await searchImpl({
       destination: geocodeDestination,
+      tripId,
       queries: [{
         category: 'hotel',
         q: lookupQuery,
@@ -117,6 +119,27 @@ async function resolveIntakeLodgingThing({
   return { ok: true, thing, search };
 }
 
+async function persistCustomerStatedLodgingThing(db, tripId, requestId, title = '') {
+  const name = String(title || '').trim().slice(0, 240);
+  if (!db || !tripId || !name) return null;
+  const inserted = await insertTripThing(db, {
+    tripId,
+    requestId,
+    thing: {
+      title: name,
+      category: 'hotel',
+      description: '',
+      location: {},
+      metadata: {
+        source: 'customer_stated',
+        intakeSource: 'chat_extraction',
+        customerStatedLodging: true,
+      },
+    },
+  });
+  return inserted;
+}
+
 async function persistTripStatedLodgingArea(db, tripId, areaHint = '') {
   const area = String(areaHint || '').replace(/\s+/g, ' ').trim().slice(0, 180);
   if (!db || !tripId || !area) return;
@@ -147,6 +170,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       title,
       destinationHint,
       areaHint: resolvedArea,
+      tripId,
       env,
       fetchImpl,
       searchImpl,
@@ -154,6 +178,11 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
     if (outcome.ok !== true) {
       if (outcome.miss) misses.push(outcome.miss);
       if (resolvedArea) await persistTripStatedLodgingArea(db, tripId, resolvedArea);
+      const stated = await persistCustomerStatedLodgingThing(db, tripId, requestId, title);
+      if (stated) {
+        have.add(title.toLowerCase());
+        saved.push(stated);
+      }
       continue;
     }
     const inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing });

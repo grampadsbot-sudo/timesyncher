@@ -4,6 +4,7 @@ const FIRST_INTAKE_LEAK = /\b(?:tier|route|model|jev)\b/i;
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAY_WORD = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g;
 const INVENTED_PARTY = /\balready (?:a |your )?collaborator\b|\balready (?:has|have) access\b|\bjust you and (?:him|her|them)\b/i;
+const CONSENT_POLICY_REPLY = /\b(?:grant|granting)\s+(?:view|edit)\b|\bview or edit\b.{0,48}\b(?:agree|okay)\b/i;
 
 function questionCount(reply) {
   return (String(reply || '').match(/\?/g) || []).length;
@@ -53,6 +54,7 @@ export function intakeReplyBlockReasons(reply, banned = appTextBanned, facts = {
     if (id && text.includes(id)) reasons.push('first_intake_reply_id_echo');
   }
   if (INVENTED_PARTY.test(text)) reasons.push('first_intake_invented_party');
+  if (CONSENT_POLICY_REPLY.test(text)) reasons.push('first_intake_consent_policy');
   const allowedDays = new Set([facts?.weekday, facts?.end_weekday].filter(Boolean));
   for (const day of String(facts?.customer_said || '').match(WEEKDAY_WORD) || []) allowedDays.add(day);
   for (const day of text.match(WEEKDAY_WORD) || []) {

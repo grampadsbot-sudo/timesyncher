@@ -81,8 +81,10 @@ const missOutcome = await persistIntakeLodgingThings(missDb, 'trip-2', 'req-2', 
     providers: [{ provider: 'brave', status: 'empty', reason: 'no_results', resultCount: 0, query: queries?.[0]?.q }],
   }),
 });
-assert.equal(missOutcome.saved.length, 0);
-assert.equal(missThings.length, 0);
+assert.equal(missOutcome.saved.length, 1);
+assert.equal(missThings.length, 1);
+assert.match(missThings[0].title, /Hyatt Regency Maui/i);
+assert.equal(missThings[0].category, 'hotel');
 assert.equal(missOutcome.misses.length, 1);
 assert.equal(missOutcome.misses[0].status, 'miss');
 assert.match(missOutcome.misses[0].query, /Kaanapali/);
@@ -122,8 +124,9 @@ const nonHotelOutcome = await persistIntakeLodgingThings(nonHotelDb, 'trip-non-h
     providers: [{ provider: 'brave', status: 'ok', resultCount: 2 }],
   }),
 });
-assert.equal(nonHotelOutcome.saved.length, 0);
-assert.equal(nonHotelThings.length, 0);
+assert.equal(nonHotelOutcome.saved.length, 1);
+assert.equal(nonHotelThings.length, 1);
+assert.match(nonHotelThings[0].title, /Hyatt Regency Maui/i);
 assert.equal(nonHotelOutcome.misses.length, 1);
 assert.equal(nonHotelOutcome.misses[0].reason, 'no_hotel_category_result');
 await persistIntakeLodgingLookupOnCustomerTurn(nonHotelDb, 'turn-non-hotel', nonHotelOutcome.misses);
