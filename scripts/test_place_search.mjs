@@ -195,7 +195,7 @@ assert.equal(found.sourceCounts.brave, 2);
 const river = found.places.find((place) => place.title === 'River Walk');
 assert.equal(river.address, 'River Road, Lisbon');
 const museum = found.places.find((place) => place.title === 'City Museum');
-assert.equal(museum.categoryName, 'museum');
+assert.equal(museum.categoryName, 'Museum');
 
 const blockedFetch = async () => {
   throw new Error('fetch should not run');
