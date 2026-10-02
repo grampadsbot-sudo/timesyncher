@@ -33,6 +33,8 @@ function sqlText(strings) {
   return strings.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+const welcomeClaims = new Set();
+
 const state = {
   tripCount: 0,
   trips: [],
@@ -64,6 +66,12 @@ const state = {
 
 function db(strings, ...values) {
   const text = sqlText(strings);
+  if (/insert into vacation_onboarding_welcomes/i.test(text)) {
+    const key = `${values[0]}|${values[1]}|${values[2] ?? ''}`;
+    if (welcomeClaims.has(key)) return [];
+    welcomeClaims.add(key);
+    return [{ id: 'welcome-claim-1' }];
+  }
   if (/insert into trips/i.test(text)) {
     state.tripCount += 1;
     const row = {
