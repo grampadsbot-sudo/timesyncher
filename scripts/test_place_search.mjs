@@ -243,11 +243,7 @@ const allEmpty = await searchPlaces({
 assert.equal(allEmpty.outcomeStatus, 'no_results');
 assert.equal(allEmpty.places.length, 0);
 assert.ok(Array.isArray(allEmpty.providers));
-assert.ok(
-  allEmpty.providers
-    .filter((row) => ['prior_db', 'osm', 'brave'].includes(String(row.provider || '')))
-    .every((row) => row.status === 'empty' || row.status === 'skipped'),
-);
+assert.ok(allEmpty.providers.filter((row) => ['prior_db', 'osm', 'brave'].includes(String(row.provider || ''))).every((row) => row.status === 'empty' || row.status === 'skipped'));
 
 const geocodeCalls = [];
 await assert.rejects(
