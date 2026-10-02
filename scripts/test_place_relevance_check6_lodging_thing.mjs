@@ -114,7 +114,9 @@ await assert.rejects(
       if (href.includes(OPENROUTER_HOST) && href.includes('decisions')) {
         const raw = options.body ? JSON.parse(String(options.body)) : {};
         soleSourceAreas.push(raw.state?.searchArea);
-        return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 0.1 } } }) };
+        const name = String(raw.state?.name || '');
+        const score = name === 'Only Prior Row' ? 3.9 : 0.1;
+        return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score } } }) };
       }
       return mockFetch({ relevanceAreas: soleSourceAreas, braveResults: KAANAPALI_ON_TARGET_BRAVE })(url, options);
     },
