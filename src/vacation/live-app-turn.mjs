@@ -14,7 +14,7 @@ import { customerInputState } from './intake-shared-trip.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
-import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
+import { blockInTurnPlaceReply, buildLiveAppRewritePending, placeResultExtra } from './chat-place-search.mjs';
 import { savedTripWithOwnerPlan } from './reply-plan-entitlement.mjs';
 export const LIVE_TRANSCRIPT_CAPTURE = 'live-vacation-app';
 export const LIVE_REPLY_PRODUCER = 'vacation-app-reply-rules';
@@ -486,6 +486,7 @@ export function unsourcedPlaces(reply, sources) {
     else if (spoken && spoken.toLowerCase() !== row.name.toLowerCase()) flagged.push(spoken);
   }
   for (const row of rows) {
+    if (/^https?:\/\//i.test(row.id)) continue;
     const named = new RegExp(`(^|[^\\p{L}\\p{N}])${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
     if (named && !cited.has(row.id)) flagged.push(row.name);
   }
@@ -496,11 +497,7 @@ export function inventedVenueNames(reply, sources) {
   return unsourcedPlaces(reply, sources);
 }
 
-export function placeResultExtra(sources) {
-  const rows = placeSourceRows(sources);
-  if (!rows.length) return '';
-  return `Results: ${rows.map((row) => `${row.name} (id:${row.id})`).join('; ')}.`;
-}
+export { placeResultExtra };
 
 const MONTHS = {
   january: 1, jan: 1, february: 2, feb: 2, march: 3, mar: 3, april: 4, apr: 4, may: 5,

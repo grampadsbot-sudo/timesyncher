@@ -189,13 +189,36 @@ export async function applyChatPlaceSearchForVacationTurn({
   return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
 }
 
+function providerResultNeedsIdCitation(sourceRef) {
+  const source = String(sourceRef?.source || '').trim();
+  const id = String(sourceRef?.id || '').trim();
+  if (source === 'tavily') return false;
+  if (/^https?:\/\//i.test(id)) return false;
+  return true;
+}
+
+export function placeResultExtra(sources) {
+  const items = Array.isArray(sources) ? sources : [];
+  const parts = items.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
+    const id = String(ref?.id ?? item.id ?? '').trim();
+    const name = String(item.name ?? item.title ?? '').trim();
+    if (!id || !name) return [];
+    return providerResultNeedsIdCitation(ref) ? [`${name} (id:${id})`] : [name];
+  });
+  if (!parts.length) return '';
+  return `Results: ${parts.join('; ')}.`;
+}
+
 function inTurnPlaceRows(sources) {
   return (Array.isArray(sources) ? sources : []).flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
     const ref = item.sourceRef && typeof item.sourceRef === 'object' ? item.sourceRef : null;
     const id = String(ref?.id ?? item.id ?? '').trim();
     const name = String(item.name ?? item.title ?? '').trim();
-    return id && name ? [{ id, name }] : [];
+    if (!id || !name) return [];
+    return [{ id, name, needsIdCitation: providerResultNeedsIdCitation(ref) }];
   });
 }
 
@@ -219,6 +242,7 @@ function unsourcedAgainstInTurnResults(reply, sources) {
     else if (spoken && spoken.toLowerCase() !== row.name.toLowerCase()) flagged.push(spoken);
   }
   for (const row of rows) {
+    if (row.needsIdCitation === false) continue;
     const named = new RegExp(`(^|[^\\p{L}\\p{N}])${row.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'iu').test(text);
     if (named && !cited.has(row.id)) flagged.push(row.name);
   }
@@ -416,7 +440,7 @@ export async function runVacationAppInTurnSearch({
   return {
     ok: true,
     inTurnProviderResults,
-    enforceInTurnSearch: (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0,
+    enforceInTurnSearch: placeSearchTurn === true && inTurnProviderResults.length > 0,
     webResearchTurn: webTurn.webResearchTurn,
   };
 }

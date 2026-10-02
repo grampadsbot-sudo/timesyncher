@@ -1,4 +1,4 @@
-const ID_CITATION = /\(\s*id\s*:\s*[^)]+\)/i;
+const ID_CITATION = /\(\s*id\s*:\s*(?!https?:\/\/)[^)]+\)/i;
 const PRODUCT_ID_LITERAL = /timesyncher_vacation_[a-z0-9_]+/i;
 
 export class ReplyIdCitationBlockedError extends Error {
