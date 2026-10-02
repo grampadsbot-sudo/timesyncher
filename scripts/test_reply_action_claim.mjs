@@ -9,7 +9,7 @@ const successFacts = { invite: { ok: true, code: 'collaborator_invite_sent', inv
 const viewClaim = 'Kim will see these on the trip site once she accepts.';
 
 assert.equal(replyActionClaimReason(claim, null), 'reply_action_claim_unbacked');
-assert.equal(replyActionClaimReason(claim, { collaboratorInvite: { ok: false } }), 'reply_action_claim_unbacked');
+assert.equal(replyActionClaimReason(claim, { invite: { ok: false, code: 'send_failed', inviteeEmail: 'kim@example.com' } }), 'reply_action_claim_unbacked');
 assert.equal(replyActionClaimReason(claim, successFacts), '');
 assert.equal(replyActionClaimReason(failure, null), '');
 assert.equal(replyActionClaimReason(viewClaim, null), 'reply_action_claim_unbacked');

@@ -8,6 +8,9 @@ import {
   attachPurchasedEntitlementToChatTrip,
   preflightAttachOwnerEntitlementForChatTrip,
 } from './chat-trip-entitlement-attach.mjs';
+import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
+import { attachSessionCollaboratorInvitesToTrip } from './collaborators.mjs';
+import { createWebEditorInvite } from './web-access.mjs';
 
 export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
@@ -76,6 +79,32 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
         code: 'vacation_app_trip_load_failed',
       };
     }
+    if (isPlaceholderTripRecord(selected) && intakeTripReadyForCreation(jobFields)) {
+      const tripTitle = cleanText(jobFields.title, 180);
+      const tripDestination = cleanText(jobFields.destination, 180);
+      await db`
+        update trips
+        set title = ${tripTitle},
+          destination = ${tripDestination || null},
+          start_date = coalesce(start_date, ${cleanText(jobFields.startDate, 40) || null}::date),
+          end_date = coalesce(end_date, ${cleanText(jobFields.endDate, 40) || null}::date),
+          status = case when status = 'onboarding' then 'planning' else status end,
+          metadata = coalesce(metadata, '{}'::jsonb) || ${{ placeholderTrip: false, upgradedFromShell: true, source: 'vacation_app_chat' }},
+          updated_at = now()
+        where id = ${session.trip_id}
+      `;
+      const upgraded = await loadTrips(db, session);
+      const upgradedSelected = upgraded.find((trip) => trip.id === session.trip_id) || upgraded[0] || null;
+      return {
+        ok: true,
+        action: 'upgraded',
+        vacations: upgraded,
+        selected: upgradedSelected,
+        tripId: session.trip_id,
+        jobFields,
+        classification,
+      };
+    }
     return {
       ok: true,
       action: 'existing',
@@ -121,6 +150,35 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
       and trip_id is null
   `;
   session.trip_id = tripId;
+  const attachedInvites = await attachSessionCollaboratorInvitesToTrip(db, {
+    ownerCustomerId: session.customer_id,
+    tripId,
+    onboardingSessionId: session.id,
+  });
+  for (const invite of attachedInvites) {
+    const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+    if (!metadata.deferredWebEditor) continue;
+    const email = String(metadata.email || '').trim().toLowerCase();
+    const displayName = String(metadata.displayName || invite.requested_for || '').trim();
+    if (!email) continue;
+    try {
+      await createWebEditorInvite(db, {
+        ownerCustomerId: session.customer_id,
+        tripId,
+        email,
+        displayName,
+        role: 'web_editor',
+        metadata: { payer: metadata.payer || 'owner', channel: 'email-invite', collaboratorInviteId: invite.id },
+      });
+    } catch (error) {
+      console.warn(JSON.stringify({
+        event: 'deferred_web_editor_attach_skipped',
+        tripId: String(tripId || ''),
+        inviteId: String(invite.id || ''),
+        message: String(error?.message || error || ''),
+      }));
+    }
+  }
   const vacations = await loadTrips(db, session);
   const selected = vacations.find((trip) => trip.id === tripId) || vacations[0] || null;
   if (!selected) {

@@ -190,13 +190,16 @@ try {
   const openerAt = appGet.indexOf('ensureOnboardingOpener');
   const turnsAt = appGet.indexOf('loadVacationAppTurns');
   assert.ok(acceptedAt >= 0 && acceptedAt < openerAt && openerAt < turnsAt);
-  assert.match(appGet, /if \(selected && eula\.accepted\) await ensureOnboardingOpener/);
+  assert.match(appGet, /if \(eula\.accepted && !seatFromSession\(session\)\)/);
+  assert.match(appGet, /await ensureOnboardingOpener\(db, session, selected \|\| null\)/);
   assert.match(api, /welcomeAudience = seat \? 'collaborator' : 'owner'/);
   assert.match(api, /welcomeFor = seat \? String\(session\.customer_id\) : 'owner'/);
   const queueAt = api.indexOf('async function queueVacationAppTurn');
   const queueBody = api.slice(queueAt, api.indexOf('\nasync function ', queueAt + 10));
+  const queueModule = await readFile(new URL('routes/vacation-app-chat-queue.mjs', root), 'utf8');
   assert.ok(queueBody.indexOf('ensureOnboardingOpener') >= 0);
-  assert.ok(queueBody.indexOf('ensureOnboardingOpener') < queueBody.indexOf('insert into transcript_turns'));
+  assert.ok(queueBody.indexOf('ensureOnboardingOpener') < queueBody.indexOf('runQueueVacationAppTurn'));
+  assert.ok(queueModule.indexOf('insert into transcript_turns') >= 0);
 
   const welcomeSource = await readFile(new URL('src/vacation/onboarding-welcome.mjs', root), 'utf8');
   const liveSource = await readFile(new URL('src/vacation/live-app-turn.mjs', root), 'utf8');

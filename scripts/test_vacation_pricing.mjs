@@ -169,7 +169,7 @@ assert.equal(ownerMediaCoversTrip(entitlement, { customer_id: 'someone-else', id
 
 await assert.rejects(
   () => createCollaboratorInvite(db, { ownerCustomerId: 'owner-1', planCode: 'single_trip', env }),
-  /tripId is required/,
+  /onboardingSessionId/,
 );
 const first = await createCollaboratorInvite(db, {
   ownerCustomerId: 'owner-1',

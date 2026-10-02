@@ -296,13 +296,14 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   }
 
   let turnActionResults = {};
-  if (tripId && !seat) {
+  if (!seat) {
     turnActionResults = await runVacationAppTurnActions({
       db,
       session,
       tripId,
       requestText,
       roster: Array.isArray(classification.roster) ? classification.roster : [],
+      env,
     });
     payload.turnActionResults = turnActionResults;
     customerLive.turnActionResults = turnActionResults;
@@ -401,6 +402,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     intakeError: jobFields.intakeError,
     placeSearch: customerLive.placeSearch ?? payload.placeSearch ?? null,
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
+    turnActionResults,
   };
   const blockReplyShipGate = async (replyText) => {
     const actionBlocked = await blockVacationAppReplyActionClaim({
