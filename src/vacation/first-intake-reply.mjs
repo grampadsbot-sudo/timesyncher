@@ -148,6 +148,17 @@ function namedPerson(value, ids = []) {
   return name;
 }
 
+function samePersonName(left, right) {
+  const normalize = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const a = normalize(left);
+  const b = normalize(right);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const aFirst = a.split(' ')[0];
+  const bFirst = b.split(' ')[0];
+  return aFirst.length >= 2 && bFirst.length >= 2 && aFirst === bFirst;
+}
+
 function hiddenIds(session = {}, extra = []) {
   const ids = [];
   for (const value of [session.customer_id, session.customerId, session.id, session.token, session.trip_id, session.tripId, session.session_id, session.sessionId, ...extra]) {
@@ -234,6 +245,7 @@ export function firstIntakeReplyFacts({
 } = {}) {
   const hidden = Array.isArray(ids) ? ids.filter((id) => String(id || '').trim().length >= 8) : [];
   const said = scrubValue(intakeFactText(customerTurn, 6000), hidden);
+  const customer = namedPerson(customerName, hidden);
   const lodging = [];
   const plans = [];
   const mentioned = [];
@@ -265,7 +277,8 @@ export function firstIntakeReplyFacts({
     const role = intakeFactText(person?.role, 40).toLowerCase();
     const contact = intakeFactText(person?.email || person?.contact || person?.phone, 120);
     if (!name || role === 'viewer' || role === 'editor' || role === 'child') continue;
-    if (role === 'collaborator' || contact || role === '') {
+    if (role === 'owner' && customer && samePersonName(name, customer)) continue;
+    if (role === 'collaborator' || role === 'owner' || contact || role === '') {
       mentioned.push(name);
       offer.push(name);
     }

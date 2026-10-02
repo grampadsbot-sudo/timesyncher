@@ -599,6 +599,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     if (Array.isArray(value)) {
       const items = value.map((item) => String(item || '').trim()).filter(Boolean);
       if (items.length) customerInput[key] = items;
+    } else if (value && typeof value === 'object') {
+      customerInput[key] = value;
     } else if (typeof value === 'string' && value.trim()) {
       customerInput[key] = value.trim();
     }
