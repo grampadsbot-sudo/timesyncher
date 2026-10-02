@@ -6,8 +6,15 @@ import {
   TRIP_MAP_FIT_MAX_ZOOM,
   TRIP_MAP_SINGLE_POINT_ZOOM,
   computeTripMapInitialView,
+  coordsFromPlace,
+  destinationCoordsFromTrip,
 } from '../src/vacation/trip-map-initial-view.mjs';
+import { patchTripMapInitialView } from '../src/vacation/trek-live-product-patches.mjs';
 import { sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
+
+assert.equal(typeof patchTripMapInitialView, 'function');
+assert.deepEqual(coordsFromPlace({ lat: 1, lng: 2 }), { lat: 1, lng: 2 });
+assert.deepEqual(destinationCoordsFromTrip({ lat: 3, lng: 4 }), { lat: 3, lng: 4 });
 
 const p1 = { lat: 10, lng: 20 };
 const p2 = { lat: 12, lng: 22 };

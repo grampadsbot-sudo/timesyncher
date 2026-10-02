@@ -35,7 +35,7 @@ const TRIP_MAP_LOG_PATCH = 'return I.useEffect(()=>{if(!tsMapIv.ok)console.error
 
 const TRIP_MAP_PLAN_NEEDLE = 'Se==="plan"&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
 
-const TRIP_MAP_PLAN_PATCH = 'Se==="plan"&&!tsMapIv.ok&&n.jsx("div",{"data-map-center-unresolved":"1","data-ts-trip-map-error":"1",style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",padding:24,background:"var(--bg-primary)",color:"var(--text-muted)",fontSize:14,textAlign:"center"},children:"Map cannot open until the trip or its Things have stored coordinates."}),Se==="plan"&&tsMapIv.ok&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
+const TRIP_MAP_PLAN_PATCH = 'Se==="plan"&&!tsMapIv.ok&&n.jsx("div",{"data-map-center-unresolved":"1","data-ts-trip-map-error":"1",style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",padding:24,background:"var(--bg-primary)",color:"var(--text-muted)",fontSize:14,textAlign:"center"},children:c("trip.mapCenterUnresolved")}),Se==="plan"&&tsMapIv.ok&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
 
 const MAP_SETTINGS_DEFAULTS_NEEDLE = 'default_lat:48.8566,default_lng:2.3522,default_zoom:10';
 const MAP_SETTINGS_DEFAULTS_PATCH = 'default_lat:null,default_lng:null,default_zoom:null';
