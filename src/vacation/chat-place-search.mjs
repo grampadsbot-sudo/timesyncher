@@ -20,6 +20,7 @@ import {
   syncWorkerJobAfterInTurnPlaceSearch,
 } from './chat-place-search-outcomes.mjs';
 import { insertStampedChatPlaceThings, workerInputAfterInTurnPlaceSearch } from './chat-place-search-when.mjs';
+import { persistTripDestinationCenter } from './trip-destination-center.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -251,6 +252,11 @@ export async function applyChatPlaceSearchForVacationTurn({
   payload.placeSearch = placeSearch;
   customerLive.placeSearch = placeSearch;
   if (chatSearch.things.length && publishShare) await publishShare(db, tripId);
+  await persistTripDestinationCenter(
+    db,
+    tripId,
+    chatSearch.search?.center || chatSearch.search?.searchCenter || null,
+  );
   await db`
     update transcript_turns
     set payload = ${payload}

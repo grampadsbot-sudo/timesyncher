@@ -2,6 +2,7 @@ import { assignDatesScheduling as scheduleThingDates, tripIsoDay } from './intak
 
 export { tripIsoDay };
 import { captureThingLogo } from './thing-logo-capture.mjs';
+import { destinationCenterFromTripMetadata } from './trip-destination-center.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
 const MONTHS = {
@@ -364,6 +365,7 @@ export function sharedTripFromIntake({ trip, things }) {
   }
   const categories = [...categoryRegistry.values()];
   const destination = customerPlaceName(trip?.destination);
+  const destinationCenter = destinationCenterFromTripMetadata(trip?.metadata);
   const planned = Boolean(destination || start || end || (things || []).length);
   const rawTitle = String(trip?.title || '').trim();
   const title = customerPlaceName(rawTitle);
@@ -375,6 +377,8 @@ export function sharedTripFromIntake({ trip, things }) {
       start_date: start || null,
       end_date: end || null,
       currency: 'usd',
+      metadata: trip?.metadata && typeof trip.metadata === 'object' ? trip.metadata : {},
+      ...(destinationCenter ? { lat: destinationCenter.lat, lng: destinationCenter.lng } : {}),
     },
     days,
     assignments,
