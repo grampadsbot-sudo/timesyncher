@@ -45,6 +45,9 @@ const MAP_SETTINGS_FALLBACK_B = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.
 
 export function patchTripMapInitialView(source = '') {
   let js = String(source || '');
+  if (!js.includes(TRIP_MAP_INJECT_NEEDLE) && !js.includes('tsTripMapInitialView=')) {
+    return js;
+  }
   if (!js.includes('tsTripMapInitialView=')) {
     if (!js.includes(TRIP_MAP_INJECT_NEEDLE)) {
       throw new Error('trek bundle missing pze() anchor for trip map initial view patch');
@@ -63,7 +66,10 @@ export function patchTripMapInitialView(source = '') {
   if (js.includes('or=[p.default_lat')) {
     throw new Error('trek bundle still uses default_lat Paris fallback for trip map center');
   }
-  if (!js.includes('tsTripMapInitialView=') || !js.includes('tsMapIv=I.useMemo')) {
+  if (!js.includes('tsTripMapInitialView=')) {
+    throw new Error('trip map initial view patch did not apply');
+  }
+  if (js.includes(TRIP_MAP_VIEW_NEEDLE) && !js.includes('tsMapIv=I.useMemo')) {
     throw new Error('trip map initial view patch did not apply');
   }
   return js;

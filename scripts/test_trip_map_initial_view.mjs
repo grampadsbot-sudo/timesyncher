@@ -13,6 +13,7 @@ import { patchTripMapInitialView } from '../src/vacation/trek-live-product-patch
 import { sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 
 assert.equal(typeof patchTripMapInitialView, 'function');
+assert.equal(patchTripMapInitialView('if(h==="report"&&g){noop}'), 'if(h==="report"&&g){noop}');
 assert.deepEqual(coordsFromPlace({ lat: 1, lng: 2 }), { lat: 1, lng: 2 });
 assert.deepEqual(destinationCoordsFromTrip({ lat: 3, lng: 4 }), { lat: 3, lng: 4 });
 
