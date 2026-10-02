@@ -5,12 +5,16 @@ import { failReplyActionClaim, replyActionClaimReason } from '../src/vacation/re
 
 const claim = "I've added Kim Brooks as a collaborator for the trip.";
 const failure = "I couldn't send the invite to Kim yet — you can add her from Settings when you're ready.";
-const successFacts = { collaboratorInvite: { ok: true, action: 'collaborator_invite_sent' } };
+const successFacts = { invite: { ok: true, code: 'collaborator_invite_sent', inviteeEmail: 'kim@example.com' } };
+const viewClaim = 'Kim will see these on the trip site once she accepts.';
 
 assert.equal(replyActionClaimReason(claim, null), 'reply_action_claim_unbacked');
 assert.equal(replyActionClaimReason(claim, { collaboratorInvite: { ok: false } }), 'reply_action_claim_unbacked');
 assert.equal(replyActionClaimReason(claim, successFacts), '');
 assert.equal(replyActionClaimReason(failure, null), '');
+assert.equal(replyActionClaimReason(viewClaim, null), 'reply_action_claim_unbacked');
+assert.equal(replyActionClaimReason(viewClaim, successFacts), '');
+assert.equal(replyActionClaimReason('They can now view the itinerary.', null), 'reply_action_claim_unbacked');
 assert.throws(
   () => assertCustomerReplyShippable(claim, 'trip-1', null),
   (error) => error?.name === 'reply_action_claim_blocked' && error.reason === 'reply_action_claim_unbacked',

@@ -422,7 +422,7 @@
   {
     "file": "scripts/vacation-app-reply-rules.mjs",
     "rule": "JEV-CARD-EVAL",
-    "symbol_or_pattern": "reply-model-tier 57b461033e4b b315270d9a18",
+    "symbol_or_pattern": "reply-model-tier e946c6ef4107 b315270d9a18",
     "inventory_id": "3503389f",
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },

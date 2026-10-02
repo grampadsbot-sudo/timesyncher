@@ -360,9 +360,7 @@ export function selectPriorPlaces(rows = [], center) {
   return places.slice(0, 40).map(({ meters, ...place }) => place);
 }
 
-async function queryPriorRows(env, tripId = null) {
-  const scopedTripId = String(tripId || '').trim();
-  if (!scopedTripId) return [];
+async function queryPriorRows(env) {
   const databaseUrl = env.DATABASE_URL || env.NEON_DATABASE_URL || '';
   if (!databaseUrl) return [];
   const { sql } = await import('./db.mjs');
@@ -370,16 +368,15 @@ async function queryPriorRows(env, tripId = null) {
   return db`
     select id, title, category, location, source
     from trip_things
-    where trip_id = ${scopedTripId}
-      and source in ('prior_db', 'osm', 'brave')
+    where source in ('prior_db', 'osm', 'brave')
     order by updated_at desc
     limit 400
   `;
 }
 
-export async function readPriorPlaces(center, { env = process.env, query, tripId = null } = {}) {
+export async function readPriorPlaces(center, { env = process.env, query } = {}) {
   if (finite(center?.lat) === null || finite(center?.lng) === null) return [];
-  const rows = query ? await query(center) : await queryPriorRows(env, tripId);
+  const rows = query ? await query(center) : await queryPriorRows(env);
   return selectPriorPlaces(Array.isArray(rows) ? rows : [], center);
 }
 
@@ -436,7 +433,6 @@ export async function searchPlaces({
   fetchImpl = globalThis.fetch,
   priorPlaces,
   loadPriorPlaces,
-  tripId = null,
 } = {}) {
   env = buildProviderEnv(env);
   const started = Date.now();
@@ -481,9 +477,6 @@ export async function searchPlaces({
     }
   }
   const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
-  async function readPriorPlacesForTrip(center, { env: providerEnv }) {
-    return readPriorPlaces(center, { env: providerEnv, tripId });
-  }
   if (placeQueries.length) {
     const pass = await runPlaceProviderPass({
       fetchImpl,
@@ -498,7 +491,7 @@ export async function searchPlaces({
       relevanceContext: { target: placeTarget, area: placeArea },
       priorPlaces,
       loadPriorPlaces,
-      readPriorPlaces: readPriorPlacesForTrip,
+      readPriorPlaces,
       selectPriorPlaces,
       priorRowsFromInput,
       queryOsm,

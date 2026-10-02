@@ -2,6 +2,8 @@ const INVITE_SUCCESS_CLAIM = /\b(?:i(?:'|')ve|i have|we(?:'|')ve|we have)\s+(?:a
 const INVITE_SENT_CLAIM = /\bsent\s+(?:the\s+)?invite\b/i;
 const SHARED_WITH_CLAIM = /\bshared\s+(?:this\s+)?(?:trip|itinerary|plan|site)\s+with\b/i;
 const ADDED_COLLABORATOR_CLAIM = /\badded\s+.{1,120}\s+as\s+(?:a\s+)?collaborator\b/i;
+const VIEW_ACCESS_CLAIM = /\b(?:can now view|can view (?:the|this)|now have access|will see (?:the|this|these|your))\b/i;
+const THEY_VIEW_CLAIM = /\bthey can (?:now )?view\b/i;
 
 class ReplyActionClaimBlockedError extends Error {
   constructor(reason, tripId) {
@@ -12,11 +14,19 @@ class ReplyActionClaimBlockedError extends Error {
   }
 }
 
+function inviteResultRow(turnActionResults) {
+  const invite = turnActionResults?.invite;
+  if (invite && typeof invite === 'object') return invite;
+  const legacy = turnActionResults?.collaboratorInvite;
+  if (legacy && typeof legacy === 'object') return legacy;
+  return null;
+}
+
 function collaboratorInviteSucceeded(turnActionResults) {
-  const row = turnActionResults?.collaboratorInvite;
-  if (!row || typeof row !== 'object') return false;
+  const row = inviteResultRow(turnActionResults);
+  if (!row) return false;
   if (row.ok === true) return true;
-  const action = String(row.action || '').trim();
+  const action = String(row.action || row.code || '').trim();
   return action === 'collaborator_invite_sent' || action.endsWith('_invite_sent');
 }
 
@@ -28,6 +38,9 @@ function replyClaimsCollaboratorInviteAction(reply) {
   if (INVITE_SENT_CLAIM.test(body) && /\bcollaborator\b/i.test(body)) return true;
   if (SHARED_WITH_CLAIM.test(body)) return true;
   if (INVITE_SUCCESS_CLAIM.test(body) && /\b(?:wife|husband|spouse|partner)\b/i.test(body)) return true;
+  if (VIEW_ACCESS_CLAIM.test(body)) return true;
+  if (THEY_VIEW_CLAIM.test(body)) return true;
+  if (/\bwill see\b/i.test(body) && /\b(?:trip|plan|itinerary|site|these)\b/i.test(body)) return true;
   return false;
 }
 

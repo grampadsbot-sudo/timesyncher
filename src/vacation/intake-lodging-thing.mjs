@@ -158,9 +158,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
   existingTitles = [],
-  scopedTripId = null,
 } = {}) {
-  const priorTripId = String(scopedTripId || tripId || '').trim() || null;
   const have = new Set((Array.isArray(existingTitles) ? existingTitles : []).map((title) => String(title || '').toLowerCase()));
   const saved = [];
   const misses = [];
@@ -172,7 +170,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       title,
       destinationHint,
       areaHint: resolvedArea,
-      tripId: priorTripId,
+      tripId,
       env,
       fetchImpl,
       searchImpl,

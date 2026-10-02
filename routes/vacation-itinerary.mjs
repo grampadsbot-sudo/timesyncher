@@ -31,7 +31,7 @@ import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-
 // Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
-import { appReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
+import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import {
   applyLiveAppReplyFailureToPayload,
   commitShippedRewrite,
@@ -390,6 +390,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     latencyMs: elapsed,
     sessionE2eMs: elapsed,
   });
+  logVacationAppReplyTelemetry(live);
   const payload = {
     source: 'vacation_app',
     surface: 'vacation-app',

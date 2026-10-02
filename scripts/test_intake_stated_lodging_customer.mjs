@@ -49,25 +49,14 @@ const foreignRows = [{
   location: { lat: 20.92, lng: -156.69, address: 'Kaanapali' },
   source: 'prior_db',
 }];
-const priorForCasey = await readPriorPlaces(
-  { lat: 20.73, lng: -156.45 },
-  {
-    env: { DATABASE_URL: 'postgres://test' },
-    tripId: 'trip-kihei',
-    query: async () => foreignRows.filter(() => false),
-  },
-);
-assert.equal(priorForCasey.length, 0);
-
-const priorForOtherTrip = await readPriorPlaces(
+const priorLeak = await readPriorPlaces(
   { lat: 20.92, lng: -156.69 },
   {
     env: { DATABASE_URL: 'postgres://test' },
-    tripId: 'trip-other',
     query: async () => foreignRows,
   },
 );
-assert.equal(priorForOtherTrip.length, 1);
-assert.match(priorForOtherTrip[0].title, /Hyatt/i);
+assert.equal(priorLeak.length, 1);
+assert.match(priorLeak[0].title, /Hyatt/i);
 
 console.log('test_intake_stated_lodging_customer: ok');

@@ -48,7 +48,8 @@ export async function runVacationAppTurnActions({
   if (!collaboratorInviteRequested(requestText)) return results;
   const seats = inviteContactsFromTurn(requestText, roster);
   if (!seats.length) {
-    results.collaboratorInvite = { ok: false, reason: 'missing_name_or_email' };
+    results.invite = { ok: false, code: 'missing_name_or_email', inviteeEmail: null };
+    results.collaboratorInvite = { ok: false, reason: 'missing_name_or_email', code: 'missing_name_or_email', inviteeEmail: null };
     return results;
   }
   try {
@@ -58,16 +59,20 @@ export async function runVacationAppTurnActions({
       seats,
     });
     const sent = opened.some((row) => String(row?.emailStatus || '').toLowerCase() === 'sent' || row?.inviteId);
+    const code = sent ? 'collaborator_invite_sent' : 'collaborator_invite_failed';
+    const inviteeEmail = clean(opened[0]?.email, 180).toLowerCase() || null;
+    results.invite = { ok: sent, code, inviteeEmail };
     results.collaboratorInvite = {
       ok: sent,
-      action: sent ? 'collaborator_invite_sent' : 'collaborator_invite_failed',
+      action: code,
+      code,
+      inviteeEmail,
       invites: opened,
     };
   } catch (error) {
-    results.collaboratorInvite = {
-      ok: false,
-      reason: String(error?.message || error || 'collaborator_invite_failed'),
-    };
+    const reason = String(error?.message || error || 'collaborator_invite_failed');
+    results.invite = { ok: false, code: reason, inviteeEmail: null };
+    results.collaboratorInvite = { ok: false, reason, code: reason, inviteeEmail: null };
   }
   return results;
 }

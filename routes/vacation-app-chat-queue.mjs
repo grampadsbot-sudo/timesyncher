@@ -352,6 +352,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         savedStart: jobFields.startDate,
         savedEnd: jobFields.endDate,
         loadOwnerPlan,
+        turnActionResults,
       });
     }
   } catch (error) {

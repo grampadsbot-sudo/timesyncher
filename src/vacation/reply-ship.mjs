@@ -1,6 +1,6 @@
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
 import { liveTurnRecord } from './live-app-turn.mjs';
-import { appReplyTelemetry } from './reply-telemetry.mjs';
+import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 
@@ -110,6 +110,7 @@ export async function persistVacationAppOutboundReply({
     model: produced.model,
     rules: produced.rules,
   });
+  logVacationAppReplyTelemetry(appLive);
   await db`
     insert into transcript_turns (
       customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
@@ -178,6 +179,7 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
     rules: finished.rules,
     speakerName: pending.speakerName || null,
   });
+  logVacationAppReplyTelemetry(appLive);
   await db`
     insert into transcript_turns (
       customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
