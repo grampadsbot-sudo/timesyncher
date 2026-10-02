@@ -3,13 +3,18 @@ import { assignTripSiteUrl } from './onboarding.mjs';
 import { websiteTripBase } from './web-access.mjs';
 
 export async function assignTripSiteUrlWhenThingsPresent(db, tripId, env = process.env) {
-  const rows = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
-  if (!Number(rows[0]?.n)) return null;
-  if (!intakeShareSlug(tripId)) return null;
   try {
-    websiteTripBase(env);
-  } catch {
+    const rows = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
+    if (!Number(rows[0]?.n)) return null;
+    if (!intakeShareSlug(tripId)) return null;
+    try {
+      websiteTripBase(env);
+    } catch {
+      return null;
+    }
+    return await assignTripSiteUrl(db, tripId, env);
+  } catch (error) {
+    if (error?.code === 'onboarding_trip_site_url_failed') throw error;
     return null;
   }
-  return assignTripSiteUrl(db, tripId, env);
 }
