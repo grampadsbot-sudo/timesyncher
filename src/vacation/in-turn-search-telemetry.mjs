@@ -34,7 +34,7 @@ export function inTurnSearchTelemetry(things = [], providerAttempts = []) {
 
 export function stampTurnClassifier(payload, customerLive, classification) {
   const turnClassifier = {
-    turnKind: classification?.ok === true ? classification.turnKind : 'other',
+    turnKind: classification?.ok === true ? classification.turnKind : null,
     classifierModel: classification?.routerModel || null,
   };
   payload.turnClassifier = turnClassifier;
@@ -42,12 +42,12 @@ export function stampTurnClassifier(payload, customerLive, classification) {
   return turnClassifier;
 }
 
-export function skippedInTurnSearchTelemetry(reason, classification) {
+export function turnClassifierFailedTelemetry(reason) {
+  const detail = String(reason || 'trip intake classification failed').trim();
   return {
-    status: 'skipped',
-    reason,
-    turnKind: classification?.turnKind || 'other',
-    classifierModel: classification?.routerModel || null,
+    turnKind: null,
+    error: 'turn_classifier_failed',
+    reason: detail,
     providers: [],
     results: [],
     resultIds: [],

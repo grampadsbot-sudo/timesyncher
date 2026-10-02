@@ -206,7 +206,7 @@ export async function classifyTripIntake({ text, env = process.env, apiKey, rout
   const failed = (error) => ({
     ok: false,
     intake: false,
-    turnKind: 'other',
+    turnKind: null,
     target: '',
     anchor: '',
     anchorIsLodging: false,

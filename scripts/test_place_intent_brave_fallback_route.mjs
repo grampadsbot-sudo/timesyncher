@@ -9,75 +9,18 @@ import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-
 import { ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
-const BRAVE_DUMMY = 'place-intent-brave-key-aa11';
-const TAVILY_DUMMY = 'place-intent-tavily-key-bb22';
-const OPENROUTER_DUMMY = 'place-intent-openrouter-cc33';
-const ROUTER_MODEL = 'jev-router-test-model';
-
-const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
-const OVERPASS_HOST = ['overpass-api', 'de'].join('.');
-const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
-const TAVILY_HOST = ['api', 'tavily', 'com'].join('.');
-const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
-
-function classifierPayloadForTurn(text, state) {
-  const lower = String(text || '').toLowerCase();
-  if (state.classifierMode === 'fail') return null;
-  if (/weather|events/.test(lower)) {
-    return {
-      turnKind: 'web_research',
-      target: '',
-      anchor: '',
-      anchorIsLodging: false,
-      question: text,
-      things: [],
-      roster: [],
-      destination: '',
-      hasDates: false,
-      title: '',
-    };
-  }
-  if (/land in maui/.test(lower)) {
-    return {
-      turnKind: 'other',
-      target: '',
-      anchor: '',
-      anchorIsLodging: false,
-      question: '',
-      things: [],
-      roster: [],
-      destination: 'Maui',
-      hasDates: false,
-      title: '',
-    };
-  }
-  if (/taco|tacos/.test(lower)) {
-    return {
-      turnKind: 'place_search',
-      target: 'tacos',
-      anchor: /our hotel/.test(lower) ? 'our hotel' : 'Kaanapali Maui',
-      anchorIsLodging: /our hotel/.test(lower),
-      question: '',
-      things: [],
-      roster: [],
-      destination: '',
-      hasDates: false,
-      title: '',
-    };
-  }
-  return {
-    turnKind: 'other',
-    target: '',
-    anchor: '',
-    anchorIsLodging: false,
-    question: '',
-    things: [],
-    roster: [],
-    destination: '',
-    hasDates: false,
-    title: '',
-  };
-}
+import {
+  BRAVE_DUMMY,
+  BRAVE_HOST,
+  classifierPayloadForTurn,
+  NOMINATIM_HOST,
+  OPENROUTER_DUMMY,
+  OPENROUTER_HOST,
+  OVERPASS_HOST,
+  ROUTER_MODEL,
+  TAVILY_HOST,
+  TAVILY_DUMMY,
+} from './fixtures/place-intent-brave-fallback-fixtures.mjs';
 
 async function runPlaceIntentRouteTests() {
   const storeDir = await mkdtemp(path.join(tmpdir(), 'place-intent-brave-fallback-'));
@@ -459,14 +402,23 @@ async function runPlaceIntentRouteTests() {
     assert.equal(landingPayload.turnClassifier?.turnKind, 'other');
 
     state.classifierMode = 'fail';
+    const braveCallsBeforeClassifierFail = state.fetchCalls.filter((url) => url.includes(BRAVE_HOST) && url.includes('local')).length;
     const classifierFail = await postTurn('best tacos near our hotel');
-    assert.notEqual(classifierFail.status, 502, JSON.stringify(classifierFail.body));
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('local')), false);
+    assert.equal(classifierFail.status, 502);
+    assert.equal(classifierFail.body.ok, false);
+    assert.equal(classifierFail.body.status, 'turn_classifier_failed');
+    assert.match(String(classifierFail.body.error || ''), /classifier down/i);
+    assert.equal(
+      state.fetchCalls.filter((url) => url.includes(BRAVE_HOST) && url.includes('local')).length,
+      braveCallsBeforeClassifierFail,
+    );
     const classifierFailPayload = state.turnPayloads.at(-1);
-    assert.equal(classifierFailPayload.placeSearch?.status, 'skipped');
-    assert.equal(classifierFailPayload.placeSearch?.reason, 'classifier_failed');
-    assert.equal(classifierFailPayload.webSearch?.status, 'skipped');
-    assert.equal(classifierFailPayload.webSearch?.reason, 'classifier_failed');
+    assert.equal(classifierFailPayload.turnClassifier?.turnKind, null);
+    assert.equal(classifierFailPayload.placeSearch?.turnKind, null);
+    assert.equal(classifierFailPayload.placeSearch?.error, 'turn_classifier_failed');
+    assert.match(String(classifierFailPayload.placeSearch?.reason || ''), /classifier down/i);
+    assert.equal(classifierFailPayload.webSearch?.error, 'turn_classifier_failed');
+    assert.equal(classifierFailPayload.webSearch?.turnKind, null);
 
     return { ok: true };
   } finally {
@@ -494,7 +446,7 @@ console.log(JSON.stringify({
     'all_providers_fail_502_with_provider_telemetry',
     'events_question_uses_tavily_not_brave',
     'maui_landing_no_in_turn_search',
-    'classifier_failure_skips_search_telemetry',
+    'classifier_failure_loud_fail_no_provider_fetch',
   ],
   result,
 }));

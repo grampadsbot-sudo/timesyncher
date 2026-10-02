@@ -1,7 +1,7 @@
 import { insertTripThing } from './trip-things.mjs';
 import { placeToTripThing, searchPlaces } from './place-search.mjs';
 import { buildProviderEnv } from './provider-env.mjs';
-import { placeSearchTelemetry, skippedInTurnSearchTelemetry, stampTurnClassifier } from './in-turn-search-telemetry.mjs';
+import { placeSearchTelemetry, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { lodgingAnchorFromThing } from './lodging-anchor.mjs';
 
@@ -43,7 +43,7 @@ function queriesFromPlaceClassification(classification, tripDestination = '', lo
 
 async function resolveTripIntakeForCustomerTurn({ text = '', env = process.env, classifyImpl } = {}) {
   const classification = await classifyImpl({ text, env });
-  const turnKind = classification?.ok === true ? classification.turnKind : 'other';
+  const turnKind = classification?.ok === true ? classification.turnKind : null;
   return {
     classification,
     placeSearchTurn: turnKind === 'place_search',
@@ -406,21 +406,23 @@ export async function runVacationAppInTurnSearch({
 } = {}) {
   stampTurnClassifier(payload, customerLive, classification);
   if (classification?.ok !== true) {
-    const skipped = skippedInTurnSearchTelemetry('classifier_failed', classification);
-    payload.placeSearch = skipped;
-    payload.webSearch = skipped;
-    customerLive.placeSearch = skipped;
-    customerLive.webSearch = skipped;
+    const reason = String(classification?.error || 'trip intake classification failed').trim();
+    const failedTelemetry = turnClassifierFailedTelemetry(reason);
+    payload.placeSearch = failedTelemetry;
+    payload.webSearch = failedTelemetry;
+    customerLive.placeSearch = failedTelemetry;
+    customerLive.webSearch = failedTelemetry;
     await db`
       update transcript_turns
       set payload = ${payload}
       where id = ${turnId}
     `;
     return {
-      ok: true,
-      inTurnProviderResults: [],
-      enforceInTurnSearch: false,
-      webResearchTurn: false,
+      ok: false,
+      status: 'turn_classifier_failed',
+      error: reason,
+      placeSearch: failedTelemetry,
+      webSearch: failedTelemetry,
     };
   }
 
