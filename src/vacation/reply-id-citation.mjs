@@ -27,10 +27,10 @@ export function failReplyIdCitation(reason, tripId = '') {
   throw new ReplyIdCitationBlockedError(reason, id);
 }
 
-export function assertCustomerReplyShippable(reply, tripId = '', turnActionResults = null) {
+export function assertCustomerReplyShippable(reply, tripId = '', turnActionResults = null, replyClaimContext = null) {
   const reason = replyIdCitationReason(reply);
   if (reason) failReplyIdCitation(reason, tripId);
-  const actionReason = replyActionClaimReason(reply, turnActionResults);
+  const actionReason = replyActionClaimReason(reply, turnActionResults, replyClaimContext);
   if (actionReason) failReplyActionClaim(actionReason, tripId);
   return reply;
 }

@@ -10,7 +10,7 @@ import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs
 import { intakeExtractedThings, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
 import { seatFromSession, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
-import { blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
+import { activeCollaboratorsFromDialogParty, blockVacationAppReplyActionClaim } from '../src/vacation/reply-action-claim.mjs';
 import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-actions.mjs';
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 
@@ -404,11 +404,13 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     webSearch: customerLive.webSearch ?? payload.webSearch ?? null,
     turnActionResults,
   };
+  const replyClaimContext = { activeCollaborators: activeCollaboratorsFromDialogParty(trip) };
   const blockReplyShipGate = async (replyText) => {
     const actionBlocked = await blockVacationAppReplyActionClaim({
       replyText,
       tripId,
       turnActionResults,
+      replyClaimContext,
       db,
       turnId: turnRows[0].id,
       payload,
