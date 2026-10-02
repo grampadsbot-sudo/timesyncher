@@ -446,6 +446,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     firstIntake,
     requestText,
     intakeThings: intakeExtractedThings(placeSearchTurn, classification),
+    customerTurnId: turnRows[0].id,
     recordCustomerThingNotes: hooks.recordCustomerThingNotes,
     publishIntakeShare: hooks.publishIntakeShare,
     vacationAppTripSummary: hooks.vacationAppTripSummary,

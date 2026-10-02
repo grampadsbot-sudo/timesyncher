@@ -25,12 +25,13 @@ const TURN_KIND_ENUM = `"place_search"|"web_research"|"${TURN_KIND_TRIP_INTAKE}"
 
 export const TRIP_INTAKE_HAS_DATES_PROMPT = 'hasDates is true only when the customer stated calendar trip dates (a month and day or a full date range). Clock times, arrival or departure times of day, relative logistics, and durations without a calendar date make hasDates false.';
 
-const THING_SYSTEM = [
+export const TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT = [
   'Classify one customer chat message and extract fields.',
   `Return JSON only: {"turnKind":${TURN_KIND_ENUM},"target":string,"anchor":string,"anchorIsLodging":boolean,"category":string,"question":string,"things":[{"name":string,"kind":string,"who":string,"when":string}],"roster":[{"name":string,"role":string,"age":number|null}],"destination":string,"hasDates":boolean,"startDate":string,"endDate":string,"title":string}.`,
+  'In that JSON, target is the customer specific place wording for their ask (for example tacos, taco spots, or snorkeling); category is separate and only scopes map or OSM place-type filters.',
   `turnKind place_search when they want nearby or in-area places; web_research for events, weather, or general web facts; ${TURN_KIND_TRIP_INTAKE} when describing the trip to plan; other otherwise.`,
-  'For place_search, target is what category or kind of place they want; anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
-  `For place_search, category is required and must be exactly one of: ${PLACE_SEARCH_CATEGORY_KEYS.join(', ')} (the kind of place to search for).`,
+  'For place_search, target must be their specific ask in their words (never the category label); anchor is the area or reference point they named in their words; anchorIsLodging true when that reference is their hotel, lodging, resort, or where they are staying (including phrases like near our hotel or by the place we are staying at), false when they named a geographic area or neighborhood instead.',
+  `For place_search, category is required and must be exactly one of: ${PLACE_SEARCH_CATEGORY_KEYS.join(', ')} (map or OSM place-type scope only; never copy category into target).`,
   'For web_research, question is the research ask in their words; leave target, anchor, category empty and anchorIsLodging false.',
   `For ${TURN_KIND_TRIP_INTAKE} or other, leave target, anchor, category, question empty and anchorIsLodging false unless they named lodging as part of trip planning.`,
   'things: name is their wording for one wanted item; kind is activity, restaurant, hotel, flight, car, or store; who and when are strings or empty.',
@@ -40,6 +41,8 @@ const THING_SYSTEM = [
   TRIP_INTAKE_HAS_DATES_PROMPT,
   'When hasDates is true, startDate and endDate are required YYYY-MM-DD; resolve any stated calendar range in the message into full ISO start and end days. When hasDates is false, leave startDate and endDate empty. Do not invent items, names, times, people, places, dates, or titles.',
 ].join(' ');
+
+const THING_SYSTEM = TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT;
 
 export function intakeExtractionDatesError(extractedFields = {}) {
   if (extractedFields.hasDates !== true) return '';
