@@ -140,7 +140,6 @@
     ],
     "strings": [
       "Reservations, payments, split-payer, or other language the reply rules ban.",
-      "Do not mention reservations, payments, or checkout.",
       "Item34 ban: never say \"splitting payments\", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.",
       "Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.",
       "Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.",
