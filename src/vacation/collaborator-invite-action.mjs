@@ -1,23 +1,18 @@
 import { cleanText } from './http.mjs';
 import { openCollaboratorAppSeats, seatFromSession } from './collaborator-app-seat.mjs';
-import { isCollaboratorInviteRequest } from './collaborators.mjs';
 
-const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
-
-export function parseCollaboratorInviteTurn(text = '') {
-  const source = String(text || '');
-  if (!EMAIL_RE.test(source)) return null;
-  const email = (source.match(EMAIL_RE) || [])[0]?.toLowerCase() || '';
-  if (!email) return null;
-  const nameMatch = source.match(/\b(?:add|invite)\s+(?:my\s+)?([A-Za-z][A-Za-z'.-]{0,40})(?:\s*,|\s+at\s+|\s+—|\s+-|\s+email|\s+\(|$)/i);
-  const name = cleanText(nameMatch?.[1], 180);
-  return { name, email };
+export function collaboratorInviteFromClassification(classification) {
+  if (!classification || typeof classification !== 'object') return null;
+  const inviteeEmail = cleanText(classification.inviteeEmail, 180).toLowerCase();
+  if (!inviteeEmail || !inviteeEmail.includes('@')) return null;
+  return {
+    name: cleanText(classification.inviteeName, 180),
+    email: inviteeEmail,
+  };
 }
 
-export function shouldRunCollaboratorInviteFromChat(text = '') {
-  const parsed = parseCollaboratorInviteTurn(text);
-  if (!parsed) return false;
-  return isCollaboratorInviteRequest(text) || /\b(add|invite)\b/i.test(text);
+export function shouldRunCollaboratorInviteFromChat(classification = null) {
+  return Boolean(collaboratorInviteFromClassification(classification));
 }
 
 function resolveInviteScope(session, trip) {
@@ -67,4 +62,3 @@ export async function runCollaboratorInviteAction(db, {
     seats,
   };
 }
-

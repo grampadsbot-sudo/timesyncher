@@ -32,7 +32,7 @@ import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedInta
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 // Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
-import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { authorPeopleFromTrip, transcriptAuthorMissingError, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import {
   applyLiveAppReplyFailureToPayload,
@@ -274,19 +274,60 @@ async function loadVacationAppTrips(db, session) {
   return rows.map(vacationAppTripSummary);
 }
 
-async function loadVacationAppTurns(db, session, tripId) {
-  const customerId = transcriptCustomerId(session);
-  if (!customerId) return [];
-  const tripKey = tripId || null;
+async function loadTranscriptAuthorPeople(db, customerId, tripKey) {
+  const owners = await db`
+    select id, first_name, display_name
+    from customers
+    where id = ${customerId}
+    limit 1
+  `;
+  const owner = owners[0] || null;
   let party = {};
   let collabRows = [];
   if (tripKey) {
     const tripRows = await db`select metadata from trips where id = ${tripKey} limit 1`;
     const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
     party = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
-    collabRows = await db`select display_name from vacation_collaborators where owner_customer_id = ${customerId} and trip_id = ${tripKey} and status = 'active'`;
+    collabRows = await db`
+      select c.display_name, c.metadata, i.metadata as invite_metadata
+      from vacation_collaborators c
+      left join vacation_collaborator_invites i on i.id = c.invite_id
+      where c.owner_customer_id = ${customerId}
+        and c.trip_id = ${tripKey}
+        and c.status = 'active'
+    `;
+  } else {
+    collabRows = await db`
+      select c.display_name, c.metadata, i.metadata as invite_metadata
+      from vacation_collaborators c
+      left join vacation_collaborator_invites i on i.id = c.invite_id
+      where c.owner_customer_id = ${customerId}
+        and c.trip_id is null
+        and c.status = 'active'
+    `;
   }
-  const people = authorPeopleFromTrip(party, collabRows, customerId);
+  const partyWithOwner = owner
+    ? {
+      ...party,
+      primary: party?.primary || {
+        id: owner.id,
+        first_name: owner.first_name,
+        display_name: owner.display_name,
+      },
+    }
+    : party;
+  return authorPeopleFromTrip(partyWithOwner, collabRows, customerId);
+}
+
+async function loadVacationAppTurns(db, session, tripId) {
+  const customerId = transcriptCustomerId(session);
+  if (!customerId) return [];
+  const tripKey = tripId || null;
+  const people = await loadTranscriptAuthorPeople(db, customerId, tripKey);
+  const labelSession = {
+    ...session,
+    viewerId: session.viewerId || session.customer_id || null,
+  };
   const rows = tripKey
     ? await db`
       select speaker, body, channel, payload, direction, received_at, sent_at, created_at
@@ -310,6 +351,7 @@ async function loadVacationAppTurns(db, session, tripId) {
     const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
     const clientPayload = vacationAppTurnPayloadForClient(payload);
     const live = clientPayload.liveTranscript && typeof clientPayload.liveTranscript === 'object' ? clientPayload.liveTranscript : {};
+    const inbound = row.speaker === 'customer' || row.direction === 'inbound';
     const turn = {
       speaker: row.speaker || 'customer',
       body: row.body || '',
@@ -317,12 +359,23 @@ async function loadVacationAppTurns(db, session, tripId) {
       direction: row.direction || '',
       payload: clientPayload,
       authorName: String(clientPayload.authorName || live.speakerName || ''),
-      authorId: String(clientPayload.authorId || ''),
+      authorId: (() => {
+        const explicit = String(clientPayload.authorId || '').trim();
+        if (explicit) return explicit;
+        const spoken = String(clientPayload.authorName || live.speakerName || '').trim();
+        if (inbound && !spoken) return String(customerId);
+        return '';
+      })(),
       at: row.received_at || row.sent_at || row.created_at || null,
     };
-    const named = turnAuthorLabel(turn, session, people);
+    const named = turnAuthorLabel(turn, labelSession, people);
     turn.authorLabel = named.label;
     if (named.reason) turn.authorLabelReason = named.reason;
+    if (named.reason === 'author_name_missing' && inbound) {
+      const missing = transcriptAuthorMissingError(turn, labelSession, tripKey);
+      console.error(JSON.stringify(missing));
+      throw Object.assign(new Error('transcript_author_missing'), { code: 'transcript_author_missing', details: missing });
+    }
     if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
     return turn;
   });
@@ -337,10 +390,21 @@ function tripHasVacationSite(trip) {
   return Boolean(String(trip?.shareToken || '').trim());
 }
 
+function tripWelcomeSiteUrl(trip) {
+  if (!tripHasVacationSite(trip)) return '';
+  const direct = String(trip?.publicUrl || '').trim();
+  if (direct) return direct;
+  return builtVacationSiteUrl({
+    sharedToken: trip.shareToken,
+    shareToken: trip.shareToken,
+    publicUrl: trip.publicUrl,
+  });
+}
+
 async function welcomeInputs(db, session, trip) {
   const seat = seatFromSession(session);
   const hasSite = tripHasVacationSite(trip);
-  const tripSiteUrl = hasSite ? String(trip?.publicUrl || '').trim() : '';
+  const tripSiteUrl = hasSite ? tripWelcomeSiteUrl(trip) : '';
   const tripTitle = String(trip?.title || '').trim();
   if (seat) {
     const owners = await db`
@@ -381,8 +445,8 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) return;
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
-  const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
+  const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
   const claimed = await db`
     insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)

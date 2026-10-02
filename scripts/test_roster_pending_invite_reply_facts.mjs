@@ -32,7 +32,7 @@ assert.equal(replyActionClaimReason(honest, null, { activeCollaborators: ['Morga
 
 const blocked = 'Welcome, Jamie! Jamie is joining the trip.';
 assert.equal(
-  replyActionClaimReason(blocked, null, { activeCollaborators: ['Morgan'] }),
+  replyActionClaimReason(blocked, null, { activeCollaborators: ['Morgan'], pendingInviteeNames: ['Jamie'] }),
   REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP,
 );
 

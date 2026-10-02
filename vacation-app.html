@@ -565,16 +565,16 @@
 
     function renderEula() {
       document.title = 'Review Terms & Privacy';
-      const eula = state.eula || {};
-      const name = state.session?.customerName || '';
+      const eula = state.eula || {}, name = state.session?.customerName || '', collabSeat = Boolean(state.session?.seat);
+      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.', eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
       root.innerHTML = `<main class="app">
         <header class="topbar">
           <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>Terms &amp; Privacy</small></span></div>
         </header>
         <section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy">
           <h1>Review Terms &amp; Privacy</h1>
-          <p>These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.</p>
-          <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe('Terms are not ready yet. Open the link from your purchase email again in a moment.')}</div>
+          <p>${eulaLead}</p>
+          <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe(eulaWait)}</div>
           <form class="eula-form" id="eulaForm">
             <label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label>
             <label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label>
@@ -585,15 +585,14 @@
       </main>`;
       document.getElementById('eulaForm').addEventListener('submit', acceptEula);
     }
-
     async function acceptEula(event) {
       event.preventDefault();
       const errorBox = document.getElementById('eulaError');
       const button = document.getElementById('eulaAgreeButton');
-      const sessionId = state.eula?.sessionId || '';
+      const sessionId = state.eula?.sessionId || '', collabSeat = Boolean(state.session?.seat);
       if (!sessionId) {
         errorBox.hidden = false;
-        errorBox.textContent = 'Terms session is missing. Open the link from your purchase email again.';
+        errorBox.textContent = collabSeat ? 'Terms session is missing. Open your invite link again.' : 'Terms session is missing. Open the link from your purchase email again.';
         return;
       }
       button.disabled = true;
@@ -639,7 +638,8 @@
       const turnMarkup = chatTurns.length
         ? chatTurns.map((turn) => {
           const user = turn.speaker === 'customer' || turn.direction === 'inbound';
-          return `<article class="bubble ${user ? 'user' : ''}"><small>${safe(user ? (turn.authorLabel || '') : (turn.authorLabel || 'TimeSyncher'))}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
+          if (!String(turn.authorLabel || '').trim()) throw new Error('transcript_author_missing');
+          return `<article class="bubble ${user ? 'user' : ''}"><small>${safe(String(turn.authorLabel).trim())}</small>${user ? safe(turn.body) : chatText(turn.body)}</article>`;
         }).join('')
         : '';
       const inviteCopy = hasSite ? 'Invite a collaborator by email to join this vacation chat.' : 'Invite a collaborator by email before the trip site is ready.';
@@ -867,6 +867,5 @@
       }
     }
     loadApp();
-  </script>
-</body>
+  </script></body>
 </html>

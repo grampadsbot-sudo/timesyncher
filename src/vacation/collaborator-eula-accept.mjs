@@ -1,6 +1,7 @@
 import {
   activationStatusPersistent,
   createOnboardingSessionPersistent,
+  loadCollaboratorAppSeatEulaText,
   loadDefaultEulaText,
   loadSessionPersistent,
   sessionKey,
@@ -87,12 +88,12 @@ async function collaboratorPersistentSession(store, invite, joined, env) {
       'vacation_planning_onboarding',
       'in_app_text_voice_and_file_intake',
       'hosted_itinerary_generation',
-      'purchase_receipts_and_support',
+      'support_contact',
     ],
     google: { returnUrl },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
-      text: loadDefaultEulaText(env),
+      text: loadCollaboratorAppSeatEulaText(env),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
   });
@@ -130,6 +131,6 @@ export async function vacationAppEulaForCollaboratorSeat(session, seat, env = pr
   if (accepted) return payload;
   const eulaSession = await loadSessionPersistent(store, eulaSessionId);
   payload.version = eulaSession?.eula?.version || null;
-  payload.text = eulaSession?.eula?.text || '';
+  payload.text = loadCollaboratorAppSeatEulaText(env);
   return payload;
 }

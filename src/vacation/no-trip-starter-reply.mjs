@@ -2,6 +2,7 @@ import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-ru
 import { appTextBanned } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { failReplyPlanEntitlement, loadSessionOwnerReplyPlan } from './reply-plan-entitlement.mjs';
+import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { firstIntakeReplyLeak, intakeCustomerName } from './first-intake-reply.mjs';
 import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 
@@ -31,15 +32,18 @@ function questionCount(reply) {
   return (String(reply || '').match(/\?/g) || []).length;
 }
 
-function noTripStarterFacts({ customerTurn = '', session = null, ownerPlan = null, turnActionResults = null } = {}) {
+export function noTripStarterFacts({ customerTurn = '', session = null, ownerPlan = null, turnActionResults = null } = {}) {
   const facts = {
-    shape: 'no-trip',
+    shape: isCollaboratorAppSeat(session) ? 'no-trip-collaborator' : 'no-trip',
     customer_said: intakeFactText(customerTurn, 1200),
     customer_name: intakeCustomerName(session),
     missing_where: true,
     missing_when: true,
     gaps: ['where', 'when'],
   };
+  if (isCollaboratorAppSeat(session)) {
+    return applyTurnInviteReplyFacts(facts, turnActionResults);
+  }
   if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', '');
   facts.plan = {
     purchased_plan: String(ownerPlan.checkout_plan || '').trim(),

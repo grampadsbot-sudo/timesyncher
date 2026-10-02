@@ -85,6 +85,8 @@ const missingThingsFetch = async (url) => {
             startDate: '',
             endDate: '',
             title: '',
+            inviteeName: '',
+            inviteeEmail: '',
           }),
         },
       }],
@@ -114,6 +116,8 @@ function fullExtraction(overrides = {}) {
     startDate: '',
     endDate: '',
     title: '',
+    inviteeName: '',
+    inviteeEmail: '',
     ...overrides,
   });
 }
