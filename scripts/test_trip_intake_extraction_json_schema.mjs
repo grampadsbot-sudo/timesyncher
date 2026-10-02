@@ -34,6 +34,7 @@ function assertStrictObjectSchema(schema) {
   assert.strictEqual(schema.required.includes('endDate'), true);
   assert.strictEqual(schema.required.includes('hasDates'), true);
   assert.strictEqual(schema.required.includes('category'), true);
+  assert.strictEqual(schema.required.includes('targetKind'), true);
 }
 
 function assertStrictThingItemSchema(schema) {
@@ -78,6 +79,7 @@ const missingThingsFetch = async (url) => {
             anchor: '',
             anchorIsLodging: false,
             category: '',
+            targetKind: '',
             question: '',
             roster: [],
             destination: '',
@@ -108,6 +110,7 @@ function fullExtraction(overrides = {}) {
     anchor: '',
     anchorIsLodging: false,
     category: '',
+    targetKind: '',
     question: '',
     things: [],
     roster: [],

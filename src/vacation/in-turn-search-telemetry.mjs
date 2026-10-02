@@ -86,6 +86,9 @@ export function placeSearchTelemetry({
   judgeHttpStatus = null,
   judgeBodySnippet = null,
   providerErrors = null,
+  braveLookups = null,
+  anchorRadiusPolicy = null,
+  anchorRadiusRejections = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -133,6 +136,34 @@ export function placeSearchTelemetry({
       ...(Number.isFinite(Number(row?.httpStatus)) ? { httpStatus: Number(row.httpStatus) } : {}),
       message: String(row?.message || row?.reason || '').trim(),
     })).filter((row) => row.provider && row.message);
+  }
+  if (Array.isArray(braveLookups) && braveLookups.length) {
+    telemetry.braveLookups = braveLookups.slice(0, 10).map((row) => ({
+      query: String(row?.query || '').trim().slice(0, 500),
+      endpoint: String(row?.endpoint || '').trim().slice(0, 40),
+    })).filter((row) => row.query && row.endpoint);
+  }
+  if (anchorRadiusPolicy && typeof anchorRadiusPolicy === 'object') {
+    const lat = Number(anchorRadiusPolicy?.center?.lat);
+    const lng = Number(anchorRadiusPolicy?.center?.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      telemetry.anchorRadiusPolicy = {
+        scope: String(anchorRadiusPolicy.scope || '').trim(),
+        ...(Number.isFinite(Number(anchorRadiusPolicy.radiusMeters))
+          ? { radiusMeters: Number(anchorRadiusPolicy.radiusMeters) }
+          : {}),
+        center: {
+          lat,
+          lng,
+          ...(anchorRadiusPolicy.center?.label
+            ? { label: String(anchorRadiusPolicy.center.label).trim() }
+            : {}),
+        },
+      };
+    }
+  }
+  if (Array.isArray(anchorRadiusRejections) && anchorRadiusRejections.length) {
+    telemetry.anchorRadiusRejections = anchorRadiusRejections.slice(0, 20);
   }
   return telemetry;
 }

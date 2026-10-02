@@ -6,6 +6,9 @@ function finite(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+export const ANCHOR_RADIUS_SCOPE_LODGING = 'lodging_anchor';
+export const ANCHOR_RADIUS_SCOPE_DESTINATION = 'destination';
+
 export function anchorRadiusCenter(searchAnchorGeocode, searchCenter) {
   const anchorLat = finite(searchAnchorGeocode?.lat);
   const anchorLng = finite(searchAnchorGeocode?.lng);
@@ -18,25 +21,60 @@ export function anchorRadiusCenter(searchAnchorGeocode, searchCenter) {
   return { lat: centerLat, lng: centerLng, label: String(searchCenter?.label || '').trim() };
 }
 
-export function filterPlacesWithinRadius(places = [], radiusCenter, categoryForPlace) {
+export function radiusMetersForAnchorScope(category, scope = ANCHOR_RADIUS_SCOPE_LODGING) {
+  if (scope === ANCHOR_RADIUS_SCOPE_DESTINATION) {
+    return categoryRadiusMeters('activity');
+  }
+  return categoryRadiusMeters(category);
+}
+
+function placeTitle(place = {}) {
+  return String(place?.title || place?.name || '').trim();
+}
+
+export function filterPlacesWithinRadius(places = [], radiusCenter, categoryForPlace, scope = ANCHOR_RADIUS_SCOPE_LODGING) {
   const rows = Array.isArray(places) ? places : [];
-  if (!radiusCenter) return { places: rows, rejected: 0 };
+  if (!radiusCenter) return { places: rows, rejected: 0, rejections: [] };
   const kept = [];
+  const rejections = [];
   let rejected = 0;
   for (const place of rows) {
     const category = String(categoryForPlace(place) || '').trim().toLowerCase();
     const lat = finite(place?.lat);
     const lng = finite(place?.lng);
+    const title = placeTitle(place);
+    const source = String(place?.source || '').trim();
+    const limitMeters = radiusMetersForAnchorScope(category, scope);
     if (lat === null || lng === null || !category) {
       rejected += 1;
+      rejections.push({
+        title,
+        source,
+        lat,
+        lng,
+        meters: null,
+        limitMeters,
+        scope,
+        reason: 'missing_coordinates_or_category',
+      });
       continue;
     }
     const meters = distanceMeters(radiusCenter, { lat, lng });
-    if (meters === null || meters > categoryRadiusMeters(category)) {
+    if (meters === null || meters > limitMeters) {
       rejected += 1;
+      rejections.push({
+        title,
+        source,
+        lat,
+        lng,
+        meters,
+        limitMeters,
+        scope,
+        reason: 'outside_radius',
+      });
       continue;
     }
     kept.push(place);
   }
-  return { places: kept, rejected };
+  return { places: kept, rejected, rejections };
 }

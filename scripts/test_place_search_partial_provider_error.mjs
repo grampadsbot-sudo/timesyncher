@@ -15,6 +15,7 @@ const placeQueries = [{
   q: 'taco spots near Kaanapali Maui',
   limit: 5,
   place: true,
+  targetKind: 'category',
   target: 'taco spots',
 }];
 

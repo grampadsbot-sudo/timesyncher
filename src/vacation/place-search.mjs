@@ -10,7 +10,6 @@ import {
   braveTitle,
 } from './brave-place-query.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
-import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
@@ -18,9 +17,15 @@ import { writeRatings } from './write-ratings.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
+import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
 import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
 import { distanceMeters, samePlace } from './place-search-same-place.mjs';
+import {
+  ANCHOR_RADIUS_SCOPE_DESTINATION,
+  ANCHOR_RADIUS_SCOPE_LODGING,
+  radiusMetersForAnchorScope,
+} from './place-search-radius-filter.mjs';
 
 export { PlaceSearchError };
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
@@ -134,7 +139,6 @@ export function queriesFromWantedThings(wantedThings = []) {
     if (!name || name.length < 2 || NOT_A_PLACE.test(name)) continue;
     const kind = String(thing?.kind || thing?.category || '').trim().toLowerCase();
     const place = PLACE_KINDS.has(kind);
-    if (place && !intakeThingHasProperName(name)) continue;
     const category = place ? kind : (kind || 'decision');
     const key = `${category}:${normalizeName(name)}`;
     if (seen.has(key)) continue;
@@ -144,6 +148,7 @@ export function queriesFromWantedThings(wantedThings = []) {
       q: name,
       limit: place ? searchLimit(category) : 5,
       place,
+      ...(place ? { target: name, targetKind: 'named_place' } : {}),
     });
   }
   return found;
@@ -290,14 +295,24 @@ function braveCallSummary(calls) {
   return { query, endpoint };
 }
 
-export async function queryBravePlaceSearch(fetchImpl, env, { center, locationText }, queries) {
+export async function queryBravePlaceSearch(fetchImpl, env, {
+  center,
+  locationText,
+  compactLocality = '',
+  namedPlaceLookup = false,
+}, queries) {
   const places = [];
   const calls = [];
   let anchorRadiusRejected = 0;
+  const anchorRadiusRejections = [];
+  const braveRadiusScope = namedPlaceLookup
+    ? ANCHOR_RADIUS_SCOPE_DESTINATION
+    : ANCHOR_RADIUS_SCOPE_LODGING;
   const area = String(locationText || center?.label || '').trim();
+  const locality = String(compactLocality || center?.compactLocality || '').trim();
   try {
     for (const item of queries) {
-      const query = braveQueryString(item, area, center);
+      const query = braveQueryString(item, area, center, locality);
       const endpoint = braveEndpoint(center);
       calls.push({ query, endpoint });
       const params = new URLSearchParams({
@@ -328,8 +343,20 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
         const address = braveAddress(result);
         const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
         if (!title) continue;
-        if (center && metersInsideCategory(center, point, item.category) === null) {
+        const limitMeters = radiusMetersForAnchorScope(item.category, braveRadiusScope);
+        const meters = center ? distanceMeters(center, point) : null;
+        if (center && (meters === null || meters > limitMeters)) {
           anchorRadiusRejected += 1;
+          anchorRadiusRejections.push({
+            title,
+            source: 'brave',
+            lat: point.lat,
+            lng: point.lng,
+            meters,
+            limitMeters,
+            scope: braveRadiusScope,
+            reason: 'outside_radius',
+          });
           continue;
         }
         const providerCategories = braveProviderCategories(result);
@@ -359,10 +386,16 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
     throw error;
   }
   const rawResults = calls.flatMap((row) => (Array.isArray(row.rawResults) ? row.rawResults : [])).slice(0, 5);
+  const braveLookups = calls.map((row) => ({
+    query: String(row.query || '').trim(),
+    endpoint: String(row.endpoint || '').trim(),
+  })).filter((row) => row.query && row.endpoint);
   return {
     places,
     rawResults,
+    ...(braveLookups.length ? { braveLookups } : {}),
     ...(anchorRadiusRejected > 0 ? { anchorRadiusRejected } : {}),
+    ...(anchorRadiusRejections.length ? { anchorRadiusRejections } : {}),
     ...braveCallSummary(calls),
   };
 }
@@ -515,6 +548,8 @@ export async function searchPlaces({
     if (raw !== 'hotel' && !normalizePlaceSearchCategory(raw)) {
       fail(`Place search refused: unknown place category ${raw}.`, 'unknown_place_category');
     }
+    const targetKind = normalizePlaceSearchTargetKind(item?.targetKind);
+    if (!targetKind) fail('Place search refused: classifier place targetKind missing.', 'missing_place_target_kind');
   }
   const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
   if (placeQueries.length) {
@@ -554,6 +589,11 @@ export async function searchPlaces({
       ...(Number(pass.anchorRadiusRejected) > 0 ? { anchorRadiusRejected: pass.anchorRadiusRejected } : {}),
       ...(Array.isArray(pass.dedupeMerges) && pass.dedupeMerges.length ? { dedupeMerges: pass.dedupeMerges } : {}),
       ...(Array.isArray(pass.providerErrors) && pass.providerErrors.length ? { providerErrors: pass.providerErrors } : {}),
+      ...(Array.isArray(pass.braveLookups) && pass.braveLookups.length ? { braveLookups: pass.braveLookups } : {}),
+      ...(pass.anchorRadiusPolicy ? { anchorRadiusPolicy: pass.anchorRadiusPolicy } : {}),
+      ...(Array.isArray(pass.anchorRadiusRejections) && pass.anchorRadiusRejections.length
+        ? { anchorRadiusRejections: pass.anchorRadiusRejections }
+        : {}),
     };
     if (pass.status === 'no_results') {
       return {

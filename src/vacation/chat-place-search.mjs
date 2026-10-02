@@ -10,9 +10,11 @@ import {
   placeSearchClientError,
 } from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
+import { chatPlaceSearchGeocodeDestination } from './place-search-named-target.mjs';
 import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 import {
   customerChatPlaceSearchNoResults,
+  finishCustomerChatPlaceSearch,
   inTurnSearchNoResultsReturn,
   persistTurnPlaceSearchNoResults,
   syncWorkerJobAfterInTurnPlaceSearch,
@@ -59,43 +61,11 @@ export function intakeThingsForPersistence(placeSearchTurn, classification, webR
   return Array.isArray(wantedThings) ? wantedThings : [];
 }
 
-function placesToChatResultRows(places = []) {
-  return (Array.isArray(places) ? places : []).flatMap((place) => {
-    const thing = placeToTripThing(place);
-    const name = String(thing?.title || '').trim();
-    if (!name) return [];
-    const providerRef = thing?.metadata?.sourceRef;
-    const providerId = String(providerRef?.id || '').trim();
-    if (!providerId) return [];
-    return [{
-      name,
-      title: name,
-      sourceRef: { source: String(providerRef.source || thing.source || ''), id: providerId },
-    }];
-  });
-}
-
 function inTurnPlaceResultFromTripThing(inserted) {
   const name = String(inserted?.title || '').trim();
   const id = String(inserted?.id || '').trim();
   if (!name || !id) return null;
   return { name, title: name, sourceRef: { source: 'trip_thing', id } };
-}
-
-function finishCustomerChatPlaceSearch({ places = [], search = {}, errorMessage = null } = {}) {
-  const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
-  const normalizedPlaces = Array.isArray(places) ? places : [];
-  const things = normalizedPlaces.map((place) => placeToTripThing(place));
-  const status = placeSearchStatusFromProviderAttempts(things);
-  if (status === 'failed') {
-    const error = String(
-      errorMessage || `Place search returned no results for ${search?.destination || 'the requested area'}.`,
-    ).trim();
-    console.error(`customer chat place search failed: ${error}`);
-    return { status: 'failed', error, placeResults: [], things: [], search };
-  }
-  const placeResults = placesToChatResultRows(normalizedPlaces);
-  return { status: 'ok', error: null, places: normalizedPlaces, things, placeResults, search };
 }
 
 export async function runCustomerChatPlaceSearch({
@@ -121,7 +91,13 @@ export async function runCustomerChatPlaceSearch({
     tripResolvedArea,
   });
   const plan = queriesFromPlaceClassification(classification, tripDestination, lodging, tripResolvedArea, tripStatedLodgingArea);
-  if (!plan.destination) {
+  const geocodeDestination = chatPlaceSearchGeocodeDestination({
+    planQueries: plan.queries,
+    tripDestination,
+    tripResolvedArea,
+    planDestination: plan.destination,
+  });
+  if (!geocodeDestination) {
     const error = 'Place search needs a trip destination or a named area in the message.';
     console.error(`customer chat place search refused: ${error}`);
     return {
@@ -134,7 +110,7 @@ export async function runCustomerChatPlaceSearch({
   }
   try {
     const search = await searchImpl({
-      destination: plan.destination,
+      destination: geocodeDestination,
       tripId,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
@@ -225,10 +201,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       customerLive,
       providerAttempts,
       classifierMeta,
-      providerErrors: chatSearch.search?.providerErrors || null,
-      judgeInput: chatSearch.search?.judgeInput || null,
-      searchCenter: chatSearch.search?.searchCenter || null,
-      anchor: chatSearch.search?.anchor || null,
+      search: chatSearch.search,
     });
     return { kind: 'no_results', error: null, placeSearch, placeSearchTurn };
   }

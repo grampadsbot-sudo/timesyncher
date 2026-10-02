@@ -72,8 +72,10 @@ const queries = CATEGORIES.map((category) => ({
   q: category,
   place: true,
   limit: 2,
+  targetKind: 'category',
+  target: category,
 }));
-queries.push({ category: 'hotel', q: 'hotel', place: true, limit: 2 });
+queries.push({ category: 'hotel', q: 'hotel', place: true, limit: 2, targetKind: 'category', target: 'hotel' });
 
 const priorRows = [];
 const osmElements = [];
