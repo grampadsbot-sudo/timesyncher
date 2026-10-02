@@ -354,30 +354,29 @@ async function runPlaceIntentRouteTests() {
     state.nominatimMode = 'fail';
     state.braveMode = 'ok';
     const findNearHotel = await postTurn('Find family-friendly taco spots near our hotel in Kaanapali');
-    assert.notEqual(findNearHotel.status, 502, JSON.stringify(findNearHotel.body));
+    assert.equal(findNearHotel.status, 502);
     assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
     const findPayload = state.turnPayloads.at(-1);
-    assert.equal(findPayload.placeSearch?.status, 'ok');
+    assert.equal(findPayload.placeSearch?.status, 'failed');
     const findBrave = findPayload.placeSearch.providers.find((row) => row.provider === 'brave');
     assert.equal(findBrave.endpoint, 'web');
     assert.match(findBrave.query, /tacos near Kaanapali, Maui/);
+    assert.equal(findBrave.status, 'empty');
     const nominatimRow = findPayload.placeSearch.providers.find((row) => row.provider === 'nominatim');
     assert.ok(nominatimRow && (nominatimRow.status === 'error' || nominatimRow.status === 'skipped' || nominatimRow.status === 'empty'));
-    assert.ok(findPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'ok'));
 
     state.seededLodging = false;
     state.nominatimMode = 'empty';
     state.braveMode = 'ok';
     const recommend = await postTurn('recommend taco spots near Kaanapali Maui');
-    assert.notEqual(recommend.status, 502, JSON.stringify(recommend.body));
+    assert.equal(recommend.status, 502);
     assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
     const recommendPayload = state.turnPayloads.at(-1);
-    assert.equal(recommendPayload.placeSearch?.status, 'ok');
+    assert.equal(recommendPayload.placeSearch?.status, 'failed');
     const recommendBrave = recommendPayload.placeSearch.providers.find((row) => row.provider === 'brave');
     assert.equal(recommendBrave.endpoint, 'web');
     assert.match(recommendBrave.query, /tacos near Kaanapali Maui/);
-    assert.equal(Array.isArray(recommendPayload.placeSearch.providers), true);
-    assert.ok(recommendPayload.placeSearch.providers.some((row) => row.provider === 'brave' && row.status === 'ok'));
+    assert.equal(recommendBrave.status, 'empty');
 
     state.seededLodging = false;
     state.nominatimMode = 'empty';
@@ -451,8 +450,8 @@ console.log(JSON.stringify({
   checked: 'place-intent-brave-fallback-route',
   tests: [
     'best_tacos_near_our_hotel_brave_lodging_anchor',
-    'find_near_hotel_nominatim_fail_brave_ok',
-    'recommend_near_kaanapali_no_coords_brave_ok',
+    'find_near_hotel_nominatim_fail_brave_web_not_places',
+    'recommend_near_kaanapali_no_coords_brave_web_not_places',
     'all_providers_fail_502_with_provider_telemetry',
     'events_question_uses_tavily_not_brave',
     'maui_landing_no_in_turn_search',
