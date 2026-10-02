@@ -92,6 +92,12 @@ scripts/test_reply_plan_entitlement.mjs
 scripts/test_reply_id_citation_weather.mjs
 scripts/test_reply_action_claim.mjs
 scripts/test_turn_invite_reply_facts_claim.mjs
+scripts/test_no_trip_turn_invite_reply_facts.mjs
+scripts/test_roster_pending_invite_reply_facts.mjs
+scripts/test_place_search_reply_provider_leak.mjs
+scripts/test_stated_lodging_reply_facts.mjs
+scripts/test_place_search_no_results_reply_facts.mjs
+scripts/test_reply_facts_saved_dates.mjs
 scripts/test_assign_dates_weekday.mjs
 scripts/test_shared_trip_stated_lodging_only.mjs
 scripts/test_intake_stated_lodging_customer.mjs

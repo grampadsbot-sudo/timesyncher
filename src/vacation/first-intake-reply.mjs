@@ -1,6 +1,7 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
+import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 
@@ -102,7 +103,6 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
 export const FIRST_INTAKE_GAP_INSTRUCTION = [
   'You are writing the first reply after a short or vague intake in the TimeSyncher vacation app. Write it in your own words from the intake facts. Do not copy this instruction back.',
   'Start the trip draft anyway, as a short draft.',
-  'Then ask two or three gap questions, including where they are going and for how long, and who is coming.',
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
   'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',
@@ -356,6 +356,7 @@ export async function produceFirstIntakeReply({
   savedStart = '',
   savedEnd = '',
   loadOwnerPlan = loadTripOwnerReplyPlan,
+  turnActionResults = null,
 } = {}) {
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
@@ -395,8 +396,12 @@ export async function produceFirstIntakeReply({
     customerName: intakeCustomerName(session),
     ids,
   };
-  const facts = firstIntakeReplyFacts(factInput);
-  const prompt = firstIntakeReplyPrompt(factInput);
+  const facts = applyTurnInviteReplyFacts(firstIntakeReplyFacts(factInput), turnActionResults);
+  const prompt = `${facts.shape === 'voice-note'
+    ? FIRST_INTAKE_VOICE_INSTRUCTION
+    : facts.shape === 'question'
+      ? FIRST_INTAKE_QUESTION_INSTRUCTION
+      : FIRST_INTAKE_GAP_INSTRUCTION}\n\nIntake facts: ${JSON.stringify(facts)}`;
   let model = null;
   let reply = '';
   let block = '';
