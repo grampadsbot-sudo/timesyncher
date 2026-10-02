@@ -1,7 +1,6 @@
 import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
-import { intakeDatesFromCustomerSaid } from './first-intake-dates.mjs';
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
 
@@ -230,7 +229,6 @@ export function firstIntakeReplyFacts({
   customerName = '',
   ids = [],
   today = '',
-  hasDates = false,
 } = {}) {
   const hidden = Array.isArray(ids) ? ids.filter((id) => String(id || '').trim().length >= 8) : [];
   const said = scrubValue(intakeFactText(customerTurn, 6000), hidden);
@@ -273,9 +271,8 @@ export function firstIntakeReplyFacts({
   const who = uniqueFactNames(mentioned);
   const collaborators = uniqueFactNames(offer);
   const where = intakeFactText(extractedDestination, 180);
-  const saidDates = intakeDatesFromCustomerSaid(said);
-  const start = isoDay(savedStart) || saidDates.start || isoDay(String(savedDates || '').split(/\s+to\s+/i)[0]);
-  const end = isoDay(savedEnd) || saidDates.end || isoDay(String(savedDates || '').split(/\s+to\s+/i)[1]);
+  const start = isoDay(savedStart) || isoDay(String(savedDates || '').split(/\s+to\s+/i)[0]);
+  const end = isoDay(savedEnd) || isoDay(String(savedDates || '').split(/\s+to\s+/i)[1]);
   const when = [start, end].filter(Boolean).join(' to ') || intakeFactText(savedDates, 180);
   const nightCount = nightsBetween(start, end);
   const saidNights = nightCount == null ? String(said || '').match(/\b(\d{1,3})\s+nights?\b/i) : null;
@@ -289,11 +286,11 @@ export function firstIntakeReplyFacts({
   const question = !voiceNote && isDirectQuestion(said);
   const gaps = [];
   if (!where) gaps.push('where');
-  if (!when && nights == null && hasDates !== true) gaps.push('when');
+  if (!when && nights == null) gaps.push('when');
   if (!named) gaps.push('who');
   if (!stay) gaps.push('lodging');
   if (!planItems.length) gaps.push('plans');
-  const planReply = voiceNote || (!question && named && where && (Boolean(when) || nights != null || hasDates === true));
+  const planReply = voiceNote || (!question && named && where && (Boolean(when) || nights != null));
   const facts = { shape: planReply ? 'voice-note' : question ? 'question' : 'gaps',
     customer_said: said || null };
   const title = intakeFactText(tripTitle, 180);
@@ -356,7 +353,8 @@ export async function produceFirstIntakeReply({
   wantedThings = [],
   roster = null,
   extractedDestination = '',
-  hasDates = false,
+  savedStart = '',
+  savedEnd = '',
   loadOwnerPlan = loadTripOwnerReplyPlan,
 } = {}) {
   if (!rules?.ok) {
@@ -376,8 +374,8 @@ export async function produceFirstIntakeReply({
   }
   jev.jevBeforeModel = true;
   const saved = await loadSavedTripRecord(session, env);
-  const savedStart = saved?.start || '';
-  const savedEnd = saved?.end || '';
+  const tripStart = String(savedStart || saved?.start || '').trim();
+  const tripEnd = String(savedEnd || saved?.end || '').trim();
   const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
   const ownerPlan = saved?.ownerPlan
     || (tripId ? await loadOwnerPlan({ tripId, env }) : null);
@@ -388,15 +386,14 @@ export async function produceFirstIntakeReply({
     wantedThings,
     roster,
     extractedDestination: intakeFactText(extractedDestination, 180) || intakeFactText(saved?.destination, 180),
-    savedStart,
-    savedEnd,
-    savedDates: isoDay(savedStart) && isoDay(savedEnd) ? `${isoDay(savedStart)} to ${isoDay(savedEnd)}` : '',
+    savedStart: tripStart,
+    savedEnd: tripEnd,
+    savedDates: isoDay(tripStart) && isoDay(tripEnd) ? `${isoDay(tripStart)} to ${isoDay(tripEnd)}` : '',
     planOwned: saved?.planOwned === true || ownerPlan?.order_bump_owned === true,
     ownerPlan,
     tripId,
     customerName: intakeCustomerName(session),
     ids,
-    hasDates: hasDates === true,
   };
   const facts = firstIntakeReplyFacts(factInput);
   const prompt = firstIntakeReplyPrompt(factInput);

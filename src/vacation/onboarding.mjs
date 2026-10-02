@@ -97,11 +97,14 @@ export async function upsertCustomer(db, contact, metadata = {}) {
 export async function ensureTrip(db, customerId, metadata) {
   const title = cleanText(metadata.trip_title, 180);
   if (!title) throw new Error('trip title is required to create a vacation');
+  const destination = cleanText(metadata.destination, 180);
   const vacationDate = cleanText(metadata.vacation_date, 40);
+  const startDate = cleanText(metadata.start_date, 40) || vacationDate || null;
+  const endDate = cleanText(metadata.end_date, 40) || null;
   const rows = await db`
-    insert into trips (customer_id, title, start_date, preferences, status, metadata)
+    insert into trips (customer_id, title, destination, start_date, end_date, preferences, status, metadata)
     values (
-      ${customerId}, ${title}, ${vacationDate || null},
+      ${customerId}, ${title}, ${destination || null}, ${startDate || null}, ${endDate || null},
       ${{
         source: cleanText(metadata.source, 80) || 'stripe_purchase',
         onboarding: true,

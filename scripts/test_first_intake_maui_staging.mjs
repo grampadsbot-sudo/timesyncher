@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { intakeDatesFromCustomerSaid } from '../src/vacation/first-intake-dates.mjs';
 import { firstIntakeReplyFacts, intakeReplyBlock } from '../src/vacation/first-intake-reply.mjs';
 import { appTextBanned } from '../src/vacation/live-app-turn.mjs';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
@@ -8,6 +7,8 @@ import { replyPlanFactsFromEntitlementRow } from '../src/vacation/reply-plan-ent
 
 const STAGING_TURN_ID = 'a68dc1a0-6ac9-4079-81bd-7adf7c3b7086';
 const CUSTOMER_TURN = 'Maui March 10-17 2027 with my wife';
+const CLASSIFIER_START = '2027-03-10';
+const CLASSIFIER_END = '2027-03-17';
 const STAGING_FLAGGED_DRAFT = "Shepherd, I'm building your Maui itinerary for Wednesday, March 10 through Wednesday, March 17, 2027, with you and your wife. I can add your wife when you agree. I will not grant view or edit until you agree. Where are you staying?";
 
 const planEnv = {
@@ -19,11 +20,6 @@ const ownerPlan = replyPlanFactsFromEntitlementRow({
   status: 'active',
   metadata: { product: 'timesyncher_vacation_single' },
 }, planEnv, '5ce5eb7d-10f9-4022-ae4b-85620a616116');
-
-assert.deepEqual(intakeDatesFromCustomerSaid(CUSTOMER_TURN), {
-  start: '2027-03-10',
-  end: '2027-03-17',
-});
 
 const stagingFactsBeforeFix = {
   shape: 'gaps',
@@ -45,11 +41,14 @@ const facts = firstIntakeReplyFacts({
   roster: [{ name: 'wife', role: 'collaborator' }],
   extractedDestination: 'Maui',
   customerName: 'Shepherd',
-  hasDates: true,
+  savedStart: CLASSIFIER_START,
+  savedEnd: CLASSIFIER_END,
   ownerPlan,
   tripId: '5ce5eb7d-10f9-4022-ae4b-85620a616116',
 });
 assert.equal(facts.shape, 'voice-note');
+assert.equal(facts.start, CLASSIFIER_START);
+assert.equal(facts.end, CLASSIFIER_END);
 assert.equal(facts.weekday, 'Wednesday');
 assert.equal(facts.end_weekday, 'Wednesday');
 assert.deepEqual(facts.gaps, ['lodging', 'plans']);
@@ -76,6 +75,7 @@ console.log(JSON.stringify({
   ok: true,
   checked: 'first-intake-maui-staging',
   stagingTurnId: STAGING_TURN_ID,
+  classifierStart: CLASSIFIER_START,
+  classifierEnd: CLASSIFIER_END,
   stagingFlaggedDraft: STAGING_FLAGGED_DRAFT,
-  flagReason: 'first_intake_reply_flagged (gaps shape + weekday not in facts before date parse)',
 }));

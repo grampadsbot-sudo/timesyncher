@@ -179,7 +179,7 @@ function loadVacationAppTrips() {
   }));
 }
 
-function intakeFetchMock({ title, things, destination, hasDates, intake = true }) {
+function intakeFetchMock({ title, things, destination, hasDates, startDate = '2026-10-07', endDate = '2026-10-09', intake = true }) {
   return async (url, init) => {
     const href = String(url);
     if (href.includes('app-config') || href.includes('/auth/app-config')) {
@@ -203,7 +203,20 @@ function intakeFetchMock({ title, things, destination, hasDates, intake = true }
       json: async () => ({
         choices: [{
           message: {
-            content: JSON.stringify({ things, roster: [], destination, hasDates, title }),
+            content: JSON.stringify({
+              turnKind: intake ? 'trip_intake' : 'other',
+              target: '',
+              anchor: '',
+              anchorIsLodging: false,
+              question: '',
+              things,
+              roster: [],
+              destination,
+              hasDates,
+              startDate: hasDates ? startDate : '',
+              endDate: hasDates ? endDate : '',
+              title,
+            }),
           },
         }],
       }),
