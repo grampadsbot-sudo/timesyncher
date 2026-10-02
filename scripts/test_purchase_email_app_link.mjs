@@ -55,6 +55,7 @@ const state = {
   session: null,
   contact: null,
   turns: [],
+  welcomeClaims: new Set(),
 };
 
 function db(strings, ...values) {
@@ -137,6 +138,12 @@ function db(strings, ...values) {
     return state.trip ? [{ ...state.trip, current: true }] : [];
   }
   if (/select 1\s+from transcript_turns/i.test(text)) return state.turns.length ? [1] : [];
+  if (/insert into vacation_onboarding_welcomes/i.test(text)) {
+    const key = `${values[0]}|${values[1]}|${values[2] ?? ''}`;
+    if (state.welcomeClaims.has(key)) return [];
+    state.welcomeClaims.add(key);
+    return [{ id: 'welcome-claim-1' }];
+  }
   if (/insert into transcript_turns/i.test(text)) {
     const body = [...values].reverse().find((value) => typeof value === 'string' && value.length > 20);
     const payload = values.find((value) => value && typeof value === 'object' && value.liveTranscript);
