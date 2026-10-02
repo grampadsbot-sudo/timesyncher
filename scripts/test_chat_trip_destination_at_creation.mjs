@@ -59,8 +59,16 @@ const state = {
   },
 };
 
+const welcomeClaims = new Set();
+
 function db(strings, ...values) {
   const text = sqlText(strings);
+  if (/insert into vacation_onboarding_welcomes/i.test(text)) {
+    const key = `${values[0]}|${values[1]}`;
+    if (welcomeClaims.has(key)) return [];
+    welcomeClaims.add(key);
+    return [{ id: 'welcome-claim-1' }];
+  }
   if (/insert into trips/i.test(text)) {
     state.tripCount += 1;
     const row = {

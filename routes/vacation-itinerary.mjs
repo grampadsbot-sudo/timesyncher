@@ -362,43 +362,19 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
   const tripId = trip?.id || null;
   if (!tripId && seat) return;
+  const onboardingSessionId = session?.id;
+  if (!onboardingSessionId) return;
   const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
-  const existing = seat
-    ? await db`
-      select 1
-      from transcript_turns
-      where customer_id = ${customerId}
-        and trip_id = ${tripId}
-        and channel = 'vacation-app'
-        and payload->>'welcomeAudience' = 'collaborator'
-        and payload->>'welcomeFor' = ${welcomeFor}
-      limit 1
-    `
-    : tripId
-      ? await db`
-        select 1
-        from transcript_turns
-        where customer_id = ${customerId}
-          and trip_id = ${tripId}
-          and channel = 'vacation-app'
-          and payload->'liveTranscript' is not null
-          and coalesce(payload->>'welcomeAudience', 'owner') = 'owner'
-        limit 1
-      `
-      : await db`
-        select 1
-        from transcript_turns
-        where customer_id = ${customerId}
-          and trip_id is null
-          and channel = 'vacation-app'
-          and payload->'liveTranscript' is not null
-          and coalesce(payload->>'welcomeAudience', 'owner') = 'owner'
-        limit 1
-      `;
-  if (existing.length) return;
+  const claimed = await db`
+    insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)
+    values (${onboardingSessionId}, ${welcomeFor}, ${tripId})
+    on conflict (onboarding_session_id, welcome_for) do nothing
+    returning id
+  `;
+  if (!claimed.length) return;
   const inputs = await welcomeInputs(db, session, welcomeTrip);
   const missing = missingWelcomeFields(inputs);
   const started = Date.now();
@@ -429,47 +405,17 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     welcomeFor,
     liveTranscript: live,
   };
-  const inserted = tripId
-    ? await db`
-      insert into transcript_turns (
-        customer_id, trip_id, speaker, channel, body, payload, direction,
-        sent_at, response_latency_ms
-      )
-      select
-        ${customerId}, ${tripId}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
-        now(), 0
-      where not exists (
-        select 1
-        from transcript_turns
-        where customer_id = ${customerId}
-          and trip_id = ${tripId}
-          and channel = 'vacation-app'
-          and payload->'liveTranscript' is not null
-          and coalesce(payload->>'welcomeAudience', 'owner') = ${welcomeAudience}
-          and (${welcomeAudience} = 'owner' or payload->>'welcomeFor' = ${welcomeFor})
-      )
-      returning id
-    `
-    : await db`
-      insert into transcript_turns (
-        customer_id, trip_id, speaker, channel, body, payload, direction,
-        sent_at, response_latency_ms
-      )
-      select
-        ${customerId}, null, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
-        now(), 0
-      where not exists (
-        select 1
-        from transcript_turns
-        where customer_id = ${customerId}
-          and trip_id is null
-          and channel = 'vacation-app'
-          and payload->'liveTranscript' is not null
-          and coalesce(payload->>'welcomeAudience', 'owner') = ${welcomeAudience}
-          and (${welcomeAudience} = 'owner' or payload->>'welcomeFor' = ${welcomeFor})
-      )
-      returning id
-    `;
+  const inserted = await db`
+    insert into transcript_turns (
+      customer_id, trip_id, speaker, channel, body, payload, direction,
+      sent_at, response_latency_ms
+    )
+    values (
+      ${customerId}, ${tripId}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
+      now(), 0
+    )
+    returning id
+  `;
   if (inserted.length) {
     console.log(JSON.stringify({
       event: 'canned_welcome',

@@ -59,6 +59,7 @@ export function buildState(plan) {
     },
     redemptionId: crypto.randomUUID(),
     eulaStore: {},
+    welcomeClaims: new Set(),
   };
 }
 
@@ -204,6 +205,12 @@ export function dbFor(state) {
     }
     if (/insert into vacation_requests/i.test(text)) {
       return [{ id: 'req-e2e', received_at: new Date(), queued_at: new Date() }];
+    }
+    if (/insert into vacation_onboarding_welcomes/i.test(text)) {
+      const key = `${values[0]}|${values[1]}`;
+      if (state.welcomeClaims.has(key)) return [];
+      state.welcomeClaims.add(key);
+      return [{ id: 'welcome-claim-e2e' }];
     }
     if (/insert into transcript_turns/i.test(text) && /where not exists/i.test(text)) return [];
     if (/insert into transcript_turns/i.test(text) && /returning id/i.test(text)) {

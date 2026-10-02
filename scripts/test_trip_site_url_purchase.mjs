@@ -226,13 +226,14 @@ try {
 
   const mockWelcomeDb = async (strings, ...values) => {
     const text = sqlText(strings);
-    if (/select 1/i.test(text)) return [];
+    if (/insert into vacation_onboarding_welcomes/i.test(text)) return [{ id: 'welcome-claim-1' }];
     if (/from customers/i.test(text)) return [{ first_name: 'Ada', display_name: 'Ada' }];
-    if (/insert into transcript_turns/i.test(text)) return [];
+    if (/insert into transcript_turns/i.test(text)) return [{ id: 'turn-1' }];
     throw new Error(`unexpected welcome sql: ${text}`);
   };
 
   await ensureOnboardingOpener(mockWelcomeDb, {
+    id: 'purchase-session-1',
     customer_id: customerId,
     first_name: 'Ada',
     display_name: 'Ada',
