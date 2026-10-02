@@ -68,12 +68,12 @@ function db(strings, ...values) {
     state.tripCount += 1;
     const row = {
       id: TRIP_ID,
-      title: values.find((v) => typeof v === 'string' && v.length > 3 && v !== CUSTOMER_ID) || 'trip',
-      destination: '',
-      start_date: null,
-      end_date: null,
+      title: typeof values[1] === 'string' ? values[1] : 'trip',
+      destination: typeof values[2] === 'string' ? values[2] : '',
+      start_date: values[3] || null,
+      end_date: values[4] || null,
       status: 'onboarding',
-      metadata: {},
+      metadata: values[values.length - 1] && typeof values[values.length - 1] === 'object' ? values[values.length - 1] : {},
     };
     state.trips.push(row);
     return [{ id: TRIP_ID }];
