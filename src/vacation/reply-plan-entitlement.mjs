@@ -49,6 +49,12 @@ export function replyPlanFactsFromEntitlementRow(row, env = process.env, tripId 
   };
 }
 
+export async function loadOwnerReplyPlanForTurn({ session, tripId, env = process.env, db = null } = {}) {
+  const id = String(tripId || session?.trip_id || session?.tripId || '').trim();
+  if (id) return loadTripOwnerReplyPlan({ tripId: id, env, db });
+  return loadSessionOwnerReplyPlan({ session, env, db });
+}
+
 export async function loadSessionOwnerReplyPlan({ session, env = process.env, db = null } = {}) {
   const orderId = String(session?.order_id || '').trim();
   const customerId = String(session?.customer_id || '').trim();

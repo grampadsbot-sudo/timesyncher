@@ -48,6 +48,7 @@ export function buildState(plan) {
     siblings: [],
     session: null,
     fetchCalls: [],
+    tripOwnerPlanLoads: [],
     coupon: {
       id: crypto.randomUUID(),
       code_hash: couponHash(couponCode, {}),
@@ -139,19 +140,13 @@ export function dbFor(state) {
       rows.push(...state.siblings.filter((row) => row.trip_id === tripId).map((row) => ({ id: row.id })));
       return rows;
     }
-    if (/from entitlements e/i.test(text) && /e\.customer_id = t\.customer_id/i.test(text)) {
+    if (/join entitlements e on e\.customer_id = t\.customer_id/i.test(text) && /e\.trip_id = t\.id/i.test(text)) {
       const tripId = values.find((v) => v === TRIP_ID || v === TRIP_ID_B);
+      if (tripId) state.tripOwnerPlanLoads.push(tripId);
       const row = state.entitlement.trip_id === tripId
         ? state.entitlement
         : state.siblings.find((sibling) => sibling.trip_id === tripId);
       return row ? [{ plan: row.plan, status: row.status, metadata: row.metadata }] : [];
-    }
-    if (/from entitlements/i.test(text)) {
-      return [{
-        plan: state.entitlement.plan,
-        status: state.entitlement.status,
-        metadata: state.entitlement.metadata,
-      }];
     }
     if (/insert into paid_orders/i.test(text)) return [{ id: state.orderId }];
     if (/from onboarding_sessions/i.test(text) && /where order_id/i.test(text) && !/customers/i.test(text)) return [];
@@ -262,6 +257,14 @@ export function intakeFetchMock({ title, destination, hasDates, intake = true })
     if (corpus.includes('Starter facts')) {
       return { ok: true, json: async () => ({ choices: [{ message: { content: 'Where are you headed, and what dates work for you?' } }] }) };
     }
+    if (/Intake facts/i.test(corpus)) {
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: 'Who is traveling with you? Do you already have lodging booked for the week?' } }],
+        }),
+      };
+    }
     if (/tags from the allowed list/i.test(corpus)) {
       return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ tags: ['activities_experiences'], ask: false }) } }] }) };
     }
@@ -287,7 +290,13 @@ export function intakeFetchMock({ title, destination, hasDates, intake = true })
   };
 }
 
-export function providerFetchMock(state, env, originalFetch) {
+export function providerFetchMock(state, env, originalFetch, intakeOptions = {
+  title: TRIP_TITLE,
+  destination: DESTINATION,
+  hasDates: true,
+  intake: true,
+}) {
+  const intakeMock = intakeFetchMock(intakeOptions);
   return async (url, init) => {
     const href = String(url);
     state.fetchCalls.push(href);
@@ -323,6 +332,14 @@ export function providerFetchMock(state, env, originalFetch) {
     if (href.includes(OPENROUTER_HOST) && href.includes('decisions')) {
       const raw = init?.body ? JSON.parse(String(init.body)) : {};
       const questions = raw?.questions || raw?.input?.questions || {};
+      if (questions.trip_intake) {
+        return {
+          ok: true,
+          json: async () => ({
+            answers: { trip_intake: { noul: intakeOptions.intake === false ? 0.1 : 0.92 } },
+          }),
+        };
+      }
       if (questions.relevance) {
         return { ok: true, json: async () => ({ answers: { relevance: { choice: 5 } } }) };
       }
@@ -346,7 +363,10 @@ export function providerFetchMock(state, env, originalFetch) {
       if (/Starter facts/i.test(String(raw.messages?.[1]?.content || raw.messages?.[0]?.content || ''))) {
         return { ok: true, json: async () => ({ choices: [{ message: { content: 'Here are a few nearby options to consider.' } }] }) };
       }
+      if (/Intake facts/i.test(String(raw.messages?.[1]?.content || raw.messages?.[0]?.content || ''))) {
+        return { ok: true, json: async () => ({ choices: [{ message: { content: 'Who is traveling with you? Do you already have lodging booked for the week?' } }] }) };
+      }
     }
-    return intakeFetchMock({ title: TRIP_TITLE, destination: DESTINATION, hasDates: true, intake: true })(url, init);
+    return intakeMock(url, init);
   };
 }
