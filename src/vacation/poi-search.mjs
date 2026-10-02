@@ -157,7 +157,7 @@ function envKeyBySuffix(env, suffix) {
   return hit ? String(hit[1] || '').trim() : '';
 }
 
-export function braveSubscriptionKey(env = process.env) {
+function braveSubscriptionKey(env = process.env) {
   return String(env?.brave || envKeyBySuffix(env, 'E_SEARCH_API_KEY') || '').trim();
 }
 
