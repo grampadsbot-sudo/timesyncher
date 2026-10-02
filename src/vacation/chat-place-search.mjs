@@ -4,6 +4,7 @@ import { buildProviderEnv } from './provider-env.mjs';
 import { placeSearchTelemetry, stampTurnClassifier, turnClassifierFailedTelemetry } from './in-turn-search-telemetry.mjs';
 import { applyChatWebResearchForVacationTurn } from './chat-web-research.mjs';
 import { lodgingAnchorFromThing } from './lodging-anchor.mjs';
+import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -65,12 +66,24 @@ export function intakeExtractedThings(placeSearchTurn, classification, webResear
 function placesToChatResultRows(places = []) {
   return (Array.isArray(places) ? places : []).flatMap((place) => {
     const thing = placeToTripThing(place);
-    const sourceRef = thing?.metadata?.sourceRef;
-    const id = String(sourceRef?.id || '').trim();
     const name = String(thing?.title || '').trim();
-    if (!id || !name) return [];
-    return [{ name, title: name, sourceRef: { source: String(sourceRef.source || thing.source || ''), id } }];
+    if (!name) return [];
+    const providerRef = thing?.metadata?.sourceRef;
+    const providerId = String(providerRef?.id || '').trim();
+    if (!providerId) return [];
+    return [{
+      name,
+      title: name,
+      sourceRef: { source: String(providerRef.source || thing.source || ''), id: providerId },
+    }];
   });
+}
+
+function inTurnPlaceResultFromTripThing(inserted) {
+  const name = String(inserted?.title || '').trim();
+  const id = String(inserted?.id || '').trim();
+  if (!name || !id) return null;
+  return { name, title: name, sourceRef: { source: 'trip_thing', id } };
 }
 
 async function loadTripLodgingThing(db, tripId) {
@@ -194,8 +207,11 @@ export async function applyChatPlaceSearchForVacationTurn({
     `;
     return { kind: 'failed', error: chatSearch.error, placeSearch, placeSearchTurn };
   }
+  const placeResults = [];
   for (const thing of chatSearch.things) {
-    await insertTripThing(db, { tripId, requestId, thing });
+    const inserted = await insertTripThing(db, { tripId, requestId, thing });
+    const row = inTurnPlaceResultFromTripThing(inserted);
+    if (row) placeResults.push(row);
   }
   const placeSearch = placeSearchTelemetry({
     status: 'ok',
@@ -211,10 +227,8 @@ export async function applyChatPlaceSearchForVacationTurn({
     set payload = ${payload}
     where id = ${turnId}
   `;
-  return { kind: 'ok', placeResults: chatSearch.placeResults, placeSearch, placeSearchTurn };
+  return { kind: 'ok', placeResults, placeSearch, placeSearchTurn };
 }
-
-import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 
 export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
   const sources = Array.isArray(inTurnPlaceResults) ? inTurnPlaceResults : [];

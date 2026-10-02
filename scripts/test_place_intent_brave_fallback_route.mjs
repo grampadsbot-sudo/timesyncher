@@ -170,7 +170,7 @@ async function runPlaceIntentRouteTests() {
     if (/insert into worker_jobs/i.test(text)) return [{ id: 'job-place-intent' }];
     if (/insert into trip_things/i.test(text)) {
       state.tripThings.push({ source: values.find((value) => value === 'brave') || 'brave' });
-      return [];
+      return [{ id: `trip-thing-${state.tripThings.length}` }];
     }
     if (/update transcript_turns/i.test(text) && /set payload/i.test(text)) {
       const payload = values.find((value) => value && typeof value === 'object' && value.liveTranscript);

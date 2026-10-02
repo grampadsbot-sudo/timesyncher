@@ -189,7 +189,7 @@ async function runProviderEnvRouteTest(blobMode) {
         || metaValue?.source
         || (metaJson && JSON.parse(metaJson).source);
       state.tripThings.push({ metaJson: metaJson || JSON.stringify(metaValue || {}), source });
-      return [];
+      return [{ id: `trip-thing-${state.tripThings.length}` }];
     }
     if (/update transcript_turns/i.test(text) && /set payload/i.test(text)) {
       const payload = values.find((value) => value && typeof value === 'object' && value.liveTranscript);

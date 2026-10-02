@@ -32,7 +32,7 @@ export function tripThingRow(thing) {
 export async function insertTripThing(db, { tripId, requestId, thing }) {
   const item = tripThingRow(thing);
   if (!item) return null;
-  await db`
+  const rows = await db`
     insert into trip_things (
       trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,
       cost_estimate_cents, currency, location, links, ratings, metadata, source
@@ -47,6 +47,8 @@ export async function insertTripThing(db, { tripId, requestId, thing }) {
       ${JSON.stringify(item.metadata)}::jsonb,
       ${item.source}
     )
+    returning id
   `;
-  return { ...item, source: item.source };
+  const id = rows[0]?.id ? String(rows[0].id) : null;
+  return { ...item, source: item.source, id };
 }
