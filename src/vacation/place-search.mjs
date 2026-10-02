@@ -301,8 +301,9 @@ export async function queryBravePlaceSearch(fetchImpl, env, { center, locationTe
           headers: { 'X-Subscription-Token': String(env.brave).trim() },
         },
       );
-      const rawBraveResults = bravePlaceSearchRows(payload, endpoint).slice(0, 5);
-      for (const result of rawBraveResults) {
+      const braveRows = bravePlaceSearchRows(payload, endpoint);
+      const rawBraveResults = braveRows.slice(0, 5);
+      for (const result of braveRows) {
         if (!braveLocalPlaceResult(result)) continue;
         const point = bravePoint(result);
         const title = braveTitle(result?.title || result?.name);
