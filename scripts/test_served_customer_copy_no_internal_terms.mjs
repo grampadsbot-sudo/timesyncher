@@ -18,6 +18,8 @@ const CUSTOMER_HTML = [
   'order-success.html',
 ];
 
+const LEGAL_DISCLOSURE_PAGES = new Set(['terms.html', 'privacy.html']);
+
 const FORBIDDEN_PROSE = [
   { id: 'gbrain', re: /\bGBrain\b/i },
   { id: 'coming-soon', re: /\bcoming soon\b/i },
@@ -26,10 +28,10 @@ const FORBIDDEN_PROSE = [
   { id: 'openclaw', re: /\bOpenClaw\b/i },
   { id: 'grok', re: /\bGrok\b/i },
   { id: 'shepherd', re: /\bShepherd\b/ },
-  { id: 'ai-assisted', re: /AI-assisted/i },
   { id: 'workflow-promise', re: /compare-and-summarize workflow/i },
   { id: 'composer-model', re: /\bcomposer-2/i },
   { id: 'mcp-cursor-product', re: /Claude Web[,、] Cursor|Claude Web وCursor/ },
+  { id: 'ai-assisted', re: /AI-assisted/i, allowOnLegal: true },
 ];
 
 function stripNonProse(html = '') {
@@ -46,6 +48,7 @@ function stripNonProse(html = '') {
 function scanText(rel, text) {
   const hits = [];
   for (const rule of FORBIDDEN_PROSE) {
+    if (rule.allowOnLegal && LEGAL_DISCLOSURE_PAGES.has(rel)) continue;
     const match = text.match(rule.re);
     if (match) hits.push({ file: rel, rule: rule.id, sample: match[0] });
   }

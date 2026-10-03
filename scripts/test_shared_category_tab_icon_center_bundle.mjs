@@ -12,7 +12,7 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
-assert.match(rendered, /data-ts-category-tab-icon":"1"/);
+assert.match(rendered, /data-tab-category":G\.id/);
 assert.match(rendered, /display:"inline-flex",alignItems:"center"\},children:G\.label\}/);
 assert.doesNotMatch(rendered, /AI-assisted vacation itinerary planning/);
 

@@ -85,7 +85,7 @@ const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","a
 
 const BOOKINGS_TAB_ICON_V1_NEEDLE = BOOKINGS_TAB_ICON_PATCH;
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center",boxSizing:"border-box",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:G.icon})})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box"},children:G.icon})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
@@ -118,7 +118,7 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(BOOKINGS_TAB_ICON_V1_NEEDLE)) {
     js = js.replace(BOOKINGS_TAB_ICON_V1_NEEDLE, BOOKINGS_TAB_ICON_V2_PATCH);
-  } else if (!js.includes('data-ts-category-tab-icon":"1"')) {
+  } else if (!js.includes('data-tab-category":G.id')) {
     throw new Error('trek bundle missing category tab icon anchor for centering patch');
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
