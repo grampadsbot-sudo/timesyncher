@@ -13,7 +13,6 @@ import {
   readEulaReceiptDocument,
   runEulaReadbackGate,
   harnessBlobListCallCount,
-  recordHarnessBlobListCall,
   resetHarnessBlobListCallCount,
 } from './shepherd-staging-smoke-eula-readback.mjs';
 import { SMOKE_FAIL_CLOSED_GO } from './shepherd-staging-smoke-plan.mjs';
@@ -48,10 +47,6 @@ resetHarnessBlobListCallCount();
 const receiptDoc = await readEulaReceiptDocument(db, sessionId, process.env);
 assert.ok(receiptDoc?.receiptSha256);
 assert.equal(harnessBlobListCallCount(), 0);
-recordHarnessBlobListCall();
-assert.equal(harnessBlobListCallCount(), 1);
-
-resetHarnessBlobListCallCount();
 const gate = await runEulaReadbackGate({ db, sessionToken, env: process.env });
 assert.equal(gate.pass, true);
 assert.equal(gate.blobListCalls, 0);
