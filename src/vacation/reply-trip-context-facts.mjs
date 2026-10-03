@@ -108,7 +108,7 @@ function chatExtractionReplyFacts(wantedThings, tripStart, tripEnd) {
   return chatPlaceSearchSavedReplyFacts(rows, tripStart, tripEnd);
 }
 
-export function statedLodgingAreaFromTripMetadata(meta = {}) {
+function statedLodgingAreaFromTripMetadata(meta = {}) {
   const row = meta && typeof meta === 'object' ? meta : {};
   return String(row.statedLodgingArea || row.statedLodgingAreaHint || '').trim().slice(0, 240);
 }
