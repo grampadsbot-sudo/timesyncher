@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { writeFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -6,6 +7,7 @@ const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { sql } from '/workspace/src/vacation/db.mjs';
 import { createSmokeRunner } from './shepherd-staging-smoke-run-check.mjs';
 import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
+import { runShepherdJevPreflight } from './shepherd-staging-smoke-jev-preflight.mjs';
 import { configureShepherdSmokeHelpers, seedDecoy } from './shepherd-staging-smoke-helpers.mjs';
 import { runShepherdSmokeBootstrap, runShepherdSmokeSpine, runShepherdSmokeMapBudLogoChecks } from './shepherd-staging-smoke-main.mjs';
 import { buildMainIndependentParallelChecks } from './shepherd-staging-smoke-parallel.mjs';
@@ -70,6 +72,16 @@ const [couponMain, couponH2, couponA1, couponA2, couponDTrip, couponInvClaim, co
 if (!couponMain || !couponH2 || !couponA1 || !couponA2 || !couponDTrip || !couponInvClaim || !couponK || !couponAskLodging) process.exit(1);
 
 await ensureShepherdStagingSmokeEnv();
+
+const jevPreflight = await runShepherdJevPreflight();
+out.jevPreflight = jevPreflight;
+if (!jevPreflight.ok) {
+  out.harnessBlocker = { reason: 'jev_preflight', detail: jevPreflight.error };
+  await mkdir(ARTIFACT_DIR, { recursive: true });
+  writeFileSync(artifactPath('out.json'), `${JSON.stringify(out, null, 2)}\n`);
+  console.error(`Harness blocker: Jev preflight failed: ${jevPreflight.error}`);
+  process.exit(2);
+}
 
 const db = sql(process.env);
 out.decoy = await seedDecoy(db);

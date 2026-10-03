@@ -38,11 +38,15 @@ import {
   APP_MAP_READY_FAIL_MS,
   SHARED_GOTO_TIMEOUT_MS,
   SHARED_MAP_READY_WAIT_MS,
+  gotoAndHydrateSharedIntakePage,
+  listSharedDomTabs,
 } from './shepherd-staging-smoke-shared-ui-map.mjs';
 
 assert.equal(APP_MAP_READY_FAIL_MS, 10000);
 assert.equal(SHARED_GOTO_TIMEOUT_MS, 60000);
 assert.equal(SHARED_MAP_READY_WAIT_MS, 45000);
+assert.equal(typeof gotoAndHydrateSharedIntakePage, 'function');
+assert.equal(typeof listSharedDomTabs, 'function');
 
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);
