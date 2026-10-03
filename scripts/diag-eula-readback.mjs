@@ -2,11 +2,13 @@
 /** Standalone EULA receipt readback diagnostic (staging DB + same smoke accept path). */
 import { sql } from '/workspace/src/vacation/db.mjs';
 import { receiptKey } from '/workspace/src/onboarding/eula-persistent-core.mjs';
+import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
 import { mintCheckoutCoupons } from './mint-checkout-coupons.mjs';
 import {
   eulaStoreObjectKey,
   eulaVacationSessionId,
   listEulaStoreObjectKeysForSession,
+  requireEulaStorePrefix,
 } from './shepherd-staging-smoke-eula-readback.mjs';
 
 const BASE = process.env.SHEPHERD_BASE || 'https://vacation-staging.timesyncher.com';
@@ -17,7 +19,16 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+await ensureShepherdStagingSmokeEnv();
+try {
+  requireEulaStorePrefix(process.env);
+} catch (err) {
+  console.error(String(err?.message || err));
+  process.exit(1);
+}
+
 const db = sql(process.env);
+const eulaBlobPrefix = requireEulaStorePrefix(process.env);
 const codes = await mintCheckoutCoupons(db, { count: 1, tier: 'single', label: `diag-eula-${RUN_TS}`, max: 1 });
 const couponMain = codes[0];
 if (!couponMain) {
@@ -62,20 +73,28 @@ const out = {
   base: BASE,
   sessionToken,
   sessionId,
+  TIMESYNCHER_EULA_BLOB_PREFIX: eulaBlobPrefix,
   acceptHttp: acceptRes.status,
   acceptOk: acceptJson.ok === true,
   receiptSha256FromApi: acceptJson.receiptSha256 || null,
   expectedReceiptKey: expectedKey,
   appRelativeReceiptKey: relReceipt,
   exactKeyFound: exactRows.length > 0,
-  eulaStoreKeysForSession: storeKeys.keys,
-  eulaStoreKeyRowCount: storeKeys.rowCount,
   sessionIdLike: storeKeys.sessionIdLike,
+  eulaStoreKeyRowCount: storeKeys.rowCount,
+  eulaStoreKeysLikeSessionId: storeKeys.keys,
 };
 
 console.log(JSON.stringify(out, null, 2));
+if (storeKeys.keys.length) {
+  console.error(`eula_store_objects LIKE ${storeKeys.sessionIdLike} (${storeKeys.rowCount} rows):`);
+  for (const key of storeKeys.keys) console.error(`  ${key}`);
+}
 if (!exactRows.length) {
   console.error(`missing expected eula_store_objects key: ${expectedKey}`);
+  if (storeKeys.keys.some((key) => key !== expectedKey && key.includes(sessionId))) {
+    console.error('prefix mismatch suspected: keys exist for session but not at expectedReceiptKey');
+  }
   process.exit(1);
 }
 process.exit(0);
