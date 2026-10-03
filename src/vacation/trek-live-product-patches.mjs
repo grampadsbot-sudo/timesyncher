@@ -54,16 +54,50 @@ const MAP_SETTINGS_DEFAULTS_PATCH = 'default_lat:null,default_lng:null,default_z
 const MAP_SETTINGS_FALLBACK_A = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.3522),me(e.default_zoom||10)';
 const MAP_SETTINGS_FALLBACK_B = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.3522),me(e.default_zoom||10);';
 
-const THING_LOGO_CHIP_NEEDLE = 'children:[n.jsx("span",{children:ua}),zt&&n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"}})]})';
-const THING_LOGO_CHIP_PATCH = 'children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{width:"100%",height:"100%",maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block",padding:3,boxSizing:"border-box"}})]:[n.jsx("span",{style:{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})';
+const THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)"},children:[n.jsx("span",{children:ua}),zt&&n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"}})]})}';
+
+const THING_LOGO_CHIP_DC_V1_NEEDLE = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)"},children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{width:"100%",height:"100%",maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block",padding:3,boxSizing:"border-box"}})]:[n.jsx("span",{style:{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
+
+const THING_LOGO_CHIP_DC_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",padding:3,boxSizing:"border-box"},children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
+
+const MAP_MARKER_LOGO_NEEDLE = 'p=c?`<img src="${c}" alt="" style="width:30px;height:30px;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" />`';
+
+const MAP_MARKER_LOGO_PATCH = 'p=c?`<div data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center;box-sizing:border-box;padding:2px"><img src="${c}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border:0;background:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.30));" /></div>`';
+
+const DETAIL_TIMELINE_EMOJI_NEEDLE = 'style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr}';
+
+const DETAIL_TIMELINE_EMOJI_PATCH = 'style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr}';
+
+const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon})';
+
+const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
 export function patchThingLogoChipAlignment(source = '') {
   let js = String(source || '');
-  if (!js.includes(THING_LOGO_CHIP_NEEDLE)) {
-    if (js.includes(THING_LOGO_CHIP_PATCH)) return js;
-    throw new Error('trek bundle missing thing logo chip needle for centering patch');
+  if (!js.includes('data-ts-logo-chip":"1"')) {
+    if (js.includes(THING_LOGO_CHIP_DC_V1_NEEDLE)) js = js.replace(THING_LOGO_CHIP_DC_V1_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+    else if (js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE)) js = js.replace(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+    else throw new Error('trek bundle missing dc() anchor for thing logo chip centering patch');
   }
-  return js.replace(THING_LOGO_CHIP_NEEDLE, THING_LOGO_CHIP_PATCH);
+  if (js.includes(MAP_MARKER_LOGO_NEEDLE)) js = js.replace(MAP_MARKER_LOGO_NEEDLE, MAP_MARKER_LOGO_PATCH);
+  else if (!js.includes('data-ts-logo-chip="1" style="width:30px')) {
+    throw new Error('trek bundle missing map marker logo needle for centering patch');
+  }
+  if (js.includes(DETAIL_TIMELINE_EMOJI_NEEDLE)) {
+    js = js.replace(DETAIL_TIMELINE_EMOJI_NEEDLE, DETAIL_TIMELINE_EMOJI_PATCH);
+  }
+  if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
+    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_PATCH);
+  } else if (js.includes('transform:"translateY(-0.5px)"},children:G.icon}')) {
+    throw new Error('trek bundle missing bookings tab icon needle for centering patch');
+  }
+  if (!js.includes('display:"inline-grid",placeItems:"center"')) {
+    throw new Error('thing logo chip centering patch did not apply');
+  }
+  if (js.includes(THING_LOGO_CHIP_DC_V1_NEEDLE) || js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE)) {
+    throw new Error('thing logo chip centering patch did not apply');
+  }
+  return js;
 }
 
 export function patchTripMapInitialView(source = '') {

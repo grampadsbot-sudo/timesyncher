@@ -45,9 +45,9 @@ assert.equal(areaSelect.includes('selected'), false);
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(rendered, committed);
 
-const logoChipPatch =
-  'children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{width:"100%",height:"100%",maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block",padding:3,boxSizing:"border-box"}})]:[n.jsx("span",{style:{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})';
-assert.match(rendered, new RegExp(logoChipPatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+assert.match(rendered, /data-ts-logo-chip":"1"/);
+assert.match(rendered, /display:"inline-grid",placeItems:"center"/);
 assert.doesNotMatch(rendered, /position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"/);
+assert.doesNotMatch(rendered, /padding:3,boxSizing:"border-box"\}\)\]:\[n\.jsx\("span",\{style:\{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1\},children:ua\}\)\]\}\)/);
 
 console.log('served trek bundle matches the patcher');

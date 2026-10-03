@@ -124,15 +124,24 @@
     el.dataset.tsIconType = resolved.type;
     if (resolved.logoUrl && !resolved.isFlight) {
       el.textContent = '';
+      el.style.display = 'inline-grid';
+      el.style.placeItems = 'center';
+      el.style.width = '22px';
+      el.style.height = '22px';
+      el.style.boxSizing = 'border-box';
+      el.dataset.tsLogoChip = '1';
+      el.setAttribute('aria-hidden', 'true');
       const img = document.createElement('img');
       img.src = resolved.logoUrl;
       img.alt = '';
       img.className = 'tiny-logo';
-      img.style.width = '22px';
-      img.style.height = '22px';
-      img.style.maxWidth = '22px';
-      img.style.maxHeight = '22px';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
       img.style.objectFit = 'contain';
+      img.style.objectPosition = 'center center';
+      img.style.display = 'block';
       el.appendChild(img);
       return;
     }
