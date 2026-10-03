@@ -79,7 +79,7 @@ assert.match(prompt, /Ada does not want two big activities/);
 assert.doesNotMatch(prompt, /\$\d+/);
 assert.doesNotMatch(prompt, /Welcome aboard/i);
 assert.doesNotMatch(prompt, /use only places, activities, and venues the customer already named/);
-assert.match(prompt, /Ask the customer for anything they haven't said/);
+assert.doesNotMatch(prompt, /Ask the customer for anything they haven't said/);
 assert.doesNotMatch(prompt, /Big Island|Kailua-Kona|Kimberly|\bTyler\b|\bLauren\b|\bCraig\b|Vegas|Waikiki|\bApril\b|four friends/i);
 
 const priced = replyRulesSystem({}, '', 'forbidden', false, 'How much is a seat? I pay for Ada.', {
