@@ -345,12 +345,11 @@ assert.doesNotMatch(overlay, /wantsJourneyBook/);
 assert.doesNotMatch(overlay, /document\.write/);
 assert.doesNotMatch(overlay, /ts-journey-chip/);
 assert.doesNotMatch(overlay, /report\/style-2/);
-
 const patch = await readFile(new URL('../public/ts-timeline-icon-patch.js', import.meta.url), 'utf8');
 assert.match(patch, /isTinyIconSlot/);
 assert.match(patch, /rect\.width > 48/);
-assert.match(patch, /maxWidth = '22px'/);
-assert.doesNotMatch(patch, /img\.style\.width = '100%'/);
+assert.match(patch, /placeItems = 'center'/);
+assert.match(patch, /maxWidth = '100%'/);
 assert.match(patch, /AIRPLANE/);
 assert.match(patch, /printMode/);
 assert.match(patch, /isPrintReport/);

@@ -5,6 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
+import { computeTripMapInitialView } from '../src/vacation/trip-map-initial-view.mjs';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
 const bundlePath = path.join(root, 'public/assets/index-BKun7ofk.js');
@@ -136,10 +138,45 @@ try {
     () => document.querySelector('.mapboxgl-map,.leaflet-container') && !document.querySelector('[data-map-center-unresolved]'),
     { timeout: 45000 },
   );
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector('.leaflet-container,.mapboxgl-map');
+      return Boolean(el && el.getAttribute('data-ts-map-center') && window.__tsTripMap);
+    },
+    { timeout: 45000 },
+  );
   const unresolved = await page.$('[data-map-center-unresolved]');
   assert.equal(unresolved, null);
   const mapRoot = await page.$('.mapboxgl-map,.leaflet-container');
   assert.ok(mapRoot, 'expected map on first plan view when Things have coordinates');
+
+  const expected = computeTripMapInitialView({
+    places: [placeA, placeB],
+    trip: tripPayloadWithPlaces([placeA, placeB]).trip,
+  });
+  assert.equal(expected.ok, true);
+
+  const hook = await page.evaluate(() => {
+    const el = document.querySelector('.leaflet-container,.mapboxgl-map');
+    return {
+      center: el?.getAttribute('data-ts-map-center') || null,
+      zoom: el?.getAttribute('data-ts-map-zoom') || null,
+      bounds: el?.getAttribute('data-ts-map-bounds') || null,
+      engine: el?.getAttribute('data-ts-map-engine') || null,
+      global: window.__tsTripMap || null,
+    };
+  });
+  assert.ok(hook.center, 'expected data-ts-map-center on map container');
+  assert.ok(hook.zoom, 'expected data-ts-map-zoom on map container');
+  assert.ok(hook.bounds, 'expected data-ts-map-bounds on map container');
+  assert.equal(hook.engine, 'leaflet');
+  const [liveLat, liveLng] = hook.center.split(',').map(Number);
+  assert.ok(Number.isFinite(liveLat) && Number.isFinite(liveLng));
+  assert.ok(Math.abs(liveLat - expected.center.lat) < 0.02);
+  assert.ok(Math.abs(liveLng - expected.center.lng) < 0.02);
+  assert.ok(Number.isFinite(Number(hook.zoom)));
+  assert.deepEqual(hook.global?.center, { lat: liveLat, lng: liveLng });
+  assert.equal(hook.global?.engine, 'leaflet');
 } finally {
   await browser.close();
   await app.close();
