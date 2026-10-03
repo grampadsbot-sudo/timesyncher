@@ -34,6 +34,7 @@ import {
   withBrowserPageSlot,
   waitForSelector,
 } from './shepherd-staging-smoke-browser-pool.mjs';
+import { registerLayoutVisualSpineChecks } from './shepherd-staging-smoke-layout-visual-spine.mjs';
 
 /**
  * @param {object} ctx
@@ -127,6 +128,8 @@ export async function runShepherdSmokeSpine(ctx) {
     artifactPath,
     CHROME,
     sharedBrowser,
+    registerBrowser,
+    EXPECT_SHA,
   } = ctx;
   const wPoints = ctx.wPoints || {};
 
@@ -198,6 +201,21 @@ export async function runShepherdSmokeSpine(ctx) {
       });
     });
   }, { timeoutMs: 90000 });
+
+  await registerLayoutVisualSpineChecks({
+    runCheck,
+    out,
+    state,
+    BASE,
+    CHROME,
+    sharedBrowser,
+    registerBrowser,
+    EXPECT_SHA,
+    artifactPath,
+    puppeteer,
+    db,
+    SHA7,
+  });
 
   await runCheck('I', async ({ setStage }) => {
     setStage('collaborator invite Alex');
