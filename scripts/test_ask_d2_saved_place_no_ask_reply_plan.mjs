@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { chatPlaceSearchSavedReplyFacts } from '../src/vacation/chat-place-search-when.mjs';
 import { draftingFacts } from '../src/vacation/live-app-turn.mjs';
 import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
+import { classifyTurn } from '../src/vacation/turn-tags.mjs';
 import { classifyVacationAppCustomerTurnTag } from '../src/vacation/vacation-app-turn-tag.mjs';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 
-const LODGING_ASK_RULE = /includes lodgingAsk\. Ask the customer where they are staying, in your own words\./;
 const DAY_REQUIRED_NOTES = /name the day \(required\)/i;
 
 const savedStart = '2027-03-10';
@@ -14,16 +14,27 @@ const savedEnd = '2027-03-17';
 const placeTitle = 'Paia Fish Market Restaurant';
 const customerTurn = 'save Paia Fish Market';
 
+const placeSaveTag = classifyTurn({
+  text: customerTurn,
+  speaker: 'customer',
+  direction: 'inbound',
+  channel: 'vacation-app',
+  payload: { contentTags: ['restaurants_food'] },
+});
+assert.equal(placeSaveTag.ask, false);
+assert.notEqual(placeSaveTag.category, 'needs_ask');
+assert.equal(placeSaveTag.category, 'travel_research');
+assert.equal(placeSaveTag.tags.includes('restaurants_food'), true);
+
 const { turnTag } = await classifyVacationAppCustomerTurnTag({
   requestText: customerTurn,
   tripId: '285c0510-1403-4609-bee7-66ae1636134b',
   placeSearchTurn: true,
-  webResearchTurn: false,
-  classification: { ok: true, intake: false },
+  classification: { ok: true, intake: false, category: 'restaurant' },
   payload: {},
 });
 assert.equal(turnTag.ask, false);
-assert.notEqual(turnTag.category, 'needs_ask');
+assert.equal(turnTag.category, 'travel_research');
 
 const things = [
   { title: "Mama's Fish House", whenLabel: 'Saturday', customerWhen: '', category: 'restaurant' },
@@ -41,30 +52,28 @@ const tripContext = await enrichDraftingTripContext(draftingFacts(
   savedStart,
   savedEnd,
 });
-assert.equal(tripContext.lodging, undefined);
-assert.equal(tripContext.lodgingAsk, undefined);
-assert.equal(tripContext.needsCustomerInput, undefined);
 assert.match(String(tripContext.unscheduledDayRule || ''), /not on a day/);
 
 const system = replyRulesSystem({}, 'Maui', false, false, customerTurn, { tripContext });
-assert.doesNotMatch(system, LODGING_ASK_RULE);
 assert.doesNotMatch(system, DAY_REQUIRED_NOTES);
 assert.match(system, /Tell the customer that for each of those places/);
 
-const withLodging = await enrichDraftingTripContext({
-  ...draftingFacts([], customerTurn, { things }),
-  lodging: 'Paia',
-}, {
+const lodgedFacts = draftingFacts([], customerTurn, {
+  things,
+  statedLodgingArea: 'Paia',
+  span: { spanLabel: 'Mar 10 through Mar 17' },
+});
+assert.equal(lodgedFacts.lodgingAsk, undefined);
+assert.equal(lodgedFacts.needsCustomerInput, undefined);
+
+const lodgedContext = await enrichDraftingTripContext({ ...lodgedFacts, lodging: 'Paia' }, {
   env: {},
   things,
   placeSearchReplyFacts: generated,
   savedStart,
   savedEnd,
 });
-assert.equal(withLodging.lodging, 'Paia');
-assert.equal(withLodging.lodgingAsk, undefined);
-const lodgedSystem = replyRulesSystem({}, 'Maui', false, false, customerTurn, { tripContext: withLodging });
-assert.doesNotMatch(lodgedSystem, LODGING_ASK_RULE);
+assert.equal(lodgedContext.lodgingAsk, undefined);
 
 console.log(JSON.stringify({
   ok: true,

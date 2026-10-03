@@ -10,7 +10,7 @@ import {
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
-import { customerInputState, tripIsoDay } from './intake-shared-trip.mjs';
+import { customerInputState, statedLodgingLabelFromThings, tripIsoDay } from './intake-shared-trip.mjs';
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs'; import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
@@ -404,18 +404,18 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
-    ...customerInputState(things),
-    ...customerInputFields(record),
+    ...customerInputState(things, record),
+    ...customerInputFields(record, things),
   };
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
 }
 
-function customerInputFields(record) {
+function customerInputFields(record, things = []) {
   if (!record || typeof record !== 'object') return {};
   const fields = {};
   if (Array.isArray(record.needsCustomerInput)) {
-    const needsCustomerInput = record.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
+    const needsCustomerInput = record.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean).filter((item) => item !== 'lodging' || !(statedLodgingLabelFromThings(things) || String(record.lodging || record.statedLodgingArea || record.statedLodgingAreaHint || '').trim()));
     if (needsCustomerInput.length) { fields.needsCustomerInput = needsCustomerInput; if (needsCustomerInput.some((item) => item === 'lodging')) fields.lodgingAsk = true; }
   }
   const flightAsk = String(record.flightAsk || '').trim();
@@ -1429,7 +1429,7 @@ export async function loadSavedTripRecord(session, env = process.env) {
       }),
       party: meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : null,
       rule: meta.intakeRule || '',
-      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true,
+      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true, statedLodgingArea: String(meta.statedLodgingArea || meta.statedLodgingAreaHint || '').trim(),
     };
   } catch {
     return null;
@@ -1476,7 +1476,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     planOwned: saved?.planOwned === true,
     purchased_plan: String(saved?.purchased_plan || saved?.ownerPlan?.checkout_plan || '').trim(), rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
-    ...customerInputFields(saved),
+    ...customerInputFields(saved, things),
   };
 }
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null, placeSearchReplyFacts = null } = {}) {

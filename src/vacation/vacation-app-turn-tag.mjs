@@ -1,12 +1,14 @@
 import { classifyTurn, classifyTurnWithModel } from './turn-tags.mjs';
+import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { turnStageTimings } from './turn-stage-timings.mjs';
 
-function classifyAppTurnTag(input, { placeSearchTurn = false, webResearchTurn = false } = {}) {
-  const tagged = classifyTurn(input);
-  if ((placeSearchTurn || webResearchTurn) && tagged.category === 'needs_ask') {
-    return { ...tagged, category: 'travel_research', ask: false };
-  }
-  return tagged;
+function placeSearchContentTags(classification, webResearchTurn) {
+  if (webResearchTurn) return ['activities_experiences'];
+  const cat = normalizePlaceSearchCategory(classification?.category);
+  if (cat === 'restaurant') return ['restaurants_food'];
+  if (cat === 'grocery' || cat === 'market' || cat === 'store') return ['shopping'];
+  if (cat) return ['activities_experiences'];
+  return [];
 }
 
 export async function classifyVacationAppCustomerTurnTag({
@@ -21,13 +23,18 @@ export async function classifyVacationAppCustomerTurnTag({
   const intakeTurn = classification?.ok === true && classification?.intake === true;
   const turnTagStarted = Date.now();
   const turnTag = (tripId && (placeSearchTurn || webResearchTurn)) || intakeTurn
-    ? classifyAppTurnTag({
+    ? classifyTurn({
       text: requestText,
       speaker: 'customer',
       direction: 'inbound',
       channel: 'vacation-app',
-      payload,
-    }, { placeSearchTurn, webResearchTurn })
+      payload: {
+        ...payload,
+        contentTags: (placeSearchTurn || webResearchTurn)
+          ? placeSearchContentTags(classification, webResearchTurn)
+          : (Array.isArray(payload?.contentTags) ? payload.contentTags : []),
+      },
+    })
     : await classifyTurnWithModel({
       text: requestText,
       speaker: 'customer',

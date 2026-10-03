@@ -36,32 +36,6 @@ function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
   };
 }
 
-function stripLodgingAskFields(ctx) {
-  if (!ctx || typeof ctx !== 'object') return ctx;
-  const next = { ...ctx };
-  delete next.lodgingAsk;
-  if (Array.isArray(next.needsCustomerInput)) {
-    const rest = next.needsCustomerInput.map((item) => String(item || '').trim()).filter((item) => item && item !== 'lodging');
-    if (rest.length) next.needsCustomerInput = rest;
-    else delete next.needsCustomerInput;
-  }
-  return next;
-}
-
-function stripLodgingAskWhenLodgingKnown(ctx) {
-  if (!ctx || typeof ctx !== 'object') return ctx;
-  if (!String(ctx.lodging || '').trim()) return ctx;
-  return stripLodgingAskFields(ctx);
-}
-
-function stripLodgingAskForPlainUnscheduledPlaceSave(ctx, placeSearchReplyFacts) {
-  const rows = placeSearchReplyFacts?.chatPlaceSearch?.unscheduled;
-  if (!Array.isArray(rows) || !rows.length) return ctx;
-  const plainUnscheduled = rows.some((row) => row?.notOnADay === true && row?.weekdayAmbiguous !== true);
-  if (!plainUnscheduled) return ctx;
-  return stripLodgingAskFields(ctx);
-}
-
 function applyUnscheduledDayStatus(ctx) {
   if (!ctx || typeof ctx !== 'object' || !Array.isArray(ctx.itinerary)) return ctx;
   const search = ctx.chatPlaceSearch;
@@ -147,11 +121,8 @@ export async function enrichDraftingTripContext(tripContext, {
   let ctx = applySavedJobDatesToReplyFacts(tripContext, { savedStart, savedEnd });
   ctx = applyTurnInviteReplyFacts(ctx, turnActionResults);
   ctx = applyPlaceSearchReplyFacts(ctx, placeSearchReplyFacts);
-  ctx = stripLodgingAskForPlainUnscheduledPlaceSave(ctx, placeSearchReplyFacts);
   if (!ctx.chatPlaceSearch) {
-    const extractionFacts = chatExtractionReplyFacts(wantedThings, savedStart, savedEnd);
-    ctx = applyPlaceSearchReplyFacts(ctx, extractionFacts);
-    ctx = stripLodgingAskForPlainUnscheduledPlaceSave(ctx, extractionFacts);
+    ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
   }
   const unscheduledRule = String(ctx.chatPlaceSearch?.unscheduledDayRule || '').trim();
   if (unscheduledRule) ctx = { ...ctx, unscheduledDayRule: unscheduledRule };
@@ -160,9 +131,7 @@ export async function enrichDraftingTripContext(tripContext, {
     const label = statedLodgingLabelFromThings(things);
     if (label) ctx.lodging = label;
   }
-  if (!env?.DATABASE_URL || !session?.customer_id) {
-    return stripLodgingAskWhenLodgingKnown(applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults)));
-  }
+  if (!env?.DATABASE_URL || !session?.customer_id) return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
   try {
     const { sql } = await import('./db.mjs');
     const db = sql(env);
@@ -178,8 +147,8 @@ export async function enrichDraftingTripContext(tripContext, {
       tripId,
       onboardingSessionId: session?.id || '',
     });
-    return stripLodgingAskWhenLodgingKnown(applyUnscheduledDayStatus(applyTripReplyGate(applyPendingInviteReplyFacts(ctx, pendingInviteReplyFacts(pendingRows)), things, inTurnPlaceResults)));
+    return applyUnscheduledDayStatus(applyTripReplyGate(applyPendingInviteReplyFacts(ctx, pendingInviteReplyFacts(pendingRows)), things, inTurnPlaceResults));
   } catch {
-    return stripLodgingAskWhenLodgingKnown(applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults)));
+    return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
   }
 }

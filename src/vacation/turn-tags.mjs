@@ -39,8 +39,10 @@ function categoryFor(tags) {
   if (tags.some((tag) => ['lodging', 'flights', 'cars_transport', 'restaurants_food', 'activities_experiences', 'shopping'].includes(tag))) return 'travel_research';
   if (tags.some((tag) => ['destination', 'dates', 'travelers', 'budget', 'constraints_preferences'].includes(tag))) return 'trip_intake';
   if (tags.includes('assistant_response') && !tags.includes('customer_request')) return 'assistant_response';
-  return 'needs_ask';
+  return 'customer_turn';
 }
+
+const CONTENT_TAG_SET = new Set(CONTENT_TAGS);
 
 /** Speaker and payload tags only. Customer-word tags come from the model. */
 export function classifyTurn({ speaker = '', direction = '', channel = '', payload = {} } = {}) {
@@ -49,6 +51,10 @@ export function classifyTurn({ speaker = '', direction = '', channel = '', paylo
   if (speaker === 'system' || /error/.test(String(channel || ''))) tags.push('support_problem');
   if (direction === 'inbound' || speaker === 'customer') tags.push('customer_request');
   if (payload?.voice || payload?.transcriptionModel) tags.push('voice_note');
+  for (const tag of Array.isArray(payload?.contentTags) ? payload.contentTags : []) {
+    const name = String(tag || '').trim();
+    if (CONTENT_TAG_SET.has(name)) tags.push(name);
+  }
   const finalTags = unique(tags);
   const category = categoryFor(finalTags);
   return {
@@ -58,7 +64,7 @@ export function classifyTurn({ speaker = '', direction = '', channel = '', paylo
     confidence: finalTags.length ? 0.9 : 0.2,
     travelTags: [],
     outsideTags: [],
-    ask: category === 'needs_ask',
+    ask: false,
   };
 }
 

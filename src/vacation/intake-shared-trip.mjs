@@ -237,8 +237,8 @@ function recordInputKind(record = {}) {
   return transportKind(record);
 }
 
-/** Missing lodging facts only. No wording. */
-export function customerInputState(records = []) {
+export function customerInputState(records = [], trip = {}) {
+  if (statedLodgingLabelFromThings(records) || String(trip?.lodging || trip?.statedLodgingArea || trip?.statedLodgingAreaHint || '').trim()) return {};
   const present = new Set();
   for (const record of records || []) {
     const kind = recordInputKind(record);
