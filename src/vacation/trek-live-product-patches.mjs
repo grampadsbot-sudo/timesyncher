@@ -46,14 +46,14 @@ const MAP_SETTINGS_FALLBACK_B = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.
 const THING_LOGO_CHIP_NEEDLE = 'children:[n.jsx("span",{children:ua}),zt&&n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"}})]})';
 const THING_LOGO_CHIP_PATCH = 'children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{width:"100%",height:"100%",maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block",padding:3,boxSizing:"border-box"}})]:[n.jsx("span",{style:{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})';
 
-export function stripSharedBudgetTab(source = '') {
+function stripSharedBudgetTab(source = '') {
   let js = String(source || '');
   js = js.replace(/,\.\.\.Tn!=null&&Tn\.share_budget\?\[\{id:"budget",label:"Budget",icon:"💵"\}\]:\[\]/g, '');
   js = js.replace(/,\.\.\.Tn!=null&&Tn\.share_budget\?\[\{id:"budget",label:x\("shared\.tabBudget"\),Icon:rm\}\]:\[\]/g, '');
   return js;
 }
 
-export function patchThingLogoChipAlignment(source = '') {
+function patchThingLogoChipAlignment(source = '') {
   let js = String(source || '');
   if (!js.includes(THING_LOGO_CHIP_NEEDLE)) {
     if (js.includes(THING_LOGO_CHIP_PATCH)) return js;
