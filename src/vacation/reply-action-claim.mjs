@@ -213,32 +213,3 @@ export function failReplyActionClaim(reason, tripId = '') {
   console.error(JSON.stringify({ reason, tripId: id }));
   throw new ReplyActionClaimBlockedError(reason, id);
 }
-
-export async function blockVacationAppReplyActionClaim({
-  replyText,
-  tripId,
-  turnActionResults,
-  replyClaimContext = null,
-  db,
-  turnId,
-  payload,
-  customerLive,
-  base,
-  storeReplyFailure,
-}) {
-  const reason = replyActionClaimReason(replyText, turnActionResults, replyClaimContext);
-  if (!reason) return null;
-  try {
-    failReplyActionClaim(reason, tripId);
-  } catch (error) {
-    if (error?.name !== 'reply_action_claim_blocked') throw error;
-    const replyFailure = 'reply_action_claim_blocked';
-    payload.replyFailure = replyFailure;
-    customerLive.replyFailure = replyFailure;
-    payload.blockedReasons = [String(error.reason || reason)];
-    customerLive.blockedReasons = payload.blockedReasons;
-    await storeReplyFailure(db, turnId, payload);
-    return { ...base, ok: false, status: 'reply_unavailable', error: replyFailure };
-  }
-  return null;
-}
