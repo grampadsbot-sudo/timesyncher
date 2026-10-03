@@ -190,7 +190,9 @@ async function runScenario(page, origin, width) {
 
   const planTab = await page.$('button[title="Plan"],button[title*="Plan"]');
   if (planTab) await planTab.click();
-  await page.waitForSelector('.leaflet-container', { timeout: 30000 }).catch(() => {});
+  await page.waitForSelector('.leaflet-container', { timeout: 30000 }).catch((error) => {
+    if (error?.name !== 'TimeoutError') throw error;
+  });
   await sleep(1200);
   all.push(...await sampleSurface(page, { surface: 'plan-map', width, place: 'plan-map' }));
 
@@ -206,7 +208,9 @@ async function runScenario(page, origin, width) {
       width,
       place: index === 0 ? 'hotel-detail' : 'car-detail',
     }));
-    await page.keyboard.press('Escape').catch(() => {});
+    await page.keyboard.press('Escape').catch((error) => {
+      if (error?.name !== 'TargetCloseError') throw error;
+    });
     await sleep(400);
   }
 
