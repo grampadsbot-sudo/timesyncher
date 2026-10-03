@@ -2,12 +2,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { SMOKE_PARALLEL_CONCURRENCY } from './shepherd-staging-smoke-plan.mjs';
 import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
 import { captureVisualStateScreenshots } from './shepherd-staging-smoke-visual-capture.mjs';
-import {
-  VISUAL_JUDGE_MODEL,
-  VISUAL_RUBRIC_VERSION,
-  judgeScreenshotsParallel,
-} from './shepherd-staging-smoke-visual-judge.mjs';
-import { loadVisualScreenSpec } from './shepherd-staging-smoke-visual-rubric.mjs';
+import { VISUAL_JUDGE_MODEL, judgeScreenshotsParallel } from './shepherd-staging-smoke-visual-judge.mjs';
+import { VISUAL_RUBRIC_VERSION, loadVisualScreenSpec } from './shepherd-staging-smoke-visual-rubric.mjs';
 
 function visualArtifactDir(baseDir, expectSha) {
   const dir = `${baseDir}/${expectSha}-visual`;

@@ -192,27 +192,18 @@ export function webEditorInviteEmail({ grant, token, env = process.env }) {
   return { subject, textBody, htmlBody };
 }
 
-async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
-  const apiKey = env.RESEND_API_KEY || env.TIMESYNCHER_RESEND_API_KEY || '';
-  if (!apiKey) return null;
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: fromEmail(env),
-      to,
-      subject,
-      html: htmlBody,
-      text: textBody,
-    }),
-  });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(json.message || json.error || `Resend ${response.status}`);
-  return { provider: 'resend', providerMessageId: json.id || null };
-}
+import {
+  resendAttemptFields,
+  sendWithResend,
+} from './email-harness-outbound.mjs';
+
+export {
+  extractResendResponseMetadata,
+  harnessOutboundEmailAllowed,
+  outboundEmailPassesSmokeHarness,
+  resendAttemptFields,
+  sendWithResend,
+} from './email-harness-outbound.mjs';
 
 export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env) {
   const to = cleanText(onboarding.contact?.email, 180).toLowerCase();
@@ -241,20 +232,21 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
-    const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
-      provider = sent.provider;
-      providerMessageId = sent.providerMessageId;
-      status = 'sent';
-      sentAt = new Date().toISOString();
-    }
+    const sent = await sendWithResend({ to, ...message, env, fromEmailFn: fromEmail });
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(sent, null));
   } catch (error) {
-    provider = 'resend';
-    status = 'failed';
-    errorSummary = cleanText(error.message, 1000);
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(null, error));
   }
+
+  const emailMetadata = {
+    onboardingUrl: onboarding.onboardingUrl,
+    vacationAppUrl: onboarding.vacationAppUrl,
+    launchUrl: message.launchUrl,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -268,11 +260,7 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
           status = ${status},
           error_summary = ${errorSummary},
           sent_at = ${sentAt},
-          metadata = metadata || ${{
-            onboardingUrl: onboarding.onboardingUrl,
-            vacationAppUrl: onboarding.vacationAppUrl,
-            launchUrl: message.launchUrl,
-          }}
+          metadata = metadata || ${emailMetadata}
         where id = ${existing[0].id}
         returning id
       `
@@ -284,11 +272,7 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
         values (
           ${onboarding.customerId}, ${onboarding.orderId}, ${onboarding.session.id}, ${to},
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
-          ${providerMessageId}, ${status}, ${errorSummary}, ${{
-            onboardingUrl: onboarding.onboardingUrl,
-            vacationAppUrl: onboarding.vacationAppUrl,
-            launchUrl: message.launchUrl,
-          }}, ${sentAt}
+          ${providerMessageId}, ${status}, ${errorSummary}, ${emailMetadata}, ${sentAt}
         )
         returning id
       `;
@@ -350,20 +334,20 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
-    const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
-      provider = sent.provider;
-      providerMessageId = sent.providerMessageId;
-      status = 'sent';
-      sentAt = new Date().toISOString();
-    }
+    const sent = await sendWithResend({ to, ...message, env, fromEmailFn: fromEmail });
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(sent, null));
   } catch (error) {
-    provider = 'resend';
-    status = 'failed';
-    errorSummary = cleanText(error.message, 1000);
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(null, error));
   }
+
+  const inviteMetadata = {
+    collaboratorInviteId: invite.id,
+    toEmail: to,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -377,10 +361,7 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           status = ${status},
           error_summary = ${errorSummary},
           sent_at = ${sentAt},
-          metadata = metadata || ${{
-            collaboratorInviteId: invite.id,
-            toEmail: to,
-          }}
+          metadata = metadata || ${inviteMetadata}
         where id = ${existing[0].id}
         returning id
       `
@@ -395,6 +376,7 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           ${providerMessageId}, ${status}, ${errorSummary}, ${{
             collaboratorInviteId: invite.id,
             collaboratorRequestedFor: normalizedContact.displayName || null,
+            ...resendMetadata,
           }}, ${sentAt}
         )
         returning id
@@ -422,20 +404,23 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
-    const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
-      provider = sent.provider;
-      providerMessageId = sent.providerMessageId;
-      status = 'sent';
-      sentAt = new Date().toISOString();
-    }
+    const sent = await sendWithResend({ to, ...message, env, fromEmailFn: fromEmail });
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(sent, null));
   } catch (error) {
-    provider = 'resend';
-    status = 'failed';
-    errorSummary = cleanText(error.message, 1000);
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(null, error));
   }
+
+  const webMetadata = {
+    webAccessGrantId: grant.id,
+    webAccessAcceptUrl: webAccessAcceptUrl(token, env),
+    toEmail: to,
+    tripId: grant.trip_id,
+    role: grant.role,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -449,6 +434,7 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
             webAccessGrantId: grant.id,
             webAccessAcceptUrl: webAccessAcceptUrl(token, env),
             toEmail: to,
+            ...resendMetadata,
           }}
         where id = ${existing[0].id}
         returning id
@@ -461,13 +447,7 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
         values (
           ${grant.owner_customer_id}, null, null, ${to},
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
-          ${providerMessageId}, ${status}, ${errorSummary}, ${{
-            webAccessGrantId: grant.id,
-            webAccessAcceptUrl: webAccessAcceptUrl(token, env),
-            toEmail: to,
-            tripId: grant.trip_id,
-            role: grant.role,
-          }}, ${sentAt}
+          ${providerMessageId}, ${status}, ${errorSummary}, ${webMetadata}, ${sentAt}
         )
         returning id
       `;
