@@ -171,10 +171,11 @@ const unscheduled = replyFacts.chatPlaceSearch.unscheduled;
 assert.equal(unscheduled.length, 1);
 assert.equal(unscheduled[0].title, 'Paia Fish Market');
 assert.equal(unscheduled[0].notOnADay, true);
-assert.equal(replyFacts.unscheduledDayRule, 'Each place in unscheduled is not on a day. Tell the customer that for each of those places.');
+assert.equal(replyFacts.unscheduledDayRule, undefined);
 assert.deepEqual(replyFacts.chatPlaceSearch.scheduled[0].dates, ['2027-03-13']);
 const system = replyRulesSystem({}, 'Maui', false, false, 'add Paia Fish Market', { tripContext: replyFacts });
-assert.match(system.slice(0, system.indexOf('Saved trip record:')), /Tell the customer that for each of those places/);
+assert.doesNotMatch(system, /Tell the customer that for each of those places/);
+assert.doesNotMatch(system, /name the day \(required\)/i);
 
 const stringTrip = tripRow('6ce5eb7d-10f9-4022-ae4b-85620a616116', '2027-03-10', '2027-03-17');
 const created = chatDb(stringTrip);
