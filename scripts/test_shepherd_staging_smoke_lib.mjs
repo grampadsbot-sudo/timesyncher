@@ -23,6 +23,9 @@ import {
   gradeAskD2NoQuestionReply,
   replyHasLodgingQuestion,
   persistedLodgingAskSignals,
+  isRealBrandLogoSrc,
+  gradeSharedTabLogoUrlRecords,
+  gradeCarTabRowIcons,
 } from './shepherd-staging-smoke-lib.mjs';
 
 assert.equal(isoDateFromStartsAt(new Date('2027-03-13T12:00:00.000Z')), '2027-03-13');
@@ -174,13 +177,35 @@ const geoFail = gradeLogoChipRow({
   contentCenterDxPx: 4,
   contentCenterDyPx: 0,
   paddingAsymmetryPx: { left: 1, right: 5, top: 2, bottom: 2 },
-  com: { dxPx: 0.5, dyPx: 0.5 },
+  com: { dxPx: 2, dyPx: 0.5 },
 });
 assert.equal(geoFail.pass, false);
-assert.equal(geoFail.geometryCentered, false);
 
-const tabFail = gradeLogoTabResult({ tab: 'hotels', clicked: true, rows: [geoFail] });
+const tabFail = gradeLogoTabResult({
+  tab: 'hotels',
+  clicked: true,
+  rows: [],
+  logoUrlEvidence: { ok: true, records: [{ hasLogoUrl: true }] },
+});
 assert.equal(tabFail.pass, false);
+assert.equal(tabFail.failReason, 'zero_brand_imgs_with_real_src');
+
+const logoUrlFail = gradeLogoTabResult({
+  tab: 'hotels',
+  clicked: true,
+  rows: [{ isBrandImg: true, com: { dxPx: 0.5, dyPx: 0.5 } }],
+  logoUrlEvidence: gradeSharedTabLogoUrlRecords({
+    places: [{ id: 1, name: 'Westin', category_name: 'hotel' }],
+    thingOverrides: { 'place:1': {} },
+  }, 'hotels'),
+});
+assert.equal(logoUrlFail.pass, false);
+assert.equal(logoUrlFail.logoUrlEvidence.missingLogoUrlCount, 1);
+
+assert.equal(isRealBrandLogoSrc('https://cdn.example/logo.png'), true);
+assert.equal(isRealBrandLogoSrc(''), false);
+assert.equal(gradeCarTabRowIcons({ hasPlane: true, hasCar: true, rowCount: 1 }).pass, false);
+assert.equal(gradeCarTabRowIcons({ hasPlane: false, hasCar: true, rowCount: 1 }).pass, true);
 
 const suspects = attributeLogoMisalignmentCss({ liAlignItems: 'flex-start', imgMargin: '0px auto' });
 assert.ok(suspects.some((s) => s.file.includes('trek-style2-bundle.mjs')));
