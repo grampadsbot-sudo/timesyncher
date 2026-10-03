@@ -103,25 +103,22 @@ async function waitForSharedMapReadyHook(page, stageTimestamps) {
 }
 
 async function waitForSharedTabShellHydration(page, stageTimestamps) {
-  await new Promise((r) => setTimeout(r, 1500));
+  await new Promise((r) => setTimeout(r, 800));
   stageTimestamps.mapReadyWaitStartMs = Date.now();
   stageTimestamps.leafletWaitStartMs = stageTimestamps.mapReadyWaitStartMs;
   const timeout = SHARED_MAP_READY_WAIT_MS;
-  const tabShellFn = () => {
-    const tabBar = document.querySelector('[role="tablist"]')
-      || document.querySelector('[data-ts-shared-tab-bar]')
-      || document.querySelector('nav');
-    const tabs = Array.from(document.querySelectorAll('button, [role="tab"], [data-ts-tab]'));
-    if (!tabBar || tabs.length < 2) return false;
-    const norm = (text) => String(text || '')
+  const sharedIntakeReadyFn = () => {
+    const text = document.body?.innerText || '';
+    if (!/Day-by-Day/i.test(text)) return false;
+    const norm = (raw) => String(raw || '')
       .replace(/\p{Extended_Pictographic}/gu, '')
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();
-    const labels = tabs.map((node) => norm(node.textContent));
-    return labels.some((label) => label.includes('budget'))
-      && labels.some((label) => label.includes('hotel'))
-      && labels.some((label) => label.includes('car'));
+    const buttons = Array.from(document.querySelectorAll('button, [role="tab"]'));
+    const labels = buttons.map((node) => norm(node.textContent));
+    return labels.some((label) => label.includes('day-by-day'))
+      && (labels.some((label) => label.includes('hotel')) || labels.some((label) => label.includes('budget')));
   };
   const mapHookFn = () => {
     const mapEl = document.querySelector(
@@ -133,7 +130,7 @@ async function waitForSharedTabShellHydration(page, stageTimestamps) {
   };
   try {
     await Promise.race([
-      page.waitForFunction(tabShellFn, { timeout }),
+      page.waitForFunction(sharedIntakeReadyFn, { timeout }),
       page.waitForFunction(mapHookFn, { timeout }),
     ]);
     stageTimestamps.mapReadyWaitEndMs = Date.now();
@@ -141,7 +138,7 @@ async function waitForSharedTabShellHydration(page, stageTimestamps) {
   } catch (err) {
     stageTimestamps.mapReadyWaitEndMs = Date.now();
     stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
-    if (await page.evaluate(tabShellFn)) {
+    if (await page.evaluate(sharedIntakeReadyFn)) {
       return;
     }
     stageTimestamps.hangingStage = 'shared_tab_shell';

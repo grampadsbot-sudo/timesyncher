@@ -1676,13 +1676,13 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
       reason: quality?.reason || 'quality_not_judged',
     };
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, tripContext });
+    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate });
     if (blocked) return blocked;
     return { reply: originalDraft, ...unjudged };
   }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, tripContext });
+    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate });
     if (blocked) return blocked;
     const shipped = stampShippedReply({
       reply: originalDraft,
@@ -2157,7 +2157,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     judgeMs,
   };
   if (pending.enforceInTurnPlaces) {
-    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true }, tripContext: pending.tripContext });
+    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true }, tripContext: pending.tripContext, tripPlaceAllowRows: pending.tripContext?.tripReplyGate });
     if (blocked) return { ...blocked, log: { ...log, rewriteFailReason: blocked.reason, held: true } };
   }
   const stamped = stampShippedReply({
