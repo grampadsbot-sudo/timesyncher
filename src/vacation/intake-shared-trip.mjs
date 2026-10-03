@@ -245,7 +245,7 @@ export function customerInputState(records = []) {
     if (kind === 'lodging') present.add('lodging');
   }
   if (present.has('lodging')) return {};
-  return { needsCustomerInput: ['lodging'] };
+  return { needsCustomerInput: ['lodging'], lodgingAsk: true };
 }
 
 function noteText(thing) {

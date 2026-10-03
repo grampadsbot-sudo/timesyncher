@@ -2,23 +2,29 @@
 import assert from 'node:assert/strict';
 import { chatPlaceSearchSavedReplyFacts } from '../src/vacation/chat-place-search-when.mjs';
 import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
+import { draftingFacts } from '../src/vacation/live-app-turn.mjs';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 
-const LODGING_ASK_RULE = /flags needsCustomerInput for lodging\. Ask the customer where they are staying, in your own words\./;
+const LODGING_ASK_RULE = /includes lodgingAsk\. Ask the customer where they are staying, in your own words\./;
 const FLIGHT_ASK_RULE = /includes flightAsk\. Ask the customer about their flights, in your own words\./;
 const GENERIC_STILL_NEEDED = /customer input that is still needed|Ask for that in your own words/i;
 
-const lodgingGap = replyRulesSystem({}, 'Maui', 'forbidden', false, 'We arrive Friday.', {
-  tripContext: {
-    itinerary: ['Swim: Monday'],
-    dates: 'Saved trip dates: Fri through Sun.',
-    roster: 'Traveling: Ada.',
-    needsCustomerInput: ['lodging'],
-  },
+const lodgingFacts = draftingFacts([], 'We arrive Friday.', {
+  things: [{ title: 'Swim', category: 'activity' }],
 });
+assert.equal(lodgingFacts.lodgingAsk, true);
+const lodgingGap = replyRulesSystem({}, 'Maui', 'forbidden', false, 'We arrive Friday.', { tripContext: lodgingFacts });
 assert.match(lodgingGap, LODGING_ASK_RULE);
 assert.doesNotMatch(lodgingGap, FLIGHT_ASK_RULE);
 assert.doesNotMatch(lodgingGap, GENERIC_STILL_NEEDED);
+
+const nonLodgingGap = draftingFacts([], 'We arrive Friday.', {
+  things: [{ title: 'Kona house', category: 'hotel', metadata: { customerStatedLodging: true } }],
+  needsCustomerInput: ['car'],
+});
+assert.equal(Object.hasOwn(nonLodgingGap, 'lodgingAsk'), false);
+const nonLodgingPrompt = replyRulesSystem({}, 'Maui', 'forbidden', false, 'We arrive Friday.', { tripContext: nonLodgingGap });
+assert.doesNotMatch(nonLodgingPrompt, LODGING_ASK_RULE);
 
 const flightAsk = replyRulesSystem({}, 'Maui', 'forbidden', false, 'We land Tuesday.', {
   tripContext: {

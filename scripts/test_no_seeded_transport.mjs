@@ -157,6 +157,6 @@ assert.doesNotMatch(intake, /People matter more/);
 const keepsake = await readFile(new URL('../src/vacation/keepsake-list-minimums.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(keepsake, /first-pass catalog/);
 const replyRules = await readFile(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
-assert.doesNotMatch(replyRules, /preferredAirline/);
+assert.doesNotMatch(replyRules, /preferredAirline|needsCustomerInput/);
 
 console.log('no seeded transport');

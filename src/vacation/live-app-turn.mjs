@@ -417,6 +417,7 @@ function customerInputFields(record) {
   if (Array.isArray(record.needsCustomerInput)) {
     const needsCustomerInput = record.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
     if (needsCustomerInput.length) fields.needsCustomerInput = needsCustomerInput;
+    if (needsCustomerInput.some((item) => item === 'lodging')) fields.lodgingAsk = true;
   }
   const flightAsk = String(record.flightAsk || '').trim();
   if (flightAsk) fields.flightAsk = flightAsk;
