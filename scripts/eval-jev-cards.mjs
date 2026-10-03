@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { classify, loadBaselineFile } from './check-hardcoded-content.mjs';
 import { cardRecords, jevCardFindings, questionsFrom, receiptMatches } from './jev-cards.mjs';
-import { parseJevRelevanceScoreAnswer } from '../src/vacation/place-relevance-judge.mjs';
+import { parseJevRelevanceScoreAnswer } from '../src/vacation/place-relevance-score-parse.mjs';
 
 const THRESHOLD = 0.8;
 const KEY_NAMES = [
