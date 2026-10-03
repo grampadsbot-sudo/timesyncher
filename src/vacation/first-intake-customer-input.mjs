@@ -10,14 +10,26 @@ export function firstIntakeLodgingCustomerInput(savedThings = [], wantedThings =
   return customerInputState(records);
 }
 
+const FIRST_INTAKE_GAP_ORDER = ['where', 'when', 'who', 'lodging', 'plans', 'invite_contact'];
+
+function finalizeFirstIntakeGaps(facts = {}) {
+  if (!facts || typeof facts !== 'object') return facts;
+  const present = new Set(Array.isArray(facts.gaps) ? facts.gaps : []);
+  if (facts.lodgingAsk === true) present.add('lodging');
+  if (facts.invite_contact_needed === true) present.add('invite_contact');
+  if (present.size) facts.gaps = FIRST_INTAKE_GAP_ORDER.filter((key) => present.has(key));
+  return facts;
+}
+
 export function applyCustomerInputToFirstIntakeFacts(facts, inputState = {}) {
   if (!facts || typeof facts !== 'object') return facts;
-  if (inputState?.lodgingAsk !== true) return facts;
-  facts.lodgingAsk = true;
-  if (Array.isArray(inputState.needsCustomerInput) && inputState.needsCustomerInput.length) {
-    facts.needsCustomerInput = inputState.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
+  if (inputState?.lodgingAsk === true) {
+    facts.lodgingAsk = true;
+    if (Array.isArray(inputState.needsCustomerInput) && inputState.needsCustomerInput.length) {
+      facts.needsCustomerInput = inputState.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean);
+    }
   }
-  return facts;
+  return finalizeFirstIntakeGaps(facts);
 }
 
 export function attachFirstIntakeCustomerInputPayload(payload, inputState = {}) {

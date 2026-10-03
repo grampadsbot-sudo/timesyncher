@@ -66,12 +66,7 @@ export function intakeReplyBlockReasons(reply, banned = appTextBanned, facts = {
   const questions = questionCount(text);
   if (facts?.shape === 'gaps') {
     if (questions < 2 || questions > 3) reasons.push('first_intake_question_count_gaps');
-  } else if (facts?.shape !== 'no-trip') {
-    const dualAsk = facts?.lodgingAsk === true && facts?.invite_contact_needed === true;
-    if (dualAsk) {
-      if (questions < 1 || questions > 2) reasons.push('first_intake_question_count');
-    } else if (questions !== 1) reasons.push('first_intake_question_count');
-  }
+  } else if (facts?.shape !== 'no-trip' && questions !== 1) reasons.push('first_intake_question_count');
   return reasons;
 }
 
