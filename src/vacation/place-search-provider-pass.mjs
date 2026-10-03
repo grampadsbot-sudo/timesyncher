@@ -356,8 +356,12 @@ export async function runPlaceProviderPass({
   }
   let places = relevance.places;
   const relevanceRejections = relevance.rejections;
-  const namedTargetKind = normalizePlaceSearchTargetKind(placeQueries?.[0]?.targetKind);
-  const namedFinalize = finalizeNamedPlaceSearchResults(places, namedTargetKind);
+  const singleNamedPlaceQuery = placeQueries.length === 1
+    && normalizePlaceSearchTargetKind(placeQueries[0]?.targetKind) === 'named_place';
+  const namedFinalize = finalizeNamedPlaceSearchResults(
+    places,
+    singleNamedPlaceQuery ? 'named_place' : '',
+  );
   if (namedFinalize.ambiguous) {
     const titles = (namedFinalize.namedPlaceCandidates || []).map((row) => row.title).filter(Boolean).join(', ');
     fail(
