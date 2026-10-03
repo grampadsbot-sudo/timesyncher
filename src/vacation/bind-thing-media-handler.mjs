@@ -13,6 +13,7 @@ import {
   resolveThingFromShared,
   sniffMediaType,
 } from './thing-media-bind.mjs';
+import { sendCachedBindingMedia } from './bind-thing-media-cache.mjs';
 import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
 const MAX_BYTES = Number.parseInt(process.env.TIMESYNCHER_MEDIA_BIND_MAX_BYTES || '20971520', 10);
@@ -282,11 +283,7 @@ export default async function handler(req, res) {
         if (!media) {
           return sendJson(res, 404, { ok: false, error: 'Bound media bytes were not found.' });
         }
-        res.statusCode = 200;
-        res.setHeader('content-type', media.mimeType);
-        res.setHeader('cache-control', 'public, max-age=3600');
-        res.setHeader('content-disposition', `inline; filename="${media.originalName.replace(/"/g, '')}"`);
-        res.end(media.bytes);
+        sendCachedBindingMedia(res, req, media);
         return;
       }
       if (!shareToken) {

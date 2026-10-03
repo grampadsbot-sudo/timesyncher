@@ -170,11 +170,15 @@ assert.ok(!hotelMerged.places[0].image_url);
 const handler = await readFile(new URL('../src/vacation/bind-thing-media-handler.mjs', import.meta.url), 'utf8');
 assert.match(handler, /chooseMediaStorage/);
 assert.match(handler, /getBindingMedia/);
+assert.match(handler, /sendCachedBindingMedia/);
+assert.match(handler, /raw/);
+assert.doesNotMatch(handler, /410/);
 assert.match(handler, /storeBytes/);
 assert.match(handler, /sniffMediaType/);
 
 const store = await readFile(new URL('../src/vacation/thing-media-store.mjs', import.meta.url), 'utf8');
 assert.match(store, /file_bytes bytea/);
+assert.match(store, /getBindingMedia/);
 assert.match(store, /catch \{\s*return null;/);
 
 console.log('thing media bind tests passed');
