@@ -202,9 +202,35 @@ export function harnessOutboundEmailAllowed(to, env = process.env) {
   return false;
 }
 
+/** Shepherd smoke + purchase paths: only real Resend sends pass (never stubbed/pending/failed). */
+export function outboundEmailPassesSmokeHarness(row = {}) {
+  if (!row || typeof row !== 'object') return false;
+  if (String(row.status || '') !== 'sent') return false;
+  return cleanText(row.provider_message_id, 200).length > 0;
+}
+
+export function extractResendResponseMetadata(response) {
+  if (!response?.headers) return {};
+  const meta = {};
+  const daily = response.headers.get('x-resend-daily-quota');
+  if (daily != null && String(daily).trim()) meta.resendDailyQuota = cleanText(daily, 120);
+  const ratelimit = {};
+  for (const [key, value] of response.headers.entries()) {
+    if (!/^ratelimit-/i.test(key)) continue;
+    ratelimit[key.toLowerCase()] = cleanText(value, 120);
+  }
+  if (Object.keys(ratelimit).length) meta.resendRatelimit = ratelimit;
+  return meta;
+}
+
 async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
   if (!harnessOutboundEmailAllowed(to, env)) {
-    return { provider: 'harness_stub', providerMessageId: null, stubbed: true };
+    return {
+      provider: 'harness_stub',
+      providerMessageId: null,
+      stubbed: true,
+      resendMetadata: { harnessStub: true },
+    };
   }
   const apiKey = env.RESEND_API_KEY || env.TIMESYNCHER_RESEND_API_KEY || '';
   if (!apiKey) return null;
@@ -222,9 +248,14 @@ async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
       text: textBody,
     }),
   });
+  const resendMetadata = extractResendResponseMetadata(response);
   const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(json.message || json.error || `Resend ${response.status}`);
-  return { provider: 'resend', providerMessageId: json.id || null };
+  if (!response.ok) {
+    const err = new Error(json.message || json.error || `Resend ${response.status}`);
+    err.resendMetadata = resendMetadata;
+    throw err;
+  }
+  return { provider: 'resend', providerMessageId: json.id || null, resendMetadata };
 }
 
 export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env) {
@@ -254,23 +285,34 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
     const sent = await sendWithResend({ to, ...message, env });
     if (sent?.stubbed) {
       provider = sent.provider;
       status = 'stubbed';
+      resendMetadata = sent.resendMetadata || { harnessStub: true };
     } else if (sent) {
       provider = sent.provider;
       providerMessageId = sent.providerMessageId;
       status = 'sent';
       sentAt = new Date().toISOString();
+      resendMetadata = sent.resendMetadata || {};
     }
   } catch (error) {
     provider = 'resend';
     status = 'failed';
     errorSummary = cleanText(error.message, 1000);
+    resendMetadata = error.resendMetadata || {};
   }
+
+  const emailMetadata = {
+    onboardingUrl: onboarding.onboardingUrl,
+    vacationAppUrl: onboarding.vacationAppUrl,
+    launchUrl: message.launchUrl,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -284,11 +326,7 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
           status = ${status},
           error_summary = ${errorSummary},
           sent_at = ${sentAt},
-          metadata = metadata || ${{
-            onboardingUrl: onboarding.onboardingUrl,
-            vacationAppUrl: onboarding.vacationAppUrl,
-            launchUrl: message.launchUrl,
-          }}
+          metadata = metadata || ${emailMetadata}
         where id = ${existing[0].id}
         returning id
       `
@@ -300,11 +338,7 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
         values (
           ${onboarding.customerId}, ${onboarding.orderId}, ${onboarding.session.id}, ${to},
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
-          ${providerMessageId}, ${status}, ${errorSummary}, ${{
-            onboardingUrl: onboarding.onboardingUrl,
-            vacationAppUrl: onboarding.vacationAppUrl,
-            launchUrl: message.launchUrl,
-          }}, ${sentAt}
+          ${providerMessageId}, ${status}, ${errorSummary}, ${emailMetadata}, ${sentAt}
         )
         returning id
       `;
@@ -366,23 +400,33 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
     const sent = await sendWithResend({ to, ...message, env });
     if (sent?.stubbed) {
       provider = sent.provider;
       status = 'stubbed';
+      resendMetadata = sent.resendMetadata || { harnessStub: true };
     } else if (sent) {
       provider = sent.provider;
       providerMessageId = sent.providerMessageId;
       status = 'sent';
       sentAt = new Date().toISOString();
+      resendMetadata = sent.resendMetadata || {};
     }
   } catch (error) {
     provider = 'resend';
     status = 'failed';
     errorSummary = cleanText(error.message, 1000);
+    resendMetadata = error.resendMetadata || {};
   }
+
+  const inviteMetadata = {
+    collaboratorInviteId: invite.id,
+    toEmail: to,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -396,10 +440,7 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           status = ${status},
           error_summary = ${errorSummary},
           sent_at = ${sentAt},
-          metadata = metadata || ${{
-            collaboratorInviteId: invite.id,
-            toEmail: to,
-          }}
+          metadata = metadata || ${inviteMetadata}
         where id = ${existing[0].id}
         returning id
       `
@@ -414,6 +455,7 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           ${providerMessageId}, ${status}, ${errorSummary}, ${{
             collaboratorInviteId: invite.id,
             collaboratorRequestedFor: normalizedContact.displayName || null,
+            ...resendMetadata,
           }}, ${sentAt}
         )
         returning id
@@ -441,23 +483,36 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
     const sent = await sendWithResend({ to, ...message, env });
     if (sent?.stubbed) {
       provider = sent.provider;
       status = 'stubbed';
+      resendMetadata = sent.resendMetadata || { harnessStub: true };
     } else if (sent) {
       provider = sent.provider;
       providerMessageId = sent.providerMessageId;
       status = 'sent';
       sentAt = new Date().toISOString();
+      resendMetadata = sent.resendMetadata || {};
     }
   } catch (error) {
     provider = 'resend';
     status = 'failed';
     errorSummary = cleanText(error.message, 1000);
+    resendMetadata = error.resendMetadata || {};
   }
+
+  const webMetadata = {
+    webAccessGrantId: grant.id,
+    webAccessAcceptUrl: webAccessAcceptUrl(token, env),
+    toEmail: to,
+    tripId: grant.trip_id,
+    role: grant.role,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -471,6 +526,7 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
             webAccessGrantId: grant.id,
             webAccessAcceptUrl: webAccessAcceptUrl(token, env),
             toEmail: to,
+            ...resendMetadata,
           }}
         where id = ${existing[0].id}
         returning id
@@ -483,13 +539,7 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
         values (
           ${grant.owner_customer_id}, null, null, ${to},
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
-          ${providerMessageId}, ${status}, ${errorSummary}, ${{
-            webAccessGrantId: grant.id,
-            webAccessAcceptUrl: webAccessAcceptUrl(token, env),
-            toEmail: to,
-            tripId: grant.trip_id,
-            role: grant.role,
-          }}, ${sentAt}
+          ${providerMessageId}, ${status}, ${errorSummary}, ${webMetadata}, ${sentAt}
         )
         returning id
       `;

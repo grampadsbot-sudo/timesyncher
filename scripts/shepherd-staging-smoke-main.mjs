@@ -3,6 +3,7 @@ const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
+import { outboundEmailPassesSmokeHarness } from '/workspace/src/vacation/email.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 import { prepareMapLogoIntakeShare } from './shepherd-staging-smoke-map-prep.mjs';
@@ -224,7 +225,7 @@ export async function runShepherdSmokeSpine(ctx) {
       select id, trip_id, status, metadata from vacation_collaborator_invites
       where owner_customer_id=${state.customerId} and metadata->>'email'=${INVITE_EMAIL} order by created_at desc limit 1`)[0];
     const iOutboundAll = await db`
-      select id, status, subject, to_email, html_body, text_body, metadata, error_summary from outbound_emails
+      select id, status, subject, to_email, html_body, text_body, metadata, error_summary, provider_message_id from outbound_emails
       where customer_id=${state.customerId} and to_email=${INVITE_EMAIL} order by created_at asc`;
     const ownerDisplay = (await db`select display_name, first_name from customers where id=${state.customerId} limit 1`)[0];
     const iAcceptPath = iInviteRow?.id ? `/accept/vacation-collaborator-${iInviteRow.id}` : '';
@@ -256,7 +257,8 @@ export async function runShepherdSmokeSpine(ctx) {
     }
     const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
     const iTitleOk = state.tripTitle && (outboundRow?.subject || '').includes(state.tripTitle);
-    const pass = inviteRes.status === 200 && iOutboundAll.length === 1 && outboundRow?.status === 'sent' && iLinkOk && iOwnerOk && iTitleOk;
+    const pass = inviteRes.status === 200 && iOutboundAll.length === 1
+      && outboundEmailPassesSmokeHarness(outboundRow) && iLinkOk && iOwnerOk && iTitleOk;
     return { pass, http: inviteRes.status };
   }, { timeoutMs: 60000 });
 
@@ -385,7 +387,7 @@ export async function runShepherdSmokeSpine(ctx) {
     const clGood = /emailed|pending|accept|invite/i.test(state.clReply);
     const clInviteOk = clTurn.json.turnActionResults?.invite?.ok === true || clInvite?.id;
     out.checkCL = { http: clTurn.status, reply: state.clReply, inviteDb: clInvite, outboundEmail: clOut, turnActionResults: clTurn.json.turnActionResults };
-    const pass = clTurn.status === 201 && clOut?.status === 'sent' && clInviteOk && clGood && !clBad;
+    const pass = clTurn.status === 201 && outboundEmailPassesSmokeHarness(clOut) && clInviteOk && clGood && !clBad;
     return { pass, http: clTurn.status };
   }, { timeoutMs: 60000 });
 

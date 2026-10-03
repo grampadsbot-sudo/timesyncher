@@ -20,3 +20,7 @@ Do not drive or cite these as the customer launch:
 - Standalone `/accept/{session}` as the screen the purchase email opens
 
 `/accept` remains a legacy route. It is not the post-purchase customer path. Collaborator website-edit accept links are a different flow (`collaborators.md`).
+
+## Deploy gate notes
+
+`TIMESYNCHER_HARNESS_STUB_OUTBOUND` must be **ABSENT** in any launch/customer environment; staging-only.
