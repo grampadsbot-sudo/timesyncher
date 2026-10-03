@@ -100,7 +100,7 @@ function db(strings, ...values) {
       id: state.sessionId,
       token,
       customer_id: state.customerId,
-      trip_id: state.tripId,
+      trip_id: state.trip?.id ?? null,
       order_id: state.orderId,
       status: 'purchase_confirmed',
       current_step: 'post_purchase',
@@ -145,7 +145,12 @@ function db(strings, ...values) {
   }
   if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) {
     const audience = values.find((value) => value === 'owner' || value === 'collaborator');
-    const rows = state.turns.filter((turn) => turn.payload?.welcomeAudience === audience);
+    const rows = state.turns.filter((turn) => {
+      const stored = turn.payload?.welcomeAudience;
+      if (stored === audience) return true;
+      if (audience === 'owner' && stored === 'owner_no_site') return true;
+      return false;
+    });
     return rows.length ? [{ id: 'welcome-turn' }] : [];
   }
   if (/insert into vacation_onboarding_welcomes/i.test(text)) {

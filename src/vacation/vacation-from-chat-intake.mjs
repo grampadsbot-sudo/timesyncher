@@ -156,6 +156,13 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     tripId,
     onboardingSessionId: session.id,
   });
+  if (attachedInvites.length) {
+    const { ensureCollaboratorWelcomeAfterTripBind } = await import('./collaborator-welcome.mjs');
+    const { ensureOnboardingOpener } = await import('../../routes/vacation-itinerary.mjs');
+    for (const invite of attachedInvites) {
+      await ensureCollaboratorWelcomeAfterTripBind(db, invite, ensureOnboardingOpener, env);
+    }
+  }
   const vacationsAfterAttach = await loadTrips(db, session);
   const tripForInvites = vacationsAfterAttach.find((trip) => trip.id === tripId) || null;
   let tripPublicUrl = '';

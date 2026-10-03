@@ -1,3 +1,4 @@
+import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { placeToTripThing, PlaceSearchError } from './place-search.mjs';
 import { braveAddress } from './brave-place-query.mjs';
@@ -293,7 +294,7 @@ async function persistCustomerStatedLodgingThing(db, tripId, requestId, title = 
   return inserted;
 }
 
-async function upgradeLodgingThingInPlace(db, tripId, rowId, requestId, thing = {}) {
+async function upgradeLodgingThingInPlace(db, tripId, rowId, requestId, thing = {}, env = process.env) {
   const item = tripThingRow(thing);
   if (!item || !rowId) return null;
   await db`
@@ -311,6 +312,7 @@ async function upgradeLodgingThingInPlace(db, tripId, rowId, requestId, thing = 
     where id = ${rowId}
       and trip_id = ${tripId}
   `;
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   return { ...item, id: String(rowId) };
 }
 
@@ -378,7 +380,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
     if (have.has(titleKey)) continue;
     let inserted = null;
     if (priorRow?.id && emptyCustomerStatedLodging(priorRow)) {
-      inserted = await upgradeLodgingThingInPlace(db, tripId, priorRow.id, requestId, outcome.thing);
+      inserted = await upgradeLodgingThingInPlace(db, tripId, priorRow.id, requestId, outcome.thing, env);
     } else {
       await dropCustomerStatedLodging(db, tripId, title);
       inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing });
@@ -393,6 +395,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       saved.push(inserted);
     }
   }
+  if (saved.length) await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   const lodgingOutcome = buildIntakeLodgingOutcome({ saved, misses, lookups });
   return { saved, misses, lookups, lodgingOutcome };
 }

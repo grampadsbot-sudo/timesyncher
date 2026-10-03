@@ -41,7 +41,10 @@ async function ensureInvitePaidForOwnerSeat(db, invite) {
   const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
   const payer = clean(metadata.payer || 'owner', 40);
   const channel = clean(metadata.channel, 40);
-  if (invite.status !== 'pending_payment' || (payer !== 'owner' && channel !== 'vacation-app')) {
+  if (invite.status !== 'pending_payment') {
+    throw Object.assign(new Error(`Collaborator invite is ${invite.status}.`), { statusCode: 409 });
+  }
+  if (payer !== 'owner' && channel !== 'vacation-app') {
     throw Object.assign(new Error(`Collaborator invite is ${invite.status}.`), { statusCode: 409 });
   }
   const rows = await db`

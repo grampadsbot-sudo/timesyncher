@@ -56,7 +56,7 @@ export async function runCollaboratorInviteAction(db, {
     code: 'collaborator_invite_sent',
     inviteeEmail,
     inviteeName,
-    tripId: scope.tripId || null,
+    tripId: scope.tripId || seat?.tripId || null,
     inviteId: seat?.inviteId || null,
     emailStatus: seat?.emailStatus || null,
     seats,

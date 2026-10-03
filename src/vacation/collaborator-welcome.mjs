@@ -1,5 +1,6 @@
 import { ensureCollaboratorAppSeatForInvite } from './collaborator-eula-accept.mjs';
-import { seatFromSession, transcriptCustomerId } from './collaborator-app-seat.mjs';
+import { seatFromSession } from './collaborator-app-seat.mjs';
+import { onboardingWelcomeTranscriptCustomerId, onboardingWelcomeTurnExists } from './onboarding-welcome-turn.mjs';
 import { collaboratorInviteIdFromEulaSession, isCollaboratorEulaSessionId, loadCollaboratorInviteForEmail } from './collaborators.mjs';
 import { onboardingWelcomeFailure } from './welcome-failure.mjs';
 
@@ -46,45 +47,32 @@ async function loadCollaboratorAppSessionForInvite(db, invite) {
 export async function collaboratorWelcomeTurnExists(db, session, trip) {
   const seat = seatFromSession(session);
   if (!seat) return false;
-  const customerId = transcriptCustomerId(session);
+  const customerId = onboardingWelcomeTranscriptCustomerId(session, seat);
   if (!customerId) return false;
-  const welcomeFor = String(session.customer_id || '');
-  const tripId = trip?.id || seat.ownerTripId || null;
-  const rows = tripId
-    ? await db`
-      select id
-      from transcript_turns
-      where customer_id = ${customerId}
-        and (trip_id = ${tripId} or trip_id is null)
-        and channel in ('vacation-app', 'vacation_app')
-        and speaker = 'app'
-        and direction = 'outbound'
-        and payload->>'welcomeAudience' = 'collaborator'
-      limit 1
-    `
-    : await db`
-      select id
-      from transcript_turns
-      where customer_id = ${customerId}
-        and trip_id is null
-        and channel in ('vacation-app', 'vacation_app')
-        and speaker = 'app'
-        and direction = 'outbound'
-        and payload->>'welcomeAudience' = 'collaborator'
-      limit 1
-    `;
-  if (rows.length > 0) return true;
-  if (session?.id && welcomeFor) {
-    const claims = await db`
-      select id
-      from vacation_onboarding_welcomes
-      where onboarding_session_id = ${session.id}
-        and welcome_for = ${welcomeFor}
-      limit 1
-    `;
-    if (claims.length) return false;
+  const tripId = trip?.id || session?.trip_id || seat.ownerTripId || null;
+  return onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience: 'collaborator' });
+}
+
+export async function ensureCollaboratorWelcomeAfterTripBind(db, invite, ensureOpener, env = process.env) {
+  if (!invite?.trip_id) return { ok: true, skipped: true };
+  const metadata = invite?.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+  const token = clean(metadata.collaboratorOnboardingToken, 120);
+  if (!token) return { ok: true, skipped: true };
+  const session = await loadCollaboratorAppSessionForInvite(db, invite);
+  if (!session?.id) return { ok: true, skipped: true };
+  const trips = await db`
+    select id, title, destination, start_date, end_date, status, metadata
+    from trips
+    where id = ${invite.trip_id}
+    limit 1
+  `;
+  const trip = tripForWelcome(trips[0]);
+  await ensureOpener(db, session, trip, env);
+  const exists = await collaboratorWelcomeTurnExists(db, session, trip);
+  if (!exists) {
+    throw onboardingWelcomeFailure('collaborator onboarding welcome missing after trip bind', invite.trip_id);
   }
-  return false;
+  return { ok: true, skipped: false, tripId: invite.trip_id };
 }
 
 export async function ensureCollaboratorWelcomeAfterEulaAccept(db, sessionId, ensureOpener, env = process.env) {

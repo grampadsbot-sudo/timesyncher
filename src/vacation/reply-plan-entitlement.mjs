@@ -34,6 +34,12 @@ function entitlementMetadata(row = {}) {
 
 export function replyPlanFactsFromEntitlementRow(row, env = process.env, tripId = '') {
   if (!row || typeof row !== 'object') failReplyPlanEntitlement('entitlement_row_missing', tripId);
+  const expectedTripId = String(tripId || '').trim();
+  const boundTripId = String(row.trip_id || '').trim();
+  if (expectedTripId && !boundTripId) failReplyPlanEntitlement('entitlement_trip_id_null', expectedTripId);
+  if (expectedTripId && boundTripId && boundTripId !== expectedTripId) {
+    failReplyPlanEntitlement('entitlement_trip_id_mismatch', expectedTripId);
+  }
   if (String(row.status || '').trim() !== 'active') failReplyPlanEntitlement('entitlement_not_active', tripId);
   const metadata = entitlementMetadata(row);
   const checkoutPlan = checkoutPlanFromMetadata({ plan: row.plan, ...metadata });
@@ -64,7 +70,7 @@ export async function loadSessionOwnerReplyPlan({ session, env = process.env, db
   const database = db || (await import('./db.mjs')).sql(env);
   const rows = orderId
     ? await database`
-      select e.plan, e.status, e.metadata
+      select e.plan, e.status, e.metadata, e.trip_id
       from entitlements e
       inner join paid_orders po on po.entitlement_id = e.id
       where po.id = ${orderId}
@@ -73,7 +79,7 @@ export async function loadSessionOwnerReplyPlan({ session, env = process.env, db
       limit 1
     `
     : await database`
-      select e.plan, e.status, e.metadata
+      select e.plan, e.status, e.metadata, e.trip_id
       from entitlements e
       where e.customer_id = ${customerId}
         and e.status = 'active'
@@ -81,7 +87,11 @@ export async function loadSessionOwnerReplyPlan({ session, env = process.env, db
       order by e.updated_at desc
       limit 1
     `;
-  return replyPlanFactsFromEntitlementRow(rows[0], env, String(session?.trip_id || '').trim());
+  const sessionTripId = String(session?.trip_id || '').trim();
+  if (sessionTripId && rows[0] && !String(rows[0].trip_id || '').trim()) {
+    failReplyPlanEntitlement('entitlement_trip_id_null', sessionTripId);
+  }
+  return replyPlanFactsFromEntitlementRow(rows[0], env, sessionTripId);
 }
 
 export async function savedTripWithOwnerPlan(saved, tripId, env = process.env, session = null) {
@@ -134,7 +144,7 @@ export async function loadTripOwnerReplyPlan({ tripId, env = process.env, db = n
   if (!id) failReplyPlanEntitlement('trip_id_missing', '');
   const database = db || (await import('./db.mjs')).sql(env);
   const rows = await database`
-    select e.plan, e.status, e.metadata
+    select e.plan, e.status, e.metadata, e.trip_id
     from trips t
     join entitlements e on e.customer_id = t.customer_id and e.trip_id = t.id
     where t.id = ${id}
@@ -142,5 +152,6 @@ export async function loadTripOwnerReplyPlan({ tripId, env = process.env, db = n
     order by e.updated_at desc
     limit 1
   `;
+  if (!rows[0]) failReplyPlanEntitlement('entitlement_row_missing', id);
   return replyPlanFactsFromEntitlementRow(rows[0], env, id);
 }
