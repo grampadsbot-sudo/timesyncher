@@ -1,4 +1,10 @@
+import { syncFirstIntakeCustomerInputOnTurn } from './first-intake-customer-input.mjs';
 import { transcriptCustomerId } from './collaborator-app-seat.mjs';
+
+export function stampCustomerLivePayload(payload, customerLive, { firstIntake, produced } = {}) {
+  payload.liveTranscript = customerLive;
+  syncFirstIntakeCustomerInputOnTurn(payload, customerLive, { firstIntake, produced });
+}
 import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';

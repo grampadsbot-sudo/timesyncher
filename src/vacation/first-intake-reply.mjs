@@ -1,6 +1,10 @@
 import { failReplyPlanEntitlement, loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { isCollaboratorAppSeat } from './collaborator-app-seat.mjs';
 import { intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
+import {
+  applyCustomerInputToFirstIntakeFacts,
+  firstIntakeLodgingCustomerInput,
+} from './first-intake-customer-input.mjs';
 
 export { produceFirstIntakeReply } from './first-intake-reply-produce.mjs';
 export { firstIntakeReplyLeak, intakeReplyBlock, intakeReplyBlockReasons } from './first-intake-gate.mjs';
@@ -94,9 +98,16 @@ export const FIRST_INTAKE_VOICE_INSTRUCTION = [
   'Do all of the following in this one message, in order:',
   '1. Confirm the itinerary is being built. Reflect where, the dates, the end date, the number of nights, who is coming, lodging, and the planned activities, when those are in customer_said or the other intake facts. Leave out any of those that are absent. Do not invent a place, a date, a lodging, an activity, a weekday, or a name.',
   '2. When collaborators is present, those people already have contact on file; you may say they can be invited when the customer is ready — never that you added, invited, sent, or will add them on this turn unless turnInvite says the invite was emailed. Do not say they are already collaborators or that they already have access. Do not invent party facts. Do not name anyone who is not in collaborators, who, or customer_said.',
-  '3. When invite_contact_needed is true, do not mention adding or inviting anyone. End with exactly one question asking for their name and email so you can invite them.',
-  '4. Otherwise end with exactly one question, about the most important missing detail. gaps is ordered with the most important first. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
+  '3. When lodgingAsk is true in the intake facts, ask where they are staying in your own words when lodging is the first applicable gap in gaps.',
+  '4. When invite_contact_needed is true, do not mention adding or inviting anyone. When invite_contact is the first applicable gap in gaps, ask for their name and email so you can invite them.',
+  '5. End with exactly one question about the first applicable gap in gaps. gaps is ordered with the most important missing detail first: where, then when (dates), then who, then lodging, then plans, then invite_contact. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
   FIRST_INTAKE_TONE,
+].join('\n');
+
+const FIRST_INTAKE_STRUCTURED_QUESTION_RULE = [
+  'When lodgingAsk is true in the intake facts, ask where they are staying in your own words when lodging is the first applicable gap in gaps.',
+  'When invite_contact_needed is true, do not mention adding or inviting anyone. When invite_contact is the first applicable gap in gaps, ask for their name and email so you can invite them.',
+  'End with exactly one question about the first applicable gap in gaps. gaps is ordered with the most important missing detail first: where, then when (dates), then who, then lodging, then plans, then invite_contact. If a gap is already answered in customer_said, skip it and use the next one. If gaps is empty, ask one question about what they still left undecided. Never ask a second question.',
 ].join('\n');
 
 export const FIRST_INTAKE_GAP_INSTRUCTION = [
@@ -105,6 +116,7 @@ export const FIRST_INTAKE_GAP_INSTRUCTION = [
   'Then nudge them to send a voice note.',
   'Do not offer to add collaborators. Do not pitch a plan.',
   'Use only customer_said and the other intake facts. Do not invent a place, a date, a lodging, a plan, or a name.',
+  FIRST_INTAKE_STRUCTURED_QUESTION_RULE,
   FIRST_INTAKE_TONE,
 ].join('\n');
 
@@ -352,12 +364,12 @@ export function firstIntakeReplyFacts({
     return scrubFacts(facts, hidden);
   }
   facts.gaps = gaps;
-  if (!planReply) return scrubFacts(facts, hidden);
   if (inviteContactNeeded) {
     facts.invite_contact_needed = true;
-    if (!gaps.includes('invite_contact')) gaps.unshift('invite_contact');
+    if (!gaps.includes('invite_contact')) gaps.push('invite_contact');
     facts.gaps = gaps;
   }
+  if (!planReply) return scrubFacts(facts, hidden);
   if (collaborators.length) facts.collaborators = collaborators;
   if (isCollaboratorAppSeat(session)) return scrubFacts(facts, hidden);
   if (!ownerPlan || typeof ownerPlan !== 'object') failReplyPlanEntitlement('owner_plan_missing', tripId);
@@ -376,12 +388,16 @@ export function firstIntakeReplyFacts({
   return scrubFacts(facts, hidden);
 }
 
+export function firstIntakeReplyInstruction(facts = {}) {
+  if (facts.shape === 'voice-note') return FIRST_INTAKE_VOICE_INSTRUCTION;
+  if (facts.shape === 'question') {
+    return `${FIRST_INTAKE_QUESTION_INSTRUCTION}\n${FIRST_INTAKE_STRUCTURED_QUESTION_RULE}`;
+  }
+  return FIRST_INTAKE_GAP_INSTRUCTION;
+}
+
 export function firstIntakeReplyPrompt(input = {}) {
-  const facts = firstIntakeReplyFacts(input);
-  const instruction = facts.shape === 'voice-note'
-    ? FIRST_INTAKE_VOICE_INSTRUCTION
-    : facts.shape === 'question'
-      ? FIRST_INTAKE_QUESTION_INSTRUCTION
-      : FIRST_INTAKE_GAP_INSTRUCTION;
-  return `${instruction}\n\nIntake facts: ${JSON.stringify(facts)}`;
+  const customerInput = firstIntakeLodgingCustomerInput(input.savedThings || [], input.wantedThings || []);
+  const facts = applyCustomerInputToFirstIntakeFacts(firstIntakeReplyFacts(input), customerInput);
+  return `${firstIntakeReplyInstruction(facts)}\n\nIntake facts: ${JSON.stringify(facts)}`;
 }
