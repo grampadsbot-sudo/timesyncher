@@ -7,7 +7,6 @@ import { loadCollaboratorAppSeatEulaText } from '../src/onboarding/eula-persiste
 import {
   configureSharedUiHelpers,
   runSharedSiteLogoBarChecks,
-  runSharedSiteMapBudLogoChecks,
 } from './shepherd-staging-smoke-shared-ui.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
@@ -144,7 +143,7 @@ export function persistedTurnClassifier(payload) {
   return { targetKind: tc.targetKind || p.targetKind || null, category: tc.category || p.category || null, reason: tc.reason || p.placeSearch?.error || null };
 }
 
-export { runSharedSiteLogoBarChecks, runSharedSiteMapBudLogoChecks };
+export { runSharedSiteLogoBarChecks };
 
 export function inviteUiHits(html) {
   const hits = [];

@@ -25,13 +25,18 @@ const spineText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-main.mjs
 const parallelText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-parallel.mjs'), 'utf8');
 const askText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-ask.mjs'), 'utf8');
 const tailText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-tail.mjs'), 'utf8');
+const mapLogoRunText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-map-logo-run.mjs'), 'utf8');
 const runCheckText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-run-check.mjs'), 'utf8');
-const combined = `${mainText}\n${spineText}\n${parallelText}\n${askText}\n${tailText}`;
+const combined = `${mainText}\n${spineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
+const dedicatedCheckRe = /runDedicatedSharedCheck\s*\(\s*ctx\s*,\s*['"]([^'"]+)['"]\s*,\s*(?:\d+|MAP_CHECK_TIMEOUT_MS)/g;
 const registered = new Set();
 let m;
 while ((m = runCheckRe.exec(combined)) !== null) {
+  registered.add(m[1]);
+}
+while ((m = dedicatedCheckRe.exec(combined)) !== null) {
   registered.add(m[1]);
 }
 

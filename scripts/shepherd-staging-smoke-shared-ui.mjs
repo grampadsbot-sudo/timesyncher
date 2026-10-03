@@ -44,7 +44,7 @@ function mapFailReason({ publicUrlAfterH, sharedJson, productMapGrade, mapCaptur
   if (!publicUrlAfterH) return 'missing_public_url';
   if ((sharedJson.places || []).length < 1) return 'shared_api_no_places';
   if (mapCapture.stageTimestamps?.hangingStage) return `hanging_stage:${mapCapture.stageTimestamps.hangingStage}`;
-  if (!productMapGrade.pass) return productMapGrade.reason || 'product_map_grade_fail';
+  if (!productMapGrade.pass) return 'product_map_grade_fail';
   return null;
 }
 
@@ -158,23 +158,6 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
       sharedApiPlaces: (sharedJson.places || []).length,
       intakeShareUrl: intakeMapUrl,
       failReason: pass ? null : failReason,
-    },
-  };
-}
-
-/** @deprecated Combined path; smoke uses separate MAP/BUD/LOGO browsers. */
-export async function runSharedSiteMapBudLogoChecks(opts) {
-  const map = await runSharedSiteMapCheck(opts);
-  const bud = await runSharedSiteBudgetCheck(opts);
-  const logo = await runSharedSiteLogoCheck(opts);
-  return {
-    ...map,
-    checkBUD: bud.checkBUD,
-    checkLOGO: logo.checkLOGO,
-    checks: {
-      MAP: map.pass ? 'PASS' : 'FAIL',
-      BUD: bud.pass ? 'PASS' : 'FAIL',
-      LOGO: logo.pass ? 'PASS' : 'FAIL',
     },
   };
 }
