@@ -28,8 +28,13 @@ import {
   gradeSharedTabLogoUrlRecords,
   gradeCarTabRowIcons,
 } from './shepherd-staging-smoke-lib.mjs';
+import {
+  classifySmokeServerTiming,
+} from './shepherd-staging-smoke-helpers.mjs';
 
-assert.equal(isoDateFromStartsAt(new Date('2027-03-13T12:00:00.000Z')), '2027-03-13');
+assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
+assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);
+assert.equal(classifySmokeServerTiming({ latencyMs: 11000, sessionE2eMs: 4000 }).appFail, true);
 assert.equal(isoDateFromStartsAt('2027-03-13T12:00:00.000Z'), '2027-03-13');
 assert.equal(isoDateFromStartsAt('Sat Mar 13 2027 12:00:00 GMT+0000'), '2027-03-13');
 assert.equal(d1StartsOnDate(new Date('2027-03-13T12:00:00.000Z')), true);
