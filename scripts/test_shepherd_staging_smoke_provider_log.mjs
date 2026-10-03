@@ -47,6 +47,15 @@ finalizeSmokeProviderLogSummary(out);
 assert.equal(out.nominatimCallsPerSecondMax, 2);
 assert.equal(out.nominatimCacheHits, 0);
 assert.equal(out.nominatimOutboundHttpCalls, 2);
+assert.equal(out.nominatimThrottleWaitMs, 0);
+
+recordProviderCallsForCheck(out, '6b', {
+  placeSearch: {
+    providers: [{ provider: 'nominatim', status: 'ok', nominatimThrottleWaitMs: 250 }],
+  },
+});
+finalizeSmokeProviderLogSummary(out);
+assert.equal(out.nominatimThrottleWaitMs, 250);
 
 assert.equal(nominatimCacheHitCount([
   { provider: 'nominatim', status: 'ok', resultCount: 1 },
@@ -68,8 +77,8 @@ assert.equal(providerCallTimestampMs({ atMs: 42 }), 42);
 
 const mainText = readFileSync(new URL('./shepherd-staging-smoke.mjs', import.meta.url), 'utf8');
 assert.match(mainText, /registerBrowser,/);
-const mainModuleText = readFileSync(new URL('./shepherd-staging-smoke-main.mjs', import.meta.url), 'utf8');
-assert.match(mainModuleText, /registerBrowser\(chromeMap\)/);
+const mapLogoRunText = readFileSync(new URL('./shepherd-staging-smoke-map-logo-run.mjs', import.meta.url), 'utf8');
+assert.match(mapLogoRunText, /registerBrowser\(chrome\)/);
 
 console.log(JSON.stringify({
   ok: true,
