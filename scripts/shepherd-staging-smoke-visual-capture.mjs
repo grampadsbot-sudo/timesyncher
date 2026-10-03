@@ -5,9 +5,13 @@ import {
   runLayoutDomEval,
 } from './shepherd-staging-smoke-layout-dom.mjs';
 import {
+  formatComposerSendDomContextForJudge,
+  readComposerSendButtonDomContext,
+} from './shepherd-staging-smoke-composer-send-dom.mjs';
+import {
   clickSharedTabByKeyword,
   gotoAndHydrateSharedIntakePage,
-} from './shepherd-staging-smoke-shared-ui-map.mjs';
+} from './shepherd-staging-smoke-shared-ui.mjs';
 
 const VISUAL_TAB_SETTLE_MS = 400;
 
@@ -137,6 +141,8 @@ export async function captureVisualStateScreenshots({
       await page.screenshot({ path: chatFile });
       const composerFile = shotPath(artifactDir, state.id, 'composer', viewport.label);
       const composerCaptured = await captureComposerClip(page, composerFile);
+      const sendDom = composerCaptured ? await readComposerSendButtonDomContext(page) : null;
+      const sendButtonDomContext = formatComposerSendDomContextForJudge(sendDom);
       if (composerCaptured) {
         composerShots.push({ stateId: state.id, viewport: viewport.label, path: composerFile });
       }
@@ -153,6 +159,7 @@ export async function captureVisualStateScreenshots({
         judgeComposer,
         layoutDom,
         layoutDomFacts: layoutDom.layoutDomFacts,
+        sendButtonDomContext,
       });
       if (state.id === 'v1site' && state.sharedUrl) {
         setStage?.(`visual ${state.id} shared hydrate ${viewport.label}`);

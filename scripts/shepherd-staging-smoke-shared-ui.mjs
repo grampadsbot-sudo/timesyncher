@@ -9,8 +9,11 @@ import {
   listSharedDomTabs,
   mapSharedTripState,
   sharedBudgetTabCheck,
+  clickSharedTabByKeyword,
   APP_MAP_READY_FAIL_MS,
 } from './shepherd-staging-smoke-shared-ui-map.mjs';
+
+export { clickSharedTabByKeyword, gotoAndHydrateSharedIntakePage };
 import {
   createLogoStageTimestamps,
   pickSlowLogoStage,

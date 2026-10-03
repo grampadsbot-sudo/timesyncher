@@ -11,6 +11,8 @@ import {
   eulaStoreObjectKey,
   eulaVacationSessionId,
   readEulaReceiptDocument,
+  listEulaStoreObjectKeysForSession,
+  requireEulaStorePrefix,
   runEulaReadbackGate,
   harnessBlobListCallCount,
   resetHarnessBlobListCallCount,
@@ -51,6 +53,30 @@ const gate = await runEulaReadbackGate({ db, sessionToken, env: process.env });
 assert.equal(gate.pass, true);
 assert.equal(gate.blobListCalls, 0);
 assert.equal(gate.receiptKey, eulaStoreObjectKey(sessionId, 'receipt', process.env));
+assert.ok(gate.eulaStoreKeysForSession.includes(gate.receiptKey));
+
+const missingGate = await runEulaReadbackGate({ db, sessionToken: 'no-such-token', env: process.env });
+assert.equal(missingGate.pass, false);
+assert.ok(missingGate.eulaStoreKeyDiag);
+assert.equal(missingGate.eulaStoreKeyDiag.expectedReceiptKey, eulaStoreObjectKey('vacation-no-such-token', 'receipt', process.env));
+const listed = await listEulaStoreObjectKeysForSession(db, sessionId, process.env);
+assert.ok(listed.keys.includes(gate.receiptKey));
+
+assert.throws(
+  () => requireEulaStorePrefix({}),
+  /TIMESYNCHER_EULA_BLOB_PREFIX is required/,
+);
+assert.throws(
+  () => eulaStoreObjectKey(sessionId, 'receipt', {}),
+  /TIMESYNCHER_EULA_BLOB_PREFIX is required/,
+);
+const noPrefixGate = await runEulaReadbackGate({
+  db,
+  sessionToken,
+  env: { ...process.env, TIMESYNCHER_EULA_BLOB_PREFIX: '' },
+});
+assert.equal(noPrefixGate.pass, false);
+assert.match(noPrefixGate.validation.errors.join(' '), /TIMESYNCHER_EULA_BLOB_PREFIX is required/);
 
 assert.ok(SMOKE_FAIL_CLOSED_GO.includes('EULA'));
 

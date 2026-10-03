@@ -18,6 +18,14 @@ export function handleEulaStoreDbSql(text, values, eulaStore) {
       .filter(([key]) => key.startsWith(prefix) && key.endsWith('.json'))
       .map(([, document]) => ({ document }));
   }
+  if (/select key from eula_store_objects/i.test(text) && /key like/i.test(text)) {
+    const like = values.find((v) => typeof v === 'string' && v.includes('%'));
+    const needle = String(like || '').replace(/^%|%$/g, '');
+    return Object.keys(eulaStore)
+      .filter((key) => key.includes(needle))
+      .sort()
+      .map((key) => ({ key }));
+  }
   if (/select document from eula_store_objects/i.test(text)) {
     const key = values[0];
     return eulaStore[key] ? [{ document: eulaStore[key] }] : [];
