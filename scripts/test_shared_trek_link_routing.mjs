@@ -25,7 +25,7 @@ assert.equal(intakeShareSlug(tripId), 'intake-0123456789ab');
 assert.equal(sharedTripWebsiteUrl('intake-0123456789ab', env), 'https://vacation-staging.timesyncher.com/shared/intake-0123456789ab/');
 assert.equal(sharedTripWebsiteUrl(UPSTREAM_SLUG, env), `https://vacation-staging.timesyncher.com/shared/${UPSTREAM_SLUG}/`);
 assert.equal(publicTripUrl({ metadata: { publicSlug: UPSTREAM_SLUG } }, env), `https://vacation-staging.timesyncher.com/shared/${UPSTREAM_SLUG}/`);
-assert.match(webAccessAcceptUrl('token-abc', env), /\/api\/vacation-web-access\?action=accept&token=/);
+assert.match(webAccessAcceptUrl('token-abc', env), /\/api\/vacation-itinerary\?webAccess=1&action=accept&token=/);
 assert.match(collaboratorEulaAcceptUrl({ id: 'inv-1' }, env), /\/accept\//);
 
 function mockRes() {
