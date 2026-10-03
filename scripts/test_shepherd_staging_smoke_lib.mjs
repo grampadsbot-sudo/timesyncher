@@ -20,8 +20,9 @@ import {
   attributeLogoMisalignmentCss,
   objectFitContentBox,
   gradeAskLodging,
-  gradeAskD2NoQuestionReply,
-  replyHasLodgingQuestion,
+  gradeD2UnschedReply,
+  gradeAskD2Reply,
+  parseJevNoulAnswer,
   persistedLodgingAskSignals,
   isRealBrandLogoSrc,
   gradeSharedTabLogoUrlRecords,
@@ -216,20 +217,59 @@ const lodgingSignals = persistedLodgingAskSignals(
   {},
 );
 assert.equal(lodgingSignals.persistedLodgingAsk, true);
-assert.equal(replyHasLodgingQuestion('Where are you staying on Maui?'), true);
-assert.equal(replyHasLodgingQuestion('Great — I saved your dates.'), false);
-const lodgingPass = gradeAskLodging({
+
+const stubJevYes = async () => ({
+  ok: true,
+  error: null,
+  verdict: 'yes',
+  yes: true,
+  rationale: 'stub-yes',
+  model: 'test/jev-stub',
+});
+const stubJevNo = async () => ({
+  ok: true,
+  error: null,
+  verdict: 'no',
+  yes: false,
+  rationale: 'stub-no',
+  model: 'test/jev-stub',
+});
+const stubJevFail = async () => ({
+  ok: false,
+  error: 'stub-timeout',
+  verdict: null,
+  yes: null,
+  rationale: '',
+  model: 'test/jev-stub',
+});
+
+const c842D2Reply = "Paia Fish Market is on the list but not yet assigned to a specific day.";
+const d2UnschedPass = await gradeD2UnschedReply(c842D2Reply, { judgeFn: stubJevYes });
+assert.equal(d2UnschedPass.pass, true);
+assert.equal(d2UnschedPass.jev.verdict, 'yes');
+assert.equal(d2UnschedPass.jev.model, 'test/jev-stub');
+
+const d2UnschedJevFail = await gradeD2UnschedReply(c842D2Reply, { judgeFn: stubJevFail });
+assert.equal(d2UnschedJevFail.pass, false);
+assert.match(String(d2UnschedJevFail.jev.error || ''), /stub-timeout/);
+
+const askD2Pass = await gradeAskD2Reply(c842D2Reply, { judgeFn: stubJevNo });
+assert.equal(askD2Pass.pass, true);
+
+const askD2Fail = await gradeAskD2Reply('Where are you staying on Maui?', { judgeFn: stubJevYes });
+assert.equal(askD2Fail.pass, false);
+
+const lodgingPass = await gradeAskLodging({
   replyText: 'Where will you be staying during the trip?',
   payload: { tripContext: { lodgingAsk: true } },
   turnJson: {},
   hotelCount: 0,
+  judgeFn: stubJevYes,
 });
 assert.equal(lodgingPass.pass, true);
+assert.equal(lodgingPass.jev.verdict, 'yes');
 
-const d2Pass = gradeAskD2NoQuestionReply('Paia Fish Market is saved but not on a day yet.');
-const d2Fail = gradeAskD2NoQuestionReply('Which location did you mean?');
-assert.equal(d2Pass.pass, true);
-assert.equal(d2Fail.pass, false);
-assert.equal(d2Fail.evidence.whichLocation, true);
+assert.equal(parseJevNoulAnswer({ noul: 0.9 }).yes, true);
+assert.equal(parseJevNoulAnswer({ noul: 0.1 }).yes, false);
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));

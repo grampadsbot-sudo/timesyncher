@@ -273,8 +273,11 @@ export {
   gradeSharedTabLogoUrlRecords,
   gradeCarTabRowIcons,
   persistedLodgingAskSignals,
-  replyHasLodgingQuestion,
   gradeAskLodging,
-  gradeAskD2NoQuestionReply,
 } from './shepherd-staging-smoke-grader-lib.mjs';
+export {
+  gradeD2UnschedReply,
+  gradeAskD2Reply,
+  parseJevNoulAnswer,
+} from './shepherd-staging-smoke-jev-reply-judge.mjs';
 
