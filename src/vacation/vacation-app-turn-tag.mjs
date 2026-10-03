@@ -1,6 +1,14 @@
 import { classifyTurn, classifyTurnWithModel } from './turn-tags.mjs';
 import { turnStageTimings } from './turn-stage-timings.mjs';
 
+function classifyAppTurnTag(input, { placeSearchTurn = false, webResearchTurn = false } = {}) {
+  const tagged = classifyTurn(input);
+  if ((placeSearchTurn || webResearchTurn) && tagged.category === 'needs_ask') {
+    return { ...tagged, category: 'travel_research', ask: false };
+  }
+  return tagged;
+}
+
 export async function classifyVacationAppCustomerTurnTag({
   requestText,
   tripId,
@@ -13,13 +21,13 @@ export async function classifyVacationAppCustomerTurnTag({
   const intakeTurn = classification?.ok === true && classification?.intake === true;
   const turnTagStarted = Date.now();
   const turnTag = (tripId && (placeSearchTurn || webResearchTurn)) || intakeTurn
-    ? classifyTurn({
+    ? classifyAppTurnTag({
       text: requestText,
       speaker: 'customer',
       direction: 'inbound',
       channel: 'vacation-app',
       payload,
-    })
+    }, { placeSearchTurn, webResearchTurn })
     : await classifyTurnWithModel({
       text: requestText,
       speaker: 'customer',

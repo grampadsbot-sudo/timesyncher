@@ -41,6 +41,7 @@ assert.doesNotMatch(factsPrefix, locationClarifyInvite);
 assert.doesNotMatch(factsPrefix, matchClarifyInvite);
 assert.match(factsPrefix, /Each place in unscheduled is not on a day/);
 assert.match(factsPrefix, /Tell the customer that for each of those places/);
+assert.doesNotMatch(system, /name the day \(required\)/i);
 
 console.log(JSON.stringify({
   ok: true,
