@@ -122,8 +122,7 @@ function measureInPage(request) {
     return [...document.querySelectorAll('button, [role="button"]')].find((el) => names.includes(accName(el) || flatText(el))) || null;
   }
 
-  const banner = document.querySelector('h1')?.parentElement || null;
-  const header = document.querySelector('header.topbar') || document.querySelector('header') || banner;
+  const header = document.querySelector('header.topbar') || document.querySelector('header');
   const composer = document.querySelector('textarea#messageText');
   const fileAdd = document.querySelector('#attachButton');
   const speak = document.querySelector('#voiceButton');
@@ -132,7 +131,9 @@ function measureInPage(request) {
   const slider = document.querySelector('#splitter');
   const dropdown = document.querySelector('#tripButton, [aria-haspopup="listbox"]');
   const footer = document.querySelector('footer[data-build-stamp="1"], footer');
-  const logo = header ? header.querySelector('img, svg') : null;
+  const logo = header
+    ? [...header.querySelectorAll('img, svg')].find((el) => !el.closest('button, [role="tab"], [data-ts-logo-chip]'))
+    : null;
   const openNav = [...document.querySelectorAll('button')].find((el) => {
     const name = accName(el) || flatText(el);
     return name === 'Open navigation' || name === 'Close navigation';
@@ -184,15 +185,14 @@ function measureInPage(request) {
   const hiddenPainting = [];
   const emptyWhite = [];
   const wider = [];
-  if (request.kind === 'app') {
-    for (const el of document.querySelectorAll('body *')) {
-      const box = readBox(el);
-      if (!box) continue;
-      if (box.paints && intersects(box) && box.right > viewport.width + eps) {
-        wider.push({ tag: el.tagName, id: el.id || '', right: box.right, w: box.w });
-      }
-      if (el.hasAttribute('hidden') && box.paints && intersects(box)) hiddenPainting.push({ tag: el.tagName, id: el.id || '' });
-      if (!box.paints || !intersects(box) || allowed(el)) continue;
+  for (const el of document.querySelectorAll('body *')) {
+    const box = readBox(el);
+    if (!box) continue;
+    if (box.paints && intersects(box) && box.right > viewport.width + eps) {
+      wider.push({ tag: el.tagName, id: el.id || '', right: box.right, w: box.w });
+    }
+    if (el.hasAttribute('hidden') && box.paints && intersects(box)) hiddenPainting.push({ tag: el.tagName, id: el.id || '' });
+    if (request.kind !== 'app' || !box.paints || !intersects(box) || allowed(el)) continue;
       const style = window.getComputedStyle(el);
       const directText = [...el.childNodes].some((node) => node.nodeType === 3 && node.textContent.trim());
       const notable = ['HEADER', 'FOOTER', 'IMG', 'BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT', 'NAV'].includes(el.tagName) || directText;
@@ -202,7 +202,6 @@ function measureInPage(request) {
       if ((style.position === 'fixed' || style.position === 'absolute') && white && empty && box.w >= 80 && box.h >= 40) {
         emptyWhite.push({ tag: el.tagName, id: el.id || '' });
       }
-    }
   }
 
   const tabs = [];
@@ -217,6 +216,23 @@ function measureInPage(request) {
   }
 
   const logoBox = visible(logo);
+  let composerMoved = false;
+  if (composer) {
+    const before = composer.getBoundingClientRect().y;
+    const scroller = document.querySelector('#messages');
+    const sitePane = document.querySelector('.site-pane');
+    const prevMsg = scroller ? scroller.scrollTop : 0;
+    const prevSite = sitePane ? sitePane.scrollTop : 0;
+    const prevWin = window.scrollY;
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+    if (sitePane) sitePane.scrollTop = sitePane.scrollHeight;
+    window.scrollTo(0, scrolling.scrollHeight);
+    const after = composer.getBoundingClientRect().y;
+    if (Math.abs(after - before) > eps) composerMoved = true;
+    if (scroller) scroller.scrollTop = prevMsg;
+    if (sitePane) sitePane.scrollTop = prevSite;
+    window.scrollTo(0, prevWin);
+  }
   return {
     viewport,
     scrollWidth: scrolling.scrollWidth,
@@ -224,6 +240,7 @@ function measureInPage(request) {
     kind: request.kind,
     state: request.state,
     hasSite: Boolean(request.hasSite),
+    composerMoved,
     specMissing: Boolean(request.specMissing),
     tabRequired: Boolean(request.tabLabel),
     regions: {
@@ -234,6 +251,7 @@ function measureInPage(request) {
       dropdown: visible(dropdown),
       messages: visible(messages),
       composer: visible(composer),
+      composerForm: visible(form),
       fileAdd: visible(fileAdd),
       speak: visible(speak),
       site: visible(site),
@@ -252,12 +270,21 @@ function measureInPage(request) {
     strayLogos: [...document.querySelectorAll('img, svg')].flatMap((img) => {
       const box = readBox(img);
       if (!box || !box.paints || !intersects(box)) return [];
-      if (header && header.contains(img)) return [];
-      if (footer && footer.contains(img)) return [];
-      if (img.closest('[data-ts-logo-chip], button, [role="tab"]')) return [];
+      if (img.closest('button, [role="tab"], [data-ts-logo-chip]')) return [];
+      const brand = img.matches('#footerLogo, img.ts-logo, .ts-logo, [data-brand-lockup], [data-last-page-logo]')
+        || Boolean(img.closest('[data-brand-lockup], [data-last-page-logo], .print-brand'));
+      const inHeader = Boolean(header && header.contains(img));
+      const heading = document.querySelector('h1');
+      const banner = heading ? heading.parentElement : null;
+      const bannerBox = banner ? readBox(banner) : null;
+      const inBanner = Boolean(banner && banner.contains(img) && bannerBox && box.w <= 64 && box.h <= 64 && box.y <= bannerBox.y + 80);
+      if (brand || inHeader || inBanner) {
+        return [{ id: img.id || '', tag: img.tagName, x: box.x, y: box.y, w: box.w, h: box.h }];
+      }
       const style = window.getComputedStyle(img);
       const floated = style.position === 'absolute' || style.position === 'fixed';
       if (!floated) return [];
+      if (footer && footer.contains(img)) return [];
       if (box.w >= 200 && box.h >= 200) return [];
       let node = img;
       while (node && node !== document.body) {

@@ -4,7 +4,7 @@ The customer trip page. Staging layout proof uses `layoutSharedPath` in `verify-
 
 ## Sub-features
 
-- `shell` — Open navigation and Settings are absent. The header and its logo sit at the top. The footer is at the document end, or the build-stamp footer is pinned to the viewport bottom. Nothing is wider than the viewport. An empty white box that still paints fails.
+- `shell` — Open navigation and Settings are absent. No app or brand logo paints. No footer and no build stamp. Nothing is wider than the viewport. An empty white box that still paints fails.
 - `day-by-day` — Day-by-Day tab. Its icon is vertically centered in the tab.
 - `flights` — Flights tab. Same icon rule.
 - `hotels` — Hotels tab. Same icon rule.
@@ -25,7 +25,7 @@ Each sub-feature is checked at 390x844 and 1280x800.
 
 Preconditions: staging `/api/version` returns 200. Chromium launches at both viewports. The shell spec is `features/screens/trip.md`. A tab uses `features/screens/<tab>.md` when that file exists, otherwise `features/screens/trip.md`.
 
-- Open the shell: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --out <dir> --only shared-trip` opens `layoutSharedPath` at both viewports. Observable result: `<dir>/verify/shared-trip-shell-<390|1280>.png`. A painted Open navigation button, Settings button, or header wider than the viewport fails the row.
+- Open the shell: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --out <dir> --only shared-trip` opens `layoutSharedPath` at both viewports. Observable result: `<dir>/verify/shared-trip-shell-<390|1280>.png`. A painted Open navigation button, Settings button, brand logo, or footer fails the row.
 - Open a tab: the same command clicks the button whose accessible name is that tab, then measures again. Observable result: `<dir>/verify/shared-trip-<tab>-<390|1280>.png`. A missing button is `tab-unmeasured`. An icon whose center is more than 1.5px from the tab center fails.
 
 ## Gotchas

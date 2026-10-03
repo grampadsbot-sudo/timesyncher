@@ -30,7 +30,8 @@ Preconditions: `https://vacation-staging.timesyncher.com/api/version` returns 20
 
 ## Gotchas
 
-- A logo, a send button, Open navigation, or Settings is outside the spec. The row fails.
+- A logo, a send button, Open navigation, or Settings is outside the spec. The row fails. No app or brand logo paints anywhere in the shell.
+- With 0 or 1 vacations the conversation is the top region and ends above the text box. With 2 or more and no website yet, it ends above the text box. When a website is showing, conversation placement is not graded.
 - With 0 or 1 vacations an empty header bar fails `header-renders`. The header element is absent, or its height is 0.
 - The full-screen control is the only extra button on a website. Website full-screen stays a failed row until that control is in the served app. It is not a GAP.
 - The text box is `textarea#messageText`. A form edge that sits inside the viewport while the textarea hangs below it fails.

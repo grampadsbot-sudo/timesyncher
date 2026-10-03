@@ -10,7 +10,9 @@ import {
   correctApp2,
   correctFullscreen,
   correctFullscreenHtml,
+  brandedTripHtml,
   correctTrip,
+  correctTripHtml,
   correctWithSite,
   correctWithSiteHtml,
   emptyHeaderBar,
@@ -19,6 +21,8 @@ import {
   p0OffscreenHtml,
   probeChat390,
   probeShared390,
+  tripWithFooter,
+  tripWithLogo,
 } from './layout-fixtures.mjs';
 import { judgeScreenshot } from './layout-judge.mjs';
 import { VIEWPORTS, chromePath, launchBrowser, measureHtml } from './layout-measure.mjs';
@@ -78,8 +82,26 @@ const stuckCodes = codes(stuck);
 assert(stuckCodes.includes('fullscreen-exit-unmeasured') && stuckCodes.includes('fullscreen-chrome-paints'), `full-screen still showing the text box: ${stuckCodes.join(',')}`);
 const app2 = evaluateLayout(correctApp2(), tolerances);
 assert(app2.layout === 'PASS', `two vacations with only the dropdown should pass: ${app2.reasons.join(',')}`);
+const underSite = correctWithSite();
+underSite.regions.messages = box(0, 540, 390, 200);
+assert(evaluateLayout(underSite, tolerances).layout === 'PASS', `conversation under the site is not graded: ${codes(underSite).join(',')}`);
+const lowConversation = correctApp0();
+lowConversation.regions.messages = box(0, 40, 390, 720);
+assert(has(lowConversation, 'content-not-at-top'), 'conversation that does not start at the top fails when the header is hidden');
+const overComposer = correctApp0();
+overComposer.regions.messages = box(0, 0, 390, 820);
+assert(has(overComposer, 'messages-below-composer'), 'conversation that crosses the text box fails');
+const straySite = correctApp0();
+straySite.regions.site = box(0, 0, 390, 100);
+assert(has(straySite, 'site-paints'), 'a website in the zero-vacation state fails');
+const fileOutside = correctApp0();
+fileOutside.regions.fileAdd = box(8, 700, 42, 42);
+assert(has(fileOutside, 'file-add-outside-composer'), 'file-add outside the composer box fails');
 const trip = evaluateLayout(correctTrip(), tolerances);
 assert(trip.layout === 'PASS', `correct trip should pass: ${trip.reasons.join(',')}`);
+assert(has(tripWithLogo(), 'logo-paints'), 'a shell brand logo on the trip page fails');
+assert(has(tripWithFooter(), 'footer-paints'), 'a painted footer on the trip page fails');
+assert(!codes(correctTrip()).includes('logo-unmeasured') && !codes(correctTrip()).includes('footer-unmeasured'), 'a trip page does not require a header logo or a footer');
 
 const tilted = correctTrip();
 tilted.tabs[0].iconBox = { ...tilted.tabs[0].iconBox, y: tilted.tabs[0].iconBox.y + 6 };
@@ -175,7 +197,7 @@ if (chromePath()) {
       const badCodes = evaluateLayout(bad, tolerances).reasons;
       assert(badCodes.includes('composer-below-viewport'), `rendered p0 composer: ${badCodes.join(',')}`);
       assert(badCodes.includes('header-wider-than-viewport') || badCodes.includes('scroll-wider-than-viewport'), `rendered p0 header: ${badCodes.join(',')}`);
-      assert(badCodes.includes('logo-outside-header'), `rendered p0 footer logo: ${badCodes.join(',')}`);
+      assert(badCodes.includes('logo-paints'), `rendered p0 footer logo: ${badCodes.join(',')}`);
       assert(badCodes.includes('hidden-paints'), `rendered p0 hidden nav: ${badCodes.join(',')}`);
       assert(badCodes.includes('empty-white-box'), `rendered p0 white box: ${badCodes.join(',')}`);
       const good = await measureHtml(browser, correctApp0Html(), VIEWPORTS[0], {
@@ -223,6 +245,23 @@ if (chromePath()) {
       });
       const fullResult = evaluateLayout(full, tolerances);
       assert(fullResult.layout === 'PASS', `rendered website full-screen: ${fullResult.reasons.join(',')}`);
+      const tripPage = await measureHtml(browser, correctTripHtml(), VIEWPORTS[0], {
+        kind: 'trip',
+        state: 'day-by-day',
+        tabLabel: 'Day-by-Day',
+        specMissing: false,
+      });
+      const tripResult = evaluateLayout(tripPage, tolerances);
+      assert(tripResult.layout === 'PASS', `rendered trip without a logo or footer: ${tripResult.reasons.join(',')}`);
+      const branded = await measureHtml(browser, brandedTripHtml(), VIEWPORTS[0], {
+        kind: 'trip',
+        state: 'day-by-day',
+        tabLabel: 'Day-by-Day',
+        specMissing: false,
+      });
+      const brandedCodes = evaluateLayout(branded, tolerances).reasons;
+      assert(brandedCodes.includes('logo-paints'), `rendered trip brand logo: ${brandedCodes.join(',')}`);
+      assert(brandedCodes.includes('footer-paints'), `rendered trip footer: ${brandedCodes.join(',')}`);
       browserNote = 'chromium compare ok';
     } finally {
       await browser.close();

@@ -18,17 +18,12 @@
     {
       "id": "headerTopPx",
       "value": 1,
-      "specLine": "The header sits at the top of the viewport."
-    },
-    {
-      "id": "footerEndSlackPx",
-      "value": 8,
-      "specLine": "The footer sits at the document end. A logo floating mid-page fails."
+      "specLine": "On the signup page, a header that is present sits at the top of the viewport."
     },
     {
       "id": "stackGapPx",
       "value": 2,
-      "specLine": "The conversation list sits between the header and the text box. The vacation website sits on top, and the control slider sits in the middle, above the text box."
+      "specLine": "With 0 or 1 vacations the conversation is the top region and ends above the text box. With 2 or more and no website yet, the conversation ends above the text box. The vacation website sits on top, and the control slider sits in the middle, above the text box. Placement of the conversation under a website is not graded."
     },
     {
       "id": "fullscreenFillPx",

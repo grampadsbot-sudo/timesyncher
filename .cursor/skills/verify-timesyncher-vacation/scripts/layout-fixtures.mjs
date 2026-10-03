@@ -44,6 +44,7 @@ export function correctApp0() {
     regions: {
       messages: box(0, 0, 390, 772),
       composer,
+      composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
     },
@@ -199,6 +200,7 @@ export function emptyHeaderBar() {
       header: box(0, 0, 390, 56),
       messages: box(0, 56, 390, 716),
       composer,
+      composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
     },
@@ -251,6 +253,7 @@ export function correctWithSite() {
       slider: box(0, 520, 390, 12),
       fullscreen: box(330, 12, 44, 44),
       composer,
+      composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
     },
@@ -342,6 +345,7 @@ export function correctApp2() {
       dropdown: box(12, 8, 200, 32),
       messages: box(0, 48, 390, 724),
       composer,
+      composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
     },
@@ -357,12 +361,66 @@ export function correctTrip() {
     kind: 'trip',
     state: 'day-by-day',
     scrollHeight: 844,
-    regions: {
-      header: box(0, 0, 390, 56),
-      logo: box(12, 12, 32, 32),
-      footer: box(0, 812, 390, 32, { docBottom: 844 }),
-    },
+    regions: {},
     tabs: [{ name: 'Day-by-Day', box: tab, iconBox: icon }],
     tabRequired: true,
   });
+}
+
+export function tripWithLogo() {
+  const trip = correctTrip();
+  trip.regions.logo = box(184, 24, 22, 22);
+  return trip;
+}
+
+export function tripWithFooter() {
+  const trip = correctTrip();
+  trip.regions.footer = box(0, 820, 390, 24);
+  return trip;
+}
+
+export function correctTripHtml() {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #fff; }
+    button { padding: 0; border: 0; background: #fff; }
+    #day { position: absolute; left: 8px; top: 64px; width: 120px; height: 36px; }
+    #day span { position: absolute; left: 50px; top: 8px; width: 20px; height: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Las Vegas</h1>
+  <button id="day" type="button" aria-label="Day-by-Day"><span data-ts-logo-chip="1"></span></button>
+</body>
+</html>`;
+}
+
+export function brandedTripHtml() {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #fff; }
+    button { padding: 0; border: 0; background: #fff; }
+    #hero { position: absolute; left: 0; top: 0; width: 390px; height: 288px; }
+    #hero img { position: absolute; left: 184px; top: 24px; width: 22px; height: 22px; }
+    #day { position: absolute; left: 8px; top: 64px; width: 120px; height: 36px; }
+    #day span { position: absolute; left: 50px; top: 8px; width: 20px; height: 20px; }
+    footer { position: fixed; left: 0; bottom: 0; width: 390px; height: 20px; }
+  </style>
+</head>
+<body>
+  <div id="hero"><img class="ts-logo" alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><h1>Las Vegas</h1></div>
+  <button id="day" type="button" aria-label="Day-by-Day"><span data-ts-logo-chip="1"></span></button>
+  <footer data-build-stamp="1">build</footer>
+</body>
+</html>`;
 }
