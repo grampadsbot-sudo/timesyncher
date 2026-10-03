@@ -269,5 +269,9 @@ export {
   mergeLogoCssSuspects,
   objectFitContentBox,
   LOGO_CENTER_TOLERANCE_PX,
+  persistedLodgingAskSignals,
+  replyHasLodgingQuestion,
+  gradeAskLodging,
+  gradeAskD2NoQuestionReply,
 } from './shepherd-staging-smoke-grader-lib.mjs';
 

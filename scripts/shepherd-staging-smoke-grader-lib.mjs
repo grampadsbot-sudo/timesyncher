@@ -225,3 +225,70 @@ export function mergeLogoCssSuspects(rows = []) {
   }
   return out;
 }
+
+const LODGING_QUESTION_WORDS = /\b(stay(?:ing)?|lodging|hotels?|condo|rental|accommodations?)\b/i;
+
+/** Persisted per-fact lodging ask flags on a customer/app turn payload or turn JSON. */
+export function persistedLodgingAskSignals(payload = {}, turnJson = {}) {
+  const p = payload && typeof payload === 'object' ? payload : {};
+  const j = turnJson && typeof turnJson === 'object' ? turnJson : {};
+  const tripContext = p.tripContext || p.liveTranscript?.tripContext || j.tripContext || {};
+  const customerInputState = p.customerInputState || j.customerInputState || tripContext.customerInputState || {};
+  const needsRaw = customerInputState.needsCustomerInput
+    ?? tripContext.needsCustomerInput
+    ?? p.needsCustomerInput
+    ?? j.needsCustomerInput;
+  const needsCustomerInput = Array.isArray(needsRaw) ? needsRaw.map((item) => String(item)) : [];
+  const lodgingAsk = tripContext.lodgingAsk === true
+    || customerInputState.lodgingAsk === true
+    || p.lodgingAsk === true
+    || j.lodgingAsk === true;
+  const needsLodging = needsCustomerInput.includes('lodging');
+  return {
+    lodgingAsk,
+    needsCustomerInput,
+    needsLodging,
+    persistedLodgingAsk: lodgingAsk || needsLodging,
+    tripContext,
+    customerInputState,
+  };
+}
+
+export function replyHasLodgingQuestion(replyText) {
+  const hay = String(replyText || '');
+  const chunks = hay.split(/(?<=[.!?])\s+/).filter((part) => part.includes('?'));
+  if (!chunks.length && hay.includes('?')) chunks.push(hay);
+  return chunks.some((sentence) => LODGING_QUESTION_WORDS.test(sentence));
+}
+
+export function gradeAskLodging({ replyText, payload, turnJson, hotelCount }) {
+  const signals = persistedLodgingAskSignals(payload, turnJson);
+  const replyEvidence = String(replyText || '');
+  const replyLodgingQuestion = replyHasLodgingQuestion(replyEvidence);
+  const hotelN = Number(hotelCount);
+  const pass = hotelN === 0 && signals.persistedLodgingAsk && replyLodgingQuestion;
+  return {
+    pass,
+    evidence: {
+      replyText: replyEvidence.slice(0, 2000),
+      hotelCount: hotelN,
+      replyLodgingQuestion,
+      ...signals,
+    },
+  };
+}
+
+export function gradeAskD2NoQuestionReply(replyText) {
+  const replyEvidence = String(replyText || '');
+  const hasQuestionMark = replyEvidence.includes('?');
+  const whichLocation = /\bwhich\b[^?\n]{0,120}\blocation\b/i.test(replyEvidence);
+  const pass = !hasQuestionMark && !whichLocation;
+  return {
+    pass,
+    evidence: {
+      replyText: replyEvidence.slice(0, 2000),
+      hasQuestionMark,
+      whichLocation,
+    },
+  };
+}

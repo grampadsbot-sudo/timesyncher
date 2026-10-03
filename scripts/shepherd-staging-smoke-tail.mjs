@@ -7,6 +7,7 @@ import {
   matchCollaboratorWelcome,
   a2WelcomePass,
   welcomeTranscriptTurnsForClaims,
+  gradeAskD2NoQuestionReply,
 } from './shepherd-staging-smoke-lib.mjs';
 import {
   postItinerary,
@@ -17,7 +18,6 @@ import {
   customerVisibleReplies,
   scanErrorText,
 } from './shepherd-staging-smoke-helpers.mjs';
-import { SMOKE_PARALLEL_INDEPENDENT_NAMES } from './shepherd-staging-smoke-plan.mjs';
 
 async function freshOwnerSession(ctx, couponCode, tag, firstName = tag, lastName = ctx.SHA7) {
   const { BASE, SHA7, RUN_TS } = ctx;
@@ -229,6 +229,7 @@ export function buildTailIndependentParallelChecks(ctx) {
           d2: {
             http: d2.status,
             reply: d2Reply.slice(0, 300),
+            replyEvidence: d2Reply,
             unschedReply: d2Unsched,
             targetKind: d2Persist.targetKind,
             customerTurnId: d2Db?.id || null,
@@ -289,6 +290,20 @@ export async function runShepherdSmokeTail(ctx) {
     customerId,
     runCheck,
   } = ctx;
+
+  await runCheck('ASK-d2', async ({ setStage }) => {
+    setStage('ask-d2 d2 reply must not question');
+    const d2Block = out.checkD?.d2 || {};
+    const replyText = d2Block.replyEvidence || d2Block.turnResponse?.reply || d2Block.reply || '';
+    const grade = gradeAskD2NoQuestionReply(replyText);
+    out.checkASKD2 = {
+      ...grade.evidence,
+      d2CustomerTurnId: d2Block.customerTurnId || null,
+      dTripId: out.checkD?.dTripId || null,
+    };
+    const pass = Boolean(d2Block.customerTurnId) && grade.pass;
+    return { pass, http: d2Block.http || 200 };
+  }, { timeoutMs: 60000 });
 
   await runCheck('P', async () => {
     const pHits = out.checkP?.commerceHits || [];

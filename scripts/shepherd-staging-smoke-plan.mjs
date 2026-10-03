@@ -5,8 +5,8 @@ export const SMOKE_PARALLEL_CONCURRENCY = 6;
 /** Full registration order for cap / lint. */
 export const SMOKE_CHECK_ORDER = [
   '1', '2', '3', '4', 'C', 'W', '5', 'I', '6', 'H', 'MAP', 'BUD', 'LOGO', 'INV-UI',
-  '6b', 'T', 'CL', '7', '8', 'H2', 'M', 'R', 'K', 'O',
-  'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'INV-CLAIM',
+  '6b', 'T', 'CL', '7', '8', 'H2', 'M', 'R', 'K', 'ASK-lodging', 'O',
+  'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'ASK-d2', 'INV-CLAIM',
 ];
 
 /** Main customer spine — one session/trip/couponMain; must stay sequential. */
@@ -27,12 +27,13 @@ export const SMOKE_PARALLEL_INDEPENDENT = [
   { name: 'A2', coupon: 'couponA2', customer: 'a2-owner', browser: false },
   { name: 'D', coupon: 'couponDTrip', customer: 'd-owner', browser: false },
   { name: 'INV-CLAIM', coupon: 'couponInvClaim', customer: 'inv-owner', browser: false },
+  { name: 'ASK-lodging', coupon: null, customer: 'ask-lodging', browser: false },
 ];
 
 export const SMOKE_PARALLEL_INDEPENDENT_NAMES = SMOKE_PARALLEL_INDEPENDENT.map((r) => r.name);
 
 /** Post-spine checks that depend on main + parallel results. */
-export const SMOKE_TAIL_SEQUENTIAL = ['E', 'prior_db', 'P'];
+export const SMOKE_TAIL_SEQUENTIAL = ['ASK-d2', 'P', 'E', 'prior_db'];
 
 function assertParallelPlanDisjoint() {
   const coupons = SMOKE_PARALLEL_INDEPENDENT.map((r) => r.coupon).filter(Boolean);

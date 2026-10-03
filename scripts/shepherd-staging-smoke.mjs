@@ -14,6 +14,7 @@ import {
   SMOKE_TAIL_SEQUENTIAL,
   SMOKE_PARALLEL_INDEPENDENT,
 } from './shepherd-staging-smoke-plan.mjs';
+import { buildAskLodgingParallelCheck } from './shepherd-staging-smoke-ask.mjs';
 import { buildTailIndependentParallelChecks, runShepherdSmokeTail } from './shepherd-staging-smoke-tail.mjs';
 
 const EXPECT_SHA = process.argv[2];
@@ -119,6 +120,7 @@ sharedCtx.sharedBrowser = sharedBrowser;
 const parallelEntries = [
   ...buildMainIndependentParallelChecks(sharedCtx),
   ...buildTailIndependentParallelChecks(sharedCtx),
+  ...buildAskLodgingParallelCheck(sharedCtx),
 ];
 
 await Promise.all([

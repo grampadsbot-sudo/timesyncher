@@ -19,7 +19,10 @@ import {
   gradeLogoTabResult,
   attributeLogoMisalignmentCss,
   objectFitContentBox,
-  LOGO_CENTER_TOLERANCE_PX,
+  gradeAskLodging,
+  gradeAskD2NoQuestionReply,
+  replyHasLodgingQuestion,
+  persistedLodgingAskSignals,
 } from './shepherd-staging-smoke-lib.mjs';
 
 assert.equal(isoDateFromStartsAt(new Date('2027-03-13T12:00:00.000Z')), '2027-03-13');
@@ -182,5 +185,26 @@ assert.equal(tabFail.pass, false);
 const suspects = attributeLogoMisalignmentCss({ liAlignItems: 'flex-start', imgMargin: '0px auto' });
 assert.ok(suspects.some((s) => s.file.includes('trek-style2-bundle.mjs')));
 assert.ok(suspects.some((s) => s.file === 'shared-app.html'));
+
+const lodgingSignals = persistedLodgingAskSignals(
+  { tripContext: { lodgingAsk: true, needsCustomerInput: ['lodging'] } },
+  {},
+);
+assert.equal(lodgingSignals.persistedLodgingAsk, true);
+assert.equal(replyHasLodgingQuestion('Where are you staying on Maui?'), true);
+assert.equal(replyHasLodgingQuestion('Great — I saved your dates.'), false);
+const lodgingPass = gradeAskLodging({
+  replyText: 'Where will you be staying during the trip?',
+  payload: { tripContext: { lodgingAsk: true } },
+  turnJson: {},
+  hotelCount: 0,
+});
+assert.equal(lodgingPass.pass, true);
+
+const d2Pass = gradeAskD2NoQuestionReply('Paia Fish Market is saved but not on a day yet.');
+const d2Fail = gradeAskD2NoQuestionReply('Which location did you mean?');
+assert.equal(d2Pass.pass, true);
+assert.equal(d2Fail.pass, false);
+assert.equal(d2Fail.evidence.whichLocation, true);
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));
