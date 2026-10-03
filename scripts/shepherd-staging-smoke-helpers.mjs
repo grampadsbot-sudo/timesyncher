@@ -1,15 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
+import { PNG } from 'pngjs';
 import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { normalizePlaceName } from '../src/vacation/intake-lodging-candidate.mjs';
 import { loadCollaboratorAppSeatEulaText } from '../src/onboarding/eula-persistent-core.mjs';
 import {
-  evaluateLeafletProductMapInPage,
-  evaluateTripMapInPage,
-  budgetHardcodedHits,
-  gradeLeafletProductMap,
-  gradeMapBar,
-  sharedTabLabelIncludes,
-} from './shepherd-staging-smoke-lib.mjs';
+  configureSharedUiHelpers,
+  runSharedSiteLogoBarChecks,
+  runSharedSiteMapBudLogoChecks,
+} from './shepherd-staging-smoke-shared-ui.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
 /** @typedef {{ BASE: string, RUN_TS: number, DECOY_TITLE: string, HYATT_CANON: string, REAL_HYATT: { lat: number, lng: number, street: string }, SHA7: string, commerceHits: (text: string) => string[] }} ShepherdHelperConfig */
@@ -24,6 +23,7 @@ let SHA7 = '';
 let commerceHits = () => [];
 
 export function configureShepherdSmokeHelpers(cfg) {
+  configureSharedUiHelpers(cfg);
   BASE = cfg.BASE;
   RUN_TS = cfg.RUN_TS;
   DECOY_TITLE = cfg.DECOY_TITLE;
@@ -108,177 +108,7 @@ export function persistedTurnClassifier(payload) {
   return { targetKind: tc.targetKind || p.targetKind || null, category: tc.category || p.category || null, reason: tc.reason || p.placeSearch?.error || null };
 }
 
-async function mapSharedTripState(page, url) {
-  const mapConsoleErrors = [];
-  page.on('console', (m) => {
-    const t = m.text();
-    if (/map_center_unresolved|map_mount_failed|map_/.test(t)) mapConsoleErrors.push(t);
-  });
-  await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
-  await new Promise((r) => setTimeout(r, 4000));
-  await clickSharedTabByKeyword(page, 'plan');
-  await page.waitForSelector('.leaflet-container', { timeout: 90000 }).catch((err) => {
-    mapConsoleErrors.push(`leaflet_wait:${String(err?.message || err)}`);
-  });
-  await new Promise((r) => setTimeout(r, 2500));
-  const productMapState = await page.evaluate(evaluateLeafletProductMapInPage);
-  const mapState = await page.evaluate(evaluateTripMapInPage);
-  return { mapState, productMapState, mapConsoleErrors };
-}
-
-async function clickSharedTabByKeyword(page, keyword) {
-  return page.evaluate((kw) => {
-    function normalize(text) {
-      return String(text || '')
-        .replace(/\p{Extended_Pictographic}/gu, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase();
-    }
-    const want = normalize(kw);
-    const nodes = Array.from(document.querySelectorAll(
-      'button, [role="tab"], a, [data-tab], [data-ts-tab]',
-    ));
-    for (const node of nodes) {
-      const title = node.getAttribute('title') || '';
-      const dataTab = node.getAttribute('data-tab') || node.getAttribute('data-ts-tab') || '';
-      const combined = [node.textContent, title, dataTab].join(' ');
-      if (normalize(combined).includes(want)) {
-        node.click();
-        return true;
-      }
-    }
-    return false;
-  }, keyword);
-}
-
-async function sharedTabPresent(page, keyword) {
-  return page.evaluate((kw) => {
-    function normalize(text) {
-      return String(text || '')
-        .replace(/\p{Extended_Pictographic}/gu, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase();
-    }
-    const want = normalize(kw);
-    const nodes = Array.from(document.querySelectorAll(
-      'button, [role="tab"], a, [data-tab], [data-ts-tab]',
-    ));
-    return nodes.some((node) => {
-      const title = node.getAttribute('title') || '';
-      const dataTab = node.getAttribute('data-tab') || node.getAttribute('data-ts-tab') || '';
-      const combined = [node.textContent, title, dataTab].join(' ');
-      return normalize(combined).includes(want);
-    });
-  }, keyword);
-}
-
-async function sharedBudgetTabCheck(page, budgetLines = []) {
-  const clicked = await clickSharedTabByKeyword(page, 'budget');
-  await new Promise((r) => setTimeout(r, 1500));
-  const bodyText = await page.evaluate(() => document.body?.innerText || '');
-  const hardcoded = budgetHardcodedHits(bodyText, budgetLines);
-  const tabPresent = await sharedTabPresent(page, 'budget');
-  const pageErrors = await page.evaluate(() => ({
-    mapError: !!document.querySelector('[data-ts-trip-map-error]'),
-    unresolved: !!document.querySelector('[data-map-center-unresolved]'),
-  }));
-  return {
-    tabPresent,
-    clicked,
-    hardcoded,
-    pageErrors,
-    bodySnippet: bodyText.slice(0, 400),
-  };
-}
-
-async function sharedLogoChipMetrics(page, tabKeyword) {
-  const clicked = await clickSharedTabByKeyword(page, tabKeyword);
-  await new Promise((r) => setTimeout(r, 1200));
-  const chips = await page.evaluate(() => {
-    const imgs = Array.from(document.querySelectorAll('li img, img.tiny-logo, [data-has-logo="1"] img'));
-    return imgs.map((img) => {
-      const chip = img.parentElement;
-      if (!chip) return null;
-      const ir = img.getBoundingClientRect();
-      const cr = chip.getBoundingClientRect();
-      if (ir.width < 4 || cr.width < 4) return null;
-      const icx = ir.left + ir.width / 2;
-      const icy = ir.top + ir.height / 2;
-      const ccx = cr.left + cr.width / 2;
-      const ccy = cr.top + cr.height / 2;
-      return {
-        dx: Math.abs(icx - ccx),
-        dy: Math.abs(icy - ccy),
-        chipW: cr.width,
-        chipH: cr.height,
-        imgW: ir.width,
-        imgH: ir.height,
-        alt: img.getAttribute('alt') || '',
-      };
-    }).filter(Boolean);
-  });
-  const tolerance = 2;
-  const rows = chips.map((c) => ({
-    ...c,
-    centered: c.dx <= tolerance && c.dy <= tolerance,
-  }));
-  return { tab: tabKeyword, clicked, rows, pass: clicked && rows.every((r) => r.centered) };
-}
-
-export async function runSharedSiteMapBudLogoChecks({
-  page,
-  mapUrl,
-  publicUrlAfterH,
-  shareSlug,
-  sharedApi,
-  artifactPath,
-}) {
-  let mapCapture = { mapUrl, mapState: null, productMapState: null, mapConsoleErrors: [] };
-  if (mapUrl) mapCapture = { mapUrl, ...(await mapSharedTripState(page, mapUrl)) };
-  const mapShot = artifactPath('trip-map.png');
-  await page.screenshot({ path: mapShot, fullPage: true });
-  const budgetShot = artifactPath('shared-budget.png');
-  const budgetCheck = mapUrl
-    ? await sharedBudgetTabCheck(page, sharedApi?.json?.budget || [])
-    : { tabPresent: false, clicked: false, hardcoded: [], pageErrors: {} };
-  if (budgetCheck.clicked) await page.screenshot({ path: budgetShot, fullPage: true });
-  const logoShot = artifactPath('shared-logo-chips.png');
-  const logoHotels = mapUrl ? await sharedLogoChipMetrics(page, 'hotels') : { pass: false, rows: [], clicked: false };
-  const logoCars = mapUrl ? await sharedLogoChipMetrics(page, 'cars') : { pass: false, rows: [], clicked: false };
-  if (logoHotels.clicked || logoCars.clicked) await page.screenshot({ path: logoShot, fullPage: true });
-  const sharedHtml = await page.content();
-  const productMapGrade = gradeLeafletProductMap(mapCapture.productMapState, mapCapture.mapConsoleErrors);
-  const mapGrade = gradeMapBar(mapCapture.mapState, mapCapture.mapConsoleErrors);
-  const placesOk = (sharedApi?.json?.places || []).length >= 1;
-  const budPass = Boolean(publicUrlAfterH) && placesOk && budgetCheck.tabPresent && budgetCheck.clicked
-    && budgetCheck.hardcoded.length === 0 && !budgetCheck.pageErrors?.mapError;
-  const logoPass = logoHotels.pass && logoCars.pass && logoHotels.clicked && logoCars.clicked;
-  const mapPass = Boolean(publicUrlAfterH) && placesOk && productMapGrade.pass;
-  return {
-    mapShot,
-    budgetShot: budgetCheck.clicked ? budgetShot : null,
-    logoShot: (logoHotels.rows.length || logoCars.rows.length) ? logoShot : null,
-    sharedHtml,
-    checkMAP: {
-      publicUrl: publicUrlAfterH,
-      shareSlug,
-      sharedApiPlaces: (sharedApi?.json?.places || []).length,
-      mapCapture,
-      productMapGrade,
-      mapGrade,
-      mapShot,
-    },
-    checkBUD: {
-      budgetCheck,
-      budgetShot: budgetCheck.clicked ? budgetShot : null,
-      apiBudgetLines: (sharedApi?.json?.budget || []).length,
-    },
-    checkLOGO: { hotels: logoHotels, cars: logoCars, logoShot: (logoHotels.rows.length || logoCars.rows.length) ? logoShot : null },
-    checks: { MAP: mapPass ? 'PASS' : 'FAIL', BUD: budPass ? 'PASS' : 'FAIL', LOGO: logoPass ? 'PASS' : 'FAIL' },
-  };
-}
+export { runSharedSiteLogoBarChecks, runSharedSiteMapBudLogoChecks };
 
 export function inviteUiHits(html) {
   const hits = [];
