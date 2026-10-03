@@ -5,10 +5,13 @@ import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { loadTripOwnerReplyPlan } from './reply-plan-entitlement.mjs';
 import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import {
-  FIRST_INTAKE_GAP_INSTRUCTION,
-  FIRST_INTAKE_QUESTION_INSTRUCTION,
-  FIRST_INTAKE_VOICE_INSTRUCTION,
+  applyCustomerInputToFirstIntakeFacts,
+  firstIntakeLodgingCustomerInput,
+  persistTripLodgingCustomerInputGap,
+} from './first-intake-customer-input.mjs';
+import {
   firstIntakeReplyFacts,
+  firstIntakeReplyInstruction,
   hiddenIds,
   intakeCustomerName,
   intakeFactText,
@@ -34,6 +37,12 @@ export async function produceFirstIntakeReply({
   if (!rules?.ok) {
     return { reply: null, rules, jev: null, model: null, reason: rules?.error || 'reply_rules_unloaded' };
   }
+  const saved = await loadSavedTripRecord(session, env);
+  const tripStart = String(savedStart || saved?.start || '').trim();
+  const tripEnd = String(savedEnd || saved?.end || '').trim();
+  const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
+  const customerInput = firstIntakeLodgingCustomerInput(saved?.things || [], wantedThings);
+  await persistTripLodgingCustomerInputGap(env, tripId, customerInput);
   const jevStarted = Date.now();
   const jev = await jevPrecall({
     customerTurn,
@@ -44,13 +53,9 @@ export async function produceFirstIntakeReply({
   });
   if (jev && typeof jev === 'object') jev.jevLatencyMs = Math.max(0, Date.now() - jevStarted);
   if (!jev?.jevRan) {
-    return { reply: null, rules, jev, model: null, reason: jev?.error || 'jev_skipped' };
+    return { reply: null, rules, jev, model: null, customerInput, reason: jev?.error || 'jev_skipped' };
   }
   jev.jevBeforeModel = true;
-  const saved = await loadSavedTripRecord(session, env);
-  const tripStart = String(savedStart || saved?.start || '').trim();
-  const tripEnd = String(savedEnd || saved?.end || '').trim();
-  const tripId = String(session?.trip_id || session?.tripId || saved?.tripId || '').trim();
   const ownerPlan = saved?.ownerPlan
     || (tripId ? await loadOwnerPlan({ tripId, env }) : null);
   const ids = hiddenIds(session, [saved?.id, saved?.tripId, saved?.trip_id, tripId]);
@@ -70,12 +75,11 @@ export async function produceFirstIntakeReply({
     session,
     ids,
   };
-  const facts = applyTurnInviteReplyFacts(firstIntakeReplyFacts(factInput), turnActionResults);
-  const prompt = `${facts.shape === 'voice-note'
-    ? FIRST_INTAKE_VOICE_INSTRUCTION
-    : facts.shape === 'question'
-      ? FIRST_INTAKE_QUESTION_INSTRUCTION
-      : FIRST_INTAKE_GAP_INSTRUCTION}\n\nIntake facts: ${JSON.stringify(facts)}`;
+  const facts = applyCustomerInputToFirstIntakeFacts(
+    applyTurnInviteReplyFacts(firstIntakeReplyFacts(factInput), turnActionResults),
+    customerInput,
+  );
+  const prompt = `${firstIntakeReplyInstruction(facts)}\n\nIntake facts: ${JSON.stringify(facts)}`;
   let model = null;
   let reply = '';
   let block = '';
@@ -110,6 +114,7 @@ export async function produceFirstIntakeReply({
       rules,
       jev,
       model,
+      customerInput,
       reason: (visible && intakeReplyBlock(visible, appTextBanned, facts, ids)) || fallbackReason,
       blockedDraft: visible || '',
       blockedReasons: blockedReasons.length ? blockedReasons : (visible ? [fallbackReason] : [fallbackReason]),
@@ -131,10 +136,11 @@ export async function produceFirstIntakeReply({
       rules,
       jev,
       model,
+      customerInput,
       reason,
       blockedDraft: reply,
       blockedReasons: [String(error.reason || reason)],
     };
   }
-  return { reply, rules, jev, model, reason: null };
+  return { reply, rules, jev, model, customerInput, reason: null };
 }
