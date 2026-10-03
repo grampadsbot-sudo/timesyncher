@@ -29,6 +29,11 @@
       "id": "stackGapPx",
       "value": 2,
       "specLine": "The conversation list sits between the header and the text box. The vacation website sits on top, and the control slider sits in the middle, above the text box."
+    },
+    {
+      "id": "fullscreenFillPx",
+      "value": 0.5,
+      "specLine": "With 0 or 1 vacations the header is absent or its height is 0. An empty header bar fails. Website full-screen: the website fills the viewport."
     }
   ]
 }

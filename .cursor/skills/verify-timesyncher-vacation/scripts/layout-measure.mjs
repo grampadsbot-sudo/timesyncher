@@ -118,6 +118,10 @@ function measureInPage(request) {
     return text.endsWith(label) && text.length <= label.length + 3;
   }
 
+  function namedButton(names) {
+    return [...document.querySelectorAll('button, [role="button"]')].find((el) => names.includes(accName(el) || flatText(el))) || null;
+  }
+
   const banner = document.querySelector('h1')?.parentElement || null;
   const header = document.querySelector('header.topbar') || document.querySelector('header') || banner;
   const composer = document.querySelector('textarea#messageText');
@@ -135,6 +139,8 @@ function measureInPage(request) {
   }) || null;
   const settings = [...document.querySelectorAll('button')].find((el) => (accName(el) || flatText(el)) === 'Settings') || null;
   const signupForm = document.querySelector('input[name="firstName"]')?.closest('form') || null;
+  const fullscreen = document.querySelector('#fullscreenButton') || namedButton(['Full screen', 'Enter full screen']);
+  const fullscreenExit = document.querySelector('#exitFullscreenButton') || namedButton(['Exit full screen', 'Close full screen']);
 
   const textboxes = [...document.querySelectorAll('textarea')].filter((el) => {
     const box = readBox(el);
@@ -152,8 +158,11 @@ function measureInPage(request) {
     if (shell(el)) return true;
     if (request.kind !== 'app') return true;
     if (messages && request.showMessages && (el === messages || messages.contains(el))) return true;
-    if (site && request.hasSite && (el === site || site.contains(el) || (site.parentElement && (el === site.parentElement || site.parentElement.contains(el))))) return true;
-    if (slider && request.hasSite && (el === slider || slider.contains(el))) return true;
+    if (site && request.hasSite && (el === site || site.contains(el))) return true;
+    if (site && request.hasSite && site.parentElement && el === site.parentElement) return true;
+    if (slider && request.hasSite && request.state !== 'website-full-screen' && (el === slider || slider.contains(el))) return true;
+    if (fullscreen && request.state !== 'website-full-screen' && (el === fullscreen || fullscreen.contains(el))) return true;
+    if (fullscreenExit && request.state === 'website-full-screen' && (el === fullscreenExit || fullscreenExit.contains(el))) return true;
     if (form && (el === form || form.contains(el))) {
       if (allowedControls.has(el) || [...allowedControls].some((control) => control.contains(el))) return true;
       if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'IMG') return false;
@@ -163,6 +172,7 @@ function measureInPage(request) {
       const border = ['Top', 'Right', 'Bottom', 'Left'].some((side) => parseFloat(style[`border${side}Width`]) > 0);
       return !paintedBg && !border;
     }
+    if (request.state === 'app-2-plus' && header && el === header) return true;
     if (request.state === 'app-2-plus' && dropdown) {
       const menu = dropdown.closest('#tripMenu') || dropdown;
       if (el === menu || menu.contains(el)) return true;
@@ -206,7 +216,6 @@ function measureInPage(request) {
     tabs.push({ name: request.tabLabel, box: button ? readBox(button) : null, iconBox });
   }
 
-  const headerBox = visible(header) || (header ? readBox(header) : null);
   const logoBox = visible(logo);
   return {
     viewport,
@@ -218,8 +227,10 @@ function measureInPage(request) {
     specMissing: Boolean(request.specMissing),
     tabRequired: Boolean(request.tabLabel),
     regions: {
-      header: headerBox && headerBox.paints ? headerBox : null,
+      header: header ? readBox(header) : null,
       logo: logoBox,
+      fullscreen: visible(fullscreen),
+      fullscreenExit: visible(fullscreenExit),
       dropdown: visible(dropdown),
       messages: visible(messages),
       composer: visible(composer),

@@ -61,7 +61,7 @@ function appUrl() {
 function loadSpec(screenId) {
   const dir = path.join(root, 'features/screens');
   const specific = path.join(dir, `${screenId}.md`);
-  const sharedName = screenId.startsWith('app-') ? 'app.md' : 'trip.md';
+  const sharedName = screenId.startsWith('app-') || screenId === 'website-full-screen' ? 'app.md' : 'trip.md';
   const signup = screenId === 'signup' || screenId === 'form';
   const shared = path.join(dir, signup ? 'signup.md' : sharedName);
   const file = existsSync(specific) ? specific : shared;
@@ -210,7 +210,7 @@ async function driveChat(browser, shotDir, rows, measurements) {
   const prerequisite = 'an accepted staging session in TIMESYNCHER_VERIFY_SESSION. No disposable signup coupon is documented, so this drive does not create an account.';
   if (!url) {
     for (const viewport of VIEWPORTS) {
-      for (const sub of [...APP_STATES, 'send-one-message']) rows.push(unreachableRow('chat', sub, viewport.id, prerequisite));
+      for (const sub of [...APP_STATES, 'website-full-screen', 'send-one-message']) rows.push(unreachableRow('chat', sub, viewport.id, prerequisite));
     }
     return;
   }
@@ -256,6 +256,43 @@ async function driveChat(browser, shotDir, rows, measurements) {
         });
         rows.push(row);
         measurements.push({ feature: 'chat', sub, viewport: viewport.id, measurement, judge });
+      }
+      if (current) {
+        const spec = loadSpec('website-full-screen');
+        const entered = detected.hasSite
+          ? await clickControl(page, ['Full screen', 'Enter full screen'], 'fullscreenButton')
+          : false;
+        if (entered) await sleep(400);
+        const measurement = await measurePage(page, {
+          kind: 'app',
+          state: 'website-full-screen',
+          hasSite: true,
+          showMessages: false,
+          specMissing: spec.specMissing,
+        });
+        measurement.specMissing = spec.specMissing;
+        const shot = await shoot(page, shotDir, 'chat', 'website-full-screen', viewport.id);
+        const judge = await grade(shot.viewportPath, spec.specText);
+        const extra = [];
+        if (entered) {
+          const exitClicked = await clickControl(page, ['Exit full screen', 'Close full screen'], 'exitFullscreenButton');
+          if (exitClicked) await sleep(400);
+          const restored = exitClicked && await splitRestored(page);
+          if (!restored) extra.push('fullscreen-exit-did-not-return');
+        }
+        await writeFile(path.join(shotDir, `${shot.stem}.json`), JSON.stringify({ measurement, judge, entered, specFile: spec.specFile }, null, 2));
+        rows.push(finishRow({
+          feature: 'chat',
+          sub: 'website-full-screen',
+          viewport: viewport.id,
+          measurement,
+          judge,
+          screenshot: path.relative(path.dirname(shotDir), shot.viewportPath),
+          extra,
+        }));
+        measurements.push({ feature: 'chat', sub: 'website-full-screen', viewport: viewport.id, entered, measurement, judge });
+      } else {
+        rows.push(unreachableRow('chat', 'website-full-screen', viewport.id, why));
       }
       let reply = sent;
       if (current && !sent) {
@@ -313,6 +350,31 @@ async function driveChat(browser, shotDir, rows, measurements) {
       await page.close();
     }
   }
+}
+
+async function clickControl(page, names, id) {
+  return page.evaluate((names, id) => {
+    const byId = id ? document.getElementById(id) : null;
+    const button = byId || [...document.querySelectorAll('button, [role="button"]')].find((el) => {
+      const name = (el.getAttribute('aria-label') || el.getAttribute('title') || el.innerText || '').replace(/\s+/g, ' ').trim();
+      return names.includes(name);
+    });
+    if (!button) return false;
+    button.click();
+    return true;
+  }, names, id);
+}
+
+async function splitRestored(page) {
+  return page.evaluate(() => {
+    const paints = (el) => {
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0 && rect.width >= 0.5 && rect.height >= 0.5;
+    };
+    return paints(document.querySelector('#messageText')) && paints(document.querySelector('#splitter'));
+  });
 }
 
 async function clickTab(page, label) {

@@ -100,13 +100,24 @@ function composerChecks(reasons, measurement, limits) {
   if (boxes.length !== 1) fail(reasons, 'second-textbox');
 }
 
-function headerEmpty(reasons, measurement, eps) {
+function headerHidden(reasons, measurement, limits) {
   const header = measurement.regions?.header;
-  if (measured(header) && headerIntersects(header, measurement.viewport)) fail(reasons, 'header-not-empty');
-  if (measured(header) && (header.w > measurement.viewport.width + eps || rightOf(header) > measurement.viewport.width + eps)) {
+  const eps = limits.edgeEpsilonPx;
+  const limit = Number.isFinite(limits.fullscreenFillPx) ? limits.fullscreenFillPx : eps;
+  if (header && (header.paints || Number(header.h) > limit)) fail(reasons, 'header-renders');
+  if (measured(measurement.regions?.logo)) fail(reasons, 'header-renders');
+  if (header && (header.w > measurement.viewport.width + eps || rightOf(header) > measurement.viewport.width + eps)) {
     fail(reasons, 'header-wider-than-viewport');
   }
-  if (measured(measurement.regions?.logo)) fail(reasons, 'header-not-empty');
+}
+
+function fillsViewport(box, viewport, limit) {
+  return box.x <= limit
+    && box.y <= limit
+    && rightOf(box) >= viewport.width - limit
+    && bottomOf(box) >= viewport.height - limit
+    && rightOf(box) <= viewport.width + limit
+    && bottomOf(box) <= viewport.height + limit;
 }
 
 function headerIntersects(box, viewport) {
@@ -163,19 +174,52 @@ function forbiddenChrome(reasons, measurement) {
   }
 }
 
+function fullscreenControl(reasons, measurement, limits) {
+  const control = measurement.regions?.fullscreen;
+  const site = measurement.regions?.site;
+  const eps = limits.edgeEpsilonPx;
+  if (!requireBox(reasons, control, 'fullscreen-control-unmeasured')) return;
+  if (!measured(site)) return;
+  const centerX = control.x + control.w / 2;
+  const centerY = control.y + control.h / 2;
+  const inside = centerX >= site.x - eps && centerX <= rightOf(site) + eps
+    && centerY >= site.y - eps && centerY <= bottomOf(site) + eps;
+  if (!inside) fail(reasons, 'fullscreen-control-outside-site');
+}
+
+function fullscreenState(reasons, measurement, limits) {
+  const limit = Number.isFinite(limits.fullscreenFillPx) ? limits.fullscreenFillPx : limits.edgeEpsilonPx;
+  widthChecks(reasons, measurement, limits.edgeEpsilonPx);
+  forbiddenChrome(reasons, measurement);
+  if ((measurement.strayLogos || []).length) fail(reasons, 'logo-outside-header');
+  headerHidden(reasons, measurement, limits);
+  const site = measurement.regions?.site;
+  if (!measured(site)) fail(reasons, 'fullscreen-site-unmeasured');
+  else if (!fillsViewport(site, measurement.viewport, limit)) fail(reasons, 'fullscreen-not-filled');
+  if (!measured(measurement.regions?.fullscreenExit)) fail(reasons, 'fullscreen-exit-unmeasured');
+  if (measured(measurement.regions?.composer) || measured(measurement.regions?.slider) || measured(measurement.regions?.messages) || measured(measurement.regions?.dropdown) || (measurement.textboxes || []).length) {
+    fail(reasons, 'fullscreen-chrome-paints');
+  }
+}
+
 function appRules(reasons, measurement, limits) {
   const state = measurement.state;
+  if (state === 'website-full-screen') {
+    fullscreenState(reasons, measurement, limits);
+    return;
+  }
   composerChecks(reasons, measurement, limits);
   widthChecks(reasons, measurement, limits.edgeEpsilonPx);
   forbiddenChrome(reasons, measurement);
   if ((measurement.strayLogos || []).length) fail(reasons, 'logo-outside-header');
   if (state === 'app-2-plus') dropdownOnly(reasons, measurement);
-  else headerEmpty(reasons, measurement, limits.edgeEpsilonPx);
+  else headerHidden(reasons, measurement, limits);
   if (state === 'app-0-vacations' || state === 'app-1-no-site' || (state === 'app-2-plus' && !measurement.hasSite)) {
     messagesBetween(reasons, measurement, limits);
   }
   if (state === 'app-1-with-site' || (state === 'app-2-plus' && measurement.hasSite)) {
     siteAndSlider(reasons, measurement, limits);
+    fullscreenControl(reasons, measurement, limits);
   }
 }
 

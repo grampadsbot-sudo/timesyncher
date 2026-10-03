@@ -188,6 +188,167 @@ export function probeShared390() {
   });
 }
 
+/** An empty header bar still has height. That is a fail for 0 or 1 vacations. */
+export function emptyHeaderBar() {
+  const viewport = { width: 390, height: 844 };
+  const composer = box(58, 787, 230, 42);
+  return base(viewport, {
+    kind: 'app',
+    state: 'app-1-no-site',
+    regions: {
+      header: box(0, 0, 390, 56),
+      messages: box(0, 56, 390, 716),
+      composer,
+      fileAdd: box(8, 787, 42, 42),
+      speak: box(340, 787, 42, 42),
+    },
+    textboxes: [composer],
+  });
+}
+
+export function emptyHeaderBarHtml() {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #fff; }
+    button, textarea { padding: 0; border: 0; }
+    header.topbar { position: absolute; left: 0; top: 0; width: 390px; height: 56px; background: #fff; }
+    #messages { position: absolute; left: 0; top: 56px; width: 390px; height: 716px; }
+    #composer { position: absolute; left: 0; top: 772px; width: 390px; height: 72px; margin: 0; background: #fff; }
+    #attachButton, #voiceButton, #messageText { position: absolute; top: 15px; height: 42px; margin: 0; }
+    #attachButton { left: 8px; width: 42px; }
+    #messageText { left: 58px; width: 230px; }
+    #voiceButton { left: 340px; width: 42px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar"></header>
+    <section id="messages">Hello</section>
+    <form id="composer">
+      <button id="attachButton" type="button" aria-label="Add vacation files">+</button>
+      <textarea id="messageText" aria-label="Message TimeSyncher Vacation"></textarea>
+      <button id="voiceButton" type="button" aria-label="Speak a message">mic</button>
+    </form>
+  </main>
+</body>
+</html>`;
+}
+
+export function correctWithSite() {
+  const viewport = { width: 390, height: 844 };
+  const composer = box(58, 787, 230, 42);
+  return base(viewport, {
+    kind: 'app',
+    state: 'app-1-with-site',
+    hasSite: true,
+    regions: {
+      site: box(0, 0, 390, 520),
+      slider: box(0, 520, 390, 12),
+      fullscreen: box(330, 12, 44, 44),
+      composer,
+      fileAdd: box(8, 787, 42, 42),
+      speak: box(340, 787, 42, 42),
+    },
+    textboxes: [composer],
+  });
+}
+
+export function correctWithSiteHtml() {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #fff; }
+    button, textarea, iframe { padding: 0; border: 0; }
+    .site-pane { position: absolute; left: 0; top: 0; width: 390px; height: 520px; }
+    .site-pane iframe { width: 390px; height: 520px; }
+    #fullscreenButton { position: absolute; left: 330px; top: 12px; width: 44px; height: 44px; }
+    #splitter { position: absolute; left: 0; top: 520px; width: 390px; height: 12px; }
+    #composer { position: absolute; left: 0; top: 772px; width: 390px; height: 72px; margin: 0; background: #fff; }
+    #attachButton, #voiceButton, #messageText { position: absolute; top: 15px; height: 42px; margin: 0; }
+    #attachButton { left: 8px; width: 42px; }
+    #messageText { left: 58px; width: 230px; }
+    #voiceButton { left: 340px; width: 42px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="site-pane"><iframe title="Vacation website" src="about:blank"></iframe></div>
+    <button id="fullscreenButton" type="button" aria-label="Full screen">full</button>
+    <button id="splitter" type="button" aria-label="Resize website and chat panels"></button>
+    <form id="composer">
+      <button id="attachButton" type="button" aria-label="Add vacation files">+</button>
+      <textarea id="messageText" aria-label="Message TimeSyncher Vacation"></textarea>
+      <button id="voiceButton" type="button" aria-label="Speak a message">mic</button>
+    </form>
+  </main>
+</body>
+</html>`;
+}
+
+export function correctFullscreen() {
+  const viewport = { width: 390, height: 844 };
+  return base(viewport, {
+    kind: 'app',
+    state: 'website-full-screen',
+    hasSite: true,
+    regions: {
+      site: box(0, 0, 390, 844),
+      fullscreenExit: box(330, 12, 44, 44),
+    },
+  });
+}
+
+export function correctFullscreenHtml() {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #fff; }
+    button, iframe { padding: 0; border: 0; }
+    .site-pane { position: absolute; left: 0; top: 0; width: 390px; height: 844px; }
+    .site-pane iframe { width: 390px; height: 844px; }
+    #exitFullscreenButton { position: absolute; left: 330px; top: 12px; width: 44px; height: 44px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="site-pane"><iframe title="Vacation website" src="about:blank"></iframe></div>
+    <button id="exitFullscreenButton" type="button" aria-label="Exit full screen">exit</button>
+  </main>
+</body>
+</html>`;
+}
+
+export function correctApp2() {
+  const viewport = { width: 390, height: 844 };
+  const composer = box(58, 787, 230, 42);
+  return base(viewport, {
+    kind: 'app',
+    state: 'app-2-plus',
+    regions: {
+      header: box(0, 0, 390, 48),
+      dropdown: box(12, 8, 200, 32),
+      messages: box(0, 48, 390, 724),
+      composer,
+      fileAdd: box(8, 787, 42, 42),
+      speak: box(340, 787, 42, 42),
+    },
+    textboxes: [composer],
+  });
+}
+
 export function correctTrip() {
   const viewport = { width: 390, height: 844 };
   const tab = box(8, 64, 120, 36);

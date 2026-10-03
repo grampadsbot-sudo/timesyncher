@@ -4,9 +4,17 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluateLayout, exitCode, judgeColumn, renderVerify } from './layout-rules.mjs';
 import {
+  box,
   correctApp0,
   correctApp0Html,
+  correctApp2,
+  correctFullscreen,
+  correctFullscreenHtml,
   correctTrip,
+  correctWithSite,
+  correctWithSiteHtml,
+  emptyHeaderBar,
+  emptyHeaderBarHtml,
   p0Offscreen,
   p0OffscreenHtml,
   probeChat390,
@@ -44,6 +52,32 @@ assert(probeShared.includes('settings-paints'), `probe shared-390 settings: ${pr
 
 const correct = evaluateLayout(correctApp0(), tolerances);
 assert(correct.layout === 'PASS', `correct app-0 should pass: ${correct.reasons.join(',')}`);
+const zeroHeader = correctApp0();
+zeroHeader.regions.header = box(0, 0, 390, 0, { paints: false });
+assert(evaluateLayout(zeroHeader, tolerances).layout === 'PASS', 'a header with height 0 passes');
+const emptyBar = codes(emptyHeaderBar());
+assert(emptyBar.includes('header-renders'), `empty header bar must fail: ${emptyBar.join(',')}`);
+assert(evaluateLayout(emptyHeaderBar(), tolerances).layout === 'FAIL', 'empty header bar is not a pass');
+const withSite = evaluateLayout(correctWithSite(), tolerances);
+assert(withSite.layout === 'PASS', `site with a full-screen control should pass: ${withSite.reasons.join(',')}`);
+const missingControl = correctWithSite();
+missingControl.regions.fullscreen = null;
+const missingControlCodes = codes(missingControl);
+assert(missingControlCodes.includes('fullscreen-control-unmeasured'), `missing full-screen control: ${missingControlCodes.join(',')}`);
+assert(!missingControlCodes.includes('GAP'), 'a missing full-screen control is not a GAP');
+const fullscreen = evaluateLayout(correctFullscreen(), tolerances);
+assert(fullscreen.layout === 'PASS', `website full-screen should pass: ${fullscreen.reasons.join(',')}`);
+const notFilled = correctFullscreen();
+notFilled.regions.site = box(0, 0, 390, 600);
+assert(has(notFilled, 'fullscreen-not-filled'), 'a website that does not fill the viewport fails');
+const stuck = correctFullscreen();
+stuck.regions.fullscreenExit = null;
+stuck.regions.composer = box(58, 787, 230, 42);
+stuck.textboxes = [stuck.regions.composer];
+const stuckCodes = codes(stuck);
+assert(stuckCodes.includes('fullscreen-exit-unmeasured') && stuckCodes.includes('fullscreen-chrome-paints'), `full-screen still showing the text box: ${stuckCodes.join(',')}`);
+const app2 = evaluateLayout(correctApp2(), tolerances);
+assert(app2.layout === 'PASS', `two vacations with only the dropdown should pass: ${app2.reasons.join(',')}`);
 const trip = evaluateLayout(correctTrip(), tolerances);
 assert(trip.layout === 'PASS', `correct trip should pass: ${trip.reasons.join(',')}`);
 
@@ -153,6 +187,42 @@ if (chromePath()) {
       });
       const goodResult = evaluateLayout(good, tolerances);
       assert(goodResult.layout === 'PASS', `rendered correct page: ${goodResult.reasons.join(',')}`);
+      const bar = await measureHtml(browser, emptyHeaderBarHtml(), VIEWPORTS[0], {
+        kind: 'app',
+        state: 'app-1-no-site',
+        hasSite: false,
+        showMessages: true,
+        specMissing: false,
+      });
+      const barCodes = evaluateLayout(bar, tolerances).reasons;
+      assert(barCodes.includes('header-renders'), `rendered empty header: ${barCodes.join(',')}`);
+      const site = await measureHtml(browser, correctWithSiteHtml(), VIEWPORTS[0], {
+        kind: 'app',
+        state: 'app-1-with-site',
+        hasSite: true,
+        showMessages: false,
+        specMissing: false,
+      });
+      const siteResult = evaluateLayout(site, tolerances);
+      assert(siteResult.layout === 'PASS', `rendered site with full-screen control: ${siteResult.reasons.join(',')}`);
+      const bareSite = await measureHtml(browser, correctWithSiteHtml().replace(/<button id="fullscreenButton"[\s\S]*?<\/button>/, ''), VIEWPORTS[0], {
+        kind: 'app',
+        state: 'app-1-with-site',
+        hasSite: true,
+        showMessages: false,
+        specMissing: false,
+      });
+      const bareCodes = evaluateLayout(bareSite, tolerances).reasons;
+      assert(bareCodes.includes('fullscreen-control-unmeasured'), `rendered site without full-screen control: ${bareCodes.join(',')}`);
+      const full = await measureHtml(browser, correctFullscreenHtml(), VIEWPORTS[0], {
+        kind: 'app',
+        state: 'website-full-screen',
+        hasSite: true,
+        showMessages: false,
+        specMissing: false,
+      });
+      const fullResult = evaluateLayout(full, tolerances);
+      assert(fullResult.layout === 'PASS', `rendered website full-screen: ${fullResult.reasons.join(',')}`);
       browserNote = 'chromium compare ok';
     } finally {
       await browser.close();
