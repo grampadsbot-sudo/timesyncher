@@ -1,13 +1,23 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
+import {
+  SMOKE_CHECK_ORDER,
+  SMOKE_PARALLEL_CONCURRENCY,
+  SMOKE_PARALLEL_INDEPENDENT_NAMES,
+} from './shepherd-staging-smoke-plan.mjs';
 
-/** Execution order for whole-run cap (remaining checks marked FAIL on cap). */
-export const SMOKE_CHECK_ORDER = [
-  '1', '2', '3', '4', 'C', 'W', '5', 'I', '6', 'H', 'MAP', 'BUD', 'LOGO', 'INV-UI',
-  '6b', 'T', 'CL', '7', '8', 'H2', 'M', 'R', 'K', 'O',
-  'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'INV-CLAIM',
-];
+export { SMOKE_CHECK_ORDER, SMOKE_PARALLEL_INDEPENDENT_NAMES };
 
-const WHOLE_RUN_CAP_MS = 25 * 60 * 1000;
+const WHOLE_RUN_CAP_MS = 12 * 60 * 1000;
+
+function createCheckStageTools(runStartedAt) {
+  const stages = [];
+  let stage = 'init';
+  const setStage = (label) => {
+    stage = label;
+    stages.push({ label, atMs: Date.now() - runStartedAt });
+  };
+  return { setStage, getStage: () => stage, stages, resetStages: () => { stages.length = 0; } };
+}
 
 /**
  * @param {{ out: Record<string, unknown>, sha7: string, artifactDir?: string, runStartedAt?: number, wholeRunCapMs?: number }} ctx
@@ -29,6 +39,7 @@ export function createSmokeRunner(ctx) {
   out.stageTimings = out.stageTimings || {};
   out.checkFailures = out.checkFailures || {};
   out.browserCleanupErrors = out.browserCleanupErrors || [];
+  out.harnessErrors = out.harnessErrors || {};
 
   function recordBrowserCleanupError(err, context) {
     out.browserCleanupErrors.push({
@@ -71,12 +82,24 @@ export function createSmokeRunner(ctx) {
     }
   }
 
+  function recordStageTiming(name, record) {
+    out.stageTimings[name] = record;
+  }
+
   function markRemainingCapTimeouts(fromName) {
     const startIdx = SMOKE_CHECK_ORDER.indexOf(fromName);
     const slice = startIdx >= 0 ? SMOKE_CHECK_ORDER.slice(startIdx) : SMOKE_CHECK_ORDER;
     for (const name of slice) {
       if (completed.has(name)) continue;
       assignCheck(name, false, { reason: 'timeout', stage: 'whole_run_cap' });
+      recordStageTiming(name, {
+        startMs: runStartedAt,
+        endMs: Date.now(),
+        ms: Date.now() - runStartedAt,
+        timedOut: true,
+        stage: 'whole_run_cap',
+        stages: [],
+      });
       completed.add(name);
     }
   }
@@ -99,7 +122,7 @@ export function createSmokeRunner(ctx) {
 
   /**
    * @param {string} name
-   * @param {(tools: { setStage: (s: string) => void, registerBrowser: (b: unknown) => void }) => Promise<{ pass?: boolean, http?: number }>} fn
+   * @param {(tools: { setStage: (s: string) => void, registerBrowser: (b: unknown) => void, stages: { label: string, atMs: number }[] }) => Promise<{ pass?: boolean, http?: number, harnessError?: boolean, harnessMessage?: string }>} fn
    * @param {{ timeoutMs: number }} opts
    */
   async function runCheck(name, fn, { timeoutMs }) {
@@ -109,16 +132,21 @@ export function createSmokeRunner(ctx) {
     if (capAborted || capExceeded()) {
       if (!completed.has(name)) {
         assignCheck(name, false, { reason: 'timeout', stage: 'whole_run_cap' });
+        recordStageTiming(name, {
+          startMs: Date.now(),
+          endMs: Date.now(),
+          ms: 0,
+          timedOut: true,
+          stage: 'whole_run_cap',
+          stages: [],
+        });
         completed.add(name);
       }
       return;
     }
 
-    const started = Date.now();
-    let stage = `check:${name}`;
-    const setStage = (label) => {
-      stage = label;
-    };
+    const checkStart = Date.now();
+    const tools = createCheckStageTools(runStartedAt);
     let settled = false;
     let pass = false;
     let http;
@@ -127,8 +155,15 @@ export function createSmokeRunner(ctx) {
       if (settled) return;
       settled = true;
       await killBrowsers();
-      assignCheck(name, false, { reason: 'timeout', stage });
-      out.stageTimings[name] = { ms: Date.now() - started, timedOut: true, stage };
+      assignCheck(name, false, { reason: 'timeout', stage: tools.getStage() });
+      recordStageTiming(name, {
+        startMs: checkStart,
+        endMs: Date.now(),
+        ms: Date.now() - checkStart,
+        timedOut: true,
+        stage: tools.getStage(),
+        stages: tools.stages,
+      });
       completed.add(name);
       if (capExceeded() && !capAborted) {
         capAborted = true;
@@ -138,22 +173,46 @@ export function createSmokeRunner(ctx) {
     }, timeoutMs);
 
     try {
-      const result = await fn({ setStage, registerBrowser });
+      const result = await fn({
+        setStage: tools.setStage,
+        registerBrowser,
+        stages: tools.stages,
+      });
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      pass = Boolean(result?.pass);
+      if (result?.harnessError) {
+        out.harnessErrors[name] = { message: result.harnessMessage || 'harness error' };
+        assignCheck(name, false, { reason: 'harness_error', stage: tools.getStage(), message: result.harnessMessage });
+        pass = false;
+      } else {
+        pass = Boolean(result?.pass);
+        assignCheck(name, pass);
+      }
       http = result?.http;
-      assignCheck(name, pass);
       if (http != null) out.http[name] = http;
-      out.stageTimings[name] = { ms: Date.now() - started, timedOut: false };
+      recordStageTiming(name, {
+        startMs: checkStart,
+        endMs: Date.now(),
+        ms: Date.now() - checkStart,
+        timedOut: false,
+        stages: tools.stages,
+      });
       completed.add(name);
     } catch (err) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      assignCheck(name, false, { reason: 'error', stage, message: String(err?.message || err) });
-      out.stageTimings[name] = { ms: Date.now() - started, timedOut: false, stage, error: String(err?.message || err) };
+      assignCheck(name, false, { reason: 'error', stage: tools.getStage(), message: String(err?.message || err) });
+      recordStageTiming(name, {
+        startMs: checkStart,
+        endMs: Date.now(),
+        ms: Date.now() - checkStart,
+        timedOut: false,
+        stage: tools.getStage(),
+        error: String(err?.message || err),
+        stages: tools.stages,
+      });
       completed.add(name);
     }
 
@@ -164,11 +223,31 @@ export function createSmokeRunner(ctx) {
     }
   }
 
+  /**
+   * @param {Array<{ name: string, timeoutMs: number, run: () => Promise<{ pass?: boolean, http?: number, harnessError?: boolean, harnessMessage?: string }> }>} entries
+   * @param {number} [concurrency]
+   */
+  async function runChecksParallel(entries, concurrency = SMOKE_PARALLEL_CONCURRENCY) {
+    let next = 0;
+    async function worker() {
+      while (next < entries.length) {
+        const idx = next;
+        next += 1;
+        const entry = entries[idx];
+        await runCheck(entry.name, ({ setStage, registerBrowser, stages }) => entry.run({ setStage, registerBrowser, stages }), {
+          timeoutMs: entry.timeoutMs,
+        });
+      }
+    }
+    const n = Math.max(1, Math.min(concurrency, entries.length));
+    await Promise.all(Array.from({ length: n }, () => worker()));
+  }
+
   async function finish() {
     out.totalRuntimeMs = Date.now() - runStartedAt;
     const failed = Object.values(out.checks).some((v) => v === 'FAIL');
     await writeOutAndExit(failed ? 1 : 0);
   }
 
-  return { runCheck, registerBrowser, killBrowsers, finish, writeOutAndExit };
+  return { runCheck, runChecksParallel, registerBrowser, killBrowsers, finish, writeOutAndExit };
 }

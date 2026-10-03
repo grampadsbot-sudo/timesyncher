@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 import { mkdir } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { sql } from '/workspace/src/vacation/db.mjs';
 import { createSmokeRunner } from './shepherd-staging-smoke-run-check.mjs';
 import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
 import { configureShepherdSmokeHelpers, seedDecoy } from './shepherd-staging-smoke-helpers.mjs';
-import { runShepherdStagingSmokeMainChecks } from './shepherd-staging-smoke-main.mjs';
-import { runShepherdSmokeTail } from './shepherd-staging-smoke-tail.mjs';
+import { runShepherdSmokeBootstrap, runShepherdSmokeSpine } from './shepherd-staging-smoke-main.mjs';
+import { buildMainIndependentParallelChecks } from './shepherd-staging-smoke-parallel.mjs';
+import {
+  SMOKE_MAIN_SPINE_ORDER,
+  SMOKE_TAIL_SEQUENTIAL,
+  SMOKE_PARALLEL_INDEPENDENT,
+} from './shepherd-staging-smoke-plan.mjs';
+import { buildTailIndependentParallelChecks, runShepherdSmokeTail } from './shepherd-staging-smoke-tail.mjs';
 
 const EXPECT_SHA = process.argv[2];
 if (!EXPECT_SHA || !/^[0-9a-f]{40}$/i.test(EXPECT_SHA)) {
@@ -54,7 +63,7 @@ configureShepherdSmokeHelpers({
 const out = { expectSha: EXPECT_SHA, checks: {}, http: {} };
 const runStartedAt = Date.now();
 const runner = createSmokeRunner({ out, sha7: SHA7, artifactDir: ARTIFACT_DIR, runStartedAt });
-const { runCheck } = runner;
+const { runCheck, runChecksParallel, registerBrowser } = runner;
 
 const [couponMain, couponH2, couponA1, couponA2, couponDTrip, couponInvClaim] = process.argv.slice(3);
 if (!couponMain || !couponH2 || !couponA1 || !couponA2 || !couponDTrip || !couponInvClaim) process.exit(1);
@@ -69,9 +78,10 @@ const state = {
   tripTitle: '',
   leak6: false,
   sharedSite: null,
+  creationReply: '',
 };
 
-await runShepherdStagingSmokeMainChecks({
+const sharedCtx = {
   runCheck,
   out,
   db,
@@ -88,34 +98,43 @@ await runShepherdStagingSmokeMainChecks({
   HYATT_CANON,
   artifactPath,
   CHROME,
-});
-
-out.deployId = process.env.SHEPHERD_DEPLOY_ID || 'dpl_H9FZGdY3mKcvLwHLfsBjMWa7a2pn1';
-
-await runShepherdSmokeTail({
-  db,
-  out,
-  BASE,
-  SHA7,
-  RUN_TS,
   couponA1,
   couponA2,
   couponDTrip,
   couponInvClaim,
-  couponMain,
-  couponH2,
-  session: state.session,
-  customerId: state.customerId,
-  tripId: state.tripId,
-  smokeEmail: state.smokeEmail,
   A1_EMAIL,
   A2_OWNER_FIRST,
   A2_OWNER_LAST,
   A2_COLLAB_NAME,
   A2_EMAIL,
-  DECOY_TITLE,
   D1_EXPECT_START,
-  SCT_CODE,
+};
+
+await runShepherdSmokeBootstrap(sharedCtx);
+
+const sharedBrowser = await puppeteer.launch(CHROME);
+registerBrowser(sharedBrowser);
+sharedCtx.sharedBrowser = sharedBrowser;
+
+const parallelEntries = [
+  ...buildMainIndependentParallelChecks(sharedCtx),
+  ...buildTailIndependentParallelChecks(sharedCtx),
+];
+
+await Promise.all([
+  runShepherdSmokeSpine(sharedCtx),
+  runChecksParallel(parallelEntries),
+]);
+
+out.deployId = process.env.SHEPHERD_DEPLOY_ID || 'dpl_H9FZGdY3mKcvLwHLfsBjMWa7a2pn1';
+out.smokePlan = { spine: SMOKE_MAIN_SPINE_ORDER, tail: SMOKE_TAIL_SEQUENTIAL, parallel: SMOKE_PARALLEL_INDEPENDENT.map((r) => r.name) };
+
+await runShepherdSmokeTail({
+  ...sharedCtx,
+  session: state.session,
+  customerId: state.customerId,
+  tripId: state.tripId,
+  smokeEmail: state.smokeEmail,
   leak6: state.leak6,
   ps6: state.ps6,
   ps6b: state.ps6b,
@@ -127,7 +146,7 @@ await runShepherdSmokeTail({
   tripMsg: state.tripMsg,
   creationReply: state.creationReply,
   tTurn: state.tTurn,
-  runCheck,
+  SCT_CODE,
 });
 
 await runner.finish();

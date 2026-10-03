@@ -2,7 +2,6 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
-import { classifyTripIntake } from '/workspace/src/vacation/trip-intake-classify.mjs';
 import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
@@ -36,26 +35,8 @@ import {
  * @param {import('/workspace/src/vacation/db.mjs').sql} ctx.db
  * @param {Record<string, unknown>} ctx.state mutable run state (session, tripId, replies, …)
  */
-export async function runShepherdStagingSmokeMainChecks(ctx) {
-  const {
-    runCheck,
-    out,
-    db,
-    state,
-    EXPECT_SHA,
-    BASE,
-    SHA7,
-    RUN_TS,
-    couponMain,
-    couponH2,
-    INVITE_EMAIL,
-    CL_EMAIL,
-    DECOY_TITLE,
-    HYATT_CANON,
-    artifactPath,
-    CHROME,
-  } = ctx;
-
+export async function runShepherdSmokeBootstrap(ctx) {
+  const { runCheck, out, db, state, EXPECT_SHA, BASE, SHA7, RUN_TS, couponMain, CHROME, sharedBrowser } = ctx;
   const wPoints = {};
 
   await runCheck('1', async ({ setStage }) => {
@@ -69,18 +50,28 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
 
   await runCheck('2', async ({ setStage, registerBrowser }) => {
     setStage('landing price');
-    const browser = await puppeteer.launch(CHROME);
-    registerBrowser(browser);
+    const browser = sharedBrowser || await puppeteer.launch(CHROME);
+    if (!sharedBrowser) registerBrowser(browser);
     const page = await browser.newPage();
-    await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle2', timeout: 120000 });
-    await new Promise((r) => setTimeout(r, 4000));
-    const price = await page.$eval('#singlePrice', (el) => el.textContent).catch(() => '');
-    state.smokeEmail = `shepherd-${SHA7}-${RUN_TS}@resend.dev`;
-    await page.type('input[name="firstName"]', 'Shepherd');
-    await page.type('input[name="lastName"]', SHA7);
-    await page.type('input[name="email"]', state.smokeEmail);
-    await browser.close();
-    return { pass: price === '$37', http: 200 };
+    try {
+      await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle2', timeout: 120000 });
+      await new Promise((r) => setTimeout(r, 4000));
+      const price = await page.$eval('#singlePrice', (el) => el.textContent).catch(() => '');
+      state.smokeEmail = `shepherd-${SHA7}-${RUN_TS}@resend.dev`;
+      await page.type('input[name="firstName"]', 'Shepherd');
+      await page.type('input[name="lastName"]', SHA7);
+      await page.type('input[name="email"]', state.smokeEmail);
+      return { pass: price === '$37', http: 200 };
+    } finally {
+      await page.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+      if (!sharedBrowser) await browser.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+    }
   }, { timeoutMs: 90000 });
 
   await runCheck('3', async ({ setStage }) => {
@@ -111,32 +102,26 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
     return { pass: state.hi.status === 200 && /where|when/i.test(state.hi.json.reply || ''), http: state.hi.status };
   }, { timeoutMs: 60000 });
 
-  await runCheck('C', async ({ setStage, registerBrowser }) => {
-    setStage('checkout zero UI');
-    const chromeC = await puppeteer.launch(CHROME);
-    registerBrowser(chromeC);
-    const cPage = await chromeC.newPage();
-    await cPage.goto(`${BASE}/index.html`, { waitUntil: 'networkidle2', timeout: 120000 });
-    await new Promise((r) => setTimeout(r, 3000));
-    await cPage.type('input[name="firstName"]', 'C');
-    await cPage.type('input[name="lastName"]', 'Check');
-    await cPage.type('input[name="email"]', `c-check-${Date.now()}@resend.dev`);
-    await cPage.click('#continueBtn');
-    await new Promise((r) => setTimeout(r, 2500));
-    await cPage.type('#couponCode', couponMain);
-    await cPage.evaluate(() => document.querySelector('#couponCode')?.dispatchEvent(new Event('input', { bubbles: true })));
-    await new Promise((r) => setTimeout(r, 2000));
-    const checkC = await cPage.evaluate(() => ({
-      total: document.getElementById('total')?.textContent?.trim(),
-      redeemVisible: !document.getElementById('couponPayBtn')?.hidden,
-      redeemText: document.getElementById('couponPayBtn')?.textContent?.trim(),
-    }));
-    const cShot = artifactPath('checkout-zero.png');
-    await cPage.screenshot({ path: cShot, fullPage: true });
-    await chromeC.close();
-    out.checkC = { ...checkC, screenshot: cShot };
-    return { pass: /\$0/.test(checkC.total || '') && checkC.redeemVisible, http: 200 };
-  }, { timeoutMs: 90000 });
+  ctx.wPoints = wPoints;
+}
+
+export async function runShepherdSmokeSpine(ctx) {
+  const {
+    runCheck,
+    out,
+    db,
+    state,
+    BASE,
+    SHA7,
+    INVITE_EMAIL,
+    CL_EMAIL,
+    DECOY_TITLE,
+    HYATT_CANON,
+    artifactPath,
+    CHROME,
+    sharedBrowser,
+  } = ctx;
+  const wPoints = ctx.wPoints || {};
 
   await runCheck('W', async ({ setStage }) => {
     setStage('welcome transcript');
@@ -156,15 +141,15 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
     setStage('trip create + chat screenshot');
     state.tripTitle = state.tripId ? (await db`select title from trips where id=${state.tripId} limit 1`)[0]?.title : '';
     const ent = (await db`select trip_id from entitlements where customer_id=${state.customerId} and status='active' limit 1`)[0];
-    const chrome5 = await puppeteer.launch(CHROME);
-    registerBrowser(chrome5);
+    const chrome5 = sharedBrowser || await puppeteer.launch(CHROME);
+    if (!sharedBrowser) registerBrowser(chrome5);
     const p5 = await chrome5.newPage();
+    try {
     await p5.goto(`${BASE}/vacation-app.html?session=${encodeURIComponent(state.session)}`, { waitUntil: 'networkidle2', timeout: 120000 });
     await new Promise((r) => setTimeout(r, 3000));
     const chatShot = artifactPath('chat.png');
     await p5.screenshot({ path: chatShot, fullPage: true });
     const chatHtml = await p5.content();
-    await chrome5.close();
     out.checkINVUI = { chatShot, chatHits: inviteUiHits(chatHtml) };
     const tripRow = state.tripId ? (await db`select start_date, end_date, destination from trips where id=${state.tripId}`)[0] : null;
     const tripTurnDb = state.tripId ? await turnRow(db, state.tripId, 'Maui March%') : null;
@@ -173,6 +158,16 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
     out.check5 = { tripId: state.tripId, tripRow, ent, screenshot: chatShot, intakeBlock: { tripBlocked, tripIntakeBlock } };
     const pass = state.tripMsg.status === 201 && !tripIntakeBlock && ent?.trip_id === state.tripId && tripRow?.start_date;
     return { pass, http: state.tripMsg.status };
+    } finally {
+      await p5.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+      if (!sharedBrowser) await chrome5.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+    }
   }, { timeoutMs: 90000 });
 
   await runCheck('I', async ({ setStage }) => {
@@ -257,10 +252,11 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
       const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
       sharedApi = { status: sr.status, json: await sr.json().catch((err) => ({ _jsonError: String(err?.message || err) })) };
     }
-    const chromeMap = await puppeteer.launch(CHROME);
-    registerBrowser(chromeMap);
+    const chromeMap = sharedBrowser || await puppeteer.launch(CHROME);
+    if (!sharedBrowser) registerBrowser(chromeMap);
     const mapPage = await chromeMap.newPage();
     const mapUrl = publicUrlAfterH || (shareSlug ? `${BASE}/shared/${shareSlug}/` : '');
+    try {
     state.sharedSite = await runSharedSiteMapBudLogoChecks({
       page: mapPage,
       mapUrl,
@@ -269,11 +265,20 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
       sharedApi,
       artifactPath,
     });
-    await chromeMap.close();
     out.checkMAP = { ...state.sharedSite.checkMAP, sharedUiHits: inviteUiHits(state.sharedSite.sharedHtml) };
     out.checkBUD = state.sharedSite.checkBUD;
     out.checkLOGO = state.sharedSite.checkLOGO;
     return { pass: state.sharedSite.checks.MAP === 'PASS', http: 200 };
+    } finally {
+      await mapPage.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+      if (!sharedBrowser) await chromeMap.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+    }
   }, { timeoutMs: 90000 });
 
   await runCheck('BUD', async () => ({
@@ -370,59 +375,6 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
     return { pass: land.status >= 200 && land.status < 300 && land.json.status !== 'turn_classifier_failed' && after8 - before8 === 0, http: land.status };
   }, { timeoutMs: 60000 });
 
-  await runCheck('H2', async ({ setStage }) => {
-    setStage('H2 Kihei Kai Nani intake');
-    const h2Email = `shepherd-h2-${SHA7}-${RUN_TS}@resend.dev`;
-    const H2_CREATE_TEXT = "Maui March 10-17 2027 with my wife — we're staying at Kihei Kai Nani in Kihei.";
-    const h2Coupon = await fetch(`${BASE}/api/checkout-coupon`, {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ firstName: 'H2', lastName: 'Kihei', email: h2Email, couponCode: couponH2, orderBump: false, photoMemories: false }),
-    });
-    const h2Json = JSON.parse((await h2Coupon.text()).split('\nHTTP:')[0]);
-    const h2Session = h2Json.session?.token;
-    await fetch(`${BASE}/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-${h2Session}`)}`, {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ acceptedByName: 'H2', checkboxConfirmed: true }),
-    });
-    await postItinerary(h2Session, { text: 'hi' });
-    const h2Trip = await postItinerary(h2Session, { text: H2_CREATE_TEXT });
-    const h2TripId = h2Trip.json.trip?.id;
-    const h2Hotels = h2TripId ? await db`select id, title, source, location, description, metadata from trip_things where trip_id=${h2TripId} and category='hotel' order by created_at` : [];
-    const h2Db = h2TripId ? await customerTurnRow(db, h2TripId, 'Maui March%') : null;
-    const h2Bundle = lookupBundle(h2Db?.payload);
-    const h2Raw = h2Hotels[0];
-    const h2Thing = thingReport(h2Raw);
-    const h2SiteRes = h2Session ? await fetch(`${BASE}/api/vacation-itinerary?session=${encodeURIComponent(h2Session)}`) : null;
-    const h2Site = h2SiteRes ? await h2SiteRes.json().catch((err) => ({ _jsonError: String(err?.message || err) })) : {};
-    const h2HotelThings = (h2Site.things || []).filter((t) => t.category === 'hotel');
-    state.creationReply = String(h2Trip.json.reply || '');
-    const creationMentionsKihei = /kihei\s+kai\s+nani/i.test(state.creationReply) || /kihei\s+kai\s+nani/i.test(h2Db?.body || '');
-    const h2HotelsTabOk = h2HotelThings.some((t) => String(t.location?.address || t.description || '').includes('2495'));
-    const h2AddrOk = h2Hotels.length === 1 && String(h2Thing?.address || '').includes('2495') && h2Thing?.providerId;
-    const h2OneHotelAtShip = h2Hotels.length === 1;
-    out.checkH2 = {
-      http: h2Trip.status,
-      tripId: h2TripId,
-      creationReply: state.creationReply.slice(0, 400),
-      creationMentionsKihei,
-      hotelCount: h2Hotels.length,
-      hotelThing: h2Thing,
-      hotels: h2Hotels.map(thingReport),
-      hotelsTabCount: h2HotelThings.length,
-      hotelsTabSample: h2HotelThings.map((t) => ({ title: t.title, address: t.location?.address || t.description })),
-      lodgingOutcome: h2Db?.payload?.lodgingOutcome || h2Db?.payload?.liveTranscript?.lodgingOutcome || null,
-      lodgingTurnPayload: h2Db?.payload || null,
-      intakeLodgingLookup: h2Db?.payload?.intakeLodgingLookup || null,
-      pickRanking: h2Bundle.pickRanking,
-      rawResults: h2Bundle.rawResults,
-      diag: fullDiag(h2Db?.payload),
-      siteHttp: h2SiteRes?.status,
-      h2OneHotelAtShip,
-    };
-    const pass = h2Trip.status >= 200 && h2Trip.status < 300 && h2Trip.status !== 502 && creationMentionsKihei && h2AddrOk && h2HotelsTabOk && h2OneHotelAtShip;
-    return { pass, http: h2Trip.status };
-  }, { timeoutMs: 60000 });
-
   await runCheck('M', async ({ setStage }) => {
     setStage('farmers market Kihei');
     const mTurn = await postItinerary(state.session, { tripId: state.tripId, text: 'farmers market near Kihei' });
@@ -462,15 +414,11 @@ export async function runShepherdStagingSmokeMainChecks(ctx) {
       coffeeRows: rCoffee.rows,
       coffeeFailures: rCoffee.failures,
     };
+    if (rCoffee.harnessError) {
+      return { pass: false, harnessError: true, harnessMessage: 'R coffee row missing persisted metadata', http: rTurn.status };
+    }
     const pass = rTurn.status >= 200 && rTurn.status < 300 && !rOffersOutside && !rClassifierFail && Boolean(rPersist.category) && rCoffee.pass;
     return { pass, http: rTurn.status };
-  }, { timeoutMs: 60000 });
-
-  await runCheck('K', async ({ setStage }) => {
-    setStage('classify farmers market');
-    const kClass = await classifyTripIntake({ text: 'farmers market near Kihei', env: process.env });
-    out.checkK = { category: kClass?.category || kClass?.classification?.category, ok: kClass?.ok, turnKind: kClass?.turnKind };
-    return { pass: String(kClass?.category || '').toLowerCase() === 'market', http: 200 };
   }, { timeoutMs: 60000 });
 
   await runCheck('O', async ({ setStage }) => {

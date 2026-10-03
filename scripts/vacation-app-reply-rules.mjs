@@ -607,6 +607,10 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
+  const lodgingAsk = tripRaw?.lodgingAsk === true;
+  const flightAsk = String(tripRaw?.flightAsk || '').trim();
+  const lodgingGapAskRule = lodgingAsk ? 'The saved trip record includes lodgingAsk. Ask the customer where they are staying, in your own words.' : '';
+  const flightAskRule = flightAsk ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.' : '';
   const trip = itinerary.length || dates || roster || rule || hasCustomerInput
     ? { itinerary, dates, roster, rule, ...customerInput }
     : null;
@@ -642,20 +646,21 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
     'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
     'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
-    'You know only what the customer said in chat and what is in the saved trip record. Ask the customer for anything they haven\'t said. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
+    'You know only what the customer said in chat and what is in the saved trip record. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
     'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
     'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
     'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
     'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
     'Do not put an activity on a day that is not already that activity on the saved trip record.',
-    'When the customer asks to add a place, name the matches and ask "add these?" The chat box is the search. There is no separate search screen.',
+    'When the customer asks to add a place, the chat box is the search. There is no separate search screen.',
     'Viewers and editors are not on the trip. Do not put them in the house, the crew, or the group for a day. A saved preference rule stays as saved. Do not call it locked in and do not rename it.',
     'When the customer asks for two options on a day, offer only activities already saved on that day or named in the question. Do not repeat a paragraph.',
     'Do not invent an activity the customer did not name.',
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-    hasCustomerInput ? 'The saved trip record lists customer input that is still needed. Ask for that in your own words.' : '',
+    lodgingGapAskRule,
+    flightAskRule,
     unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
