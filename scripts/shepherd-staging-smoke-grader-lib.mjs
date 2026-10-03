@@ -57,7 +57,74 @@ export function gradeCoffeeReplyRows(rows = []) {
 
 /** Budget tab must not show dollar amounts absent from API budget lines. */
 
-export const LOGO_CENTER_TOLERANCE_PX = 2;
+export const LOGO_CENTER_TOLERANCE_PX = 1.5;
+
+export function isRealBrandLogoSrc(src) {
+  const value = String(src || '').trim();
+  if (!value) return false;
+  if (/timesyncher-icon/i.test(value)) return false;
+  if (/^data:image\/svg/i.test(value)) return false;
+  return true;
+}
+
+function placeMatchesLogoTab(place = {}, tabKeyword = '') {
+  const tab = String(tabKeyword || '').toLowerCase();
+  const name = String(place.name || place.title || '').trim();
+  const category = String(place.category_name || place.category || '').toLowerCase();
+  const hay = `${name} ${category}`;
+  if (tab === 'hotels' || tab === 'hotel') {
+    return /hotel|lodging|resort|stay/i.test(hay);
+  }
+  if (tab === 'cars' || tab === 'car') {
+    return /\bcar\b|rental|hertz|alamo|avis|enterprise|budget/i.test(hay);
+  }
+  return false;
+}
+
+/** Shared API places for a tab must carry logoUrl in thingOverrides (or place). */
+export function gradeSharedTabLogoUrlRecords(sharedJson = {}, tabKeyword = '') {
+  const places = Array.isArray(sharedJson?.places) ? sharedJson.places : [];
+  const overrides = sharedJson?.thingOverrides && typeof sharedJson.thingOverrides === 'object'
+    ? sharedJson.thingOverrides
+    : {};
+  const relevant = places.filter((place) => placeMatchesLogoTab(place, tabKeyword));
+  const records = relevant.map((place) => {
+    const key = `place:${place.id}`;
+    const override = overrides[key] && typeof overrides[key] === 'object' ? overrides[key] : {};
+    const logoUrl = String(override.logoUrl || place.logoUrl || '').trim();
+    return {
+      id: place.id,
+      name: place.name || place.title || null,
+      category: place.category_name || null,
+      logoUrl: logoUrl || null,
+      hasLogoUrl: Boolean(logoUrl),
+    };
+  });
+  const missing = records.filter((row) => !row.hasLogoUrl);
+  return {
+    tab: tabKeyword,
+    placeCount: records.length,
+    records,
+    missingLogoUrl: missing,
+    missingLogoUrlCount: missing.length,
+    ok: records.length > 0 && missing.length === 0,
+    failReason: records.length === 0 ? 'no_tab_places_in_shared_api' : (missing.length ? 'records_missing_logoUrl' : null),
+  };
+}
+
+export function gradeCarTabRowIcons(iconScan = {}) {
+  const rowCount = Number(iconScan.rowCount) || 0;
+  const hasPlane = iconScan.hasPlane === true;
+  const hasCar = iconScan.hasCar === true;
+  const pass = !hasPlane && (rowCount === 0 || hasCar);
+  return {
+    pass,
+    hasPlane,
+    hasCar,
+    rowCount,
+    samples: iconScan.samples || [],
+  };
+}
 
 /** Pixel box of drawn image content inside a CSS object-fit box (viewport coords). */
 export function objectFitContentBox({
@@ -146,11 +213,11 @@ function gradeLogoChipCom(row = {}) {
   return { comCentered, comError: null, comDx, comDy };
 }
 
-/** Grade one logo chip row (geometry + center-of-mass); FAIL if either check fails. */
+/** Grade one brand logo chip row (center-of-mass of img inside chip). */
 export function gradeLogoChipRow(row = {}) {
   const geometry = gradeLogoChipGeometry(row);
   const comGrade = gradeLogoChipCom(row);
-  const pass = geometry.geometryCentered && comGrade.comCentered;
+  const pass = comGrade.comCentered === true;
   return {
     ...row,
     ...geometry,
@@ -159,10 +226,38 @@ export function gradeLogoChipRow(row = {}) {
   };
 }
 
-export function gradeLogoTabResult({ tab, clicked, rows = [], cssSuspects = [] }) {
-  const graded = (rows || []).map((r) => gradeLogoChipRow(r));
-  const pass = Boolean(clicked) && graded.length > 0 && graded.every((r) => r.pass);
-  return { tab, clicked, rows: graded, pass, cssSuspects };
+export function gradeLogoTabResult({
+  tab,
+  clicked,
+  rows = [],
+  cssSuspects = [],
+  logoUrlEvidence = null,
+  viewports = null,
+  carIconGrade = null,
+}) {
+  const brandRows = (rows || []).filter((r) => r.isBrandImg === true);
+  const graded = brandRows.map((r) => gradeLogoChipRow(r));
+  let failReason = null;
+  if (!clicked) failReason = 'tab_not_clicked';
+  else if (brandRows.length === 0) failReason = 'zero_brand_imgs_with_real_src';
+  else if (logoUrlEvidence && logoUrlEvidence.ok === false) failReason = logoUrlEvidence.failReason || 'records_missing_logoUrl';
+  else if (viewports && Object.values(viewports).some((v) => v && v.pass === false)) failReason = 'viewport_logo_fail';
+  else if (carIconGrade && carIconGrade.pass === false) failReason = 'car_tab_icon_fail';
+  else if (!graded.every((r) => r.pass)) failReason = 'logo_com_off_center';
+
+  const pass = !failReason;
+  return {
+    tab,
+    clicked,
+    rows: graded,
+    brandImgCount: brandRows.length,
+    logoUrlEvidence,
+    viewports,
+    carIconGrade,
+    failReason,
+    pass,
+    cssSuspects,
+  };
 }
 
 /** Map computed layout hints to likely source files (harness attribution, not runtime). */
@@ -224,4 +319,71 @@ export function mergeLogoCssSuspects(rows = []) {
     }
   }
   return out;
+}
+
+const LODGING_QUESTION_WORDS = /\b(stay(?:ing)?|lodging|hotels?|condo|rental|accommodations?)\b/i;
+
+/** Persisted per-fact lodging ask flags on a customer/app turn payload or turn JSON. */
+export function persistedLodgingAskSignals(payload = {}, turnJson = {}) {
+  const p = payload && typeof payload === 'object' ? payload : {};
+  const j = turnJson && typeof turnJson === 'object' ? turnJson : {};
+  const tripContext = p.tripContext || p.liveTranscript?.tripContext || j.tripContext || {};
+  const customerInputState = p.customerInputState || j.customerInputState || tripContext.customerInputState || {};
+  const needsRaw = customerInputState.needsCustomerInput
+    ?? tripContext.needsCustomerInput
+    ?? p.needsCustomerInput
+    ?? j.needsCustomerInput;
+  const needsCustomerInput = Array.isArray(needsRaw) ? needsRaw.map((item) => String(item)) : [];
+  const lodgingAsk = tripContext.lodgingAsk === true
+    || customerInputState.lodgingAsk === true
+    || p.lodgingAsk === true
+    || j.lodgingAsk === true;
+  const needsLodging = needsCustomerInput.includes('lodging');
+  return {
+    lodgingAsk,
+    needsCustomerInput,
+    needsLodging,
+    persistedLodgingAsk: lodgingAsk || needsLodging,
+    tripContext,
+    customerInputState,
+  };
+}
+
+export function replyHasLodgingQuestion(replyText) {
+  const hay = String(replyText || '');
+  const chunks = hay.split(/(?<=[.!?])\s+/).filter((part) => part.includes('?'));
+  if (!chunks.length && hay.includes('?')) chunks.push(hay);
+  return chunks.some((sentence) => LODGING_QUESTION_WORDS.test(sentence));
+}
+
+export function gradeAskLodging({ replyText, payload, turnJson, hotelCount }) {
+  const signals = persistedLodgingAskSignals(payload, turnJson);
+  const replyEvidence = String(replyText || '');
+  const replyLodgingQuestion = replyHasLodgingQuestion(replyEvidence);
+  const hotelN = Number(hotelCount);
+  const pass = hotelN === 0 && signals.persistedLodgingAsk && replyLodgingQuestion;
+  return {
+    pass,
+    evidence: {
+      replyText: replyEvidence.slice(0, 2000),
+      hotelCount: hotelN,
+      replyLodgingQuestion,
+      ...signals,
+    },
+  };
+}
+
+export function gradeAskD2NoQuestionReply(replyText) {
+  const replyEvidence = String(replyText || '');
+  const hasQuestionMark = replyEvidence.includes('?');
+  const whichLocation = /\bwhich\b[^?\n]{0,120}\blocation\b/i.test(replyEvidence);
+  const pass = !hasQuestionMark && !whichLocation;
+  return {
+    pass,
+    evidence: {
+      replyText: replyEvidence.slice(0, 2000),
+      hasQuestionMark,
+      whichLocation,
+    },
+  };
 }

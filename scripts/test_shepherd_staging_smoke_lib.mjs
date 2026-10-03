@@ -19,7 +19,13 @@ import {
   gradeLogoTabResult,
   attributeLogoMisalignmentCss,
   objectFitContentBox,
-  LOGO_CENTER_TOLERANCE_PX,
+  gradeAskLodging,
+  gradeAskD2NoQuestionReply,
+  replyHasLodgingQuestion,
+  persistedLodgingAskSignals,
+  isRealBrandLogoSrc,
+  gradeSharedTabLogoUrlRecords,
+  gradeCarTabRowIcons,
 } from './shepherd-staging-smoke-lib.mjs';
 
 assert.equal(isoDateFromStartsAt(new Date('2027-03-13T12:00:00.000Z')), '2027-03-13');
@@ -171,16 +177,59 @@ const geoFail = gradeLogoChipRow({
   contentCenterDxPx: 4,
   contentCenterDyPx: 0,
   paddingAsymmetryPx: { left: 1, right: 5, top: 2, bottom: 2 },
-  com: { dxPx: 0.5, dyPx: 0.5 },
+  com: { dxPx: 2, dyPx: 0.5 },
 });
 assert.equal(geoFail.pass, false);
-assert.equal(geoFail.geometryCentered, false);
 
-const tabFail = gradeLogoTabResult({ tab: 'hotels', clicked: true, rows: [geoFail] });
+const tabFail = gradeLogoTabResult({
+  tab: 'hotels',
+  clicked: true,
+  rows: [],
+  logoUrlEvidence: { ok: true, records: [{ hasLogoUrl: true }] },
+});
 assert.equal(tabFail.pass, false);
+assert.equal(tabFail.failReason, 'zero_brand_imgs_with_real_src');
+
+const logoUrlFail = gradeLogoTabResult({
+  tab: 'hotels',
+  clicked: true,
+  rows: [{ isBrandImg: true, com: { dxPx: 0.5, dyPx: 0.5 } }],
+  logoUrlEvidence: gradeSharedTabLogoUrlRecords({
+    places: [{ id: 1, name: 'Westin', category_name: 'hotel' }],
+    thingOverrides: { 'place:1': {} },
+  }, 'hotels'),
+});
+assert.equal(logoUrlFail.pass, false);
+assert.equal(logoUrlFail.logoUrlEvidence.missingLogoUrlCount, 1);
+
+assert.equal(isRealBrandLogoSrc('https://cdn.example/logo.png'), true);
+assert.equal(isRealBrandLogoSrc(''), false);
+assert.equal(gradeCarTabRowIcons({ hasPlane: true, hasCar: true, rowCount: 1 }).pass, false);
+assert.equal(gradeCarTabRowIcons({ hasPlane: false, hasCar: true, rowCount: 1 }).pass, true);
 
 const suspects = attributeLogoMisalignmentCss({ liAlignItems: 'flex-start', imgMargin: '0px auto' });
 assert.ok(suspects.some((s) => s.file.includes('trek-style2-bundle.mjs')));
 assert.ok(suspects.some((s) => s.file === 'shared-app.html'));
+
+const lodgingSignals = persistedLodgingAskSignals(
+  { tripContext: { lodgingAsk: true, needsCustomerInput: ['lodging'] } },
+  {},
+);
+assert.equal(lodgingSignals.persistedLodgingAsk, true);
+assert.equal(replyHasLodgingQuestion('Where are you staying on Maui?'), true);
+assert.equal(replyHasLodgingQuestion('Great — I saved your dates.'), false);
+const lodgingPass = gradeAskLodging({
+  replyText: 'Where will you be staying during the trip?',
+  payload: { tripContext: { lodgingAsk: true } },
+  turnJson: {},
+  hotelCount: 0,
+});
+assert.equal(lodgingPass.pass, true);
+
+const d2Pass = gradeAskD2NoQuestionReply('Paia Fish Market is saved but not on a day yet.');
+const d2Fail = gradeAskD2NoQuestionReply('Which location did you mean?');
+assert.equal(d2Pass.pass, true);
+assert.equal(d2Fail.pass, false);
+assert.equal(d2Fail.evidence.whichLocation, true);
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));

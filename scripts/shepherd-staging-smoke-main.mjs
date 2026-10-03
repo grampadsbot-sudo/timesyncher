@@ -243,23 +243,29 @@ export async function runShepherdSmokeSpine(ctx) {
   }, { timeoutMs: 60000 });
 
   await runCheck('MAP', async ({ setStage, registerBrowser }) => {
-    setStage('shared site plan map');
-    const tripMetaAfterH = state.tripId ? (await db`select metadata from trips where id=${state.tripId} limit 1`)[0]?.metadata : null;
-    const publicUrlAfterH = tripMetaAfterH?.publicUrl || tripMetaAfterH?.public_url || '';
+    setStage('logo fixture hotel and car');
+    await postItinerary(state.session, { tripId: state.tripId, text: "We're staying at the Westin Maui in Kaanapali." });
+    await postItinerary(state.session, { tripId: state.tripId, text: 'Hertz rental car at OGG' });
+    setStage('shared intake share for map/logo');
     const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
     let sharedApi = null;
     if (shareSlug) {
-      const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
-      sharedApi = { status: sr.status, json: await sr.json().catch((err) => ({ _jsonError: String(err?.message || err) })) };
+      for (let i = 0; i < 25; i += 1) {
+        const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
+        sharedApi = { status: sr.status, json: await sr.json().catch((err) => ({ _jsonError: String(err?.message || err) })) };
+        if ((sharedApi.json?.places || []).length >= 1) break;
+        await new Promise((r) => setTimeout(r, 2000));
+      }
     }
     const chromeMap = sharedBrowser || await puppeteer.launch(CHROME);
     if (!sharedBrowser) registerBrowser(chromeMap);
     const mapPage = await chromeMap.newPage();
-    const mapUrl = publicUrlAfterH || (shareSlug ? `${BASE}/shared/${shareSlug}/` : '');
+    const tripMetaAfterH = state.tripId ? (await db`select metadata from trips where id=${state.tripId} limit 1`)[0]?.metadata : null;
+    const publicUrlAfterH = tripMetaAfterH?.publicUrl || tripMetaAfterH?.public_url || '';
     try {
     state.sharedSite = await runSharedSiteMapBudLogoChecks({
       page: mapPage,
-      mapUrl,
+      mapUrl: shareSlug ? `${BASE}/shared/${shareSlug}/` : '',
       publicUrlAfterH,
       shareSlug,
       sharedApi,

@@ -92,8 +92,8 @@ if (shareOnly) {
   await postItinerary(session, { text: 'hi' });
   const tripMsg = await postItinerary(session, { text: 'Maui March 10-17 2027 with my wife' });
   const tripId = tripMsg.json.trip?.id || (await db`select id from trips where customer_id=${customerId} order by created_at desc limit 1`)[0]?.id;
-  await postItinerary(session, { tripId, text: "We're staying at the Hyatt Regency Maui in Kaanapali." });
-  await postItinerary(session, { tripId, text: 'Add Alamo Rent A Car at Kahului Airport for our trip.' });
+  await postItinerary(session, { tripId, text: "We're staying at the Westin Maui in Kaanapali." });
+  await postItinerary(session, { tripId, text: 'Hertz rental car at OGG' });
   const shareSlug = tripId ? intakeShareSlug(tripId) : '';
   mapUrl = shareSlug ? `${BASE}/shared/${shareSlug}/` : '';
   for (let i = 0; i < 25; i += 1) {

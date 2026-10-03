@@ -269,5 +269,12 @@ export {
   mergeLogoCssSuspects,
   objectFitContentBox,
   LOGO_CENTER_TOLERANCE_PX,
+  isRealBrandLogoSrc,
+  gradeSharedTabLogoUrlRecords,
+  gradeCarTabRowIcons,
+  persistedLodgingAskSignals,
+  replyHasLodgingQuestion,
+  gradeAskLodging,
+  gradeAskD2NoQuestionReply,
 } from './shepherd-staging-smoke-grader-lib.mjs';
 
