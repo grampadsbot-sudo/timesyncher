@@ -43,6 +43,9 @@ scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
 scripts/test_trip_map_harness_hook_bundle.mjs
 scripts/test_shared_logo_chip_center_bundle.mjs
+scripts/test_shared_category_tab_icon_center_bundle.mjs
+scripts/test_served_customer_copy_no_internal_terms.mjs
+scripts/test_shared_tab_category_css_blast_radius.mjs
 scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
 scripts/test_restaurant_list_tags.mjs
@@ -145,7 +148,6 @@ scripts/test_brave_tavily_adapter.mjs
 scripts/test_customer_input_reply.mjs
 scripts/test_g2c_thing_notes_destination.mjs
 scripts/test_g2d_jev_score_rewrite.mjs
-scripts/test_harness_outbound_email_stub.mjs
 scripts/test_rewrite_ships_tier_draft.mjs
 scripts/test_g3a_canned_dialog.mjs
 scripts/test_onboarding_welcome.mjs
@@ -200,6 +202,7 @@ scripts/test_place_category_radius.mjs
 scripts/test_ratings_source.mjs
 scripts/test_seat_price_data.mjs
 scripts/test_shepherd_staging_smoke_harness.mjs
+scripts/test_shepherd_staging_smoke_visual_judge.mjs
 scripts/test_shepherd_staging_smoke_jev_preflight.mjs
 scripts/test_shepherd_staging_smoke_lib.mjs
 scripts/test_shepherd_staging_smoke_provider_log.mjs
@@ -211,5 +214,7 @@ scripts/test_trip_intake_search.mjs
 scripts/test_trip_literal_ban_g2a.mjs
 scripts/test_keepsake_order_buy_link.mjs
 scripts/test_sct_a78799b_search_fill.mjs
+scripts/test_shepherd_staging_smoke_layout_visual_exports.mjs
+scripts/test_shepherd_staging_smoke_visual_capture.mjs
 scripts/test_verify_vacation_layout_self_check.mjs
 scripts/test_verify_skill_no_vercel.mjs

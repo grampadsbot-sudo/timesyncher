@@ -77,6 +77,68 @@ function intakeHotelsTwo() {
   }));
 }
 
+function intakeHyattResortLabel() {
+  const tripId = 'c15be2f6-d7bf-498a-b2e7-aa2b828dfab6';
+  const things = [
+    {
+      id: '66f4916e-fe4e-4333-ba48-632696bcf139',
+      category: 'hotel',
+      title: 'Hyatt Regency Maui Resort & Spa',
+      description: '',
+      source: 'brave',
+      location: { lat: 20.912971, lng: -156.6921667, address: '200 Nohea Kai Dr, Lahaina, HI 96761' },
+      metadata: {
+        categoryName: 'Resort',
+        providerCategories: ['Resort', 'lodging'],
+        customerStatedLodging: true,
+        sourceRecord: {
+          url: 'https://hyatt.com/',
+          source: 'brave',
+          categories: ['Resort', 'lodging'],
+          icon_category: 'lodging',
+        },
+        logoUrl: 'https://hyatt.com/favicon.ico',
+      },
+    },
+    {
+      id: '5305492c-a1b5-4543-a4d8-d3e3fbe74523',
+      category: 'lodging',
+      title: "The Westin Maui Resort & Spa, Ka'anapali",
+      description: '',
+      source: 'brave',
+      location: { lat: 20.919752, lng: -156.6950079, address: '2365 Kaanapali Pkwy, Lahaina, HI 96761' },
+      metadata: {
+        categoryName: 'lodging',
+        providerCategories: ['lodging'],
+        customerStatedLodging: true,
+        sourceRecord: {
+          url: 'https://marriott.com/',
+          source: 'brave',
+          categories: ['lodging'],
+          icon_category: 'lodging',
+        },
+        logoUrl: 'https://marriott.com/favicon.ico',
+      },
+    },
+  ].map((row) => thingRecordFromTripRow(row));
+  return applyCapturedLogos(sharedTripFromIntake({
+    trip: {
+      id: tripId,
+      title: 'Maui March 2027',
+      destination: 'Maui',
+      start_date: '2027-03-10',
+      end_date: '2027-03-17',
+      metadata: { intakeShare: true, publicSlug: 'intake-c15be2f6d7bf' },
+    },
+    things,
+  }));
+}
+
+const resortLabel = finalizeServedSharedTripPayload(intakeHyattResortLabel());
+assert.equal(resortLabel.liveTabLists.hotels.length, 2);
+assert.match(resortLabel.liveTabLists.hotels.join('\n'), /Hyatt Regency Maui Resort/);
+assert.match(resortLabel.liveTabLists.hotels.join('\n'), /Westin Maui/);
+
 const twoHotels = intakeHotelsTwo();
 const twoHotelPayload = finalizeServedSharedTripPayload(twoHotels);
 assert.equal(twoHotelPayload.liveTabLists.hotels.length, 2);

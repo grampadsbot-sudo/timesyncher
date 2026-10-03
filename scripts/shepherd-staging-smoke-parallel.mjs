@@ -193,6 +193,10 @@ export function buildMainIndependentParallelChecks(ctx) {
         const kDb = kTripId ? await customerTurnRow(db, kTripId, 'farmers market%') : null;
         const kPersist = persistedTurnClassifier(kDb?.payload);
         const kFromResponse = kTurn.json?.turnClassifier || kTurn.json?.category || null;
+        const kReply = String(kTurn.json?.reply || kDb?.body || '').trim();
+        const gateOk = kTurn.status !== 502
+          && kTurn.json?.status !== 'turn_classifier_failed'
+          && String(kDb?.payload?.blockedReasons?.[0] || '').toLowerCase() !== 'turn_classifier_failed';
         out.checkK = {
           http: kTurn.status,
           hiHttp: kHi.status,
@@ -201,6 +205,8 @@ export function buildMainIndependentParallelChecks(ctx) {
           persistedTargetKind: kPersist.targetKind,
           responseCategory: kFromResponse?.category || kTurn.json?.category || null,
           customerTurnId: kDb?.id || null,
+          replyPresent: kReply.length > 0,
+          gateOk,
           postsOk: itineraryPostOk(kHi) && itineraryPostOk(kTrip) && itineraryPostOk(kTurn),
         };
         const fail429 = attachProviderLogAndMaybeFail(out, 'K', { payload: kDb?.payload, placeSearch: kDb?.payload?.placeSearch, itineraryJson: kTurn.json }, { http: kTurn.status });
@@ -208,7 +214,7 @@ export function buildMainIndependentParallelChecks(ctx) {
         const category = String(kPersist.category || kFromResponse?.category || '').toLowerCase();
         const postsOk = itineraryPostOk(kHi) && itineraryPostOk(kTrip) && itineraryPostOk(kTurn);
         return {
-          pass: postsOk && kTurn.status >= 200 && kTurn.status < 300 && Boolean(kDb?.id) && category === 'market',
+          pass: postsOk && gateOk && kReply.length > 0 && kTurn.status >= 200 && kTurn.status < 300 && Boolean(kDb?.id) && category === 'market',
           http: kTurn.status,
         };
       },

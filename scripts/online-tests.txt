@@ -6,4 +6,6 @@ scripts/test_coupon_intake_shared_trip_chrome.mjs browser: coupon purchase, chat
 scripts/test_build_stamp_viewport.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_trip_map_initial_view_chrome.mjs browser: shared-app plan map first load needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_shared_logo_chip_center_chrome.mjs browser: shared-app logo chip center-of-mass needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_category_tab_icon_center_chrome.mjs browser: shared-app category tab icon vertical centering needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_tab_row_counts_chrome.mjs browser: shared-app API place count versus DOM row count needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_served_page_layout.mjs browser: served app-shell layout needs puppeteer-core and Chrome, which the offline job does not install
