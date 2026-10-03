@@ -2,52 +2,33 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 /** @param {import('puppeteer-core').Page} page */
-export async function collectLogoChipElements(page) {
+export async function collectBrandLogoChips(page) {
   return page.evaluate(() => {
     const out = [];
-    const chips = document.querySelectorAll('span[aria-hidden="true"]');
-    for (const chip of chips) {
-      const img = chip.querySelector('img[alt=""]');
-      const emoji = !img
-        ? (chip.dataset.tsLogoChip === '1' && chip.childNodes.length === 1 && chip.firstChild?.nodeType === Node.TEXT_NODE
-          ? chip
-          : chip.querySelector('span'))
-        : null;
-      if (!img && !emoji) continue;
-      const rect = chip.getBoundingClientRect();
-      if (rect.width < 12 || rect.height < 12) continue;
-      out.push({
-        kind: img ? 'brand' : 'emoji',
-        selector: `span[aria-hidden="true"][data-ts-logo-chip-id="${out.length}"]`,
-      });
-      chip.setAttribute('data-ts-logo-chip-id', String(out.length));
-    }
-    const markerChips = document.querySelectorAll('.leaflet-marker-icon [data-ts-logo-chip]');
-    for (const target of markerChips) {
-      if (!target.querySelector('img')) continue;
-      const rect = target.getBoundingClientRect();
-      if (rect.width < 12) continue;
-      const id = `marker-${out.length}`;
-      target.setAttribute('data-ts-logo-chip-id', id);
-      out.push({
-        kind: 'map-marker',
-        selector: `[data-ts-logo-chip-id="${id}"]`,
-      });
-    }
-    const tiny = document.querySelectorAll('img.tiny-logo');
-    for (const img of tiny) {
-      const wrapper = img.closest('[data-ts-logo-chip]') || img;
+    const imgs = document.querySelectorAll(
+      'img.tiny-logo[src], span[data-ts-logo-chip="1"] img[src][alt=""]',
+    );
+    for (const img of imgs) {
+      const src = String(img.getAttribute('src') || '').trim();
+      if (!src || /^data:image\/svg\+xml/i.test(src)) continue;
+      const wrapper = img.closest('[data-ts-logo-chip="1"]') || img.parentElement;
+      if (!wrapper) continue;
       const rect = wrapper.getBoundingClientRect();
-      if (rect.width < 12) continue;
-      const id = `tiny-${out.length}`;
+      if (rect.width < 12 || rect.height < 12) continue;
+      const id = `brand-${out.length}`;
       wrapper.setAttribute('data-ts-logo-chip-id', id);
       out.push({
-        kind: 'tiny-logo',
+        kind: 'brand',
         selector: `[data-ts-logo-chip-id="${id}"]`,
       });
     }
     return out;
   });
+}
+
+/** @param {import('puppeteer-core').Page} page */
+export async function collectLogoChipElements(page) {
+  return collectBrandLogoChips(page);
 }
 
 /**

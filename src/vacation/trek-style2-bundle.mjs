@@ -48,7 +48,9 @@ const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?p
 
 
 const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}';
-const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
+const W_LIST_PATCH_PRIOR = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
+
+const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="display:flex;align-items:center;gap:8px">${Re?`<span data-ts-logo-chip="1" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${an(Re)}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center center;display:block" /></span>`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px;display:inline-grid;place-items:center">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
 const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&rr(_i.item)?`<div data-row-summary="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
@@ -316,7 +318,9 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(WD_MEDIA_NEEDLE)) {
     patched = patched.replace(WD_MEDIA_NEEDLE, WD_MEDIA_PATCH);
   }
-  if (patched.includes(W_LIST_NEEDLE)) {
+  if (patched.includes(W_LIST_PATCH_PRIOR)) {
+    patched = patched.replace(W_LIST_PATCH_PRIOR, W_LIST_PATCH);
+  } else if (patched.includes(W_LIST_NEEDLE)) {
     patched = patched.replace(W_LIST_NEEDLE, W_LIST_PATCH);
   }
   if (patched.includes(OP_TITLE_NEEDLE)) {

@@ -233,7 +233,9 @@ function styleBlock() {
     .summary-stat strong { display: block; font-size: 20px; color: #111827; }
     .logo-list { columns: 2; column-gap: 18px; margin: 0 0 16px; padding: 0; list-style: none; }
     .logo-list li { break-inside: avoid; display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 0 0 7px; }
-    .tiny-logo, .thing-emoji { width: 22px; height: 22px; object-fit: contain; border-radius: 6px; background: #f8fafc; border: 1px solid #e5e7eb; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+    .thing-emoji { width: 22px; height: 22px; font-size: 13px; display: inline-grid; place-items: center; border-radius: 6px; background: #f8fafc; border: 1px solid #e5e7eb; }
+    [data-ts-logo-chip="1"] { display: inline-grid; place-items: center; box-sizing: border-box; }
+    img.tiny-logo { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; object-position: center center; display: block; }
     .recap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .story-card { border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; background: #fff; break-inside: avoid; }
     .story-card h3 { margin: 0; padding: 12px 12px 0; font-size: 14px; }

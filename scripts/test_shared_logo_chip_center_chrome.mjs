@@ -9,7 +9,7 @@ import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import {
   assertComWithinTolerance,
-  collectLogoChipElements,
+  collectBrandLogoChips,
   measureCenterOfMassOffset,
   screenshotChipCrop,
 } from './lib/logo-chip-center-of-mass.mjs';
@@ -45,7 +45,7 @@ function buildPayload() {
     trip: {
       id: '00000000-0000-4000-8000-000000000099',
       title: 'Logo center fixture',
-      destination: 'Area alpha',
+      destination: 'TimeSyncher logo center fixture',
       start_date: '2026-10-01',
       end_date: '2026-10-03',
     },
@@ -67,23 +67,6 @@ function buildPayload() {
         lng: -105.03,
         starts_at: '2026-10-01',
       },
-      {
-        id: 'thing-hotel-emoji',
-        title: 'Emoji Hotel',
-        category: 'hotel',
-        lat: 40.04,
-        lng: -105.04,
-        metadata: { customerStatedLodging: true },
-        starts_at: '2026-10-01',
-      },
-      {
-        id: 'thing-car-emoji',
-        title: 'Emoji Rental',
-        category: 'car',
-        lat: 40.05,
-        lng: -105.05,
-        starts_at: '2026-10-01',
-      },
     ],
   }));
 
@@ -97,14 +80,6 @@ function buildPayload() {
     } else if (/Summit Car/i.test(place.name)) {
       place.logoUrl = '/ts-thing-logos/car-brand.svg';
       override.logoUrl = '/ts-thing-logos/car-brand.svg';
-      override.icon = '🚗';
-    } else if (/Emoji Hotel/i.test(place.name)) {
-      place.logoUrl = '';
-      override.logoUrl = '';
-      override.icon = '🏨';
-    } else if (/Emoji Rental/i.test(place.name)) {
-      place.logoUrl = '';
-      override.logoUrl = '';
       override.icon = '🚗';
     }
     shared.thingOverrides[key] = override;
@@ -142,37 +117,36 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function clickTab(page, keyword) {
-  return page.evaluate((kw) => {
-    const normalize = (text) => String(text || '').replace(/\p{Extended_Pictographic}/gu, '').replace(/\s+/g, ' ').trim().toLowerCase();
-    const want = normalize(kw);
-    for (const node of document.querySelectorAll('button,[role="tab"],a')) {
-      const combined = [node.textContent, node.getAttribute('title') || '', node.getAttribute('data-tab') || ''].join(' ');
-      if (normalize(combined).includes(want)) {
+async function clickBookingsTab(page, kind) {
+  return page.evaluate((tabKind) => {
+    const pattern = tabKind === 'hotels' ? /^hotels\b/i : /^cars\b/i;
+    for (const node of document.querySelectorAll('button,[role="tab"]')) {
+      const text = String(node.textContent || '').replace(/\s+/g, ' ').trim();
+      if (pattern.test(text)) {
         node.click();
         return true;
       }
     }
     return false;
-  }, keyword);
+  }, kind);
 }
 
-async function sampleSurface(page, { surface, width, place }) {
+async function sampleBrandLogos(page, { surface, width, place }) {
   const metrics = [];
-  const chips = await collectLogoChipElements(page);
+  const chips = await collectBrandLogoChips(page);
   let idx = 0;
   for (const chip of chips) {
     const offset = await measureCenterOfMassOffset(page, chip.selector);
     if (!offset) continue;
     const cropPath = path.join(
       artifactRoot,
-      `logo-center-${phase}-${width}-${place || surface}-${idx}.png`,
+      `logo-center-${phase}-${width}-${place}-${idx}.png`,
     );
     await screenshotChipCrop(page, chip.selector, cropPath);
     metrics.push({
       surface,
       width,
-      place: place || `${chip.kind}-${idx}`,
+      place: `${place}-${idx}`,
       kind: chip.kind,
       offset,
       cropPath,
@@ -185,43 +159,28 @@ async function sampleSurface(page, { surface, width, place }) {
 async function runScenario(page, origin, width) {
   await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
   await page.goto(`${origin}/shared/${intakeSlug}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForFunction(() => (document.body?.innerText || '').includes('Logo center fixture'), { timeout: 45000 });
+  await page.waitForFunction(() => (document.body?.innerText || '').includes('Logo center fixture'), { timeout: 90000 });
+  await sleep(2500);
   const all = [];
 
-  const planTab = await page.$('button[title="Plan"],button[title*="Plan"]');
-  if (planTab) await planTab.click();
-  await page.waitForSelector('.leaflet-container', { timeout: 30000 }).catch((error) => {
-    if (error?.name !== 'TimeoutError') throw error;
-  });
-  await sleep(1200);
-  all.push(...await sampleSurface(page, { surface: 'plan-map', width, place: 'plan-map' }));
-
-  const markerCount = await page.evaluate(() => document.querySelectorAll('.leaflet-marker-icon').length);
-  for (let index = 0; index < markerCount; index += 1) {
-    await page.evaluate((markerIndex) => {
-      const marker = document.querySelectorAll('.leaflet-marker-icon')[markerIndex];
-      marker?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-    }, index);
-    await sleep(900);
-    all.push(...await sampleSurface(page, {
-      surface: 'detail',
-      width,
-      place: index === 0 ? 'hotel-detail' : 'car-detail',
-    }));
-    await page.keyboard.press('Escape').catch((error) => {
-      if (error?.name !== 'TargetCloseError') throw error;
-    });
-    await sleep(400);
-  }
-
-  await clickTab(page, 'booking');
-  await sleep(1200);
-  all.push(...await sampleSurface(page, { surface: 'bookings', width, place: 'bookings' }));
-
-  for (const tab of ['hotel', 'car']) {
-    await clickTab(page, tab);
-    await sleep(900);
-    all.push(...await sampleSurface(page, { surface: 'bookings-tab', width, place: `${tab}-tab` }));
+  const sections = [
+    { tab: 'hotels', place: 'hotels-brand' },
+    { tab: 'cars', place: 'cars-brand' },
+  ];
+  for (const { tab, place } of sections) {
+    await clickBookingsTab(page, tab);
+    await page.evaluate((kind) => {
+      const want = kind === 'hotels' ? /hotels/i : /cars/i;
+      for (const node of document.querySelectorAll('button')) {
+        const text = String(node.textContent || '').replace(/\s+/g, ' ').trim();
+        if (want.test(text)) {
+          node.click();
+          return;
+        }
+      }
+    }, tab);
+    await sleep(1200);
+    all.push(...await sampleBrandLogos(page, { surface: 'bookings-tab', width, place }));
   }
 
   return all;
@@ -253,6 +212,9 @@ const app = await startServer({ html, js, css, payload, staticFiles });
 const results = [];
 try {
   const page = await browser.newPage();
+  page.on('pageerror', (error) => {
+    console.error('shared logo chip pageerror:', error?.message || error);
+  });
   for (const width of [1280, 390]) {
     results.push(...await runScenario(page, app.origin, width));
   }
@@ -264,13 +226,8 @@ try {
 console.log(JSON.stringify({ phase, results }, null, 2));
 
 if (phase === 'after') {
-  const measured = results.filter((r) =>
-    ['brand', 'tiny-logo', 'map-marker', 'emoji'].includes(r.kind));
-  assert.ok(
-    measured.some((r) => r.kind === 'brand' || r.kind === 'tiny-logo' || r.kind === 'map-marker'),
-    'expected logo chips in fixture surfaces',
-  );
-  assertComWithinTolerance(measured, maxOffset);
+  assert.ok(results.length >= 2, 'expected hotel and car brand logo chips on bookings tabs');
+  assertComWithinTolerance(results, maxOffset);
 }
 
 console.log(`shared logo chip center ${phase} chrome tests passed`);

@@ -45,7 +45,8 @@ assert.equal(areaSelect.includes('selected'), false);
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(rendered, committed);
 
-assert.match(rendered, /data-ts-logo-chip":"1"/);
+assert.match(rendered, /className:"tiny-logo",src:zt/);
+assert.match(rendered, /i==="car"\?"🚗"/);
 assert.match(rendered, /display:"inline-grid",placeItems:"center"/);
 assert.doesNotMatch(rendered, /position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"/);
 assert.doesNotMatch(rendered, /padding:3,boxSizing:"border-box"\}\)\]:\[n\.jsx\("span",\{style:\{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1\},children:ua\}\)\]\}\)/);
