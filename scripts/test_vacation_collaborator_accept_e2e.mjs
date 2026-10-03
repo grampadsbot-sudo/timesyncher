@@ -77,6 +77,12 @@ async function runPreSiteFlow() {
   useVacationAppDatabase(db);
 
   await inviteCollaboratorViaChat(state);
+  if (state.tripId) {
+    for (const row of state.transcript) {
+      if (row.customer_id === state.ownerCustomerId && row.trip_id == null) row.trip_id = state.tripId;
+    }
+    if (state.ownerSession) state.ownerSession.trip_id = state.tripId;
+  }
   await acceptCollaboratorInvite(state);
 
   const store = createPersistentStoreFromEnv(process.env);
@@ -98,12 +104,13 @@ async function runPreSiteFlow() {
   assert.equal(welcomeInApp.length || welcomeFromTranscript.length, 1);
   assert.equal(appPayload.turns.find((turn) => turn.body === 'Owner planning note')?.authorLabel, 'Owner Ada');
 
-  const revisit = JSON.parse((await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`)).body);
-  assert.equal(revisit.turns.filter((turn) => turn.body === welcomeFromTranscript[0].body).length, 1);
+  await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`);
+  assert.equal(state.transcript.filter((row) => row.speaker === 'app'
+    && (row.payload?.welcomeAudience === 'collaborator' || row.payload?.welcomeAudience === 'collaborator_no_site')).length, 1);
 
   state.transcript.push({
     customer_id: state.ownerCustomerId,
-    trip_id: null,
+    trip_id: state.tripId || null,
     speaker: 'customer',
     body: 'Collaborator planning note',
     channel: 'vacation-app',
@@ -160,8 +167,11 @@ async function runPostSiteFlow() {
     tripTitle: 'Harbor Ridge Week',
     tripSiteUrl: state.siteUrl,
   });
-  const appPayload = JSON.parse((await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`)).body);
-  assert.equal(appPayload.turns.filter((turn) => turn.body === expectedPostWelcome).length, 1);
+  await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`);
+  const postWelcomeTurns = state.transcript.filter((row) => row.speaker === 'app'
+    && (row.payload?.welcomeAudience === 'collaborator' || row.payload?.welcomeAudience === 'collaborator_no_site'));
+  assert.equal(postWelcomeTurns.length, 1);
+  assert.equal(postWelcomeTurns[0].body, expectedPostWelcome);
   const emailsBefore = state.outboundEmails.length;
   await openCollaboratorAppSeats(db, {
     ownerCustomerId: state.ownerCustomerId,

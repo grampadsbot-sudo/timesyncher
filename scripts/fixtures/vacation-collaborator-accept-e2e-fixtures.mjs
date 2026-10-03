@@ -116,7 +116,7 @@ export function buildState({ withTrip = false, withInvite = true } = {}) {
 export function dbFor(state) {
   const db = async (strings, ...values) => {
     const text = sqlText(strings);
-    if (/from transcript_turns/i.test(text) && /speaker = 'app'/i.test(text) && /limit 1/i.test(text) && !/order by/i.test(text)) {
+    if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text) && /limit 1/i.test(text) && !/order by/i.test(text)) {
       const welcomed = state.transcript.filter((row) => row.speaker === 'app'
         && (row.payload?.welcomeAudience === 'collaborator'
           || row.payload?.welcomeAudience === 'collaborator_no_site'
