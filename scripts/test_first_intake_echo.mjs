@@ -17,6 +17,7 @@ import { authorPeopleFromTrip, turnAuthorLabel } from '../src/vacation/turn-auth
 const root = new URL('../', import.meta.url);
 const plans = JSON.parse(await readFile(new URL('content/plans.json', root), 'utf8'));
 const route = await readFile(new URL('routes/vacation-itinerary.mjs', root), 'utf8');
+const vacationAppTranscript = await readFile(new URL('src/vacation/vacation-app-transcript.mjs', root), 'utf8');
 const replyShip = await readFile(new URL('src/vacation/reply-ship.mjs', root), 'utf8');
 const page = await readFile(new URL('vacation-app.html', root), 'utf8');
 const planEnv = {
@@ -119,7 +120,7 @@ assert.equal(route.includes('viewerId: session.customer_id'), true);
 assert.match(page, /turn\.authorLabel/);
 assert.doesNotMatch(page, /authorLabel \|\| \(user \? 'You'/);
 assert.match(route, /authorPeopleFromTrip/);
-assert.match(route, /authorLabelReason/);
+assert.match(vacationAppTranscript, /authorLabelReason/);
 
 const people = authorPeopleFromTrip(
   { primary: { name: 'Ada Lovelace' }, seats: [{ id: collabId, displayName: 'Nico Hale' }] },

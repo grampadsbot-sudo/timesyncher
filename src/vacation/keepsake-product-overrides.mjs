@@ -102,6 +102,12 @@ export function applyProductKeepsakeOverrides(shared = {}) {
       place.category = place.category && typeof place.category === 'object'
         ? { ...place.category, name: place.category.name || 'Restaurant' }
         : { id: 2, name: 'Restaurant', icon: '🍽️' };
+    } else if (category === 'car') {
+      place.category_id = place.category_id || 12;
+      place.category_name = place.category_name || 'Car';
+      place.category = place.category && typeof place.category === 'object'
+        ? { ...place.category, name: place.category.name || 'Car' }
+        : { id: 12, name: 'Car', icon: '🚗' };
     } else if (category === 'store') {
       place.category_id = place.category_id || 11;
       place.category_name = place.category_name || 'Store';

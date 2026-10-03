@@ -66,6 +66,10 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import { pickVacationAppTrip } from '../src/vacation/vacation-app-trip-select.mjs';
+import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { sharedTripWebsiteUrl } from '../src/vacation/web-access.mjs';
 import {
   collaboratorSessionForAccept,
   vacationAppEulaForCollaboratorSeat,
@@ -219,12 +223,13 @@ function groupBy(items, key) {
   }, {});
 }
 
-function builtVacationSiteUrl(metadata) {
+function builtVacationSiteUrl(metadata, tripId = '') {
   const meta = metadata && typeof metadata === 'object' ? metadata : {};
   const explicit = String(meta.publicUrl || meta.public_url || meta.webItineraryUrl || '').trim();
-  const slug = String(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug || '').trim();
+  const derivedSlug = meta.intakeShare === true && tripId ? intakeShareSlug(tripId) : '';
+  const slug = String(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug || derivedSlug || '').trim();
   if (!explicit && !slug) return '';
-  const url = publicTripUrl({ metadata: meta }, process.env);
+  const url = explicit || (slug ? sharedTripWebsiteUrl(slug, process.env) : publicTripUrl({ metadata: { ...meta, publicSlug: slug, shareToken: slug } }, process.env));
   try {
     const parsed = new URL(url);
     if (!parsed.pathname || parsed.pathname === '/') return '';
@@ -236,7 +241,9 @@ function builtVacationSiteUrl(metadata) {
 
 function vacationAppTripSummary(row) {
   const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const url = builtVacationSiteUrl(metadata);
+  const url = builtVacationSiteUrl(metadata, row.id);
+  const slug = metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug
+    || (metadata.intakeShare === true && row.id ? intakeShareSlug(row.id) : null);
   return {
     id: row.id,
     title: row.title || '',
@@ -246,7 +253,7 @@ function vacationAppTripSummary(row) {
     status: row.status || 'planning',
     current: Boolean(row.current),
     publicUrl: url,
-    shareToken: metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug || null,
+    shareToken: slug,
     intakeShare: metadata.intakeShare === true,
     intakeRule: metadata.intakeRule || '',
     intakeSpan: metadata.intakeSpan || '',
@@ -344,76 +351,7 @@ async function loadTranscriptAuthorPeople(db, customerId, tripKey) {
 }
 
 async function loadVacationAppTurns(db, session, tripId) {
-  const customerId = transcriptCustomerId(session);
-  if (!customerId) return [];
-  const tripKey = tripId || null;
-  const people = await loadTranscriptAuthorPeople(db, customerId, tripKey);
-  const labelSession = { ...session, viewerId: session.viewerId || session.customer_id || null };
-  const seat = seatFromSession(session);
-  const welcomeCustomerId = onboardingWelcomeTranscriptCustomerId(session, seat);
-  const rows = tripKey
-    ? await db`
-      select speaker, body, channel, payload, direction, received_at, sent_at, created_at
-      from transcript_turns
-      where customer_id = ${customerId}
-        and trip_id = ${tripKey}
-        and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
-      order by coalesce(received_at, sent_at, created_at) desc nulls last
-      limit 120
-    `
-    : await db`
-      select speaker, body, channel, payload, direction, received_at, sent_at, created_at
-      from transcript_turns
-      where customer_id = ${customerId}
-        and trip_id is null
-        and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
-      order by coalesce(received_at, sent_at, created_at) desc nulls last
-      limit 120
-    `;
-  let merged = rows;
-  if (seat && welcomeCustomerId && welcomeCustomerId !== customerId) {
-    const welcomeRows = await loadCollaboratorWelcomeTranscriptRows(db, welcomeCustomerId, tripKey);
-    const seen = new Set(rows.map((row) => `${row.body}|${row.received_at}|${row.sent_at}`));
-    const extra = welcomeRows.filter((row) => !seen.has(`${row.body}|${row.received_at}|${row.sent_at}`));
-    merged = [...rows, ...extra];
-    merged.sort((a, b) => {
-      const atA = a.received_at || a.sent_at || a.created_at;
-      const atB = b.received_at || b.sent_at || b.created_at;
-      return new Date(atA).getTime() - new Date(atB).getTime();
-    });
-  }
-  return merged.reverse().map((row) => {
-    const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
-    const clientPayload = vacationAppTurnPayloadForClient(payload);
-    const live = clientPayload.liveTranscript && typeof clientPayload.liveTranscript === 'object' ? clientPayload.liveTranscript : {};
-    const inbound = row.speaker === 'customer' || row.direction === 'inbound';
-    const turn = {
-      speaker: row.speaker || 'customer',
-      body: row.body || '',
-      channel: row.channel || '',
-      direction: row.direction || '',
-      payload: clientPayload,
-      authorName: String(clientPayload.authorName || live.speakerName || ''),
-      authorId: (() => {
-        const explicit = String(clientPayload.authorId || '').trim();
-        if (explicit) return explicit;
-        const spoken = String(clientPayload.authorName || live.speakerName || '').trim();
-        if (inbound && !spoken) return String(customerId);
-        return '';
-      })(),
-      at: row.received_at || row.sent_at || row.created_at || null,
-    };
-    const named = turnAuthorLabel(turn, labelSession, people);
-    turn.authorLabel = named.label;
-    if (named.reason) turn.authorLabelReason = named.reason;
-    if (named.reason === 'author_name_missing' && inbound) {
-      const missing = transcriptAuthorMissingError(turn, labelSession, tripKey);
-      console.error(JSON.stringify(missing));
-      throw Object.assign(new Error('transcript_author_missing'), { code: 'transcript_author_missing', details: missing });
-    }
-    if (row.speaker === 'app' || live.role === 'app') Object.assign(turn, appReplyTelemetry(live));
-    return turn;
-  });
+  return loadTripScopedVacationAppTurns(db, session, tripId, { loadTranscriptAuthorPeople });
 }
 
 function welcomeFirstName(value) {
@@ -422,6 +360,7 @@ function welcomeFirstName(value) {
 }
 
 function tripHasVacationSite(trip) {
+  if (String(trip?.publicUrl || '').trim()) return true;
   return Boolean(String(trip?.shareToken || '').trim());
 }
 
@@ -921,12 +860,14 @@ async function handleVacationApp(req, res, db, url) {
   }
 
   if (req.method === 'GET') {
-    let vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
-    let selected = vacations.find((trip) => trip.id === requestedTripId)
-      || vacations.find((trip) => trip.id === session.trip_id)
-      || vacations[0]
-      || null;
+    const seatPrefetch = seatFromSession(session);
+    if (seatPrefetch?.ownerTripId) await publishIntakeShare(db, seatPrefetch.ownerTripId);
+    let vacations = await loadVacationAppTrips(db, session);
+    let selected = pickVacationAppTrip(vacations, session, requestedTripId);
+    if (selected?.id) await publishIntakeShare(db, selected.id);
+    vacations = await loadVacationAppTrips(db, session);
+    selected = pickVacationAppTrip(vacations, session, requestedTripId);
     const eula = await vacationAppEula(session, process.env);
     if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
@@ -938,10 +879,9 @@ async function handleVacationApp(req, res, db, url) {
       }
     }
     const turns = await loadVacationAppTurns(db, session, selected?.id || null);
-    if (selected) await publishIntakeShare(db, selected.id);
-    const published = selected ? await loadVacationAppTrips(db, session) : vacations;
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
+    const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
     return sendJson(res, 200, {
       ok: true,
       session: {
@@ -954,7 +894,10 @@ async function handleVacationApp(req, res, db, url) {
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
-      vacations: published,
+      trip: selected,
+      tripSiteUrl,
+      publicUrl: selected?.publicUrl || '',
+      vacations,
       turns,
       itinerary,
     });
