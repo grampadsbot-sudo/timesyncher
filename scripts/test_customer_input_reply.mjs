@@ -24,7 +24,8 @@ const carried = draftingFacts([], 'Friday.', {
 });
 assert.deepEqual(carried.needsCustomerInput, ['lodging']);
 const absent = draftingFacts([], 'Friday.', { things: [{ title: 'Swim' }] });
-assert.equal(Object.hasOwn(absent, 'needsCustomerInput'), false);
+assert.deepEqual(absent.needsCustomerInput, ['lodging']);
+assert.equal(absent.lodgingAsk, undefined);
 
 const inputContext = {
   itinerary: ['Swim: Monday'],

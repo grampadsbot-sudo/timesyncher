@@ -120,7 +120,7 @@ assert.equal(Object.hasOwn(cleared, 'needsCustomerInput'), false);
 const replyFacts = draftingFacts([], 'Friday April 3.', {
   things: [{ title: 'Swim', category: 'activity' }],
 });
-assert.equal(Object.hasOwn(replyFacts, 'needsCustomerInput'), false);
+assert.deepEqual(replyFacts.needsCustomerInput, ['lodging']);
 const coveredFacts = draftingFacts([], 'Friday April 3.', {
   things: [
     { title: 'Kona house', category: 'hotel', metadata: { customerStatedLodging: true } },

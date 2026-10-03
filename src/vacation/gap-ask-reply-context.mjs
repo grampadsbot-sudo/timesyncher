@@ -1,13 +1,13 @@
 import { intakeLodgingWanted } from './trip-intake-classify.mjs';
-import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
-import { FIRST_INTAKE_GAP_ORDER } from './first-intake-customer-input.mjs';
+import { customerInputState, statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
+import { FIRST_INTAKE_GAP_ORDER, persistTripGapAskState } from './first-intake-customer-input.mjs';
 
 function lodgingSatisfied(things = [], trip = {}) {
   if (statedLodgingLabelFromThings(things)) return true;
   return Boolean(String(trip?.lodging || trip?.statedLodgingArea || trip?.statedLodgingAreaHint || '').trim());
 }
 
-export function gapSatisfied(gap, things = [], trip = {}) {
+function gapSatisfied(gap, things = [], trip = {}) {
   const key = String(gap || '').trim();
   if (!key) return true;
   if (key === 'lodging') return lodgingSatisfied(things, trip);
@@ -41,7 +41,7 @@ function lodgingFilledThisTurn(saved = {}, merged = {}, { wantedThings = [] } = 
   return !lodgingSatisfied(saved?.things || [], saved) && lodgingSatisfied(merged?.things || [], merged);
 }
 
-export function detectGapAnswerTurn(saved = {}, merged = {}, options = {}) {
+function detectGapAnswerTurn(saved = {}, merged = {}, options = {}) {
   const lastAsked = String(merged?.lastAskedGap || saved?.lastAskedGap || '').trim();
   if (!lastAsked) return { gapAnswerTurn: false };
   if (lastAsked === 'lodging' && lodgingFilledThisTurn(saved, merged, options)) {
@@ -50,6 +50,27 @@ export function detectGapAnswerTurn(saved = {}, merged = {}, options = {}) {
   const explicit = String(merged?.gapFilledThisTurn || '').trim();
   if (explicit && explicit === lastAsked) return { gapAnswerTurn: true, gapFilledThisTurn: explicit };
   return { gapAnswerTurn: false };
+}
+
+export function savedTripGapFields(meta = {}) {
+  const row = meta && typeof meta === 'object' ? meta : {};
+  return {
+    statedLodgingArea: String(row.statedLodgingArea || row.statedLodgingAreaHint || '').trim(),
+    lastAskedGap: String(row.lastAskedGap || '').trim(),
+    invite_contact_needed: row.invite_contact_needed === true,
+    lodgingAsk: row.lodgingAsk === true,
+    needsCustomerInput: Array.isArray(row.needsCustomerInput) ? row.needsCustomerInput : undefined,
+    flightAsk: String(row.flightAsk || '').trim(),
+  };
+}
+
+export function mergeSavedTripGapFields(saved = {}) {
+  const row = saved && typeof saved === 'object' ? saved : {};
+  return {
+    lastAskedGap: String(row.lastAskedGap || '').trim(),
+    invite_contact_needed: row.invite_contact_needed === true,
+    statedLodgingArea: String(row.statedLodgingArea || '').trim(),
+  };
 }
 
 export function annotateLiveTurnGapAnswer(merged = {}, saved = null, { wantedThings = [] } = {}) {
@@ -67,44 +88,88 @@ export function annotateLiveTurnGapAnswer(merged = {}, saved = null, { wantedThi
   return { ...withMeta, gapAnswerTurn: true, gapFilledThisTurn: detected.gapFilledThisTurn };
 }
 
-function askFieldsForGap(gap, things, trip) {
+/** Missing structured data only (no lodgingAsk / inviteContactAsk / flightAsk ask signals). */
+function missingCustomerInputFacts(things = [], trip = {}) {
+  const state = customerInputState(things, trip);
+  const needs = Array.isArray(state.needsCustomerInput)
+    ? state.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+  if (!needs.length) return {};
+  return { needsCustomerInput: needs };
+}
+
+function askSignalsForGap(gap, things, trip) {
   const key = String(gap || '').trim();
-  if (!key) return {};
+  if (!key) return { fields: {}, persistGapAsk: null };
   if (key === 'lodging') {
-    return { lodgingAsk: true, needsCustomerInput: ['lodging'], persistGapAsk: { lastAskedGap: 'lodging', lodgingAsk: true, needsCustomerInput: ['lodging'] } };
+    return {
+      fields: { lodgingAsk: true, needsCustomerInput: ['lodging'] },
+      persistGapAsk: { lastAskedGap: 'lodging', lodgingAsk: true, needsCustomerInput: ['lodging'] },
+    };
   }
   if (key === 'invite_contact') {
     return {
-      invite_contact_needed: true,
-      inviteContactAsk: true,
-      gaps: [key],
-      needsCustomerInput: ['invite_contact'],
-      persistGapAsk: { lastAskedGap: 'invite_contact', invite_contact_needed: true, lodgingAsk: false, needsCustomerInput: ['invite_contact'] },
+      fields: {
+        invite_contact_needed: true,
+        inviteContactAsk: true,
+        gaps: [key],
+        needsCustomerInput: ['invite_contact'],
+      },
+      persistGapAsk: {
+        lastAskedGap: 'invite_contact',
+        invite_contact_needed: true,
+        lodgingAsk: false,
+        needsCustomerInput: ['invite_contact'],
+      },
     };
   }
-  if (key === 'flight' || key === 'car') {
-    const flightAsk = key === 'flight' ? 'missing' : '';
-    if (flightAsk) {
-      return { flightAsk, needsCustomerInput: [key], persistGapAsk: { lastAskedGap: key, flightAsk, needsCustomerInput: [key] } };
-    }
-    return { needsCustomerInput: [key], persistGapAsk: { lastAskedGap: key, needsCustomerInput: [key] } };
+  if (key === 'flight') {
+    return {
+      fields: { flightAsk: 'missing', needsCustomerInput: [key] },
+      persistGapAsk: { lastAskedGap: key, flightAsk: 'missing', needsCustomerInput: [key] },
+    };
   }
-  return { gaps: [key], persistGapAsk: { lastAskedGap: key } };
+  if (key === 'car') {
+    return {
+      fields: { needsCustomerInput: [key] },
+      persistGapAsk: { lastAskedGap: key, needsCustomerInput: [key] },
+    };
+  }
+  return { fields: { gaps: [key] }, persistGapAsk: { lastAskedGap: key } };
 }
 
-export function replyGapAskFields(record = {}, things = []) {
-  if (!record || typeof record !== 'object') return {};
-  if (record.gapAnswerTurn !== true) return {};
+function replyGapAskSignals(record = {}, things = []) {
+  if (!record || typeof record !== 'object' || record.gapAnswerTurn !== true) {
+    return { fields: {}, persistGapAsk: null };
+  }
   const filled = String(record.gapFilledThisTurn || record.lastAskedGap || '').trim();
-  if (!filled) return {};
+  if (!filled) return { fields: {}, persistGapAsk: null };
   const next = nextOpenGapAfter(filled, things, record);
-  if (!next) return {};
-  const { persistGapAsk, ...publicFields } = askFieldsForGap(next, things, record);
-  return persistGapAsk ? { ...publicFields, _persistGapAsk: persistGapAsk } : publicFields;
+  if (!next) return { fields: {}, persistGapAsk: null };
+  return askSignalsForGap(next, things, record);
 }
 
-export function stripGapAskPersistHints(facts = {}) {
-  if (!facts || typeof facts !== 'object') return facts;
-  const { _persistGapAsk, ...rest } = facts;
-  return rest;
+export function draftingGapFields(record = {}, things = []) {
+  const missing = missingCustomerInputFacts(things, record);
+  const { fields, persistGapAsk } = replyGapAskSignals(record, things);
+  return { facts: { ...missing, ...fields }, persistGapAsk };
+}
+
+export function perFactGapAskRuleLines(tripRaw = {}) {
+  const lodgingAsk = tripRaw?.lodgingAsk === true;
+  const flightAsk = String(tripRaw?.flightAsk || '').trim();
+  const inviteContactAsk = tripRaw?.inviteContactAsk === true;
+  return [
+    lodgingAsk ? 'The saved trip record includes lodgingAsk. Ask the customer where they are staying, in your own words.' : '',
+    flightAsk ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.' : '',
+    inviteContactAsk ? 'The saved trip record includes inviteContactAsk. Ask for the collaborator name and email so you can invite them, in your own words.' : '',
+  ].filter(Boolean);
+}
+
+export async function draftingFactsForLiveReply(draftingFactsFn, history, customerTurn, mergedTrip, env, tripId) {
+  const things = Array.isArray(mergedTrip?.things) ? mergedTrip.things : [];
+  const { persistGapAsk } = replyGapAskSignals(mergedTrip, things);
+  const id = String(tripId || '').trim();
+  if (persistGapAsk && id) await persistTripGapAskState(env, id, persistGapAsk);
+  return draftingFactsFn(history, customerTurn, mergedTrip);
 }

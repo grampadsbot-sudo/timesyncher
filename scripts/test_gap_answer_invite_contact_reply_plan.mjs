@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { draftingFacts } from '../src/vacation/live-app-turn.mjs';
-import { stripGapAskPersistHints } from '../src/vacation/gap-ask-reply-context.mjs';
 import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
 import { replyRulesSystem } from './vacation-app-reply-rules.mjs';
 
@@ -34,7 +33,7 @@ assert.equal(facts.inviteContactAsk, true);
 assert.equal(facts.invite_contact_needed, true);
 assert.deepEqual(facts.needsCustomerInput, ['invite_contact']);
 
-const tripContext = await enrichDraftingTripContext(stripGapAskPersistHints(facts), {
+const tripContext = await enrichDraftingTripContext(facts, {
   env: {},
   things,
   savedStart: '2027-03-10',
