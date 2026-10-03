@@ -4,7 +4,9 @@ import {
 } from './shepherd-staging-smoke-lib.mjs';
 import {
   configureSharedUiMapHelpers,
+  gotoAndHydrateSharedIntakePage,
   gotoSharedIntakePage,
+  listSharedDomTabs,
   mapSharedTripState,
   sharedBudgetTabCheck,
 } from './shepherd-staging-smoke-shared-ui-map.mjs';
@@ -102,22 +104,50 @@ export async function runSharedSiteBudgetCheck({ page, prep, artifactPath }) {
     return {
       pass: false,
       checkBUD: { failReason: 'no_intake_map_url' },
+      appFail: null,
     };
   }
-  await gotoSharedIntakePage(page, intakeMapUrl);
-  await new Promise((r) => setTimeout(r, 1500));
+  const hydration = await gotoAndHydrateSharedIntakePage(page, intakeMapUrl);
+  const domTabList = hydration.domTabList || [];
+  if (hydration.stageTimestamps?.hangingStage) {
+    const budgetShot = artifactPath('shared-budget-hydration-fail.png');
+    await page.screenshot({ path: budgetShot, fullPage: true });
+    return {
+      pass: false,
+      appFail: null,
+      checkBUD: {
+        budgetCheck: { tabPresent: false, clicked: false, hardcoded: [], pageErrors: {}, bodySnippet: '' },
+        budgetShot,
+        apiBudgetLines: (sharedJson.budget || []).length,
+        failReason: `hanging_stage:${hydration.stageTimestamps.hangingStage}`,
+        domTabList,
+        hydrationTimestamps: hydration.stageTimestamps,
+      },
+    };
+  }
   const budgetCheck = await sharedBudgetTabCheck(page, sharedJson.budget || []);
   const budgetShot = artifactPath('shared-budget.png');
-  if (budgetCheck.clicked) await page.screenshot({ path: budgetShot, fullPage: true });
-  const failReason = budFailReason({ publicUrlAfterH, sharedJson, budgetCheck });
-  const pass = !failReason;
+  await page.screenshot({ path: budgetShot, fullPage: true });
+  let appFail = null;
+  if (!budgetCheck.tabPresent) {
+    appFail = {
+      reason: 'app_budget_tab_missing',
+      domTabList: await listSharedDomTabs(page),
+    };
+  }
+  const failReason = appFail?.reason
+    || budFailReason({ publicUrlAfterH, sharedJson, budgetCheck });
+  const pass = !appFail && !failReason;
   return {
     pass,
+    appFail,
     checkBUD: {
       budgetCheck,
-      budgetShot: budgetCheck.clicked ? budgetShot : null,
+      budgetShot,
       apiBudgetLines: (sharedJson.budget || []).length,
-      failReason,
+      failReason: pass ? null : (failReason || appFail?.reason),
+      domTabList,
+      hydrationTimestamps: hydration.stageTimestamps,
     },
   };
 }
@@ -129,12 +159,47 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
     return {
       pass: false,
       checkLOGO: { failReason: 'no_intake_map_url' },
+      appFail: null,
     };
   }
-  await gotoSharedIntakePage(page, intakeMapUrl);
-  await new Promise((r) => setTimeout(r, 2000));
+  const hydration = await gotoAndHydrateSharedIntakePage(page, intakeMapUrl);
+  const domTabList = hydration.domTabList || [];
   const logoShot = artifactPath('shared-logo-chips.png');
   const logoCropsPath = '/opt/cursor/artifacts/logo-chips-crops.png';
+  if (hydration.stageTimestamps?.hangingStage) {
+    await page.screenshot({ path: logoShot, fullPage: true });
+    return {
+      pass: false,
+      appFail: null,
+      checkLOGO: {
+        failReason: `hanging_stage:${hydration.stageTimestamps.hangingStage}`,
+        domTabList,
+        hydrationTimestamps: hydration.stageTimestamps,
+        logoShot,
+      },
+    };
+  }
+  const hotelsTabPresent = domTabList.some((t) => /hotel/i.test(`${t.text} ${t.dataTab}`));
+  const carsTabPresent = domTabList.some((t) => /car/i.test(`${t.text} ${t.dataTab}`));
+  if (!hotelsTabPresent || !carsTabPresent) {
+    await page.screenshot({ path: logoShot, fullPage: true });
+    return {
+      pass: false,
+      appFail: {
+        reason: 'app_logo_tabs_missing',
+        domTabList: await listSharedDomTabs(page),
+        missing: { hotels: !hotelsTabPresent, cars: !carsTabPresent },
+      },
+      checkLOGO: {
+        failReason: 'app_logo_tabs_missing',
+        domTabList,
+        hydrationTimestamps: hydration.stageTimestamps,
+        logoShot,
+        sharedApiPlaces: (sharedJson.places || []).length,
+        intakeShareUrl: intakeMapUrl,
+      },
+    };
+  }
   const logoHotels = await sharedLogoTabCheck(page, 'hotels', sharedJson);
   const logoCars = await sharedLogoTabCheck(page, 'cars', sharedJson);
   if (logoHotels.clicked || logoCars.clicked) await page.screenshot({ path: logoShot, fullPage: true });
@@ -150,6 +215,7 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
   else if (!logoCars.pass) failReason = 'logo_cars_grade_fail';
   return {
     pass,
+    appFail: null,
     checkLOGO: {
       hotels: logoHotels,
       cars: logoCars,
@@ -158,6 +224,8 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
       sharedApiPlaces: (sharedJson.places || []).length,
       intakeShareUrl: intakeMapUrl,
       failReason: pass ? null : failReason,
+      domTabList,
+      hydrationTimestamps: hydration.stageTimestamps,
     },
   };
 }

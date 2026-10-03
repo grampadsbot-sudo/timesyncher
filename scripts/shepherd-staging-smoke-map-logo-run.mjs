@@ -63,12 +63,20 @@ export async function runShepherdSmokeMapBudLogoChecks(ctx) {
   await runDedicatedSharedCheck(ctx, 'BUD', 90000, async ({ page, prep, artifactPath }) => {
     const bud = await runSharedSiteBudgetCheck({ page, prep, artifactPath });
     out.checkBUD = bud.checkBUD;
+    if (bud.appFail) {
+      out.checkBUD.appFail = bud.appFail;
+      return { pass: false, http: 200 };
+    }
     return { pass: bud.pass, http: 200 };
   });
 
-  await runDedicatedSharedCheck(ctx, 'LOGO', 90000, async ({ page, prep, artifactPath }) => {
+  await runDedicatedSharedCheck(ctx, 'LOGO', 120000, async ({ page, prep, artifactPath }) => {
     const logo = await runSharedSiteLogoCheck({ page, prep, artifactPath });
     out.checkLOGO = logo.checkLOGO;
+    if (logo.appFail) {
+      out.checkLOGO.appFail = logo.appFail;
+      return { pass: false, http: 200 };
+    }
     return { pass: logo.pass, http: 200 };
   });
 }
