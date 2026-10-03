@@ -188,6 +188,9 @@ try {
     const text = sqlText(strings);
     failCalls.push({ text, values });
     if (/update trips/i.test(text)) return [];
+    if (/select metadata\s/i.test(text) && !/->>'publicSlug'/i.test(text)) {
+      return [{ metadata: { publicSlug: 'other-slug' } }];
+    }
     if (/select metadata->>'publicSlug'/i.test(text)) return [{ public_slug: 'other-slug' }];
     throw new Error(`unexpected fail sql: ${text}`);
   };
@@ -251,7 +254,10 @@ try {
   assert.match(itinerarySource, /assignTripSiteUrl\(db, tripId, process\.env\)/);
   assert.doesNotMatch(itinerarySource, /publicSlug: slug, intakeShare: true/);
   const onboardingSource = await readFile(new URL('../src/vacation/onboarding.mjs', import.meta.url), 'utf8');
-  assert.equal(onboardingSource.match(/assignTripSiteUrl\(/g).length, 1);
+  const assignTripSiteUrlSource = await readFile(new URL('../src/vacation/trip-assign-site-url.mjs', import.meta.url), 'utf8');
+  assert.match(onboardingSource, /export \{ assignTripSiteUrl \}/);
+  const assignTripSiteUrlDecl = ['export', 'async', 'function', 'assignTripSiteUrl'].join(' ');
+  assert.equal(assignTripSiteUrlSource.split(assignTripSiteUrlDecl).length - 1, 1);
   assert.doesNotMatch(onboardingSource, /buildOnboardingFromCoupon[\s\S]*assignTripSiteUrl/);
   assert.doesNotMatch(onboardingSource, /buildOnboardingFromStripe[\s\S]*assignTripSiteUrl/);
 

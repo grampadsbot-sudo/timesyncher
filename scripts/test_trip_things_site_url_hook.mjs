@@ -17,6 +17,7 @@ const db = async (strings, ...values) => {
     assert.ok(patch?.publicUrl, 'assignTripSiteUrl stores publicUrl');
     return [{ public_slug: patch.publicSlug }];
   }
+  if (/select metadata\s/i.test(text) && !/->>'publicSlug'/i.test(text)) return [{ metadata: {} }];
   if (/select metadata->>'publicSlug'/i.test(text)) return [{ public_slug: '' }];
   throw new Error(`unexpected ${text.slice(0, 120)}`);
 };

@@ -100,6 +100,13 @@ function httpStatusFromReason(reason) {
 }
 
 const nominatimInflightByKey = new Map();
+let nominatimInflightStore = null;
+
+function resetNominatimInflightIfStoreChanged(store) {
+  if (nominatimInflightStore === store) return;
+  nominatimInflightByKey.clear();
+  nominatimInflightStore = store;
+}
 
 function nominatimProviderTimingFields({
   calledAtMs,
@@ -202,6 +209,7 @@ async function nominatimReadJson(fetchImpl, url, readJson, {
   ...readOptions
 } = {}) {
   const store = getNominatimStore(env);
+  resetNominatimInflightIfStoreChanged(store);
   const key = String(cacheKey || '').trim();
   const cached = await readCachedNominatimPayload(store, key);
   if (cached !== null && cached !== undefined) {
@@ -246,7 +254,7 @@ async function nominatimReadJson(fetchImpl, url, readJson, {
   if (!inflight) {
     const outbound = (async () => await runOutbound())();
     inflight = outbound.finally(() => {
-      if (nominatimInflightByKey.get(key) === outbound) nominatimInflightByKey.delete(key);
+      if (nominatimInflightByKey.get(key) === inflight) nominatimInflightByKey.delete(key);
     });
     nominatimInflightByKey.set(key, inflight);
   }
