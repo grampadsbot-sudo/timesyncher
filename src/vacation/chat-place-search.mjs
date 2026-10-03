@@ -11,7 +11,7 @@ import {
 } from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { chatPlaceSearchGeocodeDestination } from './place-search-named-target.mjs';
-import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
+import { tripOwnedPlaceAllowRows, unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 import {
   customerChatPlaceSearchNoResults,
   finishCustomerChatPlaceSearch,
@@ -295,7 +295,9 @@ export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults, options = {
 
 export function blockInTurnPlaceReply(reply, enforceInTurnPlaces, inTurnPlaceResults, carry = {}) {
   if (!enforceInTurnPlaces) return null;
-  const tripPlaceAllowRows = Array.isArray(carry.tripPlaceAllowRows) ? carry.tripPlaceAllowRows : [];
+  const tripPlaceAllowRows = Array.isArray(carry.tripPlaceAllowRows) && carry.tripPlaceAllowRows.length
+    ? carry.tripPlaceAllowRows
+    : tripOwnedPlaceAllowRows(carry.tripContext?.tripReplyGate || {});
   const violation = inTurnPlaceReplyViolation(reply, inTurnPlaceResults, { tripPlaceAllowRows });
   if (!violation) return null;
   console.error(`place search reply blocked: ${violation.error}`);

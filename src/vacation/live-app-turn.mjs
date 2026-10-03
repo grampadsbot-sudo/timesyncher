@@ -18,7 +18,6 @@ import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
 import {
   placeResultExtra,
-  tripOwnedPlaceAllowRows,
   unsourcedAgainstInTurnResults,
 } from './provider-result-context.mjs';
 import { liveReplyCommerceGate } from './collaborator-app-seat.mjs';
@@ -1568,11 +1567,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     complete: async () => String(extractedDestination || '').trim() || 'none',
   });
   const destination = resolvedDestination.destination;
-  const tripPlaceAllowRows = tripOwnedPlaceAllowRows({
-    destination: mergedTrip.destination || destination,
-    lodging: tripContext.lodging,
-    things: mergedTrip.things,
-  });
   const genStarted = Date.now();
   const speaker = String(tripFacts.addressedTo || '').trim();
   const draftExtra = [
@@ -1682,13 +1676,13 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
       reason: quality?.reason || 'quality_not_judged',
     };
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, tripPlaceAllowRows });
+    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, tripContext });
     if (blocked) return blocked;
     return { reply: originalDraft, ...unjudged };
   }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, tripPlaceAllowRows });
+    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, tripContext });
     if (blocked) return blocked;
     const shipped = stampShippedReply({
       reply: originalDraft,
@@ -1729,7 +1723,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     modelPlaceSources,
     inTurnProviderResults,
     enforceInTurnPlaces,
-    tripPlaceAllowRows,
     tripContext,
     tripFacts,
     planTable,
@@ -2164,7 +2157,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     judgeMs,
   };
   if (pending.enforceInTurnPlaces) {
-    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true }, tripPlaceAllowRows: pending.tripPlaceAllowRows });
+    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true }, tripContext: pending.tripContext });
     if (blocked) return { ...blocked, log: { ...log, rewriteFailReason: blocked.reason, held: true } };
   }
   const stamped = stampShippedReply({
