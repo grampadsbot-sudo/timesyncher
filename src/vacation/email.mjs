@@ -192,7 +192,20 @@ export function webEditorInviteEmail({ grant, token, env = process.env }) {
   return { subject, textBody, htmlBody };
 }
 
+/** When TIMESYNCHER_HARNESS_STUB_OUTBOUND=1, only bundle-spine recipients hit Resend. */
+export function harnessOutboundEmailAllowed(to, env = process.env) {
+  if (env.TIMESYNCHER_HARNESS_STUB_OUTBOUND !== '1') return true;
+  const addr = cleanText(to, 180).toLowerCase();
+  if (addr === 'alex.rivera.sct@agentmail.to') return true;
+  if (addr === 'kim.rivera.sct@agentmail.to') return true;
+  if (/^shepherd-[0-9a-f]{7}-\d+@resend\.dev$/.test(addr)) return true;
+  return false;
+}
+
 async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
+  if (!harnessOutboundEmailAllowed(to, env)) {
+    return { provider: 'harness_stub', providerMessageId: null, stubbed: true };
+  }
   const apiKey = env.RESEND_API_KEY || env.TIMESYNCHER_RESEND_API_KEY || '';
   if (!apiKey) return null;
   const response = await fetch('https://api.resend.com/emails', {
@@ -244,7 +257,10 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
 
   try {
     const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
+    if (sent?.stubbed) {
+      provider = sent.provider;
+      status = 'stubbed';
+    } else if (sent) {
       provider = sent.provider;
       providerMessageId = sent.providerMessageId;
       status = 'sent';
@@ -353,7 +369,10 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
 
   try {
     const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
+    if (sent?.stubbed) {
+      provider = sent.provider;
+      status = 'stubbed';
+    } else if (sent) {
       provider = sent.provider;
       providerMessageId = sent.providerMessageId;
       status = 'sent';
@@ -425,7 +444,10 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
 
   try {
     const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
+    if (sent?.stubbed) {
+      provider = sent.provider;
+      status = 'stubbed';
+    } else if (sent) {
       provider = sent.provider;
       providerMessageId = sent.providerMessageId;
       status = 'sent';

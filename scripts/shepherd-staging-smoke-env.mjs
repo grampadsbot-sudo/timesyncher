@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-/** Load staging secrets required for local mint + DB smoke (never log values). */
+ * Staging project should set TIMESYNCHER_HARNESS_STUB_OUTBOUND=1 so harness mint
+ * checkouts do not consume Resend quota; bundle spine still sends to agentmail + shepherd-*@resend.dev.
 import { readFileSync } from 'node:fs';
 
 const PROJECT = 'timesyncher-vacation-staging';
