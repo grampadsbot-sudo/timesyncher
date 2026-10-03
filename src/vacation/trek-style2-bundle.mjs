@@ -245,7 +245,7 @@ const CO_NEEDLE = 'Co=G=>ha(G).longDetails??Fl(G)';
 const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String(G.name||G.title||"")))||{}).longDetails||Fl(G)';
 
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
-const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
+const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":Re.includes("car")||Re.includes("rental")?"car":';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
 
@@ -668,7 +668,7 @@ export function assertPatchedStyleTwo(source = '') {
     throw new Error('Style two daily-thing media filter did not apply.');
   }
   if (!js.includes(MN_CATEGORY_PATCH) || js.includes(MN_CATEGORY_NEEDLE)) {
-    throw new Error('Style two live category Mn() restaurant-before-car patch did not apply.');
+    throw new Error('Style two live category Mn() must classify lodging and resort as hotel before car or rental.');
   }
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');

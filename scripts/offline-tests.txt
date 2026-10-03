@@ -43,6 +43,9 @@ scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
 scripts/test_trip_map_harness_hook_bundle.mjs
 scripts/test_shared_logo_chip_center_bundle.mjs
+scripts/test_shared_category_tab_icon_center_bundle.mjs
+scripts/test_served_customer_copy_no_internal_terms.mjs
+scripts/test_shared_tab_category_css_blast_radius.mjs
 scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
 scripts/test_restaurant_list_tags.mjs
