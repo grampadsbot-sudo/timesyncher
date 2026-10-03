@@ -9,6 +9,7 @@ import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-
 import { ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
+import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 
 const BRAVE_DUMMY = 'route-test-brave-key-aa11';
 const TAVILY_DUMMY = 'route-test-tavily-key-bb22';
@@ -212,6 +213,7 @@ async function runProviderEnvRouteTest(blobMode) {
 
   useVacationDatabase(db);
   useVacationAppDatabase(db);
+  installNoopNominatimStore();
 
   const store = createPersistentStoreFromEnv(process.env);
   await ensureVacationEulaSession(state.session, { env: process.env });
@@ -387,6 +389,7 @@ async function runProviderEnvRouteTest(blobMode) {
     globalThis.fetch = originalFetch;
     useVacationDatabase(null);
     useVacationAppDatabase(null);
+    resetNominatimStore();
     for (const [key, value] of Object.entries(saved)) {
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;

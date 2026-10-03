@@ -38,6 +38,7 @@ function placeSearchHardProviderFailure(code = '', providerAttempts = []) {
   const normalizedCode = String(code || '').trim();
   if (normalizedCode === 'relevance_judge_failed') return true;
   if (normalizedCode === 'prior_db_sole_source') return true;
+  if (normalizedCode === 'geocode_failed') return true;
   for (const row of normalizeAttempts(providerAttempts)) {
     if (providerAttemptHardFailure(row)) return true;
   }

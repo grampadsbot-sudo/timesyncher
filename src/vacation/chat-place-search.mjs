@@ -153,6 +153,7 @@ export async function runCustomerChatPlaceSearch({
       ...(code === 'prior_db_sole_source' ? { reason: 'prior_db_sole_source' } : {}),
       ...(code === 'relevance_judge_failed' ? { reason: 'relevance_judge_failed' } : {}),
       ...(code === 'all_providers_failed' ? { reason: 'all_providers_failed' } : {}),
+      ...(code === 'geocode_failed' ? { reason: 'geocode_failed' } : {}),
       internalError: message,
     };
     return finishCustomerChatPlaceSearch({ places: [], search, errorMessage: message });

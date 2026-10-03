@@ -43,8 +43,11 @@ function placeResultProviderRows(providerLog = []) {
 }
 
 function providerErrorsFromProviderLog(providerLog = []) {
-  return placeResultProviderRows(providerLog)
-    .filter((row) => providerRowIsError(row))
+  return (Array.isArray(providerLog) ? providerLog : [])
+    .filter((row) => {
+      const provider = String(row?.provider || '').trim();
+      return (PLACE_RESULT_PROVIDERS.has(provider) || provider === 'nominatim') && providerRowIsError(row);
+    })
     .map((row) => {
       const httpStatus = Number.isFinite(Number(row?.httpStatus))
         ? Number(row.httpStatus)
@@ -55,6 +58,11 @@ function providerErrorsFromProviderLog(providerLog = []) {
         message: String(row?.reason || row?.status || 'error').trim(),
       };
     });
+}
+
+function httpStatusFromError(error, reason) {
+  if (Number.isFinite(Number(error?.httpStatus))) return Number(error.httpStatus);
+  return httpStatusFromReason(reason);
 }
 
 function placeResultProvidersAnswered(providerLog = []) {
@@ -155,6 +163,7 @@ export async function runPlaceProviderPass({
     providerLog,
     readJson,
     fail,
+    { env },
   );
   const center = context.center;
   const locationText = context.locationText || dest;
@@ -170,7 +179,7 @@ export async function runPlaceProviderPass({
   const anchorText = String(searchAnchor?.text || '').trim();
   let anchorGeocode = null;
   if (anchorText && !namedPlaceLookup) {
-    anchorGeocode = await tryGeocodeLabel(fetchImpl, anchorText, providerLog, readJson);
+    anchorGeocode = await tryGeocodeLabel(fetchImpl, anchorText, providerLog, readJson, { env });
   }
   const lodgingRadiusCenter = namedPlaceLookup ? null : anchorRadiusCenter(anchorGeocode, null);
   const destinationRadiusCenter = anchorRadiusCenter(null, center);
@@ -183,6 +192,32 @@ export async function runPlaceProviderPass({
     : (lodgingRadiusCenter || destinationRadiusCenter);
   const primaryCategory = String(placeQueries?.[0]?.category || 'restaurant').trim().toLowerCase();
   const anchorRadiusPolicy = anchorRadiusPolicySnapshot(radiusCenter, radiusScope, primaryCategory);
+  const judgeArea = String(relevanceContext?.area || '').trim() || locationText || dest;
+  const judgeTarget = String(relevanceContext?.target || '').trim();
+
+  if (!queryCenter) {
+    const nominatimRows = providerLog.filter((row) => String(row?.provider || '').trim() === 'nominatim');
+    const nominatimError = nominatimRows.find((row) => providerRowIsError(row));
+    const detail = nominatimError?.reason
+      || nominatimRows.map((row) => row.reason || row.status).filter(Boolean).join('; ')
+      || 'no coordinates';
+    const providerErrors = providerErrorsFromProviderLog(providerLog);
+    fail(
+      `Place search geocode failed: ${detail}`,
+      'geocode_failed',
+      providerLog,
+      null,
+      buildPlaceSearchFailureDiagnostics({
+        center,
+        judgeTarget,
+        judgeArea,
+        anchor: searchAnchor,
+        anchorRadiusPolicy,
+        ...(providerErrors.length ? { providerErrors } : {}),
+      }),
+    );
+  }
+
   let anchorRadiusRejected = 0;
   const anchorRadiusRejections = [];
 
@@ -228,9 +263,9 @@ export async function runPlaceProviderPass({
   const osmFilter = Array.isArray(osmCategoryFilter)
     ? [...new Set(osmCategoryFilter.map((c) => String(c || '').trim().toLowerCase()).filter(Boolean))]
     : [];
-  const osmQuery = queryCenter && osmFilter.length
+  const osmQuery = osmFilter.length
     ? queryOsm(fetchImpl, queryCenter, osmFilter).then((places) => ({ places })).catch((error) => ({ error }))
-    : Promise.resolve({ skipped: queryCenter ? 'no_osm_category' : 'no_coordinates' });
+    : Promise.resolve({ skipped: 'no_osm_category' });
   const braveQuery = queryBrave(fetchImpl, env, {
     center: queryCenter,
     locationText,
@@ -249,7 +284,7 @@ export async function runPlaceProviderPass({
     });
   } else if (osmSettled.error) {
     const reason = String(osmSettled.error?.message || osmSettled.error || 'osm failed').trim();
-    const httpStatus = httpStatusFromReason(reason);
+    const httpStatus = httpStatusFromError(osmSettled.error, reason);
     console.error(`place search provider osm failed: ${reason}`);
     providerLog.push({
       provider: 'osm',
@@ -269,10 +304,17 @@ export async function runPlaceProviderPass({
   }
 
   let brave = [];
-  if (braveSettled.error) {
+  if (braveSettled.skipped) {
+    providerLog.push({
+      provider: 'brave',
+      status: 'skipped',
+      reason: braveSettled.skipped,
+      resultCount: 0,
+    });
+  } else if (braveSettled.error) {
     const error = braveSettled.error;
     const reason = String(error?.message || error || 'brave failed').trim();
-    const httpStatus = httpStatusFromReason(reason);
+    const httpStatus = httpStatusFromError(error, reason);
     const query = String(error?.braveQuery || '').trim();
     const endpoint = String(error?.braveEndpoint || '').trim();
     if (query && endpoint) braveLookups = [{ query, endpoint }];
@@ -315,8 +357,6 @@ export async function runPlaceProviderPass({
   const dedupeMerges = [];
   const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
   const namedArea = String(relevanceContext?.area || '').trim();
-  const judgeArea = namedArea || locationText || dest;
-  const judgeTarget = String(relevanceContext?.target || '').trim();
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({
@@ -334,6 +374,7 @@ export async function runPlaceProviderPass({
       ...(braveLookups.length ? { braveLookups } : {}),
     });
   };
+
   let relevance;
   try {
     relevance = await attachRelevance(merged, fetchImpl, env, {
@@ -369,7 +410,7 @@ export async function runPlaceProviderPass({
       destination: dest,
     });
     if (tieBreakLabel) {
-      const tieBreakGeocode = await tryGeocodeLabel(fetchImpl, tieBreakLabel, providerLog, readJson);
+      const tieBreakGeocode = await tryGeocodeLabel(fetchImpl, tieBreakLabel, providerLog, readJson, { env });
       namedPlaceAnchorCenter = anchorRadiusCenter(tieBreakGeocode, destinationRadiusCenter);
     } else {
       namedPlaceAnchorCenter = destinationRadiusCenter;

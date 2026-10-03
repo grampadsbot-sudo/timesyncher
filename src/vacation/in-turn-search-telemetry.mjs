@@ -21,6 +21,7 @@ function normalizeProviderAttempts(attempts = []) {
     if (Number.isFinite(Number(row.relevanceRejected))) entry.relevanceRejected = Number(row.relevanceRejected);
     if (row.query) entry.query = String(row.query).trim().slice(0, 500);
     if (row.endpoint) entry.endpoint = String(row.endpoint).trim().slice(0, 40);
+    if (Number.isFinite(Number(row.httpStatus))) entry.httpStatus = Number(row.httpStatus);
     return entry;
   }).filter(Boolean);
 }

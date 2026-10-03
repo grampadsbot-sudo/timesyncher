@@ -137,7 +137,10 @@ async function fetchBrave(fetchImpl, braveKey, origin, category) {
   const response = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(`${category} near ${origin.lat},${origin.lng}`)}`, {
     headers: { 'X-Subscription-Token': braveKey, Accept: 'application/json' },
   });
-  if (!response?.ok) return [];
+  if (!response?.ok) {
+    const status = Number(response?.status) || 0;
+    throw new Error(`Brave web search failed: HTTP ${status}`);
+  }
   return bravePois(await response.json(), category);
 }
 

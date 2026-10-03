@@ -202,7 +202,12 @@ export async function placeSearchReadJson(fetchImpl, url, { headers, method, bod
     } catch {
       detail = '';
     }
-    fail(`${label} failed: HTTP ${response?.status || 'no status'} ${String(detail).slice(0, 300)}`.trim(), 'source_failed');
+    const httpStatus = Number(response?.status);
+    const message = `${label} failed: HTTP ${response?.status || 'no status'} ${String(detail).slice(0, 300)}`.trim();
+    const error = new PlaceSearchError(message, 'source_failed');
+    if (Number.isFinite(httpStatus)) error.httpStatus = httpStatus;
+    console.error(message);
+    throw error;
   }
   try {
     return await response.json();
@@ -301,6 +306,11 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
   compactLocality = '',
   namedPlaceLookup = false,
 }, queries) {
+  if (braveEndpoint(center) !== 'local') {
+    const error = new Error('Brave place search requires coordinates');
+    error.code = 'no_coordinates';
+    throw error;
+  }
   const places = [];
   const calls = [];
   let anchorRadiusRejected = 0;
@@ -313,21 +323,18 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
   try {
     for (const item of queries) {
       const query = braveQueryString(item, area, center, locality);
-      const endpoint = braveEndpoint(center);
+      const endpoint = 'local';
       calls.push({ query, endpoint });
       const params = new URLSearchParams({
         q: query,
         count: String(item.limit || searchLimit(item.category)),
+        latitude: String(center.lat),
+        longitude: String(center.lng),
+        radius: String(categoryRadiusMeters(item.category)),
       });
-      if (endpoint === 'local') {
-        params.set('latitude', String(center.lat));
-        params.set('longitude', String(center.lng));
-        params.set('radius', String(categoryRadiusMeters(item.category)));
-      }
-      const path = endpoint === 'local' ? 'local/place_search' : 'web/search';
       const payload = await placeSearchReadJson(
         fetchImpl,
-        `https://api.search.brave.com/res/v1/${path}?${params}`,
+        `https://api.search.brave.com/res/v1/local/place_search?${params}`,
         {
           label: 'Brave Place Search',
           headers: { 'X-Subscription-Token': String(env.brave).trim() },
