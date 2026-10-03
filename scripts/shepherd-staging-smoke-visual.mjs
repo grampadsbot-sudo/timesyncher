@@ -8,7 +8,7 @@ import {
   judgeScreenshotsParallel,
 } from './shepherd-staging-smoke-visual-judge.mjs';
 
-export function visualArtifactDir(baseDir, expectSha) {
+function visualArtifactDir(baseDir, expectSha) {
   const dir = `${baseDir}/${expectSha}-visual`;
   mkdirSync(dir, { recursive: true });
   return dir;

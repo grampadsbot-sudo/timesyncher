@@ -31,7 +31,7 @@ export function parseVisualJudgeResponseText(text) {
   return parsed;
 }
 
-export async function judgeScreenshotWithOpenRouter({
+async function judgeScreenshotWithOpenRouter({
   shotMeta,
   apiKey,
   fetchImpl = fetch,

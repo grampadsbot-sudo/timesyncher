@@ -1,10 +1,10 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const VISUAL_JUDGE_MODEL = 'google/gemini-2.5-flash';
+export const VISUAL_JUDGE_MODEL = 'google/gemini-2.5-flash-lite';
 export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v1';
 
-export const VISUAL_RUBRIC_ITEMS = [
+const VISUAL_RUBRIC_ITEMS = [
   { id: '1', key: 'composer_visible', text: 'The composer is visible at the bottom (chat pages only; N/A on shared trip tabs — mark pass if not applicable).' },
   { id: '2', key: 'horizontal_overflow', text: 'Nothing is cut off or overflowing horizontally.' },
   { id: '3', key: 'no_empty_placeholders', text: 'There are no stray empty boxes or placeholder cards.' },

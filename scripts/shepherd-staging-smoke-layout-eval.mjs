@@ -16,14 +16,6 @@ export const LAYOUT_RULE_APPLICABILITY = {
   chat_pane_row_parity: ['chat'],
 };
 
-export function layoutFailure(selector, rule, detail, viewport, rects = {}) {
-  return { selector, rule, detail, viewport, rects };
-}
-
-/**
- * Runs inside Puppeteer page context.
- * @param {'chat'|'shared'} pageKind
- */
 export function evaluateLayoutRules(pageKind) {
   const failures = [];
   const vw = window.innerWidth;

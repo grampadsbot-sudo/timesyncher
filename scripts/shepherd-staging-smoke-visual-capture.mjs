@@ -4,7 +4,7 @@ import {
   gotoAndHydrateSharedIntakePage,
 } from './shepherd-staging-smoke-shared-ui-map.mjs';
 
-export const VISUAL_TAB_SETTLE_MS = 400;
+const VISUAL_TAB_SETTLE_MS = 400;
 
 async function waitForChatAppReady(page) {
   await page.waitForFunction(() => {
@@ -14,7 +14,7 @@ async function waitForChatAppReady(page) {
   }, { timeout: 90000 });
 }
 
-export const SHARED_VISUAL_TAB_LABELS = [
+const SHARED_VISUAL_TAB_LABELS = [
   'Day-by-Day',
   'Flights',
   'Hotels',
@@ -25,7 +25,7 @@ export const SHARED_VISUAL_TAB_LABELS = [
   'Budget',
 ];
 
-export async function listSharedTripTabs(page) {
+async function listSharedTripTabs(page) {
   return page.evaluate((labels) => {
     function normalize(text) {
       return String(text || '')

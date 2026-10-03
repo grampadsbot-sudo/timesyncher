@@ -4,9 +4,6 @@ import {
   LAYOUT_RULE_APPLICABILITY,
   LAYOUT_VIEWPORTS,
 } from './shepherd-staging-smoke-layout-eval.mjs';
-import { gotoAndHydrateSharedIntakePage } from './shepherd-staging-smoke-shared-ui-map.mjs';
-
-export { LAYOUT_VIEWPORTS, LAYOUT_RULE_APPLICABILITY };
 
 async function waitForChatAppReady(page) {
   await page.waitForFunction(() => {
@@ -16,7 +13,7 @@ async function waitForChatAppReady(page) {
   }, { timeout: 90000 });
 }
 
-export async function runLayoutProbeOnPage(page, {
+async function runLayoutProbeOnPage(page, {
   pageKind,
   url,
   viewport,
