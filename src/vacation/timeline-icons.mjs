@@ -70,7 +70,15 @@ export function normalizeThingType(raw) {
   if (LUCIDE_TO_TYPE[compact]) return LUCIDE_TO_TYPE[compact];
   if (lower === 'other') return '';
   if (lower.includes('flight')) return 'flight';
-  if (lower.includes('hotel') || lower.includes('lodging') || lower.includes('accommodation')) return 'hotel';
+  if (
+    lower.includes('hotel')
+    || lower.includes('lodging')
+    || lower.includes('accommodation')
+    || lower.includes('resort')
+    || lower.includes('motel')
+    || lower.includes('hostel')
+    || /\binn\b/.test(lower)
+  ) return 'hotel';
   if (lower.includes('restaurant') || lower.includes('dining') || lower.includes('utensil')) return 'restaurant';
   if (lower.includes('store') || lower.includes('shop') || lower.includes('shopping')) return 'store';
   if (/\bcar\b/.test(lower) || lower.includes('rental')) return 'car';

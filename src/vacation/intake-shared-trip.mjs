@@ -3,6 +3,7 @@ import { assignDatesScheduling as scheduleThingDates, tripIsoDay } from './intak
 export { tripIsoDay };
 import { placeSourceFieldsFromThing, logoFieldsForSharedPlace } from './intake-shared-place-source.mjs';
 import { transportKind } from './intake-transport-kind.mjs';
+import { normalizeThingType } from './timeline-icons.mjs';
 import { destinationCenterFromTripMetadata } from './trip-destination-center.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
@@ -134,9 +135,31 @@ function sourceCategoryName(thing = {}) {
   return labelText(thing.category);
 }
 
+function lodgingLabels(thing = {}) {
+  const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const record = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : {};
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {};
+  return [
+    thing.category,
+    thing.categoryName,
+    meta.categoryName,
+    record.icon_category,
+    metaRecord.icon_category,
+    ...(Array.isArray(thing.providerCategories) ? thing.providerCategories : []),
+    ...(Array.isArray(meta.providerCategories) ? meta.providerCategories : []),
+    ...(Array.isArray(record.categories) ? record.categories : []),
+    ...(Array.isArray(metaRecord.categories) ? metaRecord.categories : []),
+  ];
+}
+
+function isLodgingStay(thing = {}) {
+  return lodgingLabels(thing).some((value) => normalizeThingType(value) === 'hotel');
+}
+
 function categoryFor(thing) {
+  const lodging = isLodgingStay(thing);
   const kind = transportKind(thing);
-  if (kind === 'flight' || kind === 'car') {
+  if (kind === 'flight' || (kind === 'car' && !lodging)) {
     const category_name = kind === 'flight' ? 'Flight' : 'Car';
     const category_icon = kind === 'flight' ? '✈️' : '🚗';
     return { category_name, category_icon, category: kind };
@@ -148,11 +171,11 @@ function categoryFor(thing) {
     || model.category || model.category_name || thing?.modelCategory || ''
     || sourceCategoryName(thing)
   ).trim();
-  if (!raw) return { category_name: '', category_icon: '', category: '' };
+  if (!raw && !lodging) return { category_name: '', category_icon: '', category: '' };
   const key = raw.toLowerCase();
-  if (key === 'hotel' || key === 'lodging' || key === 'accommodation') {
+  if (lodging || normalizeThingType(raw) === 'hotel') {
     const named = sourceCategoryName(thing);
-    const category_name = named && !/^(hotel|lodging|accommodation)$/i.test(named) ? named : 'Hotel';
+    const category_name = named && !/^(hotel|lodging|accommodation|resort|motel|hostel|inn)$/i.test(named) ? named : 'Hotel';
     return { category_name, category_icon: '🏨', category: 'hotel' };
   }
   const known = {
