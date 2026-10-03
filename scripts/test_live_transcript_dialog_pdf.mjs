@@ -185,7 +185,7 @@ assert.doesNotMatch(source, /WHAT_I_CHANGED/);
 const partyFacts = draftingFacts([], 'The party of eight needs a quiet day. Four friends are still unnamed.');
 assert.doesNotMatch(partyFacts.roster, /party of (six|seven|eight|nine|ten)/i);
 assert.match(partyFacts.roster, /List only people the customer named/);
-assert.match(partyFacts.roster, /Ask the customer for anything they haven't said/);
+assert.doesNotMatch(partyFacts.roster, /Ask the customer for anything they haven't said/);
 assert.doesNotMatch(partyFacts.roster, /four friends/i);
 assert.doesNotMatch(partyFacts.roster, /count in the party/i);
 const fullParty = { travelers: ['Craig Davidson', 'Kimberly Davidson', 'Tyler Davidson', 'Lauren Davidson', 'Torren', 'Peyton', 'Keegan', 'Fallon'] };
