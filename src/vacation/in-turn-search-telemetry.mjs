@@ -80,6 +80,9 @@ export function stampTurnClassifier(payload, customerLive, classification) {
 }
 
 function turnClassifierStampError(classification = {}, stamped = null) {
+  if (classification?.ok !== true) {
+    return String(classification?.error || 'trip intake classification failed').trim();
+  }
   return placeSearchTurnClassificationError(classification)
     || placeSearchTurnKindError(classification)
     || (!String(stamped?.turnKind || '').trim() ? 'trip intake classification turnKind missing' : '');
