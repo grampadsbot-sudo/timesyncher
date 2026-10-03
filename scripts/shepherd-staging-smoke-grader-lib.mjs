@@ -1,7 +1,14 @@
 /** Coffee + logo chip graders for staging smoke. */
 
+import {
+  gradeAskLodgingReplyQuestion,
+  jevBlockFromResult,
+} from './shepherd-staging-smoke-jev-reply-judge.mjs';
+
 function coffeePlaceEvidenceFromPersistedRow(row = {}) {
-  const name = String(row.name || row.title || '').trim();
+  const name = String(
+    row.name || row.title || row.placeName || row.displayName || row.label || '',
+  ).trim();
   const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   const category = String(
     row.category
@@ -10,8 +17,11 @@ function coffeePlaceEvidenceFromPersistedRow(row = {}) {
     || meta.categoryName
     || meta.category
     || row.sourceRecord?.categoryName
+    || (Array.isArray(row.providerCategories) ? row.providerCategories.join(' ') : '')
+    || (Array.isArray(row.categories) ? row.categories.join(' ') : '')
     || '',
   ).toLowerCase();
+  const desc = String(row.description || row.address || meta.address || '').trim();
   const tags = row.tags || row.osmTags || meta.tags || meta.osmTags || row.source?.tags || row.raw?.tags || {};
   const amenity = String(tags.amenity || meta.amenity || '').toLowerCase();
   const cuisine = String(tags.cuisine || meta.cuisine || '').toLowerCase();
@@ -22,7 +32,8 @@ function coffeePlaceEvidenceFromPersistedRow(row = {}) {
   if (amenity === 'cafe') evidence.push('osm:amenity=cafe');
   if (cuisine.includes('coffee') || cuisine === 'coffee_shop') evidence.push('osm:cuisine=coffee');
   if (braveCategory && /\bcafe\b|coffee/.test(braveCategory)) evidence.push('brave:category');
-  const hasPersistedFields = Boolean(name || category || amenity || cuisine || braveCategory
+  if (desc && /\bcafe\b|coffee|espresso|roaster|latte/i.test(desc)) evidence.push('description');
+  const hasPersistedFields = Boolean(name || desc || category || amenity || cuisine || braveCategory
     || (tags && typeof tags === 'object' && Object.keys(tags).length > 0));
   return {
     ok: evidence.length > 0,
@@ -321,8 +332,6 @@ export function mergeLogoCssSuspects(rows = []) {
   return out;
 }
 
-const LODGING_QUESTION_WORDS = /\b(stay(?:ing)?|lodging|hotels?|condo|rental|accommodations?)\b/i;
-
 /** Persisted per-fact lodging ask flags on a customer/app turn payload or turn JSON. */
 export function persistedLodgingAskSignals(payload = {}, turnJson = {}) {
   const p = payload && typeof payload === 'object' ? payload : {};
@@ -349,41 +358,35 @@ export function persistedLodgingAskSignals(payload = {}, turnJson = {}) {
   };
 }
 
-export function replyHasLodgingQuestion(replyText) {
-  const hay = String(replyText || '');
-  const chunks = hay.split(/(?<=[.!?])\s+/).filter((part) => part.includes('?'));
-  if (!chunks.length && hay.includes('?')) chunks.push(hay);
-  return chunks.some((sentence) => LODGING_QUESTION_WORDS.test(sentence));
-}
-
-export function gradeAskLodging({ replyText, payload, turnJson, hotelCount }) {
+export async function gradeAskLodging({
+  replyText,
+  payload,
+  turnJson,
+  hotelCount,
+  customerTurn = 'Maui March 10-17 2027 with my wife',
+  judgeFn,
+  env,
+  fetchImpl,
+}) {
   const signals = persistedLodgingAskSignals(payload, turnJson);
   const replyEvidence = String(replyText || '');
-  const replyLodgingQuestion = replyHasLodgingQuestion(replyEvidence);
+  const replyGrade = await gradeAskLodgingReplyQuestion(replyEvidence, {
+    customerTurn,
+    judgeFn,
+    env,
+    fetchImpl,
+  });
   const hotelN = Number(hotelCount);
-  const pass = hotelN === 0 && signals.persistedLodgingAsk && replyLodgingQuestion;
+  const jev = jevBlockFromResult(replyGrade.jev);
+  const pass = hotelN === 0 && signals.persistedLodgingAsk && replyGrade.pass;
   return {
     pass,
+    jev,
     evidence: {
       replyText: replyEvidence.slice(0, 2000),
       hotelCount: hotelN,
-      replyLodgingQuestion,
+      replyLodgingQuestion: jev.verdict === 'yes',
       ...signals,
-    },
-  };
-}
-
-export function gradeAskD2NoQuestionReply(replyText) {
-  const replyEvidence = String(replyText || '');
-  const hasQuestionMark = replyEvidence.includes('?');
-  const whichLocation = /\bwhich\b[^?\n]{0,120}\blocation\b/i.test(replyEvidence);
-  const pass = !hasQuestionMark && !whichLocation;
-  return {
-    pass,
-    evidence: {
-      replyText: replyEvidence.slice(0, 2000),
-      hasQuestionMark,
-      whichLocation,
     },
   };
 }

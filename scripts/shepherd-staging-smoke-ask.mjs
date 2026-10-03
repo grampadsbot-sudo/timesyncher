@@ -36,16 +36,18 @@ export function buildAskLodgingParallelCheck(ctx) {
           : 0;
         const customerDb = tripId ? await customerTurnRow(db, tripId, 'Maui March%') : null;
         const replyText = tripMsg.json.reply || '';
-        const grade = gradeAskLodging({
+        const grade = await gradeAskLodging({
           replyText,
           payload: customerDb?.payload,
           turnJson: tripMsg.json,
           hotelCount,
+          customerTurn: 'Maui March 10-17 2027 with my wife',
         });
         out.checkASKLODGING = {
           http: tripMsg.status,
           tripId,
           customerTurnId: customerDb?.id || null,
+          jev: grade.jev,
           ...grade.evidence,
         };
         const pass = tripMsg.status >= 200 && tripMsg.status < 300 && grade.pass;
