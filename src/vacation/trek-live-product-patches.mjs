@@ -223,9 +223,17 @@ export function applyLiveProductPatches(patched = '') {
   } else if (js.includes('AI-assisted vacation itinerary planning')) {
     throw new Error('served bundle still contains AI-assisted footer copy');
   }
-  js = js.replace(/Claude Web, Cursor[^"\\]{0,48}/g, 'supported MCP clients');
-  js = js.replace(/Claude Web、Cursor 等/g, 'supported MCP clients');
-  js = js.replace(/Claude Web وCursor[^"\\]{0,48}/g, 'supported MCP clients');
+  js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor usw\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor, ecc\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor, enz\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor itp\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor atd\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor stb\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor и др\.\)/g, '(supported MCP clients)');
+  js = js.replace(/（Claude Web、Cursor 等）/g, '（supported MCP clients）');
+  js = js.replace(/\(Claude Web وCursor وغيرها\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor, dll\.\)/g, '(supported MCP clients)');
   js = js.replace(/Claude Desktop, Work laptop/g, 'Example client, Work laptop');
   js = js.replace(/Claude Desktop, Laptop di lavoro/g, 'Example client, Work laptop');
   js = js.replace(/Claude Desktop, Werklaptop/g, 'Example client, Work laptop');

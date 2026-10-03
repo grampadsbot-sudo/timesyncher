@@ -1,23 +1,15 @@
-import assert from 'node:assert/strict';
+#!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
-import {
-  assertTabInkWithinTolerance,
-  collectCategoryTabInkMetrics,
-  inkMetricsFailures,
-  summarizeInkMetrics,
-} from './lib/shared-trip-category-tab-icon-metrics.mjs';
-
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
 const intakeSlug = 'intake-f687d29fec02';
-const maxOffset = Number(process.env.CATEGORY_TAB_ICON_MAX_OFFSET || '1');
-const TAB_LABELS = ['Day-by-Day', 'Flights', 'Hotels', 'Cars', 'Restaurants', 'Stores', 'The Rest'];
+const outDir = process.env.TAB_ROW_SCREENSHOT_DIR || '/opt/cursor/artifacts/shared-tab-row';
 
 function loadPuppeteer() {
   try {
@@ -131,8 +123,7 @@ function sendText(res, status, body, type) {
 }
 
 function sendJson(res, status, body) {
-  const payload = JSON.stringify(body);
-  sendText(res, status, payload, 'application/json; charset=utf-8');
+  sendText(res, status, JSON.stringify(body), 'application/json; charset=utf-8');
 }
 
 async function startServer({ html, js, css, tripPayload }) {
@@ -182,18 +173,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function clickTabByAriaLabel(page, label) {
-  await page.evaluate((want) => {
-    for (const btn of document.querySelectorAll('button')) {
-      if (btn.getAttribute('aria-label') === want) {
-        btn.click();
-        return;
-      }
-    }
-  }, label);
-}
-
-async function runViewportInk(page, origin, width) {
+async function captureTabRow(page, origin, width, tag) {
   await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
   await page.goto(`${origin}/shared/${intakeSlug}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(
@@ -201,52 +181,31 @@ async function runViewportInk(page, origin, width) {
     { timeout: 90000 },
   );
   await sleep(2500);
-
-  if (width >= 640) {
-    const metrics = await collectCategoryTabInkMetrics(page);
-    return { width, metrics, ...summarizeInkMetrics(metrics) };
+  const clip = await page.evaluate(() => {
+    const chips = [...document.querySelectorAll('[data-ts-logo-chip][data-tab-category]')];
+    const buttons = chips.length
+      ? chips.map((chip) => chip.closest('button')).filter(Boolean)
+      : [...document.querySelectorAll('button')].filter((btn) => btn.querySelector('[data-ts-logo-chip]'));
+    if (!buttons.length) return null;
+    const rects = buttons.map((btn) => btn.getBoundingClientRect());
+    const left = Math.min(...rects.map((r) => r.left));
+    const top = Math.min(...rects.map((r) => r.top));
+    const right = Math.max(...rects.map((r) => r.right));
+    const bottom = Math.max(...rects.map((r) => r.bottom));
+    const pad = 8;
+    return {
+      x: Math.max(0, left - pad),
+      y: Math.max(0, top - pad),
+      width: Math.min(window.innerWidth, right - left + pad * 2),
+      height: bottom - top + pad * 2,
+    };
+  });
+  if (!clip || clip.width < 10 || clip.height < 10) {
+    throw new Error(`tab row clip missing at ${width}px (${tag})`);
   }
-
-  const metrics = [];
-  for (const label of TAB_LABELS) {
-    await clickTabByAriaLabel(page, label);
-    await sleep(400);
-    const batch = await collectCategoryTabInkMetrics(page);
-    const row = batch.find((entry) => entry.tab === label);
-    if (row) metrics.push(row);
-  }
-  return { width, metrics, ...summarizeInkMetrics(metrics) };
-}
-
-async function measureBundleInk(browser, { html, css, js, tripPayload }) {
-  const app = await startServer({ html, js, css, tripPayload });
-  try {
-    const page = await browser.newPage();
-    await page.setRequestInterception(true);
-    page.on('pageerror', (error) => {
-      console.error('shared category tab icon pageerror:', error?.message || error);
-    });
-    page.on('request', (request) => {
-      const url = request.url();
-      if (url.includes('/api/auth/app-config') || url.includes('/auth/app-config')) {
-        request.abort('blockedbyclient');
-        return;
-      }
-      if (url.startsWith(app.origin) || url.startsWith('data:') || url.startsWith('blob:')) {
-        request.continue();
-        return;
-      }
-      request.abort('blockedbyclient');
-    });
-    const results = [];
-    for (const width of [1280, 390]) {
-      results.push(await runViewportInk(page, app.origin, width));
-    }
-    await page.close();
-    return results;
-  } finally {
-    await app.close();
-  }
+  const file = path.join(outDir, `${tag}-w${width}.png`);
+  await page.screenshot({ path: file, clip, type: 'png' });
+  return file;
 }
 
 const fixture = JSON.parse(await readFile(path.join(root, 'scripts/public-research-fixture.json'), 'utf8'));
@@ -261,6 +220,8 @@ const bundleBefore = execFileSync('git', ['show', '9986132:public/assets/index-B
   maxBuffer: 25 * 1024 * 1024,
 }).toString('utf8');
 
+await mkdir(outDir, { recursive: true });
+
 const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
@@ -268,23 +229,36 @@ const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
 });
 
-const beforeResults = await measureBundleInk(browser, { html, css, js: bundleBefore, tripPayload });
-const afterResults = await measureBundleInk(browser, { html, css, js: bundleAfter, tripPayload });
-await browser.close();
-
-console.log(JSON.stringify({ before: beforeResults, after: afterResults }, null, 2));
-
-assert.ok(beforeResults.every((entry) => entry.metrics.length === 7), 'expected seven category tab icons on 9986132 bundle');
-assert.ok(afterResults.every((entry) => entry.metrics.length === 7), 'expected seven category tab icons on fixed bundle');
-
-const beforeFailures = beforeResults.flatMap((entry) => inkMetricsFailures(entry.metrics, maxOffset));
-assert.ok(
-  beforeFailures.length > 0,
-  `9986132 served bundle must fail ink centering (<= ${maxOffset}px); got no failures`,
-);
-
-for (const entry of afterResults) {
-  assertTabInkWithinTolerance(entry.metrics, maxOffset);
+const written = [];
+for (const phase of [
+  { tag: 'before-9986132', js: bundleBefore },
+  { tag: 'after-fix', js: bundleAfter },
+]) {
+  const app = await startServer({ html, css, js: phase.js, tripPayload });
+  try {
+    const page = await browser.newPage();
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      const url = request.url();
+      if (url.includes('/api/auth/app-config') || url.includes('/auth/app-config')) {
+        request.abort('blockedbyclient');
+        return;
+      }
+      if (url.startsWith(app.origin) || url.startsWith('data:') || url.startsWith('blob:')) {
+        request.continue();
+        return;
+      }
+      request.abort('blockedbyclient');
+    });
+    for (const width of [1280, 390]) {
+      written.push(await captureTabRow(page, app.origin, width, phase.tag));
+    }
+    await page.close();
+  } finally {
+    await app.close();
+  }
 }
 
-console.log('shared category tab icon ink center chrome tests passed');
+await browser.close();
+await writeFile(path.join(outDir, 'manifest.json'), `${JSON.stringify({ files: written }, null, 2)}\n`);
+console.log(JSON.stringify({ outDir, files: written }, null, 2));

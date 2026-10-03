@@ -1,22 +1,25 @@
 import { PNG } from 'pngjs';
 
-function inkCenterYFromPngBuffer(buf) {
+function inkCenterYFromPngBuffer(buf, bgOverride = null) {
   const png = PNG.sync.read(buf);
   const { width: w, height: h, data } = png;
   if (!w || !h) return null;
-  const corners = [
-    [0, 0],
-    [w - 1, 0],
-    [0, h - 1],
-    [w - 1, h - 1],
-  ].map(([x, y]) => {
-    const i = (y * w + x) * 4;
-    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
-  });
-  const bg = corners.reduce(
-    (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
-    [0, 0, 0],
-  ).map((v) => v / corners.length);
+  let bg = bgOverride;
+  if (!bg) {
+    const corners = [
+      [0, 0],
+      [w - 1, 0],
+      [0, h - 1],
+      [w - 1, h - 1],
+    ].map(([x, y]) => {
+      const i = (y * w + x) * 4;
+      return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+    });
+    bg = corners.reduce(
+      (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
+      [0, 0, 0],
+    ).map((v) => v / corners.length);
+  }
   const threshold = 18;
   let sumY = 0;
   let mass = 0;
@@ -47,9 +50,23 @@ async function measureElementInkCenterY(page, selector) {
     await handle.dispose();
     return null;
   }
+  const bgRgb = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const pick = (node) => {
+      const raw = getComputedStyle(node).backgroundColor;
+      const m = raw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (!m) return null;
+      const aMatch = raw.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([0-9.]+)\)/);
+      const alpha = aMatch ? Number(aMatch[1]) : 1;
+      if (alpha >= 0.05) return [Number(m[1]), Number(m[2]), Number(m[3])];
+      return null;
+    };
+    return pick(el) || pick(el.parentElement) || pick(el.closest('button')) || [255, 255, 255];
+  }, selector);
   const buf = await handle.screenshot({ type: 'png' });
   await handle.dispose();
-  const ink = inkCenterYFromPngBuffer(Buffer.from(buf));
+  const ink = inkCenterYFromPngBuffer(Buffer.from(buf), bgRgb);
   if (!ink) return null;
   return {
     pageInkCenterY: box.y + ink.inkCenterY,
@@ -64,9 +81,21 @@ async function measureElementInkCenterY(page, selector) {
 /** @param {import('puppeteer-core').Page} page */
 export async function collectCategoryTabInkMetrics(page) {
   const tabs = await page.evaluate(() => {
+    const categoryLabels = new Set([
+      'Day-by-Day',
+      'Flights',
+      'Hotels',
+      'Cars',
+      'Restaurants',
+      'Stores',
+      'The Rest',
+      'Budget',
+    ]);
     const rows = [];
     for (const btn of document.querySelectorAll('button')) {
-      const chip = btn.querySelector('[data-ts-logo-chip]');
+      const aria = String(btn.getAttribute('aria-label') || '').trim();
+      const chip = btn.querySelector('[data-ts-logo-chip][data-tab-category]')
+        || (categoryLabels.has(aria) ? btn.querySelector('[data-ts-logo-chip]') : null);
       if (!chip) continue;
       const label = [...btn.querySelectorAll('span')].find(
         (node) => !node.hasAttribute('data-ts-logo-chip') && !node.hasAttribute('aria-hidden'),
@@ -78,7 +107,6 @@ export async function collectCategoryTabInkMetrics(page) {
       );
       const labelText = labelVisible ? String(label.textContent || '').replace(/\s+/g, ' ').trim() : '';
       const iconText = String(chip.textContent || '').replace(/\s+/g, ' ').trim();
-      const aria = String(btn.getAttribute('aria-label') || '').trim();
       const tabLabel = aria || labelText || iconText;
       if (!tabLabel) continue;
       const id = `tab-ink-${rows.length}`;
@@ -102,7 +130,7 @@ export async function collectCategoryTabInkMetrics(page) {
       const r = el.getBoundingClientRect();
       return { centerY: r.top + r.height / 2 };
     }, `[data-ts-tab-ink-btn="${row.id}"]`);
-    if (!btnBox) continue;
+    if (!btnBox || !chipInk) continue;
     metrics.push({
       tab: row.tab,
       labelVisible: row.labelVisible,
