@@ -582,11 +582,9 @@ function thingView(row) {
 }
 
 async function publishIntakeShare(db, tripId) {
-  if (intakeShareSlug(tripId)) {
-    await assignTripSiteUrl(db, tripId, process.env);
-  }
   const things = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (!Number(things[0]?.n)) return;
+  await assignTripSiteUrl(db, tripId, process.env);
   await storePreCollaboratorSnapshot(db, tripId);
 }
 
