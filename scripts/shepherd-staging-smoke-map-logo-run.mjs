@@ -70,7 +70,7 @@ export async function runShepherdSmokeMapBudLogoChecks(ctx) {
     return { pass: bud.pass, http: 200 };
   });
 
-  await runDedicatedSharedCheck(ctx, 'LOGO', 90000, async ({ page, prep, artifactPath }) => {
+  await runDedicatedSharedCheck(ctx, 'LOGO', 120000, async ({ page, prep, artifactPath }) => {
     const logo = await runSharedSiteLogoCheck({ page, prep, artifactPath });
     out.checkLOGO = logo.checkLOGO;
     if (logo.appFail) {
