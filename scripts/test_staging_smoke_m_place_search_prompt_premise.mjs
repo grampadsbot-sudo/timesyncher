@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 /**
  * Shepherd staging smoke check M: farmers market near Kihei after Hyatt + Westin lodging turns.
- * Rebuilds the place-search reply prompt/facts and asserts saved-trip lodging cues are gone.
+ * Rebuilds the place-search reply prompt/facts: labelled lodging context stays separate from Results.
  */
 import assert from 'node:assert/strict';
 import { draftingFacts, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
-import { modelVisibleTripContext, placeResultExtra } from '../src/vacation/provider-result-context.mjs';
+import {
+  CUSTOMER_OWN_LODGING_CONTEXT_LABEL,
+  modelVisibleTripContext,
+  placeResultExtra,
+} from '../src/vacation/provider-result-context.mjs';
 import { loadVacationAppReplyRules, replyRequestBody, replyRulesSystem } from './vacation-app-reply-rules.mjs';
 
 const customerTurn = 'farmers market near Kihei';
@@ -50,7 +54,10 @@ const saved = {
   statedLodgingArea: 'Kaanapali',
 };
 
-const drafting = draftingFacts(priorTurns, customerTurn, saved);
+const drafting = {
+  ...draftingFacts(priorTurns, customerTurn, saved),
+  statedLodgingArea: saved.statedLodgingArea,
+};
 const tripContext = await enrichDraftingTripContext(drafting, {
   things,
   session: null,
@@ -59,30 +66,39 @@ const tripContext = await enrichDraftingTripContext(drafting, {
 });
 assert.equal(tripContext.lodging, undefined);
 assert.equal(tripContext.statedLodgingArea, undefined);
+assert.ok(tripContext.customerOwnLodgingContext?.label === CUSTOMER_OWN_LODGING_CONTEXT_LABEL);
+assert.equal(tripContext.customerOwnLodgingContext.lodging, 'Hyatt Regency Maui');
+assert.equal(tripContext.customerOwnLodgingContext.statedLodgingArea, 'Kaanapali');
 assert.ok(Array.isArray(tripContext.tripReplyGate) && tripContext.tripReplyGate.length > 0, 'guard rows stay on full tripContext');
 assert.deepEqual(tripContext.citablePlaces, [
   'Kihei Farmers Market',
   'South Maui Farmers Market',
 ]);
+assert.equal(tripContext.citablePlaces.some((title) => /hyatt|westin/i.test(title)), false);
 assert.equal(tripContext.notCitableAsResult.some((title) => /westin/i.test(title)), true);
 assert.equal(tripContext.notCitableAsResult.some((title) => /hyatt/i.test(title)), true);
 
 const visible = modelVisibleTripContext(tripContext);
-assert.equal(visible.lodging, undefined);
 assert.equal(visible.tripReplyGate, undefined);
+assert.deepEqual(visible.customerOwnLodgingContext, tripContext.customerOwnLodgingContext);
+assert.equal(visible.citablePlaces, tripContext.citablePlaces);
 
 const rules = await loadVacationAppReplyRules({ DATABASE_URL: '' });
 const system = replyRulesSystem(rules, 'Maui', 'forbidden', false, customerTurn, { tripContext });
+assert.match(system, /Customer's own lodging \(context only; not a search result; never recommend or describe it as a find\)/);
 const savedLine = system.slice(system.indexOf('Saved trip record:'));
 const recordJson = savedLine.slice('Saved trip record: '.length).split('\n')[0];
 const record = JSON.parse(recordJson);
 assert.equal(record.lodging, undefined);
 assert.equal(record.tripReplyGate, undefined);
+assert.equal(record.customerOwnLodgingContext.lodging, 'Hyatt Regency Maui');
 assert.deepEqual(record.citablePlaces, tripContext.citablePlaces);
+assert.equal(recordJson.indexOf('"citablePlaces"') < recordJson.indexOf('"customerOwnLodgingContext"'), true);
 assert.equal(
   placeResultExtra(inTurnPlaceResults),
   'Results: Kihei Farmers Market; South Maui Farmers Market.',
 );
+assert.equal(system.includes('Results:'), false, 'Results line stays in systemExtra, not Saved trip record');
 
 const request = replyRequestBody({
   rules,
@@ -96,21 +112,22 @@ const request = replyRequestBody({
   upsell: 'forbidden',
   tripContext,
 });
-assert.equal(request.trip_context.lodging, undefined);
 assert.equal(request.trip_context.tripReplyGate, undefined);
+assert.equal(request.trip_context.customerOwnLodgingContext.lodging, 'Hyatt Regency Maui');
 assert.deepEqual(request.trip_context.citablePlaces, tripContext.citablePlaces);
+assert.equal(JSON.stringify(request.trip_context).includes('[object Object]'), false);
 
 const violations = [];
-if (/"lodging"\s*:/.test(recordJson)) violations.push('saved trip record still exposes lodging');
+if (record.lodging !== undefined) violations.push('unlabelled top-level lodging key in saved trip record');
 if (/tripReplyGate/.test(recordJson)) violations.push('saved trip record still exposes tripReplyGate');
-if (/westin/i.test(recordJson) && !record.notCitableAsResult?.some((t) => /westin/i.test(t))) {
-  violations.push('Westin appears outside notCitableAsResult');
-}
+if (/\[object Object\]/.test(recordJson)) violations.push('saved trip record stringifies gate rows');
+if (!record.customerOwnLodgingContext?.label) violations.push('missing labelled lodging block');
 assert.deepEqual(violations, []);
 
 console.log(JSON.stringify({
   ok: true,
   checked: 'staging-smoke-m-place-search-prompt',
   citable: record.citablePlaces,
+  lodgingBlock: record.customerOwnLodgingContext,
   resultsLine: placeResultExtra(inTurnPlaceResults),
 }));

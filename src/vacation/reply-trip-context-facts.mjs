@@ -121,18 +121,17 @@ export async function enrichDraftingTripContext(tripContext, {
   if (!ctx.chatPlaceSearch) {
     ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
   }
-  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
-  const inTurnPlaceReply = Array.isArray(ctx.citablePlaces) && ctx.citablePlaces.length > 0;
-  if (!inTurnPlaceReply && !ctx.lodging) {
+  if (!ctx.lodging) {
     const label = statedLodgingLabelFromThings(things);
     if (label) ctx.lodging = label;
   }
+  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
   if (!env?.DATABASE_URL || !session?.customer_id) return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
   try {
     const { sql } = await import('./db.mjs');
     const db = sql(env);
     const tripId = session?.trip_id || session?.tripId || '';
-    if (!inTurnPlaceReply && tripId && !ctx.lodging) {
+    if (tripId && !ctx.lodging) {
       const trips = await db`select metadata from trips where id = ${tripId} limit 1`;
       const meta = trips[0]?.metadata && typeof trips[0].metadata === 'object' ? trips[0].metadata : {};
       const area = String(meta.statedLodgingArea || meta.statedLodgingAreaHint || '').trim();

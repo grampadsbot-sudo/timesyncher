@@ -110,15 +110,12 @@ export function citablePlaceTitles(inTurnResults = []) {
   return titles;
 }
 
+export const CUSTOMER_OWN_LODGING_CONTEXT_LABEL = "Customer's own lodging (context only; not a search result; never recommend or describe it as a find)";
+
 export function modelVisibleTripContext(tripContext) {
   if (!tripContext || typeof tripContext !== 'object') return tripContext;
   if (!Array.isArray(tripContext.citablePlaces) || !tripContext.citablePlaces.length) return tripContext;
-  const {
-    lodging,
-    statedLodgingArea,
-    tripReplyGate,
-    ...rest
-  } = tripContext;
+  const { tripReplyGate, ...rest } = tripContext;
   return rest;
 }
 
@@ -150,8 +147,17 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
   delete replyFacts.survivingPriorDbTitles;
   delete replyFacts.relevanceRejections;
   delete replyFacts.priorPlaces;
+  const lodgingLabel = String(facts.lodging || '').trim();
+  const statedArea = String(facts.statedLodgingArea || '').trim();
   delete replyFacts.lodging;
   delete replyFacts.statedLodgingArea;
+  if (lodgingLabel || statedArea) {
+    replyFacts.customerOwnLodgingContext = {
+      label: CUSTOMER_OWN_LODGING_CONTEXT_LABEL,
+      ...(lodgingLabel ? { lodging: lodgingLabel } : {}),
+      ...(statedArea ? { statedLodgingArea: statedArea } : {}),
+    };
+  }
   if (notCitableAsResult.length) {
     replyFacts.notCitableAsResult = notCitableAsResult;
     replyFacts.notCitableAsResultRule = 'notCitableAsResult places are not results from this turn. Cite only citablePlaces.';
