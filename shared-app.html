@@ -69,6 +69,10 @@
           if (!data.liveTabLists || typeof data.liveTabLists !== 'object') {
             throw new Error('shared_live_tab_lists_missing');
           }
+          if (!Object.prototype.hasOwnProperty.call(data.liveTabLists, 'hotels')
+            || !Object.prototype.hasOwnProperty.call(data.liveTabLists, 'cars')) {
+            throw new Error('shared_live_tab_lists_keys_missing');
+          }
           window.__TS_SHARED_LIVE_TAB_LISTS__ = data.liveTabLists;
         }
         const trek = document.createElement('script');
