@@ -13,7 +13,17 @@ const fetchImpl = async (url) => {
   const href = String(url);
   if (href.includes(NOMINATIM_HOST)) {
     nominatimCalls += 1;
-    throw new Error('geocode gateway should not run when trip destination center is stored');
+    if (!decodeURIComponent(href).toLowerCase().includes('kihei')) {
+      throw new Error('geocode gateway should not run when trip destination center is stored');
+    }
+    return {
+      ok: true,
+      json: async () => [{
+        lat: '20.765',
+        lon: '-156.445',
+        display_name: 'Kihei, Maui County, Hawaii, United States',
+      }],
+    };
   }
   if (href.includes(OVERPASS_HOST)) {
     return { ok: true, json: async () => ({ elements: [] }) };
@@ -66,9 +76,12 @@ const pass = await runPlaceProviderPass({
 });
 
 assert.equal(pass.status, 'no_results');
-assert.equal(nominatimCalls, 0);
+assert.equal(nominatimCalls, 1, 'named anchor geocodes cache-first even when trip destination center is stored');
 const nominatimRows = pass.providerLog.filter((row) => row.provider === 'nominatim');
 assert.ok(nominatimRows.some((row) => row.reason === 'trip_destination_center'));
-assert.ok(nominatimRows.some((row) => row.reason === 'anchor_matches_search_center'));
+assert.ok(
+  !nominatimRows.some((row) => row.reason === 'anchor_matches_search_center'),
+  'named anchor must geocode cache-first, not skip via anchor_matches_search_center',
+);
 
 console.log('test_place_search_trip_destination_center: ok');

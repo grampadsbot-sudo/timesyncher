@@ -104,6 +104,10 @@ assert.ok(
   !kaanapali.pass.providerLog.some((row) => row.provider === 'nominatim' && row.reason === 'trip_destination_center'),
   'sub-area search must not reuse stored island trip_destination_center',
 );
+assert.ok(
+  !kaanapali.pass.providerLog.some((row) => row.reason === 'anchor_matches_search_center'),
+  'Kaanapali Maui must not skip anchor geocode via anchor_matches_search_center',
+);
 
 const kihei = await providerPassForAnchor({
   dest: 'Kihei',
@@ -143,7 +147,7 @@ const mauiOnly = await runPlaceProviderPass({
     target: 'dinner',
   }],
   osmCategoryFilter: ['restaurant'],
-  searchAnchor: { text: 'Maui', source: 'destination' },
+  searchAnchor: null,
   relevanceContext: { target: 'dinner', area: 'Maui' },
   tripId: 'trip-maui-only',
   priorPlaces: [],
@@ -161,6 +165,65 @@ const mauiOnly = await runPlaceProviderPass({
 assert.equal(mauiOnlyNominatim, 0);
 assert.ok(mauiOnly.providerLog.some((row) => row.reason === 'trip_destination_center'));
 assert.ok(Math.abs(mauiOnly.searchCenter.lat - STORED_MAUI_CENTER.lat) < 0.0001);
+
+const HYATT_LODGING_GEOCODE = {
+  lat: '20.9212',
+  lon: '-156.6926',
+  display_name: 'Hyatt Regency Maui, Kaanapali, Maui County, Hawaii, United States',
+  address: { tourism: 'hotel', county: 'Maui County', state: 'Hawaii', country_code: 'us' },
+};
+let lodgingOnlyNominatim = 0;
+const lodgingOnly = await runPlaceProviderPass({
+  fetchImpl: async (url) => {
+    const href = String(url);
+    if (href.includes(NOMINATIM_HOST)) {
+      lodgingOnlyNominatim += 1;
+      return nominatimFetch({ hyatt: HYATT_LODGING_GEOCODE })(url);
+    }
+    if (href.includes(OVERPASS_HOST)) return { ok: true, json: async () => ({ elements: [] }) };
+    if (href.includes('brave.com')) return { ok: true, json: async () => ({ results: [] }) };
+    if (href.includes('openrouter')) {
+      return { ok: true, json: async () => ({ answers: { relevance: { type: 'score', score: 4 } } }) };
+    }
+    throw new Error(href);
+  },
+  env,
+  dest: 'Maui',
+  tripDestinationLabel: 'Maui',
+  lodging: 'Hyatt Regency Maui',
+  lodgingPoint: null,
+  tripDestinationCenter: STORED_MAUI_CENTER,
+  placeQueries: [{
+    category: 'restaurant',
+    q: 'best tacos near our hotel',
+    limit: 5,
+    place: true,
+    targetKind: 'category',
+    target: 'taco spots',
+  }],
+  osmCategoryFilter: ['restaurant'],
+  searchAnchor: { text: 'Hyatt Regency Maui', source: 'lodging' },
+  relevanceContext: { target: 'taco spots', area: 'Maui' },
+  tripId: 'trip-lodging-over-stored',
+  priorPlaces: [],
+  selectPriorPlaces: (rows) => rows,
+  priorRowsFromInput: (rows) => rows,
+  queryOsm: async () => [],
+  queryBrave: async () => [],
+  mergePlaces: () => [],
+  attachRelevance: async (rows) => ({ places: rows, rejections: [] }),
+  readJson: async () => ({}),
+  fail: (message) => {
+    throw new Error(message);
+  },
+});
+assert.ok(lodgingOnlyNominatim >= 1, 'lodging label should geocode when no named anchor');
+assert.ok(
+  !lodgingOnly.providerLog.some((row) => row.reason === 'trip_destination_center'),
+  'lodging search must not use stored trip_destination_center skip',
+);
+assert.ok(Math.abs(lodgingOnly.searchCenter.lat - 20.9212) < 0.05);
+assert.ok(Math.abs(lodgingOnly.searchCenter.lat - STORED_MAUI_CENTER.lat) > 0.05);
 
 const rejectedPass = await runPlaceProviderPass({
   fetchImpl: nominatimFetch({ kihei: KIHEI_LODGING_GEOCODE }),

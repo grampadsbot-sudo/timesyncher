@@ -1,6 +1,6 @@
 import { PlaceSearchError } from './place-search-error.mjs';
 import { persistTripDestinationCenter } from './trip-destination-center.mjs';
-import { nominatimLabelsEquivalent } from './place-search-anchor-geocode.mjs';
+import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
 import {
   getNominatimStore,
   NOMINATIM_GEOCODE_CACHE_TTL_MS,
@@ -443,10 +443,14 @@ export async function resolveSearchContext(
     fail('Place search needs a destination.', 'missing_destination');
   }
   const tripDestinationLabel = String(options.tripDestinationLabel || destinationLabel).trim();
+  const turnNamedAnchor = String(options.turnNamedAnchor || '').trim();
+  const namedAnchorOverridesStoredCenter = turnNamedAnchor
+    && !nominatimLabelsEquivalent(turnNamedAnchor, tripDestinationLabel);
   if (
     destinationLabel
     && storedCenter
     && !lodgingLabel
+    && !namedAnchorOverridesStoredCenter
     && nominatimLabelsEquivalent(destinationLabel, tripDestinationLabel)
   ) {
     providerLog.push({

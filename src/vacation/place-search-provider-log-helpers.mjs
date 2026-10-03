@@ -59,3 +59,15 @@ export function everyPlaceResultProviderErrored(providerLog = []) {
   const ran = placeResultProviderRows(providerLog).filter((row) => providerRowRan(row));
   return ran.length > 0 && ran.every((row) => providerRowIsError(row));
 }
+
+/** All place-result providers finished without errors and none returned live rows. */
+export function placeSearchProvidersAllEmpty(providerLog = []) {
+  const rows = placeResultProviderRows(providerLog);
+  if (!rows.length) return false;
+  if (rows.some(providerRowIsError)) return false;
+  if (rows.some(providerRowIsHit)) return false;
+  return rows.every((row) => {
+    const status = String(row?.status || '').trim().toLowerCase();
+    return status === 'empty' || status === 'skipped';
+  });
+}

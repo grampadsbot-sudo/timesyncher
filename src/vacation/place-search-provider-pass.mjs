@@ -7,6 +7,7 @@ import {
   PLACE_RESULT_PROVIDERS,
   placeResultProviderRows,
   placeResultProvidersAnswered,
+  placeSearchProvidersAllEmpty,
   providerErrorsFromProviderLog,
   providerRowIsError,
   providerRowIsHit,
@@ -27,46 +28,9 @@ import {
   resolveNamedPlaceTieBreakLabel,
 } from './place-search-named-select.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
+import { resolveBraveCompactLocality, resolvePlaceSearchQueryCenter } from './place-search-query-center.mjs';
 
-function resolveBraveCompactLocality({
-  namedPlaceLookup,
-  searchAnchor,
-  context,
-  relevanceContext,
-  dest,
-}) {
-  if (namedPlaceLookup) {
-    const fromContext = String(context?.compactLocality || context?.center?.compactLocality || '').trim();
-    if (fromContext) return fromContext;
-    const fromRelevance = String(relevanceContext?.area || '').trim();
-    if (fromRelevance && !fromRelevance.includes(',')) return fromRelevance;
-    const tripDest = String(dest || '').trim();
-    if (tripDest && !tripDest.includes(',')) return tripDest;
-    return fromRelevance || tripDest;
-  }
-  const anchor = String(searchAnchor?.text || '').trim();
-  if (anchor) return anchor;
-  const fromContext = String(context?.compactLocality || context?.center?.compactLocality || '').trim();
-  if (fromContext) return fromContext;
-  const fromRelevance = String(relevanceContext?.area || '').trim();
-  if (fromRelevance && !fromRelevance.includes(',')) return fromRelevance;
-  const tripDest = String(dest || '').trim();
-  if (tripDest && !tripDest.includes(',')) return tripDest;
-  return fromRelevance || tripDest;
-}
-
-/** All place-result providers finished without errors and none returned live rows. */
-export function placeSearchProvidersAllEmpty(providerLog = []) {
-  const rows = (Array.isArray(providerLog) ? providerLog : [])
-    .filter((row) => PLACE_RESULT_PROVIDERS.has(String(row?.provider || '').trim()));
-  if (!rows.length) return false;
-  if (rows.some(providerRowIsError)) return false;
-  if (rows.some(providerRowIsHit)) return false;
-  return rows.every((row) => {
-    const status = String(row?.status || '').trim().toLowerCase();
-    return status === 'empty' || status === 'skipped';
-  });
-}
+export { placeSearchProvidersAllEmpty } from './place-search-provider-log-helpers.mjs';
 
 export async function runPlaceProviderPass({
   fetchImpl,
@@ -105,6 +69,9 @@ export async function runPlaceProviderPass({
     relevanceMs: 0,
   };
   const contextStarted = Date.now();
+  const anchorText = String(searchAnchor?.text || '').trim();
+  const anchorSource = String(searchAnchor?.source || '').trim();
+  const turnNamedAnchor = anchorSource === 'named_anchor' ? anchorText : '';
   const context = await resolveSearchContext(
     fetchImpl,
     { lodging, lodgingPoint, destination: dest, keepAreaText, tripDestinationCenter },
@@ -116,6 +83,7 @@ export async function runPlaceProviderPass({
       db,
       tripId,
       tripDestinationLabel: String(tripDestinationLabel || dest).trim(),
+      turnNamedAnchor,
     },
   );
   providerTimings.contextMs = Date.now() - contextStarted;
@@ -130,7 +98,6 @@ export async function runPlaceProviderPass({
     dest,
   });
   let braveLookups = [];
-  const anchorText = String(searchAnchor?.text || '').trim();
   let anchorGeocode = null;
   if (anchorText && !namedPlaceLookup) {
     const anchorStarted = Date.now();
@@ -138,23 +105,16 @@ export async function runPlaceProviderPass({
       fetchImpl,
       anchorText,
       namedPlaceLookup,
-      context,
-      dest,
       providerLog,
       readJson,
       env,
     });
     providerTimings.anchorGeocodeMs = Date.now() - anchorStarted;
   }
-  const lodgingRadiusCenter = namedPlaceLookup ? null : anchorRadiusCenter(anchorGeocode, null);
+  const queryCenter = resolvePlaceSearchQueryCenter({ namedPlaceLookup, anchorGeocode, context });
   const destinationRadiusCenter = anchorRadiusCenter(null, center);
   const radiusScope = namedPlaceLookup ? ANCHOR_RADIUS_SCOPE_DESTINATION : ANCHOR_RADIUS_SCOPE_LODGING;
-  const radiusCenter = namedPlaceLookup
-    ? destinationRadiusCenter
-    : (lodgingRadiusCenter || destinationRadiusCenter);
-  const queryCenter = namedPlaceLookup
-    ? destinationRadiusCenter
-    : (lodgingRadiusCenter || destinationRadiusCenter);
+  const radiusCenter = queryCenter;
   const primaryCategory = String(placeQueries?.[0]?.category || 'restaurant').trim().toLowerCase();
   const anchorRadiusPolicy = anchorRadiusPolicySnapshot(radiusCenter, radiusScope, primaryCategory);
   const judgeArea = String(relevanceContext?.area || '').trim() || locationText || dest;
