@@ -44,7 +44,7 @@ export function isProviderHttp429(row = {}) {
     || /\bstatus\s*429\b/i.test(reason) || /\b429\b/.test(reason);
 }
 
-export function normalizeProviderCallRecord(checkName, row = {}) {
+function normalizeProviderCallRecord(checkName, row = {}) {
   return {
     check: checkName,
     provider: String(row.provider || '').trim() || null,
@@ -64,7 +64,7 @@ export function recordProviderCallsForCheck(out, checkName, sources = {}) {
   return records;
 }
 
-export function provider429Violations(records = []) {
+function provider429Violations(records = []) {
   return records.filter(isProviderHttp429);
 }
 
