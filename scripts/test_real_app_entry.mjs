@@ -60,8 +60,8 @@ assert.equal(swim.category_name, 'activity');
 assert.notEqual(swim.category_name, 'Attraction');
 const house = shared.places.find((place) => place.name === 'Kailua-Kona house');
 assert.equal(house.category_name, 'Hotel');
-assert.equal(shared.permissions.share_budget, true);
-assert.deepEqual(shared.budget, []);
+assert.equal('share_budget' in shared.permissions, false);
+assert.equal('budget' in shared, false);
 const priced = sharedTripFromIntake({
   trip: {
     id: tripId,
@@ -72,9 +72,8 @@ const priced = sharedTripFromIntake({
   },
   things: [{ id: 'fare', category: 'transport', title: 'Shuttle', total_price: 42 }],
 });
-assert.equal(priced.permissions.share_budget, true);
-assert.equal(priced.budget.length, 1);
-assert.equal(priced.budget[0].total_price, 42);
+assert.equal('share_budget' in priced.permissions, false);
+assert.equal('budget' in priced, false);
 const unlabeled = sharedTripFromIntake({
   trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
   things: [{ id: 'blank', title: 'Open block' }],

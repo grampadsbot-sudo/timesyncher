@@ -255,16 +255,6 @@ function noteText(thing) {
   ].map((note) => String(note || '').trim()).filter(Boolean).join('\n');
 }
 
-export function budgetPriceFromThing(thing = {}) {
-  const direct = thing?.total_price ?? thing?.price;
-  if (direct !== null && direct !== undefined && direct !== '' && Number.isFinite(Number(direct))) {
-    return Number(direct);
-  }
-  const cents = thing?.cost_estimate_cents ?? thing?.costEstimateCents;
-  if (Number.isInteger(cents) && cents >= 0) return cents / 100;
-  return null;
-}
-
 export function thingRecordFromTripRow(row = {}) {
   const meta = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {};
   const ratings = row.ratings && typeof row.ratings === 'object' && !Array.isArray(row.ratings) ? row.ratings : null;
@@ -401,22 +391,8 @@ export function sharedTripFromIntake({ trip, things }) {
       share_map: true,
       share_bookings: true,
       share_packing: false,
-      share_budget: (things || []).length > 0 && planned,
       share_collab: false,
     },
-    budget: (things || []).flatMap((thing, index) => {
-      const amount = budgetPriceFromThing(thing);
-      if (amount === null) return [];
-      return [{
-        id: intId(`${trip.id}:budget:${thing.id || thing.title || index}`),
-        trip_id: intId(trip.id),
-        category: String(thing?.category || 'Trip'),
-        name: thing?.title || trip.title || 'Vacation',
-        total_price: amount,
-        note: '',
-        sort_order: index,
-      }];
-    }),
     media: [],
     reservations: [],
     accommodations: [],
