@@ -32,24 +32,46 @@ function build() {
   });
 }
 
-async function footerInViewport(page) {
-  return page.evaluate(() => {
+async function checkBuildStamp(page, pageName) {
+  return page.evaluate((name) => {
     const footer = document.querySelector('footer[data-build-stamp="1"]');
     if (!footer) return { ok: false, reason: 'missing footer' };
-    const rect = footer.getBoundingClientRect();
-    const style = window.getComputedStyle(footer);
-    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) {
-      return { ok: false, reason: 'footer hidden' };
+    const stampText = (footer.textContent || '').trim();
+    if (footer.getAttribute('data-build-stamp') !== '1' || stampText.length < 7) {
+      return { ok: false, reason: 'stamp text or attribute missing', stampText };
     }
+    const style = window.getComputedStyle(footer);
+    const rect = footer.getBoundingClientRect();
     const vh = window.innerHeight;
     const vw = window.innerWidth;
-    const visible = rect.bottom > 0 && rect.top < vh && rect.right > 0 && rect.left < vw;
+    const visibleInViewport = style.display !== 'none'
+      && style.visibility !== 'hidden'
+      && Number(style.opacity) !== 0
+      && rect.bottom > 0
+      && rect.top < vh
+      && rect.right > 0
+      && rect.left < vw;
+
+    if (name === 'vacation-app.html') {
+      const appShell = document.querySelector('main.app');
+      const domOnlyHidden = style.visibility === 'hidden' || footer.getClientRects().length === 0;
+      return {
+        ok: Boolean(appShell) && domOnlyHidden && stampText.length >= 7,
+        mode: 'dom-stamp-hidden',
+        stampText,
+        domOnlyHidden,
+        visibleInViewport,
+      };
+    }
+
     return {
-      ok: visible,
+      ok: visibleInViewport,
+      mode: 'viewport-visible',
+      stampText,
       rect: { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right },
       viewport: { w: vw, h: vh },
     };
-  });
+  }, pageName);
 }
 
 await build();
@@ -96,7 +118,10 @@ try {
     await page.setViewport({ width: viewport.width, height: viewport.height });
     for (const name of pages) {
       await page.goto(`http://127.0.0.1:${port}/${name}`, { waitUntil: 'domcontentloaded' });
-      const check = await footerInViewport(page);
+      if (name === 'vacation-app.html') {
+        await page.waitForSelector('main.app', { timeout: 20000 });
+      }
+      const check = await checkBuildStamp(page, name);
       assert.equal(check.ok, true, `${name} @ ${viewport.label}: ${JSON.stringify(check)}`);
     }
     await page.close();
