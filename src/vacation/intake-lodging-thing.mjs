@@ -18,13 +18,11 @@ import {
 } from './intake-lodging-lookup.mjs';
 import { buildIntakeLodgingOutcome } from './intake-lodging-turn-outcome.mjs';
 import {
-  nominatimForwardSearch,
-  nominatimReverseGeocode,
+  nominatimForwardWithEvidence,
+  nominatimReverseWithEvidence,
   nominatimLodgingPickMissReason,
   pickNominatimLodgingCandidate,
-  trimNominatimEvidenceRow,
 } from './intake-lodging-nominatim.mjs';
-import { consumeNominatimNetworkCallAtMs } from './place-search-geocode.mjs';
 import { intakeLodgingWanted } from './trip-intake-classify.mjs';
 
 class IntakeLodgingResolveError extends Error {
@@ -76,90 +74,6 @@ function usableBraveAddress(picked = {}) {
 
 function braveLodgingCategoryEstablished(places = []) {
   return (Array.isArray(places) ? places : []).some((place) => hasCoordinates(place) && isLodgingProviderPlace(place));
-}
-
-function pushNominatimProvider(search, {
-  status,
-  reason = '',
-  resultCount = 0,
-  query = '',
-  rawResults = [],
-  calledAtMs = null,
-  httpStatus = null,
-}) {
-  const providers = Array.isArray(search?.providers) ? [...search.providers] : [];
-  providers.push({
-    provider: 'nominatim',
-    status,
-    ...(reason ? { reason } : {}),
-    resultCount,
-    ...(query ? { query } : {}),
-    rawResults: rawResults.slice(0, 5),
-    ...(Number.isFinite(Number(calledAtMs)) ? { calledAtMs: Number(calledAtMs) } : {}),
-    ...(Number.isFinite(Number(httpStatus)) ? { httpStatus: Number(httpStatus) } : {}),
-  });
-  search.providers = providers;
-}
-
-async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, search) {
-  const query = String(lookupQuery || '').trim();
-  try {
-    const hits = await nominatimForwardSearch(fetchImpl, query, { limit: 5 });
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
-    pushNominatimProvider(search, {
-      status: hits.length ? 'ok' : 'empty',
-      reason: hits.length ? '' : 'no_results',
-      resultCount: hits.length,
-      query,
-      rawResults: hits.map((row) => trimNominatimEvidenceRow(row)),
-      calledAtMs,
-    });
-    return hits;
-  } catch (error) {
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
-    const reason = String(error?.message || error || 'nominatim forward failed').trim();
-    const httpStatus = Number.isFinite(Number(error?.httpStatus)) ? Number(error.httpStatus) : null;
-    pushNominatimProvider(search, {
-      status: 'error',
-      reason,
-      resultCount: 0,
-      query,
-      rawResults: [],
-      calledAtMs,
-      httpStatus,
-    });
-    return [];
-  }
-}
-
-async function nominatimReverseWithEvidence(fetchImpl, lat, lng, search, lookupQuery) {
-  try {
-    const reversed = await nominatimReverseGeocode(fetchImpl, lat, lng);
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
-    pushNominatimProvider(search, {
-      status: reversed?.address ? 'ok' : 'empty',
-      reason: reversed?.address ? '' : 'no_address',
-      resultCount: reversed?.address ? 1 : 0,
-      query: `reverse:${lat},${lng}`,
-      rawResults: reversed?.hit ? [trimNominatimEvidenceRow(reversed.hit)] : [],
-      calledAtMs,
-    });
-    return reversed;
-  } catch (error) {
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
-    const reason = String(error?.message || error || 'nominatim reverse failed').trim();
-    const httpStatus = Number.isFinite(Number(error?.httpStatus)) ? Number(error.httpStatus) : null;
-    pushNominatimProvider(search, {
-      status: 'error',
-      reason,
-      resultCount: 0,
-      query: `reverse:${lat},${lng}`,
-      rawResults: [],
-      calledAtMs,
-      httpStatus,
-    });
-    return null;
-  }
 }
 
 async function resolveIntakeLodgingThing({
