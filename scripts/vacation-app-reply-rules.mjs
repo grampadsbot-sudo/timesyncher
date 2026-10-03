@@ -545,7 +545,7 @@ function grokReplyUrl(env) {
   return /^https?:\/\//i.test(host) ? host.replace(/\/+$/, '') + routePath : `http://${host}:${port}${routePath}`;
 }
 
-function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext = null, planTable = null }) {
+export function replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext = null, planTable = null }) {
   return {
     destination_lock: text(destination, 160) || null,
     single_upsell: upsell === 'allow-once' ? 'allow-once' : 'forbidden',
@@ -556,13 +556,10 @@ function replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, 
     rules_slug: rules?.slug || REPLY_RULES_SLUG,
     rules: {
       smoke_bar_id: rules?.smoke_bar_id || null,
-      notes_where: rules?.notes_where || null,
     },
     jev: {
       modelTier,
       responseModel,
-      routeType: jev?.routeType || jev?.extraContext?.routeType || null,
-      extraContext: jev?.extraContext || null,
     },
     customer_turn: text(customerTurn, 12000),
     stage: text(stage, 80),
@@ -903,7 +900,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     };
   }
   assertSharedReplyTargetAllowed(OPENROUTER_CHAT_COMPLETIONS_URL, 'tiered openrouter chat', { allowTieredOpenRouterChat: true });
-  const request = replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
+  const request = replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext, planTable });
   const userContent = intakeReplyTurn ? JSON.stringify(replyFacts && typeof replyFacts === 'object' ? replyFacts : {}) : JSON.stringify(request);
   const genStarted = Date.now();
   try {
