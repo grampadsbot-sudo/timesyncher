@@ -17,6 +17,7 @@ import { writeRatings } from './write-ratings.mjs';
 import { mergeLogoMetadata } from './trip-thing-logo-metadata.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
+import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
@@ -182,6 +183,12 @@ function countSources(places) {
 }
 
 export async function placeSearchReadJson(fetchImpl, url, { headers, method, body, label }) {
+  if (isNominatimOpenStreetMapUrl(url)) {
+    throw new PlaceSearchError(
+      'Nominatim HTTP must use the nominatim gateway (throttle + cache)',
+      'nominatim_bypass',
+    );
+  }
   let response;
   try {
     response = await fetchImpl(url, {

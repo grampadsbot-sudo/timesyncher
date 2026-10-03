@@ -11,6 +11,7 @@ import { PlaceSearchError } from '../src/vacation/place-search-error.mjs';
 function createRecordingNominatimDb({ payloadAsStringOnRead = false } = {}) {
   const cache = new Map();
   const calls = [];
+  const recording = { nextSlotMs: 0 };
   const db = async (strings, ...values) => {
     calls.push({ strings: [...strings], values: [...values] });
     const text = strings.join(' ').toLowerCase();
@@ -26,12 +27,40 @@ function createRecordingNominatimDb({ payloadAsStringOnRead = false } = {}) {
       const payload = payloadAsStringOnRead ? row.payloadJson : JSON.parse(row.payloadJson);
       return [{ payload }];
     }
-    if (text.includes('nominatim_throttle')) {
-      return [{ execute_at_ms: Date.now() }];
+    if (text.includes('update nominatim_throttle')) {
+      const now = Number(values[0]);
+      const interval = Number(values[1]);
+      if (!recording.nextSlotMs) recording.nextSlotMs = 0;
+      const executeAt = Math.max(recording.nextSlotMs, now);
+      recording.nextSlotMs = executeAt + interval;
+      return [{ execute_at_ms: executeAt }];
     }
     throw new Error(`unexpected sql: ${strings.join('')}`);
   };
-  return { db, calls, cache };
+  return { db, calls, cache, recording };
+}
+
+async function throttleUpdateSpacesConcurrentSlots() {
+  useNominatimStore(null);
+  const { db, recording } = createRecordingNominatimDb();
+  useVacationDatabase(db);
+  const store = getNominatimStore({ DATABASE_URL: 'postgres://test' });
+  let nowMs = 100_000;
+  const starts = [];
+  const sleep = async (ms) => {
+    nowMs += ms;
+  };
+  await Promise.all([
+    store.runNominatimThrottled(async () => { starts.push(nowMs); }, { nowMs: () => nowMs, sleep }),
+    store.runNominatimThrottled(async () => { starts.push(nowMs); }, { nowMs: () => nowMs, sleep }),
+    store.runNominatimThrottled(async () => { starts.push(nowMs); }, { nowMs: () => nowMs, sleep }),
+  ]);
+  starts.sort((a, b) => a - b);
+  assert.equal(starts.length, 3);
+  assert.ok(starts[1] - starts[0] >= 1000);
+  assert.ok(starts[2] - starts[1] >= 1000);
+  assert.ok(recording.nextSlotMs >= starts[2] + 1000);
+  useVacationDatabase(null);
 }
 
 async function putUsesJsonStringCast() {
@@ -118,6 +147,7 @@ await getParsesStringPayloadFromDriver();
 await corruptCachePayloadIsLoud();
 await noDatabaseThrowsLoudly();
 await cacheWriteFailureIsLoud();
+await throttleUpdateSpacesConcurrentSlots();
 
 console.log(JSON.stringify({
   ok: true,
@@ -129,5 +159,6 @@ console.log(JSON.stringify({
     'corrupt_cache_payload_is_loud',
     'no_database_throws_loudly',
     'cache_write_failure_is_loud',
+    'throttle_update_spaces_concurrent_slots',
   ],
 }));
