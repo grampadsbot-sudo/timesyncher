@@ -68,13 +68,15 @@ async function judgeScreenshotWithOpenRouter({
       rubricVersion: VISUAL_RUBRIC_VERSION,
     };
   }
-  const screenSpecText = loadScreenSpecForLabel(shotMeta.screenLabel);
+  const screenSpecText = shotMeta.specText || loadScreenSpecForLabel(shotMeta.screenLabel);
   const prompt = buildVisualJudgePrompt({
     screenLabel: shotMeta.screenLabel,
     pageKind: shotMeta.pageKind,
+    stateId: shotMeta.stateId,
     tabLabel: shotMeta.tabLabel || '',
     viewport: shotMeta.viewport,
     screenSpecText,
+    specSource: shotMeta.specSource || 'canonical_fallback_0926_pt',
   });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

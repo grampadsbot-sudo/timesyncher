@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Proof runner: LAYOUT + VISUAL against live staging (fail-closed). */
-import { mkdir, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
@@ -24,12 +24,11 @@ import {
   summarizeVisualVerdicts,
 } from './shepherd-staging-smoke-visual.mjs';
 import { VISUAL_JUDGE_MODEL } from './shepherd-staging-smoke-visual-judge.mjs';
+import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 
 const EXPECT_SHA = process.argv[2];
-const shareArg = process.argv.find((a) => a.startsWith('--share='));
-const sessionArg = process.argv.find((a) => a.startsWith('--session='));
 if (!EXPECT_SHA || !/^[0-9a-f]{7,40}$/i.test(EXPECT_SHA)) {
-  console.error('Usage: node scripts/shepherd-staging-smoke-layout-visual-run.mjs <full40Sha> [--share=slug] [--session=token]');
+  console.error('Usage: node scripts/shepherd-staging-smoke-layout-visual-run.mjs <full40Sha>');
   process.exit(1);
 }
 const SHA7 = EXPECT_SHA.slice(0, 7);
@@ -63,46 +62,37 @@ if (version.sha !== EXPECT_SHA && !String(version.sha || '').startsWith(SHA7)) {
   process.exit(2);
 }
 
-let chatUrl = '';
-let sharedUrl = '';
-let session = '';
-let tripId = '';
-if (sessionArg && shareArg) {
-  session = sessionArg.slice('--session='.length);
-  const share = shareArg.slice('--share='.length).replace(/^\/+|\/+$/g, '');
-  chatUrl = `${BASE}/vacation-app.html?session=${encodeURIComponent(session)}`;
-  sharedUrl = share.startsWith('http') ? share : `${BASE}/shared/${share}/`;
-} else {
-  const db = sql(process.env);
-  const [couponMain] = await mintCheckoutCoupons(db, { count: 1, max: 1, label: `judge-${SHA7}` });
-  const email = `judge-${SHA7}-${Date.now()}@resend.dev`;
-  const couponRes = await fetch(`${BASE}/api/checkout-coupon`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      firstName: 'Visual', lastName: SHA7, email, couponCode: couponMain, orderBump: false, photoMemories: false,
-    }),
-  });
-  const couponJson = await couponRes.json();
-  session = couponJson.session?.token;
-  await fetch(`${BASE}/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-${session}`)}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ acceptedByName: 'Visual', checkboxConfirmed: true }),
-  });
-  await getApp(session);
-  await postItinerary(session, { text: 'hi' });
-  const tripMsg = await postItinerary(session, { text: 'Maui March 10-17 2027 with my wife' });
-  tripId = tripMsg.json.trip?.id;
-  chatUrl = `${BASE}/vacation-app.html?session=${encodeURIComponent(session)}`;
-  sharedUrl = tripId ? `${BASE}/shared/${intakeShareSlug(tripId)}/` : '';
-}
+const db = sql(process.env);
+const spec = loadAppScreenSpecText();
 
 const browser = await puppeteer.launch(CHROME);
 const page = await browser.newPage();
 let layout;
 let visual;
 try {
+  const [couponMain] = await mintCheckoutCoupons(db, { count: 1, max: 1, label: `layout-${SHA7}` });
+  const email = `layout-${SHA7}-${Date.now()}@resend.dev`;
+  const couponRes = await fetch(`${BASE}/api/checkout-coupon`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      firstName: 'Layout', lastName: SHA7, email, couponCode: couponMain, orderBump: false, photoMemories: false,
+    }),
+  });
+  const couponJson = await couponRes.json();
+  const session = couponJson.session?.token;
+  await fetch(`${BASE}/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-${session}`)}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ acceptedByName: 'Layout', checkboxConfirmed: true }),
+  });
+  await getApp(session);
+  await postItinerary(session, { text: 'hi' });
+  const tripMsg = await postItinerary(session, { text: 'Maui March 10-17 2027 with my wife' });
+  const tripId = tripMsg.json.trip?.id;
+  const chatUrl = `${BASE}/vacation-app.html?session=${encodeURIComponent(session)}`;
+  const sharedUrl = tripId ? `${BASE}/shared/${intakeShareSlug(tripId)}/` : '';
+
   layout = await runLayoutHarnessCheck({
     page,
     chatUrl,
@@ -112,10 +102,9 @@ try {
   });
   visual = await runVisualHarnessCheck({
     page,
-    session,
-    tripId,
-    chatUrl,
-    sharedUrl,
+    db,
+    BASE,
+    SHA7,
     expectSha: EXPECT_SHA,
     setStage: (label) => { process.stderr.write(`[VISUAL] ${label}\n`); },
   });
@@ -138,6 +127,7 @@ const pass = layout.pass && visual.pass;
 const out = {
   expectSha: EXPECT_SHA,
   visualJudgeModel: VISUAL_JUDGE_MODEL,
+  uiSpecSource: spec.source,
   deployId: process.env.SHEPHERD_DEPLOY_ID || 'dpl_EJNxPWyTbdDPTb7UagmT487jAte9',
   checks: { LAYOUT: layout.pass ? 'PASS' : 'FAIL', VISUAL: visual.pass ? 'PASS' : 'FAIL' },
   checkLAYOUT: layout,

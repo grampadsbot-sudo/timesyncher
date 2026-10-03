@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs';
+import { gotoAndHydrateSharedIntakePage } from './shepherd-staging-smoke-shared-ui-map.mjs';
 import {
   evaluateLayoutRules,
   LAYOUT_RULE_APPLICABILITY,
@@ -48,7 +49,8 @@ async function runLayoutProbeOnPage(page, {
     }
   }
   setStage?.(`layout ${pageKind} ${viewport.label} evaluate`);
-  const result = await page.evaluate(evaluateLayoutRules, pageKind);
+  const evalSrc = evaluateLayoutRules.toString();
+  const result = await page.evaluate(new Function('pageKind', `return (${evalSrc})(pageKind)`), pageKind);
   const shot = artifactPath(`layout-${pageKind}-${viewport.label}.png`);
   await page.screenshot({ path: shot, fullPage: true });
   return {

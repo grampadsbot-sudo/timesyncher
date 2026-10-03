@@ -9,7 +9,9 @@ export const LAYOUT_VIEWPORTS = [
 export const LAYOUT_RULE_APPLICABILITY = {
   composer_in_viewport: ['chat'],
   horizontal_overflow: ['chat', 'shared'],
-  topbar_logo_menu: ['chat'],
+  header_grok_spec: ['chat'],
+  composer_controls_only: ['chat'],
+  site_splitter_when_site: ['chat'],
   messages_visible: ['chat'],
   hidden_attr_display_none: ['chat', 'shared'],
   guest_nav_disjoint: ['shared'],
@@ -36,7 +38,9 @@ export function evaluateLayoutRules(pageKind) {
     const list = {
       composer_in_viewport: ['chat'],
       horizontal_overflow: ['chat', 'shared'],
-      topbar_logo_menu: ['chat'],
+      header_grok_spec: ['chat'],
+      composer_controls_only: ['chat'],
+      site_splitter_when_site: ['chat'],
       messages_visible: ['chat'],
       hidden_attr_display_none: ['chat', 'shared'],
       guest_nav_disjoint: ['shared'],
@@ -97,28 +101,97 @@ export function evaluateLayoutRules(pageKind) {
     push('#messageText', 'composer_in_viewport', 'composer textarea missing on chat page', { viewport });
   }
 
-  if (applies('topbar_logo_menu')) {
+  if (applies('header_grok_spec')) {
     const header = document.querySelector('header.topbar');
-    if (!header) {
-      push('header.topbar', 'topbar_logo_menu', 'header.topbar missing', { viewport });
-    } else {
+    if (header) {
       const hr = header.getBoundingClientRect();
-      const logo = header.querySelector('img.mark, img[alt*="TimeSyncher" i], .brand img');
-      const menuEl = header.querySelector('#tripMenu, .trip-menu');
-      if (!logo) push('header.topbar', 'topbar_logo_menu', 'logo not found under header.topbar', { header: rectObj(header) });
-      if (!menuEl) push('header.topbar', 'topbar_logo_menu', '#tripMenu not found under header.topbar', { header: rectObj(header) });
-      if (logo && !header.contains(logo)) push('header.topbar', 'topbar_logo_menu', 'logo not descendant of header.topbar', {});
-      if (menuEl && !header.contains(menuEl)) push('header.topbar', 'topbar_logo_menu', 'trip menu not descendant of header.topbar', {});
-      if (logo) {
-        const lr = logo.getBoundingClientRect();
-        if (lr.top < hr.top - 1 || lr.bottom > hr.bottom + 1 || lr.left < hr.left - 1 || lr.right > hr.right + 1) {
-          push('header.topbar', 'topbar_logo_menu', 'logo rect not inside header.topbar rect', { header: rectObj(header), logo: rectObj(logo) });
+      if (hr.height > 1 && hr.width > 1) {
+        const logos = header.querySelectorAll('img, svg, .mark, .brand');
+        for (const logo of logos) {
+          const r = logo.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0 && getComputedStyle(logo).display !== 'none') {
+            push('header.topbar', 'header_grok_spec', 'header must not show logo/brand chrome', { header: rectObj(header), logo: rectObj(logo) });
+            break;
+          }
+        }
+        const tripOptions = header.querySelectorAll('#tripMenu .trip-option, .trip-list .trip-option');
+        const vacationCount = tripOptions.length;
+        const menu = header.querySelector('#tripMenu');
+        const menuVisible = menu && getComputedStyle(menu).display !== 'none' && menu.getBoundingClientRect().height > 0;
+        if (vacationCount >= 2) {
+          if (!menuVisible) {
+            push('#tripMenu', 'header_grok_spec', '2+ vacations require vacation dropdown in header', { vacationCount });
+          }
+          const allowed = new Set(['tripMenu', 'tripButton', 'trip-list']);
+          for (const el of header.querySelectorAll('button, a, input, select')) {
+            const st = getComputedStyle(el);
+            if (st.display === 'none' || st.visibility === 'hidden') continue;
+            const r = el.getBoundingClientRect();
+            if (r.width < 1 || r.height < 1) continue;
+            if (menu && menu.contains(el)) continue;
+            if (el.id === 'tripButton' || el.closest('#tripMenu')) continue;
+            push('header.topbar', 'header_grok_spec', 'header may only contain vacation dropdown when 2+ vacations', { tag: el.tagName, id: el.id, cls: String(el.className || '').slice(0, 40) });
+            break;
+          }
+        } else if (menuVisible && vacationCount < 2) {
+          push('#tripMenu', 'header_grok_spec', 'header must be empty when fewer than 2 vacations (no dropdown)', { vacationCount, menu: rectObj(menu) });
+        }
+        const brand = header.querySelector('.brand');
+        if (brand && getComputedStyle(brand).display !== 'none' && brand.getBoundingClientRect().height > 0) {
+          push('.brand', 'header_grok_spec', 'header brand bar must not be visible (empty header spec)', { brand: rectObj(brand) });
         }
       }
-      if (menuEl) {
-        const mr = menuEl.getBoundingClientRect();
-        if (mr.top < hr.top - 1 || mr.bottom > hr.bottom + 1 || mr.left < hr.left - 1 || mr.right > hr.right + 1) {
-          push('header.topbar', 'topbar_logo_menu', 'trip menu rect not inside header.topbar rect', { header: rectObj(header), menu: rectObj(menuEl) });
+    }
+    const guestNav = document.querySelector('[data-ts-guest-nav]');
+    if (guestNav && getComputedStyle(guestNav).display !== 'none') {
+      push('[data-ts-guest-nav]', 'header_grok_spec', 'Open navigation/Settings guest nav forbidden on chat app', { guestNav: rectObj(guestNav) });
+    }
+  }
+
+  if (applies('composer_controls_only')) {
+    const grid = document.querySelector('.compose-grid, #composer');
+    if (grid) {
+      const attach = document.querySelector('#attachButton');
+      const voice = document.querySelector('#voiceButton');
+      const send = document.querySelector('.send-button, button[type="submit"]');
+      if (send && getComputedStyle(send).display !== 'none' && send.getBoundingClientRect().width > 0) {
+        push('.send-button', 'composer_controls_only', 'composer must only expose file-add and speak (no send button)', { send: rectObj(send) });
+      }
+      const controls = grid.querySelectorAll('button, input, textarea, select');
+      for (const el of controls) {
+        const st = getComputedStyle(el);
+        if (st.display === 'none') continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        const id = el.id || '';
+        const ok = id === 'attachButton' || id === 'voiceButton' || el === textarea || el.id === 'messageText';
+        if (!ok) {
+          push('#composer', 'composer_controls_only', `unexpected composer control ${id || el.tagName}`, { el: rectObj(el) });
+          break;
+        }
+      }
+      if (!attach || !voice) {
+        push('#composer', 'composer_controls_only', 'composer missing file-add or speak button', { attach: Boolean(attach), voice: Boolean(voice) });
+      }
+    }
+  }
+
+  if (applies('site_splitter_when_site')) {
+    const sitePane = document.querySelector('.site-pane');
+    const splitter = document.querySelector('#splitter, .splitter');
+    const siteVisible = sitePane && getComputedStyle(sitePane).display !== 'none' && sitePane.getBoundingClientRect().height > 8;
+    const iframe = sitePane?.querySelector('iframe');
+    const hasSiteContent = siteVisible && iframe && String(iframe.getAttribute('src') || '').trim().length > 0;
+    if (hasSiteContent) {
+      if (!splitter || getComputedStyle(splitter).display === 'none' || splitter.getBoundingClientRect().height < 1) {
+        push('#splitter', 'site_splitter_when_site', 'site content visible but resizable divider missing', { sitePane: rectObj(sitePane) });
+      } else {
+        const chatPane = document.querySelector('.chat-pane');
+        const siteTop = sitePane.getBoundingClientRect().top;
+        const chatTop = chatPane?.getBoundingClientRect().top ?? 0;
+        const splitTop = splitter.getBoundingClientRect().top;
+        if (!(siteTop <= splitTop && splitTop <= chatTop + 2)) {
+          push('#workspace', 'site_splitter_when_site', 'site pane must be above splitter above chat', { siteTop, splitTop, chatTop });
         }
       }
     }
@@ -138,7 +211,7 @@ export function evaluateLayoutRules(pageKind) {
   }
 
   if (applies('guest_nav_disjoint')) {
-    const guestNav = document.querySelector('[data-guest-nav], .guest-nav, nav.guest, div.guest-nav')
+    const guestNav = document.querySelector('[data-ts-guest-nav], [data-guest-nav], .guest-nav')
       || Array.from(document.querySelectorAll('div, nav')).find((el) => {
         const t = String(el.textContent || '');
         return /open navigation|settings/i.test(t) && getComputedStyle(el).position === 'fixed';
@@ -170,7 +243,7 @@ export function evaluateLayoutRules(pageKind) {
       const rowTops = visibleKids.map((el) => Math.round(el.getBoundingClientRect().top));
       const rowCount = new Set(rowTops).size;
       if (visibleKids.length > 0 && rowCount !== visibleKids.length) {
-        push('.chat-pane', 'chat_pane_row_parity', `visible child count ${visibleKids.length} != layout row count ${rowCount} (stacked/overlapping rows)`, {
+        push('.chat-pane', 'chat_pane_row_parity', `visible child count ${visibleKids.length} != layout row count ${rowCount}`, {
           childCount: visibleKids.length,
           rowCount,
           rowTops,

@@ -4,7 +4,7 @@ import { runVisualHarnessCheck } from './shepherd-staging-smoke-visual.mjs';
 import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { withBrowserPageSlot } from './shepherd-staging-smoke-browser-pool.mjs';
 
-export async function registerLayoutVisualSpineChecks(ctx) {
+export async function registerLayoutVisualSpineChecks(spineCtx) {
   const {
     runCheck,
     out,
@@ -16,7 +16,9 @@ export async function registerLayoutVisualSpineChecks(ctx) {
     EXPECT_SHA,
     artifactPath,
     puppeteer,
-  } = ctx;
+    db,
+    SHA7,
+  } = spineCtx;
 
   await runCheck('LAYOUT', async ({ setStage, registerBrowser: reg }) => {
     setStage('layout chat + shared viewports');
@@ -44,26 +46,22 @@ export async function registerLayoutVisualSpineChecks(ctx) {
   }, { timeoutMs: 180000 });
 
   await runCheck('VISUAL', async ({ setStage, registerBrowser: reg }) => {
-    setStage('visual judge chat + shared tabs');
-    const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
-    const sharedUrl = shareSlug ? `${BASE}/shared/${shareSlug}/` : '';
-    const chatUrl = `${BASE}/vacation-app.html?session=${encodeURIComponent(state.session)}`;
+    setStage('visual judge four customer states');
     const chromeVisual = sharedBrowser || await puppeteer.launch(CHROME);
     if (!sharedBrowser) reg(chromeVisual);
     return withBrowserPageSlot(chromeVisual, async (page) => {
       const visual = await runVisualHarnessCheck({
         page,
-        session: state.session,
-        tripId: state.tripId,
-        chatUrl,
-        sharedUrl,
+        db,
+        BASE,
+        SHA7,
         expectSha: EXPECT_SHA,
         setStage,
       });
       out.checkVISUAL = {
         pass: visual.pass,
         artifactDir: visual.artifactDir,
-        seed: visual.seed,
+        specSource: visual.specSource,
         stageTimestamps: visual.stageTimestamps,
         summary: visual.verdictDoc.shots.map((s) => ({ id: s.id, pass: s.pass, failures: s.failures })),
       };
@@ -74,5 +72,5 @@ export async function registerLayoutVisualSpineChecks(ctx) {
         out.browserCloseErrors.push(String(err?.message || err));
       });
     });
-  }, { timeoutMs: 420000 });
+  }, { timeoutMs: 900000 });
 }

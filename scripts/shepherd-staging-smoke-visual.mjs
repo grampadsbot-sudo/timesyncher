@@ -1,12 +1,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { SMOKE_PARALLEL_CONCURRENCY } from './shepherd-staging-smoke-plan.mjs';
-import { seedVisualSmokeTripContent } from './shepherd-staging-smoke-visual-seed.mjs';
-import { captureVisualScreenshots } from './shepherd-staging-smoke-visual-capture.mjs';
+import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
+import { captureVisualStateScreenshots } from './shepherd-staging-smoke-visual-capture.mjs';
 import {
   VISUAL_JUDGE_MODEL,
   VISUAL_RUBRIC_VERSION,
   judgeScreenshotsParallel,
 } from './shepherd-staging-smoke-visual-judge.mjs';
+import { loadVisualScreenSpec } from './shepherd-staging-smoke-visual-rubric.mjs';
 
 function visualArtifactDir(baseDir, expectSha) {
   const dir = `${baseDir}/${expectSha}-visual`;
@@ -37,33 +38,36 @@ export function summarizeVisualVerdicts(judged) {
 
 export async function runVisualHarnessCheck({
   page,
-  session,
-  tripId,
-  chatUrl,
-  sharedUrl,
+  db,
+  BASE,
+  SHA7,
   expectSha,
   artifactBaseDir = '/opt/cursor/artifacts',
   setStage,
   env = process.env,
   fetchImpl = fetch,
+  /** When set (spine), skip mint and use this single-state map for faster smoke. */
+  spineState = null,
 }) {
   const stageTimestamps = {};
   const artifactDir = visualArtifactDir(artifactBaseDir, expectSha);
-  setStage?.('visual seed trip tabs');
-  stageTimestamps.seedStartMs = Date.now();
-  const seed = await seedVisualSmokeTripContent(session, tripId, { setStage });
-  stageTimestamps.seedEndMs = Date.now();
+  const spec = loadVisualScreenSpec();
+  stageTimestamps.mintStartMs = Date.now();
+  const states = spineState || await mintVisualStateCustomers({ db, BASE, SHA7, setStage });
+  stageTimestamps.mintEndMs = Date.now();
   stageTimestamps.captureStartMs = Date.now();
-  const shots = await captureVisualScreenshots({
+  const shots = await captureVisualStateScreenshots({
     page,
-    chatUrl,
-    sharedUrl,
+    states,
     artifactDir,
-    expectSha,
     setStage,
     stageTimestamps,
   });
   stageTimestamps.captureEndMs = Date.now();
+  for (const shot of shots) {
+    shot.specSource = spec.source;
+    shot.specText = spec.text;
+  }
   stageTimestamps.judgeStartMs = Date.now();
   const judged = await judgeScreenshotsParallel(shots, {
     apiKey: env.OPENROUTER_API_KEY,
@@ -81,11 +85,12 @@ export async function runVisualHarnessCheck({
     expectSha,
     model: VISUAL_JUDGE_MODEL,
     rubricVersion: VISUAL_RUBRIC_VERSION,
-    screenSpecFiles: null,
-    seed,
+    specSource: spec.source,
+    states: Object.keys(states),
     stageTimestamps,
     shots: judged.map(({ shot, verdict }) => ({
       id: shot.id,
+      stateId: shot.stateId,
       pageKind: shot.pageKind,
       tabLabel: shot.tabLabel || null,
       viewport: shot.viewport?.label || shot.viewport?.width,
@@ -98,5 +103,13 @@ export async function runVisualHarnessCheck({
     pass,
   };
   writeFileSync(`${artifactDir}/verdict.json`, `${JSON.stringify(verdictDoc, null, 2)}\n`);
-  return { pass, judged, verdictDoc, artifactDir, stageTimestamps, seed, screenSpecNote: 'features/screens/*.md absent; shared shots include features/itinerary-surfaces.md when matched' };
+  return {
+    pass,
+    judged,
+    verdictDoc,
+    artifactDir,
+    stageTimestamps,
+    states,
+    specSource: spec.source,
+  };
 }

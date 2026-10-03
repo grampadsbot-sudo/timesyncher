@@ -214,6 +214,8 @@ export async function runShepherdSmokeSpine(ctx) {
     EXPECT_SHA,
     artifactPath,
     puppeteer,
+    db,
+    SHA7,
   });
 
   await runCheck('I', async ({ setStage }) => {
