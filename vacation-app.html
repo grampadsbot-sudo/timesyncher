@@ -19,6 +19,7 @@
       --danger: #a23a2a;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     html, body { height: 100%; }
     body {
       margin: 0;
@@ -38,9 +39,10 @@
       overflow: hidden;
     }
     .topbar {
-      min-height: 58px;
+      grid-row: 1;
+      min-height: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr);
       gap: 14px;
       align-items: center;
       padding: 10px clamp(12px, 3vw, 22px);
@@ -49,6 +51,18 @@
       backdrop-filter: blur(14px);
       z-index: 4;
     }
+    .app.site-fullscreen {
+      padding-bottom: 0;
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .app.site-fullscreen .topbar { display: none; }
+    .app.site-fullscreen .workspace {
+      grid-row: 1;
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .app.site-fullscreen .splitter,
+    .app.site-fullscreen .chat-pane { display: none; }
+    html:has(.app.site-fullscreen) body { padding-bottom: 0 !important; }
     .brand {
       min-width: 0;
       display: flex;
@@ -63,18 +77,6 @@
       display: block;
       flex: 0 0 auto;
     }
-    .trip-label {
-      max-width: min(48vw, 380px);
-      min-height: 38px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      color: var(--ink);
-      display: inline-flex;
-      align-items: center;
-      padding: 7px 12px;
-      font-weight: 750;
-    }
     .brand small {
       display: block;
       color: var(--muted);
@@ -82,9 +84,9 @@
       font-size: 12px;
       margin-top: 1px;
     }
-    .trip-menu { position: relative; }
+    .vacation-dropdown { position: relative; min-width: 0; max-width: 100%; justify-self: end; }
     .trip-button {
-      max-width: min(48vw, 380px);
+      max-width: 100%;
       min-height: 38px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -114,14 +116,14 @@
       padding: 8px;
       transform-origin: top right;
       transform: scale(.94) translateY(-8px);
-      opacity: 0;
+      opacity: 0; visibility: hidden;
       pointer-events: none;
       transition: transform .16s ease, opacity .16s ease;
       z-index: 8;
     }
-    .trip-menu.open .trip-list {
+    .vacation-dropdown.open .trip-list {
       transform: scale(1) translateY(0);
-      opacity: 1;
+      opacity: 1; visibility: visible;
       pointer-events: auto;
     }
     .trip-option {
@@ -146,6 +148,7 @@
     }
     .trip-option small { color: var(--muted); margin-top: 2px; }
     .workspace {
+      grid-row: 2;
       min-height: 0;
       display: grid;
       grid-template-rows: minmax(128px, var(--site-height, 52fr)) 10px minmax(220px, 48fr);
@@ -162,20 +165,26 @@
       background: #dce2ea;
       position: relative;
     }
+    .fullscreen-button {
+      position: absolute;
+      z-index: 3;
+      top: 8px;
+      right: 8px;
+      min-width: 42px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      font-weight: 750;
+      padding: 0 10px;
+    }
     iframe {
       width: 100%;
       height: 100%;
       border: 0;
       display: block;
       background: white;
-    }
-    .site-empty {
-      min-height: 100%;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      text-align: center;
-      color: var(--muted);
     }
     .splitter {
       border: 0;
@@ -199,49 +208,9 @@
     }
     .chat-pane {
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-rows: minmax(0, 1fr) auto;
       background: var(--panel);
     }
-    .path-nav {
-      display: flex;
-      gap: 8px;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--line);
-    }
-    .path-nav button {
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 8px;
-      padding: 6px 10px;
-    }
-    .path-nav button.active {
-      border-color: var(--gold);
-      color: var(--gold-strong);
-      font-weight: 750;
-    }
-    .itinerary-screen, .thing-screen {
-      min-height: 0;
-      overflow: auto;
-      padding: 16px clamp(12px, 3vw, 24px);
-    }
-    .itinerary-screen h1, .thing-screen h1 { margin: 0 0 8px; font-size: 22px; }
-    .thing-list { list-style: none; margin: 0; padding: 0; }
-    .thing-list button, .thing-back {
-      display: block;
-      width: 100%;
-      text-align: left;
-      margin: 8px 0;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-    }
-    .thing-list small, .thing-screen .thing-category, .thing-screen .thing-meta { color: var(--muted); font-weight: 700; }
-    .thing-when { display: block; color: var(--gold-strong); font-weight: 750; margin-top: 4px; }
-    .thing-list p, .intake-rule { margin: 4px 0 12px; }
-    .thing-notes, .collaborator-notes { margin: 12px 0; padding: 0; }
-    .collaborator-notes { border-top: 1px solid var(--line); padding-top: 12px; }
-    .collaborator-notes h2 { margin: 0 0 8px; font-size: 16px; }
     .messages {
       min-height: 0;
       overflow: auto;
@@ -283,6 +252,7 @@
       flex-wrap: wrap;
       margin-bottom: 8px;
     }
+    .attachment-row:empty { display: none; }
     .chip {
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -298,11 +268,11 @@
     }
     .compose-grid {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 8px;
       align-items: end;
     }
-    .icon-button, .send-button {
+    .icon-button {
       min-width: 42px;
       min-height: 42px;
       border: 1px solid var(--line);
@@ -317,12 +287,6 @@
       color: #fff;
       border-color: var(--danger);
       background: var(--danger);
-    }
-    .send-button {
-      padding: 0 14px;
-      color: #fff;
-      border-color: var(--blue);
-      background: var(--blue);
     }
     textarea {
       width: 100%;
@@ -444,11 +408,10 @@
       justify-self: start;
     }
     @media (max-width: 700px) {
-      .topbar { grid-template-columns: 1fr; align-items: start; }
-      .trip-button { max-width: 100%; width: 100%; justify-content: space-between; }
-      .trip-list { left: 0; right: auto; width: 100%; }
-      .workspace:not(.chat-only) { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); }
-      .bubble { max-width: 94%; }
+      .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; } .trip-button { max-width: 100%; } .trip-list { left: 0; right: auto; width: 100%; } .workspace:not(.chat-only) { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); } .bubble { max-width: 94%; }
+    }
+    html:has(.app.site-fullscreen) footer[data-build-stamp="1"] {
+      visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0);
     }
   </style>
 </head>
@@ -460,7 +423,7 @@
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
     let sessionToken = params.get('session') || params.get('token') || ((eula) => eula.startsWith('vacation-') && !eula.startsWith('vacation-collaborator-') ? eula.slice('vacation-'.length) : '')(params.get('eulaSession') || '') || localStorage.getItem('tsVacationAppSession') || '';
-    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
+    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, sending: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     if (!window.tsVacationAppRequest?.failAppRequest) { const m = 'vacation-app-request.js did not load (tsVacationAppRequest missing).'; console.error(m); throw new Error(m); }
     const { customerSafeErrorMessage, showComposerStatus, failAppRequest } = window.tsVacationAppRequest;
@@ -468,7 +431,6 @@
     const icon = {
       clip: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m21.4 11.6-8.7 8.7a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.6-8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       mic: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-      send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M22 2 11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
       check: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       chevron: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     };
@@ -478,11 +440,21 @@
       if (!value) return '';
       try {
         const parsed = new URL(value, 'https://timesyncher.com');
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
         if (!parsed.pathname || parsed.pathname === '/') return '';
         if (/\/shared\/intake-/i.test(parsed.pathname) && !customerPlaceName(trip?.destination)) return '';
         return value;
       } catch {
         return '';
+      }
+    }
+    function embedSiteUrl(url) {
+      try {
+        const parsed = new URL(url, window.location.href);
+        parsed.searchParams.set('embed', '1');
+        return parsed.href;
+      } catch {
+        return url;
       }
     }
     function customerPlaceName(value) {
@@ -524,11 +496,9 @@
     }
 
     function vacationSelector(trips, trip) {
+      if (trips.length < 2) return '';
       const label = (item) => (customerPlaceName(item.title) || customerPlaceName(item.destination)).split(',')[0].trim();
-      if (!trips.length) {
-        return `<div class="trip-menu" id="tripMenu"><button class="trip-button" id="tripButton" type="button" disabled aria-haspopup="listbox" aria-expanded="false"><span></span>${icon.chevron}</button><div class="trip-list" role="listbox"></div></div>`;
-      }
-      return `<div class="trip-menu" id="tripMenu"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe(item.status || 'Vacation')}</small></span></button>`).join('')}</div></div>`;
+      return `<div class="vacation-dropdown" id="vacationDropdown"><button class="trip-button" id="tripButton" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${safe(tripBadge(trip))}</span>${icon.chevron}</button><div class="trip-list" role="listbox">${trips.map((item) => `<button class="trip-option ${item.id === trip?.id ? 'active' : ''}" type="button" data-trip-id="${safe(item.id)}" role="option" aria-selected="${item.id === trip?.id ? 'true' : 'false'}"><span>${item.id === trip?.id ? icon.check : ''}</span><span><b>${safe(label(item))}</b><small>${safe(item.status || 'Vacation')}</small></span></button>`).join('')}</div></div>`;
     }
 
     function realVacations() {
@@ -643,21 +613,18 @@
               <p id="composerStatus" role="status" aria-live="polite" hidden style="margin:0 0 8px;color:var(--danger);font-weight:750;font-size:14px"></p>
               <div class="attachment-row" id="attachmentRow"></div>
               <div class="compose-grid">
-                <button class="icon-button" id="attachButton" type="button" title="Add vacation files">${icon.clip}</button>
-                <textarea id="messageText" name="message" placeholder="Message TimeSyncher Vacation" rows="1"></textarea>
-                <button class="icon-button" id="voiceButton" type="button" title="Speak a message">${icon.mic}</button>
-                <button class="send-button" type="submit" title="Send">${icon.send}</button>
+                <button class="icon-button" id="attachButton" type="button" aria-label="Add file" title="Add file">${icon.clip}</button>
+                <textarea id="messageText" name="message" rows="1" aria-label="Message" enterkeyhint="send"></textarea>
+                <button class="icon-button" id="voiceButton" type="button" aria-label="Speak" title="Speak">${icon.mic}</button>
               </div>
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
             </form>`;
       const body = onboardingPane;
+      const header = trips.length >= 2 ? `<header class="topbar" id="appHeader">${vacationSelector(trips, trip)}</header>` : '';
       root.innerHTML = `<main class="app">
-        <header class="topbar">
-          <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>${safe(state.session?.customerName || state.session?.email || 'Vacation workspace')}</small></span></div>
-          ${vacationSelector(trips, trip)}
-        </header>
+        ${header}
         <section class="workspace${hasSite ? '' : ' chat-only'}" id="workspace">
-          ${hasSite ? `<div class="site-pane"><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(siteUrl)}"></iframe></div>
+          ${hasSite ? `<div class="site-pane"><button class="fullscreen-button" id="fullScreenButton" type="button" aria-pressed="false" aria-label="Full screen">Full screen</button><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(embedSiteUrl(siteUrl))}"></iframe></div>
           <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
           <section class="chat-pane" aria-label="Vacation chat">
             ${body}
@@ -669,17 +636,19 @@
     }
 
     function bindApp() {
-      const menu = document.getElementById('tripMenu');
+      const menu = document.getElementById('vacationDropdown');
       const button = document.getElementById('tripButton');
       if (menu && button) {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (event) => {
+          event.stopPropagation();
           const open = !menu.classList.contains('open');
           menu.classList.toggle('open', open);
           button.setAttribute('aria-expanded', String(open));
         });
-        document.addEventListener('click', (event) => {
-          if (!menu.contains(event.target)) menu.classList.remove('open');
-        }, { once: true });
+        document.addEventListener('click', () => {
+          menu.classList.remove('open');
+          button.setAttribute('aria-expanded', 'false');
+        });
         document.querySelectorAll('.trip-option').forEach((option) => {
           option.addEventListener('click', () => {
             state.currentTripId = option.dataset.tripId;
@@ -689,15 +658,34 @@
         });
       }
       if (document.getElementById('splitter')) bindSplitter();
+      bindFullScreen();
       const attachButton = document.getElementById('attachButton');
-      if (!attachButton) return;
+      const messageText = document.getElementById('messageText');
+      const composer = document.getElementById('composer');
+      if (!attachButton || !messageText || !composer) return;
       attachButton.addEventListener('click', () => document.getElementById('fileInput').click());
       document.getElementById('fileInput').addEventListener('change', (event) => {
         state.attachments = Array.from(event.target.files || []).slice(0, 6);
         renderAttachments();
+        messageText.focus();
       });
       bindVoice();
-      document.getElementById('composer').addEventListener('submit', sendMessage);
+      let shiftBreak = false, imeBreak = false;
+      const enterSend = (event, fromBreak) => {
+        const skip = shiftBreak || imeBreak || event.isComposing === true || event.keyCode === 229 || event.shiftKey === true || event.repeat;
+        if (fromBreak) { shiftBreak = false; imeBreak = false; }
+        if (skip || (!messageText.value.trim() && !state.attachments.length && !state.sending)) return;
+        event.preventDefault(); if (!state.sending) composer.requestSubmit();
+      };
+      messageText.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        shiftBreak = event.shiftKey === true; imeBreak = event.isComposing === true || event.keyCode === 229;
+        enterSend(event, false);
+      });
+      messageText.addEventListener('beforeinput', (event) => {
+        if (event.inputType === 'insertLineBreak' || event.inputType === 'insertParagraph') enterSend(event, true);
+      });
+      composer.addEventListener('submit', sendMessage);
     }
 
     function renderAttachments() {
@@ -724,6 +712,7 @@
       recognition.onend = () => {
         state.voiceMode = false;
         voiceButton.classList.remove('recording');
+        document.getElementById('messageText')?.focus();
       };
       recognition.onresult = (event) => {
         const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
@@ -733,6 +722,19 @@
         }
       };
       voiceButton.addEventListener('click', () => recognition.start());
+    }
+
+    function bindFullScreen() {
+      const button = document.getElementById('fullScreenButton');
+      const app = document.querySelector('.app');
+      if (!button || !app) return;
+      button.addEventListener('click', () => {
+        const on = app.classList.toggle('site-fullscreen');
+        const label = on ? 'Exit full screen' : 'Full screen';
+        button.setAttribute('aria-pressed', String(on));
+        button.setAttribute('aria-label', label);
+        button.textContent = label;
+      });
     }
 
     function bindSplitter() {
@@ -757,10 +759,12 @@
 
     async function sendMessage(event) {
       event.preventDefault();
+      if (state.sending) return;
       showComposerStatus('');
       const textarea = document.getElementById('messageText');
       const text = textarea.value.trim();
       if (!text && state.attachments.length === 0) return;
+      state.sending = true;
       const hadSite = Boolean(realSiteUrl(currentTrip()?.publicUrl, currentTrip()));
       const voiceTurn = state.voiceArmed === true;
       state.voiceArmed = false;
@@ -822,6 +826,8 @@
         document.getElementById('tsTyping')?.remove();
         console.error(error);
         showComposerStatus(customerSafeErrorMessage(error, error?.response));
+      } finally {
+        state.sending = false;
       }
       messages.scrollTop = messages.scrollHeight;
     }
