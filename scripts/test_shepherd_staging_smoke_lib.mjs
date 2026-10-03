@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
@@ -20,9 +19,11 @@ import {
   attributeLogoMisalignmentCss,
   objectFitContentBox,
   gradeAskLodging,
+  gradeCoffeeReplyRows,
   gradeD2UnschedReply,
   gradeAskD2Reply,
   parseJevNoulAnswer,
+  jevBlockFromResult,
   persistedLodgingAskSignals,
   isRealBrandLogoSrc,
   gradeSharedTabLogoUrlRecords,
@@ -276,5 +277,26 @@ assert.equal(lodgingPass.jev.verdict, 'yes');
 
 assert.equal(parseJevNoulAnswer({ noul: 0.9 }).yes, true);
 assert.equal(parseJevNoulAnswer({ noul: 0.1 }).yes, false);
+
+const jevMeta = jevBlockFromResult({ verdict: 'yes', rationale: 'ok', score: 0.9, model: 'test-model' }, {
+  questionKey: 'saved_not_on_day',
+  customerTurn: 'save Paia Fish Market',
+  replyExcerpt: 'Saved for later.',
+});
+assert.equal(jevMeta.questionKey, 'saved_not_on_day');
+assert.equal(jevMeta.noul, 0.9);
+assert.match(jevMeta.replyExcerpt, /Saved/);
+
+const stubCoffeeJev = async () => ({
+  ok: true,
+  verdict: 'yes',
+  yes: true,
+  score: 0.95,
+  rationale: 'noul=0.950',
+  model: 'stub',
+});
+const coffeeGrade = await gradeCoffeeReplyRows([{ title: 'Maui Coffee Roasters' }], { judgeFn: stubCoffeeJev });
+assert.equal(coffeeGrade.pass, true);
+assert.equal(coffeeGrade.rows[0].jev.verdict, 'yes');
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));

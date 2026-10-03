@@ -4,6 +4,7 @@ import {
   SMOKE_PARALLEL_CONCURRENCY,
   SMOKE_PARALLEL_INDEPENDENT_NAMES,
 } from './shepherd-staging-smoke-plan.mjs';
+import { finalizeSmokeProviderLogSummary } from './shepherd-staging-smoke-provider-log.mjs';
 
 export { SMOKE_CHECK_ORDER, SMOKE_PARALLEL_INDEPENDENT_NAMES };
 
@@ -111,6 +112,7 @@ export function createSmokeRunner(ctx) {
     if (!out.deployId) {
       out.deployId = process.env.SHEPHERD_DEPLOY_ID || null;
     }
+    finalizeSmokeProviderLogSummary(out);
     mkdirSync(artifactDir, { recursive: true });
     const artifactOut = `${artifactDir}/shepherd-${sha7}-out.json`;
     writeFileSync(artifactOut, JSON.stringify(out, null, 2));
@@ -245,6 +247,7 @@ export function createSmokeRunner(ctx) {
 
   async function finish() {
     out.totalRuntimeMs = Date.now() - runStartedAt;
+    finalizeSmokeProviderLogSummary(out);
     const failed = Object.values(out.checks).some((v) => v === 'FAIL');
     await writeOutAndExit(failed ? 1 : 0);
   }
