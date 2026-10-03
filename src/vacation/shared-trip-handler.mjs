@@ -3,6 +3,7 @@ import { cleanText, headerValue, sendJson } from './http.mjs';
 import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
+import { prepareSharedTripForLiveApp } from './shared-trip-live-tab-lists.mjs';
 
 let sharedTripDatabase = null;
 
@@ -91,7 +92,9 @@ export async function intakeSharedResponse(shareToken, db = null) {
   } catch {
     forecast = [];
   }
-  return applyCapturedLogos(applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] }));
+  const presented = applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] });
+  const captured = applyCapturedLogos(presented);
+  return prepareSharedTripForLiveApp(captured);
 }
 
 function sendSlugMiss(res, shareToken) {

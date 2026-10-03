@@ -100,7 +100,9 @@ scripts/test_eula_accept_onboarding.mjs
 scripts/test_collaborator_welcome_a1_a2.mjs
 scripts/test_collaborator_getapp_trip_site_url.mjs
 scripts/test_collaborator_trip_chat_visibility.mjs
+scripts/test_collaborator_web_access_redirect.mjs
 scripts/test_shared_place_logo_and_category.mjs
+scripts/test_shared_trip_live_tab_logos.mjs
 scripts/test_trip_thing_logo_metadata.mjs
 scripts/test_vacation_collaborator_accept_e2e.mjs
 scripts/test_collaborator_no_commerce_offers.mjs
