@@ -35,6 +35,7 @@ function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
       destination: String(ctx.destination || '').trim(),
       lodging: String(ctx.lodging || lodgingCtx?.lodging || '').trim(),
       tripStatedLodgingArea: String(ctx.statedLodgingArea || lodgingCtx?.statedLodgingArea || '').trim(),
+      tripResolvedArea: String(ctx.searchArea || '').trim(),
       things,
     }),
   };

@@ -15,7 +15,7 @@ import {
   placePersistCategory,
   isCarRentalProviderPlace,
 } from '../src/vacation/intake-car-category.mjs';
-import { placeToTripThing, queryBravePlaceSearch } from '../src/vacation/place-search.mjs';
+import { mergePlaces, placeToTripThing, queryBravePlaceSearch } from '../src/vacation/place-search.mjs';
 import { osmAppCategoryFromTags } from '../src/vacation/place-search-osm-tag-map.mjs';
 import { HERTZ_KAHULUI_BRAVE } from './fixtures/place-search-brave-hertz-kahului.mjs';
 
@@ -37,6 +37,9 @@ assert.equal(HERTZ_KAHULUI_BRAVE[0].categories.length, 0);
 assert.equal(osmTagsIndicateCarRental({ amenity: 'car_rental' }), true);
 assert.equal(isCarRentalProviderPlace(places[0]), true);
 assert.equal(places[0].category, 'car');
+const merged = mergePlaces([places]);
+assert.equal(merged.length, 1);
+assert.equal(merged[0].category, 'car');
 assert.equal(placePersistCategory({ category: 'store', source: 'brave', sourceRecord: HERTZ_KAHULUI_BRAVE[0] }), 'car');
 
 const thing = placeToTripThing(places[0]);

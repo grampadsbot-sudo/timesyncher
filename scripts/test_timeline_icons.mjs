@@ -88,5 +88,6 @@ assert(resolveThingType(outbound) === 'transport', 'transport category is not up
 assert(resolveThingType({ name: 'Sample Hotel', category_name: 'Hotel' }) === 'hotel', 'source category selects the icon');
 assert(resolveThingType({ name: 'City A to City B', category_name: 'Flight' }) === 'flight', 'flight category selects the icon');
 assert(resolveThingType({ name: 'Sample Rental', category_name: 'Car' }) === 'car', 'car category selects the icon');
+assert(resolveThingType({ name: 'Hertz counter', category: 'car' }) === 'car', 'string trip_things category selects car');
 
 console.log('timeline icon tests passed');
