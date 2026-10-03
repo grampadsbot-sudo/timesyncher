@@ -13,7 +13,7 @@ export function verifyLayoutProvisionHelp() {
   return {
     states: VERIFY_LAYOUT_STATE_IDS,
     mint: 'mintVisualStateCustomers({ db, BASE, SHA7, setStage })',
-    env: 'VERCEL_TOKEN + ensureShepherdStagingSmokeEnv (DATABASE_URL, OPENROUTER_API_KEY for VISUAL judge)',
+    env: 'DATABASE_URL and OPENROUTER_API_KEY in process.env (operator supplies; skill does not call Vercel API)',
     viewports: ['390x844', '1280x800'],
     note: 'Never reuse coupon TS-2TZD3CGMA_J7; v1site supplies sharedUrl for Day-by-Day shell.',
   };
