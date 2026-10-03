@@ -170,6 +170,20 @@
     if (!current) el.textContent = resolved.icon;
   }
 
+  function paintInlinedLogos() {
+    document.querySelectorAll('img.tiny-logo[data-logo-bytes]').forEach((img) => {
+      if (img.dataset.tsLogoPainted === '1') return;
+      const raw = text(img.getAttribute('data-logo-bytes'));
+      if (!raw) return;
+      img.dataset.tsLogoPainted = '1';
+      const bin = atob(raw);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+      const type = text(img.getAttribute('data-logo-type')) || 'image/svg+xml';
+      img.src = URL.createObjectURL(new Blob([bytes], { type }));
+    });
+  }
+
   function apply(lookup) {
     const titles = [...lookup.keys()].sort((a, b) => b.length - a.length);
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
@@ -271,9 +285,11 @@
     }
     apply(lookup);
     repairStoryCards();
+    paintInlinedLogos();
     new MutationObserver(() => {
       apply(lookup);
       repairStoryCards();
+      paintInlinedLogos();
     }).observe(document.body, { childList: true, subtree: true });
   }
 
