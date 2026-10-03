@@ -4,7 +4,7 @@
  * @param {'leaflet' | 'mapbox-gl'} engine
  * @returns {boolean}
  */
-export function publishTsTripMapHook(map, engine) {
+function publishTsTripMapHook(map, engine) {
   const container = map && typeof map.getContainer === 'function' ? map.getContainer() : null;
   if (!container) return false;
   const center = map.getCenter();
@@ -33,7 +33,7 @@ export function publishTsTripMapHook(map, engine) {
 }
 
 /** @param {import('leaflet').Map} map */
-export function bindTsTripMapHookLeaflet(map) {
+function bindTsTripMapHookLeaflet(map) {
   if (!map || map.__tsTripMapHookBound) return;
   map.__tsTripMapHookBound = true;
   const sync = () => {
