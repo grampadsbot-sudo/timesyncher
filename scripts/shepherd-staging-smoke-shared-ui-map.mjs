@@ -78,33 +78,73 @@ export async function listSharedDomTabs(page) {
   });
 }
 
-async function waitForSharedIntakeHydration(page, stageTimestamps) {
+async function waitForSharedMapReadyHook(page, stageTimestamps) {
   await new Promise((r) => setTimeout(r, 1500));
   await clickSharedTabByKeyword(page, 'plan');
   stageTimestamps.mapReadyWaitStartMs = Date.now();
   stageTimestamps.leafletWaitStartMs = stageTimestamps.mapReadyWaitStartMs;
   try {
     await page.waitForFunction(() => {
-      const tabBar = document.querySelector('[role="tablist"]')
-        || document.querySelector('[data-ts-shared-tab-bar]')
-        || document.querySelector('nav');
-      const tabs = document.querySelectorAll('button, [role="tab"], [data-ts-tab]');
-      const hasTabs = tabs.length >= 2;
-      const mapEl = document.querySelector(
+      const el = document.querySelector(
         '.leaflet-container[data-ts-map-center], .mapboxgl-map[data-ts-map-center]',
       );
-      const mapHook = window.__tsTripMap;
-      const center = mapHook?.center || mapHook?.mapCenter;
-      const mapReady = (mapEl?.getAttribute('data-ts-map-center') && mapHook)
-        || (center && Number.isFinite(Number(center.lat)) && Number.isFinite(Number(center.lng)));
-      return Boolean(tabBar && hasTabs && mapReady);
+      if (el?.getAttribute('data-ts-map-center') && window.__tsTripMap) return true;
+      const center = window.__tsTripMap?.center || window.__tsTripMap?.mapCenter;
+      return Boolean(center && Number.isFinite(Number(center.lat)) && Number.isFinite(Number(center.lng)));
     }, { timeout: SHARED_MAP_READY_WAIT_MS });
     stageTimestamps.mapReadyWaitEndMs = Date.now();
     stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
   } catch (err) {
     stageTimestamps.mapReadyWaitEndMs = Date.now();
     stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
-    stageTimestamps.hangingStage = 'shared_hydration';
+    stageTimestamps.hangingStage = 'map_ready_wait';
+    throw err;
+  }
+}
+
+async function waitForSharedTabShellHydration(page, stageTimestamps) {
+  await new Promise((r) => setTimeout(r, 1500));
+  stageTimestamps.mapReadyWaitStartMs = Date.now();
+  stageTimestamps.leafletWaitStartMs = stageTimestamps.mapReadyWaitStartMs;
+  const timeout = SHARED_MAP_READY_WAIT_MS;
+  const tabShellFn = () => {
+    const tabBar = document.querySelector('[role="tablist"]')
+      || document.querySelector('[data-ts-shared-tab-bar]')
+      || document.querySelector('nav');
+    const tabs = Array.from(document.querySelectorAll('button, [role="tab"], [data-ts-tab]'));
+    if (!tabBar || tabs.length < 2) return false;
+    const norm = (text) => String(text || '')
+      .replace(/\p{Extended_Pictographic}/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    const labels = tabs.map((node) => norm(node.textContent));
+    return labels.some((label) => label.includes('budget'))
+      && labels.some((label) => label.includes('hotel'))
+      && labels.some((label) => label.includes('car'));
+  };
+  const mapHookFn = () => {
+    const mapEl = document.querySelector(
+      '.leaflet-container[data-ts-map-center], .mapboxgl-map[data-ts-map-center]',
+    );
+    if (mapEl?.getAttribute('data-ts-map-center') && window.__tsTripMap) return true;
+    const center = window.__tsTripMap?.center || window.__tsTripMap?.mapCenter;
+    return Boolean(center && Number.isFinite(Number(center.lat)) && Number.isFinite(Number(center.lng)));
+  };
+  try {
+    await Promise.race([
+      page.waitForFunction(tabShellFn, { timeout }),
+      page.waitForFunction(mapHookFn, { timeout }),
+    ]);
+    stageTimestamps.mapReadyWaitEndMs = Date.now();
+    stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
+  } catch (err) {
+    stageTimestamps.mapReadyWaitEndMs = Date.now();
+    stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
+    if (await page.evaluate(tabShellFn)) {
+      return;
+    }
+    stageTimestamps.hangingStage = 'shared_tab_shell';
     throw err;
   }
 }
@@ -125,7 +165,7 @@ export async function gotoAndHydrateSharedIntakePage(page, url) {
   await gotoSharedIntakePage(page, url);
   stageTimestamps.gotoEndMs = Date.now();
   try {
-    await waitForSharedIntakeHydration(page, stageTimestamps);
+    await waitForSharedTabShellHydration(page, stageTimestamps);
   } catch (err) {
     const domTabList = await listSharedDomTabs(page);
     return { stageTimestamps, domTabList, hydrationError: String(err?.message || err) };
@@ -168,7 +208,7 @@ export async function mapSharedTripState(page, url) {
 
   if (!gotoError) {
     try {
-      await waitForSharedIntakeHydration(page, stageTimestamps);
+      await waitForSharedMapReadyHook(page, stageTimestamps);
     } catch (err) {
       stageTimestamps.hangingStage = stageTimestamps.hangingStage || 'map_ready_wait';
       mapConsoleErrors.push(`map_ready_wait:${String(err?.message || err)}`);
