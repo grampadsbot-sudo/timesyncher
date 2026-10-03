@@ -278,6 +278,8 @@ export {
 export {
   gradeD2UnschedReply,
   gradeAskD2Reply,
+  gradeInvClaimFirstReply,
+  gradeInvClaimAfterLodgingReply,
   parseJevNoulAnswer,
   jevBlockFromResult,
 } from './shepherd-staging-smoke-jev-reply-judge.mjs';

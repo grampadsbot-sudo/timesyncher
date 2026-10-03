@@ -94,10 +94,35 @@ export function attachProviderLogAndMaybeFail(out, checkName, sources = {}, { ht
   };
 }
 
+function nominatimRow(row = {}) {
+  return String(row.provider || '').toLowerCase() === 'nominatim';
+}
+
+/** Nominatim provider rows that resolved from cache (no outbound HTTP timestamp). */
+export function nominatimCacheHitCount(calls = []) {
+  let hits = 0;
+  for (const row of calls) {
+    if (!nominatimRow(row)) continue;
+    const status = String(row.status || '').toLowerCase();
+    if (status === 'skipped') continue;
+    if (providerCallTimestampMs(row) != null) continue;
+    hits += 1;
+  }
+  return hits;
+}
+
+/** Rows that represent a live Nominatim HTTP call (have calledAtMs, not skipped). */
+export function nominatimOutboundHttpRows(calls = []) {
+  return (Array.isArray(calls) ? calls : []).filter((row) => {
+    if (!nominatimRow(row)) return false;
+    if (String(row.status || '').toLowerCase() === 'skipped') return false;
+    return providerCallTimestampMs(row) != null;
+  });
+}
+
 export function nominatimCallsPerSecondMax(calls = []) {
   const buckets = new Map();
-  for (const row of calls) {
-    if (String(row.provider || '').toLowerCase() !== 'nominatim') continue;
+  for (const row of nominatimOutboundHttpRows(calls)) {
     const ms = providerCallTimestampMs(row);
     if (ms == null) continue;
     const sec = Math.floor(ms / 1000);
@@ -110,5 +135,7 @@ export function nominatimCallsPerSecondMax(calls = []) {
 
 export function finalizeSmokeProviderLogSummary(out) {
   const calls = out.providerCallTimestamps || [];
+  out.nominatimCacheHits = nominatimCacheHitCount(calls);
+  out.nominatimOutboundHttpCalls = nominatimOutboundHttpRows(calls).length;
   out.nominatimCallsPerSecondMax = nominatimCallsPerSecondMax(calls);
 }
