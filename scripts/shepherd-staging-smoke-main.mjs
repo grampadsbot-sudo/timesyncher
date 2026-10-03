@@ -148,13 +148,14 @@ export async function runShepherdSmokeSpine(ctx) {
 
   await runCheck('5', async ({ setStage, registerBrowser }) => {
     setStage('trip create server timing');
-    const tripCreateTiming = classifySmokeServerTiming(
-      serverTimingFromItineraryJson(state.tripMsg?.json || {}),
-    );
+    const tripCreateTimingRaw = serverTimingFromItineraryJson(state.tripMsg?.json || {});
+    const tripCreateTiming = classifySmokeServerTiming(tripCreateTimingRaw);
+    const tripCreateStageTimings = tripCreateTimingRaw.stages || null;
     if (tripCreateTiming.appFail) {
       out.check5 = {
         tripId: state.tripId,
         serverTiming: tripCreateTiming,
+        stageTimings: tripCreateStageTimings,
         appFailSlowTripCreate: true,
       };
       return {
@@ -187,6 +188,7 @@ export async function runShepherdSmokeSpine(ctx) {
         screenshot: chatShot,
         intakeBlock: { tripBlocked, tripIntakeBlock },
         serverTiming: tripCreateTiming,
+        stageTimings: tripCreateStageTimings,
       };
       const pass = state.tripMsg.status === 201 && !tripIntakeBlock && ent?.trip_id === state.tripId && tripRow?.start_date;
       return { pass, http: state.tripMsg.status };
