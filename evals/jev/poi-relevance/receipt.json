@@ -1,0 +1,12 @@
+{
+  "card": "poi-relevance",
+  "model": "typesafe/jev-1.13",
+  "verdict": "pass",
+  "cardHash": "3a02ec0be2c1b7ba3716efd625bdd8c33a7137b6b3af6a8660dc517a74a64fc5",
+  "labeledSetHash": "9fb004c54cf6a71d66325fc8d4f1aac39e58572c61f1e8162f0df08c3d896ff3",
+  "passed": true,
+  "score": 1,
+  "threshold": 0.8,
+  "ranAt": "2026-10-02T04:36:19.059Z",
+  "gitSha": "f8d55533611fcf2c2af64dcee1ed9d111a8a7425"
+}

@@ -8,163 +8,16 @@ import { cleanText } from './http.mjs';
 /** Color-card stubs were 15–21KB @ 960×640; TREK placeholder canvases are 1024² @ 3071B. */
 export const PRINT_STUB_MAX_BYTES = 24 * 1024;
 
-export const TREK_SHARED_API_BASE = 'https://travel.timesyncher.com';
-export const VACATION3_SHARE_TOKEN = 'las-vegas-vacation-3';
-
-export const FILENAME_THING_HINTS = [
-  [/carbone/i, 'Carbone'],
-  [/shake/i, 'Shake Shack'],
-  [/lotus/i, 'Lotus of Siam'],
-  [/eggslut/i, 'Eggslut'],
-  [/cosmo|shop/i, 'Cosmopolitan shops'],
-  [/conservatory|bellagio.*cocktail|anniversary cocktail/i, 'Bellagio Conservatory'],
-  [/bellagio|lodging|hotel|fountain/i, 'Bellagio'],
-  [/boarding|sfo.*las|outbound|depart/i, 'SFO to LAS'],
-  [/las.*sfo|return|inbound/i, 'LAS to SFO'],
-];
-
-export const THINGS_NOT_ON_VACATION3 = [
-  { pattern: /high.?roller/i, name: 'High Roller' },
-  { pattern: /\bsphere\b/i, name: 'Sphere' },
-  { pattern: /cirque/i, name: 'Cirque O' },
-];
-
-export const SCT_VACATION3_MEDIA_DIR = '/workspace/sct-runs/story-draft-20260907/media';
-
-export const SCT_VACATION3_MEDIA_PACK = [
-  {
-    file: 'boarding-passes-photo.jpg',
-    action: 'bind',
-    targets: [
-      { thingId: 8877, thingName: 'SFO to LAS' },
-      { thingId: 8878, thingName: 'LAS to SFO' },
-    ],
-  },
-  {
-    file: 'carbone-late-hands-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8872, thingName: 'Carbone' }],
-  },
-  {
-    file: 'carbone-plates-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8872, thingName: 'Carbone' }],
-  },
-  {
-    file: 'cirque-program-photo.jpg',
-    action: 'skip',
-    skipName: 'Cirque O',
-    skipReason: 'Cirque O is not on trip 197',
-  },
-  {
-    file: 'conservatory-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8871, thingName: 'Bellagio Conservatory' }],
-  },
-  {
-    file: 'eggslut-sandwich-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8875, thingName: 'Eggslut' }],
-  },
-  {
-    file: 'high-roller-photo-01.jpg',
-    action: 'skip',
-    skipName: 'High Roller',
-    skipReason: 'High Roller is not on trip 197',
-  },
-  {
-    file: 'high-roller-photo-02.jpg',
-    action: 'skip',
-    skipName: 'High Roller',
-    skipReason: 'High Roller is not on trip 197',
-  },
-  {
-    file: 'high-roller-photo-03.jpg',
-    action: 'skip',
-    skipName: 'High Roller',
-    skipReason: 'High Roller is not on trip 197',
-  },
-  {
-    file: 'shake-shack-fries-photo.jpg',
-    action: 'bind',
-    targets: [{ thingId: 8873, thingName: 'Shake Shack' }],
-  },
-  {
-    file: 'sphere-late-photo-01.jpg',
-    action: 'skip',
-    skipName: 'Sphere',
-    skipReason: 'Sphere is not on trip 197',
-  },
-  {
-    file: 'sphere-late-photo-02.jpg',
-    action: 'skip',
-    skipName: 'Sphere',
-    skipReason: 'Sphere is not on trip 197',
-  },
-  {
-    file: 'bellagio-fountain-late-video.mp4',
-    action: 'bind',
-    targets: [{ thingId: 8869, thingName: 'Bellagio' }],
-  },
-  {
-    file: 'bellagio-fountain-night-video.mp4',
-    action: 'bind',
-    targets: [{ thingId: 8869, thingName: 'Bellagio' }],
-  },
-  {
-    file: 'sphere-led-video.mp4',
-    action: 'skip',
-    skipName: 'Sphere',
-    skipReason: 'Sphere is not on trip 197',
-  },
-];
-
-function basenameLower(filename = '') {
-  return String(filename || '').split('/').pop().trim().toLowerCase();
-}
-
-export function mapVacation3SctMediaFile(filename = '') {
-  const file = basenameLower(filename);
-  const exact = SCT_VACATION3_MEDIA_PACK.find((row) => row.file === file);
-  if (exact) {
-    return {
-      file,
-      action: exact.action,
-      targets: exact.targets ? exact.targets.map((target) => ({ ...target })) : [],
-      skipName: exact.skipName || '',
-      skipReason: exact.skipReason || '',
-      exact: true,
-    };
-  }
-  const guessed = guessThingNameFromFilename(file);
-  if (guessed.missing) {
-    return {
-      file,
-      action: 'skip',
-      targets: [],
-      skipName: guessed.thingName,
-      skipReason: `${guessed.thingName} is not on trip 197`,
-      exact: false,
-    };
-  }
-  if (guessed.thingName) {
-    return {
-      file,
-      action: 'bind',
-      targets: [{ thingId: 0, thingName: guessed.thingName }],
-      skipName: '',
-      skipReason: '',
-      exact: false,
-    };
-  }
-  return {
-    file,
-    action: 'unknown',
-    targets: [],
-    skipName: '',
-    skipReason: 'No Thing mapping for this filename',
-    exact: false,
-  };
+/** TREK shared API host comes from TIMESYNCHER_TRAVEL_BASE_URL (no baked-in default). */
+export function trekSharedApiBase(env = process.env) {
+  const value = String(
+    env.TIMESYNCHER_TRAVEL_BASE_URL
+    || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL
+    || env.TIMESYNCHER_TREK_PUBLIC_BASE_URL
+    || '',
+  ).trim().replace(/\/+$/, '');
+  if (!value) throw new Error('TIMESYNCHER_TRAVEL_BASE_URL is missing');
+  return value;
 }
 
 function text(value, max = 240) {
@@ -173,19 +26,6 @@ function text(value, max = 240) {
 
 function normalize(value) {
   return text(value, 400).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-}
-
-export function guessThingNameFromFilename(filename = '') {
-  const base = String(filename || '').split('/').pop() || '';
-  for (const missing of THINGS_NOT_ON_VACATION3) {
-    if (missing.pattern.test(base)) {
-      return { thingName: missing.name, missing: true };
-    }
-  }
-  for (const [pattern, thingName] of FILENAME_THING_HINTS) {
-    if (pattern.test(base)) return { thingName, missing: false };
-  }
-  return { thingName: '', missing: false };
 }
 
 export function thingDisplayName(place = {}, override = {}) {
@@ -404,7 +244,7 @@ export function newBindingId() {
   return crypto.randomUUID();
 }
 
-export function proofPngBuffer({ width = 480, height = 270, label = 'Carbone bind proof' } = {}) {
+export function proofPngBuffer({ width = 480, height = 270, label = 'bind proof' } = {}) {
   const rows = [];
   for (let y = 0; y < height; y += 1) {
     const row = Buffer.alloc(1 + width * 3);

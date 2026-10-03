@@ -1,0 +1,1 @@
+function activitySentenceCommits(hit) { return !/\bif\b/i.test(hit); }

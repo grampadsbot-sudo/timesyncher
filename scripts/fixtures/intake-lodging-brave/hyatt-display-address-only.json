@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "type": "location_result",
+      "id": "fixture-hyatt-display-only",
+      "title": "Hyatt Regency Maui Resort & Spa",
+      "coordinates": [20.9124823, -156.6916397],
+      "postal_address": {
+        "displayAddress": "200 Nohea Kai Drive, Lahaina, HI 96761"
+      },
+      "categories": ["Hotel"],
+      "icon_category": "lodging"
+    }
+  ]
+}

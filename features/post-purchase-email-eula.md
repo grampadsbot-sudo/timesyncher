@@ -6,17 +6,21 @@ Hold certify. This inventory is not a certify.
 
 ## Customer path
 
-1. **Purchase-ack UI.** `order-success.html` acknowledges the purchase and tells the customer to check email and click the link in that email. There is no primary Open App button.
-2. **Purchase email.** `purchaseEmail` in `src/vacation/email.mjs` carries the launch link. The link is `vacationAppLink` (`/vacation-app.html?session=…`).
+1. **Purchase-ack UI.** `order-success.html` acknowledges the purchase and tells the customer to check email and click the link in that email. Open App (`#openApp`) and Review Terms go to the same `vacation-app.html?session=…` URL. Terms are accepted in the app, not on this page.
+2. **Purchase email.** `purchaseEmail` in `src/vacation/email.mjs` carries the launch link. The link is `vacationAppLink` (`/vacation-app.html?session=…`). It does not link `/shared/intake-…`.
 3. **EULA first screen of the app URL.** `vacation-app.html` paints Review Terms & Privacy (`#eulaScreen`, Agree) when `eula.accepted` is not true. Acceptance posts to `/api/eula?action=accept` from that screen.
-4. **Onboarding chat.** After Agree, the empty workspace shows `no vacations yet`, chat-only, with no mode dropdown.
+4. **Onboarding chat.** After Agree, the customer is in the app shell. The only layout statement is `features/screens/app.md`.
 
 ## Retired customer path
 
 Do not drive or cite these as the customer launch:
 
-- Order-success **Open TimeSyncher Vacation** / `#openApp` / `vacation_app_open`
+- Purchase email or order-success links to `/shared/intake-…`
 - Order-success EULA section / `#acceptEula`
 - Standalone `/accept/{session}` as the screen the purchase email opens
 
 `/accept` remains a legacy route. It is not the post-purchase customer path. Collaborator website-edit accept links are a different flow (`collaborators.md`).
+
+## Deploy gate notes
+
+`TIMESYNCHER_HARNESS_STUB_OUTBOUND` must be **ABSENT** in any launch/customer environment; staging-only.

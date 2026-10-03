@@ -1,0 +1,9 @@
+{
+  "results": [
+    {"id":"loc4JAZKW55Y5E2EAK34Y45CNFTDYC7U26EQBJUMNMY=","title":"Hyatt Regency Maui Resort & Spa","address":null,"location":null,"categories":["lodging"],"coordinates":[20.912971,-156.6921667],"icon_category":"lodging","postal_address":{"type":"PostalAddress","displayAddress":"200 Nohea Kai Dr, Lahaina, HI 96761"}},
+    {"id":"loc4LRK7MXIR5I2EBIOGONWDHFTDYCVLHNPFKHDGFDA=","title":"Hyatt Residence Club Maui, Ka'anapali Beach","address":null,"location":null,"categories":["lodging"],"coordinates":[20.9143275,-156.6937773],"icon_category":"lodging","postal_address":{"type":"PostalAddress","displayAddress":"180 Nohea Kai Dr, Lahaina, HI 96761"}},
+    {"id":"loc4HNXPRXLU5M2EBRI6GWAT3FTDYBY573QDZCES6AQ=","title":"The Westin Maui Resort & Spa, Ka'anapali","address":null,"location":null,"categories":["lodging"],"coordinates":[20.919752,-156.69500789999998],"icon_category":"lodging","postal_address":{"type":"PostalAddress","displayAddress":"2365 Kaanapali Pkwy, Lahaina, HI 96761, United States"}},
+    {"id":"loc4WOEYFT6F5E2EAT7ZEGACLFTDYC2POKUBAAAAAAA=","title":"Accents Hyatt Regency Maui","address":null,"location":null,"categories":[],"coordinates":[20.9131746,-156.6920777],"icon_category":"gift","postal_address":{"type":"PostalAddress","displayAddress":"210 Nohea Kai Dr, Lahaina, HI 96761"}},
+    {"id":"loc4L5BXAXGG5E2EBBWJKTASRFTDYAMCJC5HAAAAAAA=","title":"Hertz Car Rental - Maui Kaanapali Lahaina - Hyatt Regency","address":null,"location":null,"categories":[],"coordinates":[20.913183,-156.692475],"icon_category":"car_rental","postal_address":{"type":"PostalAddress","displayAddress":"200 Nohea Kai Dr, Lahaina, HI 96761"}}
+  ]
+}

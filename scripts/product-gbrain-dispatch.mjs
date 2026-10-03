@@ -5,7 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
-import { assertRequiredFirstPassMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import { assertRequiredFirstPassMinimums, firstPassMissingMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
+import { destinationFromChat, lodgingFromChat } from '../src/vacation/place-search.mjs';
 import {
   DIALOG_TEST_FINGERPRINT,
   REPLY_RULES_SLUG,
@@ -215,39 +216,12 @@ function containsAny(source, words) {
   return words.some((word) => lower.includes(word));
 }
 
-function knownDestinationFromText(source) {
-  const lower = source.toLowerCase();
-  const places = [];
-  const add = (label, pattern) => {
-    if (pattern.test(lower) && !places.includes(label)) places.push(label);
-  };
-  add('Caldwell', /\bcaldwell\b/);
-  add('Boise', /\bboise\b/);
-  add('Idaho', /\bidaho\b/);
-  add('Oahu/Waikiki', /\boahu\b|\bhonolulu\b|\bwaikiki\b/);
-  add('Maui/Kihei', /\bmaui\b|\bkihei\b/);
-  add('Kona/Big Island', /\bkona\b|\bbig island\b/);
-  add('Hawaii', /\bhawaii\b/);
-  add('Las Vegas Strip', /\blas vegas strip\b|\bvegas strip\b/);
-  add('Las Vegas', /\blas vegas\b|\bvegas\b/);
-
-  if (places.includes('Las Vegas Strip')) return 'Las Vegas Strip';
-  if (places.includes('Las Vegas')) return 'Las Vegas';
-  if (places.includes('Caldwell') || places.includes('Boise') || places.includes('Idaho')) {
-    if (places.includes('Caldwell')) return 'Caldwell, Idaho';
-    if (places.includes('Boise')) return 'Boise, Idaho';
-    return 'Idaho';
-  }
-  const hawaiiPlaces = places.filter((place) => place !== 'Idaho');
-  return hawaiiPlaces.join(' / ');
-}
-
 function extractDestination(requestText, payload, trip, options = {}) {
   const inheritedTripDestination = options.ignoreTripContext ? '' : (trip.destination || payload.trip?.destination || '');
   return text(
     inheritedTripDestination ||
       payload.destination ||
-      knownDestinationFromText(requestText) ||
+      destinationFromChat(requestText) ||
       firstMatch(requestText, [
         /\b(?:to|in|for)\s+([A-Z][A-Za-z .'-]{2,60}?)(?:\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|from|on|for|with|between|around|starting|leaving)\b|$)/i,
         /\b(?:visit|visiting|vacation(?:ing)? in|trip to)\s+([A-Z][A-Za-z .'-]{2,60})(?:\s|$)/i,
@@ -353,7 +327,7 @@ function isWebsiteLinkRequestText(value) {
   const requestText = text(value, 2000).toLowerCase();
   return (
     /\b(send|share|show|give|need|where|what|open|current|broken|old)\b/.test(requestText) || /\?/.test(requestText)
-  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary|caldwell|davidson|vegas|las vegas|strip)\b/.test(requestText);
+  ) && /\b(website|web site|web page|site|link|url)\b/.test(requestText) && /\b(vacation|trip|itinerary)\b/.test(requestText);
 }
 
 function isLinkCapabilityQuestion(value) {
@@ -363,29 +337,29 @@ function isLinkCapabilityQuestion(value) {
     && /\b(someone|anyone|person|people|family|friend|stranger|finds?|has|with)\b/.test(requestText)
     && /\b(link|url|website|web site|web page|site|shared link)\b/.test(requestText)
     && /\b(edit|change|modify|collaborate|comment|view|see|open|only view)\b/.test(requestText)
-    && /\b(vacation|trip|itinerary|vegas|las vegas|strip|jockey club)\b/.test(requestText);
+    && /\b(vacation|trip|itinerary)\b/.test(requestText);
 }
 
-function linkCapabilityAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+function vacationCandidateList(linkedVacations, fallbackBase) {
+  return linkedVacations.slice(0, 8).map((vacation) => ({
+    label: text(vacation.name || vacation.destination || vacation.token || '', 180),
+    token: text(vacation.token || '', 180),
+    url: publicVacationUrl(vacation, fallbackBase),
+  })).filter((row) => row.label || row.token);
+}
+
+function linkedVacationResolution(requestText, linkedVacations) {
   const lookup = vacationLookupTerm(requestText);
-  const lookupMatches = lookup
-    ? linkedVacations.filter((vacation) => vacationMatchesLookup(vacation, lookup))
-    : [];
-  const matches = lookupMatches.length
-    ? lookupMatches
-    : (linkedVacations.length === 1 ? linkedVacations : []);
-  if (matches.length !== 1) return 'I need to know which vacation link you mean before I answer what that link allows.';
+  const lookupMatches = lookup ? linkedVacations.filter((vacation) => vacationMatchesLookup(vacation, lookup)) : [];
+  const matches = lookupMatches.length ? lookupMatches : (linkedVacations.length === 1 ? linkedVacations : []);
+  return { lookup, matches };
+}
+
+function linkCapabilityFacts({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const { lookup, matches } = linkedVacationResolution(requestText, linkedVacations);
+  if (matches.length !== 1) return { need: 'which_trip', candidates: vacationCandidateList(matches.length ? matches : linkedVacations, fallbackBase) };
   const match = matches[0];
-  const label = match.name || match.destination || lookup || 'that vacation';
-  const url = publicVacationUrl(match, fallbackBase);
-  const lines = [];
-  lines.push(`The shared website link for ${label} is view-only for people who have the URL.`);
-  if (url) lines.push(`Website: ${url}`);
-  lines.push(match.shareCollab
-    ? 'Website editing is enabled for approved sessions: the owner or paid Telegram collaborator can open from Telegram and edit, and non-Telegram invitees can use an owner-approved email magic link.'
-    : 'This shared link is view-only unless the owner opens from Telegram/session or grants a specific editor path.');
-  lines.push('The shared website link does not grant full Telegram editing or media-upload access by itself.');
-  return lines.join('\n\n');
+  return { label: match.name || match.destination || lookup || '', url: publicVacationUrl(match, fallbackBase), linkAccess: 'view_only', shareCollab: Boolean(match.shareCollab), mediaUploadViaLink: false };
 }
 
 function isPaymentCredentialRequest(value) {
@@ -453,7 +427,7 @@ function isConcreteItineraryEditRequest(value) {
   if (isWebsiteLinkRequestText(requestText)) return false;
   if (isDeleteVacationRequest(requestText)) return false;
   if (isPersonAccessQuestion(requestText)) return false;
-  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|caldwell|davidson|shared website|travel plan)\b/.test(requestText);
+  const mentionsTrip = /\b(vacation|trip|itinerary|dates?|nights?|days?|hotel|lodging|shared website|travel plan)\b/.test(requestText);
   const mentionsEdit = /\b(add|remove|delete|keep|change|update|move|create|fill in|timeline|day\s*\d|\d+\s*days?|days?\s+\d|\d+\s*nights?|nights?\s+\d|right dates?|dates?|length of (the )?trip|hotel|lodging|rename|title|description|access|share|member|family|wife|husband|spouse|collaborator|permission|edit rights?|view rights?)\b/.test(requestText);
   const timelineAdd = /\b(add|create|put|include|schedule)\b/.test(requestText)
     && /\b(day\s*\d|days?\s+\d|timeline|family event)\b/.test(requestText);
@@ -469,7 +443,7 @@ function isExplicitNewVacationRequest(value) {
   if (/\b(update|change|edit)\s+(?:the\s+)?(?:trip|vacation|itinerary|website)\s+at\s+https?:\/\//.test(requestText)) return false;
   const explicitPlanningCreate = /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText)
     && /\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)
-    && (knownDestinationFromText(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
+    && (destinationFromChat(requestText) || /\b(to|in|for)\s+[a-z][a-z .'-]{2,60}/i.test(requestText) || /\b\d{1,2}\s*(day|night)s?\b/i.test(requestText));
   return (
     /\b(start|create|make|build|plan|set up|setup)\b/.test(requestText) &&
     /\b(new|brand new|fresh|another|separate|next)\b/.test(requestText) &&
@@ -517,10 +491,10 @@ function isPersonAccessQuestion(value) {
   if (!requestText) return false;
   if (/\bfamily event\b/.test(requestText)) return false;
   if (sharedTokenFromText(requestText) && /\b(update|change|edit|add|remove|delete|rename|move|make)\b/.test(requestText)) return false;
-  const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|use\s+telegram|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
+  const mentionsAccess = /\b(access|permission|permissions|edit rights?|view rights?|member|collaborator|collaborate|share|shared|see|view|look at|open|edit|modify|change|interact|add\s+(?:pics?|pictures?|photos?|videos?|media)|send\s+(?:vacation\s+)?(?:pics?|pictures?|photos?|videos?|media)|save\s+(?:pics?|pictures?|photos?|videos?|media)|upload|uploads?)\b/.test(requestText);
   const explicitNamedPerson = /\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/.test(rawText);
-  const mentionsPerson = /\b(kim|wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
-  const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|web page|site|telegram|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
+  const mentionsPerson = /\b(wife|husband|spouse|partner|she|he|family|friend|assistant|collaborator|member)\b/.test(requestText) || explicitNamedPerson;
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site|collaborator|photos?|pictures?|pics?|videos?|media|upload|uploads?)\b/.test(requestText);
   return mentionsAccess && mentionsPerson && mentionsVacationContext;
 }
 
@@ -528,14 +502,14 @@ function isAccessRosterQuestion(value) {
   const requestText = text(value, 4000).toLowerCase().replace(/\s+/g, ' ').trim();
   if (!requestText || !isQuestionLike(requestText)) return false;
   const asksWho = /\b(who|which people|what people|who all)\b/.test(requestText);
-  const mentionsAccess = /\b(access|permission|permissions|edit|editor|member|collaborator|collaborate|share|shared|view|see|telegram|upload|media)\b/.test(requestText);
-  const mentionsVacationContext = /\b(this|that|vegas|las vegas|strip|jockey club|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
+  const mentionsAccess = /\b(access|permission|permissions|edit|editor|member|collaborator|collaborate|share|shared|view|see|upload|media)\b/.test(requestText);
+  const mentionsVacationContext = /\b(this|that|vacation|trip|itinerary|website|web page|site)\b/.test(requestText);
   return asksWho && mentionsAccess && mentionsVacationContext;
 }
 
 function vacationLookupTerm(value) {
   const requestText = text(value, 4000).toLowerCase();
-  const destination = knownDestinationFromText(requestText);
+  const destination = destinationFromChat(requestText);
   if (destination) return destination;
   if (isPersonAccessQuestion(requestText) && !/\b(vacation|trip|itinerary|staycation|travel plan)\b/.test(requestText)) return '';
   const match = requestText.match(/\b(?:is there|are there|do we have|do i have|did we create|did i create|is my|is our)\s+(?:a|an|the|any)?\s*([a-z][a-z0-9 .'-]{2,80}?)(?:\s+(?:vacation|trip|itinerary|staycation|travel plan)\b|[?!.]|$)/i);
@@ -551,8 +525,6 @@ function vacationMatchesLookup(vacation, lookup) {
     .toLowerCase();
   if (!haystack) return false;
   if (haystack.includes(needle)) return true;
-  if (needle.includes('vegas')) return /\b(vegas|las vegas|strip|jockey club)\b/i.test(haystack);
-  if (needle.includes('hawaii')) return /\b(hawaii|oahu|waikiki|maui|kona|big island)\b/i.test(haystack);
   return false;
 }
 
@@ -562,26 +534,41 @@ function publicVacationUrl(vacation, fallbackBase) {
   return '';
 }
 
-function accessPersonLabel(value = '', context = '') {
+function websiteFacts(linkedVacations, fallbackBase) {
+  const match = linkedVacations.length === 1 ? linkedVacations[0] : null;
+  return {
+    url: match ? publicVacationUrl(match, fallbackBase) : '',
+    label: match ? (match.name || match.destination || '') : '',
+    linkedVacationCount: linkedVacations.length,
+  };
+}
+
+function existenceReply(value) {
+  if (value && typeof value === 'object') return { answer: '', facts: value.facts || null };
+  return { answer: value || '', facts: null };
+}
+
+function rememberReplyFacts(artifacts, facts) {
+  if (!facts || typeof facts !== 'object') return;
+  artifacts.replyFacts = { ...(artifacts.replyFacts || {}), ...facts };
+}
+
+function accessPersonLabel(value = '') {
   const rawText = text(value, 500);
   const requestText = rawText.toLowerCase();
-  const contextText = text(context, 3000).toLowerCase();
-  if (/\bkim\b/.test(requestText) || (/\b(she|her)\b/.test(requestText) && /\bkim\b/.test(contextText))) return 'Kim';
   if (/\bwife\b/.test(requestText)) return 'your wife';
   if (/\bhusband\b/.test(requestText)) return 'your husband';
   if (/\bspouse|partner\b/.test(requestText)) return 'your spouse';
   if (/\bfamily\b/.test(requestText)) return 'your family';
   const named = rawText.match(/\b(?:[Cc]an|[Dd]oes|[Dd]id|[Ww]ill|[Ii]s|[Aa]dd|[Rr]emove|[Ss]hare(?:\s+with)?|[Gg]ive|[Mm]ake)\s+(?:my\s+)?([A-Z][A-Za-z'-]{1,40})\b/)?.[1];
-  if (named && !/^(TimeSyncher|Vegas|Las|The|This|That|A|An)$/i.test(named)) return named;
+  if (named) return named;
   return 'that person';
 }
 
 function accessPersonCustomerLabel(personLabel = '', requestText = '', contextText = '') {
   const person = text(personLabel, 120);
   const configuredWifeName = text(process.env.TIMESYNCHER_CUSTOMER_WIFE_DISPLAY_NAME || process.env.TIMESYNCHER_PRIMARY_SPOUSE_NAME, 80);
-  const combined = `${text(requestText, 1000)}\n${text(contextText, 3000)}`.toLowerCase();
   if (person === 'your wife' && configuredWifeName) return configuredWifeName;
-  if (person === 'your wife' && /\bkim\b/.test(combined)) return 'Kim';
   return person || 'that person';
 }
 
@@ -640,19 +627,10 @@ function accessCapabilitiesRequested(requestText = '') {
   if (wantsPhoto || wantsMedia || wantsFull) caps.add('photo_upload');
   if (wantsVideo || wantsFull) caps.add('video_upload');
   if (wantsPhoto || wantsVideo || wantsMedia || wantsFull) caps.add('media_upload');
-  if (/\b(telegram|bot|message|chat|talk to|text|modify|change|edit|add to|interact|upload|uploads|photo|photos|video|videos|media|full access)\b/.test(source)) caps.add('collab_telegram');
+  if (/\b(bot|message|chat|talk to|text|modify|change|edit|add to|interact|upload|uploads|photo|photos|video|videos|media|full access)\b/.test(source)) caps.add('collab_telegram');
   if (/\b(website|site|web|web page|shared link|link|view|see|look at|open)\b/.test(source)) caps.add('view_shared');
   if (/\b(web collab|website collab|collaborate on the website|collaborate on the web page|comment on the shared website|comment on the website|edit the website|edit the web page|modify the website|modify the web page)\b/.test(source) || (/\b(collaborate|comment|edit|modify|change)\b/.test(source) && /\b(website|web page|site|web)\b/.test(source))) caps.add('collab_web');
-  if (!caps.size) caps.add('collab_telegram');
   return [...caps];
-}
-
-function isTelegramCollaboratorStatusQuestion(requestText = '') {
-  const source = text(requestText, 1200).toLowerCase();
-  if (!/\btelegram\b/.test(source) || !/\bcollaborator\b/.test(source)) return false;
-  if (!/\b(already|currently|now|is|are|listed|status)\b/.test(source)) return false;
-  if (/\b(can|could|may|able|allow|let|add|invite|make|give|grant|buy|purchase|cost|price|upload|photo|photos|video|videos|website|web page|site)\b/.test(source)) return false;
-  return true;
 }
 
 function checkoutBaseUrl(manifest) {
@@ -692,39 +670,29 @@ function isAccessPricingQuestion(requestText = '') {
   const source = text(requestText, 2000).toLowerCase();
   if (!isQuestionLike(source)) return false;
   const asksPrice = /\b(how much|cost|costs|price|pricing|charge|fee|pay|purchase|buy)\b/.test(source);
-  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|telegram|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant|kim)\b/.test(source);
+  const accessTarget = /\b(access|full access|collaborator|collaborate|edit|editing|change|modify|photo|photos|pic|pics|video|videos|media|upload|wife|spouse|family|assistant)\b/.test(source);
   return asksPrice && accessTarget;
 }
 
-function accessPricingAnswer({ requestText = '', manifest = null } = {}) {
+function accessPricingAnswer({ requestText = '' } = {}) {
   const source = text(requestText, 2000).toLowerCase();
   const person = accessPersonLabel(requestText);
-  const allVacations = /\b(all|every|unlimited|future)\b/.test(source) && /\b(vacations?|trips?)\b/.test(source);
   const wantsMedia = /\b(photo|photos|picture|pictures|pic|pics|video|videos|media|upload|uploads)\b/.test(source) || /\bfull access\b/.test(source);
-  const plans = Array.isArray(manifest?.collaboratorEntitlementPolicy?.plans) ? manifest.collaboratorEntitlementPolicy.plans : [];
-  const singleTrip = plans.find((plan) => text(plan?.scope, 80) === 'single_trip');
-  const unlimited = plans.find((plan) => text(plan?.scope, 80) === 'unlimited_trips');
-  const photo = manifest?.mediaAddOnPolicy?.photoMemories || {};
-  const video = manifest?.mediaAddOnPolicy?.videoMemoriesRecommendation || {};
-  const checkout = checkoutBaseUrl(manifest);
-  const lines = [];
-  if (allVacations) {
-    lines.push(`For ${person}, full Telegram editing access for unlimited vacations for the whole year is ${unlimited?.amountUsd ? `$${unlimited.amountUsd}` : '$27'}.`);
-    lines.push(`That adds one active Telegram collaborator. Add more collaborators one checkout at a time.`);
-    if (wantsMedia) {
-      lines.push(`Photo upload access across all vacations is ${photo.unlimitedVacationsAmountUsd ? `$${photo.unlimitedVacationsAmountUsd}` : '$9'}.`);
-      lines.push(`Video upload access across all vacations is ${video.unlimitedVacationsAmountUsd ? `$${video.unlimitedVacationsAmountUsd}` : '$27'}.`);
-    }
-  } else {
-    lines.push(`For ${person}, Telegram editing access for one vacation is ${singleTrip?.amountUsd ? `$${singleTrip.amountUsd}` : '$15'}.`);
-    lines.push(`That adds one active Telegram collaborator for that vacation. Add more collaborators one checkout at a time.`);
-    if (wantsMedia) {
-      lines.push(`Photo upload access for one vacation is ${photo.singleVacationAmountUsd ? `$${photo.singleVacationAmountUsd}` : '$5'}.`);
-      lines.push(`Video upload access for one vacation is ${video.singleVacationAmountUsd ? `$${video.singleVacationAmountUsd}` : '$17'}.`);
-    }
-  }
-  lines.push(`Add-on checkout link: ${checkout}/addons-checkout.html`);
-  return lines.join('\n\n');
+  const collaboratorCents = Number.parseInt(String(process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS ?? '').trim(), 10);
+  const mediaCents = Number.parseInt(String(process.env.TIMESYNCHER_MEDIA_PRICE_CENTS ?? '').trim(), 10);
+  const telegramUsd = Number.isFinite(collaboratorCents) && collaboratorCents > 0 ? collaboratorCents / 100 : null;
+  const mediaUsd = Number.isFinite(mediaCents) && mediaCents > 0 ? mediaCents / 100 : null;
+  if (!telegramUsd) console.error('config missing: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS');
+  if (wantsMedia && !mediaUsd) console.error('config missing: TIMESYNCHER_MEDIA_PRICE_CENTS');
+  return {
+    person,
+    scope: 'single_trip',
+    wantsMedia,
+    telegramUsd,
+    photoUsd: wantsMedia ? mediaUsd : null,
+    videoUsd: wantsMedia ? mediaUsd : null,
+    collaboratorSeats: 1,
+  };
 }
 
 function hasTelegramCollaboratorAccess({ namedMember = false, requestedCaps = [] } = {}) {
@@ -741,7 +709,7 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
     : (linkedVacations.length === 1 ? linkedVacations : []);
   const rawPerson = accessPersonLabel(requestText, contextText);
   const person = accessPersonCustomerLabel(rawPerson, requestText, contextText);
-  if (matches.length !== 1) return { matches, person, lookup, facts: null, fallbackAnswer: '' };
+  if (matches.length !== 1) return { matches, person, lookup, facts: null };
   const match = matches[0];
   const label = match.name || match.destination || lookup || 'that vacation';
   const url = publicVacationUrl(match, fallbackBase);
@@ -749,44 +717,13 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
   const namedMember = Array.isArray(match.members) && match.members.some((member) => memberMatchesAccessPerson(member, person) || memberMatchesAccessPerson(member, rawPerson));
   const telegramCollaborator = hasTelegramCollaboratorAccess({ namedMember, requestedCaps });
   const inviteState = accessInviteStateFrom(match, person) || accessInviteStateFrom(match, rawPerson);
-  const allowedClaims = [];
-  const forbiddenClaims = [];
-  allowedClaims.push(telegramCollaborator
-    ? `${person} is a Telegram collaborator on ${label}.`
-    : `${person} is not a Telegram collaborator on ${label} yet.`);
-  if (inviteState === 'sent') allowedClaims.push(`${person} has been sent a website editor invite.`);
-  if (inviteState === 'accepted') allowedClaims.push(`${person} has accepted a website editor invite.`);
-  allowedClaims.push(`Telegram collaboration is separate from website editor access.`);
-  if (namedMember) allowedClaims.push(`${person} is listed as a named member/editor on ${label}.`);
-  else allowedClaims.push(`${person} is not listed as a named member/editor on ${label}.`);
-  if (url) allowedClaims.push(`The shared vacation website is ${url}.`);
-  forbiddenClaims.push(`${person} can edit through Telegram.`);
-  forbiddenClaims.push(`${person} accepted the invite.`);
-  forbiddenClaims.push(`${person} is a collaborator.`);
-  forbiddenClaims.push(`${person} has website editor access.`);
-  const fallbackLines = [];
-  if (requestedCaps.includes('collab_telegram')) {
-    fallbackLines.push(telegramCollaborator
-      ? `Yes, ${person} is a Telegram collaborator on ${label}.`
-      : `No, ${person} is not a Telegram collaborator on ${label} yet.`);
-    if (inviteState === 'sent') fallbackLines.push(`${person} has the website editor invite, but Telegram collaboration is separate.`);
-    else fallbackLines.push('Telegram collaboration is separate from website editor access.');
-  } else {
-    fallbackLines.push(namedMember
-      ? `${person} is listed as a named member/editor on ${label}.`
-      : `${person} is not listed as a named member/editor on ${label}.`);
+  const remediationKeys = [];
+  if ((!namedMember || requestedCaps.includes('collab_telegram')) && !requestedCaps.includes('collab_telegram') && remediationCatalogItem(manifest, 'collab_telegram')) {
+    remediationKeys.push('collab_telegram');
   }
-  if (url && !requestedCaps.includes('collab_telegram')) fallbackLines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
-  if (requestedCaps.includes('photo_upload') || requestedCaps.includes('video_upload')) {
-    const parts = [];
-    if (requestedCaps.includes('photo_upload')) parts.push('photo uploads');
-    if (requestedCaps.includes('video_upload')) parts.push('video uploads');
-    fallbackLines.push(`${person} is not currently enabled for ${parts.join(' or ')} on ${label}.`);
-  }
-  if (!namedMember || requestedCaps.includes('collab_telegram')) {
-    const line = remediationLine(manifest, 'collab_telegram', { person, label });
-    if (line && !requestedCaps.includes('collab_telegram')) fallbackLines.push(line);
-  }
+  if (requestedCaps.includes('photo_upload') && remediationCatalogItem(manifest, 'photo_upload')) remediationKeys.push('photo_upload');
+  if (requestedCaps.includes('video_upload') && remediationCatalogItem(manifest, 'video_upload')) remediationKeys.push('video_upload');
+  if (!match.shareCollab && requestedCaps.includes('collab_web') && remediationCatalogItem(manifest, 'collab_web')) remediationKeys.push('collab_web');
   return {
     matches,
     person,
@@ -798,16 +735,18 @@ function vacationAccessAnswerFacts({ requestText = '', linkedVacations = [], fal
       person_reference: rawPerson,
       vacation_name: label,
       vacation_url: url || '',
+      shareCollab: Boolean(match.shareCollab),
+      linkAccess: 'view_only',
       requested_capabilities: requestedCaps,
       telegram_collaborator: telegramCollaborator,
       named_member_or_editor: namedMember,
       website_editor_invite: inviteState || 'unknown',
-      allowed_claims: allowedClaims,
-      forbidden_claims: forbiddenClaims,
+      photo_upload_enabled: false,
+      video_upload_enabled: false,
+      remediation_keys: remediationKeys,
       required_terms: [person, label],
-      preferred_style: 'direct, warm, one or two short Telegram sentences',
+      preferred_style: 'direct, warm, one or two short sentences',
     },
-    fallbackAnswer: fallbackLines.filter(Boolean).join('\n\n'),
   };
 }
 
@@ -821,22 +760,15 @@ function customerCopyLooksSafe(answer = '', facts = {}) {
   const label = text(facts.vacation_name, 180);
   if (person && person !== 'that person' && !lower.includes(person.toLowerCase())) return false;
   if (label && !lower.includes(label.toLowerCase())) return false;
-  if (facts.telegram_collaborator === false && !/^\s*no\b/i.test(source)) return false;
-  if (facts.telegram_collaborator === true && !/^\s*yes\b/i.test(source)) return false;
-  if (facts.telegram_collaborator === false && /\b(is|already is|can edit through telegram|has telegram access)\b/i.test(source) && !/\bnot\b/i.test(source)) return false;
-  const forbidden = Array.isArray(facts.forbidden_claims) ? facts.forbidden_claims : [];
-  for (const claim of forbidden) {
-    const normalized = text(claim, 240).toLowerCase();
-    if (normalized && lower.includes(normalized.toLowerCase())) return false;
-  }
+  if (facts.telegram_collaborator === true && /\bcan edit through a removed chat channel\b/i.test(source)) return false;
   return true;
 }
 
 function grokCustomerRender(facts = {}) {
   if (process.env.TIMESYNCHER_GROK_RESPONSE_RENDERER_FAKE === '1') {
-    const claims = Array.isArray(facts.allowed_claims) ? facts.allowed_claims : [];
-    const first = facts.telegram_collaborator === false && claims[0] ? `No, ${claims[0]}` : claims[0];
-    const answer = [first, claims[1], claims[2]].filter(Boolean).join(' ');
+    const person = text(facts.person_name, 120);
+    const label = text(facts.vacation_name, 180);
+    const answer = [person, label].filter(Boolean).join(' — ').trim();
     return customerCopyLooksSafe(answer, facts) ? answer : '';
   }
   if (process.env.TIMESYNCHER_DISABLE_GROK_RESPONSE_RENDERER === '1') return '';
@@ -865,89 +797,45 @@ function grokCustomerRender(facts = {}) {
   return '';
 }
 
-function vacationAccessQuestionAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE, contextText = '', manifest = null } = {}) {
+function vacationAccessQuestionReply({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE, contextText = '', manifest = null } = {}) {
   const resolved = vacationAccessAnswerFacts({ requestText, linkedVacations, fallbackBase, contextText, manifest });
-  const { lookup, matches, person } = resolved;
+  const { matches, person } = resolved;
   if (matches.length !== 1) {
-    if (matches.length > 1) {
-      const lines = matches.slice(0, 5).map((match) => {
-        const label = match.name || match.destination || match.token || 'Untitled vacation';
-        const url = publicVacationUrl(match, fallbackBase);
-        return url ? `- ${label}: ${url}` : `- ${label}`;
-      });
-      return [`I found more than one matching vacation:`, ...lines, '', `Which vacation should I check for ${person}?`].join('\n');
-    }
-    return [
-      `I could not verify ${person}'s access to a matching vacation yet.`,
-    ].join('\n');
+    const pool = matches.length ? matches : linkedVacations;
+    return {
+      answer: '',
+      facts: {
+        need: 'which_trip',
+        person,
+        candidates: vacationCandidateList(pool, fallbackBase),
+      },
+    };
   }
-  const modelAnswer = resolved.facts ? grokCustomerRender(resolved.facts) : '';
-  if (modelAnswer) return modelAnswer;
-  if (resolved.fallbackAnswer && isTelegramCollaboratorStatusQuestion(requestText)) return resolved.fallbackAnswer;
-  const match = matches[0];
-  const label = match.name || match.destination || lookup || 'that vacation';
-  const url = publicVacationUrl(match, fallbackBase);
-  const requestedCaps = accessCapabilitiesRequested(requestText);
-  const namedMember = Array.isArray(match.members) && match.members.some((member) => memberMatchesAccessPerson(member, person));
-  const lines = [];
-  lines.push(namedMember
-    ? `${person} is listed as a named member/editor on ${label}.`
-    : `${person} is not listed as a named member/editor on ${label}.`);
-  if (url) lines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
-  else lines.push('I found the vacation record, but I do not have a share-link URL for it yet.');
-  lines.push(match.shareCollab
-    ? 'Website editing requires an authenticated owner, a paid Telegram collaborator opening from Telegram, or an owner-approved email web editor.'
-    : 'The shared website is view-only unless the owner opens from Telegram/session, the paid Telegram collaborator opens from Telegram, or the owner invites a named email user as a web editor.');
-  if (requestedCaps.includes('photo_upload') || requestedCaps.includes('video_upload')) {
-    const parts = [];
-    if (requestedCaps.includes('photo_upload')) parts.push('photo uploads');
-    if (requestedCaps.includes('video_upload')) parts.push('video uploads');
-    lines.push(`${person} is not currently enabled for ${parts.join(' or ')} on ${label}.`);
-  }
-  if (!namedMember || requestedCaps.includes('collab_telegram')) {
-    lines.push('Full Telegram editing is separate and requires paid collaborator access.');
-    const line = remediationLine(manifest, 'collab_telegram', { person, label });
-    if (line) lines.push(line);
-  }
-  if (requestedCaps.includes('photo_upload')) {
-    const line = remediationLine(manifest, 'photo_upload', { person, label });
-    if (line) lines.push(line);
-  }
-  if (requestedCaps.includes('video_upload')) {
-    const line = remediationLine(manifest, 'video_upload', { person, label });
-    if (line) lines.push(line);
-  }
-  if (!match.shareCollab && requestedCaps.includes('collab_web')) {
-    const line = remediationLine(manifest, 'collab_web', { person, label });
-    if (line) lines.push(line);
-  }
-  return lines.join('\n\n');
+  const facts = resolved.facts;
+  const modelAnswer = facts ? grokCustomerRender(facts) : '';
+  return { answer: modelAnswer || '', facts };
 }
 
-function vacationAccessRosterAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
-  const lookup = vacationLookupTerm(requestText);
-  const matches = lookup
-    ? linkedVacations.filter((vacation) => vacationMatchesLookup(vacation, lookup))
-    : (linkedVacations.length === 1 ? linkedVacations : []);
-  if (matches.length !== 1) {
-    return 'I need to know which linked vacation you want me to check before I answer who has access.';
-  }
+function vacationAccessRosterFacts({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  const { lookup, matches } = linkedVacationResolution(requestText, linkedVacations);
+  if (matches.length !== 1) return { need: 'which_trip', candidates: vacationCandidateList(matches.length ? matches : linkedVacations, fallbackBase) };
   const match = matches[0];
-  const label = match.name || match.destination || lookup || 'that vacation';
-  const url = publicVacationUrl(match, fallbackBase);
   const named = Array.isArray(match.members) && match.members.length
     ? match.members.map((member) => [member.username, member.email].filter(Boolean).join(' / ')).filter(Boolean)
     : [];
-  const lines = [];
-  lines.push(named.length
-    ? `Named members/editors I can see for ${label}: ${named.join(', ')}.`
-    : `I do not see any named members/editors for ${label}.`);
-  if (url) lines.push(`The vacation website itself is available to anyone with the shared link: ${url}`);
-  lines.push(match.shareCollab
-    ? 'Website editing requires an authenticated owner, a paid Telegram collaborator opening from Telegram, or an owner-approved email web editor.'
-    : 'The shared website is view-only unless the owner opens from Telegram/session, the paid Telegram collaborator opens from Telegram, or the owner invites a named email user as a web editor.');
-  lines.push('Full Telegram editing is separate and requires paid collaborator access.');
-  return lines.join('\n\n');
+  return { label: match.name || match.destination || lookup || '', url: publicVacationUrl(match, fallbackBase), shareCollab: Boolean(match.shareCollab), namedMembers: named, linkAccess: 'view_only' };
+}
+
+function tripIntentClarificationFacts({ currentShareToken = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
+  if (currentShareToken || linkedVacations.length) {
+    return {
+      need: 'update_or_new',
+      currentShareToken: text(currentShareToken, 180),
+      linkedVacationCount: linkedVacations.length,
+      url: linkedVacations.length === 1 ? publicVacationUrl(linkedVacations[0], fallbackBase) : '',
+    };
+  }
+  return { need: 'vacation_instruction' };
 }
 
 function vacationExistenceQuestionAnswer({ requestText = '', linkedVacations = [], fallbackBase = DEFAULT_SITE_BASE } = {}) {
@@ -957,9 +845,7 @@ function vacationExistenceQuestionAnswer({ requestText = '', linkedVacations = [
     const match = matches[0];
     const label = match.name || match.destination || lookup || 'that vacation';
     const url = publicVacationUrl(match, fallbackBase);
-    return url
-      ? `Yes, I found ${label}. Here is the website: ${url}`
-      : `Yes, I found ${label}.`;
+    return { facts: { label, url } };
   }
   if (matches.length > 1) {
     const lines = matches.slice(0, 5).map((match) => {
@@ -998,8 +884,9 @@ function makeTurnDecision({
   tripSelector = null,
   reasons = [],
   source = 'deterministic_current_turn_router',
+  facts = null,
 }) {
-  return {
+  const decision = {
     intent,
     write_mode: writeMode,
     writeMode,
@@ -1012,8 +899,9 @@ function makeTurnDecision({
     reasons: Array.isArray(reasons) ? reasons.map((reason) => text(reason, 240)).filter(Boolean) : [],
     source,
   };
+  if (facts) decision.facts = facts;
+  return decision;
 }
-
 
 function isQuestionLike(value) {
   const requestText = text(value, 2000).toLowerCase();
@@ -1090,10 +978,6 @@ function grokRouterDecision(job, context = {}) {
   }
 }
 
-function supportClarificationAnswer() {
-  return 'I need to check one thing before I change anything.\n\nDo you want me to update an existing vacation, start a brand-new vacation, or answer a product/account question?';
-}
-
 function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, linkedVacations, fallbackBase, currentShareToken }) {
   if (!decision) return null;
   const intent = decision.intent;
@@ -1105,40 +989,50 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
   if (writeMode !== 'none') return null;
   let answer = text(decision.answer, 2400);
   let answerMode = decision.answerMode || 'clarify';
+  let facts = null;
   const selectedSkill = decision.selectedSkill || 'timesyncher-vacation-support-router';
   if (!answer) {
     if (intent === 'unsafe_internal' || isSensitiveDumpRequest(ownRequestText)) {
       answer = 'I cannot provide customer-wide vacation IDs, owner emails, API keys, tokens, secrets, or internal database dumps. I can only help with vacation information you are authorized to access.';
       answerMode = 'refuse_internal';
     } else if (isPaymentCredentialRequest(ownRequestText)) {
-      answer = 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.';
+      answer = 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.';
       answerMode = 'payment_refusal';
     } else if (isAccessPricingQuestion(ownRequestText)) {
-      answer = accessPricingAnswer({ requestText: ownRequestText, manifest });
+      facts = accessPricingAnswer({ requestText: ownRequestText, manifest });
+      answer = '';
       answerMode = 'pricing';
     } else if (isDeleteVacationRequest(ownRequestText)) {
       answer = deleteVacationSafetyAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
       answerMode = 'delete_safety';
     } else if (intent === 'website_link_question' || isWebsiteLinkRequestText(ownRequestText)) {
-      answer = linkedVacations.length === 1 ? 'Here is the website: ' + publicVacationUrl(linkedVacations[0], fallbackBase) : 'I need to know which vacation website you want.';
+      facts = websiteFacts(linkedVacations, fallbackBase);
+      answer = '';
       answerMode = 'account_state';
     } else if (isVacationExistenceQuestion(ownRequestText)) {
-      answer = vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+      const existence = existenceReply(vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }));
+      answer = existence.answer;
+      facts = existence.facts;
       answerMode = linkedVacations.length ? 'account_state' : 'clarify';
     } else if (isAccessRosterQuestion(ownRequestText)) {
-      answer = vacationAccessRosterAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase });
+      facts = vacationAccessRosterFacts({ requestText: ownRequestText, linkedVacations, fallbackBase });
+      answer = '';
       answerMode = linkedVacations.length ? 'account_state' : 'access_state_unverified';
     } else if (['account_question', 'collaborator_access_question', 'media_upload_question'].includes(intent) || isPersonAccessQuestion(ownRequestText)) {
-      answer = vacationAccessQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest });
+      const access = vacationAccessQuestionReply({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest });
+      answer = access.answer;
+      facts = access.facts;
       answerMode = linkedVacations.length ? 'account_state' : 'access_state_unverified';
     } else if (/\b(book|booking|reserve|reservation|purchase|buy|pay for|hold)\b/i.test(ownRequestText)) {
       answer = 'TimeSyncher Vacation helps organize and compare itinerary options. Customers verify details and make any bookings themselves.';
       answerMode = 'support_answer';
     } else if (intent === 'ambiguous') {
-      answer = currentShareToken || linkedVacations.length ? 'I need to check one thing before I change anything.\n\nDo you want me to update the current vacation website, or start a brand-new vacation?' : 'I need a direct vacation instruction before I change anything. Send the destination, dates, and priorities for a new vacation, or the vacation name plus the exact update for an existing one.';
+      facts = tripIntentClarificationFacts({ currentShareToken, linkedVacations, fallbackBase });
+      answer = '';
       answerMode = 'clarify';
     } else {
-      answer = supportClarificationAnswer();
+      facts = { need: 'trip_intent', choices: ['update_existing', 'create_new', 'account_question'] };
+      answer = '';
       answerMode = 'clarify';
     }
   }
@@ -1148,6 +1042,7 @@ function hydrateStructuredDecision(decision, { job, manifest, ownRequestText, li
     shouldQueueWorker: false,
     confidence: decision.confidence,
     answer,
+    facts,
     selectedSkill,
     answerMode,
     tripSelector: decision.tripSelector || { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
@@ -1225,7 +1120,7 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.96,
-      answer: 'Do not send card numbers, CVV codes, or payment details in chat. TimeSyncher Vacation does not book, reserve, purchase, hold, or charge travel arrangements from chat. Customers verify details and make bookings or payments themselves through the official provider or checkout page.',
+      answer: 'Do not send card numbers or CVV codes in chat. TimeSyncher Vacation does not arrange travel from chat. Customers verify details themselves through the official provider.',
       answerMode: 'payment_refusal',
       reasons: ['payment_credential_request', 'external_action_boundary', 'current_turn_no_write'],
     });
@@ -1234,7 +1129,8 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.94,
-      answer: accessPricingAnswer({ requestText: ownRequestText, manifest }),
+      answer: '',
+      facts: accessPricingAnswer({ requestText: ownRequestText, manifest }),
       answerMode: 'pricing',
       tripSelector: { candidatesConsidered: linkedVacations.length },
       reasons: ['access_pricing_question', 'current_turn_no_write'],
@@ -1251,10 +1147,12 @@ function currentTurnRouterDecision(job) {
     });
   }
   if (isVacationExistenceQuestion(ownRequestText)) {
+    const existence = existenceReply(vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }));
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.92,
-      answer: vacationExistenceQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answer: existence.answer,
+      facts: existence.facts,
       answerMode: linkedVacations.length ? 'account_state' : 'clarify',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['vacation_existence_question', 'current_turn_no_write'],
@@ -1265,7 +1163,8 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'account_question',
       confidence: 0.92,
-      answer: vacationAccessRosterAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answer: '',
+      facts: vacationAccessRosterFacts({ requestText: ownRequestText, linkedVacations, fallbackBase }),
       answerMode: linkedVacations.length ? 'account_state' : 'access_state_unverified',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['access_roster_question', 'current_turn_no_write'],
@@ -1273,10 +1172,12 @@ function currentTurnRouterDecision(job) {
   }
 
   if (isPersonAccessQuestion(ownRequestText)) {
+    const access = vacationAccessQuestionReply({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest });
     return makeTurnDecision({
       intent: 'account_question',
       confidence: 0.93,
-      answer: vacationAccessQuestionAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase, contextText: combinedRequestText(job), manifest }),
+      answer: access.answer,
+      facts: access.facts,
       answerMode: linkedVacations.length ? 'account_state' : 'access_state_unverified',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['person_access_question', 'current_turn_no_write'],
@@ -1319,7 +1220,8 @@ function currentTurnRouterDecision(job) {
       writeMode: 'none',
       shouldQueueWorker: false,
       confidence: 0.92,
-      answer: linkCapabilityAnswer({ requestText: ownRequestText, linkedVacations, fallbackBase }),
+      answer: '',
+      facts: linkCapabilityFacts({ requestText: ownRequestText, linkedVacations, fallbackBase }),
       answerMode: 'account_state',
       tripSelector: { lookup: vacationLookupTerm(ownRequestText), candidatesConsidered: linkedVacations.length },
       reasons: ['shared_link_capability_question', 'current_turn_no_write'],
@@ -1331,9 +1233,8 @@ function currentTurnRouterDecision(job) {
       writeMode: 'none',
       shouldQueueWorker: false,
       confidence: 0.8,
-      answer: linkedVacations.length === 1
-        ? `Here is the website: ${publicVacationUrl(linkedVacations[0], fallbackBase)}`
-        : 'I need to know which linked vacation website you want.',
+      answer: '',
+      facts: websiteFacts(linkedVacations, fallbackBase),
       answerMode: 'account_state',
       tripSelector: { candidatesConsidered: linkedVacations.length },
       reasons: ['website_link_lookup_no_write'],
@@ -1366,7 +1267,8 @@ function currentTurnRouterDecision(job) {
     return makeTurnDecision({
       intent: 'support_question',
       confidence: 0.8,
-      answer: 'I need to check one thing before I change anything.\n\nDo you want me to update an existing vacation, start a brand-new vacation, or answer a product/account question?',
+      answer: '',
+      facts: { need: 'trip_intent', choices: ['update_existing', 'create_new', 'account_question'] },
       answerMode: 'clarify',
       reasons: ['question_like_support_candidate'],
     });
@@ -1374,9 +1276,8 @@ function currentTurnRouterDecision(job) {
   return makeTurnDecision({
     intent: 'ambiguous',
     confidence: 0.55,
-    answer: currentShareToken || linkedVacations.length
-      ? 'I need to check one thing before I change anything.\n\nDo you want me to update the current vacation website, or start a brand-new vacation?'
-      : 'I need a direct vacation instruction before I change anything. Send the destination, dates, and priorities for a new vacation, or the vacation name plus the exact update for an existing one.',
+    answer: '',
+    facts: tripIntentClarificationFacts({ currentShareToken, linkedVacations, fallbackBase }),
     answerMode: 'clarify',
     tripSelector: { candidatesConsidered: linkedVacations.length, shareTokenPresent: Boolean(currentShareToken) },
     reasons: ['default_fail_closed_no_write'],
@@ -1413,62 +1314,6 @@ function planningQuestions(destination, dates) {
   return questions.slice(0, 4);
 }
 
-function extractTripSegments(requestText) {
-  const lower = requestText.toLowerCase();
-  const segments = [];
-  if (containsAny(lower, ['honolulu', 'waikiki', 'oahu', 'banzai pipeline', 'moana', 'surfrider'])) {
-    segments.push({
-      island: 'Oahu',
-      base: containsAny(lower, ['waikiki']) ? 'Waikiki / Honolulu' : 'Honolulu',
-      nights: /\bthree nights?\b/i.test(requestText) ? 3 : /\btwo nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['moana', 'surfrider']) ? 'Beachfront Waikiki lodging requested; compare source-backed nearby hotels.' : 'Waikiki hotel options.',
-      ideas: [
-        'Waikiki arrival/check-in and beach time',
-        'Local restaurants, juice/breakfast spots, and dinner options',
-        'North Shore surf/coast day or half-day',
-        'Waikiki surf lesson',
-        'Waikiki shopping shortlist',
-      ],
-    });
-  }
-  if (containsAny(lower, ['maui', 'kihei', 'kapalua'])) {
-    segments.push({
-      island: 'Maui',
-      base: containsAny(lower, ['kihei']) ? 'Kihei' : 'Maui',
-      nights: /\bthree nights?\b/i.test(requestText) && !/\btwo nights?\b/i.test(requestText) ? 3 : 2,
-      lodging: 'Kihei-area lodging first; include Kapalua-area dining options.',
-      ideas: [
-        'Kihei beach / resort-area downtime',
-        'Highly rated Kihei restaurants',
-        'Kapalua-area dinner options',
-        'Sunset dinner sailboat cruise',
-        'Whale watching only if seasonally available; otherwise swap in snorkeling/sunset sail',
-      ],
-    });
-  }
-  if (containsAny(lower, ['kona', 'big island', 'manta'])) {
-    segments.push({
-      island: 'Big Island',
-      base: 'Kona',
-      nights: /\blast two nights?\b/i.test(requestText) ? 2 : 2,
-      lodging: containsAny(lower, ['hilton']) ? 'Hilton option preferred; verify exact Kona-area property fit.' : 'Kona hotel options.',
-      ideas: [
-        'Kona arrival/check-in',
-        'Night manta ray snorkel tour',
-        'Hotel-based or waterfront restaurant options',
-        'Flexible Kona beach / coffee / scenic time depending on flight schedule',
-      ],
-    });
-  }
-  return segments.length ? segments : [{
-    island: 'Trip segment',
-    base: 'Needs confirmation',
-    nights: null,
-    lodging: 'Lodging preferences need confirmation.',
-    ideas: ['Build the day-by-day plan after destination/dates are confirmed.'],
-  }];
-}
-
 function buildInitialItinerary(artifacts) {
   const start = artifacts.dates.dateText || artifacts.dates.startDate || 'travel date to confirm';
   const destination = artifacts.destination || 'destination needs confirmation';
@@ -1484,149 +1329,10 @@ function buildInitialItinerary(artifacts) {
     '- multiple lodging/hotel options with source URLs, fees, cancellation terms, and location tradeoffs',
     '- flight options when relevant, including airline, airport, timing, fare caveats, and baggage notes',
     '- cars and ground transport options with pickup logistics and total-price caveats',
-    '- restaurants, shopping, and activities with source URLs, hours, reservation needs, and verification status',
+    '- restaurants, shopping, and activities with source URLs, hours, and verification status',
     '- open questions and customer decisions before anything is treated as final',
   ];
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').slice(0, 3900);
-}
-
-function link(label, url) {
-  return { label, url };
-}
-
-function researchedThing({ category, subtype, title, description, links = [], island, status = 'research_candidate' }) {
-  return {
-    category,
-    subtype,
-    title,
-    description,
-    links,
-    metadata: {
-      source: 'product-gbrain-dispatch',
-      status,
-      sourceBacked: true,
-      island,
-      researchedAt: new Date().toISOString(),
-      caveat: 'Verify current availability, prices, hours, and seasonal fit before relying on this option. TimeSyncher Vacation does not book travel.',
-    },
-  };
-}
-
-function hawaiiResearchThings(requestText) {
-  if (!/\bhawaii|honolulu|waikiki|oahu|maui|kihei|kona|big island\b/i.test(requestText)) return [];
-  return [
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Waikiki hotel candidate',
-      title: 'Source-backed Waikiki beachfront lodging candidate',
-      island: 'Oahu',
-      description: 'Primary Waikiki hotel candidate because the customer specifically asked for the Surfrider/Moana. Research pass should compare room availability, cancellation terms, resort fees, beach access, and nearby alternatives.',
-      links: [link('Hotel site', 'https://www.marriott.com/en-us/hotels/hnlwi-moana-surfrider-a-westin-resort-and-spa-waikiki-beach/overview/')],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Surf lesson',
-      title: 'Waikiki surf lesson shortlist',
-      island: 'Oahu',
-      description: 'Customer wants to learn to surf in Waikiki. Research pass should compare 2-3 beginner-friendly lesson providers by meeting point, group/private format, duration, reviews, and cancellation policy.',
-      links: [
-        link('Hans Hedemann Surf School', 'https://hhsurf.com/'),
-        link('Faith Surf School', 'https://faithsurfschool.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'North Shore day option',
-      title: 'North Shore surf/coast day',
-      island: 'Oahu',
-      description: 'Customer asked for a North Shore surf/coast stop. Research pass should set expectations about surf seasonality and pair it with nearby source-backed food or shopping stops if surf is quiet.',
-      links: [link('Go Hawaii North Shore overview', 'https://www.gohawaii.com/islands/oahu/regions/north-shore')],
-    }),
-    researchedThing({
-      category: 'restaurant',
-      subtype: 'Waikiki restaurants',
-      title: 'Waikiki local/interesting restaurant research set',
-      island: 'Oahu',
-      description: 'Starter shortlist should be generated from current public sources for casual noodles, beachfront classics, malasadas, plate-lunch, and poke options near Waikiki.',
-      links: [
-        link('Waikiki casual noodle source', 'https://www.gohawaii.com/islands/oahu/regions/honolulu/waikiki'),
-        link('Duke’s Waikiki', 'https://www.dukeswaikiki.com/'),
-        link('Leonard’s Bakery', 'https://www.leonardshawaii.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'shopping',
-      subtype: 'Waikiki shopping',
-      title: 'Waikiki shopping shortlist',
-      island: 'Oahu',
-      description: 'Starter shortlist to verify: Royal Hawaiian Center and International Market Place for Waikiki walkable shopping; Ala Moana Center for a larger shopping block if transportation/time fits.',
-      links: [
-        link('Royal Hawaiian Center', 'https://www.royalhawaiiancenter.com/'),
-        link('International Market Place', 'https://shopinternationalmarketplace.com/'),
-        link('Ala Moana Center', 'https://www.alamoanacenter.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Kihei lodging candidate',
-      title: 'Kihei-area lodging research',
-      island: 'Maui',
-      description: 'Customer wants Kihei. Research pass should compare Kihei/Wailea lodging by beach access, parking, resort fees, cancellation terms, and drive time to Kapalua-area restaurants.',
-      links: [link('Go Hawaii Kihei overview', 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei')],
-    }),
-    researchedThing({
-      category: 'restaurant',
-      subtype: 'Maui restaurants',
-      title: 'Kihei and Kapalua restaurant research set',
-      island: 'Maui',
-      description: 'Starter shortlist should be generated from current public sources for Kihei/South Maui casual food, sushi, sunset dining, and elevated dinner options.',
-      links: [
-        link('Nalu’s South Shore Grill', 'https://www.naluskihei.com/'),
-        link('Maui sunset dining source', 'https://www.gohawaii.com/islands/maui/regions/south-maui/kihei'),
-      ],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Maui sunset sail',
-      title: 'Maui sunset dinner sail / whale-watching check',
-      island: 'Maui',
-      description: 'Customer wants a sunset dinner sail and whale watching ideally. Research pass should confirm whale season before promising whale watching, then compare sunset sail operators and dinner-included options.',
-      links: [
-        link('Trilogy Maui dinner sail options', 'https://sailtrilogy.com/'),
-        link('Pacific Whale Foundation', 'https://www.pacificwhale.org/'),
-      ],
-    }),
-    researchedThing({
-      category: 'hotel',
-      subtype: 'Kona-area hotel candidate',
-      title: 'Kona-area lodging fit check',
-      island: 'Big Island',
-      description: 'Customer mentioned a Hilton-style Hawaii lodging preference. Research pass should confirm island intent and compare source-backed Kona-area lodging against true Kona-town hotels.',
-      links: [link('Kona-area lodging source', 'https://www.gohawaii.com/islands/hawaii-island/regions/kona')],
-    }),
-    researchedThing({
-      category: 'activity',
-      subtype: 'Manta ray night snorkel',
-      title: 'Kona night manta ray snorkel',
-      island: 'Big Island',
-      description: 'Customer wants manta rays at night. Research pass should compare operators by departure harbor, duration, snorkel vs dive, minimum age/swim requirements, cancellation policy, and moon/weather caveats.',
-      links: [
-        link('Kona manta ray tour source', 'https://www.gohawaii.com/islands/hawaii-island/things-to-do/water-activities'),
-        link('Big Island Divers', 'https://bigislanddivers.com/'),
-      ],
-    }),
-    researchedThing({
-      category: 'transport',
-      subtype: 'Inter-island and car rental',
-      title: 'Inter-island flights and rental cars',
-      island: 'Hawaii',
-      description: 'Plan needs LAS -> HNL, HNL -> OGG, OGG -> KOA, and KOA -> LAS or return routing, plus rental car strategy. Oahu can be mixed car/no-car; Maui and Big Island generally need cars.',
-      links: [
-        link('Hawaiian Airlines', 'https://www.hawaiianairlines.com/'),
-        link('Southwest Hawaii', 'https://www.southwest.com/destinations/hawaii'),
-      ],
-    }),
-  ];
 }
 
 function siteBase() {
@@ -1849,6 +1555,7 @@ async function buildArtifacts(job, manifest) {
       hostedSync: { skipped: true, reason: 'support_router_no_write' },
       publicResearch: { status: 'support_router_no_write' },
       clarificationNeeded: routerDecision.intent === 'ambiguous',
+      clarificationFacts: routerDecision.facts || null,
       supportRouterDecision: routerDecision,
       turnDecision: routerDecision,
       editApplied: false,
@@ -1888,7 +1595,9 @@ async function buildArtifacts(job, manifest) {
   }
   if (shouldAskBeforeStartingNewPass({ job, input, payload, requestText })) {
     const token = shareTokenFromContext(job, input, payload, requestText);
+    const linkedVacations = linkedVacationsFrom(job, input, payload);
     const publicBase = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com';
+    const clarificationFacts = tripIntentClarificationFacts({ currentShareToken: token, linkedVacations, fallbackBase });
     return {
       requestText,
       destination: extractDestination(requestText, payload, trip),
@@ -1901,7 +1610,7 @@ async function buildArtifacts(job, manifest) {
       budgetItems: [],
       supportNotes: [{
         actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-        note: 'Asked for clarification before starting a new first pass because the Telegram turn was linked to an existing shared trip.',
+        note: 'Asked for clarification before starting a new first pass because the turn was linked to an existing shared trip.',
         metadata: { requestedAt: new Date().toISOString(), shareToken: token || null },
       }],
       initialItinerary: '',
@@ -1911,6 +1620,7 @@ async function buildArtifacts(job, manifest) {
       hostedSync: { skipped: true, reason: 'needs_trip_intent_clarification' },
       publicResearch: { status: 'needs_trip_intent_clarification' },
       clarificationNeeded: true,
+      clarificationFacts,
     };
   }
   const destination = extractDestination(requestText, payload, trip, { ignoreTripContext: createNewTrip });
@@ -1922,10 +1632,37 @@ async function buildArtifacts(job, manifest) {
   const titleDestination = destination ? titleCase(destination) : 'Vacation';
   const requestedAt = new Date().toISOString();
   const initialItinerary = buildInitialItinerary({ requestText, destination, dates });
-  const publicResearch = await runPublicResearch({ artifacts: { requestText, vacationName, unforgettableGoal, destination, dates, lodgingLane: lane }, targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15, minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10 });
+  const stay = lodgingFromChat(requestText, {
+    lodging: text(payload.lodging || payload.lodgingName || '', 180),
+    lat: asObject(payload.house).lat ?? payload.houseLat,
+    lng: asObject(payload.house).lng ?? payload.houseLng,
+  });
+  const jobInput = asObject(job.input);
+  const wantedThings = Array.isArray(jobInput.wantedThings)
+    ? jobInput.wantedThings
+    : (Array.isArray(payload.wantedThings) ? payload.wantedThings : []);
+  const intakeEvent = jobInput.intakeEvent ?? payload.intakeEvent ?? null;
+  const publicResearch = await runPublicResearch({
+    wantedThings,
+    intakeEvent,
+    artifacts: {
+      requestText,
+      vacationName,
+      unforgettableGoal,
+      destination,
+      dates,
+      lodging: stay.text,
+      house: stay.lat !== null ? { lat: stay.lat, lng: stay.lng } : undefined,
+    },
+    targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15,
+    minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10,
+  });
+  const live = publicResearch.status === 'live_place_search';
   const researchedThings = publicResearch.candidates || [];
-  assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
-  if (publicResearch.status !== 'source_backed_research_complete') {
+  if (live) {
+    const gate = firstPassMissingMinimums(researchedThings, publicResearch.firstPassMinimums);
+    if (!Object.keys(gate.missing).length) assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
+  } else if (publicResearch.status !== 'no_wanted_things') {
     throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
   }
   const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal, destination, dates, researchedThings, createNewTrip });
@@ -1938,7 +1675,7 @@ async function buildArtifacts(job, manifest) {
     `Customer action: TimeSyncher Vacation organizes and compares options; customers verify details and make any bookings themselves.`,
   ].join('\n');
 
-  const things = [
+  const things = live ? (publicResearch.things || []) : [
     {
       category: 'note',
       subtype: 'planning_brief',
@@ -1999,8 +1736,10 @@ async function buildArtifacts(job, manifest) {
   const supportNotes = [
     {
       actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-      note: `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
-      metadata: { destination: destination || null, lodgingLane: lane.primary, requestedAt, webItineraryUrl: webItineraryUrl || null },
+      note: live
+        ? `Trip intake saved ${(publicResearch.things || []).length} places. Sources: ${JSON.stringify(publicResearch.sourceCounts || {})}`
+        : `Restricted Product GBrain dispatch created a TREK research workspace and queued source-backed public research. Methods: ${methods.join(', ')}`,
+      metadata: { destination: destination || null, requestedAt, webItineraryUrl: webItineraryUrl || null },
     },
   ];
 
@@ -2023,20 +1762,21 @@ function renderCustomerResponse(job, artifacts) {
   const url = text(artifacts.webItineraryUrl || '', 500);
   const requestText = text(job.request_text || job.text || job.message || artifacts.requestText || '', 2000).toLowerCase();
   if (artifacts.supportRouterDecision && artifacts.supportRouterDecision.shouldQueueWorker === false) {
+    if (artifacts.supportRouterDecision.facts) rememberReplyFacts(artifacts, artifacts.supportRouterDecision.facts);
     const answer = text(artifacts.supportRouterDecision.answer, 1800);
     if (answer) return answer.slice(0, 3900);
+    if (artifacts.replyFacts) return '';
   }
   if (url && isWebsiteLinkRequestText(requestText)) {
-    return `Here is the website: ${url}`.slice(0, 3900);
+    rememberReplyFacts(artifacts, { url });
+    return '';
   }
   if (artifacts.clarificationNeeded) {
-    return [
-      'I need to check one thing before I change anything.',
-      '',
-      'Do you want me to update the current vacation website, or start a brand-new vacation?',
-      '',
-      url ? `Current website: ${url}` : 'Tell me the vacation name if you want me to update an existing vacation.',
-    ].join('\n').slice(0, 3900);
+    const facts = artifacts.clarificationFacts
+      || artifacts.supportRouterDecision?.facts
+      || tripIntentClarificationFacts({ currentShareToken: text(job.share_token || job.shared_token || '', 180), linkedVacations: [] });
+    rememberReplyFacts(artifacts, facts);
+    return '';
   }
   if (artifacts.editApplied) {
     const updatedItems = Array.isArray(artifacts.trekSync?.updatedItems) ? artifacts.trekSync.updatedItems : [];
@@ -2052,19 +1792,18 @@ function renderCustomerResponse(job, artifacts) {
       })
       .filter(Boolean)
       .slice(0, 8);
+    rememberReplyFacts(artifacts, { url });
     return [
       itemLines.length
         ? 'I updated the vacation website:'
         : 'I updated the vacation website.',
       ...itemLines,
-      '',
-      `Here is the website: ${url}`,
     ].join('\n').slice(0, 3900);
   }
   if (requestType === 'itinerary_research_update' || url) {
     const count = artifacts.researchedThings?.length || 0;
     const researchStatus = text(artifacts.publicResearch?.status || '', 120);
-    if (researchStatus && researchStatus !== 'source_backed_research_complete') {
+    if (researchStatus && researchStatus !== 'source_backed_research_complete' && researchStatus !== 'live_place_search') {
       return [
         'I started the vacation website, but it still needs more source-backed options before I call the first pass ready.',
         '',
@@ -2075,21 +1814,20 @@ function renderCustomerResponse(job, artifacts) {
         url ? `Here is the current website: ${url}` : 'I will send the website link once the next pass is ready.',
       ].join('\n').slice(0, 3900);
     }
+    rememberReplyFacts(artifacts, { url: url || '' });
     return [
       'Your first TimeSyncher Vacation pass is ready.',
       '',
       count
         ? `I researched and organized ${count} source-linked options for the trip, including restaurants, activities, wineries, sightseeing, transportation notes, and open decisions.`
         : 'I organized the details you sent into the vacation website and marked the remaining research areas for the next pass.',
-      '',
-      url ? `Here is the website: ${url}` : 'The website was created, but I could not attach the link in this message. I will retry sending it.',
     ].join('\n').slice(0, 3900);
   }
 
   const lines = [
     'Great, I’ve got the starting shape of your trip.',
     '',
-    'Before I build the first version of your vacation website, send me one more note with anything else you want me to know: favorite restaurants or foods, lodging preferences, budget range, must-do activities, things to avoid, mobility needs, kid-friendly priorities, or any reservations/flights you already have.',
+    'Before I build the first version of your vacation website, send me one more note with anything else you want me to know: favorite restaurants or foods, lodging preferences, budget range, must-do activities, things to avoid, mobility needs, kid-friendly priorities, or any flights you already have.',
     '',
     'After your next message, I’ll spend about 10-15 minutes researching and organizing the first pass, then I’ll come back with your dedicated TimeSyncher Vacation website.',
   ].filter(Boolean);
@@ -2181,6 +1919,7 @@ function emitProducerResponse({ manifest, capabilities, job, artifacts, customer
   const turnInspector = buildTurnInspector(job, artifacts, customerResponseText);
   const response = {
     customerResponse: customerResponseText,
+    replyFacts: artifacts.replyFacts || null,
     sharedReply,
     result: {
       handledBy: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',

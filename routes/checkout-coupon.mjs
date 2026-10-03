@@ -1,26 +1,16 @@
 import { sql } from '../src/vacation/db.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption } from '../src/vacation/coupons.mjs';
+import { consumeCoupon, completeCouponRedemption, completeCollaboratorCouponRedemption, couponHash, lookupCoupon } from '../src/vacation/coupons.mjs';
 import { buildOnboardingFromCoupon } from '../src/vacation/onboarding.mjs';
 import { queueOrSendCollaboratorInviteEmail, queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
-import { recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
+import { recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
-  collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { joinCollaboratorAppSession } from '../src/vacation/collaborator-app-seat.mjs';
-
-const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
-const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
-const PHOTO_MEMORIES_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
-const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-const COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS || '2700', 10);
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
+import { checkoutChargeDisplay, checkoutCurrency, checkoutOrderSummary, customerCheckoutFailure } from '../src/vacation/checkout-pricing.mjs';
 
 function requireContact(body) {
   const firstName = cleanText(body.firstName, 80);
@@ -38,32 +28,55 @@ function requireContact(body) {
   };
 }
 
-function orderDetails(body) {
-  const orderBump = Boolean(body.orderBump);
-  const photoMemories = Boolean(body.photoMemories);
-  const photoAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
-  const amount = BASE_PRICE_CENTS + (orderBump ? ORDER_BUMP_PRICE_CENTS : 0) + photoAmount;
+export function orderDetails(body) {
+  const summary = checkoutOrderSummary({
+    orderBump: Boolean(body.orderBump),
+    photoMemories: Boolean(body.photoMemories),
+    media: Boolean(body.media),
+  }, process.env);
   return {
-    orderBump,
-    photoMemories,
-    amount,
-    plan: orderBump ? 'unlimited' : 'single',
+    orderBump: summary.orderBump,
+    photoMemories: summary.photoMemories,
+    amount: summary.amountCents,
+    plan: summary.plan,
   };
 }
 
+const COUPON_PLANS = new Set(['single', 'unlimited', 'owner_media', 'telegram_collaborators_single_trip']);
+
+export function storedCouponPlan(metadata) {
+  if (metadata == null || typeof metadata !== 'object' || Array.isArray(metadata)) return null;
+  if (!Object.hasOwn(metadata, 'plan')) return null;
+  const plan = metadata.plan;
+  if (plan == null || plan === '') return null;
+  if (plan === 'owner_media_single_vacation' || plan === 'owner_media_unlimited_vacations') return 'owner_media';
+  if (typeof plan === 'string' && COUPON_PLANS.has(plan)) return plan;
+  const shown = typeof plan === 'string' ? plan : '';
+  throw Object.assign(new Error(shown
+    ? `Coupon plan "${shown}" is not supported. Use single or unlimited.`
+    : 'Coupon plan is not supported. Use single or unlimited.'), { statusCode: 400 });
+}
+
+export function resolveRedeemPlan(metadata, orderBump) {
+  return storedCouponPlan(metadata) || (orderBump ? 'unlimited' : 'single');
+}
+
+async function readStoredCouponMetadata(db, couponCode) {
+  const hash = couponHash(couponCode, process.env);
+  if (!hash) return null;
+  const rows = await db`select metadata from checkout_coupons where code_hash = ${hash} limit 1`;
+  return rows[0]?.metadata ?? null;
+}
+
 function collaboratorAccessAddOns(body = {}, plan = {}) {
-  const selected = body.accessAddOns && typeof body.accessAddOns === 'object' ? body.accessAddOns : body;
-  const unlimited = plan.scope === 'unlimited_trips';
-  const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
-  const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
-  const photoAmountCents = photoUpload ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-  const videoAmountCents = videoUpload ? (unlimited ? COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
+  const media = selectedMediaAddOn(body, process.env);
   return {
-    photoUpload,
-    videoUpload,
-    photoAmountCents,
-    videoAmountCents,
-    amountCents: photoAmountCents + videoAmountCents,
+    photoUpload: media.photoUpload,
+    videoUpload: media.videoUpload,
+    photoAmountCents: media.photoAmountCents,
+    videoAmountCents: media.videoAmountCents,
+    amountCents: media.amountCents,
+    plan: plan.code || media.plan,
   };
 }
 
@@ -76,6 +89,26 @@ export default async function handler(req, res) {
     const db = sql(process.env);
     const couponCode = cleanText(body.couponCode || body.coupon, 120);
     const collaboratorInviteToken = cleanText(body.collaboratorInvite || body.collaboratorInviteToken, 200);
+    const couponMetadata = await readStoredCouponMetadata(db, couponCode);
+    storedCouponPlan(couponMetadata);
+    if (body.action === 'validate_coupon') {
+      const plan = resolveRedeemPlan(couponMetadata, order.orderBump);
+      const coupon = await lookupCoupon(db, couponCode, process.env);
+      const charge = checkoutChargeDisplay({ amountCents: order.amount, coupon: true });
+      return sendJson(res, 200, {
+        ok: true,
+        status: 'coupon_valid',
+        coupon,
+        order: {
+          amountCents: charge.totalCents,
+          originalAmountCents: order.amount,
+          amountWaivedCents: charge.waivedCents,
+          currency: checkoutCurrency(),
+          plan,
+          status: 'coupon_valid',
+        },
+      });
+    }
     if (body.action === 'redeem_owner_media_coupon' || body.product === 'owner_media_addons') {
       const addOns = requireOwnerMediaAddOns(body);
       const { coupon, redemption } = await consumeCoupon(db, couponCode, {
@@ -101,7 +134,7 @@ export default async function handler(req, res) {
         contact,
         addOns,
         amountCents: 0,
-        currency: CURRENCY,
+        currency: checkoutCurrency(),
         status: 'coupon_redeemed',
         metadata: {
           couponId: coupon.id,
@@ -138,7 +171,7 @@ export default async function handler(req, res) {
           amountCents: 0,
           originalAmountCents: addOns.amountCents,
           amountWaivedCents: addOns.amountCents,
-          currency: CURRENCY,
+          currency: checkoutCurrency(),
           plan: addOns.plan,
           status: 'coupon_redeemed',
           mediaAddOns: addOns,
@@ -187,6 +220,18 @@ export default async function handler(req, res) {
         },
       });
       const joined = await joinCollaboratorAppSession(db, { invite, contact, env: process.env });
+      if (addOns.amountCents > 0) {
+        await recordOwnerMediaPurchase({
+          db,
+          contact,
+          addOns: { ...addOns, plan: 'owner_media', scope: 'owner', amountCents: addOns.amountCents, ownerCustomerId: pendingInvite.owner_customer_id },
+          ownerCustomerId: pendingInvite.owner_customer_id,
+          amountCents: 0,
+          currency: checkoutCurrency(),
+          status: 'coupon_redeemed',
+          metadata: { paidVia: 'collaborator_coupon_checkout', collaboratorInviteId: pendingInvite.id },
+        });
+      }
       const email = await queueOrSendCollaboratorInviteEmail(db, {
         invite,
         token: collaboratorInviteToken,
@@ -205,7 +250,6 @@ export default async function handler(req, res) {
         collaboratorInvite: {
           id: invite.id,
           status: invite.status,
-          telegramUrl: collaboratorTelegramLink(collaboratorInviteToken, process.env),
           vacationAppUrl: joined.vacationAppUrl,
           token: joined.token,
           payer: joined.payer,
@@ -217,7 +261,7 @@ export default async function handler(req, res) {
           amountCents: 0,
           originalAmountCents,
           amountWaivedCents: originalAmountCents,
-          currency: CURRENCY,
+          currency: checkoutCurrency(),
           plan: plan.code,
           status: 'coupon_redeemed',
           accessAddOns: addOns,
@@ -225,14 +269,15 @@ export default async function handler(req, res) {
         email,
       });
     }
+    const plan = resolveRedeemPlan(couponMetadata, order.orderBump);
     const metadata = {
       source: 'coupon_checkout',
       order_bump: String(order.orderBump),
       photo_memories: String(order.photoMemories),
       vacation_date: cleanText(body.vacationDate, 40) || null,
-      currency: CURRENCY,
-      product: order.plan === 'unlimited' ? 'timesyncher_vacation_unlimited' : 'timesyncher_vacation_single',
-      plan: order.plan,
+      currency: checkoutCurrency(),
+      product: plan === 'unlimited' ? 'timesyncher_vacation_unlimited' : plan === 'owner_media' ? 'timesyncher_vacation_owner_media_addons' : plan === 'telegram_collaborators_single_trip' ? 'timesyncher_vacation_telegram_collaborator' : 'timesyncher_vacation_single',
+      plan,
       email: contact.email,
       phone: contact.phone,
       first_name: contact.firstName,
@@ -240,17 +285,20 @@ export default async function handler(req, res) {
     };
     const { coupon, redemption } = await consumeCoupon(db, couponCode, {
       email: contact.email,
-      plan: order.plan,
+      plan,
       originalAmountCents: order.amount,
       metadata,
     }, process.env);
+    const grantedPlan = resolveRedeemPlan(coupon.metadata, order.orderBump);
     const onboarding = await buildOnboardingFromCoupon({
       db,
       contact,
-      plan: order.plan,
+      plan: grantedPlan,
       amountCents: order.amount,
       metadata: {
         ...metadata,
+        plan: grantedPlan,
+        product: grantedPlan === 'unlimited' ? 'timesyncher_vacation_unlimited' : grantedPlan === 'owner_media' ? 'timesyncher_vacation_owner_media_addons' : grantedPlan === 'telegram_collaborators_single_trip' ? 'timesyncher_vacation_telegram_collaborator' : 'timesyncher_vacation_single',
         couponId: coupon.id,
         couponHint: coupon.codeHint,
         couponRedemptionId: redemption.id,
@@ -275,13 +323,14 @@ export default async function handler(req, res) {
         amountCents: 0,
         originalAmountCents: order.amount,
         amountWaivedCents: order.amount,
-        currency: CURRENCY,
-        plan: order.plan,
+        currency: checkoutCurrency(),
+        plan: grantedPlan,
         status: 'coupon_redeemed',
       },
       email,
     });
   } catch (error) {
-    return sendJson(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to redeem coupon.' });
+    const safe = customerCheckoutFailure(error);
+    return sendJson(res, safe.statusCode || 400, { ok: false, error: safe.message || 'Unable to redeem coupon.' });
   }
 }

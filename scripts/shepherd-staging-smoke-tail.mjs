@@ -1,0 +1,379 @@
+import { couponHash } from '../src/vacation/coupons.mjs';
+import { createWebEditorInvite } from '../src/vacation/web-access.mjs';
+import {
+  isoDateFromStartsAt,
+  attributeDThingRows,
+  gradeDExtraRows,
+  matchCollaboratorWelcome,
+  a2WelcomePass,
+  welcomeTranscriptTurnsForClaims,
+  gradeD2UnschedReply,
+  gradeAskD2Reply,
+  gradeInvClaimFirstReply,
+  gradeInvClaimAfterLodgingReply,
+} from './shepherd-staging-smoke-lib.mjs';
+import {
+  postItinerary,
+  getApp,
+  collabAcceptFlow,
+  customerTurnRow,
+  persistedTurnClassifier,
+  customerVisibleReplies,
+  scanErrorText,
+} from './shepherd-staging-smoke-helpers.mjs';
+import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
+
+async function freshOwnerSession(ctx, couponCode, tag, firstName = tag, lastName = ctx.SHA7) {
+  const { BASE, SHA7, RUN_TS } = ctx;
+  const email = `shepherd-${tag}-${SHA7}-${RUN_TS}@resend.dev`;
+  const couponRes = await fetch(`${BASE}/api/checkout-coupon`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ firstName, lastName, email, couponCode, orderBump: false, photoMemories: false }),
+  });
+  const couponJson = JSON.parse((await couponRes.text()).split('\nHTTP:')[0]);
+  const tok = couponJson.session?.token;
+  const cid = couponJson.redemption?.customer_id;
+  await fetch(`${BASE}/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-${tok}`)}`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ acceptedByName: tag, checkboxConfirmed: true }),
+  });
+  return { session: tok, customerId: cid, email };
+}
+
+/** @returns {Array<{ name: string, timeoutMs: number, run: Function }>} */
+export function buildTailIndependentParallelChecks(ctx) {
+  const {
+    db, out, BASE, SHA7, RUN_TS, couponA1, couponA2, couponDTrip, couponInvClaim,
+    A1_EMAIL, A2_OWNER_FIRST, A2_OWNER_LAST, A2_COLLAB_NAME, A2_EMAIL, D1_EXPECT_START,
+  } = ctx;
+
+  return [
+    {
+      name: 'A1',
+      timeoutMs: 60000,
+      run: async ({ setStage }) => {
+        setStage('a1 owner session');
+        const a1Owner = await freshOwnerSession(ctx, couponA1, 'a1');
+        await postItinerary(a1Owner.session, { text: 'hi' });
+        await postItinerary(a1Owner.session, { text: 'Owner planning note' });
+        setStage('a1 invite');
+        const a1InviteRes = await postItinerary(a1Owner.session, { action: 'collaborator-invite', seats: [{ name: 'A1 Collab', email: A1_EMAIL }] });
+        const a1InviteRow = (await db`
+          select id, trip_id, status, metadata from vacation_collaborator_invites
+          where owner_customer_id=${a1Owner.customerId} and metadata->>'email'=${A1_EMAIL} order by created_at desc limit 1`)[0];
+        const a1OwnerRow = (await db`select display_name, first_name from customers where id=${a1Owner.customerId} limit 1`)[0];
+        const a1OwnerFirst = String(a1OwnerRow?.first_name || a1OwnerRow?.display_name || 'a1').split(/\s+/)[0];
+        setStage('a1 accept flow');
+        const a1Flow = a1InviteRow?.id ? await collabAcceptFlow({
+          inviteId: a1InviteRow.id, acceptedByName: 'A1 Collab', ownerFirstName: a1OwnerFirst, tripTitleForWelcome: 'this vacation', audience: 'collaborator_no_site',
+        }) : null;
+        const a1ExpectedOwnerLabel = String(a1OwnerRow?.display_name || `${a1OwnerFirst} ${SHA7}`).trim();
+        const a1OwnerLabelOk = (a1Flow?.labeledOwnerSample || []).every((t) => String(t.authorLabel || '').trim() === a1ExpectedOwnerLabel);
+        out.checkA1 = { inviteHttp: a1InviteRes.status, inviteDb: a1InviteRow, ownerRow: a1OwnerRow, flow: a1Flow, ownerLabelOk: a1OwnerLabelOk };
+        let a1WelcomeDb = [];
+        let a1WelcomeTurnsDb = [];
+        if (a1Flow?.collabToken) {
+          const a1Onboard = (await db`select id, customer_id from onboarding_sessions where token=${a1Flow.collabToken} limit 1`)[0];
+          if (a1Onboard?.id) {
+            a1WelcomeDb = await db`select id, welcome_for, trip_id from vacation_onboarding_welcomes where onboarding_session_id=${a1Onboard.id}`;
+            const a1TranscriptPool = await db`
+              select id, body, payload, speaker from transcript_turns
+              where customer_id=${a1Onboard.customer_id}
+                and channel in ('vacation-app', 'vacation_app')
+                and speaker='app'
+              order by created_at asc`;
+            a1WelcomeTurnsDb = welcomeTranscriptTurnsForClaims({ welcomeRows: a1WelcomeDb, transcriptTurns: a1TranscriptPool });
+          }
+        }
+        out.checkA1.welcomeDb = a1WelcomeDb;
+        out.checkA1.welcomeTurnsDb = a1WelcomeTurnsDb.map((t) => ({ id: t.id, welcomeFor: t.payload?.welcomeFor }));
+        const pass = a1InviteRes.status === 200 && a1Flow?.acceptPageStatus === 200 && a1Flow?.termsCount === 1
+          && a1Flow?.acceptPostStatus === 201 && a1WelcomeDb.length === 1 && a1WelcomeTurnsDb.length === 1
+          && !/https?:\/\//i.test(a1WelcomeTurnsDb[0]?.body || '')
+          && a1Flow?.missingAuthorLabelCount === 0 && a1OwnerLabelOk;
+        return { pass, http: a1Flow?.appGetStatus || a1InviteRes.status };
+      },
+    },
+    {
+      name: 'A2',
+      timeoutMs: 90000,
+      run: async ({ setStage }) => {
+        setStage('a2 owner session');
+        const a2Owner = await freshOwnerSession(ctx, couponA2, 'a2', A2_OWNER_FIRST, A2_OWNER_LAST);
+        await postItinerary(a2Owner.session, { text: 'hi' });
+        const a2TripMsg = await postItinerary(a2Owner.session, { text: 'Maui March 10-17 2027 with my wife' });
+        const a2TripId = a2TripMsg.json.trip?.id;
+        const a2TripTitle = a2TripId ? (await db`select title, metadata from trips where id=${a2TripId} limit 1`)[0]?.title : '';
+        await postItinerary(a2Owner.session, { tripId: a2TripId, text: "We're staying at Hyatt Regency Maui in Kaanapali." });
+        const a2OwnerApp = await getApp(a2Owner.session);
+        const a2SiteUrl = a2OwnerApp.json?.trip?.publicUrl || a2OwnerApp.json?.trip?.siteUrl || a2OwnerApp.json?.publicUrl || '';
+        const a2PublicOk = Boolean(String(a2SiteUrl || '').trim());
+        setStage('a2 invite');
+        const a2InviteRes = await postItinerary(a2Owner.session, { tripId: a2TripId, action: 'collaborator-invite', seats: [{ name: A2_COLLAB_NAME, email: A2_EMAIL }] });
+        const a2InviteRow = (await db`
+          select id, trip_id, status, metadata from vacation_collaborator_invites
+          where owner_customer_id=${a2Owner.customerId} and metadata->>'email'=${A2_EMAIL} order by created_at desc limit 1`)[0];
+        const a2OwnerRow = (await db`select display_name, first_name, last_name from customers where id=${a2Owner.customerId} limit 1`)[0];
+        const a2OwnerFirst = String(a2OwnerRow?.first_name || A2_OWNER_FIRST).split(/\s+/)[0];
+        let a2WebRedirect = null;
+        let legacyGrant = null;
+        if (a2InviteRow?.id && a2TripId) {
+          legacyGrant = await createWebEditorInvite(db, {
+            ownerCustomerId: a2Owner.customerId,
+            tripId: a2TripId,
+            email: A2_EMAIL,
+            displayName: A2_COLLAB_NAME,
+            metadata: { collaboratorInviteId: a2InviteRow.id, payer: 'owner', channel: 'email-invite' },
+          });
+          const redir = await fetch(legacyGrant.acceptUrl, { redirect: 'manual' });
+          a2WebRedirect = { status: redir.status, location: redir.headers.get('location') };
+        }
+        setStage('a2 accept flow');
+        const a2Flow = a2InviteRow?.id ? await collabAcceptFlow({
+          inviteId: a2InviteRow.id, acceptedByName: A2_COLLAB_NAME, ownerFirstName: a2OwnerFirst, tripTitleForWelcome: a2TripTitle || 'this vacation',
+          audience: 'collaborator', tripSiteUrl: a2SiteUrl || 'https://vacation-staging.timesyncher.com/',
+        }) : null;
+        let a2WelcomeDb = [];
+        let a2WelcomeTurnsDb = [];
+        let a2CollabCustomerId = null;
+        if (a2Flow?.collabToken) {
+          const collabOnboard = (await db`select id, customer_id from onboarding_sessions where token=${a2Flow.collabToken} limit 1`)[0];
+          a2CollabCustomerId = collabOnboard?.customer_id || null;
+          if (collabOnboard?.id) {
+            a2WelcomeDb = await db`select id, welcome_for, trip_id, created_at from vacation_onboarding_welcomes where onboarding_session_id=${collabOnboard.id} order by created_at`;
+            const a2TranscriptPool = await db`
+              select id, body, payload, speaker from transcript_turns
+              where customer_id=${collabOnboard.customer_id}
+                and channel in ('vacation-app', 'vacation_app')
+                and speaker='app'
+              order by created_at asc`;
+            a2WelcomeTurnsDb = welcomeTranscriptTurnsForClaims({ welcomeRows: a2WelcomeDb, transcriptTurns: a2TranscriptPool });
+          }
+        }
+        const a2WelcomeMatch = matchCollaboratorWelcome({
+          welcomeRows: a2WelcomeDb,
+          transcriptTurns: a2WelcomeTurnsDb,
+          welcomeForCustomerId: a2CollabCustomerId,
+          inviteeDisplayName: A2_COLLAB_NAME,
+        });
+        const pHits = [...(a2Flow?.commerce?.acceptPage || []), ...(a2Flow?.commerce?.eula || []), ...(a2Flow?.commerce?.chat || [])];
+        const a2RedirectOk = a2WebRedirect?.status === 302 && /\/accept\/vacation-collaborator-/.test(String(a2WebRedirect?.location || ''));
+        out.checkA2 = {
+          inviteHttp: a2InviteRes.status,
+          inviteDb: a2InviteRow,
+          flow: a2Flow,
+          legacyGrantMinted: Boolean(legacyGrant?.token),
+          webAccessRedirect: a2WebRedirect,
+          tripSiteUrl: a2SiteUrl,
+          publicUrlOk: a2PublicOk,
+          welcomeDb: a2WelcomeDb,
+          welcomeTurnsDb: a2WelcomeTurnsDb.map((t) => ({
+            id: t.id,
+            welcomeFor: t.payload?.welcomeFor,
+            bodySnippet: String(t.body || '').slice(0, 160),
+          })),
+          welcomeMatch: a2WelcomeMatch,
+          collabCustomerId: a2CollabCustomerId,
+        };
+        out.checkP = { commerceHits: pHits, surfaces: a2Flow?.commerce };
+        const pass = a2InviteRes.status === 200 && a2WelcomePass(a2WelcomeMatch, { redirectOk: a2RedirectOk, publicUrlOk: a2PublicOk });
+        return { pass, http: a2Flow?.appGetStatus || a2InviteRes.status };
+      },
+    },
+    {
+      name: 'D',
+      timeoutMs: 60000,
+      run: async ({ setStage }) => {
+        setStage('d owner session');
+        const dOwner = await freshOwnerSession(ctx, couponDTrip, 'd', 'D', 'Trip');
+        await postItinerary(dOwner.session, { text: 'hi' });
+        const dTripMsg = await postItinerary(dOwner.session, { text: 'Maui March 10-17 2027 with my wife' });
+        const dTripId = dTripMsg.json.trip?.id;
+        setStage('d1 mama fish');
+        const d1 = await postItinerary(dOwner.session, { tripId: dTripId, text: "add Mama's Fish House for Saturday" });
+        const d1Db = dTripId ? await customerTurnRow(db, dTripId, "%Mama%Fish House%") : null;
+        const d1ThingId = d1.json?.thingId || d1.json?.savedThings?.[0]?.thingId || null;
+        const d1SharedDayIds = d1.json?.sharedDayIds || d1.json?.savedThings?.[0]?.sharedDayIds || [];
+        const d1Thing = d1ThingId ? (await db`select id, title, metadata, starts_at, source from trip_things where id=${d1ThingId} limit 1`)[0] : null;
+        const d1StartsIso = isoDateFromStartsAt(d1Thing?.starts_at);
+        setStage('d2 paia');
+        const d2 = await postItinerary(dOwner.session, { tripId: dTripId, text: 'save Paia Fish Market' });
+        const d2Db = dTripId ? await customerTurnRow(db, dTripId, '%Paia Fish Market%') : null;
+        const d2Reply = d2.json.reply || '';
+        setStage('d2 paia jev unsched reply');
+        const d2UnschedGrade = await gradeD2UnschedReply(d2Reply, {
+          customerTurn: 'save Paia Fish Market',
+        });
+        const d2Persist = persistedTurnClassifier(d2Db?.payload);
+        const dAllThings = dTripId ? await db`
+          select id, title, source, starts_at, metadata, created_at, source_request_id
+          from trip_things where trip_id=${dTripId} order by created_at asc` : [];
+        const dTurns = dTripId ? await db`
+          select id, body, speaker, payload, created_at, request_id
+          from transcript_turns where trip_id=${dTripId} and speaker='customer' order by created_at asc` : [];
+        const dCustomerTurnIds = dTurns.map((t) => t.id);
+        const dExtraRows = attributeDThingRows({
+          things: dAllThings,
+          customerTurns: dTurns,
+          turnResponses: [
+            { turnId: d1Db?.id, json: d1.json },
+            { turnId: d2Db?.id, json: d2.json },
+          ].filter((r) => r.turnId),
+        });
+        const dExtraFailures = gradeDExtraRows(dExtraRows);
+        out.checkD = {
+          dTripId,
+          dCustomerTurnIds,
+          d1: {
+            http: d1.status,
+            thingId: d1ThingId,
+            sharedDayIds: d1SharedDayIds,
+            thing: d1Thing,
+            startsAtIso: d1StartsIso,
+            turnResponse: { thingId: d1.json?.thingId, sharedDayIds: d1.json?.sharedDayIds },
+            customerTurnId: d1Db?.id || null,
+          },
+          d2: {
+            http: d2.status,
+            reply: d2Reply.slice(0, 300),
+            replyEvidence: d2Reply,
+            unschedReply: d2UnschedGrade.pass,
+            jev: d2UnschedGrade.jev,
+            targetKind: d2Persist.targetKind,
+            customerTurnId: d2Db?.id || null,
+            requestId: d2Db?.request_id || null,
+            turnResponse: d2.json,
+          },
+          dExtra: { rows: dExtraRows, failures: dExtraFailures },
+        };
+        const fail429 = attachProviderLogAndMaybeFail(out, 'D', { payload: d2Db?.payload, placeSearch: d2Db?.payload?.placeSearch, itineraryJson: d2.json }, { http: d2.status });
+        if (fail429) return fail429;
+        const pass = d1.status >= 200 && d1.status < 300 && d1ThingId && d1StartsIso === D1_EXPECT_START && d1SharedDayIds.length > 0
+          && d2.status >= 200 && d2.status < 300 && d2UnschedGrade.pass && dExtraFailures.length === 0;
+        return { pass, http: d2.status };
+      },
+    },
+    {
+      name: 'INV-CLAIM',
+      timeoutMs: 120000,
+      run: async ({ setStage }) => {
+        setStage('inv-claim intake');
+        const invOwner = await freshOwnerSession(ctx, couponInvClaim, 'inv', 'Inv', 'Claim');
+        const invTrip = await postItinerary(invOwner.session, { text: 'Maui March 10-17 2027 with my wife' });
+        const invReply = invTrip.json.reply || '';
+        const invTripId = invTrip.json.tripId || invTrip.json.trip?.id || null;
+        setStage('inv-claim jev first reply');
+        const invFirst = await gradeInvClaimFirstReply(invReply);
+        setStage('inv-claim lodging answer');
+        const lodgingTurn = invTripId
+          ? await postItinerary(invOwner.session, {
+            tripId: invTripId,
+            text: "We're staying at the Hyatt Regency Maui in Kaanapali.",
+          })
+          : { status: 0, json: {} };
+        const lodgingReply = lodgingTurn.json?.reply || '';
+        setStage('inv-claim jev after lodging');
+        const invSecond = await gradeInvClaimAfterLodgingReply(lodgingReply);
+        out.checkINVCLAIM = {
+          http: lodgingTurn.status || invTrip.status,
+          firstReply: invReply.slice(0, 500),
+          lodgingReply: lodgingReply.slice(0, 500),
+          jevFirst: invFirst.jev,
+          jevAfterLodging: invSecond.jev,
+        };
+        if (invFirst.jevError || invSecond.jevError) {
+          return {
+            pass: false,
+            harnessError: true,
+            harnessMessage: 'INV-CLAIM Jev judge error',
+            http: lodgingTurn.status || invTrip.status,
+          };
+        }
+        const pass = invTrip.status >= 200 && invTrip.status < 300 && invTrip.status !== 502
+          && lodgingTurn.status >= 200 && lodgingTurn.status < 300 && lodgingTurn.status !== 502
+          && invFirst.pass && invSecond.pass;
+        return { pass, http: lodgingTurn.status || invTrip.status };
+      },
+    },
+  ];
+}
+
+export async function runShepherdSmokeTail(ctx) {
+  const {
+    db,
+    out,
+    couponMain,
+    couponH2,
+    session,
+    tripId,
+    smokeEmail,
+    RUN_TS,
+    couponA1,
+    couponA2,
+    SCT_CODE,
+    DECOY_TITLE,
+    leak6,
+    ps6,
+    ps6b,
+    mReply,
+    rReply,
+    hTurn,
+    clReply,
+    hi,
+    tripMsg,
+    creationReply,
+    tTurn,
+    customerId,
+    runCheck,
+  } = ctx;
+
+  await runCheck('ASK-d2', async ({ setStage }) => {
+    setStage('ask-d2 d2 reply must not question');
+    const d2Block = out.checkD?.d2 || {};
+    const replyText = d2Block.replyEvidence || d2Block.turnResponse?.reply || d2Block.reply || '';
+    const grade = await gradeAskD2Reply(replyText, { customerTurn: 'save Paia Fish Market' });
+    out.checkASKD2 = {
+      replyText: String(replyText || '').slice(0, 2000),
+      jev: grade.jev,
+      d2CustomerTurnId: d2Block.customerTurnId || null,
+      dTripId: out.checkD?.dTripId || null,
+    };
+    const pass = Boolean(d2Block.customerTurnId) && grade.pass;
+    return { pass, http: d2Block.http || 200 };
+  }, { timeoutMs: 60000 });
+
+  await runCheck('P', async () => {
+    const pHits = out.checkP?.commerceHits || [];
+    return { pass: pHits.length === 0, http: 200 };
+  }, { timeoutMs: 60000 });
+
+  await runCheck('E', async ({ setStage }) => {
+    setStage('scan transcript errors');
+    const allAppTurns = await db`select speaker, body from transcript_turns where customer_id=${customerId} and channel='vacation-app' order by created_at`;
+    const errorHits = scanErrorText(customerVisibleReplies(allAppTurns, [
+      mReply, rReply, hTurn?.json?.reply, clReply, hi?.json?.reply, tripMsg?.json?.reply, creationReply, tTurn?.json?.reply,
+    ]));
+    out.checkE = { errorHits };
+    return { pass: errorHits.length === 0, http: 200 };
+  }, { timeoutMs: 60000 });
+
+  await runCheck('prior_db', async () => {
+    const savedTitles = tripId ? (await db`select title from trip_things where trip_id=${tripId}`).map((r) => r.title) : [];
+    const priorLeak = leak6 || (ps6b?.survivingPriorDbTitles || []).includes(DECOY_TITLE) || savedTitles.includes(DECOY_TITLE);
+    out.checkPriorDb = { decoyTitle: DECOY_TITLE, surviving6: ps6?.survivingPriorDbTitles, surviving6b: ps6b?.survivingPriorDbTitles, savedTitlesMatch: savedTitles.filter((t) => t.includes('PRIOR_DB_LEAK')) };
+    return { pass: !priorLeak, http: 200 };
+  }, { timeoutMs: 60000 });
+
+  const sctHash = couponHash(SCT_CODE, process.env);
+  const sct = (await db`select redemption_count, status from checkout_coupons where code_hash = ${sctHash} limit 1`)[0];
+  out.sctReserve = { code: SCT_CODE, redemption_count: sct?.redemption_count, status: sct?.status };
+
+  out.couponMain = couponMain;
+  out.couponH2 = couponH2;
+  out.session = session;
+  out.tripId = tripId;
+  out.smokeEmail = smokeEmail;
+  out.runTs = RUN_TS;
+  out.couponA1 = couponA1;
+  out.couponA2 = couponA2;
+}

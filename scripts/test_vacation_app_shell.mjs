@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { purchaseEmail } from '../src/vacation/email.mjs';
-import { ONBOARDING_OPENER_CHAT_ONLY } from '../src/vacation/live-app-turn.mjs';
-import { seatJoinCustomerText } from '../src/vacation/collaborator-app-seat.mjs';
+import { collaboratorSeatJoinEvent } from '../src/vacation/collaborator-app-seat.mjs';
 
 const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 assert.match(page, /TimeSyncher Vacation App/);
@@ -18,15 +17,26 @@ assert.match(page, /MAX_INLINE_FILE_BYTES/);
 assert.match(page, /FileReader/);
 assert.match(page, /\/timesyncher-logo-gold\.png/);
 assert.match(page, /alt="TimeSyncher"/);
-assert.match(page, /no vacations yet/);
-assert.match(page, /function tripBadge/);
+assert.match(page, /function vacationSelector/);
+assert.match(page, /trips\.length < 2/);
+assert.doesNotMatch(page, /id="collaboratorInviteForm"/);
+assert.doesNotMatch(page, /collaboratorInviteOpen/);
+assert.doesNotMatch(page, /class="collaborator-invite"/);
+assert.doesNotMatch(page, /Invite collaborator/);
+assert.match(page, /vacation-app-request\.js/);
+assert.doesNotMatch(page, /id="tripLabel"/);
+assert.doesNotMatch(page, /no vacations yet/);
+assert.doesNotMatch(page, /TimeSyncher Vacation Setup/i);
 assert.doesNotMatch(page, /data-screen="itinerary"/);
 assert.doesNotMatch(page, /data-screen="thing"/);
 assert.doesNotMatch(page, /aria-label="Vacation path"/);
 assert.match(page, /workspace\.chat-only/);
 assert.match(page, /realSiteUrl/);
 assert.doesNotMatch(page, /class="mark"[^>]*>TS</);
-assert.match(page, /id="attachButton"[\s\S]*id="messageText"[\s\S]*id="voiceButton"[\s\S]*class="send-button"/);
+assert.match(page, /id="attachButton"[\s\S]*id="messageText"[\s\S]*id="voiceButton"[\s\S]*id="sendButton"/);
+assert.match(page, /id="sendButton"[^>]*type="submit"[^>]*aria-label="Send"/);
+assert.doesNotMatch(page, /class="path-nav"/);
+assert.doesNotMatch(page, /id="tripMenu"/);
 assert.doesNotMatch(page, /title="Voice mode"/);
 assert.match(page, /id="eulaScreen"/);
 assert.match(page, /id="eulaAgreeButton"/);
@@ -42,7 +52,8 @@ assert.match(api, /queueVacationAppTurn/);
 assert.match(api, /vacation-app/);
 assert.match(api, /worker_jobs/);
 assert.match(api, /transcript_turns/);
-assert.match(api, /delete from transcript_turns where id = \$\{turnRows\[0\]\.id\}/);
+assert.match(api, /applyLiveAppReplyFailureToPayload/);
+assert.doesNotMatch(api, /delete from transcript_turns where id = \$\{turnRows\[0\]\.id\}/);
 assert.match(api, /classifyTurn/);
 assert.match(api, /publicTripUrl/);
 assert.match(api, /builtVacationSiteUrl/);
@@ -55,22 +66,40 @@ assert.match(api, /jevStamp/);
 assert.match(page, /data\.reply/);
 assert.match(page, /voiceArmed/);
 assert.doesNotMatch(page, /Got it\. I saved that/);
-assert.ok(page.includes(ONBOARDING_OPENER_CHAT_ONLY.split('\n\n')[0]));
-assert.ok(page.includes('Tell me the trip basics'));
-assert.ok(page.includes('welcome them onto this vacation as collaborators'));
+assert.doesNotMatch(page, /Your website is not built yet/);
+assert.doesNotMatch(page, /I can update this vacation from here/);
+assert.doesNotMatch(page, /Tell me the trip basics/);
 assert.match(api, /seat-join/);
-assert.match(api, /seatJoinCustomerText/);
-assert.match(seatJoinCustomerText({ displayName: 'Kimberly Davidson', payer: 'owner' }), /paid/);
-assert.match(seatJoinCustomerText({ displayName: 'Kimberly Davidson', payer: 'owner' }), /coupon/);
-assert.match(seatJoinCustomerText({ displayName: 'Tyler Davidson', payer: 'tyler' }), /EULA terms/);
-assert.match(seatJoinCustomerText({ displayName: 'Lauren Davidson', payer: 'lauren' }), /clicked join/);
+assert.match(api, /collaboratorSeatJoinEvent/);
+assert.doesNotMatch(api, /seatJoinCustomerText/);
+assert.doesNotMatch(page, /seatJoinCustomerText/);
+const joined = collaboratorSeatJoinEvent({
+  displayName: 'A Collaborator',
+  payer: 'owner',
+  role: 'collaborator',
+  inviteId: 'invite-1',
+  ownerCustomerId: 'owner-1',
+  ownerTripId: 'trip-1',
+});
+assert.equal(joined.speaker, 'system');
+assert.equal(joined.direction, 'system');
+assert.equal(joined.body, '');
+assert.equal(joined.payload.event, 'collaborator_seat_join');
+assert.equal(joined.payload.source, 'collaborator_seat_join');
+assert.equal(joined.payload.seat.displayName, 'A Collaborator');
+assert.equal(joined.payload.seat.payer, 'owner');
+assert.doesNotMatch(JSON.stringify(joined), /Big Island|Kailua-Kona|Kimberly|Tyler|Lauren|Craig|Vegas|Waikiki|EULA terms|clicked join|coupon/i);
 assert.match(page, /action: 'seat-join'/);
+assert.match(page, /speaker !== 'system'/);
 const acceptEula = page.slice(page.indexOf('async function acceptEula'), page.indexOf('function renderApp'));
-assert.match(acceptEula, /status === 'interim'/);
-assert.match(acceptEula, /action: 'finish-rewrite'/);
+assert.match(acceptEula, /status !== 'joined'/);
+assert.match(acceptEula, /already_joined/);
+assert.doesNotMatch(acceptEula, /finish-rewrite/);
 assert.match(api, /ensureOnboardingOpener/);
-assert.match(api, /onboardingOpenerText/);
-assert.match(api, /FIXED_OPENER_REASON/);
+assert.match(api, /renderOnboardingWelcome/);
+assert.doesNotMatch(api, /produceOnboardingOpener/);
+assert.doesNotMatch(api, /onboardingOpenerText/);
+assert.doesNotMatch(api, /FIXED_OPENER_REASON/);
 
 const vite = await readFile(new URL('../vite.config.mjs', import.meta.url), 'utf8');
 assert.match(vite, /vacationApp/);
@@ -82,9 +111,11 @@ assert.match(onboarding, /in_app_text_voice_and_file_intake/);
 
 const orderSuccess = await readFile(new URL('../order-success.html', import.meta.url), 'utf8');
 assert.match(orderSuccess, /Purchase confirmed/);
-assert.match(orderSuccess, /Check your email and click the link in that email to open TimeSyncher Vacation/);
+assert.match(orderSuccess, /Your TimeSyncher Vacation purchase is confirmed\./);
+assert.match(orderSuccess, /Check your email and click the link in that email/i);
 assert.match(orderSuccess, /purchase_email_ack/);
-assert.doesNotMatch(orderSuccess, /id="openApp"/);
+assert.match(orderSuccess, /id="openApp"/);
+assert.match(orderSuccess, /id="purchaseLink"/);
 assert.doesNotMatch(orderSuccess, /Open TimeSyncher Vacation/);
 assert.doesNotMatch(orderSuccess, /id="acceptEula"/);
 assert.doesNotMatch(orderSuccess, /\/accept\//);
@@ -92,20 +123,21 @@ assert.doesNotMatch(orderSuccess, /telegram|telegraph/i);
 
 const confirmed = purchaseEmail({
   contact: { firstName: 'Alex' },
-  publicSlug: 'intake-eab1cbb15144',
+  sessionToken: 'app-session-token',
   env: { TIMESYNCHER_SITE_BASE_URL: 'https://vacation-staging.timesyncher.com' },
 });
 assert.equal(
   confirmed.launchUrl,
-  'https://vacation-staging.timesyncher.com/shared/intake-eab1cbb15144/',
+  'https://vacation-staging.timesyncher.com/vacation-app.html?session=app-session-token',
 );
-assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\//);
-assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/shared\/intake-eab1cbb15144\/"/);
-assert.doesNotMatch(confirmed.htmlBody, /vacation-app\.html/);
+assert.match(confirmed.textBody, /Open TimeSyncher Vacation: https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token/);
+assert.match(confirmed.htmlBody, /href="https:\/\/vacation-staging\.timesyncher\.com\/vacation-app\.html\?session=app-session-token"/);
+assert.doesNotMatch(`${confirmed.launchUrl}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /\/shared\/intake-/);
 assert.doesNotMatch(`${confirmed.subject}\n${confirmed.textBody}\n${confirmed.htmlBody}`, /order-success|\/accept\/|telegram|telegraph/i);
 
 const orderTest = await readFile(new URL('../order-test.html', import.meta.url), 'utf8');
-assert.match(orderTest, /\/api\/checkout-coupon/);
+const orderCouponJs = await readFile(new URL('../public/order-test-coupon-checkout.js', import.meta.url), 'utf8');
+assert.match(`${orderTest}\n${orderCouponJs}`, /\/api\/checkout-coupon/);
 assert.doesNotMatch(orderTest, /fetch\('\/api\/create-payment-intent'[\s\S]{0,400}Redeeming coupon/);
 
 console.log('vacation app shell regression passed');

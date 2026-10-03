@@ -1,0 +1,1 @@
+values (${requestId}, ${tripId}, 'trip_intake', ${payload});

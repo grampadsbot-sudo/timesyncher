@@ -20,7 +20,7 @@ for (const [text, expectedKind] of blockedExamples) {
   const result = blockHighAuthorityRequest(text, {});
   assert.equal(result.blocked, true, `${text} should be blocked`);
   assert.ok(result.kinds.includes(expectedKind), `${text} should include ${expectedKind}`);
-  assert.match(result.message, /advisory-only/);
+  assert.equal(result.message, undefined);
 }
 
 const allowedPlanning = classifyHighAuthorityRequest('compare three hotels and draft a recommendation');

@@ -1,8 +1,7 @@
 import Stripe from 'stripe';
+import { checkoutCurrency } from './checkout-pricing.mjs';
 import { stripeSecretKey } from './stripe-env.mjs';
 import { collaboratorPlan, countActiveCollaborators, createCollaboratorInvite } from './collaborators.mjs';
-
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 
 function clean(value, max = 500) {
   return String(value || '').trim().slice(0, max);
@@ -13,17 +12,17 @@ function siteBase(env = process.env) {
 }
 
 export async function createCollaboratorCheckout({ db, stripe, env = process.env, ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {} }) {
-  const plan = collaboratorPlan(clean(planCode || 'single_trip', 80));
+  const plan = collaboratorPlan(clean(planCode || 'single_trip', 80), env);
   const ownerId = clean(ownerCustomerId, 80);
   const normalizedTripId = clean(tripId, 80);
   if (!ownerId) throw Object.assign(new Error('ownerCustomerId is required.'), { statusCode: 400 });
-  if (plan.scope === 'single_trip' && !normalizedTripId) {
-    throw Object.assign(new Error('tripId is required for single vacation collaborators.'), { statusCode: 400 });
+  if (!normalizedTripId) {
+    throw Object.assign(new Error('tripId is required. The owner invites a collaborator to each vacation separately.'), { statusCode: 400 });
   }
 
-  const activeCount = await countActiveCollaborators(db, ownerId);
+  const activeCount = await countActiveCollaborators(db, ownerId, normalizedTripId);
   if (activeCount >= plan.maxActiveCollaborators) {
-    throw Object.assign(new Error('Telegram collaborator cap reached.'), { statusCode: 409 });
+    throw Object.assign(new Error('Collaborator cap reached.'), { statusCode: 409 });
   }
 
   const { invite, token } = await createCollaboratorInvite(db, {
@@ -32,7 +31,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
     planCode: plan.code,
     requestedFor: clean(requestedFor, 180),
     metadata: {
-      source: 'telegram_collaborator_checkout',
+      source: 'collaborator_checkout',
       ...metadata,
     },
     env,
@@ -44,11 +43,9 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
     allow_promotion_codes: true,
     line_items: [{
       price_data: {
-        currency: CURRENCY,
+        currency: checkoutCurrency(env),
         product_data: {
-          name: plan.scope === 'single_trip'
-            ? 'Telegram collaborator for one vacation'
-            : 'Telegram collaborator for all vacations',
+          name: 'Collaborator access for this vacation',
         },
         unit_amount: plan.amountCents,
       },
@@ -61,7 +58,7 @@ export async function createCollaboratorCheckout({ db, stripe, env = process.env
       invite_id: invite.id,
       invite_token: token,
       owner_customer_id: ownerId,
-      trip_id: plan.scope === 'single_trip' ? normalizedTripId : '',
+      trip_id: normalizedTripId,
       plan_code: plan.code,
       scope: plan.scope,
     },

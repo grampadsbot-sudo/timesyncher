@@ -1,111 +1,90 @@
 ---
 name: verify-timesyncher-vacation
-description: "Re-runnable TimeSyncher Vacation verification. Drives the real shared app on vacation-staging and overwrites a per-feature PASS/FAIL/GAP table. Use for /maintain-verification-skill, after an app merge, or the weekly verification pass."
+description: "Drive the served TimeSyncher Vacation app on vacation-staging at 390x844 and 1280x800. Use after an app change, for the daily maintain pass, or whenever chat, checkout, or the shared trip should be checked against the screen spec."
 ---
 
 # Verify TimeSyncher Vacation
 
-The target is the real TimeSyncher app: Day-by-Day itinerary, Vacation Day View timeline bars, and Thing detail pages. Reference UI: `https://vacation-staging.timesyncher.com/shared/las-vegas-vacation-3/` (the staging copy of travel.timesyncher.com shared vacation-3). Never drive the deleted Onboarding/Itinerary card shell.
+The instance is staging. The customer surfaces are the chat workspace, signup, and the shared trip. Geometry is measured in Chromium. A vision judge reads Product's screen spec and the screenshot. Tolerances are the table in `layout-tolerances.json`.
 
-Prove the customer path in `features/post-purchase-email-eula.md`. The purchase email is the launch. Order-success Open App and standalone `/accept` are retired for this path. After a trip has a shared site, the app iframe is that real itinerary.
+Craig, 2026-10-03 9:26 AM PT: "It's a Grok-like text interface: just a text box with the file-add and speak buttons. The dropdown of vacations shows up if a customer has more than one vacation. Otherwise nothing in the header. The vacation website shows up on top once it has stuff in it. There is a control slider in the middle once the vacation shows up. Nothing else." The trip page's Open navigation / Settings menu is deleted.
+
+Craig, 2026-10-03 9:42 AM PT: "The header should be hidden if there are not multiple vacations. Not just empty. I also think we need a full screen control in the web site area." With 0 or 1 vacations the header is absent or its height is 0. An empty header bar fails. When a website is shown, a full-screen control in that area expands it to the viewport, and an exit control returns to the split view. That state is `website-full-screen`, checked at both viewports. Until the served app has it, the row fails. It is not a GAP.
+
+Craig, 2026-10-03 10:50 AM PT (`tsv-ui-spec` revision `a3896550`): the composer is the text box plus file-add, speak, and a visible send button. The send button is inside the composer and inside the viewport at 390 and 1280, and it is tappable. A missing send button fails. Send is an allowed composer control.
 
 ## Launch
 
-Staging is already the instance. Do not start a second host.
+Staging is already running. Do not start a second host.
 
 - Alias: `https://vacation-staging.timesyncher.com`
-- Ready when `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor` prints `doctor ok`.
+- Ready when `GET /api/version` returns 200 and a sha, and this doctor prints `sha <sha>`:
 
-No local server. Teardown is not a process kill.
+```bash
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --doctor
+```
+
+`--doctor` is the readiness check below. It does not deploy.
 
 ## Doctor
 
+One read-only check:
+
 ```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --doctor
 ```
 
-Doctor GETs `/order-success.html` and `/vacation-app.html` on the staging alias. It fails if order-success still offers a primary Open App control or an in-page EULA accept, or if the app document no longer loads the vacation app script.
+The doctor fails unless all of these hold:
+
+- `GET /api/version` is 200 and the JSON includes `sha`
+- `/vacation-app.html`, `/`, and `layoutSharedPath` from `verify-config.json` load
+- each page's `meta[name="timesyncher-build"]` or `html[data-build-sha]` matches that sha
+- Chromium opens at 390x844 (deviceScaleFactor 2, isMobile, hasTouch) and at 1280x800, and `innerWidth`/`innerHeight` match
+
+A doctor failure overwrites `<out>/VERIFY.md` with a failed readiness row. It is not a pass.
 
 ## Drive
 
-Source gate (no network):
-
 ```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --out <dir>
+node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --out <dir> --only chat
 ```
 
-Evidence gate. The launch URL is read from the captured purchase email, not typed from a success page:
+`<dir>` defaults to `.cursor/skills/verify-timesyncher-vacation/output`. The command opens the surfaces in `features/`, at both viewports, using the selectors in those files (`#messageText`, `#attachButton`, `#voiceButton`, `#composer`, `#messages`, `#splitter`, `#tripButton`, tab buttons by accessible name). It writes `<dir>/VERIFY.md`.
 
-```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --evidence /opt/cursor/artifacts/craig-811-email-eula-20260925
-```
+Set `TIMESYNCHER_VERIFY_SESSION` to an accepted app URL or session token to open chat. Leave it unset and the chat states, including `website-full-screen`, are `verified-unreachable`. That is a failed row. The command does not create an account and does not redeem a coupon.
 
-Live read of that email's app URL plus the staging doctor:
+Screen specs are read at runtime from `features/screens/<screen>.md`. Chat states, including the app shell after Agree, use `features/screens/app.md` (the repo copy of `tsv-ui-spec` revision `b4f09fa9`). The trip uses `features/screens/trip.md` when a narrower file is absent. A missing spec is `spec-missing` and the row fails.
 
-```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --evidence /opt/cursor/artifacts/craig-811-email-eula-20260925 --live
-```
+The layout column is measured geometry from `skills/tsv-layout-verification` v0.4 (revision e21dd1b8) against `tsv-ui-spec` revision b4f09fa9. With fewer than 2 vacations the header is absent or its height is 0. With 2 or more it contains only the vacation dropdown. No app or brand logo paints in the shell. The per-state table decides the middle: conversation is the top region only when there is no website, and it ends above the text box; under a website that placement is not graded. A painted footer or build stamp on the trip page fails. The judge column is one vision call per screenshot. `OPENROUTER_API_KEY` is required. A missing key, timeout, or transport error fails the judge. It is not skipped.
 
-Fail-closed self-check (missing email, email that opens order-success, email that opens `/accept`):
-
-```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --self-check
-```
-
-The harness exits non-zero when:
-
-- the evidence directory has no purchase email HTML or text (the run skipped email);
-- the email launch link is order-success or `/accept` instead of `vacation-app.html?session=`;
-- EULA acceptance is only on order-success (`#acceptEula` or an `/accept/` customer link) and the app URL did not show `#eulaScreen` first;
-- onboarding chat proof is missing after that EULA screen.
+The process exits non-zero when any row is not PASS. A GAP is allowed only when that feature file says `status: not-built`.
 
 ## Evidence
 
-Keep proof in the directory passed to `--evidence`. This path uses `/opt/cursor/artifacts/craig-811-email-eula-20260925/`. Required captures: `purchase-email.html` or `purchase-email.txt`, and `browser-notes.json` with `email`, `eula-first`, and `onboarding` steps. Screenshots in that folder are the human proof. The harness does not delete them.
+Proof stays in `<dir>`: `VERIFY.md`, `measurements.json`, and `verify/<feature>-<subfeature>-<390|1280>.png` plus the full-page `*-page.png` and a JSON sidecar. The judge's verdict and mismatches are in that sidecar. The harness does not delete this directory.
 
 ## Cleanup
 
-The harness only writes under a temp directory during `--self-check`, and it removes that directory before exit. It does not delete evidence, coupons, or staging data.
+The harness closes the Chromium process it launched. It does not delete `<dir>`, coupons, or staging data. `--self-check` uses a temp directory and removes that temp directory before it exits. Skill files and a caller's evidence directory stay.
 
 ## Helpers
 
-`node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs` checks the email launch. Flags: `--doctor`, `--evidence <dir>`, `--live`, `--self-check`.
+Every script is run with `node`. The entry is executable in the sense the repo runs it with `node`, not a shell chmod gate.
 
-## Live composer Jev tier
+- `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --self-check` proves the gate offline. The 10/3 probe boxes fail (composer bottom below 844, header width 479 at 390, Open navigation and Settings painted). An empty header bar fails `header-renders`. A header with height 0 passes. A website without a full-screen control fails `fullscreen-control-unmeasured`. A website that fills the viewport with an exit control passes, and one that does not fill fails. A shell brand logo fails `logo-paints`. A painted trip footer fails `footer-paints`. A correct trip page has neither. A conversation under the website is not graded. A correct 390 page passes. A missing spec, unmeasured composer, missing screenshot, judge error, and judge timeout each fail. When Chromium is installed it also renders those HTML fixtures and checks the measurements. No network.
+- `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --doctor` is the readiness check.
+- `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --out <dir>` drives every feature.
+- `node .cursor/skills/verify-timesyncher-vacation/scripts/layout-self-check.mjs` is the same offline proof, called by `--self-check`.
 
-Prove `features/live-app-jev-tier.md`. The composer reply is Jev, then that model tier, then the stored text. Same shared producer as Dialog.
+`scripts/test_verify_vacation_layout_self_check.mjs` is on `scripts/offline-tests.txt`, so CI runs the offline proof and does not call staging.
 
-```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --self-check
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --transcript <live-transcript.json>
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-live-app-jev-tier.mjs --session <token>
-```
+## Maintain
 
-The harness exits non-zero when the source path skips Jev, stamps a dialog fingerprint onto the customer reply, or a live app turn lacks `jevRan` plus tier and route. A skipped classify must be `jevRan: false` with a reason and no invented tier. `--session` only reads stored turns.
+Once a day, one live session:
 
-## Feature map drive
+1. Run the doctor.
+2. Run the full drive with `TIMESYNCHER_VERIFY_SESSION` when a chat session is available, and with `OPENROUTER_API_KEY` set.
+3. Read `<dir>/VERIFY.md`.
 
-This is the command `/maintain-verification-skill` re-runs after every app merge and weekly. It is idempotent: it overwrites `<out>/VERIFY.md` and `<out>/verify/*.png`, and it does not redeem a coupon or insert staging rows.
-
-```bash
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs --self-check
-node .cursor/skills/verify-timesyncher-vacation/scripts/verify-feature-map.mjs --out <dir>
-```
-
-`<dir>` defaults to `.cursor/skills/verify-timesyncher-vacation/output`, which is not committed. The same input overwrites the same table. QA reads that table: one row per feature file, result `PASS`, `FAIL`, or `GAP`.
-
-The real-app gate is required. The command runs `npm run test:real-app-entry` first and refuses a clean table when that gate fails. A doctor failure overwrites the same table with `Doctor FAIL` so a later run cannot leave an older PASS table in place. A product gap stays a `GAP` row. Do not delete or soften the feature file.
-
-A missing feature file in the checker list fails `--self-check`. Pass `TIMESYNCHER_VERIFY_SESSION` only when a pending app URL should be opened again. Omit it on a routine re-run.
-
-## Screenshot journey
-
-Every test run also builds the Screenshot Journey PDF from these feature files. The script is idempotent: it overwrites `screenshot-journey.pdf`, the page PNGs under `journey-pages/`, and the `## Screenshot journey` section of `VERIFY.md`. It does not redeem a coupon and it does not click Agree.
-
-```bash
-node scripts/screenshot-journey-pdf.mjs --self-check
-node scripts/screenshot-journey-pdf.mjs --out <dir> --session-url <app-url> --shared-url <intake-url> --eula-url <pending-app-url>
-```
-
-The real-app gate runs first. A feature file with no screenshot is a GAP in the PDF contents page and in `VERIFY.md`. Shell screens are refused. `--eula-url` is a pending app URL used only for the EULA page. Omit it and that page is a gap.
+Outcome is `clean` when every row is PASS, `changed` when any row fails because the served UI differs from the screen spec, and `blocked` when the doctor fails, the judge key is missing, or a sub-feature is verified-unreachable. Open at most one PR for that pass, and only for a `changed` outcome. Do not open a second PR in the same pass.

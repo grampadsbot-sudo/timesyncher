@@ -1,14 +1,21 @@
-import { cleanText, headerValue, sendJson } from './http.mjs';
-
-const TRAVEL_TREK = 'https://travel.timesyncher.com';
+import { cleanText, headerValue } from './http.mjs';
 
 function productTrekPublic() {
-  const fromEnv = String(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || '').replace(/\/+$/, '');
-  if (/^https:\/\/travel\.timesyncher\.com$/i.test(fromEnv)) return fromEnv;
-  return TRAVEL_TREK;
+  const fromEnv = String(
+    process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL
+    || process.env.TIMESYNCHER_TRAVEL_BASE_URL
+    || process.env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL
+    || '',
+  ).replace(/\/+$/, '');
+  if (!fromEnv) throw new Error('TIMESYNCHER_TREK_PUBLIC_BASE_URL is missing');
+  return fromEnv;
 }
 
-export const PRODUCT_TREK_PUBLIC = productTrekPublic();
+let cachedProductTrekPublic;
+export function getProductTrekPublic() {
+  if (!cachedProductTrekPublic) cachedProductTrekPublic = productTrekPublic();
+  return cachedProductTrekPublic;
+}
 
 /** Sole SoT. CoS dated twin is the same rules. */
 export const PRODUCT_SOT = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
@@ -126,7 +133,7 @@ export function productPdfUrl({
   if (isDailyReport(report, pdfPath)) {
     const day = dailyDayFromPdfPath(pdfPath) || String(report).replace(/^[^\d]*/, '') || '';
     const suffix = day ? `/daily/${encodeURIComponent(day)}.pdf` : '/daily.pdf';
-    return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}${suffix}${search}`;
+    return `${getProductTrekPublic()}/api/pdf/shared/${token}${suffix}${search}`;
   }
   const name = normalizeReportName(report);
   if (name === PRODUCT_STYLE_TWO_REPORT) {
@@ -143,7 +150,7 @@ export function productPdfUrl({
       search,
     });
   }
-  return `${PRODUCT_TREK_PUBLIC}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
+  return `${getProductTrekPublic()}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
 }
 
 export function forwardedKeepsakeSearch(url) {

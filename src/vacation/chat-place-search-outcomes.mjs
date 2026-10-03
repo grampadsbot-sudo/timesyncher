@@ -1,0 +1,117 @@
+import { placeToTripThing } from './place-search.mjs';
+import { placeSearchTelemetry, placeSearchStatusFromProviderAttempts } from './in-turn-search-telemetry.mjs';
+import { placeSearchReplyFacts } from './place-search-reply-facts.mjs';
+import { pickPlaceSearchDiagnostics } from './place-search-diagnostics-pick.mjs';
+
+function placesToChatResultRows(places = []) {
+  return (Array.isArray(places) ? places : []).flatMap((place) => {
+    const thing = placeToTripThing(place);
+    const name = String(thing?.title || '').trim();
+    if (!name) return [];
+    const providerRef = thing?.metadata?.sourceRef;
+    const providerId = String(providerRef?.id || '').trim();
+    if (!providerId) return [];
+    return [{
+      name,
+      title: name,
+      sourceRef: { source: String(providerRef.source || thing.source || ''), id: providerId },
+    }];
+  });
+}
+
+export function finishCustomerChatPlaceSearch({ places = [], search = {}, errorMessage = null } = {}) {
+  const providerAttempts = Array.isArray(search?.providers) ? search.providers : [];
+  const normalizedPlaces = Array.isArray(places) ? places : [];
+  const things = normalizedPlaces.map((place) => placeToTripThing(place));
+  const status = placeSearchStatusFromProviderAttempts(things);
+  if (status === 'failed') {
+    const error = String(
+      errorMessage || `Place search returned no results for ${search?.destination || 'the requested area'}.`,
+    ).trim();
+    console.error(`customer chat place search failed: ${error}`);
+    return { status: 'failed', error, placeResults: [], things: [], search };
+  }
+  const placeResults = placesToChatResultRows(normalizedPlaces);
+  return { status: 'ok', error: null, places: normalizedPlaces, things, placeResults, search };
+}
+
+export function customerChatPlaceSearchNoResults(search) {
+  return {
+    status: 'no_results',
+    error: null,
+    placeResults: [],
+    things: [],
+    search,
+  };
+}
+
+export async function persistTurnPlaceSearchNoResults(db, turnId, {
+  payload,
+  customerLive,
+  providerAttempts = [],
+  classifierMeta = {},
+  search = null,
+  providerErrors = null,
+  judgeInput = null,
+  searchCenter = null,
+  anchor = null,
+} = {}) {
+  const diagnostics = pickPlaceSearchDiagnostics(search);
+  const outcomeReason = String(search?.outcomeReason || search?.reason || '').trim();
+  const placeSearch = placeSearchTelemetry({
+    status: 'no_results',
+    error: null,
+    reason: outcomeReason || null,
+    things: [],
+    providerAttempts,
+    providerErrors: providerErrors ?? diagnostics.providerErrors ?? null,
+    judgeInput: judgeInput ?? diagnostics.judgeInput ?? null,
+    searchCenter: searchCenter ?? diagnostics.searchCenter ?? null,
+    anchor: anchor ?? diagnostics.anchor ?? null,
+    braveLookups: diagnostics.braveLookups ?? null,
+    anchorRadiusPolicy: diagnostics.anchorRadiusPolicy ?? null,
+    anchorRadiusRejections: diagnostics.anchorRadiusRejections ?? null,
+    relevanceRejections: diagnostics.relevanceRejections ?? null,
+    dedupeMerges: diagnostics.dedupeMerges ?? null,
+    providerTimings: diagnostics.providerTimings ?? null,
+    ...classifierMeta,
+    ...(Number(diagnostics.anchorRadiusRejected) > 0
+      ? { anchorRadiusRejected: diagnostics.anchorRadiusRejected }
+      : {}),
+  });
+  payload.placeSearch = placeSearch;
+  customerLive.placeSearch = placeSearch;
+  await db`
+    update transcript_turns
+    set payload = ${payload}
+    where id = ${turnId}
+  `;
+  return placeSearch;
+}
+
+export async function syncWorkerJobAfterInTurnPlaceSearch(db, jobId, input) {
+  await db`
+    update worker_jobs
+    set input = ${input}
+    where id = ${jobId}
+  `;
+}
+
+export function inTurnSearchNoResultsReturn(placeSearch, { classification = null, tripDestination = '' } = {}) {
+  const target = String(classification?.target || '').trim();
+  const area = String(classification?.anchor || tripDestination || '').trim();
+  const code = String(placeSearch?.reason || '').trim() || 'all_providers_failed';
+  return {
+    ok: true,
+    inTurnProviderResults: [],
+    enforceInTurnSearch: false,
+    placeSearch,
+    webResearchTurn: false,
+    placeSearchReplyFacts: placeSearchReplyFacts({
+      target,
+      area,
+      destination: tripDestination,
+      code,
+    }),
+  };
+}

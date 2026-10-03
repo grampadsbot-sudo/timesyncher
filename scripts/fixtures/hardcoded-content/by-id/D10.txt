@@ -1,0 +1,1 @@
+budget: [{ total_price: null, persons: null }], share_budget: true,

@@ -11,7 +11,13 @@ function siteBase(env = process.env) {
 }
 
 function travelBase(env = process.env) {
-  return String(env.TIMESYNCHER_TRAVEL_BASE_URL || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || 'https://travel.timesyncher.com').replace(/\/+$/, '');
+  const value = String(env.TIMESYNCHER_TRAVEL_BASE_URL || env.TIMESYNCHER_PUBLIC_TRAVEL_BASE_URL || '').trim().replace(/\/+$/, '');
+  if (!value) throw new Error('TIMESYNCHER_TRAVEL_BASE_URL is missing');
+  return value;
+}
+
+export function requiredTravelBase(env = process.env) {
+  return travelBase(env);
 }
 
 /** Staging website already honors Style two Config (`Ae()`). Do not invent hosts. */
@@ -71,15 +77,8 @@ export function webAccessCookieName() {
 }
 
 export function webAccessAcceptUrl(token, env = process.env) {
-  return `${siteBase(env)}/api/vacation-web-access?action=accept&token=${encodeURIComponent(token)}`;
-}
-
-export function webAccessTelegramLaunchUrl(token, redirectUrl = '', env = process.env) {
-  const url = new URL(`${siteBase(env)}/api/vacation-web-access`);
-  url.searchParams.set('action', 'telegram_launch');
-  url.searchParams.set('token', token);
-  if (redirectUrl) url.searchParams.set('redirect', redirectUrl);
-  return url.toString();
+  const base = websiteTripBase(env);
+  return `${base}/api/vacation-itinerary?webAccess=1&action=accept&token=${encodeURIComponent(token)}`;
 }
 
 export function publicTripUrl(trip, env = process.env) {
@@ -193,7 +192,7 @@ export async function createWebEditorInvite(db, {
   };
 }
 
-export async function createTelegramWebAccessSession(db, {
+async function createAcceptedWebAccessSession(db, {
   ownerCustomerId,
   tripId,
   email,
@@ -209,7 +208,7 @@ export async function createTelegramWebAccessSession(db, {
   const normalizedRole = editableRole(role);
   if (!ownerId) throw Object.assign(new Error('ownerCustomerId is required.'), { statusCode: 400 });
   if (!normalizedTripId) throw Object.assign(new Error('tripId is required.'), { statusCode: 400 });
-  if (!normalizedEmail || !normalizedEmail.includes('@')) throw Object.assign(new Error('A linked owner email is required for Telegram website access.'), { statusCode: 400 });
+  if (!normalizedEmail || !normalizedEmail.includes('@')) throw Object.assign(new Error('A linked owner email is required for website access.'), { statusCode: 400 });
 
   const ownerTrip = await db`
     select
@@ -222,7 +221,7 @@ export async function createTelegramWebAccessSession(db, {
       and trips.customer_id = ${ownerId}
     limit 1
   `;
-  if (!ownerTrip[0]) throw Object.assign(new Error('Only the vacation owner or paid collaborator can create Telegram website access.'), { statusCode: 403 });
+  if (!ownerTrip[0]) throw Object.assign(new Error('Only the vacation owner can create website access.'), { statusCode: 403 });
 
   const sessionToken = randomToken();
   const rows = await db`
@@ -257,7 +256,7 @@ export async function createTelegramWebAccessSession(db, {
       public_url: publicUrl,
     },
     sessionToken,
-    launchUrl: webAccessTelegramLaunchUrl(sessionToken, publicUrl, env),
+    launchUrl: publicUrl,
   };
 }
 
@@ -297,7 +296,7 @@ export async function createOwnerWebsiteSessionByShareToken(db, {
   const publicUrl = sharedTripWebsiteUrl(token, env) || publicTripUrl(trip, env);
   const ownerId = clean(trip.customer_id || trip.owner_customer_id, 80);
   if (!requested || requested === ownerEmail) {
-    return createTelegramWebAccessSession(db, {
+    return createAcceptedWebAccessSession(db, {
       ownerCustomerId: ownerId,
       tripId: trip.id,
       email: ownerEmail || requested,
@@ -350,37 +349,6 @@ export async function loadWebAccessGrantByInviteToken(db, token, env = process.e
     limit 1
   `;
   return rows[0] || null;
-}
-
-export async function loadWebAccessGrantBySessionToken(db, token, env = process.env) {
-  if (!token) return null;
-  await ensureVacationWebAccessSchema(db);
-  const rows = await db`
-    select
-      g.*,
-      trips.title as trip_title,
-      trips.metadata as trip_metadata,
-      customers.email as owner_email,
-      customers.display_name as owner_display_name
-    from vacation_web_access_grants g
-    join trips on trips.id = g.trip_id
-    left join customers on customers.id = g.owner_customer_id
-    where g.session_token_hash = ${webAccessTokenHash(token, env)}
-      and g.role in ('owner', 'web_editor', 'telegram_collaborator')
-      and g.status = 'accepted'
-      and (g.expires_at is null or g.expires_at > now())
-    limit 1
-  `;
-  if (!rows[0]) return null;
-  await db`
-    update vacation_web_access_grants
-    set last_seen_at = now(), updated_at = now()
-    where id = ${rows[0].id}
-  `;
-  return {
-    ...rows[0],
-    public_url: publicTripUrl({ metadata: rows[0].trip_metadata }, env),
-  };
 }
 
 export async function acceptWebAccessInvite(db, token, env = process.env) {
@@ -495,5 +463,5 @@ export async function requireWebEditAccess(db, req, { tripId, ownerCustomerId = 
     return { ok: true, role: 'owner' };
   }
 
-  throw Object.assign(new Error('Website editing requires the owner, a paid Telegram collaborator, or an accepted owner-approved email invite.'), { statusCode: 403 });
+  throw Object.assign(new Error('Website editing requires the owner or an accepted owner-approved email invite.'), { statusCode: 403 });
 }

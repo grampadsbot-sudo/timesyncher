@@ -1,0 +1,11 @@
+const tripWindow = { start: '2026-04-03', end: '2026-04-10' };
+const monthDay = 'April 10th';
+const shortMonth = 'Apr 10';
+const ordinalDay = 'last Monday';
+const fixed = new Date('2026-04-10');
+const numeric = new Date(2026, 3, 10);
+const utcDay = Date.UTC(2026, 3, 10);
+const clock = new Date();
+const now = new Date(Date.now());
+const named = new Date(when);
+const open = { start: beginOn, end: endOn };

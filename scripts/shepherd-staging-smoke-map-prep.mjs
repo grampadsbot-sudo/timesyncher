@@ -1,0 +1,21 @@
+import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
+import { postItinerary } from './shepherd-staging-smoke-helpers.mjs';
+
+export async function prepareMapLogoIntakeShare(ctx) {
+  const { state, BASE, db } = ctx;
+  await postItinerary(state.session, { tripId: state.tripId, text: "We're staying at the Westin Maui in Kaanapali." });
+  await postItinerary(state.session, { tripId: state.tripId, text: 'Hertz rental car at OGG' });
+  const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
+  let sharedApi = null;
+  if (shareSlug) {
+    for (let i = 0; i < 25; i += 1) {
+      const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
+      sharedApi = { status: sr.status, json: await sr.json().catch((err) => ({ _jsonError: String(err?.message || err) })) };
+      if ((sharedApi.json?.places || []).length >= 1) break;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  const tripMetaAfterH = state.tripId ? (await db`select metadata from trips where id=${state.tripId} limit 1`)[0]?.metadata : null;
+  const publicUrlAfterH = tripMetaAfterH?.publicUrl || tripMetaAfterH?.public_url || '';
+  return { shareSlug, sharedApi, publicUrlAfterH, intakeShareUrl: shareSlug ? `${BASE}/shared/${shareSlug}/` : '' };
+}

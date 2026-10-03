@@ -1,11 +1,23 @@
-import { lowestCarOffers } from './car-offers.mjs';
-import { BIG_ISLAND_FILL_DETAILS } from './keepsake-list-minimums.mjs';
-import { captureThingLogo } from './thing-logo-capture.mjs';
+import { assignDatesScheduling as scheduleThingDates, tripIsoDay } from './intake-weekday-dates.mjs';
+
+export { tripIsoDay };
+import { placeSourceFieldsFromThing, logoFieldsForSharedPlace } from './intake-shared-place-source.mjs';
+import { transportKind } from './intake-transport-kind.mjs';
+import { isLodgingStay } from './intake-lodging-stay.mjs';
+import { normalizeThingType } from './timeline-icons.mjs';
+import { destinationCenterFromTripMetadata } from './trip-destination-center.mjs';
+import { writeRatings } from './write-ratings.mjs';
 
 const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
+
+function customerPlaceName(value) {
+  const text = String(value || '').trim();
+  if (!text || /^(shell|intake)-[a-z0-9]+$/i.test(text)) return '';
+  return text;
+}
 
 export function intakeShareSlug(tripId) {
   const hex = String(tripId || '').replace(/-/g, '').toLowerCase().slice(0, 12);
@@ -13,19 +25,14 @@ export function intakeShareSlug(tripId) {
   return `intake-${hex}`;
 }
 
-function intId(seed) {
+export function intId(seed) {
   let hash = 2166136261;
   for (const char of String(seed)) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
   return (hash >>> 0) % 900000000 + 1000;
 }
 
 function isoDate(value) {
-  if (!value) return '';
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : '';
+  return tripIsoDay(value);
 }
 
 function addDays(iso, count) {
@@ -54,68 +61,227 @@ function namedDates(label, year) {
   return [...new Set(found)];
 }
 
-function formatTakeoff(start) {
-  const iso = String(start || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
-  const date = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return '';
-  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()];
-  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getUTCMonth()];
-  return `${weekday} ${month} ${date.getUTCDate()}`;
+function schedulingRecord(thing = {}) {
+  const meta = thing.metadata && typeof thing.metadata === 'object' && !Array.isArray(thing.metadata) ? thing.metadata : {};
+  return {
+    whenLabel: String(thing.whenLabel || thing.when || meta.whenLabel || '').trim(),
+    customerWhen: String(thing.customerWhen || meta.customerWhen || '').trim(),
+    starts_at: thing.starts_at || thing.startsAt || meta.starts_at || null,
+  };
 }
 
-function assignDates(thing, year, tripDates) {
-  if (thing.title === 'Groceries') {
-    const arrival = namedDates(thing.whenLabel || '', year).filter((date) => tripDates.includes(date));
-    if (arrival.length) return [arrival[0]];
+export function assignDatesScheduling(thing, year, tripDates) {
+  const record = schedulingRecord(thing);
+  const scheduled = scheduleThingDates(record, year, tripDates, namedDates);
+  if (scheduled.dates.length || scheduled.weekdayAmbiguous) return scheduled;
+  const stamped = tripIsoDay(record.starts_at);
+  if (stamped && Array.isArray(tripDates) && tripDates.includes(stamped)) {
+    return { dates: [stamped], weekdayAmbiguous: false, candidateDates: [] };
   }
-  const named = [...namedDates(thing.customerWhen, year), ...namedDates(thing.whenLabel, year)];
-  let unique = [...new Set(named)].filter((date) => tripDates.includes(date));
-  if (thing.title === 'Swim') {
-    const arrival = tripDates[0] || '';
-    unique = unique.filter((date) => date !== arrival);
-    return unique;
+  return scheduled;
+}
+
+export function assignDates(thing, year, tripDates) {
+  return assignDatesScheduling(thing, year, tripDates).dates;
+}
+
+function thingMetadata(thing = {}) {
+  return thing.metadata && typeof thing.metadata === 'object' && !Array.isArray(thing.metadata) ? thing.metadata : {};
+}
+
+export function customerStatedLodgingThing(thing = {}) {
+  const category = String(thing.category || '').toLowerCase();
+  if (category !== 'hotel' && category !== 'lodging' && category !== 'accommodation') return true;
+  const meta = thingMetadata(thing);
+  if (meta.customerStatedLodging === true) return true;
+  const source = String(meta.source || thing.source || '').toLowerCase();
+  if (source === 'customer_stated' || source === 'customer') return true;
+  if (meta.intakeSource === 'chat_extraction') return true;
+  if (['brave', 'osm', 'tavily'].includes(source) && locationOf(thing)) return true;
+  return false;
+}
+
+export function statedLodgingLabelFromThings(things = []) {
+  for (const thing of things || []) {
+    if (!customerStatedLodgingThing(thing)) continue;
+    const kind = categoryKey(thing) || String(thing.category || '').trim().toLowerCase();
+    if (kind !== 'lodging' && kind !== 'hotel' && kind !== 'accommodation') continue;
+    const title = String(thing.title || thing.name || '').trim();
+    if (title) return title.slice(0, 240);
   }
-  if (!unique.length) return tripDates.slice(0, 1);
-  const spansTrip = /big island|house/i.test(String(thing.title || ''));
-  if (spansTrip && unique.length >= 2) {
-    const sorted = unique.slice().sort();
-    const span = eachDate(sorted[0], sorted[sorted.length - 1]).filter((date) => tripDates.includes(date));
-    if (span.length > 2) return span;
+  return '';
+}
+
+function labelText(value) {
+  if (typeof value === 'string') return value.trim();
+  if (value && typeof value === 'object' && !Array.isArray(value)) return String(value.name || '').trim();
+  return '';
+}
+
+function sourceCategoryName(thing = {}) {
+  const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const record = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : {};
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {};
+  for (const value of [
+    thing.categoryName,
+    meta.categoryName,
+    record.categoryName,
+    metaRecord.categoryName,
+    record.category_name,
+    metaRecord.category_name,
+  ]) {
+    const text = labelText(value);
+    if (text) return text;
   }
-  return unique;
+  return labelText(thing.category);
 }
 
 function categoryFor(thing) {
-  if (String(thing.category || '').toLowerCase() === 'hotel') {
-    return { category_name: 'Hotel', category_icon: '🏨', category: 'hotel' };
+  const lodging = isLodgingStay(thing);
+  const kind = transportKind(thing);
+  if (kind === 'flight' || (kind === 'car' && !lodging)) {
+    const category_name = kind === 'flight' ? 'Flight' : 'Car';
+    const category_icon = kind === 'flight' ? '✈️' : '🚗';
+    return { category_name, category_icon, category: kind };
   }
-  return { category_name: 'Attraction', category_icon: '🏛️', category: 'other' };
+  const source = thing?.source && typeof thing.source === 'object' ? thing.source : {};
+  const model = thing?.model && typeof thing.model === 'object' ? thing.model : {};
+  const raw = String(
+    source.category || source.category_name || thing?.sourceCategory || ''
+    || model.category || model.category_name || thing?.modelCategory || ''
+    || sourceCategoryName(thing)
+  ).trim();
+  if (!raw && !lodging) return { category_name: '', category_icon: '', category: '' };
+  const key = raw.toLowerCase();
+  if (lodging || normalizeThingType(raw) === 'hotel') {
+    const named = sourceCategoryName(thing);
+    const category_name = named && !/^(hotel|lodging|accommodation|resort|motel|hostel|inn)$/i.test(named) ? named : 'Hotel';
+    return { category_name, category_icon: '🏨', category: 'hotel' };
+  }
+  const known = {
+    restaurant: ['Restaurant', '🍽️', 'restaurant'],
+    store: ['Store', '🛍️', 'store'],
+    shopping: ['Store', '🛍️', 'shopping'],
+    transport: ['Transport', '🚕', 'transport'],
+    attraction: ['Attraction', '🏛️', 'attraction'],
+    bar: ['Bar', '☕', 'bar'],
+  }[key];
+  if (known) return { category_name: known[0], category_icon: known[1], category: known[2] };
+  return { category_name: raw, category_icon: '', category: key };
 }
 
-/** Product thing copy from the title, who, and when. Not a pasted chat turn. */
-export function productThingSummary(thing = {}) {
-  const title = String(thing.title || thing.name || '').trim();
-  const who = String(thing.who || '').trim();
-  const when = String(thing.customerWhen || thing.whenLabel || '').trim();
-  const whoBit = who ? ` for ${who}` : '';
-  const whenBit = when ? ` on ${when}` : '';
-  if (/grocer/i.test(title)) return `Groceries${whenBit}, the arrival day, after the airport shuttle.`.replace(/\s+/g, ' ').trim();
-  if (/garden/i.test(title)) return `Garden time${whoBit}${whenBit}. One garden block, not two big activities.`;
-  if (/\bswim\b/i.test(title)) {
-    const wind = String(thing.windBackup || '').trim();
-    const base = `A swim${whoBit}${whenBit}.`.replace(/\s+/g, ' ').trim();
-    return wind ? `${base} ${wind}` : base;
+function finiteCoord(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function locationOf(thing = {}) {
+  const nested = thing.location && typeof thing.location === 'object' ? thing.location : {};
+  const lat = finiteCoord(thing.lat ?? nested.lat ?? nested.latitude);
+  const lng = finiteCoord(thing.lng ?? nested.lng ?? nested.longitude);
+  if (lat == null || lng == null) return null;
+  const address = String(thing.address || nested.address || '').trim();
+  return address ? { lat, lng, address } : { lat, lng };
+}
+
+function sourceRefOf(thing = {}) {
+  const direct = thing.sourceRef;
+  if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+    const source = String(direct.source || '').trim();
+    const id = String(direct.id || '').trim();
+    if (source && id) return { source, id };
   }
-  if (/\bdinner\b/i.test(title)) return `Dinner${whoBit}${whenBit}.`;
-  if (/town walk/i.test(title)) return `A town walk${whoBit}${whenBit}.`;
-  if (/house/i.test(title)) return when ? `The Kailua-Kona house, ${when}.` : 'The Kailua-Kona house.';
-  if (/big island/i.test(title)) return when ? `Big Island, ${when}. People matter more than a packed list.` : 'Big Island. People matter more than a packed list.';
-  if (/speedishuttle/i.test(title)) return 'SpeediShuttle from the Kona airport to the Kailua-Kona house on arrival day.';
-  if (/koa arrival|kona arrival/i.test(title)) return when ? `Arrival into Kona on ${when}, then the shuttle and groceries the same day.` : 'Arrival into Kona, then the shuttle and groceries the same day.';
-  const clean = String(thing.summary || '').replace(/\s+/g, ' ').trim();
-  if (clean && !/[?]/.test(clean) && !/\b(i am|i'm|we leave|voice note)\b/i.test(clean)) return clean;
-  return [title, whoBit.trim(), whenBit.trim()].filter(Boolean).join(' ').trim();
+  const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const nested = meta.sourceRef;
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    const source = String(nested.source || '').trim();
+    const id = String(nested.id || '').trim();
+    if (source && id) return { source, id };
+  }
+  return null;
+}
+
+function categoryKey(record = {}) {
+  const raw = record?.category;
+  const fromCategory = typeof raw === 'string'
+    ? raw
+    : (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw.name : '');
+  const text = String(fromCategory || record?.category_name || '').trim().toLowerCase();
+  if (text === 'flight' || text === 'car') return text;
+  if (text === 'hotel' || text === 'lodging' || text === 'accommodation') return 'lodging';
+  return '';
+}
+
+function recordInputKind(record = {}) {
+  const keyed = categoryKey(record);
+  if (keyed) return keyed;
+  return transportKind(record);
+}
+
+export function customerInputState(records = [], trip = {}) {
+  if (statedLodgingLabelFromThings(records) || String(trip?.lodging || trip?.statedLodgingArea || trip?.statedLodgingAreaHint || '').trim()) return {};
+  const present = new Set();
+  for (const record of records || []) {
+    const kind = recordInputKind(record);
+    if (kind === 'lodging') present.add('lodging');
+  }
+  if (present.has('lodging')) return {};
+  return { needsCustomerInput: ['lodging'], lodgingAsk: true };
+}
+
+function noteText(thing) {
+  return [
+    ...(Array.isArray(thing?.notes) ? thing.notes : []),
+    ...(Array.isArray(thing?.collaboratorNotes) ? thing.collaboratorNotes : []),
+  ].map((note) => String(note || '').trim()).filter(Boolean).join('\n');
+}
+
+export function budgetPriceFromThing(thing = {}) {
+  const direct = thing?.total_price ?? thing?.price;
+  if (direct !== null && direct !== undefined && direct !== '' && Number.isFinite(Number(direct))) {
+    return Number(direct);
+  }
+  const cents = thing?.cost_estimate_cents ?? thing?.costEstimateCents;
+  if (Number.isInteger(cents) && cents >= 0) return cents / 100;
+  return null;
+}
+
+export function thingRecordFromTripRow(row = {}) {
+  const meta = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? row.metadata : {};
+  const ratings = row.ratings && typeof row.ratings === 'object' && !Array.isArray(row.ratings) ? row.ratings : null;
+  const sourceRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' && !Array.isArray(meta.sourceRecord) ? meta.sourceRecord : null;
+  const location = row.location && typeof row.location === 'object' && !Array.isArray(row.location) ? row.location : {};
+  const sourceRef = sourceRefOf({ sourceRef: meta.sourceRef, metadata: meta });
+  return {
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    description: row.description || '',
+    who: meta.who || '',
+    whenLabel: meta.whenLabel || '',
+    customerWhen: meta.customerWhen || '',
+    starts_at: row.starts_at || row.startsAt || null,
+    notes: Array.isArray(meta.notes) ? meta.notes : [],
+    collaboratorNotes: Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [],
+    ratings,
+    sourceRecord,
+    source: row.source || '',
+    categoryName: String(meta.categoryName || '').trim(),
+    providerCategories: Array.isArray(meta.providerCategories) ? meta.providerCategories : [],
+    metadata: meta,
+    location,
+    lat: location.lat,
+    lng: location.lng,
+    address: location.address || '',
+    sourceRef,
+    cost_estimate_cents: Number.isInteger(row.cost_estimate_cents) ? row.cost_estimate_cents : null,
+    logoUrl: textField(meta.logoUrl || ''),
+    logoCaptureReason: textField(meta.logoCaptureReason || ''),
+  };
+}
+
+function textField(value) {
+  return String(value || '').trim();
 }
 
 export function sharedTripFromIntake({ trip, things }) {
@@ -136,28 +302,43 @@ export function sharedTripFromIntake({ trip, things }) {
   const assignments = {};
   const thingOverrides = {};
   for (const thing of things || []) {
+    if (!customerStatedLodgingThing(thing)) continue;
     const id = intId(thing.id || thing.title);
     const kind = categoryFor(thing);
-    const summary = productThingSummary(thing);
+    const notes = noteText(thing);
+    const point = locationOf(thing);
+    const ratings = writeRatings(thing);
+    const sourceRef = sourceRefOf(thing);
+    const source = String(thing.source || ratings.source || 'customer');
     places.push({
       id,
       trip_id: intId(trip.id),
       name: thing.title,
-      description: summary,
+      description: '',
       category_name: kind.category_name,
       category_icon: kind.category_icon,
       category: { name: kind.category_name, icon: kind.category_icon },
       reservation_status: 'considering',
-      notes: summary,
+      notes,
+      source,
+      ratings,
+      ...(sourceRef ? { sourceRef } : {}),
+      ...placeSourceFieldsFromThing(thing),
+      ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
+      ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
+      ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
     });
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
       timeline: true,
       status: 'considering',
       category: kind.category,
-      summary,
-      longDetails: [thing.who ? `Who: ${thing.who}` : '', ...new Set([thing.whenLabel, thing.customerWhen].map((part) => String(part || '').trim()).filter(Boolean))].join(' · '),
+      source,
       dayIds,
+      ...ratings,
+      ...(sourceRef ? { sourceRef } : {}),
+      ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
+      ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
     };
     for (const date of assignDates(thing, year, tripDates)) {
       const day = dayByDate.get(date);
@@ -169,45 +350,67 @@ export function sharedTripFromIntake({ trip, things }) {
         id: intId(`${thing.id}:${date}`),
         day_id: day.id,
         order_index: rows.length,
-        notes: summary,
+        notes,
         place_id: id,
         place: places[places.length - 1],
       });
       assignments[key] = rows;
     }
   }
+  const categoryRegistry = new Map();
+  for (const place of places) {
+    const name = String(place.category_name || '').trim() || 'Place';
+    const icon = String(place.category_icon || '').trim();
+    const key = `${name}\0${icon}`;
+    if (!categoryRegistry.has(key)) {
+      categoryRegistry.set(key, { id: intId(`category:${trip.id}:${name}:${icon}`), name, icon });
+    }
+    const category = categoryRegistry.get(key);
+    place.category_id = category.id;
+    place.category = { id: category.id, name: category.name, icon: category.icon };
+  }
+  const categories = [...categoryRegistry.values()];
+  const destination = customerPlaceName(trip?.destination);
+  const destinationCenter = destinationCenterFromTripMetadata(trip?.metadata);
+  const planned = Boolean(destination || start || end || (things || []).length);
+  const rawTitle = String(trip?.title || '').trim();
+  const title = customerPlaceName(rawTitle);
   return {
     trip: {
       id: intId(trip.id),
-      title: trip.title || 'Vacation',
-      description: trip.destination || '',
+      title: planned ? (title || (rawTitle ? '' : 'Vacation')) : '',
+      description: destination,
       start_date: start || null,
       end_date: end || null,
       currency: 'usd',
+      metadata: trip?.metadata && typeof trip.metadata === 'object' ? trip.metadata : {},
+      ...(destinationCenter ? { lat: destinationCenter.lat, lng: destinationCenter.lng } : {}),
     },
     days,
     assignments,
     dayNotes: {},
     places,
-    categories: [],
+    categories,
     permissions: {
       share_map: true,
       share_bookings: true,
       share_packing: false,
-      share_budget: true,
+      share_budget: (things || []).length > 0 && planned,
       share_collab: false,
     },
-    budget: [{
-      id: intId(`${trip.id}:budget`),
-      trip_id: intId(trip.id),
-      category: 'Trip',
-      name: trip.title || 'Vacation',
-      total_price: null,
-      persons: null,
-      days: null,
-      note: '',
-      sort_order: 0,
-    }],
+    budget: (things || []).flatMap((thing, index) => {
+      const amount = budgetPriceFromThing(thing);
+      if (amount === null) return [];
+      return [{
+        id: intId(`${trip.id}:budget:${thing.id || thing.title || index}`),
+        trip_id: intId(trip.id),
+        category: String(thing?.category || 'Trip'),
+        name: thing?.title || trip.title || 'Vacation',
+        total_price: amount,
+        note: '',
+        sort_order: index,
+      }];
+    }),
     media: [],
     reservations: [],
     accommodations: [],
@@ -215,50 +418,26 @@ export function sharedTripFromIntake({ trip, things }) {
     collab: {},
     thingOverrides,
     timesyncherIntake: true,
+    ...customerInputState(things),
   };
 }
 
-const PLACE_COORDS = {
-  Groceries: [19.6399, -155.9854, '74-5594 Palani Rd, Kailua-Kona'],
-  Gardens: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
-  Swim: [19.5804, -155.9622, 'Kahaluʻu Beach Park, Keauhou'],
-  Dinner: [19.6394, -155.9958, 'Aliʻi Drive, Kailua-Kona'],
-  'Town walk': [19.6393, -155.9946, 'Kona Inn Shopping Village, Aliʻi Drive'],
-  'Kailua-Kona house': [19.649, -155.994, 'Kailua-Kona'],
-  'Big Island': [19.64, -155.99, 'Hawaiʻi'],
-  SpeediShuttle: [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
-  'KOA arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
-  'Kona arrival': [19.7388, -156.0456, 'Ellison Onizuka Kona International Airport'],
-};
-
-function coordsFor(name) {
-  const detail = BIG_ISLAND_FILL_DETAILS[name];
-  if (detail?.lat && detail?.lng) return [detail.lat, detail.lng, detail.address || 'Kailua-Kona, Hawaii'];
-  return PLACE_COORDS[name] || null;
+function sourceObject(place = {}) {
+  const row = place.source;
+  return row && typeof row === 'object' && !Array.isArray(row) ? row : null;
 }
 
-function blankRatings() {
+/** Tags and happy hour come from the Thing's source record. Missing fields stay blank. */
+function sourcedRestaurantFields(place = {}) {
+  const source = sourceObject(place);
+  const tags = Array.isArray(place.restaurantTags)
+    ? place.restaurantTags
+    : (Array.isArray(source?.restaurantTags) ? source.restaurantTags : []);
+  const happyHourFlag = place.happyHour ?? source?.happyHour;
   return {
-    googleRating: '',
-    yelpRating: '',
-    thirdPartyRating: '',
-    review1: '',
-    review2: '',
-    review3: '',
-  };
-}
-
-function sourcedRatings(name, options) {
-  const rows = options?.sourcedRatings && typeof options.sourcedRatings === 'object' ? options.sourcedRatings : {};
-  const row = rows[name];
-  if (!row || row.source === 'google-places' || !row.source) return blankRatings();
-  return {
-    googleRating: String(row.googleRating || ''),
-    yelpRating: String(row.yelpRating || ''),
-    thirdPartyRating: String(row.thirdPartyRating || ''),
-    review1: String(row.review1 || ''),
-    review2: String(row.review2 || ''),
-    review3: String(row.review3 || ''),
+    restaurantTags: tags.map((tag) => String(tag || '').trim()).filter(Boolean),
+    happyHour: typeof happyHourFlag === 'boolean' ? happyHourFlag : null,
+    happyHourDetails: String(place.happyHourDetails || source?.happyHourDetails || '').trim(),
   };
 }
 
@@ -267,18 +446,17 @@ export function windLookupPointsFromThings(things = []) {
   const seen = new Set();
   for (const thing of things || []) {
     const name = String(thing.title || thing.name || '').trim();
-    const coords = coordsFor(name);
-    if (!coords || !/house|swim|garden|walk|dinner|grocer/i.test(name)) continue;
-    const key = name.toLowerCase();
+    const point = locationOf(thing);
+    if (!name || !point) continue;
+    const key = `${point.lat},${point.lng}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    points.push({ name, lat: coords[0], lng: coords[1] });
+    points.push({ name, lat: point.lat, lng: point.lng });
   }
   return points;
 }
 
 export function applyThingPresentation(shared = {}, options = {}) {
-  const windBackup = String(options.windBackup || '').trim();
   const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
   const thingOverrides = { ...(shared.thingOverrides || {}) };
   const put = (place, extra) => {
@@ -287,132 +465,30 @@ export function applyThingPresentation(shared = {}, options = {}) {
   };
   for (const place of places) {
     const name = String(place.name || '').trim();
-    const summary = productThingSummary({
-      title: name,
-      summary: place.description || place.notes || '',
-      windBackup: /\bswim\b/i.test(name) ? windBackup : '',
-    });
-    place.description = summary;
-    place.notes = summary;
-    const coords = coordsFor(name);
+    place.description = '';
+    const lat = finiteCoord(place.lat);
+    const lng = finiteCoord(place.lng);
+    const ratings = place.ratings && typeof place.ratings === 'object' && !Array.isArray(place.ratings) ? place.ratings : {};
+    const priorOverride = thingOverrides[`place:${place.id}`] || {};
     const extra = {
-      summary,
-      logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
-      ...sourcedRatings(name, options),
+      source: String(place.source || 'customer'),
+      ...logoFieldsForSharedPlace(place, priorOverride),
+      ...ratings,
     };
-    if (coords) {
-      place.lat = coords[0];
-      place.lng = coords[1];
-      place.address = coords[2];
-      extra.lat = coords[0];
-      extra.lng = coords[1];
-      extra.address = coords[2];
+    if (place.sourceRef) extra.sourceRef = place.sourceRef;
+    if (lat != null && lng != null) {
+      extra.lat = lat;
+      extra.lng = lng;
+      if (place.address) extra.address = place.address;
     }
-    if (/ulu ocean/i.test(name)) {
-      extra.restaurantTags = ['Seafood', 'Cocktail Bar / Happy Hour'];
-      extra.happyHour = true;
-      extra.happyHourDetails = 'Ocean bar happy hour at Ulu Ocean Grill. Recheck the Four Seasons Hualalai listing before the trip.';
-    } else if (/huggo/i.test(name) || /fish hopper/i.test(name)) {
-      extra.restaurantTags = ['Seafood'];
-    }
+    const sourcedMenu = sourcedRestaurantFields(place);
+    if (sourcedMenu.restaurantTags.length) extra.restaurantTags = sourcedMenu.restaurantTags;
+    if (sourcedMenu.happyHour != null) extra.happyHour = sourcedMenu.happyHour;
+    if (sourcedMenu.happyHourDetails) extra.happyHourDetails = sourcedMenu.happyHourDetails;
     put(place, extra);
   }
-  if (!places.some((place) => /speedishuttle/i.test(place.name || ''))) {
-    const id = intId(`${shared.trip?.id || 'trip'}:speedishuttle`);
-    const place = {
-      id,
-      trip_id: shared.trip?.id,
-      name: 'SpeediShuttle',
-      description: productThingSummary({ title: 'SpeediShuttle' }),
-      category_name: 'Car',
-      category: { name: 'Car', icon: '🚗' },
-      reservation_status: 'considering',
-      notes: productThingSummary({ title: 'SpeediShuttle' }),
-    };
-    const shuttle = coordsFor('SpeediShuttle');
-    if (shuttle) {
-      place.lat = shuttle[0];
-      place.lng = shuttle[1];
-      place.address = shuttle[2];
-    }
-    places.push(place);
-    put(place, {
-      category: 'car',
-      rentalCompany: 'SpeediShuttle',
-      carType: 'Shared shuttle',
-      summary: place.description,
-      lat: place.lat,
-      lng: place.lng,
-      address: place.address,
-      logoUrl: captureThingLogo(place, { title: 'SpeediShuttle', category: 'car' }),
-      ...sourcedRatings('SpeediShuttle', options),
-    });
-  }
-  const flightName = /\bKOA\b/.test(JSON.stringify(shared.trip || {})) ? 'KOA arrival' : 'Kona arrival';
-  if (!places.some((place) => /koa arrival|kona arrival/i.test(place.name || ''))) {
-    const id = intId(`${shared.trip?.id || 'trip'}:kona-arrival`);
-    const place = {
-      id,
-      trip_id: shared.trip?.id,
-      name: flightName,
-      description: productThingSummary({ title: flightName }),
-      category_name: 'Flight',
-      category: { name: 'Flight', icon: '✈️' },
-      reservation_status: 'considering',
-      notes: productThingSummary({ title: flightName }),
-    };
-    const koa = coordsFor(flightName);
-    if (koa) {
-      place.lat = koa[0];
-      place.lng = koa[1];
-      place.address = koa[2];
-    }
-    places.push(place);
-    const flightText = `${place.description || ''} ${place.notes || ''}`;
-    const connections = flightText.match(/\b(nonstop into [A-Z]{3}|[0-9]+ connections?)\b/i);
-    const layover = flightText.match(/\blayover\s+(?:in\s+)?([A-Za-z][^.\n]{0,40})/i);
-    const takeoff = formatTakeoff(shared.trip?.start_date);
-    put(place, {
-      category: 'flight',
-      ...(takeoff ? { takeoffTime: takeoff } : {}),
-      ...(connections ? { connections: connections[1] } : {}),
-      ...(layover ? { layover: layover[1].trim() } : {}),
-      summary: place.description,
-      lat: place.lat,
-      lng: place.lng,
-      address: place.address,
-      logoUrl: captureThingLogo(place, { title: flightName, category: 'flight' }),
-      ...sourcedRatings(flightName, options),
-    });
-  }
-  const shownCars = lowestCarOffers(
-    places
-      .filter((place) => /car/i.test(String(place.category_name || '')) && Number.isFinite(Number(place.price)) && String(place.name || '').trim())
-      .map((place) => ({ brand: place.name, price: Number(place.price) })),
-    10,
-  );
-  for (const offer of shownCars) {
-    if (places.some((place) => String(place.name || '').toLowerCase() === offer.brand.toLowerCase())) continue;
-    const id = intId(`${shared.trip?.id || 'trip'}:car:${offer.brand}`);
-    const place = {
-      id,
-      trip_id: shared.trip?.id,
-      name: offer.brand,
-      description: `$${offer.price} a day`,
-      category_name: 'Car',
-      category: { name: 'Car', icon: '🚗' },
-      reservation_status: 'considering',
-      notes: `$${offer.price} a day`,
-      price: offer.price,
-    };
-    places.push(place);
-    put(place, {
-      category: 'car',
-      rentalCompany: offer.brand,
-      summary: place.description,
-      price: offer.price,
-      logoUrl: captureThingLogo(place, { title: offer.brand, category: 'car' }),
-    });
-  }
-  return { ...shared, places, thingOverrides, carOfferPool: shownCars };
+  const next = { ...shared, places, thingOverrides };
+  delete next.needsCustomerInput;
+  delete next.flightAsk;
+  return { ...next, ...customerInputState(places) };
 }

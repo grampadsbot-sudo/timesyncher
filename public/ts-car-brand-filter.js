@@ -7,7 +7,7 @@
       if (!label || label.length > 80) return false;
       if (/^car type$/i.test(label) || /^cars$/i.test(label) || /^remove /i.test(label)) return false;
       const category = (node.closest('[data-category]')?.getAttribute('data-category') || '').toLowerCase();
-      return category === 'car' || /\$\d+/.test(label) || /speedishuttle/i.test(label);
+      return category === 'car' || /\$\d+/.test(label);
     });
   }
 

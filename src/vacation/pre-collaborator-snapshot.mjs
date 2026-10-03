@@ -1,4 +1,3 @@
-import { padKeepsakeSharedPlaces } from './keepsake-list-minimums.mjs';
 import { sharedTripFromIntake } from './intake-shared-trip.mjs';
 
 function thingView(row) {
@@ -11,14 +10,16 @@ function thingView(row) {
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
+    starts_at: row.starts_at || null,
     notes: Array.isArray(meta.notes) ? meta.notes : [],
     collaboratorNotes: [],
+    source: meta.source || '',
   };
 }
 
 export function preCollaboratorPayload(trip, things) {
   const stripped = (things || []).map((thing) => ({ ...thing, collaboratorNotes: [] }));
-  return padKeepsakeSharedPlaces(sharedTripFromIntake({ trip, things: stripped }));
+  return sharedTripFromIntake({ trip, things: stripped });
 }
 
 export async function storePreCollaboratorSnapshot(db, tripId) {
@@ -36,7 +37,7 @@ export async function storePreCollaboratorSnapshot(db, tripId) {
     return meta.preCollaboratorSnapshot;
   }
   const thingRows = await db`
-    select id, category, title, description, metadata
+    select id, category, title, description, metadata, starts_at
     from trip_things
     where trip_id = ${trip.id}
     order by created_at asc

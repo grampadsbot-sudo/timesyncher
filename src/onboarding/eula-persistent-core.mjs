@@ -135,11 +135,31 @@ export async function activationStatusPersistent(store, clientKey, requiredEulaV
   return { ok: false, clientKey, requiredEulaVersion, errors: ['no valid accepted EULA receipt found'] };
 }
 
-export function loadDefaultEulaText() {
-  if (process.env.TIMESYNCHER_EULA_PATH) return readFileSync(process.env.TIMESYNCHER_EULA_PATH, 'utf8');
-  try {
-    return readFileSync('public/legal/terms-2026-06-advisory-only.md', 'utf8');
-  } catch {
-    return CURRENT_EULA_TEXT;
+export function eulaCollaboratorPlanName(env = process.env) {
+  const name = String(env.TIMESYNCHER_COLLABORATOR_NAME || '').trim();
+  if (!name) throw new Error('TIMESYNCHER_COLLABORATOR_NAME is missing');
+  return name;
+}
+
+export function loadDefaultEulaText(env = process.env) {
+  let text;
+  if (process.env.TIMESYNCHER_EULA_PATH) text = readFileSync(process.env.TIMESYNCHER_EULA_PATH, 'utf8');
+  else {
+    try {
+      text = readFileSync('public/legal/terms-2026-06-advisory-only.md', 'utf8');
+    } catch {
+      text = CURRENT_EULA_TEXT;
+    }
   }
+  const collaboratorName = eulaCollaboratorPlanName(env);
+  return String(text).replace(/\{\{TIMESYNCHER_COLLABORATOR_NAME\}\}/g, collaboratorName);
+}
+
+const COLLABORATOR_EULA_SECTION_11 = `## 11. Collaborator access
+
+You are joining a vacation through an owner invitation. You are not purchasing a TimeSyncher plan in this flow. TimeSyncher planning help here is advisory-only.`;
+
+export function loadCollaboratorAppSeatEulaText(env = process.env) {
+  const ownerTerms = loadDefaultEulaText(env);
+  return String(ownerTerms).replace(/\n## 11\. Checkout plans[\s\S]*$/m, `\n${COLLABORATOR_EULA_SECTION_11}\n`);
 }

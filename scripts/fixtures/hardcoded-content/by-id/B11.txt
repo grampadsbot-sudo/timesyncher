@@ -1,0 +1,1 @@
+function verifiedRewriteChange(change, draft, shipped) { return change; }

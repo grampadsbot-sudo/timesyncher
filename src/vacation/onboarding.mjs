@@ -6,19 +6,16 @@ import {
   loadSessionPersistent,
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
-import { intakeShareSlug } from './intake-shared-trip.mjs';
-import { sharedTripWebsiteUrl } from './web-access.mjs';
+import { CheckoutConfigError, checkoutCurrency, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
+import { assignTripSiteUrl } from './trip-assign-site-url.mjs';
+
+export { assignTripSiteUrl };
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
-const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
 const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
 
-export function siteBase(env = process.env) {
+function siteBase(env = process.env) {
   return String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).trim().replace(/\/+$/, '');
-}
-
-export function botUsername(env = process.env) {
-  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || DEFAULT_BOT_USERNAME).trim().replace(/^@/, '');
 }
 
 export function cleanText(value, max = 1000) {
@@ -31,10 +28,6 @@ export function onboardingLink(token, env = process.env) {
 
 export function vacationAppLink(token, env = process.env) {
   return `${siteBase(env)}/vacation-app.html?session=${encodeURIComponent(token)}`;
-}
-
-export function telegramLink(token, env = process.env) {
-  return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
 }
 
 export function eulaSessionIdForOnboarding(row) {
@@ -101,13 +94,17 @@ export async function upsertCustomer(db, contact, metadata = {}) {
   return rows[0].id;
 }
 
-async function ensureTrip(db, customerId, metadata) {
-  const title = cleanText(metadata.trip_title || 'TimeSyncher Vacation Setup', 180) || 'TimeSyncher Vacation Setup';
+export async function ensureTrip(db, customerId, metadata) {
+  const title = cleanText(metadata.trip_title, 180);
+  if (!title) throw new Error('trip title is required to create a vacation');
+  const destination = cleanText(metadata.destination, 180);
   const vacationDate = cleanText(metadata.vacation_date, 40);
+  const startDate = cleanText(metadata.start_date, 40) || vacationDate || null;
+  const endDate = cleanText(metadata.end_date, 40) || null;
   const rows = await db`
-    insert into trips (customer_id, title, start_date, preferences, status, metadata)
+    insert into trips (customer_id, title, destination, start_date, end_date, preferences, status, metadata)
     values (
-      ${customerId}, ${title}, ${vacationDate || null},
+      ${customerId}, ${title}, ${destination || null}, ${startDate || null}, ${endDate || null},
       ${{
         source: cleanText(metadata.source, 80) || 'stripe_purchase',
         onboarding: true,
@@ -161,7 +158,16 @@ async function ensureOrder(db, customerId, tripId, entitlementId, order) {
   return rows[0].id;
 }
 
-export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', amountCents = 0, metadata = {}, env = process.env }) {
+function couponPriceKey(plan) {
+  if (plan === 'owner_media') return 'TIMESYNCHER_MEDIA_PRICE_CENTS';
+  if (plan === 'unlimited') return 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS';
+  if (String(plan || '').includes('collaborator')) return 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS';
+  return 'TIMESYNCHER_BASE_PRICE_CENTS';
+}
+
+export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', amountCents, metadata = {}, env = process.env }) {
+  const original = Number(amountCents);
+  if (!Number.isInteger(original) || original < 0) throw new CheckoutConfigError(couponPriceKey(plan));
   const orderMetadata = {
     ...jsonObject(metadata),
     source: 'coupon_checkout',
@@ -175,38 +181,28 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' '), 180) || cleanText(contact?.email, 180) || null,
   };
   const customerId = await upsertCustomer(db, cleanContact, orderMetadata);
-  const tripId = await ensureTrip(db, customerId, orderMetadata);
+  const tripId = null;
   const order = {
     stripeCustomerId: null,
     stripeSubscriptionId: null,
     stripeInvoiceId: null,
     stripePaymentIntentId: null,
     amountCents: 0,
-    currency: cleanText(orderMetadata.currency || 'usd', 12) || 'usd',
-    plan: cleanText(plan, 40) === 'unlimited' ? 'unlimited' : 'single',
+    currency: cleanText(orderMetadata.currency, 12) || checkoutCurrency(env),
+    plan: checkoutPlanFromMetadata({ ...orderMetadata, plan: cleanText(plan, 80) || orderMetadata.plan }),
     status: 'coupon_redeemed',
     contact: cleanContact,
     paidAt: new Date().toISOString(),
     metadata: {
       ...orderMetadata,
-      originalAmountCents: Number.isFinite(amountCents) ? amountCents : 0,
-      amountWaivedCents: Number.isFinite(amountCents) ? amountCents : 0,
+      originalAmountCents: original,
+      amountWaivedCents: original,
     },
   };
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
   const eula = await ensureVacationEulaSession(session, { contact: cleanContact, env });
-  const publicSlug = intakeShareSlug(tripId);
-  const publicUrl = publicSlug ? sharedTripWebsiteUrl(publicSlug, env) : '';
-  if (publicSlug) {
-    await db`
-      update trips
-      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true }},
-        updated_at = now()
-      where id = ${tripId}
-    `;
-  }
 
   return {
     customerId,
@@ -215,11 +211,10 @@ export async function buildOnboardingFromCoupon({ db, contact, plan = 'single', 
     orderId,
     session,
     token: session.token,
-    publicSlug,
-    publicUrl,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact: cleanContact,
     order,
@@ -242,7 +237,7 @@ async function ensureOnboardingSession(db, customerId, tripId, orderId, metadata
     )
     values (
       ${customerId}, ${tripId}, ${orderId}, ${sessionToken}, 'purchase_confirmed', 'post_purchase',
-      ${telegramLink(sessionToken, env)}, ${metadata}, now()
+      ${null}, ${metadata}, now()
     )
     returning *
   `;
@@ -279,18 +274,15 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     selectedFunctionality: [
       'vacation_planning_onboarding',
       'in_app_text_voice_and_file_intake',
-      'telegram_fallback_intake',
-      'telegram_voice_note_intake',
       'hosted_itinerary_generation',
       'purchase_receipts_and_support',
     ],
     google: {
       returnUrl: vacationAppLink(row.token, env),
-      telegramFallbackUrl: row.telegram_deep_link || telegramLink(row.token, env),
     },
     eula: {
       version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
-      text: loadDefaultEulaText(),
+      text: loadDefaultEulaText(env),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
   });
@@ -348,9 +340,10 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
         orderId: row.order_id,
         session: row,
         token: row.token,
+        publicSlug: '',
+        publicUrl: '',
         onboardingUrl: onboardingLink(row.token, env),
         vacationAppUrl: vacationAppLink(row.token, env),
-        telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
         eula,
         contact,
         order: {
@@ -379,14 +372,14 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     ...jsonObject(resolvedPaymentIntent?.metadata),
   };
   const contact = customerContact({ stripeCustomer: resolvedCustomer, metadata });
-  const plan = cleanText(metadata.product || metadata.plan, 80).includes('unlimited') || metadata.order_bump === 'true' ? 'unlimited' : 'single';
+  const plan = checkoutPlanFromMetadata(metadata);
   const order = {
     stripeCustomerId: cleanText(customerIdFromStripe, 120) || null,
     stripeSubscriptionId: cleanText(resolvedSubscription?.id || resolvedInvoice?.subscription, 120) || null,
     stripeInvoiceId: cleanText(resolvedInvoice?.id || resolvedPaymentIntent?.invoice, 120) || null,
     stripePaymentIntentId: cleanText(resolvedPaymentIntent?.id, 120) || null,
     amountCents: resolvedPaymentIntent?.amount_received || resolvedInvoice?.amount_paid || resolvedPaymentIntent?.amount || null,
-    currency: cleanText(resolvedPaymentIntent?.currency || resolvedInvoice?.currency || 'usd', 12) || 'usd',
+    currency: cleanText(resolvedPaymentIntent?.currency || resolvedInvoice?.currency, 12) || checkoutCurrency(env),
     plan,
     contact,
     paidAt: resolvedPaymentIntent?.created ? new Date(resolvedPaymentIntent.created * 1000).toISOString() : new Date().toISOString(),
@@ -402,7 +395,7 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     stripeCustomerId: order.stripeCustomerId,
     ...metadata,
   });
-  const tripId = await ensureTrip(db, customerId, metadata);
+  const tripId = null;
   const entitlementId = await ensureEntitlement(db, customerId, tripId, order);
   const orderId = await ensureOrder(db, customerId, tripId, entitlementId, order);
   const session = await ensureOnboardingSession(db, customerId, tripId, orderId, order.metadata, env);
@@ -415,9 +408,10 @@ export async function buildOnboardingFromStripe({ db, stripe, paymentIntent, inv
     orderId,
     session,
     token: session.token,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, env),
     vacationAppUrl: vacationAppLink(session.token, env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, env),
     eula,
     contact,
     order,
@@ -458,7 +452,6 @@ export function publicSession(row, env = process.env, eula = null) {
     currency: row.currency,
     onboardingUrl: onboardingLink(row.token, env),
     vacationAppUrl: vacationAppLink(row.token, env),
-    telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
     eula: eula ? {
       status: eula.status || (eula.ok ? 'accepted' : 'pending'),
       accepted: Boolean(eula.ok || eula.status === 'accepted'),
@@ -466,10 +459,5 @@ export function publicSession(row, env = process.env, eula = null) {
       sessionId: eula.sessionId || eulaSessionIdForOnboarding(row),
       receiptSha256: eula.receiptSha256 || null,
     } : null,
-    telegramInstall: {
-      ios: 'https://apps.apple.com/app/telegram-messenger/id686449807',
-      android: 'https://play.google.com/store/apps/details?id=org.telegram.messenger',
-      desktop: 'https://apps.apple.com/us/app/telegram/id747648890?mt=12',
-    },
   };
 }
