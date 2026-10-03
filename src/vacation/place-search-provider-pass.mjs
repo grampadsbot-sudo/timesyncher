@@ -8,7 +8,10 @@ import {
   radiusMetersForAnchorScope,
 } from './place-search-radius-filter.mjs';
 import { namedPlaceLookupFromQueries } from './place-search-named-target.mjs';
-import { finalizeNamedPlaceSearchResults } from './place-search-named-select.mjs';
+import {
+  finalizeNamedPlaceSearchResults,
+  resolveNamedPlaceTieBreakLabel,
+} from './place-search-named-select.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 
 function providerRowIsError(row = {}) {
@@ -358,9 +361,24 @@ export async function runPlaceProviderPass({
   const relevanceRejections = relevance.rejections;
   const singleNamedPlaceQuery = placeQueries.length === 1
     && normalizePlaceSearchTargetKind(placeQueries[0]?.targetKind) === 'named_place';
+  let namedPlaceAnchorCenter = null;
+  if (singleNamedPlaceQuery) {
+    const tieBreakLabel = resolveNamedPlaceTieBreakLabel({
+      namedArea,
+      searchAnchor,
+      destination: dest,
+    });
+    if (tieBreakLabel) {
+      const tieBreakGeocode = await tryGeocodeLabel(fetchImpl, tieBreakLabel, providerLog, readJson);
+      namedPlaceAnchorCenter = anchorRadiusCenter(tieBreakGeocode, destinationRadiusCenter);
+    } else {
+      namedPlaceAnchorCenter = destinationRadiusCenter;
+    }
+  }
   const namedFinalize = finalizeNamedPlaceSearchResults(
     places,
     singleNamedPlaceQuery ? 'named_place' : '',
+    { anchorCenter: namedPlaceAnchorCenter },
   );
   if (namedFinalize.ambiguous) {
     const titles = (namedFinalize.namedPlaceCandidates || []).map((row) => row.title).filter(Boolean).join(', ');

@@ -23,6 +23,18 @@ export const KIHEI_LODGING_GEOCODE = {
   },
 };
 
+export const PAIA_AREA_GEOCODE = {
+  lat: '20.9032006',
+  lon: '-156.3690593',
+  display_name: 'Paia, Maui County, Hawaii, United States',
+  address: {
+    town: 'Paia',
+    county: 'Maui County',
+    state: 'Hawaii',
+    country_code: 'us',
+  },
+};
+
 export const PAIA_FISH_MARKET_BRAVE = [{
   id: 'loc-paia-fish-market',
   title: 'Paia Fish Market',
