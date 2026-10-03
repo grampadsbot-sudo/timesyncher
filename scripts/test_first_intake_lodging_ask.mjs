@@ -44,8 +44,8 @@ assert.equal(inviteFacts.gaps[0], 'lodging');
 assert.ok(inviteFacts.gaps.includes('invite_contact'));
 const invitePrompt = firstIntakeReplyPrompt(inviteInput);
 assert.match(invitePrompt, /"lodgingAsk":true/);
-assert.match(invitePrompt, /"invite_contact_needed":true/);
-assert.match(invitePrompt, /"gaps":\["lodging"/);
+assert.doesNotMatch(invitePrompt, /invite/);
+assert.match(invitePrompt, /"gaps":\["lodging"\]/);
 assert.match(invitePrompt, /ask where they are staying/i);
 assert.match(invitePrompt, /Never ask a second question/);
 

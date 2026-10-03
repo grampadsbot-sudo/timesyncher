@@ -5,6 +5,7 @@ import {
   FIRST_INTAKE_GAP_INSTRUCTION,
   FIRST_INTAKE_VOICE_INSTRUCTION,
   firstIntakeReplyFacts,
+  firstIntakeReplyPrompt,
   intakeReplyBlock,
   weekdayForIso,
   whenRelativeToToday,
@@ -41,10 +42,9 @@ assert.equal(whenRelativeToToday('2032-09-23', today), false);
 assert.equal(whenRelativeToToday('2027-09-01', today), true);
 assert.equal(plans.timesyncher_vacation_single.plan_id, 'timesyncher_vacation_single');
 assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /unlimited\s+\S*\s*vacations?/i);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /When collaborators is present/);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /invite_contact_needed/);
+assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /invite_contact_needed/);
+assert.doesNotMatch(FIRST_INTAKE_VOICE_INSTRUCTION, /can be invited/);
 assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /exactly one question/);
-assert.match(FIRST_INTAKE_VOICE_INSTRUCTION, /already have access/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /Start the trip draft anyway/);
 assert.match(FIRST_INTAKE_GAP_INSTRUCTION, /second person/);
 
@@ -73,6 +73,27 @@ assert.equal(facts.when_relative, false);
 assert.equal(facts.customer_name, 'Ada Lovelace');
 assert.deepEqual(facts.collaborators, ['Bristol', 'Calvin']);
 assert.equal(facts.plan.plan_id, plans.timesyncher_vacation_single.plan_id);
+const echoPrompt = firstIntakeReplyPrompt({
+  customerTurn: said,
+  tripTitle: tripId,
+  extractedDestination: 'the coast',
+  wantedThings: [{ name: 'swim', kind: 'activity', who: 'Bristol' }],
+  roster: [
+    { name: 'Bristol', role: 'collaborator', email: 'bristol@example.com' },
+    { name: 'Calvin', role: 'collaborator', email: 'calvin@example.com' },
+  ],
+  savedStart: '2032-09-23',
+  savedEnd: '2032-09-30',
+  customerName: 'Ada Lovelace',
+  today,
+  ids: [tripId, ownerId],
+  ownerPlan: singlePlan,
+  tripId,
+});
+assert.match(echoPrompt, /When collaborators is present/);
+assert.match(echoPrompt, /already have access/);
+assert.match(echoPrompt, /contact on file/);
+assert.doesNotMatch(echoPrompt, /invite/);
 assert.equal(facts.plan.plan_name, 'TimeSyncher Vacation Single');
 assert.equal(JSON.stringify(facts).includes(tripId), false);
 assert.equal(JSON.stringify(facts).includes(ownerId), false);
