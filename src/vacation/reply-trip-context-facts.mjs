@@ -66,12 +66,9 @@ function applyUnscheduledDayStatus(ctx) {
   });
   if (!changed) return ctx;
   const chatPlaceSearch = { ...search, unscheduled };
-  const stillOpen = unscheduled.some((row) => row?.notOnADay === true && row?.weekdayAmbiguous !== true);
-  if (stillOpen) chatPlaceSearch.unscheduledDayRule = search.unscheduledDayRule || ctx.unscheduledDayRule;
-  else delete chatPlaceSearch.unscheduledDayRule;
+  delete chatPlaceSearch.unscheduledDayRule;
   const next = { ...ctx, itinerary, chatPlaceSearch };
-  if (stillOpen) next.unscheduledDayRule = chatPlaceSearch.unscheduledDayRule;
-  else delete next.unscheduledDayRule;
+  delete next.unscheduledDayRule;
   return next;
 }
 
@@ -124,8 +121,6 @@ export async function enrichDraftingTripContext(tripContext, {
   if (!ctx.chatPlaceSearch) {
     ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
   }
-  const unscheduledRule = String(ctx.chatPlaceSearch?.unscheduledDayRule || '').trim();
-  if (unscheduledRule) ctx = { ...ctx, unscheduledDayRule: unscheduledRule };
   ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
   if (!ctx.lodging) {
     const label = statedLodgingLabelFromThings(things);

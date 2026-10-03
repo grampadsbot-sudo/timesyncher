@@ -123,7 +123,10 @@ if (Array.isArray(facts.needsCustomerInput) && facts.needsCustomerInput.includes
 }
 if (/includes lodgingAsk|where they are staying/i.test(system)) violations.push('lodging question instruction');
 if (/needsCustomerInput"\s*:\s*\[\s*"lodging"\s*\]/.test(system)) violations.push('prompt lodging-missing fact');
-if (/name the day \(required\)|which day|not on a day|unscheduledDayRule/i.test(system)) {
-  violations.push('day question instruction');
-}
+if (/Tell the customer that for each of those places/.test(system)) violations.push('unscheduled day instruction');
+if (/unscheduledDayRule/.test(system)) violations.push('unscheduledDayRule field');
+if (/name the day \(required\)/.test(system)) violations.push('day-required notes line');
+if (/\bwhich day\b/i.test(system)) violations.push('which-day question');
+if (!/"notOnADay":true/.test(system)) violations.push('missing notOnADay fact');
+if (!/Paia Fish Market Restaurant: not on a day/.test(system)) violations.push('missing plain not-on-a-day state');
 assert.deepEqual(violations, []);
