@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 
 import { sharedLiveTabListMountOutcome } from '../src/vacation/shared-live-tab-list-mount.mjs';
-import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
+import { applyCapturedLogos, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { finalizeServedSharedTripPayload, renderServedSharedPageLiveTabMarkup } from '../src/vacation/shared-trip-served-page.mjs';
 
@@ -158,6 +158,11 @@ assert.equal(sharedLiveTabListMountOutcome('cars', emptyPayload.liveTabLists).ki
 assert.throws(
   () => sharedLiveTabListMountOutcome('hotels', { cars: [] }),
   /shared_live_tab_lists_missing:hotels/,
+);
+
+assert.equal(
+  resolveThingLogoUrl({ image_url: '/ts-thing-logos/car.svg', category_name: 'Car' }, { category: 'car' }),
+  '/ts-thing-logos/car.svg',
 );
 
 console.log('shared trip served page live tab logo tests passed');

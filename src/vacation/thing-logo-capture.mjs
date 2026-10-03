@@ -1,4 +1,4 @@
-import { timelineIcon, timelineCategoryIcon } from './timeline-icons.mjs';
+import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
 
 export const NAMED_THING_LOGOS = {};
 
@@ -125,6 +125,16 @@ export function logoLookupRuntimeSource() {
 }
 
 export function captureThingLogo(thing = {}, override = {}) {
+  return sourceLogoUrl(thing, override);
+}
+
+/** Same logo fields as live tab rows and the shared trek bundle (_l / ha). */
+export function resolveThingLogoUrl(thing = {}, override = {}) {
+  const direct = thingLogoUrl(thing, override);
+  if (direct) {
+    const logo = usableLogo(direct);
+    return logo || direct;
+  }
   return sourceLogoUrl(thing, override);
 }
 
