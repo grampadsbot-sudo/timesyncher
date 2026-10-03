@@ -103,11 +103,21 @@ async function resolveIntakeLodgingThing({
     });
   } catch (error) {
     const providerAttempts = Array.isArray(error?.providers) ? error.providers : [];
+    const code = String(error?.code || '').trim();
+    const message = String(error?.message || error || '').trim();
+    if (code === 'geocode_failed' || /geocode failed/i.test(message)) {
+      return lodgingLookupMiss({
+        name,
+        query: lookupQuery,
+        reason: code || message || 'geocode_failed',
+        search: { providers: providerAttempts },
+      });
+    }
     if (!intakeLodgingLookupProviderFailure(error, providerAttempts)) {
       return lodgingLookupMiss({
         name,
         query: lookupQuery,
-        reason: String(error?.code || error?.message || 'no_results').trim(),
+        reason: code || message || 'no_results',
         search: { providers: providerAttempts },
       });
     }

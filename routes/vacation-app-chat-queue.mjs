@@ -1,5 +1,5 @@
 import { cleanText } from '../src/vacation/http.mjs';
-import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
+import { classifyVacationAppCustomerTurnTag } from '../src/vacation/vacation-app-turn-tag.mjs';
 import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { customerModality, jevStamp, liveTurnRecord, firstMarkedIntake, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { produceNoTripStarterReply } from '../src/vacation/no-trip-starter-reply.mjs';
@@ -156,24 +156,22 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     title: jobFields.title,
     titleError: jobFields.titleError,
     intakeError: jobFields.intakeError,
-    stageTimings: turnStageTimings({ classifierMs: intake.classifierMs }),
+    stageTimings: turnStageTimings({
+      classifierMs: intake.classifierMs,
+      welcomeMs: intake.welcomeMs,
+      ...(intake.tripCreateTimings && typeof intake.tripCreateTimings === 'object' ? intake.tripCreateTimings : {}),
+    }),
   };
   customerLive.stageTimings = payload.stageTimings;
-  const turnTag = (tripId && (placeSearchTurn || webResearchTurn))
-    ? classifyTurn({
-      text: requestText,
-      speaker: 'customer',
-      direction: 'inbound',
-      channel: 'vacation-app',
-      payload,
-    })
-    : await classifyTurnWithModel({
-      text: requestText,
-      speaker: 'customer',
-      direction: 'inbound',
-      channel: 'vacation-app',
-      payload,
-    });
+  const { turnTag } = await classifyVacationAppCustomerTurnTag({
+    requestText,
+    tripId,
+    placeSearchTurn,
+    webResearchTurn,
+    classification,
+    payload,
+    customerLive,
+  });
   const requestRows = await db`
     insert into vacation_requests (
       customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,

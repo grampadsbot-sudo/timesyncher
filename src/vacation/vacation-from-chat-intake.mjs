@@ -60,7 +60,9 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
       code: 'vacation_app_message_required',
     };
   }
+  const classifyStarted = Date.now();
   const { classification, jobFields } = await classifyVacationChatIntake(requestText, env);
+  const classifierMs = Date.now() - classifyStarted;
   if (classification.ok !== true) {
     return {
       ok: false,
@@ -104,6 +106,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
         tripId: session.trip_id,
         jobFields,
         classification,
+        classifierMs,
       };
     }
     return {
@@ -115,7 +118,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     };
   }
   if (!intakeTripReadyForCreation(jobFields)) {
-    return { ok: true, action: 'queue_without_trip', jobFields, classification };
+    return { ok: true, action: 'queue_without_trip', jobFields, classification, classifierMs };
   }
   const preflight = await preflightAttachOwnerEntitlementForChatTrip(db, session);
   if (!preflight.ok) {
@@ -126,6 +129,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
       code: preflight.code || 'vacation_app_owner_entitlement_missing',
     };
   }
+  const tripCreateStarted = Date.now();
   const tripId = await ensureTrip(db, session.customer_id, {
     trip_title: cleanText(jobFields.title, 180),
     destination: cleanText(jobFields.destination, 180),
@@ -134,7 +138,10 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     source: 'vacation_app_chat',
     onboarding_session_id: session.id,
   });
+  const tripCreateMs = Date.now() - tripCreateStarted;
+  const entitlementStarted = Date.now();
   const attached = await attachPurchasedEntitlementToChatTrip(db, session, tripId);
+  const entitlementMs = Date.now() - entitlementStarted;
   if (!attached.ok) {
     await db`delete from trips where id = ${tripId}`;
     return {
@@ -225,5 +232,7 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
     tripId,
     jobFields,
     classification,
+    classifierMs,
+    tripCreateTimings: { classifierMs, tripCreateMs, entitlementMs },
   };
 }

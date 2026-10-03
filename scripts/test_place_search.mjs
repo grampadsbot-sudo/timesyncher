@@ -14,6 +14,10 @@ import {
   searchPlaces,
   selectPriorPlaces,
 } from '../src/vacation/place-search.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
+
 const ENV = {
   BRAVE_SEARCH_API_KEY: 'brave-test-key',
 };
