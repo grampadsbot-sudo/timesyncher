@@ -4,7 +4,6 @@ import { writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
-import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { sql } from '/workspace/src/vacation/db.mjs';
 import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
 import { runShepherdJevPreflight } from './shepherd-staging-smoke-jev-preflight.mjs';

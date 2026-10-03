@@ -145,7 +145,6 @@ scripts/test_brave_tavily_adapter.mjs
 scripts/test_customer_input_reply.mjs
 scripts/test_g2c_thing_notes_destination.mjs
 scripts/test_g2d_jev_score_rewrite.mjs
-scripts/test_harness_outbound_email_stub.mjs
 scripts/test_rewrite_ships_tier_draft.mjs
 scripts/test_g3a_canned_dialog.mjs
 scripts/test_onboarding_welcome.mjs
