@@ -1,5 +1,6 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
+import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -203,15 +204,15 @@ export function applyLiveProductPatches(patched = '') {
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
 const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 const LIVE_TAB_MOUNT_HELPER_NEEDLE = 'tsPad=(rows)=>rows,tsListThings=';
-const LIVE_TAB_MOUNT_HELPER_PATCH = 'tsPad=(rows)=>rows,tsSharedLiveTabListMount=G=>{const lists=window.__TS_SHARED_LIVE_TAB_LISTS__;if(!lists||!Object.prototype.hasOwnProperty.call(lists,G))throw new Error("shared_live_tab_lists_missing:"+G);const h=lists[G];if(!Array.isArray(h))throw new Error("shared_live_tab_lists_invalid:"+G);if(!h.length)return null;return n.jsx("div",{"data-shared-live-tab-mount":G,dangerouslySetInnerHTML:{__html:`<ul data-shared-live-tab="${G}">${h.join("")}</ul>`},style:{display:"contents"}})},tsListThings=';
+const LIVE_TAB_MOUNT_HELPER_PATCH = `tsPad=(rows)=>rows,${sharedLiveTabListMountBundleExpr()},tsListThings=`;
+const HOTELS_TAB_CATALOG_NEEDLE = 'vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))';
+const HOTELS_TAB_LIVE_MOUNT_PATCH = 'tsSharedLiveTabListMount("hotels")';
+const CARS_TAB_PLACEHOLDER_NEEDLE = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon."})';
+const CARS_TAB_LIVE_MOUNT_PATCH = 'tsSharedLiveTabListMount("cars")';
 const LIVE_TAB_DELEGATE_HOTELS_NEEDLE = 'Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),';
 const LIVE_TAB_DELEGATE_HOTELS_PATCH = 'Gn=[],';
 const LIVE_TAB_DELEGATE_CARS_NEEDLE = 'ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))),';
 const LIVE_TAB_DELEGATE_CARS_PATCH = 'ki=[],';
-const GN_RENDER_DELEGATE_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
-const GN_RENDER_DELEGATE_PATCH = 'tsSharedLiveTabListMount("hotels"),false&&tsPad(Gn).length===0';
-const KI_RENDER_DELEGATE_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
-const KI_RENDER_DELEGATE_PATCH = 'tsSharedLiveTabListMount("cars")';
 export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const QN_RENDER_PATCH = 'tsPad(Qn).map(G=>Oe(G))';
@@ -238,14 +239,25 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   if (js.includes(REST_TYPE_CHIPS_NEEDLE)) js = js.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
+  if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
+  if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
   if (served) {
-    if (js.includes(GN_RENDER_DELEGATE_NEEDLE)) js = js.replace(GN_RENDER_DELEGATE_NEEDLE, GN_RENDER_DELEGATE_PATCH);
-    else if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
-    if (js.includes(KI_RENDER_DELEGATE_NEEDLE)) js = js.replace(KI_RENDER_DELEGATE_NEEDLE, KI_RENDER_DELEGATE_PATCH);
-    else if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
-  } else {
-    if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
-    if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
+    if (js.includes(HOTELS_TAB_CATALOG_NEEDLE)) {
+      js = js.replace(HOTELS_TAB_CATALOG_NEEDLE, HOTELS_TAB_LIVE_MOUNT_PATCH);
+    } else if (!js.includes(HOTELS_TAB_LIVE_MOUNT_PATCH)) {
+      throw new Error('served shared Hotels tab missing tsSharedLiveTabListMount("hotels") anchor');
+    }
+    if (js.includes(CARS_TAB_PLACEHOLDER_NEEDLE)) {
+      js = js.replace(CARS_TAB_PLACEHOLDER_NEEDLE, CARS_TAB_LIVE_MOUNT_PATCH);
+    } else if (!js.includes(CARS_TAB_LIVE_MOUNT_PATCH)) {
+      throw new Error('served shared Cars tab missing tsSharedLiveTabListMount("cars") anchor');
+    }
+    if (js.includes('vi(kn,"hotels")')) {
+      throw new Error('served shared Hotels tab still filters catalog kn rows');
+    }
+    if (js.includes('GBrain') || js.includes('Coming soon')) {
+      throw new Error('served shared bundle still contains internal or placeholder customer copy');
+    }
   }
   if (js.includes(QN_EMPTY_NEEDLE)) js = js.replace(QN_EMPTY_NEEDLE, QN_EMPTY_PATCH);
   if (js.includes(GN_EMPTY_NEEDLE)) js = js.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
