@@ -6,6 +6,9 @@ export const noopNominatimStore = {
   },
   async putCachedGeocode() {},
   async reserveNominatimSlot() {},
+  async runNominatimThrottled(work) {
+    return work(Date.now());
+  },
 };
 
 export function installNoopNominatimStore() {

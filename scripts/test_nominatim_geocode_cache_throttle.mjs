@@ -22,7 +22,10 @@ function createTestStore() {
     async putCachedGeocode(cacheKey, payload, ttlMs = 60_000) {
       cache.set(String(cacheKey || '').trim(), { payload, expiresAt: Date.now() + ttlMs });
     },
-    async reserveNominatimSlot({ nowMs = 0, maxWaitMs = 60_000, sleep } = {}) {
+    async reserveNominatimSlot(options = {}) {
+      await this.runNominatimThrottled(async () => {}, options);
+    },
+    async runNominatimThrottled(work, { nowMs = 0, maxWaitMs = 60_000, sleep } = {}) {
       let release;
       const prior = slotChain;
       slotChain = new Promise((resolve) => {
@@ -30,7 +33,7 @@ function createTestStore() {
       });
       await prior;
       try {
-        const now = Number(nowMs);
+        const now = Number(typeof nowMs === 'function' ? nowMs() : nowMs);
         const executeAt = Math.max(nextSlotMs, now);
         nextSlotMs = executeAt + 1000;
         const waitMs = Math.max(0, executeAt - now);
@@ -38,6 +41,8 @@ function createTestStore() {
           throw new PlaceSearchError(`wait ${waitMs}`, 'nominatim_throttle_timeout');
         }
         if (waitMs > 0 && sleep) await sleep(waitMs);
+        const callAtMs = typeof nowMs === 'function' ? nowMs() : Date.now();
+        return await work(Number.isFinite(Number(callAtMs)) ? Number(callAtMs) : Date.now());
       } finally {
         release();
       }

@@ -54,7 +54,7 @@ function nominatimHitToPlace(hit = {}) {
   };
 }
 
-export function trimNominatimEvidenceRow(hit = {}) {
+function trimNominatimEvidenceRow(hit = {}) {
   const tags = nominatimTags(hit);
   const lat = finite(hit?.lat);
   const lng = finite(hit?.lon ?? hit?.lng);
@@ -69,11 +69,11 @@ export function trimNominatimEvidenceRow(hit = {}) {
   };
 }
 
-export async function nominatimForwardSearch(fetchImpl, query, options = {}) {
+async function nominatimForwardSearch(fetchImpl, query, options = {}) {
   return nominatimForwardSearchGeocode(fetchImpl, query, placeSearchReadJson, options);
 }
 
-export async function nominatimReverseGeocode(fetchImpl, lat, lng) {
+async function nominatimReverseGeocode(fetchImpl, lat, lng) {
   return nominatimReverseGeocodeGeocode(fetchImpl, lat, lng, placeSearchReadJson);
 }
 

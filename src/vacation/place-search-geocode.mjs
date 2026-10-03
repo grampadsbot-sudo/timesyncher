@@ -96,22 +96,22 @@ async function nominatimReadJson(fetchImpl, url, readJson, {
     const cached = await store.getCachedGeocode(key);
     if (cached !== null && cached !== undefined) return cached;
   }
-  await store.reserveNominatimSlot({
-    nowMs: typeof now === 'function' ? now() : now,
+  return store.runNominatimThrottled(async (callAtMs) => {
+    lastNominatimNetworkCallAtMs = callAtMs;
+    const payload = await readJson(fetchImpl, url, readOptions);
+    if (key) {
+      let cacheable = false;
+      if (key.startsWith('forward:')) cacheable = nominatimForwardPayloadCacheable(payload);
+      else if (key.startsWith('geocode:')) cacheable = nominatimLabelGeocodePayloadCacheable(payload, readOptions.labelQuery || '');
+      else if (key.startsWith('reverse:')) cacheable = nominatimReversePayloadCacheable(payload);
+      if (cacheable) await store.putCachedGeocode(key, payload, NOMINATIM_GEOCODE_CACHE_TTL_MS);
+    }
+    return payload;
+  }, {
+    nowMs: typeof now === 'function' ? now : () => now,
     sleep,
     maxWaitMs: readOptions.maxWaitMs,
   });
-  const callAtMs = typeof now === 'function' ? now() : Number(now);
-  lastNominatimNetworkCallAtMs = Number.isFinite(callAtMs) ? callAtMs : Date.now();
-  const payload = await readJson(fetchImpl, url, readOptions);
-  if (key) {
-    let cacheable = false;
-    if (key.startsWith('forward:')) cacheable = nominatimForwardPayloadCacheable(payload);
-    else if (key.startsWith('geocode:')) cacheable = nominatimLabelGeocodePayloadCacheable(payload, readOptions.labelQuery || '');
-    else if (key.startsWith('reverse:')) cacheable = nominatimReversePayloadCacheable(payload);
-    if (cacheable) await store.putCachedGeocode(key, payload, NOMINATIM_GEOCODE_CACHE_TTL_MS);
-  }
-  return payload;
 }
 
 export async function nominatimForwardSearch(fetchImpl, query, readJson, { limit = 5, env = process.env, sleep, now } = {}) {

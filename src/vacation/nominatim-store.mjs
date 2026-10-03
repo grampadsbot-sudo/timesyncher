@@ -61,7 +61,10 @@ function createMemoryNominatimStore() {
       if (!key || payload === undefined) return;
       cache.set(key, { payload, expiresAt: Date.now() + Math.max(Number(ttlMs) || 0, 1) });
     },
-    async reserveNominatimSlot({
+    async reserveNominatimSlot(options = {}) {
+      await this.runNominatimThrottled(async () => {}, options);
+    },
+    async runNominatimThrottled(work, {
       nowMs = Date.now(),
       maxWaitMs = NOMINATIM_THROTTLE_MAX_WAIT_MS,
       sleep = defaultSleep,
@@ -73,7 +76,7 @@ function createMemoryNominatimStore() {
       });
       await prior;
       try {
-        const now = Number(nowMs);
+        const now = Number(typeof nowMs === 'function' ? nowMs() : nowMs);
         const executeAt = Math.max(nextSlotMs, now);
         nextSlotMs = executeAt + NOMINATIM_THROTTLE_INTERVAL_MS;
         const waitMs = Math.max(0, executeAt - now);
@@ -84,6 +87,8 @@ function createMemoryNominatimStore() {
           );
         }
         if (waitMs > 0) await sleep(waitMs);
+        const callAtMs = typeof nowMs === 'function' ? nowMs() : Date.now();
+        return await work(Number.isFinite(Number(callAtMs)) ? Number(callAtMs) : Date.now());
       } finally {
         release();
       }
@@ -120,12 +125,15 @@ function createPostgresNominatimStore(env) {
             expires_at = excluded.expires_at
       `;
     },
-    async reserveNominatimSlot({
+    async reserveNominatimSlot(options = {}) {
+      await this.runNominatimThrottled(async () => {}, options);
+    },
+    async runNominatimThrottled(work, {
       nowMs = Date.now(),
       maxWaitMs = NOMINATIM_THROTTLE_MAX_WAIT_MS,
       sleep = defaultSleep,
     } = {}) {
-      const now = Number(nowMs);
+      const now = Number(typeof nowMs === 'function' ? nowMs() : nowMs);
       const rows = await db`
         update nominatim_throttle
         set next_slot_ms = greatest(next_slot_ms, ${now}) + ${NOMINATIM_THROTTLE_INTERVAL_MS}
@@ -144,6 +152,8 @@ function createPostgresNominatimStore(env) {
         );
       }
       if (waitMs > 0) await sleep(waitMs);
+      const callAtMs = typeof nowMs === 'function' ? nowMs() : Date.now();
+      return work(Number.isFinite(Number(callAtMs)) ? Number(callAtMs) : Date.now());
     },
   };
 }
