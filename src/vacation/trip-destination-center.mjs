@@ -1,4 +1,6 @@
 import { finiteCoord } from './trip-map-initial-view.mjs';
+import { tryGeocodeLabel } from './place-search-geocode.mjs';
+import { scheduleBackgroundWork } from './deferred-work.mjs';
 
 function cleanCenter(center = {}) {
   const lat = finiteCoord(center?.lat ?? center?.latitude);
@@ -23,4 +25,41 @@ export async function persistTripDestinationCenter(db, tripId, center) {
       and (metadata->'destinationCenter') is null
   `;
   return true;
+}
+
+export async function geocodeAndPersistTripDestinationCenter(
+  db,
+  tripId,
+  destinationLabel,
+  fetchImpl = globalThis.fetch,
+  env = process.env,
+) {
+  const label = String(destinationLabel || '').trim();
+  if (!db || !tripId || !label) return null;
+  const rows = await db`
+    select metadata
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const meta = rows[0]?.metadata && typeof rows[0].metadata === 'object' ? rows[0].metadata : {};
+  const existing = destinationCenterFromTripMetadata(meta);
+  if (existing) return existing;
+  const providerLog = [];
+  const found = await tryGeocodeLabel(fetchImpl, label, providerLog, null, { env });
+  if (!found) return null;
+  await persistTripDestinationCenter(db, tripId, found);
+  return found;
+}
+
+export function scheduleTripDestinationGeocode({
+  db,
+  tripId,
+  destinationLabel,
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+} = {}) {
+  scheduleBackgroundWork(() => {
+    void geocodeAndPersistTripDestinationCenter(db, tripId, destinationLabel, fetchImpl, env);
+  });
 }

@@ -11,7 +11,8 @@ export const noopNominatimStore = {
   async putCachedGeocode() {},
   async reserveNominatimSlot() {},
   async runNominatimThrottled(work) {
-    return work();
+    const result = await work();
+    return { result, throttleWaitMs: 0 };
   },
 };
 
@@ -114,15 +115,16 @@ export function createMemoryNominatimStore() {
         const now = Number(typeof nowMs === 'function' ? nowMs() : nowMs);
         const executeAt = Math.max(nextSlotMs, now);
         nextSlotMs = executeAt + NOMINATIM_THROTTLE_INTERVAL_MS;
-        const waitMs = Math.max(0, executeAt - now);
-        if (waitMs > maxWaitMs) {
+        const throttleWaitMs = Math.max(0, executeAt - now);
+        if (throttleWaitMs > maxWaitMs) {
           throw new PlaceSearchError(
-            `Nominatim throttle wait ${waitMs}ms exceeds budget ${maxWaitMs}ms`,
+            `Nominatim throttle wait ${throttleWaitMs}ms exceeds budget ${maxWaitMs}ms`,
             'nominatim_throttle_timeout',
           );
         }
-        if (waitMs > 0) await sleep(waitMs);
-        return await work();
+        if (throttleWaitMs > 0) await sleep(throttleWaitMs);
+        const result = await work();
+        return { result, throttleWaitMs };
       } finally {
         release();
       }

@@ -99,9 +99,23 @@ function httpStatusFromReason(reason) {
   return match ? Number(match[1]) : null;
 }
 
-function nominatimProviderTimingFields(calledAtMs) {
-  const ms = Number(calledAtMs);
-  return Number.isFinite(ms) && ms > 0 ? { calledAtMs: ms } : {};
+const nominatimInflightByKey = new Map();
+
+function nominatimProviderTimingFields({
+  calledAtMs,
+  throttleWaitMs,
+  nominatimFetchMs,
+  cacheHit,
+} = {}) {
+  const fields = {};
+  const called = Number(calledAtMs);
+  if (Number.isFinite(called) && called > 0) fields.calledAtMs = called;
+  const wait = Number(throttleWaitMs);
+  if (Number.isFinite(wait) && wait >= 0) fields.nominatimThrottleWaitMs = wait;
+  const fetchMs = Number(nominatimFetchMs);
+  if (Number.isFinite(fetchMs) && fetchMs >= 0) fields.nominatimFetchMs = fetchMs;
+  if (cacheHit === true) fields.cacheHit = true;
+  return fields;
 }
 
 async function readCachedNominatimPayload(store, cacheKey) {
@@ -191,24 +205,52 @@ async function nominatimReadJson(fetchImpl, url, readJson, {
   const key = String(cacheKey || '').trim();
   const cached = await readCachedNominatimPayload(store, key);
   if (cached !== null && cached !== undefined) {
-    return { payload: cached, calledAtMs: null, cacheHit: true };
+    return {
+      payload: cached,
+      calledAtMs: null,
+      cacheHit: true,
+      throttleWaitMs: 0,
+      nominatimFetchMs: 0,
+    };
   }
-  let calledAtMs = null;
   const clock = typeof now === 'function' ? now : () => now;
-  const payload = await store.runNominatimThrottled(async () => {
-    const { payload: body, calledAtMs: fetchAtMs } = await nominatimHttpReadJson(fetchImpl, url, {
-      ...readOptions,
-      now: clock,
+  const runOutbound = async () => {
+    let calledAtMs = null;
+    let nominatimFetchMs = 0;
+    const { result: payload, throttleWaitMs } = await store.runNominatimThrottled(async () => {
+      const fetchStarted = Math.trunc(Number(clock()));
+      const { payload: body, calledAtMs: fetchAtMs } = await nominatimHttpReadJson(fetchImpl, url, {
+        ...readOptions,
+        now: clock,
+      });
+      const fetchEnded = Math.trunc(Number(clock()));
+      calledAtMs = fetchAtMs;
+      nominatimFetchMs = Math.max(0, fetchEnded - fetchStarted);
+      await writeNominatimCache(store, key, body);
+      return body;
+    }, {
+      nowMs: clock,
+      sleep,
+      maxWaitMs: readOptions.maxWaitMs,
     });
-    calledAtMs = fetchAtMs;
-    await writeNominatimCache(store, key, body);
-    return body;
-  }, {
-    nowMs: clock,
-    sleep,
-    maxWaitMs: readOptions.maxWaitMs,
-  });
-  return { payload, calledAtMs, cacheHit: false };
+    return {
+      payload,
+      calledAtMs,
+      cacheHit: false,
+      throttleWaitMs: Number(throttleWaitMs) || 0,
+      nominatimFetchMs,
+    };
+  };
+  if (!key) return await runOutbound();
+  let inflight = nominatimInflightByKey.get(key);
+  if (!inflight) {
+    const outbound = (async () => await runOutbound())();
+    inflight = outbound.finally(() => {
+      if (nominatimInflightByKey.get(key) === outbound) nominatimInflightByKey.delete(key);
+    });
+    nominatimInflightByKey.set(key, inflight);
+  }
+  return await inflight;
 }
 
 export async function nominatimForwardSearch(fetchImpl, query, readJson, { limit = 5, env = process.env, sleep, now } = {}) {
@@ -258,7 +300,13 @@ export async function nominatimReverseGeocode(fetchImpl, lat, lng, readJson, { e
 async function geocodeLabel(fetchImpl, label, readJson, options = {}) {
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(label)}`;
   const cacheKey = nominatimLabelGeocodeCacheKey(label);
-  const { payload, calledAtMs } = await nominatimReadJson(fetchImpl, url, readJson, {
+  const {
+    payload,
+    calledAtMs,
+    throttleWaitMs,
+    nominatimFetchMs,
+    cacheHit,
+  } = await nominatimReadJson(fetchImpl, url, readJson, {
     label: 'Nominatim geocode',
     labelQuery: label,
     env: options.env,
@@ -269,7 +317,15 @@ async function geocodeLabel(fetchImpl, label, readJson, options = {}) {
   const hit = Array.isArray(payload) ? payload[0] : null;
   const lat = finite(hit?.lat);
   const lng = finite(hit?.lon ?? hit?.lng);
-  if (lat === null || lng === null) return { found: null, calledAtMs };
+  if (lat === null || lng === null) {
+    return {
+      found: null,
+      calledAtMs,
+      throttleWaitMs,
+      nominatimFetchMs,
+      cacheHit,
+    };
+  }
   return {
     found: {
       lat,
@@ -278,6 +334,9 @@ async function geocodeLabel(fetchImpl, label, readJson, options = {}) {
       compactLocality: compactLocalityText(hit, label),
     },
     calledAtMs,
+    throttleWaitMs,
+    nominatimFetchMs,
+    cacheHit,
   };
 }
 
@@ -288,14 +347,25 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
     return null;
   }
   try {
-    const { found, calledAtMs } = await geocodeLabel(fetchImpl, trimmed, readJson, options);
+    const {
+      found,
+      calledAtMs,
+      throttleWaitMs,
+      nominatimFetchMs,
+      cacheHit,
+    } = await geocodeLabel(fetchImpl, trimmed, readJson, options);
     if (!found) {
       providerLog.push({
         provider: 'nominatim',
         status: 'empty',
         reason: `no coordinates for ${trimmed}`,
         resultCount: 0,
-        ...nominatimProviderTimingFields(calledAtMs),
+        ...nominatimProviderTimingFields({
+          calledAtMs,
+          throttleWaitMs,
+          nominatimFetchMs,
+          cacheHit,
+        }),
       });
       return null;
     }
@@ -303,7 +373,12 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
       provider: 'nominatim',
       status: 'ok',
       resultCount: 1,
-      ...nominatimProviderTimingFields(calledAtMs),
+      ...nominatimProviderTimingFields({
+        calledAtMs,
+        throttleWaitMs,
+        nominatimFetchMs,
+        cacheHit,
+      }),
     });
     return found;
   } catch (error) {
@@ -324,13 +399,14 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
 
 export async function resolveSearchContext(
   fetchImpl,
-  { lodging, lodgingPoint, destination, keepAreaText = false },
+  { lodging, lodgingPoint, destination, keepAreaText = false, tripDestinationCenter = null },
   providerLog,
   readJson,
   fail,
   options = {},
 ) {
   const given = pointFrom(lodgingPoint);
+  const storedCenter = pointFrom(tripDestinationCenter);
   const lodgingLabel = String(lodging || '').trim();
   const destinationLabel = String(destination || '').trim();
   if (given) {
@@ -354,6 +430,20 @@ export async function resolveSearchContext(
   }
   if (!destinationLabel && !lodgingLabel) {
     fail('Place search needs a destination.', 'missing_destination');
+  }
+  if (destinationLabel && storedCenter && !lodgingLabel) {
+    providerLog.push({
+      provider: 'nominatim',
+      status: 'skipped',
+      reason: 'trip_destination_center',
+      resultCount: 0,
+    });
+    const locationText = keepAreaText ? destinationLabel : (storedCenter.label || destinationLabel);
+    return {
+      center: { ...storedCenter, geocoded: 'stored' },
+      locationText,
+      compactLocality: compactLocalityText(null, destinationLabel),
+    };
   }
   if (destinationLabel) {
     const found = await tryGeocodeLabel(fetchImpl, destinationLabel, providerLog, readJson, options);

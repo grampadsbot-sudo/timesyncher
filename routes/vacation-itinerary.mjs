@@ -65,6 +65,7 @@ import {
   runVacationAppInTurnSearch,
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
+import { scheduleTripDestinationGeocode } from '../src/vacation/trip-destination-center.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { pickVacationAppTrip } from '../src/vacation/vacation-app-trip-select.mjs';
 import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
@@ -707,6 +708,15 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
     }
   }
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
+  if (tripDestination) {
+    scheduleTripDestinationGeocode({
+      db,
+      tripId,
+      destinationLabel: tripDestination,
+      env,
+      fetchImpl,
+    });
+  }
   return loadTripThings(db, tripId);
 }
 

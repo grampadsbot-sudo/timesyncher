@@ -123,15 +123,16 @@ function createPostgresNominatimStore(env) {
         if (!Number.isFinite(executeAt)) {
           throw new PlaceSearchError('Nominatim throttle slot update returned no row', 'nominatim_throttle_timeout');
         }
-        const waitMs = Math.max(0, executeAt - now);
-        if (waitMs > maxWaitMs) {
+        const throttleWaitMs = Math.max(0, executeAt - now);
+        if (throttleWaitMs > maxWaitMs) {
           throw new PlaceSearchError(
-            `Nominatim throttle wait ${waitMs}ms exceeds budget ${maxWaitMs}ms`,
+            `Nominatim throttle wait ${throttleWaitMs}ms exceeds budget ${maxWaitMs}ms`,
             'nominatim_throttle_timeout',
           );
         }
-        if (waitMs > 0) await sleep(waitMs);
-        return await work();
+        if (throttleWaitMs > 0) await sleep(throttleWaitMs);
+        const result = await work();
+        return { result, throttleWaitMs };
       } finally {
         release();
       }

@@ -237,7 +237,8 @@ assert.equal(confirmed.titleError, null);
 let searches = 0;
 const missed = await resolveIntakePlace({
   destination: 'Lisbon',
-  title: 'Lisbon week',
+  title: '',
+  titleError: 'trip title was not in the extraction',
   searchImpl: async () => {
     searches += 1;
     return { ok: false, error: 'live search returned no place' };
@@ -248,6 +249,16 @@ assert.equal(missed.destination, '');
 assert.equal(missed.title, '');
 assert.match(missed.destinationError, /no place/);
 assert.match(missed.titleError, /no place/);
+
+const classifierNamed = await resolveIntakePlace({
+  destination: 'Lisbon',
+  title: 'Lisbon week',
+  searchImpl: async () => {
+    throw new Error('live search must not run when classifier named destination and title');
+  },
+});
+assert.equal(classifierNamed.destination, 'Lisbon');
+assert.equal(classifierNamed.title, 'Lisbon week');
 
 const unnamed = await resolveIntakePlace({
   destination: '',

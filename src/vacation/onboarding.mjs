@@ -7,9 +7,9 @@ import {
 } from '../onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
 import { CheckoutConfigError, checkoutCurrency, checkoutPlanFromMetadata } from './checkout-pricing.mjs';
-import { intakeShareSlug } from './intake-shared-trip.mjs';
-import { tripSiteUrlFailure } from './trip-site-url-failure.mjs';
-import { sharedTripWebsiteUrl } from './web-access.mjs';
+import { assignTripSiteUrl } from './trip-assign-site-url.mjs';
+
+export { assignTripSiteUrl };
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
@@ -156,34 +156,6 @@ async function ensureOrder(db, customerId, tripId, entitlementId, order) {
     returning id
   `;
   return rows[0].id;
-}
-
-export async function assignTripSiteUrl(db, tripId, env = process.env) {
-  const publicSlug = intakeShareSlug(tripId);
-  if (!publicSlug) throw tripSiteUrlFailure('onboarding trip site url missing slug', tripId);
-  const publicUrl = sharedTripWebsiteUrl(publicSlug, env);
-  const updated = await db`
-    update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true, publicUrl }},
-      updated_at = now()
-    where id = ${tripId}
-      and coalesce(metadata->>'sharedToken', '') = ''
-      and coalesce(metadata->>'shareToken', '') = ''
-      and coalesce(metadata->>'source_token', '') = ''
-      and coalesce(metadata->>'publicSlug', '') in ('', ${publicSlug})
-    returning metadata->>'publicSlug' as public_slug
-  `;
-  const stored = String(updated[0]?.public_slug || '').trim();
-  if (stored === publicSlug) return { publicSlug, publicUrl };
-  const existing = await db`
-    select metadata->>'publicSlug' as public_slug
-    from trips
-    where id = ${tripId}
-    limit 1
-  `;
-  const prior = String(existing[0]?.public_slug || '').trim();
-  if (prior === publicSlug) return { publicSlug, publicUrl };
-  throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
 }
 
 function couponPriceKey(plan) {

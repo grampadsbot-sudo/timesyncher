@@ -463,6 +463,14 @@ export async function resolveIntakePlace({
       titleError: titleError || 'trip title was not in the extraction',
     };
   }
+  if (namedDestination && namedTitle && !destinationError && !titleError) {
+    return {
+      destination: namedDestination,
+      title: namedTitle,
+      destinationError: null,
+      titleError: null,
+    };
+  }
   let found;
   try {
     found = await searchImpl({ destination: namedDestination, title: namedTitle, query });
