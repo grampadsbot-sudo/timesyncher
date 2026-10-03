@@ -3,10 +3,40 @@ import {
   evaluateLeafletProductMapInPage,
   evaluateTripMapInPage,
 } from './shepherd-staging-smoke-lib.mjs';
+import { writeFileSync } from 'node:fs';
 
 export const SHARED_GOTO_TIMEOUT_MS = 60000;
 export const SHARED_MAP_READY_WAIT_MS = 45000;
 export const APP_MAP_READY_FAIL_MS = 10000;
+
+function attachSharedHydrationDiagnostics(page) {
+  const diag = { consoleErrors: [], failedRequests: [], timingTrace: [] };
+  const t0 = Date.now();
+  const mark = (event, detail = null) => {
+    diag.timingTrace.push({ event, atMs: Date.now() - t0, detail });
+  };
+  const onConsole = (msg) => {
+    const type = msg.type();
+    if (type === 'error' || type === 'warning') diag.consoleErrors.push({ type, text: msg.text() });
+  };
+  const onRequestFailed = (req) => {
+    diag.failedRequests.push({
+      url: req.url(),
+      method: req.method(),
+      failure: req.failure()?.errorText || 'request_failed',
+    });
+  };
+  page.on('console', onConsole);
+  page.on('requestfailed', onRequestFailed);
+  return {
+    diag,
+    mark,
+    detach() {
+      page.off('console', onConsole);
+      page.off('requestfailed', onRequestFailed);
+    },
+  };
+}
 
 export function configureSharedUiMapHelpers(_cfg) {
   /* BASE reserved for future shared URLs in map tab helpers */
@@ -146,7 +176,8 @@ async function waitForSharedTabShellHydration(page, stageTimestamps) {
   }
 }
 
-export async function gotoAndHydrateSharedIntakePage(page, url) {
+export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
+  const { debugArtifactPath = null } = opts;
   const stageTimestamps = {
     networkidle2Skipped: true,
     gotoStartMs: Date.now(),
@@ -159,14 +190,30 @@ export async function gotoAndHydrateSharedIntakePage(page, url) {
     leafletWaitEndMs: null,
     hangingStage: null,
   };
+  const diagSession = attachSharedHydrationDiagnostics(page);
+  diagSession.mark('goto_start');
   await gotoSharedIntakePage(page, url);
   stageTimestamps.gotoEndMs = Date.now();
+  diagSession.mark('goto_end');
   try {
+    diagSession.mark('hydration_wait_start');
     await waitForSharedTabShellHydration(page, stageTimestamps);
+    diagSession.mark('hydration_wait_end');
   } catch (err) {
+    diagSession.mark('hydration_timeout', String(err?.message || err));
     const domTabList = await listSharedDomTabs(page);
-    return { stageTimestamps, domTabList, hydrationError: String(err?.message || err) };
+    const payload = {
+      url,
+      hydrationError: String(err?.message || err),
+      stageTimestamps,
+      domTabList,
+      diagnostics: diagSession.diag,
+    };
+    if (debugArtifactPath) writeFileSync(debugArtifactPath, `${JSON.stringify(payload, null, 2)}\n`);
+    diagSession.detach();
+    return { stageTimestamps, domTabList, hydrationError: String(err?.message || err), hydrationDiagPath: debugArtifactPath };
   }
+  diagSession.detach();
   await new Promise((r) => setTimeout(r, 800));
   const domTabList = await listSharedDomTabs(page);
   return { stageTimestamps, domTabList, hydrationError: null };

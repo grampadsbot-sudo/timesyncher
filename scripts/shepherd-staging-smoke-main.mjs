@@ -4,6 +4,7 @@ const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
 import { outboundEmailPassesSmokeHarness } from '/workspace/src/vacation/email.mjs';
+import { checkIOutboundPassesSmokeHarness } from './shepherd-staging-smoke-env.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 import { prepareMapLogoIntakeShare } from './shepherd-staging-smoke-map-prep.mjs';
@@ -258,7 +259,7 @@ export async function runShepherdSmokeSpine(ctx) {
     const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
     const iTitleOk = state.tripTitle && (outboundRow?.subject || '').includes(state.tripTitle);
     const pass = inviteRes.status === 200 && iOutboundAll.length === 1
-      && outboundEmailPassesSmokeHarness(outboundRow) && iLinkOk && iOwnerOk && iTitleOk;
+      && checkIOutboundPassesSmokeHarness(outboundRow) && iLinkOk && iOwnerOk && iTitleOk;
     return { pass, http: inviteRes.status };
   }, { timeoutMs: 60000 });
 

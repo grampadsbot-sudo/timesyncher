@@ -47,7 +47,8 @@ async function judgeScreenshotWithOpenRouter({
       rubricVersion: VISUAL_RUBRIC_VERSION,
     };
   }
-  if (!shotMeta?.path) {
+  const judgePath = shotMeta?.composerPath || shotMeta?.path;
+  if (!judgePath) {
     return {
       pass: false,
       failures: [{ rubricItem: 'harness', reason: 'missing screenshot path' }],
@@ -58,7 +59,7 @@ async function judgeScreenshotWithOpenRouter({
   }
   let pngB64;
   try {
-    pngB64 = readFileSync(shotMeta.path).toString('base64');
+    pngB64 = readFileSync(judgePath).toString('base64');
   } catch (err) {
     return {
       pass: false,
