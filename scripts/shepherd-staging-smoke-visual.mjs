@@ -3,6 +3,7 @@ import { SMOKE_PARALLEL_CONCURRENCY } from './shepherd-staging-smoke-plan.mjs';
 import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
 import { captureVisualStateScreenshots } from './shepherd-staging-smoke-visual-capture.mjs';
 import { VISUAL_JUDGE_MODEL, judgeScreenshotsParallel } from './shepherd-staging-smoke-visual-judge.mjs';
+import { runVisualOpenRouterPreflight } from './shepherd-staging-smoke-visual-preflight.mjs';
 import { VISUAL_RUBRIC_VERSION, loadVisualScreenSpec } from './shepherd-staging-smoke-visual-rubric.mjs';
 
 function visualArtifactDir(baseDir, expectSha) {
@@ -69,6 +70,29 @@ export async function runVisualHarnessCheck({
   const stageTimestamps = {};
   const artifactDir = visualArtifactDir(artifactBaseDir, expectSha);
   const spec = loadVisualScreenSpec();
+  const preflight = await runVisualOpenRouterPreflight({
+    apiKey: env.OPENROUTER_API_KEY,
+    fetchImpl,
+  });
+  if (!preflight.ok) {
+    return {
+      pass: false,
+      infraBlocked: true,
+      preflight,
+      judged: [],
+      verdictDoc: {
+        expectSha,
+        model: VISUAL_JUDGE_MODEL,
+        rubricVersion: VISUAL_RUBRIC_VERSION,
+        preflight,
+        pass: false,
+      },
+      artifactDir,
+      stageTimestamps,
+      states: spineState || {},
+      specSource: spec.source,
+    };
+  }
   stageTimestamps.mintStartMs = Date.now();
   const states = spineState || await mintVisualStateCustomers({ db, BASE, SHA7, setStage });
   stageTimestamps.mintEndMs = Date.now();

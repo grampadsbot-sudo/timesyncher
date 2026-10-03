@@ -35,8 +35,17 @@ async function registerVisualSpineChecks(spineCtx) {
         artifactDir: visual.artifactDir,
         specSource: visual.specSource,
         stageTimestamps: visual.stageTimestamps,
-        summary: visual.verdictDoc.shots.map((s) => ({ id: s.id, pass: s.pass, failures: s.failures })),
+        preflight: visual.preflight || null,
+        summary: visual.verdictDoc?.shots?.map((s) => ({ id: s.id, pass: s.pass, failures: s.failures })) || [],
       };
+      if (visual.infraBlocked) {
+        return {
+          pass: false,
+          checkStatus: 'INFRA_BLOCKED',
+          infraDetail: visual.preflight?.infraDetail || { reason: 'visual_openrouter_preflight' },
+          http: 200,
+        };
+      }
       return { pass: visual.pass, http: 200 };
     }).finally(async () => {
       if (!sharedBrowser) await chromeVisual.close().catch((err) => {

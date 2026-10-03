@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url';
 import { judgeScreenshot } from './layout-judge.mjs';
 import { VIEWPORTS, applyViewport, launchBrowser, measurePage } from './layout-measure.mjs';
 import { evaluateLayout, exitCode, judgeColumn, renderVerify } from './layout-rules.mjs';
+import { provisionVerifyLayoutChatStates } from './verify-layout-chat-provision.mjs';
+import { driveChatProvisioned } from './verify-layout-chat-drive.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const skillDir = fileURLToPath(new URL('..', import.meta.url));
@@ -545,7 +547,48 @@ async function main() {
       reasons: doctor.ok ? [`sha ${doctor.sha}`] : doctor.reasons,
     });
     const only = argValue('--only');
-    if (!doctorOnly && (!only || only === 'chat')) await driveChat(browser, shotDir, rows, measurements);
+    let chatStates = null;
+    if (!doctorOnly && (!only || only === 'chat')) {
+      try {
+        chatStates = await provisionVerifyLayoutChatStates({ env: process.env });
+      } catch (error) {
+        rows.push({
+          feature: 'chat',
+          sub: 'provision',
+          viewport: 'both',
+          layout: 'FAIL',
+          judge: 'FAIL',
+          screenshot: '',
+          reasons: [redact(error.message || error), 'screenshot-missing'],
+        });
+      }
+    }
+    if (!doctorOnly && (!only || only === 'chat')) {
+      await driveChatProvisioned({
+        browser,
+        shotDir,
+        rows,
+        measurements,
+        chatStates,
+        VIEWPORTS,
+        APP_STATES,
+        applyViewport,
+        detectApp,
+        stateId,
+        showMessages,
+        loadSpec,
+        measurePage,
+        shoot,
+        grade,
+        finishRow,
+        writeFile,
+        path,
+        unreachableRow,
+        sleep,
+        clickControl,
+        splitRestored,
+      });
+    }
     if (!doctorOnly && (!only || only === 'shared-trip')) await driveTrip(browser, shotDir, rows, measurements);
     if (!doctorOnly && (!only || only === 'signup-checkout')) await driveSignup(browser, shotDir, rows, measurements);
   } catch (error) {

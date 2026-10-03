@@ -14,16 +14,22 @@ import {
   loadVisualScreenSpec,
 } from './shepherd-staging-smoke-visual-rubric.mjs';
 import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
-import { evaluateComposerControlsOnly } from './shepherd-staging-smoke-layout-eval.mjs';
+import { evaluateComposerControlsOnly } from './shepherd-staging-smoke-composer-send.mjs';
 
-function mockComposerEl({ id = '', className = '', hidden = false } = {}) {
-  const style = { display: hidden ? 'none' : 'block', visibility: 'visible', opacity: '1' };
+function mockComposerEl({ id = '', className = '', ariaLabel = '', hidden = false } = {}) {
+  const style = { display: hidden ? 'none' : 'block', visibility: 'visible', opacity: '1', pointerEvents: 'auto' };
   return {
     id,
     tagName: 'BUTTON',
+    disabled: false,
     className,
     classList: { contains: (c) => String(className).split(/\s+/).includes(c) },
-    getBoundingClientRect: () => ({ width: 40, height: 40, top: 0, left: 0, right: 40, bottom: 40 }),
+    getAttribute(name) {
+      if (name === 'aria-label') return ariaLabel;
+      return null;
+    },
+    getBoundingClientRect: () => ({ width: 40, height: 40, top: 700, left: 330, right: 370, bottom: 740 }),
+    contains: () => false,
     _style: style,
   };
 }
@@ -32,14 +38,14 @@ function composerFailures({ send }) {
   const failures = [];
   const attach = mockComposerEl({ id: 'attachButton' });
   const voice = mockComposerEl({ id: 'voiceButton' });
-  const textarea = mockComposerEl({ id: 'messageText' });
-  const gridChildren = [textarea, attach, voice, send].filter(Boolean);
-  const grid = { querySelectorAll: () => gridChildren };
+  const textarea = mockComposerEl({ id: 'messageText', tagName: 'TEXTAREA' });
+  const gridChildren = [attach, textarea, voice, send].filter(Boolean);
+  const grid = { querySelectorAll: (sel) => (String(sel) === 'button' ? gridChildren.filter((c) => c.tagName === 'BUTTON') : gridChildren) };
+  const form = { querySelector: (sel) => (String(sel).includes('compose-grid') ? grid : null) };
   const nodes = {
-    '.compose-grid, #composer': grid,
+    'form#composer, form.composer#composer, #composer': form,
     '#attachButton': attach,
     '#voiceButton': voice,
-    '.send-button, button[type="submit"][form], #composer button.send-button, button.send-button': send,
     '#messageText, textarea[name="message"], #composer textarea': textarea,
   };
   evaluateComposerControlsOnly({
@@ -49,12 +55,15 @@ function composerFailures({ send }) {
     push: (_s, _r, detail) => failures.push(detail),
     applies: (rule) => rule === 'composer_controls_only',
     rectObj: () => null,
+    elementFromPoint: () => send,
+    innerWidth: 390,
+    innerHeight: 844,
   });
   return failures;
 }
 
-assert.equal(composerFailures({ send: mockComposerEl({ className: 'send-button' }) }).some((d) => /send button/i.test(d)), false);
-assert.equal(composerFailures({ send: null }).some((d) => /visible send button/i.test(d)), true);
+assert.equal(composerFailures({ send: mockComposerEl({ id: 'sendButton', ariaLabel: 'Send' }) }).length, 0);
+assert.equal(composerFailures({ send: null }).some((d) => /Send button/i.test(d)), true);
 
 assert.match(layoutFactsForPrompt({ pass: true }), /PASS/);
 assert.match(

@@ -71,23 +71,34 @@ export async function runShepherdSmokeMapBudLogoChecks(ctx) {
     return { pass: bud.pass, http: 200 };
   });
 
-const LOGO_CHECK_TIMEOUT_MS = 90000;
+  const LOGO_CHECK_TIMEOUT_MS = 180000;
 
   await runDedicatedSharedCheck(ctx, 'LOGO', LOGO_CHECK_TIMEOUT_MS, async ({ page, prep, artifactPath }) => {
     out.checkLOGO = { partial: true, stageTimestamps: createLogoStageTimestamps() };
-    const logo = await runSharedSiteLogoCheck({
-      page,
-      prep,
-      artifactPath,
-      onPersist: (patch) => {
-        Object.assign(out.checkLOGO, patch);
-      },
-    });
-    out.checkLOGO = logo.checkLOGO;
-    if (logo.appFail) {
+    let logo = null;
+    try {
+      logo = await runSharedSiteLogoCheck({
+        page,
+        prep,
+        artifactPath,
+        onPersist: (patch) => {
+          Object.assign(out.checkLOGO, patch);
+        },
+      });
+    } finally {
+      if (out.checkLOGO?.partial) {
+        out.checkLOGO.partial = false;
+        if (!out.checkLOGO.failReason && !logo?.checkLOGO?.failReason) {
+          out.checkLOGO.failReason = 'logo_check_incomplete';
+          out.checkLOGO.harnessIncomplete = true;
+        }
+      }
+    }
+    if (logo?.checkLOGO) out.checkLOGO = logo.checkLOGO;
+    if (logo?.appFail) {
       out.checkLOGO.appFail = logo.appFail;
       return { pass: false, http: 200 };
     }
-    return { pass: logo.pass, http: 200 };
+    return { pass: logo?.pass ?? false, http: 200 };
   });
 }

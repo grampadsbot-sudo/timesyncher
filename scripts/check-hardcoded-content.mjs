@@ -192,6 +192,7 @@ const CANNED_TOKEN = /\b([A-Z][A-Z0-9_]*(?:LIST_FILL|FILL_DETAILS)|PLACE_COORDS|
 const ALLOWED_MODELS = new Set([
   'google/gemini-2.5-flash-lite',
   'qwen/qwen3-235b-a22b-2507',
+  'qwen/qwen2.5-vl-72b-instruct',
   'deepseek/deepseek-v3.2',
   'qwen/qwen3-max',
   'typesafe/jev-1.13',

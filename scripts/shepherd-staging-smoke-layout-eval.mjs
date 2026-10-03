@@ -1,5 +1,7 @@
 /** In-browser layout assertions for chat + shared staging pages (harness-only). */
 
+import { evaluateComposerControlsOnly } from './shepherd-staging-smoke-composer-send.mjs';
+
 export const LAYOUT_VIEWPORTS = [
   { width: 390, height: 844, label: '390' },
   { width: 1280, height: 800, label: '1280' },
@@ -18,49 +20,6 @@ export const LAYOUT_RULE_APPLICABILITY = {
   guest_nav_disjoint: ['shared'],
   chat_pane_row_parity: ['chat'],
 };
-
-export function evaluateComposerControlsOnly(ctx) {
-  const {
-    pageKind,
-    querySelector,
-    getComputedStyle,
-    push,
-    applies,
-    rectObj,
-  } = ctx;
-  if (!applies('composer_controls_only')) return;
-  const grid = querySelector('.compose-grid, #composer');
-  if (!grid) return;
-  const textarea = querySelector('#messageText, textarea[name="message"], #composer textarea');
-  const attach = querySelector('#attachButton');
-  const voice = querySelector('#voiceButton');
-  const send = querySelector('.send-button, button[type="submit"][form], #composer button.send-button, button.send-button');
-  const sendVisible = send
-    && getComputedStyle(send).display !== 'none'
-    && getComputedStyle(send).visibility !== 'hidden'
-    && send.getBoundingClientRect().width > 0
-    && send.getBoundingClientRect().height > 0;
-  if (!sendVisible) {
-    push('.send-button', 'composer_controls_only', 'composer must expose a visible send button', { send: send ? rectObj(send) : null });
-  }
-  const controls = grid.querySelectorAll('button, input, textarea, select');
-  for (const el of controls) {
-    const st = getComputedStyle(el);
-    if (st.display === 'none') continue;
-    const r = el.getBoundingClientRect();
-    if (r.width < 1 || r.height < 1) continue;
-    const id = el.id || '';
-    const isSend = el === send || el.classList?.contains?.('send-button');
-    const ok = id === 'attachButton' || id === 'voiceButton' || isSend || el === textarea || id === 'messageText';
-    if (!ok) {
-      push('#composer', 'composer_controls_only', `unexpected composer control ${id || el.tagName}`, { el: rectObj(el) });
-      break;
-    }
-  }
-  if (!attach || !voice) {
-    push('#composer', 'composer_controls_only', 'composer missing file-add or speak button', { attach: Boolean(attach), voice: Boolean(voice) });
-  }
-}
 
 export function evaluateLayoutRules(pageKind) {
   const failures = [];
