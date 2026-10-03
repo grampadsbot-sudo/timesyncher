@@ -12,13 +12,7 @@ const STAGE_KEYS = [
 ];
 
 export function turnStageTimings(partial = {}) {
-  const timings = {
-    classifierMs: null,
-    searchMs: null,
-    judgeMs: null,
-    replyMs: null,
-    gateMs: null,
-  };
+  const timings = Object.fromEntries(STAGE_KEYS.map((key) => [key, null]));
   const source = partial && typeof partial === 'object' ? partial : {};
   for (const key of STAGE_KEYS) {
     const value = Number(source[key]);
