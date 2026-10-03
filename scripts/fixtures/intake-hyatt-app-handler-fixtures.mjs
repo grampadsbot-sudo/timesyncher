@@ -10,6 +10,7 @@ import {
   TAVILY_DUMMY,
   TAVILY_HOST,
 } from './place-intent-brave-fallback-fixtures.mjs';
+import { handleEulaStoreDbSql } from './eula-store-db-sql.mjs';
 
 export {
   BRAVE_DUMMY,
@@ -37,16 +38,8 @@ export function sqlText(strings) {
 export function createHyattHandlerDb(state) {
   return async function db(strings, ...values) {
     const text = sqlText(strings);
-    if (/create table if not exists eula_store_objects/i.test(text)) return [];
-    if (/insert into eula_store_objects/i.test(text)) {
-      const key = values.find((v) => typeof v === 'string' && v.includes('timesyncher-eula'));
-      const doc = values.find((v) => v && typeof v === 'object' && !Array.isArray(v));
-      if (key) state.eulaStore[key] = doc;
-      return [];
-    }
-    if (/select document from eula_store_objects/i.test(text)) {
-      return state.eulaStore[values[0]] ? [{ document: state.eulaStore[values[0]] }] : [];
-    }
+    const eulaHandled = handleEulaStoreDbSql(text, values, state.eulaStore);
+    if (eulaHandled !== undefined) return eulaHandled;
     if (/from entitlements e/i.test(text) && /e\.customer_id = t\.customer_id/i.test(text)) {
       return [{
         plan: state.entitlement.plan,
