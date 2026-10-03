@@ -19,6 +19,7 @@ import {
   customerVisibleReplies,
   scanErrorText,
 } from './shepherd-staging-smoke-helpers.mjs';
+import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 
 async function freshOwnerSession(ctx, couponCode, tag, firstName = tag, lastName = ctx.SHA7) {
   const { BASE, SHA7, RUN_TS } = ctx;
@@ -243,6 +244,8 @@ export function buildTailIndependentParallelChecks(ctx) {
           },
           dExtra: { rows: dExtraRows, failures: dExtraFailures },
         };
+        const fail429 = attachProviderLogAndMaybeFail(out, 'D', { payload: d2Db?.payload, placeSearch: d2Db?.payload?.placeSearch, itineraryJson: d2.json }, { http: d2.status });
+        if (fail429) return fail429;
         const pass = d1.status >= 200 && d1.status < 300 && d1ThingId && d1StartsIso === D1_EXPECT_START && d1SharedDayIds.length > 0
           && d2.status >= 200 && d2.status < 300 && d2UnschedGrade.pass && dExtraFailures.length === 0;
         return { pass, http: d2.status };

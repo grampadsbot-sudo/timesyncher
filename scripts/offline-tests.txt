@@ -159,6 +159,7 @@ scripts/test_ratings_source.mjs
 scripts/test_seat_price_data.mjs
 scripts/test_shepherd_staging_smoke_lib.mjs
 scripts/test_shepherd_staging_smoke_harness.mjs
+scripts/test_shepherd_staging_smoke_provider_log.mjs
 scripts/test_trip_intake_classify.mjs
 scripts/test_trip_intake_concrete_things.mjs
 scripts/test_checkout_customer_price_message.mjs

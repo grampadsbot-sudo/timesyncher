@@ -2,9 +2,10 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
-import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
+import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
+import { prepareMapLogoIntakeShare } from './shepherd-staging-smoke-map-prep.mjs';
 import {
   postItinerary,
   postItineraryTimed,
@@ -241,6 +242,8 @@ export async function runShepherdSmokeSpine(ctx) {
       http: t6.status, elapsedMs: t6.elapsedMs, stageTimings: st6, brave: brave6, anchor: state.ps6?.anchor,
       searchCenter: state.ps6?.searchCenter, braveTacoRows: taco6, diag: fullDiag(t6db?.payload, state.ps6),
     };
+    const fail429 = attachProviderLogAndMaybeFail(out, '6', { payload: t6db?.payload, placeSearch: state.ps6, itineraryJson: t6.json }, { http: t6.status });
+    if (fail429) return fail429;
     const pass = t6.status >= 200 && t6.status < 300 && t6.status !== 504 && t6.elapsedMs < 60000 && st6Ok
       && /taco/i.test(brave6?.query || '') && brave6?.status === 'ok' && taco6.length > 0 && !state.leak6;
     return { pass, http: t6.status };
@@ -266,6 +269,8 @@ export async function runShepherdSmokeSpine(ctx) {
       rawResults: hBundle.rawResults,
       diag: fullDiag(hDb?.payload),
     };
+    const fail429 = attachProviderLogAndMaybeFail(out, 'H', { payload: hDb?.payload, placeSearch: hDb?.payload?.placeSearch, itineraryJson: state.hTurn?.json }, { http: state.hTurn.status });
+    if (fail429) return fail429;
     return { pass: state.hTurn.status >= 200 && state.hTurn.status < 300 && hyattThingPass(state.hThing, hyatt), http: state.hTurn.status };
   }, { timeoutMs: 60000 });
 
@@ -285,6 +290,8 @@ export async function runShepherdSmokeSpine(ctx) {
     const anchor = state.ps6b?.anchor;
     const sc = state.ps6b?.searchCenter;
     out.check6b = { http: t6b.status, brave: brave6b, query: brave6b?.query, anchor, searchCenter: sc, diag: fullDiag(t6bdb?.payload, state.ps6b) };
+    const fail429 = attachProviderLogAndMaybeFail(out, '6b', { payload: t6bdb?.payload, placeSearch: state.ps6b, itineraryJson: t6b.json }, { http: t6b.status });
+    if (fail429) return fail429;
     const t6bClassifierFail = t6bdb?.payload?.placeSearch?.error === 'turn_classifier_failed' || t6b.status === 502;
     const pass = t6b.status === 201 && !t6bClassifierFail && brave6b?.status === 'ok' && Number(brave6b?.resultCount) > 0 && anchorMatchesRealHyatt(anchor, sc);
     return { pass, http: t6b.status };
@@ -316,6 +323,8 @@ export async function runShepherdSmokeSpine(ctx) {
       marchLeak: tMarchLeak,
       persistedCategory: tPersist.category,
     };
+    const fail429 = attachProviderLogAndMaybeFail(out, 'T', { payload: tDb?.payload, placeSearch: tPs, itineraryJson: state.tTurn?.json }, { http: state.tTurn.status });
+    if (fail429) return fail429;
     const pass = state.tTurn.status === 201 && tPersist.category === 'restaurant' && tClass.targetKind === 'category' && tNearLodging && tBrave?.status === 'ok' && !tViolation && !tMarchLeak;
     return { pass, http: state.tTurn.status };
   }, { timeoutMs: 60000 });
@@ -367,6 +376,8 @@ export async function runShepherdSmokeSpine(ctx) {
     const mHonestNo = /no results|couldn't find|could not find|nothing specific/i.test(state.mReply);
     const mRealMarket = mMarketRows.length > 0 || /farmers?\s+market/i.test(state.mReply);
     out.checkM = { http: mTurn.status, reply: state.mReply.slice(0, 500), placeSearch: mPs, marketRows: mMarketRows.slice(0, 5), diag: fullDiag(mDb?.payload, mPs) };
+    const fail429 = attachProviderLogAndMaybeFail(out, 'M', { payload: mDb?.payload, placeSearch: mPs, itineraryJson: mTurn.json }, { http: mTurn.status });
+    if (fail429) return fail429;
     const pass = mTurn.status >= 200 && mTurn.status < 300 && !ERROR_REPLY_RE.test(state.mReply) && !mGrocery && (mRealMarket || mHonestNo);
     return { pass, http: mTurn.status };
   }, { timeoutMs: 60000 });
@@ -383,7 +394,7 @@ export async function runShepherdSmokeSpine(ctx) {
     const rClass = classifierSnapshot(rDb?.payload);
     const rClassifierFail = rTurn.status === 502 || rClass.reason === 'turn_classifier_failed' || String(rPs?.error || '').includes('turn_classifier_failed') || String(rDb?.payload?.placeSearch?.error || '').includes('category unknown');
     const rResultRows = rPs?.results || rDb?.payload?.placeSearch?.results || [];
-    const rCoffee = gradeCoffeeReplyRows(rResultRows);
+    const rCoffee = await gradeCoffeeReplyRows(rResultRows, { customerTurn: 'coffee shops near Kihei' });
     out.checkR = {
       http: rTurn.status,
       anchorRadiusRejected: rAnchorRejected,
@@ -397,6 +408,8 @@ export async function runShepherdSmokeSpine(ctx) {
     if (rCoffee.harnessError) {
       return { pass: false, harnessError: true, harnessMessage: 'R coffee row missing persisted metadata', http: rTurn.status };
     }
+    const fail429 = attachProviderLogAndMaybeFail(out, 'R', { payload: rDb?.payload, placeSearch: rPs, itineraryJson: rTurn.json }, { http: rTurn.status });
+    if (fail429) return fail429;
     const pass = rTurn.status >= 200 && rTurn.status < 300 && !rOffersOutside && !rClassifierFail && Boolean(rPersist.category) && rCoffee.pass;
     return { pass, http: rTurn.status };
   }, { timeoutMs: 60000 });
@@ -415,25 +428,6 @@ export async function runShepherdSmokeSpine(ctx) {
       && !String(oFail || '').includes('reply_action_claim') && !(oBlocked || []).some((r) => String(r).includes('reply_action_claim'));
     return { pass, http: oTurn.status };
   }, { timeoutMs: 60000 });
-}
-
-async function prepareMapLogoIntakeShare(ctx) {
-  const { state, BASE, db } = ctx;
-  await postItinerary(state.session, { tripId: state.tripId, text: "We're staying at the Westin Maui in Kaanapali." });
-  await postItinerary(state.session, { tripId: state.tripId, text: 'Hertz rental car at OGG' });
-  const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
-  let sharedApi = null;
-  if (shareSlug) {
-    for (let i = 0; i < 25; i += 1) {
-      const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
-      sharedApi = { status: sr.status, json: await sr.json().catch((err) => ({ _jsonError: String(err?.message || err) })) };
-      if ((sharedApi.json?.places || []).length >= 1) break;
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-  }
-  const tripMetaAfterH = state.tripId ? (await db`select metadata from trips where id=${state.tripId} limit 1`)[0]?.metadata : null;
-  const publicUrlAfterH = tripMetaAfterH?.publicUrl || tripMetaAfterH?.public_url || '';
-  return { shareSlug, sharedApi, publicUrlAfterH, intakeShareUrl: shareSlug ? `${BASE}/shared/${shareSlug}/` : '' };
 }
 
 /** MAP/BUD/LOGO in a dedicated browser after the parallel pool (one retry on connection closed). */
