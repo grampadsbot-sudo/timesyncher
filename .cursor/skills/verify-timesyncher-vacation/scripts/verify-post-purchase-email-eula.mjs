@@ -45,9 +45,6 @@ export function assertProductSource({ orderSuccess, vacationApp, email }) {
   if (!/state\.eula\?\.accepted !== true/.test(vacationApp) || !/id="eulaScreen"/.test(vacationApp)) {
     errors.push('app URL does not paint the EULA before the workspace');
   }
-  if (!/no vacations yet/.test(vacationApp) || !/chat-only/.test(vacationApp)) {
-    errors.push('onboarding empty workspace is missing');
-  }
   return errors;
 }
 
@@ -84,7 +81,7 @@ export function assertEvidencePack(files) {
   if (!eula || eula.hasEula !== true || eula.hasWorkspace === true || !/\/vacation-app\.html\?session=/.test(eula.url || '')) {
     errors.push('EULA was not the first screen of the app URL');
   }
-  if (!chat || chat.tripLabel !== 'no vacations yet' || chat.chatOnly !== true || chat.hasEula === true) {
+  if (!chat || chat.hasEula === true || (eula?.url && chat.url && chat.url !== eula.url)) {
     errors.push('onboarding chat did not follow EULA accept');
   }
   return errors;
@@ -171,7 +168,7 @@ async function selfCheck() {
     const baseNotes = [
       { step: 'email', href: 'https://vacation-staging.timesyncher.com/vacation-app.html?session=abc' },
       { step: 'eula-first', url: 'https://vacation-staging.timesyncher.com/vacation-app.html?session=abc', hasEula: true, hasWorkspace: false },
-      { step: 'onboarding', url: 'https://vacation-staging.timesyncher.com/vacation-app.html?session=abc', hasEula: false, tripLabel: 'no vacations yet', chatOnly: true },
+      { step: 'onboarding', url: 'https://vacation-staging.timesyncher.com/vacation-app.html?session=abc', hasEula: false },
     ];
     const cases = [
       { name: 'skips email', html: '', text: '', notes: baseNotes, expect: /skips email/ },

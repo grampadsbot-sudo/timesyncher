@@ -3,30 +3,24 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import {
   agreeThenReadWelcome,
   ensureWelcomeDatabase,
   priorWelcomeTexts,
   redactWelcomeSecrets,
   welcomeShownFromBubbles,
-  WELCOME_DATABASE_EMPTY,
-  WELCOME_DATABASE_FETCH_FAILED,
+  WELCOME_DATABASE_MISSING,
   WELCOME_ONBOARDING_TIMEOUT,
-  WELCOME_VERCEL_TOKEN_MISSING,
 } from '../.cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs';
 
 const SENTINEL = 'sentinel-welcome-db-url-7c2e';
-const TOKEN = 'unit-test-token';
-const STAGING_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true';
 const scriptPath = fileURLToPath(new URL('../.cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs', import.meta.url));
 const repo = fileURLToPath(new URL('..', import.meta.url));
-const selfPath = fileURLToPath(import.meta.url);
 
 function leaked(text) {
   const raw = Buffer.isBuffer(text) ? text : Buffer.from(String(text ?? ''));
   return raw.includes(Buffer.from(SENTINEL))
-    || raw.includes(Buffer.from(TOKEN))
     || raw.includes(Buffer.from('postgres://'))
     || raw.includes(Buffer.from('postgresql://'));
 }
@@ -64,22 +58,12 @@ function baseEnv() {
   const env = { ...process.env };
   delete env.DATABASE_URL;
   delete env.NEON_DATABASE_URL;
-  delete env.VERCEL_TOKEN;
   return env;
 }
 
-function writePreload(rootDir, source) {
-  const file = path.join(rootDir, 'harness', 'preload.mjs');
-  fs.writeFileSync(file, source);
-  return file;
-}
-
-function runCli(rootDir, { preload, token = true } = {}) {
+function runCli(rootDir) {
   const env = baseEnv();
-  if (token) env.VERCEL_TOKEN = TOKEN;
-  const args = [];
-  if (preload) args.push('--import', pathToFileURL(preload).href);
-  args.push(scriptPath, '--check');
+  const args = [scriptPath, '--check'];
   const result = spawnSync(process.execPath, args, { cwd: repo, env, encoding: 'utf8' });
   for (const name of ['artifacts', 'evidence']) {
     fs.writeFileSync(path.join(rootDir, name, 'stdout.txt'), result.stdout || '');
@@ -92,174 +76,42 @@ function runCli(rootDir, { preload, token = true } = {}) {
   return result;
 }
 
-async function runChildResolve(rootDir) {
-  delete process.env.DATABASE_URL;
-  delete process.env.NEON_DATABASE_URL;
-  const env = { ...process.env };
-  delete env.DATABASE_URL;
-  delete env.NEON_DATABASE_URL;
-  env.VERCEL_TOKEN = TOKEN;
-  let sawUrl = false;
-  let sawAuth = false;
-  try {
-    await ensureWelcomeDatabase({
-      env,
-      fetchImpl: async (url, init) => {
-        sawUrl = url === STAGING_URL;
-        const method = String(init?.method || 'GET').toUpperCase();
-        const auth = init?.headers?.Authorization || '';
-        sawAuth = method === 'GET' && auth === `Bearer ${TOKEN}`;
-        if (!sawUrl || !sawAuth) return { ok: false, status: 400, json: async () => ({ value: SENTINEL }) };
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({ key: 'DATABASE_URL', value: SENTINEL, contentHint: SENTINEL }),
-          text: async () => SENTINEL,
-        };
-      },
-    });
-  } catch (error) {
-    process.stderr.write(`${error?.message || WELCOME_DATABASE_FETCH_FAILED}\n`);
-    process.exit(error?.exitCode || 1);
-  }
-  if (!sawUrl || !sawAuth || process.env.DATABASE_URL !== SENTINEL || env.DATABASE_URL !== SENTINEL) {
-    process.stderr.write(`${WELCOME_DATABASE_EMPTY}\n`);
-    process.exit(1);
-  }
-  const body = `${redactWelcomeSecrets(JSON.stringify({ loaded: true, database: process.env.DATABASE_URL }))}\n`;
-  fs.writeFileSync(path.join(rootDir, 'artifacts', 'database-load.json'), body);
-  fs.writeFileSync(path.join(rootDir, 'evidence', 'database-load.json'), body);
-  process.stdout.write('resolved\n');
+const previous = process.env.DATABASE_URL;
+delete process.env.DATABASE_URL;
+try {
+  const preset = { DATABASE_URL: 'preset-welcome-db' };
+  await ensureWelcomeDatabase({ env: preset });
+  assert.equal(preset.DATABASE_URL, 'preset-welcome-db');
+  assert.equal(process.env.DATABASE_URL, undefined);
+
+  await assert.rejects(
+    () => ensureWelcomeDatabase({ env: {} }),
+    (error) => {
+      assert.equal(error.message, WELCOME_DATABASE_MISSING);
+      assert.equal(error.exitCode, 1);
+      return true;
+    },
+  );
+  await assert.rejects(
+    () => ensureWelcomeDatabase({ env: { DATABASE_URL: '   ' } }),
+    (error) => error.message === WELCOME_DATABASE_MISSING,
+  );
+
+  const redacted = redactWelcomeSecrets('connect postgres://user:secret@host/db failed', 'postgres://user:secret@host/db');
+  assert.equal(redacted.includes('postgres://'), false);
+  assert.equal(redacted.includes('secret'), false);
+  assert.equal(redacted.includes('[redacted]'), true);
+} finally {
+  if (previous === undefined) delete process.env.DATABASE_URL;
+  else process.env.DATABASE_URL = previous;
 }
 
-if (process.argv[2] === '--child-resolve') {
-  await runChildResolve(process.argv[3]);
-} else {
-  const source = fs.readFileSync(scriptPath, 'utf8');
-  assert.equal(source.includes(STAGING_URL), true);
-  assert.equal(source.includes('timesyncher-vacation-staging'), true);
+const missing = runCli(makeRoot());
+assert.notEqual(missing.status, 0);
+assert.equal(missing.stderr.includes(WELCOME_DATABASE_MISSING), true);
+assert.equal(missing.stderr.includes('api.vercel.com'), false);
 
-  const previous = process.env.DATABASE_URL;
-  delete process.env.DATABASE_URL;
-  try {
-    let called = false;
-    const preset = { DATABASE_URL: 'preset-welcome-db', VERCEL_TOKEN: TOKEN };
-    await ensureWelcomeDatabase({
-      env: preset,
-      fetchImpl: async () => {
-        called = true;
-        throw new Error('fetch should not run');
-      },
-    });
-    assert.equal(called, false);
-    assert.equal(preset.DATABASE_URL, 'preset-welcome-db');
-    assert.equal(process.env.DATABASE_URL, undefined);
-
-    await assert.rejects(
-      () => ensureWelcomeDatabase({ env: {}, fetchImpl: async () => { throw new Error(SENTINEL); } }),
-      (error) => {
-        assert.equal(error.message, WELCOME_VERCEL_TOKEN_MISSING);
-        assert.equal(String(error.stack || '').includes(SENTINEL), false);
-        return true;
-      },
-    );
-
-    await assert.rejects(
-      () => ensureWelcomeDatabase({
-        env: { VERCEL_TOKEN: TOKEN },
-        fetchImpl: async () => { throw new Error(SENTINEL); },
-      }),
-      (error) => {
-        assert.equal(error.message, WELCOME_DATABASE_FETCH_FAILED);
-        assert.equal(error.exitCode, 1);
-        assert.equal(String(error.message).includes(SENTINEL), false);
-        assert.equal(String(error.stack || '').includes(SENTINEL), false);
-        return true;
-      },
-    );
-
-    const redacted = redactWelcomeSecrets('connect postgres://user:secret@host/db failed', 'postgres://user:secret@host/db');
-    assert.equal(redacted.includes('postgres://'), false);
-    assert.equal(redacted.includes('secret'), false);
-    assert.equal(redacted.includes('[redacted]'), true);
-  } finally {
-    if (previous === undefined) delete process.env.DATABASE_URL;
-    else process.env.DATABASE_URL = previous;
-  }
-
-  const missing = runCli(makeRoot(), { token: false });
-  assert.notEqual(missing.status, 0);
-  assert.equal(missing.stderr.includes(WELCOME_VERCEL_TOKEN_MISSING), true);
-
-  const httpFail = runCli(makeRoot(), {
-    preload: writePreload(makeRoot(), `globalThis.fetch = async () => ({
-      ok: false,
-      status: 500,
-      text: async () => ${JSON.stringify(SENTINEL)},
-      json: async () => ({ value: ${JSON.stringify(SENTINEL)} }),
-    });
-`),
-  });
-  assert.notEqual(httpFail.status, 0);
-  assert.equal(httpFail.stderr.includes(`${WELCOME_DATABASE_FETCH_FAILED} (HTTP 500)`), true);
-
-  const thrown = runCli(makeRoot(), {
-    preload: writePreload(makeRoot(), `globalThis.fetch = async () => { throw new Error(${JSON.stringify(SENTINEL)}); };
-`),
-  });
-  assert.notEqual(thrown.status, 0);
-  assert.equal(thrown.stderr.includes(WELCOME_DATABASE_FETCH_FAILED), true);
-  assert.equal(thrown.stderr.includes('HTTP'), false);
-
-  const empty = runCli(makeRoot(), {
-    preload: writePreload(makeRoot(), `globalThis.fetch = async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ key: 'DATABASE_URL', value: '   ', note: ${JSON.stringify(SENTINEL)} }),
-    });
-`),
-  });
-  assert.notEqual(empty.status, 0);
-  assert.equal(empty.stderr.includes(WELCOME_DATABASE_EMPTY), true);
-
-  const wrongKey = runCli(makeRoot(), {
-    preload: writePreload(makeRoot(), `globalThis.fetch = async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ key: 'NOT_DATABASE_URL', value: ${JSON.stringify(SENTINEL)} }),
-    });
-`),
-  });
-  assert.notEqual(wrongKey.status, 0);
-  assert.equal(wrongKey.stderr.includes(WELCOME_DATABASE_FETCH_FAILED), true);
-  assert.equal(wrongKey.stderr.includes(WELCOME_DATABASE_EMPTY), false);
-
-  const resolvedRoot = makeRoot();
-  const resolved = spawnSync(process.execPath, [selfPath, '--child-resolve', resolvedRoot], {
-    cwd: resolvedRoot,
-    env: baseEnv(),
-    encoding: 'utf8',
-  });
-  for (const name of ['artifacts', 'evidence']) {
-    fs.writeFileSync(path.join(resolvedRoot, name, 'stdout.txt'), resolved.stdout || '');
-    fs.writeFileSync(path.join(resolvedRoot, name, 'stderr.txt'), resolved.stderr || '');
-  }
-  assert.equal(resolved.status, 0);
-  assert.equal(resolved.stdout, 'resolved\n');
-  assert.equal(resolved.stderr, '');
-  assertNoLeak(resolved.stdout, 'resolve stdout');
-  assertNoLeak(resolved.stderr, 'resolve stderr');
-  assertDirClean(path.join(resolvedRoot, 'artifacts'));
-  assertDirClean(path.join(resolvedRoot, 'evidence'));
-  for (const name of ['artifacts', 'evidence']) {
-    const body = fs.readFileSync(path.join(resolvedRoot, name, 'database-load.json'), 'utf8');
-    assert.equal(body.includes('"loaded":true'), true);
-    assert.equal(body.includes('[redacted]'), true);
-    assertNoLeak(body, `${name} database-load`);
-  }
-  assert.equal(process.env.DATABASE_URL, previous);
-
-  const self = spawnSync(process.execPath, [scriptPath, '--self-test-missing-env'], {
+const self = spawnSync(process.execPath, [scriptPath, '--self-test-missing-env'], {
     cwd: repo,
     env: baseEnv(),
     encoding: 'utf8',
@@ -316,5 +168,4 @@ if (process.argv[2] === '--child-resolve') {
   const sessionWelcomeAt = drive.indexOf('const welcomeShown');
   assert.ok(agreeAt > 0 && sessionWelcomeAt > agreeAt);
 
-  process.stdout.write('welcome database url test passed\n');
-}
+process.stdout.write('welcome database url test passed\n');
