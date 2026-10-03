@@ -65,6 +65,7 @@ import {
   runVacationAppInTurnSearch,
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
+import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
 import { pickVacationAppTrip } from '../src/vacation/vacation-app-trip-select.mjs';
 import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
@@ -904,6 +905,7 @@ async function handleVacationApp(req, res, db, url) {
   }
 
   if (req.method === 'POST') {
+    const postStarted = Date.now();
     const body = await readJson(req);
     if (body.action === 'open-seats' || body.action === 'collaborator-invite') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
@@ -943,6 +945,7 @@ async function handleVacationApp(req, res, db, url) {
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
     let created = null;
+    let createVacationMs = null;
     if (!selected) {
       if (!eula.accepted) {
         return sendJson(res, 409, vacationAppErrorBody({
@@ -951,7 +954,9 @@ async function handleVacationApp(req, res, db, url) {
           customerMessage: 'Accept the terms before you send a message.',
         }));
       }
+      const createStarted = Date.now();
       created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
+      createVacationMs = Date.now() - createStarted;
       if (!created.ok) {
         return sendJson(res, created.statusCode || 500, vacationAppErrorBody({
           error: created.error,
@@ -1004,11 +1009,23 @@ async function handleVacationApp(req, res, db, url) {
       `;
       return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
+    const queueStarted = Date.now();
     const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill);
+    const queueTurnMs = Date.now() - queueStarted;
     const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
+    const serverTiming = mergeTripCreateServerTiming({
+      postMs: Date.now() - postStarted,
+      createVacationMs,
+      queueTurnMs,
+      tripCreateTimings: created?.tripCreateTimings,
+      stageTimings: queued.stageTimings,
+      latencyMs: queued.latencyMs,
+      sessionE2eMs: queued.sessionE2eMs,
+    });
     return sendJson(res, postStatus, {
       trip: selected,
       ...queued,
+      serverTiming,
     });
   }
 

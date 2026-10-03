@@ -21,6 +21,22 @@ export function anchorRadiusCenter(searchAnchorGeocode, searchCenter) {
   return { lat: centerLat, lng: centerLng, label: String(searchCenter?.label || '').trim() };
 }
 
+export function anchorRadiusPolicySnapshot(radiusCenter, scope, categoryFallback = 'restaurant') {
+  if (!radiusCenter) return null;
+  const lat = Number(radiusCenter.lat);
+  const lng = Number(radiusCenter.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return {
+    scope,
+    center: {
+      lat,
+      lng,
+      ...(radiusCenter.label ? { label: String(radiusCenter.label).trim() } : {}),
+    },
+    radiusMeters: radiusMetersForAnchorScope(categoryFallback, scope),
+  };
+}
+
 export function radiusMetersForAnchorScope(category, scope = ANCHOR_RADIUS_SCOPE_LODGING) {
   if (scope === ANCHOR_RADIUS_SCOPE_DESTINATION) {
     return categoryRadiusMeters('activity');

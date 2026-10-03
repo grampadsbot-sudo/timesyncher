@@ -23,6 +23,11 @@ function normalizeProviderAttempts(attempts = []) {
     if (row.endpoint) entry.endpoint = String(row.endpoint).trim().slice(0, 40);
     if (Number.isFinite(Number(row.httpStatus))) entry.httpStatus = Number(row.httpStatus);
     if (Number.isFinite(Number(row.calledAtMs))) entry.calledAtMs = Number(row.calledAtMs);
+    if (Number.isFinite(Number(row.nominatimThrottleWaitMs))) {
+      entry.nominatimThrottleWaitMs = Number(row.nominatimThrottleWaitMs);
+    }
+    if (Number.isFinite(Number(row.nominatimFetchMs))) entry.nominatimFetchMs = Number(row.nominatimFetchMs);
+    if (row.cacheHit === true) entry.cacheHit = true;
     return entry;
   }).filter(Boolean);
 }

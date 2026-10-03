@@ -12,6 +12,7 @@ import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
 import { attachSessionCollaboratorInvitesToTrip, loadCollaboratorInviteForEmail } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
 import { publicTripUrl } from './web-access.mjs';
+import { scheduleTripDestinationGeocode } from './trip-destination-center.mjs';
 
 export function tripIntakeJobKind() {
   return ['trip', 'intake'].join('_');
@@ -158,6 +159,15 @@ export async function createVacationFromChatMessage(db, session, body, loadTrips
       and trip_id is null
   `;
   session.trip_id = tripId;
+  const tripDestinationLabel = cleanText(jobFields.destination, 180);
+  if (tripDestinationLabel) {
+    scheduleTripDestinationGeocode({
+      db,
+      tripId,
+      destinationLabel: tripDestinationLabel,
+      env,
+    });
+  }
   const attachedInvites = await attachSessionCollaboratorInvitesToTrip(db, {
     ownerCustomerId: session.customer_id,
     tripId,

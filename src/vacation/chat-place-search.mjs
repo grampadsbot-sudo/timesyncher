@@ -21,7 +21,7 @@ import {
 } from './chat-place-search-outcomes.mjs';
 import { insertStampedChatPlaceThings, workerInputAfterInTurnPlaceSearch } from './chat-place-search-when.mjs';
 import { maybePersistFirstIntakeLodging } from './intake-lodging-queue-persist.mjs';
-import { persistTripDestinationCenter } from './trip-destination-center.mjs';
+import { destinationCenterFromTripMetadata, persistTripDestinationCenter } from './trip-destination-center.mjs';
 export { buildLiveAppRewritePending } from './chat-place-search-reply-pending.mjs';
 function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -80,6 +80,8 @@ export async function runCustomerChatPlaceSearch({
   lodging = '',
   lodgingPoint = null,
   tripId = '',
+  tripDestinationCenter = null,
+  db = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
@@ -115,6 +117,8 @@ export async function runCustomerChatPlaceSearch({
     const search = await searchImpl({
       destination: geocodeDestination,
       tripId,
+      db,
+      tripDestinationCenter,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
       keepAreaText: classification?.anchorIsLodging === true && !lodging,
@@ -187,6 +191,17 @@ export async function applyChatPlaceSearchForVacationTurn({
   const lodgingThing = await loadTripLodgingThing(db, tripId);
   const lodgingAnchor = lodgingAnchorFromThing(lodgingThing);
   const tripPlaceContext = await loadTripPlaceSearchContext(db, tripId);
+  let tripDestinationCenter = null;
+  if (db && tripId) {
+    const centerRows = await db`
+      select metadata
+      from trips
+      where id = ${tripId}
+      limit 1
+    `;
+    const meta = centerRows[0]?.metadata && typeof centerRows[0].metadata === 'object' ? centerRows[0].metadata : {};
+    tripDestinationCenter = destinationCenterFromTripMetadata(meta);
+  }
   const chatSearch = await runCustomerChatPlaceSearch({
     placeSearchTurn,
     classification,
@@ -196,6 +211,8 @@ export async function applyChatPlaceSearchForVacationTurn({
     lodging: lodgingAnchor.text,
     lodgingPoint: lodgingAnchor.point,
     tripId,
+    tripDestinationCenter,
+    db,
     env: buildProviderEnv(env),
     searchImpl,
   });

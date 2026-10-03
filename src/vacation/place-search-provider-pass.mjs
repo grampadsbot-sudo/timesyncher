@@ -1,9 +1,23 @@
 import { providerFailureMessage, resolveSearchContext, tryGeocodeLabel } from './place-search-geocode.mjs';
+import { resolveSearchAnchorGeocode } from './place-search-anchor-geocode.mjs';
+import {
+  everyPlaceResultProviderErrored,
+  httpStatusFromError,
+  httpStatusFromReason,
+  PLACE_RESULT_PROVIDERS,
+  placeResultProviderRows,
+  placeResultProvidersAnswered,
+  providerErrorsFromProviderLog,
+  providerRowIsError,
+  providerRowIsHit,
+  providerRowRan,
+} from './place-search-provider-log-helpers.mjs';
 import { buildPlaceSearchFailureDiagnostics } from './place-search-failure-diagnostics.mjs';
 import {
   ANCHOR_RADIUS_SCOPE_DESTINATION,
   ANCHOR_RADIUS_SCOPE_LODGING,
   anchorRadiusCenter,
+  anchorRadiusPolicySnapshot,
   filterPlacesWithinRadius,
   radiusMetersForAnchorScope,
 } from './place-search-radius-filter.mjs';
@@ -13,68 +27,6 @@ import {
   resolveNamedPlaceTieBreakLabel,
 } from './place-search-named-select.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
-
-function providerRowIsError(row = {}) {
-  return String(row?.status || '').trim().toLowerCase() === 'error';
-}
-
-function providerRowIsHit(row = {}) {
-  return String(row?.status || '').trim().toLowerCase() === 'ok';
-}
-
-function providerRowRan(row = {}) {
-  const status = String(row?.status || '').trim().toLowerCase();
-  return status !== 'skipped';
-}
-
-function providerRowAnswered(row = {}) {
-  const status = String(row?.status || '').trim().toLowerCase();
-  return status === 'ok' || status === 'empty';
-}
-
-function httpStatusFromReason(reason) {
-  const match = String(reason || '').match(/HTTP\s+(\d{3})/i);
-  return match ? Number(match[1]) : null;
-}
-
-function placeResultProviderRows(providerLog = []) {
-  return (Array.isArray(providerLog) ? providerLog : [])
-    .filter((row) => PLACE_RESULT_PROVIDERS.has(String(row?.provider || '').trim()));
-}
-
-function providerErrorsFromProviderLog(providerLog = []) {
-  return (Array.isArray(providerLog) ? providerLog : [])
-    .filter((row) => {
-      const provider = String(row?.provider || '').trim();
-      return (PLACE_RESULT_PROVIDERS.has(provider) || provider === 'nominatim') && providerRowIsError(row);
-    })
-    .map((row) => {
-      const httpStatus = Number.isFinite(Number(row?.httpStatus))
-        ? Number(row.httpStatus)
-        : httpStatusFromReason(row?.reason);
-      return {
-        provider: String(row.provider || '').trim(),
-        ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
-        message: String(row?.reason || row?.status || 'error').trim(),
-      };
-    });
-}
-
-function httpStatusFromError(error, reason) {
-  if (Number.isFinite(Number(error?.httpStatus))) return Number(error.httpStatus);
-  return httpStatusFromReason(reason);
-}
-
-function placeResultProvidersAnswered(providerLog = []) {
-  return placeResultProviderRows(providerLog).filter((row) => providerRowRan(row) && providerRowAnswered(row));
-}
-
-function everyPlaceResultProviderErrored(providerLog = []) {
-  const ran = placeResultProviderRows(providerLog).filter((row) => providerRowRan(row));
-  return ran.length > 0 && ran.every((row) => providerRowIsError(row));
-}
-
-const PLACE_RESULT_PROVIDERS = new Set(['prior_db', 'osm', 'brave']);
 
 function resolveBraveCompactLocality({
   namedPlaceLookup,
@@ -103,22 +55,6 @@ function resolveBraveCompactLocality({
   return fromRelevance || tripDest;
 }
 
-function anchorRadiusPolicySnapshot(radiusCenter, scope, categoryFallback = 'restaurant') {
-  if (!radiusCenter) return null;
-  const lat = Number(radiusCenter.lat);
-  const lng = Number(radiusCenter.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  return {
-    scope,
-    center: {
-      lat,
-      lng,
-      ...(radiusCenter.label ? { label: String(radiusCenter.label).trim() } : {}),
-    },
-    radiusMeters: radiusMetersForAnchorScope(categoryFallback, scope),
-  };
-}
-
 /** All place-result providers finished without errors and none returned live rows. */
 export function placeSearchProvidersAllEmpty(providerLog = []) {
   const rows = (Array.isArray(providerLog) ? providerLog : [])
@@ -139,11 +75,13 @@ export async function runPlaceProviderPass({
   lodging,
   lodgingPoint,
   keepAreaText = false,
+  tripDestinationCenter = null,
   placeQueries,
   osmCategoryFilter = null,
   searchAnchor = null,
   relevanceContext,
   tripId,
+  db = null,
   priorPlaces,
   loadPriorPlaces,
   readPriorPlaces = null,
@@ -159,11 +97,11 @@ export async function runPlaceProviderPass({
   const providerLog = [];
   const context = await resolveSearchContext(
     fetchImpl,
-    { lodging, lodgingPoint, destination: dest, keepAreaText },
+    { lodging, lodgingPoint, destination: dest, keepAreaText, tripDestinationCenter },
     providerLog,
     readJson,
     fail,
-    { env },
+    { env, db, tripId },
   );
   const center = context.center;
   const locationText = context.locationText || dest;
@@ -179,7 +117,16 @@ export async function runPlaceProviderPass({
   const anchorText = String(searchAnchor?.text || '').trim();
   let anchorGeocode = null;
   if (anchorText && !namedPlaceLookup) {
-    anchorGeocode = await tryGeocodeLabel(fetchImpl, anchorText, providerLog, readJson, { env });
+    anchorGeocode = await resolveSearchAnchorGeocode({
+      fetchImpl,
+      anchorText,
+      namedPlaceLookup,
+      context,
+      dest,
+      providerLog,
+      readJson,
+      env,
+    });
   }
   const lodgingRadiusCenter = namedPlaceLookup ? null : anchorRadiusCenter(anchorGeocode, null);
   const destinationRadiusCenter = anchorRadiusCenter(null, center);

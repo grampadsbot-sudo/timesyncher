@@ -115,10 +115,15 @@ const intakeTrip = {
 };
 const purchaseDb = (strings, ...values) => {
   const query = strings.join(' ');
+  if (/select metadata/i.test(query) && query.includes('from trips')) {
+    return [{ metadata: intakeTrip.metadata || {} }];
+  }
   if (/update trips/i.test(query)) {
+    const patchJson = values.find((value) => typeof value === 'string' && value.includes('publicSlug'));
+    if (patchJson) intakeTrip.metadata = { ...(intakeTrip.metadata || {}), ...JSON.parse(patchJson) };
     const patch = values.find((value) => value && value.publicSlug);
-    intakeTrip.metadata = { ...(intakeTrip.metadata || {}), ...patch };
-    return [{ public_slug: patch?.publicSlug || intakeTrip.metadata.publicSlug }];
+    if (patch) intakeTrip.metadata = { ...(intakeTrip.metadata || {}), ...patch };
+    return [{ public_slug: intakeTrip.metadata.publicSlug || patch?.publicSlug }];
   }
   if (query.includes('from trips')) {
     const meta = intakeTrip.metadata || {};

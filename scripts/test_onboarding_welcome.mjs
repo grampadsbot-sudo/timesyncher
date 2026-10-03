@@ -223,10 +223,10 @@ try {
   assert.match(api, /welcomeFor = seat \? String\(session\.customer_id\) : 'owner'/);
   const queueAt = api.indexOf('async function queueVacationAppTurn');
   const queueBody = api.slice(queueAt, api.indexOf('\nasync function ', queueAt + 10));
-  const queueModule = await readFile(new URL('routes/vacation-app-chat-queue.mjs', root), 'utf8');
+  const persistModule = await readFile(new URL('src/vacation/vacation-app-queue-persist.mjs', root), 'utf8');
   assert.ok(queueBody.indexOf('ensureOnboardingOpener') >= 0);
   assert.ok(queueBody.indexOf('ensureOnboardingOpener') < queueBody.indexOf('runQueueVacationAppTurn'));
-  assert.ok(queueModule.indexOf('insert into transcript_turns') >= 0);
+  assert.ok(persistModule.indexOf('insert into transcript_turns') >= 0);
 
   const welcomeSource = await readFile(new URL('src/vacation/onboarding-welcome.mjs', root), 'utf8');
   const liveSource = await readFile(new URL('src/vacation/live-app-turn.mjs', root), 'utf8');
