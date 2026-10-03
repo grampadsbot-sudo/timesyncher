@@ -4,7 +4,7 @@
  * checkouts do not consume Resend quota; bundle spine still sends to agentmail + shepherd-*@resend.dev.
  */
 import { readFileSync } from 'node:fs';
-import { outboundEmailPassesSmokeHarness } from '/workspace/src/vacation/email.mjs';
+import { outboundEmailPassesSmokeHarness } from '../src/vacation/email.mjs';
 
 const PROJECT = 'timesyncher-vacation-staging';
 const V1_ENV_IDS = {
