@@ -1,7 +1,8 @@
 import { assignDatesScheduling as scheduleThingDates, tripIsoDay } from './intake-weekday-dates.mjs';
 
 export { tripIsoDay };
-import { captureThingLogo } from './thing-logo-capture.mjs';
+import { placeSourceFieldsFromThing, logoFieldsForSharedPlace } from './intake-shared-place-source.mjs';
+import { transportKind } from './intake-transport-kind.mjs';
 import { destinationCenterFromTripMetadata } from './trip-destination-center.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
@@ -106,29 +107,6 @@ export function statedLodgingLabelFromThings(things = []) {
     const title = String(thing.title || thing.name || '').trim();
     if (title) return title.slice(0, 240);
   }
-  return '';
-}
-
-function flightLikeLabel(record = {}) {
-  const text = [record.name, record.title, record.description, record.whenLabel]
-    .map((value) => String(value || '').trim())
-    .filter(Boolean)
-    .join(' ');
-  if (!text) return false;
-  if (/\bflight\b/i.test(text)) return true;
-  return /\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(text);
-}
-
-function transportKind(record = {}) {
-  const tokens = new Set();
-  for (const part of [record.category, record.category_name, record.category?.name, record.type]) {
-    for (const token of String(part || '').toLowerCase().split(/[^a-z]+/)) {
-      if (token) tokens.add(token);
-    }
-  }
-  if (tokens.has('flight')) return 'flight';
-  if (tokens.has('car')) return 'car';
-  if (flightLikeLabel(record) && (tokens.has('transport') || tokens.has('transfer'))) return 'flight';
   return '';
 }
 
@@ -286,13 +264,21 @@ export function thingRecordFromTripRow(row = {}) {
     sourceRecord,
     source: row.source || '',
     categoryName: String(meta.categoryName || '').trim(),
+    providerCategories: Array.isArray(meta.providerCategories) ? meta.providerCategories : [],
+    metadata: meta,
     location,
     lat: location.lat,
     lng: location.lng,
     address: location.address || '',
     sourceRef,
     cost_estimate_cents: Number.isInteger(row.cost_estimate_cents) ? row.cost_estimate_cents : null,
+    logoUrl: textField(meta.logoUrl || ''),
+    logoCaptureReason: textField(meta.logoCaptureReason || ''),
   };
+}
+
+function textField(value) {
+  return String(value || '').trim();
 }
 
 export function sharedTripFromIntake({ trip, things }) {
@@ -334,6 +320,9 @@ export function sharedTripFromIntake({ trip, things }) {
       source,
       ratings,
       ...(sourceRef ? { sourceRef } : {}),
+      ...placeSourceFieldsFromThing(thing),
+      ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
+      ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
       ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
     });
     const dayIds = [];
@@ -345,6 +334,8 @@ export function sharedTripFromIntake({ trip, things }) {
       dayIds,
       ...ratings,
       ...(sourceRef ? { sourceRef } : {}),
+      ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
+      ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
     };
     for (const date of assignDates(thing, year, tripDates)) {
       const day = dayByDate.get(date);
@@ -475,9 +466,10 @@ export function applyThingPresentation(shared = {}, options = {}) {
     const lat = finiteCoord(place.lat);
     const lng = finiteCoord(place.lng);
     const ratings = place.ratings && typeof place.ratings === 'object' && !Array.isArray(place.ratings) ? place.ratings : {};
+    const priorOverride = thingOverrides[`place:${place.id}`] || {};
     const extra = {
       source: String(place.source || 'customer'),
-      logoUrl: captureThingLogo(place, { title: name, category: place.category_name }),
+      ...logoFieldsForSharedPlace(place, priorOverride),
       ...ratings,
     };
     if (place.sourceRef) extra.sourceRef = place.sourceRef;

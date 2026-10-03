@@ -1,3 +1,4 @@
+import { PlaceSearchError } from './place-search-error.mjs';
 import {
   getNominatimStore,
   NOMINATIM_GEOCODE_CACHE_TTL_MS,
@@ -7,7 +8,79 @@ import {
   nominatimLabelGeocodePayloadCacheable,
   nominatimReverseCacheKey,
   nominatimReversePayloadCacheable,
+  nominatimMinimumSearchLimitForCacheKey,
+  nominatimSearchAliasLookupKeys,
+  nominatimSearchAliasWriteKeys,
+  nominatimUnwrapSearchCachePayload,
+  nominatimWrapSearchCachePayload,
 } from './nominatim-store.mjs';
+
+const NOMINATIM_HOST = 'nominatim.openstreetmap.org';
+
+export function isNominatimOpenStreetMapUrl(url) {
+  try {
+    const host = new URL(String(url || '')).hostname.toLowerCase();
+    return host === NOMINATIM_HOST;
+  } catch {
+    return String(url || '').includes(NOMINATIM_HOST);
+  }
+}
+
+/** Sole production entry point for HTTP to nominatim.openstreetmap.org. */
+export async function nominatimHttpReadJson(fetchImpl, url, { headers, method, body, label, now } = {}) {
+  if (!isNominatimOpenStreetMapUrl(url)) {
+    throw new PlaceSearchError(
+      `nominatimHttpReadJson requires a ${NOMINATIM_HOST} URL`,
+      'nominatim_bypass',
+    );
+  }
+  const clock = typeof now === 'function' ? now : () => (typeof now === 'number' ? now : Date.now());
+  const calledAtMs = Math.trunc(Number(clock()));
+  let response;
+  const requestLabel = String(label || 'Nominatim').trim() || 'Nominatim';
+  try {
+    response = await fetchImpl(url, {
+      method: method || 'GET',
+      headers: {
+        accept: 'application/json',
+        'user-agent': 'TimeSyncherVacation/1.0',
+        ...(headers || {}),
+      },
+      body,
+    });
+  } catch (error) {
+    const message = `${requestLabel} request failed: ${error.message || error}`;
+    throw new PlaceSearchError(message, 'source_failed');
+  }
+  if (!response?.ok) {
+    let detail = '';
+    try {
+      detail = typeof response.text === 'function' ? await response.text() : '';
+    } catch {
+      detail = '';
+    }
+    const httpStatus = Number(response?.status);
+    const message = `${requestLabel} failed: HTTP ${response?.status || 'no status'} ${String(detail).slice(0, 300)}`.trim();
+    const error = new PlaceSearchError(message, 'source_failed');
+    if (Number.isFinite(httpStatus)) error.httpStatus = httpStatus;
+    console.error(message);
+    throw error;
+  }
+  try {
+    const payload = await response.json();
+    return { payload, calledAtMs };
+  } catch (error) {
+    throw new PlaceSearchError(
+      `${requestLabel} returned invalid JSON: ${error.message || error}`,
+      'source_failed',
+    );
+  }
+}
+
+/** Test helper: canonical Nominatim search URL without duplicating host literals in scripts. */
+export function nominatimSelfTestSearchUrl(query = 'test') {
+  return `https://${NOMINATIM_HOST}/search?format=jsonv2&q=${encodeURIComponent(query)}`;
+}
 
 function finite(value) {
   const number = Number(value);
@@ -26,17 +99,40 @@ function httpStatusFromReason(reason) {
   return match ? Number(match[1]) : null;
 }
 
-let lastNominatimNetworkCallAtMs = null;
-
-/** Timestamp (ms) of the most recent live Nominatim HTTP call, for provider telemetry. */
-export function consumeNominatimNetworkCallAtMs() {
-  const ms = lastNominatimNetworkCallAtMs;
-  lastNominatimNetworkCallAtMs = null;
-  return ms;
+function nominatimProviderTimingFields(calledAtMs) {
+  const ms = Number(calledAtMs);
+  return Number.isFinite(ms) && ms > 0 ? { calledAtMs: ms } : {};
 }
 
-function nominatimProviderTimingFields(calledAtMs) {
-  return Number.isFinite(Number(calledAtMs)) ? { calledAtMs: Number(calledAtMs) } : {};
+async function readCachedNominatimPayload(store, cacheKey) {
+  const key = String(cacheKey || '').trim();
+  if (!key) return null;
+  const minLimit = nominatimMinimumSearchLimitForCacheKey(key);
+  const lookupKeys = [key, ...nominatimSearchAliasLookupKeys(key)];
+  for (const lookupKey of lookupKeys) {
+    const raw = await store.getCachedGeocode(lookupKey);
+    if (raw === null || raw === undefined) continue;
+    if (minLimit == null) return raw;
+    const payload = nominatimUnwrapSearchCachePayload(raw, minLimit, lookupKey);
+    if (payload !== null && payload !== undefined) return payload;
+  }
+  return null;
+}
+
+async function writeNominatimCache(store, cacheKey, payload) {
+  const key = String(cacheKey || '').trim();
+  if (!key || payload === undefined) return;
+  let cacheable = false;
+  if (key.startsWith('forward:')) cacheable = nominatimForwardPayloadCacheable(payload);
+  else if (key.startsWith('geocode:')) cacheable = nominatimLabelGeocodePayloadCacheable(payload);
+  else if (key.startsWith('reverse:')) cacheable = nominatimReversePayloadCacheable(payload);
+  if (!cacheable) return;
+  const searchLimit = nominatimMinimumSearchLimitForCacheKey(key);
+  const stored = searchLimit == null ? payload : nominatimWrapSearchCachePayload(payload, searchLimit);
+  const keysToWrite = [key, ...nominatimSearchAliasWriteKeys(key)];
+  for (const writeKey of keysToWrite) {
+    await store.putCachedGeocode(writeKey, stored, NOMINATIM_GEOCODE_CACHE_TTL_MS);
+  }
 }
 
 export function providerFailureMessage(providerLog = []) {
@@ -86,32 +182,33 @@ export function resolvedAreaText(hit, fallback = '') {
 async function nominatimReadJson(fetchImpl, url, readJson, {
   env = process.env,
   cacheKey = '',
+  labelQuery = '',
   sleep,
   now = Date.now,
   ...readOptions
 } = {}) {
   const store = getNominatimStore(env);
   const key = String(cacheKey || '').trim();
-  if (key) {
-    const cached = await store.getCachedGeocode(key);
-    if (cached !== null && cached !== undefined) return cached;
+  const cached = await readCachedNominatimPayload(store, key);
+  if (cached !== null && cached !== undefined) {
+    return { payload: cached, calledAtMs: null, cacheHit: true };
   }
-  return store.runNominatimThrottled(async (callAtMs) => {
-    lastNominatimNetworkCallAtMs = callAtMs;
-    const payload = await readJson(fetchImpl, url, readOptions);
-    if (key) {
-      let cacheable = false;
-      if (key.startsWith('forward:')) cacheable = nominatimForwardPayloadCacheable(payload);
-      else if (key.startsWith('geocode:')) cacheable = nominatimLabelGeocodePayloadCacheable(payload, readOptions.labelQuery || '');
-      else if (key.startsWith('reverse:')) cacheable = nominatimReversePayloadCacheable(payload);
-      if (cacheable) await store.putCachedGeocode(key, payload, NOMINATIM_GEOCODE_CACHE_TTL_MS);
-    }
-    return payload;
+  let calledAtMs = null;
+  const clock = typeof now === 'function' ? now : () => now;
+  const payload = await store.runNominatimThrottled(async () => {
+    const { payload: body, calledAtMs: fetchAtMs } = await nominatimHttpReadJson(fetchImpl, url, {
+      ...readOptions,
+      now: clock,
+    });
+    calledAtMs = fetchAtMs;
+    await writeNominatimCache(store, key, body);
+    return body;
   }, {
-    nowMs: typeof now === 'function' ? now : () => now,
+    nowMs: clock,
     sleep,
     maxWaitMs: readOptions.maxWaitMs,
   });
+  return { payload, calledAtMs, cacheHit: false };
 }
 
 export async function nominatimForwardSearch(fetchImpl, query, readJson, { limit = 5, env = process.env, sleep, now } = {}) {
@@ -119,14 +216,16 @@ export async function nominatimForwardSearch(fetchImpl, query, readJson, { limit
   if (!q) return [];
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=${Math.min(Math.max(limit, 1), 10)}&q=${encodeURIComponent(q)}`;
   const cacheKey = nominatimForwardCacheKey(q, limit);
-  const payload = await nominatimReadJson(fetchImpl, url, readJson, {
+  const { payload, calledAtMs } = await nominatimReadJson(fetchImpl, url, readJson, {
     label: 'Nominatim forward',
+    labelQuery: q,
     env,
     cacheKey,
     sleep,
     now,
   });
-  return (Array.isArray(payload) ? payload : []).slice(0, limit);
+  const hits = (Array.isArray(payload) ? payload : []).slice(0, limit);
+  return { hits, calledAtMs };
 }
 
 export async function nominatimReverseGeocode(fetchImpl, lat, lng, readJson, { env = process.env, sleep, now } = {}) {
@@ -135,28 +234,31 @@ export async function nominatimReverseGeocode(fetchImpl, lat, lng, readJson, { e
   if (pointLat === null || pointLng === null) return null;
   const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pointLat}&lon=${pointLng}`;
   const cacheKey = nominatimReverseCacheKey(pointLat, pointLng);
-  const payload = await nominatimReadJson(fetchImpl, url, readJson, {
+  const { payload, calledAtMs } = await nominatimReadJson(fetchImpl, url, readJson, {
     label: 'Nominatim reverse',
     env,
     cacheKey,
     sleep,
     now,
   });
-  if (!payload || typeof payload !== 'object') return null;
+  if (!payload || typeof payload !== 'object') return { reversed: null, calledAtMs };
   const address = String(payload.display_name || '').trim();
-  if (!address) return null;
+  if (!address) return { reversed: null, calledAtMs };
   return {
-    address,
-    hit: payload,
-    lat: finite(payload.lat) ?? pointLat,
-    lng: finite(payload.lon ?? payload.lng) ?? pointLng,
+    reversed: {
+      address,
+      hit: payload,
+      lat: finite(payload.lat) ?? pointLat,
+      lng: finite(payload.lon ?? payload.lng) ?? pointLng,
+    },
+    calledAtMs,
   };
 }
 
 async function geocodeLabel(fetchImpl, label, readJson, options = {}) {
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(label)}`;
   const cacheKey = nominatimLabelGeocodeCacheKey(label);
-  const payload = await nominatimReadJson(fetchImpl, url, readJson, {
+  const { payload, calledAtMs } = await nominatimReadJson(fetchImpl, url, readJson, {
     label: 'Nominatim geocode',
     labelQuery: label,
     env: options.env,
@@ -167,12 +269,15 @@ async function geocodeLabel(fetchImpl, label, readJson, options = {}) {
   const hit = Array.isArray(payload) ? payload[0] : null;
   const lat = finite(hit?.lat);
   const lng = finite(hit?.lon ?? hit?.lng);
-  if (lat === null || lng === null) return null;
+  if (lat === null || lng === null) return { found: null, calledAtMs };
   return {
-    lat,
-    lng,
-    label: resolvedAreaText(hit, label),
-    compactLocality: compactLocalityText(hit, label),
+    found: {
+      lat,
+      lng,
+      label: resolvedAreaText(hit, label),
+      compactLocality: compactLocalityText(hit, label),
+    },
+    calledAtMs,
   };
 }
 
@@ -183,8 +288,7 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
     return null;
   }
   try {
-    const found = await geocodeLabel(fetchImpl, trimmed, readJson, options);
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
+    const { found, calledAtMs } = await geocodeLabel(fetchImpl, trimmed, readJson, options);
     if (!found) {
       providerLog.push({
         provider: 'nominatim',
@@ -203,7 +307,6 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
     });
     return found;
   } catch (error) {
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
     const reason = String(error?.message || error || 'geocode failed').trim();
     const httpStatus = Number.isFinite(Number(error?.httpStatus))
       ? Number(error.httpStatus)
@@ -214,7 +317,6 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
       reason,
       ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
       resultCount: 0,
-      ...nominatimProviderTimingFields(calledAtMs),
     });
     return null;
   }
