@@ -3,16 +3,21 @@ import { join } from 'node:path';
 import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 
 export const VISUAL_JUDGE_MODEL = 'google/gemini-2.5-flash-lite';
-export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v2-grok0926';
+export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v3-shell-chrome-logos';
+
+const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is unchanged):
+- Craig's spec applies to the APP SHELL: header, composer row, and site/chat slider divider area.
+- FAIL any APP or BRAND chrome logo in or around that shell: TimeSyncher pill, TimeSyncher wordmark in the header, TimeSyncher footer or logo appearing as in-app site chrome, tab/nav bars, deploy stamps, Open navigation/Settings, or other non-spec chrome.
+- ALLOWED in vacation SITE CONTENT ROWS (e.g. Hotels, Cars list rows): vendor/brand logos such as Hyatt, Westin, Hertz. These are trip content, not app chrome. They should look centered in their rows; do NOT fail rubric 1 solely for those vendor marks.`;
 
 const VISUAL_RUBRIC_ITEMS = [
-  { id: '1', text: 'Everything matches the canonical app spec; nothing else is visible (no logos, pills, nav bars, stamps, empty boxes, Open navigation/Settings, or extra buttons).' },
+  { id: '1', text: 'App shell matches the canonical spec (header, composer row, slider when site exists). No extra chrome: app/brand logos (TimeSyncher pill, in-app site chrome logos, nav bars, stamps, Settings/Open navigation). Vendor logos inside Hotels/Cars/content rows are allowed and must not be treated as violations of item 1.' },
   { id: '2', text: 'The composer is visible at the bottom with only the textarea, file-add button, and speak button.' },
   { id: '3', text: 'The header is empty, or holds only the vacation dropdown when there are 2+ vacations.' },
   { id: '4', text: 'When the vacation site has content, it is on top with a resizable divider/slider between site and chat.' },
   { id: '5', text: 'Nothing is cut off or overflowing horizontally.' },
-  { id: '6', text: 'No internal or placeholder text (GBrain, workflow, Coming soon, TODO, lorem, undefined, null, deploy stamps).' },
-  { id: '7', text: 'It looks like a finished consumer app.' },
+  { id: '6', text: 'No internal or placeholder text (GBrain, workflow, Coming soon, TODO, lorem, undefined, null, deploy stamps like commit shas in chrome).' },
+  { id: '7', text: 'It looks like a finished consumer app (shell). Vendor row logos on content tabs may appear; judge shell polish separately from row icons.' },
 ];
 
 export function buildVisualJudgePrompt({ screenLabel, pageKind, stateId, tabLabel, viewport, screenSpecText, specSource }) {
@@ -25,7 +30,9 @@ Customer state: ${stateId || 'unknown'}
 Screen: ${screenLabel}
 Page kind: ${pageKind}${tabLabel ? `\nSite section/tab: ${tabLabel}` : ''}
 ${specBlock}
-Rubric — fail if ANY item is clearly violated.
+${LOGO_DISTINCTION}
+
+Rubric — fail if ANY item is clearly violated. Item 1 is about app shell chrome only, not vendor logos inside Hotels/Cars/content list rows.
 
 ${rubricBlock}
 
