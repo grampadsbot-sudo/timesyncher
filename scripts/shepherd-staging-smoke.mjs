@@ -7,7 +7,7 @@ import { sql } from '/workspace/src/vacation/db.mjs';
 import { createSmokeRunner } from './shepherd-staging-smoke-run-check.mjs';
 import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
 import { configureShepherdSmokeHelpers, seedDecoy } from './shepherd-staging-smoke-helpers.mjs';
-import { runShepherdSmokeBootstrap, runShepherdSmokeSpine } from './shepherd-staging-smoke-main.mjs';
+import { runShepherdSmokeBootstrap, runShepherdSmokeSpine, runShepherdSmokeMapBudLogoChecks } from './shepherd-staging-smoke-main.mjs';
 import { buildMainIndependentParallelChecks } from './shepherd-staging-smoke-parallel.mjs';
 import {
   SMOKE_MAIN_SPINE_ORDER,
@@ -19,7 +19,7 @@ import { buildTailIndependentParallelChecks, runShepherdSmokeTail } from './shep
 
 const EXPECT_SHA = process.argv[2];
 if (!EXPECT_SHA || !/^[0-9a-f]{40}$/i.test(EXPECT_SHA)) {
-  console.error('Usage: node scripts/shepherd-staging-smoke.mjs <full40Sha> <couponMain> <couponH2> <couponA1> <couponA2> <couponDTrip> <couponInvClaim>');
+  console.error('Usage: node scripts/shepherd-staging-smoke.mjs <full40Sha> <couponMain> <couponH2> <couponA1> <couponA2> <couponDTrip> <couponInvClaim> <couponK> <couponAskLodging>');
   process.exit(1);
 }
 const SHA7 = EXPECT_SHA.slice(0, 7);
@@ -64,10 +64,10 @@ configureShepherdSmokeHelpers({
 const out = { expectSha: EXPECT_SHA, checks: {}, http: {} };
 const runStartedAt = Date.now();
 const runner = createSmokeRunner({ out, sha7: SHA7, artifactDir: ARTIFACT_DIR, runStartedAt });
-const { runCheck, runChecksParallel, registerBrowser } = runner;
+const { runCheck, runChecksParallel, registerBrowser, killBrowsers } = runner;
 
-const [couponMain, couponH2, couponA1, couponA2, couponDTrip, couponInvClaim] = process.argv.slice(3);
-if (!couponMain || !couponH2 || !couponA1 || !couponA2 || !couponDTrip || !couponInvClaim) process.exit(1);
+const [couponMain, couponH2, couponA1, couponA2, couponDTrip, couponInvClaim, couponK, couponAskLodging] = process.argv.slice(3);
+if (!couponMain || !couponH2 || !couponA1 || !couponA2 || !couponDTrip || !couponInvClaim || !couponK || !couponAskLodging) process.exit(1);
 
 await ensureShepherdStagingSmokeEnv();
 
@@ -103,6 +103,8 @@ const sharedCtx = {
   couponA2,
   couponDTrip,
   couponInvClaim,
+  couponK,
+  couponAskLodging,
   A1_EMAIL,
   A2_OWNER_FIRST,
   A2_OWNER_LAST,
@@ -128,7 +130,11 @@ await Promise.all([
   runChecksParallel(parallelEntries),
 ]);
 
-out.deployId = process.env.SHEPHERD_DEPLOY_ID || 'dpl_H9FZGdY3mKcvLwHLfsBjMWa7a2pn1';
+await killBrowsers();
+
+await runShepherdSmokeMapBudLogoChecks(sharedCtx);
+
+out.deployId = process.env.SHEPHERD_DEPLOY_ID || 'dpl_H9TcCqtk2bmxzE2WSdyduGERw3yr';
 out.smokePlan = { spine: SMOKE_MAIN_SPINE_ORDER, tail: SMOKE_TAIL_SEQUENTIAL, parallel: SMOKE_PARALLEL_INDEPENDENT.map((r) => r.name) };
 
 await runShepherdSmokeTail({

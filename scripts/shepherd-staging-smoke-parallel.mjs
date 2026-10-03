@@ -5,21 +5,27 @@ import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candi
 import {
   postItinerary,
   getApp,
-  turnRow,
   customerTurnRow,
   thingReport,
   hyattThingPass,
   lookupBundle,
   fullDiag,
   persistedTurnClassifier,
+  itineraryPostOk,
+  measureCheckoutIndexFetchMs,
+  classifySmokeServerTiming,
 } from './shepherd-staging-smoke-helpers.mjs';
+import {
+  withBrowserPageSlot,
+  waitForSelector,
+} from './shepherd-staging-smoke-browser-pool.mjs';
 
 async function freshClassifierSession(ctx) {
-  const { BASE, SHA7, RUN_TS, couponMain } = ctx;
+  const { BASE, SHA7, RUN_TS, couponK } = ctx;
   const email = `shepherd-k-${SHA7}-${RUN_TS}@resend.dev`;
   const couponRes = await fetch(`${BASE}/api/checkout-coupon`, {
     method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ firstName: 'K', lastName: SHA7, email, couponCode: couponMain, orderBump: false, photoMemories: false }),
+    body: JSON.stringify({ firstName: 'K', lastName: SHA7, email, couponCode: couponK, orderBump: false, photoMemories: false }),
   });
   const couponJson = JSON.parse((await couponRes.text()).split('\nHTTP:')[0]);
   const session = couponJson.session?.token;
@@ -42,20 +48,32 @@ export function buildMainIndependentParallelChecks(ctx) {
       name: 'C',
       timeoutMs: 90000,
       run: async ({ setStage }) => {
+        setStage('checkout index fetch timing');
+        const indexFetch = await measureCheckoutIndexFetchMs(BASE);
+        const checkoutPageTiming = classifySmokeServerTiming(
+          { latencyMs: indexFetch.clientRttMs, sessionE2eMs: indexFetch.clientRttMs },
+        );
+        if (checkoutPageTiming.appFail) {
+          out.checkC = {
+            ...indexFetch,
+            serverTiming: checkoutPageTiming,
+            appFailSlowCheckoutPage: true,
+          };
+          return { pass: false, http: indexFetch.http, harnessError: true, harnessMessage: 'APP FAIL: checkout index.html server/client fetch > 10s' };
+        }
         setStage('checkout zero UI');
         const browser = sharedBrowser || await puppeteer.launch(CHROME);
-        const cPage = await browser.newPage();
-        try {
-          await cPage.goto(`${BASE}/index.html`, { waitUntil: 'networkidle2', timeout: 120000 });
-          await new Promise((r) => setTimeout(r, 3000));
+        return withBrowserPageSlot(browser, async (cPage) => {
+          await cPage.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+          await waitForSelector(cPage, '#singlePrice', 120000);
           await cPage.type('input[name="firstName"]', 'C');
           await cPage.type('input[name="lastName"]', 'Check');
           await cPage.type('input[name="email"]', `c-check-${Date.now()}@resend.dev`);
           await cPage.click('#continueBtn');
-          await new Promise((r) => setTimeout(r, 2500));
+          await waitForSelector(cPage, '#couponCode', 60000);
           await cPage.type('#couponCode', couponMain);
           await cPage.evaluate(() => document.querySelector('#couponCode')?.dispatchEvent(new Event('input', { bubbles: true })));
-          await new Promise((r) => setTimeout(r, 2000));
+          await waitForSelector(cPage, '#total', 60000);
           const checkC = await cPage.evaluate(() => ({
             total: document.getElementById('total')?.textContent?.trim(),
             redeemVisible: !document.getElementById('couponPayBtn')?.hidden,
@@ -63,18 +81,19 @@ export function buildMainIndependentParallelChecks(ctx) {
           }));
           const cShot = artifactPath('checkout-zero.png');
           await cPage.screenshot({ path: cShot, fullPage: true });
-          out.checkC = { ...checkC, screenshot: cShot };
+          out.checkC = {
+            ...checkC,
+            screenshot: cShot,
+            indexFetch,
+            serverTiming: checkoutPageTiming,
+          };
           return { pass: /\$0/.test(checkC.total || '') && checkC.redeemVisible, http: 200 };
-        } finally {
-          await cPage.close().catch((err) => {
-            out.browserCloseErrors = out.browserCloseErrors || [];
-            out.browserCloseErrors.push(String(err?.message || err));
-          });
+        }).finally(async () => {
           if (!sharedBrowser) await browser.close().catch((err) => {
             out.browserCloseErrors = out.browserCloseErrors || [];
             out.browserCloseErrors.push(String(err?.message || err));
           });
-        }
+        });
       },
     },
     {
@@ -140,23 +159,31 @@ export function buildMainIndependentParallelChecks(ctx) {
       run: async ({ setStage }) => {
         setStage('K persisted turnClassifier market');
         const kSession = await freshClassifierSession(ctx);
-        await postItinerary(kSession.session, { text: 'hi' });
+        await getApp(kSession.session);
+        const kHi = await postItinerary(kSession.session, { text: 'hi' });
         const kTrip = await postItinerary(kSession.session, { text: 'Maui March 10-17 2027 with my wife' });
         const kTripId = kTrip.json.trip?.id;
         setStage('K farmers market turn');
         const kTurn = await postItinerary(kSession.session, { tripId: kTripId, text: 'farmers market near Kihei' });
-        const kDb = kTripId ? await turnRow(db, kTripId, 'farmers market%') : null;
+        const kDb = kTripId ? await customerTurnRow(db, kTripId, 'farmers market%') : null;
         const kPersist = persistedTurnClassifier(kDb?.payload);
         const kFromResponse = kTurn.json?.turnClassifier || kTurn.json?.category || null;
         out.checkK = {
           http: kTurn.status,
+          hiHttp: kHi.status,
+          tripHttp: kTrip.status,
           persistedCategory: kPersist.category,
           persistedTargetKind: kPersist.targetKind,
           responseCategory: kFromResponse?.category || kTurn.json?.category || null,
           customerTurnId: kDb?.id || null,
+          postsOk: itineraryPostOk(kHi) && itineraryPostOk(kTrip) && itineraryPostOk(kTurn),
         };
         const category = String(kPersist.category || kFromResponse?.category || '').toLowerCase();
-        return { pass: kTurn.status >= 200 && kTurn.status < 300 && category === 'market', http: kTurn.status };
+        const postsOk = itineraryPostOk(kHi) && itineraryPostOk(kTrip) && itineraryPostOk(kTurn);
+        return {
+          pass: postsOk && kTurn.status >= 200 && kTurn.status < 300 && Boolean(kDb?.id) && category === 'market',
+          http: kTurn.status,
+        };
       },
     },
   ];

@@ -93,6 +93,38 @@ export async function postItinerary(session, body) {
   return { status: res.status, json };
 }
 
+const SMOKE_SERVER_SLOW_MS = 10000;
+
+export function itineraryPostOk(res) {
+  return Boolean(res) && res.status >= 200 && res.status < 300;
+}
+
+/** Server-reported timings from vacation-itinerary JSON (ms). */
+export function serverTimingFromItineraryJson(json = {}) {
+  const latencyMs = Number(json.latencyMs);
+  const sessionE2eMs = Number(json.sessionE2eMs);
+  return {
+    latencyMs: Number.isFinite(latencyMs) ? latencyMs : null,
+    sessionE2eMs: Number.isFinite(sessionE2eMs) ? sessionE2eMs : null,
+  };
+}
+
+export function classifySmokeServerTiming(timing = {}, { slowMs = SMOKE_SERVER_SLOW_MS } = {}) {
+  const latencyMs = timing.latencyMs ?? null;
+  const sessionE2eMs = timing.sessionE2eMs ?? null;
+  const candidates = [latencyMs, sessionE2eMs].filter((n) => Number.isFinite(n));
+  const serverSideMs = candidates.length ? Math.max(...candidates) : null;
+  const appFail = serverSideMs != null && serverSideMs > slowMs;
+  return { latencyMs, sessionE2eMs, serverSideMs, appFail, slowThresholdMs: slowMs };
+}
+
+export async function measureCheckoutIndexFetchMs(baseUrl = BASE) {
+  const started = Date.now();
+  const res = await fetch(`${baseUrl}/index.html`, { redirect: 'follow' });
+  await res.arrayBuffer().catch(() => null);
+  return { http: res.status, clientRttMs: Date.now() - started };
+}
+
 export async function getApp(session) {
   const res = await fetch(`${BASE}/api/vacation-itinerary?app=1&session=${encodeURIComponent(session)}`);
   return { status: res.status, json: await res.json().catch(() => ({})) };
