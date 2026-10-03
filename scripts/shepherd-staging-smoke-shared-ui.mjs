@@ -28,8 +28,9 @@ export async function runSharedSiteLogoBarChecks({
   mapUrl,
   sharedApi,
   artifactPath = (name) => `/opt/cursor/artifacts/${name}`,
+  skipInitialGoto = false,
 }) {
-  if (mapUrl) {
+  if (mapUrl && !skipInitialGoto) {
     await page.goto(mapUrl, { waitUntil: 'networkidle2', timeout: 120000 });
     await new Promise((r) => setTimeout(r, 2500));
   }
@@ -87,6 +88,7 @@ export async function runSharedSiteMapBudLogoChecks({
       mapUrl: intakeMapUrl,
       sharedApi,
       artifactPath,
+      skipInitialGoto: true,
     })
     : { checkLOGO: {}, pass: false };
 

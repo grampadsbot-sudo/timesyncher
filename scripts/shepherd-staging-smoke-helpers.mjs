@@ -101,11 +101,15 @@ export function itineraryPostOk(res) {
 
 /** Server-reported timings from vacation-itinerary JSON (ms). */
 export function serverTimingFromItineraryJson(json = {}) {
-  const latencyMs = Number(json.latencyMs);
-  const sessionE2eMs = Number(json.sessionE2eMs);
+  const serverTiming = json.serverTiming && typeof json.serverTiming === 'object' ? json.serverTiming : json;
+  const latencyMs = Number(serverTiming.latencyMs ?? json.latencyMs);
+  const sessionE2eMs = Number(serverTiming.sessionE2eMs ?? json.sessionE2eMs);
+  const rawStages = serverTiming.stages;
+  const stages = rawStages && typeof rawStages === 'object' ? { ...rawStages } : null;
   return {
     latencyMs: Number.isFinite(latencyMs) ? latencyMs : null,
     sessionE2eMs: Number.isFinite(sessionE2eMs) ? sessionE2eMs : null,
+    stages,
   };
 }
 
