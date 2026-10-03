@@ -18,6 +18,14 @@ function amenityFood(tags) {
   return /^(?:restaurant|cafe|fast_food)$/.test(String(tags.amenity || '').trim().toLowerCase());
 }
 
+function amenityCarRental(tags) {
+  return String(tags.amenity || '').trim().toLowerCase() === 'car_rental';
+}
+
+function shopCar(tags) {
+  return String(tags.shop || '').trim().toLowerCase() === 'car';
+}
+
 function shopRetail(tags) {
   const shop = String(tags.shop || '').trim().toLowerCase();
   if (!shop || shopGrocery(tags) || shopFarm(tags)) return false;
@@ -90,6 +98,18 @@ export const OSM_TAG_TO_APP_CATEGORY = Object.freeze([
     filter: '["amenity"~"restaurant|cafe|fast_food"]',
     match: amenityFood,
     displayName: displayFromTags,
+  },
+  {
+    appCategory: 'car',
+    filter: '["amenity"="car_rental"]',
+    match: amenityCarRental,
+    displayName: () => 'Car rental',
+  },
+  {
+    appCategory: 'car',
+    filter: '["shop"="car"]',
+    match: shopCar,
+    displayName: () => 'Car rental',
   },
   {
     appCategory: 'store',
