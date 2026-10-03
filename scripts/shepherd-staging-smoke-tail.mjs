@@ -9,6 +9,8 @@ import {
   welcomeTranscriptTurnsForClaims,
   gradeD2UnschedReply,
   gradeAskD2Reply,
+  gradeInvClaimFirstReply,
+  gradeInvClaimAfterLodgingReply,
 } from './shepherd-staging-smoke-lib.mjs';
 import {
   postItinerary,
@@ -253,18 +255,44 @@ export function buildTailIndependentParallelChecks(ctx) {
     },
     {
       name: 'INV-CLAIM',
-      timeoutMs: 60000,
+      timeoutMs: 120000,
       run: async ({ setStage }) => {
         setStage('inv-claim intake');
         const invOwner = await freshOwnerSession(ctx, couponInvClaim, 'inv', 'Inv', 'Claim');
         const invTrip = await postItinerary(invOwner.session, { text: 'Maui March 10-17 2027 with my wife' });
         const invReply = invTrip.json.reply || '';
-        const invQuestions = (invReply.match(/\?/g) || []).length;
-        const invBad = /\b(I'?ve added|I'll invite|I will invite|add your wife as a collaborator|will be added|joining the trip)\b/i.test(invReply);
-        const invAsksContact = /(name|email).*(name|email)|email.*name/i.test(invReply);
-        out.checkINVCLAIM = { http: invTrip.status, reply: invReply.slice(0, 500), questionCount: invQuestions, invBad, invAsksContact };
-        const pass = invTrip.status >= 200 && invTrip.status < 300 && invTrip.status !== 502 && invQuestions === 1 && invAsksContact && !invBad;
-        return { pass, http: invTrip.status };
+        const invTripId = invTrip.json.tripId || invTrip.json.trip?.id || null;
+        setStage('inv-claim jev first reply');
+        const invFirst = await gradeInvClaimFirstReply(invReply);
+        setStage('inv-claim lodging answer');
+        const lodgingTurn = invTripId
+          ? await postItinerary(invOwner.session, {
+            tripId: invTripId,
+            text: "We're staying at the Hyatt Regency Maui in Kaanapali.",
+          })
+          : { status: 0, json: {} };
+        const lodgingReply = lodgingTurn.json?.reply || '';
+        setStage('inv-claim jev after lodging');
+        const invSecond = await gradeInvClaimAfterLodgingReply(lodgingReply);
+        out.checkINVCLAIM = {
+          http: lodgingTurn.status || invTrip.status,
+          firstReply: invReply.slice(0, 500),
+          lodgingReply: lodgingReply.slice(0, 500),
+          jevFirst: invFirst.jev,
+          jevAfterLodging: invSecond.jev,
+        };
+        if (invFirst.jevError || invSecond.jevError) {
+          return {
+            pass: false,
+            harnessError: true,
+            harnessMessage: 'INV-CLAIM Jev judge error',
+            http: lodgingTurn.status || invTrip.status,
+          };
+        }
+        const pass = invTrip.status >= 200 && invTrip.status < 300 && invTrip.status !== 502
+          && lodgingTurn.status >= 200 && lodgingTurn.status < 300 && lodgingTurn.status !== 502
+          && invFirst.pass && invSecond.pass;
+        return { pass, http: lodgingTurn.status || invTrip.status };
       },
     },
   ];
