@@ -23,12 +23,13 @@ for (const file of harnessFiles) {
 
 const mainText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke.mjs'), 'utf8');
 const spineText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-main.mjs'), 'utf8');
+const layoutVisualSpineText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-layout-visual-spine.mjs'), 'utf8');
 const parallelText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-parallel.mjs'), 'utf8');
 const askText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-ask.mjs'), 'utf8');
 const tailText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-tail.mjs'), 'utf8');
 const mapLogoRunText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-map-logo-run.mjs'), 'utf8');
 const runCheckText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-run-check.mjs'), 'utf8');
-const combined = `${mainText}\n${spineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}`;
+const combined = `${mainText}\n${spineText}\n${layoutVisualSpineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
 const dedicatedCheckRe = /runDedicatedSharedCheck\s*\(\s*ctx\s*,\s*['"]([^'"]+)['"]\s*,\s*(?:\d+|MAP_CHECK_TIMEOUT_MS|LOGO_CHECK_TIMEOUT_MS)/g;
@@ -58,6 +59,8 @@ assert.equal(sharedTabLabelIncludes('💰 Budget', 'budget'), true);
 assert.equal(normalizeSharedTabLabel('  🏨  Hotels '), 'hotels');
 
 assert.ok(SMOKE_FAIL_CLOSED_GO.includes('LAYOUT'), 'GO gate must include LAYOUT');
+assert.ok(SMOKE_FAIL_CLOSED_GO.includes('VISUAL'), 'GO gate must include VISUAL');
 assert.ok(registered.has('LAYOUT'), 'main spine must register runCheck(LAYOUT)');
+assert.ok(registered.has('VISUAL'), 'main spine must register runCheck(VISUAL)');
 
 console.log(JSON.stringify({ ok: true, harnessFiles, registered: [...registered].sort() }));
