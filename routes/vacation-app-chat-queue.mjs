@@ -4,7 +4,7 @@ import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { customerModality, jevStamp, liveTurnRecord, firstMarkedIntake, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { produceNoTripStarterReply } from '../src/vacation/no-trip-starter-reply.mjs';
 import { loadVacationAppReplyRules } from '../scripts/vacation-app-reply-rules.mjs';
-import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure } from '../src/vacation/reply-ship.mjs';
+import { applyLiveAppReplyFailureToPayload, persistVacationAppOutboundReply, storeReplyFailure, stampCustomerLivePayload } from '../src/vacation/reply-ship.mjs';
 import { tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { tripIntakeJobKind } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { intakeExtractedThings, intakeThingsForPersistence, runVacationAppInTurnSearch } from '../src/vacation/chat-place-search.mjs';
@@ -370,7 +370,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   customerLive.rules = produced.rules
     ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
     : null;
-  payload.liveTranscript = customerLive;
+  stampCustomerLivePayload(payload, customerLive, { firstIntake, produced });
   await db`
     update transcript_turns
     set payload = ${payload}
