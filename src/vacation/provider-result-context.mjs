@@ -110,6 +110,18 @@ export function citablePlaceTitles(inTurnResults = []) {
   return titles;
 }
 
+export function modelVisibleTripContext(tripContext) {
+  if (!tripContext || typeof tripContext !== 'object') return tripContext;
+  if (!Array.isArray(tripContext.citablePlaces) || !tripContext.citablePlaces.length) return tripContext;
+  const {
+    lodging,
+    statedLodgingArea,
+    tripReplyGate,
+    ...rest
+  } = tripContext;
+  return rest;
+}
+
 export function applyInTurnCitablePlaces(facts, inTurnResults) {
   if (!facts || typeof facts !== 'object') return facts;
   if (!Array.isArray(inTurnResults) || !inTurnResults.length) return facts;
@@ -127,6 +139,8 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
   for (const item of facts.survivingPriorDbTitles || []) remember(item);
   for (const item of facts.relevanceRejections || []) remember(item);
   for (const item of facts.priorPlaces || []) remember(item);
+  remember(facts.lodging);
+  remember(facts.statedLodgingArea);
   const itinerary = (Array.isArray(facts.itinerary) ? facts.itinerary : []).flatMap((item) => {
     const title = placeTitle(item);
     if (!title || !citableKeys.has(title.toLowerCase())) return [];
@@ -136,6 +150,8 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
   delete replyFacts.survivingPriorDbTitles;
   delete replyFacts.relevanceRejections;
   delete replyFacts.priorPlaces;
+  delete replyFacts.lodging;
+  delete replyFacts.statedLodgingArea;
   if (notCitableAsResult.length) {
     replyFacts.notCitableAsResult = notCitableAsResult;
     replyFacts.notCitableAsResultRule = 'notCitableAsResult places are not results from this turn. Cite only citablePlaces.';

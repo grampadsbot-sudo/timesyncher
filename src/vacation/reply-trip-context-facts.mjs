@@ -122,7 +122,8 @@ export async function enrichDraftingTripContext(tripContext, {
     ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
   }
   ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
-  if (!ctx.lodging) {
+  const inTurnPlaceReply = Array.isArray(ctx.citablePlaces) && ctx.citablePlaces.length > 0;
+  if (!inTurnPlaceReply && !ctx.lodging) {
     const label = statedLodgingLabelFromThings(things);
     if (label) ctx.lodging = label;
   }
@@ -131,7 +132,7 @@ export async function enrichDraftingTripContext(tripContext, {
     const { sql } = await import('./db.mjs');
     const db = sql(env);
     const tripId = session?.trip_id || session?.tripId || '';
-    if (tripId && !ctx.lodging) {
+    if (!inTurnPlaceReply && tripId && !ctx.lodging) {
       const trips = await db`select metadata from trips where id = ${tripId} limit 1`;
       const meta = trips[0]?.metadata && typeof trips[0].metadata === 'object' ? trips[0].metadata : {};
       const area = String(meta.statedLodgingArea || meta.statedLodgingAreaHint || '').trim();
