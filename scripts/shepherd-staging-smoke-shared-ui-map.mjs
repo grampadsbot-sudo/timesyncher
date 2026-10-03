@@ -44,7 +44,7 @@ function attachSharedHydrationDiagnostics(page) {
 }
 
 /** In-page readiness for shared intake tab shell (same selectors as listSharedDomTabs / LOGO check). */
-export function sharedIntakeTabShellReadyInBrowser() {
+function sharedIntakeTabShellReadyInBrowser() {
   const bodyText = document.body?.innerText || '';
   if (!/Day-by-Day/i.test(bodyText)) return false;
   const norm = (raw) => String(raw || '')
@@ -159,7 +159,7 @@ async function waitForSharedMapReadyHook(page, stageTimestamps) {
   }
 }
 
-export async function waitForSharedIntakeTabShellReady(page, stageTimestamps) {
+async function waitForSharedIntakeTabShellReady(page, stageTimestamps) {
   await new Promise((r) => setTimeout(r, 800));
   stageTimestamps.mapReadyWaitStartMs = Date.now();
   stageTimestamps.leafletWaitStartMs = stageTimestamps.mapReadyWaitStartMs;
