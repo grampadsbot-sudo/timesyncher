@@ -206,6 +206,9 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
       jev: finished.jev || pending.jev || null,
       rules: finished.rules || null,
     });
+    if (!recovered.reply || recovered.reason) {
+      return { ok: false, status: 'reply_unavailable', reply: null, error: 'reply_unavailable' };
+    }
     finished = { ...finished, reply: recovered.reply, model: recovered.model || finished.model };
   }
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));

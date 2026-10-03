@@ -1,5 +1,4 @@
 const INVITE_SUCCESS_CLAIM = /\b(?:i(?:'|')ve|i have|we(?:'|')ve|we have)\s+(?:added|invited)\b/i;
-const ADDED_OR_INVITED_FAMILY_MEMBER = /\b(?:i(?:'|')ve|i have|we(?:'|')ve|we have)\s+(?:added|invited)\s+(?:your\s+)?(?:wife|husband|spouse|partner)\b/i;
 const INVITE_SENT_CLAIM = /\bsent\s+(?:the\s+)?invite\b/i;
 const SHARED_WITH_CLAIM = /\bshared\s+(?:this\s+)?(?:trip|itinerary|plan|site)\s+with\b/i;
 const ADDED_COLLABORATOR_CLAIM = /\badded\s+.{1,120}\s+as\s+(?:a\s+)?collaborator\b/i;
@@ -41,7 +40,7 @@ function replyClaimsCollaboratorInviteAction(reply) {
   if (GO_AHEAD_ADD_COLLABORATOR_CLAIM.test(body)) return true;
   if (INVITE_SENT_CLAIM.test(body) && /\bcollaborator\b/i.test(body)) return true;
   if (SHARED_WITH_CLAIM.test(body)) return true;
-  if (ADDED_OR_INVITED_FAMILY_MEMBER.test(body)) return true;
+  if (INVITE_SUCCESS_CLAIM.test(body) && /\b(?:wife|husband|spouse|partner)\b/i.test(body)) return true;
   if (VIEW_ACCESS_CLAIM.test(body)) return true;
   if (THEY_VIEW_CLAIM.test(body)) return true;
   if (/\bwill see\b/i.test(body) && /\b(?:trip|plan|itinerary|site|these)\b/i.test(body)) return true;

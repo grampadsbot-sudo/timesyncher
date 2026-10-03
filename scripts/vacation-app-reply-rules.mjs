@@ -644,10 +644,12 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Do not insert a welcome the customer did not ask for.',
     seat ? `Seat record: ${JSON.stringify(seat)}. The name is the person joining.` : '',
     'Day-advice turns name the people already on the saved roster. They do not add a household welcome.',
-    'Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range. Do not move an activity off the day already named.',
+    `Use the saved trip record. If a day or activity is not on that record, do not announce it as set. Do not call any day the last day, the last evening, after checkout, or one last time, and do not say pack or head out, unless that day is the saved trip end. Do not shorten a date range.${unscheduledOpen ? '' : ' Do not move an activity off the day already named.'}`,
     'You know only what the customer said in chat and what is in the saved trip record. Use the party size and the people already named. Never invent people. Do not name a person who is not in the saved roster or the customer turn. When the customer states a party size, the names you list are that party. Do not add extra people on top of that size.',
     'The account holder in the saved roster is on the trip. Do not leave them off. When you say the crew and list names, include the account holder, the collaborators, and the children already named. A person who just joined is a collaborator, not the account holder. Do not say just the crew or the whole crew unless the account holder is in that list.',
-    'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
+    unscheduledOpen
+      ? 'A saved place that is not on a day stays off every weekday. A weekday already used by a different activity is not a day for that place.'
+      : 'When the customer asks for a later activity and does not name a day, use only a day that is already on the saved trip record. Do not invent a day. Do not dodge the question with "it sounds like", "wonderful trip", "I can help you", or "coming together".',
     'Address the person who is speaking. Do not give that person an activity the saved trip record assigns to someone else.',
     'Do not say we have corrected that, or I have corrected that, unless the customer asked for a correction.',
     'Do not put an activity on a day that is not already that activity on the saved trip record.',

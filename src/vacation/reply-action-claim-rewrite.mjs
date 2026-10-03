@@ -58,7 +58,7 @@ export async function rewriteBlockedActionClaim({
     rewriteFailed: true,
   }));
   return {
-    reply: rewritten || originalText,
+    reply: null,
     model: called?.called ? called : null,
     reason: still || called?.reason || 'rewrite_empty',
   };

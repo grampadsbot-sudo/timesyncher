@@ -389,7 +389,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       postIntake: firstIntake === true,
     });
     if (recovered.model) produced.model = recovered.model;
-    return String(recovered.reply || draft).trim();
+    if (!recovered.reply || recovered.reason) return '';
+    return String(recovered.reply).trim();
   };
   const blockReplyShipGate = async (replyText) => {
     const gateStarted = Date.now();
@@ -408,7 +409,13 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     return blocked;
   };
   if (produced.status === 'interim' && produced.pending) {
-    const interimText = await rewriteClaim(produced.interimReply?.text || '');
+    const interimDraft = produced.interimReply?.text || '';
+    const interimText = await rewriteClaim(interimDraft);
+    if (String(interimDraft || '').trim() && !interimText) {
+      const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
+      await storeReplyFailure(db, turnRows[0].id, payload);
+      return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
+    }
     if (produced.interimReply) produced.interimReply.text = interimText;
     const interimBlocked = await blockReplyShipGate(interimText);
     if (interimBlocked) return interimBlocked;
@@ -443,15 +450,16 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     const draft = String(produced.blockedDraft || '').trim();
     if (draft && (produced.reason === 'reply_action_claim_blocked' || replyActionClaimReason(draft, turnActionResults, replyClaimContext))) {
       produced.reply = await rewriteClaim(draft);
-      produced.reason = null;
+      if (produced.reply) produced.reason = null;
     }
+  } else {
+    produced.reply = await rewriteClaim(produced.reply);
   }
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     await storeReplyFailure(db, turnRows[0].id, payload);
     return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
   }
-  produced.reply = await rewriteClaim(produced.reply);
 
   const citationBlocked = await blockReplyShipGate(produced.reply);
   if (citationBlocked) return citationBlocked;
