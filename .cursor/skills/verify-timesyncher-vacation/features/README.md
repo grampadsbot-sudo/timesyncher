@@ -19,7 +19,7 @@ GBrain Feature Map is canonical. The repo `features/` mirror is the inventory. T
 
 - Capture the email body and the app URL it contains before any EULA or chat shot.
 - EULA proof is `#eulaScreen` on `vacation-app.html?session=`, with no workspace yet.
-- Chat proof is the empty onboarding workspace (`no vacations yet`, chat-only) after Agree.
+- Chat proof is the app shell after Agree. Layout is only `features/screens/app.md`.
 - Report a skipped email as failed, not as verified through order-success.
 
 ## Feature entry contract
