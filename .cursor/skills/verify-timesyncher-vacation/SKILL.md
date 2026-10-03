@@ -11,6 +11,8 @@ Craig, 2026-10-03 9:26 AM PT: "It's a Grok-like text interface: just a text box 
 
 Craig, 2026-10-03 9:42 AM PT: "The header should be hidden if there are not multiple vacations. Not just empty. I also think we need a full screen control in the web site area." With 0 or 1 vacations the header is absent or its height is 0. An empty header bar fails. When a website is shown, a full-screen control in that area expands it to the viewport, and an exit control returns to the split view. That state is `website-full-screen`, checked at both viewports. Until the served app has it, the row fails. It is not a GAP.
 
+Craig, 2026-10-03 10:50 AM PT (`tsv-ui-spec` revision `a3896550`): the composer is the text box plus file-add, speak, and a visible send button. The send button is inside the composer and inside the viewport at 390 and 1280, and it is tappable. A missing send button fails. Send is an allowed composer control.
+
 ## Launch
 
 Staging is already running. Do not start a second host.

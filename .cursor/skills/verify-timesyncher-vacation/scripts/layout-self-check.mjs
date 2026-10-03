@@ -97,6 +97,18 @@ assert(has(straySite, 'site-paints'), 'a website in the zero-vacation state fail
 const fileOutside = correctApp0();
 fileOutside.regions.fileAdd = box(8, 700, 42, 42);
 assert(has(fileOutside, 'file-add-outside-composer'), 'file-add outside the composer box fails');
+const noSend = correctApp0();
+noSend.regions.send = null;
+assert(has(noSend, 'send-unmeasured'), 'a missing send button fails');
+const sendOutside = correctApp0();
+sendOutside.regions.send = box(8, 700, 36, 42, { tappable: true });
+assert(has(sendOutside, 'send-outside-composer'), 'a send button outside the composer fails');
+const sendBelow = correctApp0();
+sendBelow.regions.send = box(296, 860, 36, 42, { tappable: true });
+assert(has(sendBelow, 'send-outside-viewport'), 'a send button below the viewport fails');
+const coveredSend = correctApp0();
+coveredSend.regions.send = box(296, 787, 36, 42, { tappable: false });
+assert(has(coveredSend, 'send-not-tappable'), 'a send button that cannot be tapped fails');
 const trip = evaluateLayout(correctTrip(), tolerances);
 assert(trip.layout === 'PASS', `correct trip should pass: ${trip.reasons.join(',')}`);
 assert(has(tripWithLogo(), 'logo-paints'), 'a shell brand logo on the trip page fails');

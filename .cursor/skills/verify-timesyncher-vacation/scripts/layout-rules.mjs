@@ -96,6 +96,11 @@ function composerChecks(reasons, measurement, limits) {
     if (!measured(measurement.regions.speak)) fail(reasons, 'speak-unmeasured');
     else fail(reasons, 'speak-outside-viewport');
   }
+  const send = measurement.regions?.send;
+  if (!insideViewport(send, viewport, eps)) {
+    if (!measured(send)) fail(reasons, 'send-unmeasured');
+    else fail(reasons, 'send-outside-viewport');
+  } else if (send.tappable !== true) fail(reasons, 'send-not-tappable');
   const form = measurement.regions?.composerForm;
   if (requireBox(reasons, form, 'composer-form-unmeasured')) {
     if (measured(measurement.regions.fileAdd) && !insideOuter(measurement.regions.fileAdd, form, eps)) {
@@ -104,6 +109,7 @@ function composerChecks(reasons, measurement, limits) {
     if (measured(measurement.regions.speak) && !insideOuter(measurement.regions.speak, form, eps)) {
       fail(reasons, 'speak-outside-composer');
     }
+    if (measured(send) && !insideOuter(send, form, eps)) fail(reasons, 'send-outside-composer');
   }
   if (measurement.composerMoved) fail(reasons, 'composer-moved');
   const boxes = measurement.textboxes || [];
@@ -222,7 +228,7 @@ function fullscreenState(reasons, measurement, limits) {
   if (!measured(site)) fail(reasons, 'fullscreen-site-unmeasured');
   else if (!fillsViewport(site, measurement.viewport, limit)) fail(reasons, 'fullscreen-not-filled');
   if (!measured(measurement.regions?.fullscreenExit)) fail(reasons, 'fullscreen-exit-unmeasured');
-  if (measured(measurement.regions?.composer) || measured(measurement.regions?.slider) || measured(measurement.regions?.messages) || measured(measurement.regions?.dropdown) || (measurement.textboxes || []).length) {
+  if (measured(measurement.regions?.composer) || measured(measurement.regions?.slider) || measured(measurement.regions?.messages) || measured(measurement.regions?.dropdown) || measured(measurement.regions?.send) || (measurement.textboxes || []).length) {
     fail(reasons, 'fullscreen-chrome-paints');
   }
 }

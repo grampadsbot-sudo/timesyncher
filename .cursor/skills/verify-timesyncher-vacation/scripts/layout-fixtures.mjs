@@ -47,6 +47,7 @@ export function correctApp0() {
       composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
+      send: box(296, 787, 36, 42, { tappable: true }),
     },
     textboxes: [composer],
   });
@@ -65,9 +66,10 @@ export function correctApp0Html() {
     button, textarea { padding: 0; border: 0; }
     #messages { position: absolute; left: 0; top: 0; width: 390px; height: 772px; }
     #composer { position: absolute; left: 0; top: 772px; width: 390px; height: 72px; margin: 0; background: #fff; }
-    #attachButton, #voiceButton, #messageText { position: absolute; top: 15px; height: 42px; margin: 0; }
+    #attachButton, #voiceButton, #messageText, .send-button { position: absolute; top: 15px; height: 42px; margin: 0; }
     #attachButton { left: 8px; width: 42px; }
     #messageText { left: 58px; width: 230px; }
+    .send-button { left: 296px; width: 36px; }
     #voiceButton { left: 340px; width: 42px; }
   </style>
 </head>
@@ -77,6 +79,7 @@ export function correctApp0Html() {
     <form id="composer">
       <button id="attachButton" type="button" aria-label="Add vacation files">+</button>
       <textarea id="messageText" aria-label="Message TimeSyncher Vacation"></textarea>
+      <button class="send-button" type="submit" aria-label="Send">send</button>
       <button id="voiceButton" type="button" aria-label="Speak a message">mic</button>
     </form>
   </main>
@@ -203,6 +206,7 @@ export function emptyHeaderBar() {
       composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
+      send: box(296, 787, 36, 42, { tappable: true }),
     },
     textboxes: [composer],
   });
@@ -221,9 +225,10 @@ export function emptyHeaderBarHtml() {
     header.topbar { position: absolute; left: 0; top: 0; width: 390px; height: 56px; background: #fff; }
     #messages { position: absolute; left: 0; top: 56px; width: 390px; height: 716px; }
     #composer { position: absolute; left: 0; top: 772px; width: 390px; height: 72px; margin: 0; background: #fff; }
-    #attachButton, #voiceButton, #messageText { position: absolute; top: 15px; height: 42px; margin: 0; }
+    #attachButton, #voiceButton, #messageText, .send-button { position: absolute; top: 15px; height: 42px; margin: 0; }
     #attachButton { left: 8px; width: 42px; }
     #messageText { left: 58px; width: 230px; }
+    .send-button { left: 296px; width: 36px; }
     #voiceButton { left: 340px; width: 42px; }
   </style>
 </head>
@@ -234,6 +239,7 @@ export function emptyHeaderBarHtml() {
     <form id="composer">
       <button id="attachButton" type="button" aria-label="Add vacation files">+</button>
       <textarea id="messageText" aria-label="Message TimeSyncher Vacation"></textarea>
+      <button class="send-button" type="submit" aria-label="Send">send</button>
       <button id="voiceButton" type="button" aria-label="Speak a message">mic</button>
     </form>
   </main>
@@ -256,6 +262,7 @@ export function correctWithSite() {
       composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
+      send: box(296, 787, 36, 42, { tappable: true }),
     },
     textboxes: [composer],
   });
@@ -276,9 +283,10 @@ export function correctWithSiteHtml() {
     #fullscreenButton { position: absolute; left: 330px; top: 12px; width: 44px; height: 44px; }
     #splitter { position: absolute; left: 0; top: 520px; width: 390px; height: 12px; }
     #composer { position: absolute; left: 0; top: 772px; width: 390px; height: 72px; margin: 0; background: #fff; }
-    #attachButton, #voiceButton, #messageText { position: absolute; top: 15px; height: 42px; margin: 0; }
+    #attachButton, #voiceButton, #messageText, .send-button { position: absolute; top: 15px; height: 42px; margin: 0; }
     #attachButton { left: 8px; width: 42px; }
     #messageText { left: 58px; width: 230px; }
+    .send-button { left: 296px; width: 36px; }
     #voiceButton { left: 340px; width: 42px; }
   </style>
 </head>
@@ -290,6 +298,7 @@ export function correctWithSiteHtml() {
     <form id="composer">
       <button id="attachButton" type="button" aria-label="Add vacation files">+</button>
       <textarea id="messageText" aria-label="Message TimeSyncher Vacation"></textarea>
+      <button class="send-button" type="submit" aria-label="Send">send</button>
       <button id="voiceButton" type="button" aria-label="Speak a message">mic</button>
     </form>
   </main>
@@ -348,6 +357,7 @@ export function correctApp2() {
       composerForm: box(0, 772, 390, 72),
       fileAdd: box(8, 787, 42, 42),
       speak: box(340, 787, 42, 42),
+      send: box(296, 787, 36, 42, { tappable: true }),
     },
     textboxes: [composer],
   });

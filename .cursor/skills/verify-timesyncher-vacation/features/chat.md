@@ -1,13 +1,13 @@
 # Chat
 
-The customer workspace at `/vacation-app.html?session=` after terms. Selectors are from `vacation-app.html`: `textarea#messageText`, `#attachButton`, `#voiceButton`, `form#composer`, `#messages`, `header.topbar`, `#splitter`, `#tripButton`, `.site-pane iframe`.
+The customer workspace at `/vacation-app.html?session=` after terms. Selectors are from `vacation-app.html`: `textarea#messageText`, `#attachButton`, `#voiceButton`, `button.send-button`, `form#composer`, `#messages`, `header.topbar`, `#splitter`, `#tripButton`, `.site-pane iframe`.
 
 ## Sub-features
 
-- `app-0-vacations` — the header is absent or its height is 0. Conversation. Text box with the file-add and speak buttons pinned to the bottom. Nothing else. 390x844 and 1280x800.
+- `app-0-vacations` — the header is absent or its height is 0. Conversation. Text box with the file-add, speak, and send buttons pinned to the bottom. Nothing else. 390x844 and 1280x800.
 - `app-1-no-site` — same as zero vacations. No header bar, no dropdown, no website, no slider.
-- `app-1-with-site` — header absent or height 0. Vacation website on top, with a full-screen control in the website area. Control slider in the middle. Text box with file-add and speak at the bottom. Nothing else.
-- `app-2-plus` — header holds only the vacation dropdown. Website on top, with a full-screen control, and the slider in the middle once the selected vacation has content. Text box at the bottom. Nothing else.
+- `app-1-with-site` — header absent or height 0. Vacation website on top, with a full-screen control in the website area. Control slider in the middle. Text box with file-add, speak, and send at the bottom. Nothing else.
+- `app-2-plus` — header holds only the vacation dropdown. Website on top, with a full-screen control, and the slider in the middle once the selected vacation has content. Text box with file-add, speak, and send at the bottom. Nothing else.
 - `website-full-screen` — the website fills the viewport. An exit control returns to the split view. No header, no slider, no text box. The exit control is the only extra button.
 - `send-one-message` — type into `textarea#messageText`, submit `form#composer`, and wait until a new `article.bubble` that is not `.user` is in `#messages`.
 
@@ -30,7 +30,8 @@ Preconditions: `https://vacation-staging.timesyncher.com/api/version` returns 20
 
 ## Gotchas
 
-- A logo, a send button, Open navigation, or Settings is outside the spec. The row fails. No app or brand logo paints anywhere in the shell.
+- A logo, Open navigation, or Settings is outside the spec. The row fails. No app or brand logo paints anywhere in the shell.
+- The send button is part of the composer. It is visible, inside `form#composer`, inside the viewport, and tappable at 390 and 1280. A missing send button fails `send-unmeasured`.
 - With 0 or 1 vacations the conversation is the top region and ends above the text box. With 2 or more and no website yet, it ends above the text box. When a website is showing, conversation placement is not graded.
 - With 0 or 1 vacations an empty header bar fails `header-renders`. The header element is absent, or its height is 0.
 - The full-screen control is the only extra button on a website. Website full-screen stays a failed row until that control is in the served app. It is not a GAP.

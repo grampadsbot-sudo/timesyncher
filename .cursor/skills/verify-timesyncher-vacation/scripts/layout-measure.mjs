@@ -103,6 +103,18 @@ function measureInPage(request) {
     return box && box.paints ? box : null;
   }
 
+  function tappable(el, box) {
+    if (!el || !box) return false;
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
+    const style = window.getComputedStyle(el);
+    if (style.pointerEvents === 'none') return false;
+    const cx = box.x + box.w / 2;
+    const cy = box.y + box.h / 2;
+    if (cx < 0 || cy < 0 || cx > viewport.width || cy > viewport.height) return false;
+    const hit = document.elementFromPoint(cx, cy);
+    return Boolean(hit && (hit === el || el.contains(hit)));
+  }
+
   function accName(el) {
     return (el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
   }
@@ -126,6 +138,7 @@ function measureInPage(request) {
   const composer = document.querySelector('textarea#messageText');
   const fileAdd = document.querySelector('#attachButton');
   const speak = document.querySelector('#voiceButton');
+  const send = document.querySelector('button.send-button, #sendButton') || namedButton(['Send', 'Send message']);
   const messages = document.querySelector('#messages');
   const site = document.querySelector('.site-pane iframe, iframe#siteFrame, iframe[title$="website"]');
   const slider = document.querySelector('#splitter');
@@ -148,7 +161,7 @@ function measureInPage(request) {
     return box && box.paints;
   });
   const form = document.querySelector('#composer');
-  const allowedControls = new Set([composer, fileAdd, speak].filter(Boolean));
+  const allowedControls = new Set([composer, fileAdd, speak, send].filter(Boolean));
 
   function shell(el) {
     if (el === document.documentElement || el === document.body || el.tagName === 'MAIN') return true;
@@ -254,6 +267,11 @@ function measureInPage(request) {
       composerForm: visible(form),
       fileAdd: visible(fileAdd),
       speak: visible(speak),
+      send: (() => {
+        const box = visible(send);
+        if (box) box.tappable = tappable(send, box);
+        return box;
+      })(),
       site: visible(site),
       slider: visible(slider),
       footer: footer ? readBox(footer) : null,

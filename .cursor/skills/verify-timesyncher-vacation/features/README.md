@@ -6,6 +6,8 @@ Craig, 2026-10-03 9:26 AM PT: "It's a Grok-like text interface: just a text box 
 
 Craig, 2026-10-03 9:42 AM PT: "The header should be hidden if there are not multiple vacations. Not just empty. I also think we need a full screen control in the web site area."
 
+Craig, 2026-10-03 10:50 AM PT: the composer is the text box plus file-add, speak, and a visible send button. A missing send button fails.
+
 Chat proof is the app shell after Agree. Layout is only `features/screens/app.md`.
 
 ## Features

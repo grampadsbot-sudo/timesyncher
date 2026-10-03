@@ -3,7 +3,7 @@
     {
       "id": "composerBottomSlackPx",
       "value": 24,
-      "specLine": "The text box is pinned to the bottom. Served pages reserve 24px under the document for the build stamp (body padding-bottom: 24px)."
+      "specLine": "The composer is the text box plus file-add, speak, and a visible send button, pinned to the bottom and inside the viewport. Served pages reserve 24px under the document for the build stamp (body padding-bottom: 24px)."
     },
     {
       "id": "iconCenterPx",
