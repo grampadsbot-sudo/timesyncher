@@ -5,9 +5,10 @@
  */
 import assert from 'node:assert/strict';
 import { draftingFacts, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
-import { enrichDraftingTripContext } from '../src/vacation/reply-trip-context-facts.mjs';
+import { enrichDraftingTripContext, draftingLodgingFields, loadTripMetadataStatedLodgingArea } from '../src/vacation/reply-trip-context-facts.mjs';
 import {
   CUSTOMER_OWN_LODGING_CONTEXT_LABEL,
+  applyInTurnCitablePlaces,
   modelVisibleTripContext,
   placeResultExtra,
 } from '../src/vacation/provider-result-context.mjs';
@@ -123,6 +124,23 @@ if (/tripReplyGate/.test(recordJson)) violations.push('saved trip record still e
 if (/\[object Object\]/.test(recordJson)) violations.push('saved trip record stringifies gate rows');
 if (!record.customerOwnLodgingContext?.label) violations.push('missing labelled lodging block');
 assert.deepEqual(violations, []);
+
+const metadataTripId = '285c0510-1403-4609-bee7-66ae1636134b';
+const stubTripDb = async (strings) => {
+  if (/from trips/i.test(String(strings))) {
+    return [{ metadata: { statedLodgingArea: 'Kaanapali' } }];
+  }
+  return [];
+};
+assert.equal(await loadTripMetadataStatedLodgingArea(stubTripDb, metadataTripId), 'Kaanapali');
+const metadataLodging = await draftingLodgingFields({}, { things: [], db: stubTripDb, tripId: metadataTripId });
+assert.equal(metadataLodging.lodging, undefined);
+assert.equal(metadataLodging.statedLodgingArea, 'Kaanapali');
+const metadataInTurn = applyInTurnCitablePlaces(metadataLodging, inTurnPlaceResults);
+assert.equal(metadataInTurn.lodging, undefined);
+assert.equal(metadataInTurn.customerOwnLodgingContext?.statedLodgingArea, 'Kaanapali');
+assert.equal(metadataInTurn.customerOwnLodgingContext?.lodging, undefined);
+assert.equal(metadataInTurn.customerOwnLodgingContext?.label, CUSTOMER_OWN_LODGING_CONTEXT_LABEL);
 
 console.log(JSON.stringify({
   ok: true,
