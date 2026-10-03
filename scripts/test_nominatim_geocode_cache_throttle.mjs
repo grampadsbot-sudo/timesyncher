@@ -4,15 +4,14 @@ import { useVacationDatabase } from '../src/vacation/db.mjs';
 import {
   getNominatimStore,
   nominatimLabelGeocodeCacheKey,
+  nominatimWrapSearchCachePayload,
   useNominatimStore,
 } from '../src/vacation/nominatim-store.mjs';
 import {
   nominatimForwardSearch,
-  tryGeocodeLabel,
-} from '../src/vacation/place-search-geocode.mjs';
-import {
   nominatimHttpReadJson,
   nominatimSelfTestSearchUrl,
+  tryGeocodeLabel,
 } from '../src/vacation/place-search-geocode.mjs';
 import { placeSearchReadJson } from '../src/vacation/place-search.mjs';
 import { PlaceSearchError } from '../src/vacation/place-search-error.mjs';
@@ -26,11 +25,27 @@ function createTestStore() {
   return createMemoryNominatimStore();
 }
 
+function outboundFetchTimesMs(providerLog = []) {
+  return providerLog
+    .filter((row) => String(row?.provider || '') === 'nominatim' && Number(row?.calledAtMs) > 0)
+    .map((row) => Number(row.calledAtMs))
+    .sort((left, right) => left - right);
+}
+
+function assertFetchTimesAtLeastOneSecondApart(times) {
+  for (let i = 1; i < times.length; i += 1) {
+    assert.ok(times[i] - times[i - 1] >= 1000, `fetch times must be >= 1000ms apart: ${times.join(',')}`);
+  }
+}
+
 async function cacheHitSkipsNetwork() {
   const store = createTestStore();
   useNominatimStore(store);
   const key = nominatimLabelGeocodeCacheKey('Ka La Resort, Kaanapali');
-  await store.putCachedGeocode(key, [{ lat: '20.92', lon: '-156.69', display_name: 'cached hit' }]);
+  await store.putCachedGeocode(key, nominatimWrapSearchCachePayload(
+    [{ lat: '20.92', lon: '-156.69', display_name: 'cached hit' }],
+    1,
+  ));
   let fetchCount = 0;
   const providerLog = [];
   const found = await tryGeocodeLabel(
@@ -49,14 +64,13 @@ async function cacheHitSkipsNetwork() {
   useNominatimStore(null);
 }
 
-async function concurrentGeocodesSpaced() {
+async function runConcurrentGeocodes({ sleep, advanceClockOnSleep = true, nowMsStart = 10_000 }) {
   const store = createTestStore();
   useNominatimStore(store);
-  const sleeps = [];
-  let nowMs = 10_000;
-  const sleep = async (ms) => {
-    sleeps.push(ms);
-    nowMs += ms;
+  let nowMs = nowMsStart;
+  const sleepImpl = async (ms) => {
+    await sleep(ms);
+    if (advanceClockOnSleep) nowMs += ms;
   };
   const providerLog = [];
   const fetchImpl = async () => ({
@@ -68,18 +82,46 @@ async function concurrentGeocodesSpaced() {
     label,
     providerLog,
     null,
-    { sleep, now: () => nowMs },
+    { sleep: sleepImpl, now: () => nowMs },
   );
   await Promise.all([
     run('label a'),
     run('label b'),
     run('label c'),
   ]);
+  useNominatimStore(null);
+  return { providerLog, nowMs };
+}
+
+async function concurrentGeocodesSpaced() {
+  const sleeps = [];
+  const { providerLog } = await runConcurrentGeocodes({
+    sleep: async (ms) => {
+      sleeps.push(ms);
+    },
+  });
   assert.ok(sleeps.length >= 2, `expected waits, got ${sleeps.join(',')}`);
   assert.ok(sleeps.every((ms) => ms >= 1000), `waits must be >= 1000ms: ${sleeps.join(',')}`);
-  assert.ok(providerLog.length >= 3);
+  const fetchTimes = outboundFetchTimesMs(providerLog);
+  assert.equal(fetchTimes.length, 3);
+  assertFetchTimesAtLeastOneSecondApart(fetchTimes);
   assert.equal(nominatimCallsPerSecondMax(providerLog), 1);
-  useNominatimStore(null);
+}
+
+async function noopSleepFailsFetchSpacingAssertion() {
+  const { providerLog } = await runConcurrentGeocodes({
+    sleep: async () => {},
+    advanceClockOnSleep: false,
+  });
+  const fetchTimes = outboundFetchTimesMs(providerLog);
+  assert.equal(fetchTimes.length, 3);
+  let spacingHeld = true;
+  try {
+    assertFetchTimesAtLeastOneSecondApart(fetchTimes);
+  } catch {
+    spacingHeld = false;
+  }
+  assert.equal(spacingHeld, false, 'spacing check must fail when sleep does not advance the clock');
 }
 
 async function throttleWaitsInsteadOfRejecting() {
@@ -113,9 +155,17 @@ async function forwardThenGeocodeSharesCache() {
   let fetches = 0;
   const fetchImpl = async () => {
     fetches += 1;
-    return { ok: true, json: async () => [{ lat: '20.92', lon: '-156.69', display_name: anchor }] };
+    return {
+      ok: true,
+      json: async () => Array.from({ length: 5 }, (_, i) => ({
+        lat: String(20.9 + i * 0.01),
+        lon: '-156.69',
+        display_name: `${anchor} hit ${i}`,
+      })),
+    };
   };
-  await nominatimForwardSearch(fetchImpl, anchor, null, { limit: 5 });
+  const { hits } = await nominatimForwardSearch(fetchImpl, anchor, null, { limit: 5 });
+  assert.equal(hits.length, 5);
   assert.equal(fetches, 1);
   const providerLog = [];
   await tryGeocodeLabel(fetchImpl, anchor, providerLog, null);
@@ -124,28 +174,56 @@ async function forwardThenGeocodeSharesCache() {
   useNominatimStore(null);
 }
 
+async function geocodeThenForwardLimitFiveMissesCache() {
+  const store = createTestStore();
+  useNominatimStore(store);
+  const anchor = 'Small Cache Resort';
+  let fetches = 0;
+  const fetchImpl = async () => {
+    fetches += 1;
+    const body = fetches === 1
+      ? [{ lat: '21.0', lon: '-156.0', display_name: anchor }]
+      : Array.from({ length: 5 }, (_, i) => ({
+        lat: String(21.1 + i * 0.01),
+        lon: '-156.1',
+        display_name: `${anchor} wide ${i}`,
+      }));
+    return { ok: true, json: async () => body };
+  };
+  await tryGeocodeLabel(fetchImpl, anchor, [], null);
+  assert.equal(fetches, 1);
+  const { hits } = await nominatimForwardSearch(fetchImpl, anchor, null, { limit: 5 });
+  assert.equal(fetches, 2);
+  assert.equal(hits.length, 5);
+  useNominatimStore(null);
+}
+
 async function postgresThrottleAcrossStoreInstances() {
   useNominatimStore(null);
   const { db } = createFaithfulNeonNominatimDb();
   useVacationDatabase(db);
   const env = { DATABASE_URL: 'postgres://test' };
-  const storeA = getNominatimStore(env);
-  const storeB = getNominatimStore(env);
-  const starts = [];
+  assert.equal(getNominatimStore(env), getNominatimStore(env));
   let nowMs = 50_000;
   const sleep = async (ms) => {
     nowMs += ms;
   };
-  const work = async (store, id) => store.runNominatimThrottled(async (callAtMs) => {
-    starts.push({ id, callAtMs });
-  }, { nowMs: () => nowMs, sleep });
-  await Promise.all([work(storeA, 'a'), work(storeB, 'b'), work(storeA, 'c')]);
-  starts.sort((left, right) => left.callAtMs - right.callAtMs);
-  assert.equal(starts.length, 3);
-  for (let i = 1; i < starts.length; i += 1) {
-    assert.ok(starts[i].callAtMs - starts[i - 1].callAtMs >= 1000,
-      `slot spacing: ${JSON.stringify(starts)}`);
-  }
+  const providerLog = [];
+  const fetchImpl = async () => ({
+    ok: true,
+    json: async () => [{ lat: '1', lon: '2', display_name: 'pg' }],
+  });
+  const run = (label) => tryGeocodeLabel(
+    fetchImpl,
+    label,
+    providerLog,
+    null,
+    { env, sleep, now: () => nowMs },
+  );
+  await Promise.all([run('pg a'), run('pg b'), run('pg c')]);
+  const fetchTimes = outboundFetchTimesMs(providerLog);
+  assert.equal(fetchTimes.length, 3);
+  assertFetchTimesAtLeastOneSecondApart(fetchTimes);
   useVacationDatabase(null);
 }
 
@@ -173,8 +251,10 @@ async function gatewayOwnsNominatimFetch() {
 
 await cacheHitSkipsNetwork();
 await concurrentGeocodesSpaced();
+await noopSleepFailsFetchSpacingAssertion();
 await throttleWaitsInsteadOfRejecting();
 await forwardThenGeocodeSharesCache();
+await geocodeThenForwardLimitFiveMissesCache();
 await postgresThrottleAcrossStoreInstances();
 await gatewayOwnsNominatimFetch();
 
@@ -184,8 +264,10 @@ console.log(JSON.stringify({
   tests: [
     'cache_hit_skips_network',
     'concurrent_geocodes_spaced_one_second',
+    'noop_sleep_fails_fetch_spacing_assertion',
     'throttle_waits_instead_of_rejecting',
     'forward_then_geocode_shares_cache',
+    'geocode_then_forward_limit_five_misses_cache',
     'postgres_throttle_across_store_instances',
     'gateway_owns_nominatim_fetch',
   ],

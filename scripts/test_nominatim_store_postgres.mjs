@@ -51,9 +51,9 @@ async function throttleUpdateSpacesConcurrentSlots() {
     nowMs += ms;
   };
   await Promise.all([
-    store.runNominatimThrottled(async (callAtMs) => { starts.push(callAtMs); }, { nowMs: () => nowMs, sleep }),
-    store.runNominatimThrottled(async (callAtMs) => { starts.push(callAtMs); }, { nowMs: () => nowMs, sleep }),
-    store.runNominatimThrottled(async (callAtMs) => { starts.push(callAtMs); }, { nowMs: () => nowMs, sleep }),
+    store.runNominatimThrottled(async () => { starts.push(nowMs); }, { nowMs: () => nowMs, sleep }),
+    store.runNominatimThrottled(async () => { starts.push(nowMs); }, { nowMs: () => nowMs, sleep }),
+    store.runNominatimThrottled(async () => { starts.push(nowMs); }, { nowMs: () => nowMs, sleep }),
   ]);
   starts.sort((a, b) => a - b);
   assert.equal(starts.length, 3);

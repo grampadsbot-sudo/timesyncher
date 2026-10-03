@@ -11,7 +11,7 @@ export const noopNominatimStore = {
   async putCachedGeocode() {},
   async reserveNominatimSlot() {},
   async runNominatimThrottled(work) {
-    return work(Date.now());
+    return work();
   },
 };
 
@@ -37,6 +37,7 @@ const NOMINATIM_THROTTLE_MAX_WAIT_MS = 45_000;
 export function createFaithfulNeonNominatimDb() {
   const cache = new Map();
   let nextSlotMs = 0;
+  let throttleChain = Promise.resolve();
   const db = async (strings, ...values) => {
     const text = strings.join(' ').toLowerCase();
     if (text.includes('insert into nominatim_geocode_cache')) {
@@ -53,11 +54,21 @@ export function createFaithfulNeonNominatimDb() {
       return [{ payload }];
     }
     if (text.includes('update nominatim_throttle')) {
-      const now = Number(values[0]);
-      const interval = Number(values[1]);
-      const executeAt = Math.max(nextSlotMs, now);
-      nextSlotMs = executeAt + interval;
-      return [{ execute_at_ms: executeAt }];
+      let release;
+      const prior = throttleChain;
+      throttleChain = new Promise((resolve) => {
+        release = resolve;
+      });
+      await prior;
+      try {
+        const now = Number(values[0]);
+        const interval = Number(values[1]);
+        const executeAt = Math.max(nextSlotMs, now);
+        nextSlotMs = executeAt + interval;
+        return [{ execute_at_ms: executeAt }];
+      } finally {
+        release();
+      }
     }
     throw new Error(`unexpected sql: ${strings.join('')}`);
   };
@@ -111,7 +122,7 @@ export function createMemoryNominatimStore() {
           );
         }
         if (waitMs > 0) await sleep(waitMs);
-        return await work(executeAt);
+        return await work();
       } finally {
         release();
       }

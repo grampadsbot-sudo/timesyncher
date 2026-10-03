@@ -8,7 +8,11 @@ import {
   nominatimLabelGeocodePayloadCacheable,
   nominatimReverseCacheKey,
   nominatimReversePayloadCacheable,
-  nominatimSearchCacheAliases,
+  nominatimMinimumSearchLimitForCacheKey,
+  nominatimSearchAliasLookupKeys,
+  nominatimSearchAliasWriteKeys,
+  nominatimUnwrapSearchCachePayload,
+  nominatimWrapSearchCachePayload,
 } from './nominatim-store.mjs';
 
 const NOMINATIM_HOST = 'nominatim.openstreetmap.org';
@@ -23,13 +27,15 @@ export function isNominatimOpenStreetMapUrl(url) {
 }
 
 /** Sole production entry point for HTTP to nominatim.openstreetmap.org. */
-export async function nominatimHttpReadJson(fetchImpl, url, { headers, method, body, label } = {}) {
+export async function nominatimHttpReadJson(fetchImpl, url, { headers, method, body, label, now } = {}) {
   if (!isNominatimOpenStreetMapUrl(url)) {
     throw new PlaceSearchError(
       `nominatimHttpReadJson requires a ${NOMINATIM_HOST} URL`,
       'nominatim_bypass',
     );
   }
+  const clock = typeof now === 'function' ? now : () => (typeof now === 'number' ? now : Date.now());
+  const calledAtMs = Math.trunc(Number(clock()));
   let response;
   const requestLabel = String(label || 'Nominatim').trim() || 'Nominatim';
   try {
@@ -61,7 +67,8 @@ export async function nominatimHttpReadJson(fetchImpl, url, { headers, method, b
     throw error;
   }
   try {
-    return await response.json();
+    const payload = await response.json();
+    return { payload, calledAtMs };
   } catch (error) {
     throw new PlaceSearchError(
       `${requestLabel} returned invalid JSON: ${error.message || error}`,
@@ -100,11 +107,14 @@ function nominatimProviderTimingFields(calledAtMs) {
 async function readCachedNominatimPayload(store, cacheKey) {
   const key = String(cacheKey || '').trim();
   if (!key) return null;
-  const primary = await store.getCachedGeocode(key);
-  if (primary !== null && primary !== undefined) return primary;
-  for (const alias of nominatimSearchCacheAliases(key)) {
-    const hit = await store.getCachedGeocode(alias);
-    if (hit !== null && hit !== undefined) return hit;
+  const minLimit = nominatimMinimumSearchLimitForCacheKey(key);
+  const lookupKeys = [key, ...nominatimSearchAliasLookupKeys(key)];
+  for (const lookupKey of lookupKeys) {
+    const raw = await store.getCachedGeocode(lookupKey);
+    if (raw === null || raw === undefined) continue;
+    if (minLimit == null) return raw;
+    const payload = nominatimUnwrapSearchCachePayload(raw, minLimit, lookupKey);
+    if (payload !== null && payload !== undefined) return payload;
   }
   return null;
 }
@@ -117,9 +127,11 @@ async function writeNominatimCache(store, cacheKey, payload) {
   else if (key.startsWith('geocode:')) cacheable = nominatimLabelGeocodePayloadCacheable(payload);
   else if (key.startsWith('reverse:')) cacheable = nominatimReversePayloadCacheable(payload);
   if (!cacheable) return;
-  const keysToWrite = [key, ...nominatimSearchCacheAliases(key)];
+  const searchLimit = nominatimMinimumSearchLimitForCacheKey(key);
+  const stored = searchLimit == null ? payload : nominatimWrapSearchCachePayload(payload, searchLimit);
+  const keysToWrite = [key, ...nominatimSearchAliasWriteKeys(key)];
   for (const writeKey of keysToWrite) {
-    await store.putCachedGeocode(writeKey, payload, NOMINATIM_GEOCODE_CACHE_TTL_MS);
+    await store.putCachedGeocode(writeKey, stored, NOMINATIM_GEOCODE_CACHE_TTL_MS);
   }
 }
 
@@ -182,13 +194,17 @@ async function nominatimReadJson(fetchImpl, url, readJson, {
     return { payload: cached, calledAtMs: null, cacheHit: true };
   }
   let calledAtMs = null;
-  const payload = await store.runNominatimThrottled(async (slotCallAtMs) => {
-    calledAtMs = slotCallAtMs;
-    const body = await nominatimHttpReadJson(fetchImpl, url, readOptions);
+  const clock = typeof now === 'function' ? now : () => now;
+  const payload = await store.runNominatimThrottled(async () => {
+    const { payload: body, calledAtMs: fetchAtMs } = await nominatimHttpReadJson(fetchImpl, url, {
+      ...readOptions,
+      now: clock,
+    });
+    calledAtMs = fetchAtMs;
     await writeNominatimCache(store, key, body);
     return body;
   }, {
-    nowMs: typeof now === 'function' ? now : () => now,
+    nowMs: clock,
     sleep,
     maxWaitMs: readOptions.maxWaitMs,
   });
