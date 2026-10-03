@@ -1,4 +1,4 @@
-import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { mintCheckoutCoupons } from './mint-checkout-coupons.mjs';
 import { getApp, postItinerary } from './shepherd-staging-smoke-helpers.mjs';
 import { seedVisualSmokeTripContent } from './shepherd-staging-smoke-visual-seed.mjs';

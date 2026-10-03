@@ -1,5 +1,8 @@
 import { mkdirSync } from 'node:fs';
-import { gotoAndHydrateSharedIntakePage } from './shepherd-staging-smoke-shared-ui-map.mjs';
+import {
+  clickSharedTabByKeyword,
+  gotoAndHydrateSharedIntakePage,
+} from './shepherd-staging-smoke-shared-ui-map.mjs';
 import {
   evaluateLayoutRules,
   LAYOUT_RULE_APPLICABILITY,
@@ -48,6 +51,8 @@ async function runLayoutProbeOnPage(page, {
         applicability: LAYOUT_RULE_APPLICABILITY,
       };
     }
+    await clickSharedTabByKeyword(page, 'day-by-day');
+    await new Promise((r) => setTimeout(r, 400));
   }
   setStage?.(`layout ${pageKind} ${viewport.label} evaluate`);
   const result = await runLayoutDomEval(page, pageKind);
