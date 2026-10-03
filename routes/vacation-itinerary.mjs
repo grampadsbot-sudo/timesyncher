@@ -478,7 +478,7 @@ async function welcomeInputs(db, session, trip) {
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
-  const tripId = trip?.id || session?.trip_id || seat?.ownerTripId || null;
+  const tripId = trip?.id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) {
     if (seat) {
