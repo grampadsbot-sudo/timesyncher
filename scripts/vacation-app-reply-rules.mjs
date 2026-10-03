@@ -13,7 +13,6 @@ const JEV_DECISIONS_PATH = /\/api\/alpha\/decisions\/?$/i;
 const OPENROUTER_CHAT_PATH = /\/api\/v1\/chat\/completions\/?$/i;
 export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisions';
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 
@@ -952,63 +951,5 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
     return { called: true, via: 'openrouter-chat', modelTier, responseModel: returned, text: visible.text, beats: visible.beats, maxTokens: 900, genLatencyMs: Math.max(0, Date.now() - genStarted) };
   } catch (error) {
     return { called: false, via: 'openrouter-chat', modelTier, responseModel, reason: text(error?.message || error, 300) };
-  }
-}
-
-const VISUAL_PREFLIGHT_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-
-function openRouterModelAcceptsImage(row) {
-  const raw = row?.architecture?.input_modalities || [];
-  const list = Array.isArray(raw) ? raw : [raw];
-  return list.some((entry) => String(entry).toLowerCase().includes('image'));
-}
-
-export async function fetchOpenRouterModelRecord(modelId, { apiKey, fetchImpl = fetch } = {}) {
-  const key = String(apiKey || '').trim();
-  if (!key) return { ok: false, error: 'OPENROUTER_API_KEY missing' };
-  const res = await fetchImpl(OPENROUTER_MODELS_URL, { headers: { Authorization: `Bearer ${key}` } });
-  if (!res.ok) return { ok: false, error: `models HTTP ${res.status}` };
-  const body = await res.json();
-  const row = (body.data || []).find((m) => m.id === modelId);
-  if (!row) return { ok: false, error: `model ${modelId} not listed` };
-  if (!openRouterModelAcceptsImage(row)) {
-    return { ok: false, error: `model ${modelId} input_modalities lack image`, modalities: row.architecture?.input_modalities };
-  }
-  return { ok: true, model: row.id, inputModalities: row.architecture?.input_modalities };
-}
-
-export async function postOpenRouterVisionPreflight({ model, apiKey, fetchImpl = fetch, timeoutMs = 45000 } = {}) {
-  const key = String(apiKey || '').trim();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetchImpl(OPENROUTER_CHAT_COMPLETIONS_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://vacation-staging.timesyncher.com',
-        'X-Title': 'Shepherd Visual Preflight',
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Reply with JSON {"ok":true} only.' },
-            { type: 'image_url', image_url: { url: `data:image/png;base64,${VISUAL_PREFLIGHT_PNG_B64}` } },
-          ],
-        }],
-      }),
-      signal: controller.signal,
-    });
-    const raw = await res.text();
-    if (!res.ok) return { ok: false, status: res.status, excerpt: raw.slice(0, 200) };
-    return { ok: true };
-  } catch (error) {
-    return { ok: false, error: String(error?.message || error) };
-  } finally {
-    clearTimeout(timer);
   }
 }

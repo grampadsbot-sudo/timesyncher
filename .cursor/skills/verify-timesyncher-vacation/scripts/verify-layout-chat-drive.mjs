@@ -1,5 +1,12 @@
 #!/usr/bin/env node
-/** Drive four provisioned chat states × viewports (screenshot required per row). */
+import { VIEWPORTS, applyViewport } from './layout-measure.mjs';
+import {
+  clickControl,
+  detectApp,
+  showMessages,
+  splitRestored,
+  stateId,
+} from './verify-layout-shared-helpers.mjs';
 
 export async function driveChatProvisioned({
   browser,
@@ -7,14 +14,9 @@ export async function driveChatProvisioned({
   rows,
   measurements,
   chatStates,
-  VIEWPORTS,
-  APP_STATES,
   applyViewport,
-  detectApp,
-  stateId,
-  showMessages,
   loadSpec,
-  measurePage,
+  measurePage: measurePageFn,
   shoot,
   grade,
   finishRow,
@@ -22,9 +24,8 @@ export async function driveChatProvisioned({
   path,
   unreachableRow,
   sleep,
-  clickControl,
-  splitRestored,
 }) {
+  const APP_STATES = ['app-0-vacations', 'app-1-no-site', 'app-1-with-site', 'app-2-plus'];
   const prerequisite = 'DATABASE_URL provisioning failed or was not run; harness must mint four fixture customers.';
   if (!chatStates || typeof chatStates !== 'object') {
     for (const viewport of VIEWPORTS) {
@@ -57,7 +58,7 @@ export async function driveChatProvisioned({
           continue;
         }
         const spec = loadSpec(sub);
-        const measurement = await measurePage(page, {
+        const measurement = await measurePageFn(page, {
           kind: 'app',
           state: sub,
           hasSite: detected.hasSite,
@@ -84,7 +85,7 @@ export async function driveChatProvisioned({
             ? await clickControl(page, ['Full screen', 'Enter full screen'], 'fullscreenButton')
             : false;
           if (entered) await sleep(400);
-          const fsMeasure = await measurePage(page, {
+          const fsMeasure = await measurePageFn(page, {
             kind: 'app',
             state: 'website-full-screen',
             hasSite: true,
