@@ -132,6 +132,19 @@ export async function produceNoTripStarterReply({
         || 'no trip starter reply model returned no reply',
     };
   }
-  assertCustomerReplyShippable(reply, '', turnActionResults);
+  try {
+    assertCustomerReplyShippable(reply, '', turnActionResults);
+  } catch (error) {
+    if (error?.name !== 'reply_action_claim_blocked') throw error;
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: 'reply_action_claim_blocked',
+      blockedDraft: reply,
+      blockedReasons: [String(error.reason || 'reply_action_claim_blocked')],
+    };
+  }
   return { reply, rules, jev, model, reason: null };
 }
