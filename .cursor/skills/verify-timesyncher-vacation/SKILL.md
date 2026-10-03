@@ -52,7 +52,7 @@ node .cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs --out 
 
 Set `TIMESYNCHER_VERIFY_SESSION` to an accepted app URL or session token to open chat. Leave it unset and the chat states, including `website-full-screen`, are `verified-unreachable`. That is a failed row. The command does not create an account and does not redeem a coupon.
 
-Screen specs are read at runtime from `features/screens/<screen>.md`, with `features/screens/app.md` for the chat states and `features/screens/trip.md` for the trip when a narrower file is absent. A missing spec is `spec-missing` and the row fails.
+Screen specs are read at runtime from `features/screens/<screen>.md`. Chat states, including the app shell after Agree, use `features/screens/app.md` (the repo copy of `tsv-ui-spec` revision `b4f09fa9`). The trip uses `features/screens/trip.md` when a narrower file is absent. A missing spec is `spec-missing` and the row fails.
 
 The layout column is measured geometry from `skills/tsv-layout-verification` v0.4 (revision e21dd1b8) against `tsv-ui-spec` revision b4f09fa9. With fewer than 2 vacations the header is absent or its height is 0. With 2 or more it contains only the vacation dropdown. No app or brand logo paints in the shell. The per-state table decides the middle: conversation is the top region only when there is no website, and it ends above the text box; under a website that placement is not graded. A painted footer or build stamp on the trip page fails. The judge column is one vision call per screenshot. `OPENROUTER_API_KEY` is required. A missing key, timeout, or transport error fails the judge. It is not skipped.
 
