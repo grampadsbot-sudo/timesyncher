@@ -28,7 +28,7 @@ const inputContext = {
 };
 const withInput = replyRulesSystem({}, '', 'forbidden', false, 'We arrive Friday.', { tripContext: inputContext });
 assert.match(withInput, /"needsCustomerInput":\["lodging"\]/);
-assert.match(withInput, /Ask for that in your own words/);
+assert.doesNotMatch(withInput, /customer input that is still needed|Ask for that in your own words/);
 assert.doesNotMatch(withInput, cannedQuestion);
 assert.doesNotMatch(withInput, /flightAsk/);
 

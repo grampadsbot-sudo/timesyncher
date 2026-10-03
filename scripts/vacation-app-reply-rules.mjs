@@ -594,14 +594,9 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const rule = String(tripRaw?.rule || '').trim();
   const unscheduledDayRule = String(tripRaw?.unscheduledDayRule || tripRaw?.chatPlaceSearch?.unscheduledDayRule || '').trim();
   const customerInput = {};
-  const tripRecordContext = {};
-  const coreTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
-  const statedTripFields = new Set([...coreTripFields, 'start', 'end', 'when', 'chatPlaceSearch', 'unscheduledDayRule', 'citablePlaces', 'notCitableAsResult', 'notCitableAsResultRule', 'tripReplyGate', 'placeSearch', 'lodging', 'purchased_plan', 'askRoster']);
+  const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
-    if (statedTripFields.has(key)) {
-      if (!coreTripFields.has(key) && value != null && value !== '' && !(Array.isArray(value) && !value.length)) tripRecordContext[key] = value;
-      continue;
-    }
+    if (statedTripFields.has(key)) continue;
     if (Array.isArray(value)) {
       const items = value.map((item) => String(item || '').trim()).filter(Boolean);
       if (items.length) customerInput[key] = items;
@@ -612,8 +607,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
-  const trip = itinerary.length || dates || roster || rule || hasCustomerInput || Object.keys(tripRecordContext).length
-    ? { itinerary, dates, roster, rule, ...tripRecordContext, ...customerInput }
+  const trip = itinerary.length || dates || roster || rule || hasCustomerInput
+    ? { itinerary, dates, roster, rule, ...customerInput }
     : null;
   const seatName = String(context.seat?.name || context.seat?.displayName || '').trim();
   const seat = seatName ? { name: seatName, payer: String(context.seat?.payer || '').trim() } : null;
@@ -660,7 +655,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-    hasCustomerInput ? 'The saved trip record lists customer input that is still needed. Ask for that in your own words.' : '',
     unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',

@@ -13,6 +13,8 @@ assert.ok(generated?.chatPlaceSearch?.unscheduled?.length === 1);
 
 const tripContext = await enrichDraftingTripContext({
   itinerary: [placeTitle],
+  lodging: 'Paia',
+  askRoster: true,
 }, {
   env: {},
   placeSearchReplyFacts: generated,
@@ -28,14 +30,15 @@ const record = JSON.parse(saved.slice('Saved trip record: '.length).split('\n')[
 assert.equal(record.itinerary[0], `${placeTitle}: not on a day`);
 assert.equal(record.chatPlaceSearch.unscheduled[0].title, placeTitle);
 assert.equal(record.chatPlaceSearch.unscheduled[0].notOnADay, true);
+assert.equal(record.lodging, 'Paia');
 
 const locationClarifyInvite = /\b(which|what)\s+(location|branch)\b/i;
 const matchClarifyInvite = /name the matches/i;
 const savedPlaceClarifyInvite = /customer input that is still needed|Ask for that in your own words/i;
 
+assert.doesNotMatch(system, savedPlaceClarifyInvite);
 assert.doesNotMatch(factsPrefix, locationClarifyInvite);
 assert.doesNotMatch(factsPrefix, matchClarifyInvite);
-assert.doesNotMatch(factsPrefix, savedPlaceClarifyInvite);
 assert.match(factsPrefix, /Each place in unscheduled is not on a day/);
 assert.match(factsPrefix, /Tell the customer that for each of those places/);
 
