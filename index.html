@@ -164,6 +164,7 @@
     .order-form select option { color: #111; }
     .hidden { display: none !important; }
     .order-summary { margin: 16px 0; border: 1px solid rgba(245,211,123,.26); border-radius: 18px; overflow: hidden; background: rgba(255,255,255,.045); }
+    .checkout-step-one-price { margin: 14px 0 0; } .checkout-step-one-price .summary-row { border-bottom: 0; font-size: 1.05rem; }
     .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 13px 14px; color: #e9dec8; border-bottom: 1px solid rgba(245,211,123,.14); }
     .summary-row[hidden] { display: none !important; }
     .summary-row:last-child { border-bottom: 0; }
@@ -330,6 +331,9 @@
                 <button type="button" class="step-pill active" id="step1Pill" role="tab" aria-selected="true" aria-controls="step1">Step 1: Contact Info</button>
                 <button type="button" class="step-pill" id="step2Pill" role="tab" aria-selected="false" aria-controls="step2" tabindex="-1">Step 2: Payment Info</button>
               </div>
+              <div class="order-summary checkout-step-one-price" aria-label="Plan price">
+                <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
+              </div>
             </div>
 
             <form class="order-form" id="orderForm">
@@ -353,7 +357,6 @@
 
               <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
                 <div class="order-summary" aria-label="Order summary">
-                  <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
                   <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName"></span><strong id="unlimitedPrice"></strong></div>
                   <div class="summary-row" id="photoRow" hidden><span id="photoName">owner_media</span><strong id="photoPrice"></strong></div>
                   <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>

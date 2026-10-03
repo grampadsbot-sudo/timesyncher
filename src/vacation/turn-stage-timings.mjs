@@ -1,4 +1,15 @@
-const STAGE_KEYS = ['classifierMs', 'searchMs', 'judgeMs', 'replyMs', 'gateMs'];
+const STAGE_KEYS = [
+  'classifierMs',
+  'searchMs',
+  'judgeMs',
+  'replyMs',
+  'gateMs',
+  'welcomeMs',
+  'tripCreateMs',
+  'entitlementMs',
+  'turnTagMs',
+  'siteUrlMs',
+];
 
 export function turnStageTimings(partial = {}) {
   const timings = {

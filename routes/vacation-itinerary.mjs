@@ -2,7 +2,6 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
-import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
@@ -54,7 +53,6 @@ import {
 } from '../src/vacation/reply-ship.mjs';
 import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import {
-  classifyTripIntake,
   intakeActivityThings,
   intakeLodgingThings,
   intakeLodgingWanted,
@@ -63,7 +61,6 @@ import {
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
 import {
-  classifyVacationAppCustomerTurn,
   intakeExtractedThings,
   runVacationAppInTurnSearch,
 } from '../src/vacation/chat-place-search.mjs';
@@ -78,6 +75,7 @@ import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite
 import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
+import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
 
 let vacationAppDatabase = null;
 
@@ -594,21 +592,16 @@ function queueVacationAppHooks() {
   };
 }
 
-async function queueVacationAppTurn(db, session, trip, body) {
+async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null) {
+  const welcomeStarted = Date.now();
   if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
+  const welcomeMs = Date.now() - welcomeStarted;
   const requestText = cleanText(body.text || body.message, 12000);
-  const classifyStarted = Date.now();
-  const { classification, placeSearchTurn, webResearchTurn } = await classifyVacationAppCustomerTurn(
-    requestText,
-    process.env,
-    (opts) => classifyTripIntake({ ...opts, requireExtractedTripDates: false }),
-  );
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
   return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
     requestText,
-    classification,
-    placeSearchTurn,
-    webResearchTurn,
-    classifierMs: Date.now() - classifyStarted,
+    ...intake,
+    welcomeMs,
   });
 }
 
@@ -1022,6 +1015,7 @@ async function handleVacationApp(req, res, db, url) {
     let selected = vacations.find((trip) => trip.id === requestedTripId)
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
+    let created = null;
     if (!selected) {
       if (!eula.accepted) {
         return sendJson(res, 409, vacationAppErrorBody({
@@ -1030,18 +1024,25 @@ async function handleVacationApp(req, res, db, url) {
           customerMessage: 'Accept the terms before you send a message.',
         }));
       }
-      const created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
+      created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
       if (!created.ok) {
         return sendJson(res, created.statusCode || 500, vacationAppErrorBody({
           error: created.error,
           code: created.code || 'vacation_app_chat_failed',
         }));
       }
-      if (created.action === 'created' || created.action === 'existing') {
+      if (created.action === 'created' || created.action === 'existing' || created.action === 'upgraded') {
         vacations = created.vacations;
         selected = created.selected;
       }
     }
+    const intakePrefill = created?.classification?.ok === true
+      ? {
+        classification: created.classification,
+        classifierMs: created.classifierMs,
+        tripCreateTimings: created.tripCreateTimings,
+      }
+      : null;
     if (!eula.accepted) {
       return sendJson(res, 409, vacationAppErrorBody({
         error: 'Accept the terms before sending a message.',
@@ -1076,7 +1077,7 @@ async function handleVacationApp(req, res, db, url) {
       `;
       return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
-    const queued = await queueVacationAppTurn(db, session, selected, body);
+    const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill);
     const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
     return sendJson(res, postStatus, {
       trip: selected,

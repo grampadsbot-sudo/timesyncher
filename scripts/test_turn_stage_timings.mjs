@@ -12,7 +12,18 @@ const timings = turnStageTimings({
   replyMs: -1,
   gateMs: 'no',
 });
-assert.deepEqual(Object.keys(timings), ['classifierMs', 'searchMs', 'judgeMs', 'replyMs', 'gateMs']);
+assert.deepEqual(Object.keys(timings), [
+  'classifierMs',
+  'searchMs',
+  'judgeMs',
+  'replyMs',
+  'gateMs',
+  'welcomeMs',
+  'tripCreateMs',
+  'entitlementMs',
+  'turnTagMs',
+  'siteUrlMs',
+]);
 assert.equal(timings.classifierMs, 1370);
 assert.equal(timings.searchMs, 18000);
 assert.equal(timings.judgeMs, 390);
