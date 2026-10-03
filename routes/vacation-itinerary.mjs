@@ -538,7 +538,6 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
       welcomeAudience,
     }));
   }
-  const payloadWelcomeAudience = String(inputs?.audience || welcomeAudience);
   const elapsed = Math.max(1, Date.now() - started);
   const live = cannedWelcomeLiveTurn({
     text,
@@ -551,7 +550,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     source: 'vacation_app',
     surface: 'vacation-app',
     selectedTripId: tripId,
-    welcomeAudience: payloadWelcomeAudience,
+    welcomeAudience,
     welcomeFor,
     liveTranscript: live,
   };

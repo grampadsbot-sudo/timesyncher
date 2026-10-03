@@ -21,30 +21,60 @@ async function selectWelcomeTurnId(db, { customerId, tripId, welcomeAudience }) 
     return rows[0]?.id || null;
   }
   if (tripId) {
-    const rows = await db`
+    const rows = welcomeAudience === 'owner'
+      ? await db`
+        select id
+        from transcript_turns
+        where customer_id = ${customerId}
+          and (trip_id = ${tripId} or trip_id is null)
+          and channel in ('vacation-app', 'vacation_app')
+          and speaker = 'app'
+          and direction = 'outbound'
+          and (
+            payload->>'welcomeAudience' = ${welcomeAudience}
+            or payload->>'welcomeAudience' = 'owner_no_site'
+          )
+        limit 1
+      `
+      : await db`
+        select id
+        from transcript_turns
+        where customer_id = ${customerId}
+          and (trip_id = ${tripId} or trip_id is null)
+          and channel in ('vacation-app', 'vacation_app')
+          and speaker = 'app'
+          and direction = 'outbound'
+          and payload->>'welcomeAudience' = ${welcomeAudience}
+        limit 1
+      `;
+    return rows[0]?.id || null;
+  }
+  const rows = welcomeAudience === 'owner'
+    ? await db`
       select id
       from transcript_turns
       where customer_id = ${customerId}
-        and (trip_id = ${tripId} or trip_id is null)
+        and trip_id is null
+        and channel in ('vacation-app', 'vacation_app')
+        and speaker = 'app'
+        and direction = 'outbound'
+        and (
+          payload->>'welcomeAudience' = ${welcomeAudience}
+          or payload->>'welcomeAudience' = 'owner_no_site'
+        )
+      limit 1
+    `
+    : await db`
+      select id
+      from transcript_turns
+      where customer_id = ${customerId}
+        and trip_id is null
         and channel in ('vacation-app', 'vacation_app')
         and speaker = 'app'
         and direction = 'outbound'
         and payload->>'welcomeAudience' = ${welcomeAudience}
       limit 1
     `;
-    return rows[0]?.id || null;
-  }
-  const rows = await db`
-    select id
-    from transcript_turns
-    where customer_id = ${customerId}
-      and trip_id is null
-      and channel in ('vacation-app', 'vacation_app')
-      and speaker = 'app'
-      and direction = 'outbound'
-      and payload->>'welcomeAudience' = ${welcomeAudience}
-    limit 1
-  `;
   return rows[0]?.id || null;
 }
 
