@@ -62,7 +62,6 @@ import {
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
-import { resolveIntakeTitleFields } from '../src/vacation/intake-title-persist.mjs';
 import {
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
@@ -480,6 +479,7 @@ async function welcomeInputs(db, session, trip) {
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
   const tripId = trip?.id || seat?.ownerTripId || null;
+  const welcomeScopeTripId = trip?.id || session?.trip_id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) {
     if (seat) {
@@ -491,10 +491,10 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
-  if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) {
+  if (await onboardingWelcomeTurnExists(db, { customerId, tripId: welcomeScopeTripId, welcomeAudience })) {
     await bindPreTripOnboardingWelcome(db, {
       customerId,
-      tripId,
+      tripId: welcomeScopeTripId,
       welcomeAudience,
       welcomeFor,
       onboardingSessionId,
@@ -529,7 +529,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     returning id
   `;
   if (!claimed.length) {
-    if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+    if (await onboardingWelcomeTurnExists(db, { customerId, tripId: welcomeScopeTripId, welcomeAudience })) return;
     if (!priorClaims.length) return;
     console.error(JSON.stringify({
       event: 'onboarding_welcome_claim_without_turn',
@@ -680,11 +680,6 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   const span = intakeSpan(text);
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
   const priorDestination = String(priorRows[0]?.destination || '').trim();
-  const titleFields = resolveIntakeTitleFields({
-    extractedTitle,
-    titleError,
-    savedTripTitle: priorRows[0]?.title,
-  });
   const resolvedDestination = priorDestination
     ? { destination: priorDestination, ask: false, source: 'saved-trip' }
     : await resolveTripDestination({
@@ -706,9 +701,9 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
   const resolved = await resolveIntakePlace({
     destination: extractedDestination || resolvedDestination.destination,
-    title: titleFields.title,
+    title: extractedTitle,
     destinationError,
-    titleError: titleFields.titleError,
+    titleError,
     searchImpl,
   });
   const tripTitle = resolved.title;

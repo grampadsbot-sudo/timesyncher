@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import {
   applyIntakeExtractedTripTitle,
-  resolveIntakeTitleFields,
 } from '../src/vacation/intake-title-persist.mjs';
 import {
   attachIntakeItineraryFromReply,
@@ -76,15 +75,6 @@ function mockTripDb(tripId, { title = SAVED_TITLE, destination = 'Maui' } = {}) 
   };
   return { db, tripThings, getTitle: () => tripTitle, getMeta: () => tripMeta };
 }
-
-assert.deepEqual(
-  resolveIntakeTitleFields({
-    extractedTitle: '',
-    titleError: 'trip title was not in the extraction',
-    savedTripTitle: SAVED_TITLE,
-  }),
-  { title: SAVED_TITLE, titleError: null },
-);
 
 const { db: shellDb, tripThings: shellThings, getTitle: shellTitle } = mockTripDb('trip-shell', {
   title: 'shell-abc123',
