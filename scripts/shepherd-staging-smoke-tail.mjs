@@ -7,7 +7,8 @@ import {
   matchCollaboratorWelcome,
   a2WelcomePass,
   welcomeTranscriptTurnsForClaims,
-  gradeAskD2NoQuestionReply,
+  gradeD2UnschedReply,
+  gradeAskD2Reply,
 } from './shepherd-staging-smoke-lib.mjs';
 import {
   postItinerary,
@@ -18,6 +19,7 @@ import {
   customerVisibleReplies,
   scanErrorText,
 } from './shepherd-staging-smoke-helpers.mjs';
+import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 
 async function freshOwnerSession(ctx, couponCode, tag, firstName = tag, lastName = ctx.SHA7) {
   const { BASE, SHA7, RUN_TS } = ctx;
@@ -196,7 +198,10 @@ export function buildTailIndependentParallelChecks(ctx) {
         const d2 = await postItinerary(dOwner.session, { tripId: dTripId, text: 'save Paia Fish Market' });
         const d2Db = dTripId ? await customerTurnRow(db, dTripId, '%Paia Fish Market%') : null;
         const d2Reply = d2.json.reply || '';
-        const d2Unsched = /not on a day|isn't on a day|not scheduled|unscheduled/i.test(d2Reply);
+        setStage('d2 paia jev unsched reply');
+        const d2UnschedGrade = await gradeD2UnschedReply(d2Reply, {
+          customerTurn: 'save Paia Fish Market',
+        });
         const d2Persist = persistedTurnClassifier(d2Db?.payload);
         const dAllThings = dTripId ? await db`
           select id, title, source, starts_at, metadata, created_at, source_request_id
@@ -230,7 +235,8 @@ export function buildTailIndependentParallelChecks(ctx) {
             http: d2.status,
             reply: d2Reply.slice(0, 300),
             replyEvidence: d2Reply,
-            unschedReply: d2Unsched,
+            unschedReply: d2UnschedGrade.pass,
+            jev: d2UnschedGrade.jev,
             targetKind: d2Persist.targetKind,
             customerTurnId: d2Db?.id || null,
             requestId: d2Db?.request_id || null,
@@ -238,8 +244,10 @@ export function buildTailIndependentParallelChecks(ctx) {
           },
           dExtra: { rows: dExtraRows, failures: dExtraFailures },
         };
+        const fail429 = attachProviderLogAndMaybeFail(out, 'D', { payload: d2Db?.payload, placeSearch: d2Db?.payload?.placeSearch, itineraryJson: d2.json }, { http: d2.status });
+        if (fail429) return fail429;
         const pass = d1.status >= 200 && d1.status < 300 && d1ThingId && d1StartsIso === D1_EXPECT_START && d1SharedDayIds.length > 0
-          && d2.status >= 200 && d2.status < 300 && d2Unsched && dExtraFailures.length === 0;
+          && d2.status >= 200 && d2.status < 300 && d2UnschedGrade.pass && dExtraFailures.length === 0;
         return { pass, http: d2.status };
       },
     },
@@ -295,9 +303,10 @@ export async function runShepherdSmokeTail(ctx) {
     setStage('ask-d2 d2 reply must not question');
     const d2Block = out.checkD?.d2 || {};
     const replyText = d2Block.replyEvidence || d2Block.turnResponse?.reply || d2Block.reply || '';
-    const grade = gradeAskD2NoQuestionReply(replyText);
+    const grade = await gradeAskD2Reply(replyText, { customerTurn: 'save Paia Fish Market' });
     out.checkASKD2 = {
-      ...grade.evidence,
+      replyText: String(replyText || '').slice(0, 2000),
+      jev: grade.jev,
       d2CustomerTurnId: d2Block.customerTurnId || null,
       dTripId: out.checkD?.dTripId || null,
     };

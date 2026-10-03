@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
@@ -20,15 +19,23 @@ import {
   attributeLogoMisalignmentCss,
   objectFitContentBox,
   gradeAskLodging,
-  gradeAskD2NoQuestionReply,
-  replyHasLodgingQuestion,
+  gradeCoffeeReplyRows,
+  gradeD2UnschedReply,
+  gradeAskD2Reply,
+  parseJevNoulAnswer,
+  jevBlockFromResult,
   persistedLodgingAskSignals,
   isRealBrandLogoSrc,
   gradeSharedTabLogoUrlRecords,
   gradeCarTabRowIcons,
 } from './shepherd-staging-smoke-lib.mjs';
+import {
+  classifySmokeServerTiming,
+} from './shepherd-staging-smoke-helpers.mjs';
 
-assert.equal(isoDateFromStartsAt(new Date('2027-03-13T12:00:00.000Z')), '2027-03-13');
+assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
+assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);
+assert.equal(classifySmokeServerTiming({ latencyMs: 11000, sessionE2eMs: 4000 }).appFail, true);
 assert.equal(isoDateFromStartsAt('2027-03-13T12:00:00.000Z'), '2027-03-13');
 assert.equal(isoDateFromStartsAt('Sat Mar 13 2027 12:00:00 GMT+0000'), '2027-03-13');
 assert.equal(d1StartsOnDate(new Date('2027-03-13T12:00:00.000Z')), true);
@@ -216,20 +223,80 @@ const lodgingSignals = persistedLodgingAskSignals(
   {},
 );
 assert.equal(lodgingSignals.persistedLodgingAsk, true);
-assert.equal(replyHasLodgingQuestion('Where are you staying on Maui?'), true);
-assert.equal(replyHasLodgingQuestion('Great — I saved your dates.'), false);
-const lodgingPass = gradeAskLodging({
+
+const stubJevYes = async () => ({
+  ok: true,
+  error: null,
+  verdict: 'yes',
+  yes: true,
+  rationale: 'stub-yes',
+  model: 'test/jev-stub',
+});
+const stubJevNo = async () => ({
+  ok: true,
+  error: null,
+  verdict: 'no',
+  yes: false,
+  rationale: 'stub-no',
+  model: 'test/jev-stub',
+});
+const stubJevFail = async () => ({
+  ok: false,
+  error: 'stub-timeout',
+  verdict: null,
+  yes: null,
+  rationale: '',
+  model: 'test/jev-stub',
+});
+
+const c842D2Reply = "Paia Fish Market is on the list but not yet assigned to a specific day.";
+const d2UnschedPass = await gradeD2UnschedReply(c842D2Reply, { judgeFn: stubJevYes });
+assert.equal(d2UnschedPass.pass, true);
+assert.equal(d2UnschedPass.jev.verdict, 'yes');
+assert.equal(d2UnschedPass.jev.model, 'test/jev-stub');
+
+const d2UnschedJevFail = await gradeD2UnschedReply(c842D2Reply, { judgeFn: stubJevFail });
+assert.equal(d2UnschedJevFail.pass, false);
+assert.match(String(d2UnschedJevFail.jev.error || ''), /stub-timeout/);
+
+const askD2Pass = await gradeAskD2Reply(c842D2Reply, { judgeFn: stubJevNo });
+assert.equal(askD2Pass.pass, true);
+
+const askD2Fail = await gradeAskD2Reply('Where are you staying on Maui?', { judgeFn: stubJevYes });
+assert.equal(askD2Fail.pass, false);
+
+const lodgingPass = await gradeAskLodging({
   replyText: 'Where will you be staying during the trip?',
   payload: { tripContext: { lodgingAsk: true } },
   turnJson: {},
   hotelCount: 0,
+  judgeFn: stubJevYes,
 });
 assert.equal(lodgingPass.pass, true);
+assert.equal(lodgingPass.jev.verdict, 'yes');
 
-const d2Pass = gradeAskD2NoQuestionReply('Paia Fish Market is saved but not on a day yet.');
-const d2Fail = gradeAskD2NoQuestionReply('Which location did you mean?');
-assert.equal(d2Pass.pass, true);
-assert.equal(d2Fail.pass, false);
-assert.equal(d2Fail.evidence.whichLocation, true);
+assert.equal(parseJevNoulAnswer({ noul: 0.9 }).yes, true);
+assert.equal(parseJevNoulAnswer({ noul: 0.1 }).yes, false);
+
+const jevMeta = jevBlockFromResult({ verdict: 'yes', rationale: 'ok', score: 0.9, model: 'test-model' }, {
+  questionKey: 'saved_not_on_day',
+  customerTurn: 'save Paia Fish Market',
+  replyExcerpt: 'Saved for later.',
+});
+assert.equal(jevMeta.questionKey, 'saved_not_on_day');
+assert.equal(jevMeta.noul, 0.9);
+assert.match(jevMeta.replyExcerpt, /Saved/);
+
+const stubCoffeeJev = async () => ({
+  ok: true,
+  verdict: 'yes',
+  yes: true,
+  score: 0.95,
+  rationale: 'noul=0.950',
+  model: 'stub',
+});
+const coffeeGrade = await gradeCoffeeReplyRows([{ title: 'Maui Coffee Roasters' }], { judgeFn: stubCoffeeJev });
+assert.equal(coffeeGrade.pass, true);
+assert.equal(coffeeGrade.rows[0].jev.verdict, 'yes');
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));

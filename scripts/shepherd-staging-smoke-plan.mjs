@@ -1,6 +1,6 @@
 /** Staging smoke execution plan (harness-only). */
 
-export const SMOKE_PARALLEL_CONCURRENCY = 6;
+export const SMOKE_PARALLEL_CONCURRENCY = 3;
 
 /** Full registration order for cap / lint. */
 export const SMOKE_CHECK_ORDER = [
@@ -12,7 +12,7 @@ export const SMOKE_CHECK_ORDER = [
 /** Main customer spine — one session/trip/couponMain; must stay sequential. */
 export const SMOKE_MAIN_SPINE_ORDER = [
   '1', '2', '3', '4', 'W', '5', 'I', '6', 'H',
-  'MAP', 'BUD', 'LOGO', 'INV-UI', '6b', 'T', 'CL', '7', '8', 'M', 'R', 'O',
+  'INV-UI', '6b', 'T', 'CL', '7', '8', 'M', 'R', 'O',
 ];
 
 /**
@@ -22,12 +22,12 @@ export const SMOKE_MAIN_SPINE_ORDER = [
 export const SMOKE_PARALLEL_INDEPENDENT = [
   { name: 'C', coupon: 'couponMain', customer: 'checkout-ui', browser: true },
   { name: 'H2', coupon: 'couponH2', customer: 'h2-owner', browser: false },
-  { name: 'K', coupon: null, customer: 'classifier-only', browser: false },
+  { name: 'K', coupon: 'couponK', customer: 'classifier-only', browser: false },
   { name: 'A1', coupon: 'couponA1', customer: 'a1-owner', browser: false },
   { name: 'A2', coupon: 'couponA2', customer: 'a2-owner', browser: false },
   { name: 'D', coupon: 'couponDTrip', customer: 'd-owner', browser: false },
   { name: 'INV-CLAIM', coupon: 'couponInvClaim', customer: 'inv-owner', browser: false },
-  { name: 'ASK-lodging', coupon: null, customer: 'ask-lodging', browser: false },
+  { name: 'ASK-lodging', coupon: 'couponAskLodging', customer: 'ask-lodging', browser: false },
 ];
 
 export const SMOKE_PARALLEL_INDEPENDENT_NAMES = SMOKE_PARALLEL_INDEPENDENT.map((r) => r.name);

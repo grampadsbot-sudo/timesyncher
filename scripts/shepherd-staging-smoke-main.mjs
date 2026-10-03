@@ -2,9 +2,10 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
-import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
+import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
+import { prepareMapLogoIntakeShare } from './shepherd-staging-smoke-map-prep.mjs';
 import {
   postItinerary,
   postItineraryTimed,
@@ -26,7 +27,14 @@ import {
   welcomeClaimRows,
   ERROR_REPLY_RE,
   OUTSIDE_KIHEI_RE,
+  serverTimingFromItineraryJson,
+  classifySmokeServerTiming,
 } from './shepherd-staging-smoke-helpers.mjs';
+import {
+  withBrowserPageSlot,
+  withConnectionClosedRetry,
+  waitForSelector,
+} from './shepherd-staging-smoke-browser-pool.mjs';
 
 /**
  * @param {object} ctx
@@ -128,46 +136,66 @@ export async function runShepherdSmokeSpine(ctx) {
     const onboardSess = (await db`select id from onboarding_sessions where token=${state.session} limit 1`)[0]?.id;
     state.tripMsg = await postItinerary(state.session, { text: 'Maui March 10-17 2027 with my wife' });
     state.tripId = state.tripMsg.json.trip?.id || (await db`select id from trips where customer_id=${state.customerId} order by created_at desc limit 1`)[0]?.id;
+    const tripCreateTiming = classifySmokeServerTiming(serverTimingFromItineraryJson(state.tripMsg?.json || {}));
     wPoints.afterTripCreate = await transcriptWelcomes(db, state.customerId);
     await getApp(state.session);
     wPoints.afterSecondGet = await transcriptWelcomes(db, state.customerId);
     const welcomeClaims = await welcomeClaimRows(db, onboardSess);
-    out.checkW = { points: wPoints, welcomeClaimRows: welcomeClaims };
+    out.checkW = { points: wPoints, welcomeClaimRows: welcomeClaims, tripCreateServerTiming: tripCreateTiming };
     const wOk = Object.values(wPoints).every((p) => p.count === 1 && !p.hasLink);
     return { pass: wOk, http: 200 };
   }, { timeoutMs: 60000 });
 
   await runCheck('5', async ({ setStage, registerBrowser }) => {
+    setStage('trip create server timing');
+    const tripCreateTiming = classifySmokeServerTiming(
+      serverTimingFromItineraryJson(state.tripMsg?.json || {}),
+    );
+    if (tripCreateTiming.appFail) {
+      out.check5 = {
+        tripId: state.tripId,
+        serverTiming: tripCreateTiming,
+        appFailSlowTripCreate: true,
+      };
+      return {
+        pass: false,
+        http: state.tripMsg?.status,
+        harnessError: true,
+        harnessMessage: 'APP FAIL: trip create server timing > 10s',
+      };
+    }
     setStage('trip create + chat screenshot');
     state.tripTitle = state.tripId ? (await db`select title from trips where id=${state.tripId} limit 1`)[0]?.title : '';
     const ent = (await db`select trip_id from entitlements where customer_id=${state.customerId} and status='active' limit 1`)[0];
     const chrome5 = sharedBrowser || await puppeteer.launch(CHROME);
     if (!sharedBrowser) registerBrowser(chrome5);
-    const p5 = await chrome5.newPage();
-    try {
-    await p5.goto(`${BASE}/vacation-app.html?session=${encodeURIComponent(state.session)}`, { waitUntil: 'networkidle2', timeout: 120000 });
-    await new Promise((r) => setTimeout(r, 3000));
-    const chatShot = artifactPath('chat.png');
-    await p5.screenshot({ path: chatShot, fullPage: true });
-    const chatHtml = await p5.content();
-    out.checkINVUI = { chatShot, chatHits: inviteUiHits(chatHtml) };
-    const tripRow = state.tripId ? (await db`select start_date, end_date, destination from trips where id=${state.tripId}`)[0] : null;
-    const tripTurnDb = state.tripId ? await turnRow(db, state.tripId, 'Maui March%') : null;
-    const tripBlocked = tripTurnDb?.payload?.blockedReasons || state.tripMsg.json.blockedReasons || [];
-    const tripIntakeBlock = tripBlocked.some((r) => String(r).includes('first_intake')) || state.tripMsg.json.status === 'blocked' || state.tripMsg.json.error === 'first_intake_reply_flagged';
-    out.check5 = { tripId: state.tripId, tripRow, ent, screenshot: chatShot, intakeBlock: { tripBlocked, tripIntakeBlock } };
-    const pass = state.tripMsg.status === 201 && !tripIntakeBlock && ent?.trip_id === state.tripId && tripRow?.start_date;
-    return { pass, http: state.tripMsg.status };
-    } finally {
-      await p5.close().catch((err) => {
-        out.browserCloseErrors = out.browserCloseErrors || [];
-        out.browserCloseErrors.push(String(err?.message || err));
-      });
+    return withBrowserPageSlot(chrome5, async (p5) => {
+      await p5.goto(`${BASE}/vacation-app.html?session=${encodeURIComponent(state.session)}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await waitForSelector(p5, 'textarea, [contenteditable="true"], .chat-input', 120000).catch(() => waitForSelector(p5, 'body', 30000));
+      const chatShot = artifactPath('chat.png');
+      await p5.screenshot({ path: chatShot, fullPage: true });
+      const chatHtml = await p5.content();
+      out.checkINVUI = { chatShot, chatHits: inviteUiHits(chatHtml) };
+      const tripRow = state.tripId ? (await db`select start_date, end_date, destination from trips where id=${state.tripId}`)[0] : null;
+      const tripTurnDb = state.tripId ? await turnRow(db, state.tripId, 'Maui March%') : null;
+      const tripBlocked = tripTurnDb?.payload?.blockedReasons || state.tripMsg.json.blockedReasons || [];
+      const tripIntakeBlock = tripBlocked.some((r) => String(r).includes('first_intake')) || state.tripMsg.json.status === 'blocked' || state.tripMsg.json.error === 'first_intake_reply_flagged';
+      out.check5 = {
+        tripId: state.tripId,
+        tripRow,
+        ent,
+        screenshot: chatShot,
+        intakeBlock: { tripBlocked, tripIntakeBlock },
+        serverTiming: tripCreateTiming,
+      };
+      const pass = state.tripMsg.status === 201 && !tripIntakeBlock && ent?.trip_id === state.tripId && tripRow?.start_date;
+      return { pass, http: state.tripMsg.status };
+    }).finally(async () => {
       if (!sharedBrowser) await chrome5.close().catch((err) => {
         out.browserCloseErrors = out.browserCloseErrors || [];
         out.browserCloseErrors.push(String(err?.message || err));
       });
-    }
+    });
   }, { timeoutMs: 90000 });
 
   await runCheck('I', async ({ setStage }) => {
@@ -214,6 +242,8 @@ export async function runShepherdSmokeSpine(ctx) {
       http: t6.status, elapsedMs: t6.elapsedMs, stageTimings: st6, brave: brave6, anchor: state.ps6?.anchor,
       searchCenter: state.ps6?.searchCenter, braveTacoRows: taco6, diag: fullDiag(t6db?.payload, state.ps6),
     };
+    const fail429 = attachProviderLogAndMaybeFail(out, '6', { payload: t6db?.payload, placeSearch: state.ps6, itineraryJson: t6.json }, { http: t6.status });
+    if (fail429) return fail429;
     const pass = t6.status >= 200 && t6.status < 300 && t6.status !== 504 && t6.elapsedMs < 60000 && st6Ok
       && /taco/i.test(brave6?.query || '') && brave6?.status === 'ok' && taco6.length > 0 && !state.leak6;
     return { pass, http: t6.status };
@@ -239,63 +269,12 @@ export async function runShepherdSmokeSpine(ctx) {
       rawResults: hBundle.rawResults,
       diag: fullDiag(hDb?.payload),
     };
+    const fail429 = attachProviderLogAndMaybeFail(out, 'H', { payload: hDb?.payload, placeSearch: hDb?.payload?.placeSearch, itineraryJson: state.hTurn?.json }, { http: state.hTurn.status });
+    if (fail429) return fail429;
     return { pass: state.hTurn.status >= 200 && state.hTurn.status < 300 && hyattThingPass(state.hThing, hyatt), http: state.hTurn.status };
   }, { timeoutMs: 60000 });
 
-  await runCheck('MAP', async ({ setStage, registerBrowser }) => {
-    setStage('logo fixture hotel and car');
-    await postItinerary(state.session, { tripId: state.tripId, text: "We're staying at the Westin Maui in Kaanapali." });
-    await postItinerary(state.session, { tripId: state.tripId, text: 'Hertz rental car at OGG' });
-    setStage('shared intake share for map/logo');
-    const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
-    let sharedApi = null;
-    if (shareSlug) {
-      for (let i = 0; i < 25; i += 1) {
-        const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
-        sharedApi = { status: sr.status, json: await sr.json().catch((err) => ({ _jsonError: String(err?.message || err) })) };
-        if ((sharedApi.json?.places || []).length >= 1) break;
-        await new Promise((r) => setTimeout(r, 2000));
-      }
-    }
-    const chromeMap = sharedBrowser || await puppeteer.launch(CHROME);
-    if (!sharedBrowser) registerBrowser(chromeMap);
-    const mapPage = await chromeMap.newPage();
-    const tripMetaAfterH = state.tripId ? (await db`select metadata from trips where id=${state.tripId} limit 1`)[0]?.metadata : null;
-    const publicUrlAfterH = tripMetaAfterH?.publicUrl || tripMetaAfterH?.public_url || '';
-    try {
-    state.sharedSite = await runSharedSiteMapBudLogoChecks({
-      page: mapPage,
-      mapUrl: shareSlug ? `${BASE}/shared/${shareSlug}/` : '',
-      publicUrlAfterH,
-      shareSlug,
-      sharedApi,
-      artifactPath,
-    });
-    out.checkMAP = { ...state.sharedSite.checkMAP, sharedUiHits: inviteUiHits(state.sharedSite.sharedHtml) };
-    out.checkBUD = state.sharedSite.checkBUD;
-    out.checkLOGO = state.sharedSite.checkLOGO;
-    return { pass: state.sharedSite.checks.MAP === 'PASS', http: 200 };
-    } finally {
-      await mapPage.close().catch((err) => {
-        out.browserCloseErrors = out.browserCloseErrors || [];
-        out.browserCloseErrors.push(String(err?.message || err));
-      });
-      if (!sharedBrowser) await chromeMap.close().catch((err) => {
-        out.browserCloseErrors = out.browserCloseErrors || [];
-        out.browserCloseErrors.push(String(err?.message || err));
-      });
-    }
-  }, { timeoutMs: 90000 });
-
-  await runCheck('BUD', async () => ({
-    pass: state.sharedSite?.checks.BUD === 'PASS',
-    http: 200,
-  }), { timeoutMs: 60000 });
-
-  await runCheck('LOGO', async () => ({
-    pass: state.sharedSite?.checks.LOGO === 'PASS',
-    http: 200,
-  }), { timeoutMs: 60000 });
+  state.mapLogoPrep = await prepareMapLogoIntakeShare(ctx);
 
   await runCheck('INV-UI', async () => {
     const pass = (out.checkINVUI?.chatHits || []).length === 0 && (out.checkMAP?.sharedUiHits || []).length === 0;
@@ -311,6 +290,8 @@ export async function runShepherdSmokeSpine(ctx) {
     const anchor = state.ps6b?.anchor;
     const sc = state.ps6b?.searchCenter;
     out.check6b = { http: t6b.status, brave: brave6b, query: brave6b?.query, anchor, searchCenter: sc, diag: fullDiag(t6bdb?.payload, state.ps6b) };
+    const fail429 = attachProviderLogAndMaybeFail(out, '6b', { payload: t6bdb?.payload, placeSearch: state.ps6b, itineraryJson: t6b.json }, { http: t6b.status });
+    if (fail429) return fail429;
     const t6bClassifierFail = t6bdb?.payload?.placeSearch?.error === 'turn_classifier_failed' || t6b.status === 502;
     const pass = t6b.status === 201 && !t6bClassifierFail && brave6b?.status === 'ok' && Number(brave6b?.resultCount) > 0 && anchorMatchesRealHyatt(anchor, sc);
     return { pass, http: t6b.status };
@@ -342,6 +323,8 @@ export async function runShepherdSmokeSpine(ctx) {
       marchLeak: tMarchLeak,
       persistedCategory: tPersist.category,
     };
+    const fail429 = attachProviderLogAndMaybeFail(out, 'T', { payload: tDb?.payload, placeSearch: tPs, itineraryJson: state.tTurn?.json }, { http: state.tTurn.status });
+    if (fail429) return fail429;
     const pass = state.tTurn.status === 201 && tPersist.category === 'restaurant' && tClass.targetKind === 'category' && tNearLodging && tBrave?.status === 'ok' && !tViolation && !tMarchLeak;
     return { pass, http: state.tTurn.status };
   }, { timeoutMs: 60000 });
@@ -393,6 +376,8 @@ export async function runShepherdSmokeSpine(ctx) {
     const mHonestNo = /no results|couldn't find|could not find|nothing specific/i.test(state.mReply);
     const mRealMarket = mMarketRows.length > 0 || /farmers?\s+market/i.test(state.mReply);
     out.checkM = { http: mTurn.status, reply: state.mReply.slice(0, 500), placeSearch: mPs, marketRows: mMarketRows.slice(0, 5), diag: fullDiag(mDb?.payload, mPs) };
+    const fail429 = attachProviderLogAndMaybeFail(out, 'M', { payload: mDb?.payload, placeSearch: mPs, itineraryJson: mTurn.json }, { http: mTurn.status });
+    if (fail429) return fail429;
     const pass = mTurn.status >= 200 && mTurn.status < 300 && !ERROR_REPLY_RE.test(state.mReply) && !mGrocery && (mRealMarket || mHonestNo);
     return { pass, http: mTurn.status };
   }, { timeoutMs: 60000 });
@@ -409,7 +394,7 @@ export async function runShepherdSmokeSpine(ctx) {
     const rClass = classifierSnapshot(rDb?.payload);
     const rClassifierFail = rTurn.status === 502 || rClass.reason === 'turn_classifier_failed' || String(rPs?.error || '').includes('turn_classifier_failed') || String(rDb?.payload?.placeSearch?.error || '').includes('category unknown');
     const rResultRows = rPs?.results || rDb?.payload?.placeSearch?.results || [];
-    const rCoffee = gradeCoffeeReplyRows(rResultRows);
+    const rCoffee = await gradeCoffeeReplyRows(rResultRows, { customerTurn: 'coffee shops near Kihei' });
     out.checkR = {
       http: rTurn.status,
       anchorRadiusRejected: rAnchorRejected,
@@ -423,6 +408,8 @@ export async function runShepherdSmokeSpine(ctx) {
     if (rCoffee.harnessError) {
       return { pass: false, harnessError: true, harnessMessage: 'R coffee row missing persisted metadata', http: rTurn.status };
     }
+    const fail429 = attachProviderLogAndMaybeFail(out, 'R', { payload: rDb?.payload, placeSearch: rPs, itineraryJson: rTurn.json }, { http: rTurn.status });
+    if (fail429) return fail429;
     const pass = rTurn.status >= 200 && rTurn.status < 300 && !rOffersOutside && !rClassifierFail && Boolean(rPersist.category) && rCoffee.pass;
     return { pass, http: rTurn.status };
   }, { timeoutMs: 60000 });
@@ -441,4 +428,56 @@ export async function runShepherdSmokeSpine(ctx) {
       && !String(oFail || '').includes('reply_action_claim') && !(oBlocked || []).some((r) => String(r).includes('reply_action_claim'));
     return { pass, http: oTurn.status };
   }, { timeoutMs: 60000 });
+}
+
+/** MAP/BUD/LOGO in a dedicated browser after the parallel pool (one retry on connection closed). */
+export async function runShepherdSmokeMapBudLogoChecks(ctx) {
+  const { runCheck, out, state, BASE, CHROME, artifactPath, registerBrowser } = ctx;
+
+  await runCheck('MAP', async ({ setStage }) => {
+    setStage('map/logo dedicated browser');
+    const prep = state.mapLogoPrep || {};
+    const chromeMap = await puppeteer.launch(CHROME);
+    registerBrowser(chromeMap);
+    try {
+      const sharedSite = await withConnectionClosedRetry(async () => {
+        const mapPage = await chromeMap.newPage();
+        try {
+          return await runSharedSiteMapBudLogoChecks({
+            page: mapPage,
+            mapUrl: prep.intakeShareUrl || '',
+            publicUrlAfterH: prep.publicUrlAfterH || '',
+            shareSlug: prep.shareSlug || '',
+            sharedApi: prep.sharedApi,
+            artifactPath,
+          });
+        } finally {
+          await mapPage.close().catch((err) => {
+            out.browserCloseErrors = out.browserCloseErrors || [];
+            out.browserCloseErrors.push(String(err?.message || err));
+          });
+        }
+      }, { retries: 1 });
+      state.sharedSite = sharedSite;
+      out.checkMAP = { ...sharedSite.checkMAP, sharedUiHits: inviteUiHits(sharedSite.sharedHtml), intakeShareUrl: prep.intakeShareUrl };
+      out.checkBUD = sharedSite.checkBUD;
+      out.checkLOGO = sharedSite.checkLOGO;
+      return { pass: sharedSite.checks.MAP === 'PASS', http: 200 };
+    } finally {
+      await chromeMap.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+    }
+  }, { timeoutMs: 120000 });
+
+  await runCheck('BUD', async () => ({
+    pass: state.sharedSite?.checks.BUD === 'PASS',
+    http: 200,
+  }), { timeoutMs: 60000 });
+
+  await runCheck('LOGO', async () => ({
+    pass: state.sharedSite?.checks.LOGO === 'PASS',
+    http: 200,
+  }), { timeoutMs: 60000 });
 }
