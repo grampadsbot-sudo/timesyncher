@@ -110,7 +110,13 @@ const out = {
   deployId: process.env.SHEPHERD_DEPLOY_ID || 'dpl_EJNxPWyTbdDPTb7UagmT487jAte9',
   checks: { LAYOUT: layout.pass ? 'PASS' : 'FAIL', VISUAL: visual.pass ? 'PASS' : 'FAIL' },
   checkLAYOUT: layout,
-  checkVISUAL: { pass: visual.pass, artifactDir: visual.artifactDir, verdictPath: `${visual.artifactDir}/verdict.json` },
+  checkVISUAL: {
+    pass: visual.pass,
+    artifactDir: visual.artifactDir,
+    verdictPath: `${visual.artifactDir}/verdict.json`,
+    preflight: visual.preflight || visual.verdictDoc?.preflight || null,
+    infraBlocked: Boolean(visual.infraBlocked),
+  },
   layoutSummary,
   visualSummary,
 };

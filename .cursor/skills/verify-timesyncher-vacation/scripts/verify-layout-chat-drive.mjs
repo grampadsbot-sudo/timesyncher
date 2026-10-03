@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { existsSync } from 'node:fs';
 import { VIEWPORTS, applyViewport } from './layout-measure.mjs';
 import {
   clickControl,
@@ -67,6 +68,10 @@ export async function driveChatProvisioned({
         });
         measurement.specMissing = spec.specMissing;
         const shot = await shoot(page, shotDir, 'chat', sub, viewport.id);
+        if (!existsSync(shot.viewportPath)) {
+          rows.push(unreachableRow('chat', sub, viewport.id, `screenshot missing for ${sub} at ${viewport.id}`));
+          continue;
+        }
         const judge = await grade(shot.viewportPath, spec.specText);
         await writeFile(path.join(shotDir, `${shot.stem}.json`), JSON.stringify({ measurement, judge, specFile: spec.specFile, fixture: sub }, null, 2));
         rows.push(finishRow({

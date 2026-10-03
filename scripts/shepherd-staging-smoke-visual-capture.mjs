@@ -122,7 +122,7 @@ export async function captureVisualStateScreenshots({
       await waitForChatAppReady(page);
       const layoutDom = await captureLayoutDomForShot(page, 'chat');
       const chatFile = shotPath(artifactDir, state.id, 'chat', viewport.label);
-      await page.screenshot({ path: chatFile, fullPage: true });
+      await page.screenshot({ path: chatFile });
       shots.push({
         id: `${state.id}-chat-${viewport.label}`,
         stateId: state.id,

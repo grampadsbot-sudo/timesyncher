@@ -18,6 +18,17 @@ import {
 } from './shepherd-staging-smoke-plan.mjs';
 import { buildAskLodgingParallelCheck } from './shepherd-staging-smoke-ask.mjs';
 import { buildTailIndependentParallelChecks, runShepherdSmokeTail } from './shepherd-staging-smoke-tail.mjs';
+import { acquireShepherdStagingSmokeLock, isSmokeLockHeldError } from './shepherd-staging-smoke-single-instance.mjs';
+
+try {
+  acquireShepherdStagingSmokeLock();
+} catch (err) {
+  if (isSmokeLockHeldError(err)) {
+    console.error(String(err.message || err));
+    process.exit(3);
+  }
+  throw err;
+}
 
 const EXPECT_SHA = process.argv[2];
 if (!EXPECT_SHA || !/^[0-9a-f]{40}$/i.test(EXPECT_SHA)) {

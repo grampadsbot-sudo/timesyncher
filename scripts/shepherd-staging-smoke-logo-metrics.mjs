@@ -75,8 +75,16 @@ export function pickSlowLogoStage(stageTimestamps) {
   return slow.name ? slow : null;
 }
 
-async function measureLogoComFromPngBuffer(buf) {
-  const png = PNG.sync.read(buf);
+export function normalizePngBufferInput(data) {
+  if (Buffer.isBuffer(data)) return data;
+  if (data instanceof Uint8Array) return Buffer.from(data);
+  if (data instanceof ArrayBuffer) return Buffer.from(new Uint8Array(data));
+  if (typeof data === 'string') return Buffer.from(data, 'base64');
+  throw new TypeError('png_buffer_input_unsupported');
+}
+
+export async function measureLogoComFromPngBuffer(buf) {
+  const png = PNG.sync.read(normalizePngBufferInput(buf));
   const { width: w, height: h, data } = png;
   const corners = [
     [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
@@ -123,7 +131,7 @@ async function measureLogoComFromPngBuffer(buf) {
 
 export async function stitchLogoChipCropsPng(cropBuffers, outPath) {
   if (!cropBuffers.length) return null;
-  const decoded = cropBuffers.map((buf) => PNG.sync.read(buf));
+  const decoded = cropBuffers.map((buf) => PNG.sync.read(normalizePngBufferInput(buf)));
   const pad = 4;
   const cellW = Math.max(...decoded.map((p) => p.width));
   const cellH = Math.max(...decoded.map((p) => p.height));

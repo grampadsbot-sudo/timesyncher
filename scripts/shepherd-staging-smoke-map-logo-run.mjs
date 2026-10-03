@@ -10,6 +10,7 @@ import {
   runSharedSiteMapCheck,
 } from './shepherd-staging-smoke-shared-ui.mjs';
 import { createLogoStageTimestamps } from './shepherd-staging-smoke-logo-metrics.mjs';
+import { runBindThingMediaCacheCheck } from './shepherd-staging-smoke-bind-thing-media-cache.mjs';
 
 const MAP_CHECK_TIMEOUT_MS = 120000;
 
@@ -44,7 +45,10 @@ async function runDedicatedSharedCheck(ctx, checkName, timeoutMs, runOnPage) {
 
 /** MAP/BUD/LOGO each use a dedicated browser (one retry on connection closed). */
 export async function runShepherdSmokeMapBudLogoChecks(ctx) {
-  const { out } = ctx;
+  const { out, BASE } = ctx;
+  const prep = ctx.state.mapLogoPrep || {};
+  const cacheResult = await runBindThingMediaCacheCheck({ BASE, prep, fetchImpl: fetch });
+  out.check208 = cacheResult.check208;
 
   await runDedicatedSharedCheck(ctx, 'MAP', MAP_CHECK_TIMEOUT_MS, async ({ page, prep, artifactPath }) => {
     const mapResult = await runSharedSiteMapCheck({ page, prep, artifactPath });
@@ -53,7 +57,12 @@ export async function runShepherdSmokeMapBudLogoChecks(ctx) {
       sharedUiHits: inviteUiHits(mapResult.sharedHtml || ''),
       intakeShareUrl: intakeShareUrlFromPrep(prep),
       failReason: mapResult.failReason || null,
+      mediaCache: out.check208,
     };
+    if (!cacheResult.pass) {
+      out.checkMAP.failReason = out.checkMAP.failReason || cacheResult.check208?.failReason || 'bind_thing_media_cache_check_failed';
+      return { pass: false, http: cacheResult.http || 404 };
+    }
     if (mapResult.appFail) {
       out.checkMAP.appFail = mapResult.appFail;
       return { pass: false, http: 200 };

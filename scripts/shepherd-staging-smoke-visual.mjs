@@ -147,9 +147,11 @@ export async function runVisualHarnessCheck({
     })),
     pass,
   };
+  verdictDoc.preflight = preflight;
   writeFileSync(`${artifactDir}/verdict.json`, `${JSON.stringify(verdictDoc, null, 2)}\n`);
   return {
     pass,
+    preflight,
     judged,
     verdictDoc,
     artifactDir,
