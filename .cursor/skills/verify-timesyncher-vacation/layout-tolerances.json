@@ -1,0 +1,34 @@
+{
+  "table": [
+    {
+      "id": "composerBottomSlackPx",
+      "value": 24,
+      "specLine": "The text box is pinned to the bottom. Served pages reserve 24px under the document for the build stamp (body padding-bottom: 24px)."
+    },
+    {
+      "id": "iconCenterPx",
+      "value": 1.5,
+      "specLine": "Tab icons are vertically centered within their tab."
+    },
+    {
+      "id": "edgeEpsilonPx",
+      "value": 0.5,
+      "specLine": "No element is wider than the viewport: document scrollWidth <= innerWidth, and each element's right <= innerWidth. Half a pixel is float rounding only."
+    },
+    {
+      "id": "headerTopPx",
+      "value": 1,
+      "specLine": "The header sits at the top of the viewport."
+    },
+    {
+      "id": "footerEndSlackPx",
+      "value": 8,
+      "specLine": "The footer sits at the document end. A logo floating mid-page fails."
+    },
+    {
+      "id": "stackGapPx",
+      "value": 2,
+      "specLine": "The conversation list sits between the header and the text box. The vacation website sits on top, and the control slider sits in the middle, above the text box."
+    }
+  ]
+}
