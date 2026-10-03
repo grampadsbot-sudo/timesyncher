@@ -81,6 +81,7 @@ export async function runPlaceProviderPass({
   searchAnchor = null,
   relevanceContext,
   tripId,
+  db = null,
   priorPlaces,
   loadPriorPlaces,
   readPriorPlaces = null,
@@ -100,7 +101,7 @@ export async function runPlaceProviderPass({
     providerLog,
     readJson,
     fail,
-    { env },
+    { env, db, tripId },
   );
   const center = context.center;
   const locationText = context.locationText || dest;

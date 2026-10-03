@@ -16,6 +16,7 @@ import { runVacationAppTurnActions } from '../src/vacation/vacation-app-turn-act
 import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlement.mjs';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings, withGateMs } from '../src/vacation/turn-stage-timings.mjs';
+import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -172,62 +173,25 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     payload,
     customerLive,
   });
-  const requestRows = await db`
-    insert into vacation_requests (
-      customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
-      status, queued_at
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, 'vacation-app', ${queuedJobType}, ${requestText},
-      ${{ turnTag }}, ${payload}, 'queued', now()
-    )
-    returning id, received_at, queued_at
-  `;
-  const requestId = requestRows[0].id;
   const intakeLatency = Date.now() - started;
-  const turnRows = await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      received_at, response_latency_ms,
-      turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
-      now(), ${intakeLatency},
-      ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
-    )
-    returning id
-  `;
-  await db`
-    insert into vacation_request_events (request_id, event_type, actor, details)
-    values
-      (${requestId}, 'received', 'customer', ${payload}),
-      (${requestId}, 'queued', 'system', ${{ surface: 'vacation-app', turnTag }})
-  `;
-  const jobRows = await db`
-    insert into worker_jobs (request_id, trip_id, job_type, input)
-    values (${requestId}, ${tripId}, ${queuedJobType}, ${{
-      customerId: transcriptOwnerId,
-      tripId,
-      requestId,
-      source: 'vacation-app',
-      requestType: queuedJobType,
-      requestText,
-      payload,
-      intakeEvent: jobFields.intakeEvent,
-      wantedThings: jobFields.wantedThings,
-      roster: jobFields.roster,
-      rosterError: jobFields.rosterError,
-      destination: jobFields.destination,
-      hasDates: jobFields.hasDates,
-      startDate: jobFields.startDate,
-      endDate: jobFields.endDate,
-      title: jobFields.title,
-      titleError: jobFields.titleError,
-      intakeError: jobFields.intakeError,
-    }})
-    returning id
-  `;
+  const {
+    requestId,
+    requestRow,
+    customerTurnId: persistedCustomerTurnId,
+    jobId: persistedJobId,
+  } = await persistVacationAppCustomerTurn(db, {
+    transcriptOwnerId,
+    tripId,
+    queuedJobType,
+    requestText,
+    payload,
+    turnTag,
+    jobFields,
+    customerTurnIndex,
+    intakeLatency,
+  });
+  const turnRows = [{ id: persistedCustomerTurnId }];
+  const jobRows = [{ id: persistedJobId }];
   let placeResults = [], enforceInTurnSearch = false, activeWebResearchTurn = webResearchTurn, placeSearchReplyFacts = null;
   if (tripId) {
     const searchStarted = Date.now();
@@ -264,8 +228,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       return failedInTurnSearchTurn({
         requestId,
         jobId: jobRows[0].id,
-        receivedAt: requestRows[0].received_at,
-        queuedAt: requestRows[0].queued_at,
+        receivedAt: requestRow.received_at,
+        queuedAt: requestRow.queued_at,
         turnTag,
         modality,
         turnIndex: customerTurnIndex,
@@ -379,8 +343,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   const base = {
     requestId,
     jobId: jobRows[0].id,
-    receivedAt: requestRows[0].received_at,
-    queuedAt: requestRows[0].queued_at,
+    receivedAt: requestRow.received_at,
+    queuedAt: requestRow.queued_at,
     turnTag,
     modality,
     turnIndex: customerTurnIndex,

@@ -81,6 +81,7 @@ export async function runCustomerChatPlaceSearch({
   lodgingPoint = null,
   tripId = '',
   tripDestinationCenter = null,
+  db = null,
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchPlaces,
@@ -116,6 +117,7 @@ export async function runCustomerChatPlaceSearch({
     const search = await searchImpl({
       destination: geocodeDestination,
       tripId,
+      db,
       tripDestinationCenter,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
@@ -210,6 +212,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     lodgingPoint: lodgingAnchor.point,
     tripId,
     tripDestinationCenter,
+    db,
     env: buildProviderEnv(env),
     searchImpl,
   });

@@ -33,9 +33,10 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
   if (priorSlug && priorSlug !== publicSlug) {
     throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
   }
+  const metadataPatch = JSON.stringify({ publicSlug, intakeShare: true, publicUrl });
   const updated = await db`
     update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug, intakeShare: true, publicUrl }},
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${metadataPatch}::jsonb,
         updated_at = now()
     where id = ${tripId}
       and coalesce(metadata->>'publicSlug', '') in ('', ${publicSlug})

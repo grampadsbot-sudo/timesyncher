@@ -44,6 +44,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@stripe/stripe-js": "^9.7.0",
     "@vercel/blob": "^2.3.3",
+    "@vercel/functions": "^2.2.13",
     "qrcode": "^1.5.4",
     "stripe": "^22.2.0"
   }

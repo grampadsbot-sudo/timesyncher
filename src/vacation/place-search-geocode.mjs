@@ -1,4 +1,5 @@
 import { PlaceSearchError } from './place-search-error.mjs';
+import { persistTripDestinationCenter } from './trip-destination-center.mjs';
 import {
   getNominatimStore,
   NOMINATIM_GEOCODE_CACHE_TTL_MS,
@@ -456,6 +457,11 @@ export async function resolveSearchContext(
   if (destinationLabel) {
     const found = await tryGeocodeLabel(fetchImpl, destinationLabel, providerLog, readJson, options);
     if (found) {
+      const tripId = String(options.tripId || '').trim();
+      const db = options.db;
+      if (db && tripId) {
+        await persistTripDestinationCenter(db, tripId, found);
+      }
       const locationText = keepAreaText ? destinationLabel : (found.label || destinationLabel);
       return {
         center: { ...found, geocoded: 'destination' },

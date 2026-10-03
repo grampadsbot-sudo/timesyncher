@@ -19,7 +19,7 @@ export async function persistTripDestinationCenter(db, tripId, center) {
   if (!db || !tripId || !point) return false;
   await db`
     update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ destinationCenter: point }},
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${JSON.stringify({ destinationCenter: point })}::jsonb,
         updated_at = now()
     where id = ${tripId}
       and (metadata->'destinationCenter') is null
@@ -47,7 +47,14 @@ export async function geocodeAndPersistTripDestinationCenter(
   if (existing) return existing;
   const providerLog = [];
   const found = await tryGeocodeLabel(fetchImpl, label, providerLog, null, { env });
-  if (!found) return null;
+  if (!found) {
+    console.error(JSON.stringify({
+      event: 'trip_destination_geocode_failed',
+      tripId: String(tripId || ''),
+      label,
+    }));
+    return null;
+  }
   await persistTripDestinationCenter(db, tripId, found);
   return found;
 }
@@ -59,7 +66,11 @@ export function scheduleTripDestinationGeocode({
   env = process.env,
   fetchImpl = globalThis.fetch,
 } = {}) {
-  scheduleBackgroundWork(() => {
-    void geocodeAndPersistTripDestinationCenter(db, tripId, destinationLabel, fetchImpl, env);
-  });
+  return scheduleBackgroundWork(() => geocodeAndPersistTripDestinationCenter(
+    db,
+    tripId,
+    destinationLabel,
+    fetchImpl,
+    env,
+  ));
 }
