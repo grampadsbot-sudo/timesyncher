@@ -3,6 +3,7 @@ const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
+import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 import { prepareMapLogoIntakeShare } from './shepherd-staging-smoke-map-prep.mjs';
@@ -34,6 +35,7 @@ import {
   withBrowserPageSlot,
   waitForSelector,
 } from './shepherd-staging-smoke-browser-pool.mjs';
+import { runLayoutHarnessCheck } from './shepherd-staging-smoke-layout.mjs';
 
 /**
  * @param {object} ctx
@@ -198,6 +200,31 @@ export async function runShepherdSmokeSpine(ctx) {
       });
     });
   }, { timeoutMs: 90000 });
+
+  await runCheck('LAYOUT', async ({ setStage, registerBrowser }) => {
+    setStage('layout chat + shared viewports');
+    const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
+    const sharedUrl = shareSlug ? `${BASE}/shared/${shareSlug}/` : '';
+    const chatUrl = `${BASE}/vacation-app.html?session=${encodeURIComponent(state.session)}`;
+    const chromeLayout = sharedBrowser || await puppeteer.launch(CHROME);
+    if (!sharedBrowser) registerBrowser(chromeLayout);
+    return withBrowserPageSlot(chromeLayout, async (page) => {
+      const layout = await runLayoutHarnessCheck({
+        page,
+        chatUrl,
+        sharedUrl,
+        artifactPath,
+        setStage,
+      });
+      out.checkLAYOUT = layout;
+      return { pass: layout.pass, http: 200 };
+    }).finally(async () => {
+      if (!sharedBrowser) await chromeLayout.close().catch((err) => {
+        out.browserCloseErrors = out.browserCloseErrors || [];
+        out.browserCloseErrors.push(String(err?.message || err));
+      });
+    });
+  }, { timeoutMs: 180000 });
 
   await runCheck('I', async ({ setStage }) => {
     setStage('collaborator invite Alex');

@@ -6,6 +6,7 @@ import {
   SMOKE_CHECK_ORDER,
   SMOKE_PARALLEL_INDEPENDENT_NAMES,
 } from './shepherd-staging-smoke-run-check.mjs';
+import { SMOKE_FAIL_CLOSED_GO } from './shepherd-staging-smoke-plan.mjs';
 import {
   normalizeSharedTabLabel,
   sharedTabLabelIncludes,
@@ -55,5 +56,8 @@ assert.doesNotMatch(runCheckText, /\bexport const WHOLE_RUN_CAP_MS\b/, 'WHOLE_RU
 assert.equal(sharedTabLabelIncludes('🗺️ Plan', 'plan'), true);
 assert.equal(sharedTabLabelIncludes('💰 Budget', 'budget'), true);
 assert.equal(normalizeSharedTabLabel('  🏨  Hotels '), 'hotels');
+
+assert.ok(SMOKE_FAIL_CLOSED_GO.includes('LAYOUT'), 'GO gate must include LAYOUT');
+assert.ok(registered.has('LAYOUT'), 'main spine must register runCheck(LAYOUT)');
 
 console.log(JSON.stringify({ ok: true, harnessFiles, registered: [...registered].sort() }));
