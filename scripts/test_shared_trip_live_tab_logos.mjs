@@ -4,10 +4,7 @@ import crypto from 'node:crypto';
 
 import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
-import {
-  renderSharedLiveTabListHtml,
-  sharedLiveTabRows,
-} from '../src/vacation/shared-trip-live-tab-lists.mjs';
+import { finalizeServedSharedTripPayload, renderServedSharedPageLiveTabMarkup } from '../src/vacation/shared-trip-served-page.mjs';
 
 const tripId = crypto.randomUUID();
 
@@ -55,20 +52,21 @@ const shared = applyCapturedLogos(sharedTripFromIntake({
   things: records,
 }));
 
-const hotelRows = sharedLiveTabRows(shared, 'hotels');
-assert.equal(hotelRows.length, 1);
-assert.equal(hotelRows[0].category, 'hotel');
+const servedPayload = finalizeServedSharedTripPayload(shared);
+assert.ok(servedPayload.liveTabLists?.hotels);
+assert.ok(servedPayload.liveTabLists?.cars);
 
-const carRows = sharedLiveTabRows(shared, 'cars');
-assert.equal(carRows.length, 1);
-assert.equal(carRows[0].category, 'car');
+const hotelsHtml = renderServedSharedPageLiveTabMarkup(shared, 'hotels');
+const carsHtml = renderServedSharedPageLiveTabMarkup(shared, 'cars');
+assert.equal(hotelsHtml, servedPayload.liveTabLists.hotels);
+assert.equal(carsHtml, servedPayload.liveTabLists.cars);
 
-const hotelsHtml = renderSharedLiveTabListHtml(shared, 'hotels');
 assert.match(hotelsHtml, /data-shared-live-tab="hotels"/);
 assert.match(hotelsHtml, /img class="tiny-logo" src="https:\/\/hyatt\.com\/favicon\.ico"/);
+assert.match(hotelsHtml, /data-ts-logo-chip="1"/);
 
-const carsHtml = renderSharedLiveTabListHtml(shared, 'cars');
 assert.match(carsHtml, /data-shared-live-tab="cars"/);
 assert.match(carsHtml, /img class="tiny-logo" src="https:\/\/hertz\.com\/favicon\.ico"/);
+assert.match(carsHtml, /data-ts-logo-chip="1"/);
 
-console.log('shared trip live tab logo tests passed');
+console.log('shared trip served page live tab logo tests passed');

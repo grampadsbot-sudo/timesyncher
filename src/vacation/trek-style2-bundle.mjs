@@ -235,6 +235,21 @@ const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
 const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 
+const LIVE_TAB_MOUNT_HELPER_NEEDLE = 'tsPad=(rows)=>rows,tsListThings=';
+const LIVE_TAB_MOUNT_HELPER_PATCH = 'tsPad=(rows)=>rows,tsSharedLiveTabListMount=G=>{const h=window.__TS_SHARED_LIVE_TAB_LISTS__?.[G];if(!h)throw new Error("shared_live_tab_lists_missing:"+G);return n.jsx("div",{"data-shared-live-tab-mount":G,dangerouslySetInnerHTML:{__html:h},style:{display:"contents"}})},tsListThings=';
+
+const LIVE_TAB_DELEGATE_HOTELS_NEEDLE = 'Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),';
+const LIVE_TAB_DELEGATE_HOTELS_PATCH = 'Gn=[],';
+
+const LIVE_TAB_DELEGATE_CARS_NEEDLE = 'ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))),';
+const LIVE_TAB_DELEGATE_CARS_PATCH = 'ki=[],';
+
+const GN_RENDER_DELEGATE_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
+const GN_RENDER_DELEGATE_PATCH = 'tsSharedLiveTabListMount("hotels"),false&&tsPad(Gn).length===0';
+
+const KI_RENDER_DELEGATE_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
+const KI_RENDER_DELEGATE_PATCH = 'tsSharedLiveTabListMount("cars")';
+
 const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 
@@ -408,6 +423,15 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(LIVE_TAB_NEEDLE)) {
     patched = patched.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
   }
+  if (patched.includes(LIVE_TAB_MOUNT_HELPER_NEEDLE)) {
+    patched = patched.replace(LIVE_TAB_MOUNT_HELPER_NEEDLE, LIVE_TAB_MOUNT_HELPER_PATCH);
+  }
+  if (patched.includes(LIVE_TAB_DELEGATE_HOTELS_NEEDLE)) {
+    patched = patched.replace(LIVE_TAB_DELEGATE_HOTELS_NEEDLE, LIVE_TAB_DELEGATE_HOTELS_PATCH);
+  }
+  if (patched.includes(LIVE_TAB_DELEGATE_CARS_NEEDLE)) {
+    patched = patched.replace(LIVE_TAB_DELEGATE_CARS_NEEDLE, LIVE_TAB_DELEGATE_CARS_PATCH);
+  }
   if (patched.includes(REST_TYPE_CHIPS_NEEDLE)) {
     patched = patched.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
   }
@@ -418,10 +442,14 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(QN_RENDER_NEEDLE)) {
     patched = patched.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   }
-  if (patched.includes(GN_RENDER_NEEDLE)) {
+  if (patched.includes(GN_RENDER_DELEGATE_NEEDLE)) {
+    patched = patched.replace(GN_RENDER_DELEGATE_NEEDLE, GN_RENDER_DELEGATE_PATCH);
+  } else if (patched.includes(GN_RENDER_NEEDLE)) {
     patched = patched.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
   }
-  if (patched.includes(KI_RENDER_NEEDLE)) {
+  if (patched.includes(KI_RENDER_DELEGATE_NEEDLE)) {
+    patched = patched.replace(KI_RENDER_DELEGATE_NEEDLE, KI_RENDER_DELEGATE_PATCH);
+  } else if (patched.includes(KI_RENDER_NEEDLE)) {
     patched = patched.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
   }
   if (patched.includes(MO_BUDGET_NEEDLE)) {
@@ -699,6 +727,12 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
+  }
+  if (!js.includes('tsSharedLiveTabListMount=G=>')) {
+    throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
+  }
+  if (js.includes('Gn=tsPad(Fs.filter') || js.includes('ki=tsPad(Cc.filter')) {
+    throw new Error('Hotels/Cars live tabs must not filter catalog rows in the bundle.');
   }
   if (js.includes('__tsLiveFill:1') || js.includes('lat:36.1147') || js.includes('address:"Nevada"') || js.includes('logoUrl:tsLogo(name)')) {
     throw new Error('Live tabs must not pad Las Vegas names or coordinates.');
