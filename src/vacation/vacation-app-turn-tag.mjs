@@ -1,5 +1,15 @@
 import { classifyTurn, classifyTurnWithModel } from './turn-tags.mjs';
+import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { turnStageTimings } from './turn-stage-timings.mjs';
+
+function placeSearchContentTags(classification, webResearchTurn) {
+  if (webResearchTurn) return ['activities_experiences'];
+  const cat = normalizePlaceSearchCategory(classification?.category);
+  if (cat === 'restaurant') return ['restaurants_food'];
+  if (cat === 'grocery' || cat === 'market' || cat === 'store') return ['shopping'];
+  if (cat) return ['activities_experiences'];
+  return [];
+}
 
 export async function classifyVacationAppCustomerTurnTag({
   requestText,
@@ -18,7 +28,12 @@ export async function classifyVacationAppCustomerTurnTag({
       speaker: 'customer',
       direction: 'inbound',
       channel: 'vacation-app',
-      payload,
+      payload: {
+        ...payload,
+        contentTags: (placeSearchTurn || webResearchTurn)
+          ? placeSearchContentTags(classification, webResearchTurn)
+          : (Array.isArray(payload?.contentTags) ? payload.contentTags : []),
+      },
     })
     : await classifyTurnWithModel({
       text: requestText,

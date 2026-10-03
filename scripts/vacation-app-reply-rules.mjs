@@ -1,4 +1,5 @@
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
+import { perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -602,15 +603,13 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       if (items.length) customerInput[key] = items;
     } else if (value && typeof value === 'object') {
       customerInput[key] = value;
+    } else if (value === true) {
+      customerInput[key] = true;
     } else if (typeof value === 'string' && value.trim()) {
       customerInput[key] = value.trim();
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
-  const lodgingAsk = tripRaw?.lodgingAsk === true;
-  const flightAsk = String(tripRaw?.flightAsk || '').trim();
-  const lodgingGapAskRule = lodgingAsk ? 'The saved trip record includes lodgingAsk. Ask the customer where they are staying, in your own words.' : '';
-  const flightAskRule = flightAsk ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.' : '';
   const trip = itinerary.length || dates || roster || rule || hasCustomerInput
     ? { itinerary, dates, roster, rule, ...customerInput }
     : null;
@@ -633,7 +632,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
-    `Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`,
+    ...(unscheduledDayRule ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     'Do not say seat to the customer; say collaborator or person joining instead.',
     'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
@@ -659,8 +658,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-    lodgingGapAskRule,
-    flightAskRule,
+    ...perFactGapAskRuleLines(tripRaw),
     unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',

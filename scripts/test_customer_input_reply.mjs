@@ -14,11 +14,18 @@ assert.doesNotMatch(liveSource, cannedQuestion);
 
 const carried = draftingFacts([], 'Friday.', {
   things: [{ title: 'Swim' }],
-  needsCustomerInput: ['lodging'],
+  gapAnswerTurn: true,
+  gapFilledThisTurn: 'who',
+  lastAskedGap: 'who',
+  destination: 'Maui',
+  start: '2027-03-10',
+  span: { start: '2027-03-10' },
+  party: { primary: { name: 'Ada' } },
 });
 assert.deepEqual(carried.needsCustomerInput, ['lodging']);
 const absent = draftingFacts([], 'Friday.', { things: [{ title: 'Swim' }] });
 assert.deepEqual(absent.needsCustomerInput, ['lodging']);
+assert.equal(absent.lodgingAsk, undefined);
 
 const inputContext = {
   itinerary: ['Swim: Monday'],

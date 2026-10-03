@@ -8,6 +8,7 @@ import {
   applyCustomerInputToFirstIntakeFacts,
   firstIntakeLodgingCustomerInput,
   persistTripLodgingCustomerInputGap,
+  persistTripInviteContactNeeded,
 } from './first-intake-customer-input.mjs';
 import {
   firstIntakeReplyFacts,
@@ -79,6 +80,7 @@ export async function produceFirstIntakeReply({
     applyTurnInviteReplyFacts(firstIntakeReplyFacts(factInput), turnActionResults),
     customerInput,
   );
+  await persistTripInviteContactNeeded(env, tripId, facts.invite_contact_needed === true);
   const prompt = `${firstIntakeReplyInstruction(facts)}\n\nIntake facts: ${JSON.stringify(facts)}`;
   let model = null;
   let reply = '';

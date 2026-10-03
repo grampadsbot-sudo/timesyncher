@@ -11,6 +11,13 @@ const GENERIC_STILL_NEEDED = /customer input that is still needed|Ask for that i
 
 const lodgingFacts = draftingFacts([], 'We arrive Friday.', {
   things: [{ title: 'Swim', category: 'activity' }],
+  gapAnswerTurn: true,
+  gapFilledThisTurn: 'who',
+  lastAskedGap: 'who',
+  destination: 'Maui',
+  start: '2027-03-10',
+  span: { start: '2027-03-10' },
+  party: { primary: { name: 'Ada' } },
 });
 assert.equal(lodgingFacts.lodgingAsk, true);
 const lodgingGap = replyRulesSystem({}, 'Maui', 'forbidden', false, 'We arrive Friday.', { tripContext: lodgingFacts });
