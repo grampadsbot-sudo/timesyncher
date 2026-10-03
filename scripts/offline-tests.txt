@@ -215,5 +215,6 @@ scripts/test_trip_literal_ban_g2a.mjs
 scripts/test_keepsake_order_buy_link.mjs
 scripts/test_sct_a78799b_search_fill.mjs
 scripts/test_shepherd_staging_smoke_layout_visual_exports.mjs
+scripts/test_shepherd_staging_smoke_visual_capture.mjs
 scripts/test_verify_vacation_layout_self_check.mjs
 scripts/test_verify_skill_no_vercel.mjs
