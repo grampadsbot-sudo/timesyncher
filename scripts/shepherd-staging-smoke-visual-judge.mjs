@@ -79,6 +79,7 @@ async function judgeScreenshotWithOpenRouter({
     screenSpecText,
     specSource: shotMeta.specSource || 'canonical_fallback_0926_pt',
     layoutDomFacts: shotMeta.layoutDomFacts || '',
+    sendButtonDomContext: shotMeta.sendButtonDomContext || '',
   });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

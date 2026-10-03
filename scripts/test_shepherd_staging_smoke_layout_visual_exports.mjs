@@ -11,8 +11,11 @@ import {
 } from './shepherd-staging-smoke-visual-judge.mjs';
 import {
   VISUAL_RUBRIC_VERSION,
+  buildVisualJudgePrompt,
   loadVisualScreenSpec,
 } from './shepherd-staging-smoke-visual-rubric.mjs';
+import { formatComposerSendDomContextForJudge } from './shepherd-staging-smoke-composer-send-dom.mjs';
+import { readFileSync } from 'node:fs';
 import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
 import { evaluateComposerControlsOnly } from './shepherd-staging-smoke-composer-send.mjs';
 
@@ -74,6 +77,28 @@ assert.equal(typeof summarizeLayoutFailures([]), 'string');
 ensureLayoutArtifactDir('/tmp/ts-layout-artifact-smoke');
 assert.equal(VISUAL_JUDGE_MODEL.includes('/'), true);
 assert.match(VISUAL_RUBRIC_VERSION, /shepherd-visual-rubric/);
+const rubricSource = readFileSync(new URL('./shepherd-staging-smoke-visual-rubric.mjs', import.meta.url), 'utf8');
+assert.match(rubricSource, /up-arrow icon submit button/i);
+const sendDomContext = formatComposerSendDomContextForJudge({
+  id: 'sendButton',
+  role: 'button',
+  ariaLabel: 'Send',
+  title: null,
+  type: 'submit',
+});
+const judgePrompt = buildVisualJudgePrompt({
+  screenLabel: 'v1 composer 390',
+  pageKind: 'chat',
+  stateId: 'v1',
+  tabLabel: '',
+  viewport: { width: 390, height: 844 },
+  screenSpecText: 'spec',
+  specSource: 'test',
+  layoutDomFacts: '',
+  sendButtonDomContext: sendDomContext,
+});
+assert.match(judgePrompt, /aria-label: Send/);
+assert.match(judgePrompt, /up-arrow icon/i);
 assert.equal(typeof loadVisualScreenSpec().text, 'string');
 assert.equal(typeof mintVisualStateCustomers, 'function');
 const judged = await judgeScreenshotsParallel([], { apiKey: '', concurrency: 1 });

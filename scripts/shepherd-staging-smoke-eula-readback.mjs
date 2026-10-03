@@ -31,6 +31,13 @@ export async function readEulaReceiptDocument(db, sessionId, env = process.env) 
   return rows[0]?.document ?? null;
 }
 
+export async function listEulaStoreObjectKeysForSession(db, sessionId, env = process.env) {
+  const like = `%${String(sessionId || '').trim()}%`;
+  const rows = await db`select key from eula_store_objects where key like ${like} order by key`;
+  const keys = rows.map((row) => row.key);
+  return { keys, rowCount: keys.length, sessionIdLike: like };
+}
+
 async function readEulaSessionDocument(db, sessionId, env = process.env) {
   const key = eulaStoreObjectKey(sessionId, 'session', env);
   const rows = await db`select document from eula_store_objects where key = ${key} limit 1`;
@@ -47,17 +54,29 @@ export async function runEulaReadbackGate({
   const sessionId = eulaVacationSessionId(sessionToken);
   const receiptDoc = await readEulaReceiptDocument(db, sessionId, env);
   const sessionDoc = await readEulaSessionDocument(db, sessionId, env);
+  const storeKeys = await listEulaStoreObjectKeysForSession(db, sessionId, env);
   const validation = receiptDoc
     ? validateReceiptForActivation({ session: sessionDoc, receipt: receiptDoc, requiredEulaVersion })
     : { ok: false, errors: ['receipt missing in eula_store_objects'] };
   const blobListCalls = harnessBlobListCallCount();
+  const pass = validation.ok && blobListCalls === 0;
   return {
     sessionId,
     receiptKey: eulaStoreObjectKey(sessionId, 'receipt', env),
     receiptSha256: receiptDoc?.receiptSha256 || null,
     validation,
     blobListCalls,
-    pass: validation.ok && blobListCalls === 0,
+    eulaStoreKeysForSession: storeKeys.keys,
+    eulaStoreKeyRowCount: storeKeys.rowCount,
+    pass,
+    ...(pass ? {} : {
+      eulaStoreKeyDiag: {
+        expectedReceiptKey: eulaStoreObjectKey(sessionId, 'receipt', env),
+        sessionIdLike: storeKeys.sessionIdLike,
+        keys: storeKeys.keys,
+        rowCount: storeKeys.rowCount,
+      },
+    }),
   };
 }
 

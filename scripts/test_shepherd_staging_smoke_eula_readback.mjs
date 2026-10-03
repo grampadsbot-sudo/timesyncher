@@ -11,6 +11,7 @@ import {
   eulaStoreObjectKey,
   eulaVacationSessionId,
   readEulaReceiptDocument,
+  listEulaStoreObjectKeysForSession,
   runEulaReadbackGate,
   harnessBlobListCallCount,
   resetHarnessBlobListCallCount,
@@ -51,6 +52,14 @@ const gate = await runEulaReadbackGate({ db, sessionToken, env: process.env });
 assert.equal(gate.pass, true);
 assert.equal(gate.blobListCalls, 0);
 assert.equal(gate.receiptKey, eulaStoreObjectKey(sessionId, 'receipt', process.env));
+assert.ok(gate.eulaStoreKeysForSession.includes(gate.receiptKey));
+
+const missingGate = await runEulaReadbackGate({ db, sessionToken: 'no-such-token', env: process.env });
+assert.equal(missingGate.pass, false);
+assert.ok(missingGate.eulaStoreKeyDiag);
+assert.equal(missingGate.eulaStoreKeyDiag.expectedReceiptKey, eulaStoreObjectKey('vacation-no-such-token', 'receipt', process.env));
+const listed = await listEulaStoreObjectKeysForSession(db, sessionId, process.env);
+assert.ok(listed.keys.includes(gate.receiptKey));
 
 assert.ok(SMOKE_FAIL_CLOSED_GO.includes('EULA'));
 

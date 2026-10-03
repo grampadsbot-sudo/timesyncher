@@ -10,7 +10,7 @@ export const SHARED_MAP_READY_WAIT_MS = 45000;
 export const APP_MAP_READY_FAIL_MS = 10000;
 
 function attachSharedHydrationDiagnostics(page) {
-  const diag = { consoleErrors: [], failedRequests: [], timingTrace: [] };
+  const diag = { consoleErrors: [], failedRequests: [], notFound404Urls: [], timingTrace: [] };
   const t0 = Date.now();
   const mark = (event, detail = null) => {
     diag.timingTrace.push({ event, atMs: Date.now() - t0, detail });
@@ -26,16 +26,43 @@ function attachSharedHydrationDiagnostics(page) {
       failure: req.failure()?.errorText || 'request_failed',
     });
   };
+  const onResponse = (res) => {
+    if (res.status() === 404) diag.notFound404Urls.push(res.url());
+  };
   page.on('console', onConsole);
   page.on('requestfailed', onRequestFailed);
+  page.on('response', onResponse);
   return {
     diag,
     mark,
     detach() {
       page.off('console', onConsole);
       page.off('requestfailed', onRequestFailed);
+      page.off('response', onResponse);
     },
   };
+}
+
+/** In-page readiness for shared intake tab shell (same selectors as listSharedDomTabs / LOGO check). */
+export function sharedIntakeTabShellReadyInBrowser() {
+  const bodyText = document.body?.innerText || '';
+  if (!/Day-by-Day/i.test(bodyText)) return false;
+  const norm = (raw) => String(raw || '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  const nodes = Array.from(document.querySelectorAll(
+    'button, [role="tab"], a, [data-tab], [data-ts-tab]',
+  ));
+  const labels = nodes.map((node) => {
+    const title = node.getAttribute('title') || '';
+    const dataTab = node.getAttribute('data-tab') || node.getAttribute('data-ts-tab') || '';
+    return norm([node.textContent, title, dataTab].join(' '));
+  }).filter(Boolean);
+  const dayByDay = labels.some((label) => label.includes('day-by-day') || label.includes('day by day'));
+  const hotelOrBudget = labels.some((label) => label.includes('hotel') || label.includes('budget'));
+  return dayByDay && hotelOrBudget;
 }
 
 export function configureSharedUiMapHelpers(_cfg) {
@@ -132,48 +159,27 @@ async function waitForSharedMapReadyHook(page, stageTimestamps) {
   }
 }
 
-async function waitForSharedTabShellHydration(page, stageTimestamps) {
+export async function waitForSharedIntakeTabShellReady(page, stageTimestamps) {
   await new Promise((r) => setTimeout(r, 800));
   stageTimestamps.mapReadyWaitStartMs = Date.now();
   stageTimestamps.leafletWaitStartMs = stageTimestamps.mapReadyWaitStartMs;
   const timeout = SHARED_MAP_READY_WAIT_MS;
-  const sharedIntakeReadyFn = () => {
-    const text = document.body?.innerText || '';
-    if (!/Day-by-Day/i.test(text)) return false;
-    const norm = (raw) => String(raw || '')
-      .replace(/\p{Extended_Pictographic}/gu, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .toLowerCase();
-    const buttons = Array.from(document.querySelectorAll('button, [role="tab"]'));
-    const labels = buttons.map((node) => norm(node.textContent));
-    return labels.some((label) => label.includes('day-by-day'))
-      && (labels.some((label) => label.includes('hotel')) || labels.some((label) => label.includes('budget')));
-  };
-  const mapHookFn = () => {
-    const mapEl = document.querySelector(
-      '.leaflet-container[data-ts-map-center], .mapboxgl-map[data-ts-map-center]',
-    );
-    if (mapEl?.getAttribute('data-ts-map-center') && window.__tsTripMap) return true;
-    const center = window.__tsTripMap?.center || window.__tsTripMap?.mapCenter;
-    return Boolean(center && Number.isFinite(Number(center.lat)) && Number.isFinite(Number(center.lng)));
-  };
   try {
-    await Promise.race([
-      page.waitForFunction(sharedIntakeReadyFn, { timeout }),
-      page.waitForFunction(mapHookFn, { timeout }),
-    ]);
+    await page.waitForFunction(sharedIntakeTabShellReadyInBrowser, { timeout });
     stageTimestamps.mapReadyWaitEndMs = Date.now();
     stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
   } catch (err) {
     stageTimestamps.mapReadyWaitEndMs = Date.now();
     stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
-    if (await page.evaluate(sharedIntakeReadyFn)) {
-      return;
-    }
+    const readyNow = await page.evaluate(sharedIntakeTabShellReadyInBrowser);
+    if (readyNow) return;
     stageTimestamps.hangingStage = 'shared_tab_shell';
     throw err;
   }
+}
+
+async function waitForSharedTabShellHydration(page, stageTimestamps) {
+  await waitForSharedIntakeTabShellReady(page, stageTimestamps);
 }
 
 export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
@@ -202,21 +208,29 @@ export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
   } catch (err) {
     diagSession.mark('hydration_timeout', String(err?.message || err));
     const domTabList = await listSharedDomTabs(page);
+    const notFound404Urls = [...(diagSession.diag.notFound404Urls || [])];
     const payload = {
       url,
       hydrationError: String(err?.message || err),
       stageTimestamps,
       domTabList,
+      notFound404Urls,
       diagnostics: diagSession.diag,
     };
     if (debugArtifactPath) writeFileSync(debugArtifactPath, `${JSON.stringify(payload, null, 2)}\n`);
     diagSession.detach();
-    return { stageTimestamps, domTabList, hydrationError: String(err?.message || err), hydrationDiagPath: debugArtifactPath };
+    return {
+      stageTimestamps,
+      domTabList,
+      notFound404Urls,
+      hydrationError: String(err?.message || err),
+      hydrationDiagPath: debugArtifactPath,
+    };
   }
   diagSession.detach();
   await new Promise((r) => setTimeout(r, 800));
   const domTabList = await listSharedDomTabs(page);
-  return { stageTimestamps, domTabList, hydrationError: null };
+  return { stageTimestamps, domTabList, hydrationError: null, notFound404Urls: [] };
 }
 
 export async function mapSharedTripState(page, url) {

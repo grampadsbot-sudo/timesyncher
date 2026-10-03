@@ -50,7 +50,7 @@ const chatPrompt = buildVisualJudgePrompt({
 });
 assert.match(chatPrompt, /form#composer/);
 assert.match(chatPrompt, /icon-only up-arrow|paper-plane/i);
-assert.match(chatPrompt, /accessible name Send/);
+assert.match(chatPrompt, /aria-label\/title Send/);
 
 const listed = await fetchOpenRouterModelRecord(VISUAL_JUDGE_MODEL, { apiKey: 'test-key', fetchImpl: preflightFetchOk });
 assert.equal(listed.ok, true);

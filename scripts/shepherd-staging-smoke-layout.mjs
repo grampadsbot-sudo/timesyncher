@@ -2,7 +2,7 @@ import { mkdirSync } from 'node:fs';
 import {
   clickSharedTabByKeyword,
   gotoAndHydrateSharedIntakePage,
-} from './shepherd-staging-smoke-shared-ui-map.mjs';
+} from './shepherd-staging-smoke-shared-ui.mjs';
 import {
   evaluateLayoutRules,
   LAYOUT_RULE_APPLICABILITY,
@@ -37,6 +37,10 @@ async function runLayoutProbeOnPage(page, {
     if (hydrated.hydrationError) {
       const shot = artifactPath(`layout-shared-${viewport.label}.png`);
       await page.screenshot({ path: shot, fullPage: true });
+      const notFound404Urls = hydrated.notFound404Urls || [];
+      const detail404 = notFound404Urls.length
+        ? `${hydrated.hydrationError}; http404=${notFound404Urls.join(' | ')}`
+        : hydrated.hydrationError;
       return {
         pageKind,
         viewport: viewport.label,
@@ -44,12 +48,14 @@ async function runLayoutProbeOnPage(page, {
         failures: [{
           selector: 'shared-hydration',
           rule: 'hydration',
-          detail: hydrated.hydrationError,
+          detail: detail404,
           viewport: { width: viewport.width, height: viewport.height },
           rects: {},
         }],
         screenshot: shot,
         hydrationDiagPath: hydrated.hydrationDiagPath || diagPath,
+        domTabList: hydrated.domTabList || [],
+        notFound404Urls,
         applicability: LAYOUT_RULE_APPLICABILITY,
       };
     }
