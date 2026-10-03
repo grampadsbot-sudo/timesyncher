@@ -101,12 +101,13 @@ function createPostgresNominatimStore(env) {
       maxWaitMs = NOMINATIM_THROTTLE_MAX_WAIT_MS,
       sleep = defaultSleep,
     } = {}) {
-      const now = Number(typeof nowMs === 'function' ? nowMs() : nowMs);
+      const now = Math.trunc(Number(typeof nowMs === 'function' ? nowMs() : nowMs));
+      const intervalMs = NOMINATIM_THROTTLE_INTERVAL_MS;
       const rows = await db`
         update nominatim_throttle
-        set next_slot_ms = greatest(next_slot_ms, ${now}) + ${NOMINATIM_THROTTLE_INTERVAL_MS}
+        set next_slot_ms = greatest(next_slot_ms, ${now}::bigint) + ${intervalMs}::bigint
         where id = 1
-        returning greatest(next_slot_ms - ${NOMINATIM_THROTTLE_INTERVAL_MS}, ${now}) as execute_at_ms
+        returning greatest(next_slot_ms - ${intervalMs}::bigint, ${now}::bigint) as execute_at_ms
       `;
       const executeAt = Number(rows?.[0]?.execute_at_ms);
       if (!Number.isFinite(executeAt)) {
@@ -120,8 +121,7 @@ function createPostgresNominatimStore(env) {
         );
       }
       if (waitMs > 0) await sleep(waitMs);
-      const callAtMs = typeof nowMs === 'function' ? nowMs() : Date.now();
-      return work(Number.isFinite(Number(callAtMs)) ? Number(callAtMs) : Date.now());
+      return work(executeAt);
     },
   };
 }
@@ -149,6 +149,20 @@ export function nominatimLabelGeocodeCacheKey(label) {
   return nominatimGeocodeCacheKey('geocode', normalized);
 }
 
+export function nominatimSearchCacheAliases(cacheKey) {
+  const key = String(cacheKey || '').trim();
+  if (!key) return [];
+  if (key.startsWith('forward:')) {
+    const normalized = key.slice('forward:'.length).split('|limit=')[0]?.trim();
+    return normalized ? [nominatimGeocodeCacheKey('search', normalized)] : [];
+  }
+  if (key.startsWith('geocode:')) {
+    const normalized = key.slice('geocode:'.length).trim();
+    return normalized ? [nominatimGeocodeCacheKey('search', normalized)] : [];
+  }
+  return [];
+}
+
 export function nominatimForwardPayloadCacheable(payload) {
   const rows = Array.isArray(payload) ? payload : [];
   return rows.some((hit) => {
@@ -162,9 +176,9 @@ export function nominatimReversePayloadCacheable(payload) {
   return Boolean(payload && typeof payload === 'object' && String(payload.display_name || '').trim());
 }
 
-export function nominatimLabelGeocodePayloadCacheable(payload, label) {
+export function nominatimLabelGeocodePayloadCacheable(payload) {
   const hit = Array.isArray(payload) ? payload[0] : null;
   const lat = Number(hit?.lat);
   const lng = Number(hit?.lon ?? hit?.lng);
-  return Number.isFinite(lat) && Number.isFinite(lng) && String(label || '').trim();
+  return Number.isFinite(lat) && Number.isFinite(lng);
 }

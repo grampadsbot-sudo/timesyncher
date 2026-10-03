@@ -1,8 +1,6 @@
-import { placeSearchReadJson } from './place-search.mjs';
 import {
   nominatimForwardSearch as nominatimForwardSearchGeocode,
   nominatimReverseGeocode as nominatimReverseGeocodeGeocode,
-  consumeNominatimNetworkCallAtMs,
 } from './place-search-geocode.mjs';
 import {
   pickIntakeLodgingCandidate,
@@ -70,11 +68,13 @@ function trimNominatimEvidenceRow(hit = {}) {
 }
 
 async function nominatimForwardSearch(fetchImpl, query, options = {}) {
-  return nominatimForwardSearchGeocode(fetchImpl, query, placeSearchReadJson, options);
+  const { hits } = await nominatimForwardSearchGeocode(fetchImpl, query, null, options);
+  return hits;
 }
 
-async function nominatimReverseGeocode(fetchImpl, lat, lng) {
-  return nominatimReverseGeocodeGeocode(fetchImpl, lat, lng, placeSearchReadJson);
+async function nominatimReverseGeocode(fetchImpl, lat, lng, options = {}) {
+  const { reversed } = await nominatimReverseGeocodeGeocode(fetchImpl, lat, lng, null, options);
+  return reversed;
 }
 
 export function pickNominatimLodgingCandidate(hits = [], options = {}, { requireTourismLodging = false } = {}) {
@@ -123,8 +123,7 @@ function pushNominatimProvider(search, {
 export async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, search) {
   const query = String(lookupQuery || '').trim();
   try {
-    const hits = await nominatimForwardSearch(fetchImpl, query, { limit: 5 });
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
+    const { hits, calledAtMs } = await nominatimForwardSearchGeocode(fetchImpl, query, null, { limit: 5 });
     pushNominatimProvider(search, {
       status: hits.length ? 'ok' : 'empty',
       reason: hits.length ? '' : 'no_results',
@@ -135,7 +134,6 @@ export async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, searc
     });
     return hits;
   } catch (error) {
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
     const reason = String(error?.message || error || 'nominatim forward failed').trim();
     const httpStatus = Number.isFinite(Number(error?.httpStatus)) ? Number(error.httpStatus) : null;
     pushNominatimProvider(search, {
@@ -144,7 +142,6 @@ export async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, searc
       resultCount: 0,
       query,
       rawResults: [],
-      calledAtMs,
       httpStatus,
     });
     return [];
@@ -153,8 +150,7 @@ export async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, searc
 
 export async function nominatimReverseWithEvidence(fetchImpl, lat, lng, search) {
   try {
-    const reversed = await nominatimReverseGeocode(fetchImpl, lat, lng);
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
+    const { reversed, calledAtMs } = await nominatimReverseGeocodeGeocode(fetchImpl, lat, lng, null);
     pushNominatimProvider(search, {
       status: reversed?.address ? 'ok' : 'empty',
       reason: reversed?.address ? '' : 'no_address',
@@ -165,7 +161,6 @@ export async function nominatimReverseWithEvidence(fetchImpl, lat, lng, search) 
     });
     return reversed;
   } catch (error) {
-    const calledAtMs = consumeNominatimNetworkCallAtMs();
     const reason = String(error?.message || error || 'nominatim reverse failed').trim();
     const httpStatus = Number.isFinite(Number(error?.httpStatus)) ? Number(error.httpStatus) : null;
     pushNominatimProvider(search, {
@@ -174,7 +169,6 @@ export async function nominatimReverseWithEvidence(fetchImpl, lat, lng, search) 
       resultCount: 0,
       query: `reverse:${lat},${lng}`,
       rawResults: [],
-      calledAtMs,
       httpStatus,
     });
     return null;

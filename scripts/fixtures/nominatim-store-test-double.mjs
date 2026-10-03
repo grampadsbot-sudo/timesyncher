@@ -33,6 +33,37 @@ const NOMINATIM_THROTTLE_INTERVAL_MS = 1000;
 const NOMINATIM_THROTTLE_MAX_WAIT_MS = 45_000;
 
 /** In-memory Nominatim store for unit tests only (not used in production). */
+/** Shared Neon-style sql executor: throttle UPDATE ... RETURNING + geocode cache upsert/select. */
+export function createFaithfulNeonNominatimDb() {
+  const cache = new Map();
+  let nextSlotMs = 0;
+  const db = async (strings, ...values) => {
+    const text = strings.join(' ').toLowerCase();
+    if (text.includes('insert into nominatim_geocode_cache')) {
+      const [cacheKey, payloadJson] = values;
+      const expiresAt = values[2];
+      cache.set(String(cacheKey), { payloadJson, expiresAt });
+      return [];
+    }
+    if (text.includes('from nominatim_geocode_cache')) {
+      const [cacheKey] = values;
+      const row = cache.get(String(cacheKey));
+      if (!row) return [];
+      const payload = typeof row.payloadJson === 'string' ? JSON.parse(row.payloadJson) : row.payloadJson;
+      return [{ payload }];
+    }
+    if (text.includes('update nominatim_throttle')) {
+      const now = Number(values[0]);
+      const interval = Number(values[1]);
+      const executeAt = Math.max(nextSlotMs, now);
+      nextSlotMs = executeAt + interval;
+      return [{ execute_at_ms: executeAt }];
+    }
+    throw new Error(`unexpected sql: ${strings.join('')}`);
+  };
+  return { db, cache, getNextSlotMs: () => nextSlotMs };
+}
+
 export function createMemoryNominatimStore() {
   const cache = new Map();
   let nextSlotMs = 0;
@@ -80,8 +111,7 @@ export function createMemoryNominatimStore() {
           );
         }
         if (waitMs > 0) await sleep(waitMs);
-        const callAtMs = typeof nowMs === 'function' ? nowMs() : Date.now();
-        return await work(Number.isFinite(Number(callAtMs)) ? Number(callAtMs) : Date.now());
+        return await work(executeAt);
       } finally {
         release();
       }
