@@ -11,7 +11,7 @@ import {
 } from './place-search-reply-facts.mjs';
 import { queriesFromPlaceClassification } from './place-search-query-plan.mjs';
 import { chatPlaceSearchGeocodeDestination } from './place-search-named-target.mjs';
-import { unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
+import { tripOwnedPlaceAllowRows, unsourcedAgainstInTurnResults } from './provider-result-context.mjs';
 import {
   customerChatPlaceSearchNoResults,
   finishCustomerChatPlaceSearch,
@@ -280,10 +280,11 @@ export async function applyChatPlaceSearchForVacationTurn({
   };
 }
 
-export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
+export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults, options = {}) {
   const sources = Array.isArray(inTurnPlaceResults) ? inTurnPlaceResults : [];
   if (!sources.length) return null;
-  const invented = unsourcedAgainstInTurnResults(String(reply || ''), sources);
+  const tripPlaceAllowRows = Array.isArray(options.tripPlaceAllowRows) ? options.tripPlaceAllowRows : [];
+  const invented = unsourcedAgainstInTurnResults(String(reply || ''), sources, { tripPlaceAllowRows });
   if (!invented.length) return null;
   return {
     status: 'unsourced_place',
@@ -294,7 +295,10 @@ export function inTurnPlaceReplyViolation(reply, inTurnPlaceResults) {
 
 export function blockInTurnPlaceReply(reply, enforceInTurnPlaces, inTurnPlaceResults, carry = {}) {
   if (!enforceInTurnPlaces) return null;
-  const violation = inTurnPlaceReplyViolation(reply, inTurnPlaceResults);
+  const tripPlaceAllowRows = Array.isArray(carry.tripPlaceAllowRows) && carry.tripPlaceAllowRows.length
+    ? carry.tripPlaceAllowRows
+    : tripOwnedPlaceAllowRows(carry.tripContext?.tripReplyGate || {});
+  const violation = inTurnPlaceReplyViolation(reply, inTurnPlaceResults, { tripPlaceAllowRows });
   if (!violation) return null;
   console.error(`place search reply blocked: ${violation.error}`);
   return {
