@@ -98,6 +98,7 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, on
       payer,
       inviteId: invite.id,
       inviteToken: token,
+      tripId: String(invite.trip_id || resolvedTripId || '').trim() || null,
       emailStatus: sent.status,
     });
   }

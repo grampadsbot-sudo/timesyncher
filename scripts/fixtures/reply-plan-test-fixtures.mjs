@@ -8,6 +8,7 @@ export const testPlanEnv = {
 export const testSingleOwnerPlan = replyPlanFactsFromEntitlementRow({
   plan: 'single',
   status: 'active',
+  trip_id: 'test-trip',
   metadata: { product: 'timesyncher_vacation_single' },
 }, testPlanEnv, 'test-trip');
 

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { attachPurchasedEntitlementToChatTrip } from './chat-trip-entitlement-attach.mjs';
 import { optionalConfigCents, requiredConfigCents } from './checkout-pricing.mjs';
 
 export const COLLABORATOR_PLANS = {
@@ -176,10 +177,70 @@ export async function countActiveCollaborators(db, ownerCustomerId, tripId = '')
   return Number(rows[0]?.count || 0);
 }
 
+function ownerSeatInviteStatus(metadata = {}) {
+  const payer = cleanInviteLookup(metadata.payer || 'owner', 40) || 'owner';
+  const channel = cleanInviteLookup(metadata.channel, 40);
+  return payer === 'owner' && channel === 'vacation-app' ? 'paid' : 'pending_payment';
+}
+
+async function ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardingSessionId, env = process.env } = {}) {
+  const ownerId = cleanInviteLookup(ownerCustomerId, 80);
+  const sessionId = cleanInviteLookup(onboardingSessionId, 80);
+  if (!ownerId || !sessionId) {
+    throw Object.assign(new Error('Owner onboarding session is required for a pre-trip collaborator invite.'), { statusCode: 409 });
+  }
+  const sessions = await db`
+    select id, trip_id, customer_id, order_id
+    from onboarding_sessions
+    where id = ${sessionId}
+      and customer_id = ${ownerId}
+    limit 1
+  `;
+  const session = sessions[0];
+  if (!session?.id) {
+    throw Object.assign(new Error('Owner onboarding session was not found for collaborator invite.'), { statusCode: 404 });
+  }
+  if (session.trip_id) return String(session.trip_id);
+  const shellKey = sessionId.replace(/-/g, '').slice(0, 12);
+  const tripRows = await db`
+    insert into trips (customer_id, title, destination, status, metadata)
+    values (
+      ${ownerId},
+      ${`shell-${shellKey}`},
+      null,
+      'onboarding',
+      ${{ placeholderTrip: true, source: 'owner_workspace', onboardingSessionId: sessionId }}
+    )
+    returning id
+  `;
+  const tripId = String(tripRows[0]?.id || '').trim();
+  if (!tripId) {
+    throw Object.assign(new Error('Owner workspace trip could not be created for collaborator invite.'), { statusCode: 500 });
+  }
+  await db`
+    update onboarding_sessions
+    set trip_id = ${tripId},
+      updated_at = now()
+    where id = ${sessionId}
+      and customer_id = ${ownerId}
+  `;
+  const attached = await attachPurchasedEntitlementToChatTrip(db, { ...session, trip_id: tripId }, tripId);
+  if (!attached.ok) {
+    throw Object.assign(
+      new Error(attached.error || 'Owner entitlement could not be attached to workspace trip.'),
+      { statusCode: attached.statusCode || 502, code: attached.code || 'vacation_app_owner_entitlement_attach_failed' },
+    );
+  }
+  return tripId;
+}
+
 export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {}, env = process.env }) {
-  const normalizedTripId = String(tripId || '').trim() || null;
   const onboardingSessionId = String(metadata?.onboardingSessionId || '').trim() || null;
-  if (!normalizedTripId && !onboardingSessionId) {
+  let normalizedTripId = String(tripId || '').trim() || null;
+  if (!normalizedTripId && onboardingSessionId) {
+    normalizedTripId = await ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardingSessionId, env });
+  }
+  if (!normalizedTripId) {
     throw Object.assign(new Error('tripId or onboardingSessionId is required for a collaborator invite.'), { statusCode: 400 });
   }
   const plan = collaboratorPlan(planCode || 'single_trip', env);
@@ -188,16 +249,28 @@ export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, pl
     ...(metadata && typeof metadata === 'object' ? metadata : {}),
     ...(onboardingSessionId ? { onboardingSessionId } : {}),
   };
-  const rows = await db`
-    insert into vacation_collaborator_invites (
-      owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata
-    )
-    values (
-      ${ownerCustomerId}, ${normalizedTripId}, ${plan.code}, ${plan.scope},
-      ${requestedFor || null}, 'pending_payment', ${hashToken(token, env)}, ${inviteMetadata}
-    )
-    returning *
-  `;
+  const inviteStatus = ownerSeatInviteStatus(inviteMetadata);
+  const rows = inviteStatus === 'paid'
+    ? await db`
+      insert into vacation_collaborator_invites (
+        owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata, paid_at
+      )
+      values (
+        ${ownerCustomerId}, ${normalizedTripId}, ${plan.code}, ${plan.scope},
+        ${requestedFor || null}, ${inviteStatus}, ${hashToken(token, env)}, ${inviteMetadata}, now()
+      )
+      returning *
+    `
+    : await db`
+      insert into vacation_collaborator_invites (
+        owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata
+      )
+      values (
+        ${ownerCustomerId}, ${normalizedTripId}, ${plan.code}, ${plan.scope},
+        ${requestedFor || null}, ${inviteStatus}, ${hashToken(token, env)}, ${inviteMetadata}
+      )
+      returning *
+    `;
   return { invite: rows[0], token };
 }
 
@@ -243,3 +316,4 @@ export async function attachSessionCollaboratorInvitesToTrip(db, { ownerCustomer
   }
   return rows;
 }
+

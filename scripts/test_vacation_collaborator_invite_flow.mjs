@@ -48,10 +48,20 @@ assert.match(live, /turnActionResults/);
 assert.doesNotMatch(live, /tripFacts\.inviteResult/);
 assert.match(turnActions, /results\.invite = inviteRow\(true/);
 
+const shellTripId = 'trip-shell-workspace';
 const inviteCalls = [];
 const inviteDb = async (strings, ...values) => {
   const sql = strings.join(' ');
   inviteCalls.push({ sql, values });
+  if (/from onboarding_sessions/i.test(sql) && /where id =/i.test(sql)) {
+    return [{ id: 'session-1', trip_id: null, customer_id: 'owner-1', order_id: 'order-1' }];
+  }
+  if (/insert into trips/i.test(sql)) return [{ id: shellTripId }];
+  if (/update onboarding_sessions/i.test(sql) && /set trip_id =/i.test(sql)) return [{ id: 'session-1' }];
+  if (/update entitlements/i.test(sql) && /set trip_id =/i.test(sql)) return [{ id: 'ent-1' }];
+  if (/from entitlements e/i.test(sql)) {
+    return [{ id: 'ent-1', customer_id: 'owner-1', trip_id: null, plan: 'single', status: 'active', metadata: { product: 'timesyncher_vacation_single' } }];
+  }
   if (/insert into vacation_collaborator_invites/i.test(sql)) {
     return [{
       id: 'invite-pre-trip',
@@ -65,7 +75,7 @@ const inviteDb = async (strings, ...values) => {
     return [{
       id: 'invite-pre-trip',
       owner_customer_id: 'owner-1',
-      trip_id: null,
+      trip_id: shellTripId,
       requested_for: 'Alex',
       owner_display_name: 'Owner',
       owner_email: 'owner@example.com',
@@ -90,8 +100,8 @@ const sessionScoped = await runCollaboratorInviteAction(inviteDb, {
   env: inviteEnv,
 });
 assert.equal(sessionScoped.ok, true);
-assert.equal(sessionScoped.tripId, null);
-assert.ok(inviteCalls.some((call) => /insert into vacation_collaborator_invites/i.test(call.sql) && call.values[1] == null));
+assert.equal(sessionScoped.tripId, shellTripId);
+assert.ok(inviteCalls.some((call) => /insert into vacation_collaborator_invites/i.test(call.sql) && call.values[1] === shellTripId));
 
 await assert.rejects(
   () => createCollaboratorInvite(inviteDb, { ownerCustomerId: 'owner-1', tripId: '', metadata: {}, env: inviteEnv }),

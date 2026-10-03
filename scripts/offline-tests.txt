@@ -89,6 +89,7 @@ scripts/test_place_search_classifier_category.mjs
 scripts/test_intake_hyatt_staging_classifier_e2e.mjs
 scripts/test_eula_render_markdown.mjs
 scripts/test_eula_accept_onboarding.mjs
+scripts/test_collaborator_welcome_a1_a2.mjs
 scripts/test_vacation_collaborator_accept_e2e.mjs
 scripts/test_collaborator_no_commerce_offers.mjs
 scripts/test_eula_collaborator_name.mjs

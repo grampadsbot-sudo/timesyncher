@@ -18,6 +18,7 @@ const planEnv = {
 const ownerPlan = replyPlanFactsFromEntitlementRow({
   plan: 'single',
   status: 'active',
+  trip_id: '5ce5eb7d-10f9-4022-ae4b-85620a616116',
   metadata: { product: 'timesyncher_vacation_single' },
 }, planEnv, '5ce5eb7d-10f9-4022-ae4b-85620a616116');
 
