@@ -26,6 +26,7 @@ scripts/test_place_search_kihei_taco_osm_relevance.mjs
 scripts/test_place_search_kihei_caffe_title.mjs
 scripts/test_place_search_hertz_car_category.mjs
 scripts/test_hertz_brave_car_persist_shared_e2e.mjs
+scripts/test_market_save_reply_cites_place.mjs
 scripts/test_trip_intake_extraction_category_schema.mjs
 scripts/test_first_intake_lodging_before_reply.mjs
 scripts/test_first_intake_lodging_ask.mjs
@@ -33,7 +34,6 @@ scripts/test_turn_classifier_target_kind_persist.mjs
 scripts/test_turn_classifier_category_live_path.mjs
 scripts/test_vacation_app_interim_place_search.mjs
 scripts/test_vacation_app_client_errors.mjs
-scripts/test_vacation_app_turn_http_after_save.mjs
 scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs

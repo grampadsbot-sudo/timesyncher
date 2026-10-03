@@ -31,6 +31,7 @@ function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
     tripReplyGate: tripOwnedPlaceAllowRows({
       destination: String(ctx.destination || '').trim(),
       lodging: String(ctx.lodging || '').trim(),
+      tripResolvedArea: String(ctx.searchArea || '').trim(),
       things,
     }),
   };
