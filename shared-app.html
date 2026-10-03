@@ -73,6 +73,17 @@
         max-width: 22px !important;
         max-height: 22px !important;
         object-fit: contain !important;
+        object-position: center center !important;
+        display: block !important;
+        margin: 0 auto !important;
+      }
+      span[aria-hidden="true"] {
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      span[aria-hidden="true"] > img[alt=""] {
+        object-fit: contain !important;
+        object-position: center center !important;
       }
       /* SITE: day timeline photo speech-bubble pointer must not clip */
       [data-ts-day-timeline="1"],

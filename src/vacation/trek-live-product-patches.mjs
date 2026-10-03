@@ -43,6 +43,18 @@ const MAP_SETTINGS_DEFAULTS_PATCH = 'default_lat:null,default_lng:null,default_z
 const MAP_SETTINGS_FALLBACK_A = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.3522),me(e.default_zoom||10)';
 const MAP_SETTINGS_FALLBACK_B = 'ee(e.default_lat||48.8566),pe(e.default_lng||2.3522),me(e.default_zoom||10);';
 
+const THING_LOGO_CHIP_NEEDLE = 'children:[n.jsx("span",{children:ua}),zt&&n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"}})]})';
+const THING_LOGO_CHIP_PATCH = 'children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{width:"100%",height:"100%",maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block",padding:3,boxSizing:"border-box"}})]:[n.jsx("span",{style:{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})';
+
+export function patchThingLogoChipAlignment(source = '') {
+  let js = String(source || '');
+  if (!js.includes(THING_LOGO_CHIP_NEEDLE)) {
+    if (js.includes(THING_LOGO_CHIP_PATCH)) return js;
+    throw new Error('trek bundle missing thing logo chip needle for centering patch');
+  }
+  return js.replace(THING_LOGO_CHIP_NEEDLE, THING_LOGO_CHIP_PATCH);
+}
+
 export function patchTripMapInitialView(source = '') {
   let js = String(source || '');
   if (!js.includes(TRIP_MAP_INJECT_NEEDLE) && !js.includes('tsTripMapInitialView=')) {
@@ -90,6 +102,7 @@ export function applyLiveProductPatches(patched = '') {
   else if (js.includes(LIST_LOGO_PATCH_NEEDLE)) js = js.replace(LIST_LOGO_PATCH_NEEDLE, LIST_LOGO_PATCH);
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
+  js = patchThingLogoChipAlignment(js);
   return patchTripMapInitialView(js);
 }
 
