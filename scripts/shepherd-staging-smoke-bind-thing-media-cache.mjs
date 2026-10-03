@@ -95,6 +95,10 @@ export async function runBindThingMediaCacheCheck({ BASE, fetchImpl = fetch, env
       }),
     };
   } finally {
-    await deleteSmokeBindThingMediaSeed(seed, env).catch(() => {});
+    try {
+      await deleteSmokeBindThingMediaSeed(seed, env);
+    } catch (error) {
+      console.error(`bind thing media seed cleanup failed: ${error?.message || error}`);
+    }
   }
 }

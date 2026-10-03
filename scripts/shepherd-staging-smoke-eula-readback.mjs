@@ -2,11 +2,6 @@ import { receiptKey, validateReceiptForActivation, sessionKey } from '../src/onb
 
 let blobListCallCount = 0;
 
-/** Harness-only counter: EULA readback must never invoke Blob list(). */
-export function recordHarnessBlobListCall() {
-  blobListCallCount += 1;
-}
-
 export function resetHarnessBlobListCallCount() {
   blobListCallCount = 0;
 }
