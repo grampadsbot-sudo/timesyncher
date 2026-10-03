@@ -16,7 +16,7 @@ export function prepareSharedTripForLiveApp(shared = {}) {
   return applyProductKeepsakeOverrides(shared);
 }
 
-export function sharedLiveTabRows(shared = {}, tabKeyword = '') {
+function sharedLiveTabRows(shared = {}, tabKeyword = '') {
   const prepared = prepareSharedTripForLiveApp(shared);
   const tab = text(tabKeyword).toLowerCase();
   const rows = [];
