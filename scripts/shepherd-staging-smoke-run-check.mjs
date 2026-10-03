@@ -84,6 +84,17 @@ export function createSmokeRunner(ctx) {
     }
   }
 
+  function assignCheckStatus(name, status, failDetail) {
+    out.checks[name] = status;
+    if (status === 'FAIL' && failDetail) {
+      out.checkFailures[name] = failDetail;
+    }
+    if (status === 'INFRA_BLOCKED') {
+      out.infraBlockedChecks = out.infraBlockedChecks || [];
+      if (!out.infraBlockedChecks.includes(name)) out.infraBlockedChecks.push(name);
+    }
+  }
+
   function recordStageTiming(name, record) {
     out.stageTimings[name] = record;
   }
@@ -188,6 +199,9 @@ export function createSmokeRunner(ctx) {
         out.harnessErrors[name] = { message: result.harnessMessage || 'harness error' };
         assignCheck(name, false, { reason: 'harness_error', stage: tools.getStage(), message: result.harnessMessage });
         pass = false;
+      } else if (result?.checkStatus === 'INFRA_BLOCKED') {
+        assignCheckStatus(name, 'INFRA_BLOCKED', result.infraDetail || null);
+        pass = false;
       } else {
         pass = Boolean(result?.pass);
         assignCheck(name, pass);
@@ -252,6 +266,13 @@ export function createSmokeRunner(ctx) {
     const goFails = SMOKE_FAIL_CLOSED_GO.filter((name) => out.checks[name] === 'FAIL');
     out.goGate = { pass: goFails.length === 0, checks: SMOKE_FAIL_CLOSED_GO, fails: goFails };
     const failed = Object.values(out.checks).some((v) => v === 'FAIL');
+    const infraBlocked = out.infraBlockedChecks || [];
+    if (infraBlocked.length) {
+      out.infraBlockedSummary = infraBlocked.map((name) => ({
+        check: name,
+        detail: out[`check${name}`]?.infraReason || out[`check${name.toLowerCase()}`]?.infraReason || null,
+      }));
+    }
     await writeOutAndExit(failed ? 1 : 0);
   }
 
