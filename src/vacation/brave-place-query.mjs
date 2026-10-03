@@ -6,7 +6,7 @@ function finite(value) {
 }
 
 export function braveEndpoint(center) {
-  return finite(center?.lat) !== null && finite(center?.lng) !== null ? 'local' : 'web';
+  return finite(center?.lat) !== null && finite(center?.lng) !== null ? 'local' : null;
 }
 
 export function braveQueryString(item, resolvedArea, center, compactLocality = '') {
@@ -14,7 +14,7 @@ export function braveQueryString(item, resolvedArea, center, compactLocality = '
   const area = String(resolvedArea || '').trim();
   const locality = String(compactLocality || '').trim();
   const named = String(item?.q || '').trim();
-  const local = braveEndpoint(center) === 'local';
+  const local = Boolean(braveEndpoint(center));
   if (item?.intakeLodgingLookup === true && named) {
     return named.replace(/\s+/g, ' ').trim().slice(0, 500);
   }

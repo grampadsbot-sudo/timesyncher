@@ -103,8 +103,8 @@ try {
 } catch (error) {
   everyProviderError = error;
 }
-assert.equal(everyProviderError?.code, 'all_providers_failed');
-assert.match(String(everyProviderError?.message || ''), /Place search failed/i);
+assert.equal(everyProviderError?.code, 'geocode_failed');
+assert.match(String(everyProviderError?.message || ''), /Place search geocode failed/i);
 
 const braveCallsOnOsmError = [];
 await searchPlaces({

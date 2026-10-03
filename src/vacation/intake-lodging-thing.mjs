@@ -19,11 +19,10 @@ import {
 } from './intake-lodging-lookup.mjs';
 import { buildIntakeLodgingOutcome } from './intake-lodging-turn-outcome.mjs';
 import {
-  nominatimForwardSearch,
-  nominatimReverseGeocode,
+  nominatimForwardWithEvidence,
+  nominatimReverseWithEvidence,
   nominatimLodgingPickMissReason,
   pickNominatimLodgingCandidate,
-  trimNominatimEvidenceRow,
 } from './intake-lodging-nominatim.mjs';
 import { intakeLodgingWanted } from './trip-intake-classify.mjs';
 
@@ -76,72 +75,6 @@ function usableBraveAddress(picked = {}) {
 
 function braveLodgingCategoryEstablished(places = []) {
   return (Array.isArray(places) ? places : []).some((place) => hasCoordinates(place) && isLodgingProviderPlace(place));
-}
-
-function pushNominatimProvider(search, {
-  status,
-  reason = '',
-  resultCount = 0,
-  query = '',
-  rawResults = [],
-}) {
-  const providers = Array.isArray(search?.providers) ? [...search.providers] : [];
-  providers.push({
-    provider: 'nominatim',
-    status,
-    ...(reason ? { reason } : {}),
-    resultCount,
-    ...(query ? { query } : {}),
-    rawResults: rawResults.slice(0, 5),
-  });
-  search.providers = providers;
-}
-
-async function nominatimForwardWithEvidence(fetchImpl, lookupQuery, search) {
-  const query = String(lookupQuery || '').trim();
-  try {
-    const hits = await nominatimForwardSearch(fetchImpl, query, { limit: 5 });
-    pushNominatimProvider(search, {
-      status: hits.length ? 'ok' : 'empty',
-      reason: hits.length ? '' : 'no_results',
-      resultCount: hits.length,
-      query,
-      rawResults: hits.map((row) => trimNominatimEvidenceRow(row)),
-    });
-    return hits;
-  } catch (error) {
-    pushNominatimProvider(search, {
-      status: 'error',
-      reason: String(error?.message || error || 'nominatim forward failed').trim(),
-      resultCount: 0,
-      query,
-      rawResults: [],
-    });
-    return [];
-  }
-}
-
-async function nominatimReverseWithEvidence(fetchImpl, lat, lng, search, lookupQuery) {
-  try {
-    const reversed = await nominatimReverseGeocode(fetchImpl, lat, lng);
-    pushNominatimProvider(search, {
-      status: reversed?.address ? 'ok' : 'empty',
-      reason: reversed?.address ? '' : 'no_address',
-      resultCount: reversed?.address ? 1 : 0,
-      query: `reverse:${lat},${lng}`,
-      rawResults: reversed?.hit ? [trimNominatimEvidenceRow(reversed.hit)] : [],
-    });
-    return reversed;
-  } catch (error) {
-    pushNominatimProvider(search, {
-      status: 'error',
-      reason: String(error?.message || error || 'nominatim reverse failed').trim(),
-      resultCount: 0,
-      query: `reverse:${lat},${lng}`,
-      rawResults: [],
-    });
-    return null;
-  }
 }
 
 async function resolveIntakeLodgingThing({

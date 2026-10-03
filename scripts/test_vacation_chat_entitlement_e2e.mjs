@@ -9,6 +9,7 @@ import handler from '../api/[...route].mjs';
 import { useOnboardingLookup } from '../routes/eula.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
+import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 import { couponHash } from '../src/vacation/coupons.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { testPlanEnv } from './fixtures/reply-plan-test-fixtures.mjs';
@@ -64,6 +65,7 @@ async function runPlanFlow(plan) {
   useVacationDatabase(db);
   useVacationAppDatabase(db);
   useOnboardingLookup(db);
+  installNoopNominatimStore();
 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = providerFetchMock(state, process.env, originalFetch);
@@ -203,6 +205,7 @@ async function runPlanFlow(plan) {
     useVacationDatabase(null);
     useVacationAppDatabase(null);
     useOnboardingLookup(null);
+    resetNominatimStore();
     await new Promise((resolve) => server.close(resolve));
     await rm(storeDir, { recursive: true, force: true });
     for (const [key, value] of Object.entries(saved)) {

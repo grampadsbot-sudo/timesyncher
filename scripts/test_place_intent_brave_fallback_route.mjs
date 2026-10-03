@@ -9,6 +9,7 @@ import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-
 import { ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
+import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 import {
   BRAVE_DUMMY,
   BRAVE_HOST,
@@ -196,6 +197,7 @@ async function runPlaceIntentRouteTests() {
 
   useVacationDatabase(db);
   useVacationAppDatabase(db);
+  installNoopNominatimStore();
 
   const store = createPersistentStoreFromEnv(process.env);
   await ensureVacationEulaSession(state.session, { env: process.env });
@@ -225,7 +227,7 @@ async function runPlaceIntentRouteTests() {
     if (href.includes(OVERPASS_HOST)) {
       return { ok: true, json: async () => ({ elements: [] }) };
     }
-    if (href.includes(BRAVE_HOST) && (href.includes('local') || href.includes('/web/search'))) {
+    if (href.includes(BRAVE_HOST) && href.includes('local/place_search')) {
       assert.equal(options.headers['X-Subscription-Token'], BRAVE_DUMMY);
       if (state.braveMode === 'fail') {
         return { ok: false, status: 503, json: async () => ({}), text: async () => 'fail' };
@@ -354,47 +356,41 @@ async function runPlaceIntentRouteTests() {
     state.nominatimMode = 'fail';
     state.braveMode = 'ok';
     const findNearHotel = await postTurn('Find family-friendly taco spots near our hotel in Kaanapali');
-    assert.equal(findNearHotel.status, 201);
-    assert.equal(findNearHotel.body.ok, true);
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
+    assert.equal(findNearHotel.status, 502);
+    assert.equal(findNearHotel.body.ok, false);
+    assert.match(String(findNearHotel.body.error || ''), /geocode|place_search_failed/i);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
     const findPayload = state.turnPayloads.at(-1);
-    assert.equal(findPayload.placeSearch?.status, 'no_results');
+    assert.equal(findPayload.placeSearch?.status, 'failed');
+    assert.equal(findPayload.placeSearch?.reason, 'geocode_failed');
     const findBrave = findPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(findBrave.endpoint, 'web');
-    assert.match(findBrave.query, /tacos near Kaanapali, Maui/);
-    assert.equal(findBrave.status, 'empty');
+    assert.equal(findBrave, undefined);
     const nominatimRow = findPayload.placeSearch.providers.find((row) => row.provider === 'nominatim');
-    assert.ok(nominatimRow && (nominatimRow.status === 'error' || nominatimRow.status === 'skipped' || nominatimRow.status === 'empty'));
+    assert.equal(nominatimRow?.status, 'error');
 
     state.seededLodging = false;
     state.nominatimMode = 'empty';
     state.braveMode = 'ok';
     const recommend = await postTurn('recommend taco spots near Kaanapali Maui');
-    assert.equal(recommend.status, 201);
-    assert.equal(recommend.body.ok, true);
-    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST) && url.includes('/web/search')), true);
+    assert.equal(recommend.status, 502);
+    assert.equal(recommend.body.ok, false);
+    assert.equal(state.fetchCalls.some((url) => url.includes(BRAVE_HOST)), false);
     const recommendPayload = state.turnPayloads.at(-1);
-    assert.equal(recommendPayload.placeSearch?.status, 'no_results');
-    assert.equal(recommendPayload.placeSearchReplyFacts?.placeSearch?.outcome, 'no_results');
-    assert.match(recommendPayload.placeSearchReplyFacts?.placeSearch?.detail || '', /nothing found nearby/i);
-    const recommendBrave = recommendPayload.placeSearch.providers.find((row) => row.provider === 'brave');
-    assert.equal(recommendBrave.endpoint, 'web');
-    assert.match(recommendBrave.query, /tacos near Kaanapali Maui/);
-    assert.equal(recommendBrave.status, 'empty');
+    assert.equal(recommendPayload.placeSearch?.status, 'failed');
+    assert.equal(recommendPayload.placeSearch?.reason, 'geocode_failed');
+    assert.equal(recommendPayload.placeSearchReplyFacts, undefined);
 
     state.seededLodging = false;
     state.nominatimMode = 'empty';
     state.braveMode = 'empty';
     const allFail = await postTurn('recommend taco spots near Kaanapali Maui');
-    assert.equal(allFail.status, 201);
-    assert.equal(allFail.body.ok, true);
+    assert.equal(allFail.status, 502);
+    assert.equal(allFail.body.ok, false);
     assert.doesNotMatch(String(allFail.body.reply || ''), /nominatim|prior_db|osm|brave|Place search failed/i);
     const failPayload = state.turnPayloads.at(-1);
-    assert.equal(failPayload.placeSearch?.status, 'no_results');
-    assert.equal(failPayload.placeSearchReplyFacts?.placeSearch?.outcome, 'no_results');
-    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'brave' && (row.status === 'empty' || row.status === 'error')));
-    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'osm'));
-    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'prior_db'));
+    assert.equal(failPayload.placeSearch?.status, 'failed');
+    assert.equal(failPayload.placeSearch?.reason, 'geocode_failed');
+    assert.ok(failPayload.placeSearch.providers.some((row) => row.provider === 'nominatim'));
 
     state.classifierMode = 'ok';
     state.braveMode = 'ok';
@@ -439,6 +435,7 @@ async function runPlaceIntentRouteTests() {
     globalThis.fetch = originalFetch;
     useVacationDatabase(null);
     useVacationAppDatabase(null);
+    resetNominatimStore();
     for (const [key, value] of Object.entries(saved)) {
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;
@@ -455,9 +452,9 @@ console.log(JSON.stringify({
   checked: 'place-intent-brave-fallback-route',
   tests: [
     'best_tacos_near_our_hotel_brave_lodging_anchor',
-    'find_near_hotel_nominatim_fail_brave_web_not_places',
-    'recommend_near_kaanapali_no_coords_brave_web_not_places',
-    'all_providers_empty_no_results_with_provider_telemetry',
+    'find_near_hotel_nominatim_fail_geocode_failed_no_brave',
+    'recommend_near_kaanapali_no_coords_geocode_failed',
+    'geocode_failed_loud_no_soft_no_results',
     'events_question_uses_tavily_not_brave',
     'maui_landing_no_in_turn_search',
     'classifier_failure_loud_fail_no_provider_fetch',
