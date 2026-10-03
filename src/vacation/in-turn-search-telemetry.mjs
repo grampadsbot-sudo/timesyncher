@@ -1,4 +1,5 @@
 import { normalizePlaceSearchCategory, placeSearchTurnClassificationError } from './place-search-category-keys.mjs';
+import { placeSearchTurnKindError } from './place-search-target-kind.mjs';
 
 function resultRowsFromThings(things = []) {
   return (Array.isArray(things) ? things : []).flatMap((thing) => {
@@ -65,9 +66,26 @@ export function stampTurnClassifier(payload, customerLive, classification) {
       ? { targetKindRaw: String(classification.targetKindRaw).trim() }
       : {}),
   };
+  if (!String(turnKind || '').trim()) {
+    turnClassifier.error = 'turn_classifier_failed';
+    turnClassifier.reason = String(
+      classification?.error
+      || placeSearchTurnKindError(classification)
+      || 'trip intake classification turnKind missing',
+    ).trim();
+  }
   payload.turnClassifier = turnClassifier;
   customerLive.turnClassifier = turnClassifier;
   return turnClassifier;
+}
+
+function turnClassifierStampError(classification = {}, stamped = null) {
+  if (classification?.ok !== true) {
+    return String(classification?.error || 'trip intake classification failed').trim();
+  }
+  return placeSearchTurnClassificationError(classification)
+    || placeSearchTurnKindError(classification)
+    || (!String(stamped?.turnKind || '').trim() ? 'trip intake classification turnKind missing' : '');
 }
 
 export async function failTurnClassifierCategoryGate({
@@ -77,7 +95,8 @@ export async function failTurnClassifierCategoryGate({
   customerLive,
   classification,
 } = {}) {
-  const error = placeSearchTurnClassificationError(classification);
+  const stamped = payload?.turnClassifier || customerLive?.turnClassifier || null;
+  const error = turnClassifierStampError(classification, stamped);
   if (!error) return null;
   const failedTelemetry = turnClassifierFailedTelemetry(error, classification);
   payload.placeSearch = failedTelemetry;
