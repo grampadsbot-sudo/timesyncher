@@ -21,7 +21,8 @@ for (const file of harnessFiles) {
 
 const mainText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke.mjs'), 'utf8');
 const tailText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-tail.mjs'), 'utf8');
-const combined = `${mainText}\n${tailText}`;
+const lateText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-late-checks.mjs'), 'utf8');
+const combined = `${mainText}\n${lateText}\n${tailText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
 const registered = new Set();
