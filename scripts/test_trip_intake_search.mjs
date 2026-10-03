@@ -190,6 +190,9 @@ const db = async (strings, ...values) => {
   if (/select\s+id,\s*title,\s*location/i.test(sql) && /from trip_things/i.test(sql)) {
     return [];
   }
+  if (/select count\(\*\)::int as n from trip_things/i.test(sql)) {
+    return [{ n: inserts.length }];
+  }
   if (/insert into trip_things/i.test(sql)) {
     inserts.push({ sql, values });
     return [{ id: `trip-thing-${++tripThingInsertSeq}` }];
