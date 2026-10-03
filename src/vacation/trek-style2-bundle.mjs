@@ -681,6 +681,15 @@ export function assertPatchedStyleTwo(source = '') {
     if (js.includes('Gn=tsPad(Fs.filter') || js.includes('ki=tsPad(Cc.filter')) {
       throw new Error('Hotels/Cars live tabs must not filter catalog rows in the bundle.');
     }
+    if (js.includes('vi(kn,"hotels")')) {
+      throw new Error('Served shared Hotels tab must mount liveTabLists.hotels, not catalog kn rows.');
+    }
+    if (!js.includes('tsSharedLiveTabListMount("hotels")') || !js.includes('tsSharedLiveTabListMount("cars")')) {
+      throw new Error('Served shared Hotels and Cars tabs must call tsSharedLiveTabListMount for each tab.');
+    }
+    if (js.includes('GBrain') || js.includes('Coming soon')) {
+      throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
+    }
   } else if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
     throw new Error('Live Hotels/Cars tabs must filter trip catalog rows in the vacation bundle.');
   }
