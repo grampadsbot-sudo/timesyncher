@@ -1,6 +1,21 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
-import { applyLiveProductPatches, patchThingDetailRatings, patchThingLogoChipAlignment, LIST_LOGO_PATCH, stripHotelBrandNameGuessing } from './trek-live-product-patches.mjs';
+import {
+  applyLiveProductPatches,
+  applySharedLiveTabBundlePatches,
+  GN_EMPTY_PATCH,
+  GN_RENDER_PATCH,
+  KI_EMPTY_PATCH,
+  KI_RENDER_PATCH,
+  patchThingDetailRatings,
+  patchThingLogoChipAlignment,
+  LIST_LOGO_PATCH,
+  QN_EMPTY_PATCH,
+  QN_RENDER_PATCH,
+  REST_TYPE_CHIPS_NEEDLE,
+  REST_TYPE_CHIPS_PATCH,
+  stripHotelBrandNameGuessing,
+} from './trek-live-product-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -232,23 +247,10 @@ const CO_PATCH = 'Co=G=>ha(G).longDetails||(tsPf.find(row=>row.match.test(String
 const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":';
 
-const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
-const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
-
-const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
-const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
-
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
-
-const QN_RENDER_NEEDLE = 'Qn.map(G=>Oe(G))';
-const QN_RENDER_PATCH = 'tsPad(Qn).map(G=>Oe(G))';
-const GN_RENDER_NEEDLE = 'Gn.map(G=>Oe(G))';
-const GN_RENDER_PATCH = 'tsPad(Gn).map(G=>Oe(G))';
-const KI_RENDER_NEEDLE = 'ki.map(G=>Oe(G))';
-const KI_RENDER_PATCH = 'tsPad(ki).map(G=>Oe(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
@@ -256,12 +258,6 @@ const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
 
-const QN_EMPTY_NEEDLE = 'tsPad(Qn).map(G=>Oe(G)),Qn.length===0';
-const QN_EMPTY_PATCH = 'tsPad(Qn).map(G=>Oe(G)),tsPad(Qn).length===0';
-const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
-const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
-const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
-const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
 const NOTICES_FETCH_CALLER = 'async fetch(){if(!(t().fetching||t().loaded)){e({fetching:!0});try{const i=await Rt.get("/system-notices/active");e({notices:i.data,loaded:!0,fetching:!1})}catch(i){console.warn("[systemNotices] failed to fetch:",i),e({loaded:!0,fetching:!1})}}},';
 const APP_CONFIG_CALLER = 'getAppConfig:()=>Rt.get("/auth/app-config").then(e=>e.data),';
 const NOTICES_EMPTY_STUB = 'async fetch(){e({notices:[],loaded:!0})}';
@@ -405,39 +401,16 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(MN_CATEGORY_NEEDLE)) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
-  if (patched.includes(LIVE_TAB_NEEDLE)) {
-    patched = patched.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
-  }
-  if (patched.includes(REST_TYPE_CHIPS_NEEDLE)) {
-    patched = patched.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
-  }
+  patched = applySharedLiveTabBundlePatches(patched, { served });
   patched = applyLiveProductPatches(patched);
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
-  }
-  if (patched.includes(QN_RENDER_NEEDLE)) {
-    patched = patched.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
-  }
-  if (patched.includes(GN_RENDER_NEEDLE)) {
-    patched = patched.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
-  }
-  if (patched.includes(KI_RENDER_NEEDLE)) {
-    patched = patched.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
   }
   if (patched.includes(MO_BUDGET_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
   }
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
-  }
-  if (patched.includes(QN_EMPTY_NEEDLE)) {
-    patched = patched.replace(QN_EMPTY_NEEDLE, QN_EMPTY_PATCH);
-  }
-  if (patched.includes(GN_EMPTY_NEEDLE)) {
-    patched = patched.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
-  }
-  if (patched.includes(KI_EMPTY_NEEDLE)) {
-    patched = patched.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
   }
   if (patched.includes(PAGE_PAD_NEEDLE)) {
     patched = patched.replace(PAGE_PAD_NEEDLE, PAGE_PAD_PATCH);
@@ -699,6 +672,17 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
+  }
+  const servedSharedHotelsCars = js.includes('tsSharedLiveTabListMount=G=>');
+  if (servedSharedHotelsCars) {
+    if (!js.includes('tsSharedLiveTabListMount=G=>')) {
+      throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
+    }
+    if (js.includes('Gn=tsPad(Fs.filter') || js.includes('ki=tsPad(Cc.filter')) {
+      throw new Error('Hotels/Cars live tabs must not filter catalog rows in the bundle.');
+    }
+  } else if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
+    throw new Error('Live Hotels/Cars tabs must filter trip catalog rows in the vacation bundle.');
   }
   if (js.includes('__tsLiveFill:1') || js.includes('lat:36.1147') || js.includes('address:"Nevada"') || js.includes('logoUrl:tsLogo(name)')) {
     throw new Error('Live tabs must not pad Las Vegas names or coordinates.');

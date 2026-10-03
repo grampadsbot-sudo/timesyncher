@@ -150,9 +150,9 @@ function categoryFor(thing) {
   ).trim();
   if (!raw) return { category_name: '', category_icon: '', category: '' };
   const key = raw.toLowerCase();
-  if (key === 'hotel') {
+  if (key === 'hotel' || key === 'lodging' || key === 'accommodation') {
     const named = sourceCategoryName(thing);
-    const category_name = named && named.toLowerCase() !== 'hotel' ? named : 'Hotel';
+    const category_name = named && !/^(hotel|lodging|accommodation)$/i.test(named) ? named : 'Hotel';
     return { category_name, category_icon: '🏨', category: 'hotel' };
   }
   const known = {

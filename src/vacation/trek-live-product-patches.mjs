@@ -200,6 +200,59 @@ export function applyLiveProductPatches(patched = '') {
   return patchTripMapInitialView(js);
 }
 
+const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
+const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
+const LIVE_TAB_MOUNT_HELPER_NEEDLE = 'tsPad=(rows)=>rows,tsListThings=';
+const LIVE_TAB_MOUNT_HELPER_PATCH = 'tsPad=(rows)=>rows,tsSharedLiveTabListMount=G=>{const lists=window.__TS_SHARED_LIVE_TAB_LISTS__;if(!lists||!Object.prototype.hasOwnProperty.call(lists,G))throw new Error("shared_live_tab_lists_missing:"+G);const h=lists[G];if(!Array.isArray(h))throw new Error("shared_live_tab_lists_invalid:"+G);if(!h.length)return null;return n.jsx("div",{"data-shared-live-tab-mount":G,dangerouslySetInnerHTML:{__html:`<ul data-shared-live-tab="${G}">${h.join("")}</ul>`},style:{display:"contents"}})},tsListThings=';
+const LIVE_TAB_DELEGATE_HOTELS_NEEDLE = 'Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),';
+const LIVE_TAB_DELEGATE_HOTELS_PATCH = 'Gn=[],';
+const LIVE_TAB_DELEGATE_CARS_NEEDLE = 'ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))),';
+const LIVE_TAB_DELEGATE_CARS_PATCH = 'ki=[],';
+const GN_RENDER_DELEGATE_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
+const GN_RENDER_DELEGATE_PATCH = 'tsSharedLiveTabListMount("hotels"),false&&tsPad(Gn).length===0';
+const KI_RENDER_DELEGATE_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
+const KI_RENDER_DELEGATE_PATCH = 'tsSharedLiveTabListMount("cars")';
+export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
+export const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
+export const QN_RENDER_PATCH = 'tsPad(Qn).map(G=>Oe(G))';
+const QN_RENDER_NEEDLE = 'Qn.map(G=>Oe(G))';
+export const GN_RENDER_PATCH = 'tsPad(Gn).map(G=>Oe(G))';
+const GN_RENDER_NEEDLE = 'Gn.map(G=>Oe(G))';
+export const KI_RENDER_PATCH = 'tsPad(ki).map(G=>Oe(G))';
+const KI_RENDER_NEEDLE = 'ki.map(G=>Oe(G))';
+const QN_EMPTY_NEEDLE = 'tsPad(Qn).map(G=>Oe(G)),Qn.length===0';
+export const QN_EMPTY_PATCH = 'tsPad(Qn).map(G=>Oe(G)),tsPad(Qn).length===0';
+const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
+export const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
+const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
+export const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
+
+export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
+  const served = options.served === true;
+  let js = String(patched || '');
+  if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
+  if (served) {
+    if (js.includes(LIVE_TAB_MOUNT_HELPER_NEEDLE)) js = js.replace(LIVE_TAB_MOUNT_HELPER_NEEDLE, LIVE_TAB_MOUNT_HELPER_PATCH);
+    if (js.includes(LIVE_TAB_DELEGATE_HOTELS_NEEDLE)) js = js.replace(LIVE_TAB_DELEGATE_HOTELS_NEEDLE, LIVE_TAB_DELEGATE_HOTELS_PATCH);
+    if (js.includes(LIVE_TAB_DELEGATE_CARS_NEEDLE)) js = js.replace(LIVE_TAB_DELEGATE_CARS_NEEDLE, LIVE_TAB_DELEGATE_CARS_PATCH);
+  }
+  if (js.includes(REST_TYPE_CHIPS_NEEDLE)) js = js.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
+  if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
+  if (served) {
+    if (js.includes(GN_RENDER_DELEGATE_NEEDLE)) js = js.replace(GN_RENDER_DELEGATE_NEEDLE, GN_RENDER_DELEGATE_PATCH);
+    else if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
+    if (js.includes(KI_RENDER_DELEGATE_NEEDLE)) js = js.replace(KI_RENDER_DELEGATE_NEEDLE, KI_RENDER_DELEGATE_PATCH);
+    else if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
+  } else {
+    if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
+    if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
+  }
+  if (js.includes(QN_EMPTY_NEEDLE)) js = js.replace(QN_EMPTY_NEEDLE, QN_EMPTY_PATCH);
+  if (js.includes(GN_EMPTY_NEEDLE)) js = js.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
+  if (js.includes(KI_EMPTY_NEEDLE)) js = js.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
+  return js;
+}
+
 export function patchThingDetailRatings(source = '') {
   let js = String(source || '');
   const ratingEndMarker = 'placeholder:"Tripadvisor/OpenTable/Booking",style:De})]})]})';
