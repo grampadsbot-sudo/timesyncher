@@ -7,7 +7,7 @@ export const SMOKE_CHECK_ORDER = [
   'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'INV-CLAIM',
 ];
 
-export const WHOLE_RUN_CAP_MS = 25 * 60 * 1000;
+const WHOLE_RUN_CAP_MS = 25 * 60 * 1000;
 
 /**
  * @param {{ out: Record<string, unknown>, sha7: string, artifactDir?: string, runStartedAt?: number, wholeRunCapMs?: number }} ctx
@@ -28,6 +28,14 @@ export function createSmokeRunner(ctx) {
 
   out.stageTimings = out.stageTimings || {};
   out.checkFailures = out.checkFailures || {};
+  out.browserCleanupErrors = out.browserCleanupErrors || [];
+
+  function recordBrowserCleanupError(err, context) {
+    out.browserCleanupErrors.push({
+      context,
+      message: String(err?.message || err),
+    });
+  }
 
   function registerBrowser(browser) {
     if (browser) browsers.add(browser);
@@ -40,13 +48,13 @@ export function createSmokeRunner(ctx) {
         for (const page of pages) {
           try {
             await page.close();
-          } catch {
-            /* ignore */
+          } catch (err) {
+            recordBrowserCleanupError(err, 'page.close');
           }
         }
         await browser.close();
-      } catch {
-        /* ignore */
+      } catch (err) {
+        recordBrowserCleanupError(err, 'browser.close');
       }
     }
     browsers.clear();
