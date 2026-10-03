@@ -48,6 +48,8 @@ async function fetchV1EnvValue(envId, { env = process.env, fetchImpl = fetch } =
   return { key: payload.key, value };
 }
 
+const STAGING_TRAVEL_BASE = 'https://vacation-staging.timesyncher.com/';
+
 export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchImpl = fetch } = {}) {
   for (const [key, envId] of Object.entries(V1_ENV_IDS)) {
     const existing = String(env[key] || '').trim();
@@ -58,6 +60,9 @@ export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchIm
     const row = await fetchV1EnvValue(envId, { env, fetchImpl });
     env[row.key] = row.value;
     if (row.key === 'DATABASE_URL') env.NEON_DATABASE_URL = row.value;
+  }
+  if (!String(env.TIMESYNCHER_TRAVEL_BASE_URL || '').trim()) {
+    env.TIMESYNCHER_TRAVEL_BASE_URL = STAGING_TRAVEL_BASE;
   }
 }
 
