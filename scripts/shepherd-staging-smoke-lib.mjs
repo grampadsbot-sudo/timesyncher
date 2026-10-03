@@ -192,246 +192,6 @@ export function a2WelcomePass(match, { redirectOk, publicUrlOk }) {
     && match.templateMatchCount >= 1;
 }
 
-/**
- * Runs in the browser (Puppeteer page.evaluate). Keep Product DOM hooks centralized here.
- */
-export function evaluateTripMapInPage() {
-  const unresolved = !!document.querySelector('[data-map-center-unresolved]');
-  const container = document.querySelector('.leaflet-container, .mapboxgl-map');
-  const dataCenter = container?.getAttribute('data-center') || container?.getAttribute('data-map-center') || null;
-  const dataBounds = container?.getAttribute('data-bounds') || container?.getAttribute('data-map-bounds') || null;
-
-  function centerFromBounds(bounds) {
-    if (!bounds || typeof bounds !== 'object') return null;
-    if (typeof bounds.getCenter === 'function') {
-      const c = bounds.getCenter();
-      return { lat: c.lat, lng: c.lng };
-    }
-    if (Array.isArray(bounds) && bounds.length >= 2) {
-      const a = bounds[0];
-      const b = bounds[1];
-      if (Array.isArray(a) && Array.isArray(b)) {
-        return { lat: (a[1] + b[1]) / 2, lng: (a[0] + b[0]) / 2 };
-      }
-    }
-    return null;
-  }
-
-  let engine = 'none';
-  let lat = null;
-  let lng = null;
-  let zoom = null;
-  let bounds = null;
-  let centerStatus = 'missing';
-
-  const leafletEl = document.querySelector('.leaflet-container');
-  const leaflet = leafletEl?._leaflet_map;
-  if (leafletEl) {
-    engine = 'leaflet';
-    if (leaflet && typeof leaflet.getCenter === 'function') {
-      const c = leaflet.getCenter();
-      lat = c.lat;
-      lng = c.lng;
-      zoom = leaflet.getZoom?.() ?? null;
-      bounds = leaflet.getBounds?.() || null;
-      centerStatus = 'verified';
-    } else {
-      centerStatus = 'unverified';
-    }
-  }
-
-  const mapboxEl = document.querySelector('.mapboxgl-map');
-  if (mapboxEl && engine === 'none') {
-    const mapbox = mapboxEl.mapbox || mapboxEl._mapbox_map || window.mapboxMap;
-    if (mapbox && typeof mapbox.getCenter === 'function') {
-      engine = 'mapbox';
-      const c = mapbox.getCenter();
-      lat = typeof c.lat === 'function' ? c.lat() : c.lat;
-      lng = typeof c.lng === 'function' ? c.lng() : c.lng;
-      zoom = mapbox.getZoom?.() ?? null;
-      bounds = mapbox.getBounds?.() || null;
-      centerStatus = 'verified';
-    } else {
-      engine = 'mapbox';
-      centerStatus = 'unverified';
-    }
-  }
-
-  if (centerStatus !== 'verified' && dataCenter) {
-    try {
-      const parsed = JSON.parse(dataCenter);
-      if (parsed?.lat != null && parsed?.lng != null) {
-        lat = Number(parsed.lat);
-        lng = Number(parsed.lng);
-        centerStatus = 'data-attribute';
-      }
-    } catch {
-      const parts = dataCenter.split(',').map(Number);
-      if (parts.length >= 2 && parts.every((n) => Number.isFinite(n))) {
-        lat = parts[0];
-        lng = parts[1];
-        centerStatus = 'data-attribute';
-      }
-    }
-  }
-
-  const boundsCenter = centerFromBounds(bounds);
-  if (centerStatus === 'unverified' && boundsCenter) {
-    lat = boundsCenter.lat;
-    lng = boundsCenter.lng;
-    centerStatus = 'bounds-derived';
-  }
-
-  const mounted = Boolean(container) && engine !== 'none';
-  return {
-    engine,
-    mounted,
-    lat,
-    lng,
-    zoom,
-    centerStatus,
-    unresolved,
-    dataCenter,
-    dataBounds,
-  };
-}
-
-export function mapWithinMaui(state, bounds = MAUI_MAP_BOUNDS) {
-  const lat = Number(state?.lat);
-  const lng = Number(state?.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
-  return lat >= bounds.latMin && lat <= bounds.latMax && lng >= bounds.lngMin && lng <= bounds.lngMax;
-}
-
-export function gradeMapBar(mapState, consoleErrors = []) {
-  const signals = (consoleErrors || []).filter((t) => /map_center_unresolved|map_mount_failed/.test(t));
-  const mounted = Boolean(mapState?.mounted);
-  const unresolved = Boolean(mapState?.unresolved);
-  const verified = mapState?.centerStatus === 'verified' || mapState?.centerStatus === 'bounds-derived';
-  const inMaui = verified && mapWithinMaui(mapState);
-  const pass = mounted && !unresolved && signals.length === 0 && inMaui;
-  return {
-    pass,
-    mounted,
-    unresolved,
-    signals,
-    centerStatus: mapState?.centerStatus || 'missing',
-    inMaui,
-  };
-}
-
-/** Product shared /shared/<slug>/ Plan tab: Leaflet instance hook (one-line DOM change point). */
-export function evaluateLeafletProductMapInPage() {
-  const unresolved = !!document.querySelector('[data-map-center-unresolved]');
-  const mapError = !!document.querySelector('[data-ts-trip-map-error]');
-  const leafletEl = document.querySelector('.leaflet-container');
-  const map = leafletEl?._leaflet_map;
-  let lat = null;
-  let lng = null;
-  let zoom = null;
-  let bounds = null;
-  if (map && typeof map.getCenter === 'function') {
-    const c = map.getCenter();
-    lat = c.lat;
-    lng = c.lng;
-    zoom = typeof map.getZoom === 'function' ? map.getZoom() : null;
-    const b = typeof map.getBounds === 'function' ? map.getBounds() : null;
-    if (b && typeof b.getNorth === 'function') {
-      bounds = {
-        north: b.getNorth(),
-        south: b.getSouth(),
-        east: b.getEast(),
-        west: b.getWest(),
-      };
-    }
-  }
-  return {
-    engine: 'leaflet',
-    mounted: Boolean(leafletEl),
-    mapInstance: Boolean(map),
-    lat,
-    lng,
-    zoom,
-    bounds,
-    unresolved,
-    mapError,
-  };
-}
-
-export function gradeLeafletProductMap(mapState, consoleErrors = []) {
-  const signals = (consoleErrors || []).filter((t) => /map_center_unresolved|map_mount_failed|map_/.test(t));
-  const inMaui = mapWithinMaui({ lat: mapState?.lat, lng: mapState?.lng });
-  const pass = Boolean(mapState?.mounted)
-    && Boolean(mapState?.mapInstance)
-    && !mapState?.unresolved
-    && !mapState?.mapError
-    && signals.length === 0
-    && inMaui;
-  return { pass, inMaui, signals, unresolved: mapState?.unresolved, mapError: mapState?.mapError };
-}
-
-/** Evidence that a place-search row is a real coffee shop. */
-function coffeePlaceEvidence(place = {}) {
-  const name = String(place.name || place.title || '').toLowerCase();
-  const cat = String(
-    place.category
-    || place.categoryName
-    || place.category_name
-    || place.metadata?.categoryName
-    || '',
-  ).toLowerCase();
-  const tags = place.tags || place.osmTags || place.source?.tags || place.raw?.tags || {};
-  const amenity = String(tags.amenity || '').toLowerCase();
-  const cuisine = String(tags.cuisine || '').toLowerCase();
-  const evidence = [];
-  if (/\bcafe\b|coffee|espresso|roaster|latte/.test(name)) evidence.push('name');
-  if (/\bcafe\b|coffee/.test(cat)) evidence.push('category');
-  if (amenity === 'cafe') evidence.push('osm:amenity=cafe');
-  if (cuisine.includes('coffee')) evidence.push('osm:cuisine=coffee');
-  return { ok: evidence.length > 0, evidence };
-}
-
-export function gradeCoffeeReplyRows(rows = []) {
-  const graded = rows.map((row) => {
-    const { ok, evidence } = coffeePlaceEvidence(row);
-    return {
-      name: row.name || row.title,
-      ok,
-      evidence,
-      source: row.provider || row.source || null,
-    };
-  });
-  const failures = graded.filter((r) => !r.ok);
-  return { rows: graded, failures, pass: rows.length > 0 && failures.length === 0 };
-}
-
-/** Budget tab must not show dollar amounts absent from API budget lines. */
-export function budgetHardcodedHits(pageText, budgetLines = []) {
-  const allowed = new Set(
-    (budgetLines || [])
-      .map((b) => Number(b.total_price ?? b.amount ?? b.total))
-      .filter((n) => Number.isFinite(n))
-      .flatMap((n) => [n, Math.round(n * 100) / 100]),
-  );
-  const hits = [];
-  const re = /\$\s*([\d,]+(?:\.\d{2})?)/g;
-  let m;
-  const hay = String(pageText || '');
-  while ((m = re.exec(hay)) !== null) {
-    const num = Number(String(m[1]).replace(/,/g, ''));
-    if (!Number.isFinite(num)) continue;
-    if (allowed.size === 0) {
-      if (num === 0) continue;
-      hits.push({ amount: num, raw: m[0], reason: 'no_budget_lines_but_visible_amount' });
-      continue;
-    }
-    if (!allowed.has(num) && !allowed.has(Math.round(num))) {
-      hits.push({ amount: num, raw: m[0], reason: 'amount_not_in_api_budget' });
-    }
-  }
-  return hits;
-}
-
 /** Offline replay: re-grade D bar from saved smoke out.json checkD + raw thing dates. */
 export function replayDGradesFromSaved(checkD) {
   const d1Thing = checkD?.d1?.thing;
@@ -491,3 +251,23 @@ export function replayA2FromSaved(checkA2, inviteeDisplayName = 'Spouse964') {
   });
   return { welcomeFor, match, wouldPassWithTranscript: match.welcomeTurnCount === 1 };
 }
+
+
+export {
+  evaluateTripMapInPage,
+  evaluateLeafletProductMapInPage,
+  mapWithinMaui,
+  gradeMapBar,
+  gradeLeafletProductMap,
+  budgetHardcodedHits,
+} from './shepherd-staging-smoke-map-lib.mjs';
+export {
+  gradeCoffeeReplyRows,
+  gradeLogoTabResult,
+  gradeLogoChipRow,
+  attributeLogoMisalignmentCss,
+  mergeLogoCssSuspects,
+  objectFitContentBox,
+  LOGO_CENTER_TOLERANCE_PX,
+} from './shepherd-staging-smoke-grader-lib.mjs';
+
