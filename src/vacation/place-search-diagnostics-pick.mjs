@@ -4,6 +4,7 @@ export function pickPlaceSearchDiagnostics(search = {}) {
   for (const key of [
     'judgeInput',
     'searchCenter',
+    'providerTimings',
     'anchor',
     'anchorRadiusRejected',
     'anchorRadiusPolicy',

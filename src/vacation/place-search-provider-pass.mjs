@@ -76,6 +76,7 @@ export async function runPlaceProviderPass({
   lodgingPoint,
   keepAreaText = false,
   tripDestinationCenter = null,
+  tripDestinationLabel = '',
   placeQueries,
   osmCategoryFilter = null,
   searchAnchor = null,
@@ -95,14 +96,29 @@ export async function runPlaceProviderPass({
   fail,
 }) {
   const providerLog = [];
+  const providerTimings = {
+    contextMs: 0,
+    anchorGeocodeMs: 0,
+    priorDbMs: 0,
+    osmMs: 0,
+    braveMs: 0,
+    relevanceMs: 0,
+  };
+  const contextStarted = Date.now();
   const context = await resolveSearchContext(
     fetchImpl,
     { lodging, lodgingPoint, destination: dest, keepAreaText, tripDestinationCenter },
     providerLog,
     readJson,
     fail,
-    { env, db, tripId },
+    {
+      env,
+      db,
+      tripId,
+      tripDestinationLabel: String(tripDestinationLabel || dest).trim(),
+    },
   );
+  providerTimings.contextMs = Date.now() - contextStarted;
   const center = context.center;
   const locationText = context.locationText || dest;
   const namedPlaceLookup = namedPlaceLookupFromQueries(placeQueries);
@@ -117,6 +133,7 @@ export async function runPlaceProviderPass({
   const anchorText = String(searchAnchor?.text || '').trim();
   let anchorGeocode = null;
   if (anchorText && !namedPlaceLookup) {
+    const anchorStarted = Date.now();
     anchorGeocode = await resolveSearchAnchorGeocode({
       fetchImpl,
       anchorText,
@@ -127,6 +144,7 @@ export async function runPlaceProviderPass({
       readJson,
       env,
     });
+    providerTimings.anchorGeocodeMs = Date.now() - anchorStarted;
   }
   const lodgingRadiusCenter = namedPlaceLookup ? null : anchorRadiusCenter(anchorGeocode, null);
   const destinationRadiusCenter = anchorRadiusCenter(null, center);
@@ -185,10 +203,12 @@ export async function runPlaceProviderPass({
 
   let prior = [];
   if (queryCenter) {
+    const priorStarted = Date.now();
     if (Array.isArray(priorPlaces)) prior = selectPriorPlaces(priorRowsFromInput(priorPlaces), queryCenter);
     else if (loadPriorPlaces) prior = await loadPriorPlaces(queryCenter);
     else if (readPriorPlaces) prior = await readPriorPlaces(queryCenter, { env, tripId });
     else prior = [];
+    providerTimings.priorDbMs = Date.now() - priorStarted;
     prior = dropOutsideAnchorRadius(
       (Array.isArray(prior) ? prior : []).map((place) => ({ ...place, source: 'prior_db' })),
     );
@@ -219,7 +239,13 @@ export async function runPlaceProviderPass({
     compactLocality: braveCompactLocality,
     namedPlaceLookup,
   }, placeQueries).then((found) => ({ found })).catch((error) => ({ error }));
+  const providersStarted = Date.now();
   const [osmSettled, braveSettled] = await Promise.all([osmQuery, braveQuery]);
+  const providersElapsed = Date.now() - providersStarted;
+  if (osmSettled.skipped) providerTimings.osmMs = 0;
+  else providerTimings.osmMs = providersElapsed;
+  if (braveSettled.skipped) providerTimings.braveMs = 0;
+  else providerTimings.braveMs = providersElapsed;
 
   let osm = [];
   if (osmSettled.skipped) {
@@ -307,7 +333,7 @@ export async function runPlaceProviderPass({
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({
-      center,
+      center: queryCenter,
       judgeTarget,
       judgeArea,
       anchor: searchAnchor,
@@ -319,10 +345,12 @@ export async function runPlaceProviderPass({
       dedupeMerges,
       ...(providerErrors.length ? { providerErrors } : {}),
       ...(braveLookups.length ? { braveLookups } : {}),
+      providerTimings,
     });
   };
 
   let relevance;
+  const relevanceStarted = Date.now();
   try {
     relevance = await attachRelevance(merged, fetchImpl, env, {
       ...(relevanceContext || {}),
@@ -345,6 +373,7 @@ export async function runPlaceProviderPass({
     }
     throw error;
   }
+  providerTimings.relevanceMs = Date.now() - relevanceStarted;
   let places = relevance.places;
   const relevanceRejections = relevance.rejections;
   const singleNamedPlaceQuery = placeQueries.length === 1
@@ -401,8 +430,18 @@ export async function runPlaceProviderPass({
         const rejected = liveMerged.filter((place) => place.source === row.provider).length;
         if (rejected > 0) row.relevanceRejected = rejected;
       }
-      const message = `Place search relevance rejected all live provider results. ${providerFailureMessage(providerLog)}`;
-      fail(message, 'relevance_rejected_all', providerLog, relevanceRejections, diagnosticsBase(relevanceRejections));
+      return {
+        status: 'no_results',
+        reason: 'relevance_rejected_all',
+        center,
+        queryCenter,
+        locationText,
+        places: [],
+        providerLog,
+        relevanceRejections,
+        providerTimings,
+        ...diagnosticsBase(relevanceRejections),
+      };
     }
     const nominatimErrored = providerLog.some(
       (row) => String(row?.provider || '').trim() === 'nominatim' && providerRowIsError(row),
@@ -412,10 +451,12 @@ export async function runPlaceProviderPass({
       return {
         status: 'no_results',
         center,
+        queryCenter,
         locationText,
         places: [],
         providerLog,
         relevanceRejections: [],
+        providerTimings,
         ...diagnosticsBase(),
       };
     }
@@ -423,10 +464,12 @@ export async function runPlaceProviderPass({
       return {
         status: 'no_results',
         center,
+        queryCenter,
         locationText,
         places: [],
         providerLog,
         relevanceRejections: [],
+        providerTimings,
         ...diagnosticsBase(),
       };
     }
@@ -437,10 +480,12 @@ export async function runPlaceProviderPass({
   return {
     status: 'ok',
     center,
+    queryCenter,
     locationText,
     places,
     providerLog,
     relevanceRejections,
+    providerTimings,
     ...diagnosticsBase(relevanceRejections),
   };
 }

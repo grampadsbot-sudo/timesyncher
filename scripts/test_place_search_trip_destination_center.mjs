@@ -35,6 +35,7 @@ const pass = await runPlaceProviderPass({
   fetchImpl,
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key', DATABASE_URL: '' },
   dest: 'Kihei',
+  tripDestinationLabel: 'Kihei',
   lodging: '',
   lodgingPoint: null,
   tripDestinationCenter: { lat: 20.765, lng: -156.445, label: 'Kihei' },

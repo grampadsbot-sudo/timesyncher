@@ -57,9 +57,11 @@ export async function persistTurnPlaceSearchNoResults(db, turnId, {
   anchor = null,
 } = {}) {
   const diagnostics = pickPlaceSearchDiagnostics(search);
+  const outcomeReason = String(search?.outcomeReason || search?.reason || '').trim();
   const placeSearch = placeSearchTelemetry({
     status: 'no_results',
     error: null,
+    reason: outcomeReason || null,
     things: [],
     providerAttempts,
     providerErrors: providerErrors ?? diagnostics.providerErrors ?? null,
@@ -71,6 +73,7 @@ export async function persistTurnPlaceSearchNoResults(db, turnId, {
     anchorRadiusRejections: diagnostics.anchorRadiusRejections ?? null,
     relevanceRejections: diagnostics.relevanceRejections ?? null,
     dedupeMerges: diagnostics.dedupeMerges ?? null,
+    providerTimings: diagnostics.providerTimings ?? null,
     ...classifierMeta,
     ...(Number(diagnostics.anchorRadiusRejected) > 0
       ? { anchorRadiusRejected: diagnostics.anchorRadiusRejected }
@@ -97,6 +100,7 @@ export async function syncWorkerJobAfterInTurnPlaceSearch(db, jobId, input) {
 export function inTurnSearchNoResultsReturn(placeSearch, { classification = null, tripDestination = '' } = {}) {
   const target = String(classification?.target || '').trim();
   const area = String(classification?.anchor || tripDestination || '').trim();
+  const code = String(placeSearch?.reason || '').trim() || 'all_providers_failed';
   return {
     ok: true,
     inTurnProviderResults: [],
@@ -107,7 +111,7 @@ export function inTurnSearchNoResultsReturn(placeSearch, { classification = null
       target,
       area,
       destination: tripDestination,
-      code: 'all_providers_failed',
+      code,
     }),
   };
 }

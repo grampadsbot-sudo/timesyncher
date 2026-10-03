@@ -1,10 +1,14 @@
 import { nominatimLabelGeocodeCacheKey } from './nominatim-store.mjs';
 import { tryGeocodeLabel } from './place-search-geocode.mjs';
 
-function nominatimLabelsEquivalent(left = '', right = '') {
+export function nominatimLabelsEquivalent(left = '', right = '') {
   const a = nominatimLabelGeocodeCacheKey(left);
   const b = nominatimLabelGeocodeCacheKey(right);
   return Boolean(a && b && a === b);
+}
+
+function centerGeocodeIdentity(center = null) {
+  return String(center?.geocodeIdentity || '').trim();
 }
 
 export async function resolveSearchAnchorGeocode({
@@ -19,8 +23,8 @@ export async function resolveSearchAnchorGeocode({
 } = {}) {
   const anchor = String(anchorText || '').trim();
   if (!anchor || namedPlaceLookup) return null;
-  const centerLabel = String(context?.center?.label || context?.locationText || dest || '').trim();
-  if (context?.center && nominatimLabelsEquivalent(anchor, centerLabel)) {
+  const identity = centerGeocodeIdentity(context?.center);
+  if (context?.center && identity && nominatimLabelsEquivalent(anchor, identity)) {
     providerLog.push({
       provider: 'nominatim',
       status: 'skipped',
@@ -30,7 +34,7 @@ export async function resolveSearchAnchorGeocode({
     return {
       lat: context.center.lat,
       lng: context.center.lng,
-      label: centerLabel || anchor,
+      label: String(context.center.label || identity || anchor).trim() || anchor,
     };
   }
   return tryGeocodeLabel(fetchImpl, anchor, providerLog, readJson, { env });

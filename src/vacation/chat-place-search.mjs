@@ -116,6 +116,7 @@ export async function runCustomerChatPlaceSearch({
   try {
     const search = await searchImpl({
       destination: geocodeDestination,
+      tripDestinationLabel: clean(tripDestination, 180),
       tripId,
       db,
       tripDestinationCenter,

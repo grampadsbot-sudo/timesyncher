@@ -11,9 +11,7 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
   const minimum = jevRelevanceMinimum(env);
   const target = String(relevanceContext.target || '').trim();
   const area = String(relevanceContext.area || relevanceContext.locationText || '').trim();
-  const scored = [];
-  const rejections = [];
-  for (const row of rows) {
+  const judged = await Promise.all((Array.isArray(rows) ? rows : []).map(async (row) => {
     const jevScore = await jevRelevanceScore({
       id: row.externalId || row.url || row.title,
       name: row.title,
@@ -21,9 +19,16 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
       category: row.category,
       address: row.address || '',
       description: row.description || '',
+      target,
+      area,
     }, { fetchImpl, apiKey, target, area });
-    if (Number(jevScore) >= minimum) {
-      scored.push({ ...row, jevScore: Number(jevScore) });
+    return { row, jevScore: Number(jevScore) };
+  }));
+  const scored = [];
+  const rejections = [];
+  for (const { row, jevScore } of judged) {
+    if (jevScore >= minimum) {
+      scored.push({ ...row, jevScore });
       continue;
     }
     if (rejections.length < 10) {
@@ -31,7 +36,7 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
         title: String(row.title || '').trim(),
         address: String(row.address || '').trim(),
         source: String(row.source || '').trim(),
-        score: Number(jevScore),
+        score: jevScore,
         reason: relevanceRejectionReason(jevScore, minimum),
       });
     }

@@ -346,12 +346,11 @@ async function runAnyProviderOkRouteTests() {
     state.nominatimMode = 'fail';
     state.osmMode = 'fail';
     const relevanceRejected = await postTurn('best tacos near our hotel');
-    assert.equal(relevanceRejected.status, 502, JSON.stringify(relevanceRejected.body));
-    assert.equal(relevanceRejected.body.ok, false);
-    assert.equal(relevanceRejected.body.status, 'place_search_no_relevant_results');
+    assert.equal(relevanceRejected.status, 201, JSON.stringify(relevanceRejected.body));
+    assert.equal(relevanceRejected.body.ok, true);
     assert.equal(state.tripThings.length, 0);
     const relevancePayload = state.turnPayloads.at(-1);
-    assert.equal(relevancePayload.placeSearch?.status, 'failed');
+    assert.equal(relevancePayload.placeSearch?.status, 'no_results');
     assert.equal(relevancePayload.placeSearch?.reason, 'relevance_rejected_all');
     const braveRejected = relevancePayload.placeSearch.providers.find((row) => row.provider === 'brave');
     assert.equal(braveRejected?.status, 'ok');

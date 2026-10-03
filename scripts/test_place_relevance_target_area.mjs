@@ -407,10 +407,11 @@ async function runPlaceRelevanceTargetAreaTests() {
     state.relevanceRejectAll = true;
     state.braveMode = 'kaanapali';
     const loudFail = await postTurn('best tacos near our hotel');
-    assert.equal(loudFail.status, 502, JSON.stringify(loudFail.body));
-    assert.equal(loudFail.body.status, 'place_search_no_relevant_results');
+    assert.equal(loudFail.status, 201, JSON.stringify(loudFail.body));
+    assert.equal(loudFail.body.ok, true);
     assert.equal(state.tripThings.length, 0);
     const failPayload = state.turnPayloads.at(-1);
+    assert.equal(failPayload.placeSearch?.status, 'no_results');
     assert.equal(failPayload.placeSearch?.reason, 'relevance_rejected_all');
 
     return { ok: true };
