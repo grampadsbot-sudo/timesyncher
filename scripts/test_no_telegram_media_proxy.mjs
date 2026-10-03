@@ -43,8 +43,10 @@ function scanTelegramRoutes(text, file) {
 }
 
 function scanMediaProxyHandlers(text, file) {
+  const neonRawServe = file.endsWith('thing-media-store.mjs')
+    || (file.includes('bind-thing-media-handler') && /sendCachedBindingMedia/.test(text));
   const proxyPatterns = [
-    /getBindingMedia\s*\(/,
+    ...(neonRawServe ? [] : [/getBindingMedia\s*\(/]),
     /Readable\.fromWeb\s*\(/,
     /res\.end\s*\(\s*media\.bytes/,
     /api\.telegram\.org/,
