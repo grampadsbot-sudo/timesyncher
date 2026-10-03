@@ -100,6 +100,17 @@ function shotPath(artifactDir, stateId, pageKey, widthLabel) {
   return `${artifactDir}/${stateId}-${pageKey}-${widthLabel}.png`;
 }
 
+async function captureComposerClip(page, outPath) {
+  const handle = await page.$('form#composer, form.composer#composer, #composer');
+  if (!handle) return false;
+  try {
+    await handle.screenshot({ path: outPath });
+    return true;
+  } finally {
+    await handle.dispose();
+  }
+}
+
 export async function captureVisualStateScreenshots({
   page,
   states,
@@ -108,6 +119,7 @@ export async function captureVisualStateScreenshots({
   stageTimestamps,
 }) {
   const shots = [];
+  const composerShots = [];
   const stamp = (key) => {
     if (stageTimestamps) stageTimestamps[key] = Date.now();
   };
@@ -122,15 +134,23 @@ export async function captureVisualStateScreenshots({
       await waitForChatAppReady(page);
       const layoutDom = await captureLayoutDomForShot(page, 'chat');
       const chatFile = shotPath(artifactDir, state.id, 'chat', viewport.label);
-      await page.screenshot({ path: chatFile, fullPage: true });
+      await page.screenshot({ path: chatFile });
+      const composerFile = shotPath(artifactDir, state.id, 'composer', viewport.label);
+      const composerCaptured = await captureComposerClip(page, composerFile);
+      if (composerCaptured) {
+        composerShots.push({ stateId: state.id, viewport: viewport.label, path: composerFile });
+      }
+      const judgeComposer = ['390', '1280'].includes(viewport.label) && composerCaptured;
       shots.push({
         id: `${state.id}-chat-${viewport.label}`,
         stateId: state.id,
         pageKind: 'chat',
         tabLabel: '',
-        screenLabel: `${state.id} chat ${viewport.label}`,
+        screenLabel: `${state.id} composer ${viewport.label}`,
         viewport,
         path: chatFile,
+        composerPath: composerCaptured ? composerFile : null,
+        judgeComposer,
         layoutDom,
         layoutDomFacts: layoutDom.layoutDomFacts,
       });
@@ -182,5 +202,5 @@ export async function captureVisualStateScreenshots({
       stamp(`${state.id}_${viewport.label}_end`);
     }
   }
-  return shots;
+  return { shots, composerShots };
 }

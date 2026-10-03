@@ -18,6 +18,17 @@ import {
 } from './shepherd-staging-smoke-plan.mjs';
 import { buildAskLodgingParallelCheck } from './shepherd-staging-smoke-ask.mjs';
 import { buildTailIndependentParallelChecks, runShepherdSmokeTail } from './shepherd-staging-smoke-tail.mjs';
+import { acquireShepherdStagingSmokeLock, isSmokeLockHeldError } from './shepherd-staging-smoke-single-instance.mjs';
+
+try {
+  acquireShepherdStagingSmokeLock();
+} catch (err) {
+  if (isSmokeLockHeldError(err)) {
+    console.error(String(err.message || err));
+    process.exit(3);
+  }
+  throw err;
+}
 
 const EXPECT_SHA = process.argv[2];
 if (!EXPECT_SHA || !/^[0-9a-f]{40}$/i.test(EXPECT_SHA)) {
@@ -27,7 +38,7 @@ if (!EXPECT_SHA || !/^[0-9a-f]{40}$/i.test(EXPECT_SHA)) {
 const SHA7 = EXPECT_SHA.slice(0, 7);
 const BASE = 'https://vacation-staging.timesyncher.com';
 const RUN_TS = Date.now();
-const INVITE_EMAIL = 'alex.rivera.sct@agentmail.to';
+const INVITE_EMAIL = `collab-invite-${SHA7}-${RUN_TS}@resend.dev`;
 const CL_EMAIL = 'kim.rivera.sct@agentmail.to';
 const A1_EMAIL = `collab-a1-${SHA7}-${RUN_TS}@resend.dev`;
 const A2_OWNER_FIRST = `Owner${SHA7}`;

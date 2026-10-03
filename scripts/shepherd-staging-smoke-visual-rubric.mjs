@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 
 export const VISUAL_JUDGE_MODEL = 'qwen/qwen2.5-vl-72b-instruct';
-export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v6-qwen25-vl-composer-send-8204';
+export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v8-qwen25-vl-composer-crop-8204';
 
 const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is unchanged):
 - Craig's spec applies to the APP SHELL: header, composer row, and site/chat slider divider area.
@@ -12,7 +12,7 @@ const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is 
 
 const VISUAL_RUBRIC_ITEMS = [
   { id: '1', text: 'App shell matches the canonical spec (header, composer row, slider when site exists). No extra chrome: app/brand logos (TimeSyncher pill, in-app site chrome logos, nav bars, stamps, Settings/Open navigation). Vendor logos inside Hotels/Cars/content rows are allowed and must not be treated as violations of item 1.' },
-  { id: '2', text: 'The composer is visible at the bottom with the textarea, file-add button, speak button, and a visible send button (required at 390px and 1280px). FAIL if send is missing or not visibly rendered.' },
+  { id: '2', text: 'The composer crop shows the textarea, file-add button, speak button, and a Send control — a visible button whose accessible name is "Send" (aria-label, title, or visible text; icon-only is OK when named Send). FAIL if Send is missing or not visibly rendered.' },
   { id: '3', text: 'When fewer than 2 vacations, the header is fully hidden (zero height / not visible). When 2+ vacations, the header holds only the vacation dropdown.' },
   { id: '4', text: 'When the vacation site has content, it is on top with a resizable divider/slider between site and chat, and a full-screen control in the site area.' },
   { id: '5', text: 'Nothing is cut off or overflowing horizontally.' },
@@ -34,10 +34,11 @@ Viewport: ${viewport.width}x${viewport.height}
 Customer state: ${stateId || 'unknown'}
 Screen: ${screenLabel}
 Page kind: ${pageKind}${tabLabel ? `\nSite section/tab: ${tabLabel}` : ''}
+Image: tight crop of form#composer (Send must be visible in this crop if present in the live UI).
 ${specBlock}${layoutBlock}
 ${LOGO_DISTINCTION}
 
-Rubric — fail if ANY item is clearly violated. Item 1 is about app shell chrome only, not vendor logos inside Hotels/Cars/content list rows.
+Rubric — fail if ANY applicable item is clearly violated. Item 1 is about app shell chrome only, not vendor logos inside Hotels/Cars/content list rows.
 
 ${rubricBlock}
 

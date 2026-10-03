@@ -67,8 +67,23 @@ async function postOpenRouterVisionPreflight({
       signal: controller.signal,
     });
     const raw = await res.text();
-    if (!res.ok) return { ok: false, status: res.status, excerpt: raw.slice(0, 200) };
-    return { ok: true };
+    if (!res.ok) return { ok: false, status: res.status, excerpt: raw.slice(0, 200), imageOk: false };
+    let imageOk = false;
+    try {
+      const outer = JSON.parse(raw);
+      const content = outer?.choices?.[0]?.message?.content;
+      const text = typeof content === 'string' ? content.trim() : JSON.stringify(content || '');
+      const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const body = JSON.parse(fence ? fence[1].trim() : text);
+      imageOk = body?.ok === true;
+    } catch (parseErr) {
+      void parseErr;
+      imageOk = false;
+    }
+    if (!imageOk) {
+      return { ok: false, imageOk: false, error: 'openrouter_vision_preflight_not_image_ok', excerpt: raw.slice(0, 200) };
+    }
+    return { ok: true, imageOk: true };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   } finally {
@@ -120,8 +135,32 @@ export async function runVisualOpenRouterPreflight({
   }
   return {
     ok: true,
+    imageOk: true,
     checkStatus: null,
     model,
     inputModalities: listed.inputModalities,
+  };
+}
+
+/** VISUAL spine: missing or non-vision preflight is INFRA_BLOCKED, never PASS. */
+export function visualPreflightReady(preflight) {
+  return Boolean(preflight && preflight.ok === true && preflight.imageOk === true);
+}
+
+export function visualInfraBlockedFromPreflight(preflight) {
+  if (visualPreflightReady(preflight)) return null;
+  if (!preflight) {
+    return { checkStatus: 'INFRA_BLOCKED', infraDetail: { reason: 'visual_openrouter_preflight_missing' } };
+  }
+  if (preflight.checkStatus === 'INFRA_BLOCKED') {
+    return { checkStatus: 'INFRA_BLOCKED', infraDetail: preflight.infraDetail || { reason: 'visual_openrouter_preflight' } };
+  }
+  return {
+    checkStatus: 'INFRA_BLOCKED',
+    infraDetail: {
+      reason: 'visual_openrouter_preflight_not_image_ok',
+      error: preflight.error || null,
+      imageOk: preflight.imageOk ?? null,
+    },
   };
 }

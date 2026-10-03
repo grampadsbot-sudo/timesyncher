@@ -32,7 +32,8 @@ async function runLayoutProbeOnPage(page, {
     await waitForChatAppReady(page);
   } else {
     setStage?.(`layout shared ${viewport.label} hydrate`);
-    const hydrated = await gotoAndHydrateSharedIntakePage(page, url);
+    const diagPath = artifactPath(`layout-shared-hydration-diag-${viewport.label}.json`);
+    const hydrated = await gotoAndHydrateSharedIntakePage(page, url, { debugArtifactPath: diagPath });
     if (hydrated.hydrationError) {
       const shot = artifactPath(`layout-shared-${viewport.label}.png`);
       await page.screenshot({ path: shot, fullPage: true });
@@ -48,6 +49,7 @@ async function runLayoutProbeOnPage(page, {
           rects: {},
         }],
         screenshot: shot,
+        hydrationDiagPath: hydrated.hydrationDiagPath || diagPath,
         applicability: LAYOUT_RULE_APPLICABILITY,
       };
     }

@@ -1,6 +1,7 @@
 /** Register LAYOUT + VISUAL spine checks (keeps main.mjs under line cap). */
 import { registerLayoutSpineChecks } from './shepherd-staging-smoke-layout-spine.mjs';
 import { runVisualHarnessCheck } from './shepherd-staging-smoke-visual.mjs';
+import { visualInfraBlockedFromPreflight, visualPreflightReady } from './shepherd-staging-smoke-visual-preflight.mjs';
 import { withBrowserPageSlot } from './shepherd-staging-smoke-browser-pool.mjs';
 
 async function registerVisualSpineChecks(spineCtx) {
@@ -38,11 +39,12 @@ async function registerVisualSpineChecks(spineCtx) {
         preflight: visual.preflight || null,
         summary: visual.verdictDoc?.shots?.map((s) => ({ id: s.id, pass: s.pass, failures: s.failures })) || [],
       };
-      if (visual.infraBlocked) {
+      if (visual.infraBlocked || !visualPreflightReady(visual.preflight)) {
+        const block = visualInfraBlockedFromPreflight(visual.preflight);
         return {
           pass: false,
-          checkStatus: 'INFRA_BLOCKED',
-          infraDetail: visual.preflight?.infraDetail || { reason: 'visual_openrouter_preflight' },
+          checkStatus: block?.checkStatus || 'INFRA_BLOCKED',
+          infraDetail: block?.infraDetail || { reason: 'visual_openrouter_preflight' },
           http: 200,
         };
       }

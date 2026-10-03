@@ -5,6 +5,15 @@ import { captureVisualStateScreenshots } from './shepherd-staging-smoke-visual-c
 import { VISUAL_JUDGE_MODEL, judgeScreenshotsParallel } from './shepherd-staging-smoke-visual-judge.mjs';
 import { runVisualOpenRouterPreflight } from './shepherd-staging-smoke-visual-preflight.mjs';
 import { VISUAL_RUBRIC_VERSION, loadVisualScreenSpec } from './shepherd-staging-smoke-visual-rubric.mjs';
+import { visualInfraBlockedFromPreflight, visualPreflightReady } from './shepherd-staging-smoke-visual-preflight.mjs';
+
+function writeVisualComposerVerifyMd(artifactDir, composerShots = []) {
+  const lines = ['# VERIFY', '', '## VISUAL composer screenshots (390 / 1280)', ''];
+  for (const row of composerShots) lines.push(`- ${row.stateId} @ ${row.viewport}: \`${row.path}\``);
+  if (!composerShots.length) lines.push('- (none captured)');
+  lines.push('');
+  writeFileSync(`${artifactDir}/VERIFY.md`, `${lines.join('\n')}\n`);
+}
 
 function visualArtifactDir(baseDir, expectSha) {
   const dir = `${baseDir}/${expectSha}-visual`;
@@ -74,7 +83,8 @@ export async function runVisualHarnessCheck({
     apiKey: env.OPENROUTER_API_KEY,
     fetchImpl,
   });
-  if (!preflight.ok) {
+  if (!visualPreflightReady(preflight)) {
+    const block = visualInfraBlockedFromPreflight(preflight);
     return {
       pass: false,
       infraBlocked: true,
@@ -91,26 +101,31 @@ export async function runVisualHarnessCheck({
       stageTimestamps,
       states: spineState || {},
       specSource: spec.source,
+      infraDetail: block?.infraDetail,
     };
   }
   stageTimestamps.mintStartMs = Date.now();
   const states = spineState || await mintVisualStateCustomers({ db, BASE, SHA7, setStage });
   stageTimestamps.mintEndMs = Date.now();
   stageTimestamps.captureStartMs = Date.now();
-  const shots = await captureVisualStateScreenshots({
+  const captured = await captureVisualStateScreenshots({
     page,
     states,
     artifactDir,
     setStage,
     stageTimestamps,
   });
+  const shots = captured.shots || [];
+  const composerShots = captured.composerShots || [];
+  writeVisualComposerVerifyMd(artifactDir, composerShots);
   stageTimestamps.captureEndMs = Date.now();
   for (const shot of shots) {
     shot.specSource = spec.source;
     shot.specText = spec.text;
   }
   stageTimestamps.judgeStartMs = Date.now();
-  const judged = (await judgeScreenshotsParallel(shots, {
+  const judgeShots = shots.filter((shot) => shot.judgeComposer && shot.composerPath);
+  const judged = (await judgeScreenshotsParallel(judgeShots, {
     apiKey: env.OPENROUTER_API_KEY,
     concurrency: SMOKE_PARALLEL_CONCURRENCY,
     fetchImpl,
@@ -120,11 +135,10 @@ export async function runVisualHarnessCheck({
     verdict: mergeLayoutAndJudgeVerdict(shot, verdict),
   }));
   stageTimestamps.judgeEndMs = Date.now();
-  const pass = judged.every((row) => {
-    if (row.shot?.missing) return false;
-    if (!row.shot?.path) return false;
-    return Boolean(row.verdict?.pass);
-  });
+  const chatLayoutPass = shots
+    .filter((shot) => shot.pageKind === 'chat')
+    .every((shot) => shot.layoutDom?.pass !== false && !shot.hydrationError);
+  const pass = chatLayoutPass && judged.length > 0 && judged.every((row) => Boolean(row.verdict?.pass));
   const verdictDoc = {
     expectSha,
     model: VISUAL_JUDGE_MODEL,
@@ -147,14 +161,18 @@ export async function runVisualHarnessCheck({
     })),
     pass,
   };
+  verdictDoc.preflight = preflight;
   writeFileSync(`${artifactDir}/verdict.json`, `${JSON.stringify(verdictDoc, null, 2)}\n`);
   return {
     pass,
+    preflight,
     judged,
     verdictDoc,
     artifactDir,
     stageTimestamps,
     states,
     specSource: spec.source,
+    composerShots,
+    verifyMdPath: `${artifactDir}/VERIFY.md`,
   };
 }

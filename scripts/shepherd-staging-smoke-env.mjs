@@ -4,6 +4,7 @@
  * checkouts do not consume Resend quota; bundle spine still sends to agentmail + shepherd-*@resend.dev.
  */
 import { readFileSync } from 'node:fs';
+import { outboundEmailPassesSmokeHarness } from '../src/vacation/email.mjs';
 
 const PROJECT = 'timesyncher-vacation-staging';
 const V1_ENV_IDS = {
@@ -67,6 +68,17 @@ export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchIm
   if (!String(env.TIMESYNCHER_TRAVEL_BASE_URL || '').trim()) {
     env.TIMESYNCHER_TRAVEL_BASE_URL = STAGING_TRAVEL_BASE;
   }
+  if (String(env.TIMESYNCHER_HARNESS_STUB_OUTBOUND || '').trim() !== '0') {
+    env.TIMESYNCHER_HARNESS_STUB_OUTBOUND = '1';
+  }
+}
+
+/** Check I: stub outbound when TIMESYNCHER_HARNESS_STUB_OUTBOUND=1 (zero Resend HTTP). */
+export function checkIOutboundPassesSmokeHarness(row, env = process.env) {
+  if (env.TIMESYNCHER_HARNESS_STUB_OUTBOUND === '1') {
+    return String(row?.status || '') === 'stubbed' && String(row?.provider || '') === 'harness_stub';
+  }
+  return outboundEmailPassesSmokeHarness(row);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

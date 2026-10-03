@@ -15,10 +15,11 @@ import { provisionVerifyLayoutChatStates } from './verify-layout-chat-provision.
 import { driveChatProvisioned } from './verify-layout-chat-drive.mjs';
 import { runVerifyLayoutDoctor } from './verify-layout-doctor.mjs';
 import { driveVerifyLayoutSignup, driveVerifyLayoutTrip } from './verify-layout-trip-signup-drive.mjs';
+import { configureShepherdSmokeHelpers } from '../../../../scripts/shepherd-staging-smoke-helpers.mjs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const skillDir = fileURLToPath(new URL('..', import.meta.url));
-const staging = 'https://vacation-staging.timesyncher.com';
+const staging = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || 'https://vacation-staging.timesyncher.com').replace(/\/?$/, '');
 const tolerances = JSON.parse(readFileSync(new URL('../layout-tolerances.json', import.meta.url), 'utf8'));
 const config = JSON.parse(readFileSync(new URL('../verify-config.json', import.meta.url), 'utf8'));
 
@@ -137,7 +138,21 @@ function driveCtx(browser, shotDir, rows, measurements) {
   };
 }
 
+function configureVerifyLayoutHarness() {
+  const SHA7 = 'verify-layout';
+  configureShepherdSmokeHelpers({
+    BASE: staging,
+    RUN_TS: Date.now(),
+    DECOY_TITLE: `VERIFY_LAYOUT_${SHA7}`,
+    HYATT_CANON: 'Hyatt Regency Maui Resort & Spa',
+    REAL_HYATT: { lat: 20.91297, lng: -156.69217, street: '200 Nohea Kai' },
+    SHA7,
+    commerceHits: () => [],
+  });
+}
+
 async function main() {
+  configureVerifyLayoutHarness();
   if (process.argv.includes('--self-check')) {
     const ran = spawnSync(process.execPath, [fileURLToPath(new URL('./layout-self-check.mjs', import.meta.url))], {
       cwd: root,
