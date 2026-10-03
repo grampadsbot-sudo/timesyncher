@@ -246,21 +246,26 @@ assert.ok(Array.isArray(allEmpty.providers));
 assert.ok(allEmpty.providers.filter((row) => ['prior_db', 'osm', 'brave'].includes(String(row.provider || ''))).every((row) => row.status === 'empty' || row.status === 'skipped'));
 
 const geocodeCalls = [];
-const nowhere = await searchPlaces({
-  destination: 'Nowhereville',
-  wantedThings: PLACE_WANTED,
-  env: placeEnv(),
-  priorPlaces: [],
-  fetchImpl: async (url) => {
-    recordHost(url, geocodeCalls);
-    const value = String(url);
-    return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value.includes('api.search.brave.com') ? { results: [] } : []);
+await assert.rejects(
+  () => searchPlaces({
+    destination: 'Nowhereville',
+    wantedThings: PLACE_WANTED,
+    env: placeEnv(),
+    priorPlaces: [],
+    fetchImpl: async (url) => {
+      recordHost(url, geocodeCalls);
+      const value = String(url);
+      return value.includes('openrouter.ai') ? jevOk(5) : jsonResponse(value.includes('api.search.brave.com') ? { results: [] } : []);
+    },
+  }),
+  (error) => {
+    assert.equal(error.code, 'geocode_failed');
+    assert.match(error.message, /Nowhereville/);
+    return true;
   },
-});
-assert.equal(nowhere.outcomeStatus, 'no_results');
-assert.equal(nowhere.places.length, 0);
-assert.ok(Array.isArray(nowhere.providers));
-assert.ok(geocodeCalls.includes('nominatim.openstreetmap.org') && geocodeCalls.includes('api.search.brave.com'));
+);
+assert.ok(geocodeCalls.includes('nominatim.openstreetmap.org'));
+assert.equal(geocodeCalls.includes('api.search.brave.com'), false);
 const fill = await fillTripIntake({
   destination: 'Lisbon',
   wantedThings: PLACE_WANTED,
