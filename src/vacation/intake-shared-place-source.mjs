@@ -4,11 +4,16 @@ function textField(value) {
   return String(value || '').trim();
 }
 
+function isGooglePlacesSource(record) {
+  const source = textField(record?.source);
+  return source.toLowerCase().replace(/[\s_]+/g, '-') === 'google-places';
+}
+
 export function placeSourceFieldsFromThing(thing = {}) {
   const record = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : null;
   const pageUrl = textField(record?.url || record?.website || thing.website || '');
   const fields = {};
-  if (record) {
+  if (record && !isGooglePlacesSource(record)) {
     fields.sourceRecord = record;
     fields.source = record;
   }
