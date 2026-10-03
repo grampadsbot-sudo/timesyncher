@@ -212,11 +212,11 @@ export function gradeLogoChipRow(row = {}) {
   };
 }
 
-export function countBrandLogoRowsWithInk(rows = []) {
+function countBrandLogoRowsWithInk(rows = []) {
   return (rows || []).filter((r) => r.isBrandImg === true && isRealBrandLogoSrc(r.src) && logoChipInkPresent(r.com)).length;
 }
 
-export function gradeCarsHeadingInkForViewports(viewports = {}) {
+function gradeCarsHeadingInkForViewports(viewports = {}) {
   const byWidth = {};
   let pass = true;
   let failReason = null;
@@ -274,8 +274,6 @@ export function gradeLogoTabResult({
     cssSuspects,
   };
 }
-
-export { gradeCarsHeadingLogoInk };
 
 /** Map computed layout hints to likely source files (harness attribution, not runtime). */
 export function attributeLogoMisalignmentCss(computed = {}) {

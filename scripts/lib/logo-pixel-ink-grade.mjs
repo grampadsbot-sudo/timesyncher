@@ -1,7 +1,7 @@
 /** Pixel ink helpers for shepherd LOGO smoke (no DOM box / naturalWidth gates). */
 
-export const LOGO_INK_MIN_MASS = 4;
-export const CARS_HEADING_LOGO_MAX_VERTICAL_PX = 1;
+const LOGO_INK_MIN_MASS = 4;
+const CARS_HEADING_LOGO_MAX_VERTICAL_PX = 1;
 
 export function logoChipInkPresent(com = {}, minMass = LOGO_INK_MIN_MASS) {
   if (!com || com.error) return false;

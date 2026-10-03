@@ -7,7 +7,6 @@ const require = createRequire(import.meta.url);
 const { PNG } = require('pngjs');
 import { gradeLogoChipRow, gradeLogoTabResult } from './shepherd-staging-smoke-grader-lib.mjs';
 import {
-  CARS_HEADING_LOGO_MAX_VERTICAL_PX,
   gradeCarsHeadingLogoInk,
   gradeLogoChipInkPresence,
   logoChipInkPresent,
@@ -68,6 +67,4 @@ assert.equal(
   gradeCarsHeadingLogoInk({ tab: 'Cars', labelVisible: true, iconVsLabelPx: 0.4, chipMass: 40 }).pass,
   true,
 );
-assert.equal(CARS_HEADING_LOGO_MAX_VERTICAL_PX, 1);
-
 console.log('logo pixel ink grade tests passed');
