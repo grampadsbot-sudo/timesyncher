@@ -2,7 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import { normalizePlaceName } from '../src/vacation/intake-lodging-candidate.mjs';
 import { loadCollaboratorAppSeatEulaText } from '../src/onboarding/eula-persistent-core.mjs';
-import { evaluateTripMapInPage } from './shepherd-staging-smoke-lib.mjs';
+import {
+  evaluateLeafletProductMapInPage,
+  evaluateTripMapInPage,
+  budgetHardcodedHits,
+} from './shepherd-staging-smoke-lib.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
 /** @typedef {{ BASE: string, RUN_TS: number, DECOY_TITLE: string, HYATT_CANON: string, REAL_HYATT: { lat: number, lng: number, street: string }, SHA7: string, commerceHits: (text: string) => string[] }} ShepherdHelperConfig */
@@ -105,21 +109,85 @@ export async function mapSharedTripState(page, url) {
   const mapConsoleErrors = [];
   page.on('console', (m) => {
     const t = m.text();
-    if (/map_center_unresolved|map_mount_failed/.test(t)) mapConsoleErrors.push(t);
+    if (/map_center_unresolved|map_mount_failed|map_/.test(t)) mapConsoleErrors.push(t);
   });
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
   await new Promise((r) => setTimeout(r, 4000));
   const planBtn = await page.$('button[title="Plan"],button[title*="Plan"]');
   if (planBtn) await planBtn.click();
-  await page.waitForFunction(
-    () => document.querySelector('.mapboxgl-map,.leaflet-container') || document.querySelector('[data-map-center-unresolved]'),
-    { timeout: 90000 },
-  ).catch((err) => {
-    mapConsoleErrors.push(`map_wait:${String(err?.message || err)}`);
+  await page.waitForSelector('.leaflet-container', { timeout: 90000 }).catch((err) => {
+    mapConsoleErrors.push(`leaflet_wait:${String(err?.message || err)}`);
   });
   await new Promise((r) => setTimeout(r, 2500));
+  const productMapState = await page.evaluate(evaluateLeafletProductMapInPage);
   const mapState = await page.evaluate(evaluateTripMapInPage);
-  return { mapState, mapConsoleErrors };
+  return { mapState, productMapState, mapConsoleErrors };
+}
+
+async function clickTabByLabel(page, label) {
+  return page.evaluate((text) => {
+    const nodes = Array.from(document.querySelectorAll('button, [role="tab"], a'));
+    const hit = nodes.find((n) => String(n.textContent || '').trim() === text);
+    if (!hit) return false;
+    hit.click();
+    return true;
+  }, label);
+}
+
+export async function sharedBudgetTabCheck(page, budgetLines = []) {
+  const clicked = await clickTabByLabel(page, 'Budget');
+  await new Promise((r) => setTimeout(r, 1500));
+  const bodyText = await page.evaluate(() => document.body?.innerText || '');
+  const hardcoded = budgetHardcodedHits(bodyText, budgetLines);
+  const tabPresent = await page.evaluate(() => {
+    const nodes = Array.from(document.querySelectorAll('button, [role="tab"], a'));
+    return nodes.some((n) => String(n.textContent || '').trim() === 'Budget');
+  });
+  const pageErrors = await page.evaluate(() => ({
+    mapError: !!document.querySelector('[data-ts-trip-map-error]'),
+    unresolved: !!document.querySelector('[data-map-center-unresolved]'),
+  }));
+  return {
+    tabPresent,
+    clicked,
+    hardcoded,
+    pageErrors,
+    bodySnippet: bodyText.slice(0, 400),
+  };
+}
+
+export async function sharedLogoChipMetrics(page, tabLabel) {
+  const clicked = await clickTabByLabel(page, tabLabel);
+  await new Promise((r) => setTimeout(r, 1200));
+  const chips = await page.evaluate(() => {
+    const imgs = Array.from(document.querySelectorAll('li img, img.tiny-logo, [data-has-logo="1"] img'));
+    return imgs.map((img) => {
+      const chip = img.parentElement;
+      if (!chip) return null;
+      const ir = img.getBoundingClientRect();
+      const cr = chip.getBoundingClientRect();
+      if (ir.width < 4 || cr.width < 4) return null;
+      const icx = ir.left + ir.width / 2;
+      const icy = ir.top + ir.height / 2;
+      const ccx = cr.left + cr.width / 2;
+      const ccy = cr.top + cr.height / 2;
+      return {
+        dx: Math.abs(icx - ccx),
+        dy: Math.abs(icy - ccy),
+        chipW: cr.width,
+        chipH: cr.height,
+        imgW: ir.width,
+        imgH: ir.height,
+        alt: img.getAttribute('alt') || '',
+      };
+    }).filter(Boolean);
+  });
+  const tolerance = 2;
+  const rows = chips.map((c) => ({
+    ...c,
+    centered: c.dx <= tolerance && c.dy <= tolerance,
+  }));
+  return { tab: tabLabel, clicked, rows, pass: clicked && rows.every((r) => r.centered) };
 }
 
 export function inviteUiHits(html) {

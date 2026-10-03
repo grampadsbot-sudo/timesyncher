@@ -305,6 +305,118 @@ export function gradeMapBar(mapState, consoleErrors = []) {
   };
 }
 
+/** Product shared /shared/<slug>/ Plan tab: Leaflet instance hook (one-line DOM change point). */
+export function evaluateLeafletProductMapInPage() {
+  const unresolved = !!document.querySelector('[data-map-center-unresolved]');
+  const mapError = !!document.querySelector('[data-ts-trip-map-error]');
+  const leafletEl = document.querySelector('.leaflet-container');
+  const map = leafletEl?._leaflet_map;
+  let lat = null;
+  let lng = null;
+  let zoom = null;
+  let bounds = null;
+  if (map && typeof map.getCenter === 'function') {
+    const c = map.getCenter();
+    lat = c.lat;
+    lng = c.lng;
+    zoom = typeof map.getZoom === 'function' ? map.getZoom() : null;
+    const b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+    if (b && typeof b.getNorth === 'function') {
+      bounds = {
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      };
+    }
+  }
+  return {
+    engine: 'leaflet',
+    mounted: Boolean(leafletEl),
+    mapInstance: Boolean(map),
+    lat,
+    lng,
+    zoom,
+    bounds,
+    unresolved,
+    mapError,
+  };
+}
+
+export function gradeLeafletProductMap(mapState, consoleErrors = []) {
+  const signals = (consoleErrors || []).filter((t) => /map_center_unresolved|map_mount_failed|map_/.test(t));
+  const inMaui = mapWithinMaui({ lat: mapState?.lat, lng: mapState?.lng });
+  const pass = Boolean(mapState?.mounted)
+    && Boolean(mapState?.mapInstance)
+    && !mapState?.unresolved
+    && !mapState?.mapError
+    && signals.length === 0
+    && inMaui;
+  return { pass, inMaui, signals, unresolved: mapState?.unresolved, mapError: mapState?.mapError };
+}
+
+/** Evidence that a place-search row is a real coffee shop. */
+export function coffeePlaceEvidence(place = {}) {
+  const name = String(place.name || place.title || '').toLowerCase();
+  const cat = String(
+    place.category
+    || place.categoryName
+    || place.category_name
+    || place.metadata?.categoryName
+    || '',
+  ).toLowerCase();
+  const tags = place.tags || place.osmTags || place.source?.tags || place.raw?.tags || {};
+  const amenity = String(tags.amenity || '').toLowerCase();
+  const cuisine = String(tags.cuisine || '').toLowerCase();
+  const evidence = [];
+  if (/\bcafe\b|coffee|espresso|roaster|latte/.test(name)) evidence.push('name');
+  if (/\bcafe\b|coffee/.test(cat)) evidence.push('category');
+  if (amenity === 'cafe') evidence.push('osm:amenity=cafe');
+  if (cuisine.includes('coffee')) evidence.push('osm:cuisine=coffee');
+  return { ok: evidence.length > 0, evidence };
+}
+
+export function gradeCoffeeReplyRows(rows = []) {
+  const graded = rows.map((row) => {
+    const { ok, evidence } = coffeePlaceEvidence(row);
+    return {
+      name: row.name || row.title,
+      ok,
+      evidence,
+      source: row.provider || row.source || null,
+    };
+  });
+  const failures = graded.filter((r) => !r.ok);
+  return { rows: graded, failures, pass: rows.length > 0 && failures.length === 0 };
+}
+
+/** Budget tab must not show dollar amounts absent from API budget lines. */
+export function budgetHardcodedHits(pageText, budgetLines = []) {
+  const allowed = new Set(
+    (budgetLines || [])
+      .map((b) => Number(b.total_price ?? b.amount ?? b.total))
+      .filter((n) => Number.isFinite(n))
+      .flatMap((n) => [n, Math.round(n * 100) / 100]),
+  );
+  const hits = [];
+  const re = /\$\s*([\d,]+(?:\.\d{2})?)/g;
+  let m;
+  const hay = String(pageText || '');
+  while ((m = re.exec(hay)) !== null) {
+    const num = Number(String(m[1]).replace(/,/g, ''));
+    if (!Number.isFinite(num)) continue;
+    if (allowed.size === 0) {
+      if (num === 0) continue;
+      hits.push({ amount: num, raw: m[0], reason: 'no_budget_lines_but_visible_amount' });
+      continue;
+    }
+    if (!allowed.has(num) && !allowed.has(Math.round(num))) {
+      hits.push({ amount: num, raw: m[0], reason: 'amount_not_in_api_budget' });
+    }
+  }
+  return hits;
+}
+
 /** Offline replay: re-grade D bar from saved smoke out.json checkD + raw thing dates. */
 export function replayDGradesFromSaved(checkD) {
   const d1Thing = checkD?.d1?.thing;

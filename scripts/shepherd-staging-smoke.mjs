@@ -8,7 +8,7 @@ import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candi
 import { classifyTripIntake } from '/workspace/src/vacation/trip-intake-classify.mjs';
 import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
-import { gradeMapBar } from './shepherd-staging-smoke-lib.mjs';
+import { gradeLeafletProductMap, gradeMapBar, gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import {
   configureShepherdSmokeHelpers,
   postItinerary,
@@ -24,6 +24,8 @@ import {
   anchorMatchesRealHyatt,
   lookupBundle,
   mapSharedTripState,
+  sharedBudgetTabCheck,
+  sharedLogoChipMetrics,
   inviteUiHits,
   fullDiag,
   classifierSnapshot,
@@ -51,7 +53,7 @@ const A2_OWNER_LAST = SHA7;
 const A2_COLLAB_NAME = `Spouse${SHA7}`;
 const A2_EMAIL = `collab-a2-${SHA7}-${RUN_TS}@resend.dev`;
 const DECOY_TITLE = `PRIOR_DB_LEAK_OTHER_TRIP_${SHA7}`;
-const ARTIFACT_DIR = '/workspace/artifacts';
+const ARTIFACT_DIR = '/opt/cursor/artifacts';
 const artifactPath = (name) => `${ARTIFACT_DIR}/shepherd-${SHA7}-${name}`;
 const D1_EXPECT_START = '2027-03-13';
 const SCT_CODE = 'TS-2TZD3CGMA_J7';
@@ -146,7 +148,7 @@ const checkC = await cPage.evaluate(() => ({
   redeemVisible: !document.getElementById('couponPayBtn')?.hidden,
   redeemText: document.getElementById('couponPayBtn')?.textContent?.trim(),
 }));
-await mkdir('/workspace/artifacts', { recursive: true });
+await mkdir(ARTIFACT_DIR, { recursive: true });
 const cShot = artifactPath('checkout-zero.png');
 await cPage.screenshot({ path: cShot, fullPage: true });
 await chromeC.close();
@@ -260,20 +262,48 @@ let mapCapture = { mapUrl, mapState: null, mapConsoleErrors: [] };
 if (mapUrl) mapCapture = { mapUrl, ...(await mapSharedTripState(mapPage, mapUrl)) };
 const mapShot = artifactPath('trip-map.png');
 await mapPage.screenshot({ path: mapShot, fullPage: true });
+const budgetShot = artifactPath('shared-budget.png');
+const budgetCheck = mapUrl
+  ? await sharedBudgetTabCheck(mapPage, sharedApi?.json?.budget || [])
+  : { tabPresent: false, clicked: false, hardcoded: [], pageErrors: {} };
+if (budgetCheck.clicked) await mapPage.screenshot({ path: budgetShot, fullPage: true });
+const logoShot = artifactPath('shared-logo-chips.png');
+const logoHotels = mapUrl ? await sharedLogoChipMetrics(mapPage, 'Hotels') : { pass: false, rows: [] };
+const logoCars = mapUrl ? await sharedLogoChipMetrics(mapPage, 'Cars') : { pass: false, rows: [] };
+if (logoHotels.clicked || logoCars.clicked) await mapPage.screenshot({ path: logoShot, fullPage: true });
 const sharedHtml = await mapPage.content();
 await chromeMap.close();
+const productMapGrade = gradeLeafletProductMap(mapCapture.productMapState, mapCapture.mapConsoleErrors);
 const mapGrade = gradeMapBar(mapCapture.mapState, mapCapture.mapConsoleErrors);
 out.checkMAP = {
   publicUrl: publicUrlAfterH,
   shareSlug,
   sharedApiPlaces: (sharedApi?.json?.places || []).length,
   mapCapture,
+  productMapGrade,
   mapGrade,
   mapShot,
   sharedUiHits: inviteUiHits(sharedHtml),
 };
+out.checkBUD = {
+  budgetCheck,
+  budgetShot: budgetCheck.clicked ? budgetShot : null,
+  apiBudgetLines: (sharedApi?.json?.budget || []).length,
+};
+out.checkLOGO = { hotels: logoHotels, cars: logoCars, logoShot: (logoHotels.rows.length || logoCars.rows.length) ? logoShot : null };
 out.http.MAP = 200;
-out.checks.MAP = Boolean(publicUrlAfterH) && (sharedApi?.json?.places?.length || 0) >= 1 && mapGrade.pass ? 'PASS' : 'FAIL';
+out.http.BUD = 200;
+out.http.LOGO = 200;
+const budPass = Boolean(publicUrlAfterH)
+  && (sharedApi?.json?.places?.length || 0) >= 1
+  && budgetCheck.tabPresent
+  && budgetCheck.clicked
+  && budgetCheck.hardcoded.length === 0
+  && !budgetCheck.pageErrors?.mapError;
+out.checks.BUD = budPass ? 'PASS' : 'FAIL';
+const logoPass = logoHotels.pass && logoCars.pass && logoHotels.clicked && logoCars.clicked;
+out.checks.LOGO = logoPass ? 'PASS' : 'FAIL';
+out.checks.MAP = Boolean(publicUrlAfterH) && (sharedApi?.json?.places?.length || 0) >= 1 && productMapGrade.pass ? 'PASS' : 'FAIL';
 out.checks['INV-UI'] = (out.checkINVUI?.chatHits || []).length === 0 && (out.checkMAP?.sharedUiHits || []).length === 0 ? 'PASS' : 'FAIL';
 
 const t6b = await postItinerary(session, { tripId, text: 'best tacos near our hotel' });
@@ -409,8 +439,16 @@ out.http.R = rTurn.status;
 const rPersist = persistedTurnClassifier(rDb?.payload);
 const rClass = classifierSnapshot(rDb?.payload);
 const rClassifierFail = rTurn.status === 502 || rClass.reason === 'turn_classifier_failed' || String(rPs?.error || '').includes('turn_classifier_failed') || String(rDb?.payload?.placeSearch?.error || '').includes('category unknown');
-out.checkR = { ...(out.checkR||{}), persistedCategory: rPersist.category, classifier: rClass };
-out.checks.R = rTurn.status >= 200 && rTurn.status < 300 && !rOffersOutside && !rClassifierFail && Boolean(rPersist.category) ? 'PASS' : 'FAIL';
+const rResultRows = rPs?.results || rDb?.payload?.placeSearch?.results || [];
+const rCoffee = gradeCoffeeReplyRows(rResultRows);
+out.checkR = {
+  ...(out.checkR || {}),
+  persistedCategory: rPersist.category,
+  classifier: rClass,
+  coffeeRows: rCoffee.rows,
+  coffeeFailures: rCoffee.failures,
+};
+out.checks.R = rTurn.status >= 200 && rTurn.status < 300 && !rOffersOutside && !rClassifierFail && Boolean(rPersist.category) && rCoffee.pass ? 'PASS' : 'FAIL';
 
 const kClass = await classifyTripIntake({ text: 'farmers market near Kihei', env: process.env });
 out.checkK = { category: kClass?.category || kClass?.classification?.category, ok: kClass?.ok, turnKind: kClass?.turnKind };
