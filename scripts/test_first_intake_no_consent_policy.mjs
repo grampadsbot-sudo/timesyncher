@@ -20,6 +20,7 @@ for (const text of [FIRST_INTAKE_VOICE_INSTRUCTION, FIRST_INTAKE_GAP_INSTRUCTION
 const ownerPlan = replyPlanFactsFromEntitlementRow({
   plan: 'single',
   status: 'active',
+  trip_id: 'trip-spouse',
   metadata: { product: 'timesyncher_vacation_single' },
 }, {
   TIMESYNCHER_SINGLE_NAME: 'TimeSyncher Vacation Single',

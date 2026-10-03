@@ -130,7 +130,9 @@ export function dbFor(state) {
       if (tripId) state.entitlement.trip_id = tripId;
       return [{ id: state.entitlement.id }];
     }
-    if (/from entitlements e/i.test(text) && /paid_orders/i.test(text)) return [{ ...state.entitlement }];
+    if (/from entitlements e/i.test(text) && /paid_orders/i.test(text)) {
+      return [{ ...state.entitlement, trip_id: state.entitlement.trip_id || null }];
+    }
     if (/from entitlements e/i.test(text) && /trip_id is null/i.test(text)) {
       return state.entitlement.trip_id ? [] : [{ ...state.entitlement }];
     }
@@ -147,7 +149,7 @@ export function dbFor(state) {
       const row = state.entitlement.trip_id === tripId
         ? state.entitlement
         : state.siblings.find((sibling) => sibling.trip_id === tripId);
-      return row ? [{ plan: row.plan, status: row.status, metadata: row.metadata }] : [];
+      return row ? [{ plan: row.plan, status: row.status, metadata: row.metadata, trip_id: row.trip_id }] : [];
     }
     if (/insert into paid_orders/i.test(text)) return [{ id: state.orderId }];
     if (/from onboarding_sessions/i.test(text) && /where order_id/i.test(text) && !/customers/i.test(text)) return [];

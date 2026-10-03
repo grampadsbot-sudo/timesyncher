@@ -14,6 +14,8 @@ import { intakeSharedResponse } from '../src/vacation/shared-trip-handler.mjs';
 const OPENROUTER_KEYS = ['OPENROUTER_API_KEY', 'TIMESYNCHER_OPENROUTER_API_KEY', 'JEV_OPENROUTER_API_KEY'];
 const savedKeys = Object.fromEntries(OPENROUTER_KEYS.map((key) => [key, process.env[key]]));
 for (const key of OPENROUTER_KEYS) delete process.env[key];
+const savedTravelBase = process.env.TIMESYNCHER_TRAVEL_BASE_URL;
+process.env.TIMESYNCHER_TRAVEL_BASE_URL = process.env.TIMESYNCHER_TRAVEL_BASE_URL || 'https://vacation-staging.timesyncher.com/';
 
 function localDate(year, month, day) {
   return new Date(year, month - 1, day);
@@ -217,6 +219,8 @@ for (const key of OPENROUTER_KEYS) {
   if (savedKeys[key] === undefined) delete process.env[key];
   else process.env[key] = savedKeys[key];
 }
+if (savedTravelBase === undefined) delete process.env.TIMESYNCHER_TRAVEL_BASE_URL;
+else process.env.TIMESYNCHER_TRAVEL_BASE_URL = savedTravelBase;
 
 console.log(JSON.stringify({
   ok: true,
