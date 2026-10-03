@@ -4,6 +4,10 @@ import {
   evaluateTripMapInPage,
 } from './shepherd-staging-smoke-lib.mjs';
 
+export const SHARED_GOTO_TIMEOUT_MS = 60000;
+export const SHARED_MAP_READY_WAIT_MS = 45000;
+export const APP_MAP_READY_FAIL_MS = 10000;
+
 export function configureSharedUiMapHelpers(_cfg) {
   /* BASE reserved for future shared URLs in map tab helpers */
 }
@@ -56,22 +60,84 @@ async function sharedTabPresent(page, keyword) {
   }, keyword);
 }
 
+export async function gotoSharedIntakePage(page, url) {
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: SHARED_GOTO_TIMEOUT_MS });
+}
+
 export async function mapSharedTripState(page, url) {
   const mapConsoleErrors = [];
   page.on('console', (m) => {
     const t = m.text();
     if (/map_center_unresolved|map_mount_failed|map_/.test(t)) mapConsoleErrors.push(t);
   });
-  await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
-  await new Promise((r) => setTimeout(r, 4000));
-  await clickSharedTabByKeyword(page, 'plan');
-  await page.waitForSelector('.leaflet-container', { timeout: 90000 }).catch((err) => {
-    mapConsoleErrors.push(`leaflet_wait:${String(err?.message || err)}`);
-  });
-  await new Promise((r) => setTimeout(r, 2500));
+
+  const stageTimestamps = {
+    networkidle2Skipped: true,
+    gotoStartMs: Date.now(),
+    gotoEndMs: null,
+    networkidle2StartMs: null,
+    networkidle2EndMs: null,
+    mapReadyWaitStartMs: null,
+    mapReadyWaitEndMs: null,
+    leafletWaitStartMs: null,
+    leafletWaitEndMs: null,
+    hangingStage: null,
+  };
+
+  let gotoError = null;
+  try {
+    await gotoSharedIntakePage(page, url);
+    stageTimestamps.gotoEndMs = Date.now();
+  } catch (err) {
+    stageTimestamps.gotoEndMs = Date.now();
+    stageTimestamps.hangingStage = 'goto';
+    gotoError = err;
+    mapConsoleErrors.push(`goto:${String(err?.message || err)}`);
+  }
+
+  if (!gotoError) {
+    await new Promise((r) => setTimeout(r, 1500));
+    await clickSharedTabByKeyword(page, 'plan');
+    stageTimestamps.mapReadyWaitStartMs = Date.now();
+    stageTimestamps.leafletWaitStartMs = stageTimestamps.mapReadyWaitStartMs;
+    try {
+      await page.waitForFunction(() => {
+        const el = document.querySelector(
+          '.leaflet-container[data-ts-map-center], .mapboxgl-map[data-ts-map-center]',
+        );
+        if (el?.getAttribute('data-ts-map-center') && window.__tsTripMap) return true;
+        const center = window.__tsTripMap?.center || window.__tsTripMap?.mapCenter;
+        return Boolean(center && Number.isFinite(Number(center.lat)) && Number.isFinite(Number(center.lng)));
+      }, { timeout: SHARED_MAP_READY_WAIT_MS });
+      stageTimestamps.mapReadyWaitEndMs = Date.now();
+      stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
+    } catch (err) {
+      stageTimestamps.mapReadyWaitEndMs = Date.now();
+      stageTimestamps.leafletWaitEndMs = stageTimestamps.mapReadyWaitEndMs;
+      stageTimestamps.hangingStage = 'map_ready_wait';
+      mapConsoleErrors.push(`map_ready_wait:${String(err?.message || err)}`);
+    }
+    await new Promise((r) => setTimeout(r, 800));
+  }
+
+  const mapReadyMs = stageTimestamps.gotoStartMs && stageTimestamps.mapReadyWaitEndMs
+    ? stageTimestamps.mapReadyWaitEndMs - stageTimestamps.gotoStartMs
+    : null;
+  let appFail = null;
+  if (Number.isFinite(mapReadyMs) && mapReadyMs > APP_MAP_READY_FAIL_MS && !stageTimestamps.hangingStage) {
+    appFail = { reason: 'app_map_ready_over_10s', mapReadyMs };
+  }
+
   const productMapState = await page.evaluate(evaluateLeafletProductMapInPage);
   const mapState = await page.evaluate(evaluateTripMapInPage);
-  return { mapState, productMapState, mapConsoleErrors };
+  return {
+    mapState,
+    productMapState,
+    mapConsoleErrors,
+    stageTimestamps,
+    mapReadyMs,
+    appFail,
+  };
 }
 
 export async function sharedBudgetTabCheck(page, budgetLines = []) {

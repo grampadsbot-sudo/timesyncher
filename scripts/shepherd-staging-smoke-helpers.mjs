@@ -167,6 +167,21 @@ export function classifierSnapshot(payload) {
   };
 }
 
+/** Provider stage timings from itinerary JSON / persisted placeSearch (or literal absent). */
+export function smokeProviderTimingsReport({ payload, placeSearch, itineraryJson } = {}) {
+  const ps = placeSearch || payload?.placeSearch || itineraryJson?.placeSearch || itineraryJson?.search;
+  const candidates = [
+    ps?.providerTimings,
+    itineraryJson?.placeSearch?.providerTimings,
+    payload?.placeSearchDiagnostics?.providerTimings,
+    payload?.placeSearch?.providerTimings,
+  ];
+  for (const value of candidates) {
+    if (value && typeof value === 'object' && Object.keys(value).length) return value;
+  }
+  return 'absent';
+}
+
 export function fullDiag(payload, ps) {
   const p = payload || {};
   const place = ps || p.placeSearch || {};
