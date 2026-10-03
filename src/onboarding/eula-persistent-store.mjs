@@ -50,15 +50,7 @@ export class LocalJsonStore {
 
 async function eulaDb(env) {
   const { sql } = await import('../vacation/db.mjs');
-  const db = sql(env);
-  await db`
-    create table if not exists eula_store_objects (
-      key text primary key,
-      document jsonb not null,
-      updated_at timestamptz not null default now()
-    )
-  `;
-  return db;
+  return sql(env);
 }
 
 export class DatabaseJsonStore {
@@ -102,21 +94,39 @@ export class DatabaseJsonStore {
 
   async listJson(prefix) {
     const db = await eulaDb(this.env);
-    const like = `${this.key(prefix)}%`;
+    const pathPrefix = `${this.key(prefix)}/`;
+    const prefixLen = pathPrefix.length;
     const rows = await db`
       select document
       from eula_store_objects
-      where key like ${like}
-        and key like '%.json'
+      where left(key, ${prefixLen}) = ${pathPrefix}
+        and right(key, 5) = '.json'
     `;
     return rows.map((row) => row.document).filter((doc) => doc && doc.kind !== 'text');
   }
+}
+
+export function isDeployedEulaRuntime(env = process.env) {
+  return Boolean(env.VERCEL || env.VERCEL_ENV || env.NODE_ENV === 'production');
+}
+
+export function isEulaStoreTestRuntime(env = process.env) {
+  return env.NODE_ENV === 'test';
 }
 
 export function createPersistentStoreFromEnv(env = process.env) {
   if (hasDatabase(env)) {
     const prefix = env.TIMESYNCHER_EULA_BLOB_PREFIX || 'timesyncher-eula';
     return new DatabaseJsonStore({ prefix, env });
+  }
+  if (isDeployedEulaRuntime(env)) {
+    throw new Error('EULA receipt store requires DATABASE_URL');
+  }
+  if (env.TIMESYNCHER_ONBOARDING_STORE) {
+    return new LocalJsonStore(env.TIMESYNCHER_ONBOARDING_STORE);
+  }
+  if (isEulaStoreTestRuntime(env)) {
+    return new LocalJsonStore(env.TIMESYNCHER_ONBOARDING_STORE || 'runtime/onboarding-eula');
   }
   return new LocalJsonStore(env.TIMESYNCHER_ONBOARDING_STORE || 'runtime/onboarding-eula');
 }
