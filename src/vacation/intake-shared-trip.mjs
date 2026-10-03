@@ -272,7 +272,13 @@ export function thingRecordFromTripRow(row = {}) {
     address: location.address || '',
     sourceRef,
     cost_estimate_cents: Number.isInteger(row.cost_estimate_cents) ? row.cost_estimate_cents : null,
+    logoUrl: textField(meta.logoUrl || ''),
+    logoCaptureReason: textField(meta.logoCaptureReason || ''),
   };
+}
+
+function textField(value) {
+  return String(value || '').trim();
 }
 
 export function sharedTripFromIntake({ trip, things }) {
@@ -315,6 +321,8 @@ export function sharedTripFromIntake({ trip, things }) {
       ratings,
       ...(sourceRef ? { sourceRef } : {}),
       ...placeSourceFieldsFromThing(thing),
+      ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
+      ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
       ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
     });
     const dayIds = [];
@@ -326,6 +334,8 @@ export function sharedTripFromIntake({ trip, things }) {
       dayIds,
       ...ratings,
       ...(sourceRef ? { sourceRef } : {}),
+      ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
+      ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
     };
     for (const date of assignDates(thing, year, tripDates)) {
       const day = dayByDate.get(date);
