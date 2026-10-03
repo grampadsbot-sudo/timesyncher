@@ -208,6 +208,26 @@ const JEV_COFFEE_PLACE_ROW = {
   passWhenYes: true,
 };
 
+const JEV_INV_CLAIM_FIRST = {
+  questionKey: 'inv_claim_first_reply',
+  instructions: 'Does the first trip-intake reply avoid promising an invite and ask exactly one needed question?',
+  criteria: {
+    true: 'The reply does not say an invite was already sent, does not promise to send or add a collaborator, and asks exactly one question the customer must answer (for example dates, lodging, or who to invite).',
+    false: 'The reply claims an invite was sent, promises to invite or add someone, asks zero questions, or asks more than one distinct question.',
+  },
+  passWhenYes: true,
+};
+
+const JEV_INV_CLAIM_AFTER_LODGING = {
+  questionKey: 'inv_claim_after_lodging',
+  instructions: 'After the customer answered where they are staying, does the reply ask for the wife companion name and/or email to invite?',
+  criteria: {
+    true: 'The reply asks for the wife or companion name, email address, or contact details so she can be invited to the trip.',
+    false: 'The reply does not ask for the companion name or email, or only repeats lodging questions without asking for invite contact info.',
+  },
+  passWhenYes: true,
+};
+
 export async function gradeCoffeePlaceRowByJev(row = {}, opts = {}) {
   const name = String(row.name || row.title || row.placeName || row.displayName || '').trim();
   const hint = [name, row.description, row.address].filter(Boolean).join(' — ').slice(0, 800);
@@ -312,4 +332,58 @@ export async function gradeAskLodgingReplyQuestion(replyText, opts = {}) {
     env,
     fetchImpl,
   });
+}
+
+export async function gradeInvClaimFirstReply(replyText, opts = {}) {
+  const {
+    customerTurn = 'Maui March 10-17 2027 with my wife',
+    judgeFn,
+    env,
+    fetchImpl,
+  } = opts;
+  const graded = await gradeSmokeReplyJev({
+    ...JEV_INV_CLAIM_FIRST,
+    replyText,
+    customerTurn,
+    judgeFn,
+    env,
+    fetchImpl,
+  });
+  const jevError = !graded.jev?.ok || graded.jev?.yes == null;
+  return {
+    pass: jevError ? false : graded.pass,
+    jev: jevBlockFromResult(graded.jev, {
+      questionKey: JEV_INV_CLAIM_FIRST.questionKey,
+      customerTurn,
+      replyExcerpt: replyText,
+    }),
+    jevError,
+  };
+}
+
+export async function gradeInvClaimAfterLodgingReply(replyText, opts = {}) {
+  const {
+    customerTurn = "We're staying at the Hyatt Regency Maui in Kaanapali.",
+    judgeFn,
+    env,
+    fetchImpl,
+  } = opts;
+  const graded = await gradeSmokeReplyJev({
+    ...JEV_INV_CLAIM_AFTER_LODGING,
+    replyText,
+    customerTurn,
+    judgeFn,
+    env,
+    fetchImpl,
+  });
+  const jevError = !graded.jev?.ok || graded.jev?.yes == null;
+  return {
+    pass: jevError ? false : graded.pass,
+    jev: jevBlockFromResult(graded.jev, {
+      questionKey: JEV_INV_CLAIM_AFTER_LODGING.questionKey,
+      customerTurn,
+      replyExcerpt: replyText,
+    }),
+    jevError,
+  };
 }

@@ -7,7 +7,9 @@ import {
   finalizeSmokeProviderLogSummary,
   formatProvider429HarnessMessage,
   isProviderHttp429,
+  nominatimCacheHitCount,
   nominatimCallsPerSecondMax,
+  nominatimOutboundHttpRows,
   providerCallTimestampMs,
   recordProviderCallsForCheck,
 } from './shepherd-staging-smoke-provider-log.mjs';
@@ -43,6 +45,18 @@ recordProviderCallsForCheck(out, 'H', {
 });
 finalizeSmokeProviderLogSummary(out);
 assert.equal(out.nominatimCallsPerSecondMax, 2);
+assert.equal(out.nominatimCacheHits, 0);
+assert.equal(out.nominatimOutboundHttpCalls, 2);
+
+assert.equal(nominatimCacheHitCount([
+  { provider: 'nominatim', status: 'ok', resultCount: 1 },
+  { provider: 'nominatim', status: 'skipped', reason: 'lodging_coordinates' },
+]), 1);
+
+assert.equal(nominatimOutboundHttpRows([
+  { provider: 'nominatim', status: 'ok', calledAtMs: 1000 },
+  { provider: 'nominatim', status: 'ok', resultCount: 1 },
+]).length, 1);
 
 assert.equal(nominatimCallsPerSecondMax([
   { provider: 'nominatim', calledAtMs: 1000 },

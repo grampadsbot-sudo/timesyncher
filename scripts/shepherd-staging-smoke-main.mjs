@@ -393,7 +393,19 @@ export async function runShepherdSmokeSpine(ctx) {
     const rPersist = persistedTurnClassifier(rDb?.payload);
     const rClass = classifierSnapshot(rDb?.payload);
     const rClassifierFail = rTurn.status === 502 || rClass.reason === 'turn_classifier_failed' || String(rPs?.error || '').includes('turn_classifier_failed') || String(rDb?.payload?.placeSearch?.error || '').includes('category unknown');
-    const rResultRows = rPs?.results || rDb?.payload?.placeSearch?.results || [];
+    const rReqId = rDb?.request_id || null;
+    const rPersistedThings = state.tripId && rReqId
+      ? await db`select title, source, metadata, category from trip_things where trip_id=${state.tripId} and source_request_id=${rReqId} order by created_at`
+      : [];
+    const rResultRows = rPersistedThings.length
+      ? rPersistedThings.map((t) => ({
+        title: t.title,
+        name: t.title,
+        source: t.source,
+        metadata: t.metadata,
+        category: t.category,
+      }))
+      : (rPs?.results || rDb?.payload?.placeSearch?.results || []);
     const rCoffee = await gradeCoffeeReplyRows(rResultRows, { customerTurn: 'coffee shops near Kihei' });
     out.checkR = {
       http: rTurn.status,
@@ -402,6 +414,7 @@ export async function runShepherdSmokeSpine(ctx) {
       diag: fullDiag(rDb?.payload, rPs),
       persistedCategory: rPersist.category,
       classifier: rClass,
+      coffeeRowSource: rPersistedThings.length ? 'trip_things' : 'placeSearch.results',
       coffeeRows: rCoffee.rows,
       coffeeFailures: rCoffee.failures,
     };
