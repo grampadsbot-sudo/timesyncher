@@ -83,6 +83,16 @@ const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16
 
 const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
+const BOOKINGS_TAB_ICON_V1_NEEDLE = BOOKINGS_TAB_ICON_PATCH;
+
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box"},children:G.icon})';
+
+const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
+
+const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center"},children:G.label})';
+
+const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
+
 export function patchThingLogoChipAlignment(source = '') {
   let js = String(source || '');
   if (js.includes(THING_LOGO_CHIP_DC_PADDING_NEEDLE)) {
@@ -105,6 +115,16 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_PATCH);
   } else if (js.includes('transform:"translateY(-0.5px)"},children:G.icon}')) {
     throw new Error('trek bundle missing bookings tab icon needle for centering patch');
+  }
+  if (js.includes(BOOKINGS_TAB_ICON_V1_NEEDLE)) {
+    js = js.replace(BOOKINGS_TAB_ICON_V1_NEEDLE, BOOKINGS_TAB_ICON_V2_PATCH);
+  } else if (!js.includes('data-tab-category":G.id')) {
+    throw new Error('trek bundle missing category tab icon anchor for centering patch');
+  }
+  if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
+    js = js.replace(BOOKINGS_TAB_LABEL_NEEDLE, BOOKINGS_TAB_LABEL_PATCH);
+  } else if (!js.includes('display:"inline-flex",alignItems:"center"},children:G.label})')) {
+    throw new Error('trek bundle missing category tab label anchor for centering patch');
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);
@@ -198,6 +218,25 @@ export function applyLiveProductPatches(patched = '') {
   else if (js.includes(LIST_LOGO_PATCH_NEEDLE)) js = js.replace(LIST_LOGO_PATCH_NEEDLE, LIST_LOGO_PATCH);
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
+  if (js.includes(SERVED_FOOTER_AI_ASSISTED_NEEDLE)) {
+    js = js.replace(SERVED_FOOTER_AI_ASSISTED_NEEDLE, '');
+  } else if (js.includes('AI-assisted vacation itinerary planning')) {
+    throw new Error('served bundle still contains AI-assisted footer copy');
+  }
+  js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor usw\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor, ecc\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor, enz\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor itp\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor atd\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor stb\.\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor и др\.\)/g, '(supported MCP clients)');
+  js = js.replace(/（Claude Web、Cursor 等）/g, '（supported MCP clients）');
+  js = js.replace(/\(Claude Web وCursor وغيرها\)/g, '(supported MCP clients)');
+  js = js.replace(/\(Claude Web, Cursor, dll\.\)/g, '(supported MCP clients)');
+  js = js.replace(/Claude Desktop, Work laptop/g, 'Example client, Work laptop');
+  js = js.replace(/Claude Desktop, Laptop di lavoro/g, 'Example client, Work laptop');
+  js = js.replace(/Claude Desktop, Werklaptop/g, 'Example client, Work laptop');
   return patchTripMapInitialView(js);
 }
 
