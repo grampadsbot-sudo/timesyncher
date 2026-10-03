@@ -3,8 +3,8 @@
  * Onboarding welcome verify against staging.
  * Signs up a fresh customer, agrees, captures the welcome, then sends three
  * fresh-trip fixtures. Shape alone is not a pass.
- * DATABASE_URL is used when set. Otherwise the staging project value is loaded
- * with VERCEL_TOKEN into process.env for this process only. The value is never
+ * DATABASE_URL and TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS come from the
+ * environment. A missing value fails this process. The values are never
  * printed, logged, or written to disk.
  */
 import { randomBytes } from 'node:crypto';
@@ -31,12 +31,9 @@ import {
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STAGING = 'https://vacation-staging.timesyncher.com';
-const STAGING_DATABASE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/A9IvKmyFpAfVBLQx?decrypt=true';
-const STAGING_COLLAB_PRICE_ENV_URL = 'https://api.vercel.com/v1/projects/timesyncher-vacation-staging/env/wxF011VOpOXjWFqi?decrypt=true';
 const DEFAULT_ARTIFACTS = '/opt/cursor/artifacts/onboarding-welcome-judge';
-export const WELCOME_VERCEL_TOKEN_MISSING = 'FAIL welcome-after-intake: VERCEL_TOKEN missing';
-export const WELCOME_DATABASE_FETCH_FAILED = 'FAIL welcome-after-intake: staging DATABASE_URL fetch failed';
-export const WELCOME_DATABASE_EMPTY = 'FAIL welcome-after-intake: staging DATABASE_URL empty';
+export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: DATABASE_URL missing';
+export const WELCOME_COLLAB_PRICE_MISSING = 'FAIL welcome-after-intake: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS missing';
 export const WELCOME_VERIFY_FAILED = 'FAIL welcome-after-intake: onboarding welcome not graded pass';
 export const WELCOME_ONBOARDING_TIMEOUT = 'FAIL welcome-after-intake: onboarding chat did not open';
 const scriptPath = fileURLToPath(import.meta.url);
@@ -59,7 +56,7 @@ export function redactWelcomeSecrets(text, secret = process.env.DATABASE_URL) {
 }
 
 function redactWelcomeError(error) {
-  const message = redactWelcomeSecrets(error?.message || WELCOME_DATABASE_FETCH_FAILED);
+  const message = redactWelcomeSecrets(error?.message || WELCOME_DATABASE_MISSING);
   const wrapped = new Error(message);
   wrapped.exitCode = error?.exitCode || 1;
   const stack = redactWelcomeSecrets(error?.stack || '');
@@ -67,64 +64,12 @@ function redactWelcomeError(error) {
   return wrapped;
 }
 
-export async function ensureWelcomeDatabase({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
-  if (String(env.DATABASE_URL || '').trim()) return;
-  const token = String(env.VERCEL_TOKEN || '').trim();
-  if (!token) throw fail(WELCOME_VERCEL_TOKEN_MISSING);
-  let response;
-  try {
-    response = await fetchImpl(STAGING_DATABASE_ENV_URL, {
-      method: 'GET',
-      redirect: 'error',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  } catch {
-    throw fail(WELCOME_DATABASE_FETCH_FAILED);
-  }
-  if (!response || response.ok !== true) {
-    const status = Number(response?.status);
-    const suffix = Number.isInteger(status) && status > 0 ? ` (HTTP ${status})` : '';
-    throw fail(`${WELCOME_DATABASE_FETCH_FAILED}${suffix}`);
-  }
-  let payload;
-  try {
-    payload = await response.json();
-  } catch {
-    throw fail(WELCOME_DATABASE_FETCH_FAILED);
-  }
-  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
-  if (payload?.key !== 'DATABASE_URL' || !value) {
-    throw fail(payload?.key === 'DATABASE_URL' ? WELCOME_DATABASE_EMPTY : WELCOME_DATABASE_FETCH_FAILED);
-  }
-  process.env.DATABASE_URL = value;
-  if (env !== process.env) env.DATABASE_URL = value;
+export async function ensureWelcomeDatabase({ env = process.env } = {}) {
+  if (!String(env.DATABASE_URL || '').trim()) throw fail(WELCOME_DATABASE_MISSING);
 }
 
-export async function ensureCollaboratorPrice({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
-  if (String(env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS || '').trim()) return;
-  const token = String(env.VERCEL_TOKEN || '').trim();
-  if (!token) return;
-  let response;
-  try {
-    response = await fetchImpl(STAGING_COLLAB_PRICE_ENV_URL, {
-      method: 'GET',
-      redirect: 'error',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  } catch {
-    return;
-  }
-  if (!response || response.ok !== true) return;
-  let payload;
-  try {
-    payload = await response.json();
-  } catch {
-    return;
-  }
-  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
-  if (payload?.key !== 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS' || !value) return;
-  process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = value;
-  if (env !== process.env) env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = value;
+export async function ensureCollaboratorPrice({ env = process.env } = {}) {
+  if (!String(env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS || '').trim()) throw fail(WELCOME_COLLAB_PRICE_MISSING);
 }
 
 function staticFail(error, message) {
@@ -696,8 +641,8 @@ async function driveCollaborator(browser, env, fixture, ownerTrip, artifactsDir)
   if (!ownerTrip?.customerId || !ownerTrip?.tripId) {
     return { error: 'owner trip missing', turns: [], screenshots: [] };
   }
-  if (!env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS && !process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS) {
-    return { error: 'collaborator price config unset', turns: [], screenshots: [] };
+  if (!String(env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS || '').trim()) {
+    throw fail(WELCOME_COLLAB_PRICE_MISSING);
   }
   const [{ sql }, { createCollaboratorInvite }, { joinCollaboratorAppSession }] = await Promise.all([
     import('../../../../src/vacation/db.mjs'),
@@ -955,6 +900,7 @@ export async function runWelcomeAfterIntake({
 
 async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, random, judge }) {
   await ensureWelcomeDatabase({ env });
+  await ensureCollaboratorPrice({ env });
   const fixtures = generateOnboardingFixtures(random);
   const runId = newRunId();
   const runStartedAt = new Date().toISOString();
@@ -1001,7 +947,6 @@ async function runWelcomeAfterIntakeUnchecked({ env, shotDir, artifactsDir, rand
       }
     }
     try {
-      await ensureCollaboratorPrice({ env });
       collaborator = await driveCollaborator(browser, env, fixtures, trips.find((trip) => trip.id === 'f1'), artifactsDir);
     } catch (error) {
       collaborator = { error: redactWelcomeSecrets(error?.message || error), turns: [], screenshots: [] };
@@ -1110,13 +1055,12 @@ export function selfTestMissingWelcomeDatabase() {
   const env = { ...process.env };
   delete env.DATABASE_URL;
   delete env.NEON_DATABASE_URL;
-  delete env.VERCEL_TOKEN;
   const child = spawnSync(process.execPath, [scriptPath, '--check'], { cwd: root, env, encoding: 'utf8' });
   const output = `${child.stdout || ''}${child.stderr || ''}`;
   if (/postgres(?:ql)?:\/\//i.test(output) || /Bearer\s+\S+/.test(output)) {
     throw new Error('welcome-after-intake missing-env self-test leaked a secret');
   }
-  if (child.status === 0 || !output.includes(WELCOME_VERCEL_TOKEN_MISSING)) {
+  if (child.status === 0 || !output.includes(WELCOME_DATABASE_MISSING)) {
     throw new Error(`welcome-after-intake missing-env self-test failed status=${child.status}`);
   }
 }
@@ -1170,7 +1114,7 @@ async function main() {
     }
     process.stdout.write(line);
   } catch (error) {
-    process.stderr.write(`${error?.message || WELCOME_DATABASE_FETCH_FAILED}\n`);
+    process.stderr.write(`${error?.message || WELCOME_DATABASE_MISSING}\n`);
     process.exit(error?.exitCode || 1);
   }
 }
