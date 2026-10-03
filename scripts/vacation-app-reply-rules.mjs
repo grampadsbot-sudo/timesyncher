@@ -1,4 +1,5 @@
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
+import { modelVisibleTripContext } from '../src/vacation/provider-result-context.mjs';
 import { perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -7,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
-
 const OPENROUTER_HOST = /openrouter\.ai/i;
 const JEV_DECISIONS_PATH = /\/api\/alpha\/decisions\/?$/i;
 const OPENROUTER_CHAT_PATH = /\/api\/v1\/chat\/completions\/?$/i;
@@ -546,10 +546,11 @@ function grokReplyUrl(env) {
 }
 
 export function replyRequestBody({ rules, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, tripContext = null, planTable = null }) {
+  const visibleTripContext = modelVisibleTripContext(tripContext);
   return {
     destination_lock: text(destination, 160) || null,
     single_upsell: upsell === 'allow-once' ? 'allow-once' : 'forbidden',
-    trip_context: tripContext && typeof tripContext === 'object' ? tripContext : null,
+    trip_context: visibleTripContext && typeof visibleTripContext === 'object' ? visibleTripContext : null,
     plan_table: planTable && typeof planTable === 'object' ? planTable : null,
     recent_turns: Array.isArray(memory) ? memory.slice(-12) : [],
     pipeline: rules?.pipeline || SHARED_REPLY_PIPELINE,
@@ -585,7 +586,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const planLine = String(context.planLine || '').trim();
   const configuredSeat = Number(context.seatDollars);
   const seatDollars = Number.isFinite(configuredSeat) && configuredSeat > 0 ? configuredSeat : null;
-  const tripRaw = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
+  const tripRaw = modelVisibleTripContext(context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null);
   const itinerary = Array.isArray(tripRaw?.itinerary) ? tripRaw.itinerary.filter(Boolean).slice(0, 12) : [];
   const dates = String(tripRaw?.dates || '').trim();
   const roster = String(tripRaw?.roster || '').trim();
@@ -595,7 +596,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const customerInput = {};
   const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
-    if (statedTripFields.has(key) || key === 'unscheduledDayRule') continue;
+    if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate') continue;
     if (Array.isArray(value)) {
       const items = value.map((item) => String(item || '').trim()).filter(Boolean);
       if (items.length) customerInput[key] = items;
