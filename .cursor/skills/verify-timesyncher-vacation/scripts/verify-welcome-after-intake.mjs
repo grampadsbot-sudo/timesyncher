@@ -32,7 +32,7 @@ import {
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STAGING = 'https://vacation-staging.timesyncher.com';
 const DEFAULT_ARTIFACTS = '/opt/cursor/artifacts/onboarding-welcome-judge';
-export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: DATABASE_URL missing';
+export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: required environment variable DATABASE_URL is unset or empty (this harness does not fetch DATABASE_URL from Vercel)';
 export const WELCOME_COLLAB_PRICE_MISSING = 'FAIL welcome-after-intake: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS missing';
 export const WELCOME_VERIFY_FAILED = 'FAIL welcome-after-intake: onboarding welcome not graded pass';
 export const WELCOME_ONBOARDING_TIMEOUT = 'FAIL welcome-after-intake: onboarding chat did not open';
@@ -64,8 +64,19 @@ function redactWelcomeError(error) {
   return wrapped;
 }
 
+export function welcomeDatabaseUrl(env = process.env) {
+  const url = String(env.DATABASE_URL || '').trim();
+  if (!url) throw fail(WELCOME_DATABASE_MISSING);
+  return url;
+}
+
 export async function ensureWelcomeDatabase({ env = process.env } = {}) {
-  if (!String(env.DATABASE_URL || '').trim()) throw fail(WELCOME_DATABASE_MISSING);
+  welcomeDatabaseUrl(env);
+}
+
+export async function runWelcomeEnvCheck({ env = process.env } = {}) {
+  await ensureWelcomeDatabase({ env });
+  await ensureCollaboratorPrice({ env });
 }
 
 export async function ensureCollaboratorPrice({ env = process.env } = {}) {
@@ -404,7 +415,7 @@ async function createFreshTrip(env, owner, title) {
     import('../../../../src/vacation/onboarding.mjs'),
     import('../../../../src/vacation/checkout-pricing.mjs'),
   ]);
-  const stagingEnv = { ...env, TIMESYNCHER_SITE_BASE_URL: STAGING, DATABASE_URL: env.DATABASE_URL || process.env.DATABASE_URL };
+  const stagingEnv = { ...env, TIMESYNCHER_SITE_BASE_URL: STAGING, DATABASE_URL: welcomeDatabaseUrl(env) };
   return buildOnboardingFromCoupon({
     db: sql(stagingEnv),
     contact: owner,
@@ -649,7 +660,7 @@ async function driveCollaborator(browser, env, fixture, ownerTrip, artifactsDir)
     import('../../../../src/vacation/collaborators.mjs'),
     import('../../../../src/vacation/collaborator-app-seat.mjs'),
   ]);
-  const stagingEnv = { ...env, TIMESYNCHER_SITE_BASE_URL: STAGING, DATABASE_URL: env.DATABASE_URL || process.env.DATABASE_URL };
+  const stagingEnv = { ...env, TIMESYNCHER_SITE_BASE_URL: STAGING, DATABASE_URL: welcomeDatabaseUrl(env) };
   const db = sql(stagingEnv);
   const invited = await createCollaboratorInvite(db, {
     ownerCustomerId: ownerTrip.customerId,
@@ -1074,6 +1085,16 @@ async function main() {
   if (process.argv.includes('--self-test-missing-env')) {
     selfTestMissingWelcomeDatabase();
     process.stdout.write('welcome-after-intake missing-env self-test passed\n');
+    return;
+  }
+  if (process.argv.includes('--check')) {
+    try {
+      await runWelcomeEnvCheck({ env: process.env });
+      process.stdout.write('welcome-after-intake env check passed\n');
+    } catch (error) {
+      process.stderr.write(`${error?.message || WELCOME_DATABASE_MISSING}\n`);
+      process.exit(error?.exitCode || 1);
+    }
     return;
   }
   const artifactsDir = path.resolve(argValue('--artifacts') || DEFAULT_ARTIFACTS);

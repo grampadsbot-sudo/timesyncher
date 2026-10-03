@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 export const JUDGE_URL = 'https://openrouter.ai/api/v1/chat/completions';
-export const JUDGE_MODEL = 'typesafe/jev-1.13';
+export const JUDGE_MODEL = 'qwen/qwen2.5-vl-72b-instruct';
 
 /**
  * One vision call per screenshot. Same OpenRouter chat path as
@@ -33,8 +33,11 @@ export async function judgeScreenshot({
     'Spec:',
     specText,
   ].join('\n');
+  const model = env.TIMESYNCHER_VERIFY_JUDGE_MODEL || JUDGE_MODEL;
   const payload = {
-    model: env.TIMESYNCHER_VERIFY_JUDGE_MODEL || JUDGE_MODEL,
+    model,
+    temperature: 0,
+    response_format: { type: 'json_object' },
     messages: [
       {
         role: 'user',
@@ -60,7 +63,9 @@ export async function judgeScreenshot({
     });
     const text = await response.text();
     if (!response.ok) {
-      return { ok: false, error: `judge HTTP ${response.status}`, verdict: null, mismatches: [], body: text.slice(0, 300) };
+      const excerpt = text.slice(0, 500);
+      console.error(`verify-layout judge OpenRouter HTTP ${response.status} model=${model}: ${excerpt}`);
+      return { ok: false, error: `judge HTTP ${response.status}`, verdict: null, mismatches: [], body: excerpt };
     }
     let body;
     try {

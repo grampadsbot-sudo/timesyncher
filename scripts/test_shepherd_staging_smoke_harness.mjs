@@ -32,8 +32,10 @@ const parallelText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-paral
 const askText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-ask.mjs'), 'utf8');
 const tailText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-tail.mjs'), 'utf8');
 const mapLogoRunText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-map-logo-run.mjs'), 'utf8');
+const eulaReadbackText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-eula-readback.mjs'), 'utf8');
+const checkIText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-check-i.mjs'), 'utf8');
 const runCheckText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-run-check.mjs'), 'utf8');
-const combined = `${mainText}\n${spineText}\n${layoutVisualSpineText}\n${layoutSpineText}\n${visualSpineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}`;
+const combined = `${mainText}\n${spineText}\n${layoutVisualSpineText}\n${layoutSpineText}\n${visualSpineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}\n${eulaReadbackText}\n${checkIText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
 const dedicatedCheckRe = /runDedicatedSharedCheck\s*\(\s*ctx\s*,\s*['"]([^'"]+)['"]\s*,\s*(?:\d+|MAP_CHECK_TIMEOUT_MS|LOGO_CHECK_TIMEOUT_MS)/g;

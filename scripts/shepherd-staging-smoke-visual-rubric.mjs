@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 
 export const VISUAL_JUDGE_MODEL = 'qwen/qwen2.5-vl-72b-instruct';
-export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v8-qwen25-vl-composer-crop-8204';
+export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v9-icon-send-composer-8205';
 
 const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is unchanged):
 - Craig's spec applies to the APP SHELL: header, composer row, and site/chat slider divider area.
@@ -12,7 +12,7 @@ const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is 
 
 const VISUAL_RUBRIC_ITEMS = [
   { id: '1', text: 'App shell matches the canonical spec (header, composer row, slider when site exists). No extra chrome: app/brand logos (TimeSyncher pill, in-app site chrome logos, nav bars, stamps, Settings/Open navigation). Vendor logos inside Hotels/Cars/content rows are allowed and must not be treated as violations of item 1.' },
-  { id: '2', text: 'The composer crop shows the textarea, file-add button, speak button, and a Send control — a visible button whose accessible name is "Send" (aria-label, title, or visible text; icon-only is OK when named Send). FAIL if Send is missing or not visibly rendered.' },
+  { id: '2', text: 'The composer crop shows the textarea, file-add button, speak button, and a Send control on the right side of the compose row (next to the mic). PASS when a visible submit/send button is present: labeled "Send" OR icon-only up-arrow / paper-plane style send button in the composer row. FAIL if there is no send control, or it is hidden, clipped, covered, or outside the composer row. (DOM harness separately requires accessible name Send; visual judgment does not override DOM FAIL.)' },
   { id: '3', text: 'When fewer than 2 vacations, the header is fully hidden (zero height / not visible). When 2+ vacations, the header holds only the vacation dropdown.' },
   { id: '4', text: 'When the vacation site has content, it is on top with a resizable divider/slider between site and chat, and a full-screen control in the site area.' },
   { id: '5', text: 'Nothing is cut off or overflowing horizontally.' },
