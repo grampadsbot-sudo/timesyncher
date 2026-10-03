@@ -408,11 +408,7 @@
       justify-self: start;
     }
     @media (max-width: 700px) {
-      .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; }
-      .trip-button { max-width: 100%; }
-      .trip-list { left: 0; right: auto; width: 100%; }
-      .workspace:not(.chat-only) { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); }
-      .bubble { max-width: 94%; }
+      .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; } .trip-button { max-width: 100%; } .trip-list { left: 0; right: auto; width: 100%; } .workspace:not(.chat-only) { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); } .bubble { max-width: 94%; }
     }
     html:has(.app.site-fullscreen) footer[data-build-stamp="1"] {
       visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0);
@@ -618,7 +614,7 @@
               <div class="attachment-row" id="attachmentRow"></div>
               <div class="compose-grid">
                 <button class="icon-button" id="attachButton" type="button" aria-label="Add file" title="Add file">${icon.clip}</button>
-                <textarea id="messageText" name="message" rows="1" aria-label="Message"></textarea>
+                <textarea id="messageText" name="message" rows="1" aria-label="Message" enterkeyhint="send"></textarea>
                 <button class="icon-button" id="voiceButton" type="button" aria-label="Speak" title="Speak">${icon.mic}</button>
               </div>
               <input id="fileInput" type="file" accept="image/*,video/*,.pdf,.txt,.ics,.csv,.json" multiple hidden>
@@ -674,10 +670,20 @@
         messageText.focus();
       });
       bindVoice();
+      let shiftBreak = false, imeBreak = false;
+      const enterSend = (event, fromBreak) => {
+        const skip = shiftBreak || imeBreak || event.isComposing === true || event.keyCode === 229 || event.shiftKey === true || event.repeat;
+        if (fromBreak) { shiftBreak = false; imeBreak = false; }
+        if (skip || (!messageText.value.trim() && !state.attachments.length && !state.sending)) return;
+        event.preventDefault(); if (!state.sending) composer.requestSubmit();
+      };
       messageText.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229 || event.repeat) return;
-        event.preventDefault();
-        composer.requestSubmit();
+        if (event.key !== 'Enter') return;
+        shiftBreak = event.shiftKey === true; imeBreak = event.isComposing === true || event.keyCode === 229;
+        enterSend(event, false);
+      });
+      messageText.addEventListener('beforeinput', (event) => {
+        if (event.inputType === 'insertLineBreak' || event.inputType === 'insertParagraph') enterSend(event, true);
       });
       composer.addEventListener('submit', sendMessage);
     }

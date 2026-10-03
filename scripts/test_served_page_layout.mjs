@@ -263,6 +263,69 @@ function fullScreenSource() {
   };
 }
 
+async function openComposer(browser, server, viewport, mobile) {
+  const page = await browser.newPage();
+  await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile });
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    const url = request.url();
+    if (url.startsWith(server.origin) || url.startsWith('data:')) request.continue();
+    else request.abort().catch((error) => { console.error(error); });
+  });
+  await page.goto(`${server.origin}/vacation-app.html?session=${sessions.NONE}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForSelector('#messageText', { timeout: 15000 });
+  return page;
+}
+
+async function checkComposerEnter(browser, server, viewport, results) {
+  const mobile = viewport.tag === '390';
+  const page = await openComposer(browser, server, viewport, mobile);
+  try {
+    if (mobile) {
+      const hint = await page.$eval('#messageText', (node) => node.getAttribute('enterkeyhint') || '');
+      await page.click('#messageText');
+      await page.keyboard.type('Phone send check');
+      await page.keyboard.press('Enter');
+      const sent = await page.waitForFunction(() => [...document.querySelectorAll('#messages .bubble.user')].some((node) => (node.textContent || '').includes('Phone send check')), { timeout: 4000 }).then(() => true).catch((error) => {
+        console.error('phone enter wait ended', error?.name || error);
+        return false;
+      });
+      const detail = await page.evaluate(() => {
+        const area = document.querySelector('#messageText');
+        const bubble = [...document.querySelectorAll('#messages .bubble.user')].map((node) => node.textContent || '');
+        return { value: area.value, bubble, hint: area.getAttribute('enterkeyhint') || '' };
+      });
+      const bubble = detail.bubble.find((text) => text.includes('Phone send check')) || '';
+      results.push({
+        id: 'APP-390-ENTER',
+        ok: hint === 'send' && sent && detail.value === '' && !detail.value.includes('\n') && bubble.includes('Phone send check') && !bubble.includes('\n'),
+        detail: { hint, sent, value: detail.value, bubble },
+      });
+    } else {
+      await page.click('#messageText');
+      await page.keyboard.type('Shift line');
+      await page.keyboard.down('Shift');
+      await page.keyboard.press('Enter');
+      await page.keyboard.up('Shift');
+      await page.waitForFunction(() => (document.querySelector('#messageText').value || '').includes('\n'), { timeout: 2000 }).catch((error) => {
+        console.error('shift newline wait ended', error?.name || error);
+      });
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      const detail = await page.evaluate(() => ({
+        value: document.querySelector('#messageText').value,
+        sent: [...document.querySelectorAll('#messages .bubble.user')].some((node) => (node.textContent || '').includes('Shift line')),
+      }));
+      results.push({
+        id: 'APP-1280-SHIFT',
+        ok: detail.value.includes('Shift line') && detail.value.includes('\n') && detail.sent === false,
+        detail,
+      });
+    }
+  } finally {
+    await page.close();
+  }
+}
+
 async function shot(page, dir, name) {
   if (!dir) return;
   await mkdir(dir, { recursive: true });
@@ -398,6 +461,7 @@ async function main() {
       });
       await shot(pub, shotDir, `shared-${viewport.tag}.png`);
       await pub.close();
+      await checkComposerEnter(browser, server, viewport, results);
     }
   } finally {
     await browser.close();
