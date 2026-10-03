@@ -111,6 +111,7 @@ const sharedCtx = {
   A2_COLLAB_NAME,
   A2_EMAIL,
   D1_EXPECT_START,
+  registerBrowser,
 };
 
 await runShepherdSmokeBootstrap(sharedCtx);
