@@ -1,11 +1,6 @@
-import { waitUntil } from '@vercel/functions';
-
 export function scheduleBackgroundWork(work) {
   if (typeof work !== 'function') {
     throw new TypeError('scheduleBackgroundWork requires a function that returns a promise');
-  }
-  if (typeof waitUntil !== 'function') {
-    throw new Error('@vercel/functions waitUntil is not available in this runtime');
   }
   const backgroundPromise = (async () => await work())().catch((error) => {
     console.error(JSON.stringify({
@@ -14,6 +9,20 @@ export function scheduleBackgroundWork(work) {
     }));
     throw error;
   });
-  waitUntil(backgroundPromise);
+
+  void import('@vercel/functions')
+    .then(({ waitUntil }) => {
+      if (typeof waitUntil !== 'function') {
+        throw new Error('@vercel/functions waitUntil is not available in this runtime');
+      }
+      waitUntil(backgroundPromise);
+    })
+    .catch((error) => {
+      console.error(JSON.stringify({
+        event: 'background_wait_until_unavailable',
+        message: String(error?.message || error || ''),
+      }));
+    });
+
   return backgroundPromise;
 }
