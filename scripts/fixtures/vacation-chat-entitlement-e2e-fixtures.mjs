@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { couponHash } from '../../src/vacation/coupons.mjs';
+import { handleEulaStoreDbSql } from './eula-store-db-sql.mjs';
 
 export const TRIP_TITLE = 'Harbor Ridge Week';
 export const DESTINATION = 'Neutral Bay';
@@ -66,16 +67,8 @@ export function buildState(plan) {
 export function dbFor(state) {
   return (strings, ...values) => {
     const text = sqlText(strings);
-    if (/create table if not exists eula_store_objects/i.test(text)) return [];
-    if (/insert into eula_store_objects/i.test(text)) {
-      const key = values.find((v) => typeof v === 'string' && v.includes('timesyncher-eula'));
-      const doc = values.find((v) => v && typeof v === 'object' && !Array.isArray(v));
-      if (key) state.eulaStore[key] = doc;
-      return [];
-    }
-    if (/select document from eula_store_objects/i.test(text)) {
-      return state.eulaStore[values[0]] ? [{ document: state.eulaStore[values[0]] }] : [];
-    }
+    const eulaHandled = handleEulaStoreDbSql(text, values, state.eulaStore);
+    if (eulaHandled !== undefined) return eulaHandled;
     if (/from checkout_coupons/i.test(text) && /code_hash/i.test(text)) {
       return state.coupon.code_hash === values.find((v) => typeof v === 'string' && v.length === 64)
         ? [{ metadata: state.coupon.metadata }]

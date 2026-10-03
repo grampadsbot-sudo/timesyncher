@@ -10,6 +10,7 @@ import { ensureVacationEulaSession, eulaSessionIdForOnboarding, vacationEulaStat
 import { useVacationAppDatabase } from '../routes/vacation-itinerary.mjs';
 import { useVacationDatabase } from '../src/vacation/db.mjs';
 import { installNoopNominatimStore, resetNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+import { handleEulaStoreDbSql } from './fixtures/eula-store-db-sql.mjs';
 import {
   BRAVE_DUMMY,
   BRAVE_HOST,
@@ -119,17 +120,8 @@ async function runPlaceRelevanceTargetAreaTests() {
 
   function db(strings, ...values) {
     const text = sqlText(strings);
-    if (/create table if not exists eula_store_objects/i.test(text)) return [];
-    if (/insert into eula_store_objects/i.test(text)) {
-      const key = values.find((v) => typeof v === 'string' && v.includes('timesyncher-eula'));
-      const doc = values.find((v) => v && typeof v === 'object' && !Array.isArray(v));
-      if (key) eulaStore[key] = doc;
-      return [];
-    }
-    if (/select document from eula_store_objects/i.test(text)) {
-      const key = values[0];
-      return eulaStore[key] ? [{ document: eulaStore[key] }] : [];
-    }
+    const eulaHandled = handleEulaStoreDbSql(text, values, eulaStore);
+    if (eulaHandled !== undefined) return eulaHandled;
     if (/from entitlements e/i.test(text) && /e\.customer_id = t\.customer_id/i.test(text)) {
       return [{ plan: state.entitlement.plan, status: state.entitlement.status, metadata: state.entitlement.metadata }];
     }
