@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 
-export const VISUAL_JUDGE_MODEL = 'qwen/qwen3-max';
+export const VISUAL_JUDGE_MODEL = 'qwen/qwen3-235b-a22b-2507';
 export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v4-layout-ground-truth';
 
 const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is unchanged):
