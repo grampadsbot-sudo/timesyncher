@@ -203,7 +203,7 @@ async function handleBind(req, res) {
   const bindingId = newBindingId();
   let blobUrl = '';
   let storagePathname = null;
-  if (bytes && !hasDatabase(process.env)) {
+  if (bytes) {
     const blob = await putMediaBlob(bytes, {
       pathname: `thing-media/${shareToken}/${thing.thingId}-${Date.now()}-${fileName}`,
       contentType: mimeType,
@@ -218,10 +218,10 @@ async function handleBind(req, res) {
     sourceUrl,
     blobUrl,
     hasDatabase: hasDatabase(process.env),
-    origin: originFromReq(req),
-    shareToken,
-    bindingId,
   });
+  if (storage.error === 'blob-required') {
+    throw Object.assign(new Error('File bind requires a working Vercel Blob store for uploads. Pass sourceUrl of an already-hosted public file, or use CLI --write-public on a git deploy.'), { statusCode: 503 });
+  }
   if (storage.error === 'no-store') {
     throw Object.assign(new Error('File bind needs DATABASE_URL (Neon) or a working Blob store, or pass sourceUrl of an already-hosted file. Use CLI --write-public on a git deploy, or --apply-trek on the TREK host.'), { statusCode: 503 });
   }
