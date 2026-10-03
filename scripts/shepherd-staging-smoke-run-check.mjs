@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import {
   SMOKE_CHECK_ORDER,
+  SMOKE_FAIL_CLOSED_GO,
   SMOKE_PARALLEL_CONCURRENCY,
   SMOKE_PARALLEL_INDEPENDENT_NAMES,
 } from './shepherd-staging-smoke-plan.mjs';
@@ -248,6 +249,8 @@ export function createSmokeRunner(ctx) {
   async function finish() {
     out.totalRuntimeMs = Date.now() - runStartedAt;
     finalizeSmokeProviderLogSummary(out);
+    const goFails = SMOKE_FAIL_CLOSED_GO.filter((name) => out.checks[name] === 'FAIL');
+    out.goGate = { pass: goFails.length === 0, checks: SMOKE_FAIL_CLOSED_GO, fails: goFails };
     const failed = Object.values(out.checks).some((v) => v === 'FAIL');
     await writeOutAndExit(failed ? 1 : 0);
   }

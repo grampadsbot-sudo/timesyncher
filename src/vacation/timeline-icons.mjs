@@ -102,9 +102,11 @@ export function resolveThingType(thing = {}, override = {}, rowType = '') {
   if (row === 'travel' || row === 'travel-to-thing') return row;
   if (row === 'flight') return 'flight';
 
+  const rawCategory = thing.category;
   const candidates = [
     override.category,
     thing.type,
+    typeof rawCategory === 'string' ? rawCategory : '',
     thing.category_name,
     thing.category?.name,
     thing.category_icon,
