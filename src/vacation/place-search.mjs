@@ -14,6 +14,7 @@ import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
+import { mergeLogoMetadata } from './trip-thing-logo-metadata.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
@@ -641,6 +642,17 @@ export async function searchPlaces({
 export function placeToTripThing(place) {
   const sourceRecord = sourceRecordFor(place);
   const sourceRef = sourceRefFor(place);
+  const baseMetadata = {
+    source: place.source,
+    externalId: place.externalId || '',
+    sourceRef,
+    sourceRecord,
+    jevScore: place.jevScore ?? 0,
+    ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
+    ...(Array.isArray(place.providerCategories) && place.providerCategories.length
+      ? { providerCategories: place.providerCategories }
+      : {}),
+  };
   return {
     category: place.category,
     subtype: place.source,
@@ -654,14 +666,7 @@ export function placeToTripThing(place) {
     },
     links: place.url ? [{ label: place.source, url: place.url }] : [],
     ratings: writeRatings({ sourceRecord }),
-    metadata: {
-      source: place.source,
-      externalId: place.externalId || '',
-      sourceRef,
-      sourceRecord,
-      jevScore: place.jevScore ?? 0,
-      ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
-    },
+    metadata: mergeLogoMetadata(baseMetadata, { ...place, sourceRecord }),
   };
 }
 
