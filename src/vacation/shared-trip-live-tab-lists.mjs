@@ -1,5 +1,5 @@
 import { applyProductKeepsakeOverrides, productThingCategory } from './keepsake-product-overrides.mjs';
-import { thingLogoUrl } from './timeline-icons.mjs';
+import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -54,7 +54,7 @@ function sharedLiveTabRows(shared = {}, tabKeyword = '') {
 }
 
 function listRowHtml({ place, override, tab, onLogoMissing }) {
-  const logoUrl = thingLogoUrl(place, override);
+  const logoUrl = resolveThingLogoUrl(place, override);
   const name = escapeHtml(place.name || place.title || 'Place');
   const tabAttr = escapeHtml(tab);
   if (!logoUrl) {
