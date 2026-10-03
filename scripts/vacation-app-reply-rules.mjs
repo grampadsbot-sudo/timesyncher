@@ -607,6 +607,10 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
+  const lodgingAsk = tripRaw?.lodgingAsk === true;
+  const flightAsk = String(tripRaw?.flightAsk || '').trim();
+  const lodgingGapAskRule = lodgingAsk ? 'The saved trip record includes lodgingAsk. Ask the customer where they are staying, in your own words.' : '';
+  const flightAskRule = flightAsk ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.' : '';
   const trip = itinerary.length || dates || roster || rule || hasCustomerInput
     ? { itinerary, dates, roster, rule, ...customerInput }
     : null;
@@ -655,6 +659,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
+    lodgingGapAskRule,
+    flightAskRule,
     unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
