@@ -102,9 +102,6 @@ export function chatPlaceSearchSavedReplyFacts(savedThings = [], tripStart = '',
     chatPlaceSearch.weekdayAmbiguityRule =
       'Some saved places name a weekday that matches more than one trip day; use candidateDates and ask which day before scheduling.';
   }
-  if (unscheduled.some((row) => row.notOnADay === true && !row.weekdayAmbiguous)) {
-    chatPlaceSearch.unscheduledDayRule = 'Each place in unscheduled is not on a day. Tell the customer that for each of those places.';
-  }
   return { chatPlaceSearch };
 }
 
