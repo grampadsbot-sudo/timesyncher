@@ -32,7 +32,7 @@ import {
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STAGING = 'https://vacation-staging.timesyncher.com';
 const DEFAULT_ARTIFACTS = '/opt/cursor/artifacts/onboarding-welcome-judge';
-export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: required environment variable DATABASE_URL is unset or empty (VERCEL_TOKEN is not used to load DATABASE_URL)';
+export const WELCOME_DATABASE_MISSING = 'FAIL welcome-after-intake: required environment variable DATABASE_URL is unset or empty (this harness does not fetch DATABASE_URL from Vercel)';
 export const WELCOME_COLLAB_PRICE_MISSING = 'FAIL welcome-after-intake: TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS missing';
 export const WELCOME_VERIFY_FAILED = 'FAIL welcome-after-intake: onboarding welcome not graded pass';
 export const WELCOME_ONBOARDING_TIMEOUT = 'FAIL welcome-after-intake: onboarding chat did not open';

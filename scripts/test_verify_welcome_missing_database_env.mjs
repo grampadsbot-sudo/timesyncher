@@ -26,7 +26,8 @@ await assert.rejects(
   (error) => {
     assert.equal(error.message, WELCOME_DATABASE_MISSING);
     assert.equal(error.exitCode, 1);
-    assert.equal(error.message.includes('VERCEL_TOKEN'), true);
+    assert.match(error.message, /DATABASE_URL/);
+    assert.match(error.message, /does not fetch DATABASE_URL from Vercel/i);
     assert.equal(error.message.includes(TOKEN), false);
     return true;
   },
