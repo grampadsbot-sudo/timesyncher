@@ -41,12 +41,28 @@ import {
   gotoAndHydrateSharedIntakePage,
   listSharedDomTabs,
 } from './shepherd-staging-smoke-shared-ui-map.mjs';
+import {
+  createLogoStageTimestamps,
+  pickSlowLogoStage,
+  LOGO_TAB_SETTLE_MS,
+  LOGO_IMG_LOAD_CAP_MS,
+  LOGO_VIEWPORT_WIDTHS,
+  LOGO_ROW_SCREENSHOT_CAP,
+} from './shepherd-staging-smoke-logo-metrics.mjs';
 
 assert.equal(APP_MAP_READY_FAIL_MS, 10000);
 assert.equal(SHARED_GOTO_TIMEOUT_MS, 60000);
 assert.equal(SHARED_MAP_READY_WAIT_MS, 45000);
 assert.equal(typeof gotoAndHydrateSharedIntakePage, 'function');
 assert.equal(typeof listSharedDomTabs, 'function');
+assert.equal(typeof createLogoStageTimestamps, 'function');
+assert.equal(typeof pickSlowLogoStage, 'function');
+assert.equal(LOGO_TAB_SETTLE_MS, 400);
+assert.equal(LOGO_IMG_LOAD_CAP_MS, 5000);
+assert.deepEqual(LOGO_VIEWPORT_WIDTHS, [1280, 390]);
+assert.equal(LOGO_ROW_SCREENSHOT_CAP, 8);
+const emptyStages = createLogoStageTimestamps();
+assert.equal(pickSlowLogoStage(emptyStages), null);
 
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);

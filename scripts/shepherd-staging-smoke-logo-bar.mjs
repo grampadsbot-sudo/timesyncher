@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Run LOGO bar only against live staging (shared Hotels + Cars logo chips). */
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const puppeteer = require('/workspace/node_modules/puppeteer-core');
@@ -11,8 +11,10 @@ import {
   configureShepherdSmokeHelpers,
   postItinerary,
   getApp,
-  runSharedSiteLogoBarChecks,
 } from './shepherd-staging-smoke-helpers.mjs';
+import { runSharedSiteLogoCheck } from './shepherd-staging-smoke-shared-ui.mjs';
+import { pickSlowLogoStage } from './shepherd-staging-smoke-logo-metrics.mjs';
+import { runShepherdJevPreflight } from './shepherd-staging-smoke-jev-preflight.mjs';
 import { mintCheckoutCoupons } from './mint-checkout-coupons.mjs';
 
 const EXPECT_SHA = process.argv[2];
@@ -41,6 +43,12 @@ configureShepherdSmokeHelpers({
 await ensureShepherdStagingSmokeEnv();
 await mkdir(ARTIFACT_DIR, { recursive: true });
 
+const jevPreflight = await runShepherdJevPreflight();
+if (!jevPreflight.ok) {
+  console.error(JSON.stringify({ harnessBlocker: { reason: 'jev_preflight', detail: jevPreflight.error }, jevPreflight }, null, 2));
+  process.exit(2);
+}
+
 const vres = await fetch(`${BASE}/api/version`);
 const version = await vres.json();
 if (version.sha !== EXPECT_SHA && !String(version.sha || '').startsWith(SHA7)) {
@@ -50,6 +58,7 @@ if (version.sha !== EXPECT_SHA && !String(version.sha || '').startsWith(SHA7)) {
 
 let mapUrl = '';
 let sharedApi = null;
+let mapLogoPrep = null;
 
 if (shareOnly) {
   mapUrl = shareOnly.startsWith('http') ? shareOnly : `${BASE}/shared/${shareOnly.replace(/^\/+|\/+$/g, '')}/`;
@@ -92,18 +101,35 @@ if (shareOnly) {
   await postItinerary(session, { text: 'hi' });
   const tripMsg = await postItinerary(session, { text: 'Maui March 10-17 2027 with my wife' });
   const tripId = tripMsg.json.trip?.id || (await db`select id from trips where customer_id=${customerId} order by created_at desc limit 1`)[0]?.id;
+  await postItinerary(session, { tripId, text: "We're staying at the Hyatt Regency Maui in Kaanapali." });
   await postItinerary(session, { tripId, text: "We're staying at the Westin Maui in Kaanapali." });
   await postItinerary(session, { tripId, text: 'Hertz rental car at OGG' });
   const shareSlug = tripId ? intakeShareSlug(tripId) : '';
   mapUrl = shareSlug ? `${BASE}/shared/${shareSlug}/` : '';
+  let publicUrlAfterH = '';
   for (let i = 0; i < 25; i += 1) {
     if (!shareSlug) break;
     const sr = await fetch(`${BASE}/api/shared/${shareSlug}`);
     const json = await sr.json().catch(() => ({}));
     sharedApi = { status: sr.status, json };
+    if (tripId) {
+      const tripMeta = (await db`select metadata from trips where id=${tripId} limit 1`)[0]?.metadata;
+      publicUrlAfterH = tripMeta?.publicUrl || tripMeta?.public_url || publicUrlAfterH;
+    }
     if ((json.places || []).length >= 1) break;
     await new Promise((r) => setTimeout(r, 2000));
   }
+  mapLogoPrep = { shareSlug, sharedApi, publicUrlAfterH, intakeShareUrl: mapUrl };
+}
+
+if (shareOnly && mapUrl) {
+  const slug = mapUrl.split('/shared/')[1]?.replace(/\/$/, '') || shareOnly.replace(/^\/+|\/+$/g, '');
+  mapLogoPrep = mapLogoPrep || {
+    shareSlug: slug,
+    sharedApi,
+    publicUrlAfterH: '',
+    intakeShareUrl: mapUrl,
+  };
 }
 
 if (!mapUrl) {
@@ -118,22 +144,43 @@ if (!sharedApi) {
     sharedApi = { status: sr.status, json: await sr.json().catch(() => ({})) };
   }
 }
+if (mapLogoPrep && !mapLogoPrep.sharedApi) {
+  mapLogoPrep.sharedApi = sharedApi;
+}
+
+const artifactPath = (name) => `${ARTIFACT_DIR}/shepherd-${SHA7}-logo-only-${name}`;
+const outPath = `${ARTIFACT_DIR}/shepherd-${SHA7}-logo-only-out.json`;
 
 const browser = await puppeteer.launch(CHROME);
 const page = await browser.newPage();
-const logoBar = await runSharedSiteLogoBarChecks({
+let checkLOGO = { partial: true };
+const logoResult = await runSharedSiteLogoCheck({
   page,
-  mapUrl,
-  sharedApi,
-  artifactPath: (name) => `${ARTIFACT_DIR}/shepherd-${SHA7}-logo-bar-${name}`,
+  prep: mapLogoPrep || {
+    shareSlug: mapUrl.split('/shared/')[1]?.replace(/\/$/, '') || '',
+    sharedApi,
+    publicUrlAfterH: '',
+    intakeShareUrl: mapUrl,
+  },
+  artifactPath,
+  onPersist: (patch) => {
+    Object.assign(checkLOGO, patch);
+  },
 });
+checkLOGO = logoResult.checkLOGO;
 await browser.close();
 
+const slowStage = pickSlowLogoStage(checkLOGO.stageTimestamps || {});
 const out = {
   expectSha: version.sha,
-  checkLOGO: logoBar.checkLOGO,
-  pass: logoBar.pass,
-  mapUrl,
+  deployId: process.env.SHEPHERD_DEPLOY_ID || null,
+  jevPreflight,
+  intakeShareUrl: mapUrl,
+  checkLOGO,
+  slowStage,
+  pass: logoResult.pass,
+  checks: { LOGO: logoResult.pass ? 'PASS' : 'FAIL' },
 };
+await import('node:fs/promises').then(({ writeFile }) => writeFile(outPath, `${JSON.stringify(out, null, 2)}\n`));
 console.log(JSON.stringify(out, null, 2));
-process.exit(logoBar.pass ? 0 : 1);
+process.exit(logoResult.pass ? 0 : 1);

@@ -30,7 +30,7 @@ const runCheckText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-run-c
 const combined = `${mainText}\n${spineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
-const dedicatedCheckRe = /runDedicatedSharedCheck\s*\(\s*ctx\s*,\s*['"]([^'"]+)['"]\s*,\s*(?:\d+|MAP_CHECK_TIMEOUT_MS)/g;
+const dedicatedCheckRe = /runDedicatedSharedCheck\s*\(\s*ctx\s*,\s*['"]([^'"]+)['"]\s*,\s*(?:\d+|MAP_CHECK_TIMEOUT_MS|LOGO_CHECK_TIMEOUT_MS)/g;
 const registered = new Set();
 let m;
 while ((m = runCheckRe.exec(combined)) !== null) {

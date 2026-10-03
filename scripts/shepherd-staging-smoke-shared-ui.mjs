@@ -9,8 +9,11 @@ import {
   listSharedDomTabs,
   mapSharedTripState,
   sharedBudgetTabCheck,
+  APP_MAP_READY_FAIL_MS,
 } from './shepherd-staging-smoke-shared-ui-map.mjs';
 import {
+  createLogoStageTimestamps,
+  pickSlowLogoStage,
   sharedLogoTabCheck,
   stitchLogoChipCropsPng,
 } from './shepherd-staging-smoke-logo-metrics.mjs';
@@ -152,22 +155,39 @@ export async function runSharedSiteBudgetCheck({ page, prep, artifactPath }) {
   };
 }
 
-export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
+export async function runSharedSiteLogoCheck({ page, prep, artifactPath, onPersist } = {}) {
   const intakeMapUrl = intakeShareUrlFromPrep(prep);
   const sharedJson = prep.sharedApi?.json || {};
+  const stageTimestamps = createLogoStageTimestamps();
+  const persist = (patch) => {
+    onPersist?.({ stageTimestamps, ...patch });
+  };
+  persist({ partial: true, failReason: null });
+
   if (!intakeMapUrl) {
     return {
       pass: false,
-      checkLOGO: { failReason: 'no_intake_map_url' },
+      checkLOGO: { failReason: 'no_intake_map_url', stageTimestamps },
       appFail: null,
     };
   }
-  const hydration = await gotoAndHydrateSharedIntakePage(page, intakeMapUrl);
-  const domTabList = hydration.domTabList || [];
   const logoShot = artifactPath('shared-logo-chips.png');
   const logoCropsPath = '/opt/cursor/artifacts/logo-chips-crops.png';
+
+  stageTimestamps.gotoStartMs = Date.now();
+  const hydration = await gotoAndHydrateSharedIntakePage(page, intakeMapUrl);
+  stageTimestamps.gotoEndMs = hydration.stageTimestamps?.gotoEndMs || Date.now();
+  stageTimestamps.hydrationWaitStartMs = hydration.stageTimestamps?.mapReadyWaitStartMs ?? null;
+  stageTimestamps.hydrationWaitEndMs = hydration.stageTimestamps?.mapReadyWaitEndMs ?? null;
+  if (hydration.stageTimestamps?.hangingStage) {
+    stageTimestamps.hangingStage = hydration.stageTimestamps.hangingStage;
+  }
+  persist({ hydrationTimestamps: hydration.stageTimestamps, domTabList: hydration.domTabList });
+
+  const domTabList = hydration.domTabList || [];
   if (hydration.stageTimestamps?.hangingStage) {
     await page.screenshot({ path: logoShot, fullPage: true });
+    persist({ failReason: `hanging_stage:${hydration.stageTimestamps.hangingStage}`, logoShot });
     return {
       pass: false,
       appFail: null,
@@ -175,14 +195,24 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
         failReason: `hanging_stage:${hydration.stageTimestamps.hangingStage}`,
         domTabList,
         hydrationTimestamps: hydration.stageTimestamps,
+        stageTimestamps,
         logoShot,
+        slowStage: pickSlowLogoStage(stageTimestamps),
       },
     };
   }
+
+  const tabsReadyAt = Date.now();
+  stageTimestamps.logoTabsReadyMs = tabsReadyAt;
+  const hydrationEnd = stageTimestamps.hydrationWaitEndMs || stageTimestamps.gotoEndMs;
+  stageTimestamps.logoTabsReadyFromHydrationMs = Number.isFinite(hydrationEnd)
+    ? tabsReadyAt - hydrationEnd
+    : null;
   const hotelsTabPresent = domTabList.some((t) => /hotel/i.test(`${t.text} ${t.dataTab}`));
   const carsTabPresent = domTabList.some((t) => /car/i.test(`${t.text} ${t.dataTab}`));
   if (!hotelsTabPresent || !carsTabPresent) {
     await page.screenshot({ path: logoShot, fullPage: true });
+    persist({ failReason: 'app_logo_tabs_missing', logoShot, domTabList });
     return {
       pass: false,
       appFail: {
@@ -193,78 +223,86 @@ export async function runSharedSiteLogoCheck({ page, prep, artifactPath }) {
       checkLOGO: {
         failReason: 'app_logo_tabs_missing',
         domTabList,
-        hydrationTimestamps: hydration.stageTimestamps,
+        stageTimestamps,
         logoShot,
         sharedApiPlaces: (sharedJson.places || []).length,
         intakeShareUrl: intakeMapUrl,
+        slowStage: pickSlowLogoStage(stageTimestamps),
       },
     };
   }
-  const logoHotels = await sharedLogoTabCheck(page, 'hotels', sharedJson);
-  const logoCars = await sharedLogoTabCheck(page, 'cars', sharedJson);
+  if (
+    Number.isFinite(stageTimestamps.logoTabsReadyFromHydrationMs)
+    && stageTimestamps.logoTabsReadyFromHydrationMs > APP_MAP_READY_FAIL_MS
+  ) {
+    await page.screenshot({ path: logoShot, fullPage: true });
+    const appFail = {
+      reason: 'app_logo_tabs_over_10s',
+      logoTabsReadyFromHydrationMs: stageTimestamps.logoTabsReadyFromHydrationMs,
+    };
+    persist({ appFail, failReason: appFail.reason, logoShot });
+    return {
+      pass: false,
+      appFail,
+      checkLOGO: {
+        failReason: appFail.reason,
+        domTabList,
+        stageTimestamps,
+        logoShot,
+        sharedApiPlaces: (sharedJson.places || []).length,
+        intakeShareUrl: intakeMapUrl,
+        slowStage: pickSlowLogoStage(stageTimestamps),
+      },
+    };
+  }
+
+  const logoHotels = await sharedLogoTabCheck(page, 'hotels', sharedJson, {
+    stageTimestamps,
+    onPersist: (p) => persist(p),
+  });
+  persist({ hotels: logoHotels });
+
+  const logoCars = await sharedLogoTabCheck(page, 'cars', sharedJson, {
+    stageTimestamps,
+    onPersist: (p) => persist(p),
+  });
+  persist({ cars: logoCars });
+
   if (logoHotels.clicked || logoCars.clicked) await page.screenshot({ path: logoShot, fullPage: true });
   const allCropBuffers = [...(logoHotels.cropBuffers || []), ...(logoCars.cropBuffers || [])];
+  stageTimestamps.cropStitchStartMs = Date.now();
   const logoCropsWritten = allCropBuffers.length
     ? await stitchLogoChipCropsPng(allCropBuffers, logoCropsPath)
     : null;
+  stageTimestamps.cropStitchEndMs = Date.now();
+  const slowStage = pickSlowLogoStage(stageTimestamps);
+  if (slowStage) stageTimestamps.slowStage = slowStage.name;
+
   const pass = logoPassFromTabs(logoHotels, logoCars);
   let failReason = null;
   if (!logoHotels.clicked) failReason = logoHotels.failReason || 'logo_hotels_tab_not_clicked';
   else if (!logoCars.clicked) failReason = logoCars.failReason || 'logo_cars_tab_not_clicked';
   else if (!logoHotels.pass) failReason = 'logo_hotels_grade_fail';
   else if (!logoCars.pass) failReason = 'logo_cars_grade_fail';
+
+  const checkLOGO = {
+    hotels: logoHotels,
+    cars: logoCars,
+    logoShot: (logoHotels.rows?.length || logoCars.rows?.length) ? logoShot : null,
+    logoCropsPath: logoCropsWritten,
+    sharedApiPlaces: (sharedJson.places || []).length,
+    intakeShareUrl: intakeMapUrl,
+    failReason: pass ? null : failReason,
+    domTabList,
+    hydrationTimestamps: hydration.stageTimestamps,
+    stageTimestamps,
+    slowStage,
+    partial: false,
+  };
+  persist(checkLOGO);
   return {
     pass,
     appFail: null,
-    checkLOGO: {
-      hotels: logoHotels,
-      cars: logoCars,
-      logoShot: (logoHotels.rows?.length || logoCars.rows?.length) ? logoShot : null,
-      logoCropsPath: logoCropsWritten,
-      sharedApiPlaces: (sharedJson.places || []).length,
-      intakeShareUrl: intakeMapUrl,
-      failReason: pass ? null : failReason,
-      domTabList,
-      hydrationTimestamps: hydration.stageTimestamps,
-    },
-  };
-}
-
-export async function runSharedSiteLogoBarChecks({
-  page,
-  mapUrl,
-  sharedApi,
-  artifactPath = (name) => `/opt/cursor/artifacts/${name}`,
-  skipInitialGoto = false,
-}) {
-  if (mapUrl && !skipInitialGoto) {
-    await gotoSharedIntakePage(page, mapUrl);
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-  const sharedJson = sharedApi?.json || {};
-  const logoShot = artifactPath('shared-logo-chips.png');
-  const logoCropsPath = '/opt/cursor/artifacts/logo-chips-crops.png';
-  const logoHotels = mapUrl
-    ? await sharedLogoTabCheck(page, 'hotels', sharedJson)
-    : { pass: false, rows: [], clicked: false, cssSuspects: [], cropBuffers: [], failReason: 'no_map_url' };
-  const logoCars = mapUrl
-    ? await sharedLogoTabCheck(page, 'cars', sharedJson)
-    : { pass: false, rows: [], clicked: false, cssSuspects: [], cropBuffers: [], failReason: 'no_map_url' };
-  if (logoHotels.clicked || logoCars.clicked) await page.screenshot({ path: logoShot, fullPage: true });
-  const allCropBuffers = [...(logoHotels.cropBuffers || []), ...(logoCars.cropBuffers || [])];
-  const logoCropsWritten = allCropBuffers.length
-    ? await stitchLogoChipCropsPng(allCropBuffers, logoCropsPath)
-    : null;
-  const logoPass = logoPassFromTabs(logoHotels, logoCars);
-  return {
-    checkLOGO: {
-      hotels: logoHotels,
-      cars: logoCars,
-      logoShot: (logoHotels.rows?.length || logoCars.rows?.length) ? logoShot : null,
-      logoCropsPath: logoCropsWritten,
-      sharedApiPlaces: (sharedJson.places || []).length,
-      intakeShareUrl: mapUrl,
-    },
-    pass: logoPass,
+    checkLOGO,
   };
 }
