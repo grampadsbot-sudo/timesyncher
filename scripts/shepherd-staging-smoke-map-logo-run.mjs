@@ -9,6 +9,7 @@ import {
   runSharedSiteLogoCheck,
   runSharedSiteMapCheck,
 } from './shepherd-staging-smoke-shared-ui.mjs';
+import { createLogoStageTimestamps } from './shepherd-staging-smoke-logo-metrics.mjs';
 
 const MAP_CHECK_TIMEOUT_MS = 120000;
 
@@ -70,8 +71,18 @@ export async function runShepherdSmokeMapBudLogoChecks(ctx) {
     return { pass: bud.pass, http: 200 };
   });
 
-  await runDedicatedSharedCheck(ctx, 'LOGO', 120000, async ({ page, prep, artifactPath }) => {
-    const logo = await runSharedSiteLogoCheck({ page, prep, artifactPath });
+const LOGO_CHECK_TIMEOUT_MS = 90000;
+
+  await runDedicatedSharedCheck(ctx, 'LOGO', LOGO_CHECK_TIMEOUT_MS, async ({ page, prep, artifactPath }) => {
+    out.checkLOGO = { partial: true, stageTimestamps: createLogoStageTimestamps() };
+    const logo = await runSharedSiteLogoCheck({
+      page,
+      prep,
+      artifactPath,
+      onPersist: (patch) => {
+        Object.assign(out.checkLOGO, patch);
+      },
+    });
     out.checkLOGO = logo.checkLOGO;
     if (logo.appFail) {
       out.checkLOGO.appFail = logo.appFail;
