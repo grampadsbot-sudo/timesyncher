@@ -25,6 +25,8 @@ async function assertSpec() {
   assert.match(text, /\| 1 vacation with site content \| hidden \(0px, not rendered\) \|/);
   assert.match(text, /\| 2\+ vacations \| vacation dropdown only \|/);
   assert.match(text, /\| Website full-screen \| none \| website fills the viewport, with an exit-full-screen control \| none \| none \|/);
+  assert.match(text, /text box with file-add, speak and send buttons/);
+  assert.match(text, /never removes the basic controls any chat app needs, such as a send button/);
 }
 
 function expectedIds() {
@@ -37,7 +39,8 @@ function expectedIds() {
         ids.push(`APP-${tag}-SITE-STACK`, `APP-${tag}-SITE-EMBED`, `APP-${tag}-SITE-FULLSCREEN`, `APP-${tag}-SITE-EXIT`);
       }
     }
-    ids.push(`APP-${tag}-PUBLIC`);
+    ids.push(`APP-${tag}-PUBLIC`, `APP-${tag}-SEND`);
+    if (tag === '390') ids.push('APP-390-SEND-TAP', 'APP-390-SEND-BLANK');
   }
   return ids;
 }
@@ -85,10 +88,10 @@ function measureSource() {
     }
     const visibleButtons = [...document.querySelectorAll('.app button')].filter((el) => visible(el)).map((el) => el.id || el.className || el.tagName);
     const allowed = state === 'SITE'
-      ? ['attachButton', 'fullScreenButton', 'splitter', 'voiceButton']
+      ? ['attachButton', 'fullScreenButton', 'sendButton', 'splitter', 'voiceButton']
       : state === 'MANY'
-        ? ['attachButton', 'tripButton', 'voiceButton']
-        : ['attachButton', 'voiceButton'];
+        ? ['attachButton', 'sendButton', 'tripButton', 'voiceButton']
+        : ['attachButton', 'sendButton', 'voiceButton'];
     const sameButtons = visibleButtons.length === allowed.length && allowed.every((name) => visibleButtons.includes(name));
     check(id('BUTTONS'), sameButtons, { visibleButtons, allowed });
 
@@ -117,9 +120,9 @@ function measureSource() {
       });
       const controls = [...composer.querySelectorAll('button, textarea, input, select')].filter((el) => visible(el));
       const controlIds = controls.map((el) => el.id || el.className || el.tagName).sort();
-      const expected = ['attachButton', 'messageText', 'voiceButton'];
+      const expected = ['attachButton', 'messageText', 'sendButton', 'voiceButton'];
       const same = controlIds.length === expected.length && expected.every((name) => controlIds.includes(name));
-      check(id('CONTROLS'), same && !composer.querySelector('.send-button'), { controlIds });
+      check(id('CONTROLS'), same, { controlIds });
     }
 
     const docRight = Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth || 0);
@@ -281,6 +284,8 @@ async function checkComposerEnter(browser, server, viewport, results) {
   const mobile = viewport.tag === '390';
   const page = await openComposer(browser, server, viewport, mobile);
   try {
+    const send = await page.evaluate(() => { const named = [...document.querySelectorAll('button')].find((el) => (el.getAttribute('aria-label') || el.textContent || '').trim() === 'Send'); const box = named?.getBoundingClientRect(); const form = document.querySelector('#composer')?.getBoundingClientRect(); const style = named ? getComputedStyle(named) : null; const visible = Boolean(named && style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0); const inside = Boolean(box && form && box.top >= Math.max(-1, form.top - 1) && box.bottom <= Math.min(innerHeight + 1, form.bottom + 1) && box.left >= Math.max(-1, form.left - 1) && box.right <= Math.min(innerWidth + 1, form.right + 1)); const hit = box ? document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2) : null; return { visible, inside, hittable: Boolean(hit && (hit === named || named.contains(hit))), width: box?.width || 0, height: box?.height || 0 }; });
+    results.push({ id: `APP-${viewport.tag}-SEND`, ok: Boolean(send.visible && send.inside && send.hittable), detail: send });
     if (mobile) {
       const hint = await page.$eval('#messageText', (node) => node.getAttribute('enterkeyhint') || '');
       await page.click('#messageText');
@@ -301,6 +306,10 @@ async function checkComposerEnter(browser, server, viewport, results) {
         ok: hint === 'send' && sent && detail.value === '' && !detail.value.includes('\n') && bubble.includes('Phone send check') && !bubble.includes('\n'),
         detail: { hint, sent, value: detail.value, bubble },
       });
+      const tapped = await page.waitForFunction(() => !document.querySelector('#tsTyping'), { timeout: 4000 }).catch((error) => { console.error('send tap wait ended', error?.name || error); }).then(() => page.click('#messageText')).then(() => page.keyboard.type('Tap send check')).then(() => page.tap('button[aria-label="Send"]')).then(() => page.evaluate(() => ({ value: document.querySelector('#messageText').value, bubble: [...document.querySelectorAll('#messages .bubble.user')].map((node) => node.textContent || '').find((text) => text.includes('Tap send check')) || '' }))).catch((error) => ({ value: 'threw', bubble: '', error: String(error?.message || error) }));
+      results.push({ id: 'APP-390-SEND-TAP', ok: tapped.value === '' && tapped.bubble.includes('Tap send check'), detail: tapped });
+      const blank = await page.waitForFunction(() => !document.querySelector('#tsTyping'), { timeout: 4000 }).catch((error) => { console.error('blank send wait ended', error?.name || error); }).then(() => page.click('#messageText')).then(() => page.keyboard.type('   ')).then(() => page.tap('button[aria-label="Send"]')).then(() => page.evaluate(() => ({ value: document.querySelector('#messageText').value, status: document.querySelector('#composerStatus')?.textContent || '', bubbles: document.querySelectorAll('#messages .bubble.user').length }))).catch((error) => ({ value: 'threw', status: '', bubbles: -1, error: String(error?.message || error) }));
+      results.push({ id: 'APP-390-SEND-BLANK', ok: blank.value === '   ' && blank.status === 'Something went wrong. Please try again.' && blank.bubbles === 2, detail: blank });
     } else {
       await page.click('#messageText');
       await page.keyboard.type('Shift line');
