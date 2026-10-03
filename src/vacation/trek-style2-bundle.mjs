@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
-import { applyLiveProductPatches, patchThingDetailRatings, LIST_LOGO_PATCH, stripHotelBrandNameGuessing } from './trek-live-product-patches.mjs';
+import { applyLiveProductPatches, patchThingDetailRatings, patchThingLogoChipAlignment, LIST_LOGO_PATCH, stripHotelBrandNameGuessing } from './trek-live-product-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -412,6 +412,9 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
   }
   patched = applyLiveProductPatches(patched);
+  if (served) {
+    patched = patchThingLogoChipAlignment(patched);
+  }
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
