@@ -22,10 +22,53 @@ function text(value) {
 }
 
 function sourceRecord(thing = {}, override = {}) {
-  return {
-    ...(thing.source && typeof thing.source === 'object' ? thing.source : {}),
-    ...(override.source && typeof override.source === 'object' ? override.source : {}),
-  };
+  const embedded = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : {};
+  const overrideRecord = override.sourceRecord && typeof override.sourceRecord === 'object' ? override.sourceRecord : {};
+  const fromThing = thing.source && typeof thing.source === 'object' ? thing.source : {};
+  const fromOverride = override.source && typeof override.source === 'object' ? override.source : {};
+  return { ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
+}
+
+function pageUrlForLogo(thing = {}, override = {}) {
+  const source = sourceRecord(thing, override);
+  return text(
+    source.url
+    || source.website
+    || source.sourceUrl
+    || thing.url
+    || thing.website
+    || thing.sourceUrl
+    || thing.source_url,
+  );
+}
+
+/** Why captureThingLogo returned empty (for shared API diagnostics). */
+export function logoCaptureMissReason(thing = {}, override = {}) {
+  const source = sourceRecord(thing, override);
+  const explicit = [
+    source.logo,
+    source.logoUrl,
+    source.favicon,
+    source.faviconUrl,
+    thing.logo,
+    thing.favicon,
+    thing.faviconUrl,
+    override.logoUrl,
+    override.iconUrl,
+    thing.logoUrl,
+    thing.iconUrl,
+  ];
+  for (const value of explicit) {
+    const logo = usableLogo(value);
+    if (logo) return '';
+  }
+  const page = text(
+    source.url || source.website || source.sourceUrl
+    || thing.url || thing.website || thing.sourceUrl || thing.source_url,
+  );
+  if (!page) return 'no_place_website';
+  if (!httpUrl(page)) return 'no_usable_place_website';
+  return 'no_logo_or_favicon';
 }
 
 function httpUrl(value) {
@@ -71,7 +114,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     const logo = usableLogo(value);
     if (logo) return logo;
   }
-  const page = httpUrl(source.url || source.website || source.sourceUrl || thing.url || thing.website || thing.sourceUrl || thing.source_url);
+  const page = httpUrl(pageUrlForLogo(thing, override));
   if (!page) return '';
   return `${page.origin}/favicon.ico`;
 }
@@ -99,6 +142,10 @@ export function applyCapturedLogos(shared = {}) {
     const resolved = timelineIcon(place, override);
     const logoUrl = captureThingLogo(place, override);
     override.logoUrl = logoUrl;
+    if (!logoUrl) {
+      const reason = logoCaptureMissReason(place, override);
+      if (reason) override.logoCaptureReason = reason;
+    }
     override.icon = resolved.icon;
     if (resolved.isFlight) override.icon = '✈️';
     else if (!override.icon || /plane|✈️|\u2708/i.test(String(override.icon))) {

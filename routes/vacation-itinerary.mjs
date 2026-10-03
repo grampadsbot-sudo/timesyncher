@@ -66,6 +66,7 @@ import {
 } from '../src/vacation/chat-place-search.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import { pickVacationAppTrip } from '../src/vacation/vacation-app-trip-select.mjs';
 import {
   collaboratorSessionForAccept,
   vacationAppEulaForCollaboratorSeat,
@@ -422,6 +423,7 @@ function welcomeFirstName(value) {
 }
 
 function tripHasVacationSite(trip) {
+  if (String(trip?.publicUrl || '').trim()) return true;
   return Boolean(String(trip?.shareToken || '').trim());
 }
 
@@ -921,12 +923,12 @@ async function handleVacationApp(req, res, db, url) {
   }
 
   if (req.method === 'GET') {
-    let vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
-    let selected = vacations.find((trip) => trip.id === requestedTripId)
-      || vacations.find((trip) => trip.id === session.trip_id)
-      || vacations[0]
-      || null;
+    let vacations = await loadVacationAppTrips(db, session);
+    let selected = pickVacationAppTrip(vacations, session, requestedTripId);
+    if (selected?.id) await publishIntakeShare(db, selected.id);
+    vacations = await loadVacationAppTrips(db, session);
+    selected = pickVacationAppTrip(vacations, session, requestedTripId);
     const eula = await vacationAppEula(session, process.env);
     if (eula.accepted) {
       await ensureOnboardingOpener(db, session, selected || null);
@@ -938,10 +940,9 @@ async function handleVacationApp(req, res, db, url) {
       }
     }
     const turns = await loadVacationAppTurns(db, session, selected?.id || null);
-    if (selected) await publishIntakeShare(db, selected.id);
-    const published = selected ? await loadVacationAppTrips(db, session) : vacations;
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
+    const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
     return sendJson(res, 200, {
       ok: true,
       session: {
@@ -954,7 +955,10 @@ async function handleVacationApp(req, res, db, url) {
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
-      vacations: published,
+      trip: selected,
+      tripSiteUrl,
+      publicUrl: selected?.publicUrl || '',
+      vacations,
       turns,
       itinerary,
     });
