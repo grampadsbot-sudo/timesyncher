@@ -52,7 +52,7 @@ const shared = {
     'place:8869': { title: 'Sample place B', category: 'hotel', story: 'Fountain spray lit gold outside the glass.' },
   },
   places: [
-    { id: 8872, name: 'Sample place C', category_name: 'Restaurant', category_icon: '🍽️', image_url: '/api/bind-thing-media?shareToken=x&id=1&raw=1' },
+    { id: 8872, name: 'Sample place C', category_name: 'Restaurant', category_icon: '🍽️', image_url: '/ts-thing-media/sample-trip/venue-c-plates-photo.jpg' },
     { id: 8873, name: 'Sample place D', category_name: 'Restaurant', category_icon: '🍽️' },
     { id: 8876, name: 'Sample place E', category_name: 'Store', category_icon: 'ShoppingBag' },
     { id: 8871, name: 'Sample place F', category_name: 'Attraction', category_icon: '🏛️' },
@@ -70,14 +70,14 @@ const shared = {
 const bindings = [
   { id: 's1', thingId: 8872, thingName: 'Sample place C', publicUrl: '/ts-thing-media/sample-trip/venue-c-plates-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
   { id: 's2', thingId: 8871, thingName: 'Sample place F', publicUrl: '/ts-thing-media/sample-trip/venue-f-photo.jpg', mimeType: 'image/jpeg', mediaKind: 'photo' },
-  { id: 's3', thingId: 8869, thingName: 'Sample place B', publicUrl: '/api/bind-thing-media?shareToken=x&id=vid&raw=1', mimeType: 'application/octet-stream', mediaKind: 'video', originalName: 'venue-b-video.mp4' },
+  { id: 's3', thingId: 8869, thingName: 'Sample place B', publicUrl: '/ts-thing-media/sample-trip/venue-b-clip', mimeType: 'video/mp4', mediaKind: 'video', originalName: 'venue-b-clip.mp4' },
   {
     id: '6ba36f2a-e9f2-467e-9e61-3aac64fe165a',
     thingId: 8869,
     thingName: 'Sample place B',
-    publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=sample-trip&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1',
-    mimeType: 'application/octet-stream',
-    mediaKind: 'photo',
+    publicUrl: 'https://v3b2c4d5.public.blob.vercel-storage.com/thing-media/sample-trip/6ba36f2a-e9f2-467e-9e61-3aac64fe165a',
+    mimeType: 'video/mp4',
+    mediaKind: 'video',
     originalName: 'venue-b-video.mp4',
   },
 ];
@@ -245,7 +245,7 @@ assert.equal(itineraryMinThings({}), 8);
 assert.ok(model.assignedCount >= Math.min(model.placeCount, model.minThings));
 const filled = backfillAssignments(shared, { TIMESYNCHER_ITINERARY_MIN_THINGS: '8' });
 assert.equal(filled.shortfall, 2);
-const playbackUrl = 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=sample-trip&id=6ba36f2a-e9f2-467e-9e61-3aac64fe165a&raw=1';
+const playbackUrl = 'https://v3b2c4d5.public.blob.vercel-storage.com/thing-media/sample-trip/6ba36f2a-e9f2-467e-9e61-3aac64fe165a';
 const playbackQr = qrSvg(playbackUrl, { size: PDF_QR_SIZE });
 assert.match(playbackQr, /<svg[\s\S]*<rect/);
 assert.match(playbackQr, /fill="#fff"/);

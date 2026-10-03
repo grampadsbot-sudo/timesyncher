@@ -13,7 +13,7 @@ import {
   resolveThingFromShared,
   sniffMediaType,
 } from './thing-media-bind.mjs';
-import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
+import { listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
 const MAX_BYTES = Number.parseInt(process.env.TIMESYNCHER_MEDIA_BIND_MAX_BYTES || '20971520', 10);
 function trekPublic() {
@@ -203,7 +203,7 @@ async function handleBind(req, res) {
   const bindingId = newBindingId();
   let blobUrl = '';
   let storagePathname = null;
-  if (bytes && !hasDatabase(process.env)) {
+  if (bytes) {
     const blob = await putMediaBlob(bytes, {
       pathname: `thing-media/${shareToken}/${thing.thingId}-${Date.now()}-${fileName}`,
       contentType: mimeType,
@@ -218,12 +218,12 @@ async function handleBind(req, res) {
     sourceUrl,
     blobUrl,
     hasDatabase: hasDatabase(process.env),
-    origin: originFromReq(req),
-    shareToken,
-    bindingId,
   });
+  if (storage.error === 'blob-required') {
+    throw Object.assign(new Error('File bind requires a working Vercel Blob store for uploads. Pass sourceUrl of an already-hosted public file, or use CLI --write-public on a git deploy.'), { statusCode: 503 });
+  }
   if (storage.error === 'no-store') {
-    throw Object.assign(new Error('File bind needs DATABASE_URL (Neon) or a working Blob store, or pass sourceUrl of an already-hosted file. Use CLI --write-public on a git deploy, or --apply-trek on the TREK host.'), { statusCode: 503 });
+    throw Object.assign(new Error('File bind needs DATABASE_URL (Neon) or a working Blob store, or pass sourceUrl of an already-hosted file. Use CLI --write-public on a git deploy, or apply-trek on the TREK host.'), { statusCode: 503 });
   }
   if (storage.error === 'no-input') {
     throw Object.assign(new Error('Provide file, fileBase64, or sourceUrl.'), { statusCode: 400 });
@@ -278,16 +278,11 @@ export default async function handler(req, res) {
       const id = cleanText(url.searchParams.get('id'), 80);
       const raw = url.searchParams.get('raw') === '1' || url.searchParams.get('raw') === 'true';
       if (raw && shareToken && id) {
-        const media = await getBindingMedia(shareToken, id, process.env);
-        if (!media) {
-          return sendJson(res, 404, { ok: false, error: 'Bound media bytes were not found.' });
-        }
-        res.statusCode = 200;
-        res.setHeader('content-type', media.mimeType);
-        res.setHeader('cache-control', 'public, max-age=3600');
-        res.setHeader('content-disposition', `inline; filename="${media.originalName.replace(/"/g, '')}"`);
-        res.end(media.bytes);
-        return;
+        console.error(`rejected bind-thing-media raw stream shareToken=${shareToken} id=${id}`);
+        return sendJson(res, 410, {
+          ok: false,
+          error: 'Bound media is no longer streamed through this API. Use the public blob URL on the binding row.',
+        });
       }
       if (!shareToken) {
         return sendJson(res, 200, { ok: true, ...opsHelp(originFromReq(req)) });

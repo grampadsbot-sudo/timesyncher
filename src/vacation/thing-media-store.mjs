@@ -215,35 +215,3 @@ export async function saveBinding(binding, env = process.env, { bytes = null } =
   return { binding: toPublicBinding(row), stored };
 }
 
-function bytesFromNeon(value) {
-  if (!value) return null;
-  if (Buffer.isBuffer(value)) return value;
-  if (value instanceof Uint8Array) return Buffer.from(value);
-  if (typeof value === 'string') {
-    const hex = value.startsWith('\\x') ? value.slice(2) : value;
-    if (/^[0-9a-fA-F]+$/.test(hex) && hex.length % 2 === 0) return Buffer.from(hex, 'hex');
-    return Buffer.from(value, 'base64');
-  }
-  return null;
-}
-
-export async function getBindingMedia(shareToken, id, env = process.env) {
-  if (!hasDatabase(env) || !shareToken || !id) return null;
-  const db = sql(env);
-  await ensureNeonSchema(db);
-  const rows = await db`
-    select mime_type, original_name, file_bytes
-    from thing_media_bindings
-    where share_token = ${shareToken} and id = ${id}
-    limit 1
-  `;
-  const row = rows[0];
-  const bytes = bytesFromNeon(row?.file_bytes);
-  if (!row || !bytes) return null;
-  const originalName = row.original_name || 'media';
-  return {
-    bytes,
-    mimeType: sniffMediaType(bytes, originalName, row.mime_type || ''),
-    originalName,
-  };
-}
