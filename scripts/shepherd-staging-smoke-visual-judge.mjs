@@ -7,7 +7,7 @@ import {
   loadScreenSpecForLabel,
 } from './shepherd-staging-smoke-visual-rubric.mjs';
 
-export { VISUAL_JUDGE_MODEL, VISUAL_RUBRIC_VERSION };
+export { VISUAL_JUDGE_MODEL };
 
 export function parseVisualJudgeResponseText(text) {
   let body = String(text || '').trim();
