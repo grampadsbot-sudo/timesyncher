@@ -412,9 +412,6 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
   }
   patched = applyLiveProductPatches(patched);
-  if (served) {
-    patched = patchThingLogoChipAlignment(patched);
-  }
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
@@ -538,7 +535,7 @@ function dropServedTrekCallers(source) {
 
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const patched = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
+  const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
   return js;
