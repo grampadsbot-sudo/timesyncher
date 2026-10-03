@@ -1,6 +1,6 @@
 import { renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 
-export const MAUI_MAP_BOUNDS = {
+const MAUI_MAP_BOUNDS = {
   latMin: 20.5,
   latMax: 21.1,
   lngMin: -156.75,
@@ -41,7 +41,7 @@ export function turnTextRequestsThing(turnText, thingTitle) {
   return false;
 }
 
-export function thingIdsFromTurnResponse(json = {}) {
+function thingIdsFromTurnResponse(json = {}) {
   const ids = new Set();
   if (json.thingId) ids.add(String(json.thingId));
   for (const row of json.savedThings || []) {

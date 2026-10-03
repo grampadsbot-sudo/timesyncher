@@ -26,6 +26,7 @@ import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
 import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from '../src/vacation/trip-site-url-after-insert.mjs';
+import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
 import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
 import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
@@ -34,6 +35,7 @@ import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedInta
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 // Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
+import { bindPreTripOnboardingWelcome, onboardingWelcomeTurnExists } from '../src/vacation/onboarding-welcome-turn.mjs';
 import { authorPeopleFromTrip, transcriptAuthorMissingError, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import {
@@ -457,34 +459,6 @@ async function welcomeInputs(db, session, trip) {
   return { audience: 'owner_no_site', firstName };
 }
 
-async function onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience }) {
-  if (!customerId || !welcomeAudience) return false;
-  const rows = tripId
-    ? await db`
-      select id
-      from transcript_turns
-      where customer_id = ${customerId}
-        and trip_id = ${tripId}
-        and channel in ('vacation-app', 'vacation_app')
-        and speaker = 'app'
-        and direction = 'outbound'
-        and payload->>'welcomeAudience' = ${welcomeAudience}
-      limit 1
-    `
-    : await db`
-      select id
-      from transcript_turns
-      where customer_id = ${customerId}
-        and trip_id is null
-        and channel in ('vacation-app', 'vacation_app')
-        and speaker = 'app'
-        and direction = 'outbound'
-        and payload->>'welcomeAudience' = ${welcomeAudience}
-      limit 1
-    `;
-  return rows.length > 0;
-}
-
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
   const tripId = trip?.id || seat?.ownerTripId || null;
@@ -499,7 +473,16 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
-  if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+  if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) {
+    await bindPreTripOnboardingWelcome(db, {
+      customerId,
+      tripId,
+      welcomeAudience,
+      welcomeFor,
+      onboardingSessionId,
+    });
+    return;
+  }
   const priorClaims = await db`
     select id
     from vacation_onboarding_welcomes
@@ -682,6 +665,7 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
         );
       }
     }
+    await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
     return loadTripThings(db, tripId);
   }
   const span = intakeSpan(text);
@@ -753,15 +737,15 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   for (const thing of planned) {
     const scheduled = scheduleChatThing(thing, tripDatesRow);
     const metadata = chatSaveMetadata(thing, scheduled);
-    await db`
-      insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
-      values (
-        ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
-        'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb,
-        ${{ ...metadata, source: metadata.source }},
-        ${scheduled.starts_at}
-      )
-    `;
+    await insertIntakeTripThingRow(db, {
+      tripId,
+      category: thing.category,
+      title: thing.title,
+      description: thing.description,
+      metadata: { ...metadata, source: metadata.source },
+      startsAt: scheduled.starts_at,
+      env,
+    });
   }
   if (lodgingWanted.length) {
     const current = await loadTripThings(db, tripId);
@@ -861,17 +845,16 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         candidateDates: thing.candidateDates,
         starts_at: thing.starts_at,
       });
-      const inserted = await db`
-        insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata, starts_at)
-        values (
-          ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
-          'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb,
-          ${{ ...metadata, source: metadata.source }},
-          ${thing.starts_at || null}
-        )
-        returning id
-      `;
-      if (inserted[0]?.id) savedThingIds.push(inserted[0].id);
+      const insertedId = await insertIntakeTripThingRow(db, {
+        tripId,
+        category: thing.category || 'activity',
+        title: thing.title,
+        description: thing.description || '',
+        metadata: { ...metadata, source: metadata.source },
+        startsAt: thing.starts_at || null,
+        env,
+      });
+      if (insertedId) savedThingIds.push(insertedId);
       continue;
     }
     if (JSON.stringify({

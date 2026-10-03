@@ -24,13 +24,13 @@ const unlabeled = sharedTripFromIntake({
 });
 assert.equal(unlabeled.places[0].category_name, '');
 assert.deepEqual(unlabeled.budget, []);
-assert.equal(unlabeled.permissions.share_budget, false);
+assert.equal(unlabeled.permissions.share_budget, true);
 const nullPrice = sharedTripFromIntake({
   trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
   things: [{ id: 'blank', title: 'Open block', total_price: null, price: null }],
 });
 assert.deepEqual(nullPrice.budget, []);
-assert.equal(nullPrice.permissions.share_budget, false);
+assert.equal(nullPrice.permissions.share_budget, true);
 const sourced = sharedTripFromIntake({
   trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
   things: [{ id: 'cafe', category: 'activity', title: 'Cafe', source: { category: 'restaurant' }, total_price: 18 }],

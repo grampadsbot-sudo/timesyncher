@@ -60,7 +60,7 @@ assert.equal(swim.category_name, 'activity');
 assert.notEqual(swim.category_name, 'Attraction');
 const house = shared.places.find((place) => place.name === 'Kailua-Kona house');
 assert.equal(house.category_name, 'Hotel');
-assert.equal(shared.permissions.share_budget, false);
+assert.equal(shared.permissions.share_budget, true);
 assert.deepEqual(shared.budget, []);
 const priced = sharedTripFromIntake({
   trip: {

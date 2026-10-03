@@ -56,7 +56,7 @@ async function ensureInvitePaidForOwnerSeat(db, invite) {
   return loadCollaboratorInviteForEmail(db, rows[0]?.id || invite.id);
 }
 
-async function ensureCollaboratorAppSeatForInvite(db, invite, env = process.env) {
+export async function ensureCollaboratorAppSeatForInvite(db, invite, env = process.env) {
   const ready = await ensureInvitePaidForOwnerSeat(db, invite);
   const contact = inviteContact(ready);
   if (!contact.email) {

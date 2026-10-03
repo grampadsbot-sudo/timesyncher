@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
-import { applyLiveProductPatches, patchThingDetailRatings, LIST_LOGO_PATCH, stripHotelBrandNameGuessing } from './trek-live-product-patches.mjs';
+import { applyLiveProductPatches, patchThingDetailRatings, patchThingLogoChipAlignment, LIST_LOGO_PATCH, stripHotelBrandNameGuessing } from './trek-live-product-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -535,7 +535,7 @@ function dropServedTrekCallers(source) {
 
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
-  const patched = dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true }));
+  const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
   return js;

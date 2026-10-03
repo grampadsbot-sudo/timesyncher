@@ -64,6 +64,9 @@ async function acceptCollaboratorInvite(state) {
   assert.equal(accept.statusCode, 201, accept.body);
   const acceptPayload = JSON.parse(accept.body);
   assert.ok(acceptPayload.redirectUrl);
+  const invite = state.invites.find((row) => row.id === state.inviteId) || state.invites[state.invites.length - 1];
+  assert.ok(invite, 'invite row missing after accept');
+  assert.notEqual(invite.status, 'pending_payment', `invite ${invite.id} still pending_payment after accept`);
   return acceptPayload;
 }
 

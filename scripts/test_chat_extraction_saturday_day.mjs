@@ -24,18 +24,43 @@ function chatDb(trip) {
   const db = async (strings, ...values) => {
     const sql = strings.join(' ');
     if (/count\(\*\)/i.test(sql) && /trip_things/i.test(sql)) return [{ n: things.length }];
+    if (/from trip_things/i.test(sql) && /source in/i.test(sql)) return [];
     if (/insert into trip_things/i.test(sql)) {
+      const tripId = values[0];
+      let category = 'activity';
+      let title = '';
+      let description = '';
+      let metadata = {};
+      let starts_at = null;
+      const jsonMeta = values
+        .filter((value) => typeof value === 'string' && value.trim().startsWith('{'))
+        .sort((left, right) => right.length - left.length)[0];
+      const objectValues = values.filter((value) => value && typeof value === 'object' && !Array.isArray(value));
+      metadata = jsonMeta
+        ? JSON.parse(jsonMeta)
+        : (objectValues.sort((left, right) => Object.keys(right).length - Object.keys(left).length)[0] || {});
+      if (/source_request_id/i.test(sql)) {
+        category = values[2];
+        title = values[4];
+        description = values[5] || '';
+        starts_at = values[6] ?? null;
+      } else {
+        category = values[1];
+        title = values[2];
+        description = values[3] || '';
+        starts_at = values[5] ?? null;
+      }
       const row = {
         id: `thing-${things.length + 1}`,
-        trip_id: values[0],
-        category: values[1],
-        title: values[2],
-        description: values[3] || '',
-        metadata: values[4] && typeof values[4] === 'object' ? values[4] : {},
+        trip_id: tripId,
+        category,
+        title,
+        description,
+        metadata,
         location: {},
         ratings: {},
         source: '',
-        starts_at: values[5] ?? null,
+        starts_at,
       };
       things.push(row);
       return [{ id: row.id }];
@@ -52,7 +77,14 @@ function chatDb(trip) {
       return [];
     }
     if (/from trip_things/i.test(sql)) return things.map((row) => ({ ...row, metadata: { ...row.metadata } }));
-    if (/update trips/i.test(sql)) return [];
+    if (/update trips/i.test(sql)) {
+      const tripId = values.find((v) => typeof v === 'string' && v.startsWith('trip-')) ?? trip.id;
+      if (values.some((v) => v && typeof v === 'object' && v.publicSlug)) {
+        trip.metadata = { ...trip.metadata, ...values.find((v) => v && typeof v === 'object') };
+      }
+      return [{ public_slug: trip.metadata?.publicSlug ?? intakeShareSlug(tripId) }];
+    }
+    if (/select metadata->>'publicSlug'/i.test(sql)) return [{ public_slug: trip.metadata?.publicSlug || '' }];
     if (/publicSlug/i.test(sql)) return [trip];
     if (/start_date/i.test(sql) && /from trips/i.test(sql)) {
       return [{ start_date: trip.start_date, end_date: trip.end_date }];

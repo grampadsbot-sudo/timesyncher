@@ -134,11 +134,21 @@ try {
       stored.push(payload);
       return [{ id: `turn-${stored.length}` }];
     }
+    if (/update vacation_onboarding_welcomes/i.test(query) && /set trip_id =/i.test(query)) {
+      return [];
+    }
+    if (/update transcript_turns/i.test(query) && /set trip_id =/i.test(query)) {
+      const tripId = values.find((value) => typeof value === 'string' && value.startsWith('trip-'));
+      for (const payload of stored) {
+        if (tripId) payload.selectedTripId = tripId;
+      }
+      return [];
+    }
     if (/from transcript_turns/i.test(query) && /welcomeAudience/i.test(query)) {
       const audience = values.find((value) => value === 'owner' || value === 'collaborator');
       const tripId = values.find((value) => typeof value === 'string' && value.startsWith('trip-'));
       const rows = stored.filter((payload) => payload?.welcomeAudience === audience
-        && (!tripId || payload?.selectedTripId === tripId));
+        && (!tripId || payload?.selectedTripId === tripId || payload?.selectedTripId === null));
       return rows.length ? [{ id: 'welcome-turn-existing' }] : [];
     }
     if (/from customers/i.test(query)) {
